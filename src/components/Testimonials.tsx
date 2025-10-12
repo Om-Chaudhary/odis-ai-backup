@@ -1,0 +1,65 @@
+export default function Testimonials() {
+  const testimonials = [
+    {
+      name: "Dr. Deepti Pal",
+      title: "DVM",
+      quote:
+        "Odis is different from the other AI scribes I've tried—the diagnosis suggestions actually show up during the appointment, so most of the time I don't even need to touch the note afterward. That's been the biggest game changer for me.",
+      image: "/professional-veterinarian-portrait.jpg",
+    },
+    {
+      name: "Dr. Tais Perpetuo",
+      title: "DVM",
+      quote:
+        "What I've really loved is that I walk into the room already knowing what I need to. The pre-appointment summaries are short and to the point—behavior notes, allergies, that kind of thing. It saves me time and honestly helps me connect with clients.",
+      image: "/professional-veterinarian-portrait.jpg",
+    },
+    {
+      name: "Jenn",
+      title: "Practice Manager",
+      quote:
+        "One of the things clients notice right away is how fast they get follow-up instructions now. Before, they'd wait hours or we'd have to call them way later. Now it's all automated, and I think it makes us look way more organized and responsive.",
+      image: "/professional-practice-manager-portrait.jpg",
+    },
+    {
+      name: "Kayla",
+      title: "Receptionist",
+      quote:
+        "From my side of things—I'm at the front a lot—it's just taken so much off our plate. Discharge instructions used to be this whole process at the end of every appointment. Now it's basically automatic.",
+      image: "/professional-receptionist.png",
+    },
+  ];
+
+  return (
+    <section className="bg-gradient-to-b from-emerald-50/20 via-emerald-50/30 to-emerald-50/20 py-20 sm:py-24 md:py-28 lg:py-32">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <h2 className="font-display mb-16 text-center text-3xl font-bold text-gray-600 sm:mb-18 sm:text-4xl md:mb-20 md:text-5xl lg:text-6xl">
+          Loved by Veterinarians
+        </h2>
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 sm:gap-10 lg:grid-cols-4">
+          {testimonials.map((testimonial, index) => (
+            <div
+              key={index}
+              className="bg-card border-border rounded-xl border p-6 shadow-sm transition-shadow duration-300 hover:shadow-md sm:p-8"
+            >
+              <img
+                src={testimonial.image || "/placeholder.svg"}
+                alt={testimonial.name}
+                className="mx-auto mb-4 h-16 w-16 rounded-full object-cover sm:h-20 sm:w-20"
+              />
+              <p className="mb-4 font-serif text-sm leading-relaxed text-gray-700 sm:text-base">
+                "{testimonial.quote}"
+              </p>
+              <div className="font-serif text-sm font-semibold text-gray-800 sm:text-base">
+                {testimonial.name}
+              </div>
+              <div className="font-serif text-xs text-gray-700 sm:text-sm">
+                {testimonial.title}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
