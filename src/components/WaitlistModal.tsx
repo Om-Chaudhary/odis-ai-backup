@@ -50,7 +50,7 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="bg-white sm:max-w-md">
+      <DialogContent className="bg-white text-gray-900 sm:max-w-md">
         {!isSubmitted ? (
           <>
             <DialogHeader>
@@ -60,7 +60,9 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="mt-4 space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Name *</Label>
+                <Label htmlFor="name" className="text-gray-700">
+                  Name *
+                </Label>
                 <Input
                   id="name"
                   required
@@ -69,11 +71,14 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
                     setFormData({ ...formData, name: e.target.value })
                   }
                   placeholder="Your full name"
+                  className="placeholder:text-gray-500"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email" className="text-gray-700">
+                  Email *
+                </Label>
                 <Input
                   id="email"
                   type="email"
@@ -83,11 +88,14 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
                     setFormData({ ...formData, email: e.target.value })
                   }
                   placeholder="your@email.com"
+                  className="placeholder:text-gray-500"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="practiceName">Practice Name</Label>
+                <Label htmlFor="practiceName" className="text-gray-700">
+                  Practice Name
+                </Label>
                 <Input
                   id="practiceName"
                   value={formData.practiceName}
@@ -95,27 +103,51 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
                     setFormData({ ...formData, practiceName: e.target.value })
                   }
                   placeholder="Your practice name"
+                  className="placeholder:text-gray-500"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
+                <Label htmlFor="role" className="text-gray-700">
+                  Role
+                </Label>
                 <Select
                   value={formData.role}
                   onValueChange={(value) =>
                     setFormData({ ...formData, role: value })
                   }
                 >
-                  <SelectTrigger id="role">
+                  <SelectTrigger
+                    id="role"
+                    className="border-gray-300 bg-white text-gray-900 data-[placeholder]:text-gray-500"
+                  >
                     <SelectValue placeholder="Select your role" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="veterinarian">Veterinarian</SelectItem>
-                    <SelectItem value="practice-manager">
+                  <SelectContent className="border-gray-300 bg-white">
+                    <SelectItem
+                      value="veterinarian"
+                      className="text-gray-900 hover:bg-gray-100"
+                    >
+                      Veterinarian
+                    </SelectItem>
+                    <SelectItem
+                      value="practice-manager"
+                      className="text-gray-900 hover:bg-gray-100"
+                    >
                       Practice Manager
                     </SelectItem>
-                    <SelectItem value="technician">Technician</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem
+                      value="technician"
+                      className="text-gray-900 hover:bg-gray-100"
+                    >
+                      Technician
+                    </SelectItem>
+                    <SelectItem
+                      value="other"
+                      className="text-gray-900 hover:bg-gray-100"
+                    >
+                      Other
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -126,6 +158,9 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
               >
                 Get Early Access
               </Button>
+              <p className="text-center text-sm text-gray-600">
+                Join waitlist - It&apos;s free →
+              </p>
             </form>
           </>
         ) : (
@@ -135,7 +170,7 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
               Thank you!
             </h3>
             <p className="font-serif text-[#4a5568]">
-              We'll be in touch soon with early access.
+              We&apos;ll be in touch soon with early access.
             </p>
           </div>
         )}

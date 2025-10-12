@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mail, Phone, MapPin, Twitter, Linkedin, Github } from "lucide-react";
+import { Mail, MapPin, Linkedin } from "lucide-react";
 import { Logo } from "~/components/ui/Logo";
 
 export default function Footer() {
@@ -19,7 +19,7 @@ export default function Footer() {
                   <Logo size="md" />
                 </div>
                 <span className="font-display text-xl font-semibold text-slate-900">
-                  OdisAI
+                  Odis AI
                 </span>
               </div>
               <p className="mb-6 max-w-md text-sm leading-relaxed text-slate-600">
@@ -31,115 +31,13 @@ export default function Footer() {
               <div className="space-y-3">
                 <div className="flex items-center space-x-3 text-sm text-slate-600">
                   <Mail className="h-4 w-4 text-teal-600" />
-                  <span>hello@odisai.net</span>
-                </div>
-                <div className="flex items-center space-x-3 text-sm text-slate-600">
-                  <Phone className="h-4 w-4 text-teal-600" />
-                  <span>+1 (555) 123-4567</span>
+                  <span>admin@odisai.net</span>
                 </div>
                 <div className="flex items-center space-x-3 text-sm text-slate-600">
                   <MapPin className="h-4 w-4 text-teal-600" />
-                  <span>San Francisco, CA</span>
+                  <span>Livermore, California</span>
                 </div>
               </div>
-            </div>
-
-            {/* Product Links */}
-            <div>
-              <h3 className="font-display mb-4 font-semibold text-slate-900">
-                Product
-              </h3>
-              <ul className="space-y-3">
-                <li>
-                  <Link
-                    href="/features"
-                    className="text-sm text-slate-600 transition-colors hover:text-teal-600"
-                  >
-                    Features
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/pricing"
-                    className="text-sm text-slate-600 transition-colors hover:text-teal-600"
-                  >
-                    Pricing
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/integrations"
-                    className="text-sm text-slate-600 transition-colors hover:text-teal-600"
-                  >
-                    Integrations
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/api"
-                    className="text-sm text-slate-600 transition-colors hover:text-teal-600"
-                  >
-                    API
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/security"
-                    className="text-sm text-slate-600 transition-colors hover:text-teal-600"
-                  >
-                    Security
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Company Links */}
-            <div>
-              <h3 className="font-display mb-4 font-semibold text-slate-900">
-                Company
-              </h3>
-              <ul className="space-y-3">
-                <li>
-                  <Link
-                    href="/about"
-                    className="text-sm text-slate-600 transition-colors hover:text-teal-600"
-                  >
-                    About Us
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/careers"
-                    className="text-sm text-slate-600 transition-colors hover:text-teal-600"
-                  >
-                    Careers
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/blog"
-                    className="text-sm text-slate-600 transition-colors hover:text-teal-600"
-                  >
-                    Blog
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/press"
-                    className="text-sm text-slate-600 transition-colors hover:text-teal-600"
-                  >
-                    Press
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/contact"
-                    className="text-sm text-slate-600 transition-colors hover:text-teal-600"
-                  >
-                    Contact
-                  </Link>
-                </li>
-              </ul>
             </div>
           </div>
         </div>
@@ -149,7 +47,7 @@ export default function Footer() {
           <div className="flex flex-col items-center justify-between space-y-4 md:flex-row md:space-y-0">
             {/* Copyright */}
             <div className="text-sm text-slate-500">
-              © 2025 OdisAI. All rights reserved.
+              © 2025 Odis AI. All rights reserved.
             </div>
 
             {/* Legal Links */}
@@ -177,25 +75,11 @@ export default function Footer() {
             {/* Social Links */}
             <div className="flex items-center space-x-4">
               <Link
-                href="https://twitter.com/odisai"
-                className="text-slate-400 transition-colors hover:text-teal-600"
-                aria-label="Twitter"
-              >
-                <Twitter className="h-5 w-5" />
-              </Link>
-              <Link
-                href="https://linkedin.com/company/odisai"
+                href="https://www.linkedin.com/company/odisai/"
                 className="text-slate-400 transition-colors hover:text-teal-600"
                 aria-label="LinkedIn"
               >
                 <Linkedin className="h-5 w-5" />
-              </Link>
-              <Link
-                href="https://github.com/odisai"
-                className="text-slate-400 transition-colors hover:text-teal-600"
-                aria-label="GitHub"
-              >
-                <Github className="h-5 w-5" />
               </Link>
             </div>
           </div>

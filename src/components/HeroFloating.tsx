@@ -263,7 +263,7 @@ export default function HeroFloating() {
                 iconPosition="right"
                 className="group w-full transition-all duration-300 hover:scale-105 hover:shadow-lg sm:w-auto"
               >
-                Join Waitlist - it's free
+                Join Waitlist - it&apos;s free
               </EnhancedButton>
             </div>
           </div>

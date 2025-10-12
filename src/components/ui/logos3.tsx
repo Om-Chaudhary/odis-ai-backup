@@ -4,6 +4,7 @@
 
 "use client";
 
+import Image from "next/image";
 import AutoScroll from "embla-carousel-auto-scroll";
 
 import {
@@ -100,9 +101,11 @@ const Logos3 = ({
                   className="flex min-w-[200px] basis-auto justify-center pl-0"
                 >
                   <div className="flex shrink-0 items-center justify-center px-8">
-                    <img
+                    <Image
                       src={logo.image}
                       alt={logo.description}
+                      width={120}
+                      height={48}
                       className={`${logo.className} opacity-60 grayscale filter transition-opacity hover:opacity-100`}
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;

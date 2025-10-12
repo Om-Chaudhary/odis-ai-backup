@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export default function Testimonials() {
   const testimonials = [
     {
@@ -42,13 +44,15 @@ export default function Testimonials() {
               key={index}
               className="bg-card border-border rounded-xl border p-6 shadow-sm transition-shadow duration-300 hover:shadow-md sm:p-8"
             >
-              <img
+              <Image
                 src={testimonial.image || "/placeholder.svg"}
                 alt={testimonial.name}
+                width={80}
+                height={80}
                 className="mx-auto mb-4 h-16 w-16 rounded-full object-cover sm:h-20 sm:w-20"
               />
               <p className="mb-4 font-serif text-sm leading-relaxed text-gray-700 sm:text-base">
-                "{testimonial.quote}"
+                &ldquo;{testimonial.quote}&rdquo;
               </p>
               <div className="font-serif text-sm font-semibold text-gray-800 sm:text-base">
                 {testimonial.name}
