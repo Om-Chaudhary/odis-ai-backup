@@ -13,9 +13,9 @@ const enhancedButtonVariants = cva(
         default:
           "bg-[#31aba3] text-white hover:bg-[#2a9a92] hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-[#31aba3]/30",
         secondary:
-          "bg-white text-[#31aba3] border-2 border-[#31aba3] hover:bg-[#31aba3] hover:text-white hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-[#31aba3]/20",
+          "bg-white text-[#31aba3] border border-[#31aba3]/60 hover:bg-[#31aba3] hover:text-white hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-[#31aba3]/20",
         outline:
-          "border-2 border-[#31aba3] text-[#31aba3] hover:bg-[#31aba3] hover:text-white hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-[#31aba3]/20",
+          "border border-[#31aba3]/60 text-[#31aba3] hover:bg-[#31aba3] hover:text-white hover:scale-105 shadow-lg hover:shadow-2xl hover:shadow-[#31aba3]/20",
         ghost: "text-[#31aba3] hover:bg-[#31aba3]/10 hover:scale-105",
         link: "text-[#31aba3] underline-offset-4 hover:underline hover:scale-105",
         gradient:
