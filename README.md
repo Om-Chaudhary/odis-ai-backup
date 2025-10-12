@@ -1,6 +1,23 @@
-# Odis AI Web
+# ODIS AI Web
 
-This is a [T3 Stack](https://create.t3.gg/) project with Supabase authentication and database integration using Drizzle ORM.
+A Next.js web application for veterinary professionals, providing AI-powered case management, transcription, and SOAP note generation. This app is part of the ODIS AI ecosystem and consumes the centralized backend managed in `odis-ai-backend`.
+
+Built with the [T3 Stack](https://create.t3.gg/) and Supabase authentication with Drizzle ORM.
+
+## 🏗️ Architecture Overview
+
+- **Frontend**: Next.js 15 with App Router and React Server Components
+- **Backend**: Centralized Supabase backend (`odis-ai-backend`)
+- **Environment Management**: Multi-environment support (dev/staging/prod)
+- **Authentication**: Supabase Auth with server-side session management
+- **Database**: PostgreSQL via Supabase with Drizzle ORM
+- **Styling**: Tailwind CSS with shadcn/ui components
+- **Type Safety**: End-to-end TypeScript
+
+## 🔗 Related Repositories
+
+- **`odis-ai-backend`** - Centralized backend with database migrations, Edge Functions, and CI/CD
+- **`odis-ai-ios`** - SwiftUI iOS application (shares same backend)
 
 ## Features
 
@@ -10,6 +27,7 @@ This is a [T3 Stack](https://create.t3.gg/) project with Supabase authentication
 - ⚡ **Next.js 15** - App Router with server components and actions
 - 🔒 **Type Safety** - End-to-end TypeScript with tRPC
 - 🚀 **Performance** - Optimized with Supabase connection pooling
+- 📱 **Responsive** - Mobile-first design that works across all devices
 
 ## Tech Stack
 
@@ -30,48 +48,227 @@ This is a [T3 Stack](https://create.t3.gg/) project with Supabase authentication
 
 ### Environment Setup
 
-1. Copy the environment variables template:
+1. **Clone the repository**
+   ```bash
+   git clone <repo-url>
+   cd odis-ai-web
+   ```
+
+2. **Copy environment variables template**
    ```bash
    cp .env.example .env.local
    ```
 
-2. Update `.env.local` with your Supabase credentials:
+3. **Configure environment variables**
+   
+   Update `.env.local` with your environment-specific Supabase credentials:
+   
+   **For Development:**
    ```env
-   # Database
-   DATABASE_URL="postgresql://postgres.cfolejjpkgytbkfsavjv:LHCX4S11Mb6t03TxZseVLOwFG1Mh5774n3px@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+   # Database (Development)
+   DATABASE_URL="postgresql://postgres.your-dev-ref:password@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
 
-   # Supabase
-   NEXT_PUBLIC_SUPABASE_URL="https://cfolejjpkgytbkfsavjv.supabase.co"
-   NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key-here"
-   SUPABASE_SERVICE_ROLE_KEY="your-service-role-key-here"
+   # Supabase (Development)
+   NEXT_PUBLIC_SUPABASE_URL="https://your-dev-ref.supabase.co"
+   NEXT_PUBLIC_SUPABASE_ANON_KEY="your-dev-anon-key"
+   SUPABASE_SERVICE_ROLE_KEY="your-dev-service-role-key"
 
    # PostHog (optional)
    NEXT_PUBLIC_POSTHOG_KEY="your-posthog-key-here"
    NEXT_PUBLIC_POSTHOG_HOST="https://app.posthog.com"
+   
+   # Environment identifier
+   NEXT_PUBLIC_ENVIRONMENT="development"
+   ```
+
+4. **Additional environment files** (for different deployment environments)
+   
+   Create `.env.staging` for staging:
+   ```env
+   DATABASE_URL="postgresql://postgres.your-staging-ref:password@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+   NEXT_PUBLIC_SUPABASE_URL="https://your-staging-ref.supabase.co"
+   NEXT_PUBLIC_SUPABASE_ANON_KEY="your-staging-anon-key"
+   SUPABASE_SERVICE_ROLE_KEY="your-staging-service-role-key"
+   NEXT_PUBLIC_ENVIRONMENT="staging"
+   ```
+   
+   Create `.env.production` for production:
+   ```env
+   DATABASE_URL="postgresql://postgres.your-prod-ref:password@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+   NEXT_PUBLIC_SUPABASE_URL="https://your-prod-ref.supabase.co"
+   NEXT_PUBLIC_SUPABASE_ANON_KEY="your-prod-anon-key"
+   SUPABASE_SERVICE_ROLE_KEY="your-prod-service-role-key"
+   NEXT_PUBLIC_ENVIRONMENT="production"
    ```
 
 ### Installation
 
-1. Install dependencies:
+1. **Install dependencies**
    ```bash
    pnpm install
    ```
 
-2. Set up the database schema:
+2. **Set up the database schema** (sync with backend)
    ```bash
    pnpm db:push
    ```
 
-3. Start the development server:
+3. **Start the development server**
    ```bash
    pnpm dev
    ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+4. **Open in browser**
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+5. **Verify backend connection**
+   - Check that you can sign up/login
+   - Verify database operations work
+   - Test against development backend
+
+## 🔧 Development Workflow
+
+### Local Development
+
+1. **Backend Setup**: Ensure `odis-ai-backend` is running locally
+   ```bash
+   cd ../odis-ai-backend
+   supabase start
+   ```
+
+2. **Web Development**: Work with development environment
+   ```bash
+   cd ../odis-ai-web
+   pnpm dev
+   # Runs on http://localhost:3000
+   # Points to development Supabase project
+   ```
+
+### Environment Configuration
+
+The app automatically uses different environments based on configuration:
+
+| Environment | Database | Purpose | Command |
+|-------------|----------|---------|---------|
+| Development | `odisai-dev` | Local development, testing | `pnpm dev` |
+| Staging | `odisai-staging` | Pre-production testing | `pnpm build && pnpm start` with `.env.staging` |
+| Production | `odisai-prod` | Live application | Deploy with `.env.production` |
+
+### Backend Synchronization
+
+When backend changes are deployed, you may need to update the web app:
+
+#### 1. Database Schema Changes
+```bash
+# Check for new/changed data models
+cd ../odis-ai-backend
+git pull origin dev
+
+# Review migration files
+ls supabase/migrations/
+
+# Update web app if needed
+cd ../odis-ai-web
+pnpm db:pull  # Pull latest schema
+pnpm db:generate  # Generate new types
+pnpm db:push  # Push to local if needed
+```
+
+#### 2. Edge Function Changes  
+```bash
+# Check for API endpoint changes
+cd ../odis-ai-backend/supabase/functions
+
+# Update web app service calls if needed
+cd ../odis-ai-web
+# - Update API calls
+# - Update request/response types
+# - Test integration
+```
+
+#### 3. Authentication Changes
+```bash
+# Review auth-related changes
+# Update auth flows if needed
+# Test authentication end-to-end
+```
+
+## 🚀 Daily Development Process
+
+### Development Workflow
+
+1. **Pull latest backend changes**
+   ```bash
+   cd ../odis-ai-backend
+   git pull origin dev
+   ```
+
+2. **Check for breaking changes**
+   - Review commit messages for API changes
+   - Check migration files for schema changes
+   - Update web app code if needed
+
+3. **Web development**
+   ```bash
+   cd ../odis-ai-web
+   git pull origin dev
+   pnpm dev
+   # Make your changes
+   # Test locally against dev backend
+   ```
+
+4. **Testing**
+   - Test against development environment
+   - Verify responsive design
+   - Test authentication flows
+
+5. **Commit and push**
+   ```bash
+   git add .
+   git commit -m "feat: add new functionality"
+   git push origin dev
+   ```
+
+### Release Workflow
+
+#### Development → Staging
+1. **Backend staging deployment**
+   ```bash
+   cd ../odis-ai-backend
+   git checkout staging
+   git merge dev
+   git push origin staging  # Auto-deploys to staging
+   ```
+
+2. **Web app staging testing**
+   ```bash
+   cd ../odis-ai-web
+   # Update environment to point to staging
+   cp .env.staging .env.local
+   pnpm build
+   pnpm start
+   # Test against staging backend
+   ```
+
+#### Staging → Production
+1. **Backend production deployment**
+   ```bash
+   cd ../odis-ai-backend
+   git checkout main
+   git merge staging
+   git push origin main  # Requires approval, deploys to production
+   ```
+
+2. **Web app production deployment**
+   ```bash
+   cd ../odis-ai-web
+   # Deploy to production (Vercel, Netlify, etc.)
+   # Use .env.production variables
+   ```
 
 ## Database Schema
 
-The project includes a comprehensive veterinary practice management system with the following database tables:
+The project uses the centralized database schema managed by `odis-ai-backend`:
 
 - **users** - User accounts linked to Supabase auth with veterinary roles
 - **cases** - Veterinary cases with status, type, and visibility settings
@@ -85,21 +282,26 @@ The project includes a comprehensive veterinary practice management system with 
 - **contact_submissions** - Contact form submissions from potential customers
 - **temp_soap_templates** - Temporary SOAP note templates with smart defaults
 
-### Running Migrations
+### Database Operations
 
 ```bash
-# Generate migration files
+# Pull latest schema from backend
+pnpm db:pull
+
+# Generate TypeScript types from schema
 pnpm db:generate
 
-# Apply migrations
-pnpm db:migrate
-
-# Push schema changes directly (development)
+# Push local schema changes (development only)
 pnpm db:push
 
-# Open Drizzle Studio
+# Run database migrations
+pnpm db:migrate
+
+# Open Drizzle Studio for database exploration
 pnpm db:studio
 ```
+
+**Note**: Schema migrations are managed centrally in `odis-ai-backend`. Local schema changes should be coordinated with backend team.
 
 ## Authentication Flow
 
