@@ -6,6 +6,8 @@ import "./src/env.js";
 
 /** @type {import("next").NextConfig} */
 const config = {
+  // Specify pnpm as the package manager
+  packageManager: "pnpm",
   async rewrites() {
     return [
       {
