@@ -50,7 +50,7 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="bg-white sm:max-w-md">
         {!isSubmitted ? (
           <>
             <DialogHeader>

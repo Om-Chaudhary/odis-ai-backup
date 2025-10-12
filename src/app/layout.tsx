@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import { Lora } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import "~/styles/globals.css";
+import { PostHogProvider } from "~/components/PostHogProvider";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -32,15 +33,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className="light">
       <body
         className={`font-sans ${outfit.variable} ${inter.variable} ${lora.variable} ${geistMono.variable}`}
       >
-        {children}
+        <PostHogProvider>{children}</PostHogProvider>
       </body>
     </html>
   );
