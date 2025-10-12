@@ -4,6 +4,8 @@
 
 "use client";
 
+import { useRef } from "react";
+import { usePostHog } from "posthog-js/react";
 import Image from "next/image";
 import AutoScroll from "embla-carousel-auto-scroll";
 
@@ -12,6 +14,8 @@ import {
   CarouselContent,
   CarouselItem,
 } from "~/components/ui/carousel";
+import { useSectionVisibility } from "~/hooks/useSectionVisibility";
+import { useDeviceDetection } from "~/hooks/useDeviceDetection";
 
 interface Logo {
   id: string;
@@ -67,11 +71,41 @@ const Logos3 = ({
     },
   ],
 }: Logos3Props) => {
+  const posthog = usePostHog();
+  const deviceInfo = useDeviceDetection();
+  const sectionRef = useSectionVisibility("trust_logos");
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Duplicate logos for seamless loop
   const duplicatedLogos = [...logos, ...logos, ...logos];
 
+  const handleLogoHover = (logo: Logo, index: number) => {
+    // Debounce hover events
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+
+    hoverTimeoutRef.current = setTimeout(() => {
+      posthog.capture("trust_logo_hovered", {
+        logo_name: logo.description,
+        logo_index: index,
+        device_type: deviceInfo.device_type,
+      });
+    }, 200);
+  };
+
+  const handleLogoLeave = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+  };
+
   return (
-    <section className="overflow-hidden bg-gradient-to-b from-emerald-50/20 via-emerald-50/30 to-emerald-50/20 py-20 sm:py-24 md:py-28">
+    <section
+      ref={sectionRef}
+      className="overflow-hidden bg-gradient-to-b from-emerald-50/20 via-emerald-50/30 to-emerald-50/20 py-20 sm:py-24 md:py-28"
+    >
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <h2 className="font-display mb-16 text-center text-2xl font-bold text-gray-600 sm:text-3xl md:text-4xl lg:text-5xl">
           {heading}
@@ -100,7 +134,11 @@ const Logos3 = ({
                   key={`${logo.id}-${index}`}
                   className="flex min-w-[200px] basis-auto justify-center pl-0"
                 >
-                  <div className="flex shrink-0 items-center justify-center px-8">
+                  <div
+                    className="flex shrink-0 items-center justify-center px-8"
+                    onMouseEnter={() => handleLogoHover(logo, index)}
+                    onMouseLeave={handleLogoLeave}
+                  >
                     <Image
                       src={logo.image}
                       alt={logo.description}

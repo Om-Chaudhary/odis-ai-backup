@@ -1,6 +1,42 @@
+"use client";
+
+import { useRef } from "react";
+import { usePostHog } from "posthog-js/react";
 import Image from "next/image";
+import { useSectionVisibility } from "~/hooks/useSectionVisibility";
+import { useDeviceDetection } from "~/hooks/useDeviceDetection";
 
 export default function Testimonials() {
+  const posthog = usePostHog();
+  const deviceInfo = useDeviceDetection();
+  const sectionRef = useSectionVisibility("testimonials");
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleTestimonialHover = (
+    testimonial: { name: string; title: string },
+    index: number,
+  ) => {
+    // Debounce hover events
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+
+    hoverTimeoutRef.current = setTimeout(() => {
+      posthog.capture("testimonial_card_hovered", {
+        author: testimonial.name,
+        role: testimonial.title,
+        testimonial_index: index,
+        device_type: deviceInfo.device_type,
+      });
+    }, 200);
+  };
+
+  const handleTestimonialLeave = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+  };
   const testimonials = [
     {
       name: "Dr. Deepti Pal",
@@ -33,7 +69,10 @@ export default function Testimonials() {
   ];
 
   return (
-    <section className="bg-gradient-to-b from-emerald-50/20 via-emerald-50/30 to-emerald-50/20 py-20 sm:py-24 md:py-28 lg:py-32">
+    <section
+      ref={sectionRef}
+      className="bg-gradient-to-b from-emerald-50/20 via-emerald-50/30 to-emerald-50/20 py-20 sm:py-24 md:py-28 lg:py-32"
+    >
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <h2 className="font-display mb-16 text-center text-3xl font-bold text-gray-600 sm:mb-18 sm:text-4xl md:mb-20 md:text-5xl lg:text-6xl">
           Loved by Veterinarians
@@ -42,6 +81,8 @@ export default function Testimonials() {
           {testimonials.map((testimonial, index) => (
             <div
               key={index}
+              onMouseEnter={() => handleTestimonialHover(testimonial, index)}
+              onMouseLeave={handleTestimonialLeave}
               className="bg-card border-border rounded-xl border p-6 shadow-sm transition-shadow duration-300 hover:shadow-md sm:p-8"
             >
               <Image

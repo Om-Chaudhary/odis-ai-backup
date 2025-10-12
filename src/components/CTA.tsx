@@ -1,22 +1,56 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { usePostHog } from "posthog-js/react";
 import { Spinner } from "~/components/ui/spinner";
 import { FloatingElements } from "~/components/ui/floating-elements";
 import { TextReveal } from "~/components/ui/text-reveal";
 import { ParticleBackground } from "~/components/ui/particle-background";
 import WaitlistModal from "./WaitlistModal";
+import { useDeviceDetection } from "~/hooks/useDeviceDetection";
 
 export default function CTA() {
+  const posthog = usePostHog();
+  const deviceInfo = useDeviceDetection();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleJoinWaitlist = async () => {
+    posthog.capture("waitlist_cta_clicked", {
+      location: "cta_section",
+      button_text: "Explore Our Solutions",
+      device_type: deviceInfo.device_type,
+      viewport_width: deviceInfo.viewport_width,
+    });
+
     setIsLoading(true);
     // Simulate loading state
     await new Promise((resolve) => setTimeout(resolve, 1500));
     setIsLoading(false);
     setIsModalOpen(true);
+  };
+
+  const handleButtonHover = () => {
+    // Debounce hover events
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+
+    hoverTimeoutRef.current = setTimeout(() => {
+      posthog.capture("cta_button_hover", {
+        location: "cta_section",
+        button_text: "Explore Our Solutions",
+        device_type: deviceInfo.device_type,
+      });
+    }, 200);
+  };
+
+  const handleButtonLeave = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
   };
 
   return (
@@ -77,6 +111,8 @@ export default function CTA() {
               <div className="mb-10">
                 <button
                   onClick={handleJoinWaitlist}
+                  onMouseEnter={handleButtonHover}
+                  onMouseLeave={handleButtonLeave}
                   disabled={isLoading}
                   className="group relative inline-flex items-center justify-center overflow-hidden rounded-lg bg-white px-8 py-4 text-lg font-semibold text-[#31aba3] transition-all duration-300 hover:scale-105 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-70"
                 >
@@ -115,6 +151,7 @@ export default function CTA() {
       <WaitlistModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        triggerLocation="cta_section"
       />
     </>
   );

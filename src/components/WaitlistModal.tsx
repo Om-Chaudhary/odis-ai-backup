@@ -2,7 +2,8 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { usePostHog } from "posthog-js/react";
 import {
   Dialog,
   DialogContent,
@@ -20,13 +21,21 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { CheckCircle2 } from "lucide-react";
+import { useDeviceDetection } from "~/hooks/useDeviceDetection";
 
 interface WaitlistModalProps {
   isOpen: boolean;
   onClose: () => void;
+  triggerLocation?: "navigation" | "hero" | "cta_section";
 }
 
-export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
+export default function WaitlistModal({
+  isOpen,
+  onClose,
+  triggerLocation = "navigation",
+}: WaitlistModalProps) {
+  const posthog = usePostHog();
+  const deviceInfo = useDeviceDetection();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -35,17 +44,112 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
     role: "",
   });
 
+  // Tracking refs
+  const modalOpenTime = useRef<number | null>(null);
+  const formStartTime = useRef<number | null>(null);
+  const fieldEditCounts = useRef<Record<string, number>>({});
+  const hasFormStarted = useRef(false);
+
+  // Track modal open/close
+  useEffect(() => {
+    if (isOpen && !modalOpenTime.current) {
+      modalOpenTime.current = Date.now();
+      posthog.capture("waitlist_modal_opened", {
+        trigger_location: triggerLocation,
+        device_type: deviceInfo.device_type,
+        viewport_width: deviceInfo.viewport_width,
+      });
+    }
+  }, [isOpen, triggerLocation, posthog, deviceInfo]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const formCompletionTime = formStartTime.current
+      ? Date.now() - formStartTime.current
+      : 0;
+
+    posthog.capture("waitlist_form_submitted", {
+      user_role: formData.role,
+      has_practice_name: !!formData.practiceName,
+      form_completion_time: formCompletionTime,
+      device_type: deviceInfo.device_type,
+    });
+
     // Here you would typically send the data to your backend
     console.log("Form submitted:", formData);
     setIsSubmitted(true);
+
+    posthog.capture("waitlist_signup_success", {
+      user_role: formData.role,
+      practice_name: formData.practiceName,
+      email_domain: formData.email.split("@")[1],
+      device_type: deviceInfo.device_type,
+    });
   };
 
   const handleClose = () => {
+    const timeSpentInModal = modalOpenTime.current
+      ? Date.now() - modalOpenTime.current
+      : 0;
+
+    posthog.capture("waitlist_modal_closed", {
+      closed_without_submit: !isSubmitted,
+      time_spent_in_modal: timeSpentInModal,
+      device_type: deviceInfo.device_type,
+    });
+
     setIsSubmitted(false);
     setFormData({ name: "", email: "", practiceName: "", role: "" });
+    modalOpenTime.current = null;
+    formStartTime.current = null;
+    fieldEditCounts.current = {};
+    hasFormStarted.current = false;
     onClose();
+  };
+
+  const handleFieldFocus = (fieldName: string) => {
+    if (!hasFormStarted.current) {
+      hasFormStarted.current = true;
+      formStartTime.current = Date.now();
+      posthog.capture("waitlist_form_started", {
+        form_type: "waitlist_signup",
+        device_type: deviceInfo.device_type,
+      });
+    }
+
+    posthog.capture("form_field_focused", {
+      field_name: fieldName,
+      form_type: "waitlist_signup",
+      device_type: deviceInfo.device_type,
+    });
+  };
+
+  const handleFieldBlur = (fieldName: string, isRequired: boolean) => {
+    const fieldValue = formData[fieldName as keyof typeof formData];
+    if (!fieldValue && isRequired) {
+      posthog.capture("form_field_blur_empty", {
+        field_name: fieldName,
+        is_required: isRequired,
+        device_type: deviceInfo.device_type,
+      });
+    }
+  };
+
+  const handleFieldChange = (fieldName: string, value: string) => {
+    // Track field edits
+    fieldEditCounts.current[fieldName] ??= 0;
+    fieldEditCounts.current[fieldName]++;
+
+    if (fieldEditCounts.current[fieldName] > 1) {
+      posthog.capture("form_field_edited", {
+        field_name: fieldName,
+        edit_count: fieldEditCounts.current[fieldName],
+        device_type: deviceInfo.device_type,
+      });
+    }
+
+    setFormData({ ...formData, [fieldName]: value });
   };
 
   return (
@@ -67,9 +171,9 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
                   id="name"
                   required
                   value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
+                  onChange={(e) => handleFieldChange("name", e.target.value)}
+                  onFocus={() => handleFieldFocus("name")}
+                  onBlur={() => handleFieldBlur("name", true)}
                   placeholder="Your full name"
                   className="placeholder:text-gray-500"
                 />
@@ -84,9 +188,9 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
                   type="email"
                   required
                   value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
+                  onChange={(e) => handleFieldChange("email", e.target.value)}
+                  onFocus={() => handleFieldFocus("email")}
+                  onBlur={() => handleFieldBlur("email", true)}
                   placeholder="your@email.com"
                   className="placeholder:text-gray-500"
                 />
@@ -100,8 +204,10 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
                   id="practiceName"
                   value={formData.practiceName}
                   onChange={(e) =>
-                    setFormData({ ...formData, practiceName: e.target.value })
+                    handleFieldChange("practiceName", e.target.value)
                   }
+                  onFocus={() => handleFieldFocus("practiceName")}
+                  onBlur={() => handleFieldBlur("practiceName", false)}
                   placeholder="Your practice name"
                   className="placeholder:text-gray-500"
                 />
@@ -113,9 +219,12 @@ export default function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
                 </Label>
                 <Select
                   value={formData.role}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, role: value })
-                  }
+                  onValueChange={(value) => handleFieldChange("role", value)}
+                  onOpenChange={(open) => {
+                    if (open) {
+                      handleFieldFocus("role");
+                    }
+                  }}
                 >
                   <SelectTrigger
                     id="role"

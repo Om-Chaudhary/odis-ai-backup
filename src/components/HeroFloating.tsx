@@ -1,15 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { usePostHog } from "posthog-js/react";
 import { EnhancedButton } from "~/components/ui/enhanced-button";
 import WaitlistModal from "./WaitlistModal";
 import { ArrowRight } from "lucide-react";
 import { LightRays } from "~/components/ui/light-rays";
+import { useDeviceDetection } from "~/hooks/useDeviceDetection";
 
 export default function HeroFloating() {
+  const posthog = usePostHog();
+  const deviceInfo = useDeviceDetection();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [showUnderline, setShowUnderline] = useState(false);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Trigger animations after component mounts
@@ -24,6 +29,38 @@ export default function HeroFloating() {
       return () => clearTimeout(underlineTimer);
     }
   }, [isVisible]);
+
+  const handleButtonClick = () => {
+    posthog.capture("waitlist_cta_clicked", {
+      location: "hero",
+      button_text: "Join Waitlist - it's free",
+      device_type: deviceInfo.device_type,
+      viewport_width: deviceInfo.viewport_width,
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleButtonHover = () => {
+    // Debounce hover events
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+
+    hoverTimeoutRef.current = setTimeout(() => {
+      posthog.capture("cta_button_hover", {
+        location: "hero",
+        button_text: "Join Waitlist - it's free",
+        device_type: deviceInfo.device_type,
+      });
+    }, 200);
+  };
+
+  const handleButtonLeave = () => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
+    }
+  };
 
   return (
     <>
@@ -254,7 +291,9 @@ export default function HeroFloating() {
               style={{ transitionDelay: "0.4s" }}
             >
               <EnhancedButton
-                onClick={() => setIsModalOpen(true)}
+                onClick={handleButtonClick}
+                onMouseEnter={handleButtonHover}
+                onMouseLeave={handleButtonLeave}
                 variant="gradient"
                 size="lg"
                 icon={
@@ -273,6 +312,7 @@ export default function HeroFloating() {
       <WaitlistModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        triggerLocation="hero"
       />
 
       <style jsx>{`
