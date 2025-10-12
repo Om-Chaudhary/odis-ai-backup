@@ -6,8 +6,10 @@ import "./src/env.js";
 
 /** @type {import("next").NextConfig} */
 const config = {
-  // Specify pnpm as the package manager
-  packageManager: "pnpm",
+  // Specify the correct workspace root to avoid lockfile detection issues
+  turbopack: {
+    root: "/Users/s0381806/Development/odis-ai-web",
+  },
   async rewrites() {
     return [
       {
