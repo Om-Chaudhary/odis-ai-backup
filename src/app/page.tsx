@@ -11,6 +11,7 @@ import Footer from "~/components/Footer";
 import { useScrollTracking } from "~/hooks/useScrollTracking";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
 import { useDeviceDetection } from "~/hooks/useDeviceDetection";
+import type { Metadata } from "next";
 
 export default function Home() {
   const posthog = usePostHog();
@@ -33,24 +34,32 @@ export default function Home() {
   }, [posthog, deviceInfo]);
 
   return (
-    <main className="relative">
-      <div className="dotted-background" />
-      <Navigation />
-      <div ref={heroRef}>
-        <Hero />
-      </div>
-      <div className="mt-8 sm:mt-12 md:mt-16">
-        <TrustLogos />
-      </div>
-      <div className="mt-8 sm:mt-12 md:mt-16">
-        <Testimonials />
-      </div>
-      <div className="mt-8 sm:mt-12 md:mt-16">
-        <CTA />
-      </div>
-      <div className="mt-8 sm:mt-12 md:mt-16">
-        <Footer />
-      </div>
-    </main>
+    <>
+      <main className="relative">
+        <div className="dotted-background" />
+        <Navigation />
+        <div ref={heroRef}>
+          <Hero />
+        </div>
+        <section
+          className="mt-8 sm:mt-12 md:mt-16"
+          aria-label="Trusted by veterinary practices"
+        >
+          <TrustLogos />
+        </section>
+        <section
+          className="mt-8 sm:mt-12 md:mt-16"
+          aria-label="Customer testimonials"
+        >
+          <Testimonials />
+        </section>
+        <section className="mt-8 sm:mt-12 md:mt-16" aria-label="Call to action">
+          <CTA />
+        </section>
+        <footer className="mt-8 sm:mt-12 md:mt-16">
+          <Footer />
+        </footer>
+      </main>
+    </>
   );
 }
