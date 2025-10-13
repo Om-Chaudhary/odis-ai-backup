@@ -37,9 +37,17 @@ NEXT_PUBLIC_SUPABASE_URL="https://[PROJECT_REF].supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="[ANON_KEY]"
 SUPABASE_SERVICE_ROLE_KEY="[SERVICE_ROLE_KEY]"
 
+# Sanity CMS
+NEXT_PUBLIC_SANITY_PROJECT_ID="[SANITY_PROJECT_ID]"
+NEXT_PUBLIC_SANITY_DATASET="production"
+NEXT_PUBLIC_SANITY_API_VERSION="2025-10-13"
+
 # PostHog (optional)
 NEXT_PUBLIC_POSTHOG_KEY="[POSTHOG_KEY]"
 NEXT_PUBLIC_POSTHOG_HOST="https://us.i.posthog.com"
+
+# Site Configuration
+NEXT_PUBLIC_SITE_URL="https://odisai.net"
 
 # Environment
 NODE_ENV="development|production"
@@ -125,12 +133,46 @@ git push origin main  # Requires manual approval
 
 2. **Configure environment:**
    ```bash
-   # Copy the appropriate environment file
-   cp .env.development .env.local
-   # Edit .env.local with your actual values
+   # Create .env.local file with your environment variables
+   # Copy the template below and fill in your actual values
+   ```
+   
+   **Required Environment Variables:**
+   ```bash
+   # Database
+   DATABASE_URL="postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+   
+   # Supabase
+   NEXT_PUBLIC_SUPABASE_URL="https://[PROJECT_REF].supabase.co"
+   NEXT_PUBLIC_SUPABASE_ANON_KEY="[ANON_KEY]"
+   SUPABASE_SERVICE_ROLE_KEY="[SERVICE_ROLE_KEY]"
+   
+   # Sanity CMS
+   NEXT_PUBLIC_SANITY_PROJECT_ID="[SANITY_PROJECT_ID]"
+   NEXT_PUBLIC_SANITY_DATASET="production"
+   NEXT_PUBLIC_SANITY_API_VERSION="2025-10-13"
+   
+   # PostHog (optional)
+   NEXT_PUBLIC_POSTHOG_KEY="[POSTHOG_KEY]"
+   NEXT_PUBLIC_POSTHOG_HOST="https://us.i.posthog.com"
+   
+   # Site Configuration
+   NEXT_PUBLIC_SITE_URL="https://odisai.net"
+   
+   # Environment
+   NODE_ENV="development"
    ```
 
-3. **Start development server:**
+3. **Set up Sanity CMS:**
+   ```bash
+   # If you haven't already, create a Sanity project at https://sanity.io
+   # Get your project ID and dataset name from your Sanity dashboard
+   # Add them to your .env.local file:
+   # NEXT_PUBLIC_SANITY_PROJECT_ID="your-project-id"
+   # NEXT_PUBLIC_SANITY_DATASET="production"
+   ```
+
+4. **Start development server:**
    ```bash
    pnpm dev
    ```
