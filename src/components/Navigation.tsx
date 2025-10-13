@@ -6,6 +6,7 @@ import { EnhancedButton } from "~/components/ui/enhanced-button";
 import { Logo } from "~/components/ui/Logo";
 import WaitlistModal from "./WaitlistModal";
 import { useDeviceDetection } from "~/hooks/useDeviceDetection";
+import Link from "next/link";
 
 export default function Navigation() {
   const posthog = usePostHog();
@@ -78,6 +79,16 @@ export default function Navigation() {
               >
                 OdisAI
               </span>
+            </div>
+            <div className="hidden items-center space-x-8 md:flex">
+              <Link
+                href="/blog"
+                className={`text-sm font-medium transition-colors duration-300 hover:text-teal-600 ${
+                  isScrolled ? "text-gray-700" : "text-gray-800"
+                }`}
+              >
+                Blog
+              </Link>
             </div>
             <EnhancedButton
               onClick={handleButtonClick}
