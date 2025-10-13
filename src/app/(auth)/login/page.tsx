@@ -51,7 +51,7 @@ export default function LoginPage() {
                 autoComplete="email"
                 required
                 placeholder="veterinarian@clinic.com"
-                className="border-slate-200 bg-white/50 backdrop-blur-sm transition-all duration-200 focus:border-teal-500 focus:ring-teal-500/20"
+                className="border-slate-200 bg-white/90 text-slate-900 placeholder:text-slate-500 backdrop-blur-sm transition-all duration-200 focus:border-teal-500 focus:ring-teal-500/20"
               />
             </div>
             <div className="space-y-2">
@@ -68,7 +68,7 @@ export default function LoginPage() {
                 autoComplete="current-password"
                 required
                 placeholder="Your secure password"
-                className="border-slate-200 bg-white/50 backdrop-blur-sm transition-all duration-200 focus:border-teal-500 focus:ring-teal-500/20"
+                className="border-slate-200 bg-white/90 text-slate-900 placeholder:text-slate-500 backdrop-blur-sm transition-all duration-200 focus:border-teal-500 focus:ring-teal-500/20"
               />
             </div>
             <Button
