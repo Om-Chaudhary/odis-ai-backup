@@ -98,73 +98,70 @@ function PostCard({ post }: { post: Post }) {
     : `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face&auto=format&q=80`;
 
   return (
-    <Card className="group overflow-hidden rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:border-teal-200/80 hover:shadow-2xl hover:shadow-teal-500/20">
-      <div className="aspect-video overflow-hidden">
-        <Image
-          src={imageUrl}
-          alt={post.title}
-          width={400}
-          height={200}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-        />
-        {/* Gradient overlay on hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-teal-500/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-      </div>
-      <CardHeader className="space-y-4">
-        <div className="flex items-center space-x-3">
-          <Avatar className="h-10 w-10 ring-2 ring-teal-100 transition-all duration-300 group-hover:ring-teal-200">
-            <AvatarImage
-              src={authorImageUrl}
-              alt={post.author?.name ?? "Author"}
-            />
-            <AvatarFallback className="bg-teal-100 font-semibold text-teal-700">
-              {post.author?.name?.charAt(0) ?? "?"}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <span className="text-sm font-medium text-slate-700">
-              {post.author?.name ?? "Unknown Author"}
-            </span>
-            <time className="block text-xs text-slate-500">
-              {format(new Date(post.publishedAt), "MMM d, yyyy")}
-            </time>
-          </div>
+    <Link href={`/blog/${post.slug.current}`} className="block">
+      <Card className="group cursor-pointer overflow-hidden rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:border-teal-200/80 hover:shadow-2xl hover:shadow-teal-500/20">
+        <div className="relative aspect-video overflow-hidden">
+          <Image
+            src={imageUrl}
+            alt={post.title}
+            width={400}
+            height={200}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+          {/* Gradient overlay on hover */}
+          <div className="absolute inset-0 bg-gradient-to-t from-teal-500/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         </div>
-
-        <CardTitle className="line-clamp-2 text-lg font-bold text-slate-900 transition-colors duration-300 group-hover:text-teal-700">
-          <Link
-            href={`/blog/${post.slug.current}`}
-            className="transition-colors hover:text-teal-600"
-          >
-            {post.title}
-          </Link>
-        </CardTitle>
-
-        <CardDescription className="line-clamp-3 leading-relaxed text-slate-600">
-          {(post.body?.[0] as { children?: Array<{ text?: string }> })
-            ?.children?.[0]?.text ?? "No description available"}
-        </CardDescription>
-
-        <div className="flex items-center justify-end pt-2">
-          <div className="flex items-center text-teal-600 opacity-0 transition-all duration-300 group-hover:opacity-100">
-            <span className="text-sm font-medium">Read more</span>
-            <svg
-              className="ml-1 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
+        <CardHeader className="space-y-4">
+          <div className="flex items-center space-x-3">
+            <Avatar className="h-10 w-10 ring-2 ring-teal-100 transition-all duration-300 group-hover:ring-teal-200">
+              <AvatarImage
+                src={authorImageUrl}
+                alt={post.author?.name ?? "Author"}
               />
-            </svg>
+              <AvatarFallback className="bg-teal-100 font-semibold text-teal-700">
+                {post.author?.name?.charAt(0) ?? "?"}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <span className="text-sm font-medium text-slate-700">
+                {post.author?.name ?? "Unknown Author"}
+              </span>
+              <time className="block text-xs text-slate-500">
+                {format(new Date(post.publishedAt), "MMM d, yyyy")}
+              </time>
+            </div>
           </div>
-        </div>
-      </CardHeader>
-    </Card>
+
+          <CardTitle className="line-clamp-2 text-lg font-bold text-slate-900 transition-colors duration-300 group-hover:text-teal-700">
+            {post.title}
+          </CardTitle>
+
+          <CardDescription className="line-clamp-3 leading-relaxed text-slate-600">
+            {(post.body?.[0] as { children?: Array<{ text?: string }> })
+              ?.children?.[0]?.text ?? "No description available"}
+          </CardDescription>
+
+          <div className="flex items-center justify-end pt-2">
+            <div className="flex items-center text-teal-600 opacity-0 transition-all duration-300 group-hover:opacity-100">
+              <span className="text-sm font-medium">Read more</span>
+              <svg
+                className="ml-1 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+    </Link>
   );
 }
 
@@ -208,14 +205,6 @@ export default function BlogPage() {
 
         <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6">
           <div className="relative space-y-8 text-center">
-            {/* Floating badge with announcement */}
-            <div className="animate-fade-in-up inline-flex items-center gap-2 rounded-full border border-teal-200/60 bg-teal-100/30 px-4 py-2 shadow-sm backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-md sm:px-5 sm:py-2.5">
-              <div className="h-2 w-2 flex-shrink-0 animate-pulse rounded-full bg-[#31aba3]" />
-              <span className="font-serif text-xs leading-tight font-medium text-slate-600 sm:text-sm">
-                📚 Latest insights and updates
-              </span>
-            </div>
-
             {/* Main headline with enhanced animations */}
             <h1 className="font-display animate-fade-in-up space-y-2 px-2 text-4xl leading-tight font-bold transition-all duration-1500 ease-out sm:px-0 sm:text-5xl md:text-6xl lg:text-7xl">
               <span
