@@ -33,7 +33,7 @@ export default async function DashboardPage() {
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="mt-2 text-gray-600">
-            Welcome back! Here's your account overview.
+            Welcome back! Here&apos;s your account overview.
           </p>
         </header>
 
@@ -66,7 +66,7 @@ export default async function DashboardPage() {
                   Role
                 </label>
                 <p className="text-sm text-gray-900 capitalize">
-                  {user.user_metadata?.role || "veterinarian"}
+                  {user.user_metadata?.role ?? "veterinarian"}
                 </p>
               </div>
               <div>

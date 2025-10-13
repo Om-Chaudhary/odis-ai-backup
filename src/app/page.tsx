@@ -11,7 +11,6 @@ import Footer from "~/components/Footer";
 import { useScrollTracking } from "~/hooks/useScrollTracking";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
 import { useDeviceDetection } from "~/hooks/useDeviceDetection";
-import type { Metadata } from "next";
 
 export default function Home() {
   const posthog = usePostHog();
