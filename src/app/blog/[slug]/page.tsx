@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { headers } from "next/headers";
 import { client } from "~/sanity/lib/client";
 import { urlFor } from "~/sanity/lib/image";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
@@ -33,6 +34,7 @@ interface Post {
     slug: { current: string };
   }>;
   publishedAt: string;
+  _updatedAt?: string;
   excerpt?: string;
   metaTitle?: string;
   metaDescription?: string;
@@ -63,6 +65,7 @@ async function getPost(slug: string): Promise<Post | null> {
         slug
       },
       publishedAt,
+      _updatedAt,
       excerpt,
       metaTitle,
       metaDescription,
@@ -197,20 +200,33 @@ export async function generateMetadata({ params }: BlogPostPageProps) {
   const description =
     post.metaDescription ??
     post.excerpt ??
-    ((post.body?.[0] as { children?: Array<{ text?: string }> })?.children?.[0]
+    (post.body?.[0] as { children?: Array<{ text?: string }> })?.children?.[0]
       ?.text ??
-      "Read more about this post on the Odis AI blog.");
+    "Read more about this post on the Odis AI blog.";
+
+  const hdrs = await headers();
+  const host =
+    hdrs.get("x-forwarded-host") ?? hdrs.get("host") ?? "localhost:3000";
+  const proto = hdrs.get("x-forwarded-proto") ?? "https";
+  const origin = `${proto}://${host}`;
+  const canonicalPath = `/blog/${post.slug.current}`;
+  const canonical = `${origin}${canonicalPath}`;
 
   return {
     title,
     description,
     keywords: post.keywords?.join(", "),
+    alternates: {
+      canonical,
+    },
     openGraph: {
       title,
       description,
+      url: canonical,
       images: imageUrl ? [{ url: imageUrl }] : [],
       type: "article",
       publishedTime: post.publishedAt,
+      modifiedTime: post._updatedAt,
       authors: [post.author?.name ?? "Unknown Author"],
     },
     twitter: {
@@ -218,6 +234,9 @@ export async function generateMetadata({ params }: BlogPostPageProps) {
       title,
       description,
       images: imageUrl ? [imageUrl] : [],
+    },
+    other: {
+      lastModified: post._updatedAt ?? post.publishedAt,
     },
   };
 }
@@ -236,6 +255,17 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const authorImageUrl = post.author?.image
     ? urlFor(post.author.image).width(60).height(60).url()
     : `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=60&h=60&fit=crop&crop=face&auto=format&q=80`;
+
+  const hdrs = await headers();
+  const host =
+    hdrs.get("x-forwarded-host") ?? hdrs.get("host") ?? "localhost:3000";
+  const proto = hdrs.get("x-forwarded-proto") ?? "https";
+  const origin = `${proto}://${host}`;
+  const canonical = `${origin}/blog/${post.slug.current}`;
+  const logoUrl = `${origin}/odis-logo.svg`;
+  const ogImage = post.mainImage
+    ? urlFor(post.mainImage).width(1200).height(630).url()
+    : undefined;
 
   return (
     <div className="relative">
@@ -341,6 +371,66 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
+        {/* JSON-LD: Article */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Article",
+              mainEntityOfPage: canonical,
+              headline: post.metaTitle ?? post.title,
+              description:
+                post.metaDescription ??
+                post.excerpt ??
+                (post.body?.[0] as { children?: Array<{ text?: string }> })
+                  ?.children?.[0]?.text ??
+                undefined,
+              image: ogImage ? [ogImage] : undefined,
+              datePublished: post.publishedAt,
+              dateModified: post._updatedAt ?? post.publishedAt,
+              author: post.author?.name
+                ? { "@type": "Person", name: post.author.name }
+                : undefined,
+              publisher: {
+                "@type": "Organization",
+                name: "Odis AI",
+                logo: { "@type": "ImageObject", url: logoUrl },
+              },
+            }),
+          }}
+        />
+
+        {/* JSON-LD: Breadcrumbs */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                {
+                  "@type": "ListItem",
+                  position: 1,
+                  name: "Home",
+                  item: `${origin}/`,
+                },
+                {
+                  "@type": "ListItem",
+                  position: 2,
+                  name: "Blog",
+                  item: `${origin}/blog`,
+                },
+                {
+                  "@type": "ListItem",
+                  position: 3,
+                  name: post.title,
+                  item: canonical,
+                },
+              ],
+            }),
+          }}
+        />
         <article className="mx-auto max-w-3xl">
           {/* Featured Image */}
           <div className="mb-12 overflow-hidden rounded-3xl border border-white/20 shadow-2xl shadow-black/20">
