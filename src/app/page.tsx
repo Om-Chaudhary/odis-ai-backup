@@ -6,6 +6,7 @@ import Navigation from "~/components/Navigation";
 import Hero from "~/components/HeroFloating";
 import TrustLogos from "~/components/TrustLogos";
 import Testimonials from "~/components/Testimonials";
+import FAQ from "~/components/FAQ";
 import CTA from "~/components/CTA";
 import Footer from "~/components/Footer";
 import { useScrollTracking } from "~/hooks/useScrollTracking";
@@ -44,6 +45,9 @@ export default function Home() {
       </div>
       <div className="mt-8 sm:mt-12 md:mt-16">
         <Testimonials />
+      </div>
+      <div className="mt-8 sm:mt-12 md:mt-16">
+        <FAQ />
       </div>
       <div className="mt-8 sm:mt-12 md:mt-16">
         <CTA />
