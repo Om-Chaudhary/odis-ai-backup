@@ -2,15 +2,34 @@
 
 import { useEffect } from "react";
 import { usePostHog } from "posthog-js/react";
+import dynamic from "next/dynamic";
 import Navigation from "~/components/Navigation";
-import Hero from "~/components/HeroFloating";
-import TrustLogos from "~/components/TrustLogos";
-import Testimonials from "~/components/Testimonials";
-import CTA from "~/components/CTA";
-import Footer from "~/components/Footer";
 import { useScrollTracking } from "~/hooks/useScrollTracking";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
 import { useDeviceDetection } from "~/hooks/useDeviceDetection";
+
+// Dynamic imports for heavy components
+const Hero = dynamic(() => import("~/components/HeroFloating"), {
+  loading: () => (
+    <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-emerald-100/40 to-emerald-50/30" />
+  ),
+});
+
+const TrustLogos = dynamic(() => import("~/components/TrustLogos"), {
+  loading: () => <div className="h-32" />,
+});
+
+const Testimonials = dynamic(() => import("~/components/Testimonials"), {
+  loading: () => <div className="h-96" />,
+});
+
+const CTA = dynamic(() => import("~/components/CTA"), {
+  loading: () => <div className="h-64" />,
+});
+
+const Footer = dynamic(() => import("~/components/Footer"), {
+  loading: () => <div className="h-32" />,
+});
 
 export default function Home() {
   const posthog = usePostHog();
