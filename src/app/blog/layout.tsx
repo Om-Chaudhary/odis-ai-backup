@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { env } from "~/env.js";
-import Navigation from "~/components/Navigation";
 import Footer from "~/components/Footer";
 
 export const metadata: Metadata = {
@@ -68,9 +67,6 @@ export default function BlogLayout({
           backgroundSize: "40px 40px",
         }}
       />
-
-      {/* Navigation */}
-      <Navigation />
 
       {/* Main content */}
       <main className="relative">{children}</main>

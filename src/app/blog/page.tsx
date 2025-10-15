@@ -1,12 +1,5 @@
 import { Suspense } from "react";
 import { client } from "~/sanity/lib/client";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Skeleton } from "~/components/ui/skeleton";
 import {
   Breadcrumb,
@@ -17,9 +10,8 @@ import {
   BreadcrumbSeparator,
 } from "~/components/ui/breadcrumb";
 import { urlFor } from "~/sanity/lib/image";
-import Link from "next/link";
-import { format } from "date-fns";
-import Image from "next/image";
+import { BlogLayout } from "~/components/BlogLayout";
+import { Card } from "~/components/ui/card";
 import type { SanityImageSource } from "@sanity/image-url/lib/types/types";
 import type { TypedObject } from "@portabletext/types";
 
@@ -38,199 +30,135 @@ interface Post {
     slug: { current: string };
   }>;
   publishedAt: string;
+  excerpt?: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  keywords?: string[];
   body: TypedObject[];
 }
 
 async function getPosts(): Promise<Post[]> {
-  const query = `*[_type == "post"] | order(publishedAt desc) {
-    _id,
-    title,
-    slug,
-    author->{
-      name,
-      image
-    },
-    mainImage,
-    categories[]->{
+  try {
+    const query = `*[_type == "post"] | order(publishedAt desc) {
+      _id,
       title,
-      slug
-    },
-    publishedAt,
-    body
-  }`;
+      slug,
+      author->{
+        name,
+        image
+      },
+      mainImage,
+      categories[]->{
+        title,
+        slug
+      },
+      publishedAt,
+      excerpt,
+      metaTitle,
+      metaDescription,
+      keywords,
+      body
+    }`;
 
-  return await client.fetch(query);
+    const posts = await client.fetch<Post[]>(query);
+
+    // If no posts found in Sanity, return empty array
+    if (!posts || posts.length === 0) {
+      return [];
+    }
+
+    return posts;
+  } catch (error) {
+    console.warn("Sanity client error:", error);
+    // Return empty array if Sanity is not available
+    return [];
+  }
 }
 
 function PostCardSkeleton() {
   return (
-    <Card className="overflow-hidden rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm">
-      <Skeleton className="h-48 w-full" />
-      <CardHeader className="space-y-4">
-        <div className="flex items-center space-x-3">
-          <Skeleton className="h-10 w-10 rounded-full" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-3 w-16" />
+    <Card className="group animate-fade-in-up border border-white/20 bg-white/10 shadow-lg shadow-black/10 backdrop-blur-md">
+      <div className="p-6 sm:p-8 lg:p-10">
+        <div className="grid gap-y-6 sm:grid-cols-10 sm:gap-x-5 sm:gap-y-0 md:items-center md:gap-x-8 lg:gap-x-12">
+          {/* Content Section - Left */}
+          <div className="sm:col-span-5">
+            <div className="mb-6 md:mb-8">
+              <div className="flex flex-wrap gap-2 md:gap-3">
+                <Skeleton className="h-6 w-16 rounded-full" />
+                <Skeleton className="h-6 w-20 rounded-full" />
+              </div>
+            </div>
+
+            <Skeleton className="mb-6 h-8 w-full md:h-10 lg:h-12" />
+
+            <Skeleton className="mb-3 h-4 w-full" />
+            <Skeleton className="mb-3 h-4 w-5/6" />
+            <Skeleton className="mb-8 h-4 w-4/5" />
+
+            <div className="mb-8 flex items-center space-x-4">
+              <Skeleton className="h-4 w-24" />
+              <span className="text-slate-300">•</span>
+              <Skeleton className="h-4 w-20" />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-4" />
+            </div>
+          </div>
+
+          {/* Image Section - Right */}
+          <div className="order-first sm:order-last sm:col-span-5">
+            <div className="aspect-16/9 overflow-hidden rounded-xl border border-white/20 shadow-md shadow-black/10">
+              <Skeleton className="h-full w-full" />
+            </div>
           </div>
         </div>
-        <Skeleton className="h-6 w-3/4" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-2/3" />
-        <div className="flex items-center justify-between pt-2">
-          <div className="flex gap-2">
-            <Skeleton className="h-6 w-16 rounded-full" />
-            <Skeleton className="h-6 w-20 rounded-full" />
-          </div>
-          <Skeleton className="h-4 w-20" />
-        </div>
-      </CardHeader>
+      </div>
     </Card>
-  );
-}
-
-function PostCard({ post }: { post: Post }) {
-  const imageUrl = post.mainImage
-    ? urlFor(post.mainImage).width(400).height(200).url()
-    : `https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=200&fit=crop&crop=center&auto=format&q=80`;
-  const authorImageUrl = post.author?.image
-    ? urlFor(post.author.image).width(40).height(40).url()
-    : `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face&auto=format&q=80`;
-
-  return (
-    <Link href={`/blog/${post.slug.current}`} className="block">
-      <Card className="group cursor-pointer overflow-hidden rounded-2xl border border-slate-200/60 bg-white/80 backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:border-teal-200/80 hover:shadow-2xl hover:shadow-teal-500/20">
-        <div className="relative aspect-video overflow-hidden">
-          <Image
-            src={imageUrl}
-            alt={post.title}
-            width={400}
-            height={200}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
-          {/* Gradient overlay on hover */}
-          <div className="absolute inset-0 bg-gradient-to-t from-teal-500/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-        </div>
-        <CardHeader className="space-y-4">
-          <div className="flex items-center space-x-3">
-            <Avatar className="h-10 w-10 ring-2 ring-teal-100 transition-all duration-300 group-hover:ring-teal-200">
-              <AvatarImage
-                src={authorImageUrl}
-                alt={post.author?.name ?? "Author"}
-              />
-              <AvatarFallback className="bg-teal-100 font-semibold text-teal-700">
-                {post.author?.name?.charAt(0) ?? "?"}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <span className="text-sm font-medium text-slate-700">
-                {post.author?.name ?? "Unknown Author"}
-              </span>
-              <time className="block text-xs text-slate-500">
-                {format(new Date(post.publishedAt), "MMM d, yyyy")}
-              </time>
-            </div>
-          </div>
-
-          <CardTitle className="line-clamp-2 text-lg font-bold text-slate-900 transition-colors duration-300 group-hover:text-teal-700">
-            {post.title}
-          </CardTitle>
-
-          <CardDescription className="line-clamp-3 leading-relaxed text-slate-600">
-            {(post.body?.[0] as { children?: Array<{ text?: string }> })
-              ?.children?.[0]?.text ?? "No description available"}
-          </CardDescription>
-
-          <div className="flex items-center justify-end pt-2">
-            <div className="flex items-center text-teal-600 opacity-0 transition-all duration-300 group-hover:opacity-100">
-              <span className="text-sm font-medium">Read more</span>
-              <svg
-                className="ml-1 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
-    </Link>
   );
 }
 
 async function BlogPosts() {
   const posts = await getPosts();
 
-  if (posts.length === 0) {
-    return (
-      <div className="py-12 text-center">
-        <h2 className="mb-4 text-2xl font-semibold text-gray-600">
-          No posts yet
-        </h2>
-        <p className="text-gray-500">Check back soon for new content!</p>
-      </div>
-    );
-  }
+  // Transform Sanity posts to BlogLayout format
+  const transformedPosts = posts.map((post) => ({
+    id: post._id,
+    title: post.title,
+    summary:
+      post.excerpt ??
+      (post.body?.[0] as { children?: Array<{ text?: string }> })?.children?.[0]
+        ?.text ??
+      "No description available",
+    label: post.categories?.[0]?.title ?? "General",
+    author: post.author?.name ?? "Unknown Author",
+    published: post.publishedAt,
+    url: `/blog/${post.slug.current}`,
+    image: post.mainImage
+      ? urlFor(post.mainImage).width(400).height(200).url()
+      : `https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400&h=200&fit=crop&crop=center&auto=format&q=80`,
+    tags: post.categories?.map((cat) => cat.title) ?? [],
+    authorImage: post.author?.image
+      ? urlFor(post.author.image).width(40).height(40).url()
+      : `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face&auto=format&q=80`,
+  }));
 
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      {posts.map((post) => (
-        <PostCard key={post._id} post={post} />
-      ))}
-    </div>
+    <BlogLayout
+      heading="Latest Insights"
+      description="Discover the latest insights and updates on veterinary practice management, technology, and industry trends."
+      posts={transformedPosts}
+    />
   );
 }
 
 export default function BlogPage() {
   return (
     <div className="relative">
-      {/* Hero Section */}
-      <section className="relative flex min-h-[60vh] items-center justify-center overflow-hidden pt-20">
-        {/* Prominent animated radial gradient behind text */}
-        <div
-          className="animate-pulse-slow pointer-events-none absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(ellipse 800px 500px at 50% 50%, rgba(49, 171, 163, 0.15) 0%, rgba(49, 171, 163, 0.08) 40%, transparent 70%)",
-            filter: "blur(60px)",
-          }}
-        />
-
-        <div className="relative mx-auto max-w-6xl px-4 py-16 sm:px-6">
-          <div className="relative space-y-8 text-center">
-            {/* Main headline with enhanced animations */}
-            <h1 className="font-display animate-fade-in-up space-y-2 px-2 text-4xl leading-tight font-bold transition-all duration-1500 ease-out sm:px-0 sm:text-5xl md:text-6xl lg:text-7xl">
-              <span
-                className="animate-gradient-subtle block bg-gradient-to-r from-slate-600 via-teal-600 to-slate-600 bg-clip-text text-transparent"
-                style={{ backgroundSize: "200% 200%" }}
-              >
-                Odis AI Blog
-              </span>
-            </h1>
-
-            {/* Description with enhanced animation */}
-            <p
-              className="animate-fade-in-up mx-auto max-w-3xl px-4 font-serif text-base leading-relaxed text-slate-700 transition-all duration-1300 ease-out sm:px-0 sm:text-lg md:text-xl"
-              style={{ transitionDelay: "0.2s" }}
-            >
-              Insights, tips, and updates on veterinary practice management,
-              technology, and industry trends.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        {/* Breadcrumb */}
-        <Breadcrumb className="mb-8">
+      {/* Breadcrumb */}
+      <div className="container mx-auto px-4 pt-12 sm:px-6 lg:px-8">
+        <Breadcrumb className="mb-12">
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink
@@ -246,20 +174,22 @@ export default function BlogPage() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
+      </div>
 
-        {/* Posts Grid */}
-        <Suspense
-          fallback={
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, i) => (
+      {/* Blog Posts */}
+      <Suspense
+        fallback={
+          <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
+            <div className="space-y-8 md:space-y-12">
+              {Array.from({ length: 3 }).map((_, i) => (
                 <PostCardSkeleton key={i} />
               ))}
             </div>
-          }
-        >
-          <BlogPosts />
-        </Suspense>
-      </div>
+          </div>
+        }
+      >
+        <BlogPosts />
+      </Suspense>
     </div>
   );
 }
