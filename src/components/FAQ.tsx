@@ -12,49 +12,41 @@ const faqData = [
     question: "What is ODIS AI and how does it work?",
     answer:
       "ODIS AI is an intelligent veterinary practice management system that uses artificial intelligence to streamline your clinic operations. It integrates with your existing practice management software to provide automated data entry, intelligent insights, and enhanced workflow efficiency.",
-    category: "General",
   },
   {
     question: "Which practice management systems do you support?",
     answer:
       "We currently support integration with major veterinary practice management systems including Avimark, Cornerstone, ezyVet, Digitail, Vetspire, and IDEXX Neo. Our team is continuously working to add support for additional systems.",
-    category: "Integration",
   },
   {
     question: "How secure is my practice data?",
     answer:
       "Data security is our top priority. We use enterprise-grade encryption, comply with HIPAA regulations, and maintain SOC 2 Type II certification. Your data is encrypted both in transit and at rest, and we never share your information with third parties without explicit consent.",
-    category: "Security",
   },
   {
     question: "What kind of setup and training is required?",
     answer:
       "Our implementation process is designed to be seamless and non-disruptive. We provide comprehensive training for your team, including live sessions and documentation. Most practices are up and running within 2-4 weeks with minimal downtime.",
-    category: "Implementation",
   },
   {
     question: "How much does ODIS AI cost?",
     answer:
       "Our pricing is based on the size of your practice and the features you need. We offer flexible plans that scale with your business. Contact our sales team for a personalized quote that fits your practice's specific requirements.",
-    category: "Pricing",
   },
   {
     question: "Do you offer customer support?",
     answer:
       "Yes! We provide 24/7 customer support via phone, email, and chat. Our dedicated support team includes veterinary professionals who understand the unique challenges of running a veterinary practice.",
-    category: "Support",
   },
   {
     question: "Can I try ODIS AI before committing?",
     answer:
       "Absolutely! We offer a free trial period so you can experience the benefits of ODIS AI in your own practice. Our team will work with you to set up a pilot program and demonstrate the value before you make any long-term commitment.",
-    category: "Trial",
   },
   {
     question: "How does ODIS AI improve my practice efficiency?",
     answer:
       "ODIS AI automates routine tasks like data entry, appointment scheduling, and report generation. It reduces administrative burden by up to 70%, allowing your team to focus on what matters most - providing excellent care to your patients and clients.",
-    category: "Benefits",
   },
 ];
 
@@ -151,22 +143,15 @@ export default function FAQ() {
                   key={index}
                   onMouseEnter={() => handleItemHover(index)}
                   onMouseLeave={handleItemLeave}
-                  className="group relative overflow-hidden rounded-xl border border-white/20 bg-white/80 shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-md"
+                  className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-md"
                   style={{
                     boxShadow: isOpen
-                      ? "0 0 30px rgba(49, 171, 163, 0.2), 0 0 60px rgba(49, 171, 163, 0.1)"
-                      : "0 4px 20px rgba(0, 0, 0, 0.08)",
+                      ? "0 0 30px rgba(49, 171, 163, 0.15), 0 0 60px rgba(49, 171, 163, 0.08)"
+                      : "0 2px 10px rgba(0, 0, 0, 0.05)",
                   }}
                 >
                   {/* Card background gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/90 via-white/80 to-emerald-50/30"></div>
-
-                  {/* Category badge */}
-                  <div className="absolute top-4 right-4">
-                    <span className="rounded-full bg-[#31aba3]/10 px-3 py-1 text-xs font-semibold text-[#31aba3]">
-                      {faq.category}
-                    </span>
-                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-emerald-50/10"></div>
 
                   {/* Content */}
                   <div className="relative z-10 p-6 sm:p-8">
@@ -214,7 +199,7 @@ export default function FAQ() {
 
         {/* Bottom CTA */}
         <div className="mt-16 text-center">
-          <div className="mx-auto max-w-2xl rounded-2xl border border-white/20 bg-gradient-to-r from-[#31aba3]/10 via-[#2a9d96]/10 to-[#1f7a73]/10 p-8 backdrop-blur-sm">
+          <div className="mx-auto max-w-2xl rounded-2xl border border-white/30 bg-gradient-to-r from-[#31aba3]/10 via-[#2a9d96]/10 to-[#1f7a73]/10 p-8 backdrop-blur-sm">
             <h3 className="font-display mb-4 text-xl font-semibold text-gray-800 sm:text-2xl">
               Still have questions?
             </h3>
