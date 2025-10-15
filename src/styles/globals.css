@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "./hero-animations.css";
 
 :root {
   --background: 0 0% 100%;

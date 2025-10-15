@@ -4,12 +4,6 @@
  */
 import "./src/env.js";
 
-// Bundle analyzer
-import bundleAnalyzer from "@next/bundle-analyzer";
-const withBundleAnalyzer = bundleAnalyzer({
-  enabled: process.env.ANALYZE === "true",
-});
-
 /** @type {import("next").NextConfig} */
 const config = {
   // Specify the correct workspace root to avoid lockfile detection issues
@@ -105,18 +99,8 @@ const config = {
 
   // Experimental features for better performance
   experimental: {
-    optimizePackageImports: [
-      "lucide-react",
-      "@radix-ui/react-icons",
-      "@radix-ui/react-avatar",
-      "@radix-ui/react-dialog",
-      "@radix-ui/react-label",
-      "@radix-ui/react-select",
-      "@radix-ui/react-separator",
-      "@radix-ui/react-slot",
-      "motion/react",
-    ],
+    optimizePackageImports: ["lucide-react", "@radix-ui/react-icons"],
   },
 };
 
-export default withBundleAnalyzer(config);
+export default config;
