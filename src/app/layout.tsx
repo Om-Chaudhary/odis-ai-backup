@@ -4,7 +4,7 @@ import { Inter } from "next/font/google";
 import { Lora } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import "~/styles/globals.css";
-import { PostHogProvider } from "~/components/PostHogProvider";
+import ClientPostHogProvider from "~/components/ClientPostHogProvider";
 import { TRPCReactProvider } from "~/trpc/Provider";
 import { env } from "~/env.js";
 
@@ -164,9 +164,9 @@ export default function RootLayout({
       <body
         className={`font-sans ${outfit.variable} ${inter.variable} ${lora.variable} ${geistMono.variable}`}
       >
-        <PostHogProvider>
+        <ClientPostHogProvider>
           <TRPCReactProvider>{children}</TRPCReactProvider>
-        </PostHogProvider>
+        </ClientPostHogProvider>
       </body>
     </html>
   );

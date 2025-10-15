@@ -1,9 +1,20 @@
 import { z } from "zod";
-import { publicProcedure, router } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "~/server/api/trpc";
 import { createServiceClient } from "~/lib/supabase/server";
 import PostHogClient from "~/lib/posthog";
+import type { Database } from "../../../../database.types";
 
-export const waitlistRouter = router({
+type WaitlistSignup = Database["public"]["Tables"]["waitlist_signups"]["Row"];
+type WaitlistInsert =
+  Database["public"]["Tables"]["waitlist_signups"]["Insert"];
+type WaitlistUpdate =
+  Database["public"]["Tables"]["waitlist_signups"]["Update"];
+
+export const waitlistRouter = createTRPCRouter({
   join: publicProcedure
     .input(
       z.object({
@@ -22,31 +33,31 @@ export const waitlistRouter = router({
       const supabase = await createServiceClient();
       const posthog = PostHogClient();
 
-      const ipHeader =
-        ctx.headers.get("x-forwarded-for") ??
+      const ipHeader = ctx.headers.get("x-forwarded-for") ??
         ctx.headers.get("x-real-ip") ??
         null;
       const userAgent = ctx.headers.get("user-agent") ?? undefined;
 
-      type WaitlistInsertReturn = { id: string; created_at: string };
+      const insertData: WaitlistInsert = {
+        email: input.email,
+        full_name: input.name,
+        source: input.source,
+        campaign: input.campaign,
+        ip: ipHeader ?? undefined,
+        user_agent: userAgent,
+        status: "waiting",
+        metadata: {
+          practiceName: input.practiceName ?? null,
+          role: input.role ?? null,
+          ...(input.metadata ?? {}),
+        },
+      };
+
       const { data, error } = await supabase
         .from("waitlist_signups")
-        .insert({
-          email: input.email,
-          full_name: input.name,
-          source: input.source,
-          campaign: input.campaign,
-          ip: ipHeader ?? undefined,
-          user_agent: userAgent,
-          status: "waiting",
-          metadata: {
-            practiceName: input.practiceName ?? null,
-            role: input.role ?? null,
-            ...(input.metadata ?? {}),
-          },
-        })
+        .insert(insertData)
         .select("id, created_at")
-        .single<WaitlistInsertReturn>();
+        .single<{ id: string; created_at: string }>();
 
       if (error) {
         // Unique violation: surface a friendly message
@@ -95,5 +106,58 @@ export const waitlistRouter = router({
         await posthog.flush();
       } catch {}
       return { ok: true, id: data.id, createdAt: data.created_at } as const;
+    }),
+
+  // Example protected procedure - requires authentication
+  getMyWaitlistStatus: protectedProcedure
+    .query(async ({ ctx }) => {
+      const { data, error } = await ctx.supabase
+        .from("waitlist_signups")
+        .select("*")
+        .eq("email", ctx.user.email)
+        .single<WaitlistSignup>();
+
+      if (error && error.code !== "PGRST116") {
+        throw error;
+      }
+
+      return {
+        isOnWaitlist: !!data,
+        status: data?.status ?? null,
+        joinedAt: data?.created_at ?? null,
+        // Note: position field doesn't exist in the schema, removing it
+      };
+    }),
+
+  // Another example protected procedure
+  updateWaitlistProfile: protectedProcedure
+    .input(
+      z.object({
+        practiceName: z.string().optional(),
+        role: z.string().optional(),
+        metadata: z.record(z.any()).optional(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const updateData: WaitlistUpdate = {
+        metadata: {
+          practiceName: input.practiceName,
+          role: input.role,
+          ...(input.metadata ?? {}),
+        },
+      };
+
+      const { data, error } = await ctx.supabase
+        .from("waitlist_signups")
+        .update(updateData)
+        .eq("email", ctx.user.email)
+        .select()
+        .single<WaitlistSignup>();
+
+      if (error) {
+        throw error;
+      }
+
+      return { ok: true, updated: data };
     }),
 });
