@@ -141,71 +141,75 @@ export default function FAQ() {
           </p>
         </div>
 
-        {/* FAQ Grid */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          {faqData.map((faq, index) => {
-            const isOpen = openItems.includes(`item-${index}`);
-            return (
-              <div
-                key={index}
-                onMouseEnter={() => handleItemHover(index)}
-                onMouseLeave={handleItemLeave}
-                className="group relative overflow-hidden rounded-xl border border-white/20 bg-white/80 shadow-sm backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
-                style={{
-                  boxShadow: isOpen
-                    ? "0 0 30px rgba(49, 171, 163, 0.2), 0 0 60px rgba(49, 171, 163, 0.1)"
-                    : "0 4px 20px rgba(0, 0, 0, 0.08)",
-                }}
-              >
-                {/* Card background gradient */}
-                <div className="absolute inset-0 bg-gradient-to-br from-white/90 via-white/80 to-emerald-50/30"></div>
+        {/* FAQ Accordion */}
+        <div className="mx-auto max-w-4xl">
+          <div className="space-y-4">
+            {faqData.map((faq, index) => {
+              const isOpen = openItems.includes(`item-${index}`);
+              return (
+                <div
+                  key={index}
+                  onMouseEnter={() => handleItemHover(index)}
+                  onMouseLeave={handleItemLeave}
+                  className="group relative overflow-hidden rounded-xl border border-white/20 bg-white/80 shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-md"
+                  style={{
+                    boxShadow: isOpen
+                      ? "0 0 30px rgba(49, 171, 163, 0.2), 0 0 60px rgba(49, 171, 163, 0.1)"
+                      : "0 4px 20px rgba(0, 0, 0, 0.08)",
+                  }}
+                >
+                  {/* Card background gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/90 via-white/80 to-emerald-50/30"></div>
 
-                {/* Category badge */}
-                <div className="absolute top-4 right-4">
-                  <span className="rounded-full bg-[#31aba3]/10 px-3 py-1 text-xs font-semibold text-[#31aba3]">
-                    {faq.category}
-                  </span>
-                </div>
+                  {/* Category badge */}
+                  <div className="absolute top-4 right-4">
+                    <span className="rounded-full bg-[#31aba3]/10 px-3 py-1 text-xs font-semibold text-[#31aba3]">
+                      {faq.category}
+                    </span>
+                  </div>
 
-                {/* Content */}
-                <div className="relative z-10 p-6 sm:p-8">
-                  <button
-                    onClick={() => toggleItem(index)}
-                    className="w-full rounded-lg text-left focus:ring-2 focus:ring-[#31aba3]/20 focus:ring-offset-2 focus:outline-none"
-                  >
-                    <div className="flex items-start justify-between">
-                      <h3 className="font-display pr-4 text-lg font-semibold text-gray-800 transition-colors duration-200 group-hover:text-[#31aba3] sm:text-xl">
-                        {faq.question}
-                      </h3>
-                      <div className="flex-shrink-0">
-                        <ChevronDownIcon
-                          className={`h-5 w-5 text-[#31aba3] transition-transform duration-300 ${
-                            isOpen ? "rotate-180" : ""
-                          }`}
-                        />
+                  {/* Content */}
+                  <div className="relative z-10 p-6 sm:p-8">
+                    <button
+                      onClick={() => toggleItem(index)}
+                      className="w-full rounded-lg text-left focus:ring-2 focus:ring-[#31aba3]/20 focus:ring-offset-2 focus:outline-none"
+                    >
+                      <div className="flex items-start justify-between">
+                        <h3 className="font-display pr-4 text-lg font-semibold text-gray-800 transition-colors duration-200 group-hover:text-[#31aba3] sm:text-xl">
+                          {faq.question}
+                        </h3>
+                        <div className="flex-shrink-0">
+                          <ChevronDownIcon
+                            className={`h-5 w-5 text-[#31aba3] transition-transform duration-300 ${
+                              isOpen ? "rotate-180" : ""
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Answer */}
+                    <div
+                      className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                        isOpen
+                          ? "mt-4 max-h-96 opacity-100"
+                          : "max-h-0 opacity-0"
+                      }`}
+                    >
+                      <div className="border-t border-gray-200/50 pt-4">
+                        <p className="font-serif leading-relaxed text-gray-700">
+                          {faq.answer}
+                        </p>
                       </div>
                     </div>
-                  </button>
-
-                  {/* Answer */}
-                  <div
-                    className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                      isOpen ? "mt-4 max-h-96 opacity-100" : "max-h-0 opacity-0"
-                    }`}
-                  >
-                    <div className="border-t border-gray-200/50 pt-4">
-                      <p className="font-serif leading-relaxed text-gray-700">
-                        {faq.answer}
-                      </p>
-                    </div>
                   </div>
-                </div>
 
-                {/* Hover effect overlay */}
-                <div className="absolute inset-0 bg-gradient-to-r from-[#31aba3]/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
-              </div>
-            );
-          })}
+                  {/* Hover effect overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#31aba3]/5 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Bottom CTA */}
