@@ -5,26 +5,20 @@
   "type": "module",
   "scripts": {
     "build": "next build",
-    "build:dev": "NODE_ENV=development next build",
-    "build:staging": "NODE_ENV=production next build",
-    "build:production": "NODE_ENV=production next build",
     "check": "next lint && tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "dev": "next dev --turbo",
-    "dev:staging": "NODE_ENV=production next dev --turbo",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "format:write": "prettier --write \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
     "preview": "next build && next start",
     "start": "next start",
-    "start:dev": "NODE_ENV=development next start",
-    "start:staging": "NODE_ENV=production next start",
-    "start:production": "NODE_ENV=production next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "update-types": "npx supabase gen types --lang=typescript --project-id \"$PROJECT_REF\" > database.types.ts"
   },
   "dependencies": {
     "@formkit/auto-animate": "^0.9.0",
@@ -42,6 +36,10 @@
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.75.0",
     "@t3-oss/env-nextjs": "^0.12.0",
+    "@tanstack/react-query": "^5.90.3",
+    "@trpc/client": "^11.6.0",
+    "@trpc/react-query": "^11.6.0",
+    "@trpc/server": "^11.6.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
@@ -61,8 +59,9 @@
     "react-dom": "^19.0.0",
     "sanity": "4",
     "styled-components": "6",
+    "superjson": "^2.2.2",
     "tailwind-merge": "^3.3.1",
-    "zod": "^3.24.2"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
