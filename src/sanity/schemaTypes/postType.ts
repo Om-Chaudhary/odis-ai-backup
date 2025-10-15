@@ -47,6 +47,28 @@ export const postType = defineType({
       type: "datetime",
     }),
     defineField({
+      name: "excerpt",
+      type: "text",
+      rows: 3,
+    }),
+    defineField({
+      name: "metaTitle",
+      type: "string",
+      title: "Meta Title (SEO)",
+    }),
+    defineField({
+      name: "metaDescription",
+      type: "text",
+      rows: 3,
+      title: "Meta Description (SEO)",
+    }),
+    defineField({
+      name: "keywords",
+      type: "array",
+      of: [{ type: "string" }],
+      title: "Keywords (SEO)",
+    }),
+    defineField({
       name: "body",
       type: "blockContent",
     }),

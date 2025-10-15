@@ -5,6 +5,7 @@ import { Lora } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import "~/styles/globals.css";
 import { PostHogProvider } from "~/components/PostHogProvider";
+import { TRPCReactProvider } from "~/trpc/Provider";
 import { env } from "~/env.js";
 
 const outfit = Outfit({
@@ -34,7 +35,8 @@ export const metadata: Metadata = {
     default: "Odis AI - Veterinary Practice Management Software",
     template: "%s | Odis AI",
   },
-  description: "Streamline your veterinary practice with Odis AI. Advanced practice management software designed for modern veterinary clinics. Features include patient management, appointment scheduling, billing, and more.",
+  description:
+    "Streamline your veterinary practice with Odis AI. Advanced practice management software designed for modern veterinary clinics. Features include patient management, appointment scheduling, billing, and more.",
   keywords: [
     "veterinary practice management",
     "veterinary software",
@@ -64,7 +66,8 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: siteUrl,
     title: "Odis AI - Veterinary Practice Management Software",
-    description: "Streamline your veterinary practice with Odis AI. Advanced practice management software designed for modern veterinary clinics.",
+    description:
+      "Streamline your veterinary practice with Odis AI. Advanced practice management software designed for modern veterinary clinics.",
     siteName: "Odis AI",
     images: [
       {
@@ -78,7 +81,8 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Odis AI - Veterinary Practice Management Software",
-    description: "Streamline your veterinary practice with Odis AI. Advanced practice management software designed for modern veterinary clinics.",
+    description:
+      "Streamline your veterinary practice with Odis AI. Advanced practice management software designed for modern veterinary clinics.",
     images: ["/og-image.png"],
     creator: "@odisai",
   },
@@ -133,7 +137,8 @@ const jsonLd = {
         width: 200,
         height: 60,
       },
-      description: "Leading provider of veterinary practice management software",
+      description:
+        "Leading provider of veterinary practice management software",
       sameAs: [
         "https://twitter.com/odisai",
         "https://linkedin.com/company/odis-ai",
@@ -159,7 +164,9 @@ export default function RootLayout({
       <body
         className={`font-sans ${outfit.variable} ${inter.variable} ${lora.variable} ${geistMono.variable}`}
       >
-        <PostHogProvider>{children}</PostHogProvider>
+        <PostHogProvider>
+          <TRPCReactProvider>{children}</TRPCReactProvider>
+        </PostHogProvider>
       </body>
     </html>
   );
