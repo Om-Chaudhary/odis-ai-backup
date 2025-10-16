@@ -89,8 +89,7 @@ export function Pricing({
                 !isMonthly ? "opacity-100" : "opacity-0",
               )}
             >
-              Annual billing {" "}
-              <span className="text-[#31aba3]">(Save 20%)</span>
+              Annual billing <span className="text-[#31aba3]">(Save 20%)</span>
             </span>
           </div>
         </div>
