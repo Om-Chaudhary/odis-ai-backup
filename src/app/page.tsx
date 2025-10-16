@@ -13,6 +13,7 @@ import Footer from "~/components/Footer";
 import { useScrollTracking } from "~/hooks/useScrollTracking";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
 import { useDeviceDetection } from "~/hooks/useDeviceDetection";
+import { CircleDollarSign, Handshake, Layers, Megaphone } from "lucide-react";
 
 export default function Home() {
   const posthog = usePostHog();
@@ -45,12 +46,28 @@ export default function Home() {
         className="mt-8 sm:mt-12 md:mt-16"
         aria-label="Trusted by veterinary practices"
       >
+        <div className="mb-6 text-center">
+          <div className="mx-auto inline-flex items-center justify-center rounded-full bg-[#31aba3]/10 px-4 py-2">
+            <Layers className="mr-2 h-5 w-5 text-[#31aba3]" />
+            <span className="text-sm font-semibold text-[#31aba3]">
+              Integrations
+            </span>
+          </div>
+        </div>
         <TrustLogos />
       </section>
       <section
         className="mt-8 sm:mt-12 md:mt-16"
         aria-label="Customer testimonials"
       >
+        <div className="mb-6 text-center">
+          <div className="mx-auto inline-flex items-center justify-center rounded-full bg-[#31aba3]/10 px-4 py-2">
+            <Handshake className="mr-2 h-5 w-5 text-[#31aba3]" />
+            <span className="text-sm font-semibold text-[#31aba3]">
+              Testimonials
+            </span>
+          </div>
+        </div>
         <Testimonials />
       </section>
       <section
@@ -58,6 +75,12 @@ export default function Home() {
         className="mt-8 sm:mt-12 md:mt-16"
         aria-label="Pricing plans"
       >
+        <div className="mb-6 text-center">
+          <div className="mx-auto inline-flex items-center justify-center rounded-full bg-[#31aba3]/10 px-4 py-2">
+            <CircleDollarSign className="mr-2 h-5 w-5 text-[#31aba3]" />
+            <span className="text-sm font-semibold text-[#31aba3]">Pricing</span>
+          </div>
+        </div>
         <Pricing
           plans={[
             {
@@ -125,6 +148,12 @@ export default function Home() {
         <FAQ />
       </section>
       <section className="mt-8 sm:mt-12 md:mt-16" aria-label="Call to action">
+        <div className="mb-6 text-center">
+          <div className="mx-auto inline-flex items-center justify-center rounded-full bg-[#31aba3]/10 px-4 py-2">
+            <Megaphone className="mr-2 h-5 w-5 text-[#31aba3]" />
+            <span className="text-sm font-semibold text-[#31aba3]">Get Started</span>
+          </div>
+        </div>
         <CTA />
       </section>
       <footer className="mt-8 sm:mt-12 md:mt-16">
