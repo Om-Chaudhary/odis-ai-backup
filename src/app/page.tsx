@@ -70,6 +70,9 @@ export default function Home() {
         </div>
         <Testimonials />
       </section>
+      <section className="mt-8 sm:mt-12 md:mt-16" aria-label="FAQ">
+        <FAQ />
+      </section>
       <section
         id="pricing"
         className="mt-8 sm:mt-12 md:mt-16"
@@ -145,9 +148,6 @@ export default function Home() {
           title="Pricing Plan"
           description="Choose the plan that works for your veterinary practice. All plans include access to our AI-powered SOAP note generation and practice management tools."
         />
-      </section>
-      <section className="mt-8 sm:mt-12 md:mt-16" aria-label="FAQ">
-        <FAQ />
       </section>
       <section className="mt-8 sm:mt-12 md:mt-16" aria-label="Call to action">
         <div className="mb-3 text-center">
