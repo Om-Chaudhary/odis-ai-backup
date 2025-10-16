@@ -56,7 +56,7 @@ export default function CTA() {
   return (
     <>
       {/* Container with background that continues from the section above */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-emerald-50/20 via-emerald-50/30 to-emerald-50/20 py-20 sm:py-24 md:py-28 lg:py-32">
+      <section className="relative overflow-hidden bg-gradient-to-b from-emerald-50/20 via-emerald-50/30 to-emerald-50/20 py-12 sm:py-16 md:py-20 lg:py-24">
         {/* Subtle animated background elements */}
         <ParticleBackground
           className="opacity-5"
