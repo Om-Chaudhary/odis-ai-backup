@@ -34,7 +34,6 @@ export default function Home() {
   }, [posthog, deviceInfo]);
 
   return (
-<<<<<<< HEAD
     <main className="relative">
       <div className="dotted-background" />
       <Navigation />
@@ -57,7 +56,6 @@ export default function Home() {
         <Footer />
       </div>
     </main>
-=======
     <>
       <main className="relative">
         <div className="dotted-background" />
@@ -85,6 +83,5 @@ export default function Home() {
         </footer>
       </main>
     </>
->>>>>>> origin/main
   );
 }
