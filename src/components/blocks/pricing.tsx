@@ -60,7 +60,7 @@ export function Pricing({
           </p>
         </div>
 
-        <div className="mb-10 flex justify-center">
+        <div className="mb-10 flex items-center justify-center gap-3">
           <label className="relative inline-flex cursor-pointer items-center">
             <Label>
               <Switch
@@ -70,12 +70,19 @@ export function Pricing({
               />
             </Label>
           </label>
-          <span className="ml-2 font-semibold text-slate-700">
-            Annual billing <span className="text-[#31aba3]">(Save 20%)</span>
+          <span className="font-semibold text-slate-700">
+            {isMonthly ? (
+              <>Monthly billing</>
+            ) : (
+              <>
+                Annual billing{" "}
+                <span className="text-[#31aba3]">(Save 20%)</span>
+              </>
+            )}
           </span>
         </div>
 
-        <div className="mx-auto grid max-w-4xl grid-cols-1 gap-8 md:grid-cols-2">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {plans.map((plan, index) => (
             <motion.div
               key={index}
@@ -150,12 +157,19 @@ export function Pricing({
                       )}
                     </span>
                     <span className="text-lg leading-6 font-semibold tracking-wide text-slate-600">
-                      / {plan.period}
+                      /{" "}
+                      {isMonthly
+                        ? "month"
+                        : plan.price === "Custom"
+                          ? "contact"
+                          : "year"}
                     </span>
                   </div>
-                  <p className="text-sm text-slate-500">
-                    {isMonthly ? "billed monthly" : "billed annually"}
-                  </p>
+                  {plan.price !== "Custom" && (
+                    <p className="text-sm text-slate-500">
+                      {isMonthly ? "billed monthly" : "billed annually"}
+                    </p>
+                  )}
                 </div>
 
                 <ul className="mb-8 flex-1 space-y-3">
