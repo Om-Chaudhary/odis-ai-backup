@@ -61,6 +61,21 @@ export default function Home() {
         <Pricing
           plans={[
             {
+              name: "Starter",
+              price: "50",
+              yearlyPrice: "40", // ~20% discount
+              period: "month",
+              features: [
+                "All Features",
+                "30 Notes / Month (~1 per day)",
+                "Pay-per use above",
+              ],
+              description: "Ideal for low volume vets or pilots",
+              buttonText: "Low Volume Vets",
+              href: "/signup?plan=starter",
+              isPopular: false,
+            },
+            {
               name: "Core",
               price: "150",
               yearlyPrice: "120", // 20% discount
