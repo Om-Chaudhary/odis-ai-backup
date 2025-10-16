@@ -68,6 +68,7 @@ export default function WaitlistModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
 
     const formCompletionTime = formStartTime.current
       ? Date.now() - formStartTime.current
@@ -82,14 +83,21 @@ export default function WaitlistModal({
 
     try {
       setIsSubmitting(true);
-      const res = await joinWaitlist.mutateAsync({
+
+      const mutationData = {
         name: formData.name,
         email: formData.email,
         practiceName: formData.practiceName || undefined,
         role: formData.role || undefined,
         campaign: "landing",
-        source: triggerLocation,
-      });
+        source: triggerLocation || "navigation",
+        metadata: {
+          practiceName: formData.practiceName || null,
+          role: formData.role || null,
+        },
+      };
+
+      const res = await joinWaitlist.mutateAsync(mutationData);
 
       setIsSubmitted(true);
 
@@ -104,10 +112,28 @@ export default function WaitlistModal({
             : false,
       });
     } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      console.error("Waitlist signup error:", err);
+      
       posthog.capture("waitlist_signup_error", {
-        error: err instanceof Error ? err.message : String(err),
+        error: errorMessage,
         device_type: deviceInfo.device_type,
+        form_data: {
+          has_name: !!formData.name,
+          has_email: !!formData.email,
+          has_practice_name: !!formData.practiceName,
+          has_role: !!formData.role,
+        },
       });
+
+      // Show more specific error message to user
+      if (errorMessage.includes("400") || errorMessage.includes("Bad Request")) {
+        alert("There was a validation error. Please check your information and try again.");
+      } else if (errorMessage.includes("500") || errorMessage.includes("Internal Server Error")) {
+        alert("Server error occurred. Please try again later.");
+      } else {
+        alert("Failed to join waitlist. Please try again.");
+      }
     } finally {
       setIsSubmitting(false);
     }
