@@ -1,5 +1,4 @@
 import { initTRPC, TRPCError } from "@trpc/server";
-import superjson from "superjson";
 import { ZodError } from "zod";
 import { createClient } from "~/lib/supabase/server";
 
@@ -8,22 +7,30 @@ type CreateContextOptions = {
 };
 
 export const createTRPCContext = async (opts: CreateContextOptions) => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  return {
-    headers: opts.headers,
-    user,
-    supabase,
-  };
+    return {
+      headers: opts.headers,
+      user,
+      supabase,
+    };
+  } catch (error) {
+    console.error("Failed to create tRPC context:", error);
+    throw new TRPCError({
+      code: "INTERNAL_SERVER_ERROR",
+      message: "Failed to initialize database connection",
+    });
+  }
 };
 
 const t = initTRPC
   .context<Awaited<ReturnType<typeof createTRPCContext>>>()
   .create({
-    transformer: superjson,
+    // transformer: superjson, // Temporarily disable transformer
     errorFormatter({ shape, error }) {
       return {
         ...shape,

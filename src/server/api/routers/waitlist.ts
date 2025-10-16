@@ -6,7 +6,7 @@ import {
 } from "~/server/api/trpc";
 import { createServiceClient } from "~/lib/supabase/server";
 import PostHogClient from "~/lib/posthog";
-import type { Database } from "../../../../database.types";
+import type { Database } from "~/database.types";
 
 type WaitlistSignup = Database["public"]["Tables"]["waitlist_signups"]["Row"];
 type WaitlistInsert =
@@ -23,15 +23,14 @@ export const waitlistRouter = createTRPCRouter({
         practiceName: z.string().optional(),
         role: z.string().optional(),
         campaign: z.string().default("landing"),
-        source: z
-          .enum(["navigation", "hero", "cta_section"]) // align with UI triggerLocation
-          .default("navigation"),
+        source: z.string().default("navigation"),
         metadata: z.record(z.any()).optional(),
       }),
     )
     .mutation(async ({ input, ctx }) => {
-      const supabase = await createServiceClient();
-      const posthog = PostHogClient();
+      try {
+        const supabase = await createServiceClient();
+        const posthog = PostHogClient();
 
       const ipHeader = ctx.headers.get("x-forwarded-for") ??
         ctx.headers.get("x-real-ip") ??
@@ -106,6 +105,10 @@ export const waitlistRouter = createTRPCRouter({
         await posthog.flush();
       } catch {}
       return { ok: true, id: data.id, createdAt: data.created_at } as const;
+      } catch (error) {
+        console.error("Waitlist mutation error:", error);
+        throw error;
+      }
     }),
 
   // Example protected procedure - requires authentication
