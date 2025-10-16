@@ -41,7 +41,7 @@ const faqData = [
   {
     question: "Can I try OdisAI before committing?",
     answer:
-      "Absolutely! We offer a free trial period so you can experience the benefits of OdisAI in your own practice. Our team will work with you to set up a pilot program and demonstrate the value before you make any long-term commitment.",
+      "Absolutely! Contact our team to discuss how you can experience the benefits of OdisAI in your own practice. We'll work with you to set up a pilot program and demonstrate the value before you make any long-term commitment.",
   },
   {
     question: "How does OdisAI improve my practice efficiency?",
