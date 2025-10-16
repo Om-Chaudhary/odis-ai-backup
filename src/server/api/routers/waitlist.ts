@@ -32,79 +32,79 @@ export const waitlistRouter = createTRPCRouter({
         const supabase = await createServiceClient();
         const posthog = PostHogClient();
 
-      const ipHeader = ctx.headers.get("x-forwarded-for") ??
-        ctx.headers.get("x-real-ip") ??
-        null;
-      const userAgent = ctx.headers.get("user-agent") ?? undefined;
+        const ipHeader = ctx.headers.get("x-forwarded-for") ??
+          ctx.headers.get("x-real-ip") ??
+          null;
+        const userAgent = ctx.headers.get("user-agent") ?? undefined;
 
-      const insertData: WaitlistInsert = {
-        email: input.email,
-        full_name: input.name,
-        source: input.source,
-        campaign: input.campaign,
-        ip: ipHeader ?? undefined,
-        user_agent: userAgent,
-        status: "waiting",
-        metadata: {
-          practiceName: input.practiceName ?? null,
-          role: input.role ?? null,
-          ...(input.metadata ?? {}),
-        },
-      };
+        const insertData: WaitlistInsert = {
+          email: input.email,
+          full_name: input.name,
+          source: input.source,
+          campaign: input.campaign,
+          ip: ipHeader ?? undefined,
+          user_agent: userAgent,
+          status: "waiting",
+          metadata: {
+            practiceName: input.practiceName ?? null,
+            role: input.role ?? null,
+            ...(input.metadata ?? {}),
+          },
+        };
 
-      const { data, error } = await supabase
-        .from("waitlist_signups")
-        .insert(insertData)
-        .select("id, created_at")
-        .single<{ id: string; created_at: string }>();
+        const { data, error } = await supabase
+          .from("waitlist_signups")
+          .insert(insertData)
+          .select("id, created_at")
+          .single<{ id: string; created_at: string }>();
 
-      if (error) {
-        // Unique violation: surface a friendly message
-        if (error.code === "23505") {
-          // Fire a server-side analytics event for idempotent joins
+        if (error) {
+          // Unique violation: surface a friendly message
+          if (error.code === "23505") {
+            // Fire a server-side analytics event for idempotent joins
+            posthog.capture({
+              distinctId: input.email,
+              event: "waitlist_signup_duplicate",
+              properties: {
+                campaign: input.campaign,
+                source: input.source,
+              },
+            });
+            // best-effort flush without blocking
+            try {
+              await posthog.flush();
+            } catch {}
+            return { ok: true, alreadyExists: true } as const;
+          }
           posthog.capture({
             distinctId: input.email,
-            event: "waitlist_signup_duplicate",
+            event: "waitlist_signup_failed",
             properties: {
               campaign: input.campaign,
               source: input.source,
+              error: error.message,
+              code: error.code,
             },
           });
-          // best-effort flush without blocking
           try {
             await posthog.flush();
           } catch {}
-          return { ok: true, alreadyExists: true } as const;
+          throw error;
         }
+
         posthog.capture({
           distinctId: input.email,
-          event: "waitlist_signup_failed",
+          event: "waitlist_signup_success_server",
           properties: {
             campaign: input.campaign,
             source: input.source,
-            error: error.message,
-            code: error.code,
+            id: data.id,
           },
         });
         try {
           await posthog.flush();
         } catch {}
-        throw error;
-      }
-
-      posthog.capture({
-        distinctId: input.email,
-        event: "waitlist_signup_success_server",
-        properties: {
-          campaign: input.campaign,
-          source: input.source,
-          id: data.id,
-        },
-      });
-      try {
-        await posthog.flush();
-      } catch {}
-      return { ok: true, id: data.id, createdAt: data.created_at } as const;
+        return { ok: true, id: data.id, createdAt: data.created_at } as const;
       } catch (error) {
         console.error("Waitlist mutation error:", error);
         throw error;
