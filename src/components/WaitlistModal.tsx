@@ -114,7 +114,7 @@ export default function WaitlistModal({
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : String(err);
       console.error("Waitlist signup error:", err);
-      
+
       posthog.capture("waitlist_signup_error", {
         error: errorMessage,
         device_type: deviceInfo.device_type,
@@ -127,9 +127,17 @@ export default function WaitlistModal({
       });
 
       // Show more specific error message to user
-      if (errorMessage.includes("400") || errorMessage.includes("Bad Request")) {
-        alert("There was a validation error. Please check your information and try again.");
-      } else if (errorMessage.includes("500") || errorMessage.includes("Internal Server Error")) {
+      if (
+        errorMessage.includes("400") ||
+        errorMessage.includes("Bad Request")
+      ) {
+        alert(
+          "There was a validation error. Please check your information and try again.",
+        );
+      } else if (
+        errorMessage.includes("500") ||
+        errorMessage.includes("Internal Server Error")
+      ) {
         alert("Server error occurred. Please try again later.");
       } else {
         alert("Failed to join waitlist. Please try again.");
