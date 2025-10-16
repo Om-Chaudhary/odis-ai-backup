@@ -31,7 +31,7 @@ interface PricingProps {
 export function Pricing({
   plans,
   title = "Pricing Plan",
-  description = "Choose the plan that works for your veterinary practice\nAll plans include access to our AI-powered SOAP note generation and practice management tools.",
+  description = "Choose the plan that works for your veterinary practice. All plans include access to our AI-powered SOAP note generation and practice management tools.",
 }: PricingProps) {
   const [isMonthly, setIsMonthly] = useState(true);
   const isDesktop = true; // Simplified for now
@@ -42,7 +42,7 @@ export function Pricing({
   };
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-emerald-50/20 via-emerald-50/30 to-emerald-50/20 py-20 sm:py-24 md:py-28 lg:py-32">
+    <section className="relative overflow-hidden bg-gradient-to-b from-emerald-50/20 via-emerald-50/30 to-emerald-50/20 py-12 sm:py-16 md:py-20 lg:py-24">
       {/* Background elements */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-10 left-10 h-16 w-16 animate-pulse rounded-full bg-[#31aba3]/20"></div>
@@ -60,7 +60,7 @@ export function Pricing({
           </p>
         </div>
 
-        <div className="mb-10 flex items-center justify-center gap-3">
+        <div className="mb-8 flex items-center justify-center gap-3 md:mb-10">
           <label className="relative inline-flex cursor-pointer items-center">
             <Label>
               <Switch
@@ -94,7 +94,7 @@ export function Pricing({
           </div>
         </div>
 
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mx-auto mt-4 grid max-w-6xl grid-cols-1 gap-6 sm:gap-8 md:mt-6 md:grid-cols-2 lg:grid-cols-3">
           {plans.map((plan, index) => (
             <motion.div
               key={index}
@@ -126,7 +126,7 @@ export function Pricing({
               )}
             >
               {/* Background gradient overlay */}
-              <div className="absolute inset-0 bg-gradient-to-br from-[#31aba3]/5 via-transparent to-[#2a9d96]/5 opacity-50"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-[#31aba3]/5 via-transparent to-[#2a9d96]/5 opacity-5"></div>
 
               {plan.isPopular && (
                 <div className="absolute top-0 right-0 flex items-center rounded-tr-2xl rounded-bl-2xl bg-[#31aba3] px-3 py-1">
