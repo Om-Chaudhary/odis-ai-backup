@@ -89,6 +89,21 @@ export default function Navigation() {
               >
                 Home
               </Link>
+              <a
+                href="#pricing"
+                className={`relative z-10 text-sm font-medium transition-colors duration-300 hover:text-teal-600 ${
+                  isScrolled ? "text-gray-700" : "text-gray-800"
+                }`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById("pricing")?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                  });
+                }}
+              >
+                Pricing
+              </a>
               <Link
                 href="/blog"
                 className={`relative z-10 text-sm font-medium transition-colors duration-300 hover:text-teal-600 ${
