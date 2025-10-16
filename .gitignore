@@ -36,6 +36,11 @@ yarn-error.log*
 .env
 .env*.local
 
+# Environment-specific files (keep templates, ignore actual values)
+.env.development
+.env.staging
+.env.production
+
 # vercel
 .vercel
 

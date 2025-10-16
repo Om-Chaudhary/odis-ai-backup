@@ -34,6 +34,7 @@ export default function Home() {
   }, [posthog, deviceInfo]);
 
   return (
+<<<<<<< HEAD
     <main className="relative">
       <div className="dotted-background" />
       <Navigation />
@@ -56,5 +57,34 @@ export default function Home() {
         <Footer />
       </div>
     </main>
+=======
+    <>
+      <main className="relative">
+        <div className="dotted-background" />
+        <Navigation />
+        <div ref={heroRef}>
+          <Hero />
+        </div>
+        <section
+          className="mt-8 sm:mt-12 md:mt-16"
+          aria-label="Trusted by veterinary practices"
+        >
+          <TrustLogos />
+        </section>
+        <section
+          className="mt-8 sm:mt-12 md:mt-16"
+          aria-label="Customer testimonials"
+        >
+          <Testimonials />
+        </section>
+        <section className="mt-8 sm:mt-12 md:mt-16" aria-label="Call to action">
+          <CTA />
+        </section>
+        <footer className="mt-8 sm:mt-12 md:mt-16">
+          <Footer />
+        </footer>
+      </main>
+    </>
+>>>>>>> origin/main
   );
 }
