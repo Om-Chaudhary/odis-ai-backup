@@ -60,7 +60,7 @@ export function Pricing({
           </p>
         </div>
 
-        <div className="mb-8 md:mb-10 flex items-center justify-center gap-3">
+        <div className="mb-8 flex items-center justify-center gap-3 md:mb-10">
           <label className="relative inline-flex cursor-pointer items-center">
             <Label>
               <Switch
@@ -94,7 +94,7 @@ export function Pricing({
           </div>
         </div>
 
-        <div className="mx-auto mt-4 md:mt-6 grid max-w-6xl grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mx-auto mt-4 grid max-w-6xl grid-cols-1 gap-6 sm:gap-8 md:mt-6 md:grid-cols-2 lg:grid-cols-3">
           {plans.map((plan, index) => (
             <motion.div
               key={index}

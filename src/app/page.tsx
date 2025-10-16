@@ -87,8 +87,8 @@ export default function Home() {
           plans={[
             {
               name: "Starter",
-              price: "50",
-              yearlyPrice: "40", // ~20% discount
+              price: "120",
+              yearlyPrice: "100", // ~20% discount
               period: "month",
               features: [
                 "All Features",
@@ -102,8 +102,8 @@ export default function Home() {
             },
             {
               name: "Core",
-              price: "150",
-              yearlyPrice: "120", // 20% discount
+              price: "375",
+              yearlyPrice: "300", // 20% discount
               period: "month",
               features: [
                 "All Features",
