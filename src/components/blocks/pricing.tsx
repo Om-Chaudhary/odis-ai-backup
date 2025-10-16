@@ -70,16 +70,29 @@ export function Pricing({
               />
             </Label>
           </label>
-          <span className="font-semibold text-slate-700">
-            {isMonthly ? (
-              <>Monthly billing</>
-            ) : (
-              <>
-                Annual billing{" "}
-                <span className="text-[#31aba3]">(Save 20%)</span>
-              </>
-            )}
-          </span>
+          {/* Reserve width to prevent layout shift when text changes */}
+          <div className="relative">
+            <span className="invisible block font-semibold text-slate-700">
+              Annual billing (Save 20%)
+            </span>
+            <span
+              className={cn(
+                "absolute inset-0 block font-semibold text-slate-700 transition-opacity",
+                isMonthly ? "opacity-100" : "opacity-0",
+              )}
+            >
+              Monthly billing
+            </span>
+            <span
+              className={cn(
+                "absolute inset-0 block font-semibold text-slate-700 transition-opacity",
+                !isMonthly ? "opacity-100" : "opacity-0",
+              )}
+            >
+              Annual billing {" "}
+              <span className="text-[#31aba3]">(Save 20%)</span>
+            </span>
+          </div>
         </div>
 
         <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -188,16 +201,12 @@ export function Pricing({
                     href={plan.href}
                     className={cn(
                       "group relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl px-6 py-4 text-lg font-semibold transition-all duration-300",
-                      plan.isPopular
-                        ? "bg-[#31aba3] text-white shadow-lg hover:scale-105 hover:bg-[#2a9d96]"
-                        : "border-2 border-[#31aba3] bg-white text-[#31aba3] shadow-md hover:scale-105 hover:bg-[#31aba3] hover:text-white",
+                      "bg-[#31aba3] text-white shadow-lg hover:scale-105 hover:bg-[#2a9d96]",
                     )}
                   >
                     {plan.name === "Enterprise" && <Mail className="h-5 w-5" />}
                     <span className="relative z-10">{plan.buttonText}</span>
-                    {plan.isPopular && (
-                      <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-1000 group-hover:translate-x-full"></div>
-                    )}
+                    <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-1000 group-hover:translate-x-full"></div>
                   </Link>
                   {plan.description && (
                     <p className="mt-4 text-sm text-slate-500">
