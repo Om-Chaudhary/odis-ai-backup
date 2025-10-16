@@ -26,7 +26,7 @@ const faqData = [
   {
     question: "What kind of setup and training is required?",
     answer:
-      "Our implementation process is designed to be seamless and non-disruptive. We provide comprehensive training for your team, including live sessions and documentation. Most practices are up and running within 2-4 weeks with minimal downtime.",
+      "Our implementation process is designed to be seamless and non-disruptive. We provide comprehensive training for your team, including live sessions and documentation. Most practices are up and running within a few days with minimal downtime.",
   },
   {
     question: "How much does OdisAI cost?",
