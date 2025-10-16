@@ -9,9 +9,9 @@ import { useDeviceDetection } from "~/hooks/useDeviceDetection";
 
 const faqData = [
   {
-    question: "What is ODIS AI and how does it work?",
+    question: "What is OdisAI and how does it work?",
     answer:
-      "ODIS AI is an intelligent veterinary practice management system that uses artificial intelligence to streamline your clinic operations. It integrates with your existing practice management software to provide automated data entry, intelligent insights, and enhanced workflow efficiency.",
+      "OdisAI is an intelligent veterinary practice management system that uses artificial intelligence to streamline your clinic operations. It integrates with your existing practice management software to provide automated data entry, intelligent insights, and enhanced workflow efficiency.",
   },
   {
     question: "Which practice management systems do you support?",
@@ -29,7 +29,7 @@ const faqData = [
       "Our implementation process is designed to be seamless and non-disruptive. We provide comprehensive training for your team, including live sessions and documentation. Most practices are up and running within 2-4 weeks with minimal downtime.",
   },
   {
-    question: "How much does ODIS AI cost?",
+    question: "How much does OdisAI cost?",
     answer:
       "Our pricing is based on the size of your practice and the features you need. We offer flexible plans that scale with your business. Contact our sales team for a personalized quote that fits your practice's specific requirements.",
   },
@@ -39,14 +39,14 @@ const faqData = [
       "Yes! We provide 24/7 customer support via phone, email, and chat. Our dedicated support team includes veterinary professionals who understand the unique challenges of running a veterinary practice.",
   },
   {
-    question: "Can I try ODIS AI before committing?",
+    question: "Can I try OdisAI before committing?",
     answer:
-      "Absolutely! We offer a free trial period so you can experience the benefits of ODIS AI in your own practice. Our team will work with you to set up a pilot program and demonstrate the value before you make any long-term commitment.",
+      "Absolutely! We offer a free trial period so you can experience the benefits of OdisAI in your own practice. Our team will work with you to set up a pilot program and demonstrate the value before you make any long-term commitment.",
   },
   {
-    question: "How does ODIS AI improve my practice efficiency?",
+    question: "How does OdisAI improve my practice efficiency?",
     answer:
-      "ODIS AI automates routine tasks like data entry, appointment scheduling, and report generation. It reduces administrative burden by up to 70%, allowing your team to focus on what matters most - providing excellent care to your patients and clients.",
+      "OdisAI automates routine tasks like data entry, appointment scheduling, and report generation. It reduces administrative burden by up to 70%, allowing your team to focus on what matters most - providing excellent care to your patients and clients.",
   },
 ];
 
@@ -128,7 +128,7 @@ export default function FAQ() {
             Frequently Asked Questions
           </h2>
           <p className="mx-auto max-w-3xl font-serif text-lg leading-relaxed text-gray-700 sm:text-xl">
-            Get answers to common questions about ODIS AI and how it can
+            Get answers to common questions about OdisAI and how it can
             transform your veterinary practice.
           </p>
         </div>
@@ -146,7 +146,7 @@ export default function FAQ() {
                   className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 shadow-sm backdrop-blur-sm transition-all duration-300 hover:shadow-md"
                   style={{
                     boxShadow: isOpen
-                      ? "0 0 30px rgba(49, 171, 163, 0.15), 0 0 60px rgba(49, 171, 163, 0.08)"
+                      ? "0 4px 15px rgba(0, 0, 0, 0.08), 0 8px 30px rgba(0, 0, 0, 0.04)"
                       : "0 2px 10px rgba(0, 0, 0, 0.05)",
                   }}
                 >
@@ -205,7 +205,7 @@ export default function FAQ() {
             </h3>
             <p className="mb-6 font-serif text-gray-700">
               Our team of veterinary technology experts is here to help you
-              understand how ODIS AI can transform your practice.
+              understand how OdisAI can transform your practice.
             </p>
             <button className="inline-flex items-center justify-center rounded-lg bg-[#31aba3] px-6 py-3 text-sm font-semibold text-white transition-all duration-300 hover:scale-105 hover:bg-[#2a9d96] focus:ring-2 focus:ring-[#31aba3]/20 focus:ring-offset-2 focus:outline-none">
               Contact Our Team
