@@ -42,7 +42,7 @@ export function Pricing({
   };
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-emerald-50/20 via-emerald-50/30 to-emerald-50/20 py-20 sm:py-24 md:py-28 lg:py-32">
+    <section className="relative overflow-hidden bg-gradient-to-b from-emerald-50/20 via-emerald-50/30 to-emerald-50/20 py-12 sm:py-16 md:py-20 lg:py-24">
       {/* Background elements */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute top-10 left-10 h-16 w-16 animate-pulse rounded-full bg-[#31aba3]/20"></div>

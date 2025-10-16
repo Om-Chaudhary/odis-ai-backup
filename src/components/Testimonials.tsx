@@ -71,7 +71,7 @@ export default function Testimonials() {
   return (
     <section
       ref={sectionRef}
-      className="bg-gradient-to-b from-emerald-50/20 via-emerald-50/30 to-emerald-50/20 py-20 sm:py-24 md:py-28 lg:py-32"
+      className="bg-gradient-to-b from-emerald-50/20 via-emerald-50/30 to-emerald-50/20 py-12 sm:py-16 md:py-20 lg:py-24"
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <h2 className="font-display mb-16 text-center text-3xl font-bold text-gray-600 sm:mb-18 sm:text-4xl md:mb-20 md:text-5xl lg:text-6xl">
