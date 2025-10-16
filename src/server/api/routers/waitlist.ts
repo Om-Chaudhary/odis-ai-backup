@@ -6,7 +6,7 @@ import {
 } from "~/server/api/trpc";
 import { createServiceClient } from "~/lib/supabase/server";
 import PostHogClient from "~/lib/posthog";
-import type { Database } from "../../../../database.types";
+import type { Database } from "~/database.types";
 
 type WaitlistSignup = Database["public"]["Tables"]["waitlist_signups"]["Row"];
 type WaitlistInsert =
@@ -23,9 +23,7 @@ export const waitlistRouter = createTRPCRouter({
         practiceName: z.string().optional(),
         role: z.string().optional(),
         campaign: z.string().default("landing"),
-        source: z
-          .enum(["navigation", "hero", "cta_section"]) // align with UI triggerLocation
-          .default("navigation"),
+        source: z.string().default("navigation"),
         metadata: z.record(z.any()).optional(),
       }),
     )

@@ -68,6 +68,7 @@ export default function WaitlistModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
 
     const formCompletionTime = formStartTime.current
       ? Date.now() - formStartTime.current
@@ -82,14 +83,21 @@ export default function WaitlistModal({
 
     try {
       setIsSubmitting(true);
-      const res = await joinWaitlist.mutateAsync({
+
+      const mutationData = {
         name: formData.name,
         email: formData.email,
         practiceName: formData.practiceName || undefined,
         role: formData.role || undefined,
         campaign: "landing",
-        source: triggerLocation,
-      });
+        source: triggerLocation || "navigation",
+        metadata: {
+          practiceName: formData.practiceName || null,
+          role: formData.role || null,
+        },
+      };
+
+      const res = await joinWaitlist.mutateAsync(mutationData);
 
       setIsSubmitted(true);
 
@@ -108,6 +116,9 @@ export default function WaitlistModal({
         error: err instanceof Error ? err.message : String(err),
         device_type: deviceInfo.device_type,
       });
+
+      // Show error message to user instead of refreshing page
+      alert("Failed to join waitlist. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

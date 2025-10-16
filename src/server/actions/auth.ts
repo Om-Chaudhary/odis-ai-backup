@@ -3,9 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "~/lib/supabase/server";
-import { db } from "~/server/db";
-import { users } from "~/server/db/schema";
-import { eq } from "drizzle-orm";
+import type { Database } from "~/database.types";
 
 export async function signUp(formData: FormData) {
   const supabase = await createClient();
@@ -74,30 +72,45 @@ export async function getUser() {
     return null;
   }
 
-  // Get user data from our custom users table
-  const [userData] = await db
-    .select()
-    .from(users)
-    .where(eq(users.id, user.id))
-    .limit(1);
+  // Get user data from our custom users table using Supabase client
+  const { error: userError } = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", user.id)
+    .single();
 
   // If user doesn't exist in our users table, create them
-  if (!userData) {
-    await db.insert(users).values({
-      id: user.id,
-      email: user.email!,
-    });
+  if (userError && userError.code === "PGRST116") {
+    const { error: insertError } = await supabase
+      .from("users")
+      .insert({
+        id: user.id,
+        email: user.email!,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      });
+
+    if (insertError) {
+      console.error("Error creating user profile:", insertError);
+    }
   }
 
   return user;
 }
 
 export async function getUserProfile(userId: string) {
-  const [profile] = await db
-    .select()
-    .from(users)
-    .where(eq(users.id, userId))
-    .limit(1);
+  const supabase = await createClient();
+
+  const { data: profile, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", userId)
+    .single<Database["public"]["Tables"]["users"]["Row"]>();
+
+  if (error) {
+    console.error("Error fetching user profile:", error);
+    return null;
+  }
 
   return profile;
 }
@@ -114,14 +127,22 @@ export async function updateUserProfile(
     onboardingCompleted?: boolean;
   },
 ) {
-  const [profile] = await db
-    .update(users)
-    .set({
+  const supabase = await createClient();
+
+  const { data: profile, error } = await supabase
+    .from("users")
+    .update({
       ...profileData,
-      updatedAt: new Date(),
+      updated_at: new Date().toISOString(),
     })
-    .where(eq(users.id, userId))
-    .returning();
+    .eq("id", userId)
+    .select()
+    .single<Database["public"]["Tables"]["users"]["Row"]>();
+
+  if (error) {
+    console.error("Error updating user profile:", error);
+    return null;
+  }
 
   return profile;
 }
