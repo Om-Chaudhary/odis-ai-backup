@@ -6,6 +6,7 @@ import Navigation from "~/components/Navigation";
 import Hero from "~/components/HeroFloating";
 import TrustLogos from "~/components/TrustLogos";
 import Testimonials from "~/components/Testimonials";
+import { Pricing } from "~/components/blocks/pricing";
 import FAQ from "~/components/FAQ";
 import CTA from "~/components/CTA";
 import Footer from "~/components/Footer";
@@ -51,6 +52,59 @@ export default function Home() {
         aria-label="Customer testimonials"
       >
         <Testimonials />
+      </section>
+      <section
+        id="pricing"
+        className="mt-8 sm:mt-12 md:mt-16"
+        aria-label="Pricing plans"
+      >
+        <Pricing
+          plans={[
+            {
+              name: "Core",
+              price: "150",
+              yearlyPrice: "120", // 20% discount
+              period: "month",
+              features: [
+                "All Features",
+                "Unlimited Generations",
+                "Full time support",
+                "Advanced AI SOAP note generation",
+                "Practice management integration",
+                "Priority customer support",
+                "Custom workflow automation",
+              ],
+              description:
+                "Perfect for general and specialty veterinary practices",
+              buttonText: "General / Specialty",
+              href: "/signup?plan=core",
+              isPopular: true,
+            },
+            {
+              name: "Enterprise",
+              price: "Custom",
+              yearlyPrice: "Custom",
+              period: "contact",
+              features: [
+                "All Core Features",
+                "Custom integrations",
+                "Dedicated account manager",
+                "White-label solutions",
+                "Advanced analytics & reporting",
+                "Multi-location support",
+                "Custom training & onboarding",
+                "SLA guarantees",
+              ],
+              description:
+                "Tailored solutions for large veterinary organizations",
+              buttonText: "Contact Us",
+              href: "mailto:sales@odis.ai?subject=Enterprise Pricing Inquiry",
+              isPopular: false,
+            },
+          ]}
+          title="Pricing Plan"
+          description="Choose the plan that works for your veterinary practice\nAll plans include access to our AI-powered SOAP note generation and practice management tools."
+        />
       </section>
       <section className="mt-8 sm:mt-12 md:mt-16" aria-label="FAQ">
         <FAQ />
