@@ -67,7 +67,6 @@ export default function FAQ() {
     // Track FAQ interaction
     posthog.capture("faq_item_toggled", {
       question: faqData[index]?.question,
-      category: faqData[index]?.category,
       is_opening: !openItems.includes(itemId),
       device_type: deviceInfo.device_type,
     });
@@ -81,7 +80,6 @@ export default function FAQ() {
     hoverTimeoutRef.current = setTimeout(() => {
       posthog.capture("faq_item_hovered", {
         question: faqData[index]?.question,
-        category: faqData[index]?.category,
         device_type: deviceInfo.device_type,
       });
     }, 200);

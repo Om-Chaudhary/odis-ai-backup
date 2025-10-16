@@ -63,7 +63,7 @@ async function getPosts(): Promise<Post[]> {
     const posts = await client.fetch<Post[]>(query);
 
     // If no posts found in Sanity, return empty array
-    if (!posts || posts.length === 0) {
+    if (!posts?.length) {
       return [];
     }
 
