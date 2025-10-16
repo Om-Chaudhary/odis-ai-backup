@@ -194,23 +194,6 @@ export default function FAQ() {
             })}
           </div>
         </div>
-
-        {/* Bottom CTA */}
-        <div className="mt-16 text-center">
-          <div className="mx-auto max-w-2xl rounded-2xl border border-white/30 bg-gradient-to-r from-[#31aba3]/10 via-[#2a9d96]/10 to-[#1f7a73]/10 p-8 backdrop-blur-sm">
-            <h3 className="font-display mb-4 text-xl font-semibold text-gray-800 sm:text-2xl">
-              Still have questions?
-            </h3>
-            <p className="mb-6 font-serif text-gray-700">
-              Our team of veterinary technology experts is here to help you
-              understand how OdisAI can transform your practice.
-            </p>
-            <button className="inline-flex items-center justify-center rounded-lg bg-[#31aba3] px-6 py-3 text-sm font-semibold text-white transition-all duration-300 hover:scale-105 hover:bg-[#2a9d96] focus:ring-2 focus:ring-[#31aba3]/20 focus:ring-offset-2 focus:outline-none">
-              Contact Our Team
-              <ChevronDownIcon className="ml-2 h-4 w-4 rotate-[-90deg]" />
-            </button>
-          </div>
-        </div>
       </div>
     </section>
   );
