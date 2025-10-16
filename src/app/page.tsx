@@ -40,48 +40,27 @@ export default function Home() {
       <div ref={heroRef}>
         <Hero />
       </div>
-      <div className="mt-8 sm:mt-12 md:mt-16">
+      <section
+        className="mt-8 sm:mt-12 md:mt-16"
+        aria-label="Trusted by veterinary practices"
+      >
         <TrustLogos />
-      </div>
-      <div className="mt-8 sm:mt-12 md:mt-16">
+      </section>
+      <section
+        className="mt-8 sm:mt-12 md:mt-16"
+        aria-label="Customer testimonials"
+      >
         <Testimonials />
-      </div>
-      <div className="mt-8 sm:mt-12 md:mt-16">
+      </section>
+      <section className="mt-8 sm:mt-12 md:mt-16" aria-label="FAQ">
         <FAQ />
-      </div>
-      <div className="mt-8 sm:mt-12 md:mt-16">
+      </section>
+      <section className="mt-8 sm:mt-12 md:mt-16" aria-label="Call to action">
         <CTA />
-      </div>
-      <div className="mt-8 sm:mt-12 md:mt-16">
+      </section>
+      <footer className="mt-8 sm:mt-12 md:mt-16">
         <Footer />
-      </div>
+      </footer>
     </main>
-    <>
-      <main className="relative">
-        <div className="dotted-background" />
-        <Navigation />
-        <div ref={heroRef}>
-          <Hero />
-        </div>
-        <section
-          className="mt-8 sm:mt-12 md:mt-16"
-          aria-label="Trusted by veterinary practices"
-        >
-          <TrustLogos />
-        </section>
-        <section
-          className="mt-8 sm:mt-12 md:mt-16"
-          aria-label="Customer testimonials"
-        >
-          <Testimonials />
-        </section>
-        <section className="mt-8 sm:mt-12 md:mt-16" aria-label="Call to action">
-          <CTA />
-        </section>
-        <footer className="mt-8 sm:mt-12 md:mt-16">
-          <Footer />
-        </footer>
-      </main>
-    </>
   );
 }
