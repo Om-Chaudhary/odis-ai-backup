@@ -22,6 +22,7 @@ import {
 } from "~/components/ui/select";
 import { CheckCircle2 } from "lucide-react";
 import { useDeviceDetection } from "~/hooks/useDeviceDetection";
+import { api } from "~/trpc/client";
 
 interface WaitlistModalProps {
   isOpen: boolean;
@@ -37,6 +38,7 @@ export default function WaitlistModal({
   const posthog = usePostHog();
   const deviceInfo = useDeviceDetection();
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -62,7 +64,9 @@ export default function WaitlistModal({
     }
   }, [isOpen, triggerLocation, posthog, deviceInfo]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const joinWaitlist = api.waitlist.join.useMutation();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const formCompletionTime = formStartTime.current
@@ -76,16 +80,37 @@ export default function WaitlistModal({
       device_type: deviceInfo.device_type,
     });
 
-    // Here you would typically send the data to your backend
-    console.log("Form submitted:", formData);
-    setIsSubmitted(true);
+    try {
+      setIsSubmitting(true);
+      const res = await joinWaitlist.mutateAsync({
+        name: formData.name,
+        email: formData.email,
+        practiceName: formData.practiceName || undefined,
+        role: formData.role || undefined,
+        campaign: "landing",
+        source: triggerLocation,
+      });
 
-    posthog.capture("waitlist_signup_success", {
-      user_role: formData.role,
-      practice_name: formData.practiceName,
-      email_domain: formData.email.split("@")[1],
-      device_type: deviceInfo.device_type,
-    });
+      setIsSubmitted(true);
+
+      posthog.capture("waitlist_signup_success", {
+        user_role: formData.role,
+        practice_name: formData.practiceName,
+        email_domain: formData.email.split("@")[1],
+        device_type: deviceInfo.device_type,
+        already_exists:
+          res && "alreadyExists" in res
+            ? ((res as { alreadyExists?: boolean }).alreadyExists ?? false)
+            : false,
+      });
+    } catch (err: unknown) {
+      posthog.capture("waitlist_signup_error", {
+        error: err instanceof Error ? err.message : String(err),
+        device_type: deviceInfo.device_type,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleClose = () => {
@@ -263,9 +288,10 @@ export default function WaitlistModal({
 
               <Button
                 type="submit"
-                className="w-full bg-[#31aba3] text-white hover:bg-[#2a9a92]"
+                disabled={isSubmitting}
+                className="w-full bg-[#31aba3] text-white hover:bg-[#2a9a92] disabled:cursor-not-allowed disabled:opacity-70"
               >
-                Get Early Access
+                {isSubmitting ? "Submitting..." : "Get Early Access"}
               </Button>
               <p className="text-center text-sm text-gray-600">
                 Join waitlist - It&apos;s free →

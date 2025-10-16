@@ -8,6 +8,17 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  description:
+    "Access your veterinary practice management dashboard. View account information, manage settings, and get started with Odis AI.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default async function DashboardPage() {
   const user = await getUser();
@@ -17,16 +28,19 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
-        <div className="mb-8">
+        <header className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="mt-2 text-gray-600">
-            Welcome back! Here's your account overview.
+            Welcome back! Here&apos;s your account overview.
           </p>
-        </div>
+        </header>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <section
+          className="grid gap-6 md:grid-cols-2"
+          aria-label="Account overview"
+        >
           <Card>
             <CardHeader>
               <CardTitle>Account Information</CardTitle>
@@ -52,7 +66,7 @@ export default async function DashboardPage() {
                   Role
                 </label>
                 <p className="text-sm text-gray-900 capitalize">
-                  {user.user_metadata?.role || "veterinarian"}
+                  {user.user_metadata?.role ?? "veterinarian"}
                 </p>
               </div>
               <div>
@@ -89,9 +103,9 @@ export default async function DashboardPage() {
               </form>
             </CardContent>
           </Card>
-        </div>
+        </section>
 
-        <div className="mt-8">
+        <section className="mt-8" aria-label="Getting started guide">
           <Card>
             <CardHeader>
               <CardTitle>Getting Started</CardTitle>
@@ -155,8 +169,8 @@ export default async function DashboardPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

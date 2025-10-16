@@ -17,7 +17,7 @@ export default function SignupSuccessPage() {
           Check your email
         </CardTitle>
         <CardDescription className="text-slate-600">
-          We've sent you a confirmation link to verify your email address.
+          We&apos;ve sent you a confirmation link to verify your email address.
         </CardDescription>
       </CardHeader>
       <CardContent className="relative space-y-6">

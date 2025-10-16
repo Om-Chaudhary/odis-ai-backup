@@ -1,5 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { env } from "~/env";
 
 export async function updateSession(request: NextRequest) {
@@ -16,14 +16,14 @@ export async function updateSession(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            request.cookies.set(name, value),
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
           );
           supabaseResponse = NextResponse.next({
             request,
           });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options),
+            supabaseResponse.cookies.set(name, value, options)
           );
         },
       },
@@ -43,6 +43,10 @@ export async function updateSession(request: NextRequest) {
     !request.nextUrl.pathname.startsWith("/login") &&
     !request.nextUrl.pathname.startsWith("/signup") &&
     !request.nextUrl.pathname.startsWith("/auth") &&
+    !request.nextUrl.pathname.startsWith("/studio") &&
+    !request.nextUrl.pathname.startsWith("/blog") &&
+    !request.nextUrl.pathname.startsWith("/api") &&
+    // !request.nextUrl.pathname.startsWith("/studio") &&
     request.nextUrl.pathname !== "/"
   ) {
     // no user, potentially respond by redirecting the user to the login page
