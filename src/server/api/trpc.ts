@@ -1,5 +1,4 @@
 import { initTRPC, TRPCError } from "@trpc/server";
-import superjson from "superjson";
 import { ZodError } from "zod";
 import { createClient } from "~/lib/supabase/server";
 
@@ -23,7 +22,7 @@ export const createTRPCContext = async (opts: CreateContextOptions) => {
 const t = initTRPC
   .context<Awaited<ReturnType<typeof createTRPCContext>>>()
   .create({
-    transformer: superjson,
+    // transformer: superjson, // Temporarily disable transformer
     errorFormatter({ shape, error }) {
       return {
         ...shape,
