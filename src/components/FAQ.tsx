@@ -21,7 +21,7 @@ const faqData = [
   {
     question: "How secure is my practice data?",
     answer:
-      "Data security is our top priority. We use enterprise-grade encryption, comply with HIPAA regulations, and maintain SOC 2 Type II certification. Your data is encrypted both in transit and at rest, and we never share your information with third parties without explicit consent.",
+      "Data security is our top priority. We are HIPAA and SOC 2 adjacent, using enterprise-grade encryption and maintaining the highest security standards. Your data is encrypted both in transit and at rest, and we never share your information with third parties without explicit consent.",
   },
   {
     question: "What kind of setup and training is required?",
