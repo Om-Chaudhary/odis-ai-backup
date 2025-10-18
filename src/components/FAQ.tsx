@@ -29,11 +29,6 @@ const faqData = [
       "Our implementation process is designed to be seamless and non-disruptive. We provide comprehensive training for your team, including live sessions and documentation. Most practices are up and running within a few days with minimal downtime.",
   },
   {
-    question: "How much does OdisAI cost?",
-    answer:
-      "Our pricing is based on the size of your practice and the features you need. We offer flexible plans that scale with your business. Contact our sales team for a personalized quote that fits your practice's specific requirements.",
-  },
-  {
     question: "Do you offer customer support?",
     answer:
       "Yes! We provide 24/7 customer support via phone, email, and chat. Our dedicated support team includes veterinary professionals who understand the unique challenges of running a veterinary practice.",
