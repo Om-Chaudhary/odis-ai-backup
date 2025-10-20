@@ -1,4 +1,5 @@
 import { waitlistRouter } from "~/server/api/routers/waitlist";
+import { templatesRouter } from "~/server/api/routers/templates";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
 /**
@@ -8,6 +9,7 @@ import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
  */
 export const appRouter = createTRPCRouter({
   waitlist: waitlistRouter,
+  templates: templatesRouter,
 });
 
 export type AppRouter = typeof appRouter;

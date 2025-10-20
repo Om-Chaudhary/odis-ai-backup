@@ -82,4 +82,36 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
     },
   });
 });
+
+/**
+ * Admin-only procedure
+ *
+ * Extends protectedProcedure to also verify the user has admin role.
+ * Use this for admin-only operations like template management.
+ *
+ * @see https://trpc.io/docs/procedures
+ */
+export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  // Check if user has admin role
+  const { data: userProfile } = await ctx.supabase
+    .from("users")
+    .select("role")
+    .eq("id", ctx.user.id)
+    .single();
+
+  if (userProfile?.role !== "admin") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Admin access required",
+    });
+  }
+
+  return next({
+    ctx: {
+      ...ctx,
+      user: { ...ctx.user },
+    },
+  });
+});
+
 export const middleware = t.middleware;
