@@ -147,7 +147,7 @@ export type Database = {
             foreignKeyName: "discharge_summaries_template_id_fkey"
             columns: ["template_id"]
             isOneToOne: false
-            referencedRelation: "temp_discharge_summaries"
+            referencedRelation: "temp_discharge_summary_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -292,7 +292,7 @@ export type Database = {
           },
         ]
       }
-      temp_discharge_summaries: {
+      temp_discharge_summary_templates: {
         Row: {
           content: string
           created_at: string
@@ -548,7 +548,7 @@ export type Database = {
             foreignKeyName: "users_default_discharge_template_id_fkey"
             columns: ["default_discharge_template_id"]
             isOneToOne: false
-            referencedRelation: "temp_discharge_summaries"
+            referencedRelation: "temp_discharge_summary_templates"
             referencedColumns: ["id"]
           },
         ]
