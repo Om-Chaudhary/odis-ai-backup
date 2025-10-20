@@ -35,9 +35,9 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-white dark:bg-gray-950">
       {/* Sidebar */}
-      <aside className="w-64 border-r bg-gray-50 dark:bg-gray-900">
+      <aside className="w-64 border-r bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
         <div className="flex h-full flex-col">
           {/* Logo/Header */}
           <div className="border-b p-6">
@@ -70,8 +70,8 @@ export default async function AdminLayout({
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1">
-        <div className="container mx-auto p-8">{children}</div>
+      <main className="flex-1 bg-white dark:bg-gray-950">
+        <div className="container mx-auto p-8 text-gray-900 dark:text-gray-100">{children}</div>
       </main>
       <Toaster />
     </div>
@@ -92,7 +92,7 @@ function NavLink({
   return (
     <Link
       href={href}
-      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 ${className}`}
+      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 ${className}`}
     >
       {icon}
       {children}
