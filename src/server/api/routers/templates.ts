@@ -49,9 +49,10 @@ export const templatesRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      let query = ctx.supabase
+      // Use service client to bypass RLS and get user joins
+      let query = ctx.serviceClient
         .from("temp_soap_templates")
-        .select("*, user:users(id, email, full_name)")
+        .select("*, user:users(id, email, first_name, last_name)")
         .order("created_at", { ascending: false });
 
       if (input.search) {
@@ -83,7 +84,7 @@ export const templatesRouter = createTRPCRouter({
   getSoapTemplate: adminProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      const { data, error } = await ctx.supabase
+      const { data, error } = await ctx.serviceClient
         .from("temp_soap_templates")
         .select("*")
         .eq("id", input.id)
@@ -106,7 +107,7 @@ export const templatesRouter = createTRPCRouter({
   createSoapTemplate: adminProcedure
     .input(soapTemplateSchema)
     .mutation(async ({ ctx, input }) => {
-      const { data, error } = await ctx.supabase
+      const { data, error } = await ctx.serviceClient
         .from("temp_soap_templates")
         .insert(input)
         .select()
@@ -134,7 +135,7 @@ export const templatesRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { data, error } = await ctx.supabase
+      const { data, error } = await ctx.serviceClient
         .from("temp_soap_templates")
         .update(input.data)
         .eq("id", input.id)
@@ -158,7 +159,7 @@ export const templatesRouter = createTRPCRouter({
   deleteSoapTemplate: adminProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      const { error } = await ctx.supabase
+      const { error } = await ctx.serviceClient
         .from("temp_soap_templates")
         .delete()
         .eq("id", input.id);
@@ -182,9 +183,10 @@ export const templatesRouter = createTRPCRouter({
    * Get all users for assignment dropdown
    */
   listUsers: adminProcedure.query(async ({ ctx }) => {
-    const { data, error } = await ctx.supabase
+    // Use service client to bypass RLS
+    const { data, error } = await ctx.serviceClient
       .from("users")
-      .select("id, email, full_name, role")
+      .select("id, email, first_name, last_name, role")
       .order("email");
 
     if (error) {

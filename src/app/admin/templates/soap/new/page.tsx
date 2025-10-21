@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { api } from "~/trpc/react";
+import { api } from "~/trpc/client";
 import { SoapTemplateForm } from "~/components/admin/SoapTemplateForm";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -26,18 +26,18 @@ export default function NewSoapTemplatePage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
+    <div className="space-y-4">
+      <div className="space-y-3">
         <Link href="/admin/templates/soap">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
+          <Button variant="ghost" size="sm" className="gap-2 hover:bg-primary/10 hover:text-primary">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Templates
           </Button>
         </Link>
-        <div>
-          <h1 className="text-3xl font-bold">Create SOAP Template</h1>
-          <p className="text-muted-foreground mt-2">
-            Create a new SOAP note template
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Create SOAP Template</h1>
+          <p className="text-base text-muted-foreground">
+            Create a new SOAP note template with customizable sections
           </p>
         </div>
       </div>

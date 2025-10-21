@@ -1,15 +1,11 @@
 import { redirect } from "next/navigation";
-import { getUser } from "~/server/actions/auth";
+import { getUser, signOut } from "~/server/actions/auth";
 import { createClient } from "~/lib/supabase/server";
 import Link from "next/link";
 import { Button } from "~/components/ui/button";
-import {
-  FileText,
-  Users,
-  LayoutDashboard,
-  ClipboardList,
-} from "lucide-react";
+import { LayoutDashboard, ClipboardList, LogOut } from "lucide-react";
 import { Toaster } from "sonner";
+import { DarkModeWrapper } from "~/components/DarkModeWrapper";
 
 export default async function AdminLayout({
   children,
@@ -35,13 +31,14 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-white dark:bg-gray-950">
-      {/* Sidebar */}
-      <aside className="w-64 border-r bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <DarkModeWrapper>
+      <div className="flex min-h-screen bg-background">
+        {/* Sidebar */}
+        <aside className="w-64 border-r border bg-card shadow-sm">
         <div className="flex h-full flex-col">
           {/* Logo/Header */}
-          <div className="border-b p-6">
-            <h1 className="text-xl font-bold">Admin Panel</h1>
+          <div className="border-b border p-6">
+            <h1 className="text-xl font-bold text-foreground">Admin Panel</h1>
             <p className="text-sm text-muted-foreground">Template Management</p>
           </div>
 
@@ -59,22 +56,31 @@ export default async function AdminLayout({
           </nav>
 
           {/* Footer */}
-          <div className="border-t p-4">
+          <div className="border-t border p-4 space-y-2">
             <Link href="/dashboard">
               <Button variant="outline" className="w-full">
                 Back to Dashboard
               </Button>
             </Link>
+            <form action={signOut}>
+              <Button type="submit" variant="ghost" className="w-full justify-start">
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
+              </Button>
+            </form>
           </div>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 bg-white dark:bg-gray-950">
-        <div className="container mx-auto p-8 text-gray-900 dark:text-gray-100">{children}</div>
+      <main className="flex-1 overflow-auto bg-background">
+        <div className="container mx-auto p-8">
+          {children}
+        </div>
       </main>
-      <Toaster />
-    </div>
+        <Toaster />
+      </div>
+    </DarkModeWrapper>
   );
 }
 
@@ -92,9 +98,9 @@ function NavLink({
   return (
     <Link
       href={href}
-      className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 ${className}`}
+      className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-muted-foreground transition-all hover:bg-accent hover:text-foreground ${className}`}
     >
-      {icon}
+      <span className="transition-transform group-hover:scale-110">{icon}</span>
       {children}
     </Link>
   );
