@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { env } from "~/env";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const body = await request.json() as Record<string, unknown>;
 
     const response = await fetch(
       `${env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/generate-soap-notes-v2`,
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const data = await response.json();
+    const data = await response.json() as Record<string, unknown>;
     return NextResponse.json(data);
   } catch (error) {
     console.error("Error proxying SOAP generation:", error);

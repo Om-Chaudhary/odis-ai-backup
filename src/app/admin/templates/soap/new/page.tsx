@@ -21,8 +21,8 @@ export default function NewSoapTemplatePage() {
     },
   });
 
-  const handleSubmit = async (data: any) => {
-    await createMutation.mutateAsync(data);
+  const handleSubmit = async (data: Record<string, unknown>) => {
+    await createMutation.mutateAsync(data as Parameters<typeof createMutation.mutateAsync>[0]);
   };
 
   return (

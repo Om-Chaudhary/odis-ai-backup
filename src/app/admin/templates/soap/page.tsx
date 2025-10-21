@@ -36,7 +36,7 @@ export default function SoapTemplatesPage() {
   const deleteMutation = api.templates.deleteSoapTemplate.useMutation({
     onSuccess: () => {
       toast.success("Template deleted successfully");
-      refetch();
+      void refetch();
     },
     onError: (error) => {
       toast.error(error.message || "Failed to delete template");
@@ -79,7 +79,7 @@ export default function SoapTemplatesPage() {
   };
 
   const columns = getColumns({
-    onDelete: handleDelete,
+    onDelete: (id: string, name: string) => void handleDelete(id, name),
     isDeleting: deleteMutation.isPending,
   });
 

@@ -31,10 +31,10 @@ export default function EditSoapTemplatePage({
     },
   });
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: Record<string, unknown>) => {
     await updateMutation.mutateAsync({
       id: resolvedParams.id,
-      data,
+      data: data as Parameters<typeof updateMutation.mutateAsync>[0]['data'],
     });
   };
 
@@ -60,7 +60,7 @@ export default function EditSoapTemplatePage({
           </div>
           <div className="space-y-2">
             <p className="text-lg font-medium text-foreground">Template not found</p>
-            <p className="text-sm text-muted-foreground">The template you're looking for doesn't exist</p>
+            <p className="text-sm text-muted-foreground">The template you&apos;re looking for doesn&apos;t exist</p>
           </div>
           <Link href="/admin/templates/soap">
             <Button className="gap-2 shadow-md">
