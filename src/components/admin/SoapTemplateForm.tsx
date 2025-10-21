@@ -21,7 +21,7 @@ import {
   CardTitle,
 } from "~/components/ui/card";
 import { Loader2 } from "lucide-react";
-import { api } from "~/trpc/react";
+import { api } from "~/trpc/client";
 
 interface SoapTemplateFormProps {
   initialData?: {
@@ -89,64 +89,86 @@ export function SoapTemplateForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-4">
       {/* Basic Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
-          <CardDescription>
+      <Card className="rounded-xl border-border shadow-md">
+        <CardHeader className="bg-primary/5 pb-3">
+          <CardTitle className="text-lg text-foreground">Basic Information</CardTitle>
+          <CardDescription className="text-sm">
             Template identification and display settings
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-6">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="template_id">Template ID *</Label>
+              <Label htmlFor="template_id" className="text-sm font-semibold text-foreground">
+                Template ID <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="template_id"
                 value={formData.template_id}
                 onChange={(e) => updateField("template_id", e.target.value)}
                 required
+                className="shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
+                placeholder="e.g., soap_general"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="template_name">Template Name *</Label>
+              <Label htmlFor="template_name" className="text-sm font-semibold text-foreground">
+                Template Name <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="template_name"
                 value={formData.template_name}
                 onChange={(e) => updateField("template_name", e.target.value)}
                 required
+                className="shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
+                placeholder="e.g., General SOAP"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="display_name">Display Name *</Label>
+              <Label htmlFor="display_name" className="text-sm font-semibold text-foreground">
+                Display Name <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="display_name"
                 value={formData.display_name}
                 onChange={(e) => updateField("display_name", e.target.value)}
                 required
+                className="shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
+                placeholder="e.g., General Practice SOAP Note"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="person_name">Person Name *</Label>
+              <Label htmlFor="person_name" className="text-sm font-semibold text-foreground">
+                Person Name <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="person_name"
                 value={formData.person_name}
                 onChange={(e) => updateField("person_name", e.target.value)}
                 required
+                className="shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
+                placeholder="e.g., Patient"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="icon_name">Icon Name *</Label>
+              <Label htmlFor="icon_name" className="text-sm font-semibold text-foreground">
+                Icon Name <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="icon_name"
                 value={formData.icon_name}
                 onChange={(e) => updateField("icon_name", e.target.value)}
                 required
+                className="shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
+                placeholder="e.g., Stethoscope"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="user_id">Assign to User</Label>
+              <Label htmlFor="user_id" className="text-sm font-semibold text-foreground">
+                Assign to User
+              </Label>
               <Select
                 value={formData.user_id || "unassigned"}
                 onValueChange={(value) =>
@@ -154,49 +176,66 @@ export function SoapTemplateForm({
                 }
                 disabled={usersLoading}
               >
-                <SelectTrigger>
+                <SelectTrigger className="shadow-sm">
                   <SelectValue placeholder="Select user" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {users?.map((user) => (
-                    <SelectItem key={user.id} value={user.id}>
-                      {user.full_name || user.email}
-                    </SelectItem>
-                  ))}
+                  {users?.map((user) => {
+                    const displayName =
+                      user.first_name && user.last_name
+                        ? `${user.first_name} ${user.last_name} (${user.email})`
+                        : user.email;
+
+                    return (
+                      <SelectItem key={user.id} value={user.id}>
+                        {displayName}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3 rounded-lg border border-border bg-muted/30 p-4">
             <Switch
               id="is_default"
               checked={formData.is_default}
               onCheckedChange={(checked) => updateField("is_default", checked)}
             />
-            <Label htmlFor="is_default">Set as default template</Label>
+            <div className="space-y-0.5">
+              <Label htmlFor="is_default" className="text-sm font-semibold text-foreground cursor-pointer">
+                Set as default template
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Default templates are available to all users
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* SOAP Sections */}
       {[
-        { key: "subjective", label: "Subjective" },
-        { key: "objective", label: "Objective" },
-        { key: "assessment", label: "Assessment" },
-        { key: "plan", label: "Plan" },
-        { key: "client_instructions", label: "Client Instructions" },
+        { key: "subjective", label: "Subjective", icon: "💭", description: "Patient's reported symptoms and concerns" },
+        { key: "objective", label: "Objective", icon: "📊", description: "Observable and measurable findings" },
+        { key: "assessment", label: "Assessment", icon: "🔍", description: "Clinical interpretation and diagnosis" },
+        { key: "plan", label: "Plan", icon: "📋", description: "Treatment plan and next steps" },
+        { key: "client_instructions", label: "Client Instructions", icon: "📝", description: "Patient guidance and directions" },
       ].map((section) => (
-        <Card key={section.key}>
-          <CardHeader>
-            <CardTitle>{section.label}</CardTitle>
-            <CardDescription>
-              Template and AI prompt for {section.label.toLowerCase()} section
+        <Card key={section.key} className="rounded-xl border-border shadow-md">
+          <CardHeader className="bg-muted/30 pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+              <span className="text-xl">{section.icon}</span>
+              {section.label}
+            </CardTitle>
+            <CardDescription className="text-sm">
+              {section.description}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-4">
             <div className="space-y-2">
-              <Label htmlFor={`${section.key}_template`}>
+              <Label htmlFor={`${section.key}_template`} className="text-sm font-semibold text-foreground">
                 {section.label} Template
               </Label>
               <Textarea
@@ -205,12 +244,15 @@ export function SoapTemplateForm({
                 onChange={(e) =>
                   updateField(`${section.key}_template`, e.target.value)
                 }
-                rows={4}
+                className="shadow-sm font-mono text-sm transition-all focus:ring-2 focus:ring-primary/20 max-h-32 min-h-[160px] resize-none overflow-y-auto"
                 placeholder="Enter template content..."
               />
+              <p className="text-xs text-muted-foreground">
+                The base template structure for this section
+              </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor={`${section.key}_prompt`}>
+              <Label htmlFor={`${section.key}_prompt`} className="text-sm font-semibold text-foreground">
                 {section.label} AI Prompt
               </Label>
               <Textarea
@@ -219,39 +261,59 @@ export function SoapTemplateForm({
                 onChange={(e) =>
                   updateField(`${section.key}_prompt`, e.target.value)
                 }
-                rows={3}
+                className="shadow-sm transition-all focus:ring-2 focus:ring-primary/20 max-h-24 min-h-[120px] resize-none overflow-y-auto"
                 placeholder="Enter AI generation prompt..."
               />
+              <p className="text-xs text-muted-foreground">
+                Instructions for AI to generate content for this section
+              </p>
             </div>
           </CardContent>
         </Card>
       ))}
 
       {/* System Prompt */}
-      <Card>
-        <CardHeader>
-          <CardTitle>System Prompt Addition</CardTitle>
-          <CardDescription>
+      <Card className="rounded-xl border-border shadow-md">
+        <CardHeader className="bg-muted/30 pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+            <span className="text-xl">⚙️</span>
+            System Prompt Addition
+          </CardTitle>
+          <CardDescription className="text-sm">
             Additional instructions for the AI system
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-2 pt-4">
+          <Label htmlFor="system_prompt_addition" className="text-sm font-semibold text-foreground">
+            System Instructions
+          </Label>
           <Textarea
             id="system_prompt_addition"
             value={formData.system_prompt_addition || ""}
             onChange={(e) =>
               updateField("system_prompt_addition", e.target.value)
             }
-            rows={4}
+            className="shadow-sm transition-all focus:ring-2 focus:ring-primary/20 max-h-40 min-h-[200px] resize-none overflow-y-auto"
             placeholder="Enter additional system instructions..."
           />
+          <p className="text-xs text-muted-foreground">
+            Global instructions that apply to all sections of this template
+          </p>
         </CardContent>
       </Card>
 
       {/* Submit Button */}
-      <div className="flex justify-end gap-4">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      <div className="sticky bottom-0 z-20 flex items-center justify-between gap-4 rounded-lg border border-border bg-card/95 p-4 shadow-lg backdrop-blur-sm">
+        <p className="text-sm text-muted-foreground">
+          {initialData?.id ? "Update" : "Create"} your template to make it available for use
+        </p>
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          size="lg"
+          className="gap-2 shadow-md transition-all hover:shadow-lg"
+        >
+          {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
           {initialData?.id ? "Update Template" : "Create Template"}
         </Button>
       </div>

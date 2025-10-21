@@ -1,17 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { api } from "~/trpc/react";
+import { useState, useMemo } from "react";
+import { api } from "~/trpc/client";
 import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "~/components/ui/table";
 import {
   Card,
   CardContent,
@@ -19,20 +10,27 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import { Badge } from "~/components/ui/badge";
-import { Plus, Search, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Loader2, ClipboardList } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { DataTable } from "~/components/ui/data-table";
+import { getColumns } from "~/components/admin/soap-templates-columns";
+import { SoapTemplatesFilters } from "~/components/admin/SoapTemplatesFilters";
 
 export default function SoapTemplatesPage() {
-  const [search, setSearch] = useState("");
+  // Filter state
+  const [userFilter, setUserFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Query templates
   const {
     data: templates,
     isLoading,
     refetch,
-  } = api.templates.listSoapTemplates.useQuery({ search });
+  } = api.templates.listSoapTemplates.useQuery({ search: "" });
+
+  // Query users for filter dropdown
+  const { data: users } = api.templates.listUsers.useQuery();
 
   // Delete mutation
   const deleteMutation = api.templates.deleteSoapTemplate.useMutation({
@@ -51,112 +49,116 @@ export default function SoapTemplatesPage() {
     }
   };
 
+  // Filter templates based on selected filters
+  const filteredTemplates = useMemo(() => {
+    if (!templates) return [];
+
+    return templates.filter((template) => {
+      // User filter
+      if (userFilter !== "all") {
+        if (userFilter === "unassigned") {
+          if (template.user_id !== null) return false;
+        } else {
+          if (template.user_id !== userFilter) return false;
+        }
+      }
+
+      // Status filter
+      if (statusFilter !== "all") {
+        if (statusFilter === "default" && !template.is_default) return false;
+        if (statusFilter === "non-default" && template.is_default) return false;
+      }
+
+      return true;
+    });
+  }, [templates, userFilter, statusFilter]);
+
+  const handleClearFilters = () => {
+    setUserFilter("all");
+    setStatusFilter("all");
+  };
+
+  const columns = getColumns({
+    onDelete: handleDelete,
+    isDeleting: deleteMutation.isPending,
+  });
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">SOAP Templates</h1>
-          <p className="text-muted-foreground mt-2">
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-primary/10 p-2">
+              <ClipboardList className="h-6 w-6 text-primary" />
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              SOAP Templates
+            </h1>
+          </div>
+          <p className="text-base text-muted-foreground">
             Manage SOAP note templates and assign them to users
           </p>
         </div>
         <Link href="/admin/templates/soap/new">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
+          <Button size="lg" className="gap-2">
+            <Plus className="h-5 w-5" />
             Create Template
           </Button>
         </Link>
       </div>
 
-      {/* Search */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Search Templates</CardTitle>
-          <CardDescription>Find templates by name</CardDescription>
+      {/* Templates DataTable */}
+      <Card className="rounded-xl bg-transparent shadow-none">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl">Templates</CardTitle>
+          <CardDescription>
+            Browse and manage all SOAP note templates
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="relative max-w-md">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search templates..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Templates Table */}
-      <Card>
-        <CardContent className="p-0">
           {isLoading ? (
-            <div className="flex items-center justify-center p-12">
-              <Loader2 className="h-8 w-8 animate-spin" />
+            <div className="flex items-center justify-center p-16">
+              <div className="flex flex-col items-center gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">
+                  Loading templates...
+                </p>
+              </div>
             </div>
           ) : templates && templates.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Template Name</TableHead>
-                  <TableHead>Display Name</TableHead>
-                  <TableHead>Assigned User</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {templates.map((template) => (
-                  <TableRow key={template.id}>
-                    <TableCell className="font-medium">
-                      {template.template_name}
-                    </TableCell>
-                    <TableCell>{template.display_name}</TableCell>
-                    <TableCell>
-                      {template.user ? (
-                        <span className="text-sm">
-                          {template.user.full_name || template.user.email}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">
-                          Unassigned
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {template.is_default && (
-                        <Badge variant="default">Default</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Link href={`/admin/templates/soap/${template.id}`}>
-                          <Button variant="ghost" size="sm">
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() =>
-                            handleDelete(template.id, template.display_name)
-                          }
-                          disabled={deleteMutation.isPending}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              columns={columns}
+              data={filteredTemplates}
+              searchKey="template_name"
+              searchPlaceholder="Search templates..."
+              filterComponent={
+                <SoapTemplatesFilters
+                  users={users}
+                  userFilter={userFilter}
+                  statusFilter={statusFilter}
+                  onUserFilterChange={setUserFilter}
+                  onStatusFilterChange={setStatusFilter}
+                  onClearFilters={handleClearFilters}
+                />
+              }
+            />
           ) : (
-            <div className="p-12 text-center">
-              <p className="text-muted-foreground">No templates found</p>
+            <div className="flex flex-col items-center justify-center gap-6 py-16 text-center">
+              <div className="rounded-full bg-muted p-8">
+                <ClipboardList className="h-12 w-12 text-muted-foreground" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">No templates found</h3>
+                <p className="max-w-sm text-sm text-muted-foreground">
+                  Get started by creating your first SOAP template
+                </p>
+              </div>
               <Link href="/admin/templates/soap/new">
-                <Button className="mt-4">Create your first template</Button>
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Create your first template
+                </Button>
               </Link>
             </div>
           )}

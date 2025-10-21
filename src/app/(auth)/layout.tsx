@@ -12,34 +12,34 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-b from-emerald-50 via-emerald-100/40 to-emerald-50/30 px-4 py-12 sm:px-6 lg:px-8">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-b from-emerald-50 via-teal-50/40 to-emerald-50/30 px-4 py-12 sm:px-6 lg:px-8">
       {/* Background Effects */}
       <div className="pointer-events-none absolute inset-0">
         <div
           style={{
             background:
-              "radial-gradient(circle at 30% 40%, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.06) 40%, transparent 70%)",
+              "radial-gradient(circle at 30% 40%, rgba(49, 171, 163, 0.12) 0%, rgba(49, 171, 163, 0.06) 40%, transparent 70%)",
           }}
           className="animate-gradient-move absolute inset-0 opacity-70 blur-sm"
         />
         <div
           style={{
             background:
-              "radial-gradient(circle at 70% 60%, rgba(16, 185, 129, 0.10) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 80%)",
+              "radial-gradient(circle at 70% 60%, rgba(49, 171, 163, 0.10) 0%, rgba(49, 171, 163, 0.05) 50%, transparent 80%)",
           }}
           className="animate-gradient-move-reverse absolute inset-0 opacity-50 blur-sm"
         />
         <div
           style={{
             background:
-              "radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, transparent 60%)",
+              "radial-gradient(circle, rgba(49, 171, 163, 0.06) 0%, transparent 60%)",
           }}
           className="animate-float-slow absolute top-1/4 left-1/4 h-[400px] w-[400px] rounded-full opacity-40 blur-3xl transition-opacity duration-1000 hover:opacity-60"
         />
         <div
           style={{
             background:
-              "radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 60%)",
+              "radial-gradient(circle, rgba(49, 171, 163, 0.05) 0%, transparent 60%)",
           }}
           className="animate-float-slow-reverse absolute right-1/3 bottom-1/3 h-[300px] w-[300px] rounded-full opacity-35 blur-3xl transition-opacity duration-1000 hover:opacity-50"
         />
@@ -57,7 +57,7 @@ export default function AuthLayout({
 
       <div className="relative w-full max-w-md space-y-8">
         <div className="text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-cyan-600 shadow-lg">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#31aba3] to-[#2a9a92] shadow-lg">
             <svg
               className="h-8 w-8 text-white"
               fill="currentColor"
@@ -72,10 +72,10 @@ export default function AuthLayout({
               </g>
             </svg>
           </div>
-          <h2 className="font-display mt-6 text-3xl font-bold tracking-tight text-slate-800">
+          <h2 className="font-display mt-6 text-3xl font-bold tracking-tight text-foreground">
             Welcome to Odis AI
           </h2>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="mt-2 text-sm text-muted-foreground">
             Streamline your veterinary practice with AI
           </p>
         </div>
@@ -83,7 +83,7 @@ export default function AuthLayout({
         <div className="text-center">
           <Link
             href="/"
-            className="font-medium text-teal-600 transition-colors duration-200 hover:text-teal-500"
+            className="font-medium text-[#31aba3] transition-colors duration-200 hover:text-[#2a9a92]"
           >
             ← Back to home
           </Link>
