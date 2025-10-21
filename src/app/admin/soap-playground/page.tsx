@@ -74,7 +74,7 @@ export default function SoapPlayground() {
 
   const handleTemplateSelect = (id: string) => {
     setSelectedTemplateId(id);
-    const template = templates?.find((t: { id: string }) => t.id === id);
+    const template = templates?.find((t) => t.id === id);
 
     if (template) {
       setSubjectiveTemplate(template.subjective_template ?? "");
@@ -183,7 +183,7 @@ export default function SoapPlayground() {
   };
 
   const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
+    void navigator.clipboard.writeText(text);
     toast.success(`${label} copied to clipboard`);
   };
 

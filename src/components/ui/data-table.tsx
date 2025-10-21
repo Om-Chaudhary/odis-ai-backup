@@ -1,11 +1,13 @@
 "use client";
 
 import * as React from "react";
-import {
+import type {
   ColumnDef,
   ColumnFiltersState,
   SortingState,
   VisibilityState,
+} from "@tanstack/react-table";
+import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -71,7 +73,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      {(searchKey || filterComponent) && (
+      {(searchKey ?? filterComponent) && (
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           {searchKey && (
             <div className="relative flex-1 max-w-sm">

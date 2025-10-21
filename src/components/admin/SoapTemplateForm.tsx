@@ -45,7 +45,7 @@ interface SoapTemplateFormProps {
     client_instructions_prompt?: string | null;
     system_prompt_addition?: string | null;
   };
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: Record<string, unknown>) => Promise<void>;
   isSubmitting: boolean;
 }
 
@@ -55,7 +55,7 @@ export function SoapTemplateForm({
   isSubmitting,
 }: SoapTemplateFormProps) {
   const [formData, setFormData] = useState(
-    initialData || {
+    initialData ?? {
       template_id: "",
       template_name: "",
       display_name: "",
@@ -84,7 +84,7 @@ export function SoapTemplateForm({
     await onSubmit(formData);
   };
 
-  const updateField = (field: string, value: any) => {
+  const updateField = (field: string, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -170,7 +170,7 @@ export function SoapTemplateForm({
                 Assign to User
               </Label>
               <Select
-                value={formData.user_id || "unassigned"}
+                value={formData.user_id ?? "unassigned"}
                 onValueChange={(value) =>
                   updateField("user_id", value === "unassigned" ? null : value)
                 }
@@ -240,7 +240,7 @@ export function SoapTemplateForm({
               </Label>
               <Textarea
                 id={`${section.key}_template`}
-                value={formData[`${section.key}_template` as keyof typeof formData] as string || ""}
+                value={(formData[`${section.key}_template` as keyof typeof formData] as string) ?? ""}
                 onChange={(e) =>
                   updateField(`${section.key}_template`, e.target.value)
                 }
@@ -257,7 +257,7 @@ export function SoapTemplateForm({
               </Label>
               <Textarea
                 id={`${section.key}_prompt`}
-                value={formData[`${section.key}_prompt` as keyof typeof formData] as string || ""}
+                value={(formData[`${section.key}_prompt` as keyof typeof formData] as string) ?? ""}
                 onChange={(e) =>
                   updateField(`${section.key}_prompt`, e.target.value)
                 }
@@ -289,7 +289,7 @@ export function SoapTemplateForm({
           </Label>
           <Textarea
             id="system_prompt_addition"
-            value={formData.system_prompt_addition || ""}
+            value={formData.system_prompt_addition ?? ""}
             onChange={(e) =>
               updateField("system_prompt_addition", e.target.value)
             }
