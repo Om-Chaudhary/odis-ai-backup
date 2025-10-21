@@ -102,6 +102,7 @@ export type Database = {
           case_id: string
           content: string
           created_at: string
+          generation_id: string | null
           id: string
           soap_note_id: string | null
           template_id: string | null
@@ -112,6 +113,7 @@ export type Database = {
           case_id: string
           content: string
           created_at?: string
+          generation_id?: string | null
           id?: string
           soap_note_id?: string | null
           template_id?: string | null
@@ -122,6 +124,7 @@ export type Database = {
           case_id?: string
           content?: string
           created_at?: string
+          generation_id?: string | null
           id?: string
           soap_note_id?: string | null
           template_id?: string | null
@@ -134,6 +137,13 @@ export type Database = {
             columns: ["case_id"]
             isOneToOne: false
             referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discharge_summaries_generation_id_fkey"
+            columns: ["generation_id"]
+            isOneToOne: false
+            referencedRelation: "generations"
             referencedColumns: ["id"]
           },
           {
@@ -392,7 +402,15 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "temp_soap_templates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       templates: {
         Row: {
