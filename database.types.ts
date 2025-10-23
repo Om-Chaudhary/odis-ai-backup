@@ -579,7 +579,7 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
-          ip: unknown | null
+          ip: unknown
           metadata: Json
           source: string | null
           status: Database["public"]["Enums"]["waitlist_status"]
@@ -592,7 +592,7 @@ export type Database = {
           email: string
           full_name?: string | null
           id?: string
-          ip?: unknown | null
+          ip?: unknown
           metadata?: Json
           source?: string | null
           status?: Database["public"]["Enums"]["waitlist_status"]
@@ -605,7 +605,7 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
-          ip?: unknown | null
+          ip?: unknown
           metadata?: Json
           source?: string | null
           status?: Database["public"]["Enums"]["waitlist_status"]
@@ -683,30 +683,6 @@ export type Database = {
       check_usage_limit: {
         Args: { resource: string; user_uuid: string }
         Returns: boolean
-      }
-      citext: {
-        Args: { "": boolean } | { "": string } | { "": unknown }
-        Returns: string
-      }
-      citext_hash: {
-        Args: { "": string }
-        Returns: number
-      }
-      citextin: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      citextout: {
-        Args: { "": string }
-        Returns: unknown
-      }
-      citextrecv: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      citextsend: {
-        Args: { "": string }
-        Returns: string
       }
       get_current_usage: {
         Args: { user_uuid: string }
