@@ -220,8 +220,6 @@ export type Database = {
           created_at: string
           id: string
           name: string
-          owner_email: string | null
-          owner_name: string
           updated_at: string | null
           user_id: string | null
         }
@@ -230,8 +228,6 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
-          owner_email?: string | null
-          owner_name: string
           updated_at?: string | null
           user_id?: string | null
         }
@@ -240,8 +236,6 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
-          owner_email?: string | null
-          owner_name?: string
           updated_at?: string | null
           user_id?: string | null
         }
@@ -521,7 +515,9 @@ export type Database = {
       users: {
         Row: {
           avatar_url: string | null
+          clinic_email: string | null
           clinic_name: string | null
+          clinic_phone: string | null
           created_at: string
           default_discharge_template_id: string | null
           email: string | null
@@ -535,7 +531,9 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          clinic_email?: string | null
           clinic_name?: string | null
+          clinic_phone?: string | null
           created_at?: string
           default_discharge_template_id?: string | null
           email?: string | null
@@ -549,7 +547,9 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          clinic_email?: string | null
           clinic_name?: string | null
+          clinic_phone?: string | null
           created_at?: string
           default_discharge_template_id?: string | null
           email?: string | null
