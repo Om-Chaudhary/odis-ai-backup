@@ -39,6 +39,72 @@ export default function Footer() {
                 </div>
               </div>
             </div>
+
+            {/* Quick Links */}
+            <div>
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-900">
+                Quick Links
+              </h3>
+              <ul className="space-y-3">
+                <li>
+                  <Link
+                    href="/"
+                    className="text-sm text-slate-600 transition-colors hover:text-teal-600"
+                  >
+                    Home
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/blog"
+                    className="text-sm text-slate-600 transition-colors hover:text-teal-600"
+                  >
+                    Blog
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/support"
+                    className="text-sm text-slate-600 transition-colors hover:text-teal-600"
+                  >
+                    Support
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Resources */}
+            <div>
+              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-900">
+                Resources
+              </h3>
+              <ul className="space-y-3">
+                <li>
+                  <Link
+                    href="/support"
+                    className="text-sm text-slate-600 transition-colors hover:text-teal-600"
+                  >
+                    Help Center
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/support"
+                    className="text-sm text-slate-600 transition-colors hover:text-teal-600"
+                  >
+                    Documentation
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/support"
+                    className="text-sm text-slate-600 transition-colors hover:text-teal-600"
+                  >
+                    Contact Support
+                  </Link>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
 
