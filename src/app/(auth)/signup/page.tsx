@@ -13,13 +13,13 @@ import {
 
 export default function SignupPage() {
   return (
-    <Card className="relative overflow-hidden border-0 bg-white/80 shadow-xl backdrop-blur-sm">
-      <div className="absolute inset-0 bg-gradient-to-br from-white/90 to-emerald-50/30" />
+    <Card className="relative overflow-hidden border-0 bg-white/80 shadow-xl backdrop-blur-sm dark:bg-slate-900/80">
+      <div className="absolute inset-0 bg-gradient-to-br from-white/90 to-emerald-50/30 dark:from-slate-900/90 dark:to-emerald-950/30" />
       <CardHeader className="relative">
-        <CardTitle className="font-display text-2xl font-bold text-slate-800">
+        <CardTitle className="font-display text-2xl font-bold text-slate-800 dark:text-slate-100">
           Create your account
         </CardTitle>
-        <CardDescription className="text-slate-600">
+        <CardDescription className="text-slate-600 dark:text-slate-400">
           Enter your email and password to create a new account
         </CardDescription>
       </CardHeader>
@@ -28,7 +28,7 @@ export default function SignupPage() {
           <div className="space-y-2">
             <Label
               htmlFor="email"
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-slate-700 dark:text-slate-300"
             >
               Email
             </Label>
@@ -39,13 +39,13 @@ export default function SignupPage() {
               autoComplete="email"
               required
               placeholder="veterinarian@clinic.com"
-              className="border-slate-200 bg-white/90 text-slate-900 placeholder:text-slate-500 backdrop-blur-sm transition-all duration-200 focus:border-teal-500 focus:ring-teal-500/20"
+              className="border-slate-200 bg-white/90 text-slate-900 placeholder:text-slate-500 backdrop-blur-sm transition-all duration-200 focus:border-teal-500 focus:ring-teal-500/20 dark:border-slate-700 dark:bg-slate-800/90 dark:text-slate-100 dark:placeholder:text-slate-500"
             />
           </div>
           <div className="space-y-2">
             <Label
               htmlFor="password"
-              className="text-sm font-medium text-slate-700"
+              className="text-sm font-medium text-slate-700 dark:text-slate-300"
             >
               Password
             </Label>
@@ -57,7 +57,7 @@ export default function SignupPage() {
               required
               placeholder="Create a secure password (min. 6 characters)"
               minLength={6}
-              className="border-slate-200 bg-white/90 text-slate-900 placeholder:text-slate-500 backdrop-blur-sm transition-all duration-200 focus:border-teal-500 focus:ring-teal-500/20"
+              className="border-slate-200 bg-white/90 text-slate-900 placeholder:text-slate-500 backdrop-blur-sm transition-all duration-200 focus:border-teal-500 focus:ring-teal-500/20 dark:border-slate-700 dark:bg-slate-800/90 dark:text-slate-100 dark:placeholder:text-slate-500"
             />
           </div>
           <Button
@@ -67,11 +67,11 @@ export default function SignupPage() {
             Create account
           </Button>
         </form>
-        <div className="mt-6 text-center text-sm">
+        <div className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
           Already have an account?{" "}
           <Link
             href="/login"
-            className="font-medium text-teal-600 transition-colors duration-200 hover:text-teal-500"
+            className="font-medium text-teal-600 transition-colors duration-200 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300"
           >
             Sign in
           </Link>
