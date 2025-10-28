@@ -72,10 +72,10 @@ export default function AuthLayout({
               </g>
             </svg>
           </div>
-          <h2 className="font-display mt-3 sm:mt-6 text-2xl sm:text-3xl font-bold tracking-tight text-slate-800">
+          <h2 className="font-display mt-3 sm:mt-6 text-2xl sm:text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
             Welcome to Odis AI
           </h2>
-          <p className="mt-1 sm:mt-2 text-sm text-slate-600">
+          <p className="mt-1 sm:mt-2 text-sm text-slate-600 dark:text-slate-400">
             Streamline your veterinary practice with AI
           </p>
         </div>
@@ -83,7 +83,7 @@ export default function AuthLayout({
         <div className="text-center">
           <Link
             href="/"
-            className="font-medium text-teal-600 transition-colors duration-200 hover:text-teal-500"
+            className="font-medium text-teal-600 transition-colors duration-200 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300"
           >
             ← Back to home
           </Link>
