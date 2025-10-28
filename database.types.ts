@@ -70,7 +70,11 @@ export type Database = {
       cases: {
         Row: {
           created_at: string | null
+          external_id: string | null
           id: string
+          metadata: Json | null
+          scheduled_at: string | null
+          source: string | null
           status: Database["public"]["Enums"]["CaseStatus"] | null
           type: Database["public"]["Enums"]["CaseType"] | null
           updated_at: string | null
@@ -79,7 +83,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          external_id?: string | null
           id?: string
+          metadata?: Json | null
+          scheduled_at?: string | null
+          source?: string | null
           status?: Database["public"]["Enums"]["CaseStatus"] | null
           type?: Database["public"]["Enums"]["CaseType"] | null
           updated_at?: string | null
@@ -88,7 +96,11 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          external_id?: string | null
           id?: string
+          metadata?: Json | null
+          scheduled_at?: string | null
+          source?: string | null
           status?: Database["public"]["Enums"]["CaseStatus"] | null
           type?: Database["public"]["Enums"]["CaseType"] | null
           updated_at?: string | null
@@ -216,28 +228,52 @@ export type Database = {
       }
       patients: {
         Row: {
+          breed: string | null
           case_id: string | null
           created_at: string
+          date_of_birth: string | null
           id: string
           name: string
+          owner_email: string | null
+          owner_name: string | null
+          owner_phone: string | null
+          sex: string | null
+          species: string | null
           updated_at: string | null
           user_id: string | null
+          weight_kg: number | null
         }
         Insert: {
+          breed?: string | null
           case_id?: string | null
           created_at?: string
+          date_of_birth?: string | null
           id?: string
           name: string
+          owner_email?: string | null
+          owner_name?: string | null
+          owner_phone?: string | null
+          sex?: string | null
+          species?: string | null
           updated_at?: string | null
           user_id?: string | null
+          weight_kg?: number | null
         }
         Update: {
+          breed?: string | null
           case_id?: string | null
           created_at?: string
+          date_of_birth?: string | null
           id?: string
           name?: string
+          owner_email?: string | null
+          owner_name?: string | null
+          owner_phone?: string | null
+          sex?: string | null
+          species?: string | null
           updated_at?: string | null
           user_id?: string | null
+          weight_kg?: number | null
         }
         Relationships: [
           {
