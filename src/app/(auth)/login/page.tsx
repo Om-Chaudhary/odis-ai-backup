@@ -3,13 +3,6 @@ import Link from "next/link";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -24,17 +17,17 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <Card className="relative w-full overflow-hidden border-0 rounded-2xl bg-teal-50/60 shadow-xl backdrop-blur-md">
-      <div className="absolute inset-0 bg-gradient-to-br from-teal-50/50 to-cyan-100/40" />
-      <CardHeader className="relative pb-3 sm:pb-6">
-        <CardTitle className="font-display text-xl sm:text-2xl font-bold text-slate-800">
-          Sign in to your account
-        </CardTitle>
-        <CardDescription className="text-slate-600 text-sm">
-          Enter your email and password to access your account
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="relative">
+    <div className="relative w-full overflow-hidden rounded-2xl bg-teal-50/60 shadow-xl backdrop-blur-md p-6 sm:p-8">
+      <div className="absolute inset-0 bg-gradient-to-br from-teal-50/50 to-cyan-100/40 -z-10" />
+      <div className="relative space-y-4 sm:space-y-6">
+        <div className="space-y-2">
+          <h1 className="font-display text-xl sm:text-2xl font-bold text-slate-800">
+            Sign in to your account
+          </h1>
+          <p className="text-slate-600 text-sm">
+            Enter your email and password to access your account
+          </p>
+        </div>
         <form action={signIn} className="space-y-4 sm:space-y-6">
           <div className="space-y-1.5 sm:space-y-2">
             <Label
@@ -77,7 +70,7 @@ export default function LoginPage() {
             Sign in
           </Button>
         </form>
-        <div className="mt-4 sm:mt-6 text-center text-sm">
+        <div className="text-center text-sm">
           Don&apos;t have an account?{" "}
           <Link
             href="/signup"
@@ -86,7 +79,7 @@ export default function LoginPage() {
             Sign up
           </Link>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
