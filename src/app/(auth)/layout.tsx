@@ -12,7 +12,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-b from-emerald-50 via-emerald-100/40 to-emerald-50/30 px-4 py-12 sm:px-6 lg:px-8">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-b from-emerald-50 via-emerald-100/40 to-emerald-50/30 px-4 py-4 sm:py-8 lg:py-12 sm:px-6 lg:px-8">
       {/* Background Effects */}
       <div className="pointer-events-none absolute inset-0">
         <div
@@ -55,11 +55,11 @@ export default function AuthLayout({
         className="pointer-events-none absolute inset-0 opacity-15"
       />
 
-      <div className="relative w-full max-w-md space-y-8">
+      <div className="relative w-full max-w-md space-y-3 sm:space-y-6">
         <div className="text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-cyan-600 shadow-lg">
+          <div className="mx-auto flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-cyan-600 shadow-lg">
             <svg
-              className="h-8 w-8 text-white"
+              className="h-6 w-6 sm:h-8 sm:w-8 text-white"
               fill="currentColor"
               viewBox="0 0 419.14 403.6"
               xmlns="http://www.w3.org/2000/svg"
@@ -72,10 +72,10 @@ export default function AuthLayout({
               </g>
             </svg>
           </div>
-          <h2 className="font-display mt-6 text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
+          <h2 className="font-display mt-3 sm:mt-6 text-2xl sm:text-3xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
             Welcome to Odis AI
           </h2>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+          <p className="mt-1 sm:mt-2 text-sm text-slate-600 dark:text-slate-400">
             Streamline your veterinary practice with AI
           </p>
         </div>
