@@ -97,6 +97,14 @@ export default function Navigation() {
               >
                 Blog
               </Link>
+              <Link
+                href="/support"
+                className={`relative z-10 text-sm font-medium transition-colors duration-300 hover:text-teal-600 ${
+                  isScrolled ? "text-gray-700" : "text-gray-800"
+                }`}
+              >
+                Support
+              </Link>
             </div>
             <EnhancedButton
               onClick={handleButtonClick}
