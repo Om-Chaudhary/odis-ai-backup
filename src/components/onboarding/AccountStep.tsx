@@ -27,9 +27,6 @@ export default function AccountStep({ onComplete }: AccountStepProps) {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
-        },
       });
 
       if (signUpError) {
