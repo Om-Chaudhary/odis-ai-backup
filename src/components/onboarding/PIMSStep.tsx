@@ -137,7 +137,7 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
           Connect your PIMS
         </h1>
         <p className="text-slate-600 text-sm dark:text-slate-400">
-          Select your Practice Information Management System(s)
+          Select your Practice Information Management System(s) to continue
         </p>
       </div>
 
@@ -260,22 +260,20 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
         </div>
       )}
 
-      <div className="flex gap-3">
-        <Button
-          variant="outline"
-          onClick={() => handleComplete()}
-          disabled={isLoading}
-          className="flex-1 border-slate-200 dark:border-slate-700"
-        >
-          Skip for now
-        </Button>
+      <div className="space-y-3">
         <Button
           onClick={handleComplete}
-          disabled={isLoading}
-          className="flex-1 bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-[#2a9a92] hover:to-[#31aba3] hover:shadow-lg hover:shadow-[#31aba3]/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          disabled={isLoading || selectedSystems.length === 0}
+          className="w-full bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-[#2a9a92] hover:to-[#31aba3] hover:shadow-lg hover:shadow-[#31aba3]/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
         >
           {isLoading ? "Completing setup..." : "Complete setup"}
         </Button>
+
+        {selectedSystems.length === 0 && (
+          <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
+            Please select at least one PIMS system to continue
+          </p>
+        )}
       </div>
     </div>
   );
