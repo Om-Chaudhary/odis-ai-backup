@@ -189,9 +189,14 @@ export default function SoapPlayground() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-4xl font-bold tracking-tight text-foreground">SOAP Playground</h1>
-        <p className="text-lg text-muted-foreground">
+      <div className="space-y-3">
+        <div className="flex items-center gap-3">
+          <div className="rounded-lg bg-gradient-to-br from-[#31aba3] to-[#2a9a92] p-3 shadow-lg">
+            <FlaskConical className="h-6 w-6 text-white" />
+          </div>
+          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">SOAP Playground</h1>
+        </div>
+        <p className="text-lg text-slate-600">
           Test the generate-soap-notes-v2 edge function with different templates and inputs
         </p>
       </div>
@@ -200,10 +205,10 @@ export default function SoapPlayground() {
         {/* Left Column - Input */}
         <div className="space-y-6">
           {/* Template Selection */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Template Selection</CardTitle>
-              <CardDescription>Select a template to prefill the fields below</CardDescription>
+          <Card className="border-slate-200 shadow-lg bg-white/80 backdrop-blur-sm">
+            <CardHeader className="bg-gradient-to-r from-slate-50 to-teal-50/30 border-b border-slate-200">
+              <CardTitle className="text-slate-900">Template Selection</CardTitle>
+              <CardDescription className="text-slate-600">Select a template to prefill the fields below</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -341,7 +346,12 @@ export default function SoapPlayground() {
           </Card>
 
           {/* Generate Button */}
-          <Button onClick={handleGenerate} disabled={isGenerating || !transcription.trim()} className="w-full" size="lg">
+          <Button
+            onClick={handleGenerate}
+            disabled={isGenerating || !transcription.trim()}
+            className="w-full bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white shadow-lg hover:shadow-xl hover:shadow-[#31aba3]/30 transition-all hover:scale-105"
+            size="lg"
+          >
             {isGenerating ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
