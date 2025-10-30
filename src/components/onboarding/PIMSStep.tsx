@@ -94,7 +94,7 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
     setCredentials(prev => ({
       ...prev,
       [systemId]: {
-        ...prev[systemId],
+        ...(prev[systemId] ?? { username: "", password: "" }),
         [field]: value
       }
     }));
