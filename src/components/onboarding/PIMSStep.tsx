@@ -219,7 +219,7 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
                         id={`${systemId}-username`}
                         type="text"
                         placeholder="IDEXX Neo Username"
-                        value={credentials[systemId]?.username || ""}
+                        value={credentials[systemId]?.username ?? ""}
                         onChange={(e) => handleCredentialChange(systemId, 'username', e.target.value)}
                         className="mt-1 text-sm"
                       />
@@ -232,7 +232,7 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
                         id={`${systemId}-password`}
                         type="password"
                         placeholder="IDEXX Neo Password"
-                        value={credentials[systemId]?.password || ""}
+                        value={credentials[systemId]?.password ?? ""}
                         onChange={(e) => handleCredentialChange(systemId, 'password', e.target.value)}
                         className="mt-1 text-sm"
                       />
