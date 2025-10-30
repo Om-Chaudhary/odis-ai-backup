@@ -91,17 +91,20 @@ export function SoapTemplateForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Basic Information */}
-      <Card className="rounded-xl border-border shadow-md">
-        <CardHeader className="bg-primary/5 pb-3">
-          <CardTitle className="text-lg text-foreground">Basic Information</CardTitle>
-          <CardDescription className="text-sm">
+      <Card className="rounded-xl border-slate-200 shadow-lg bg-white/80 backdrop-blur-sm">
+        <CardHeader className="bg-gradient-to-r from-[#31aba3]/10 to-[#2a9a92]/5 border-b border-slate-200 pb-3">
+          <CardTitle className="text-lg text-slate-900 flex items-center gap-2">
+            <span className="text-xl">ℹ️</span>
+            Basic Information
+          </CardTitle>
+          <CardDescription className="text-sm text-slate-600">
             Template identification and display settings
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 pt-6">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="template_id" className="text-sm font-semibold text-foreground">
+              <Label htmlFor="template_id" className="text-sm font-semibold text-slate-700">
                 Template ID <span className="text-destructive">*</span>
               </Label>
               <Input
@@ -109,7 +112,7 @@ export function SoapTemplateForm({
                 value={formData.template_id}
                 onChange={(e) => updateField("template_id", e.target.value)}
                 required
-                className="shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
+                className="shadow-sm transition-all focus:ring-2 focus:ring-[#31aba3]/20 focus:border-[#31aba3] border-slate-200"
                 placeholder="e.g., soap_general"
               />
             </div>
@@ -197,17 +200,17 @@ export function SoapTemplateForm({
               </Select>
             </div>
           </div>
-          <div className="flex items-center space-x-3 rounded-lg border border-border bg-muted/30 p-4">
+          <div className="flex items-center space-x-3 rounded-lg border-2 border-[#31aba3]/20 bg-gradient-to-r from-[#31aba3]/5 to-[#2a9a92]/5 p-4">
             <Switch
               id="is_default"
               checked={formData.is_default}
               onCheckedChange={(checked) => updateField("is_default", checked)}
             />
             <div className="space-y-0.5">
-              <Label htmlFor="is_default" className="text-sm font-semibold text-foreground cursor-pointer">
+              <Label htmlFor="is_default" className="text-sm font-semibold text-slate-900 cursor-pointer">
                 Set as default template
               </Label>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-slate-600">
                 Default templates are available to all users
               </p>
             </div>
@@ -223,13 +226,13 @@ export function SoapTemplateForm({
         { key: "plan", label: "Plan", icon: "📋", description: "Treatment plan and next steps" },
         { key: "client_instructions", label: "Client Instructions", icon: "📝", description: "Patient guidance and directions" },
       ].map((section) => (
-        <Card key={section.key} className="rounded-xl border-border shadow-md">
-          <CardHeader className="bg-muted/30 pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+        <Card key={section.key} className="rounded-xl border-slate-200 shadow-lg bg-white/80 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-slate-50 to-teal-50/30 border-b border-slate-200 pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg text-slate-900">
               <span className="text-xl">{section.icon}</span>
               {section.label}
             </CardTitle>
-            <CardDescription className="text-sm">
+            <CardDescription className="text-sm text-slate-600">
               {section.description}
             </CardDescription>
           </CardHeader>
@@ -273,13 +276,13 @@ export function SoapTemplateForm({
       ))}
 
       {/* System Prompt */}
-      <Card className="rounded-xl border-border shadow-md">
-        <CardHeader className="bg-muted/30 pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+      <Card className="rounded-xl border-slate-200 shadow-lg bg-white/80 backdrop-blur-sm">
+        <CardHeader className="bg-gradient-to-r from-slate-50 to-teal-50/30 border-b border-slate-200 pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg text-slate-900">
             <span className="text-xl">⚙️</span>
             System Prompt Addition
           </CardTitle>
-          <CardDescription className="text-sm">
+          <CardDescription className="text-sm text-slate-600">
             Additional instructions for the AI system
           </CardDescription>
         </CardHeader>
@@ -303,15 +306,15 @@ export function SoapTemplateForm({
       </Card>
 
       {/* Submit Button */}
-      <div className="sticky bottom-0 z-20 flex items-center justify-between gap-4 rounded-lg border border-border bg-card/95 p-4 shadow-lg backdrop-blur-sm">
-        <p className="text-sm text-muted-foreground">
+      <div className="sticky bottom-0 z-20 flex items-center justify-between gap-4 rounded-lg border-2 border-[#31aba3]/20 bg-white/95 p-4 shadow-xl backdrop-blur-sm">
+        <p className="text-sm text-slate-700 font-medium">
           {initialData?.id ? "Update" : "Create"} your template to make it available for use
         </p>
         <Button
           type="submit"
           disabled={isSubmitting}
           size="lg"
-          className="gap-2 shadow-md transition-all hover:shadow-lg"
+          className="gap-2 bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white shadow-lg hover:shadow-xl hover:shadow-[#31aba3]/30 transition-all hover:scale-105"
         >
           {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
           {initialData?.id ? "Update Template" : "Create Template"}

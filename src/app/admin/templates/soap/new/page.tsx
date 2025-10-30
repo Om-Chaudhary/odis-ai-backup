@@ -29,14 +29,14 @@ export default function NewSoapTemplatePage() {
     <div className="space-y-4">
       <div className="space-y-3">
         <Link href="/admin/templates/soap">
-          <Button variant="ghost" size="sm" className="gap-2 hover:bg-primary/10 hover:text-primary">
+          <Button variant="ghost" size="sm" className="gap-2 hover:bg-gradient-to-r hover:from-[#31aba3]/10 hover:to-[#2a9a92]/5 hover:text-[#31aba3] transition-colors">
             <ArrowLeft className="h-4 w-4" />
             Back to Templates
           </Button>
         </Link>
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Create SOAP Template</h1>
-          <p className="text-base text-muted-foreground">
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">Create SOAP Template</h1>
+          <p className="text-base text-slate-600">
             Create a new SOAP note template with customizable sections
           </p>
         </div>
