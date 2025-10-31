@@ -432,15 +432,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "temp_soap_templates_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       templates: {
         Row: {
@@ -562,6 +554,8 @@ export type Database = {
           last_name: string | null
           license_number: string | null
           onboarding_completed: boolean | null
+          pims_credentials: Json | null
+          pims_systems: Json | null
           role: Database["public"]["Enums"]["user_role"] | null
           updated_at: string
         }
@@ -578,6 +572,8 @@ export type Database = {
           last_name?: string | null
           license_number?: string | null
           onboarding_completed?: boolean | null
+          pims_credentials?: Json | null
+          pims_systems?: Json | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
         }
@@ -594,6 +590,8 @@ export type Database = {
           last_name?: string | null
           license_number?: string | null
           onboarding_completed?: boolean | null
+          pims_credentials?: Json | null
+          pims_systems?: Json | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
         }
