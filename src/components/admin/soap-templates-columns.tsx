@@ -10,13 +10,11 @@ import type { Database } from "~/database.types";
 // Type for the SOAP template row from database
 type SoapTemplateRow = Database["public"]["Tables"]["temp_soap_templates"]["Row"];
 
-// Type for user fields returned from the join
-type UserFields = {
-  id: string;
-  email: string | null;
-  first_name: string | null;
-  last_name: string | null;
-};
+// Type for user fields returned from the join (matching database schema)
+type UserFields = Pick<
+  Database["public"]["Tables"]["users"]["Row"],
+  "id" | "email" | "first_name" | "last_name"
+>;
 
 // Combined type matching the tRPC query output
 export type SoapTemplate = SoapTemplateRow & {

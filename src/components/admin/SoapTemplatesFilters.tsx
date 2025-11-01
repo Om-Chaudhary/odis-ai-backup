@@ -9,13 +9,12 @@ import {
 } from "~/components/ui/select";
 import { Button } from "~/components/ui/button";
 import { X } from "lucide-react";
+import type { Database } from "~/database.types";
 
-interface User {
-  id: string;
-  email: string | null;
-  first_name: string | null;
-  last_name: string | null;
-}
+type User = Pick<
+  Database["public"]["Tables"]["users"]["Row"],
+  "id" | "email" | "first_name" | "last_name"
+>;
 
 interface SoapTemplatesFiltersProps {
   users: User[] | undefined;
