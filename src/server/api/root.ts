@@ -1,6 +1,7 @@
 import { waitlistRouter } from "~/server/api/routers/waitlist";
 import { templatesRouter } from "~/server/api/routers/templates";
 import { playgroundRouter } from "~/server/api/routers/playground";
+import { usersRouter } from "~/server/api/routers/users";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
 /**
@@ -12,6 +13,7 @@ export const appRouter = createTRPCRouter({
   waitlist: waitlistRouter,
   templates: templatesRouter,
   playground: playgroundRouter,
+  users: usersRouter,
 });
 
 export type AppRouter = typeof appRouter;

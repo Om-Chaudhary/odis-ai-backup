@@ -3,7 +3,7 @@ import { getUser, signOut } from "~/server/actions/auth";
 import { createClient } from "~/lib/supabase/server";
 import Link from "next/link";
 import { Button } from "~/components/ui/button";
-import { LayoutDashboard, ClipboardList, LogOut } from "lucide-react";
+import { LayoutDashboard, ClipboardList, Users, LogOut } from "lucide-react";
 import { Toaster } from "sonner";
 
 export default async function AdminLayout({
@@ -39,13 +39,16 @@ export default async function AdminLayout({
           {/* Logo/Header */}
           <div className="border-b border-slate-200 bg-gradient-to-r from-[#31aba3] to-[#2a9a92] p-6">
             <h1 className="text-xl font-bold text-white">Admin Panel</h1>
-            <p className="text-sm text-teal-50">Template Management</p>
+            <p className="text-sm text-teal-50">Management Console</p>
           </div>
 
           {/* Navigation */}
           <nav className="flex-1 space-y-1 p-4">
             <NavLink href="/admin" icon={<LayoutDashboard size={20} />}>
               Dashboard
+            </NavLink>
+            <NavLink href="/admin/users" icon={<Users size={20} />}>
+              User Management
             </NavLink>
             <NavLink
               href="/admin/templates/soap"
