@@ -22,29 +22,12 @@ import {
 } from "~/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { api } from "~/trpc/client";
+import type { Database } from "~/database.types";
+
+type SoapTemplateData = Database["public"]["Tables"]["temp_soap_templates"]["Row"];
 
 interface SoapTemplateFormProps {
-  initialData?: {
-    id?: string;
-    template_id: string;
-    template_name: string;
-    display_name: string;
-    person_name: string;
-    icon_name: string;
-    is_default: boolean;
-    user_id?: string | null;
-    subjective_template?: string | null;
-    subjective_prompt?: string | null;
-    objective_template?: string | null;
-    objective_prompt?: string | null;
-    assessment_template?: string | null;
-    assessment_prompt?: string | null;
-    plan_template?: string | null;
-    plan_prompt?: string | null;
-    client_instructions_template?: string | null;
-    client_instructions_prompt?: string | null;
-    system_prompt_addition?: string | null;
-  };
+  initialData?: SoapTemplateData;
   onSubmit: (data: Record<string, unknown>) => Promise<void>;
   isSubmitting: boolean;
 }
