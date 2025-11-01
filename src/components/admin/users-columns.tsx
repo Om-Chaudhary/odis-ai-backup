@@ -86,7 +86,7 @@ export const getColumns = ({
     accessorKey: "role",
     header: () => <div className="font-semibold">Role</div>,
     cell: ({ row }) => {
-      const role = row.getValue("role") as keyof typeof roleDisplayMap | null;
+      const role = row.getValue("role");
       if (!role) return <span className="text-sm text-muted-foreground">N/A</span>;
 
       return (
@@ -103,7 +103,7 @@ export const getColumns = ({
     accessorKey: "clinic_name",
     header: () => <div className="font-semibold">Clinic</div>,
     cell: ({ row }) => {
-      const clinicName = row.getValue("clinic_name") as string | null;
+      const clinicName = row.getValue("clinic_name");
       return (
         <div className="text-sm text-foreground">
           {clinicName ?? (
@@ -117,7 +117,7 @@ export const getColumns = ({
     accessorKey: "onboarding_completed",
     header: () => <div className="font-semibold text-center">Onboarded</div>,
     cell: ({ row }) => {
-      const isCompleted = row.getValue("onboarding_completed") as boolean | null;
+      const isCompleted = row.getValue("onboarding_completed");
       return (
         <div className="flex justify-center">
           {isCompleted ? (
@@ -144,7 +144,7 @@ export const getColumns = ({
       );
     },
     cell: ({ row }) => {
-      const date = new Date(row.getValue("created_at") as string);
+      const date = new Date(row.getValue("created_at"));
       return (
         <div className="text-sm text-foreground">
           {date.toLocaleDateString("en-US", {
