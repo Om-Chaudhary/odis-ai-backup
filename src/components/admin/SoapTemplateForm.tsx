@@ -37,28 +37,26 @@ export function SoapTemplateForm({
   onSubmit,
   isSubmitting,
 }: SoapTemplateFormProps) {
-  const [formData, setFormData] = useState(
-    initialData ?? {
-      template_id: "",
-      template_name: "",
-      display_name: "",
-      person_name: "",
-      icon_name: "",
-      is_default: false,
-      user_id: null,
-      subjective_template: "",
-      subjective_prompt: "",
-      objective_template: "",
-      objective_prompt: "",
-      assessment_template: "",
-      assessment_prompt: "",
-      plan_template: "",
-      plan_prompt: "",
-      client_instructions_template: "",
-      client_instructions_prompt: "",
-      system_prompt_addition: "",
-    }
-  );
+  const [formData, setFormData] = useState({
+    template_id: initialData?.template_id ?? "",
+    template_name: initialData?.template_name ?? "",
+    display_name: initialData?.display_name ?? "",
+    person_name: initialData?.person_name ?? "",
+    icon_name: initialData?.icon_name ?? "",
+    is_default: initialData?.is_default ?? false,
+    user_id: initialData?.user_id ?? null,
+    subjective_template: initialData?.subjective_template ?? "",
+    subjective_prompt: initialData?.subjective_prompt ?? "",
+    objective_template: initialData?.objective_template ?? "",
+    objective_prompt: initialData?.objective_prompt ?? "",
+    assessment_template: initialData?.assessment_template ?? "",
+    assessment_prompt: initialData?.assessment_prompt ?? "",
+    plan_template: initialData?.plan_template ?? "",
+    plan_prompt: initialData?.plan_prompt ?? "",
+    client_instructions_template: initialData?.client_instructions_template ?? "",
+    client_instructions_prompt: initialData?.client_instructions_prompt ?? "",
+    system_prompt_addition: initialData?.system_prompt_addition ?? "",
+  });
 
   const { data: users, isLoading: usersLoading } = api.templates.listUsers.useQuery();
 
