@@ -15,11 +15,16 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { DataTable, type ColumnDef } from "~/components/ui/data-table";
 import { Badge } from "~/components/ui/badge";
+import { ShareDialog } from "~/components/admin/ShareDialog";
 import type { RouterOutputs } from "~/trpc/client";
 
 type DischargeTemplate = RouterOutputs["templates"]["listDischargeSummaryTemplates"][number];
 
 export default function DischargeTemplatesPage() {
+  // Share dialog state
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<{ id: string; name: string } | null>(null);
+
   // Query templates
   const {
     data: templates,
@@ -42,6 +47,11 @@ export default function DischargeTemplatesPage() {
     if (confirm(`Are you sure you want to delete "${name}"?`)) {
       deleteMutation.mutate({ id });
     }
+  };
+
+  const handleShare = (id: string, name: string) => {
+    setSelectedTemplate({ id, name });
+    setShareDialogOpen(true);
   };
 
   const columns: ColumnDef<DischargeTemplate>[] = [
@@ -96,6 +106,15 @@ export default function DischargeTemplatesPage() {
       header: "Actions",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 text-muted-foreground hover:text-blue-500"
+            onClick={() => handleShare(row.original.id, row.original.name)}
+          >
+            <Share2 className="h-3.5 w-3.5" />
+            Share
+          </Button>
           <Link href={`/admin/templates/discharge/${row.original.id}`}>
             <Button variant="ghost" size="sm" className="gap-1.5">
               <Pencil className="h-3.5 w-3.5" />
@@ -188,6 +207,17 @@ export default function DischargeTemplatesPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Share Dialog */}
+      {selectedTemplate && (
+        <ShareDialog
+          open={shareDialogOpen}
+          onOpenChange={setShareDialogOpen}
+          entityType="discharge_template"
+          entityId={selectedTemplate.id}
+          entityName={selectedTemplate.name}
+        />
+      )}
     </div>
   );
 }

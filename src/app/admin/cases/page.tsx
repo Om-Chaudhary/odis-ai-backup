@@ -10,7 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import { Loader2, Briefcase, Eye, Trash2, Filter, X } from "lucide-react";
+import { Loader2, Briefcase, Eye, Trash2, Filter, X, Share2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { DataTable, type ColumnDef } from "~/components/ui/data-table";
@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import type { RouterOutputs } from "~/trpc/client";
+import { ShareDialog } from "~/components/admin/ShareDialog";
 
 type Case = RouterOutputs["cases"]["listCases"][number];
 
@@ -31,6 +32,10 @@ export default function CasesPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [visibilityFilter, setVisibilityFilter] = useState<string>("all");
+
+  // Share dialog state
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [selectedCase, setSelectedCase] = useState<{ id: string; patientName: string } | null>(null);
 
   // Query cases
   const {
@@ -54,6 +59,11 @@ export default function CasesPage() {
     if (confirm("Are you sure you want to delete this case? This will also delete all related SOAP notes, discharge summaries, and patient records.")) {
       deleteMutation.mutate({ id });
     }
+  };
+
+  const handleShare = (id: string, patientName: string) => {
+    setSelectedCase({ id, patientName });
+    setShareDialogOpen(true);
   };
 
   // Filter cases
@@ -163,26 +173,39 @@ export default function CasesPage() {
     {
       id: "actions",
       header: "Actions",
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <Link href={`/admin/cases/${row.original.id}`}>
-            <Button variant="ghost" size="sm" className="gap-1.5">
-              <Eye className="h-3.5 w-3.5" />
-              View
+      cell: ({ row }) => {
+        const patient = row.original.patient as unknown as { name?: string } | null;
+        const patientName = patient?.name ?? "Unknown";
+        return (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-muted-foreground hover:text-blue-500"
+              onClick={() => handleShare(row.original.id, patientName)}
+            >
+              <Share2 className="h-3.5 w-3.5" />
+              Share
             </Button>
-          </Link>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-1.5 text-destructive hover:text-destructive"
-            onClick={() => void handleDelete(row.original.id)}
-            disabled={deleteMutation.isPending}
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            Delete
-          </Button>
-        </div>
-      ),
+            <Link href={`/admin/cases/${row.original.id}`}>
+              <Button variant="ghost" size="sm" className="gap-1.5">
+                <Eye className="h-3.5 w-3.5" />
+                View
+              </Button>
+            </Link>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-1.5 text-destructive hover:text-destructive"
+              onClick={() => void handleDelete(row.original.id)}
+              disabled={deleteMutation.isPending}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 
@@ -298,6 +321,17 @@ export default function CasesPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Share Dialog */}
+      {selectedCase && (
+        <ShareDialog
+          open={shareDialogOpen}
+          onOpenChange={setShareDialogOpen}
+          entityType="case"
+          entityId={selectedCase.id}
+          entityName={`Case: ${selectedCase.patientName}`}
+        />
+      )}
     </div>
   );
 }
