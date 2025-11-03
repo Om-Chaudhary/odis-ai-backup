@@ -3,9 +3,12 @@ interface StepIndicatorProps {
   totalSteps: number;
 }
 
-export default function StepIndicator({ currentStep, totalSteps }: StepIndicatorProps) {
+export default function StepIndicator({
+  currentStep,
+  totalSteps,
+}: StepIndicatorProps) {
   return (
-    <div className="flex items-center justify-center space-x-4 mb-6">
+    <div className="mb-6 flex items-center justify-center space-x-4">
       {Array.from({ length: totalSteps }, (_, index) => {
         const stepNumber = index + 1;
         const isActive = stepNumber === currentStep;
@@ -14,19 +17,17 @@ export default function StepIndicator({ currentStep, totalSteps }: StepIndicator
         return (
           <div key={stepNumber} className="flex items-center">
             <div
-              className={`
-                flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium transition-all duration-300
-                ${isActive
+              className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-all duration-300 ${
+                isActive
                   ? "bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white shadow-lg"
                   : isCompleted
-                  ? "bg-teal-600 text-white"
-                  : "bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400"
-                }
-              `}
+                    ? "bg-teal-600 text-white"
+                    : "bg-slate-200 text-slate-500"
+              } `}
             >
               {isCompleted ? (
                 <svg
-                  className="w-4 h-4"
+                  className="h-4 w-4"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
@@ -43,13 +44,9 @@ export default function StepIndicator({ currentStep, totalSteps }: StepIndicator
 
             {stepNumber < totalSteps && (
               <div
-                className={`
-                  w-12 h-0.5 ml-4 transition-all duration-300
-                  ${isCompleted
-                    ? "bg-teal-600"
-                    : "bg-slate-200 dark:bg-slate-700"
-                  }
-                `}
+                className={`ml-4 h-0.5 w-12 transition-all duration-300 ${
+                  isCompleted ? "bg-teal-600" : "bg-slate-200"
+                } `}
               />
             )}
           </div>
