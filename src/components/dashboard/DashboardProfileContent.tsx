@@ -34,22 +34,51 @@ export default function DashboardProfileContent({
 }: DashboardProfileContentProps) {
   return (
     <Tabs defaultValue="personal" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-3 bg-white/80 border border-slate-200 shadow-md">
-        <TabsTrigger value="personal" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#31aba3] data-[state=active]:to-[#2a9a92] data-[state=active]:text-white data-[state=active]:shadow-lg">Personal</TabsTrigger>
-        <TabsTrigger value="account" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#31aba3] data-[state=active]:to-[#2a9a92] data-[state=active]:text-white data-[state=active]:shadow-lg">Account</TabsTrigger>
-        <TabsTrigger value="security" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#31aba3] data-[state=active]:to-[#2a9a92] data-[state=active]:text-white data-[state=active]:shadow-lg">Security</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-3 bg-white/90 border border-slate-200/60 shadow-xl backdrop-blur-md relative overflow-hidden">
+        {/* Subtle gradient background for tabs list */}
+        <div 
+          className="absolute inset-0 opacity-5"
+          style={{
+            background: "linear-gradient(135deg, rgba(49, 171, 163, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)"
+          }}
+        />
+        <TabsTrigger 
+          value="personal" 
+          className="relative z-10 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#31aba3] data-[state=active]:to-[#10b981] data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:scale-105 transition-all hover:bg-[#31aba3]/10"
+        >
+          Personal
+        </TabsTrigger>
+        <TabsTrigger 
+          value="account" 
+          className="relative z-10 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#31aba3] data-[state=active]:to-[#10b981] data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:scale-105 transition-all hover:bg-[#31aba3]/10"
+        >
+          Account
+        </TabsTrigger>
+        <TabsTrigger 
+          value="security" 
+          className="relative z-10 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#31aba3] data-[state=active]:to-[#10b981] data-[state=active]:text-white data-[state=active]:shadow-xl data-[state=active]:scale-105 transition-all hover:bg-[#31aba3]/10"
+        >
+          Security
+        </TabsTrigger>
       </TabsList>
 
       {/* Personal Information */}
       <TabsContent value="personal" className="space-y-6">
-        <Card className="border-slate-200 shadow-lg bg-white/80 backdrop-blur-sm">
-          <CardHeader className="bg-gradient-to-r from-slate-50 to-teal-50/30 border-b border-slate-200">
-            <CardTitle className="text-slate-900">Personal Information</CardTitle>
+        <Card className="border-slate-200/60 shadow-xl bg-white/90 backdrop-blur-md relative overflow-hidden">
+          {/* Subtle gradient background */}
+          <div 
+            className="absolute inset-0 opacity-5"
+            style={{
+              background: "linear-gradient(135deg, rgba(49, 171, 163, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)"
+            }}
+          />
+          <CardHeader className="bg-gradient-to-r from-emerald-50/80 to-teal-50/50 border-b border-slate-200/60 relative z-10">
+            <CardTitle className="text-slate-900 text-xl font-semibold">Personal Information</CardTitle>
             <CardDescription className="text-slate-600">
               Update your personal details and profile information.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6 relative z-10">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="firstName">First Name</Label>
@@ -104,8 +133,8 @@ export default function DashboardProfileContent({
               </div>
             </div>
             <div className="flex justify-end gap-4">
-              <Button variant="outline" className="border-slate-300 hover:bg-slate-50">Cancel</Button>
-              <Button variant="default" className="bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white shadow-lg hover:shadow-xl hover:shadow-[#31aba3]/30 transition-all hover:scale-105">Save Changes</Button>
+              <Button variant="outline" className="border-slate-300 hover:bg-slate-50 hover:border-[#31aba3]/30 transition-all">Cancel</Button>
+              <Button variant="default" className="bg-gradient-to-r from-[#31aba3] to-[#10b981] text-white shadow-xl hover:shadow-2xl hover:shadow-[#31aba3]/40 transition-all hover:scale-105 hover:from-[#2a9a92] hover:to-[#0d9488]">Save Changes</Button>
             </div>
           </CardContent>
         </Card>
@@ -113,14 +142,21 @@ export default function DashboardProfileContent({
 
       {/* Account Settings */}
       <TabsContent value="account" className="space-y-6">
-        <Card className="border-slate-200 shadow-lg bg-white/80 backdrop-blur-sm">
-          <CardHeader className="bg-gradient-to-r from-slate-50 to-teal-50/30 border-b border-slate-200">
-            <CardTitle className="text-slate-900">Account Settings</CardTitle>
+        <Card className="border-slate-200/60 shadow-xl bg-white/90 backdrop-blur-md relative overflow-hidden">
+          {/* Subtle gradient background */}
+          <div 
+            className="absolute inset-0 opacity-5"
+            style={{
+              background: "linear-gradient(135deg, rgba(49, 171, 163, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)"
+            }}
+          />
+          <CardHeader className="bg-gradient-to-r from-emerald-50/80 to-teal-50/50 border-b border-slate-200/60 relative z-10">
+            <CardTitle className="text-slate-900 text-xl font-semibold">Account Settings</CardTitle>
             <CardDescription className="text-slate-600">
               Manage your account preferences and settings.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6 relative z-10">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <Label className="text-base text-slate-900">Account Status</Label>
@@ -152,7 +188,7 @@ export default function DashboardProfileContent({
                   Download a copy of your data
                 </p>
               </div>
-              <Button variant="outline" className="border-slate-300 hover:bg-teal-50 hover:border-[#31aba3] hover:text-[#31aba3] transition-colors">Export Data</Button>
+              <Button variant="outline" className="border-slate-300 hover:bg-teal-50 hover:border-[#31aba3] hover:text-[#31aba3] transition-all hover:shadow-md">Export Data</Button>
             </div>
           </CardContent>
         </Card>
@@ -160,14 +196,21 @@ export default function DashboardProfileContent({
 
       {/* Security Settings */}
       <TabsContent value="security" className="space-y-6">
-        <Card className="border-slate-200 shadow-lg bg-white/80 backdrop-blur-sm">
-          <CardHeader className="bg-gradient-to-r from-slate-50 to-teal-50/30 border-b border-slate-200">
-            <CardTitle className="text-slate-900">Security Settings</CardTitle>
+        <Card className="border-slate-200/60 shadow-xl bg-white/90 backdrop-blur-md relative overflow-hidden">
+          {/* Subtle gradient background */}
+          <div 
+            className="absolute inset-0 opacity-5"
+            style={{
+              background: "linear-gradient(135deg, rgba(49, 171, 163, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)"
+            }}
+          />
+          <CardHeader className="bg-gradient-to-r from-emerald-50/80 to-teal-50/50 border-b border-slate-200/60 relative z-10">
+            <CardTitle className="text-slate-900 text-xl font-semibold">Security Settings</CardTitle>
             <CardDescription className="text-slate-600">
               Manage your account security and authentication.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6 relative z-10">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
@@ -176,7 +219,7 @@ export default function DashboardProfileContent({
                     Manage your password
                   </p>
                 </div>
-                <Button variant="outline" className="border-slate-300 hover:bg-teal-50 hover:border-[#31aba3] hover:text-[#31aba3] transition-colors">
+                <Button variant="outline" className="border-slate-300 hover:bg-teal-50 hover:border-[#31aba3] hover:text-[#31aba3] transition-all hover:shadow-md">
                   <Key className="mr-2 h-4 w-4" />
                   Change Password
                 </Button>
@@ -218,7 +261,7 @@ export default function DashboardProfileContent({
                     Manage devices that are logged into your account
                   </p>
                 </div>
-                <Button variant="outline" className="border-slate-300 hover:bg-teal-50 hover:border-[#31aba3] hover:text-[#31aba3] transition-colors">
+                <Button variant="outline" className="border-slate-300 hover:bg-teal-50 hover:border-[#31aba3] hover:text-[#31aba3] transition-all hover:shadow-md">
                   <Shield className="mr-2 h-4 w-4" />
                   View Sessions
                 </Button>
