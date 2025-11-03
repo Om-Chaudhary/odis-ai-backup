@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { api } from "~/trpc/client";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
@@ -25,11 +25,10 @@ import {
 } from "~/components/ui/select";
 
 export default function UserDetailPage() {
-  const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
 
-  const { data: user, isLoading, refetch } = api.templates.getUser.useQuery(
+  const { data: user, isLoading, refetch } = api.users.getUser.useQuery(
     { id },
     { enabled: !!id }
   );
@@ -43,7 +42,7 @@ export default function UserDetailPage() {
   const [licenseNumber, setLicenseNumber] = useState("");
 
   // Update mutation
-  const updateMutation = api.templates.updateUser.useMutation({
+  const updateMutation = api.users.updateUser.useMutation({
     onSuccess: () => {
       toast.success("User updated successfully");
       void refetch();
@@ -104,7 +103,7 @@ export default function UserDetailPage() {
         <div className="text-center py-16">
           <h2 className="text-2xl font-bold">User not found</h2>
           <p className="text-muted-foreground mt-2">
-            The user you're looking for doesn't exist.
+            The user you&apos;re looking for doesn&apos;t exist.
           </p>
         </div>
       </div>
@@ -154,7 +153,7 @@ export default function UserDetailPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Role</p>
-              <p className="font-medium capitalize">{user.role?.replace("_", " ")}</p>
+              <p className="font-medium capitalize">{user.role ? String(user.role).replace("_", " ") : "N/A"}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Clinic Name</p>

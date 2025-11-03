@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import { api } from "~/trpc/client";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
@@ -14,7 +14,6 @@ import {
 import { ArrowLeft, Loader2, Briefcase, User, FileText, Save } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Badge } from "~/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -25,7 +24,6 @@ import {
 import { Label } from "~/components/ui/label";
 
 export default function CaseDetailPage() {
-  const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
 
@@ -92,7 +90,7 @@ export default function CaseDetailPage() {
         <div className="text-center py-16">
           <h2 className="text-2xl font-bold">Case not found</h2>
           <p className="text-muted-foreground mt-2">
-            The case you're looking for doesn't exist.
+            The case you&apos;re looking for doesn&apos;t exist.
           </p>
         </div>
       </div>

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { api } from "~/trpc/client";
 import { Button } from "~/components/ui/button";
 import {
@@ -18,7 +17,7 @@ import { DataTable } from "~/components/ui/data-table";
 import { Badge } from "~/components/ui/badge";
 import type { RouterOutputs } from "~/trpc/client";
 
-type User = RouterOutputs["templates"]["listUsers"][number];
+type User = RouterOutputs["users"]["listUsers"][number];
 
 export default function UsersPage() {
   // Query users
@@ -26,10 +25,10 @@ export default function UsersPage() {
     data: users,
     isLoading,
     refetch,
-  } = api.templates.listUsers.useQuery();
+  } = api.users.listUsers.useQuery({});
 
   // Delete mutation
-  const deleteMutation = api.templates.deleteUser.useMutation({
+  const deleteMutation = api.users.deleteUser.useMutation({
     onSuccess: () => {
       toast.success("User deleted successfully");
       void refetch();
@@ -45,7 +44,7 @@ export default function UsersPage() {
     }
   };
 
-  const roleColors = {
+  const roleColors: Record<string, string> = {
     admin: "bg-purple-500/10 text-purple-500",
     veterinarian: "bg-blue-500/10 text-blue-500",
     vet_tech: "bg-green-500/10 text-green-500",
@@ -74,8 +73,8 @@ export default function UsersPage() {
       cell: ({ row }) => {
         const role = row.original.role;
         return role ? (
-          <Badge variant="secondary" className={roleColors[role]}>
-            {role.replace("_", " ")}
+          <Badge variant="secondary" className={roleColors[role] ?? ""}>
+            {String(role).replace("_", " ")}
           </Badge>
         ) : (
           <span className="text-muted-foreground">N/A</span>
