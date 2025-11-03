@@ -33,25 +33,24 @@ export function ShareDialog({
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
 
   // Query all users
-  const { data: users, isLoading: isLoadingUsers } = api.templates.listUsers.useQuery(
-    undefined,
-    { enabled: open }
-  );
+  const { data: users, isLoading: isLoadingUsers } =
+    api.templates.listUsers.useQuery(undefined, { enabled: open });
 
   // Query current shares based on entity type
   const { data: soapShares } = api.sharing.listSoapTemplateShares.useQuery(
     { entityId },
-    { enabled: open && entityType === "soap_template" }
+    { enabled: open && entityType === "soap_template" },
   );
 
-  const { data: dischargeShares } = api.sharing.listDischargeTemplateShares.useQuery(
-    { entityId },
-    { enabled: open && entityType === "discharge_template" }
-  );
+  const { data: dischargeShares } =
+    api.sharing.listDischargeTemplateShares.useQuery(
+      { entityId },
+      { enabled: open && entityType === "discharge_template" },
+    );
 
   const { data: caseShares } = api.sharing.listCaseShares.useQuery(
     { entityId },
-    { enabled: open && entityType === "case" }
+    { enabled: open && entityType === "case" },
   );
 
   // Update mutation
@@ -76,10 +75,12 @@ export function ShareDialog({
   // Initialize selected users when shares load
   useEffect(() => {
     if (currentShares) {
-      const sharedUserIds = currentShares.map((share) => {
-        const user = share.user as unknown as { id: string } | null;
-        return user?.id;
-      }).filter((id): id is string => !!id);
+      const sharedUserIds = currentShares
+        .map((share) => {
+          const user = share.user as unknown as { id: string } | null;
+          return user?.id;
+        })
+        .filter((id): id is string => !!id);
       setSelectedUserIds(sharedUserIds);
     }
   }, [currentShares]);
@@ -88,7 +89,7 @@ export function ShareDialog({
     setSelectedUserIds((prev) =>
       prev.includes(userId)
         ? prev.filter((id) => id !== userId)
-        : [...prev, userId]
+        : [...prev, userId],
     );
   };
 
@@ -116,14 +117,14 @@ export function ShareDialog({
         <div className="space-y-4">
           {isLoadingUsers ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <Loader2 className="text-primary h-6 w-6 animate-spin" />
             </div>
           ) : users && users.length > 0 ? (
-            <div className="max-h-[400px] overflow-y-auto space-y-3 pr-2">
+            <div className="max-h-[400px] space-y-3 overflow-y-auto pr-2">
               {users.map((user) => (
                 <div
                   key={user.id}
-                  className="flex items-start space-x-3 rounded-lg border p-3 hover:bg-accent/50 transition-colors"
+                  className="hover:bg-accent/50 flex items-start space-x-3 rounded-lg border p-3 transition-colors"
                 >
                   <Checkbox
                     id={`user-${user.id}`}
@@ -134,15 +135,15 @@ export function ShareDialog({
                   <div className="flex-1">
                     <Label
                       htmlFor={`user-${user.id}`}
-                      className="cursor-pointer font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      className="cursor-pointer leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                     >
                       {user.first_name} {user.last_name}
                     </Label>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-muted-foreground mt-1 text-xs">
                       {user.email}
                     </p>
                     {user.role && (
-                      <p className="text-xs text-muted-foreground mt-0.5 capitalize">
+                      <p className="text-muted-foreground mt-0.5 text-xs capitalize">
                         {String(user.role).replace("_", " ")}
                       </p>
                     )}
@@ -151,12 +152,12 @@ export function ShareDialog({
               ))}
             </div>
           ) : (
-            <p className="text-center text-sm text-muted-foreground py-8">
+            <p className="text-muted-foreground py-8 text-center text-sm">
               No users available to share with
             </p>
           )}
 
-          <div className="flex justify-end gap-3 pt-4 border-t">
+          <div className="flex justify-end gap-3 border-t pt-4">
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}

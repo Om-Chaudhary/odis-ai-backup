@@ -40,7 +40,13 @@ const userSchema = z.object({
   email: z.string().email("Valid email is required"),
   first_name: z.string().min(1, "First name is required"),
   last_name: z.string().min(1, "Last name is required"),
-  role: z.enum(["veterinarian", "vet_tech", "admin", "practice_owner", "client"]),
+  role: z.enum([
+    "veterinarian",
+    "vet_tech",
+    "admin",
+    "practice_owner",
+    "client",
+  ]),
   clinic_name: z.string().optional(),
   clinic_email: z.string().email().optional(),
   clinic_phone: z.string().optional(),
@@ -64,7 +70,7 @@ export const templatesRouter = createTRPCRouter({
       z.object({
         search: z.string().optional(),
         userId: z.string().uuid().optional(), // Filter by user
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       // Use service client to bypass RLS and get user joins
@@ -75,7 +81,7 @@ export const templatesRouter = createTRPCRouter({
 
       if (input.search) {
         query = query.or(
-          `template_name.ilike.%${input.search}%,display_name.ilike.%${input.search}%`
+          `template_name.ilike.%${input.search}%,display_name.ilike.%${input.search}%`,
         );
       }
 
@@ -150,7 +156,7 @@ export const templatesRouter = createTRPCRouter({
       z.object({
         id: z.string().uuid(),
         data: soapTemplateSchema.partial(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const { data, error } = await ctx.serviceClient
@@ -205,7 +211,7 @@ export const templatesRouter = createTRPCRouter({
       z.object({
         search: z.string().optional(),
         userId: z.string().uuid().optional(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       let query = ctx.serviceClient
@@ -288,7 +294,7 @@ export const templatesRouter = createTRPCRouter({
       z.object({
         id: z.string().uuid(),
         data: dischargeSummaryTemplateSchema.partial(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const { data, error } = await ctx.serviceClient
@@ -340,20 +346,27 @@ export const templatesRouter = createTRPCRouter({
    */
   listUsers: adminProcedure
     .input(
-      z.object({
-        search: z.string().optional(),
-        role: z.enum(["veterinarian", "vet_tech", "admin", "practice_owner", "client"]).optional(),
-      }).optional()
+      z
+        .object({
+          search: z.string().optional(),
+          role: z
+            .enum([
+              "veterinarian",
+              "vet_tech",
+              "admin",
+              "practice_owner",
+              "client",
+            ])
+            .optional(),
+        })
+        .optional(),
     )
     .query(async ({ ctx, input }) => {
-      let query = ctx.serviceClient
-        .from("users")
-        .select("*")
-        .order("email");
+      let query = ctx.serviceClient.from("users").select("*").order("email");
 
       if (input?.search) {
         query = query.or(
-          `email.ilike.%${input.search}%,first_name.ilike.%${input.search}%,last_name.ilike.%${input.search}%`
+          `email.ilike.%${input.search}%,first_name.ilike.%${input.search}%,last_name.ilike.%${input.search}%`,
         );
       }
 
@@ -402,13 +415,18 @@ export const templatesRouter = createTRPCRouter({
    * Note: Requires Supabase Auth Admin API
    */
   createUser: adminProcedure
-    .input(userSchema.extend({ password: z.string().min(8, "Password must be at least 8 characters") }))
+    .input(
+      userSchema.extend({
+        password: z.string().min(8, "Password must be at least 8 characters"),
+      }),
+    )
     .mutation(async ({ ctx: _ctx, input: _input }) => {
       // This would require Supabase Auth Admin API integration
       // For now, return error instructing to use Supabase dashboard
       throw new TRPCError({
         code: "NOT_IMPLEMENTED",
-        message: "User creation requires Supabase Auth Admin API integration. Please create users through the Supabase dashboard for now.",
+        message:
+          "User creation requires Supabase Auth Admin API integration. Please create users through the Supabase dashboard for now.",
       });
     }),
 
@@ -420,7 +438,7 @@ export const templatesRouter = createTRPCRouter({
       z.object({
         id: z.string().uuid(),
         data: userSchema.partial(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const { data, error } = await ctx.serviceClient

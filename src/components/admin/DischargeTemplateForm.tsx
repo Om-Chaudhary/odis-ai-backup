@@ -44,7 +44,8 @@ export function DischargeTemplateForm({
   const [userId, setUserId] = useState(initialData?.user_id ?? "");
 
   // Query users for assignment dropdown
-  const { data: users, isLoading: isLoadingUsers } = api.templates.listUsers.useQuery();
+  const { data: users, isLoading: isLoadingUsers } =
+    api.templates.listUsers.useQuery();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,7 +93,7 @@ export function DischargeTemplateForm({
           <div className="space-y-2">
             <Label htmlFor="user">Assign to User *</Label>
             {isLoadingUsers ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="text-muted-foreground flex items-center gap-2 text-sm">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Loading users...
               </div>
@@ -118,7 +119,7 @@ export function DischargeTemplateForm({
               <Label htmlFor="is-default" className="text-base">
                 Set as Default Template
               </Label>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 This template will be used by default for this user
               </p>
             </div>
@@ -141,8 +142,9 @@ export function DischargeTemplateForm({
               required
               className="font-mono text-sm"
             />
-            <p className="text-xs text-muted-foreground">
-              This content will be used as the base template for generating discharge summaries
+            <p className="text-muted-foreground text-xs">
+              This content will be used as the base template for generating
+              discharge summaries
             </p>
           </div>
         </CardContent>

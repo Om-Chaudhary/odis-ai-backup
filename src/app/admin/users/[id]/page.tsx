@@ -28,10 +28,11 @@ export default function UserDetailPage() {
   const params = useParams();
   const id = params?.id as string;
 
-  const { data: user, isLoading, refetch } = api.users.getUser.useQuery(
-    { id },
-    { enabled: !!id }
-  );
+  const {
+    data: user,
+    isLoading,
+    refetch,
+  } = api.users.getUser.useQuery({ id }, { enabled: !!id });
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -82,10 +83,8 @@ export default function UserDetailPage() {
     return (
       <div className="flex items-center justify-center p-16">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">
-            Loading user...
-          </p>
+          <Loader2 className="text-primary h-8 w-8 animate-spin" />
+          <p className="text-muted-foreground text-sm">Loading user...</p>
         </div>
       </div>
     );
@@ -95,12 +94,16 @@ export default function UserDetailPage() {
     return (
       <div className="space-y-4">
         <Link href="/admin/users">
-          <Button variant="ghost" size="sm" className="gap-2 hover:bg-primary/10 hover:text-primary">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hover:bg-primary/10 hover:text-primary gap-2"
+          >
             <ArrowLeft className="h-4 w-4" />
             Back to Users
           </Button>
         </Link>
-        <div className="text-center py-16">
+        <div className="py-16 text-center">
           <h2 className="text-2xl font-bold">User not found</h2>
           <p className="text-muted-foreground mt-2">
             The user you&apos;re looking for doesn&apos;t exist.
@@ -115,20 +118,22 @@ export default function UserDetailPage() {
       {/* Header */}
       <div className="space-y-3">
         <Link href="/admin/users">
-          <Button variant="ghost" size="sm" className="gap-2 hover:bg-primary/10 hover:text-primary">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hover:bg-primary/10 hover:text-primary gap-2"
+          >
             <ArrowLeft className="h-4 w-4" />
             Back to Users
           </Button>
         </Link>
         <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-primary/10 p-2">
-            <UsersIcon className="h-6 w-6 text-primary" />
+          <div className="bg-primary/10 rounded-lg p-2">
+            <UsersIcon className="text-primary h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              User Profile
-            </h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-3xl font-bold tracking-tight">User Profile</h1>
+            <p className="text-muted-foreground text-sm">
               View and update user information
             </p>
           </div>
@@ -144,36 +149,42 @@ export default function UserDetailPage() {
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <p className="text-sm text-muted-foreground">Name</p>
-              <p className="font-medium">{user.first_name} {user.last_name}</p>
+              <p className="text-muted-foreground text-sm">Name</p>
+              <p className="font-medium">
+                {user.first_name} {user.last_name}
+              </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Email</p>
+              <p className="text-muted-foreground text-sm">Email</p>
               <p className="font-medium">{user.email}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Role</p>
-              <p className="font-medium capitalize">{user.role ? String(user.role).replace("_", " ") : "N/A"}</p>
+              <p className="text-muted-foreground text-sm">Role</p>
+              <p className="font-medium capitalize">
+                {user.role ? String(user.role).replace("_", " ") : "N/A"}
+              </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Clinic Name</p>
+              <p className="text-muted-foreground text-sm">Clinic Name</p>
               <p className="font-medium">{user.clinic_name ?? "N/A"}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Clinic Email</p>
+              <p className="text-muted-foreground text-sm">Clinic Email</p>
               <p className="font-medium">{user.clinic_email ?? "N/A"}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Clinic Phone</p>
+              <p className="text-muted-foreground text-sm">Clinic Phone</p>
               <p className="font-medium">{user.clinic_phone ?? "N/A"}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">License Number</p>
+              <p className="text-muted-foreground text-sm">License Number</p>
               <p className="font-medium">{user.license_number ?? "N/A"}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Joined</p>
-              <p className="font-medium">{new Date(user.created_at).toLocaleDateString()}</p>
+              <p className="text-muted-foreground text-sm">Joined</p>
+              <p className="font-medium">
+                {new Date(user.created_at).toLocaleDateString()}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -261,7 +272,16 @@ export default function UserDetailPage() {
           </div>
           <Button
             onClick={handleSave}
-            disabled={updateMutation.isPending || (!firstName && !lastName && !role && !clinicName && !clinicEmail && !clinicPhone && !licenseNumber)}
+            disabled={
+              updateMutation.isPending ||
+              (!firstName &&
+                !lastName &&
+                !role &&
+                !clinicName &&
+                !clinicEmail &&
+                !clinicPhone &&
+                !licenseNumber)
+            }
           >
             {updateMutation.isPending ? (
               <>

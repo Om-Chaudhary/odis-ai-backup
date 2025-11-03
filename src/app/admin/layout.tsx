@@ -32,14 +32,45 @@ export default async function AdminLayout({
 
   return (
     <DarkModeWrapper>
-      <div className="flex min-h-screen bg-background">
+      <div className="flex min-h-screen relative overflow-hidden bg-gradient-to-b from-emerald-50 via-emerald-100/40 to-emerald-50/30">
+        {/* Background Elements */}
+        <div className="pointer-events-none absolute inset-0">
+          {/* Dotted background pattern */}
+          <div
+            className="absolute inset-0 opacity-10"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle, #31aba3 1px, transparent 1px)",
+              backgroundSize: "40px 40px",
+            }}
+          />
+          
+          {/* Animated gradient overlay */}
+          <div
+            className="animate-gradient-move absolute inset-0 opacity-30 blur-sm"
+            style={{
+              background:
+                "radial-gradient(circle at 30% 40%, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.06) 40%, transparent 70%)",
+            }}
+          />
+
+          {/* Secondary moving gradient */}
+          <div
+            className="animate-gradient-move-reverse absolute inset-0 opacity-20 blur-sm"
+            style={{
+              background:
+                "radial-gradient(circle at 70% 60%, rgba(16, 185, 129, 0.10) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 80%)",
+            }}
+          />
+        </div>
+
         {/* Sidebar */}
-        <aside className="w-64 border-r border bg-card shadow-sm">
+        <aside className="w-64 border-r border-slate-200/60 bg-white/90 backdrop-blur-md shadow-xl relative z-10">
         <div className="flex h-full flex-col">
           {/* Logo/Header */}
-          <div className="border-b border p-6">
-            <h1 className="text-xl font-bold text-foreground">Admin Panel</h1>
-            <p className="text-sm text-muted-foreground">Practice Management</p>
+          <div className="border-b border-slate-200/60 p-6 bg-gradient-to-r from-emerald-50/80 to-teal-50/50">
+            <h1 className="text-xl font-bold bg-gradient-to-r from-slate-800 via-[#31aba3] to-slate-700 bg-clip-text text-transparent">Admin Panel</h1>
+            <p className="text-sm text-slate-600 font-medium">Practice Management</p>
           </div>
 
           {/* Navigation */}
@@ -80,14 +111,14 @@ export default async function AdminLayout({
           </nav>
 
           {/* Footer */}
-          <div className="border-t border p-4 space-y-2">
+          <div className="border-t border-slate-200/60 p-4 space-y-2 bg-gradient-to-r from-emerald-50/40 to-teal-50/20">
             <Link href="/dashboard">
-              <Button variant="outline" className="w-full">
+              <Button variant="outline" className="w-full border-slate-300 hover:bg-teal-50 hover:border-[#31aba3] hover:text-[#31aba3] transition-all hover:shadow-md">
                 Back to Dashboard
               </Button>
             </Link>
             <form action={signOut}>
-              <Button type="submit" variant="ghost" className="w-full justify-start">
+              <Button type="submit" variant="ghost" className="w-full justify-start hover:bg-red-50 hover:text-red-600 transition-all">
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign Out
               </Button>
