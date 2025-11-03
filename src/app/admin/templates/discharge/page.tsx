@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { api } from "~/trpc/client";
 import { Button } from "~/components/ui/button";
 import {
@@ -19,12 +19,16 @@ import { Badge } from "~/components/ui/badge";
 import { ShareDialog } from "~/components/admin/ShareDialog";
 import type { RouterOutputs } from "~/trpc/client";
 
-type DischargeTemplate = RouterOutputs["templates"]["listDischargeSummaryTemplates"][number];
+type DischargeTemplate =
+  RouterOutputs["templates"]["listDischargeSummaryTemplates"][number];
 
 export default function DischargeTemplatesPage() {
   // Share dialog state
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<{ id: string; name: string } | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   // Query templates
   const {
@@ -34,15 +38,16 @@ export default function DischargeTemplatesPage() {
   } = api.templates.listDischargeSummaryTemplates.useQuery({ search: "" });
 
   // Delete mutation
-  const deleteMutation = api.templates.deleteDischargeSummaryTemplate.useMutation({
-    onSuccess: () => {
-      toast.success("Template deleted successfully");
-      void refetch();
-    },
-    onError: (error) => {
-      toast.error(error.message ?? "Failed to delete template");
-    },
-  });
+  const deleteMutation =
+    api.templates.deleteDischargeSummaryTemplate.useMutation({
+      onSuccess: () => {
+        toast.success("Template deleted successfully");
+        void refetch();
+      },
+      onError: (error) => {
+        toast.error(error.message ?? "Failed to delete template");
+      },
+    });
 
   const handleDelete = async (id: string, name: string) => {
     if (confirm(`Are you sure you want to delete "${name}"?`)) {
@@ -74,7 +79,11 @@ export default function DischargeTemplatesPage() {
       accessorKey: "user",
       header: "Assigned To",
       cell: ({ row }) => {
-        const user = row.original.user as unknown as { email?: string; first_name?: string; last_name?: string } | null;
+        const user = row.original.user as unknown as {
+          email?: string;
+          first_name?: string;
+          last_name?: string;
+        } | null;
         if (!user) {
           return <span className="text-muted-foreground">Unassigned</span>;
         }
@@ -83,9 +92,7 @@ export default function DischargeTemplatesPage() {
             <span className="text-sm">
               {user.first_name ?? ""} {user.last_name ?? ""}
             </span>
-            <span className="text-xs text-muted-foreground">
-              {user.email}
-            </span>
+            <span className="text-muted-foreground text-xs">{user.email}</span>
           </div>
         );
       },
@@ -96,7 +103,7 @@ export default function DischargeTemplatesPage() {
       cell: ({ row }) => {
         const date = new Date(row.original.created_at as unknown as string);
         return (
-          <span className="text-sm text-muted-foreground">
+          <span className="text-muted-foreground text-sm">
             {date.toLocaleDateString()}
           </span>
         );
@@ -110,7 +117,7 @@ export default function DischargeTemplatesPage() {
           <Button
             variant="ghost"
             size="sm"
-            className="gap-1.5 text-muted-foreground hover:text-blue-500"
+            className="text-muted-foreground gap-1.5 hover:text-blue-500"
             onClick={() => handleShare(row.original.id, row.original.name)}
           >
             <Share2 className="h-3.5 w-3.5" />
@@ -125,8 +132,10 @@ export default function DischargeTemplatesPage() {
           <Button
             variant="ghost"
             size="sm"
-            className="gap-1.5 text-muted-foreground hover:text-foreground"
-            onClick={() => void handleDelete(row.original.id, row.original.name)}
+            className="text-muted-foreground hover:text-foreground gap-1.5"
+            onClick={() =>
+              void handleDelete(row.original.id, row.original.name)
+            }
             disabled={deleteMutation.isPending}
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -143,14 +152,14 @@ export default function DischargeTemplatesPage() {
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-primary/10 p-2">
-              <FileText className="h-6 w-6 text-primary" />
+            <div className="bg-primary/10 rounded-lg p-2">
+              <FileText className="text-primary h-6 w-6" />
             </div>
             <h1 className="text-3xl font-bold tracking-tight">
               Discharge Summary Templates
             </h1>
           </div>
-          <p className="text-base text-muted-foreground">
+          <p className="text-muted-foreground text-base">
             Manage discharge summary templates and assign them to users
           </p>
         </div>
@@ -174,8 +183,8 @@ export default function DischargeTemplatesPage() {
           {isLoading ? (
             <div className="flex items-center justify-center p-16">
               <div className="flex flex-col items-center gap-3">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">
+                <Loader2 className="text-primary h-8 w-8 animate-spin" />
+                <p className="text-muted-foreground text-sm">
                   Loading templates...
                 </p>
               </div>
@@ -189,12 +198,12 @@ export default function DischargeTemplatesPage() {
             />
           ) : (
             <div className="flex flex-col items-center justify-center gap-6 py-16 text-center">
-              <div className="rounded-full bg-muted p-8">
-                <FileText className="h-12 w-12 text-muted-foreground" />
+              <div className="bg-muted rounded-full p-8">
+                <FileText className="text-muted-foreground h-12 w-12" />
               </div>
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold">No templates found</h3>
-                <p className="max-w-sm text-sm text-muted-foreground">
+                <p className="text-muted-foreground max-w-sm text-sm">
                   Get started by creating your first discharge summary template
                 </p>
               </div>

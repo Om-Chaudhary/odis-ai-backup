@@ -34,17 +34,70 @@ export default async function DashboardPage() {
 
   return (
     <DarkModeWrapper>
-      <main className="bg-background min-h-screen px-4 py-10 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl space-y-6">
-          <DashboardProfileHeader user={user} profile={profile} />
-          <DashboardProfileContent user={user} profile={profile} />
+      <main className="min-h-screen relative overflow-hidden bg-gradient-to-b from-emerald-50 via-emerald-100/40 to-emerald-50/30">
+        {/* Background Elements */}
+        <div className="pointer-events-none absolute inset-0">
+          {/* Dotted background pattern */}
+          <div
+            className="absolute inset-0 opacity-15"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle, #31aba3 1px, transparent 1px)",
+              backgroundSize: "40px 40px",
+            }}
+          />
+          
+          {/* Animated gradient overlay */}
+          <div
+            className="animate-gradient-move absolute inset-0 opacity-40 blur-sm"
+            style={{
+              background:
+                "radial-gradient(circle at 30% 40%, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.06) 40%, transparent 70%)",
+            }}
+          />
 
-          <div className="flex justify-end">
-            <form action={signOut}>
-              <Button type="submit" variant="destructive">
-                Sign Out
-              </Button>
-            </form>
+          {/* Secondary moving gradient */}
+          <div
+            className="animate-gradient-move-reverse absolute inset-0 opacity-30 blur-sm"
+            style={{
+              background:
+                "radial-gradient(circle at 70% 60%, rgba(16, 185, 129, 0.10) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 80%)",
+            }}
+          />
+
+          {/* Floating accent orbs */}
+          <div
+            className="animate-float-slow absolute top-1/4 left-1/4 h-[300px] w-[300px] rounded-full opacity-25 blur-3xl"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, transparent 60%)",
+            }}
+          />
+          <div
+            className="animate-float-slow-reverse absolute right-1/3 bottom-1/3 h-[200px] w-[200px] rounded-full opacity-20 blur-3xl"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 60%)",
+            }}
+          />
+        </div>
+
+        <div className="relative z-10 px-4 py-10 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-6xl space-y-6">
+            <DashboardProfileHeader user={user} profile={profile} />
+            <DashboardProfileContent user={user} profile={profile} />
+
+            <div className="flex justify-end">
+              <form action={signOut}>
+                <Button 
+                  type="submit" 
+                  variant="destructive"
+                  className="shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                >
+                  Sign Out
+                </Button>
+              </form>
+            </div>
           </div>
         </div>
       </main>

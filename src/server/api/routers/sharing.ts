@@ -8,7 +8,9 @@ import { TRPCError } from "@trpc/server";
 
 const shareEntitySchema = z.object({
   entityId: z.string().uuid(),
-  userIds: z.array(z.string().uuid()).min(1, "At least one user must be selected"),
+  userIds: z
+    .array(z.string().uuid())
+    .min(1, "At least one user must be selected"),
 });
 
 const unshareEntitySchema = z.object({
@@ -138,7 +140,8 @@ export const sharingRouter = createTRPCRouter({
       // Combine shares with user data
       const sharesWithUsers = shares.map((share) => ({
         ...share,
-        user: users?.find((user) => user.id === share.shared_with_user_id) ?? null,
+        user:
+          users?.find((user) => user.id === share.shared_with_user_id) ?? null,
       }));
 
       return sharesWithUsers;
@@ -257,7 +260,8 @@ export const sharingRouter = createTRPCRouter({
       // Combine shares with user data
       const sharesWithUsers = shares.map((share) => ({
         ...share,
-        user: users?.find((user) => user.id === share.shared_with_user_id) ?? null,
+        user:
+          users?.find((user) => user.id === share.shared_with_user_id) ?? null,
       }));
 
       return sharesWithUsers;
@@ -292,7 +296,7 @@ export const sharingRouter = createTRPCRouter({
       const shareRecords = input.userIds.map((userId) => ({
         case_id: input.entityId,
         shared_with_user_id: userId,
-        shared_by_user_id: ctx.session.user.id,
+        shared_by_user_id: ctx.user.id,
       }));
 
       const { data, error } = await ctx.serviceClient
@@ -377,7 +381,8 @@ export const sharingRouter = createTRPCRouter({
       // Combine shares with user data
       const sharesWithUsers = shares.map((share) => ({
         ...share,
-        user: users?.find((user) => user.id === share.shared_with_user_id) ?? null,
+        user:
+          users?.find((user) => user.id === share.shared_with_user_id) ?? null,
       }));
 
       return sharesWithUsers;
@@ -396,7 +401,7 @@ export const sharingRouter = createTRPCRouter({
         entityType: z.enum(["soap_template", "discharge_template", "case"]),
         entityId: z.string().uuid(),
         userIds: z.array(z.string().uuid()),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const tableMap = {
@@ -442,7 +447,7 @@ export const sharingRouter = createTRPCRouter({
 
         // Add shared_by_user_id for cases (case_shares table has this column)
         if (input.entityType === "case") {
-          record.shared_by_user_id = ctx.session.user.id;
+          record.shared_by_user_id = ctx.user.id;
         }
 
         return record;

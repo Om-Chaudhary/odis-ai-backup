@@ -10,7 +10,15 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import { Loader2, Briefcase, Eye, Trash2, Filter, X, Share2 } from "lucide-react";
+import {
+  Loader2,
+  Briefcase,
+  Eye,
+  Trash2,
+  Filter,
+  X,
+  Share2,
+} from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import type { ColumnDef } from "@tanstack/react-table";
@@ -36,14 +44,13 @@ export default function CasesPage() {
 
   // Share dialog state
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [selectedCase, setSelectedCase] = useState<{ id: string; patientName: string } | null>(null);
+  const [selectedCase, setSelectedCase] = useState<{
+    id: string;
+    patientName: string;
+  } | null>(null);
 
   // Query cases
-  const {
-    data: cases,
-    isLoading,
-    refetch,
-  } = api.cases.listCases.useQuery({});
+  const { data: cases, isLoading, refetch } = api.cases.listCases.useQuery({});
 
   // Delete mutation
   const deleteMutation = api.cases.deleteCase.useMutation({
@@ -57,7 +64,11 @@ export default function CasesPage() {
   });
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this case? This will also delete all related SOAP notes, discharge summaries, and patient records.")) {
+    if (
+      confirm(
+        "Are you sure you want to delete this case? This will also delete all related SOAP notes, discharge summaries, and patient records.",
+      )
+    ) {
       deleteMutation.mutate({ id });
     }
   };
@@ -74,12 +85,16 @@ export default function CasesPage() {
     return cases.filter((c) => {
       if (statusFilter !== "all" && c.status !== statusFilter) return false;
       if (typeFilter !== "all" && c.type !== typeFilter) return false;
-      if (visibilityFilter !== "all" && c.visibility !== visibilityFilter) return false;
+      if (visibilityFilter !== "all" && c.visibility !== visibilityFilter)
+        return false;
       return true;
     });
   }, [cases, statusFilter, typeFilter, visibilityFilter]);
 
-  const hasActiveFilters = statusFilter !== "all" || typeFilter !== "all" || visibilityFilter !== "all";
+  const hasActiveFilters =
+    statusFilter !== "all" ||
+    typeFilter !== "all" ||
+    visibilityFilter !== "all";
 
   const clearFilters = () => {
     setStatusFilter("all");
@@ -92,12 +107,15 @@ export default function CasesPage() {
       accessorKey: "patient",
       header: "Patient",
       cell: ({ row }) => {
-        const patient = row.original.patient as unknown as { name?: string; owner_name?: string } | null;
+        const patient = row.original.patient as unknown as {
+          name?: string;
+          owner_name?: string;
+        } | null;
         return (
           <div className="flex flex-col">
             <span className="font-medium">{patient?.name ?? "Unknown"}</span>
             {patient?.owner_name && (
-              <span className="text-xs text-muted-foreground">
+              <span className="text-muted-foreground text-xs">
                 Owner: {patient.owner_name}
               </span>
             )}
@@ -118,7 +136,7 @@ export default function CasesPage() {
         };
         return type ? (
           <Badge variant="secondary" className={colors[type] ?? ""}>
-            {type.replace("_", " ")}
+            {String(type).replace("_", " ")}
           </Badge>
         ) : (
           <span className="text-muted-foreground">N/A</span>
@@ -161,9 +179,11 @@ export default function CasesPage() {
       accessorKey: "created_at",
       header: "Created",
       cell: ({ row }) => {
-        const date = row.original.created_at ? new Date(row.original.created_at) : null;
+        const date = row.original.created_at
+          ? new Date(row.original.created_at)
+          : null;
         return date ? (
-          <span className="text-sm text-muted-foreground">
+          <span className="text-muted-foreground text-sm">
             {date.toLocaleDateString()}
           </span>
         ) : (
@@ -175,14 +195,16 @@ export default function CasesPage() {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => {
-        const patient = row.original.patient as unknown as { name?: string } | null;
+        const patient = row.original.patient as unknown as {
+          name?: string;
+        } | null;
         const patientName = patient?.name ?? "Unknown";
         return (
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
-              className="gap-1.5 text-muted-foreground hover:text-blue-500"
+              className="text-muted-foreground gap-1.5 hover:text-blue-500"
               onClick={() => handleShare(row.original.id, patientName)}
             >
               <Share2 className="h-3.5 w-3.5" />
@@ -197,7 +219,7 @@ export default function CasesPage() {
             <Button
               variant="ghost"
               size="sm"
-              className="gap-1.5 text-destructive hover:text-destructive"
+              className="text-destructive hover:text-destructive gap-1.5"
               onClick={() => void handleDelete(row.original.id)}
               disabled={deleteMutation.isPending}
             >
@@ -216,14 +238,14 @@ export default function CasesPage() {
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-primary/10 p-2">
-              <Briefcase className="h-6 w-6 text-primary" />
+            <div className="bg-primary/10 rounded-lg p-2">
+              <Briefcase className="text-primary h-6 w-6" />
             </div>
             <h1 className="text-3xl font-bold tracking-tight">
               Case Management
             </h1>
           </div>
-          <p className="text-base text-muted-foreground">
+          <p className="text-muted-foreground text-base">
             View and manage all veterinary cases
           </p>
         </div>
@@ -241,8 +263,8 @@ export default function CasesPage() {
           {isLoading ? (
             <div className="flex items-center justify-center p-16">
               <div className="flex flex-col items-center gap-3">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">
+                <Loader2 className="text-primary h-8 w-8 animate-spin" />
+                <p className="text-muted-foreground text-sm">
                   Loading cases...
                 </p>
               </div>
@@ -256,7 +278,7 @@ export default function CasesPage() {
               filterComponent={
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4 text-muted-foreground" />
+                    <Filter className="text-muted-foreground h-4 w-4" />
                     <span className="text-sm font-medium">Filters:</span>
                   </div>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -283,7 +305,10 @@ export default function CasesPage() {
                       <SelectItem value="follow_up">Follow-up</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Select value={visibilityFilter} onValueChange={setVisibilityFilter}>
+                  <Select
+                    value={visibilityFilter}
+                    onValueChange={setVisibilityFilter}
+                  >
                     <SelectTrigger className="h-8 w-[140px]">
                       <SelectValue placeholder="Visibility" />
                     </SelectTrigger>
@@ -309,12 +334,12 @@ export default function CasesPage() {
             />
           ) : (
             <div className="flex flex-col items-center justify-center gap-6 py-16 text-center">
-              <div className="rounded-full bg-muted p-8">
-                <Briefcase className="h-12 w-12 text-muted-foreground" />
+              <div className="bg-muted rounded-full p-8">
+                <Briefcase className="text-muted-foreground h-12 w-12" />
               </div>
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold">No cases found</h3>
-                <p className="max-w-sm text-sm text-muted-foreground">
+                <p className="text-muted-foreground max-w-sm text-sm">
                   No veterinary cases in the system yet
                 </p>
               </div>
