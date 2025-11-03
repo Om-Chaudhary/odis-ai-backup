@@ -34,18 +34,18 @@ export default function DashboardProfileContent({
 }: DashboardProfileContentProps) {
   return (
     <Tabs defaultValue="personal" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="personal">Personal</TabsTrigger>
-        <TabsTrigger value="account">Account</TabsTrigger>
-        <TabsTrigger value="security">Security</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-3 bg-white/80 border border-slate-200 shadow-md">
+        <TabsTrigger value="personal" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#31aba3] data-[state=active]:to-[#2a9a92] data-[state=active]:text-white data-[state=active]:shadow-lg">Personal</TabsTrigger>
+        <TabsTrigger value="account" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#31aba3] data-[state=active]:to-[#2a9a92] data-[state=active]:text-white data-[state=active]:shadow-lg">Account</TabsTrigger>
+        <TabsTrigger value="security" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#31aba3] data-[state=active]:to-[#2a9a92] data-[state=active]:text-white data-[state=active]:shadow-lg">Security</TabsTrigger>
       </TabsList>
 
       {/* Personal Information */}
       <TabsContent value="personal" className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-            <CardDescription>
+        <Card className="border-slate-200 shadow-lg bg-white/80 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-slate-50 to-teal-50/30 border-b border-slate-200">
+            <CardTitle className="text-slate-900">Personal Information</CardTitle>
+            <CardDescription className="text-slate-600">
               Update your personal details and profile information.
             </CardDescription>
           </CardHeader>
@@ -104,8 +104,8 @@ export default function DashboardProfileContent({
               </div>
             </div>
             <div className="flex justify-end gap-4">
-              <Button variant="outline">Cancel</Button>
-              <Button variant="default">Save Changes</Button>
+              <Button variant="outline" className="border-slate-300 hover:bg-slate-50">Cancel</Button>
+              <Button variant="default" className="bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white shadow-lg hover:shadow-xl hover:shadow-[#31aba3]/30 transition-all hover:scale-105">Save Changes</Button>
             </div>
           </CardContent>
         </Card>
@@ -113,46 +113,46 @@ export default function DashboardProfileContent({
 
       {/* Account Settings */}
       <TabsContent value="account" className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Account Settings</CardTitle>
-            <CardDescription>
+        <Card className="border-slate-200 shadow-lg bg-white/80 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-slate-50 to-teal-50/30 border-b border-slate-200">
+            <CardTitle className="text-slate-900">Account Settings</CardTitle>
+            <CardDescription className="text-slate-600">
               Manage your account preferences and settings.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <Label className="text-base">Account Status</Label>
-                <p className="text-muted-foreground text-sm">
+                <Label className="text-base text-slate-900">Account Status</Label>
+                <p className="text-slate-600 text-sm">
                   Your account is currently active
                 </p>
               </div>
               <Badge
                 variant="outline"
-                className="border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-400"
+                className="border-green-200 bg-green-50 text-green-700"
               >
                 Active
               </Badge>
             </div>
-            <Separator />
+            <Separator className="bg-slate-200" />
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <Label className="text-base">User ID</Label>
-                <p className="text-muted-foreground font-mono text-sm">
+                <Label className="text-base text-slate-900">User ID</Label>
+                <p className="text-slate-600 font-mono text-sm">
                   {user.id}
                 </p>
               </div>
             </div>
-            <Separator />
+            <Separator className="bg-slate-200" />
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <Label className="text-base">Data Export</Label>
-                <p className="text-muted-foreground text-sm">
+                <Label className="text-base text-slate-900">Data Export</Label>
+                <p className="text-slate-600 text-sm">
                   Download a copy of your data
                 </p>
               </div>
-              <Button variant="outline">Export Data</Button>
+              <Button variant="outline" className="border-slate-300 hover:bg-teal-50 hover:border-[#31aba3] hover:text-[#31aba3] transition-colors">Export Data</Button>
             </div>
           </CardContent>
         </Card>
@@ -160,10 +160,10 @@ export default function DashboardProfileContent({
 
       {/* Security Settings */}
       <TabsContent value="security" className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Security Settings</CardTitle>
-            <CardDescription>
+        <Card className="border-slate-200 shadow-lg bg-white/80 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-slate-50 to-teal-50/30 border-b border-slate-200">
+            <CardTitle className="text-slate-900">Security Settings</CardTitle>
+            <CardDescription className="text-slate-600">
               Manage your account security and authentication.
             </CardDescription>
           </CardHeader>
@@ -171,21 +171,21 @@ export default function DashboardProfileContent({
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <Label className="text-base">Password</Label>
-                  <p className="text-muted-foreground text-sm">
+                  <Label className="text-base text-slate-900">Password</Label>
+                  <p className="text-slate-600 text-sm">
                     Manage your password
                   </p>
                 </div>
-                <Button variant="outline">
+                <Button variant="outline" className="border-slate-300 hover:bg-teal-50 hover:border-[#31aba3] hover:text-[#31aba3] transition-colors">
                   <Key className="mr-2 h-4 w-4" />
                   Change Password
                 </Button>
               </div>
-              <Separator />
+              <Separator className="bg-slate-200" />
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <Label className="text-base">Email Confirmed</Label>
-                  <p className="text-muted-foreground text-sm">
+                  <Label className="text-base text-slate-900">Email Confirmed</Label>
+                  <p className="text-slate-600 text-sm">
                     Your email address verification status
                   </p>
                 </div>
@@ -193,32 +193,32 @@ export default function DashboardProfileContent({
                   variant="outline"
                   className={
                     user.email_confirmed_at
-                      ? "border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-400"
-                      : "border-yellow-200 bg-yellow-50 text-yellow-700 dark:border-yellow-800 dark:bg-yellow-950 dark:text-yellow-400"
+                      ? "border-green-200 bg-green-50 text-green-700"
+                      : "border-yellow-200 bg-yellow-50 text-yellow-700"
                   }
                 >
                   {user.email_confirmed_at ? "Verified" : "Unverified"}
                 </Badge>
               </div>
-              <Separator />
+              <Separator className="bg-slate-200" />
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <Label className="text-base">Login Notifications</Label>
-                  <p className="text-muted-foreground text-sm">
+                  <Label className="text-base text-slate-900">Login Notifications</Label>
+                  <p className="text-slate-600 text-sm">
                     Get notified when someone logs into your account
                   </p>
                 </div>
                 <Switch defaultChecked />
               </div>
-              <Separator />
+              <Separator className="bg-slate-200" />
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <Label className="text-base">Active Sessions</Label>
-                  <p className="text-muted-foreground text-sm">
+                  <Label className="text-base text-slate-900">Active Sessions</Label>
+                  <p className="text-slate-600 text-sm">
                     Manage devices that are logged into your account
                   </p>
                 </div>
-                <Button variant="outline">
+                <Button variant="outline" className="border-slate-300 hover:bg-teal-50 hover:border-[#31aba3] hover:text-[#31aba3] transition-colors">
                   <Shield className="mr-2 h-4 w-4" />
                   View Sessions
                 </Button>
