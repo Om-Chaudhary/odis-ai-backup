@@ -13,7 +13,8 @@ import {
 import { Plus, Loader2, FileText, Pencil, Trash2, Share2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { DataTable, type ColumnDef } from "~/components/ui/data-table";
+import type { ColumnDef } from "@tanstack/react-table";
+import { DataTable } from "~/components/ui/data-table";
 import { Badge } from "~/components/ui/badge";
 import { ShareDialog } from "~/components/admin/ShareDialog";
 import type { RouterOutputs } from "~/trpc/client";

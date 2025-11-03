@@ -13,7 +13,8 @@ import {
 import { Loader2, Briefcase, Eye, Trash2, Filter, X, Share2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { DataTable, type ColumnDef } from "~/components/ui/data-table";
+import type { ColumnDef } from "@tanstack/react-table";
+import { DataTable } from "~/components/ui/data-table";
 import { Badge } from "~/components/ui/badge";
 import {
   Select,
@@ -109,14 +110,14 @@ export default function CasesPage() {
       header: "Type",
       cell: ({ row }) => {
         const type = row.original.type;
-        const colors = {
+        const colors: Record<string, string> = {
           checkup: "bg-blue-500/10 text-blue-500",
           emergency: "bg-red-500/10 text-red-500",
           surgery: "bg-purple-500/10 text-purple-500",
           follow_up: "bg-green-500/10 text-green-500",
         };
         return type ? (
-          <Badge variant="secondary" className={colors[type]}>
+          <Badge variant="secondary" className={colors[type] ?? ""}>
             {type.replace("_", " ")}
           </Badge>
         ) : (
@@ -129,14 +130,14 @@ export default function CasesPage() {
       header: "Status",
       cell: ({ row }) => {
         const status = row.original.status;
-        const colors = {
+        const colors: Record<string, string> = {
           draft: "bg-gray-500/10 text-gray-500",
           ongoing: "bg-blue-500/10 text-blue-500",
           completed: "bg-green-500/10 text-green-500",
           reviewed: "bg-purple-500/10 text-purple-500",
         };
         return status ? (
-          <Badge variant="secondary" className={colors[status]}>
+          <Badge variant="secondary" className={colors[status] ?? ""}>
             {status}
           </Badge>
         ) : (
