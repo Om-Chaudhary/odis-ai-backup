@@ -2,9 +2,12 @@
 
 import { createTRPCReact } from "@trpc/react-query";
 import { httpBatchLink, loggerLink } from "@trpc/client";
+import type { inferRouterOutputs } from "@trpc/server";
 import type { AppRouter } from "~/server/api/root";
 
 export const api = createTRPCReact<AppRouter>({});
+
+export type RouterOutputs = inferRouterOutputs<AppRouter>;
 
 function getBaseUrl() {
   if (typeof window !== "undefined") return ""; // browser should use relative path

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import type { Metadata } from "next";
 import { createClient } from "~/lib/supabase/server";
+import { DarkModeWrapper } from "~/components/DarkModeWrapper";
 import DashboardProfileHeader from "~/components/dashboard/DashboardProfileHeader";
 import DashboardProfileContent from "~/components/dashboard/DashboardProfileContent";
 
@@ -32,20 +33,21 @@ export default async function DashboardPage() {
     .single();
 
   return (
-    <main className="relative min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50/30 px-4 py-10 sm:px-6 lg:px-8">
-      <div className="dotted-background" />
-      <div className="relative mx-auto max-w-6xl space-y-6">
-        <DashboardProfileHeader user={user} profile={profile} />
-        <DashboardProfileContent user={user} profile={profile} />
+    <DarkModeWrapper>
+      <main className="bg-background min-h-screen px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl space-y-6">
+          <DashboardProfileHeader user={user} profile={profile} />
+          <DashboardProfileContent user={user} profile={profile} />
 
-        <div className="flex justify-end">
-          <form action={signOut}>
-            <Button type="submit" variant="destructive">
-              Sign Out
-            </Button>
-          </form>
+          <div className="flex justify-end">
+            <form action={signOut}>
+              <Button type="submit" variant="destructive">
+                Sign Out
+              </Button>
+            </form>
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </DarkModeWrapper>
   );
 }

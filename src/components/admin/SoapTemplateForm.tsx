@@ -22,12 +22,29 @@ import {
 } from "~/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { api } from "~/trpc/client";
-import type { Database } from "~/database.types";
-
-type SoapTemplateData = Database["public"]["Tables"]["temp_soap_templates"]["Row"];
 
 interface SoapTemplateFormProps {
-  initialData?: SoapTemplateData;
+  initialData?: {
+    id?: string;
+    template_id: string;
+    template_name: string;
+    display_name: string;
+    person_name: string;
+    icon_name: string;
+    is_default: boolean;
+    user_id?: string | null;
+    subjective_template?: string | null;
+    subjective_prompt?: string | null;
+    objective_template?: string | null;
+    objective_prompt?: string | null;
+    assessment_template?: string | null;
+    assessment_prompt?: string | null;
+    plan_template?: string | null;
+    plan_prompt?: string | null;
+    client_instructions_template?: string | null;
+    client_instructions_prompt?: string | null;
+    system_prompt_addition?: string | null;
+  };
   onSubmit: (data: Record<string, unknown>) => Promise<void>;
   isSubmitting: boolean;
 }
@@ -37,26 +54,28 @@ export function SoapTemplateForm({
   onSubmit,
   isSubmitting,
 }: SoapTemplateFormProps) {
-  const [formData, setFormData] = useState({
-    template_id: initialData?.template_id ?? "",
-    template_name: initialData?.template_name ?? "",
-    display_name: initialData?.display_name ?? "",
-    person_name: initialData?.person_name ?? "",
-    icon_name: initialData?.icon_name ?? "",
-    is_default: initialData?.is_default ?? false,
-    user_id: initialData?.user_id ?? null,
-    subjective_template: initialData?.subjective_template ?? "",
-    subjective_prompt: initialData?.subjective_prompt ?? "",
-    objective_template: initialData?.objective_template ?? "",
-    objective_prompt: initialData?.objective_prompt ?? "",
-    assessment_template: initialData?.assessment_template ?? "",
-    assessment_prompt: initialData?.assessment_prompt ?? "",
-    plan_template: initialData?.plan_template ?? "",
-    plan_prompt: initialData?.plan_prompt ?? "",
-    client_instructions_template: initialData?.client_instructions_template ?? "",
-    client_instructions_prompt: initialData?.client_instructions_prompt ?? "",
-    system_prompt_addition: initialData?.system_prompt_addition ?? "",
-  });
+  const [formData, setFormData] = useState(
+    initialData ?? {
+      template_id: "",
+      template_name: "",
+      display_name: "",
+      person_name: "",
+      icon_name: "",
+      is_default: false,
+      user_id: null,
+      subjective_template: "",
+      subjective_prompt: "",
+      objective_template: "",
+      objective_prompt: "",
+      assessment_template: "",
+      assessment_prompt: "",
+      plan_template: "",
+      plan_prompt: "",
+      client_instructions_template: "",
+      client_instructions_prompt: "",
+      system_prompt_addition: "",
+    }
+  );
 
   const { data: users, isLoading: usersLoading } = api.templates.listUsers.useQuery();
 
@@ -72,20 +91,17 @@ export function SoapTemplateForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Basic Information */}
-      <Card className="rounded-xl border-slate-200 shadow-lg bg-white/80 backdrop-blur-sm">
-        <CardHeader className="bg-gradient-to-r from-[#31aba3]/10 to-[#2a9a92]/5 border-b border-slate-200 pb-3">
-          <CardTitle className="text-lg text-slate-900 flex items-center gap-2">
-            <span className="text-xl">ℹ️</span>
-            Basic Information
-          </CardTitle>
-          <CardDescription className="text-sm text-slate-600">
+      <Card className="rounded-xl border-border shadow-md">
+        <CardHeader className="bg-primary/5 pb-3">
+          <CardTitle className="text-lg text-foreground">Basic Information</CardTitle>
+          <CardDescription className="text-sm">
             Template identification and display settings
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 pt-6">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="template_id" className="text-sm font-semibold text-slate-700">
+              <Label htmlFor="template_id" className="text-sm font-semibold text-foreground">
                 Template ID <span className="text-destructive">*</span>
               </Label>
               <Input
@@ -93,7 +109,7 @@ export function SoapTemplateForm({
                 value={formData.template_id}
                 onChange={(e) => updateField("template_id", e.target.value)}
                 required
-                className="shadow-sm transition-all focus:ring-2 focus:ring-[#31aba3]/20 focus:border-[#31aba3] border-slate-200"
+                className="shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
                 placeholder="e.g., soap_general"
               />
             </div>
@@ -181,17 +197,17 @@ export function SoapTemplateForm({
               </Select>
             </div>
           </div>
-          <div className="flex items-center space-x-3 rounded-lg border-2 border-[#31aba3]/20 bg-gradient-to-r from-[#31aba3]/5 to-[#2a9a92]/5 p-4">
+          <div className="flex items-center space-x-3 rounded-lg border border-border bg-muted/30 p-4">
             <Switch
               id="is_default"
               checked={formData.is_default}
               onCheckedChange={(checked) => updateField("is_default", checked)}
             />
             <div className="space-y-0.5">
-              <Label htmlFor="is_default" className="text-sm font-semibold text-slate-900 cursor-pointer">
+              <Label htmlFor="is_default" className="text-sm font-semibold text-foreground cursor-pointer">
                 Set as default template
               </Label>
-              <p className="text-xs text-slate-600">
+              <p className="text-xs text-muted-foreground">
                 Default templates are available to all users
               </p>
             </div>
@@ -207,13 +223,13 @@ export function SoapTemplateForm({
         { key: "plan", label: "Plan", icon: "📋", description: "Treatment plan and next steps" },
         { key: "client_instructions", label: "Client Instructions", icon: "📝", description: "Patient guidance and directions" },
       ].map((section) => (
-        <Card key={section.key} className="rounded-xl border-slate-200 shadow-lg bg-white/80 backdrop-blur-sm">
-          <CardHeader className="bg-gradient-to-r from-slate-50 to-teal-50/30 border-b border-slate-200 pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg text-slate-900">
+        <Card key={section.key} className="rounded-xl border-border shadow-md">
+          <CardHeader className="bg-muted/30 pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
               <span className="text-xl">{section.icon}</span>
               {section.label}
             </CardTitle>
-            <CardDescription className="text-sm text-slate-600">
+            <CardDescription className="text-sm">
               {section.description}
             </CardDescription>
           </CardHeader>
@@ -257,13 +273,13 @@ export function SoapTemplateForm({
       ))}
 
       {/* System Prompt */}
-      <Card className="rounded-xl border-slate-200 shadow-lg bg-white/80 backdrop-blur-sm">
-        <CardHeader className="bg-gradient-to-r from-slate-50 to-teal-50/30 border-b border-slate-200 pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg text-slate-900">
+      <Card className="rounded-xl border-border shadow-md">
+        <CardHeader className="bg-muted/30 pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg text-foreground">
             <span className="text-xl">⚙️</span>
             System Prompt Addition
           </CardTitle>
-          <CardDescription className="text-sm text-slate-600">
+          <CardDescription className="text-sm">
             Additional instructions for the AI system
           </CardDescription>
         </CardHeader>
@@ -287,15 +303,15 @@ export function SoapTemplateForm({
       </Card>
 
       {/* Submit Button */}
-      <div className="sticky bottom-0 z-20 flex items-center justify-between gap-4 rounded-lg border-2 border-[#31aba3]/20 bg-white/95 p-4 shadow-xl backdrop-blur-sm">
-        <p className="text-sm text-slate-700 font-medium">
+      <div className="sticky bottom-0 z-20 flex items-center justify-between gap-4 rounded-lg border border-border bg-card/95 p-4 shadow-lg backdrop-blur-sm">
+        <p className="text-sm text-muted-foreground">
           {initialData?.id ? "Update" : "Create"} your template to make it available for use
         </p>
         <Button
           type="submit"
           disabled={isSubmitting}
           size="lg"
-          className="gap-2 bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white shadow-lg hover:shadow-xl hover:shadow-[#31aba3]/30 transition-all hover:scale-105"
+          className="gap-2 shadow-md transition-all hover:shadow-lg"
         >
           {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
           {initialData?.id ? "Update Template" : "Create Template"}

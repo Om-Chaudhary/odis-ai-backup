@@ -2,47 +2,54 @@
 
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/client";
-import { SoapTemplateForm } from "~/components/admin/SoapTemplateForm";
+import { DischargeTemplateForm } from "~/components/admin/DischargeTemplateForm";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Button } from "~/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
-export default function NewSoapTemplatePage() {
+export default function NewDischargeTemplatePage() {
   const router = useRouter();
 
-  const createMutation = api.templates.createSoapTemplate.useMutation({
+  const createMutation = api.templates.createDischargeSummaryTemplate.useMutation({
     onSuccess: () => {
-      toast.success("Template created successfully");
-      router.push("/admin/templates/soap");
+      toast.success("Discharge template created successfully");
+      router.push("/admin/templates/discharge");
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to create template");
+      toast.error(error.message ?? "Failed to create template");
     },
   });
 
-  const handleSubmit = async (data: Record<string, unknown>) => {
-    await createMutation.mutateAsync(data as Parameters<typeof createMutation.mutateAsync>[0]);
+  const handleSubmit = async (data: {
+    name: string;
+    content: string;
+    is_default: boolean;
+    user_id: string;
+  }) => {
+    await createMutation.mutateAsync(data);
   };
 
   return (
     <div className="space-y-4">
       <div className="space-y-3">
-        <Link href="/admin/templates/soap">
+        <Link href="/admin/templates/discharge">
           <Button variant="ghost" size="sm" className="gap-2 hover:bg-primary/10 hover:text-primary">
             <ArrowLeft className="h-4 w-4" />
             Back to Templates
           </Button>
         </Link>
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Create SOAP Template</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            Create Discharge Summary Template
+          </h1>
           <p className="text-base text-muted-foreground">
-            Create a new SOAP note template with customizable sections
+            Create a new discharge summary template
           </p>
         </div>
       </div>
 
-      <SoapTemplateForm
+      <DischargeTemplateForm
         onSubmit={handleSubmit}
         isSubmitting={createMutation.isPending}
       />

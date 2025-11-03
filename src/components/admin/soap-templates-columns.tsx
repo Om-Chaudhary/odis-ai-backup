@@ -3,18 +3,20 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
-import { Pencil, Trash2, Loader2, ArrowUpDown } from "lucide-react";
+import { Pencil, Trash2, Loader2, ArrowUpDown, Share2 } from "lucide-react";
 import Link from "next/link";
 import type { Database } from "~/database.types";
 
 // Type for the SOAP template row from database
 type SoapTemplateRow = Database["public"]["Tables"]["temp_soap_templates"]["Row"];
 
-// Type for user fields returned from the join (matching database schema)
-type UserFields = Pick<
-  Database["public"]["Tables"]["users"]["Row"],
-  "id" | "email" | "first_name" | "last_name"
->;
+// Type for user fields returned from the join
+type UserFields = {
+  id: string;
+  email: string | null;
+  first_name: string | null;
+  last_name: string | null;
+};
 
 // Combined type matching the tRPC query output
 export type SoapTemplate = SoapTemplateRow & {
@@ -23,11 +25,13 @@ export type SoapTemplate = SoapTemplateRow & {
 
 interface GetColumnsOptions {
   onDelete: (id: string, name: string) => void;
+  onShare: (id: string, name: string) => void;
   isDeleting: boolean;
 }
 
 export const getColumns = ({
   onDelete,
+  onShare,
   isDeleting,
 }: GetColumnsOptions): ColumnDef<SoapTemplate>[] => [
   {
@@ -113,6 +117,15 @@ export const getColumns = ({
 
       return (
         <div className="flex justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onShare(template.id, template.display_name)}
+            className="h-9 w-9 opacity-0 transition-all hover:bg-blue-500/10 hover:text-blue-500 group-hover:opacity-100"
+          >
+            <Share2 className="h-4 w-4" />
+            <span className="sr-only">Share</span>
+          </Button>
           <Link href={`/admin/templates/soap/${template.id}`}>
             <Button
               variant="ghost"

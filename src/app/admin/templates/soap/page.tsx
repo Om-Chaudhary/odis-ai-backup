@@ -16,11 +16,16 @@ import { toast } from "sonner";
 import { DataTable } from "~/components/ui/data-table";
 import { getColumns } from "~/components/admin/soap-templates-columns";
 import { SoapTemplatesFilters } from "~/components/admin/SoapTemplatesFilters";
+import { ShareDialog } from "~/components/admin/ShareDialog";
 
 export default function SoapTemplatesPage() {
   // Filter state
   const [userFilter, setUserFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  // Share dialog state
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<{ id: string; name: string } | null>(null);
 
   // Query templates
   const {
@@ -47,6 +52,11 @@ export default function SoapTemplatesPage() {
     if (confirm(`Are you sure you want to delete "${name}"?`)) {
       deleteMutation.mutate({ id });
     }
+  };
+
+  const handleShare = (id: string, name: string) => {
+    setSelectedTemplate({ id, name });
+    setShareDialogOpen(true);
   };
 
   // Filter templates based on selected filters
@@ -80,6 +90,7 @@ export default function SoapTemplatesPage() {
 
   const columns = getColumns({
     onDelete: (id: string, name: string) => void handleDelete(id, name),
+    onShare: handleShare,
     isDeleting: deleteMutation.isPending,
   });
 
@@ -89,19 +100,19 @@ export default function SoapTemplatesPage() {
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-gradient-to-br from-[#31aba3] to-[#2a9a92] p-3 shadow-lg">
-              <ClipboardList className="h-6 w-6 text-white" />
+            <div className="rounded-lg bg-primary/10 p-2">
+              <ClipboardList className="h-6 w-6 text-primary" />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold tracking-tight">
               SOAP Templates
             </h1>
           </div>
-          <p className="text-base text-slate-600">
+          <p className="text-base text-muted-foreground">
             Manage SOAP note templates and assign them to users
           </p>
         </div>
         <Link href="/admin/templates/soap/new">
-          <Button size="lg" className="gap-2 bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white shadow-lg hover:shadow-xl hover:shadow-[#31aba3]/30 transition-all hover:scale-105">
+          <Button size="lg" className="gap-2">
             <Plus className="h-5 w-5" />
             Create Template
           </Button>
@@ -109,10 +120,10 @@ export default function SoapTemplatesPage() {
       </div>
 
       {/* Templates DataTable */}
-      <Card className="rounded-xl border-slate-200 shadow-lg bg-white/80 backdrop-blur-sm">
-        <CardHeader className="pb-4 bg-gradient-to-r from-slate-50 to-teal-50/30 border-b border-slate-200">
-          <CardTitle className="text-xl text-slate-900">Templates</CardTitle>
-          <CardDescription className="text-slate-600">
+      <Card className="rounded-xl bg-transparent shadow-none">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl">Templates</CardTitle>
+          <CardDescription>
             Browse and manage all SOAP note templates
           </CardDescription>
         </CardHeader>
@@ -120,8 +131,8 @@ export default function SoapTemplatesPage() {
           {isLoading ? (
             <div className="flex items-center justify-center p-16">
               <div className="flex flex-col items-center gap-3">
-                <Loader2 className="h-8 w-8 animate-spin text-[#31aba3]" />
-                <p className="text-sm text-slate-600">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">
                   Loading templates...
                 </p>
               </div>
@@ -145,17 +156,17 @@ export default function SoapTemplatesPage() {
             />
           ) : (
             <div className="flex flex-col items-center justify-center gap-6 py-16 text-center">
-              <div className="rounded-full bg-gradient-to-br from-[#31aba3]/10 to-[#2a9a92]/5 p-8">
-                <ClipboardList className="h-12 w-12 text-[#31aba3]" />
+              <div className="rounded-full bg-muted p-8">
+                <ClipboardList className="h-12 w-12 text-muted-foreground" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-slate-900">No templates found</h3>
-                <p className="max-w-sm text-sm text-slate-600">
+                <h3 className="text-lg font-semibold">No templates found</h3>
+                <p className="max-w-sm text-sm text-muted-foreground">
                   Get started by creating your first SOAP template
                 </p>
               </div>
               <Link href="/admin/templates/soap/new">
-                <Button className="gap-2 bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white shadow-lg hover:shadow-xl hover:shadow-[#31aba3]/30 transition-all hover:scale-105">
+                <Button className="gap-2">
                   <Plus className="h-4 w-4" />
                   Create your first template
                 </Button>
@@ -164,6 +175,17 @@ export default function SoapTemplatesPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Share Dialog */}
+      {selectedTemplate && (
+        <ShareDialog
+          open={shareDialogOpen}
+          onOpenChange={setShareDialogOpen}
+          entityType="soap_template"
+          entityId={selectedTemplate.id}
+          entityName={selectedTemplate.name}
+        />
+      )}
     </div>
   );
 }

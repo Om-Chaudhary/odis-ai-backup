@@ -29,6 +29,24 @@ const soapTemplateSchema = z.object({
   system_prompt_addition: z.string().nullable().optional(),
 });
 
+const dischargeSummaryTemplateSchema = z.object({
+  name: z.string().min(1, "Template name is required"),
+  content: z.string().min(1, "Template content is required"),
+  is_default: z.boolean().default(false),
+  user_id: z.string().uuid(),
+});
+
+const userSchema = z.object({
+  email: z.string().email("Valid email is required"),
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().min(1, "Last name is required"),
+  role: z.enum(["veterinarian", "vet_tech", "admin", "practice_owner", "client"]),
+  clinic_name: z.string().optional(),
+  clinic_email: z.string().email().optional(),
+  clinic_phone: z.string().optional(),
+  license_number: z.string().optional(),
+});
+
 // ============================================================================
 // ROUTER
 // ============================================================================
@@ -176,27 +194,274 @@ export const templatesRouter = createTRPCRouter({
     }),
 
   // ==========================================================================
+  // DISCHARGE SUMMARY TEMPLATES
+  // ==========================================================================
+
+  /**
+   * List all discharge summary templates (admin only)
+   */
+  listDischargeSummaryTemplates: adminProcedure
+    .input(
+      z.object({
+        search: z.string().optional(),
+        userId: z.string().uuid().optional(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      let query = ctx.serviceClient
+        .from("temp_discharge_summary_templates")
+        .select("*, user:users(id, email, first_name, last_name)")
+        .order("created_at", { ascending: false });
+
+      if (input.search) {
+        query = query.ilike("name", `%${input.search}%`);
+      }
+
+      if (input.userId) {
+        query = query.eq("user_id", input.userId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch discharge summary templates",
+          cause: error,
+        });
+      }
+
+      return data;
+    }),
+
+  /**
+   * Get single discharge summary template by ID
+   */
+  getDischargeSummaryTemplate: adminProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data, error } = await ctx.serviceClient
+        .from("temp_discharge_summary_templates")
+        .select("*")
+        .eq("id", input.id)
+        .single();
+
+      if (error) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Discharge summary template not found",
+          cause: error,
+        });
+      }
+
+      return data;
+    }),
+
+  /**
+   * Create discharge summary template
+   */
+  createDischargeSummaryTemplate: adminProcedure
+    .input(dischargeSummaryTemplateSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { data, error } = await ctx.serviceClient
+        .from("temp_discharge_summary_templates")
+        .insert(input)
+        .select()
+        .single();
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to create discharge summary template",
+          cause: error,
+        });
+      }
+
+      return data;
+    }),
+
+  /**
+   * Update discharge summary template
+   */
+  updateDischargeSummaryTemplate: adminProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        data: dischargeSummaryTemplateSchema.partial(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { data, error } = await ctx.serviceClient
+        .from("temp_discharge_summary_templates")
+        .update(input.data)
+        .eq("id", input.id)
+        .select()
+        .single();
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update discharge summary template",
+          cause: error,
+        });
+      }
+
+      return data;
+    }),
+
+  /**
+   * Delete discharge summary template
+   */
+  deleteDischargeSummaryTemplate: adminProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { error } = await ctx.serviceClient
+        .from("temp_discharge_summary_templates")
+        .delete()
+        .eq("id", input.id);
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to delete discharge summary template",
+          cause: error,
+        });
+      }
+
+      return { success: true };
+    }),
+
+  // ==========================================================================
   // USER MANAGEMENT
   // ==========================================================================
 
   /**
-   * Get all users for assignment dropdown
+   * List all users (with optional search and pagination)
    */
-  listUsers: adminProcedure.query(async ({ ctx }) => {
-    // Use service client to bypass RLS
-    const { data, error } = await ctx.serviceClient
-      .from("users")
-      .select("id, email, first_name, last_name, role")
-      .order("email");
+  listUsers: adminProcedure
+    .input(
+      z.object({
+        search: z.string().optional(),
+        role: z.enum(["veterinarian", "vet_tech", "admin", "practice_owner", "client"]).optional(),
+      }).optional()
+    )
+    .query(async ({ ctx, input }) => {
+      let query = ctx.serviceClient
+        .from("users")
+        .select("*")
+        .order("email");
 
-    if (error) {
+      if (input?.search) {
+        query = query.or(
+          `email.ilike.%${input.search}%,first_name.ilike.%${input.search}%,last_name.ilike.%${input.search}%`
+        );
+      }
+
+      if (input?.role) {
+        query = query.eq("role", input.role);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch users",
+          cause: error,
+        });
+      }
+
+      return data;
+    }),
+
+  /**
+   * Get single user by ID
+   */
+  getUser: adminProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { data, error } = await ctx.serviceClient
+        .from("users")
+        .select("*")
+        .eq("id", input.id)
+        .single();
+
+      if (error) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User not found",
+          cause: error,
+        });
+      }
+
+      return data;
+    }),
+
+  /**
+   * Create new user (creates both auth.users and public.users)
+   * Note: Requires Supabase Auth Admin API
+   */
+  createUser: adminProcedure
+    .input(userSchema.extend({ password: z.string().min(8, "Password must be at least 8 characters") }))
+    .mutation(async ({ ctx, input }) => {
+      // This would require Supabase Auth Admin API integration
+      // For now, return error instructing to use Supabase dashboard
       throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to fetch users",
-        cause: error,
+        code: "NOT_IMPLEMENTED",
+        message: "User creation requires Supabase Auth Admin API integration. Please create users through the Supabase dashboard for now.",
       });
-    }
+    }),
 
-    return data;
-  }),
+  /**
+   * Update user profile
+   */
+  updateUser: adminProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        data: userSchema.partial(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { data, error } = await ctx.serviceClient
+        .from("users")
+        .update(input.data)
+        .eq("id", input.id)
+        .select()
+        .single();
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update user",
+          cause: error,
+        });
+      }
+
+      return data;
+    }),
+
+  /**
+   * Delete user (hard delete from both auth.users and public.users)
+   * Note: Requires Supabase Auth Admin API
+   */
+  deleteUser: adminProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      // Delete from public.users (auth.users will cascade if properly configured)
+      const { error } = await ctx.serviceClient
+        .from("users")
+        .delete()
+        .eq("id", input.id);
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to delete user",
+          cause: error,
+        });
+      }
+
+      return { success: true };
+    }),
 });

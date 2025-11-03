@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { api } from "~/trpc/client";
 import { Button } from "~/components/ui/button";
 import {
@@ -10,64 +10,133 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import { Plus, Loader2, Users } from "lucide-react";
+import { Loader2, Users as UsersIcon, Eye, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import type { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "~/components/ui/data-table";
-import { getColumns } from "~/components/admin/users-columns";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
+import { Badge } from "~/components/ui/badge";
+import type { RouterOutputs } from "~/trpc/client";
+
+type User = RouterOutputs["templates"]["listUsers"][number];
 
 export default function UsersPage() {
-  // Filter state
-  const [roleFilter, setRoleFilter] = useState<string>("all");
-
   // Query users
   const {
     data: users,
     isLoading,
     refetch,
-  } = api.users.listUsers.useQuery({ search: "" });
+  } = api.templates.listUsers.useQuery();
 
   // Delete mutation
-  const deleteMutation = api.users.deleteUser.useMutation({
+  const deleteMutation = api.templates.deleteUser.useMutation({
     onSuccess: () => {
       toast.success("User deleted successfully");
       void refetch();
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to delete user");
+      toast.error(error.message ?? "Failed to delete user");
     },
   });
 
-  const handleDelete = async (id: string, name: string) => {
-    if (confirm(`Are you sure you want to delete ${name}?`)) {
+  const handleDelete = async (id: string, email: string) => {
+    if (confirm(`Are you sure you want to delete user "${email}"? This will remove them from both authentication and the database.`)) {
       deleteMutation.mutate({ id });
     }
   };
 
-  // Filter users based on selected role
-  const filteredUsers = useMemo(() => {
-    if (!users) return [];
-
-    if (roleFilter === "all") return users;
-
-    return users.filter((user) => user.role === roleFilter);
-  }, [users, roleFilter]);
-
-  const handleClearFilters = () => {
-    setRoleFilter("all");
+  const roleColors = {
+    admin: "bg-purple-500/10 text-purple-500",
+    veterinarian: "bg-blue-500/10 text-blue-500",
+    vet_tech: "bg-green-500/10 text-green-500",
+    practice_owner: "bg-orange-500/10 text-orange-500",
+    client: "bg-gray-500/10 text-gray-500",
   };
 
-  const columns = getColumns({
-    onDelete: (id: string, name: string) => void handleDelete(id, name),
-    isDeleting: deleteMutation.isPending,
-  });
+  const columns: ColumnDef<User>[] = [
+    {
+      accessorKey: "name",
+      header: "Name",
+      cell: ({ row }) => (
+        <div className="flex flex-col">
+          <span className="font-medium">
+            {row.original.first_name} {row.original.last_name}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {row.original.email}
+          </span>
+        </div>
+      ),
+    },
+    {
+      accessorKey: "role",
+      header: "Role",
+      cell: ({ row }) => {
+        const role = row.original.role;
+        return role ? (
+          <Badge variant="secondary" className={roleColors[role]}>
+            {role.replace("_", " ")}
+          </Badge>
+        ) : (
+          <span className="text-muted-foreground">N/A</span>
+        );
+      },
+    },
+    {
+      accessorKey: "clinic_name",
+      header: "Clinic",
+      cell: ({ row }) => (
+        <span className="text-sm">
+          {row.original.clinic_name ?? "N/A"}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "license_number",
+      header: "License",
+      cell: ({ row }) => (
+        <span className="text-sm text-muted-foreground">
+          {row.original.license_number ?? "N/A"}
+        </span>
+      ),
+    },
+    {
+      accessorKey: "created_at",
+      header: "Joined",
+      cell: ({ row }) => {
+        const date = new Date(row.original.created_at);
+        return (
+          <span className="text-sm text-muted-foreground">
+            {date.toLocaleDateString()}
+          </span>
+        );
+      },
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          <Link href={`/admin/users/${row.original.id}`}>
+            <Button variant="ghost" size="sm" className="gap-1.5">
+              <Eye className="h-3.5 w-3.5" />
+              View
+            </Button>
+          </Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 text-destructive hover:text-destructive"
+            onClick={() => void handleDelete(row.original.id, row.original.email ?? "user")}
+            disabled={deleteMutation.isPending}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-8">
@@ -75,30 +144,34 @@ export default function UsersPage() {
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-gradient-to-br from-[#31aba3] to-[#2a9a92] p-3 shadow-lg">
-              <Users className="h-6 w-6 text-white" />
+            <div className="rounded-lg bg-primary/10 p-2">
+              <UsersIcon className="h-6 w-6 text-primary" />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold tracking-tight">
               User Management
             </h1>
           </div>
-          <p className="text-base text-slate-600">
-            Manage user accounts and onboard new users
+          <p className="text-base text-muted-foreground">
+            View and manage user accounts
           </p>
         </div>
-        <Link href="/admin/users/new">
-          <Button size="lg" className="gap-2 bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white shadow-lg hover:shadow-xl hover:shadow-[#31aba3]/30 transition-all hover:scale-105">
-            <Plus className="h-5 w-5" />
-            Add New User
-          </Button>
-        </Link>
       </div>
 
+      {/* Info Card */}
+      <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900">
+        <CardContent className="pt-6">
+          <p className="text-sm text-blue-900 dark:text-blue-100">
+            <strong>Note:</strong> User creation requires Supabase Auth Admin API integration.
+            To create new users, please use the Supabase dashboard directly for now.
+          </p>
+        </CardContent>
+      </Card>
+
       {/* Users DataTable */}
-      <Card className="rounded-xl border-slate-200 shadow-lg bg-white/80 backdrop-blur-sm">
-        <CardHeader className="pb-4 bg-gradient-to-r from-slate-50 to-teal-50/30 border-b border-slate-200">
-          <CardTitle className="text-xl text-slate-900">Users</CardTitle>
-          <CardDescription className="text-slate-600">
+      <Card className="rounded-xl bg-transparent shadow-none">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-xl">Users</CardTitle>
+          <CardDescription>
             Browse and manage all user accounts
           </CardDescription>
         </CardHeader>
@@ -106,8 +179,8 @@ export default function UsersPage() {
           {isLoading ? (
             <div className="flex items-center justify-center p-16">
               <div className="flex flex-col items-center gap-3">
-                <Loader2 className="h-8 w-8 animate-spin text-[#31aba3]" />
-                <p className="text-sm text-slate-600">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">
                   Loading users...
                 </p>
               </div>
@@ -115,53 +188,21 @@ export default function UsersPage() {
           ) : users && users.length > 0 ? (
             <DataTable
               columns={columns}
-              data={filteredUsers}
-              searchKey="name"
-              searchPlaceholder="Search users..."
-              filterComponent={
-                <div className="flex items-center gap-3">
-                  <Select value={roleFilter} onValueChange={setRoleFilter}>
-                    <SelectTrigger className="h-10 w-[180px] border-slate-200 bg-white">
-                      <SelectValue placeholder="Filter by role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Roles</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="veterinarian">Veterinarian</SelectItem>
-                      <SelectItem value="vet_tech">Vet Tech</SelectItem>
-                      <SelectItem value="practice_owner">Practice Owner</SelectItem>
-                      <SelectItem value="client">Client</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {roleFilter !== "all" && (
-                    <Button
-                      variant="outline"
-                      onClick={handleClearFilters}
-                      className="h-10"
-                    >
-                      Clear Filters
-                    </Button>
-                  )}
-                </div>
-              }
+              data={users}
+              searchKey="email"
+              searchPlaceholder="Search by email or name..."
             />
           ) : (
             <div className="flex flex-col items-center justify-center gap-6 py-16 text-center">
-              <div className="rounded-full bg-gradient-to-br from-[#31aba3]/10 to-[#2a9a92]/5 p-8">
-                <Users className="h-12 w-12 text-[#31aba3]" />
+              <div className="rounded-full bg-muted p-8">
+                <UsersIcon className="h-12 w-12 text-muted-foreground" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-slate-900">No users found</h3>
-                <p className="max-w-sm text-sm text-slate-600">
-                  Get started by adding your first user
+                <h3 className="text-lg font-semibold">No users found</h3>
+                <p className="max-w-sm text-sm text-muted-foreground">
+                  No users in the system yet
                 </p>
               </div>
-              <Link href="/admin/users/new">
-                <Button className="gap-2 bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white shadow-lg hover:shadow-xl hover:shadow-[#31aba3]/30 transition-all hover:scale-105">
-                  <Plus className="h-4 w-4" />
-                  Add your first user
-                </Button>
-              </Link>
             </div>
           )}
         </CardContent>
