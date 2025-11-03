@@ -68,10 +68,49 @@ export type Database = {
           },
         ];
       };
+      case_shares: {
+        Row: {
+          case_id: string;
+          created_at: string | null;
+          id: string;
+          shared_by_user_id: string | null;
+          shared_with_user_id: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          case_id: string;
+          created_at?: string | null;
+          id?: string;
+          shared_by_user_id?: string | null;
+          shared_with_user_id: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          case_id?: string;
+          created_at?: string | null;
+          id?: string;
+          shared_by_user_id?: string | null;
+          shared_with_user_id?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "case_shares_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "cases";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       cases: {
         Row: {
           created_at: string | null;
+          external_id: string | null;
           id: string;
+          metadata: Json | null;
+          scheduled_at: string | null;
+          source: string | null;
           status: Database["public"]["Enums"]["CaseStatus"] | null;
           type: Database["public"]["Enums"]["CaseType"] | null;
           updated_at: string | null;
@@ -80,7 +119,11 @@ export type Database = {
         };
         Insert: {
           created_at?: string | null;
+          external_id?: string | null;
           id?: string;
+          metadata?: Json | null;
+          scheduled_at?: string | null;
+          source?: string | null;
           status?: Database["public"]["Enums"]["CaseStatus"] | null;
           type?: Database["public"]["Enums"]["CaseType"] | null;
           updated_at?: string | null;
@@ -89,7 +132,11 @@ export type Database = {
         };
         Update: {
           created_at?: string | null;
+          external_id?: string | null;
           id?: string;
+          metadata?: Json | null;
+          scheduled_at?: string | null;
+          source?: string | null;
           status?: Database["public"]["Enums"]["CaseStatus"] | null;
           type?: Database["public"]["Enums"]["CaseType"] | null;
           updated_at?: string | null;
@@ -101,29 +148,35 @@ export type Database = {
       discharge_summaries: {
         Row: {
           case_id: string;
-          created_at: string | null;
+          content: string;
+          created_at: string;
+          generation_id: string | null;
           id: string;
-          summary: string | null;
-          transcript: string | null;
-          updated_at: string | null;
+          soap_note_id: string | null;
+          template_id: string | null;
+          updated_at: string;
           user_id: string;
         };
         Insert: {
           case_id: string;
-          created_at?: string | null;
+          content: string;
+          created_at?: string;
+          generation_id?: string | null;
           id?: string;
-          summary?: string | null;
-          transcript?: string | null;
-          updated_at?: string | null;
-          user_id?: string;
+          soap_note_id?: string | null;
+          template_id?: string | null;
+          updated_at?: string;
+          user_id: string;
         };
         Update: {
           case_id?: string;
-          created_at?: string | null;
+          content?: string;
+          created_at?: string;
+          generation_id?: string | null;
           id?: string;
-          summary?: string | null;
-          transcript?: string | null;
-          updated_at?: string | null;
+          soap_note_id?: string | null;
+          template_id?: string | null;
+          updated_at?: string;
           user_id?: string;
         };
         Relationships: [
@@ -132,6 +185,59 @@ export type Database = {
             columns: ["case_id"];
             isOneToOne: false;
             referencedRelation: "cases";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "discharge_summaries_generation_id_fkey";
+            columns: ["generation_id"];
+            isOneToOne: false;
+            referencedRelation: "generations";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "discharge_summaries_soap_note_id_fkey";
+            columns: ["soap_note_id"];
+            isOneToOne: false;
+            referencedRelation: "soap_notes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "discharge_summaries_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "temp_discharge_summary_templates";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      discharge_template_shares: {
+        Row: {
+          created_at: string | null;
+          id: string;
+          shared_with_user_id: string;
+          template_id: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          id?: string;
+          shared_with_user_id: string;
+          template_id: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          id?: string;
+          shared_with_user_id?: string;
+          template_id?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "discharge_template_shares_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "temp_discharge_summary_templates";
             referencedColumns: ["id"];
           },
         ];
@@ -190,34 +296,52 @@ export type Database = {
       };
       patients: {
         Row: {
+          breed: string | null;
           case_id: string | null;
           created_at: string;
+          date_of_birth: string | null;
           id: string;
           name: string;
           owner_email: string | null;
-          owner_name: string;
+          owner_name: string | null;
+          owner_phone: string | null;
+          sex: string | null;
+          species: string | null;
           updated_at: string | null;
           user_id: string | null;
+          weight_kg: number | null;
         };
         Insert: {
+          breed?: string | null;
           case_id?: string | null;
           created_at?: string;
+          date_of_birth?: string | null;
           id?: string;
           name: string;
           owner_email?: string | null;
-          owner_name: string;
+          owner_name?: string | null;
+          owner_phone?: string | null;
+          sex?: string | null;
+          species?: string | null;
           updated_at?: string | null;
           user_id?: string | null;
+          weight_kg?: number | null;
         };
         Update: {
+          breed?: string | null;
           case_id?: string | null;
           created_at?: string;
+          date_of_birth?: string | null;
           id?: string;
           name?: string;
           owner_email?: string | null;
-          owner_name?: string;
+          owner_name?: string | null;
+          owner_phone?: string | null;
+          sex?: string | null;
+          species?: string | null;
           updated_at?: string | null;
           user_id?: string | null;
+          weight_kg?: number | null;
         };
         Relationships: [
           {
@@ -275,6 +399,68 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      soap_template_shares: {
+        Row: {
+          created_at: string | null;
+          id: string;
+          shared_with_user_id: string;
+          template_id: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          id?: string;
+          shared_with_user_id: string;
+          template_id: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          id?: string;
+          shared_with_user_id?: string;
+          template_id?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "soap_template_shares_template_id_fkey";
+            columns: ["template_id"];
+            isOneToOne: false;
+            referencedRelation: "temp_soap_templates";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      temp_discharge_summary_templates: {
+        Row: {
+          content: string;
+          created_at: string;
+          id: string;
+          is_default: boolean | null;
+          name: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          content: string;
+          created_at?: string;
+          id?: string;
+          is_default?: boolean | null;
+          name: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          content?: string;
+          created_at?: string;
+          id?: string;
+          is_default?: boolean | null;
+          name?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
       };
       temp_soap_templates: {
         Row: {
@@ -457,44 +643,67 @@ export type Database = {
       users: {
         Row: {
           avatar_url: string | null;
+          clinic_email: string | null;
           clinic_name: string | null;
+          clinic_phone: string | null;
           created_at: string;
+          default_discharge_template_id: string | null;
           email: string | null;
           first_name: string | null;
           id: string;
           last_name: string | null;
           license_number: string | null;
           onboarding_completed: boolean | null;
+          pims_credentials: Json | null;
+          pims_systems: Json | null;
           role: Database["public"]["Enums"]["user_role"] | null;
           updated_at: string;
         };
         Insert: {
           avatar_url?: string | null;
+          clinic_email?: string | null;
           clinic_name?: string | null;
+          clinic_phone?: string | null;
           created_at?: string;
+          default_discharge_template_id?: string | null;
           email?: string | null;
           first_name?: string | null;
           id?: string;
           last_name?: string | null;
           license_number?: string | null;
           onboarding_completed?: boolean | null;
+          pims_credentials?: Json | null;
+          pims_systems?: Json | null;
           role?: Database["public"]["Enums"]["user_role"] | null;
           updated_at?: string;
         };
         Update: {
           avatar_url?: string | null;
+          clinic_email?: string | null;
           clinic_name?: string | null;
+          clinic_phone?: string | null;
           created_at?: string;
+          default_discharge_template_id?: string | null;
           email?: string | null;
           first_name?: string | null;
           id?: string;
           last_name?: string | null;
           license_number?: string | null;
           onboarding_completed?: boolean | null;
+          pims_credentials?: Json | null;
+          pims_systems?: Json | null;
           role?: Database["public"]["Enums"]["user_role"] | null;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "users_default_discharge_template_id_fkey";
+            columns: ["default_discharge_template_id"];
+            isOneToOne: false;
+            referencedRelation: "temp_discharge_summary_templates";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       waitlist_signups: {
         Row: {
@@ -504,7 +713,7 @@ export type Database = {
           email: string;
           full_name: string | null;
           id: string;
-          ip: unknown | null;
+          ip: unknown;
           metadata: Json;
           source: string | null;
           status: Database["public"]["Enums"]["waitlist_status"];
@@ -517,7 +726,7 @@ export type Database = {
           email: string;
           full_name?: string | null;
           id?: string;
-          ip?: unknown | null;
+          ip?: unknown;
           metadata?: Json;
           source?: string | null;
           status?: Database["public"]["Enums"]["waitlist_status"];
@@ -530,7 +739,7 @@ export type Database = {
           email?: string;
           full_name?: string | null;
           id?: string;
-          ip?: unknown | null;
+          ip?: unknown;
           metadata?: Json;
           source?: string | null;
           status?: Database["public"]["Enums"]["waitlist_status"];
@@ -609,30 +818,6 @@ export type Database = {
         Args: { resource: string; user_uuid: string };
         Returns: boolean;
       };
-      citext: {
-        Args: { "": boolean } | { "": string } | { "": unknown };
-        Returns: string;
-      };
-      citext_hash: {
-        Args: { "": string };
-        Returns: number;
-      };
-      citextin: {
-        Args: { "": unknown };
-        Returns: string;
-      };
-      citextout: {
-        Args: { "": string };
-        Returns: unknown;
-      };
-      citextrecv: {
-        Args: { "": unknown };
-        Returns: string;
-      };
-      citextsend: {
-        Args: { "": string };
-        Returns: string;
-      };
       get_current_usage: {
         Args: { user_uuid: string };
         Returns: {
@@ -641,6 +826,10 @@ export type Database = {
           quantity: number;
           resource_type: string;
         }[];
+      };
+      set_user_default_soap_template: {
+        Args: { template_uuid: string; user_uuid: string };
+        Returns: boolean;
       };
     };
     Enums: {
