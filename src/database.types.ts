@@ -68,6 +68,7 @@ export type Database = {
           },
         ];
       };
+<<<<<<< HEAD
       case_shares: {
         Row: {
           case_id: string;
@@ -111,6 +112,12 @@ export type Database = {
           metadata: Json | null;
           scheduled_at: string | null;
           source: string | null;
+=======
+      cases: {
+        Row: {
+          created_at: string | null;
+          id: string;
+>>>>>>> origin/main
           status: Database["public"]["Enums"]["CaseStatus"] | null;
           type: Database["public"]["Enums"]["CaseType"] | null;
           updated_at: string | null;
@@ -119,11 +126,15 @@ export type Database = {
         };
         Insert: {
           created_at?: string | null;
+<<<<<<< HEAD
           external_id?: string | null;
           id?: string;
           metadata?: Json | null;
           scheduled_at?: string | null;
           source?: string | null;
+=======
+          id?: string;
+>>>>>>> origin/main
           status?: Database["public"]["Enums"]["CaseStatus"] | null;
           type?: Database["public"]["Enums"]["CaseType"] | null;
           updated_at?: string | null;
@@ -132,11 +143,15 @@ export type Database = {
         };
         Update: {
           created_at?: string | null;
+<<<<<<< HEAD
           external_id?: string | null;
           id?: string;
           metadata?: Json | null;
           scheduled_at?: string | null;
           source?: string | null;
+=======
+          id?: string;
+>>>>>>> origin/main
           status?: Database["public"]["Enums"]["CaseStatus"] | null;
           type?: Database["public"]["Enums"]["CaseType"] | null;
           updated_at?: string | null;
@@ -148,6 +163,7 @@ export type Database = {
       discharge_summaries: {
         Row: {
           case_id: string;
+<<<<<<< HEAD
           content: string;
           created_at: string;
           generation_id: string | null;
@@ -155,10 +171,18 @@ export type Database = {
           soap_note_id: string | null;
           template_id: string | null;
           updated_at: string;
+=======
+          created_at: string | null;
+          id: string;
+          summary: string | null;
+          transcript: string | null;
+          updated_at: string | null;
+>>>>>>> origin/main
           user_id: string;
         };
         Insert: {
           case_id: string;
+<<<<<<< HEAD
           content: string;
           created_at?: string;
           generation_id?: string | null;
@@ -177,6 +201,22 @@ export type Database = {
           soap_note_id?: string | null;
           template_id?: string | null;
           updated_at?: string;
+=======
+          created_at?: string | null;
+          id?: string;
+          summary?: string | null;
+          transcript?: string | null;
+          updated_at?: string | null;
+          user_id?: string;
+        };
+        Update: {
+          case_id?: string;
+          created_at?: string | null;
+          id?: string;
+          summary?: string | null;
+          transcript?: string | null;
+          updated_at?: string | null;
+>>>>>>> origin/main
           user_id?: string;
         };
         Relationships: [
@@ -187,6 +227,7 @@ export type Database = {
             referencedRelation: "cases";
             referencedColumns: ["id"];
           },
+<<<<<<< HEAD
           {
             foreignKeyName: "discharge_summaries_generation_id_fkey";
             columns: ["generation_id"];
@@ -240,6 +281,8 @@ export type Database = {
             referencedRelation: "temp_discharge_summary_templates";
             referencedColumns: ["id"];
           },
+=======
+>>>>>>> origin/main
         ];
       };
       generations: {
@@ -296,6 +339,7 @@ export type Database = {
       };
       patients: {
         Row: {
+<<<<<<< HEAD
           breed: string | null;
           case_id: string | null;
           created_at: string;
@@ -342,6 +386,36 @@ export type Database = {
           updated_at?: string | null;
           user_id?: string | null;
           weight_kg?: number | null;
+=======
+          case_id: string | null;
+          created_at: string;
+          id: string;
+          name: string;
+          owner_email: string | null;
+          owner_name: string;
+          updated_at: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          case_id?: string | null;
+          created_at?: string;
+          id?: string;
+          name: string;
+          owner_email?: string | null;
+          owner_name: string;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          case_id?: string | null;
+          created_at?: string;
+          id?: string;
+          name?: string;
+          owner_email?: string | null;
+          owner_name?: string;
+          updated_at?: string | null;
+          user_id?: string | null;
+>>>>>>> origin/main
         };
         Relationships: [
           {
@@ -400,6 +474,7 @@ export type Database = {
           },
         ];
       };
+<<<<<<< HEAD
       soap_template_shares: {
         Row: {
           created_at: string | null;
@@ -462,6 +537,8 @@ export type Database = {
         };
         Relationships: [];
       };
+=======
+>>>>>>> origin/main
       temp_soap_templates: {
         Row: {
           assessment_prompt: string | null;
@@ -643,53 +720,75 @@ export type Database = {
       users: {
         Row: {
           avatar_url: string | null;
+<<<<<<< HEAD
           clinic_email: string | null;
           clinic_name: string | null;
           clinic_phone: string | null;
           created_at: string;
           default_discharge_template_id: string | null;
+=======
+          clinic_name: string | null;
+          created_at: string;
+>>>>>>> origin/main
           email: string | null;
           first_name: string | null;
           id: string;
           last_name: string | null;
           license_number: string | null;
           onboarding_completed: boolean | null;
+<<<<<<< HEAD
           pims_credentials: Json | null;
           pims_systems: Json | null;
+=======
+>>>>>>> origin/main
           role: Database["public"]["Enums"]["user_role"] | null;
           updated_at: string;
         };
         Insert: {
           avatar_url?: string | null;
+<<<<<<< HEAD
           clinic_email?: string | null;
           clinic_name?: string | null;
           clinic_phone?: string | null;
           created_at?: string;
           default_discharge_template_id?: string | null;
+=======
+          clinic_name?: string | null;
+          created_at?: string;
+>>>>>>> origin/main
           email?: string | null;
           first_name?: string | null;
           id?: string;
           last_name?: string | null;
           license_number?: string | null;
           onboarding_completed?: boolean | null;
+<<<<<<< HEAD
           pims_credentials?: Json | null;
           pims_systems?: Json | null;
+=======
+>>>>>>> origin/main
           role?: Database["public"]["Enums"]["user_role"] | null;
           updated_at?: string;
         };
         Update: {
           avatar_url?: string | null;
+<<<<<<< HEAD
           clinic_email?: string | null;
           clinic_name?: string | null;
           clinic_phone?: string | null;
           created_at?: string;
           default_discharge_template_id?: string | null;
+=======
+          clinic_name?: string | null;
+          created_at?: string;
+>>>>>>> origin/main
           email?: string | null;
           first_name?: string | null;
           id?: string;
           last_name?: string | null;
           license_number?: string | null;
           onboarding_completed?: boolean | null;
+<<<<<<< HEAD
           pims_credentials?: Json | null;
           pims_systems?: Json | null;
           role?: Database["public"]["Enums"]["user_role"] | null;
@@ -704,6 +803,12 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+=======
+          role?: Database["public"]["Enums"]["user_role"] | null;
+          updated_at?: string;
+        };
+        Relationships: [];
+>>>>>>> origin/main
       };
       waitlist_signups: {
         Row: {
@@ -713,7 +818,11 @@ export type Database = {
           email: string;
           full_name: string | null;
           id: string;
+<<<<<<< HEAD
           ip: unknown;
+=======
+          ip: unknown | null;
+>>>>>>> origin/main
           metadata: Json;
           source: string | null;
           status: Database["public"]["Enums"]["waitlist_status"];
@@ -726,7 +835,11 @@ export type Database = {
           email: string;
           full_name?: string | null;
           id?: string;
+<<<<<<< HEAD
           ip?: unknown;
+=======
+          ip?: unknown | null;
+>>>>>>> origin/main
           metadata?: Json;
           source?: string | null;
           status?: Database["public"]["Enums"]["waitlist_status"];
@@ -739,7 +852,11 @@ export type Database = {
           email?: string;
           full_name?: string | null;
           id?: string;
+<<<<<<< HEAD
           ip?: unknown;
+=======
+          ip?: unknown | null;
+>>>>>>> origin/main
           metadata?: Json;
           source?: string | null;
           status?: Database["public"]["Enums"]["waitlist_status"];
@@ -818,6 +935,33 @@ export type Database = {
         Args: { resource: string; user_uuid: string };
         Returns: boolean;
       };
+<<<<<<< HEAD
+=======
+      citext: {
+        Args: { "": boolean } | { "": string } | { "": unknown };
+        Returns: string;
+      };
+      citext_hash: {
+        Args: { "": string };
+        Returns: number;
+      };
+      citextin: {
+        Args: { "": unknown };
+        Returns: string;
+      };
+      citextout: {
+        Args: { "": string };
+        Returns: unknown;
+      };
+      citextrecv: {
+        Args: { "": unknown };
+        Returns: string;
+      };
+      citextsend: {
+        Args: { "": string };
+        Returns: string;
+      };
+>>>>>>> origin/main
       get_current_usage: {
         Args: { user_uuid: string };
         Returns: {
@@ -827,10 +971,13 @@ export type Database = {
           resource_type: string;
         }[];
       };
+<<<<<<< HEAD
       set_user_default_soap_template: {
         Args: { template_uuid: string; user_uuid: string };
         Returns: boolean;
       };
+=======
+>>>>>>> origin/main
     };
     Enums: {
       CaseStatus: "reviewed" | "ongoing" | "completed" | "draft";

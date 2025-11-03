@@ -106,17 +106,27 @@ export default function Navigation() {
                 Support
               </Link>
             </div>
-            <EnhancedButton
-              onClick={handleButtonClick}
-              onMouseEnter={handleButtonHover}
-              onMouseLeave={handleButtonLeave}
-              variant="shimmer"
-              size="sm"
-              className="px-4 sm:px-6 md:px-8"
-            >
-              <span className="hidden sm:inline">Join Waitlist</span>
-              <span className="sm:hidden">Join</span>
-            </EnhancedButton>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Link
+                href="/signup"
+                className={`relative z-10 text-sm font-medium transition-colors duration-300 hover:text-teal-600 ${
+                  isScrolled ? "text-gray-700" : "text-gray-800"
+                }`}
+              >
+                Sign Up
+              </Link>
+              <EnhancedButton
+                onClick={handleButtonClick}
+                onMouseEnter={handleButtonHover}
+                onMouseLeave={handleButtonLeave}
+                variant="shimmer"
+                size="sm"
+                className="px-4 sm:px-6 md:px-8"
+              >
+                <span className="hidden sm:inline">Join Waitlist</span>
+                <span className="sm:hidden">Join</span>
+              </EnhancedButton>
+            </div>
           </div>
         </div>
       </nav>

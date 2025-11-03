@@ -67,6 +67,41 @@ export type Database = {
           },
         ]
       }
+      case_shares: {
+        Row: {
+          case_id: string
+          created_at: string | null
+          id: string
+          shared_by_user_id: string | null
+          shared_with_user_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          case_id: string
+          created_at?: string | null
+          id?: string
+          shared_by_user_id?: string | null
+          shared_with_user_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          case_id?: string
+          created_at?: string | null
+          id?: string
+          shared_by_user_id?: string | null
+          shared_with_user_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_shares_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cases: {
         Row: {
           created_at: string | null
@@ -107,7 +142,15 @@ export type Database = {
           user_id?: string | null
           visibility?: Database["public"]["Enums"]["CaseVisibility"] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cases_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       discharge_summaries: {
         Row: {
@@ -167,6 +210,48 @@ export type Database = {
           },
           {
             foreignKeyName: "discharge_summaries_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "temp_discharge_summary_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discharge_summaries_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discharge_template_shares: {
+        Row: {
+          created_at: string | null
+          id: string
+          shared_by_user_id: string | null
+          shared_with_user_id: string
+          template_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          shared_by_user_id?: string | null
+          shared_with_user_id: string
+          template_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          shared_by_user_id?: string | null
+          shared_with_user_id?: string
+          template_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discharge_template_shares_template_id_fkey"
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "temp_discharge_summary_templates"
@@ -283,6 +368,13 @@ export type Database = {
             referencedRelation: "cases"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "patients_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
         ]
       }
       soap_notes: {
@@ -332,6 +424,41 @@ export type Database = {
           },
         ]
       }
+      soap_template_shares: {
+        Row: {
+          created_at: string | null
+          id: string
+          shared_by_user_id: string | null
+          shared_with_user_id: string
+          template_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          shared_by_user_id?: string | null
+          shared_with_user_id: string
+          template_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          shared_by_user_id?: string | null
+          shared_with_user_id?: string
+          template_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "soap_template_shares_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "temp_soap_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       temp_discharge_summary_templates: {
         Row: {
           content: string
@@ -360,7 +487,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "temp_discharge_summary_templates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       temp_soap_templates: {
         Row: {
@@ -562,6 +697,8 @@ export type Database = {
           last_name: string | null
           license_number: string | null
           onboarding_completed: boolean | null
+          pims_credentials: Json | null
+          pims_systems: Json | null
           role: Database["public"]["Enums"]["user_role"] | null
           updated_at: string
         }
@@ -578,6 +715,8 @@ export type Database = {
           last_name?: string | null
           license_number?: string | null
           onboarding_completed?: boolean | null
+          pims_credentials?: Json | null
+          pims_systems?: Json | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
         }
@@ -594,6 +733,8 @@ export type Database = {
           last_name?: string | null
           license_number?: string | null
           onboarding_completed?: boolean | null
+          pims_credentials?: Json | null
+          pims_systems?: Json | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string
         }
