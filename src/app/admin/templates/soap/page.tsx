@@ -16,11 +16,16 @@ import { toast } from "sonner";
 import { DataTable } from "~/components/ui/data-table";
 import { getColumns } from "~/components/admin/soap-templates-columns";
 import { SoapTemplatesFilters } from "~/components/admin/SoapTemplatesFilters";
+import { ShareDialog } from "~/components/admin/ShareDialog";
 
 export default function SoapTemplatesPage() {
   // Filter state
   const [userFilter, setUserFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  // Share dialog state
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<{ id: string; name: string } | null>(null);
 
   // Query templates
   const {
@@ -47,6 +52,11 @@ export default function SoapTemplatesPage() {
     if (confirm(`Are you sure you want to delete "${name}"?`)) {
       deleteMutation.mutate({ id });
     }
+  };
+
+  const handleShare = (id: string, name: string) => {
+    setSelectedTemplate({ id, name });
+    setShareDialogOpen(true);
   };
 
   // Filter templates based on selected filters
@@ -80,6 +90,7 @@ export default function SoapTemplatesPage() {
 
   const columns = getColumns({
     onDelete: (id: string, name: string) => void handleDelete(id, name),
+    onShare: handleShare,
     isDeleting: deleteMutation.isPending,
   });
 
@@ -164,6 +175,17 @@ export default function SoapTemplatesPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Share Dialog */}
+      {selectedTemplate && (
+        <ShareDialog
+          open={shareDialogOpen}
+          onOpenChange={setShareDialogOpen}
+          entityType="soap_template"
+          entityId={selectedTemplate.id}
+          entityName={selectedTemplate.name}
+        />
+      )}
     </div>
   );
 }

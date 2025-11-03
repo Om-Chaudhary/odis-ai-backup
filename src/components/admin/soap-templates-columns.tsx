@@ -3,7 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
-import { Pencil, Trash2, Loader2, ArrowUpDown } from "lucide-react";
+import { Pencil, Trash2, Loader2, ArrowUpDown, Share2 } from "lucide-react";
 import Link from "next/link";
 import type { Database } from "~/database.types";
 
@@ -25,11 +25,13 @@ export type SoapTemplate = SoapTemplateRow & {
 
 interface GetColumnsOptions {
   onDelete: (id: string, name: string) => void;
+  onShare: (id: string, name: string) => void;
   isDeleting: boolean;
 }
 
 export const getColumns = ({
   onDelete,
+  onShare,
   isDeleting,
 }: GetColumnsOptions): ColumnDef<SoapTemplate>[] => [
   {
@@ -115,6 +117,15 @@ export const getColumns = ({
 
       return (
         <div className="flex justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onShare(template.id, template.display_name)}
+            className="h-9 w-9 opacity-0 transition-all hover:bg-blue-500/10 hover:text-blue-500 group-hover:opacity-100"
+          >
+            <Share2 className="h-4 w-4" />
+            <span className="sr-only">Share</span>
+          </Button>
           <Link href={`/admin/templates/soap/${template.id}`}>
             <Button
               variant="ghost"

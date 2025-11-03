@@ -3,7 +3,7 @@ import { getUser, signOut } from "~/server/actions/auth";
 import { createClient } from "~/lib/supabase/server";
 import Link from "next/link";
 import { Button } from "~/components/ui/button";
-import { LayoutDashboard, ClipboardList, LogOut } from "lucide-react";
+import { LayoutDashboard, ClipboardList, LogOut, FileText, Briefcase, Users } from "lucide-react";
 import { Toaster } from "sonner";
 import { DarkModeWrapper } from "~/components/DarkModeWrapper";
 
@@ -39,7 +39,7 @@ export default async function AdminLayout({
           {/* Logo/Header */}
           <div className="border-b border p-6">
             <h1 className="text-xl font-bold text-foreground">Admin Panel</h1>
-            <p className="text-sm text-muted-foreground">Template Management</p>
+            <p className="text-sm text-muted-foreground">Practice Management</p>
           </div>
 
           {/* Navigation */}
@@ -47,11 +47,35 @@ export default async function AdminLayout({
             <NavLink href="/admin" icon={<LayoutDashboard size={20} />}>
               Dashboard
             </NavLink>
+
+            <div className="pt-4 pb-2 px-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Templates
+              </p>
+            </div>
             <NavLink
               href="/admin/templates/soap"
               icon={<ClipboardList size={20} />}
             >
               SOAP Templates
+            </NavLink>
+            <NavLink
+              href="/admin/templates/discharge"
+              icon={<FileText size={20} />}
+            >
+              Discharge Templates
+            </NavLink>
+
+            <div className="pt-4 pb-2 px-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Management
+              </p>
+            </div>
+            <NavLink href="/admin/cases" icon={<Briefcase size={20} />}>
+              Cases
+            </NavLink>
+            <NavLink href="/admin/users" icon={<Users size={20} />}>
+              Users
             </NavLink>
           </nav>
 
