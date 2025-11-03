@@ -109,7 +109,7 @@ export function ShareDialog({
             Share {entityType.replace("_", " ")}
           </DialogTitle>
           <DialogDescription>
-            Select users who should have access to "{entityName}"
+            Select users who should have access to &quot;{entityName}&quot;
           </DialogDescription>
         </DialogHeader>
 
@@ -143,7 +143,7 @@ export function ShareDialog({
                     </p>
                     {user.role && (
                       <p className="text-xs text-muted-foreground mt-0.5 capitalize">
-                        {user.role.replace("_", " ")}
+                        {String(user.role).replace("_", " ")}
                       </p>
                     )}
                   </div>

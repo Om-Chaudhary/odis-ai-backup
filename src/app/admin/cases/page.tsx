@@ -118,7 +118,7 @@ export default function CasesPage() {
         };
         return type ? (
           <Badge variant="secondary" className={colors[type] ?? ""}>
-            {type.replace("_", " ")}
+            {String(type).replace("_", " ")}
           </Badge>
         ) : (
           <span className="text-muted-foreground">N/A</span>

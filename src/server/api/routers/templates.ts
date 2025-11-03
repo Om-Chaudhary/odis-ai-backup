@@ -403,7 +403,7 @@ export const templatesRouter = createTRPCRouter({
    */
   createUser: adminProcedure
     .input(userSchema.extend({ password: z.string().min(8, "Password must be at least 8 characters") }))
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ ctx: _ctx, input: _input }) => {
       // This would require Supabase Auth Admin API integration
       // For now, return error instructing to use Supabase dashboard
       throw new TRPCError({

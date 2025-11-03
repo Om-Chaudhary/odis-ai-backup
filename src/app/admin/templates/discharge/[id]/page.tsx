@@ -65,7 +65,7 @@ export default function EditDischargeTemplatePage() {
         <div className="text-center py-16">
           <h2 className="text-2xl font-bold">Template not found</h2>
           <p className="text-muted-foreground mt-2">
-            The template you're looking for doesn't exist.
+            The template you&apos;re looking for doesn&apos;t exist.
           </p>
         </div>
       </div>

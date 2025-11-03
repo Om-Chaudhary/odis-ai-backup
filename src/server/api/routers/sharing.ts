@@ -292,7 +292,7 @@ export const sharingRouter = createTRPCRouter({
       const shareRecords = input.userIds.map((userId) => ({
         case_id: input.entityId,
         shared_with_user_id: userId,
-        shared_by_user_id: ctx.session.user.id,
+        shared_by_user_id: ctx.user.id,
       }));
 
       const { data, error } = await ctx.serviceClient
@@ -442,7 +442,7 @@ export const sharingRouter = createTRPCRouter({
 
         // Add shared_by_user_id for cases (case_shares table has this column)
         if (input.entityType === "case") {
-          record.shared_by_user_id = ctx.session.user.id;
+          record.shared_by_user_id = ctx.user.id;
         }
 
         return record;
