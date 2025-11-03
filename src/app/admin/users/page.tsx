@@ -18,18 +18,14 @@ import { DataTable } from "~/components/ui/data-table";
 import { Badge } from "~/components/ui/badge";
 import type { RouterOutputs } from "~/trpc/client";
 
-type User = RouterOutputs["templates"]["listUsers"][number];
+type User = RouterOutputs["users"]["listUsers"][number];
 
 export default function UsersPage() {
   // Query users
-  const {
-    data: users,
-    isLoading,
-    refetch,
-  } = api.templates.listUsers.useQuery();
+  const { data: users, isLoading, refetch } = api.users.listUsers.useQuery({});
 
   // Delete mutation
-  const deleteMutation = api.templates.deleteUser.useMutation({
+  const deleteMutation = api.users.deleteUser.useMutation({
     onSuccess: () => {
       toast.success("User deleted successfully");
       void refetch();
@@ -40,12 +36,16 @@ export default function UsersPage() {
   });
 
   const handleDelete = async (id: string, email: string) => {
-    if (confirm(`Are you sure you want to delete user "${email}"? This will remove them from both authentication and the database.`)) {
+    if (
+      confirm(
+        `Are you sure you want to delete user "${email}"? This will remove them from both authentication and the database.`,
+      )
+    ) {
       deleteMutation.mutate({ id });
     }
   };
 
-  const roleColors = {
+  const roleColors: Record<string, string> = {
     admin: "bg-purple-500/10 text-purple-500",
     veterinarian: "bg-blue-500/10 text-blue-500",
     vet_tech: "bg-green-500/10 text-green-500",
@@ -62,7 +62,7 @@ export default function UsersPage() {
           <span className="font-medium">
             {row.original.first_name} {row.original.last_name}
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="text-muted-foreground text-xs">
             {row.original.email}
           </span>
         </div>
@@ -74,8 +74,8 @@ export default function UsersPage() {
       cell: ({ row }) => {
         const role = row.original.role;
         return role ? (
-          <Badge variant="secondary" className={roleColors[role]}>
-            {role.replace("_", " ")}
+          <Badge variant="secondary" className={roleColors[role] ?? ""}>
+            {String(role).replace("_", " ")}
           </Badge>
         ) : (
           <span className="text-muted-foreground">N/A</span>
@@ -86,16 +86,14 @@ export default function UsersPage() {
       accessorKey: "clinic_name",
       header: "Clinic",
       cell: ({ row }) => (
-        <span className="text-sm">
-          {row.original.clinic_name ?? "N/A"}
-        </span>
+        <span className="text-sm">{row.original.clinic_name ?? "N/A"}</span>
       ),
     },
     {
       accessorKey: "license_number",
       header: "License",
       cell: ({ row }) => (
-        <span className="text-sm text-muted-foreground">
+        <span className="text-muted-foreground text-sm">
           {row.original.license_number ?? "N/A"}
         </span>
       ),
@@ -106,7 +104,7 @@ export default function UsersPage() {
       cell: ({ row }) => {
         const date = new Date(row.original.created_at);
         return (
-          <span className="text-sm text-muted-foreground">
+          <span className="text-muted-foreground text-sm">
             {date.toLocaleDateString()}
           </span>
         );
@@ -126,8 +124,10 @@ export default function UsersPage() {
           <Button
             variant="ghost"
             size="sm"
-            className="gap-1.5 text-destructive hover:text-destructive"
-            onClick={() => void handleDelete(row.original.id, row.original.email ?? "user")}
+            className="text-destructive hover:text-destructive gap-1.5"
+            onClick={() =>
+              void handleDelete(row.original.id, row.original.email ?? "user")
+            }
             disabled={deleteMutation.isPending}
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -144,25 +144,26 @@ export default function UsersPage() {
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-primary/10 p-2">
-              <UsersIcon className="h-6 w-6 text-primary" />
+            <div className="bg-primary/10 rounded-lg p-2">
+              <UsersIcon className="text-primary h-6 w-6" />
             </div>
             <h1 className="text-3xl font-bold tracking-tight">
               User Management
             </h1>
           </div>
-          <p className="text-base text-muted-foreground">
+          <p className="text-muted-foreground text-base">
             View and manage user accounts
           </p>
         </div>
       </div>
 
       {/* Info Card */}
-      <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900">
+      <Card className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950/20">
         <CardContent className="pt-6">
           <p className="text-sm text-blue-900 dark:text-blue-100">
-            <strong>Note:</strong> User creation requires Supabase Auth Admin API integration.
-            To create new users, please use the Supabase dashboard directly for now.
+            <strong>Note:</strong> User creation requires Supabase Auth Admin
+            API integration. To create new users, please use the Supabase
+            dashboard directly for now.
           </p>
         </CardContent>
       </Card>
@@ -171,16 +172,14 @@ export default function UsersPage() {
       <Card className="rounded-xl bg-transparent shadow-none">
         <CardHeader className="pb-4">
           <CardTitle className="text-xl">Users</CardTitle>
-          <CardDescription>
-            Browse and manage all user accounts
-          </CardDescription>
+          <CardDescription>Browse and manage all user accounts</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="flex items-center justify-center p-16">
               <div className="flex flex-col items-center gap-3">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">
+                <Loader2 className="text-primary h-8 w-8 animate-spin" />
+                <p className="text-muted-foreground text-sm">
                   Loading users...
                 </p>
               </div>
@@ -194,12 +193,12 @@ export default function UsersPage() {
             />
           ) : (
             <div className="flex flex-col items-center justify-center gap-6 py-16 text-center">
-              <div className="rounded-full bg-muted p-8">
-                <UsersIcon className="h-12 w-12 text-muted-foreground" />
+              <div className="bg-muted rounded-full p-8">
+                <UsersIcon className="text-muted-foreground h-12 w-12" />
               </div>
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold">No users found</h3>
-                <p className="max-w-sm text-sm text-muted-foreground">
+                <p className="text-muted-foreground max-w-sm text-sm">
                   No users in the system yet
                 </p>
               </div>
