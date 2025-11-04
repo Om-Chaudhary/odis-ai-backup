@@ -44,30 +44,29 @@ export type SendCallInput = z.infer<typeof sendCallSchema>;
  */
 export const callFormSchema = z.object({
   phoneNumber: phoneNumberSchema,
-  agentId: z.string().optional().default(""),
+  agentId: z.string().default(""),
   fromNumber: z.string().optional(),
   // Retell agent variables
-  petName: z.string().optional().default(""),
-  vetName: z.string().optional().default(""),
-  clinicName: z.string().optional().default(""),
-  ownerName: z.string().optional().default(""),
-  clinicPhone: z.string().optional().default(""),
-  dischargeSummaryContent: z.string().optional().default(""),
+  petName: z.string().default(""),
+  vetName: z.string().default(""),
+  clinicName: z.string().default(""),
+  ownerName: z.string().default(""),
+  clinicPhone: z.string().default(""),
+  dischargeSummaryContent: z.string().default(""),
   // Base fields
   variables: z
     .record(z.string())
-    .optional()
     .default({})
     .describe("Custom variables to pass to the agent"),
   metadata: z
     .record(z.any())
-    .optional()
     .default({})
     .describe("Additional metadata for the call"),
-  retryOnBusy: z.boolean().optional().default(false),
+  retryOnBusy: z.boolean().default(false),
 });
 
-export type CallFormInput = z.infer<typeof callFormSchema>;
+export type CallFormInput = z.input<typeof callFormSchema>;
+export type CallFormOutput = z.infer<typeof callFormSchema>;
 
 /**
  * Schema for listing calls with filters

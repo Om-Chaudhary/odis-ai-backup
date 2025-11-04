@@ -152,12 +152,12 @@ export default function SendCallPage() {
 
       // Build variables object from form fields
       const variablesObj: Record<string, string> = {
-        pet_name: data.petName,
-        vet_name: data.vetName,
-        clinic_name: data.clinicName,
-        owner_name: data.ownerName,
-        clinic_phone: data.clinicPhone,
-        discharge_summary_content: data.dischargeSummaryContent,
+        pet_name: data.petName ?? "",
+        vet_name: data.vetName ?? "",
+        clinic_name: data.clinicName ?? "",
+        owner_name: data.ownerName ?? "",
+        clinic_phone: data.clinicPhone ?? "",
+        discharge_summary_content: data.dischargeSummaryContent ?? "",
       };
 
       // Step 2: Connecting
@@ -168,10 +168,10 @@ export default function SendCallPage() {
       setLoadingStep("initiating");
       const result = await sendCall({
         phoneNumber: data.phoneNumber,
-        agentId: data.agentId,
+        agentId: data.agentId ?? "",
         variables: variablesObj,
-        metadata: data.metadata,
-        retryOnBusy: data.retryOnBusy,
+        metadata: data.metadata ?? {},
+        retryOnBusy: data.retryOnBusy ?? false,
       });
 
       if (result.success) {

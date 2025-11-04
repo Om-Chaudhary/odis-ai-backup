@@ -75,7 +75,16 @@ export async function createPhoneCall(
   params: CreateCallParams,
 ): Promise<RetellCallResponse> {
   try {
-    const response = await retellClient.call.createPhoneCall(params);
+    // Filter out undefined values to avoid type errors with the SDK
+    const cleanedParams = Object.fromEntries(
+      Object.entries(params).filter(([_, value]) => value !== undefined),
+    ) as CreateCallParams;
+
+    const response = await retellClient.call.createPhoneCall(
+      cleanedParams as unknown as Parameters<
+        typeof retellClient.call.createPhoneCall
+      >[0],
+    );
     return response as unknown as RetellCallResponse;
   } catch (error) {
     console.error("Failed to create phone call:", error);
@@ -106,8 +115,10 @@ export async function getCall(callId: string): Promise<RetellCallResponse> {
 export async function listCalls(params?: {
   filter_criteria?: {
     agent_id?: string[];
-    call_type?: string[];
-    call_status?: string[];
+    call_type?: Array<"web_call" | "phone_call">;
+    call_status?: Array<
+      "error" | "ongoing" | "ended" | "registered" | "not_connected"
+    >;
     start_timestamp?: number;
     end_timestamp?: number;
   };
@@ -115,7 +126,9 @@ export async function listCalls(params?: {
   sort_order?: "ascending" | "descending";
 }): Promise<{ calls: RetellCallResponse[] }> {
   try {
-    const response = await retellClient.call.list(params);
+    const response = await retellClient.call.list(
+      params as unknown as Parameters<typeof retellClient.call.list>[0],
+    );
     return { calls: response as unknown as RetellCallResponse[] };
   } catch (error) {
     console.error("Failed to list calls:", error);
