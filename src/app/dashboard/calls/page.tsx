@@ -2,7 +2,15 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Phone, PhoneOutgoing, Loader2, Calendar, Clock } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  Phone,
+  PhoneOutgoing,
+  Loader2,
+  Calendar,
+  Clock,
+  ChevronRight,
+} from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -61,6 +69,102 @@ function formatDate(dateString: string): string {
     minute: "2-digit",
     hour12: true,
   });
+}
+
+// Interactive Call Row Component
+interface CallRowProps {
+  call: Call;
+}
+
+function CallRow({ call }: CallRowProps) {
+  const router = useRouter();
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleRowClick = () => {
+    router.push(`/dashboard/calls/${call.id}`);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTableRowElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleRowClick();
+    }
+  };
+
+  return (
+    <TableRow
+      key={call.id}
+      onClick={handleRowClick}
+      onKeyDown={handleKeyDown}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="group cursor-pointer border-slate-200/40 transition-all duration-200 hover:bg-emerald-50/50 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-0 focus-visible:outline-none"
+      role="button"
+      tabIndex={0}
+      aria-label={`Call details for ${call.phone_number_pretty ?? call.phone_number} - ${call.status}`}
+    >
+      <TableCell className="font-mono text-slate-900">
+        <div className="flex items-center gap-2">
+          {call.phone_number_pretty ?? call.phone_number}
+          <ChevronRight
+            className={`h-4 w-4 text-emerald-500 transition-all duration-200 ${
+              isHovered
+                ? "translate-x-1 opacity-100"
+                : "translate-x-0 opacity-0"
+            }`}
+          />
+        </div>
+      </TableCell>
+      <TableCell>
+        <Badge
+          variant="outline"
+          className={statusColors[call.status] ?? statusColors.initiated}
+        >
+          {call.status.replace("_", " ")}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-slate-600">
+        <div className="flex items-center gap-1">
+          <Clock className="h-3.5 w-3.5" />
+          {formatDuration(call.duration_seconds)}
+        </div>
+      </TableCell>
+      <TableCell className="text-slate-600">
+        <div className="flex items-center gap-1">
+          <Calendar className="h-3.5 w-3.5" />
+          {formatDate(call.created_at)}
+        </div>
+      </TableCell>
+      <TableCell className="text-slate-600">
+        {Object.keys(call.call_variables || {}).length > 0 ? (
+          <div className="flex gap-1">
+            {Object.entries(call.call_variables)
+              .slice(0, 2)
+              .map(([key, value]) => (
+                <Badge
+                  key={key}
+                  variant="secondary"
+                  className="bg-slate-100 text-xs text-slate-600"
+                >
+                  {key}: {String(value).slice(0, 10)}
+                  {String(value).length > 10 ? "..." : ""}
+                </Badge>
+              ))}
+            {Object.keys(call.call_variables).length > 2 && (
+              <Badge
+                variant="secondary"
+                className="bg-slate-100 text-xs text-slate-600"
+              >
+                +{Object.keys(call.call_variables).length - 2}
+              </Badge>
+            )}
+          </div>
+        ) : (
+          <span className="text-sm text-slate-400">None</span>
+        )}
+      </TableCell>
+    </TableRow>
+  );
 }
 
 export default function CallHistoryPage() {
@@ -177,7 +281,8 @@ export default function CallHistoryPage() {
             Call History
           </CardTitle>
           <CardDescription className="text-slate-600">
-            {calls.length} {calls.length === 1 ? "call" : "calls"} found
+            {calls.length} {calls.length === 1 ? "call" : "calls"} found - Click
+            on any row to view details
           </CardDescription>
         </CardHeader>
 
@@ -226,64 +331,7 @@ export default function CallHistoryPage() {
               </TableHeader>
               <TableBody>
                 {calls.map((call) => (
-                  <TableRow
-                    key={call.id}
-                    className="border-slate-200/40 transition-colors hover:bg-emerald-50/30"
-                  >
-                    <TableCell className="font-mono text-slate-900">
-                      {call.phone_number_pretty ?? call.phone_number}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={
-                          statusColors[call.status] ?? statusColors.initiated
-                        }
-                      >
-                        {call.status.replace("_", " ")}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-slate-600">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5" />
-                        {formatDuration(call.duration_seconds)}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-slate-600">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3.5 w-3.5" />
-                        {formatDate(call.created_at)}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-slate-600">
-                      {Object.keys(call.call_variables || {}).length > 0 ? (
-                        <div className="flex gap-1">
-                          {Object.entries(call.call_variables)
-                            .slice(0, 2)
-                            .map(([key, value]) => (
-                              <Badge
-                                key={key}
-                                variant="secondary"
-                                className="bg-slate-100 text-xs text-slate-600"
-                              >
-                                {key}: {String(value).slice(0, 10)}
-                                {String(value).length > 10 ? "..." : ""}
-                              </Badge>
-                            ))}
-                          {Object.keys(call.call_variables).length > 2 && (
-                            <Badge
-                              variant="secondary"
-                              className="bg-slate-100 text-xs text-slate-600"
-                            >
-                              +{Object.keys(call.call_variables).length - 2}
-                            </Badge>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-sm text-slate-400">None</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
+                  <CallRow key={call.id} call={call} />
                 ))}
               </TableBody>
             </Table>

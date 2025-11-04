@@ -10,6 +10,45 @@ import {
   type ListCallsInput,
 } from "~/lib/retell/validators";
 import { createPhoneCall, getCall } from "~/lib/retell/client";
+import type { RetellCallResponse } from "~/lib/retell/client";
+
+/**
+ * Enhanced type for call details with complete data from Retell API
+ */
+export interface CallDetailResponse {
+  id: string;
+  retell_call_id: string;
+  agent_id: string;
+  phone_number: string;
+  phone_number_pretty: string | null;
+  status: string;
+  duration_seconds: number | null;
+  start_timestamp: string | null;
+  end_timestamp: string | null;
+  recording_url: string | null;
+  transcript: string | null;
+  transcript_object: RetellCallResponse["transcript_object"] | null;
+  call_analysis: RetellCallResponse["call_analysis"] | null;
+  disconnection_reason: string | null;
+  public_log_url: string | null;
+  call_variables: Record<string, string> | null;
+  metadata: Record<string, unknown> | null;
+  retell_response: RetellCallResponse | null;
+  created_at: string;
+  created_by: string | null;
+}
+
+/**
+ * Lightweight status update response for polling
+ */
+export interface CallStatusResponse {
+  call_id: string;
+  status: string;
+  duration_seconds: number | null;
+  recording_available: boolean;
+  transcript_available: boolean;
+  call_analysis_available: boolean;
+}
 
 /**
  * Check if user is admin
@@ -181,7 +220,13 @@ export async function fetchCalls(input?: ListCallsInput) {
 }
 
 /**
- * Get details of a specific call
+ * Get complete details of a specific call with fresh data from Retell API
+ *
+ * This action:
+ * - Always fetches fresh data from Retell API to get latest recording URL and transcript
+ * - Updates database with latest status, duration, recording URL, and analysis
+ * - Returns complete call details for the detail page
+ * - Handles cases where recording or transcript is not ready yet
  */
 export async function fetchCall(callId: string) {
   try {
@@ -203,41 +248,111 @@ export async function fetchCall(callId: string) {
       throw new Error("Call not found");
     }
 
-    // Optionally fetch fresh data from Retell API
+    // Always fetch fresh data from Retell API to get recording URL and transcript
     try {
       const retellCall = await getCall(dbCall.retell_call_id);
 
-      // Update database with latest info
+      // Calculate duration if timestamps are available
+      const durationSeconds =
+        retellCall.end_timestamp && retellCall.start_timestamp
+          ? retellCall.end_timestamp - retellCall.start_timestamp
+          : null;
+
+      // Map status
       const mappedStatus = mapRetellStatus(retellCall.call_status);
+
+      // Update database with latest info including recording URL and transcript
       await supabase
         .from("retell_calls")
         .update({
           status: mappedStatus,
-          duration_seconds:
-            retellCall.end_timestamp && retellCall.start_timestamp
-              ? retellCall.end_timestamp - retellCall.start_timestamp
-              : null,
+          duration_seconds: durationSeconds,
           end_timestamp: retellCall.end_timestamp
             ? new Date(retellCall.end_timestamp * 1000).toISOString()
             : null,
+          recording_url: retellCall.recording_url ?? null,
+          transcript: retellCall.transcript ?? null,
+          transcript_object: retellCall.transcript_object
+            ? (retellCall.transcript_object as unknown)
+            : null,
+          call_analysis: retellCall.call_analysis
+            ? (retellCall.call_analysis as unknown)
+            : null,
+          disconnection_reason: retellCall.disconnection_reason ?? null,
+          public_log_url: retellCall.public_log_url ?? null,
           retell_response: retellCall as unknown,
         })
         .eq("id", validated.callId);
 
+      // Return enhanced call details
+      const enhancedData: CallDetailResponse = {
+        id: dbCall.id,
+        retell_call_id: dbCall.retell_call_id,
+        agent_id: retellCall.agent_id,
+        phone_number: dbCall.phone_number,
+        phone_number_pretty: dbCall.phone_number_pretty,
+        status: mappedStatus,
+        duration_seconds: durationSeconds,
+        start_timestamp: retellCall.start_timestamp
+          ? new Date(retellCall.start_timestamp * 1000).toISOString()
+          : null,
+        end_timestamp: retellCall.end_timestamp
+          ? new Date(retellCall.end_timestamp * 1000).toISOString()
+          : null,
+        recording_url: retellCall.recording_url ?? null,
+        transcript: retellCall.transcript ?? null,
+        transcript_object: retellCall.transcript_object ?? null,
+        call_analysis: retellCall.call_analysis ?? null,
+        disconnection_reason: retellCall.disconnection_reason ?? null,
+        public_log_url: retellCall.public_log_url ?? null,
+        call_variables: dbCall.call_variables,
+        metadata: dbCall.metadata,
+        retell_response: retellCall,
+        created_at: dbCall.created_at,
+        created_by: dbCall.created_by,
+      };
+
       return {
         success: true,
-        data: {
-          ...dbCall,
-          retell_response: retellCall,
-          status: mappedStatus,
-        },
+        data: enhancedData,
       };
     } catch (retellError) {
-      // If Retell API fails, return database data
+      // If Retell API fails, return database data with proper typing
       console.error("Failed to fetch from Retell API:", retellError);
+
+      const fallbackData: CallDetailResponse = {
+        id: dbCall.id,
+        retell_call_id: dbCall.retell_call_id,
+        agent_id: dbCall.agent_id,
+        phone_number: dbCall.phone_number,
+        phone_number_pretty: dbCall.phone_number_pretty,
+        status: dbCall.status,
+        duration_seconds: dbCall.duration_seconds,
+        start_timestamp: dbCall.start_timestamp,
+        end_timestamp: dbCall.end_timestamp,
+        recording_url: dbCall.recording_url ?? null,
+        transcript: dbCall.transcript ?? null,
+        transcript_object: dbCall.transcript_object
+          ? (dbCall.transcript_object as RetellCallResponse["transcript_object"])
+          : null,
+        call_analysis: dbCall.call_analysis
+          ? (dbCall.call_analysis as RetellCallResponse["call_analysis"])
+          : null,
+        disconnection_reason: dbCall.disconnection_reason ?? null,
+        public_log_url: dbCall.public_log_url ?? null,
+        call_variables: dbCall.call_variables,
+        metadata: dbCall.metadata,
+        retell_response: dbCall.retell_response
+          ? (dbCall.retell_response as RetellCallResponse)
+          : null,
+        created_at: dbCall.created_at,
+        created_by: dbCall.created_by,
+      };
+
       return {
         success: true,
-        data: dbCall,
+        data: fallbackData,
+        warning: "Using cached data - unable to fetch latest from Retell API",
       };
     }
   } catch (error) {
@@ -245,6 +360,104 @@ export async function fetchCall(callId: string) {
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to fetch call",
+    };
+  }
+}
+
+/**
+ * Lightweight status check for real-time polling
+ *
+ * This action:
+ * - Performs quick status check without fetching full call details
+ * - Updates only status and duration in database
+ * - Returns minimal data for UI status updates
+ * - Indicates availability of recording, transcript, and analysis
+ * - Suitable for polling every few seconds
+ */
+export async function refreshCallStatus(callId: string) {
+  try {
+    // Validate input
+    const validated = getCallSchema.parse({ callId });
+
+    // Check admin access
+    await checkAdminAccess();
+
+    // Fetch call from database to get Retell call ID
+    const supabase = await createClient();
+    const { data: dbCall, error } = await supabase
+      .from("retell_calls")
+      .select("id, retell_call_id, status")
+      .eq("id", validated.callId)
+      .single();
+
+    if (error || !dbCall) {
+      throw new Error("Call not found");
+    }
+
+    // Fetch lightweight status from Retell API
+    try {
+      const retellCall = await getCall(dbCall.retell_call_id);
+
+      // Calculate duration if available
+      const durationSeconds =
+        retellCall.end_timestamp && retellCall.start_timestamp
+          ? retellCall.end_timestamp - retellCall.start_timestamp
+          : null;
+
+      // Map status
+      const mappedStatus = mapRetellStatus(retellCall.call_status);
+
+      // Update only essential fields in database for performance
+      await supabase
+        .from("retell_calls")
+        .update({
+          status: mappedStatus,
+          duration_seconds: durationSeconds,
+          end_timestamp: retellCall.end_timestamp
+            ? new Date(retellCall.end_timestamp * 1000).toISOString()
+            : null,
+        })
+        .eq("id", validated.callId);
+
+      // Return minimal status response
+      const statusResponse: CallStatusResponse = {
+        call_id: dbCall.id,
+        status: mappedStatus,
+        duration_seconds: durationSeconds,
+        recording_available: !!retellCall.recording_url,
+        transcript_available: !!retellCall.transcript,
+        call_analysis_available: !!retellCall.call_analysis,
+      };
+
+      return {
+        success: true,
+        data: statusResponse,
+      };
+    } catch (retellError) {
+      // If Retell API fails, return database status
+      console.error("Failed to refresh status from Retell API:", retellError);
+
+      return {
+        success: true,
+        data: {
+          call_id: dbCall.id,
+          status: dbCall.status,
+          duration_seconds: null,
+          recording_available: false,
+          transcript_available: false,
+          call_analysis_available: false,
+        } as CallStatusResponse,
+        warning: "Using cached status - unable to fetch latest from Retell API",
+      };
+    }
+  } catch (error) {
+    console.error("Refresh call status error:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to refresh call status",
     };
   }
 }
