@@ -107,16 +107,23 @@ export default function CasesPage() {
       accessorKey: "patient",
       header: "Patient",
       cell: ({ row }) => {
-        const patient = row.original.patient as unknown as {
-          name?: string;
-          owner_name?: string;
-        } | null;
+        // Supabase relation may come back as an object or an array depending on config
+        const rawPatient = row.original.patient as unknown;
+        const patientObj = Array.isArray(rawPatient)
+          ? (rawPatient[0] as
+              | { name?: string; owner_name?: string }
+              | undefined)
+          : (rawPatient as { name?: string; owner_name?: string } | undefined);
+
+        const patientName = patientObj?.name ?? "Unknown";
+        const ownerName = patientObj?.owner_name;
+
         return (
           <div className="flex flex-col">
-            <span className="font-medium">{patient?.name ?? "Unknown"}</span>
-            {patient?.owner_name && (
+            <span className="font-medium">{patientName}</span>
+            {ownerName && (
               <span className="text-muted-foreground text-xs">
-                Owner: {patient.owner_name}
+                Owner: {ownerName}
               </span>
             )}
           </div>
@@ -127,7 +134,7 @@ export default function CasesPage() {
       accessorKey: "type",
       header: "Type",
       cell: ({ row }) => {
-        const type = row.original.type;
+        const type = row.original.type as string | null | undefined;
         const colors: Record<string, string> = {
           checkup: "bg-blue-500/10 text-blue-500",
           emergency: "bg-red-500/10 text-red-500",
@@ -147,7 +154,7 @@ export default function CasesPage() {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
-        const status = row.original.status;
+        const status = row.original.status as string | null | undefined;
         const colors: Record<string, string> = {
           draft: "bg-gray-500/10 text-gray-500",
           ongoing: "bg-blue-500/10 text-blue-500",
@@ -167,7 +174,7 @@ export default function CasesPage() {
       accessorKey: "visibility",
       header: "Visibility",
       cell: ({ row }) => {
-        const visibility = row.original.visibility;
+        const visibility = row.original.visibility as string | null | undefined;
         return visibility ? (
           <Badge variant="outline">{visibility}</Badge>
         ) : (
@@ -184,7 +191,14 @@ export default function CasesPage() {
           : null;
         return date ? (
           <span className="text-muted-foreground text-sm">
-            {date.toLocaleDateString()}
+            {date.toLocaleString(undefined, {
+              year: "numeric",
+              month: "short",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+              second: "2-digit",
+            })}
           </span>
         ) : (
           <span className="text-muted-foreground">N/A</span>
@@ -195,10 +209,11 @@ export default function CasesPage() {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => {
-        const patient = row.original.patient as unknown as {
-          name?: string;
-        } | null;
-        const patientName = patient?.name ?? "Unknown";
+        const rawPatient = row.original.patient as unknown;
+        const patientObj = Array.isArray(rawPatient)
+          ? (rawPatient[0] as { name?: string } | undefined)
+          : (rawPatient as { name?: string } | undefined);
+        const patientName = patientObj?.name ?? "Unknown";
         return (
           <div className="flex items-center gap-2">
             <Button

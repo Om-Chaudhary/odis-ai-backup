@@ -28,13 +28,15 @@ export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("users")
-    .select("first_name, last_name, role, clinic_name, license_number, avatar_url")
+    .select(
+      "first_name, last_name, role, clinic_name, license_number, avatar_url",
+    )
     .eq("id", user.id)
     .single();
 
   return (
     <DarkModeWrapper>
-      <main className="min-h-screen relative overflow-hidden bg-gradient-to-b from-emerald-50 via-emerald-100/40 to-emerald-50/30">
+      <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-emerald-50 via-emerald-100/40 to-emerald-50/30">
         {/* Background Elements */}
         <div className="pointer-events-none absolute inset-0">
           {/* Dotted background pattern */}
@@ -46,39 +48,39 @@ export default async function DashboardPage() {
               backgroundSize: "40px 40px",
             }}
           />
-          
+
           {/* Animated gradient overlay */}
           <div
-            className="animate-gradient-move absolute inset-0 opacity-40 blur-sm"
             style={{
               background:
-                "radial-gradient(circle at 30% 40%, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0.06) 40%, transparent 70%)",
+                "radial-gradient(circle at 30% 40%, rgba(49, 171, 163, 0.12) 0%, rgba(49, 171, 163, 0.06) 40%, transparent 70%)",
             }}
+            className="animate-gradient-move absolute inset-0 opacity-70 blur-sm"
           />
 
           {/* Secondary moving gradient */}
           <div
-            className="animate-gradient-move-reverse absolute inset-0 opacity-30 blur-sm"
             style={{
               background:
-                "radial-gradient(circle at 70% 60%, rgba(16, 185, 129, 0.10) 0%, rgba(16, 185, 129, 0.05) 50%, transparent 80%)",
+                "radial-gradient(circle at 70% 60%, rgba(49, 171, 163, 0.10) 0%, rgba(49, 171, 163, 0.05) 50%, transparent 80%)",
             }}
+            className="animate-gradient-move-reverse absolute inset-0 opacity-50 blur-sm"
           />
 
           {/* Floating accent orbs */}
           <div
-            className="animate-float-slow absolute top-1/4 left-1/4 h-[300px] w-[300px] rounded-full opacity-25 blur-3xl"
             style={{
               background:
-                "radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, transparent 60%)",
+                "radial-gradient(circle, rgba(49, 171, 163, 0.06) 0%, transparent 60%)",
             }}
+            className="animate-float-slow absolute top-1/4 left-1/4 h-[400px] w-[400px] rounded-full opacity-40 blur-3xl transition-opacity duration-1000 hover:opacity-60"
           />
           <div
-            className="animate-float-slow-reverse absolute right-1/3 bottom-1/3 h-[200px] w-[200px] rounded-full opacity-20 blur-3xl"
             style={{
               background:
-                "radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 60%)",
+                "radial-gradient(circle, rgba(49, 171, 163, 0.05) 0%, transparent 60%)",
             }}
+            className="animate-float-slow-reverse absolute right-1/3 bottom-1/3 h-[300px] w-[300px] rounded-full opacity-35 blur-3xl transition-opacity duration-1000 hover:opacity-50"
           />
         </div>
 
@@ -89,10 +91,10 @@ export default async function DashboardPage() {
 
             <div className="flex justify-end">
               <form action={signOut}>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   variant="destructive"
-                  className="shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                  className="shadow-lg transition-all hover:scale-105 hover:shadow-xl"
                 >
                   Sign Out
                 </Button>

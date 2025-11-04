@@ -53,7 +53,9 @@ const PIMS_SYSTEMS = [
 
 export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
   const [selectedSystems, setSelectedSystems] = useState<string[]>([]);
-  const [credentials, setCredentials] = useState<Record<string, { username: string; password: string }>>({});
+  const [credentials, setCredentials] = useState<
+    Record<string, { username: string; password: string }>
+  >({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -72,13 +74,13 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
 
         // Initialize credentials for newly selected systems
         if (!withoutNone.includes(systemId) && systemId !== "none") {
-          setCredentials(prevCreds => ({
+          setCredentials((prevCreds) => ({
             ...prevCreds,
-            [systemId]: { username: "", password: "" }
+            [systemId]: { username: "", password: "" },
           }));
         } else if (withoutNone.includes(systemId)) {
           // Remove credentials for deselected systems
-          setCredentials(prevCreds => {
+          setCredentials((prevCreds) => {
             const newCreds = { ...prevCreds };
             delete newCreds[systemId];
             return newCreds;
@@ -90,13 +92,17 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
     });
   };
 
-  const handleCredentialChange = (systemId: string, field: 'username' | 'password', value: string) => {
-    setCredentials(prev => ({
+  const handleCredentialChange = (
+    systemId: string,
+    field: "username" | "password",
+    value: string,
+  ) => {
+    setCredentials((prev) => ({
       ...prev,
       [systemId]: {
         ...(prev[systemId] ?? { username: "", password: "" }),
-        [field]: value
-      }
+        [field]: value,
+      },
     }));
   };
 
@@ -133,27 +139,27 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="space-y-2">
-        <h1 className="font-display text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">
+        <h1 className="font-display text-xl font-bold text-slate-800 sm:text-2xl">
           Connect your PIMS
         </h1>
-        <p className="text-slate-600 text-sm dark:text-slate-400">
+        <p className="text-sm text-slate-600">
           Select your Practice Information Management System(s) to continue
         </p>
       </div>
 
       <div className="space-y-4">
-        <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+        <Label className="text-sm font-medium text-slate-700">
           Which PIMS do you use? (Select all that apply)
         </Label>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {PIMS_SYSTEMS.map((system) => (
             <div
               key={system.id}
-              className={`flex items-center space-x-3 p-3 rounded-lg border transition-all duration-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 ${
+              className={`flex cursor-pointer items-center space-x-3 rounded-lg border p-3 transition-all duration-200 hover:bg-slate-50 ${
                 selectedSystems.includes(system.id)
-                  ? "border-teal-500 bg-teal-50/50 dark:bg-teal-900/20"
-                  : "border-slate-200 dark:border-slate-700"
+                  ? "border-teal-500 bg-teal-50/50"
+                  : "border-slate-200"
               }`}
               onClick={() => handleSystemToggle(system.id)}
             >
@@ -161,12 +167,12 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
                 id={system.id}
                 checked={selectedSystems.includes(system.id)}
                 onChange={() => handleSystemToggle(system.id)}
-                className="data-[state=checked]:bg-teal-600 data-[state=checked]:border-teal-600"
+                className="data-[state=checked]:border-teal-600 data-[state=checked]:bg-teal-600"
               />
 
-              <div className="flex items-center space-x-3 flex-1">
+              <div className="flex flex-1 items-center space-x-3">
                 {system.logo && (
-                  <div className="relative w-8 h-8 flex-shrink-0">
+                  <div className="relative h-8 w-8 flex-shrink-0">
                     <Image
                       src={system.logo}
                       alt={`${system.name} logo`}
@@ -177,7 +183,7 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
                 )}
                 <Label
                   htmlFor={system.id}
-                  className="text-sm font-medium text-slate-700 dark:text-slate-300 cursor-pointer"
+                  className="cursor-pointer text-sm font-medium text-slate-700"
                 >
                   {system.name}
                 </Label>
@@ -188,74 +194,96 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
 
         {selectedSystems.length > 0 && !selectedSystems.includes("none") && (
           <div className="space-y-4 border-t pt-4">
-            <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            <Label className="text-sm font-medium text-slate-700">
               Enter your PIMS credentials for each selected system:
             </Label>
-            {selectedSystems.filter(id => id !== "none").map((systemId) => {
-              const system = PIMS_SYSTEMS.find(s => s.id === systemId);
-              return (
-                <div key={systemId} className="space-y-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    {system?.logo && (
-                      <div className="relative w-6 h-6">
-                        <Image
-                          src={system.logo}
-                          alt={`${system.name} logo`}
-                          fill
-                          className="object-contain"
+            {selectedSystems
+              .filter((id) => id !== "none")
+              .map((systemId) => {
+                const system = PIMS_SYSTEMS.find((s) => s.id === systemId);
+                return (
+                  <div
+                    key={systemId}
+                    className="space-y-3 rounded-lg bg-slate-50 p-4"
+                  >
+                    <div className="flex items-center gap-2">
+                      {system?.logo && (
+                        <div className="relative h-6 w-6">
+                          <Image
+                            src={system.logo}
+                            alt={`${system.name} logo`}
+                            fill
+                            className="object-contain"
+                          />
+                        </div>
+                      )}
+                      <Label className="text-sm font-semibold text-slate-800">
+                        {system?.name} Credentials
+                      </Label>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div>
+                        <Label
+                          htmlFor={`${systemId}-username`}
+                          className="text-xs text-slate-600"
+                        >
+                          Username
+                        </Label>
+                        <Input
+                          id={`${systemId}-username`}
+                          type="text"
+                          placeholder="IDEXX Neo Username"
+                          value={credentials[systemId]?.username ?? ""}
+                          onChange={(e) =>
+                            handleCredentialChange(
+                              systemId,
+                              "username",
+                              e.target.value,
+                            )
+                          }
+                          className="mt-1 text-sm"
                         />
                       </div>
-                    )}
-                    <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                      {system?.name} Credentials
-                    </Label>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <Label htmlFor={`${systemId}-username`} className="text-xs text-slate-600 dark:text-slate-400">
-                        Username
-                      </Label>
-                      <Input
-                        id={`${systemId}-username`}
-                        type="text"
-                        placeholder="IDEXX Neo Username"
-                        value={credentials[systemId]?.username ?? ""}
-                        onChange={(e) => handleCredentialChange(systemId, 'username', e.target.value)}
-                        className="mt-1 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor={`${systemId}-password`} className="text-xs text-slate-600 dark:text-slate-400">
-                        Password
-                      </Label>
-                      <Input
-                        id={`${systemId}-password`}
-                        type="password"
-                        placeholder="IDEXX Neo Password"
-                        value={credentials[systemId]?.password ?? ""}
-                        onChange={(e) => handleCredentialChange(systemId, 'password', e.target.value)}
-                        className="mt-1 text-sm"
-                      />
+                      <div>
+                        <Label
+                          htmlFor={`${systemId}-password`}
+                          className="text-xs text-slate-600"
+                        >
+                          Password
+                        </Label>
+                        <Input
+                          id={`${systemId}-password`}
+                          type="password"
+                          placeholder="IDEXX Neo Password"
+                          value={credentials[systemId]?.password ?? ""}
+                          onChange={(e) =>
+                            handleCredentialChange(
+                              systemId,
+                              "password",
+                              e.target.value,
+                            )
+                          }
+                          className="mt-1 text-sm"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         )}
 
         {selectedSystems.length > 0 && (
-          <div className="text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-md">
+          <div className="rounded-md bg-slate-50 p-3 text-xs text-slate-500">
             {selectedSystems.includes("none")
               ? "You can set up PIMS integrations later in your dashboard settings."
-              : "These are sandbox credentials for testing purposes only. You can update them later in your dashboard settings."
-            }
+              : "These are sandbox credentials for testing purposes only. You can update them later in your dashboard settings."}
           </div>
         )}
       </div>
 
       {error && (
-        <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-3 rounded-md">
+        <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
           {error}
         </div>
       )}
@@ -264,13 +292,13 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
         <Button
           onClick={handleComplete}
           disabled={isLoading || selectedSystems.length === 0}
-          className="w-full bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-[#2a9a92] hover:to-[#31aba3] hover:shadow-lg hover:shadow-[#31aba3]/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          className="w-full bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-[#2a9a92] hover:to-[#31aba3] hover:shadow-lg hover:shadow-[#31aba3]/30 disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isLoading ? "Completing setup..." : "Complete setup"}
         </Button>
 
         {selectedSystems.length === 0 && (
-          <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
+          <p className="text-center text-sm text-slate-500">
             Please select at least one PIMS system to continue
           </p>
         )}
