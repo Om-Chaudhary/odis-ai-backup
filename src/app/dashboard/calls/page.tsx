@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -10,6 +10,7 @@ import {
   Calendar,
   Clock,
   ChevronRight,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
@@ -30,6 +31,7 @@ import {
 } from "~/components/ui/table";
 import { fetchCalls } from "~/server/actions/retell";
 import { toast } from "sonner";
+import { useCallPolling } from "~/hooks/use-call-polling";
 
 interface Call {
   id: string;
@@ -52,6 +54,9 @@ const statusColors: Record<string, string> = {
   cancelled: "bg-gray-500/10 text-gray-700 border-gray-500/20",
 };
 
+// Active call statuses that require frequent polling
+const ACTIVE_STATUSES = ["initiated", "ringing", "in_progress"];
+
 function formatDuration(seconds: number | null): string {
   if (!seconds) return "N/A";
   const mins = Math.floor(seconds / 60);
@@ -69,6 +74,22 @@ function formatDate(dateString: string): string {
     minute: "2-digit",
     hour12: true,
   });
+}
+
+function formatRelativeTime(date: Date): string {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+
+  if (seconds < 10) return "just now";
+  if (seconds < 60) return `${seconds}s ago`;
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
 }
 
 // Interactive Call Row Component
@@ -172,8 +193,14 @@ export default function CallHistoryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
+  // Load calls function
   const loadCalls = useCallback(async () => {
-    setIsLoading(true);
+    // Don't show loading spinner on background refreshes
+    const isInitialLoad = calls.length === 0;
+    if (isInitialLoad) {
+      setIsLoading(true);
+    }
+
     try {
       const result = await fetchCalls({
         status: selectedStatus as
@@ -200,13 +227,37 @@ export default function CallHistoryPage() {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {
-      setIsLoading(false);
+      if (isInitialLoad) {
+        setIsLoading(false);
+      }
     }
-  }, [selectedStatus]);
+  }, [selectedStatus, calls.length]);
 
+  // Determine if there are active calls that need frequent polling
+  const hasActiveCalls = useCallback(() => {
+    return calls.some((call) => ACTIVE_STATUSES.includes(call.status));
+  }, [calls]);
+
+  // Setup auto-refresh polling
+  const { isPolling, lastUpdated, refresh, isRefreshing } = useCallPolling({
+    enabled: true,
+    interval: 5000, // Poll every 5 seconds when active calls exist
+    idleInterval: 30000, // Poll every 30 seconds when no active calls
+    onPoll: loadCalls,
+    hasActiveCalls,
+    pauseWhenHidden: true,
+  });
+
+  // Initial load
   useEffect(() => {
     void loadCalls();
-  }, [loadCalls]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedStatus]); // Only reload when filter changes
+
+  // Memoize active calls count for UI display
+  const activeCallsCount = useMemo(() => {
+    return calls.filter((call) => ACTIVE_STATUSES.includes(call.status)).length;
+  }, [calls]);
 
   return (
     <div className="space-y-8">
@@ -277,13 +328,55 @@ export default function CallHistoryPage() {
         />
 
         <CardHeader className="relative z-10 border-b border-slate-200/60 bg-gradient-to-r from-emerald-50/80 to-teal-50/50">
-          <CardTitle className="text-xl font-semibold text-slate-900">
-            Call History
-          </CardTitle>
-          <CardDescription className="text-slate-600">
-            {calls.length} {calls.length === 1 ? "call" : "calls"} found - Click
-            on any row to view details
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-xl font-semibold text-slate-900">
+                Call History
+              </CardTitle>
+              <CardDescription className="text-slate-600">
+                {calls.length} {calls.length === 1 ? "call" : "calls"} found
+                {activeCallsCount > 0 && (
+                  <span className="ml-2 text-emerald-600">
+                    ({activeCallsCount} active)
+                  </span>
+                )}{" "}
+                - Click on any row to view details
+              </CardDescription>
+            </div>
+
+            {/* Auto-refresh status and manual refresh button */}
+            <div className="flex items-center gap-3">
+              {lastUpdated && (
+                <div className="flex items-center gap-2 text-sm text-slate-500">
+                  <div
+                    className={`h-2 w-2 rounded-full ${
+                      isPolling
+                        ? "animate-pulse bg-emerald-500"
+                        : "bg-slate-300"
+                    }`}
+                  />
+                  <span>
+                    Updated {formatRelativeTime(lastUpdated)}
+                    {isPolling && activeCallsCount > 0 && " (5s)"}
+                    {isPolling && activeCallsCount === 0 && " (30s)"}
+                  </span>
+                </div>
+              )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void refresh()}
+                disabled={isRefreshing}
+                className="border-slate-300 hover:bg-emerald-50"
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+                />
+                <span className="ml-2">Refresh</span>
+              </Button>
+            </div>
+          </div>
         </CardHeader>
 
         <CardContent className="relative z-10 p-0">

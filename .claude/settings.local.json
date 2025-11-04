@@ -20,7 +20,12 @@
       "mcp__supabase__apply_migration",
       "mcp__supabase__list_tables",
       "mcp__supabase__execute_sql",
-      "Bash(pnpm run build:*)"
+      "Bash(pnpm run build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(pnpm dlx:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []
