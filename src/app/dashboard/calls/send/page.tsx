@@ -63,7 +63,6 @@ export default function SendCallPage() {
     };
 
     function fire(particleRatio: number, opts: confetti.Options) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       void confetti({
         ...defaults,
         ...opts,
