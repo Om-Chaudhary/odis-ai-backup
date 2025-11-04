@@ -47,20 +47,17 @@ export default function AccountStep({ onComplete }: AccountStepProps) {
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="space-y-2">
-        <h1 className="font-display text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">
+        <h1 className="font-display text-xl font-bold text-slate-800 sm:text-2xl">
           Create your account
         </h1>
-        <p className="text-slate-600 text-sm dark:text-slate-400">
+        <p className="text-sm text-slate-600">
           Enter your email and password to get started
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         <div className="space-y-1.5 sm:space-y-2">
-          <Label
-            htmlFor="email"
-            className="text-sm font-medium text-slate-700 dark:text-slate-300"
-          >
+          <Label htmlFor="email" className="text-sm font-medium text-slate-700">
             Email
           </Label>
           <Input
@@ -72,14 +69,14 @@ export default function AccountStep({ onComplete }: AccountStepProps) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="veterinarian@clinic.com"
-            className="border-slate-200 bg-white/90 text-slate-900 placeholder:text-slate-500 backdrop-blur-sm transition-all duration-200 focus:border-teal-500 focus:ring-teal-500/20 dark:border-slate-700 dark:bg-slate-800/90 dark:text-slate-100 dark:placeholder:text-slate-500"
+            className="border-slate-200 bg-white/90 text-slate-900 backdrop-blur-sm transition-all duration-200 placeholder:text-slate-500 focus:border-teal-500 focus:ring-teal-500/20"
           />
         </div>
 
         <div className="space-y-1.5 sm:space-y-2">
           <Label
             htmlFor="password"
-            className="text-sm font-medium text-slate-700 dark:text-slate-300"
+            className="text-sm font-medium text-slate-700"
           >
             Password
           </Label>
@@ -93,12 +90,12 @@ export default function AccountStep({ onComplete }: AccountStepProps) {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Create a secure password (min. 6 characters)"
             minLength={6}
-            className="border-slate-200 bg-white/90 text-slate-900 placeholder:text-slate-500 backdrop-blur-sm transition-all duration-200 focus:border-teal-500 focus:ring-teal-500/20 dark:border-slate-700 dark:bg-slate-800/90 dark:text-slate-100 dark:placeholder:text-slate-500"
+            className="border-slate-200 bg-white/90 text-slate-900 backdrop-blur-sm transition-all duration-200 placeholder:text-slate-500 focus:border-teal-500 focus:ring-teal-500/20"
           />
         </div>
 
         {error && (
-          <div className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-3 rounded-md">
+          <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
             {error}
           </div>
         )}
@@ -106,7 +103,7 @@ export default function AccountStep({ onComplete }: AccountStepProps) {
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-[#2a9a92] hover:to-[#31aba3] hover:shadow-lg hover:shadow-[#31aba3]/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          className="w-full bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-[#2a9a92] hover:to-[#31aba3] hover:shadow-lg hover:shadow-[#31aba3]/30 disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isLoading ? "Creating account..." : "Continue"}
         </Button>

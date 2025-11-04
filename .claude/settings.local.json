@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where pnpm:*)",
+      "Bash(pnpm dev)",
+      "Bash(pnpm next dev:*)",
+      "Bash(taskkill:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "mcp__playwright__browser_navigate",
+      "Bash(git log:*)",
+      "Bash(nul)"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": ["shadcn"]
+}
