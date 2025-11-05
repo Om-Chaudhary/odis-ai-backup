@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Phone, RefreshCw } from "lucide-react";
+import { Phone, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -26,6 +26,7 @@ export default function CallsPage() {
   const [calls, setCalls] = useState<CallDetailResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showQuickCallDialog, setShowQuickCallDialog] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   // Use refs for stable references in polling
   const callsRef = useRef(calls);
@@ -33,32 +34,113 @@ export default function CallsPage() {
     callsRef.current = calls;
   }, [calls]);
 
-  // Load calls data
-  const loadCalls = useCallback(async (isInitial = false) => {
-    if (isInitial) {
-      setIsLoading(true);
-    }
+  // Helper function to get start and end of day in local timezone
+  const getDateRange = useCallback((date: Date) => {
+    const start = new Date(date);
+    start.setHours(0, 0, 0, 0);
 
-    try {
-      const result = await fetchCalls();
+    const end = new Date(date);
+    end.setHours(23, 59, 59, 999);
 
-      if (result.success && result.data) {
-        setCalls(result.data as CallDetailResponse[]);
-      } else {
+    return { start, end };
+  }, []);
+
+  // Navigate to previous day
+  const goToPreviousDay = useCallback(() => {
+    setSelectedDate((prev) => {
+      const newDate = new Date(prev);
+      newDate.setDate(newDate.getDate() - 1);
+      return newDate;
+    });
+  }, []);
+
+  // Navigate to next day
+  const goToNextDay = useCallback(() => {
+    setSelectedDate((prev) => {
+      const newDate = new Date(prev);
+      newDate.setDate(newDate.getDate() + 1);
+      return newDate;
+    });
+  }, []);
+
+  // Navigate to today
+  const goToToday = useCallback(() => {
+    setSelectedDate(new Date());
+  }, []);
+
+  // Check if selected date is today
+  const isToday = useCallback((date: Date) => {
+    const today = new Date();
+    return (
+      date.getDate() === today.getDate() &&
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear()
+    );
+  }, []);
+
+  // Format date for display
+  const formatDisplayDate = useCallback(
+    (date: Date) => {
+      if (isToday(date)) {
+        return "Today";
+      }
+
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      if (
+        date.getDate() === yesterday.getDate() &&
+        date.getMonth() === yesterday.getMonth() &&
+        date.getFullYear() === yesterday.getFullYear()
+      ) {
+        return "Yesterday";
+      }
+
+      return date.toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
+    },
+    [isToday],
+  );
+
+  // Load calls data with date filter
+  const loadCalls = useCallback(
+    async (isInitial = false) => {
+      if (isInitial) {
+        setIsLoading(true);
+      }
+
+      try {
+        const { start, end } = getDateRange(selectedDate);
+        const result = await fetchCalls({
+          status: "all",
+          offset: 0,
+          limit: 100,
+          startDate: start,
+          endDate: end,
+        });
+
+        if (result.success && result.data) {
+          setCalls(result.data as CallDetailResponse[]);
+        } else {
+          if (isInitial) {
+            toast.error(result.error ?? "Failed to load calls");
+          }
+        }
+      } catch {
         if (isInitial) {
-          toast.error(result.error ?? "Failed to load calls");
+          toast.error("Failed to load calls");
+        }
+      } finally {
+        if (isInitial) {
+          setIsLoading(false);
         }
       }
-    } catch {
-      if (isInitial) {
-        toast.error("Failed to load calls");
-      }
-    } finally {
-      if (isInitial) {
-        setIsLoading(false);
-      }
-    }
-  }, []);
+    },
+    [selectedDate, getDateRange],
+  );
 
   // Check if there are any active calls
   const hasActiveCalls = useCallback(() => {
@@ -132,6 +214,57 @@ export default function CallsPage() {
         </div>
       </div>
 
+      {/* Date Navigation */}
+      <Card>
+        <CardContent className="flex items-center justify-between py-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={goToPreviousDay}
+              disabled={isLoading}
+              title="Previous day"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+
+            <div className="min-w-[200px] text-center">
+              <p className="text-lg font-semibold">
+                {formatDisplayDate(selectedDate)}
+              </p>
+              <p className="text-muted-foreground text-xs">
+                {selectedDate.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </p>
+            </div>
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={goToNextDay}
+              disabled={isLoading || isToday(selectedDate)}
+              title="Next day"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {!isToday(selectedDate) && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={goToToday}
+              disabled={isLoading}
+            >
+              Go to Today
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Auto-refresh indicator */}
       {isRefreshing && (
         <div className="text-muted-foreground flex items-center gap-2 text-sm">
@@ -171,8 +304,8 @@ export default function CallsPage() {
                 {historicalCalls.length > 0
                   ? `Showing ${historicalCalls.length} historical ${
                       historicalCalls.length === 1 ? "call" : "calls"
-                    }`
-                  : "No historical calls yet"}
+                    } for ${formatDisplayDate(selectedDate)}`
+                  : `No historical calls for ${formatDisplayDate(selectedDate)}`}
               </CardDescription>
             </CardHeader>
             <CardContent>
