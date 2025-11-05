@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -193,10 +193,19 @@ export default function CallHistoryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
-  // Load calls function
+  // Track initial load with ref to avoid dependency on calls.length
+  const isInitialLoadRef = useRef(true);
+
+  // Track calls in ref to avoid recreating hasActiveCalls callback
+  const callsRef = useRef<Call[]>([]);
+  useEffect(() => {
+    callsRef.current = calls;
+  }, [calls]);
+
+  // Load calls function - FIXED: Removed calls.length from dependencies
   const loadCalls = useCallback(async () => {
     // Don't show loading spinner on background refreshes
-    const isInitialLoad = calls.length === 0;
+    const isInitialLoad = isInitialLoadRef.current;
     if (isInitialLoad) {
       setIsLoading(true);
     }
@@ -216,7 +225,9 @@ export default function CallHistoryPage() {
       });
 
       if (result.success) {
+        // FIXED: Always update state - let React handle optimization
         setCalls(result.data as Call[]);
+        isInitialLoadRef.current = false; // Mark as no longer initial load
       } else {
         toast.error("Failed to load calls", {
           description: result.error,
@@ -231,12 +242,15 @@ export default function CallHistoryPage() {
         setIsLoading(false);
       }
     }
-  }, [selectedStatus, calls.length]);
+  }, [selectedStatus]);
 
   // Determine if there are active calls that need frequent polling
+  // FIXED: Use ref to avoid recreating callback on every render
   const hasActiveCalls = useCallback(() => {
-    return calls.some((call) => ACTIVE_STATUSES.includes(call.status));
-  }, [calls]);
+    return callsRef.current.some((call) =>
+      ACTIVE_STATUSES.includes(call.status),
+    );
+  }, []); // Empty dependencies - stable reference
 
   // Setup auto-refresh polling
   const { isPolling, lastUpdated, refresh, isRefreshing } = useCallPolling({

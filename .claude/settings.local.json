@@ -25,7 +25,11 @@
       "Bash(pnpm dlx:*)",
       "Bash(npm run typecheck:*)",
       "Bash(npm run lint)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(npm run codegen:*)",
+      "Bash(npm run:*)"
     ],
     "deny": [],
     "ask": []

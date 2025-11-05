@@ -53,6 +53,19 @@ export function useCallPolling({
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isPollingRef = useRef(false);
 
+  // FIXED: Use refs to avoid recreating intervals when callbacks change
+  const onPollRef = useRef(onPoll);
+  const hasActiveCallsRef = useRef(hasActiveCalls);
+
+  // Keep refs updated with latest callbacks
+  useEffect(() => {
+    onPollRef.current = onPoll;
+  }, [onPoll]);
+
+  useEffect(() => {
+    hasActiveCallsRef.current = hasActiveCalls;
+  }, [hasActiveCalls]);
+
   // Handle visibility change
   useEffect(() => {
     if (!pauseWhenHidden) return;
@@ -68,6 +81,7 @@ export function useCallPolling({
   }, [pauseWhenHidden]);
 
   // Poll function with debounce protection
+  // FIXED: Use ref to access latest onPoll without recreating callback
   const poll = useCallback(async () => {
     if (isPollingRef.current) return; // Prevent concurrent polls
 
@@ -75,7 +89,7 @@ export function useCallPolling({
     setIsRefreshing(true);
 
     try {
-      await onPoll();
+      await onPollRef.current();
       setLastUpdated(new Date());
     } catch (error) {
       console.error("Polling error:", error);
@@ -83,7 +97,7 @@ export function useCallPolling({
       isPollingRef.current = false;
       setIsRefreshing(false);
     }
-  }, [onPoll]);
+  }, []); // Empty dependencies - stable reference
 
   // Manual refresh function
   const refresh = useCallback(async () => {
@@ -91,6 +105,7 @@ export function useCallPolling({
   }, [poll]);
 
   // Setup polling interval
+  // FIXED: Use refs for callbacks to avoid recreating interval
   useEffect(() => {
     if (!enabled || !isVisible) {
       setIsPolling(false);
@@ -101,8 +116,10 @@ export function useCallPolling({
       return;
     }
 
-    // Determine interval based on active calls
-    const currentInterval = hasActiveCalls?.() ? interval : idleInterval;
+    // Determine interval based on active calls using ref
+    const currentInterval = hasActiveCallsRef.current?.()
+      ? interval
+      : idleInterval;
 
     setIsPolling(true);
 
@@ -121,7 +138,7 @@ export function useCallPolling({
       }
       setIsPolling(false);
     };
-  }, [enabled, isVisible, interval, idleInterval, hasActiveCalls, poll]);
+  }, [enabled, isVisible, interval, idleInterval, poll]); // Removed hasActiveCalls
 
   return {
     isPolling,
