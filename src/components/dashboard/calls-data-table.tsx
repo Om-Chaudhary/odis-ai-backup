@@ -12,13 +12,18 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { Label } from "~/components/ui/label";
+import { useRouter } from "next/navigation";
 
 interface CallsDataTableProps {
   data: CallDetailResponse[];
   isLoading?: boolean;
 }
 
-export function CallsDataTable({ data, isLoading: _isLoading = false }: CallsDataTableProps) {
+export function CallsDataTable({
+  data,
+  isLoading: _isLoading = false,
+}: CallsDataTableProps) {
+  const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Filter data based on status
@@ -27,12 +32,16 @@ export function CallsDataTable({ data, isLoading: _isLoading = false }: CallsDat
       ? data
       : data.filter((call) => call.status === statusFilter);
 
+  const handleRowClick = (call: CallDetailResponse) => {
+    router.push(`/dashboard/calls/${call.id}`);
+  };
+
   return (
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex items-end gap-4">
         <div className="w-[200px]">
-          <Label htmlFor="status-filter" className="text-sm mb-2 block">
+          <Label htmlFor="status-filter" className="mb-2 block text-sm">
             Filter by Status
           </Label>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -52,7 +61,7 @@ export function CallsDataTable({ data, isLoading: _isLoading = false }: CallsDat
         </div>
 
         {/* Results count */}
-        <div className="text-sm text-muted-foreground">
+        <div className="text-muted-foreground text-sm">
           Showing {filteredData.length} of {data.length} calls
         </div>
       </div>
@@ -63,6 +72,7 @@ export function CallsDataTable({ data, isLoading: _isLoading = false }: CallsDat
         data={filteredData}
         searchPlaceholder="Search by pet name or owner..."
         searchKey="pet_name"
+        onRowClick={handleRowClick}
       />
     </div>
   );

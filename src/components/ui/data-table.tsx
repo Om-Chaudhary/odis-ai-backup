@@ -35,6 +35,7 @@ interface DataTableProps<TData, TValue> {
   searchKey?: string;
   searchPlaceholder?: string;
   filterComponent?: React.ReactNode;
+  onRowClick?: (row: TData) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -43,10 +44,11 @@ export function DataTable<TData, TValue>({
   searchKey,
   searchPlaceholder = "Search...",
   filterComponent,
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
+    [],
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
@@ -76,8 +78,8 @@ export function DataTable<TData, TValue>({
       {(searchKey ?? filterComponent) && (
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           {searchKey && (
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <div className="relative max-w-sm flex-1">
+              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
               <Input
                 placeholder={searchPlaceholder}
                 value={
@@ -93,25 +95,25 @@ export function DataTable<TData, TValue>({
           {filterComponent}
         </div>
       )}
-      <div className="overflow-hidden rounded-xl border border-border/40 bg-transparent">
+      <div className="border-border/40 overflow-hidden rounded-xl border bg-transparent">
         <Table className="bg-transparent">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
-                className="border-b border-border/40 bg-transparent hover:bg-transparent"
+                className="border-border/40 border-b bg-transparent hover:bg-transparent"
               >
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead
                       key={header.id}
-                      className="h-12 font-semibold text-foreground/80"
+                      className="text-foreground/80 h-12 font-semibold"
                     >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                     </TableHead>
                   );
@@ -125,13 +127,14 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
-                  className="group border-b border-border/40 bg-transparent transition-colors hover:bg-muted/20 data-[state=selected]:bg-muted/20 last:border-0"
+                  className={`group border-border/40 hover:bg-muted/20 data-[state=selected]:bg-muted/20 border-b bg-transparent transition-colors last:border-0 ${onRowClick ? "cursor-pointer" : ""}`}
+                  onClick={() => onRowClick?.(row.original)}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="py-4">
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -151,7 +154,7 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
       <div className="flex items-center justify-end space-x-2">
-        <div className="flex-1 text-sm text-muted-foreground">
+        <div className="text-muted-foreground flex-1 text-sm">
           {table.getFilteredRowModel().rows.length} row(s) total.
         </div>
         <div className="space-x-2">

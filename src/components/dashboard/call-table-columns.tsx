@@ -59,6 +59,7 @@ export const columns: ColumnDef<CallDetailResponse>[] = [
         <Link
           href={`/dashboard/calls/${call.id}`}
           className="font-medium hover:underline"
+          onClick={(e) => e.stopPropagation()}
         >
           {petName}
         </Link>
@@ -160,7 +161,10 @@ export const columns: ColumnDef<CallDetailResponse>[] = [
       const call = row.original;
 
       return (
-        <div className="flex items-center justify-end gap-2">
+        <div
+          className="flex items-center justify-end gap-2"
+          onClick={(e) => e.stopPropagation()}
+        >
           {call.patient && (
             <Link href={`/dashboard/calls/${call.id}`}>
               <Button size="sm" variant="ghost" className="gap-2">
