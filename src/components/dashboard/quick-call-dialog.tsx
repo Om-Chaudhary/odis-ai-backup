@@ -15,6 +15,7 @@ import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
 import { Spinner } from "~/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { Checkbox } from "~/components/ui/checkbox";
 import {
   sendCall,
   scheduleCall,
@@ -50,6 +51,7 @@ export function QuickCallDialog({
 
   // JSON import field
   const [jsonInput, setJsonInput] = useState("");
+  const [callImmediately, setCallImmediately] = useState(false);
 
   const handleCallNow = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -186,17 +188,54 @@ export function QuickCallDialog({
     setIsSubmitting(true);
 
     try {
-      const result = await importCallsFromJson(jsonInput);
+      if (callImmediately) {
+        // Parse JSON and call each number immediately
+        let callsData;
+        try {
+          callsData = JSON.parse(jsonInput);
+        } catch {
+          throw new Error("Invalid JSON format");
+        }
 
-      if (result.success) {
+        if (!Array.isArray(callsData)) {
+          throw new Error("JSON must be an array of call objects");
+        }
+
+        // Call each number
+        let successCount = 0;
+        let failCount = 0;
+
+        for (const call of callsData) {
+          const result = await sendCall({
+            phoneNumber: call.phone_number,
+            variables: {
+              pet_name: call.pet_name,
+              owner_name: call.owner_name ?? "",
+              vet_name: call.vet_name ?? "",
+              clinic_name: call.clinic_name ?? "",
+              clinic_phone: call.clinic_phone ?? "",
+              discharge_summary_content: call.discharge_summary_content ?? "",
+            },
+            metadata: {},
+            retryOnBusy: false,
+            agentId: "",
+          });
+
+          if (result.success) {
+            successCount++;
+          } else {
+            failCount++;
+          }
+        }
+
         setSuccessMessage(
-          `Successfully imported ${result.data?.count ?? 0} call${(result.data?.count ?? 0) !== 1 ? "s" : ""}!`,
+          `Called ${successCount} number${successCount !== 1 ? "s" : ""}${failCount > 0 ? `, ${failCount} failed` : ""}!`,
         );
         setShowSuccess(true);
 
         toast({
-          title: "Import Successful",
-          description: `${result.data?.count ?? 0} call${(result.data?.count ?? 0) !== 1 ? "s" : ""} imported`,
+          title: "Calls Initiated",
+          description: `${successCount} call${successCount !== 1 ? "s" : ""} started${failCount > 0 ? `, ${failCount} failed` : ""}`,
         });
 
         setTimeout(() => {
@@ -206,11 +245,33 @@ export function QuickCallDialog({
           onSuccess?.();
         }, 1500);
       } else {
-        toast({
-          title: "Import Failed",
-          description: result.error ?? "Failed to import calls",
-          variant: "destructive",
-        });
+        // Import as scheduled calls
+        const result = await importCallsFromJson(jsonInput);
+
+        if (result.success) {
+          setSuccessMessage(
+            `Successfully imported ${result.data?.count ?? 0} call${(result.data?.count ?? 0) !== 1 ? "s" : ""}!`,
+          );
+          setShowSuccess(true);
+
+          toast({
+            title: "Import Successful",
+            description: `${result.data?.count ?? 0} call${(result.data?.count ?? 0) !== 1 ? "s" : ""} imported`,
+          });
+
+          setTimeout(() => {
+            setShowSuccess(false);
+            resetForm();
+            onOpenChange(false);
+            onSuccess?.();
+          }, 1500);
+        } else {
+          toast({
+            title: "Import Failed",
+            description: result.error ?? "Failed to import calls",
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       toast({
@@ -233,6 +294,7 @@ export function QuickCallDialog({
     setClinicPhone("");
     setDischargeSummary("");
     setJsonInput("");
+    setCallImmediately(false);
   };
 
   const handleClose = () => {
@@ -435,6 +497,23 @@ export function QuickCallDialog({
                   />
                 </div>
 
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="callImmediately"
+                    checked={callImmediately}
+                    onCheckedChange={(checked) =>
+                      setCallImmediately(checked === true)
+                    }
+                    disabled={isSubmitting}
+                  />
+                  <label
+                    htmlFor="callImmediately"
+                    className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Call immediately (instead of scheduling for later)
+                  </label>
+                </div>
+
                 <DialogFooter className="flex-col gap-2 sm:flex-row">
                   <Button
                     type="button"
@@ -455,12 +534,17 @@ export function QuickCallDialog({
                     {isSubmitting ? (
                       <>
                         <Spinner className="mr-2 h-4 w-4" />
-                        Importing...
+                        {callImmediately ? "Calling..." : "Importing..."}
+                      </>
+                    ) : callImmediately ? (
+                      <>
+                        <Phone className="mr-2 h-4 w-4" />
+                        Call Now
                       </>
                     ) : (
                       <>
                         <FileJson className="mr-2 h-4 w-4" />
-                        Import Calls
+                        Schedule Calls
                       </>
                     )}
                   </Button>
