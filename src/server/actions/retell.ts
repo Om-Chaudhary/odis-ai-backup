@@ -3,13 +3,15 @@
 import { createClient } from "~/lib/supabase/server";
 import { getUser } from "./auth";
 import {
-  sendCallWithPatientSchema,
+  sendCallSchema,
   scheduleCallSchema,
   listCallsSchema,
   getCallSchema,
-  type SendCallWithPatientInput,
+  importCallsSchema,
+  type SendCallInput,
   type ScheduleCallInput,
   type ListCallsInput,
+  type ImportCallsInput,
 } from "~/lib/retell/validators";
 import { createPhoneCall, getCall } from "~/lib/retell/client";
 import type { RetellCallResponse } from "~/lib/retell/client";
@@ -112,53 +114,16 @@ async function checkAdminAccess() {
  * - RLS policies automatically filter queries by created_by
  * - Maintains backwards compatibility for calls without patient
  */
-export async function sendCall(input: SendCallWithPatientInput) {
+export async function sendCall(input: SendCallInput) {
   try {
     // Validate input
-    const validated = sendCallWithPatientSchema.parse(input);
+    const validated = sendCallSchema.parse(input);
 
     // Check admin access and get user
     const user = await checkAdminAccess();
 
     // Get Supabase client
     const supabase = await createClient();
-
-    // Initialize variables with provided values
-    let finalVariables = { ...validated.variables };
-    let phoneNumber = validated.phoneNumber;
-    let patientId: string | null = null;
-
-    // If patientId provided, fetch patient and auto-populate variables
-    if (validated.patientId) {
-      const { data: patient, error: patientError } = await supabase
-        .from("call_patients")
-        .select("*")
-        .eq("id", validated.patientId)
-        .single();
-
-      if (patientError) {
-        console.error("Failed to fetch patient:", patientError);
-        throw new Error(`Patient not found: ${patientError.message}`);
-      }
-
-      if (patient) {
-        // Auto-populate variables from patient data
-        finalVariables = {
-          pet_name: patient.pet_name,
-          owner_name: patient.owner_name,
-          vet_name: patient.vet_name ?? "",
-          clinic_name: patient.clinic_name ?? "",
-          clinic_phone: patient.clinic_phone ?? "",
-          discharge_summary_content: patient.discharge_summary ?? "",
-          // Merge with any additional variables provided
-          ...validated.variables,
-        };
-
-        // Use patient's owner_phone as the call destination
-        phoneNumber = patient.owner_phone;
-        patientId = patient.id;
-      }
-    }
 
     // Get from number from env or use provided
     const fromNumber = validated.fromNumber ?? process.env.RETELL_FROM_NUMBER;
@@ -181,31 +146,30 @@ export async function sendCall(input: SendCallWithPatientInput) {
     // Create the call via Retell API
     const response = await createPhoneCall({
       from_number: fromNumber,
-      to_number: phoneNumber,
+      to_number: validated.phoneNumber,
       override_agent_id: agentId,
-      retell_llm_dynamic_variables: finalVariables,
+      retell_llm_dynamic_variables: validated.variables,
       metadata: validated.metadata,
       retries_on_no_answer: validated.retryOnBusy ? 2 : 0,
     });
 
-    // Store call in database with created_by set to current user
-    // RLS policies will automatically filter queries by this field
+    // Store call in database
     const { error } = await supabase
       .from("retell_calls")
       .insert({
         retell_call_id: response.call_id,
         agent_id: response.agent_id,
-        phone_number: phoneNumber,
-        phone_number_pretty: formatPhoneNumber(phoneNumber),
-        call_variables: finalVariables,
+        phone_number: validated.phoneNumber,
+        phone_number_pretty: formatPhoneNumber(validated.phoneNumber),
+        call_variables: validated.variables,
         metadata: validated.metadata,
         status: mapRetellStatus(response.call_status),
         start_timestamp: response.start_timestamp
           ? new Date(response.start_timestamp * 1000).toISOString()
           : null,
         retell_response: response as unknown,
-        created_by: user.id, // Set to current user for RLS filtering
-        patient_id: patientId, // Link to patient if provided
+        created_by: user.id,
+        patient_id: null, // Always null - standalone calls only
       })
       .select()
       .single();
@@ -220,8 +184,7 @@ export async function sendCall(input: SendCallWithPatientInput) {
       data: {
         callId: response.call_id,
         status: response.call_status,
-        phoneNumber: phoneNumber,
-        patientId: patientId,
+        phoneNumber: validated.phoneNumber,
       },
     };
   } catch (error) {
@@ -761,4 +724,85 @@ function formatPhoneNumber(phoneNumber: string): string {
 
   // International format
   return `+${cleaned}`;
+}
+
+/**
+ * Import calls from JSON array
+ * Creates scheduled calls in the database for each item
+ *
+ * @param jsonInput - Array of call objects or stringified JSON
+ * @returns Result with count of imported calls
+ */
+export async function importCallsFromJson(
+  jsonInput: string | ImportCallsInput,
+) {
+  try {
+    // Parse JSON if string provided
+    let callsData: ImportCallsInput;
+    if (typeof jsonInput === "string") {
+      try {
+        callsData = JSON.parse(jsonInput);
+      } catch {
+        throw new Error("Invalid JSON format");
+      }
+    } else {
+      callsData = jsonInput;
+    }
+
+    // Validate input
+    const validated = importCallsSchema.parse(callsData);
+
+    // Check admin access and get user
+    const user = await checkAdminAccess();
+
+    // Get Supabase client
+    const supabase = await createClient();
+
+    // Prepare calls for bulk insert
+    const callsToInsert = validated.map((call) => ({
+      retell_call_id: `scheduled_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+      agent_id: process.env.RETELL_AGENT_ID ?? "",
+      phone_number: call.phone_number,
+      phone_number_pretty: formatPhoneNumber(call.phone_number),
+      call_variables: {
+        pet_name: call.pet_name,
+        owner_name: call.owner_name ?? "",
+        vet_name: call.vet_name ?? "",
+        clinic_name: call.clinic_name ?? "",
+        clinic_phone: call.clinic_phone ?? "",
+        discharge_summary_content: call.discharge_summary_content ?? "",
+      },
+      metadata: {
+        notes: call.notes,
+      },
+      status: "scheduled",
+      created_by: user.id,
+      patient_id: null,
+    }));
+
+    // Bulk insert all calls
+    const { data: insertedCalls, error: dbError } = await supabase
+      .from("retell_calls")
+      .insert(callsToInsert)
+      .select();
+
+    if (dbError) {
+      console.error("Failed to import calls:", dbError);
+      throw new Error("Failed to import calls");
+    }
+
+    return {
+      success: true,
+      data: {
+        count: insertedCalls?.length ?? 0,
+        calls: insertedCalls,
+      },
+    };
+  } catch (error) {
+    console.error("Import calls error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to import calls",
+    };
+  }
 }

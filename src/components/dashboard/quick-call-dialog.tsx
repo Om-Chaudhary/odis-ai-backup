@@ -14,33 +14,32 @@ import { Label } from "~/components/ui/label";
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
 import { Spinner } from "~/components/ui/spinner";
-import { PatientSelect } from "./patient-select";
-import { sendCall, scheduleCall } from "~/server/actions/retell";
-import { Phone, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import {
+  sendCall,
+  scheduleCall,
+  importCallsFromJson,
+} from "~/server/actions/retell";
+import { Phone, CheckCircle2, Clock, FileJson } from "lucide-react";
 import { useToast } from "~/hooks/use-toast";
 
 interface QuickCallDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
-  onAddPatient?: () => void;
 }
 
 export function QuickCallDialog({
   open,
   onOpenChange,
   onSuccess,
-  onAddPatient,
 }: QuickCallDialogProps) {
   const { toast } = useToast();
-  const [selectedPatientId, setSelectedPatientId] = useState<
-    string | undefined
-  >();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Form fields for scheduled calls
+  // Form fields
   const [phoneNumber, setPhoneNumber] = useState("");
   const [petName, setPetName] = useState("");
   const [ownerName, setOwnerName] = useState("");
@@ -49,14 +48,16 @@ export function QuickCallDialog({
   const [clinicPhone, setClinicPhone] = useState("");
   const [dischargeSummary, setDischargeSummary] = useState("");
 
+  // JSON import field
+  const [jsonInput, setJsonInput] = useState("");
+
   const handleCallNow = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate input
-    if (!selectedPatientId && !phoneNumber) {
+    if (!phoneNumber) {
       toast({
         title: "Error",
-        description: "Please select a patient or enter a phone number",
+        description: "Phone number is required",
         variant: "destructive",
       });
       return;
@@ -65,11 +66,16 @@ export function QuickCallDialog({
     setIsSubmitting(true);
 
     try {
-      // Send call with patient ID or manual phone
       const result = await sendCall({
-        phoneNumber: phoneNumber ?? "", // Will be overridden by patient data if patientId provided
-        patientId: selectedPatientId,
-        variables: {},
+        phoneNumber,
+        variables: {
+          pet_name: petName,
+          owner_name: ownerName,
+          vet_name: vetName,
+          clinic_name: clinicName,
+          clinic_phone: clinicPhone,
+          discharge_summary_content: dischargeSummary,
+        },
         metadata: {},
         retryOnBusy: false,
         agentId: "",
@@ -79,13 +85,11 @@ export function QuickCallDialog({
         setSuccessMessage("Call initiated successfully!");
         setShowSuccess(true);
 
-        // Show success toast
         toast({
           title: "Call Initiated",
           description: `Call to ${result.data?.phoneNumber} has been started`,
         });
 
-        // Close dialog and reset after delay
         setTimeout(() => {
           setShowSuccess(false);
           resetForm();
@@ -112,12 +116,11 @@ export function QuickCallDialog({
   };
 
   const handleSchedule = async () => {
-    // Validate required fields for scheduling
-    if (!phoneNumber || !petName || !ownerName) {
+    if (!phoneNumber || !petName) {
       toast({
         title: "Error",
         description:
-          "Phone number, pet name, and owner name are required to schedule a call",
+          "Phone number and pet name are required to schedule a call",
         variant: "destructive",
       });
       return;
@@ -129,7 +132,7 @@ export function QuickCallDialog({
       const result = await scheduleCall({
         phoneNumber,
         petName,
-        ownerName,
+        ownerName: ownerName || "Unknown",
         vetName: vetName || undefined,
         clinicName: clinicName || undefined,
         clinicPhone: clinicPhone || undefined,
@@ -140,13 +143,11 @@ export function QuickCallDialog({
         setSuccessMessage("Call scheduled successfully!");
         setShowSuccess(true);
 
-        // Show success toast
         toast({
           title: "Call Scheduled",
           description: `Call for ${result.data?.petName} has been queued`,
         });
 
-        // Close dialog and reset after delay
         setTimeout(() => {
           setShowSuccess(false);
           resetForm();
@@ -172,8 +173,58 @@ export function QuickCallDialog({
     }
   };
 
+  const handleJsonImport = async () => {
+    if (!jsonInput.trim()) {
+      toast({
+        title: "Error",
+        description: "Please paste JSON data",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const result = await importCallsFromJson(jsonInput);
+
+      if (result.success) {
+        setSuccessMessage(
+          `Successfully imported ${result.data?.count ?? 0} call${(result.data?.count ?? 0) !== 1 ? "s" : ""}!`,
+        );
+        setShowSuccess(true);
+
+        toast({
+          title: "Import Successful",
+          description: `${result.data?.count ?? 0} call${(result.data?.count ?? 0) !== 1 ? "s" : ""} imported`,
+        });
+
+        setTimeout(() => {
+          setShowSuccess(false);
+          resetForm();
+          onOpenChange(false);
+          onSuccess?.();
+        }, 1500);
+      } else {
+        toast({
+          title: "Import Failed",
+          description: result.error ?? "Failed to import calls",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const resetForm = () => {
-    setSelectedPatientId(undefined);
     setPhoneNumber("");
     setPetName("");
     setOwnerName("");
@@ -181,6 +232,7 @@ export function QuickCallDialog({
     setClinicName("");
     setClinicPhone("");
     setDischargeSummary("");
+    setJsonInput("");
   };
 
   const handleClose = () => {
@@ -211,40 +263,21 @@ export function QuickCallDialog({
                 New Call
               </DialogTitle>
               <DialogDescription>
-                Call an existing patient or schedule a new call with patient
-                details.
+                Schedule a call manually or import from JSON
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleCallNow} className="space-y-6">
-              <div className="space-y-4">
-                {/* Quick Call with Existing Patient */}
-                <div className="space-y-2">
-                  <Label className="text-base font-semibold">
-                    Quick Call (Existing Patient)
-                  </Label>
-                  <PatientSelect
-                    value={selectedPatientId}
-                    onValueChange={setSelectedPatientId}
-                    onAddNew={onAddPatient}
-                    placeholder="Select a patient to call immediately"
-                  />
-                </div>
+            <Tabs defaultValue="manual" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="manual">Manual Entry</TabsTrigger>
+                <TabsTrigger value="json">
+                  <FileJson className="mr-2 h-4 w-4" />
+                  JSON Import
+                </TabsTrigger>
+              </TabsList>
 
-                {/* Divider */}
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background text-muted-foreground px-2">
-                      Or schedule a new call
-                    </span>
-                  </div>
-                </div>
-
-                {/* Patient Details for Scheduling */}
-                <div className="bg-muted/30 space-y-4 rounded-lg border p-4">
+              <TabsContent value="manual" className="space-y-4">
+                <form onSubmit={handleCallNow} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="phone">
@@ -256,7 +289,7 @@ export function QuickCallDialog({
                         placeholder="+1 (555) 123-4567"
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
-                        disabled={!!selectedPatientId || isSubmitting}
+                        disabled={isSubmitting}
                       />
                     </div>
 
@@ -269,20 +302,18 @@ export function QuickCallDialog({
                         placeholder="Fluffy"
                         value={petName}
                         onChange={(e) => setPetName(e.target.value)}
-                        disabled={!!selectedPatientId || isSubmitting}
+                        disabled={isSubmitting}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="ownerName">
-                        Owner Name <span className="text-red-500">*</span>
-                      </Label>
+                      <Label htmlFor="ownerName">Owner Name</Label>
                       <Input
                         id="ownerName"
                         placeholder="John Doe"
                         value={ownerName}
                         onChange={(e) => setOwnerName(e.target.value)}
-                        disabled={!!selectedPatientId || isSubmitting}
+                        disabled={isSubmitting}
                       />
                     </div>
 
@@ -293,7 +324,7 @@ export function QuickCallDialog({
                         placeholder="Dr. Smith"
                         value={vetName}
                         onChange={(e) => setVetName(e.target.value)}
-                        disabled={!!selectedPatientId || isSubmitting}
+                        disabled={isSubmitting}
                       />
                     </div>
 
@@ -304,7 +335,7 @@ export function QuickCallDialog({
                         placeholder="Pet Care Clinic"
                         value={clinicName}
                         onChange={(e) => setClinicName(e.target.value)}
-                        disabled={!!selectedPatientId || isSubmitting}
+                        disabled={isSubmitting}
                       />
                     </div>
 
@@ -316,7 +347,7 @@ export function QuickCallDialog({
                         placeholder="+1 (555) 987-6543"
                         value={clinicPhone}
                         onChange={(e) => setClinicPhone(e.target.value)}
-                        disabled={!!selectedPatientId || isSubmitting}
+                        disabled={isSubmitting}
                       />
                     </div>
                   </div>
@@ -328,85 +359,114 @@ export function QuickCallDialog({
                       placeholder="Enter discharge summary or medical notes..."
                       value={dischargeSummary}
                       onChange={(e) => setDischargeSummary(e.target.value)}
-                      disabled={!!selectedPatientId || isSubmitting}
+                      disabled={isSubmitting}
                       rows={3}
                     />
                   </div>
+
+                  <DialogFooter className="flex-col gap-2 sm:flex-row">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleClose}
+                      disabled={isSubmitting}
+                      className="w-full sm:w-auto"
+                    >
+                      Cancel
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={handleSchedule}
+                      disabled={isSubmitting || !phoneNumber || !petName}
+                      className="w-full sm:w-auto"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Spinner className="mr-2 h-4 w-4" />
+                          Scheduling...
+                        </>
+                      ) : (
+                        <>
+                          <Clock className="mr-2 h-4 w-4" />
+                          Schedule for Later
+                        </>
+                      )}
+                    </Button>
+
+                    <Button
+                      type="submit"
+                      disabled={isSubmitting || !phoneNumber}
+                      className="w-full sm:w-auto"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Spinner className="mr-2 h-4 w-4" />
+                          Calling...
+                        </>
+                      ) : (
+                        <>
+                          <Phone className="mr-2 h-4 w-4" />
+                          Call Now
+                        </>
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </TabsContent>
+
+              <TabsContent value="json" className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="jsonInput">
+                    Paste JSON Array
+                    <span className="text-muted-foreground ml-2 text-xs font-normal">
+                      (Array of call objects)
+                    </span>
+                  </Label>
+                  <Textarea
+                    id="jsonInput"
+                    placeholder={`[\n  {\n    "phone_number": "+1XXXXXXXXXX",\n    "pet_name": "Brownie",\n    "owner_name": "John Doe",\n    "vet_name": "Dr. Allen",\n    "clinic_name": "Delle Valle",\n    "clinic_phone": "+1925XXXXXXX",\n    "discharge_summary_content": "Brownie came in with limping"\n  }\n]`}
+                    value={jsonInput}
+                    onChange={(e) => setJsonInput(e.target.value)}
+                    disabled={isSubmitting}
+                    rows={12}
+                    className="font-mono text-xs"
+                  />
                 </div>
 
-                {/* Warning if patient selected */}
-                {selectedPatientId && (
-                  <div className="flex items-start gap-2 rounded-md border border-blue-500/50 bg-blue-50 p-3 dark:bg-blue-950/20">
-                    <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-400" />
-                    <div className="text-sm text-blue-600 dark:text-blue-400">
-                      <p className="font-medium">Patient selected</p>
-                      <p className="mt-1 text-xs">
-                        Patient details will be used. Form fields above are
-                        disabled.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
+                <DialogFooter className="flex-col gap-2 sm:flex-row">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleClose}
+                    disabled={isSubmitting}
+                    className="w-full sm:w-auto"
+                  >
+                    Cancel
+                  </Button>
 
-              <DialogFooter className="flex-col gap-2 sm:flex-row">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleClose}
-                  disabled={isSubmitting}
-                  className="w-full sm:w-auto"
-                >
-                  Cancel
-                </Button>
-
-                {/* Schedule button - only enabled when form filled or patient selected */}
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleSchedule}
-                  disabled={
-                    isSubmitting ||
-                    (!selectedPatientId &&
-                      (!phoneNumber || !petName || !ownerName))
-                  }
-                  className="w-full sm:w-auto"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Spinner className="mr-2 h-4 w-4" />
-                      Scheduling...
-                    </>
-                  ) : (
-                    <>
-                      <Clock className="mr-2 h-4 w-4" />
-                      Schedule for Later
-                    </>
-                  )}
-                </Button>
-
-                {/* Call Now button */}
-                <Button
-                  type="submit"
-                  disabled={
-                    isSubmitting || (!selectedPatientId && !phoneNumber)
-                  }
-                  className="w-full sm:w-auto"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Spinner className="mr-2 h-4 w-4" />
-                      Calling...
-                    </>
-                  ) : (
-                    <>
-                      <Phone className="mr-2 h-4 w-4" />
-                      Call Now
-                    </>
-                  )}
-                </Button>
-              </DialogFooter>
-            </form>
+                  <Button
+                    type="button"
+                    onClick={handleJsonImport}
+                    disabled={isSubmitting || !jsonInput.trim()}
+                    className="w-full sm:w-auto"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Spinner className="mr-2 h-4 w-4" />
+                        Importing...
+                      </>
+                    ) : (
+                      <>
+                        <FileJson className="mr-2 h-4 w-4" />
+                        Import Calls
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </TabsContent>
+            </Tabs>
           </>
         )}
       </DialogContent>

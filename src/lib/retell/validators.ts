@@ -181,3 +181,22 @@ export const scheduleCallSchema = z.object({
 });
 
 export type ScheduleCallInput = z.infer<typeof scheduleCallSchema>;
+
+/**
+ * Schema for importing calls from JSON
+ * Accepts array of call data without requiring owner_name
+ */
+export const importCallsSchema = z.array(
+  z.object({
+    phone_number: phoneNumberSchema,
+    pet_name: z.string().min(1, "Pet name is required"),
+    owner_name: z.string().optional(),
+    vet_name: z.string().optional(),
+    clinic_name: z.string().optional(),
+    clinic_phone: z.string().optional(),
+    discharge_summary_content: z.string().optional(),
+    notes: z.string().optional(),
+  }),
+);
+
+export type ImportCallsInput = z.infer<typeof importCallsSchema>;
