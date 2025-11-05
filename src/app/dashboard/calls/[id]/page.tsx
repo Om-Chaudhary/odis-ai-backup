@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -15,6 +15,7 @@ import {
   User,
   Tag,
   RefreshCw,
+  MessageSquare,
 } from "lucide-react";
 import {
   Card,
@@ -27,9 +28,22 @@ import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { Slider } from "~/components/ui/slider";
 import {
+  Conversation,
+  ConversationContent,
+  ConversationEmptyState,
+  ConversationScrollButton,
+} from "~/components/ui/conversation";
+import {
+  Message,
+  MessageContent,
+  MessageAvatar,
+} from "~/components/ui/message";
+import { Orb } from "~/components/ui/orb";
+import {
   fetchCall,
   refreshCallStatus,
   type CallDetailResponse,
+  type TranscriptTurn,
 } from "~/server/actions/retell";
 
 export default function CallDetailPage() {
@@ -52,6 +66,29 @@ export default function CallDetailPage() {
   const [isMuted, setIsMuted] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [audioLoading, setAudioLoading] = useState(false);
+
+  // Find active message based on audio current time
+  const activeMessageIndex = useMemo(() => {
+    if (!callData?.transcript_object || currentTime === 0) return -1;
+
+    // Find the message that contains the current playback time
+    for (let i = 0; i < callData.transcript_object.length; i++) {
+      const turn = callData.transcript_object[i];
+      if (!turn?.words || turn.words.length === 0) continue;
+
+      const firstWord = turn.words[0];
+      const lastWord = turn.words[turn.words.length - 1];
+      if (!firstWord || !lastWord) continue;
+
+      const startTime = firstWord.start;
+      const endTime = lastWord.end;
+
+      if (currentTime >= startTime && currentTime <= endTime) {
+        return i;
+      }
+    }
+    return -1;
+  }, [callData?.transcript_object, currentTime]);
 
   // Fetch call data
   useEffect(() => {
@@ -198,6 +235,26 @@ export default function CallDetailPage() {
 
     audio.playbackRate = nextRate;
     setPlaybackRate(nextRate);
+  };
+
+  const seekToMessage = (turn: TranscriptTurn) => {
+    const audio = audioRef.current;
+    if (!audio || !turn.words || turn.words.length === 0) return;
+
+    const firstWord = turn.words[0];
+    if (!firstWord) return;
+
+    // Seek to the start of this message
+    audio.currentTime = firstWord.start;
+    setCurrentTime(firstWord.start);
+
+    // Auto-play if not already playing
+    if (!isPlaying) {
+      audio.play().catch((err) => {
+        console.error("Error playing audio:", err);
+      });
+      setIsPlaying(true);
+    }
   };
 
   const downloadRecording = () => {
@@ -538,20 +595,116 @@ export default function CallDetailPage() {
           </Card>
         )}
 
-        {/* Transcript */}
-        {callData.transcript && (
+        {/* Interactive Conversation Timeline */}
+        {callData.transcript_object && callData.transcript_object.length > 0 ? (
           <Card className="border-gray-200 shadow-lg">
             <CardHeader className="border-b bg-gradient-to-r from-[#31aba3]/10 to-[#10b981]/10">
-              <CardTitle>Call Transcript</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-[#31aba3]" />
+                Conversation Timeline
+              </CardTitle>
+              <CardDescription>
+                Click on any message to jump to that point in the recording
+              </CardDescription>
             </CardHeader>
-            <CardContent className="pt-6">
-              <div className="prose max-w-none">
-                <div className="rounded-lg bg-gray-50 p-6 font-mono text-sm whitespace-pre-wrap">
-                  {callData.transcript}
-                </div>
-              </div>
+            <CardContent className="p-0">
+              <Conversation className="h-[600px]">
+                <ConversationContent>
+                  {callData.transcript_object.length === 0 ? (
+                    <ConversationEmptyState
+                      icon={<MessageSquare className="h-12 w-12" />}
+                      title="No conversation recorded"
+                      description="The transcript will appear here once the call is processed"
+                    />
+                  ) : (
+                    callData.transcript_object.map((turn, index) => {
+                      const isAgent = turn.role === "agent";
+                      const isActive = index === activeMessageIndex;
+
+                      return (
+                        <Message
+                          key={index}
+                          from={isAgent ? "assistant" : "user"}
+                          className={`cursor-pointer transition-all duration-200 ${
+                            isActive
+                              ? "bg-emerald-50/30 ring-2 ring-emerald-500 ring-offset-2"
+                              : "hover:bg-gray-50"
+                          }`}
+                          onClick={() => seekToMessage(turn)}
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              seekToMessage(turn);
+                            }
+                          }}
+                          aria-label={`${isAgent ? "Agent" : "User"} message: ${turn.content}`}
+                        >
+                          <MessageAvatar
+                            src={
+                              isAgent
+                                ? "/odis-logo.png"
+                                : "https://api.dicebear.com/7.x/avataaars/svg?seed=user"
+                            }
+                            name={isAgent ? "AI" : "User"}
+                          />
+                          <MessageContent
+                            variant="contained"
+                            className="relative"
+                          >
+                            {/* Show animated orb for agent messages when active */}
+                            {isAgent && isActive && isPlaying && (
+                              <div className="mb-2 flex justify-center">
+                                <Orb
+                                  className="h-16 w-16"
+                                  agentState="talking"
+                                  colors={["#31aba3", "#10b981"]}
+                                  volumeMode="manual"
+                                  manualOutput={isMuted ? 0 : 0.5}
+                                />
+                              </div>
+                            )}
+                            <p className="text-sm leading-relaxed">
+                              {turn.content}
+                            </p>
+                            {/* Show timestamp if available */}
+                            {turn.words && turn.words.length > 0 && (
+                              <div className="mt-2 flex items-center gap-1 text-xs text-gray-500">
+                                <Clock className="h-3 w-3" />
+                                <span>
+                                  {formatTime(turn.words[0]?.start ?? 0)}
+                                </span>
+                              </div>
+                            )}
+                          </MessageContent>
+                        </Message>
+                      );
+                    })
+                  )}
+                </ConversationContent>
+                <ConversationScrollButton />
+              </Conversation>
             </CardContent>
           </Card>
+        ) : (
+          callData.transcript && (
+            <Card className="border-gray-200 shadow-lg">
+              <CardHeader className="border-b bg-gradient-to-r from-[#31aba3]/10 to-[#10b981]/10">
+                <CardTitle>Call Transcript</CardTitle>
+                <CardDescription>
+                  Structured conversation timeline not available
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="prose max-w-none">
+                  <div className="rounded-lg bg-gray-50 p-6 font-mono text-sm whitespace-pre-wrap">
+                    {callData.transcript}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )
         )}
 
         {/* Call Analysis */}
