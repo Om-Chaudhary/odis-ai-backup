@@ -216,52 +216,54 @@ export default function CallsPage() {
 
       {/* Date Navigation */}
       <Card>
-        <CardContent className="flex items-center justify-between py-4">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={goToPreviousDay}
-              disabled={isLoading}
-              title="Previous day"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
+        <CardContent className="py-4">
+          <div className="flex flex-col items-center gap-4">
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={goToPreviousDay}
+                disabled={isLoading}
+                title="Previous day"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
 
-            <div className="min-w-[200px] text-center">
-              <p className="text-lg font-semibold">
-                {formatDisplayDate(selectedDate)}
-              </p>
-              <p className="text-muted-foreground text-xs">
-                {selectedDate.toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </p>
+              <div className="min-w-[250px] text-center">
+                <p className="text-lg font-semibold">
+                  {formatDisplayDate(selectedDate)}
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {selectedDate.toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </p>
+              </div>
+
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={goToNextDay}
+                disabled={isLoading || isToday(selectedDate)}
+                title="Next day"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
 
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={goToNextDay}
-              disabled={isLoading || isToday(selectedDate)}
-              title="Next day"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+            {!isToday(selectedDate) && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={goToToday}
+                disabled={isLoading}
+              >
+                Go to Today
+              </Button>
+            )}
           </div>
-
-          {!isToday(selectedDate) && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={goToToday}
-              disabled={isLoading}
-            >
-              Go to Today
-            </Button>
-          )}
         </CardContent>
       </Card>
 

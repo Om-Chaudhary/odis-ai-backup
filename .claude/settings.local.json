@@ -42,13 +42,18 @@
       "Bash(npx supabase:*)",
       "mcp__supabase__generate_typescript_types",
       "Bash(pnpm update-types:*)",
-      "Bash(pnpm lint:fix:*)"
+      "Bash(pnpm lint:fix:*)",
+      "mcp__retellai-mcp-server__list_calls",
+      "mcp__supabase__get_logs",
+      "mcp__supabase__list_edge_functions",
+      "mcp__supabase__get_edge_function",
+      "mcp__retellai-mcp-server__get_agent",
+      "WebFetch(domain:odisai.net)",
+      "Bash(pnpm build:*)"
     ],
     "deny": [],
     "ask": []
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "shadcn"
-  ]
+  "enabledMcpjsonServers": ["shadcn"]
 }

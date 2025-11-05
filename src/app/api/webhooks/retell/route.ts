@@ -7,13 +7,17 @@ import type { RetellCallResponse } from "~/lib/retell/client";
  * Retell AI Webhook Handler
  *
  * Receives real-time notifications from Retell AI when call events occur.
- * Events: call_started, call_ended
+ * Events: call_started, call_ended, call_analyzed
+ *
+ * - call_started: Triggered when a new call begins
+ * - call_ended: Triggered when a call completes (includes all data except call_analysis)
+ * - call_analyzed: Triggered when call analysis is complete (includes call_analysis)
  *
  * Documentation: https://docs.retellai.com/features/webhook-overview
  */
 
 interface RetellWebhookPayload {
-  event: "call_started" | "call_ended";
+  event: "call_started" | "call_ended" | "call_analyzed";
   call: RetellCallResponse;
 }
 
@@ -78,12 +82,18 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (findError || !existingCall) {
-      console.error(`Call not found in database: ${call.call_id}`, findError);
-      // Still return 200 to prevent retries
-      return NextResponse.json({
-        success: false,
-        message: "Call not found in database",
-      });
+      console.warn(
+        `Call not found in database: ${call.call_id}. This may be a call created outside the application (e.g., test call from Retell dashboard).`,
+        findError,
+      );
+      // Return 200 to prevent Retell from retrying
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Call not tracked in database",
+        },
+        { status: 200 },
+      );
     }
 
     // Calculate duration if timestamps are available
@@ -138,6 +148,22 @@ export async function POST(request: NextRequest) {
         ].includes(call.disconnection_reason ?? "")
       ) {
         updateData.status = "failed";
+      }
+    }
+
+    if (event === "call_analyzed") {
+      // Update with call analysis data
+      // This event is triggered after call_ended when analysis is complete
+      updateData.call_analysis = call.call_analysis
+        ? (call.call_analysis as unknown)
+        : null;
+
+      // Also update any other fields that might be present
+      if (call.transcript) {
+        updateData.transcript = call.transcript;
+      }
+      if (call.transcript_object) {
+        updateData.transcript_object = call.transcript_object as unknown;
       }
     }
 
