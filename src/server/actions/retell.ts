@@ -3,10 +3,10 @@
 import { createClient } from "~/lib/supabase/server";
 import { getUser } from "./auth";
 import {
-  sendCallSchema,
+  sendCallWithPatientSchema,
   listCallsSchema,
   getCallSchema,
-  type SendCallInput,
+  type SendCallWithPatientInput,
   type ListCallsInput,
 } from "~/lib/retell/validators";
 import { createPhoneCall, getCall } from "~/lib/retell/client";
@@ -49,6 +49,18 @@ export interface CallDetailResponse {
   retell_response: RetellCallResponse | null;
   created_at: string;
   created_by: string | null;
+  patient_id: string | null;
+  // Patient information (joined from call_patients table)
+  patient?: {
+    id: string;
+    pet_name: string;
+    owner_name: string;
+    owner_phone: string;
+    vet_name: string | null;
+    clinic_name: string | null;
+    clinic_phone: string | null;
+    discharge_summary: string | null;
+  } | null;
 }
 
 /**
@@ -91,17 +103,60 @@ async function checkAdminAccess() {
  *
  * This action:
  * - Validates admin access
+ * - Optionally fetches patient data if patientId provided
+ * - Auto-populates call_variables from patient data
  * - Creates call via Retell API
- * - Stores call in database with created_by set to current user
+ * - Stores call in database with created_by set to current user and optional patient_id
  * - RLS policies automatically filter queries by created_by
+ * - Maintains backwards compatibility for calls without patient
  */
-export async function sendCall(input: SendCallInput) {
+export async function sendCall(input: SendCallWithPatientInput) {
   try {
     // Validate input
-    const validated = sendCallSchema.parse(input);
+    const validated = sendCallWithPatientSchema.parse(input);
 
     // Check admin access and get user
     const user = await checkAdminAccess();
+
+    // Get Supabase client
+    const supabase = await createClient();
+
+    // Initialize variables with provided values
+    let finalVariables = { ...validated.variables };
+    let phoneNumber = validated.phoneNumber;
+    let patientId: string | null = null;
+
+    // If patientId provided, fetch patient and auto-populate variables
+    if (validated.patientId) {
+      const { data: patient, error: patientError } = await supabase
+        .from("call_patients")
+        .select("*")
+        .eq("id", validated.patientId)
+        .single();
+
+      if (patientError) {
+        console.error("Failed to fetch patient:", patientError);
+        throw new Error(`Patient not found: ${patientError.message}`);
+      }
+
+      if (patient) {
+        // Auto-populate variables from patient data
+        finalVariables = {
+          pet_name: patient.pet_name,
+          owner_name: patient.owner_name,
+          vet_name: patient.vet_name ?? "",
+          clinic_name: patient.clinic_name ?? "",
+          clinic_phone: patient.clinic_phone ?? "",
+          discharge_summary_content: patient.discharge_summary ?? "",
+          // Merge with any additional variables provided
+          ...validated.variables,
+        };
+
+        // Use patient's owner_phone as the call destination
+        phoneNumber = patient.owner_phone;
+        patientId = patient.id;
+      }
+    }
 
     // Get from number from env or use provided
     const fromNumber = validated.fromNumber ?? process.env.RETELL_FROM_NUMBER;
@@ -124,24 +179,23 @@ export async function sendCall(input: SendCallInput) {
     // Create the call via Retell API
     const response = await createPhoneCall({
       from_number: fromNumber,
-      to_number: validated.phoneNumber,
+      to_number: phoneNumber,
       override_agent_id: agentId,
-      retell_llm_dynamic_variables: validated.variables,
+      retell_llm_dynamic_variables: finalVariables,
       metadata: validated.metadata,
       retries_on_no_answer: validated.retryOnBusy ? 2 : 0,
     });
 
     // Store call in database with created_by set to current user
     // RLS policies will automatically filter queries by this field
-    const supabase = await createClient();
     const { error } = await supabase
       .from("retell_calls")
       .insert({
         retell_call_id: response.call_id,
         agent_id: response.agent_id,
-        phone_number: validated.phoneNumber,
-        phone_number_pretty: formatPhoneNumber(validated.phoneNumber),
-        call_variables: validated.variables,
+        phone_number: phoneNumber,
+        phone_number_pretty: formatPhoneNumber(phoneNumber),
+        call_variables: finalVariables,
         metadata: validated.metadata,
         status: mapRetellStatus(response.call_status),
         start_timestamp: response.start_timestamp
@@ -149,6 +203,7 @@ export async function sendCall(input: SendCallInput) {
           : null,
         retell_response: response as unknown,
         created_by: user.id, // Set to current user for RLS filtering
+        patient_id: patientId, // Link to patient if provided
       })
       .select()
       .single();
@@ -163,7 +218,8 @@ export async function sendCall(input: SendCallInput) {
       data: {
         callId: response.call_id,
         status: response.call_status,
-        phoneNumber: validated.phoneNumber,
+        phoneNumber: phoneNumber,
+        patientId: patientId,
       },
     };
   } catch (error) {
@@ -196,10 +252,23 @@ export async function fetchCalls(input?: ListCallsInput) {
 
     // Fetch from database using standard client
     // RLS policies automatically filter by created_by = auth.uid()
+    // Join with call_patients to include patient information
     const supabase = await createClient();
     let query = supabase
       .from("retell_calls")
-      .select("*")
+      .select(`
+        *,
+        patient:call_patients(
+          id,
+          pet_name,
+          owner_name,
+          owner_phone,
+          vet_name,
+          clinic_name,
+          clinic_phone,
+          discharge_summary
+        )
+      `)
       .order("created_at", { ascending: false });
 
     // Apply filters
@@ -341,6 +410,7 @@ export async function fetchCall(callId: string) {
         retell_response: retellCall,
         created_at: dbCall.created_at,
         created_by: dbCall.created_by,
+        patient_id: dbCall.patient_id ?? null,
       };
 
       return {
@@ -378,6 +448,7 @@ export async function fetchCall(callId: string) {
           : null,
         created_at: dbCall.created_at,
         created_by: dbCall.created_by,
+        patient_id: dbCall.patient_id ?? null,
       };
 
       return {

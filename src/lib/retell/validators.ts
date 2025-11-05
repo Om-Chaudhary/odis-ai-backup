@@ -101,3 +101,62 @@ export const getCallSchema = z.object({
 });
 
 export type GetCallInput = z.infer<typeof getCallSchema>;
+
+/**
+ * Schema for creating a new patient
+ */
+export const createPatientSchema = z.object({
+  pet_name: z.string().min(1, "Pet name is required"),
+  owner_name: z.string().min(1, "Owner name is required"),
+  owner_phone: phoneNumberSchema,
+  vet_name: z.string().optional(),
+  clinic_name: z.string().optional(),
+  clinic_phone: z.string().optional(),
+  discharge_summary: z.string().optional(),
+});
+
+export type CreatePatientInput = z.infer<typeof createPatientSchema>;
+
+/**
+ * Schema for updating an existing patient
+ */
+export const updatePatientSchema = z.object({
+  id: z.string().min(1, "Patient ID is required"),
+  pet_name: z.string().min(1, "Pet name is required").optional(),
+  owner_name: z.string().min(1, "Owner name is required").optional(),
+  owner_phone: phoneNumberSchema.optional(),
+  vet_name: z.string().optional().nullable(),
+  clinic_name: z.string().optional().nullable(),
+  clinic_phone: z.string().optional().nullable(),
+  discharge_summary: z.string().optional().nullable(),
+});
+
+export type UpdatePatientInput = z.infer<typeof updatePatientSchema>;
+
+/**
+ * Schema for getting a single patient
+ */
+export const getPatientSchema = z.object({
+  patientId: z.string().min(1, "Patient ID is required"),
+});
+
+export type GetPatientInput = z.infer<typeof getPatientSchema>;
+
+/**
+ * Schema for deleting a patient
+ */
+export const deletePatientSchema = z.object({
+  patientId: z.string().min(1, "Patient ID is required"),
+});
+
+export type DeletePatientInput = z.infer<typeof deletePatientSchema>;
+
+/**
+ * Schema for sending a call with optional patient reference
+ * Extends the original sendCallSchema
+ */
+export const sendCallWithPatientSchema = sendCallSchema.extend({
+  patientId: z.string().optional(),
+});
+
+export type SendCallWithPatientInput = z.infer<typeof sendCallWithPatientSchema>;

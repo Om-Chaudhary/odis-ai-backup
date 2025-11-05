@@ -37,11 +37,18 @@
       "mcp__shadcn__get_item_examples_from_registries",
       "Bash(pnpm typecheck:*)",
       "Bash(pnpm tsc:*)",
-      "Bash(pnpm eslint:*)"
+      "Bash(pnpm eslint:*)",
+      "mcp__shadcn__get_add_command_for_items",
+      "Bash(npx supabase:*)",
+      "mcp__supabase__generate_typescript_types",
+      "Bash(pnpm update-types:*)",
+      "Bash(pnpm lint:fix:*)"
     ],
     "deny": [],
     "ask": []
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["shadcn"]
+  "enabledMcpjsonServers": [
+    "shadcn"
+  ]
 }

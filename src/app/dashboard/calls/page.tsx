@@ -1,17 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import {
-  Phone,
-  PhoneOutgoing,
-  Loader2,
-  Calendar,
-  Clock,
-  ChevronRight,
-  RefreshCw,
-} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Phone, RefreshCw } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -20,461 +10,198 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import { Badge } from "~/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "~/components/ui/table";
 import { fetchCalls } from "~/server/actions/retell";
-import { toast } from "sonner";
+import type { CallDetailResponse } from "~/server/actions/retell";
 import { useCallPolling } from "~/hooks/use-call-polling";
-import { createClient } from "~/lib/supabase/client";
+import { QuickCallDialog } from "~/components/dashboard/quick-call-dialog";
+import { ActiveCallsSection } from "~/components/dashboard/active-calls-section";
+import { DateGroupSection } from "~/components/dashboard/date-group-section";
+import { toast } from "sonner";
 
-interface Call {
-  id: string;
-  retell_call_id: string;
-  agent_id: string;
-  phone_number: string;
-  phone_number_pretty: string | null;
-  status: string;
-  duration_seconds: number | null;
-  created_at: string;
-  created_by: string;
-  call_variables: Record<string, string>;
-}
-
-const statusColors: Record<string, string> = {
-  initiated: "bg-blue-500/10 text-blue-700 border-blue-500/20",
-  ringing: "bg-yellow-500/10 text-yellow-700 border-yellow-500/20",
-  in_progress: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
-  completed: "bg-green-500/10 text-green-700 border-green-500/20",
-  failed: "bg-red-500/10 text-red-700 border-red-500/20",
-  cancelled: "bg-gray-500/10 text-gray-700 border-gray-500/20",
-};
-
-// Active call statuses that require frequent polling
+// Active call statuses
 const ACTIVE_STATUSES = ["initiated", "ringing", "in_progress"];
 
-function formatDuration(seconds: number | null): string {
-  if (!seconds) return "N/A";
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, "0")}`;
-}
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-}
-
-function formatRelativeTime(date: Date): string {
-  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-
-  if (seconds < 10) return "just now";
-  if (seconds < 60) return `${seconds}s ago`;
-
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
-
-// Interactive Call Row Component
-interface CallRowProps {
-  call: Call;
-  currentUserId: string | null;
-}
-
-function CallRow({ call, currentUserId }: CallRowProps) {
-  const router = useRouter();
-  const [isHovered, setIsHovered] = useState(false);
-
-  const handleRowClick = () => {
-    router.push(`/dashboard/calls/${call.id}`);
-  };
-
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLTableRowElement>) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      handleRowClick();
-    }
-  };
-
-  const isOwnCall = currentUserId && call.created_by === currentUserId;
-
-  return (
-    <TableRow
-      key={call.id}
-      onClick={handleRowClick}
-      onKeyDown={handleKeyDown}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className="group cursor-pointer border-slate-200/40 transition-all duration-200 hover:bg-emerald-50/50 focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-0 focus-visible:outline-none"
-      role="button"
-      tabIndex={0}
-      aria-label={`Call details for ${call.phone_number_pretty ?? call.phone_number} - ${call.status}`}
-    >
-      <TableCell className="font-mono text-slate-900">
-        <div className="flex items-center gap-2">
-          {call.phone_number_pretty ?? call.phone_number}
-          {isOwnCall && (
-            <Badge
-              variant="outline"
-              className="border-emerald-200 bg-emerald-50 text-xs text-emerald-700"
-            >
-              You
-            </Badge>
-          )}
-          <ChevronRight
-            className={`h-4 w-4 text-emerald-500 transition-all duration-200 ${
-              isHovered
-                ? "translate-x-1 opacity-100"
-                : "translate-x-0 opacity-0"
-            }`}
-          />
-        </div>
-      </TableCell>
-      <TableCell>
-        <Badge
-          variant="outline"
-          className={statusColors[call.status] ?? statusColors.initiated}
-        >
-          {call.status.replace("_", " ")}
-        </Badge>
-      </TableCell>
-      <TableCell className="text-slate-600">
-        <div className="flex items-center gap-1">
-          <Clock className="h-3.5 w-3.5" />
-          {formatDuration(call.duration_seconds)}
-        </div>
-      </TableCell>
-      <TableCell className="text-slate-600">
-        <div className="flex items-center gap-1">
-          <Calendar className="h-3.5 w-3.5" />
-          {formatDate(call.created_at)}
-        </div>
-      </TableCell>
-      <TableCell className="text-slate-600">
-        {Object.keys(call.call_variables || {}).length > 0 ? (
-          <div className="flex gap-1">
-            {Object.entries(call.call_variables)
-              .slice(0, 2)
-              .map(([key, value]) => (
-                <Badge
-                  key={key}
-                  variant="secondary"
-                  className="bg-slate-100 text-xs text-slate-600"
-                >
-                  {key}: {String(value).slice(0, 10)}
-                  {String(value).length > 10 ? "..." : ""}
-                </Badge>
-              ))}
-            {Object.keys(call.call_variables).length > 2 && (
-              <Badge
-                variant="secondary"
-                className="bg-slate-100 text-xs text-slate-600"
-              >
-                +{Object.keys(call.call_variables).length - 2}
-              </Badge>
-            )}
-          </div>
-        ) : (
-          <span className="text-sm text-slate-400">None</span>
-        )}
-      </TableCell>
-    </TableRow>
-  );
-}
-
-export default function CallHistoryPage() {
-  const [calls, setCalls] = useState<Call[]>([]);
+export default function CallsPage() {
+  const [calls, setCalls] = useState<CallDetailResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedStatus, setSelectedStatus] = useState<string>("all");
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [showQuickCallDialog, setShowQuickCallDialog] = useState(false);
 
-  // Get current user ID on mount
-  useEffect(() => {
-    const getCurrentUser = async () => {
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setCurrentUserId(user?.id ?? null);
-    };
-    void getCurrentUser();
-  }, []);
-
-  // Track initial load with ref to avoid dependency on calls.length
-  const isInitialLoadRef = useRef(true);
-
-  // Track calls in ref to avoid recreating hasActiveCalls callback
-  const callsRef = useRef<Call[]>([]);
+  // Use refs for stable references in polling
+  const callsRef = useRef(calls);
   useEffect(() => {
     callsRef.current = calls;
   }, [calls]);
 
-  // Load calls function - FIXED: Removed calls.length from dependencies
-  const loadCalls = useCallback(async () => {
-    // Don't show loading spinner on background refreshes
-    const isInitialLoad = isInitialLoadRef.current;
-    if (isInitialLoad) {
+  // Load calls data
+  const loadCalls = useCallback(async (isInitial = false) => {
+    if (isInitial) {
       setIsLoading(true);
     }
 
     try {
-      const result = await fetchCalls({
-        status: selectedStatus as
-          | "all"
-          | "initiated"
-          | "ringing"
-          | "in_progress"
-          | "completed"
-          | "failed"
-          | "cancelled",
-        limit: 50,
-        offset: 0,
-      });
+      const result = await fetchCalls();
 
-      if (result.success) {
-        // FIXED: Always update state - let React handle optimization
-        setCalls(result.data as Call[]);
-        isInitialLoadRef.current = false; // Mark as no longer initial load
+      if (result.success && result.data) {
+        setCalls(result.data as CallDetailResponse[]);
       } else {
-        toast.error("Failed to load calls", {
-          description: result.error,
-        });
+        if (isInitial) {
+          toast.error(result.error ?? "Failed to load calls");
+        }
       }
-    } catch (error) {
-      toast.error("Failed to load calls", {
-        description: error instanceof Error ? error.message : "Unknown error",
-      });
+    } catch {
+      if (isInitial) {
+        toast.error("Failed to load calls");
+      }
     } finally {
-      if (isInitialLoad) {
+      if (isInitial) {
         setIsLoading(false);
       }
     }
-  }, [selectedStatus]);
+  }, []);
 
-  // Determine if there are active calls that need frequent polling
-  // FIXED: Use ref to avoid recreating callback on every render
+  // Check if there are any active calls
   const hasActiveCalls = useCallback(() => {
     return callsRef.current.some((call) =>
-      ACTIVE_STATUSES.includes(call.status),
+      ACTIVE_STATUSES.includes(call.status)
     );
-  }, []); // Empty dependencies - stable reference
+  }, []);
 
-  // Setup auto-refresh polling
-  const { isPolling, lastUpdated, refresh, isRefreshing } = useCallPolling({
-    enabled: true,
-    interval: 5000, // Poll every 5 seconds when active calls exist
-    idleInterval: 30000, // Poll every 30 seconds when no active calls
+  // Auto-refresh with adaptive polling
+  const { isRefreshing, refresh } = useCallPolling({
     onPoll: loadCalls,
     hasActiveCalls,
-    pauseWhenHidden: true,
   });
 
   // Initial load
   useEffect(() => {
-    void loadCalls();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedStatus]); // Only reload when filter changes
+    void loadCalls(true);
+  }, [loadCalls]);
 
-  // Memoize active calls count for UI display
-  const activeCallsCount = useMemo(() => {
-    return calls.filter((call) => ACTIVE_STATUSES.includes(call.status)).length;
-  }, [calls]);
+  // Separate active and historical calls
+  const activeCalls = calls.filter((call) =>
+    ACTIVE_STATUSES.includes(call.status)
+  );
+
+  const historicalCalls = calls.filter(
+    (call) => !ACTIVE_STATUSES.includes(call.status)
+  );
+
+  // Handle successful call creation
+  const handleCallSuccess = () => {
+    void loadCalls();
+    toast.success("Call initiated successfully!");
+  };
 
   return (
-    <div className="space-y-8">
+    <div className="container mx-auto py-8 space-y-8">
       {/* Header */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-gradient-to-br from-emerald-50 to-teal-50 p-2">
-              <Phone className="h-6 w-6 text-emerald-600" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight text-slate-800">
-                Call Management
-              </h1>
-              <p className="text-base text-slate-600">
-                View and manage all OdisAI calls
-              </p>
-            </div>
-          </div>
-          <Link href="/dashboard/calls/send">
-            <Button className="bg-gradient-to-r from-[#31aba3] to-[#10b981] text-white shadow-xl transition-all hover:scale-105 hover:from-[#2a9a92] hover:to-[#0d9488] hover:shadow-2xl hover:shadow-[#31aba3]/40">
-              <PhoneOutgoing className="mr-2 h-4 w-4" />
-              Send Call
-            </Button>
-          </Link>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Call History</h1>
+          <p className="text-muted-foreground mt-1">
+            Manage and monitor your patient calls
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* Manual Refresh */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => void refresh()}
+            disabled={isRefreshing}
+            title="Refresh calls"
+          >
+            <RefreshCw
+              className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
+            />
+          </Button>
+
+          {/* New Call Button */}
+          <Button onClick={() => setShowQuickCallDialog(true)} className="gap-2">
+            <Phone className="w-4 h-4" />
+            New Call
+          </Button>
         </div>
       </div>
 
-      {/* Filters */}
-      <Card className="border-slate-200/60 bg-white/90 shadow-xl backdrop-blur-md">
-        <CardContent className="p-4">
-          <div className="flex gap-2">
-            {[
-              "all",
-              "initiated",
-              "ringing",
-              "in_progress",
-              "completed",
-              "failed",
-            ].map((status) => (
-              <Button
-                key={status}
-                variant={selectedStatus === status ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedStatus(status)}
-                className={
-                  selectedStatus === status
-                    ? "bg-gradient-to-r from-[#31aba3] to-[#10b981] text-white"
-                    : "border-slate-300 hover:bg-emerald-50"
-                }
-              >
-                {status.replace("_", " ").charAt(0).toUpperCase() +
-                  status.slice(1).replace("_", " ")}
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Auto-refresh indicator */}
+      {isRefreshing && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <RefreshCw className="w-3 h-3 animate-spin" />
+          <span>Refreshing calls...</span>
+        </div>
+      )}
 
-      {/* Call History Table */}
-      <Card className="relative overflow-hidden border-slate-200/60 bg-white/90 shadow-xl backdrop-blur-md">
-        <div
-          className="absolute inset-0 opacity-5"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(49, 171, 163, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)",
-          }}
-        />
-
-        <CardHeader className="relative z-10 border-b border-slate-200/60 bg-gradient-to-r from-emerald-50/80 to-teal-50/50">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-xl font-semibold text-slate-900">
-                Call History
-              </CardTitle>
-              <CardDescription className="text-slate-600">
-                {calls.length} {calls.length === 1 ? "call" : "calls"} found
-                {activeCallsCount > 0 && (
-                  <span className="ml-2 text-emerald-600">
-                    ({activeCallsCount} active)
-                  </span>
-                )}{" "}
-                - Click on any row to view details
-              </CardDescription>
+      {/* Loading state */}
+      {isLoading ? (
+        <Card>
+          <CardContent className="py-12">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <RefreshCw className="w-8 h-8 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Loading calls...</p>
             </div>
-
-            {/* Auto-refresh status and manual refresh button */}
-            <div className="flex items-center gap-3">
-              {lastUpdated && (
-                <div className="flex items-center gap-2 text-sm text-slate-500">
-                  <div
-                    className={`h-2 w-2 rounded-full ${
-                      isPolling
-                        ? "animate-pulse bg-emerald-500"
-                        : "bg-slate-300"
-                    }`}
-                  />
-                  <span>
-                    Updated {formatRelativeTime(lastUpdated)}
-                    {isPolling && activeCallsCount > 0 && " (5s)"}
-                    {isPolling && activeCallsCount === 0 && " (30s)"}
-                  </span>
-                </div>
-              )}
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => void refresh()}
-                disabled={isRefreshing}
-                className="border-slate-300 hover:bg-emerald-50"
-              >
-                <RefreshCw
-                  className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
-                />
-                <span className="ml-2">Refresh</span>
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="relative z-10 p-0">
-          {isLoading ? (
-            <div className="flex items-center justify-center p-12">
-              <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
-              <span className="ml-3 text-slate-600">Loading calls...</span>
-            </div>
-          ) : calls.length === 0 ? (
-            <div className="p-12 text-center">
-              <Phone className="mx-auto mb-4 h-12 w-12 text-slate-300" />
-              <h3 className="mb-2 text-lg font-semibold text-slate-700">
-                No calls found
-              </h3>
-              <p className="mb-6 text-slate-500">
-                Get started by sending your first call
-              </p>
-              <Link href="/dashboard/calls/send">
-                <Button className="bg-gradient-to-r from-[#31aba3] to-[#10b981] text-white">
-                  <PhoneOutgoing className="mr-2 h-4 w-4" />
-                  Send Call
-                </Button>
-              </Link>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="border-slate-200/60">
-                  <TableHead className="font-semibold text-slate-700">
-                    Phone Number
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-700">
-                    Status
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-700">
-                    Duration
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-700">
-                    Date & Time
-                  </TableHead>
-                  <TableHead className="font-semibold text-slate-700">
-                    Variables
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {calls.map((call) => (
-                  <CallRow
-                    key={call.id}
-                    call={call}
-                    currentUserId={currentUserId}
-                  />
-                ))}
-              </TableBody>
-            </Table>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          {/* Active Calls Section (pinned at top) */}
+          {activeCalls.length > 0 && (
+            <ActiveCallsSection calls={activeCalls} />
           )}
-        </CardContent>
-      </Card>
+
+          {/* Call History with Date Grouping */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Call History</CardTitle>
+              <CardDescription>
+                {historicalCalls.length > 0
+                  ? `Showing ${historicalCalls.length} historical ${
+                      historicalCalls.length === 1 ? "call" : "calls"
+                    }`
+                  : "No historical calls yet"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DateGroupSection calls={historicalCalls} />
+            </CardContent>
+          </Card>
+
+          {/* Empty state for first-time users */}
+          {calls.length === 0 && (
+            <Card className="border-dashed">
+              <CardContent className="py-16">
+                <div className="flex flex-col items-center justify-center gap-6 text-center">
+                  <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Phone className="w-10 h-10 text-primary" />
+                  </div>
+                  <div className="space-y-2 max-w-md">
+                    <h3 className="text-xl font-semibold">No calls yet</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Get started by creating your first patient and initiating a
+                      call. You can manage patient information and make calls
+                      directly from this dashboard.
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button onClick={() => setShowQuickCallDialog(true)} className="gap-2">
+                      <Phone className="w-4 h-4" />
+                      Start First Call
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
+
+      {/* Quick Call Dialog */}
+      <QuickCallDialog
+        open={showQuickCallDialog}
+        onOpenChange={setShowQuickCallDialog}
+        onSuccess={handleCallSuccess}
+      />
     </div>
   );
 }
