@@ -104,8 +104,7 @@ export const columns: ColumnDef<CallDetailResponse>[] = [
       );
     },
     filterFn: (row, id, value: string[]) => {
-      const cellValue = row.getValue(id);
-      return value.includes(cellValue);
+      return value.includes(row.getValue(id));
     },
   },
   {
@@ -123,8 +122,11 @@ export const columns: ColumnDef<CallDetailResponse>[] = [
       );
     },
     cell: ({ row }) => {
-      const duration = row.getValue("duration_seconds");
-      return <span className="text-sm">{formatDuration(duration)}</span>;
+      return (
+        <span className="text-sm">
+          {formatDuration(row.getValue("duration_seconds"))}
+        </span>
+      );
     },
   },
   {
@@ -142,7 +144,7 @@ export const columns: ColumnDef<CallDetailResponse>[] = [
       );
     },
     cell: ({ row }) => {
-      const timestamp = row.getValue("created_at");
+      const timestamp = row.getValue<string>("created_at");
       const group = getDateGroup(timestamp);
 
       return (
