@@ -25,6 +25,8 @@
     "@cult": "https://cult-ui.com/r/{name}.json",
     "@kibo": "https://www.kibo-ui.com/r/{name}.json",
     "@reui": "https://reui.io/r/{name}.json",
-    "@magicui": "https://magicui.com/r/{name}.json"
+    "@magicui": "https://magicui.com/r/{name}.json",
+    "@elevenlabs": "https://ui.elevenlabs.io/r/{name}.json",
+    "@alpine": "https://alpine-registry.vercel.app/r/{name}.json"
   }
 }

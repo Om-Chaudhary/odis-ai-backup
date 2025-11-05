@@ -13,6 +13,19 @@ import { createPhoneCall, getCall } from "~/lib/retell/client";
 import type { RetellCallResponse } from "~/lib/retell/client";
 
 /**
+ * Type definition for a single turn in the conversation transcript
+ */
+export interface TranscriptTurn {
+  role: "agent" | "user";
+  content: string;
+  words?: Array<{
+    word: string;
+    start: number;
+    end: number;
+  }>;
+}
+
+/**
  * Enhanced type for call details with complete data from Retell API
  */
 export interface CallDetailResponse {
@@ -27,7 +40,7 @@ export interface CallDetailResponse {
   end_timestamp: string | null;
   recording_url: string | null;
   transcript: string | null;
-  transcript_object: RetellCallResponse["transcript_object"] | null;
+  transcript_object: TranscriptTurn[] | null;
   call_analysis: RetellCallResponse["call_analysis"] | null;
   disconnection_reason: string | null;
   public_log_url: string | null;
@@ -75,13 +88,19 @@ async function checkAdminAccess() {
 
 /**
  * Send a new outbound call via Retell AI
+ *
+ * This action:
+ * - Validates admin access
+ * - Creates call via Retell API
+ * - Stores call in database with created_by set to current user
+ * - RLS policies automatically filter queries by created_by
  */
 export async function sendCall(input: SendCallInput) {
   try {
     // Validate input
     const validated = sendCallSchema.parse(input);
 
-    // Check admin access
+    // Check admin access and get user
     const user = await checkAdminAccess();
 
     // Get from number from env or use provided
@@ -112,7 +131,8 @@ export async function sendCall(input: SendCallInput) {
       retries_on_no_answer: validated.retryOnBusy ? 2 : 0,
     });
 
-    // Store call in database
+    // Store call in database with created_by set to current user
+    // RLS policies will automatically filter queries by this field
     const supabase = await createClient();
     const { error } = await supabase
       .from("retell_calls")
@@ -128,7 +148,7 @@ export async function sendCall(input: SendCallInput) {
           ? new Date(response.start_timestamp * 1000).toISOString()
           : null,
         retell_response: response as unknown,
-        created_by: user.id,
+        created_by: user.id, // Set to current user for RLS filtering
       })
       .select()
       .single();
@@ -157,6 +177,12 @@ export async function sendCall(input: SendCallInput) {
 
 /**
  * List all calls with optional filters
+ *
+ * This action:
+ * - Uses createClient() to respect RLS policies
+ * - RLS automatically filters by created_by = auth.uid()
+ * - Only returns calls created by the current user
+ * - Admin check ensures only admins can list calls
  */
 export async function fetchCalls(input?: ListCallsInput) {
   try {
@@ -168,7 +194,8 @@ export async function fetchCalls(input?: ListCallsInput) {
       ? listCallsSchema.parse(input)
       : listCallsSchema.parse({});
 
-    // Fetch from database
+    // Fetch from database using standard client
+    // RLS policies automatically filter by created_by = auth.uid()
     const supabase = await createClient();
     let query = supabase
       .from("retell_calls")
@@ -223,9 +250,11 @@ export async function fetchCalls(input?: ListCallsInput) {
  * Get complete details of a specific call with fresh data from Retell API
  *
  * This action:
+ * - Uses createClient() to respect RLS policies
+ * - RLS automatically filters by created_by = auth.uid()
  * - Always fetches fresh data from Retell API to get latest recording URL and transcript
- * - Updates database with latest status, duration, recording URL, and analysis
- * - Returns complete call details for the detail page
+ * - Updates database with latest status, duration, recording URL, transcript_object, and analysis
+ * - Returns complete call details including transcript_object for the detail page
  * - Handles cases where recording or transcript is not ready yet
  */
 export async function fetchCall(callId: string) {
@@ -236,7 +265,8 @@ export async function fetchCall(callId: string) {
     // Check admin access
     await checkAdminAccess();
 
-    // Fetch from database
+    // Fetch from database using standard client
+    // RLS policies automatically filter by created_by = auth.uid()
     const supabase = await createClient();
     const { data: dbCall, error } = await supabase
       .from("retell_calls")
@@ -261,7 +291,7 @@ export async function fetchCall(callId: string) {
       // Map status
       const mappedStatus = mapRetellStatus(retellCall.call_status);
 
-      // Update database with latest info including recording URL and transcript
+      // Update database with latest info including recording URL, transcript, and transcript_object
       await supabase
         .from("retell_calls")
         .update({
@@ -284,7 +314,7 @@ export async function fetchCall(callId: string) {
         })
         .eq("id", validated.callId);
 
-      // Return enhanced call details
+      // Return enhanced call details with properly typed transcript_object
       const enhancedData: CallDetailResponse = {
         id: dbCall.id,
         retell_call_id: dbCall.retell_call_id,
@@ -301,7 +331,8 @@ export async function fetchCall(callId: string) {
           : null,
         recording_url: retellCall.recording_url ?? null,
         transcript: retellCall.transcript ?? null,
-        transcript_object: retellCall.transcript_object ?? null,
+        transcript_object:
+          (retellCall.transcript_object as TranscriptTurn[]) ?? null,
         call_analysis: retellCall.call_analysis ?? null,
         disconnection_reason: retellCall.disconnection_reason ?? null,
         public_log_url: retellCall.public_log_url ?? null,
@@ -333,7 +364,7 @@ export async function fetchCall(callId: string) {
         recording_url: dbCall.recording_url ?? null,
         transcript: dbCall.transcript ?? null,
         transcript_object: dbCall.transcript_object
-          ? (dbCall.transcript_object as RetellCallResponse["transcript_object"])
+          ? (dbCall.transcript_object as TranscriptTurn[])
           : null,
         call_analysis: dbCall.call_analysis
           ? (dbCall.call_analysis as RetellCallResponse["call_analysis"])
@@ -368,6 +399,8 @@ export async function fetchCall(callId: string) {
  * Lightweight status check for real-time polling
  *
  * This action:
+ * - Uses createClient() to respect RLS policies
+ * - RLS automatically filters by created_by = auth.uid()
  * - Performs quick status check without fetching full call details
  * - Updates only status and duration in database
  * - Returns minimal data for UI status updates
@@ -383,6 +416,7 @@ export async function refreshCallStatus(callId: string) {
     await checkAdminAccess();
 
     // Fetch call from database to get Retell call ID
+    // RLS policies automatically filter by created_by = auth.uid()
     const supabase = await createClient();
     const { data: dbCall, error } = await supabase
       .from("retell_calls")

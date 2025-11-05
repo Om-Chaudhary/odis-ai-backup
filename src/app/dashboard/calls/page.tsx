@@ -32,6 +32,7 @@ import {
 import { fetchCalls } from "~/server/actions/retell";
 import { toast } from "sonner";
 import { useCallPolling } from "~/hooks/use-call-polling";
+import { createClient } from "~/lib/supabase/client";
 
 interface Call {
   id: string;
@@ -42,6 +43,7 @@ interface Call {
   status: string;
   duration_seconds: number | null;
   created_at: string;
+  created_by: string;
   call_variables: Record<string, string>;
 }
 
@@ -95,9 +97,10 @@ function formatRelativeTime(date: Date): string {
 // Interactive Call Row Component
 interface CallRowProps {
   call: Call;
+  currentUserId: string | null;
 }
 
-function CallRow({ call }: CallRowProps) {
+function CallRow({ call, currentUserId }: CallRowProps) {
   const router = useRouter();
   const [isHovered, setIsHovered] = useState(false);
 
@@ -111,6 +114,8 @@ function CallRow({ call }: CallRowProps) {
       handleRowClick();
     }
   };
+
+  const isOwnCall = currentUserId && call.created_by === currentUserId;
 
   return (
     <TableRow
@@ -127,6 +132,14 @@ function CallRow({ call }: CallRowProps) {
       <TableCell className="font-mono text-slate-900">
         <div className="flex items-center gap-2">
           {call.phone_number_pretty ?? call.phone_number}
+          {isOwnCall && (
+            <Badge
+              variant="outline"
+              className="border-emerald-200 bg-emerald-50 text-xs text-emerald-700"
+            >
+              You
+            </Badge>
+          )}
           <ChevronRight
             className={`h-4 w-4 text-emerald-500 transition-all duration-200 ${
               isHovered
@@ -192,6 +205,19 @@ export default function CallHistoryPage() {
   const [calls, setCalls] = useState<Call[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Get current user ID on mount
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id ?? null);
+    };
+    void getCurrentUser();
+  }, []);
 
   // Track initial load with ref to avoid dependency on calls.length
   const isInitialLoadRef = useRef(true);
@@ -438,7 +464,11 @@ export default function CallHistoryPage() {
               </TableHeader>
               <TableBody>
                 {calls.map((call) => (
-                  <CallRow key={call.id} call={call} />
+                  <CallRow
+                    key={call.id}
+                    call={call}
+                    currentUserId={currentUserId}
+                  />
                 ))}
               </TableBody>
             </Table>
