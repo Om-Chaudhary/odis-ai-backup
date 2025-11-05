@@ -11,6 +11,7 @@ import { formatDateInGroup, getDateGroup } from "~/lib/utils/date-grouping";
 
 // Status badge colors
 const STATUS_VARIANTS = {
+  scheduled: "secondary",
   completed: "default",
   failed: "destructive",
   cancelled: "secondary",
@@ -42,7 +43,7 @@ export const columns: ColumnDef<CallDetailResponse>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="hover:bg-transparent px-0 font-semibold"
+          className="px-0 font-semibold hover:bg-transparent"
         >
           Pet Name
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -73,7 +74,7 @@ export const columns: ColumnDef<CallDetailResponse>[] = [
       const ownerName =
         call.patient?.owner_name ?? call.call_variables?.owner_name ?? "-";
 
-      return <span className="text-sm text-muted-foreground">{ownerName}</span>;
+      return <span className="text-muted-foreground text-sm">{ownerName}</span>;
     },
   },
   {
@@ -81,13 +82,10 @@ export const columns: ColumnDef<CallDetailResponse>[] = [
     header: "Phone Number",
     cell: ({ row }) => {
       const call = row.original;
-      const phone =
-        call.patient?.owner_phone ?? call.phone_number;
+      const phone = call.patient?.owner_phone ?? call.phone_number;
 
       return (
-        <span className="font-mono text-sm">
-          {formatPhoneNumber(phone)}
-        </span>
+        <span className="font-mono text-sm">{formatPhoneNumber(phone)}</span>
       );
     },
   },
@@ -95,18 +93,18 @@ export const columns: ColumnDef<CallDetailResponse>[] = [
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
-      const status = row.getValue("status") as string;
+      const status = row.getValue("status");
       const variant =
         STATUS_VARIANTS[status as keyof typeof STATUS_VARIANTS] ?? "outline";
 
       return (
         <Badge variant={variant} className="capitalize">
-          {status.replace(/_/g, " ")}
+          {String(status).replace(/_/g, " ")}
         </Badge>
       );
     },
     filterFn: (row, id, value: string[]) => {
-      const cellValue = row.getValue(id) as string;
+      const cellValue = row.getValue(id);
       return value.includes(cellValue);
     },
   },
@@ -117,7 +115,7 @@ export const columns: ColumnDef<CallDetailResponse>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="hover:bg-transparent px-0"
+          className="px-0 hover:bg-transparent"
         >
           Duration
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -136,7 +134,7 @@ export const columns: ColumnDef<CallDetailResponse>[] = [
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="hover:bg-transparent px-0"
+          className="px-0 hover:bg-transparent"
         >
           Time
           <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -148,7 +146,7 @@ export const columns: ColumnDef<CallDetailResponse>[] = [
       const group = getDateGroup(timestamp);
 
       return (
-        <span className="text-sm text-muted-foreground">
+        <span className="text-muted-foreground text-sm">
           {formatDateInGroup(timestamp, group)}
         </span>
       );
@@ -164,14 +162,14 @@ export const columns: ColumnDef<CallDetailResponse>[] = [
           {call.patient && (
             <Link href={`/dashboard/calls/${call.id}`}>
               <Button size="sm" variant="ghost" className="gap-2">
-                <Phone className="w-3 h-3" />
+                <Phone className="h-3 w-3" />
                 <span className="sr-only">Call again</span>
               </Button>
             </Link>
           )}
           <Link href={`/dashboard/calls/${call.id}`}>
             <Button size="sm" variant="ghost" className="gap-2">
-              <ExternalLink className="w-3 h-3" />
+              <ExternalLink className="h-3 w-3" />
               View
             </Button>
           </Link>

@@ -4,9 +4,11 @@ import { createClient } from "~/lib/supabase/server";
 import { getUser } from "./auth";
 import {
   sendCallWithPatientSchema,
+  scheduleCallSchema,
   listCallsSchema,
   getCallSchema,
   type SendCallWithPatientInput,
+  type ScheduleCallInput,
   type ListCallsInput,
 } from "~/lib/retell/validators";
 import { createPhoneCall, getCall } from "~/lib/retell/client";
@@ -232,6 +234,181 @@ export async function sendCall(input: SendCallWithPatientInput) {
 }
 
 /**
+ * Schedule a call for later (saves to DB without calling Retell API)
+ *
+ * This action:
+ * - Validates admin access
+ * - Fetches patient data and validates it exists
+ * - Creates a database record with status "scheduled"
+ * - Does NOT call Retell API (call is queued for later)
+ * - Maintains backwards compatibility
+ */
+export async function scheduleCall(input: ScheduleCallInput) {
+  try {
+    // Validate input
+    const validated = scheduleCallSchema.parse(input);
+
+    // Check admin access and get user
+    const user = await checkAdminAccess();
+
+    // Get Supabase client
+    const supabase = await createClient();
+
+    // Fetch patient to validate and get data
+    const { data: patient, error: patientError } = await supabase
+      .from("call_patients")
+      .select("*")
+      .eq("id", validated.patientId)
+      .single();
+
+    if (patientError) {
+      console.error("Failed to fetch patient:", patientError);
+      throw new Error(`Patient not found: ${patientError.message}`);
+    }
+
+    if (!patient) {
+      throw new Error("Patient not found");
+    }
+
+    // Prepare call variables from patient data
+    const callVariables = {
+      pet_name: patient.pet_name,
+      owner_name: patient.owner_name,
+      vet_name: patient.vet_name ?? "",
+      clinic_name: patient.clinic_name ?? "",
+      clinic_phone: patient.clinic_phone ?? "",
+      discharge_summary_content: patient.discharge_summary ?? "",
+    };
+
+    // Store scheduled call in database (without calling Retell)
+    const { data: scheduledCall, error: dbError } = await supabase
+      .from("retell_calls")
+      .insert({
+        retell_call_id: `scheduled_${Date.now()}_${Math.random().toString(36).substring(7)}`, // Temporary ID
+        agent_id: process.env.RETELL_AGENT_ID ?? "",
+        phone_number: patient.owner_phone,
+        phone_number_pretty: formatPhoneNumber(patient.owner_phone),
+        call_variables: callVariables,
+        metadata: {
+          notes: validated.notes,
+          scheduled_for: validated.scheduledFor?.toISOString(),
+        },
+        status: "scheduled",
+        created_by: user.id,
+        patient_id: patient.id,
+      })
+      .select()
+      .single();
+
+    if (dbError) {
+      console.error("Failed to store scheduled call:", dbError);
+      throw new Error("Failed to schedule call");
+    }
+
+    return {
+      success: true,
+      data: {
+        callId: scheduledCall.id,
+        patientId: patient.id,
+        petName: patient.pet_name,
+        phoneNumber: patient.owner_phone,
+      },
+    };
+  } catch (error) {
+    console.error("Schedule call error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to schedule call",
+    };
+  }
+}
+
+/**
+ * Initiate a scheduled call (transition from "scheduled" to actual call)
+ *
+ * This action:
+ * - Fetches the scheduled call from DB
+ * - Creates actual call via Retell API
+ * - Updates DB record with Retell response
+ */
+export async function initiateScheduledCall(scheduledCallId: string) {
+  try {
+    // Check admin access
+    await checkAdminAccess();
+
+    // Get Supabase client
+    const supabase = await createClient();
+
+    // Fetch the scheduled call
+    const { data: scheduledCall, error: fetchError } = await supabase
+      .from("retell_calls")
+      .select("*")
+      .eq("id", scheduledCallId)
+      .eq("status", "scheduled")
+      .single();
+
+    if (fetchError ?? !scheduledCall) {
+      throw new Error("Scheduled call not found");
+    }
+
+    // Get agent ID and from number
+    const fromNumber = process.env.RETELL_FROM_NUMBER;
+    if (!fromNumber) {
+      throw new Error("From number not configured");
+    }
+
+    const agentId = scheduledCall.agent_id ?? process.env.RETELL_AGENT_ID;
+    if (!agentId) {
+      throw new Error("Agent ID not configured");
+    }
+
+    // Create the call via Retell API
+    const response = await createPhoneCall({
+      from_number: fromNumber,
+      to_number: scheduledCall.phone_number,
+      override_agent_id: agentId,
+      retell_llm_dynamic_variables: scheduledCall.call_variables,
+      metadata: scheduledCall.metadata,
+      retries_on_no_answer: 0,
+    });
+
+    // Update the database record
+    const { error: updateError } = await supabase
+      .from("retell_calls")
+      .update({
+        retell_call_id: response.call_id,
+        agent_id: response.agent_id,
+        status: mapRetellStatus(response.call_status),
+        start_timestamp: response.start_timestamp
+          ? new Date(response.start_timestamp * 1000).toISOString()
+          : null,
+        retell_response: response as unknown,
+      })
+      .eq("id", scheduledCallId);
+
+    if (updateError) {
+      console.error("Failed to update call record:", updateError);
+      throw new Error("Call created but failed to update database");
+    }
+
+    return {
+      success: true,
+      data: {
+        callId: response.call_id,
+        status: response.call_status,
+        phoneNumber: scheduledCall.phone_number,
+      },
+    };
+  } catch (error) {
+    console.error("Initiate scheduled call error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to initiate call",
+    };
+  }
+}
+
+/**
  * List all calls with optional filters
  *
  * This action:
@@ -256,7 +433,8 @@ export async function fetchCalls(input?: ListCallsInput) {
     const supabase = await createClient();
     let query = supabase
       .from("retell_calls")
-      .select(`
+      .select(
+        `
         *,
         patient:call_patients(
           id,
@@ -268,7 +446,8 @@ export async function fetchCalls(input?: ListCallsInput) {
           clinic_phone,
           discharge_summary
         )
-      `)
+      `,
+      )
       .order("created_at", { ascending: false });
 
     // Apply filters

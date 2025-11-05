@@ -75,6 +75,7 @@ export const listCallsSchema = z.object({
   status: z
     .enum([
       "all",
+      "scheduled",
       "initiated",
       "ringing",
       "in_progress",
@@ -159,4 +160,18 @@ export const sendCallWithPatientSchema = sendCallSchema.extend({
   patientId: z.string().optional(),
 });
 
-export type SendCallWithPatientInput = z.infer<typeof sendCallWithPatientSchema>;
+export type SendCallWithPatientInput = z.infer<
+  typeof sendCallWithPatientSchema
+>;
+
+/**
+ * Schema for scheduling a call (save to DB without calling Retell API)
+ * Requires patient ID since scheduled calls should be associated with a patient
+ */
+export const scheduleCallSchema = z.object({
+  patientId: z.string().min(1, "Patient ID is required for scheduled calls"),
+  scheduledFor: z.date().optional(),
+  notes: z.string().optional(),
+});
+
+export type ScheduleCallInput = z.infer<typeof scheduleCallSchema>;

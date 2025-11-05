@@ -15,6 +15,7 @@ import type { CallDetailResponse } from "~/server/actions/retell";
 import { useCallPolling } from "~/hooks/use-call-polling";
 import { QuickCallDialog } from "~/components/dashboard/quick-call-dialog";
 import { ActiveCallsSection } from "~/components/dashboard/active-calls-section";
+import { ScheduledCallsSection } from "~/components/dashboard/scheduled-calls-section";
 import { DateGroupSection } from "~/components/dashboard/date-group-section";
 import { toast } from "sonner";
 
@@ -62,7 +63,7 @@ export default function CallsPage() {
   // Check if there are any active calls
   const hasActiveCalls = useCallback(() => {
     return callsRef.current.some((call) =>
-      ACTIVE_STATUSES.includes(call.status)
+      ACTIVE_STATUSES.includes(call.status),
     );
   }, []);
 
@@ -77,13 +78,16 @@ export default function CallsPage() {
     void loadCalls(true);
   }, [loadCalls]);
 
-  // Separate active and historical calls
+  // Separate active, scheduled, and historical calls
   const activeCalls = calls.filter((call) =>
-    ACTIVE_STATUSES.includes(call.status)
+    ACTIVE_STATUSES.includes(call.status),
   );
 
+  const scheduledCalls = calls.filter((call) => call.status === "scheduled");
+
   const historicalCalls = calls.filter(
-    (call) => !ACTIVE_STATUSES.includes(call.status)
+    (call) =>
+      !ACTIVE_STATUSES.includes(call.status) && call.status !== "scheduled",
   );
 
   // Handle successful call creation
@@ -93,7 +97,7 @@ export default function CallsPage() {
   };
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
+    <div className="container mx-auto space-y-8 py-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -113,13 +117,16 @@ export default function CallsPage() {
             title="Refresh calls"
           >
             <RefreshCw
-              className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
+              className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
             />
           </Button>
 
           {/* New Call Button */}
-          <Button onClick={() => setShowQuickCallDialog(true)} className="gap-2">
-            <Phone className="w-4 h-4" />
+          <Button
+            onClick={() => setShowQuickCallDialog(true)}
+            className="gap-2"
+          >
+            <Phone className="h-4 w-4" />
             New Call
           </Button>
         </div>
@@ -127,8 +134,8 @@ export default function CallsPage() {
 
       {/* Auto-refresh indicator */}
       {isRefreshing && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <RefreshCw className="w-3 h-3 animate-spin" />
+        <div className="text-muted-foreground flex items-center gap-2 text-sm">
+          <RefreshCw className="h-3 w-3 animate-spin" />
           <span>Refreshing calls...</span>
         </div>
       )}
@@ -138,16 +145,22 @@ export default function CallsPage() {
         <Card>
           <CardContent className="py-12">
             <div className="flex flex-col items-center justify-center gap-4">
-              <RefreshCw className="w-8 h-8 animate-spin text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Loading calls...</p>
+              <RefreshCw className="text-muted-foreground h-8 w-8 animate-spin" />
+              <p className="text-muted-foreground text-sm">Loading calls...</p>
             </div>
           </CardContent>
         </Card>
       ) : (
         <>
           {/* Active Calls Section (pinned at top) */}
-          {activeCalls.length > 0 && (
-            <ActiveCallsSection calls={activeCalls} />
+          {activeCalls.length > 0 && <ActiveCallsSection calls={activeCalls} />}
+
+          {/* Scheduled Calls Section */}
+          {scheduledCalls.length > 0 && (
+            <ScheduledCallsSection
+              calls={scheduledCalls}
+              onCallInitiated={handleCallSuccess}
+            />
           )}
 
           {/* Call History with Date Grouping */}
@@ -172,20 +185,23 @@ export default function CallsPage() {
             <Card className="border-dashed">
               <CardContent className="py-16">
                 <div className="flex flex-col items-center justify-center gap-6 text-center">
-                  <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Phone className="w-10 h-10 text-primary" />
+                  <div className="bg-primary/10 flex h-20 w-20 items-center justify-center rounded-full">
+                    <Phone className="text-primary h-10 w-10" />
                   </div>
-                  <div className="space-y-2 max-w-md">
+                  <div className="max-w-md space-y-2">
                     <h3 className="text-xl font-semibold">No calls yet</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Get started by creating your first patient and initiating a
-                      call. You can manage patient information and make calls
+                    <p className="text-muted-foreground text-sm">
+                      Get started by creating your first patient and initiating
+                      a call. You can manage patient information and make calls
                       directly from this dashboard.
                     </p>
                   </div>
                   <div className="flex gap-3">
-                    <Button onClick={() => setShowQuickCallDialog(true)} className="gap-2">
-                      <Phone className="w-4 h-4" />
+                    <Button
+                      onClick={() => setShowQuickCallDialog(true)}
+                      className="gap-2"
+                    >
+                      <Phone className="h-4 w-4" />
                       Start First Call
                     </Button>
                   </div>

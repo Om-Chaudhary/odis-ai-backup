@@ -14,8 +14,8 @@ import { Label } from "~/components/ui/label";
 import { Input } from "~/components/ui/input";
 import { Spinner } from "~/components/ui/spinner";
 import { PatientSelect } from "./patient-select";
-import { sendCall } from "~/server/actions/retell";
-import { Phone, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { sendCall, scheduleCall } from "~/server/actions/retell";
+import { Phone, AlertTriangle, CheckCircle2, Clock } from "lucide-react";
 import { useToast } from "~/hooks/use-toast";
 
 interface QuickCallDialogProps {
@@ -32,14 +32,17 @@ export function QuickCallDialog({
   onAddPatient,
 }: QuickCallDialogProps) {
   const { toast } = useToast();
-  const [selectedPatientId, setSelectedPatientId] = useState<string | undefined>();
+  const [selectedPatientId, setSelectedPatientId] = useState<
+    string | undefined
+  >();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Manual phone number (fallback if no patient selected)
   const [manualPhone, setManualPhone] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleCallNow = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validate input
@@ -66,6 +69,7 @@ export function QuickCallDialog({
       });
 
       if (result.success) {
+        setSuccessMessage("Call initiated successfully!");
         setShowSuccess(true);
 
         // Show success toast
@@ -92,7 +96,63 @@ export function QuickCallDialog({
     } catch (error) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "An error occurred",
+        description:
+          error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSchedule = async () => {
+    // Validate patient selected (scheduling requires patient)
+    if (!selectedPatientId) {
+      toast({
+        title: "Error",
+        description: "Please select a patient to schedule a call",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const result = await scheduleCall({
+        patientId: selectedPatientId,
+      });
+
+      if (result.success) {
+        setSuccessMessage("Call scheduled successfully!");
+        setShowSuccess(true);
+
+        // Show success toast
+        toast({
+          title: "Call Scheduled",
+          description: `Call for ${result.data?.petName} has been queued`,
+        });
+
+        // Close dialog and reset after delay
+        setTimeout(() => {
+          setShowSuccess(false);
+          setSelectedPatientId(undefined);
+          setManualPhone("");
+          onOpenChange(false);
+          onSuccess?.();
+        }, 1500);
+      } else {
+        toast({
+          title: "Schedule Failed",
+          description: result.error ?? "Failed to schedule call",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error ? error.message : "An error occurred",
         variant: "destructive",
       });
     } finally {
@@ -113,39 +173,35 @@ export function QuickCallDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px]">
         {showSuccess ? (
-          <div className="py-12 flex flex-col items-center justify-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
-              <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400" />
+          <div className="flex flex-col items-center justify-center gap-4 py-12">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
+              <CheckCircle2 className="h-10 w-10 text-green-600 dark:text-green-400" />
             </div>
-            <div className="text-center space-y-2">
-              <h3 className="text-xl font-semibold">Call Initiated!</h3>
-              <p className="text-sm text-muted-foreground">
-                The call is now connecting...
-              </p>
+            <div className="space-y-2 text-center">
+              <h3 className="text-xl font-semibold">{successMessage}</h3>
             </div>
           </div>
         ) : (
           <>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Phone className="w-5 h-5" />
+                <Phone className="h-5 w-5" />
                 New Call
               </DialogTitle>
               <DialogDescription>
-                Select a patient to automatically populate call details, or enter a phone
-                number manually.
+                Select a patient to call immediately or schedule for later.
               </DialogDescription>
             </DialogHeader>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleCallNow} className="space-y-6">
               <div className="space-y-4">
                 {/* Patient Selection */}
                 <PatientSelect
                   value={selectedPatientId}
                   onValueChange={setSelectedPatientId}
                   onAddNew={onAddPatient}
-                  label="Patient (recommended)"
-                  placeholder="Select a patient for auto-filled details"
+                  label="Patient (required for scheduling)"
+                  placeholder="Select a patient"
                 />
 
                 {/* Divider */}
@@ -154,8 +210,8 @@ export function QuickCallDialog({
                     <span className="w-full border-t" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                      Or enter manually
+                    <span className="bg-background text-muted-foreground px-2">
+                      Or call manually
                     </span>
                   </div>
                 </div>
@@ -171,48 +227,75 @@ export function QuickCallDialog({
                     onChange={(e) => setManualPhone(e.target.value)}
                     disabled={!!selectedPatientId || isSubmitting}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Only required if no patient is selected
+                  <p className="text-muted-foreground text-xs">
+                    Only needed if calling without selecting a patient
                   </p>
                 </div>
 
-                {/* Warning if no patient selected */}
+                {/* Warning if no patient selected for manual phone */}
                 {!selectedPatientId && manualPhone && (
-                  <div className="flex items-start gap-2 p-3 border border-amber-500/50 rounded-md bg-amber-50 dark:bg-amber-950/20">
-                    <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex items-start gap-2 rounded-md border border-amber-500/50 bg-amber-50 p-3 dark:bg-amber-950/20">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600 dark:text-amber-400" />
                     <div className="text-sm text-amber-600 dark:text-amber-400">
-                      <p className="font-medium">No patient selected</p>
-                      <p className="text-xs mt-1">
-                        Call will be made without pre-filled patient information. Select a
-                        patient for better context.
+                      <p className="font-medium">Manual call only</p>
+                      <p className="mt-1 text-xs">
+                        Without a patient selected, you can only call now (not
+                        schedule).
                       </p>
                     </div>
                   </div>
                 )}
               </div>
 
-              <DialogFooter>
+              <DialogFooter className="flex-col gap-2 sm:flex-row">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleClose}
                   disabled={isSubmitting}
+                  className="w-full sm:w-auto"
                 >
                   Cancel
                 </Button>
+
+                {/* Schedule button - only enabled when patient selected */}
                 <Button
-                  type="submit"
-                  disabled={isSubmitting || (!selectedPatientId && !manualPhone)}
+                  type="button"
+                  variant="secondary"
+                  onClick={handleSchedule}
+                  disabled={isSubmitting || !selectedPatientId}
+                  className="w-full sm:w-auto"
                 >
                   {isSubmitting ? (
                     <>
-                      <Spinner className="w-4 h-4 mr-2" />
-                      Initiating Call...
+                      <Spinner className="mr-2 h-4 w-4" />
+                      Scheduling...
                     </>
                   ) : (
                     <>
-                      <Phone className="w-4 h-4 mr-2" />
-                      Start Call
+                      <Clock className="mr-2 h-4 w-4" />
+                      Schedule for Later
+                    </>
+                  )}
+                </Button>
+
+                {/* Call Now button */}
+                <Button
+                  type="submit"
+                  disabled={
+                    isSubmitting || (!selectedPatientId && !manualPhone)
+                  }
+                  className="w-full sm:w-auto"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Spinner className="mr-2 h-4 w-4" />
+                      Calling...
+                    </>
+                  ) : (
+                    <>
+                      <Phone className="mr-2 h-4 w-4" />
+                      Call Now
                     </>
                   )}
                 </Button>
