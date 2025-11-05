@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { createClient } from "~/lib/supabase/server";
+import { createServiceClient } from "~/lib/supabase/server";
 import type { RetellCallResponse } from "~/lib/retell/client";
 
 /**
@@ -71,8 +71,8 @@ export async function POST(request: NextRequest) {
 
     console.log(`Received Retell webhook: ${event} for call ${call.call_id}`);
 
-    // Get Supabase client
-    const supabase = await createClient();
+    // Get Supabase service client (bypasses RLS since webhooks have no auth context)
+    const supabase = await createServiceClient();
 
     // Find the call in our database by Retell call ID
     const { data: existingCall, error: findError } = await supabase

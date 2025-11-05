@@ -162,12 +162,16 @@ export default function CallDetailPage() {
 
     const updateTime = () => setCurrentTime(audio.currentTime);
     const updateDuration = () => setDuration(audio.duration);
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
     const handleEnded = () => setIsPlaying(false);
     const handleLoadStart = () => setAudioLoading(true);
     const handleCanPlay = () => setAudioLoading(false);
 
     audio.addEventListener("timeupdate", updateTime);
     audio.addEventListener("loadedmetadata", updateDuration);
+    audio.addEventListener("play", handlePlay);
+    audio.addEventListener("pause", handlePause);
     audio.addEventListener("ended", handleEnded);
     audio.addEventListener("loadstart", handleLoadStart);
     audio.addEventListener("canplay", handleCanPlay);
@@ -175,6 +179,8 @@ export default function CallDetailPage() {
     return () => {
       audio.removeEventListener("timeupdate", updateTime);
       audio.removeEventListener("loadedmetadata", updateDuration);
+      audio.removeEventListener("play", handlePlay);
+      audio.removeEventListener("pause", handlePause);
       audio.removeEventListener("ended", handleEnded);
       audio.removeEventListener("loadstart", handleLoadStart);
       audio.removeEventListener("canplay", handleCanPlay);
@@ -190,9 +196,10 @@ export default function CallDetailPage() {
     } else {
       audio.play().catch((err) => {
         console.error("Error playing audio:", err);
+        setIsPlaying(false);
       });
     }
-    setIsPlaying(!isPlaying);
+    // Note: isPlaying state will be updated by the play/pause event listeners
   };
 
   const handleSeek = (value: number[]) => {
@@ -253,7 +260,7 @@ export default function CallDetailPage() {
       audio.play().catch((err) => {
         console.error("Error playing audio:", err);
       });
-      setIsPlaying(true);
+      // Note: isPlaying state will be updated by the play event listener
     }
   };
 
