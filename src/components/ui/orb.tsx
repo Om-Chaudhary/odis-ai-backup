@@ -146,7 +146,7 @@ function Scene({
 
   useEffect(() => {
     const apply = () => {
-      if (!circleRef.current) return;
+      if (!circleRef.current?.material.uniforms.uInverted) return;
       const isDark = document.documentElement.classList.contains("dark");
       circleRef.current.material.uniforms.uInverted.value = isDark ? 1 : 0;
     };
@@ -170,6 +170,17 @@ function Scene({
       if (live[1]) targetColor2Ref.current.set(live[1]);
     }
     const u = mat.uniforms;
+    if (
+      !u.uTime ||
+      !u.uOpacity ||
+      !u.uAnimation ||
+      !u.uInputVolume ||
+      !u.uOutputVolume ||
+      !u.uColor1 ||
+      !u.uColor2
+    )
+      return;
+
     u.uTime.value += delta * 0.5;
 
     if (u.uOpacity.value < 1) {

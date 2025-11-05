@@ -313,7 +313,7 @@ export default function CallHistoryPage() {
                 Call Management
               </h1>
               <p className="text-base text-slate-600">
-                View and manage all Retell AI calls
+                View and manage all OdisAI calls
               </p>
             </div>
           </div>

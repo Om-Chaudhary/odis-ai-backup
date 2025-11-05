@@ -219,7 +219,7 @@ export default function SendCallPage() {
             Send Call
           </h1>
           <p className="text-sm text-slate-600">
-            Initiate a new outbound call via Retell AI
+            Initiate a new outbound call via OdisAI
           </p>
         </div>
       </div>
@@ -440,7 +440,7 @@ export default function SendCallPage() {
                         {loadingStep === "validating" &&
                           "Validating call details..."}
                         {loadingStep === "connecting" &&
-                          "Connecting to Retell AI..."}
+                          "Connecting to OdisAI..."}
                         {loadingStep === "initiating" && "Initiating call..."}
                         {loadingStep === "success" &&
                           "Call initiated successfully!"}
