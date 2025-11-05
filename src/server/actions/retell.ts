@@ -254,30 +254,14 @@ export async function scheduleCall(input: ScheduleCallInput) {
     // Get Supabase client
     const supabase = await createClient();
 
-    // Fetch patient to validate and get data
-    const { data: patient, error: patientError } = await supabase
-      .from("call_patients")
-      .select("*")
-      .eq("id", validated.patientId)
-      .single();
-
-    if (patientError) {
-      console.error("Failed to fetch patient:", patientError);
-      throw new Error(`Patient not found: ${patientError.message}`);
-    }
-
-    if (!patient) {
-      throw new Error("Patient not found");
-    }
-
-    // Prepare call variables from patient data
+    // Prepare call variables from input data
     const callVariables = {
-      pet_name: patient.pet_name,
-      owner_name: patient.owner_name,
-      vet_name: patient.vet_name ?? "",
-      clinic_name: patient.clinic_name ?? "",
-      clinic_phone: patient.clinic_phone ?? "",
-      discharge_summary_content: patient.discharge_summary ?? "",
+      pet_name: validated.petName,
+      owner_name: validated.ownerName,
+      vet_name: validated.vetName ?? "",
+      clinic_name: validated.clinicName ?? "",
+      clinic_phone: validated.clinicPhone ?? "",
+      discharge_summary_content: validated.dischargeSummary ?? "",
     };
 
     // Store scheduled call in database (without calling Retell)
@@ -286,8 +270,8 @@ export async function scheduleCall(input: ScheduleCallInput) {
       .insert({
         retell_call_id: `scheduled_${Date.now()}_${Math.random().toString(36).substring(7)}`, // Temporary ID
         agent_id: process.env.RETELL_AGENT_ID ?? "",
-        phone_number: patient.owner_phone,
-        phone_number_pretty: formatPhoneNumber(patient.owner_phone),
+        phone_number: validated.phoneNumber,
+        phone_number_pretty: formatPhoneNumber(validated.phoneNumber),
         call_variables: callVariables,
         metadata: {
           notes: validated.notes,
@@ -295,7 +279,7 @@ export async function scheduleCall(input: ScheduleCallInput) {
         },
         status: "scheduled",
         created_by: user.id,
-        patient_id: patient.id,
+        patient_id: null, // Not using patient_id for scheduled calls
       })
       .select()
       .single();
@@ -309,9 +293,8 @@ export async function scheduleCall(input: ScheduleCallInput) {
       success: true,
       data: {
         callId: scheduledCall.id,
-        patientId: patient.id,
-        petName: patient.pet_name,
-        phoneNumber: patient.owner_phone,
+        petName: validated.petName,
+        phoneNumber: validated.phoneNumber,
       },
     };
   } catch (error) {

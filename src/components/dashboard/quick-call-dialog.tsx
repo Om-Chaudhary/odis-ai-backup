@@ -12,6 +12,7 @@ import {
 import { Button } from "~/components/ui/button";
 import { Label } from "~/components/ui/label";
 import { Input } from "~/components/ui/input";
+import { Textarea } from "~/components/ui/textarea";
 import { Spinner } from "~/components/ui/spinner";
 import { PatientSelect } from "./patient-select";
 import { sendCall, scheduleCall } from "~/server/actions/retell";
@@ -39,14 +40,20 @@ export function QuickCallDialog({
   const [showSuccess, setShowSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Manual phone number (fallback if no patient selected)
-  const [manualPhone, setManualPhone] = useState("");
+  // Form fields for scheduled calls
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [petName, setPetName] = useState("");
+  const [ownerName, setOwnerName] = useState("");
+  const [vetName, setVetName] = useState("");
+  const [clinicName, setClinicName] = useState("");
+  const [clinicPhone, setClinicPhone] = useState("");
+  const [dischargeSummary, setDischargeSummary] = useState("");
 
   const handleCallNow = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validate input
-    if (!selectedPatientId && !manualPhone) {
+    if (!selectedPatientId && !phoneNumber) {
       toast({
         title: "Error",
         description: "Please select a patient or enter a phone number",
@@ -60,7 +67,7 @@ export function QuickCallDialog({
     try {
       // Send call with patient ID or manual phone
       const result = await sendCall({
-        phoneNumber: manualPhone ?? "", // Will be overridden by patient data if patientId provided
+        phoneNumber: phoneNumber ?? "", // Will be overridden by patient data if patientId provided
         patientId: selectedPatientId,
         variables: {},
         metadata: {},
@@ -81,8 +88,7 @@ export function QuickCallDialog({
         // Close dialog and reset after delay
         setTimeout(() => {
           setShowSuccess(false);
-          setSelectedPatientId(undefined);
-          setManualPhone("");
+          resetForm();
           onOpenChange(false);
           onSuccess?.();
         }, 1500);
@@ -106,11 +112,12 @@ export function QuickCallDialog({
   };
 
   const handleSchedule = async () => {
-    // Validate patient selected (scheduling requires patient)
-    if (!selectedPatientId) {
+    // Validate required fields for scheduling
+    if (!phoneNumber || !petName || !ownerName) {
       toast({
         title: "Error",
-        description: "Please select a patient to schedule a call",
+        description:
+          "Phone number, pet name, and owner name are required to schedule a call",
         variant: "destructive",
       });
       return;
@@ -120,7 +127,13 @@ export function QuickCallDialog({
 
     try {
       const result = await scheduleCall({
-        patientId: selectedPatientId,
+        phoneNumber,
+        petName,
+        ownerName,
+        vetName: vetName || undefined,
+        clinicName: clinicName || undefined,
+        clinicPhone: clinicPhone || undefined,
+        dischargeSummary: dischargeSummary || undefined,
       });
 
       if (result.success) {
@@ -136,8 +149,7 @@ export function QuickCallDialog({
         // Close dialog and reset after delay
         setTimeout(() => {
           setShowSuccess(false);
-          setSelectedPatientId(undefined);
-          setManualPhone("");
+          resetForm();
           onOpenChange(false);
           onSuccess?.();
         }, 1500);
@@ -160,10 +172,20 @@ export function QuickCallDialog({
     }
   };
 
+  const resetForm = () => {
+    setSelectedPatientId(undefined);
+    setPhoneNumber("");
+    setPetName("");
+    setOwnerName("");
+    setVetName("");
+    setClinicName("");
+    setClinicPhone("");
+    setDischargeSummary("");
+  };
+
   const handleClose = () => {
     if (!isSubmitting) {
-      setSelectedPatientId(undefined);
-      setManualPhone("");
+      resetForm();
       setShowSuccess(false);
       onOpenChange(false);
     }
@@ -171,7 +193,7 @@ export function QuickCallDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
         {showSuccess ? (
           <div className="flex flex-col items-center justify-center gap-4 py-12">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
@@ -189,20 +211,25 @@ export function QuickCallDialog({
                 New Call
               </DialogTitle>
               <DialogDescription>
-                Select a patient to call immediately or schedule for later.
+                Call an existing patient or schedule a new call with patient
+                details.
               </DialogDescription>
             </DialogHeader>
 
             <form onSubmit={handleCallNow} className="space-y-6">
               <div className="space-y-4">
-                {/* Patient Selection */}
-                <PatientSelect
-                  value={selectedPatientId}
-                  onValueChange={setSelectedPatientId}
-                  onAddNew={onAddPatient}
-                  label="Patient (required for scheduling)"
-                  placeholder="Select a patient"
-                />
+                {/* Quick Call with Existing Patient */}
+                <div className="space-y-2">
+                  <Label className="text-base font-semibold">
+                    Quick Call (Existing Patient)
+                  </Label>
+                  <PatientSelect
+                    value={selectedPatientId}
+                    onValueChange={setSelectedPatientId}
+                    onAddNew={onAddPatient}
+                    placeholder="Select a patient to call immediately"
+                  />
+                </div>
 
                 {/* Divider */}
                 <div className="relative">
@@ -211,36 +238,111 @@ export function QuickCallDialog({
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
                     <span className="bg-background text-muted-foreground px-2">
-                      Or call manually
+                      Or schedule a new call
                     </span>
                   </div>
                 </div>
 
-                {/* Manual Phone Entry */}
-                <div className="space-y-2">
-                  <Label htmlFor="manual-phone">Phone Number</Label>
-                  <Input
-                    id="manual-phone"
-                    type="tel"
-                    placeholder="+1 (555) 123-4567"
-                    value={manualPhone}
-                    onChange={(e) => setManualPhone(e.target.value)}
-                    disabled={!!selectedPatientId || isSubmitting}
-                  />
-                  <p className="text-muted-foreground text-xs">
-                    Only needed if calling without selecting a patient
-                  </p>
+                {/* Patient Details for Scheduling */}
+                <div className="bg-muted/30 space-y-4 rounded-lg border p-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">
+                        Phone Number <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="+1 (555) 123-4567"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        disabled={!!selectedPatientId || isSubmitting}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="petName">
+                        Pet Name <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="petName"
+                        placeholder="Fluffy"
+                        value={petName}
+                        onChange={(e) => setPetName(e.target.value)}
+                        disabled={!!selectedPatientId || isSubmitting}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="ownerName">
+                        Owner Name <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        id="ownerName"
+                        placeholder="John Doe"
+                        value={ownerName}
+                        onChange={(e) => setOwnerName(e.target.value)}
+                        disabled={!!selectedPatientId || isSubmitting}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="vetName">Vet Name</Label>
+                      <Input
+                        id="vetName"
+                        placeholder="Dr. Smith"
+                        value={vetName}
+                        onChange={(e) => setVetName(e.target.value)}
+                        disabled={!!selectedPatientId || isSubmitting}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="clinicName">Clinic Name</Label>
+                      <Input
+                        id="clinicName"
+                        placeholder="Pet Care Clinic"
+                        value={clinicName}
+                        onChange={(e) => setClinicName(e.target.value)}
+                        disabled={!!selectedPatientId || isSubmitting}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="clinicPhone">Clinic Phone</Label>
+                      <Input
+                        id="clinicPhone"
+                        type="tel"
+                        placeholder="+1 (555) 987-6543"
+                        value={clinicPhone}
+                        onChange={(e) => setClinicPhone(e.target.value)}
+                        disabled={!!selectedPatientId || isSubmitting}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="dischargeSummary">Discharge Summary</Label>
+                    <Textarea
+                      id="dischargeSummary"
+                      placeholder="Enter discharge summary or medical notes..."
+                      value={dischargeSummary}
+                      onChange={(e) => setDischargeSummary(e.target.value)}
+                      disabled={!!selectedPatientId || isSubmitting}
+                      rows={3}
+                    />
+                  </div>
                 </div>
 
-                {/* Warning if no patient selected for manual phone */}
-                {!selectedPatientId && manualPhone && (
-                  <div className="flex items-start gap-2 rounded-md border border-amber-500/50 bg-amber-50 p-3 dark:bg-amber-950/20">
-                    <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600 dark:text-amber-400" />
-                    <div className="text-sm text-amber-600 dark:text-amber-400">
-                      <p className="font-medium">Manual call only</p>
+                {/* Warning if patient selected */}
+                {selectedPatientId && (
+                  <div className="flex items-start gap-2 rounded-md border border-blue-500/50 bg-blue-50 p-3 dark:bg-blue-950/20">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+                    <div className="text-sm text-blue-600 dark:text-blue-400">
+                      <p className="font-medium">Patient selected</p>
                       <p className="mt-1 text-xs">
-                        Without a patient selected, you can only call now (not
-                        schedule).
+                        Patient details will be used. Form fields above are
+                        disabled.
                       </p>
                     </div>
                   </div>
@@ -258,12 +360,16 @@ export function QuickCallDialog({
                   Cancel
                 </Button>
 
-                {/* Schedule button - only enabled when patient selected */}
+                {/* Schedule button - only enabled when form filled or patient selected */}
                 <Button
                   type="button"
                   variant="secondary"
                   onClick={handleSchedule}
-                  disabled={isSubmitting || !selectedPatientId}
+                  disabled={
+                    isSubmitting ||
+                    (!selectedPatientId &&
+                      (!phoneNumber || !petName || !ownerName))
+                  }
                   className="w-full sm:w-auto"
                 >
                   {isSubmitting ? (
@@ -283,7 +389,7 @@ export function QuickCallDialog({
                 <Button
                   type="submit"
                   disabled={
-                    isSubmitting || (!selectedPatientId && !manualPhone)
+                    isSubmitting || (!selectedPatientId && !phoneNumber)
                   }
                   className="w-full sm:w-auto"
                 >

@@ -166,10 +166,16 @@ export type SendCallWithPatientInput = z.infer<
 
 /**
  * Schema for scheduling a call (save to DB without calling Retell API)
- * Requires patient ID since scheduled calls should be associated with a patient
+ * Stores patient details directly in call_variables
  */
 export const scheduleCallSchema = z.object({
-  patientId: z.string().min(1, "Patient ID is required for scheduled calls"),
+  phoneNumber: phoneNumberSchema,
+  petName: z.string().min(1, "Pet name is required"),
+  ownerName: z.string().min(1, "Owner name is required"),
+  vetName: z.string().optional(),
+  clinicName: z.string().optional(),
+  clinicPhone: z.string().optional(),
+  dischargeSummary: z.string().optional(),
   scheduledFor: z.date().optional(),
   notes: z.string().optional(),
 });

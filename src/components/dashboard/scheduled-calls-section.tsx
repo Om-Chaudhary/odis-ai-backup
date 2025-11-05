@@ -90,58 +90,31 @@ function ScheduledCallCard({
   return (
     <Card className="hover:border-primary/50 border-2 border-dashed p-4 transition-colors">
       <div className="flex items-start justify-between gap-4">
-        {/* Left side: Call info */}
         <div className="flex-1 space-y-2">
-          {/* Pet name and owner */}
           <div>
-            {call.patient ? (
-              <div className="space-y-1">
-                <h3 className="flex items-center gap-2 text-lg font-semibold">
-                  {String(call.patient.pet_name)}
-                  <Badge variant="secondary" className="text-xs font-normal">
-                    Scheduled
-                  </Badge>
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                  {String(call.patient.owner_name)} •{" "}
-                  {formatPhoneNumber(call.patient.owner_phone)}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                <h3 className="text-lg font-semibold">
-                  {call.call_variables?.pet_name ?? "Unknown Pet"}
-                </h3>
-                <p className="text-muted-foreground text-sm">
-                  {formatPhoneNumber(call.phone_number)}
-                </p>
-              </div>
-            )}
+            <div className="space-y-1">
+              <h3 className="flex items-center gap-2 text-lg font-semibold">
+                {call.call_variables?.pet_name ?? "Unknown Pet"}
+                <Badge variant="secondary" className="text-xs font-normal">
+                  Scheduled
+                </Badge>
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                {call.call_variables?.owner_name ?? "Unknown Owner"} •{" "}
+                {formatPhoneNumber(call.phone_number)}
+              </p>
+            </div>
           </div>
 
-          {/* Metadata */}
-          <div className="text-muted-foreground flex flex-wrap gap-3 text-xs">
+          <div className="text-muted-foreground text-xs">
             <span>Scheduled {getRelativeTime(call.created_at)}</span>
-            {call.patient?.vet_name && (
-              <div>
-                <span className="font-medium">Vet:</span>{" "}
-                {call.patient.vet_name}
-              </div>
-            )}
-            {call.patient?.clinic_name && (
-              <div>
-                <span className="font-medium">Clinic:</span>{" "}
-                {call.patient.clinic_name}
-              </div>
-            )}
           </div>
 
-          {/* Notes if any */}
-          {call.metadata?.notes && (
+          {call.metadata?.notes && typeof call.metadata.notes === "string" ? (
             <p className="text-muted-foreground text-sm italic">
-              Note: {call.metadata.notes as string}
+              Note: {call.metadata.notes}
             </p>
-          )}
+          ) : null}
         </div>
 
         {/* Right side: Actions */}
