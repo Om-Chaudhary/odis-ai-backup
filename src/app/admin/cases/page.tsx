@@ -18,6 +18,7 @@ import {
   Filter,
   X,
   Share2,
+  FolderPlus,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -33,6 +34,7 @@ import {
 } from "~/components/ui/select";
 import type { RouterOutputs } from "~/trpc/client";
 import { ShareDialog } from "~/components/admin/ShareDialog";
+import { CaseMultiAddDialog } from "~/components/admin/CaseMultiAddDialog";
 
 type Case = RouterOutputs["cases"]["listCases"][number];
 
@@ -48,6 +50,9 @@ export default function CasesPage() {
     id: string;
     patientName: string;
   } | null>(null);
+
+  // Multi-add dialog state
+  const [multiAddDialogOpen, setMultiAddDialogOpen] = useState(false);
 
   // Query cases
   const { data: cases, isLoading, refetch } = api.cases.listCases.useQuery({});
@@ -264,6 +269,14 @@ export default function CasesPage() {
             View and manage all veterinary cases
           </p>
         </div>
+        <Button
+          onClick={() => setMultiAddDialogOpen(true)}
+          className="gap-2"
+          size="lg"
+        >
+          <FolderPlus className="h-5 w-5" />
+          Create Cases
+        </Button>
       </div>
 
       {/* Cases DataTable */}
@@ -373,6 +386,13 @@ export default function CasesPage() {
           entityName={`Case: ${selectedCase.patientName}`}
         />
       )}
+
+      {/* Multi-Add Dialog */}
+      <CaseMultiAddDialog
+        open={multiAddDialogOpen}
+        onOpenChange={setMultiAddDialogOpen}
+        onSuccess={() => void refetch()}
+      />
     </div>
   );
 }

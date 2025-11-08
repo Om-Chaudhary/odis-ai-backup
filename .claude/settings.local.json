@@ -51,7 +51,9 @@
       "WebFetch(domain:odisai.net)",
       "Bash(pnpm build:*)",
       "Bash(pnpm lint:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "mcp__supabase__deploy_edge_function",
+      "mcp__supabase__list_migrations"
     ],
     "deny": [],
     "ask": []

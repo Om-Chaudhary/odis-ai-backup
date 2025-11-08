@@ -9,8 +9,14 @@ import { TRPCError } from "@trpc/server";
 const caseSchema = z.object({
   user_id: z.string().uuid().nullable().optional(),
   visibility: z.enum(["public", "private"]).nullable().optional(),
-  type: z.enum(["checkup", "emergency", "surgery", "follow_up"]).nullable().optional(),
-  status: z.enum(["draft", "ongoing", "completed", "reviewed"]).nullable().optional(),
+  type: z
+    .enum(["checkup", "emergency", "surgery", "follow_up"])
+    .nullable()
+    .optional(),
+  status: z
+    .enum(["draft", "ongoing", "completed", "reviewed"])
+    .nullable()
+    .optional(),
   scheduled_at: z.string().nullable().optional(),
   source: z.string().nullable().optional(),
   external_id: z.string().nullable().optional(),
@@ -29,22 +35,28 @@ export const casesRouter = createTRPCRouter({
     .input(
       z.object({
         search: z.string().optional(),
-        status: z.enum(["draft", "ongoing", "completed", "reviewed"]).optional(),
-        type: z.enum(["checkup", "emergency", "surgery", "follow_up"]).optional(),
+        status: z
+          .enum(["draft", "ongoing", "completed", "reviewed"])
+          .optional(),
+        type: z
+          .enum(["checkup", "emergency", "surgery", "follow_up"])
+          .optional(),
         visibility: z.enum(["public", "private"]).optional(),
         userId: z.string().uuid().optional(),
         dateFrom: z.string().optional(),
         dateTo: z.string().optional(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       let query = ctx.serviceClient
         .from("cases")
-        .select(`
+        .select(
+          `
           *,
           user:users(id, email, first_name, last_name),
           patient:patients(id, name, species, breed, owner_name)
-        `)
+        `,
+        )
         .order("created_at", { ascending: false });
 
       // Apply filters
@@ -93,9 +105,16 @@ export const casesRouter = createTRPCRouter({
       if (input.search && data) {
         const searchLower = input.search.toLowerCase();
         filteredData = data.filter((c) => {
-          const patientName = (c.patient as unknown as { name?: string })?.name?.toLowerCase() ?? "";
-          const ownerName = (c.patient as unknown as { owner_name?: string })?.owner_name?.toLowerCase() ?? "";
-          return patientName.includes(searchLower) || ownerName.includes(searchLower);
+          const patientName =
+            (c.patient as unknown as { name?: string })?.name?.toLowerCase() ??
+            "";
+          const ownerName =
+            (
+              c.patient as unknown as { owner_name?: string }
+            )?.owner_name?.toLowerCase() ?? "";
+          return (
+            patientName.includes(searchLower) || ownerName.includes(searchLower)
+          );
         });
       }
 
@@ -110,14 +129,16 @@ export const casesRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { data, error } = await ctx.serviceClient
         .from("cases")
-        .select(`
+        .select(
+          `
           *,
           user:users(id, email, first_name, last_name),
           patient:patients(*),
           soap_notes(*),
           discharge_summaries(*),
           transcriptions(*)
-        `)
+        `,
+        )
         .eq("id", input.id)
         .single();
 
@@ -140,7 +161,7 @@ export const casesRouter = createTRPCRouter({
       z.object({
         id: z.string().uuid(),
         data: caseSchema.partial(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const { data, error } = await ctx.serviceClient
@@ -184,6 +205,131 @@ export const casesRouter = createTRPCRouter({
     }),
 
   /**
+   * Bulk create cases with patients
+   * Creates one case + one patient per entry
+   */
+  bulkCreateCases: adminProcedure
+    .input(
+      z.array(
+        z.object({
+          userId: z.string().uuid(),
+          patientName: z.string().min(2),
+        }),
+      ),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const results = {
+        successful: [] as Array<{
+          caseId: string;
+          patientId: string;
+          patientName: string;
+        }>,
+        failed: [] as Array<{ patientName: string; error: string }>,
+      };
+
+      // Process each entry
+      for (const entry of input) {
+        try {
+          // 1. Verify user exists
+          const { data: user, error: userError } = await ctx.serviceClient
+            .from("users")
+            .select("id")
+            .eq("id", entry.userId)
+            .single();
+
+          if (userError || !user) {
+            results.failed.push({
+              patientName: entry.patientName,
+              error: "User not found",
+            });
+            continue;
+          }
+
+          // 2. Create patient
+          const { data: patient, error: patientError } = await ctx.serviceClient
+            .from("patients")
+            .insert({
+              name: entry.patientName,
+              user_id: entry.userId,
+            })
+            .select()
+            .single();
+
+          if (patientError || !patient) {
+            results.failed.push({
+              patientName: entry.patientName,
+              error: `Failed to create patient: ${patientError?.message ?? "Unknown error"}`,
+            });
+            continue;
+          }
+
+          // 3. Create case with defaults
+          const { data: caseData, error: caseError } = await ctx.serviceClient
+            .from("cases")
+            .insert({
+              user_id: entry.userId,
+              status: "draft" as const,
+              type: "checkup" as const,
+              visibility: "private" as const,
+            })
+            .select()
+            .single();
+
+          if (caseError || !caseData) {
+            // Clean up patient if case creation fails
+            await ctx.serviceClient
+              .from("patients")
+              .delete()
+              .eq("id", patient.id);
+
+            results.failed.push({
+              patientName: entry.patientName,
+              error: `Failed to create case: ${caseError?.message ?? "Unknown error"}`,
+            });
+            continue;
+          }
+
+          // 4. Link patient to case
+          const { error: updateError } = await ctx.serviceClient
+            .from("patients")
+            .update({ case_id: caseData.id })
+            .eq("id", patient.id);
+
+          if (updateError) {
+            // Clean up both if linking fails
+            await ctx.serviceClient
+              .from("cases")
+              .delete()
+              .eq("id", caseData.id);
+            await ctx.serviceClient
+              .from("patients")
+              .delete()
+              .eq("id", patient.id);
+
+            results.failed.push({
+              patientName: entry.patientName,
+              error: `Failed to link patient to case: ${updateError.message}`,
+            });
+            continue;
+          }
+
+          results.successful.push({
+            caseId: caseData.id,
+            patientId: patient.id,
+            patientName: entry.patientName,
+          });
+        } catch (error) {
+          results.failed.push({
+            patientName: entry.patientName,
+            error: error instanceof Error ? error.message : "Unknown error",
+          });
+        }
+      }
+
+      return results;
+    }),
+
+  /**
    * Get case statistics for dashboard
    */
   getCaseStats: adminProcedure.query(async ({ ctx }) => {
@@ -209,8 +355,10 @@ export const casesRouter = createTRPCRouter({
       byStatus: {
         draft: statusData?.filter((c) => c.status === "draft").length ?? 0,
         ongoing: statusData?.filter((c) => c.status === "ongoing").length ?? 0,
-        completed: statusData?.filter((c) => c.status === "completed").length ?? 0,
-        reviewed: statusData?.filter((c) => c.status === "reviewed").length ?? 0,
+        completed:
+          statusData?.filter((c) => c.status === "completed").length ?? 0,
+        reviewed:
+          statusData?.filter((c) => c.status === "reviewed").length ?? 0,
       },
       byType: {
         checkup: typeData?.filter((c) => c.type === "checkup").length ?? 0,

@@ -31,6 +31,26 @@ const userSchema = z.object({
 
 export const usersRouter = createTRPCRouter({
   /**
+   * Get minimal user data for dropdowns/selectors
+   */
+  getUsersForSelector: adminProcedure.query(async ({ ctx }) => {
+    const { data, error } = await ctx.serviceClient
+      .from("users")
+      .select("id, email, first_name, last_name, role")
+      .order("first_name", { ascending: true });
+
+    if (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to fetch users",
+        cause: error,
+      });
+    }
+
+    return data;
+  }),
+
+  /**
    * List all users with optional filters
    */
   listUsers: adminProcedure
@@ -38,7 +58,7 @@ export const usersRouter = createTRPCRouter({
       z.object({
         search: z.string().optional(),
         role: userRoleEnum.optional(),
-      })
+      }),
     )
     .query(async ({ ctx, input }) => {
       let query = ctx.serviceClient
@@ -49,7 +69,7 @@ export const usersRouter = createTRPCRouter({
       // Search by name or email
       if (input.search) {
         query = query.or(
-          `email.ilike.%${input.search}%,first_name.ilike.%${input.search}%,last_name.ilike.%${input.search}%`
+          `email.ilike.%${input.search}%,first_name.ilike.%${input.search}%,last_name.ilike.%${input.search}%`,
         );
       }
 
@@ -101,7 +121,7 @@ export const usersRouter = createTRPCRouter({
     .input(
       userSchema.extend({
         password: z.string().min(8, "Password must be at least 8 characters"),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const { password, ...profileData } = input;
@@ -158,7 +178,7 @@ export const usersRouter = createTRPCRouter({
       z.object({
         id: z.string().uuid(),
         data: userSchema.partial(),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const { data, error } = await ctx.serviceClient
@@ -201,7 +221,7 @@ export const usersRouter = createTRPCRouter({
 
       // Delete auth user
       const { error: authError } = await ctx.supabase.auth.admin.deleteUser(
-        input.id
+        input.id,
       );
 
       if (authError) {
@@ -225,14 +245,14 @@ export const usersRouter = createTRPCRouter({
         newPassword: z
           .string()
           .min(8, "Password must be at least 8 characters"),
-      })
+      }),
     )
     .mutation(async ({ ctx, input }) => {
       const { error } = await ctx.supabase.auth.admin.updateUserById(
         input.userId,
         {
           password: input.newPassword,
-        }
+        },
       );
 
       if (error) {
