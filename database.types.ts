@@ -359,12 +359,15 @@ export type Database = {
           case_id: string | null
           created_at: string
           date_of_birth: string | null
+          external_id: string | null
           id: string
+          metadata: Json | null
           name: string
           owner_email: string | null
           owner_name: string | null
           owner_phone: string | null
           sex: string | null
+          source: string | null
           species: string | null
           updated_at: string | null
           user_id: string | null
@@ -375,12 +378,15 @@ export type Database = {
           case_id?: string | null
           created_at?: string
           date_of_birth?: string | null
+          external_id?: string | null
           id?: string
+          metadata?: Json | null
           name: string
           owner_email?: string | null
           owner_name?: string | null
           owner_phone?: string | null
           sex?: string | null
+          source?: string | null
           species?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -391,12 +397,15 @@ export type Database = {
           case_id?: string | null
           created_at?: string
           date_of_birth?: string | null
+          external_id?: string | null
           id?: string
+          metadata?: Json | null
           name?: string
           owner_email?: string | null
           owner_name?: string | null
           owner_phone?: string | null
           sex?: string | null
+          source?: string | null
           species?: string | null
           updated_at?: string | null
           user_id?: string | null
