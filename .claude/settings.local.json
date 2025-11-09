@@ -53,7 +53,10 @@
       "Bash(pnpm lint:*)",
       "Bash(git restore:*)",
       "mcp__supabase__deploy_edge_function",
-      "mcp__supabase__list_migrations"
+      "mcp__supabase__list_migrations",
+      "Bash(pnpm install:*)",
+      "Bash(timeout:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { createServiceClient } from "~/lib/supabase/server";
 import type { RetellCallResponse } from "~/lib/retell/client";
+import { scheduleCallExecution } from "~/lib/qstash/client";
 
 /**
  * Retell AI Webhook Handler
@@ -13,6 +14,8 @@ import type { RetellCallResponse } from "~/lib/retell/client";
  * - call_ended: Triggered when a call completes (includes all data except call_analysis)
  * - call_analyzed: Triggered when call analysis is complete (includes call_analysis)
  *
+ * Enhanced with automatic retry logic for failed calls.
+ *
  * Documentation: https://docs.retellai.com/features/webhook-overview
  */
 
@@ -23,7 +26,9 @@ interface RetellWebhookPayload {
 
 /**
  * Verify webhook signature from Retell AI
+ * Currently disabled - uncomment check in POST handler when enabling
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function verifySignature(request: NextRequest): boolean {
   const signature = request.headers.get("x-retell-signature");
   const apiKey = process.env.RETELL_API_KEY;
@@ -55,13 +60,36 @@ function mapRetellStatus(retellStatus: string | undefined): string {
 }
 
 /**
+ * Determine if a call should be retried based on disconnection reason
+ */
+function shouldRetry(disconnectionReason?: string): boolean {
+  const retryableReasons = [
+    "dial_no_answer",
+    "dial_busy",
+    "error_inbound_webhook",
+  ];
+  return retryableReasons.includes(disconnectionReason ?? "");
+}
+
+/**
+ * Calculate retry delay with exponential backoff
+ *
+ * @param retryCount - Current retry count (0-based)
+ * @returns Delay in minutes
+ */
+function calculateRetryDelay(retryCount: number): number {
+  // Exponential backoff: 5, 10, 20 minutes
+  return Math.pow(2, retryCount) * 5;
+}
+
+/**
  * Handle incoming webhook from Retell AI
  */
 export async function POST(request: NextRequest) {
   try {
     // TODO: Re-enable signature verification after setting RETELL_API_KEY in Vercel
     // if (!verifySignature(request)) {
-    //   console.error("Invalid webhook signature");
+    //   console.error("[RETELL_WEBHOOK] Invalid webhook signature");
     //   return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     // }
 
@@ -69,7 +97,10 @@ export async function POST(request: NextRequest) {
     const payload = (await request.json()) as RetellWebhookPayload;
     const { event, call } = payload;
 
-    console.log(`Received Retell webhook: ${event} for call ${call.call_id}`);
+    console.log("[RETELL_WEBHOOK] Received event", {
+      event,
+      callId: call.call_id,
+    });
 
     // Get Supabase service client (bypasses RLS since webhooks have no auth context)
     const supabase = await createServiceClient();
@@ -77,15 +108,15 @@ export async function POST(request: NextRequest) {
     // Find the call in our database by Retell call ID
     const { data: existingCall, error: findError } = await supabase
       .from("retell_calls")
-      .select("id")
+      .select("id, metadata")
       .eq("retell_call_id", call.call_id)
       .single();
 
     if (findError || !existingCall) {
-      console.warn(
-        `Call not found in database: ${call.call_id}. This may be a call created outside the application (e.g., test call from Retell dashboard).`,
-        findError,
-      );
+      console.warn("[RETELL_WEBHOOK] Call not found in database", {
+        callId: call.call_id,
+        error: findError,
+      });
       // Return 200 to prevent Retell from retrying
       return NextResponse.json(
         {
@@ -117,6 +148,11 @@ export async function POST(request: NextRequest) {
         ? new Date(call.start_timestamp * 1000).toISOString()
         : null;
       updateData.status = "in_progress";
+
+      console.log("[RETELL_WEBHOOK] Call started", {
+        callId: call.call_id,
+        dbId: existingCall.id,
+      });
     }
 
     if (event === "call_ended") {
@@ -149,6 +185,95 @@ export async function POST(request: NextRequest) {
       ) {
         updateData.status = "failed";
       }
+
+      console.log("[RETELL_WEBHOOK] Call ended", {
+        callId: call.call_id,
+        dbId: existingCall.id,
+        status: updateData.status,
+        disconnectionReason: call.disconnection_reason,
+      });
+
+      // Handle retry logic for failed calls
+      if (
+        updateData.status === "failed" &&
+        shouldRetry(call.disconnection_reason)
+      ) {
+        const metadata =
+          (existingCall.metadata as Record<string, unknown>) ?? {};
+        const retryCount = (metadata.retry_count as number) ?? 0;
+        const maxRetries = (metadata.max_retries as number) ?? 3;
+
+        if (retryCount < maxRetries) {
+          // Calculate retry delay with exponential backoff
+          const delayMinutes = calculateRetryDelay(retryCount);
+          const nextRetryAt = new Date(Date.now() + delayMinutes * 60 * 1000);
+
+          console.log("[RETELL_WEBHOOK] Scheduling retry", {
+            callId: call.call_id,
+            dbId: existingCall.id,
+            retryCount: retryCount + 1,
+            maxRetries,
+            delayMinutes,
+            nextRetryAt: nextRetryAt.toISOString(),
+          });
+
+          // Update metadata with retry info
+          updateData.metadata = {
+            ...metadata,
+            retry_count: retryCount + 1,
+            next_retry_at: nextRetryAt.toISOString(),
+            last_retry_reason: call.disconnection_reason,
+          };
+
+          // Reset status to scheduled for retry
+          updateData.status = "scheduled";
+
+          // Re-enqueue in QStash
+          try {
+            const messageId = await scheduleCallExecution(
+              existingCall.id,
+              nextRetryAt,
+            );
+
+            // Add QStash message ID to metadata
+            updateData.metadata = {
+              ...(updateData.metadata ?? {}),
+              qstash_message_id: messageId,
+            };
+
+            console.log("[RETELL_WEBHOOK] Retry scheduled successfully", {
+              callId: call.call_id,
+              dbId: existingCall.id,
+              qstashMessageId: messageId,
+            });
+          } catch (qstashError) {
+            console.error("[RETELL_WEBHOOK] Failed to schedule retry", {
+              callId: call.call_id,
+              dbId: existingCall.id,
+              error:
+                qstashError instanceof Error
+                  ? qstashError.message
+                  : String(qstashError),
+            });
+            // Keep status as failed if retry scheduling fails
+            updateData.status = "failed";
+          }
+        } else {
+          console.log("[RETELL_WEBHOOK] Max retries reached", {
+            callId: call.call_id,
+            dbId: existingCall.id,
+            retryCount,
+            maxRetries,
+          });
+
+          // Mark as permanently failed
+          updateData.metadata = {
+            ...metadata,
+            final_failure: true,
+            final_failure_reason: call.disconnection_reason,
+          };
+        }
+      }
     }
 
     if (event === "call_analyzed") {
@@ -165,6 +290,11 @@ export async function POST(request: NextRequest) {
       if (call.transcript_object) {
         updateData.transcript_object = call.transcript_object as unknown;
       }
+
+      console.log("[RETELL_WEBHOOK] Call analyzed", {
+        callId: call.call_id,
+        dbId: existingCall.id,
+      });
     }
 
     // Update the call in database
@@ -174,16 +304,23 @@ export async function POST(request: NextRequest) {
       .eq("id", existingCall.id);
 
     if (updateError) {
-      console.error("Error updating call in database:", updateError);
+      console.error("[RETELL_WEBHOOK] Database update error", {
+        callId: call.call_id,
+        dbId: existingCall.id,
+        error: updateError,
+      });
       return NextResponse.json(
         { error: "Failed to update call" },
         { status: 500 },
       );
     }
 
-    console.log(
-      `Successfully processed ${event} for call ${call.call_id} - Status: ${String(updateData.status)}`,
-    );
+    console.log("[RETELL_WEBHOOK] Successfully processed", {
+      event,
+      callId: call.call_id,
+      dbId: existingCall.id,
+      status: String(updateData.status),
+    });
 
     // Return success response
     return NextResponse.json({
@@ -193,7 +330,10 @@ export async function POST(request: NextRequest) {
       status: updateData.status,
     });
   } catch (error) {
-    console.error("Webhook error:", error);
+    console.error("[RETELL_WEBHOOK] Error", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
