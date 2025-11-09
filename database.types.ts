@@ -448,6 +448,7 @@ export type Database = {
           recording_url: string | null
           retell_call_id: string
           retell_response: Json | null
+          scheduled_for: string | null
           start_timestamp: string | null
           status: string
           transcript: string | null
@@ -473,6 +474,7 @@ export type Database = {
           recording_url?: string | null
           retell_call_id: string
           retell_response?: Json | null
+          scheduled_for?: string | null
           start_timestamp?: string | null
           status?: string
           transcript?: string | null
@@ -498,6 +500,7 @@ export type Database = {
           recording_url?: string | null
           retell_call_id?: string
           retell_response?: Json | null
+          scheduled_for?: string | null
           start_timestamp?: string | null
           status?: string
           transcript?: string | null
