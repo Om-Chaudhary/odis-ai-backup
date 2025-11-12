@@ -2,12 +2,8 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { verifySignatureAppRouter } from "@upstash/qstash/dist/nextjs";
 import { createServiceClient } from "~/lib/supabase/server";
-import { createPhoneCall } from "~/lib/retell/client";
-import {
-  isWithinBusinessHours,
-  getNextBusinessHourSlot,
-} from "~/lib/utils/business-hours";
-import { scheduleCallExecution } from "~/lib/qstash/client";
+import { createPhoneCall } from "~/lib/vapi/client";
+import { mapVapiStatus } from "~/lib/vapi/client";
 
 /**
  * Execute Call Webhook
@@ -15,31 +11,13 @@ import { scheduleCallExecution } from "~/lib/qstash/client";
  * POST /api/webhooks/execute-call
  *
  * This webhook is triggered by QStash at the scheduled time.
- * It executes the scheduled call via Retell AI.
+ * It executes the scheduled call via VAPI.
  *
  * Security: QStash signature verification is critical
  */
 
 interface ExecuteCallPayload {
   callId: string;
-}
-
-/**
- * Map Retell API status to our database status
- */
-function mapRetellStatus(retellStatus: string | undefined): string {
-  if (!retellStatus) return "initiated";
-
-  const statusMap: Record<string, string> = {
-    registered: "initiated",
-    ongoing: "in_progress",
-    active: "in_progress",
-    ended: "completed",
-    error: "failed",
-  };
-
-  const lowerStatus = retellStatus.toLowerCase();
-  return statusMap[lowerStatus] ?? lowerStatus;
 }
 
 /**
@@ -68,7 +46,7 @@ async function handler(req: NextRequest) {
 
     // Fetch scheduled call from database
     const { data: call, error } = await supabase
-      .from("retell_calls")
+      .from("vapi_calls")
       .select("*")
       .eq("id", callId)
       .single();
@@ -84,8 +62,8 @@ async function handler(req: NextRequest) {
       );
     }
 
-    // Check if call is still in scheduled status (prevent double execution)
-    if (call.status !== "scheduled") {
+    // Check if call is still in queued status (prevent double execution)
+    if (call.status !== "queued") {
       console.warn("[EXECUTE_CALL] Call already processed", {
         callId,
         status: call.status,
@@ -99,111 +77,57 @@ async function handler(req: NextRequest) {
 
     // Get metadata
     const metadata = call.metadata as Record<string, unknown> | null;
-    const scheduledTime = new Date(
-      (metadata?.scheduled_for as string) ?? new Date(),
-    );
-    const timezone = (metadata?.timezone as string) ?? "America/Los_Angeles";
 
-    console.log("[EXECUTE_CALL] Checking business hours", {
-      callId,
-      scheduledTime: scheduledTime.toISOString(),
-      timezone,
-    });
+    // Get VAPI configuration
+    const assistantId = call.assistant_id;
+    const phoneNumberId = call.phone_number_id;
 
-    // Check if current time is within business hours
-    const now = new Date();
-    if (!isWithinBusinessHours(now, timezone)) {
-      console.log("[EXECUTE_CALL] Outside business hours, rescheduling", {
-        callId,
-        currentTime: now.toISOString(),
-      });
-
-      // Reschedule to next available slot
-      const nextSlot = getNextBusinessHourSlot(now, timezone);
-
-      // Update database
-      await supabase
-        .from("retell_calls")
-        .update({
-          metadata: {
-            ...metadata,
-            scheduled_for: nextSlot.toISOString(),
-            rescheduled_reason: "outside_business_hours",
-            rescheduled_count:
-              ((metadata?.rescheduled_count as number) ?? 0) + 1,
-          },
-        })
-        .eq("id", callId);
-
-      // Re-enqueue in QStash
-      const messageId = await scheduleCallExecution(callId, nextSlot);
-
-      console.log("[EXECUTE_CALL] Rescheduled successfully", {
-        callId,
-        nextScheduledFor: nextSlot.toISOString(),
-        qstashMessageId: messageId,
-      });
-
-      return NextResponse.json({
-        success: true,
-        message: "Rescheduled to next business hour",
-        nextScheduledFor: nextSlot.toISOString(),
-        qstashMessageId: messageId,
-      });
-    }
-
-    // Execute call via Retell API
-    const fromNumber = process.env.RETELL_FROM_NUMBER;
-    const agentId = call.agent_id ?? process.env.RETELL_AGENT_ID;
-
-    if (!fromNumber) {
-      console.error("[EXECUTE_CALL] Missing RETELL_FROM_NUMBER");
+    if (!assistantId) {
+      console.error("[EXECUTE_CALL] Missing assistant_id");
       return NextResponse.json(
-        { error: "Missing from_number configuration" },
+        { error: "Missing assistant_id configuration" },
         { status: 500 },
       );
     }
 
-    if (!agentId) {
-      console.error("[EXECUTE_CALL] Missing agent_id");
+    if (!phoneNumberId) {
+      console.error("[EXECUTE_CALL] Missing phone_number_id");
       return NextResponse.json(
-        { error: "Missing agent_id configuration" },
+        { error: "Missing phone_number_id configuration" },
         { status: 500 },
       );
     }
 
-    console.log("[EXECUTE_CALL] Calling Retell API", {
+    console.log("[EXECUTE_CALL] Calling VAPI API", {
       callId,
-      phoneNumber: call.phone_number,
-      agentId,
+      phoneNumber: call.customer_phone,
+      assistantId,
+      phoneNumberId,
     });
 
+    // Execute call via VAPI
     const response = await createPhoneCall({
-      from_number: fromNumber,
-      to_number: call.phone_number,
-      override_agent_id: agentId,
-      retell_llm_dynamic_variables: call.call_variables,
-      metadata: call.metadata,
-      retries_on_no_answer: 2,
+      phoneNumber: call.customer_phone,
+      assistantId,
+      phoneNumberId,
+      assistantOverrides: {
+        variableValues: call.dynamic_variables as Record<string, unknown>,
+      },
     });
 
-    console.log("[EXECUTE_CALL] Retell API success", {
+    console.log("[EXECUTE_CALL] VAPI API success", {
       callId,
-      retellCallId: response.call_id,
-      status: response.call_status,
+      vapiCallId: response.id,
+      status: response.status,
     });
 
-    // Update database with Retell response
+    // Update database with VAPI response
     await supabase
-      .from("retell_calls")
+      .from("vapi_calls")
       .update({
-        retell_call_id: response.call_id,
-        agent_id: response.agent_id,
-        status: mapRetellStatus(response.call_status),
-        start_timestamp: response.start_timestamp
-          ? new Date(response.start_timestamp * 1000).toISOString()
-          : null,
-        retell_response: response as unknown,
+        vapi_call_id: response.id,
+        status: mapVapiStatus(response.status),
+        started_at: response.startedAt ? response.startedAt : null,
         metadata: {
           ...metadata,
           executed_at: new Date().toISOString(),
@@ -214,8 +138,8 @@ async function handler(req: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "Call executed successfully",
-      retellCallId: response.call_id,
-      status: response.call_status,
+      vapiCallId: response.id,
+      status: response.status,
     });
   } catch (error) {
     console.error("[EXECUTE_CALL] Error", {

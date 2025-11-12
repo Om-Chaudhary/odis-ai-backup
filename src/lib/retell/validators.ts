@@ -62,7 +62,7 @@ export const callFormSchema = z.object({
     .record(z.any())
     .default({})
     .describe("Additional metadata for the call"),
-  retryOnBusy: z.boolean().default(false),
+  retryOnBusy: z.boolean().optional().default(false),
 });
 
 export type CallFormInput = z.input<typeof callFormSchema>;
@@ -176,8 +176,10 @@ export const scheduleCallSchema = z.object({
   clinicName: z.string().optional(),
   clinicPhone: z.string().optional(),
   dischargeSummary: z.string().optional(),
-  scheduledFor: z.date().optional(),
+  scheduledFor: z.coerce.date().optional(),
   notes: z.string().optional(),
+  timezone: z.string().optional(),
+  metadata: z.record(z.any()).optional(),
 });
 
 export type ScheduleCallInput = z.infer<typeof scheduleCallSchema>;

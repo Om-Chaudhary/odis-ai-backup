@@ -10,6 +10,7 @@ import {
   FileText,
   Briefcase,
   Users,
+  Phone,
 } from "lucide-react";
 import { Toaster } from "sonner";
 import { DarkModeWrapper } from "~/components/DarkModeWrapper";
@@ -91,6 +92,15 @@ export default async function AdminLayout({
               </NavLink>
               <NavLink href="/admin/users" icon={<Users size={20} />}>
                 Users
+              </NavLink>
+
+              <div className="px-3 pt-4 pb-2">
+                <p className="text-xs font-semibold tracking-wider text-slate-600 uppercase">
+                  Testing
+                </p>
+              </div>
+              <NavLink href="/admin/vapi-test" icon={<Phone size={20} />}>
+                Vapi Test
               </NavLink>
             </nav>
 

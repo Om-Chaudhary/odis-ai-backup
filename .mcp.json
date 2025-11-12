@@ -7,12 +7,23 @@
         "mcp"
       ]
     },
-    "retellai-mcp-server": {
+    "vapi-mcp": {
       "command": "npx",
-      "args": ["-y", "@abhaybabbar/retellai-mcp-server"],
+      "args": [
+        "mcp-remote",
+        "https://mcp.vapi.ai/mcp",
+        "--header",
+        "Authorization: Bearer ${VAPI_TOKEN}"
+      ],
       "env": {
-        "RETELL_API_KEY": "key_49876e1de9e2ae03a924ce0b8f47"
+        "VAPI_TOKEN": "eb6d0702-e660-46a7-9fe4-71c4a5264e23"
       }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ]
     }
   }
 }

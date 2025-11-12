@@ -23,6 +23,11 @@ export const env = createEnv({
       .enum(["development", "test", "production"])
       .default("development"),
     SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+    // VAPI Configuration
+    VAPI_PRIVATE_KEY: z.string().optional(),
+    VAPI_ASSISTANT_ID: z.string().optional(),
+    VAPI_PHONE_NUMBER_ID: z.string().optional(),
+    VAPI_WEBHOOK_SECRET: z.string().optional(),
     // Environment identifier
     APP_ENV: z
       .enum(["development", "staging", "production"])
@@ -58,6 +63,10 @@ export const env = createEnv({
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    VAPI_PRIVATE_KEY: process.env.VAPI_PRIVATE_KEY,
+    VAPI_ASSISTANT_ID: process.env.VAPI_ASSISTANT_ID,
+    VAPI_PHONE_NUMBER_ID: process.env.VAPI_PHONE_NUMBER_ID,
+    VAPI_WEBHOOK_SECRET: process.env.VAPI_WEBHOOK_SECRET,
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,

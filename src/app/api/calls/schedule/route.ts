@@ -2,13 +2,63 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { createClient } from "~/lib/supabase/server";
 import { scheduleCallSchema } from "~/lib/retell/validators";
-import {
-  isWithinBusinessHours,
-  getNextBusinessHourSlot,
-  isFutureTime,
-} from "~/lib/utils/business-hours";
+import { isFutureTime } from "~/lib/utils/business-hours";
 import { scheduleCallExecution } from "~/lib/qstash/client";
 import { getUser } from "~/server/actions/auth";
+import { createServerClient } from "@supabase/ssr";
+import { env } from "~/env";
+
+/**
+ * Authenticate user from either cookies (web app) or Authorization header (extension)
+ */
+async function authenticateRequest(request: NextRequest) {
+  // Check for Authorization header (browser extension)
+  const authHeader = request.headers.get("authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.substring(7);
+
+    // Create a Supabase client with the token
+    const supabase = createServerClient(
+      env.NEXT_PUBLIC_SUPABASE_URL,
+      env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          getAll() {
+            return [];
+          },
+          setAll() {
+            // No-op for token-based auth
+          },
+        },
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      },
+    );
+
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      return { user: null, supabase: null };
+    }
+
+    return { user, supabase };
+  }
+
+  // Fall back to cookie-based auth (web app)
+  const user = await getUser();
+  if (!user) {
+    return { user: null, supabase: null };
+  }
+
+  const supabase = await createClient();
+  return { user, supabase };
+}
 
 /**
  * Schedule Call API Route
@@ -19,15 +69,16 @@ import { getUser } from "~/server/actions/auth";
  * for delayed execution at the specified time.
  *
  * This endpoint is designed to accept requests from:
- * - Browser extension (IDEXX Neo integration)
- * - Admin dashboard
- * - External integrations
+ * - Browser extension (IDEXX Neo integration) - uses Bearer token
+ * - Admin dashboard - uses cookies
+ * - External integrations - uses Bearer token
  */
 export async function POST(request: NextRequest) {
   try {
-    // Check admin access
-    const user = await getUser();
-    if (!user) {
+    // Authenticate from either cookies or Authorization header
+    const { user, supabase } = await authenticateRequest(request);
+
+    if (!user || !supabase) {
       return NextResponse.json(
         { error: "Unauthorized: Authentication required" },
         { status: 401 },
@@ -35,7 +86,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify admin role
-    const supabase = await createClient();
     const { data: profile } = await supabase
       .from("users")
       .select("role")
@@ -74,21 +124,8 @@ export async function POST(request: NextRequest) {
     const timezone =
       (body.metadata?.timezone as string) ?? "America/Los_Angeles";
 
-    // Check if scheduled time is within business hours
-    let finalScheduledTime = scheduledFor;
-    if (!isWithinBusinessHours(scheduledFor, timezone)) {
-      console.log("[SCHEDULE_CALL] Time outside business hours, rescheduling", {
-        original: scheduledFor.toISOString(),
-        timezone,
-      });
-
-      // Automatically reschedule to next business hour
-      finalScheduledTime = getNextBusinessHourSlot(scheduledFor, timezone);
-
-      console.log("[SCHEDULE_CALL] Rescheduled to next business hour", {
-        newTime: finalScheduledTime.toISOString(),
-      });
-    }
+    // Use the scheduled time as-is (no business hours enforcement)
+    const finalScheduledTime = scheduledFor;
 
     // Prepare call variables from input data
     const callVariables = {
