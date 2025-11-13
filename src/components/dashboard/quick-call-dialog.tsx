@@ -30,6 +30,100 @@ interface QuickCallDialogProps {
   onSuccess?: () => void;
 }
 
+// Helper function to format dates for voice
+function formatDateForVoice(date: Date): string {
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  const ordinals = [
+    "first",
+    "second",
+    "third",
+    "fourth",
+    "fifth",
+    "sixth",
+    "seventh",
+    "eighth",
+    "ninth",
+    "tenth",
+    "eleventh",
+    "twelfth",
+    "thirteenth",
+    "fourteenth",
+    "fifteenth",
+    "sixteenth",
+    "seventeenth",
+    "eighteenth",
+    "nineteenth",
+    "twentieth",
+    "twenty first",
+    "twenty second",
+    "twenty third",
+    "twenty fourth",
+    "twenty fifth",
+    "twenty sixth",
+    "twenty seventh",
+    "twenty eighth",
+    "twenty ninth",
+    "thirtieth",
+    "thirty first",
+  ];
+
+  const month = months[date.getMonth()];
+  const day = ordinals[date.getDate() - 1];
+  const year = date.getFullYear().toString().split("").join(" ");
+
+  return `${month} ${day}, ${year}`;
+}
+
+// Helper function to format phone numbers for voice
+function formatPhoneForVoice(phone: string): string {
+  const cleaned = phone.replace(/\D/g, "");
+  const digitWords: Record<string, string> = {
+    "0": "zero",
+    "1": "one",
+    "2": "two",
+    "3": "three",
+    "4": "four",
+    "5": "five",
+    "6": "six",
+    "7": "seven",
+    "8": "eight",
+    "9": "nine",
+  };
+
+  const phoneDigits = cleaned.slice(-10);
+  const areaCode = phoneDigits
+    .slice(0, 3)
+    .split("")
+    .map((d) => digitWords[d])
+    .join(" ");
+  const exchange = phoneDigits
+    .slice(3, 6)
+    .split("")
+    .map((d) => digitWords[d])
+    .join(" ");
+  const subscriber = phoneDigits
+    .slice(6)
+    .split("")
+    .map((d) => digitWords[d])
+    .join(" ");
+
+  return `${areaCode}, ${exchange}, ${subscriber}`;
+}
+
 export function QuickCallDialog({
   open,
   onOpenChange,
@@ -131,14 +225,31 @@ export function QuickCallDialog({
     setIsSubmitting(true);
 
     try {
+      // Format today's date for voice (e.g., "November twelfth, twenty twenty five")
+      const today = new Date();
+      const appointmentDate = formatDateForVoice(today);
+
       const result = await scheduleCall({
         phoneNumber,
         petName,
         ownerName: ownerName || "Unknown",
+
+        // Required VAPI fields with defaults
+        appointmentDate,
+        callType: "discharge" as const,
+        agentName: "Sarah",
+        clinicName: clinicName || "our clinic",
+        clinicPhone: clinicPhone
+          ? formatPhoneForVoice(clinicPhone)
+          : "five five five, one two three, four five six seven",
+        emergencyPhone:
+          "five five five, nine nine nine, eight eight eight eight",
+        dischargeSummary: dischargeSummary || "had a routine checkup",
+        subType: "wellness",
+
+        // Optional fields
         vetName: vetName || undefined,
-        clinicName: clinicName || undefined,
-        clinicPhone: clinicPhone || undefined,
-        dischargeSummary: dischargeSummary || undefined,
+        nextSteps: undefined,
       });
 
       if (result.success) {

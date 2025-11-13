@@ -19,20 +19,94 @@ export function transformIdexxToCallRequest(
   // Select primary provider (first in list)
   const primaryProvider = pageData.providers[0];
 
+  // Format appointment date for voice (e.g., "November twelfth, twenty twenty five")
+  const consultationDate = pageData.consultation.date
+    ? new Date(pageData.consultation.date)
+    : new Date();
+  const appointmentDate = formatDateForVoice(consultationDate);
+
+  // Format phone numbers for voice
+  const clinicPhoneFormatted = formatPhoneForVoice(pageData.clinic.phone);
+  const emergencyPhoneFormatted = formatPhoneForVoice(
+    process.env.DEFAULT_EMERGENCY_PHONE ?? pageData.clinic.phone
+  );
+
   return {
     phoneNumber: formatPhoneNumber(pageData.client.phone),
     petName: pageData.patient.name,
     ownerName: pageData.client.name,
-    vetName: primaryProvider?.name ?? "Unknown Veterinarian",
+    appointmentDate,
+
+    // VAPI call configuration
+    callType: "discharge" as const, // IDEXX imports are typically discharge calls
+    agentName: "Sarah",
     clinicName: pageData.clinic.name,
-    clinicPhone: pageData.clinic.phone,
+    clinicPhone: clinicPhoneFormatted,
+    emergencyPhone: emergencyPhoneFormatted,
+
+    // Clinical details
     dischargeSummary:
       pageData.consultation.dischargeSummary ?? pageData.consultation.notes,
+    subType: "wellness", // Most IDEXX imports are wellness checks
+
+    // Optional fields
+    vetName: primaryProvider?.name ?? "Unknown Veterinarian",
+    nextSteps: undefined, // Can be extracted from consultation notes if needed
+
+    // Scheduling
     scheduledFor,
     notes:
       userNotes ??
       `Consultation #${pageData.consultation.id} - ${pageData.consultation.reason}`,
   };
+}
+
+/**
+ * Format date for voice output (e.g., "November twelfth, twenty twenty five")
+ */
+function formatDateForVoice(date: Date): string {
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const ordinals = [
+    "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth",
+    "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth", "sixteenth", "seventeenth",
+    "eighteenth", "nineteenth", "twentieth", "twenty first", "twenty second", "twenty third",
+    "twenty fourth", "twenty fifth", "twenty sixth", "twenty seventh", "twenty eighth",
+    "twenty ninth", "thirtieth", "thirty first"
+  ];
+
+  const month = months[date.getMonth()];
+  const day = ordinals[date.getDate() - 1];
+  const year = date.getFullYear().toString().split('').join(' '); // "2025" -> "2 0 2 5"
+
+  return `${month} ${day}, ${year}`;
+}
+
+/**
+ * Format phone number for voice output (e.g., "five five five, one two three, four five six seven")
+ */
+function formatPhoneForVoice(phone: string): string {
+  // Remove all non-digit characters
+  const cleaned = phone.replace(/\D/g, "");
+
+  // Map digits to words
+  const digitWords: Record<string, string> = {
+    '0': 'zero', '1': 'one', '2': 'two', '3': 'three', '4': 'four',
+    '5': 'five', '6': 'six', '7': 'seven', '8': 'eight', '9': 'nine'
+  };
+
+  // Get the last 10 digits (US phone number)
+  const phoneDigits = cleaned.slice(-10);
+
+  // Format as "555, 123, 4567" -> "five five five, one two three, four five six seven"
+  const areaCode = phoneDigits.slice(0, 3).split('').map(d => digitWords[d]).join(' ');
+  const exchange = phoneDigits.slice(3, 6).split('').map(d => digitWords[d]).join(' ');
+  const subscriber = phoneDigits.slice(6).split('').map(d => digitWords[d]).join(' ');
+
+  return `${areaCode}, ${exchange}, ${subscriber}`;
 }
 
 /**

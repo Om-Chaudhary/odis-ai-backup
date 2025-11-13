@@ -106,6 +106,7 @@ export async function POST(request: NextRequest) {
     console.log("[SCHEDULE_CALL] Received request", {
       phoneNumber: validated.phoneNumber,
       petName: validated.petName,
+      callType: validated.callType,
       scheduledFor: validated.scheduledFor?.toISOString(),
     });
 
@@ -127,36 +128,67 @@ export async function POST(request: NextRequest) {
     // Use the scheduled time as-is (no business hours enforcement)
     const finalScheduledTime = scheduledFor;
 
-    // Prepare call variables from input data
+    // Prepare call variables from input data (snake_case for VAPI)
     const callVariables = {
+      // Core identification
       pet_name: validated.petName,
       owner_name: validated.ownerName,
+      appointment_date: validated.appointmentDate,
+
+      // Call configuration
+      call_type: validated.callType,
+
+      // Agent/clinic information
+      agent_name: validated.agentName ?? "Sarah",
       vet_name: validated.vetName ?? "",
-      clinic_name: validated.clinicName ?? "",
-      clinic_phone: validated.clinicPhone ?? "",
-      discharge_summary_content: validated.dischargeSummary ?? "",
+      clinic_name: validated.clinicName,
+      clinic_phone: validated.clinicPhone,
+      emergency_phone: validated.emergencyPhone,
+
+      // Clinical details
+      discharge_summary_content: validated.dischargeSummary,
+
+      // Conditional fields based on call_type
+      ...(validated.callType === "discharge" && validated.subType && {
+        sub_type: validated.subType,
+      }),
+
+      ...(validated.callType === "follow-up" && validated.condition && {
+        condition: validated.condition,
+      }),
+
+      // Follow-up instructions
+      ...(validated.nextSteps && { next_steps: validated.nextSteps }),
+
+      // Optional fields
+      ...(validated.medications && { medications: validated.medications }),
+      ...(validated.recheckDate && { recheck_date: validated.recheckDate }),
     };
+
+    console.log("[SCHEDULE_CALL] Dynamic variables prepared", {
+      callVariables,
+      variableCount: Object.keys(callVariables).length,
+      callType: validated.callType,
+    });
 
     // Store scheduled call in database
     const { data: scheduledCall, error: dbError } = await supabase
-      .from("retell_calls")
+      .from("vapi_calls")
       .insert({
-        retell_call_id: `scheduled_${Date.now()}_${Math.random().toString(36).substring(7)}`, // Temporary ID
-        agent_id: process.env.RETELL_AGENT_ID ?? "",
-        phone_number: validated.phoneNumber,
-        phone_number_pretty: formatPhoneNumber(validated.phoneNumber),
-        call_variables: callVariables,
+        user_id: user.id,
+        assistant_id: process.env.VAPI_ASSISTANT_ID ?? "",
+        phone_number_id: process.env.VAPI_PHONE_NUMBER_ID ?? "",
+        customer_phone: validated.phoneNumber,
+        scheduled_for: finalScheduledTime,
+        status: "queued",
+        dynamic_variables: callVariables,
         metadata: {
           notes: validated.notes,
-          scheduled_for: finalScheduledTime.toISOString(),
           timezone,
           retry_count: 0,
           max_retries: 3,
           ...(body.metadata ?? {}),
         },
-        status: "scheduled",
-        created_by: user.id,
-        patient_id: null,
       })
       .select()
       .single();
@@ -184,7 +216,7 @@ export async function POST(request: NextRequest) {
       });
 
       // Rollback database insert
-      await supabase.from("retell_calls").delete().eq("id", scheduledCall.id);
+      await supabase.from("vapi_calls").delete().eq("id", scheduledCall.id);
 
       return NextResponse.json(
         { error: "Failed to schedule call execution" },
@@ -194,10 +226,10 @@ export async function POST(request: NextRequest) {
 
     // Update database with QStash message ID
     await supabase
-      .from("retell_calls")
+      .from("vapi_calls")
       .update({
         metadata: {
-          ...scheduledCall.metadata,
+          ...(scheduledCall.metadata as Record<string, unknown>),
           qstash_message_id: qstashMessageId,
         },
       })
@@ -243,20 +275,4 @@ export async function GET() {
     status: "ok",
     message: "Schedule call endpoint is active",
   });
-}
-
-/**
- * Format phone number for display
- */
-function formatPhoneNumber(phoneNumber: string): string {
-  // Remove + and non-digits
-  const cleaned = phoneNumber.replace(/\D/g, "");
-
-  // US/Canada format
-  if (cleaned.length === 11 && cleaned.startsWith("1")) {
-    return `+1 (${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7)}`;
-  }
-
-  // International format
-  return `+${cleaned}`;
 }

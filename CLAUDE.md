@@ -39,7 +39,7 @@ pnpm update-types     # Generate TypeScript types from Supabase schema
 - **Styling**: Tailwind CSS 4
 - **UI Components**: shadcn/ui (Radix UI primitives)
 - **Analytics**: PostHog
-- **AI Integration**: Retell AI (voice calls)
+- **AI Integration**: VAPI (voice calls)
 
 ### Project Structure
 
@@ -50,7 +50,7 @@ src/
 │   ├── admin/             # Admin dashboard
 │   ├── api/               # API routes (webhooks, tRPC)
 │   ├── dashboard/         # User dashboard
-│   │   └── calls/         # Retell AI call management
+│   │   └── calls/         # VAPI call management
 │   └── blog/              # Sanity CMS blog
 ├── components/            # React components
 │   ├── ui/               # shadcn/ui components
@@ -59,8 +59,7 @@ src/
 │   └── blocks/           # Content blocks
 ├── server/               # Server-side code
 │   ├── actions/          # Next.js Server Actions
-│   │   ├── auth.ts       # Authentication actions
-│   │   └── retell.ts     # Retell AI call actions
+│   │   └── auth.ts       # Authentication actions
 │   └── api/              # tRPC setup
 │       ├── trpc.ts       # tRPC context & procedures
 │       ├── root.ts       # App router
@@ -69,7 +68,13 @@ src/
 │   ├── supabase/         # Supabase clients
 │   │   ├── server.ts     # Server-side client (with auth)
 │   │   └── client.ts     # Client-side client
-│   ├── retell/           # Retell AI SDK wrapper
+│   ├── vapi/             # VAPI AI SDK wrapper
+│   │   ├── client.ts     # VAPI client utilities
+│   │   ├── validators.ts # Input validation
+│   │   ├── types.ts      # TypeScript types
+│   │   └── knowledge-base/ # Domain-specific veterinary knowledge
+│   ├── idexx/            # IDEXX data transformation
+│   ├── qstash/           # QStash scheduling client
 │   └── utils.ts          # Utility functions
 ├── hooks/                # Custom React hooks
 │   └── use-call-polling.ts  # Polling hook with adaptive intervals
@@ -149,37 +154,163 @@ const hasActiveItems = useCallback(() => {
 
 **Why this matters:** Unstable callback references cause polling intervals to reset constantly, breaking the steady polling cadence.
 
-## Retell AI Integration
+## VAPI AI Integration
 
-Voice call management system using Retell AI SDK.
+Voice call management system using VAPI SDK for automated post-appointment follow-ups.
+
+### Architecture Overview
+
+The VAPI integration consists of:
+1. **Scheduling System**: Schedule calls for future execution using QStash
+2. **Execution System**: Make outbound calls via VAPI
+3. **Webhook System**: Receive real-time call status updates
+4. **Knowledge Base**: Domain-specific veterinary knowledge for natural conversations
+5. **IDEXX Integration**: Transform IDEXX Neo data into call variables
 
 ### Setup Required
 
 1. Add environment variables to `.env.local`:
 
    ```bash
-   RETELL_API_KEY=key_xxx
-   RETELL_FROM_NUMBER=+1234567890
-   RETELL_AGENT_ID=agent_xxx
+   # VAPI Configuration
+   VAPI_PRIVATE_KEY=your_private_key     # For server-side operations
+   VAPI_ASSISTANT_ID=assistant_id        # Default assistant to use
+   VAPI_PHONE_NUMBER_ID=phone_id         # Outbound caller ID
+   NEXT_PUBLIC_VAPI_PUBLIC_KEY=pub_key   # For browser-based calls (optional)
+   VAPI_WEBHOOK_SECRET=webhook_secret    # For webhook signature verification
+
+   # QStash (for scheduled calls)
+   QSTASH_TOKEN=qstash_token
+   QSTASH_CURRENT_SIGNING_KEY=signing_key
+   QSTASH_NEXT_SIGNING_KEY=next_key
+
+   # Site URL (for webhook callbacks)
+   NEXT_PUBLIC_SITE_URL=https://yourdomain.com
    ```
 
-2. Configure webhook in Retell AI dashboard:
-   - URL: `https://yourdomain.com/api/webhooks/retell`
-   - Events: `call_started`, `call_ended`
+2. Configure webhook in VAPI dashboard:
+   - URL: `https://yourdomain.com/api/webhooks/vapi`
+   - Events: All events (status-update, end-of-call-report, hang)
+   - Set webhook secret for signature verification
 
-3. Database table `retell_calls` stores call history
+3. Database table `vapi_calls` stores call history
 
 ### Key Files
 
-- **Server Actions**: `src/server/actions/retell.ts` - Call operations
-- **Webhook Handler**: `src/app/api/webhooks/retell/route.ts` - Receives Retell events
-- **SDK Wrapper**: `src/lib/retell/client.ts` - Type-safe Retell SDK
-- **Dashboard UI**: `src/app/dashboard/calls/` - Call management interface
+**API Routes**:
+- `src/app/api/calls/schedule/route.ts` - Schedule new calls with QStash
+- `src/app/api/calls/execute/route.ts` - Execute scheduled calls via VAPI
+- `src/app/api/webhooks/vapi/route.ts` - Receive VAPI webhook events
+- `src/app/api/webhooks/execute-call/route.ts` - QStash webhook for execution
+
+**Core Libraries**:
+- `src/lib/vapi/client.ts` - VAPI client wrapper with type safety
+- `src/lib/vapi/validators.ts` - Zod schemas for input validation
+- `src/lib/vapi/types.ts` - TypeScript type definitions
+- `src/lib/vapi/knowledge-base/` - Domain-specific veterinary knowledge
+- `src/lib/qstash/client.ts` - QStash scheduling client
+- `src/lib/idexx/transformer.ts` - IDEXX data transformation
+
+**UI Components**:
+- `src/components/dashboard/quick-call-dialog.tsx` - Quick call interface
+
+### Call Flow
+
+1. **Schedule Call** → POST `/api/calls/schedule`
+   - Validates input data (phone, pet name, owner name, etc.)
+   - Stores in `vapi_calls` table with status="queued"
+   - Schedules execution via QStash for future time
+
+2. **Execute Call** → POST `/api/calls/execute` (via QStash)
+   - Retrieves call from database
+   - Transforms data into dynamic variables
+   - Creates VAPI call with assistant overrides
+   - Updates status to "in-progress"
+
+3. **Track Progress** → Webhook at `/api/webhooks/vapi`
+   - Receives status updates (queued, ringing, in-progress, ended)
+   - Updates database in real-time
+   - Handles automatic retries for failed calls (busy, no-answer, voicemail)
+   - Stores transcript, recording, and cost data
+
+### Dynamic Variables System
+
+VAPI uses dynamic variables to personalize each call. Variables are passed via `assistantOverrides.variableValues`:
+
+```typescript
+{
+  // Core identification
+  pet_name: "Max",
+  owner_name: "John Smith",
+  vet_name: "Dr. Sarah Johnson",
+
+  // Clinic information
+  clinic_name: "Happy Paws Veterinary",
+  clinic_phone: "555-123-4567",
+  emergency_phone: "555-999-8888",
+
+  // Call context
+  appointment_date: "January 15th",
+  call_type: "discharge" | "follow-up",
+
+  // Clinical details
+  discharge_summary_content: "...",
+  medications: "...",
+  next_steps: "...",
+
+  // Conditional fields
+  sub_type: "wellness" | "vaccination",  // For discharge
+  condition: "ear infection",            // For follow-up
+  recheck_date: "January 30th",
+}
+```
+
+Variables are referenced in assistant prompts using `{{variable_name}}` syntax.
+
+### Knowledge Base Structure
+
+Domain-specific knowledge organized by specialty in `src/lib/vapi/knowledge-base/`:
+- `behavioral.ts` - Behavioral issues and training
+- `cardiac.ts` - Heart conditions
+- `dental.ts` - Dental procedures and care
+- `dermatological.ts` - Skin conditions
+- `endocrine.ts` - Diabetes, thyroid, etc.
+- `gastrointestinal.ts` - Digestive issues
+- `neurological.ts` - Seizures, neurological conditions
+- `ophthalmic.ts` - Eye conditions
+- `orthopedic.ts` - Bone and joint issues
+- `pain-management.ts` - Pain medication protocols
+- `post-surgical.ts` - Post-operative care
+- `respiratory.ts` - Breathing issues
+- `urinary.ts` - Urinary tract issues
+- `wound-care.ts` - Wound management
+
+Each file exports FAQs and instructions for that domain. The assistant can reference this knowledge during calls.
+
+### IDEXX Integration
+
+Transform IDEXX Neo discharge summary data into VAPI call variables:
+
+```typescript
+import { transformIdexxToCallVariables } from "~/lib/idexx/transformer";
+
+const variables = transformIdexxToCallVariables(idexxData);
+// Returns properly formatted variables for VAPI
+```
+
+Handles date formatting, phone number formatting, and field mapping from IDEXX structure.
+
+### Retry Logic
+
+Failed calls automatically retry with exponential backoff:
+- **Retry conditions**: dial-busy, dial-no-answer, voicemail
+- **Max retries**: 3 attempts
+- **Backoff**: 5, 10, 20 minutes
+- **Tracking**: Retry count stored in call metadata
 
 ### Auto-refresh Pattern
 
 The calls dashboard uses adaptive polling:
-
 - 5s interval when calls are in progress
 - 30s interval when all calls completed/failed
 - Pauses when browser tab hidden (Page Visibility API)
@@ -205,10 +336,20 @@ NEXT_PUBLIC_SANITY_API_VERSION=  # API version (e.g., "2025-10-13")
 NEXT_PUBLIC_POSTHOG_KEY=         # PostHog project key
 NEXT_PUBLIC_POSTHOG_HOST=        # Usually "https://us.i.posthog.com"
 
-# Retell AI (optional)
-RETELL_API_KEY=                  # Retell AI API key
-RETELL_FROM_NUMBER=              # Default caller ID
-RETELL_AGENT_ID=                 # Default AI agent
+# VAPI AI (voice calls)
+VAPI_PRIVATE_KEY=                # VAPI private API key
+VAPI_ASSISTANT_ID=               # Default assistant ID
+VAPI_PHONE_NUMBER_ID=            # Outbound phone number ID
+NEXT_PUBLIC_VAPI_PUBLIC_KEY=     # Public key for browser calls
+VAPI_WEBHOOK_SECRET=             # Webhook signature secret
+
+# QStash (scheduled calls)
+QSTASH_TOKEN=                    # QStash API token
+QSTASH_CURRENT_SIGNING_KEY=      # Current signing key
+QSTASH_NEXT_SIGNING_KEY=         # Next signing key
+
+# Site Configuration
+NEXT_PUBLIC_SITE_URL=            # Site URL for webhooks
 ```
 
 ## Code Style & Pre-commit Hooks
@@ -323,5 +464,6 @@ Currently no test suite exists. When adding tests:
 
 ## Documentation
 
-- **Retell AI Setup**: See `RETELL_SETUP.md` for complete webhook and database configuration
+- **VAPI Integration**: See `VAPI_VARIABLES_IMPLEMENTATION.md` for dynamic variables setup
+- **VAPI Prompt**: See `VAPI_ASSISTANT_PROMPT.md` for assistant prompt configuration
 - **Auto-refresh Architecture**: See `AUTO_REFRESH_ARCHITECTURE.md` for polling implementation details
