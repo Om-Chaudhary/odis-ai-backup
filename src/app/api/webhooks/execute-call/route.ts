@@ -78,6 +78,17 @@ async function handler(req: NextRequest) {
     // Get metadata
     const metadata = call.metadata as Record<string, unknown> | null;
 
+    // Get dynamic variables from database
+    const dynamicVariables = call.dynamic_variables as Record<string, unknown> | null;
+
+    console.log("[EXECUTE_CALL] Dynamic variables from database", {
+      callId,
+      dynamicVariables,
+      hasVariables: !!dynamicVariables,
+      variableKeys: dynamicVariables ? Object.keys(dynamicVariables) : [],
+      variableCount: dynamicVariables ? Object.keys(dynamicVariables).length : 0,
+    });
+
     // Get VAPI configuration
     const assistantId = call.assistant_id;
     const phoneNumberId = call.phone_number_id;
@@ -98,22 +109,27 @@ async function handler(req: NextRequest) {
       );
     }
 
-    console.log("[EXECUTE_CALL] Calling VAPI API", {
+    // Prepare VAPI call parameters
+    const vapiParams = {
+      phoneNumber: call.customer_phone,
+      assistantId,
+      phoneNumberId,
+      assistantOverrides: dynamicVariables ? {
+        variableValues: dynamicVariables,
+      } : undefined,
+    };
+
+    console.log("[EXECUTE_CALL] Calling VAPI API with parameters", {
       callId,
       phoneNumber: call.customer_phone,
       assistantId,
       phoneNumberId,
+      hasAssistantOverrides: !!vapiParams.assistantOverrides,
+      variableValues: vapiParams.assistantOverrides?.variableValues,
     });
 
     // Execute call via VAPI
-    const response = await createPhoneCall({
-      phoneNumber: call.customer_phone,
-      assistantId,
-      phoneNumberId,
-      assistantOverrides: {
-        variableValues: call.dynamic_variables as Record<string, unknown>,
-      },
-    });
+    const response = await createPhoneCall(vapiParams);
 
     console.log("[EXECUTE_CALL] VAPI API success", {
       callId,

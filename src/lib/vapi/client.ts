@@ -5,8 +5,8 @@
  * Provides type-safe interface for creating and managing VAPI calls.
  */
 
-import Vapi from '@vapi-ai/server-sdk';
-import { env } from '~/env';
+import { VapiClient } from "@vapi-ai/server-sdk";
+import { env } from "~/env";
 
 /**
  * Get VAPI client instance
@@ -16,10 +16,10 @@ export function getVapiClient() {
   const apiKey = env.VAPI_PRIVATE_KEY ?? process.env.VAPI_PRIVATE_KEY;
 
   if (!apiKey) {
-    throw new Error('VAPI_PRIVATE_KEY not configured in environment variables');
+    throw new Error("VAPI_PRIVATE_KEY not configured in environment variables");
   }
 
-  const client = new (Vapi as any)({
+  const client = new VapiClient({
     token: apiKey,
   });
 
@@ -51,7 +51,7 @@ export interface CreatePhoneCallParams {
 export interface VapiCallResponse {
   id: string;
   orgId: string;
-  type: 'outboundPhoneCall' | 'inboundPhoneCall' | 'webCall';
+  type: "outboundPhoneCall" | "inboundPhoneCall" | "webCall";
   phoneNumber?: {
     number: string;
     id: string;
@@ -59,10 +59,10 @@ export interface VapiCallResponse {
   customer?: {
     number: string;
   };
-  status: 'queued' | 'ringing' | 'in-progress' | 'forwarding' | 'ended';
+  status: "queued" | "ringing" | "in-progress" | "forwarding" | "ended";
   endedReason?: string;
   messages?: Array<{
-    role: 'assistant' | 'user' | 'system';
+    role: "assistant" | "user" | "system";
     message: string;
     time: number;
   }>;
@@ -90,24 +90,46 @@ export interface VapiCallResponse {
  * @returns VAPI call response
  */
 export async function createPhoneCall(
-  params: CreatePhoneCallParams
+  params: CreatePhoneCallParams,
 ): Promise<VapiCallResponse> {
   const vapi = getVapiClient();
 
+  const callPayload = {
+    phoneNumberId: params.phoneNumberId,
+    customer: {
+      number: params.phoneNumber,
+    },
+    assistantId: params.assistantId,
+    assistantOverrides: params.assistantOverrides,
+  };
+
+  console.log("[VAPI_CLIENT] Creating phone call with payload", {
+    phoneNumber: params.phoneNumber,
+    assistantId: params.assistantId,
+    phoneNumberId: params.phoneNumberId,
+    hasAssistantOverrides: !!params.assistantOverrides,
+    assistantOverrides: params.assistantOverrides,
+    fullPayload: callPayload,
+  });
+
   try {
-    const call = await vapi.calls.create({
-      type: 'outboundPhoneCall',
-      phoneNumberId: params.phoneNumberId,
-      customer: {
-        number: params.phoneNumber,
-      },
-      assistantId: params.assistantId,
-      assistantOverrides: params.assistantOverrides,
+    const call = await vapi.calls.create(callPayload);
+
+    const callResponse = call as VapiCallResponse;
+
+    console.log("[VAPI_CLIENT] Phone call created successfully", {
+      vapiCallId: callResponse.id,
+      status: callResponse.status,
+      type: callResponse.type,
     });
 
-    return call as VapiCallResponse;
+    return callResponse;
   } catch (error) {
-    console.error('[VAPI_CLIENT] Failed to create phone call:', error);
+    console.error("[VAPI_CLIENT] Failed to create phone call:", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      payload: callPayload,
+    });
     throw error;
   }
 }
@@ -156,7 +178,7 @@ export async function listCalls(options?: {
 
     return calls as VapiCallResponse[];
   } catch (error) {
-    console.error('[VAPI_CLIENT] Failed to list calls:', error);
+    console.error("[VAPI_CLIENT] Failed to list calls:", error);
     throw error;
   }
 }
@@ -168,23 +190,28 @@ export async function listCalls(options?: {
  * @returns Our database status
  */
 export function mapVapiStatus(
-  vapiStatus: string | undefined
-): 'queued' | 'ringing' | 'in_progress' | 'completed' | 'failed' | 'cancelled' {
-  if (!vapiStatus) return 'queued';
+  vapiStatus: string | undefined,
+): "queued" | "ringing" | "in_progress" | "completed" | "failed" | "cancelled" {
+  if (!vapiStatus) return "queued";
 
-  const statusMap: Record<string, 'queued' | 'ringing' | 'in_progress' | 'completed' | 'failed' | 'cancelled'> = {
-    'queued': 'queued',
-    'ringing': 'ringing',
-    'in-progress': 'in_progress',
-    'forwarding': 'in_progress',
-    'ended': 'completed',
+  const statusMap: Record<
+    string,
+    "queued" | "ringing" | "in_progress" | "completed" | "failed" | "cancelled"
+  > = {
+    "queued": "queued",
+    "ringing": "ringing",
+    "in-progress": "in_progress",
+    "forwarding": "in_progress",
+    "ended": "completed",
   };
 
   const mappedStatus = statusMap[vapiStatus.toLowerCase()];
 
   if (!mappedStatus) {
-    console.warn(`[VAPI_CLIENT] Unknown VAPI status: ${vapiStatus}, defaulting to queued`);
-    return 'queued';
+    console.warn(
+      `[VAPI_CLIENT] Unknown VAPI status: ${vapiStatus}, defaulting to queued`,
+    );
+    return "queued";
   }
 
   return mappedStatus;
@@ -200,20 +227,20 @@ export function shouldMarkAsFailed(endedReason?: string): boolean {
   if (!endedReason) return false;
 
   const failedReasons = [
-    'dial-busy',
-    'dial-failed',
-    'dial-no-answer',
-    'assistant-error',
-    'exceeded-max-duration',
-    'voicemail',
-    'assistant-not-found',
-    'assistant-not-invalid',
-    'assistant-not-provided',
-    'assistant-request-failed',
-    'assistant-request-returned-error',
-    'assistant-request-returned-unspeakable-error',
-    'assistant-request-returned-invalid-json',
-    'assistant-request-returned-no-content',
+    "dial-busy",
+    "dial-failed",
+    "dial-no-answer",
+    "assistant-error",
+    "exceeded-max-duration",
+    "voicemail",
+    "assistant-not-found",
+    "assistant-not-invalid",
+    "assistant-not-provided",
+    "assistant-request-failed",
+    "assistant-request-returned-error",
+    "assistant-request-returned-unspeakable-error",
+    "assistant-request-returned-invalid-json",
+    "assistant-request-returned-no-content",
   ];
 
   return failedReasons.some((reason) =>
@@ -228,7 +255,7 @@ export function shouldMarkAsFailed(endedReason?: string): boolean {
  * @returns Total cost in USD
  */
 export function calculateTotalCost(
-  costs?: Array<{ amount: number; description: string }>
+  costs?: Array<{ amount: number; description: string }>,
 ): number {
   if (!costs || costs.length === 0) return 0;
 
