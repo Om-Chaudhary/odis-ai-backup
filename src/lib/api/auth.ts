@@ -272,7 +272,7 @@ export function successResponse<T>(
  */
 type RouteHandler<T = unknown> = (
   request: NextRequest,
-  context: { params?: Record<string, string> },
+  context: { params: Promise<Record<string, string>> },
 ) => Promise<NextResponse<T>>;
 
 /**
@@ -281,7 +281,7 @@ type RouteHandler<T = unknown> = (
 type AuthenticatedRouteHandler<T = unknown> = (
   request: NextRequest,
   auth: AuthResult,
-  context: { params?: Record<string, string> },
+  context: { params: Promise<Record<string, string>> },
 ) => Promise<NextResponse<T | ApiErrorResponse>>;
 
 /**

@@ -25,6 +25,31 @@ import type { z } from "zod";
 type Tables = Database["public"]["Tables"];
 type CaseInsert = Tables["cases"]["Insert"];
 type CaseUpdate = Tables["cases"]["Update"];
+
+/**
+ * Map extracted case types to database case types
+ * Database only supports: checkup, emergency, surgery, follow_up
+ */
+function mapCaseTypeToDb(
+  caseType: string,
+): "checkup" | "emergency" | "surgery" | "follow_up" {
+  switch (caseType) {
+    case "checkup":
+    case "vaccination":
+    case "consultation":
+      return "checkup";
+    case "emergency":
+      return "emergency";
+    case "surgery":
+    case "dental":
+      return "surgery";
+    case "follow_up":
+    case "diagnostic":
+    case "other":
+    default:
+      return "follow_up";
+  }
+}
 type PatientInsert = Tables["patients"]["Insert"];
 
 /**
@@ -108,7 +133,7 @@ export async function storeNormalizedEntities(
     if (caseId) {
       // Update existing case
       const caseUpdate: CaseUpdate = {
-        type: entities.caseType,
+        type: mapCaseTypeToDb(entities.caseType),
         metadata: metadata,
       };
 
@@ -133,7 +158,7 @@ export async function storeNormalizedEntities(
       // Create new case
       const caseData: CaseInsert = {
         user_id: userId,
-        type: entities.caseType,
+        type: mapCaseTypeToDb(entities.caseType),
         status: "draft",
         visibility: "private",
         metadata: metadata,
@@ -236,6 +261,15 @@ async function upsertPatient(
     if (existingPatients && existingPatients.length > 0) {
       const existingPatient = existingPatients[0];
 
+      if (!existingPatient) {
+        // Should not happen but TS needs this check
+        return {
+          success: false,
+          error: "Patient not found",
+          details: null,
+        };
+      }
+
       // Update case_id for existing patient
       const { error: updateError } = await supabase
         .from("patients")
@@ -252,7 +286,11 @@ async function upsertPatient(
 
       return {
         success: true,
-        patient: existingPatient,
+        patient: {
+          ...existingPatient,
+          species: existingPatient.species ?? "unknown",
+          owner_name: existingPatient.owner_name ?? "Unknown",
+        },
       };
     }
 
@@ -269,12 +307,6 @@ async function upsertPatient(
       owner_name: patient.owner.name,
       owner_email: patient.owner.email || null,
       owner_phone: ownerPhone || null,
-      metadata: {
-        ai_extracted: true,
-        original_age: patient.age,
-        original_weight: patient.weight,
-      },
-      source: "ai_entity_extraction",
     };
 
     const { data: newPatient, error: insertError } = await supabase
@@ -293,7 +325,11 @@ async function upsertPatient(
 
     return {
       success: true,
-      patient: newPatient,
+      patient: {
+        ...newPatient,
+        species: newPatient.species ?? "unknown",
+        owner_name: newPatient.owner_name ?? "Unknown",
+      },
     };
   } catch (error) {
     return {
@@ -370,7 +406,12 @@ export async function fetchCaseWithEntities(
         created_at: string;
       },
       entities: entities || null,
-      patient: patientData || null,
+      patient: patientData
+        ? {
+            ...patientData,
+            species: patientData.species ?? "unknown",
+          }
+        : null,
     };
   } catch (error) {
     return {
