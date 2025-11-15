@@ -70,11 +70,16 @@
       "mcp__playwright__browser_wait_for",
       "mcp__playwright__browser_type",
       "mcp__playwright__browser_console_messages",
-      "Bash(npx mcp-remote:*)"
+      "Bash(npx mcp-remote:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash list:*)"
     ],
     "deny": [],
     "ask": []
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["shadcn"]
+  "enabledMcpjsonServers": [
+    "shadcn"
+  ]
 }

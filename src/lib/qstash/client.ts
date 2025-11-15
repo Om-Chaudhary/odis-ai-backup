@@ -61,6 +61,50 @@ export async function scheduleCallExecution(
 }
 
 /**
+ * Schedule a discharge email for delayed delivery
+ *
+ * @param emailId - Database ID of the scheduled email
+ * @param scheduledFor - Target delivery time
+ * @returns QStash message ID for tracking
+ */
+export async function scheduleEmailExecution(
+  emailId: string,
+  scheduledFor: Date,
+): Promise<string> {
+  const delay = Math.floor((scheduledFor.getTime() - Date.now()) / 1000); // seconds
+
+  if (delay < 0) {
+    throw new Error("Cannot schedule email in the past");
+  }
+
+  const webhookUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/execute-discharge-email`;
+
+  console.log("[QSTASH_CLIENT] Scheduling email delivery", {
+    emailId,
+    scheduledFor: scheduledFor.toISOString(),
+    delay,
+    webhookUrl,
+  });
+
+  const response = await qstashClient.publishJSON({
+    url: webhookUrl,
+    body: { emailId },
+    delay, // seconds until execution
+    retries: 3, // Retry up to 3 times if webhook fails
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  console.log("[QSTASH_CLIENT] Email scheduled successfully", {
+    emailId,
+    messageId: response.messageId,
+  });
+
+  return response.messageId;
+}
+
+/**
  * Cancel a scheduled QStash job
  *
  * @param messageId - QStash message ID to cancel

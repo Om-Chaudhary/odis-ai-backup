@@ -44,7 +44,7 @@ import {
  *
  * Extract structured clinical entities from veterinary text
  */
-export const POST = withAuth(async (request, { user, supabase }) => {
+export const POST = withAuth<NormalizeResponse>(async (request, { user, supabase }, context) => {
   const startTime = Date.now();
 
   try {
@@ -147,7 +147,10 @@ export const POST = withAuth(async (request, { user, supabase }) => {
     const response: NormalizeResponse = {
       success: true,
       data: {
-        case: dbResult.case,
+        case: {
+          ...dbResult.case,
+          type: dbResult.case.type as NormalizeResponse["data"]["case"]["type"],
+        },
         patient: dbResult.patient,
         entities: dbResult.entities,
       },
@@ -180,7 +183,16 @@ export const POST = withAuth(async (request, { user, supabase }) => {
  *
  * Check if a case has extracted entities
  */
-export const GET = withAuth(async (request, { user, supabase }) => {
+export const GET = withAuth<{
+  caseId: string;
+  hasEntities: boolean;
+  entities: {
+    patientName: string | undefined;
+    caseType: NormalizeResponse["data"]["case"]["type"] | undefined;
+    confidence: number | undefined;
+    extractedAt: string | undefined;
+  } | null;
+}>(async (request, { user, supabase }, context) => {
   try {
     const { searchParams } = new URL(request.url);
     const caseId = searchParams.get("caseId");

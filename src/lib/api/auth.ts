@@ -282,7 +282,7 @@ type AuthenticatedRouteHandler<T = unknown> = (
   request: NextRequest,
   auth: AuthResult,
   context: { params?: Record<string, string> },
-) => Promise<NextResponse<T>>;
+) => Promise<NextResponse<T | ApiErrorResponse>>;
 
 /**
  * Higher-order function to create authenticated API routes

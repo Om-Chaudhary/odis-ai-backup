@@ -14,7 +14,9 @@ import {
   parseWeightToKg,
   parseAgeToDOB,
   sanitizePhoneNumber,
+  CaseTypeSchema,
 } from "~/lib/validators/scribe";
+import type { z } from "zod";
 
 /* ========================================
    Type Definitions
