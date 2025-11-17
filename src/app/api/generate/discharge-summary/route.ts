@@ -1,11 +1,13 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { createClient, createServiceClient } from "~/lib/supabase/server";
+import { createClient } from "~/lib/supabase/server";
 import { generateSummarySchema } from "~/lib/validators/discharge";
 import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
 import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
+import { generateDischargeSummaryWithRetry } from "~/lib/ai/generate-discharge";
+import type { NormalizedEntities } from "~/lib/validators/scribe";
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)
@@ -186,56 +188,82 @@ export async function POST(request: NextRequest) {
       entityKeys: entityExtraction ? Object.keys(entityExtraction) : [],
     });
 
-    // Prepare data for Edge Function
-    // Get service client to call Edge Function
-    const serviceClient = await createServiceClient();
-
-    console.log("[GENERATE_SUMMARY] Calling Edge Function", {
+    console.log("[GENERATE_SUMMARY] Generating discharge summary", {
       caseId: validated.caseId,
       soapNoteId: soapNote?.id ?? null,
       templateId: validated.templateId,
       hasEntityExtraction: !!entityExtraction,
+      hasSoapContent: !!soapNote?.content,
     });
 
-    // Call Supabase Edge Function to generate discharge summary
+    // Generate discharge summary using AI
     // Can work with either SOAP note OR entity extraction data
-    const { data: summaryResponse, error: edgeFunctionError } =
-      await serviceClient.functions.invoke("generate-discharge-summary", {
-        body: {
-          case_id: validated.caseId,
-          soap_note_id: soapNote?.id ?? null,
-          soap_content: soapNote?.content ?? null,
-          entity_extraction: entityExtraction ?? null,
-          transcripts: [], // TODO: Fetch transcripts from case if available
-          template_id: validated.templateId,
-          user_id: user.id,
+    let summaryContent: string;
+    try {
+      summaryContent = await generateDischargeSummaryWithRetry({
+        soapContent: soapNote?.content ?? null,
+        entityExtraction: (entityExtraction as NormalizedEntities) ?? null,
+        patientData: {
+          name: patient?.name,
+          species: patient?.species,
+          breed: patient?.breed,
+          owner_name: patient?.owner_name,
         },
+        // TODO: Fetch template from database if templateId provided
+        template: undefined,
       });
-
-    if (edgeFunctionError) {
-      console.error("[GENERATE_SUMMARY] Edge Function error", {
-        error: edgeFunctionError,
+    } catch (aiError) {
+      console.error("[GENERATE_SUMMARY] AI generation error", {
+        error: aiError instanceof Error ? aiError.message : String(aiError),
       });
       return withCorsHeaders(
         request,
         NextResponse.json(
           {
             error: "Failed to generate discharge summary",
-            details: edgeFunctionError.message,
+            details: aiError instanceof Error ? aiError.message : "AI generation failed",
           },
           { status: 500 },
         ),
       );
     }
 
-    const { discharge_summary_id, content: summaryContent } =
-      summaryResponse as {
-        discharge_summary_id: string;
-        content: string;
-        template_id?: string;
-      };
+    console.log("[GENERATE_SUMMARY] AI generation successful", {
+      contentLength: summaryContent.length,
+    });
 
-    console.log("[GENERATE_SUMMARY] Summary generated successfully", {
+    // Save discharge summary to database
+    const { data: dischargeSummary, error: dbError } = await supabase
+      .from("discharge_summaries")
+      .insert({
+        case_id: validated.caseId,
+        user_id: user.id,
+        content: summaryContent,
+        soap_note_id: soapNote?.id ?? null,
+        template_id: validated.templateId ?? null,
+      })
+      .select("id")
+      .single();
+
+    if (dbError) {
+      console.error("[GENERATE_SUMMARY] Database error", {
+        error: dbError,
+      });
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          {
+            error: "Failed to save discharge summary",
+            details: dbError.message,
+          },
+          { status: 500 },
+        ),
+      );
+    }
+
+    const discharge_summary_id = dischargeSummary.id;
+
+    console.log("[GENERATE_SUMMARY] Summary saved to database", {
       summaryId: discharge_summary_id,
       contentLength: summaryContent.length,
     });
