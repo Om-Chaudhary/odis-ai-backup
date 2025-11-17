@@ -12,6 +12,32 @@ import { normalizePhoneNumber } from "~/lib/utils/phone";
 import { extractVapiVariablesFromEntities, formatMedicationsForSpeech } from "~/lib/vapi/extract-variables";
 
 /**
+ * Apply test mode overrides if TEST_MODE is enabled
+ * When test mode is active, all calls/emails go to test contacts instead of real customers
+ */
+function applyTestModeOverrides(
+  ownerPhone: string | null | undefined,
+  ownerEmail: string | null | undefined
+): { phone: string | null; email: string | null } {
+  // Check if test mode is enabled
+  if (!env.TEST_MODE) {
+    return { phone: ownerPhone ?? null, email: ownerEmail ?? null };
+  }
+
+  console.log("[TEST_MODE] Enabled - Overriding contact information", {
+    originalPhone: ownerPhone,
+    originalEmail: ownerEmail,
+    testPhone: env.TEST_PHONE,
+    testEmail: env.TEST_EMAIL,
+  });
+
+  return {
+    phone: env.TEST_PHONE ?? ownerPhone ?? null,
+    email: env.TEST_EMAIL ?? ownerEmail ?? null,
+  };
+}
+
+/**
  * Authenticate user from either cookies (web app) or Authorization header (extension)
  */
 async function authenticateRequest(request: NextRequest) {
@@ -316,9 +342,15 @@ export async function POST(request: NextRequest) {
     let vapiCallId: string | null = null;
     let vapiScheduledFor: string | null = null;
 
+    // Apply test mode overrides if enabled (redirects to test contacts)
+    const { phone: phoneToUse } = applyTestModeOverrides(
+      validated.ownerPhone,
+      undefined  // Email not used in discharge summary (only phone calls)
+    );
+
     // Normalize phone number to E.164 format (required by VAPI)
-    const normalizedPhone = validated.ownerPhone
-      ? normalizePhoneNumber(validated.ownerPhone)
+    const normalizedPhone = phoneToUse
+      ? normalizePhoneNumber(phoneToUse)
       : null;
 
     if (normalizedPhone && validated.vapiScheduledFor) {

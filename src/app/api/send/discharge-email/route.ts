@@ -10,6 +10,26 @@ import { env } from "~/env";
 import { normalizeEmail } from "~/lib/utils/phone";
 
 /**
+ * Apply test mode override for email if TEST_MODE is enabled
+ * When test mode is active, all emails go to test email instead of real customer email
+ */
+function applyTestModeEmailOverride(
+  recipientEmail: string | null | undefined
+): string | null {
+  // Check if test mode is enabled
+  if (!env.TEST_MODE) {
+    return recipientEmail ?? null;
+  }
+
+  console.log("[TEST_MODE] Enabled - Overriding email address", {
+    originalEmail: recipientEmail,
+    testEmail: env.TEST_EMAIL,
+  });
+
+  return env.TEST_EMAIL ?? recipientEmail ?? null;
+}
+
+/**
  * Authenticate user from either cookies (web app) or Authorization header (extension)
  */
 async function authenticateRequest(request: NextRequest) {
@@ -108,12 +128,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validated = sendEmailSchema.parse(body);
 
+    // Apply test mode override if enabled (redirects to test email)
+    const emailToUse = applyTestModeEmailOverride(validated.recipientEmail);
+
     // Normalize email address (lowercase, trim)
-    const normalizedEmail = validated.recipientEmail
-      ? normalizeEmail(validated.recipientEmail)
+    const normalizedEmail = emailToUse
+      ? normalizeEmail(emailToUse)
       : null;
 
-    if (validated.recipientEmail && !normalizedEmail) {
+    if (emailToUse && !normalizedEmail) {
       return NextResponse.json(
         { error: "Invalid email address format" },
         { status: 400 },
@@ -126,6 +149,7 @@ export async function POST(request: NextRequest) {
       recipientName: validated.recipientName,
       subject: validated.subject,
       scheduledFor: validated.scheduledFor.toISOString(),
+      testModeEnabled: env.TEST_MODE,
     });
 
     // Validate scheduled time is in the future

@@ -357,7 +357,14 @@ QSTASH_NEXT_SIGNING_KEY=         # Next signing key
 
 # Site Configuration
 NEXT_PUBLIC_SITE_URL=            # Site URL for webhooks
+
+# Test Mode (optional - for safe bulk discharge testing)
+TEST_MODE=                       # Set to "true" to redirect all calls/emails to test contacts
+TEST_EMAIL=                      # Test email address (receives all discharge emails in test mode)
+TEST_PHONE=                      # Test phone number in E.164 format (receives all VAPI calls in test mode)
 ```
+
+For detailed test mode configuration and usage, see [TEST_MODE.md](TEST_MODE.md).
 
 ## Code Style & Pre-commit Hooks
 
