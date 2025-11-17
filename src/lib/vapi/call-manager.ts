@@ -159,7 +159,7 @@ export async function createVapiCall(
     const supabase = await createServiceClient();
 
     const { data: callRecord, error: insertError } = await supabase
-      .from('vapi_calls')
+      .from('scheduled_discharge_calls')
       .insert({
         user_id: userId,
         assistant_id: assistantId,
@@ -213,7 +213,7 @@ export async function getVapiCallStatus(
   const supabase = await createServiceClient();
 
   const { data, error } = await supabase
-    .from('vapi_calls')
+    .from('scheduled_discharge_calls')
     .select('*')
     .eq('id', callId)
     .eq('user_id', userId)
@@ -261,7 +261,7 @@ export async function listVapiCalls(
   const supabase = await createServiceClient();
 
   let query = supabase
-    .from('vapi_calls')
+    .from('scheduled_discharge_calls')
     .select('*')
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
@@ -345,7 +345,7 @@ export async function updateVapiCall(
   if (updates.cost !== undefined) updateData.cost = updates.cost;
 
   const { error } = await supabase
-    .from('vapi_calls')
+    .from('scheduled_discharge_calls')
     .update(updateData)
     .eq('vapi_call_id', vapiCallId);
 

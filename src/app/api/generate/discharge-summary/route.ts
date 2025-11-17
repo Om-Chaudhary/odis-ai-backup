@@ -9,6 +9,7 @@ import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
 import { generateDischargeSummaryWithRetry } from "~/lib/ai/generate-discharge";
 import type { NormalizedEntities } from "~/lib/validators/scribe";
 import { normalizePhoneNumber } from "~/lib/utils/phone";
+import { extractVapiVariablesFromEntities, formatMedicationsForSpeech } from "~/lib/vapi/extract-variables";
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)
@@ -148,6 +149,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Also check for most recent AI extraction in normalized_data table
+    const { data: normalizedData } = await supabase
+      .from("normalized_data")
+      .select("entities, confidence_score, created_at")
+      .eq("case_id", validated.caseId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    console.log("[GENERATE_SUMMARY] Normalized data query result", {
+      hasNormalizedData: !!normalizedData,
+      confidence: normalizedData?.confidence_score,
+    });
+
     // Fetch SOAP note (optional - can work with just entity extraction)
     let soapNote: { id: string; content: string } | null = null;
 
@@ -180,13 +195,20 @@ export async function POST(request: NextRequest) {
     } | null;
 
     const metadata = caseData.metadata as Record<string, unknown> | null;
-    const entityExtraction = metadata?.entities as
+    const caseEntityExtraction = metadata?.entities as
       | Record<string, unknown>
       | undefined;
 
+    // Use normalized_data if available (more recent/structured), otherwise fall back to case metadata
+    const entityExtraction = normalizedData?.entities
+      ? (normalizedData.entities as Record<string, unknown>)
+      : caseEntityExtraction;
+
     console.log("[GENERATE_SUMMARY] Entity extraction data", {
       hasEntityExtraction: !!entityExtraction,
+      source: normalizedData?.entities ? "normalized_data table" : caseEntityExtraction ? "case metadata" : "none",
       entityKeys: entityExtraction ? Object.keys(entityExtraction) : [],
+      confidence: normalizedData?.confidence_score,
     });
 
     // Validate we have either SOAP notes or entity extraction
@@ -300,9 +322,20 @@ export async function POST(request: NextRequest) {
       : null;
 
     if (normalizedPhone && validated.vapiScheduledFor) {
-      // Prepare VAPI call variables
+      // Extract VAPI variables from AI entity extraction
+      const extractedVars = extractVapiVariablesFromEntities(
+        entityExtraction as NormalizedEntities | undefined
+      );
+
+      // Format medications for natural speech
+      const medicationsForSpeech = entityExtraction &&
+        (entityExtraction as NormalizedEntities).clinical?.medications
+        ? formatMedicationsForSpeech((entityExtraction as NormalizedEntities).clinical.medications!)
+        : "";
+
+      // Prepare VAPI call variables (merge extracted + manual)
       const vapiVariables = {
-        // Core identification
+        // Core identification (manual takes precedence)
         pet_name: patient?.name ?? "the patient",
         owner_name: patient?.owner_name ?? "",
 
@@ -310,12 +343,15 @@ export async function POST(request: NextRequest) {
         discharge_summary_content: summaryContent,
         soap_note_content: soapNote?.content ?? "",
 
-        // Entity extraction data (if available)
-        ...(entityExtraction && {
-          extracted_data: entityExtraction,
+        // AI-extracted variables (enriches the call context)
+        ...extractedVars,
+
+        // Medications formatted for speech
+        ...(medicationsForSpeech && {
+          medications_speech: medicationsForSpeech,
         }),
 
-        // Additional variables from request
+        // Additional variables from request (highest precedence)
         ...(validated.vapiVariables ?? {}),
       };
 
@@ -326,7 +362,36 @@ export async function POST(request: NextRequest) {
         url: callScheduleUrl,
         ownerPhone: normalizedPhone,
         originalPhone: validated.ownerPhone,
-        scheduledFor: validated.vapiScheduledFor!.toISOString(),
+        scheduledFor: validated.vapiScheduledFor.toISOString(),
+      });
+
+      // Extract patient name from discharge summary if not in extraction or database
+      let parsedPetName: string | null = null;
+      const petNameMatch = /DISCHARGE INSTRUCTIONS FOR\s+(\w+)/i.exec(summaryContent);
+      if (petNameMatch) {
+        parsedPetName = petNameMatch[1] ?? null;
+      }
+
+      // Use AI-extracted patient data with multiple fallbacks
+      const finalPetName = extractedVars.patient_name ||
+                           patient?.name ||
+                           parsedPetName ||
+                           "your pet";
+      const finalOwnerName = extractedVars.owner_name_extracted ||
+                             patient?.owner_name ||
+                             "Pet Owner";
+      const finalVetName = extractedVars.vet_name || "";
+
+      console.log("[GENERATE_SUMMARY] Using patient data", {
+        petName: finalPetName,
+        ownerName: finalOwnerName,
+        vetName: finalVetName,
+        parsedFromSummary: parsedPetName,
+        extractedVars: Object.keys(extractedVars).length,
+        source: extractedVars.patient_name ? "AI extraction" :
+                patient?.name ? "database" :
+                parsedPetName ? "parsed from summary" :
+                "default",
       });
 
       const callScheduleResponse = await fetch(callScheduleUrl, {
@@ -337,8 +402,9 @@ export async function POST(request: NextRequest) {
         },
         body: JSON.stringify({
           phoneNumber: normalizedPhone,
-          petName: patient?.name ?? "your pet",
-          ownerName: patient?.owner_name ?? "Pet Owner",
+          petName: finalPetName,
+          ownerName: finalOwnerName,
+          vetName: finalVetName,
           callType: "discharge",
           scheduledFor: validated.vapiScheduledFor,
           dischargeSummary: summaryContent,

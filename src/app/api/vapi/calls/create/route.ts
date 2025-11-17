@@ -13,7 +13,7 @@
  * The actual VAPI call will be processed asynchronously by a background job.
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { createClient } from '~/lib/supabase/server';
 import { createVapiCall, type CreateVapiCallInput } from '~/lib/vapi/call-manager';
 import { z } from 'zod';

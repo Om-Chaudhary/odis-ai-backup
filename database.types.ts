@@ -517,6 +517,98 @@ export type Database = {
           },
         ]
       }
+      scheduled_discharge_calls: {
+        Row: {
+          assistant_id: string | null
+          call_analysis: Json | null
+          case_id: string | null
+          condition_category: string | null
+          cost: number | null
+          created_at: string
+          customer_phone: string | null
+          duration_seconds: number | null
+          dynamic_variables: Json
+          ended_at: string | null
+          ended_reason: string | null
+          id: string
+          knowledge_base_used: string | null
+          metadata: Json | null
+          phone_number_id: string | null
+          qstash_message_id: string | null
+          recording_url: string | null
+          scheduled_for: string | null
+          started_at: string | null
+          status: string | null
+          transcript: string | null
+          transcript_messages: Json | null
+          updated_at: string
+          user_id: string
+          vapi_call_id: string | null
+        }
+        Insert: {
+          assistant_id?: string | null
+          call_analysis?: Json | null
+          case_id?: string | null
+          condition_category?: string | null
+          cost?: number | null
+          created_at?: string
+          customer_phone?: string | null
+          duration_seconds?: number | null
+          dynamic_variables: Json
+          ended_at?: string | null
+          ended_reason?: string | null
+          id?: string
+          knowledge_base_used?: string | null
+          metadata?: Json | null
+          phone_number_id?: string | null
+          qstash_message_id?: string | null
+          recording_url?: string | null
+          scheduled_for?: string | null
+          started_at?: string | null
+          status?: string | null
+          transcript?: string | null
+          transcript_messages?: Json | null
+          updated_at?: string
+          user_id: string
+          vapi_call_id?: string | null
+        }
+        Update: {
+          assistant_id?: string | null
+          call_analysis?: Json | null
+          case_id?: string | null
+          condition_category?: string | null
+          cost?: number | null
+          created_at?: string
+          customer_phone?: string | null
+          duration_seconds?: number | null
+          dynamic_variables?: Json
+          ended_at?: string | null
+          ended_reason?: string | null
+          id?: string
+          knowledge_base_used?: string | null
+          metadata?: Json | null
+          phone_number_id?: string | null
+          qstash_message_id?: string | null
+          recording_url?: string | null
+          scheduled_for?: string | null
+          started_at?: string | null
+          status?: string | null
+          transcript?: string | null
+          transcript_messages?: Json | null
+          updated_at?: string
+          user_id?: string
+          vapi_call_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_discharge_calls_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scheduled_discharge_emails: {
         Row: {
           case_id: string | null
@@ -952,84 +1044,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      vapi_calls: {
-        Row: {
-          assistant_id: string | null
-          call_analysis: Json | null
-          condition_category: string | null
-          cost: number | null
-          created_at: string
-          customer_phone: string | null
-          duration_seconds: number | null
-          dynamic_variables: Json
-          ended_at: string | null
-          ended_reason: string | null
-          id: string
-          knowledge_base_used: string | null
-          metadata: Json | null
-          phone_number_id: string | null
-          recording_url: string | null
-          scheduled_for: string | null
-          started_at: string | null
-          status: string | null
-          transcript: string | null
-          transcript_messages: Json | null
-          updated_at: string
-          user_id: string
-          vapi_call_id: string | null
-        }
-        Insert: {
-          assistant_id?: string | null
-          call_analysis?: Json | null
-          condition_category?: string | null
-          cost?: number | null
-          created_at?: string
-          customer_phone?: string | null
-          duration_seconds?: number | null
-          dynamic_variables: Json
-          ended_at?: string | null
-          ended_reason?: string | null
-          id?: string
-          knowledge_base_used?: string | null
-          metadata?: Json | null
-          phone_number_id?: string | null
-          recording_url?: string | null
-          scheduled_for?: string | null
-          started_at?: string | null
-          status?: string | null
-          transcript?: string | null
-          transcript_messages?: Json | null
-          updated_at?: string
-          user_id: string
-          vapi_call_id?: string | null
-        }
-        Update: {
-          assistant_id?: string | null
-          call_analysis?: Json | null
-          condition_category?: string | null
-          cost?: number | null
-          created_at?: string
-          customer_phone?: string | null
-          duration_seconds?: number | null
-          dynamic_variables?: Json
-          ended_at?: string | null
-          ended_reason?: string | null
-          id?: string
-          knowledge_base_used?: string | null
-          metadata?: Json | null
-          phone_number_id?: string | null
-          recording_url?: string | null
-          scheduled_for?: string | null
-          started_at?: string | null
-          status?: string | null
-          transcript?: string | null
-          transcript_messages?: Json | null
-          updated_at?: string
-          user_id?: string
-          vapi_call_id?: string | null
-        }
-        Relationships: []
       }
       vital_signs: {
         Row: {

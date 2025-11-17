@@ -19,7 +19,7 @@
  */
 export function normalizePhoneNumber(
   phone: string | null | undefined,
-  defaultCountryCode: string = "1"
+  defaultCountryCode = "1"
 ): string | null {
   if (!phone) return null;
 

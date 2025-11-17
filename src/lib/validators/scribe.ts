@@ -195,7 +195,7 @@ export function parseWeightToKg(weightStr: string | undefined): number | undefin
   if (!weightStr) return undefined;
 
   const match = /^([\d.]+)\s*(kg|lbs?|pounds?)?$/i.exec(weightStr);
-  if (!match || !match[1]) return undefined;
+  if (!match?.[1]) return undefined;
 
   const value = parseFloat(match[1]);
   const unit = match[2]?.toLowerCase();
@@ -221,10 +221,10 @@ export function parseAgeToDOB(ageStr: string | undefined): string | undefined {
   const yearMatch = /(\d+)\s*(?:year|yr)/i.exec(ageStr);
   const monthMatch = /(\d+)\s*(?:month|mo)/i.exec(ageStr);
 
-  if (yearMatch && yearMatch[1]) {
+  if (yearMatch?.[1]) {
     totalMonths += parseInt(yearMatch[1]) * 12;
   }
-  if (monthMatch && monthMatch[1]) {
+  if (monthMatch?.[1]) {
     totalMonths += parseInt(monthMatch[1]);
   }
 

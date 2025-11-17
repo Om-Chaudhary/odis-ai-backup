@@ -230,7 +230,7 @@ export async function POST(request: NextRequest) {
 
     // Store scheduled call in database
     const { data: scheduledCall, error: dbError } = await supabase
-      .from('vapi_calls')
+      .from('scheduled_discharge_calls')
       .insert({
         user_id: user.id,
         assistant_id: assistantId,
@@ -272,7 +272,7 @@ export async function POST(request: NextRequest) {
       });
 
       // Rollback database insert
-      await supabase.from('vapi_calls').delete().eq('id', scheduledCall.id);
+      await supabase.from('scheduled_discharge_calls').delete().eq('id', scheduledCall.id);
 
       return NextResponse.json(
         { error: 'Failed to schedule call execution' },
@@ -282,7 +282,7 @@ export async function POST(request: NextRequest) {
 
     // Update database with QStash message ID
     await supabase
-      .from('vapi_calls')
+      .from('scheduled_discharge_calls')
       .update({
         metadata: {
           ...scheduledCall.metadata,

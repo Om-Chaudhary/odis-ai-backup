@@ -472,5 +472,6 @@ Currently no test suite exists. When adding tests:
 ## Documentation
 
 - **VAPI Integration**: See `VAPI_VARIABLES_IMPLEMENTATION.md` for dynamic variables setup
-- **VAPI Prompt**: See `VAPI_ASSISTANT_PROMPT.md` for assistant prompt configuration
+- **VAPI Prompt**: See `VAPI_SYSTEM_PROMPT.txt` for the complete assistant system prompt
+- **VAPI Variables**: See `VAPI_AI_EXTRACTION_VARIABLES.md` for all available dynamic variables (40+)
 - **Auto-refresh Architecture**: See `AUTO_REFRESH_ARCHITECTURE.md` for polling implementation details
