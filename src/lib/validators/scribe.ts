@@ -42,14 +42,14 @@ export type NormalizeRequest = z.infer<typeof NormalizeRequestSchema>;
  * Patient information extracted from input
  */
 export const ExtractedPatientSchema = z.object({
-  name: z.string().min(1, "Patient name required"),
+  name: z.string(), // Allow empty string if not present in notes
   species: z.enum(["dog", "cat", "bird", "rabbit", "other", "unknown"]),
   breed: z.string().optional(),
   age: z.string().optional(),
   sex: z.enum(["male", "female", "unknown"]).optional(),
   weight: z.string().optional(), // e.g., "15 kg" or "33 lbs"
   owner: z.object({
-    name: z.string().min(1, "Owner name required"),
+    name: z.string(), // Allow empty string if not present in notes
     phone: z.string().optional(),
     email: z.string().email().optional().or(z.literal("")),
   }),
