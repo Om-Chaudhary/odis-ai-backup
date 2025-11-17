@@ -114,7 +114,7 @@ Output Format (JSON only, NO markdown code blocks):
     "clinicalNotes": "string (optional, any additional notes)",
     "prognosis": "string (optional)"
   },
-  "caseType": "checkup" | "emergency" | "surgery" | "follow_up" | "dental" | "vaccination" | "diagnostic" | "consultation" | "other",
+  "caseType": "checkup" | "emergency" | "surgery" | "follow_up" | "dental" | "vaccination" | "diagnostic" | "consultation" | "other" | "unknown",
   "confidence": {
     "overall": number (0-1, how confident you are in the extraction),
     "patient": number (0-1),

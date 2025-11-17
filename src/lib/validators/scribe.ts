@@ -122,6 +122,7 @@ export const CaseTypeSchema = z.enum([
   "diagnostic",
   "consultation",
   "other",
+  "unknown",
 ]);
 
 /**
