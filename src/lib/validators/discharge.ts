@@ -16,7 +16,7 @@ export const generateEmailSchema = z.object({
  */
 export const sendEmailSchema = z.object({
   caseId: z.string().uuid("Invalid case ID format").optional(),
-  recipientEmail: z.string().email("Invalid email address"),
+  recipientEmail: z.string().email("Invalid email address").optional(),
   recipientName: z.string().min(1, "Recipient name is required").optional(),
   subject: z.string().min(1, "Subject is required"),
   htmlContent: z.string().min(1, "HTML content is required"),
@@ -39,12 +39,12 @@ export const generateSummarySchema = z.object({
   soapNoteId: z.string().uuid("Invalid SOAP note ID format").optional(),
   templateId: z.string().uuid("Invalid template ID format").optional(),
 
-  // VAPI call scheduling details
-  ownerPhone: z.string().min(1, "Owner phone number is required"),
+  // VAPI call scheduling details (optional - only schedule call if provided)
+  ownerPhone: z.string().optional(),
   vapiScheduledFor: z.coerce.date({
     required_error: "VAPI call scheduled time is required",
     invalid_type_error: "Invalid date format",
-  }),
+  }).optional(),
 
   // Additional VAPI variables to include in the call
   vapiVariables: z.record(z.any()).optional(),

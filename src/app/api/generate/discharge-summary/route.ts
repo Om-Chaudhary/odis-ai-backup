@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
       caseId: validated.caseId,
       soapNoteId: validated.soapNoteId,
       ownerPhone: validated.ownerPhone,
-      vapiScheduledFor: validated.vapiScheduledFor.toISOString(),
+      vapiScheduledFor: validated.vapiScheduledFor?.toISOString() ?? null,
     });
 
     // Fetch case data with metadata (entity extraction)
@@ -179,7 +179,7 @@ export async function POST(request: NextRequest) {
     } | null;
 
     const metadata = caseData.metadata as Record<string, unknown> | null;
-    const entityExtraction = metadata?.entity_extraction as
+    const entityExtraction = metadata?.entities as
       | Record<string, unknown>
       | undefined;
 
@@ -289,92 +289,95 @@ export async function POST(request: NextRequest) {
       contentLength: summaryContent.length,
     });
 
-    // Prepare VAPI call variables
-    const vapiVariables = {
-      // Core identification
-      pet_name: patient?.name ?? "the patient",
-      owner_name: patient?.owner_name ?? "",
+    // Only schedule VAPI call if phone number is provided
+    let vapiCallId: string | null = null;
+    let vapiScheduledFor: string | null = null;
 
-      // Clinical content
-      discharge_summary_content: summaryContent,
-      soap_note_content: soapNote?.content ?? "",
+    if (validated.ownerPhone && validated.vapiScheduledFor) {
+      // Prepare VAPI call variables
+      const vapiVariables = {
+        // Core identification
+        pet_name: patient?.name ?? "the patient",
+        owner_name: patient?.owner_name ?? "",
 
-      // Entity extraction data (if available)
-      ...(entityExtraction && {
-        extracted_data: entityExtraction,
-      }),
+        // Clinical content
+        discharge_summary_content: summaryContent,
+        soap_note_content: soapNote?.content ?? "",
 
-      // Additional variables from request
-      ...(validated.vapiVariables ?? {}),
-    };
+        // Entity extraction data (if available)
+        ...(entityExtraction && {
+          extracted_data: entityExtraction,
+        }),
 
-    // Schedule VAPI call using existing endpoint
-    const callScheduleUrl = `${env.NEXT_PUBLIC_SITE_URL}/api/calls/schedule`;
-
-    console.log("[GENERATE_SUMMARY] Scheduling VAPI call", {
-      url: callScheduleUrl,
-      ownerPhone: validated.ownerPhone,
-      scheduledFor: validated.vapiScheduledFor.toISOString(),
-    });
-
-    const callScheduleResponse = await fetch(callScheduleUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-      body: JSON.stringify({
-        phoneNumber: validated.ownerPhone,
-        petName: patient?.name ?? "your pet",
-        ownerName: patient?.owner_name ?? "Pet Owner",
-        callType: "discharge",
-        scheduledFor: validated.vapiScheduledFor,
-        dischargeSummary: summaryContent,
-        clinicName: (vapiVariables as Record<string, unknown>).clinic_name as string | undefined ?? "your veterinary clinic",
-        clinicPhone: (vapiVariables as Record<string, unknown>).clinic_phone as string | undefined ?? "",
-        emergencyPhone: (vapiVariables as Record<string, unknown>).emergency_phone as string | undefined ?? "",
-        appointmentDate: new Date().toLocaleDateString(),
-        // Include entity extraction in metadata
-        metadata: {
-          case_id: validated.caseId,
-          soap_note_id: soapNote?.id ?? null,
-          discharge_summary_id: discharge_summary_id,
-          entity_extraction: entityExtraction,
-          ...validated.vapiVariables,
-        },
-      }),
-    });
-
-    if (!callScheduleResponse.ok) {
-      const errorData = await callScheduleResponse.json();
-      console.error("[GENERATE_SUMMARY] Failed to schedule VAPI call", {
-        status: callScheduleResponse.status,
-        error: errorData,
-      });
-      return withCorsHeaders(
-        request,
-        NextResponse.json(
-          {
-            error: "Failed to schedule VAPI call",
-            details: errorData.error,
-          },
-          { status: 500 },
-        ),
-      );
-    }
-
-    const callScheduleData = (await callScheduleResponse.json()) as {
-      success: boolean;
-      data: {
-        callId: string;
-        scheduledFor: string;
+        // Additional variables from request
+        ...(validated.vapiVariables ?? {}),
       };
-    };
 
-    console.log("[GENERATE_SUMMARY] VAPI call scheduled successfully", {
-      vapiCallId: callScheduleData.data.callId,
-      summaryId: discharge_summary_id,
-    });
+      // Schedule VAPI call using existing endpoint
+      const callScheduleUrl = `${env.NEXT_PUBLIC_SITE_URL}/api/calls/schedule`;
+
+      console.log("[GENERATE_SUMMARY] Scheduling VAPI call", {
+        url: callScheduleUrl,
+        ownerPhone: validated.ownerPhone,
+        scheduledFor: validated.vapiScheduledFor!.toISOString(),
+      });
+
+      const callScheduleResponse = await fetch(callScheduleUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: JSON.stringify({
+          phoneNumber: validated.ownerPhone,
+          petName: patient?.name ?? "your pet",
+          ownerName: patient?.owner_name ?? "Pet Owner",
+          callType: "discharge",
+          scheduledFor: validated.vapiScheduledFor,
+          dischargeSummary: summaryContent,
+          clinicName: (vapiVariables as Record<string, unknown>).clinic_name as string | undefined ?? "your veterinary clinic",
+          clinicPhone: (vapiVariables as Record<string, unknown>).clinic_phone as string | undefined ?? "",
+          emergencyPhone: (vapiVariables as Record<string, unknown>).emergency_phone as string | undefined ?? "",
+          appointmentDate: new Date().toLocaleDateString(),
+          // Include entity extraction in metadata
+          metadata: {
+            case_id: validated.caseId,
+            soap_note_id: soapNote?.id ?? null,
+            discharge_summary_id: discharge_summary_id,
+            entity_extraction: entityExtraction,
+            ...validated.vapiVariables,
+          },
+        }),
+      });
+
+      if (!callScheduleResponse.ok) {
+        const errorData = await callScheduleResponse.json();
+        console.error("[GENERATE_SUMMARY] Failed to schedule VAPI call", {
+          status: callScheduleResponse.status,
+          error: errorData,
+        });
+        // Don't fail the whole request - just log and continue
+        console.warn("[GENERATE_SUMMARY] Continuing without VAPI call");
+      } else {
+        const callScheduleData = (await callScheduleResponse.json()) as {
+          success: boolean;
+          data: {
+            callId: string;
+            scheduledFor: string;
+          };
+        };
+
+        vapiCallId = callScheduleData.data.callId;
+        vapiScheduledFor = callScheduleData.data.scheduledFor;
+
+        console.log("[GENERATE_SUMMARY] VAPI call scheduled successfully", {
+          vapiCallId,
+          summaryId: discharge_summary_id,
+        });
+      }
+    } else {
+      console.log("[GENERATE_SUMMARY] Skipping VAPI call - no phone number provided");
+    }
 
     return withCorsHeaders(
       request,
@@ -382,11 +385,11 @@ export async function POST(request: NextRequest) {
         success: true,
         data: {
           summaryId: discharge_summary_id,
-          vapiCallId: callScheduleData.data.callId,
+          vapiCallId,
           content: summaryContent,
           caseId: validated.caseId,
           soapNoteId: soapNote?.id ?? null,
-          vapiScheduledFor: callScheduleData.data.scheduledFor,
+          vapiScheduledFor,
         },
       }),
     );
