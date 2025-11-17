@@ -5,6 +5,7 @@ import { generateSummarySchema } from "~/lib/validators/discharge";
 import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
+import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)
@@ -92,9 +93,12 @@ export async function POST(request: NextRequest) {
     const { user, supabase, token } = await authenticateRequest(request);
 
     if (!user || !supabase) {
-      return NextResponse.json(
-        { error: "Unauthorized: Authentication required" },
-        { status: 401 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          { error: "Unauthorized: Authentication required" },
+          { status: 401 },
+        ),
       );
     }
 
@@ -106,9 +110,12 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (profile?.role !== "admin") {
-      return NextResponse.json(
-        { error: "Unauthorized: Admin access required" },
-        { status: 403 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          { error: "Unauthorized: Admin access required" },
+          { status: 403 },
+        ),
       );
     }
 
@@ -149,7 +156,10 @@ export async function POST(request: NextRequest) {
         caseId: validated.caseId,
         error: caseError,
       });
-      return NextResponse.json({ error: "Case not found" }, { status: 404 });
+      return withCorsHeaders(
+        request,
+        NextResponse.json({ error: "Case not found" }, { status: 404 }),
+      );
     }
 
     // Fetch SOAP note
@@ -172,13 +182,27 @@ export async function POST(request: NextRequest) {
         soapNoteId: validated.soapNoteId,
         error: soapError,
       });
-      return NextResponse.json(
-        { error: "SOAP note not found for this case" },
-        { status: 404 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          { error: "SOAP note not found for this case" },
+          { status: 404 },
+        ),
       );
     }
 
     const soapNote = soapNotes[0];
+
+    if (!soapNote) {
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          { error: "SOAP note not found for this case" },
+          { status: 404 },
+        ),
+      );
+    }
+
     const patient = caseData.patients as unknown as {
       name?: string;
       species?: string;
@@ -224,12 +248,15 @@ export async function POST(request: NextRequest) {
       console.error("[GENERATE_SUMMARY] Edge Function error", {
         error: edgeFunctionError,
       });
-      return NextResponse.json(
-        {
-          error: "Failed to generate discharge summary",
-          details: edgeFunctionError.message,
-        },
-        { status: 500 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          {
+            error: "Failed to generate discharge summary",
+            details: edgeFunctionError.message,
+          },
+          { status: 500 },
+        ),
       );
     }
 
@@ -286,9 +313,9 @@ export async function POST(request: NextRequest) {
         callType: "discharge",
         scheduledFor: validated.vapiScheduledFor,
         dischargeSummary: summaryContent,
-        clinicName: vapiVariables.clinic_name ?? "your veterinary clinic",
-        clinicPhone: vapiVariables.clinic_phone ?? "",
-        emergencyPhone: vapiVariables.emergency_phone ?? "",
+        clinicName: (vapiVariables as Record<string, unknown>).clinic_name as string | undefined ?? "your veterinary clinic",
+        clinicPhone: (vapiVariables as Record<string, unknown>).clinic_phone as string | undefined ?? "",
+        emergencyPhone: (vapiVariables as Record<string, unknown>).emergency_phone as string | undefined ?? "",
         appointmentDate: new Date().toLocaleDateString(),
         // Include entity extraction in metadata
         metadata: {
@@ -307,12 +334,15 @@ export async function POST(request: NextRequest) {
         status: callScheduleResponse.status,
         error: errorData,
       });
-      return NextResponse.json(
-        {
-          error: "Failed to schedule VAPI call",
-          details: errorData.error,
-        },
-        { status: 500 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          {
+            error: "Failed to schedule VAPI call",
+            details: errorData.error,
+          },
+          { status: 500 },
+        ),
       );
     }
 
@@ -329,28 +359,35 @@ export async function POST(request: NextRequest) {
       summaryId: discharge_summary_id,
     });
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        summaryId: discharge_summary_id,
-        vapiCallId: callScheduleData.data.callId,
-        content: summaryContent,
-        caseId: validated.caseId,
-        soapNoteId: soapNote.id,
-        vapiScheduledFor: callScheduleData.data.scheduledFor,
-      },
-    });
+    return withCorsHeaders(
+      request,
+      NextResponse.json({
+        success: true,
+        data: {
+          summaryId: discharge_summary_id,
+          vapiCallId: callScheduleData.data.callId,
+          content: summaryContent,
+          caseId: validated.caseId,
+          soapNoteId: soapNote.id,
+          vapiScheduledFor: callScheduleData.data.scheduledFor,
+        },
+      }),
+    );
   } catch (error) {
     console.error("[GENERATE_SUMMARY] Error", {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Internal server error",
-      },
-      { status: 500 },
+    return withCorsHeaders(
+      request,
+      NextResponse.json(
+        {
+          error:
+            error instanceof Error ? error.message : "Internal server error",
+        },
+        { status: 500 },
+      ),
     );
   }
 }
@@ -358,9 +395,19 @@ export async function POST(request: NextRequest) {
 /**
  * Health check endpoint
  */
-export async function GET() {
-  return NextResponse.json({
-    status: "ok",
-    message: "Generate discharge summary endpoint is active",
-  });
+export function GET(request: NextRequest) {
+  return withCorsHeaders(
+    request,
+    NextResponse.json({
+      status: "ok",
+      message: "Generate discharge summary endpoint is active",
+    }),
+  );
+}
+
+/**
+ * CORS preflight handler
+ */
+export function OPTIONS(request: NextRequest) {
+  return handleCorsPreflightRequest(request);
 }

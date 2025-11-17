@@ -43,7 +43,7 @@ export type NormalizeRequest = z.infer<typeof NormalizeRequestSchema>;
  */
 export const ExtractedPatientSchema = z.object({
   name: z.string().min(1, "Patient name required"),
-  species: z.enum(["dog", "cat", "bird", "rabbit", "other"]),
+  species: z.enum(["dog", "cat", "bird", "rabbit", "other", "unknown"]),
   breed: z.string().optional(),
   age: z.string().optional(),
   sex: z.enum(["male", "female", "unknown"]).optional(),
@@ -194,7 +194,7 @@ export function parseWeightToKg(weightStr: string | undefined): number | undefin
   if (!weightStr) return undefined;
 
   const match = /^([\d.]+)\s*(kg|lbs?|pounds?)?$/i.exec(weightStr);
-  if (!match) return undefined;
+  if (!match || !match[1]) return undefined;
 
   const value = parseFloat(match[1]);
   const unit = match[2]?.toLowerCase();
@@ -220,10 +220,10 @@ export function parseAgeToDOB(ageStr: string | undefined): string | undefined {
   const yearMatch = /(\d+)\s*(?:year|yr)/i.exec(ageStr);
   const monthMatch = /(\d+)\s*(?:month|mo)/i.exec(ageStr);
 
-  if (yearMatch) {
+  if (yearMatch && yearMatch[1]) {
     totalMonths += parseInt(yearMatch[1]) * 12;
   }
-  if (monthMatch) {
+  if (monthMatch && monthMatch[1]) {
     totalMonths += parseInt(monthMatch[1]);
   }
 

@@ -19,7 +19,7 @@ import {
    Configuration
    ======================================== */
 
-const ANTHROPIC_MODEL = "claude-3-5-sonnet-20241022";
+const ANTHROPIC_MODEL = "claude-haiku-4-5-20251001";
 const MAX_TOKENS = 4096;
 const TEMPERATURE = 0.1; // Very low temperature for consistent entity extraction
 
@@ -71,7 +71,7 @@ Output Format (JSON only, NO markdown code blocks):
 {
   "patient": {
     "name": "string",
-    "species": "dog" | "cat" | "bird" | "rabbit" | "other",
+    "species": "dog" | "cat" | "bird" | "rabbit" | "other" | "unknown",
     "breed": "string (optional)",
     "age": "string (optional, e.g., '5 years')",
     "sex": "male" | "female" | "unknown",
@@ -167,7 +167,7 @@ export async function extractEntities(
     });
 
     const content = response.content[0];
-    if (content.type !== "text") {
+    if (!content || content.type !== "text") {
       throw new Error("Unexpected response type from Claude API");
     }
 

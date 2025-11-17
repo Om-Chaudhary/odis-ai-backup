@@ -20,6 +20,7 @@
 
 import type { NextRequest } from "next/server";
 import { withAuth, successResponse, errorResponse } from "~/lib/api/auth";
+import { handleCorsPreflightRequest } from "~/lib/api/cors";
 import {
   NormalizeRequestSchema,
   type NormalizeResponse,
@@ -32,7 +33,6 @@ import {
 import {
   storeNormalizedEntities,
   fetchCaseWithEntities,
-  hasExtractedEntities,
 } from "~/lib/db/scribe-transactions";
 
 /* ========================================
@@ -58,7 +58,7 @@ export const POST = withAuth<NormalizeResponse>(async (request, { user, supabase
           field: e.path.join("."),
           message: e.message,
         })),
-      });
+      }, request);
     }
 
     const { input, caseId, inputType, metadata } = validation.data;
@@ -74,7 +74,7 @@ export const POST = withAuth<NormalizeResponse>(async (request, { user, supabase
       if (!existingCase.success) {
         return errorResponse("Case not found or access denied", 404, {
           details: existingCase.error,
-        });
+        }, request);
       }
 
       // Warn if case already has entities (but allow update)
@@ -90,6 +90,8 @@ export const POST = withAuth<NormalizeResponse>(async (request, { user, supabase
       return errorResponse(
         "Input too short for entity extraction (minimum 50 characters)",
         400,
+        undefined,
+        request,
       );
     }
 
@@ -105,7 +107,7 @@ export const POST = withAuth<NormalizeResponse>(async (request, { user, supabase
       console.error("[NORMALIZE] AI entity extraction failed:", aiError);
       return errorResponse("AI entity extraction failed", 500, {
         message: aiError instanceof Error ? aiError.message : "Unknown AI error",
-      });
+      }, request);
     }
 
     // Log extraction summary
@@ -138,7 +140,7 @@ export const POST = withAuth<NormalizeResponse>(async (request, { user, supabase
       return errorResponse("Failed to store extracted entities", 500, {
         error: dbResult.error,
         details: dbResult.details,
-      });
+      }, request);
     }
 
     // Step 6: Build success response
@@ -165,12 +167,12 @@ export const POST = withAuth<NormalizeResponse>(async (request, { user, supabase
       `[NORMALIZE] Success! ${caseId ? "Updated" : "Created"} case ${dbResult.case.id} in ${processingTime}ms`,
     );
 
-    return successResponse(response, caseId ? 200 : 201);
+    return successResponse(response, caseId ? 200 : 201, request);
   } catch (error) {
     console.error("[NORMALIZE] Unexpected error:", error);
     return errorResponse("Internal server error", 500, {
       message: error instanceof Error ? error.message : "Unknown error",
-    });
+    }, request);
   }
 });
 
@@ -198,7 +200,7 @@ export const GET = withAuth<{
     const caseId = searchParams.get("caseId");
 
     if (!caseId) {
-      return errorResponse("Missing caseId parameter", 400);
+      return errorResponse("Missing caseId parameter", 400, undefined, request);
     }
 
     // Fetch case with entities
@@ -207,7 +209,7 @@ export const GET = withAuth<{
     if (!result.success) {
       return errorResponse("Case not found or access denied", 404, {
         details: result.error,
-      });
+      }, request);
     }
 
     const hasEntities = !!result.entities;
@@ -223,12 +225,12 @@ export const GET = withAuth<{
             extractedAt: result.entities?.extractedAt,
           }
         : null,
-    });
+    }, 200, request);
   } catch (error) {
     console.error("[NORMALIZE] GET error:", error);
     return errorResponse("Failed to check entity extraction status", 500, {
       message: error instanceof Error ? error.message : "Unknown error",
-    });
+    }, request);
   }
 });
 
@@ -241,13 +243,6 @@ export const GET = withAuth<{
  *
  * CORS preflight / Health check
  */
-export async function OPTIONS() {
-  return successResponse({
-    status: "ok",
-    endpoint: "/api/normalize",
-    methods: ["POST", "GET"],
-    authentication: "required (cookie or Bearer token)",
-    description:
-      "Entity extraction endpoint - extracts clinical entities from veterinary text",
-  });
+export function OPTIONS(request: NextRequest) {
+  return handleCorsPreflightRequest(request);
 }

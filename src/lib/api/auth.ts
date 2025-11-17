@@ -14,6 +14,7 @@ import { createClient } from "~/lib/supabase/server";
 import { getUser } from "~/server/actions/auth";
 import { env } from "~/env";
 import type { User } from "@supabase/supabase-js";
+import { getCorsHeaders } from "./cors";
 
 /* ========================================
    Type Definitions
@@ -238,29 +239,44 @@ async function checkUserRole(
 
 /**
  * Standard error response helper
+ *
+ * @param error - Error message
+ * @param status - HTTP status code
+ * @param details - Additional error details
+ * @param request - Optional request for CORS headers
  */
 export function errorResponse(
   error: string,
   status = 500,
   details?: Record<string, unknown>,
+  request?: NextRequest,
 ): NextResponse<ApiErrorResponse> {
+  const headers = request ? getCorsHeaders(request.headers.get("origin")) : {};
+
   return NextResponse.json(
     {
       error,
       ...details,
     },
-    { status },
+    { status, headers },
   );
 }
 
 /**
  * Standard success response helper
+ *
+ * @param data - Response data
+ * @param status - HTTP status code
+ * @param request - Optional request for CORS headers
  */
 export function successResponse<T>(
   data: T,
   status = 200,
+  request?: NextRequest,
 ): NextResponse<T> {
-  return NextResponse.json(data, { status });
+  const headers = request ? getCorsHeaders(request.headers.get("origin")) : {};
+
+  return NextResponse.json(data, { status, headers });
 }
 
 /* ========================================

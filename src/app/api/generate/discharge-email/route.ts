@@ -6,6 +6,7 @@ import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
 import { htmlToPlainText } from "~/lib/resend/client";
+import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)
@@ -88,9 +89,12 @@ export async function POST(request: NextRequest) {
     const { user, supabase } = await authenticateRequest(request);
 
     if (!user || !supabase) {
-      return NextResponse.json(
-        { error: "Unauthorized: Authentication required" },
-        { status: 401 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          { error: "Unauthorized: Authentication required" },
+          { status: 401 },
+        ),
       );
     }
 
@@ -99,12 +103,15 @@ export async function POST(request: NextRequest) {
     const validationResult = generateEmailSchema.safeParse(body);
 
     if (!validationResult.success) {
-      return NextResponse.json(
-        {
-          error: "Validation failed",
-          details: validationResult.error.errors,
-        },
-        { status: 400 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          {
+            error: "Validation failed",
+            details: validationResult.error.errors,
+          },
+          { status: 400 },
+        ),
       );
     }
 
@@ -140,9 +147,9 @@ export async function POST(request: NextRequest) {
         caseId,
         error: caseError,
       });
-      return NextResponse.json(
-        { error: "Case not found" },
-        { status: 404 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json({ error: "Case not found" }, { status: 404 }),
       );
     }
 
@@ -166,13 +173,27 @@ export async function POST(request: NextRequest) {
         dischargeSummaryId,
         error: summaryError,
       });
-      return NextResponse.json(
-        { error: "Discharge summary not found for this case" },
-        { status: 404 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          { error: "Discharge summary not found for this case" },
+          { status: 404 },
+        ),
       );
     }
 
     const dischargeSummary = summaries[0];
+
+    if (!dischargeSummary) {
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          { error: "Discharge summary not found for this case" },
+          { status: 404 },
+        ),
+      );
+    }
+
     const patient = caseData.patients as unknown as {
       name?: string;
       species?: string;
@@ -303,23 +324,36 @@ ${dischargeSummary.content}
       contentLength: dischargeSummary.content.length,
     });
 
-    return NextResponse.json({
-      subject,
-      html,
-      text,
-      patientName,
-      ownerName,
-      dischargeSummaryId: dischargeSummary.id,
-    });
+    return withCorsHeaders(
+      request,
+      NextResponse.json({
+        subject,
+        html,
+        text,
+        patientName,
+        ownerName,
+        dischargeSummaryId: dischargeSummary.id,
+      }),
+    );
   } catch (error) {
     console.error("[GENERATE_EMAIL] Error generating email content:", error);
 
-    return NextResponse.json(
-      {
-        error: "Failed to generate email content",
-        details: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 },
+    return withCorsHeaders(
+      request,
+      NextResponse.json(
+        {
+          error: "Failed to generate email content",
+          details: error instanceof Error ? error.message : String(error),
+        },
+        { status: 500 },
+      ),
     );
   }
+}
+
+/**
+ * CORS preflight handler
+ */
+export function OPTIONS(request: NextRequest) {
+  return handleCorsPreflightRequest(request);
 }
