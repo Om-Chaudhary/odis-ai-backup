@@ -8,6 +8,7 @@ import { env } from "~/env";
 import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
 import { generateDischargeSummaryWithRetry } from "~/lib/ai/generate-discharge";
 import type { NormalizedEntities } from "~/lib/validators/scribe";
+import { normalizePhoneNumber } from "~/lib/utils/phone";
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)
@@ -293,7 +294,12 @@ export async function POST(request: NextRequest) {
     let vapiCallId: string | null = null;
     let vapiScheduledFor: string | null = null;
 
-    if (validated.ownerPhone && validated.vapiScheduledFor) {
+    // Normalize phone number to E.164 format (required by VAPI)
+    const normalizedPhone = validated.ownerPhone
+      ? normalizePhoneNumber(validated.ownerPhone)
+      : null;
+
+    if (normalizedPhone && validated.vapiScheduledFor) {
       // Prepare VAPI call variables
       const vapiVariables = {
         // Core identification
@@ -318,7 +324,8 @@ export async function POST(request: NextRequest) {
 
       console.log("[GENERATE_SUMMARY] Scheduling VAPI call", {
         url: callScheduleUrl,
-        ownerPhone: validated.ownerPhone,
+        ownerPhone: normalizedPhone,
+        originalPhone: validated.ownerPhone,
         scheduledFor: validated.vapiScheduledFor!.toISOString(),
       });
 
@@ -329,7 +336,7 @@ export async function POST(request: NextRequest) {
           ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify({
-          phoneNumber: validated.ownerPhone,
+          phoneNumber: normalizedPhone,
           petName: patient?.name ?? "your pet",
           ownerName: patient?.owner_name ?? "Pet Owner",
           callType: "discharge",
@@ -376,7 +383,13 @@ export async function POST(request: NextRequest) {
         });
       }
     } else {
-      console.log("[GENERATE_SUMMARY] Skipping VAPI call - no phone number provided");
+      if (validated.ownerPhone && !normalizedPhone) {
+        console.warn("[GENERATE_SUMMARY] Invalid phone format, skipping VAPI call", {
+          originalPhone: validated.ownerPhone,
+        });
+      } else {
+        console.log("[GENERATE_SUMMARY] Skipping VAPI call - no phone number provided");
+      }
     }
 
     return withCorsHeaders(

@@ -7,6 +7,7 @@ import { scheduleEmailExecution } from "~/lib/qstash/client";
 import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
+import { normalizeEmail } from "~/lib/utils/phone";
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)
@@ -107,8 +108,21 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validated = sendEmailSchema.parse(body);
 
+    // Normalize email address (lowercase, trim)
+    const normalizedEmail = validated.recipientEmail
+      ? normalizeEmail(validated.recipientEmail)
+      : null;
+
+    if (validated.recipientEmail && !normalizedEmail) {
+      return NextResponse.json(
+        { error: "Invalid email address format" },
+        { status: 400 },
+      );
+    }
+
     console.log("[SEND_EMAIL] Received request", {
-      recipientEmail: validated.recipientEmail,
+      recipientEmail: normalizedEmail,
+      originalEmail: validated.recipientEmail,
       recipientName: validated.recipientName,
       subject: validated.subject,
       scheduledFor: validated.scheduledFor.toISOString(),
@@ -128,7 +142,7 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: user.id,
         case_id: validated.caseId ?? null,
-        recipient_email: validated.recipientEmail,
+        recipient_email: normalizedEmail,
         recipient_name: validated.recipientName ?? null,
         subject: validated.subject,
         html_content: validated.htmlContent,
@@ -195,7 +209,7 @@ export async function POST(request: NextRequest) {
         emailId: scheduledEmail.id,
         scheduledFor: validated.scheduledFor.toISOString(),
         qstashMessageId,
-        recipientEmail: validated.recipientEmail,
+        recipientEmail: normalizedEmail,
         recipientName: validated.recipientName,
         subject: validated.subject,
       },
