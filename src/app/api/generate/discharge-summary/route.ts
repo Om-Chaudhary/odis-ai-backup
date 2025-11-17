@@ -102,23 +102,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify admin role
-    const { data: profile } = await supabase
-      .from("users")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (profile?.role !== "admin") {
-      return withCorsHeaders(
-        request,
-        NextResponse.json(
-          { error: "Unauthorized: Admin access required" },
-          { status: 403 },
-        ),
-      );
-    }
-
     // Parse and validate request body
     const body = await request.json();
     const validated = generateSummarySchema.parse(body);
