@@ -36,6 +36,10 @@ export const generateSummarySchema = z.object({
   soapNoteId: z.string().uuid("Invalid SOAP note ID format").optional(),
   templateId: z.string().uuid("Invalid template ID format").optional(),
 
+  // Optional: Raw clinical text for normalization (if case doesn't have entities yet)
+  rawInput: z.string().min(50, "Raw input too short for entity extraction").optional(),
+  inputType: z.enum(["transcript", "soap_note", "visit_notes", "discharge_summary", "other"]).optional(),
+
   // VAPI call scheduling details
   ownerPhone: z.string().min(1, "Owner phone number is required"),
   vapiScheduledFor: z.coerce.date({

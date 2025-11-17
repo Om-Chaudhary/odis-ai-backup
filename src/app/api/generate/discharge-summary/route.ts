@@ -8,6 +8,8 @@ import { env } from "~/env";
 import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
 import { generateDischargeSummaryWithRetry } from "~/lib/ai/generate-discharge";
 import type { NormalizedEntities } from "~/lib/validators/scribe";
+import { extractEntitiesWithRetry } from "~/lib/ai/normalize-scribe";
+import { storeNormalizedEntities } from "~/lib/db/scribe-transactions";
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)
@@ -178,8 +180,8 @@ export async function POST(request: NextRequest) {
       date_of_birth?: string;
     } | null;
 
-    const metadata = caseData.metadata as Record<string, unknown> | null;
-    const entityExtraction = metadata?.entity_extraction as
+    let metadata = caseData.metadata as Record<string, unknown> | null;
+    let entityExtraction = metadata?.entity_extraction as
       | Record<string, unknown>
       | undefined;
 
@@ -187,6 +189,79 @@ export async function POST(request: NextRequest) {
       hasEntityExtraction: !!entityExtraction,
       entityKeys: entityExtraction ? Object.keys(entityExtraction) : [],
     });
+
+    // If no entity extraction and rawInput provided, normalize now
+    if (!entityExtraction && validated.rawInput) {
+      console.log("[GENERATE_SUMMARY] No entity extraction found, normalizing rawInput", {
+        inputLength: validated.rawInput.length,
+        inputType: validated.inputType,
+      });
+
+      try {
+        // Extract entities from raw input
+        const entities = await extractEntitiesWithRetry(
+          validated.rawInput,
+          validated.inputType,
+          3
+        );
+
+        console.log("[GENERATE_SUMMARY] Entity extraction successful", {
+          confidence: entities.confidence.overall,
+          patientName: entities.patient.name,
+          caseType: entities.caseType,
+        });
+
+        // Store entities in case metadata
+        const storeResult = await storeNormalizedEntities(
+          supabase,
+          user.id,
+          entities,
+          validated.caseId, // Update existing case
+          {
+            normalized_via: "discharge_generation",
+            input_type: validated.inputType,
+          }
+        );
+
+        if (!storeResult.success) {
+          console.error("[GENERATE_SUMMARY] Failed to store entities", {
+            error: storeResult.error,
+          });
+          return withCorsHeaders(
+            request,
+            NextResponse.json(
+              {
+                error: "Failed to store extracted entities",
+                details: storeResult.error,
+              },
+              { status: 500 },
+            ),
+          );
+        }
+
+        // Update entityExtraction with newly extracted data
+        entityExtraction = entities as unknown as Record<string, unknown>;
+        console.log("[GENERATE_SUMMARY] Entities stored successfully");
+      } catch (normalizationError) {
+        console.error("[GENERATE_SUMMARY] Normalization failed", {
+          error: normalizationError instanceof Error
+            ? normalizationError.message
+            : String(normalizationError),
+        });
+        return withCorsHeaders(
+          request,
+          NextResponse.json(
+            {
+              error: "Failed to extract entities from raw input",
+              details: normalizationError instanceof Error
+                ? normalizationError.message
+                : "Entity extraction failed",
+            },
+            { status: 500 },
+          ),
+        );
+      }
+    }
 
     console.log("[GENERATE_SUMMARY] Generating discharge summary", {
       caseId: validated.caseId,
