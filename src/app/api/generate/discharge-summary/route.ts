@@ -145,7 +145,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Fetch SOAP note
+    // Fetch SOAP note (optional - can work with just entity extraction)
+    let soapNote: { id: string; content: string } | null = null;
+
     let soapQuery = supabase
       .from("soap_notes")
       .select("id, content, created_at")
@@ -155,35 +157,15 @@ export async function POST(request: NextRequest) {
       soapQuery = soapQuery.eq("id", validated.soapNoteId);
     }
 
-    const { data: soapNotes, error: soapError } = await soapQuery
+    const { data: soapNotes } = await soapQuery
       .order("created_at", { ascending: false })
       .limit(1);
 
-    if (soapError || !soapNotes || soapNotes.length === 0) {
-      console.error("[GENERATE_SUMMARY] SOAP note not found", {
-        caseId: validated.caseId,
-        soapNoteId: validated.soapNoteId,
-        error: soapError,
-      });
-      return withCorsHeaders(
-        request,
-        NextResponse.json(
-          { error: "SOAP note not found for this case" },
-          { status: 404 },
-        ),
-      );
-    }
-
-    const soapNote = soapNotes[0];
-
-    if (!soapNote) {
-      return withCorsHeaders(
-        request,
-        NextResponse.json(
-          { error: "SOAP note not found for this case" },
-          { status: 404 },
-        ),
-      );
+    if (soapNotes && soapNotes.length > 0) {
+      soapNote = soapNotes[0]!;
+      console.log("[GENERATE_SUMMARY] Using SOAP note:", soapNote.id);
+    } else {
+      console.log("[GENERATE_SUMMARY] No SOAP note found, will use entity extraction only");
     }
 
     const patient = caseData.patients as unknown as {
@@ -210,17 +192,20 @@ export async function POST(request: NextRequest) {
 
     console.log("[GENERATE_SUMMARY] Calling Edge Function", {
       caseId: validated.caseId,
-      soapNoteId: soapNote.id,
+      soapNoteId: soapNote?.id ?? null,
       templateId: validated.templateId,
+      hasEntityExtraction: !!entityExtraction,
     });
 
     // Call Supabase Edge Function to generate discharge summary
+    // Can work with either SOAP note OR entity extraction data
     const { data: summaryResponse, error: edgeFunctionError } =
       await serviceClient.functions.invoke("generate-discharge-summary", {
         body: {
           case_id: validated.caseId,
-          soap_note_id: soapNote.id,
-          soap_content: soapNote.content,
+          soap_note_id: soapNote?.id ?? null,
+          soap_content: soapNote?.content ?? null,
+          entity_extraction: entityExtraction ?? null,
           transcripts: [], // TODO: Fetch transcripts from case if available
           template_id: validated.templateId,
           user_id: user.id,
@@ -263,7 +248,7 @@ export async function POST(request: NextRequest) {
 
       // Clinical content
       discharge_summary_content: summaryContent,
-      soap_note_content: soapNote.content,
+      soap_note_content: soapNote?.content ?? "",
 
       // Entity extraction data (if available)
       ...(entityExtraction && {
@@ -303,7 +288,7 @@ export async function POST(request: NextRequest) {
         // Include entity extraction in metadata
         metadata: {
           case_id: validated.caseId,
-          soap_note_id: soapNote.id,
+          soap_note_id: soapNote?.id ?? null,
           discharge_summary_id: discharge_summary_id,
           entity_extraction: entityExtraction,
           ...validated.vapiVariables,
@@ -351,7 +336,7 @@ export async function POST(request: NextRequest) {
           vapiCallId: callScheduleData.data.callId,
           content: summaryContent,
           caseId: validated.caseId,
-          soapNoteId: soapNote.id,
+          soapNoteId: soapNote?.id ?? null,
           vapiScheduledFor: callScheduleData.data.scheduledFor,
         },
       }),
