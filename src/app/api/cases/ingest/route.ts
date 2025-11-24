@@ -85,6 +85,14 @@ async function authenticateRequest(request: NextRequest) {
 }
 
 // --- Route Handler ---
+export async function GET() {
+  return NextResponse.json({
+    message: "Cases ingest endpoint is available",
+    methods: ["POST"],
+    endpoint: "/api/cases/ingest",
+  });
+}
+
 export async function POST(request: NextRequest) {
   try {
     // 1. Auth
