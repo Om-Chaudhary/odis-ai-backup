@@ -70,7 +70,7 @@ async function authenticateRequest(request: NextRequest) {
  *
  * This endpoint is designed to accept requests from:
  * - Browser extension (IDEXX Neo integration) - uses Bearer token
- * - Admin dashboard - uses cookies
+ * - Any authenticated user - uses cookies or Bearer token
  * - External integrations - uses Bearer token
  */
 export async function POST(request: NextRequest) {
@@ -82,20 +82,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Unauthorized: Authentication required" },
         { status: 401 },
-      );
-    }
-
-    // Verify admin role
-    const { data: profile } = await supabase
-      .from("users")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (profile?.role !== "admin") {
-      return NextResponse.json(
-        { error: "Unauthorized: Admin access required" },
-        { status: 403 },
       );
     }
 
@@ -149,13 +135,15 @@ export async function POST(request: NextRequest) {
       discharge_summary_content: validated.dischargeSummary,
 
       // Conditional fields based on call_type
-      ...(validated.callType === "discharge" && validated.subType && {
-        sub_type: validated.subType,
-      }),
+      ...(validated.callType === "discharge" &&
+        validated.subType && {
+          sub_type: validated.subType,
+        }),
 
-      ...(validated.callType === "follow-up" && validated.condition && {
-        condition: validated.condition,
-      }),
+      ...(validated.callType === "follow-up" &&
+        validated.condition && {
+          condition: validated.condition,
+        }),
 
       // Follow-up instructions
       ...(validated.nextSteps && { next_steps: validated.nextSteps }),
