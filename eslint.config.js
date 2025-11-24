@@ -11,7 +11,7 @@ export default tseslint.config(
   {
     ignores: [
       ".next",
-      "database.types.ts",
+      "src/database.types.ts",
       ".next/**",
       "out/**",
       "build/**",

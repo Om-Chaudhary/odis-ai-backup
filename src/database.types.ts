@@ -67,6 +67,48 @@ export type Database = {
           },
         ];
       };
+      call_patients: {
+        Row: {
+          clinic_name: string | null;
+          clinic_phone: string | null;
+          created_at: string;
+          discharge_summary: string | null;
+          id: string;
+          owner_name: string;
+          owner_phone: string;
+          pet_name: string;
+          updated_at: string;
+          user_id: string;
+          vet_name: string | null;
+        };
+        Insert: {
+          clinic_name?: string | null;
+          clinic_phone?: string | null;
+          created_at?: string;
+          discharge_summary?: string | null;
+          id?: string;
+          owner_name: string;
+          owner_phone: string;
+          pet_name: string;
+          updated_at?: string;
+          user_id: string;
+          vet_name?: string | null;
+        };
+        Update: {
+          clinic_name?: string | null;
+          clinic_phone?: string | null;
+          created_at?: string;
+          discharge_summary?: string | null;
+          id?: string;
+          owner_name?: string;
+          owner_phone?: string;
+          pet_name?: string;
+          updated_at?: string;
+          user_id?: string;
+          vet_name?: string | null;
+        };
+        Relationships: [];
+      };
       case_shares: {
         Row: {
           case_id: string;
@@ -317,12 +359,15 @@ export type Database = {
           case_id: string | null;
           created_at: string;
           date_of_birth: string | null;
+          external_id: string | null;
           id: string;
+          metadata: Json | null;
           name: string;
           owner_email: string | null;
           owner_name: string | null;
           owner_phone: string | null;
           sex: string | null;
+          source: string | null;
           species: string | null;
           updated_at: string | null;
           user_id: string | null;
@@ -333,12 +378,15 @@ export type Database = {
           case_id?: string | null;
           created_at?: string;
           date_of_birth?: string | null;
+          external_id?: string | null;
           id?: string;
+          metadata?: Json | null;
           name: string;
           owner_email?: string | null;
           owner_name?: string | null;
           owner_phone?: string | null;
           sex?: string | null;
+          source?: string | null;
           species?: string | null;
           updated_at?: string | null;
           user_id?: string | null;
@@ -349,12 +397,15 @@ export type Database = {
           case_id?: string | null;
           created_at?: string;
           date_of_birth?: string | null;
+          external_id?: string | null;
           id?: string;
+          metadata?: Json | null;
           name?: string;
           owner_email?: string | null;
           owner_name?: string | null;
           owner_phone?: string | null;
           sex?: string | null;
+          source?: string | null;
           species?: string | null;
           updated_at?: string | null;
           user_id?: string | null;
@@ -373,6 +424,252 @@ export type Database = {
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      retell_calls: {
+        Row: {
+          agent_id: string;
+          call_analysis: Json | null;
+          call_variables: Json | null;
+          created_at: string | null;
+          created_by: string | null;
+          disconnection_reason: string | null;
+          duration_seconds: number | null;
+          end_timestamp: string | null;
+          error_message: string | null;
+          id: string;
+          metadata: Json | null;
+          patient_id: string | null;
+          phone_number: string;
+          phone_number_pretty: string | null;
+          public_log_url: string | null;
+          recording_url: string | null;
+          retell_call_id: string;
+          retell_response: Json | null;
+          scheduled_for: string | null;
+          start_timestamp: string | null;
+          status: string;
+          transcript: string | null;
+          transcript_object: Json | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          agent_id: string;
+          call_analysis?: Json | null;
+          call_variables?: Json | null;
+          created_at?: string | null;
+          created_by?: string | null;
+          disconnection_reason?: string | null;
+          duration_seconds?: number | null;
+          end_timestamp?: string | null;
+          error_message?: string | null;
+          id?: string;
+          metadata?: Json | null;
+          patient_id?: string | null;
+          phone_number: string;
+          phone_number_pretty?: string | null;
+          public_log_url?: string | null;
+          recording_url?: string | null;
+          retell_call_id: string;
+          retell_response?: Json | null;
+          scheduled_for?: string | null;
+          start_timestamp?: string | null;
+          status?: string;
+          transcript?: string | null;
+          transcript_object?: Json | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          agent_id?: string;
+          call_analysis?: Json | null;
+          call_variables?: Json | null;
+          created_at?: string | null;
+          created_by?: string | null;
+          disconnection_reason?: string | null;
+          duration_seconds?: number | null;
+          end_timestamp?: string | null;
+          error_message?: string | null;
+          id?: string;
+          metadata?: Json | null;
+          patient_id?: string | null;
+          phone_number?: string;
+          phone_number_pretty?: string | null;
+          public_log_url?: string | null;
+          recording_url?: string | null;
+          retell_call_id?: string;
+          retell_response?: Json | null;
+          scheduled_for?: string | null;
+          start_timestamp?: string | null;
+          status?: string;
+          transcript?: string | null;
+          transcript_object?: Json | null;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "fk_retell_calls_patient";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "call_patients";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      scheduled_discharge_calls: {
+        Row: {
+          assistant_id: string | null;
+          call_analysis: Json | null;
+          case_id: string | null;
+          condition_category: string | null;
+          cost: number | null;
+          created_at: string;
+          customer_phone: string | null;
+          duration_seconds: number | null;
+          dynamic_variables: Json;
+          ended_at: string | null;
+          ended_reason: string | null;
+          id: string;
+          knowledge_base_used: string | null;
+          metadata: Json | null;
+          phone_number_id: string | null;
+          qstash_message_id: string | null;
+          recording_url: string | null;
+          scheduled_for: string | null;
+          started_at: string | null;
+          status: string | null;
+          transcript: string | null;
+          transcript_messages: Json | null;
+          updated_at: string;
+          user_id: string;
+          vapi_call_id: string | null;
+        };
+        Insert: {
+          assistant_id?: string | null;
+          call_analysis?: Json | null;
+          case_id?: string | null;
+          condition_category?: string | null;
+          cost?: number | null;
+          created_at?: string;
+          customer_phone?: string | null;
+          duration_seconds?: number | null;
+          dynamic_variables: Json;
+          ended_at?: string | null;
+          ended_reason?: string | null;
+          id?: string;
+          knowledge_base_used?: string | null;
+          metadata?: Json | null;
+          phone_number_id?: string | null;
+          qstash_message_id?: string | null;
+          recording_url?: string | null;
+          scheduled_for?: string | null;
+          started_at?: string | null;
+          status?: string | null;
+          transcript?: string | null;
+          transcript_messages?: Json | null;
+          updated_at?: string;
+          user_id: string;
+          vapi_call_id?: string | null;
+        };
+        Update: {
+          assistant_id?: string | null;
+          call_analysis?: Json | null;
+          case_id?: string | null;
+          condition_category?: string | null;
+          cost?: number | null;
+          created_at?: string;
+          customer_phone?: string | null;
+          duration_seconds?: number | null;
+          dynamic_variables?: Json;
+          ended_at?: string | null;
+          ended_reason?: string | null;
+          id?: string;
+          knowledge_base_used?: string | null;
+          metadata?: Json | null;
+          phone_number_id?: string | null;
+          qstash_message_id?: string | null;
+          recording_url?: string | null;
+          scheduled_for?: string | null;
+          started_at?: string | null;
+          status?: string | null;
+          transcript?: string | null;
+          transcript_messages?: Json | null;
+          updated_at?: string;
+          user_id?: string;
+          vapi_call_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_discharge_calls_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "cases";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      scheduled_discharge_emails: {
+        Row: {
+          case_id: string | null;
+          created_at: string;
+          html_content: string;
+          id: string;
+          metadata: Json | null;
+          qstash_message_id: string | null;
+          recipient_email: string;
+          recipient_name: string | null;
+          resend_email_id: string | null;
+          scheduled_for: string;
+          sent_at: string | null;
+          status: string;
+          subject: string;
+          text_content: string | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          case_id?: string | null;
+          created_at?: string;
+          html_content: string;
+          id?: string;
+          metadata?: Json | null;
+          qstash_message_id?: string | null;
+          recipient_email: string;
+          recipient_name?: string | null;
+          resend_email_id?: string | null;
+          scheduled_for: string;
+          sent_at?: string | null;
+          status?: string;
+          subject: string;
+          text_content?: string | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          case_id?: string | null;
+          created_at?: string;
+          html_content?: string;
+          id?: string;
+          metadata?: Json | null;
+          qstash_message_id?: string | null;
+          recipient_email?: string;
+          recipient_name?: string | null;
+          resend_email_id?: string | null;
+          scheduled_for?: string;
+          sent_at?: string | null;
+          status?: string;
+          subject?: string;
+          text_content?: string | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_discharge_emails_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "cases";
             referencedColumns: ["id"];
           },
         ];
@@ -748,6 +1045,87 @@ export type Database = {
           },
         ];
       };
+      vital_signs: {
+        Row: {
+          case_id: string | null;
+          created_at: string | null;
+          diastolic: number | null;
+          extracted_from: string | null;
+          id: string;
+          measured_at: string | null;
+          metadata: Json | null;
+          notes: string | null;
+          pulse: number | null;
+          respiration: number | null;
+          soap_note_id: string | null;
+          source: string | null;
+          systolic: number | null;
+          temperature: number | null;
+          temperature_unit: string | null;
+          updated_at: string | null;
+          user_id: string;
+          weight: number | null;
+          weight_unit: string | null;
+        };
+        Insert: {
+          case_id?: string | null;
+          created_at?: string | null;
+          diastolic?: number | null;
+          extracted_from?: string | null;
+          id?: string;
+          measured_at?: string | null;
+          metadata?: Json | null;
+          notes?: string | null;
+          pulse?: number | null;
+          respiration?: number | null;
+          soap_note_id?: string | null;
+          source?: string | null;
+          systolic?: number | null;
+          temperature?: number | null;
+          temperature_unit?: string | null;
+          updated_at?: string | null;
+          user_id: string;
+          weight?: number | null;
+          weight_unit?: string | null;
+        };
+        Update: {
+          case_id?: string | null;
+          created_at?: string | null;
+          diastolic?: number | null;
+          extracted_from?: string | null;
+          id?: string;
+          measured_at?: string | null;
+          metadata?: Json | null;
+          notes?: string | null;
+          pulse?: number | null;
+          respiration?: number | null;
+          soap_note_id?: string | null;
+          source?: string | null;
+          systolic?: number | null;
+          temperature?: number | null;
+          temperature_unit?: string | null;
+          updated_at?: string | null;
+          user_id?: string;
+          weight?: number | null;
+          weight_unit?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "vital_signs_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "cases";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "vital_signs_soap_note_id_fkey";
+            columns: ["soap_note_id"];
+            isOneToOne: false;
+            referencedRelation: "soap_notes";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       waitlist_signups: {
         Row: {
           campaign: string;
@@ -888,7 +1266,9 @@ export type Database = {
         | "client";
       waitlist_status: "waiting" | "invited" | "joined" | "declined";
     };
-    CompositeTypes: Record<never, never>;
+    CompositeTypes: {
+      [_ in never]: never;
+    };
   };
 };
 
@@ -997,14 +1377,13 @@ export type Enums<
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
     | keyof DefaultSchema["CompositeTypes"]
-      | { schema: keyof DatabaseWithoutInternals },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals;
 }
