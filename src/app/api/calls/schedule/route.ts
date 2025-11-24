@@ -70,7 +70,7 @@ async function authenticateRequest(request: NextRequest) {
  *
  * This endpoint is designed to accept requests from:
  * - Browser extension (IDEXX Neo integration) - uses Bearer token
- * - Any authenticated user - uses cookies or Bearer token
+ * - Admin dashboard - uses cookies
  * - External integrations - uses Bearer token
  */
 export async function POST(request: NextRequest) {
@@ -135,15 +135,13 @@ export async function POST(request: NextRequest) {
       discharge_summary_content: validated.dischargeSummary,
 
       // Conditional fields based on call_type
-      ...(validated.callType === "discharge" &&
-        validated.subType && {
-          sub_type: validated.subType,
-        }),
+      ...(validated.callType === "discharge" && validated.subType && {
+        sub_type: validated.subType,
+      }),
 
-      ...(validated.callType === "follow-up" &&
-        validated.condition && {
-          condition: validated.condition,
-        }),
+      ...(validated.callType === "follow-up" && validated.condition && {
+        condition: validated.condition,
+      }),
 
       // Follow-up instructions
       ...(validated.nextSteps && { next_steps: validated.nextSteps }),
@@ -161,7 +159,7 @@ export async function POST(request: NextRequest) {
 
     // Store scheduled call in database
     const { data: scheduledCall, error: dbError } = await supabase
-      .from("vapi_calls")
+      .from("scheduled_discharge_calls")
       .insert({
         user_id: user.id,
         assistant_id: process.env.VAPI_ASSISTANT_ID ?? "",
@@ -204,7 +202,7 @@ export async function POST(request: NextRequest) {
       });
 
       // Rollback database insert
-      await supabase.from("vapi_calls").delete().eq("id", scheduledCall.id);
+      await supabase.from("scheduled_discharge_calls").delete().eq("id", scheduledCall.id);
 
       return NextResponse.json(
         { error: "Failed to schedule call execution" },
@@ -214,7 +212,7 @@ export async function POST(request: NextRequest) {
 
     // Update database with QStash message ID
     await supabase
-      .from("vapi_calls")
+      .from("scheduled_discharge_calls")
       .update({
         metadata: {
           ...(scheduledCall.metadata as Record<string, unknown>),

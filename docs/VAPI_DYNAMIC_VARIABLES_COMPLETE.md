@@ -9,6 +9,7 @@ Your codebase has been successfully updated to support all VAPI dynamic variable
 ### 1. ✅ Updated Validator Schema (`src/lib/retell/validators.ts`)
 
 **Before:**
+
 ```typescript
 export const scheduleCallSchema = z.object({
   phoneNumber: phoneNumberSchema,
@@ -23,18 +24,19 @@ export const scheduleCallSchema = z.object({
 ```
 
 **After:**
+
 ```typescript
 export const scheduleCallSchema = z.object({
   // Required fields
   phoneNumber: phoneNumberSchema,
   petName: z.string().min(1),
   ownerName: z.string().min(1),
-  appointmentDate: z.string().min(1),  // NEW
-  callType: z.enum(["discharge", "follow-up"]),  // NEW
-  agentName: z.string().default("Sarah"),  // NEW
+  appointmentDate: z.string().min(1), // NEW
+  callType: z.enum(["discharge", "follow-up"]), // NEW
+  agentName: z.string().default("Sarah"), // NEW
   clinicName: z.string().min(1),
   clinicPhone: z.string().min(1),
-  emergencyPhone: z.string().min(1),  // NEW
+  emergencyPhone: z.string().min(1), // NEW
   dischargeSummary: z.string().min(1),
 
   // Conditional fields
@@ -42,9 +44,9 @@ export const scheduleCallSchema = z.object({
   condition: z.string().optional(),
 
   // Optional fields
-  nextSteps: z.string().optional(),  // NEW
-  medications: z.string().optional(),  // NEW
-  recheckDate: z.string().optional(),  // NEW
+  nextSteps: z.string().optional(), // NEW
+  medications: z.string().optional(), // NEW
+  recheckDate: z.string().optional(), // NEW
   vetName: z.string().optional(),
   // ... scheduling fields
 });
@@ -53,6 +55,7 @@ export const scheduleCallSchema = z.object({
 ### 2. ✅ Updated Schedule Call Route (`src/app/api/calls/schedule/route.ts`)
 
 **Before:**
+
 ```typescript
 const callVariables = {
   pet_name: validated.petName,
@@ -65,47 +68,51 @@ const callVariables = {
 ```
 
 **After:**
+
 ```typescript
 const callVariables = {
   // Core identification
   pet_name: validated.petName,
   owner_name: validated.ownerName,
-  appointment_date: validated.appointmentDate,  // NEW
+  appointment_date: validated.appointmentDate, // NEW
 
   // Call configuration
-  call_type: validated.callType,  // NEW
+  call_type: validated.callType, // NEW
 
   // Agent/clinic information
-  agent_name: validated.agentName ?? "Sarah",  // NEW
+  agent_name: validated.agentName ?? "Sarah", // NEW
   vet_name: validated.vetName ?? "",
   clinic_name: validated.clinicName,
   clinic_phone: validated.clinicPhone,
-  emergency_phone: validated.emergencyPhone,  // NEW
+  emergency_phone: validated.emergencyPhone, // NEW
 
   // Clinical details
   discharge_summary_content: validated.dischargeSummary,
 
   // Conditional fields based on call_type
-  ...(validated.callType === "discharge" && validated.subType && {
-    sub_type: validated.subType,  // NEW
-  }),
+  ...(validated.callType === "discharge" &&
+    validated.subType && {
+      sub_type: validated.subType, // NEW
+    }),
 
-  ...(validated.callType === "follow-up" && validated.condition && {
-    condition: validated.condition,  // NEW
-  }),
+  ...(validated.callType === "follow-up" &&
+    validated.condition && {
+      condition: validated.condition, // NEW
+    }),
 
   // Follow-up instructions
-  ...(validated.nextSteps && { next_steps: validated.nextSteps }),  // NEW
+  ...(validated.nextSteps && { next_steps: validated.nextSteps }), // NEW
 
   // Optional fields
-  ...(validated.medications && { medications: validated.medications }),  // NEW
-  ...(validated.recheckDate && { recheck_date: validated.recheckDate }),  // NEW
+  ...(validated.medications && { medications: validated.medications }), // NEW
+  ...(validated.recheckDate && { recheck_date: validated.recheckDate }), // NEW
 };
 ```
 
 ### 3. ✅ Updated IDEXX Transformer (`src/lib/idexx/transformer.ts`)
 
 Added automatic formatting for voice-friendly output:
+
 - **Date formatting**: "November twelfth, twenty twenty five"
 - **Phone formatting**: "five five five, one two three, four five six seven"
 - **All required VAPI fields**: callType, agentName, emergencyPhone, etc.
@@ -113,6 +120,7 @@ Added automatic formatting for voice-friendly output:
 ### 4. ✅ Updated Quick Call Dialog (`src/components/dashboard/quick-call-dialog.tsx`)
 
 Added helper functions and default values for required VAPI fields:
+
 - `formatDateForVoice()` - Converts dates to spoken format
 - `formatPhoneForVoice()` - Converts phone numbers to spoken format
 - Auto-fills required fields with sensible defaults
@@ -120,6 +128,7 @@ Added helper functions and default values for required VAPI fields:
 ### 5. ✅ Created Production Prompt (`VAPI_ASSISTANT_PROMPT.md`)
 
 Comprehensive veterinary follow-up assistant prompt with:
+
 - Correct snake_case variable placeholders
 - Discharge and follow-up call flows
 - Red flag assessment protocols
@@ -127,23 +136,23 @@ Comprehensive veterinary follow-up assistant prompt with:
 
 ## Variable Mapping (Code → Prompt)
 
-| Code Variable | Prompt Placeholder | Type | Required |
-|--------------|-------------------|------|----------|
-| `pet_name` | `{{pet_name}}` | string | ✅ |
-| `owner_name` | `{{owner_name}}` | string | ✅ |
-| `appointment_date` | `{{appointment_date}}` | string | ✅ |
-| `call_type` | `{{call_type}}` | "discharge" \| "follow-up" | ✅ |
-| `agent_name` | `{{agent_name}}` | string | ✅ (default: "Sarah") |
-| `clinic_name` | `{{clinic_name}}` | string | ✅ |
-| `clinic_phone` | `{{clinic_phone}}` | string | ✅ |
-| `emergency_phone` | `{{emergency_phone}}` | string | ✅ |
-| `discharge_summary_content` | `{{discharge_summary_content}}` | string | ✅ |
-| `sub_type` | `{{sub_type}}` | "wellness" \| "vaccination" | Discharge only |
-| `condition` | `{{condition}}` | string | Follow-up only |
-| `next_steps` | `{{next_steps}}` | string | Optional |
-| `vet_name` | `{{vet_name}}` | string | Optional |
-| `medications` | `{{medications}}` | string | Optional |
-| `recheck_date` | `{{recheck_date}}` | string | Optional |
+| Code Variable               | Prompt Placeholder              | Type                        | Required              |
+| --------------------------- | ------------------------------- | --------------------------- | --------------------- |
+| `pet_name`                  | `{{pet_name}}`                  | string                      | ✅                    |
+| `owner_name`                | `{{owner_name}}`                | string                      | ✅                    |
+| `appointment_date`          | `{{appointment_date}}`          | string                      | ✅                    |
+| `call_type`                 | `{{call_type}}`                 | "discharge" \| "follow-up"  | ✅                    |
+| `agent_name`                | `{{agent_name}}`                | string                      | ✅ (default: "Sarah") |
+| `clinic_name`               | `{{clinic_name}}`               | string                      | ✅                    |
+| `clinic_phone`              | `{{clinic_phone}}`              | string                      | ✅                    |
+| `emergency_phone`           | `{{emergency_phone}}`           | string                      | ✅                    |
+| `discharge_summary_content` | `{{discharge_summary_content}}` | string                      | ✅                    |
+| `sub_type`                  | `{{sub_type}}`                  | "wellness" \| "vaccination" | Discharge only        |
+| `condition`                 | `{{condition}}`                 | string                      | Follow-up only        |
+| `next_steps`                | `{{next_steps}}`                | string                      | Optional              |
+| `vet_name`                  | `{{vet_name}}`                  | string                      | Optional              |
+| `medications`               | `{{medications}}`               | string                      | Optional              |
+| `recheck_date`              | `{{recheck_date}}`              | string                      | Optional              |
 
 ## Next Steps
 
@@ -159,6 +168,7 @@ Copy the content from `VAPI_ASSISTANT_PROMPT.md` and paste it into your VAPI ass
 ### 2. Test with Sample Data
 
 **Discharge Call Example:**
+
 ```json
 {
   "phoneNumber": "+15551234567",
@@ -178,6 +188,7 @@ Copy the content from `VAPI_ASSISTANT_PROMPT.md` and paste it into your VAPI ass
 ```
 
 **Follow-up Call Example:**
+
 ```json
 {
   "phoneNumber": "+15551234567",
@@ -232,14 +243,17 @@ All TypeScript errors have been fixed! ✅ Run `pnpm typecheck` to verify.
 ## Voice Formatting Best Practices
 
 ### Phone Numbers
+
 - ❌ `"+15551234567"` or `"555-123-4567"`
 - ✅ `"five five five, one two three, four five six seven"`
 
 ### Dates
+
 - ❌ `"2025-01-15"` or `"01/15/2025"`
 - ✅ `"January fifteenth, twenty twenty five"`
 
 ### Numbers
+
 - ❌ `"$50.00"` or `"2-3"`
 - ✅ `"fifty dollars"` or `"two to three"`
 

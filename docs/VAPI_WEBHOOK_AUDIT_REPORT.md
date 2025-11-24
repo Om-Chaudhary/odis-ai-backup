@@ -11,6 +11,7 @@
 This audit reviewed the VAPI webhook integration system for proper event handling and database population. The system has been recently migrated from Retell AI to VAPI with significant improvements in webhook security and retry logic.
 
 **Key Findings**:
+
 - ✅ Core webhook events (status-update, end-of-call-report, hang) are properly handled
 - ⚠️ Missing handlers for several VAPI webhook events
 - ✅ Database schema is comprehensive with proper JSONB columns
@@ -26,24 +27,24 @@ This audit reviewed the VAPI webhook integration system for proper event handlin
 
 The webhook handler at `/src/app/api/webhooks/vapi/route.ts` currently handles **3 event types**:
 
-| Event Type | Handler Function | Database Updates | Status |
-|------------|-----------------|------------------|--------|
-| `status-update` | `handleStatusUpdate()` | status, started_at | ✅ Implemented |
+| Event Type           | Handler Function          | Database Updates                                                                                                                                          | Status         |
+| -------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| `status-update`      | `handleStatusUpdate()`    | status, started_at                                                                                                                                        | ✅ Implemented |
 | `end-of-call-report` | `handleEndOfCallReport()` | status, ended_reason, started_at, ended_at, duration_seconds, recording_url, transcript, transcript_messages, call_analysis, cost, metadata (retry logic) | ✅ Implemented |
-| `hang` | `handleHangup()` | ended_reason, ended_at | ✅ Implemented |
+| `hang`               | `handleHangup()`          | ended_reason, ended_at                                                                                                                                    | ✅ Implemented |
 
 ### 1.2 VAPI Webhook Events NOT Currently Handled
 
 According to VAPI documentation (https://docs.vapi.ai/server-url/events), the following events are **NOT** currently handled:
 
-| Event Type | Purpose | Priority | Recommendation |
-|------------|---------|----------|----------------|
-| `assistant-request` | Assistant needs information from server | 🔴 HIGH | Required for dynamic data fetching |
-| `function-call` | Tool/function execution request | 🔴 HIGH | Required for custom actions |
-| `speech-update` | Real-time transcription updates | 🟡 MEDIUM | Optional for real-time monitoring |
-| `transcript` | Final transcript available | 🟡 MEDIUM | Redundant with end-of-call-report |
-| `conversation-update` | Conversation state changes | 🟢 LOW | Optional for detailed logging |
-| `tool-calls` | Multiple tool calls requested | 🔴 HIGH | Required if using VAPI tools |
+| Event Type            | Purpose                                 | Priority  | Recommendation                     |
+| --------------------- | --------------------------------------- | --------- | ---------------------------------- |
+| `assistant-request`   | Assistant needs information from server | 🔴 HIGH   | Required for dynamic data fetching |
+| `function-call`       | Tool/function execution request         | 🔴 HIGH   | Required for custom actions        |
+| `speech-update`       | Real-time transcription updates         | 🟡 MEDIUM | Optional for real-time monitoring  |
+| `transcript`          | Final transcript available              | 🟡 MEDIUM | Redundant with end-of-call-report  |
+| `conversation-update` | Conversation state changes              | 🟢 LOW    | Optional for detailed logging      |
+| `tool-calls`          | Multiple tool calls requested           | 🔴 HIGH   | Required if using VAPI tools       |
 
 ### 1.3 Security Assessment
 
@@ -59,6 +60,7 @@ According to VAPI documentation (https://docs.vapi.ai/server-url/events), the fo
 ```
 
 **Security Implementation Status**:
+
 - ✅ HMAC-SHA256 verification code is written and tested
 - ✅ Timing-safe comparison implemented
 - ❌ Currently commented out in production
@@ -74,39 +76,41 @@ According to VAPI documentation (https://docs.vapi.ai/server-url/events), the fo
 
 Based on the code analysis, the `vapi_calls` table has the following columns:
 
-| Column Name | Type | Populated By | Webhook Event | Status |
-|-------------|------|--------------|---------------|--------|
-| `id` | UUID | Schedule API | - | ✅ Primary key |
-| `user_id` | UUID | Schedule API | - | ✅ Required |
-| `vapi_call_id` | TEXT | Execute webhook | status-update | ✅ Unique identifier |
-| `assistant_id` | TEXT | Schedule API | - | ✅ Required |
-| `phone_number_id` | TEXT | Schedule API | - | ✅ Required |
-| `customer_phone` | TEXT | Schedule API | - | ✅ Required |
-| `scheduled_for` | TIMESTAMPTZ | Schedule API | - | ✅ Required |
-| `status` | TEXT | Multiple | status-update, end-of-call-report | ✅ Updated |
-| `ended_reason` | TEXT | JSONB | end-of-call-report, hang | ✅ Updated |
-| `started_at` | TIMESTAMPTZ | Execute webhook | status-update, end-of-call-report | ✅ Updated |
-| `ended_at` | TIMESTAMPTZ | Execute webhook | end-of-call-report, hang | ✅ Updated |
-| `duration_seconds` | INTEGER | Calculated | end-of-call-report | ✅ Calculated |
-| `recording_url` | TEXT | VAPI API | end-of-call-report | ✅ Updated |
-| `transcript` | TEXT | VAPI API | end-of-call-report | ✅ Updated |
-| `transcript_messages` | JSONB | VAPI API | end-of-call-report | ✅ Updated |
-| `call_analysis` | JSONB | VAPI API | end-of-call-report | ✅ Updated |
-| `dynamic_variables` | JSONB | Schedule API | - | ✅ Used for call |
-| `condition_category` | TEXT | Schedule API | - | ⚠️ Not used |
-| `knowledge_base_used` | TEXT | - | - | ⚠️ Not populated |
-| `cost` | NUMERIC(10,4) | Calculated | end-of-call-report | ✅ Calculated |
-| `metadata` | JSONB | Multiple | All events | ✅ Flexible storage |
-| `created_at` | TIMESTAMPTZ | Auto | - | ✅ Timestamp |
-| `updated_at` | TIMESTAMPTZ | Auto | - | ✅ Timestamp |
+| Column Name           | Type          | Populated By    | Webhook Event                     | Status               |
+| --------------------- | ------------- | --------------- | --------------------------------- | -------------------- |
+| `id`                  | UUID          | Schedule API    | -                                 | ✅ Primary key       |
+| `user_id`             | UUID          | Schedule API    | -                                 | ✅ Required          |
+| `vapi_call_id`        | TEXT          | Execute webhook | status-update                     | ✅ Unique identifier |
+| `assistant_id`        | TEXT          | Schedule API    | -                                 | ✅ Required          |
+| `phone_number_id`     | TEXT          | Schedule API    | -                                 | ✅ Required          |
+| `customer_phone`      | TEXT          | Schedule API    | -                                 | ✅ Required          |
+| `scheduled_for`       | TIMESTAMPTZ   | Schedule API    | -                                 | ✅ Required          |
+| `status`              | TEXT          | Multiple        | status-update, end-of-call-report | ✅ Updated           |
+| `ended_reason`        | TEXT          | JSONB           | end-of-call-report, hang          | ✅ Updated           |
+| `started_at`          | TIMESTAMPTZ   | Execute webhook | status-update, end-of-call-report | ✅ Updated           |
+| `ended_at`            | TIMESTAMPTZ   | Execute webhook | end-of-call-report, hang          | ✅ Updated           |
+| `duration_seconds`    | INTEGER       | Calculated      | end-of-call-report                | ✅ Calculated        |
+| `recording_url`       | TEXT          | VAPI API        | end-of-call-report                | ✅ Updated           |
+| `transcript`          | TEXT          | VAPI API        | end-of-call-report                | ✅ Updated           |
+| `transcript_messages` | JSONB         | VAPI API        | end-of-call-report                | ✅ Updated           |
+| `call_analysis`       | JSONB         | VAPI API        | end-of-call-report                | ✅ Updated           |
+| `dynamic_variables`   | JSONB         | Schedule API    | -                                 | ✅ Used for call     |
+| `condition_category`  | TEXT          | Schedule API    | -                                 | ⚠️ Not used          |
+| `knowledge_base_used` | TEXT          | -               | -                                 | ⚠️ Not populated     |
+| `cost`                | NUMERIC(10,4) | Calculated      | end-of-call-report                | ✅ Calculated        |
+| `metadata`            | JSONB         | Multiple        | All events                        | ✅ Flexible storage  |
+| `created_at`          | TIMESTAMPTZ   | Auto            | -                                 | ✅ Timestamp         |
+| `updated_at`          | TIMESTAMPTZ   | Auto            | -                                 | ✅ Timestamp         |
 
 ### 2.2 Column Population Issues
 
 **Columns NOT Being Populated**:
+
 1. `condition_category` - Defined in schema but never populated
 2. `knowledge_base_used` - Defined but no code populates it
 
 **Metadata Fields** (properly used):
+
 - `retry_count` - Tracks retry attempts
 - `max_retries` - Maximum retry limit
 - `next_retry_at` - When next retry is scheduled
@@ -199,12 +203,14 @@ The dynamic variables flow is **properly implemented** with extensive logging:
 ### 4.1 Strengths
 
 1. **Type Safety**: Proper TypeScript types throughout
+
    ```typescript
-   supabase: Awaited<ReturnType<typeof createServiceClient>>
-   message: VapiWebhookPayload["message"]
+   supabase: Awaited<ReturnType<typeof createServiceClient>>;
+   message: VapiWebhookPayload["message"];
    ```
 
 2. **Error Handling**: Comprehensive try-catch blocks with detailed logging
+
    ```typescript
    console.error("[VAPI_WEBHOOK] Error", {
      error: error instanceof Error ? error.message : String(error),
@@ -213,19 +219,21 @@ The dynamic variables flow is **properly implemented** with extensive logging:
    ```
 
 3. **Retry Logic**: Intelligent exponential backoff
+
    ```typescript
    const retryableReasons = ["dial-busy", "dial-no-answer", "voicemail"];
    const delayMinutes = Math.pow(2, retryCount) * 5; // 5, 10, 20 minutes
    ```
 
 4. **Status Mapping**: Proper mapping from VAPI statuses to internal statuses
+
    ```typescript
    const statusMap = {
-     "queued": "queued",
-     "ringing": "ringing",
+     queued: "queued",
+     ringing: "ringing",
      "in-progress": "in_progress",
-     "forwarding": "in_progress",
-     "ended": "completed",
+     forwarding: "in_progress",
+     ended: "completed",
    };
    ```
 
@@ -267,6 +275,7 @@ The dynamic variables flow is **properly implemented** with extensive logging:
 ### 5.1 Webhook Event Structure (from VAPI docs)
 
 **Base Webhook Payload**:
+
 ```typescript
 {
   message: {
@@ -279,21 +288,22 @@ The dynamic variables flow is **properly implemented** with extensive logging:
 
 ### 5.2 Current Implementation vs. VAPI Spec
 
-| VAPI Event | Handler Exists | Implementation Quality | Notes |
-|------------|----------------|----------------------|-------|
-| `status-update` | ✅ Yes | ✅ Correct | Properly updates status |
-| `assistant-request` | ❌ No | N/A | Required for dynamic queries |
-| `function-call` | ❌ No | N/A | Required for tool execution |
-| `end-of-call-report` | ✅ Yes | ✅ Excellent | Complete data population |
-| `hang` | ✅ Yes | ✅ Correct | Properly handles hangup |
-| `speech-update` | ❌ No | N/A | Optional real-time feature |
-| `transcript` | ❌ No | N/A | Redundant with end-of-call |
-| `tool-calls` | ❌ No | N/A | Required for multi-tool scenarios |
-| `conversation-update` | ❌ No | N/A | Optional detailed logging |
+| VAPI Event            | Handler Exists | Implementation Quality | Notes                             |
+| --------------------- | -------------- | ---------------------- | --------------------------------- |
+| `status-update`       | ✅ Yes         | ✅ Correct             | Properly updates status           |
+| `assistant-request`   | ❌ No          | N/A                    | Required for dynamic queries      |
+| `function-call`       | ❌ No          | N/A                    | Required for tool execution       |
+| `end-of-call-report`  | ✅ Yes         | ✅ Excellent           | Complete data population          |
+| `hang`                | ✅ Yes         | ✅ Correct             | Properly handles hangup           |
+| `speech-update`       | ❌ No          | N/A                    | Optional real-time feature        |
+| `transcript`          | ❌ No          | N/A                    | Redundant with end-of-call        |
+| `tool-calls`          | ❌ No          | N/A                    | Required for multi-tool scenarios |
+| `conversation-update` | ❌ No          | N/A                    | Optional detailed logging         |
 
 ### 5.3 Dynamic Variables Structure
 
 **Current Implementation** (✅ Correct):
+
 ```typescript
 {
   assistantOverrides: {
@@ -308,6 +318,7 @@ The dynamic variables flow is **properly implemented** with extensive logging:
 ```
 
 **VAPI Expected Structure** (✅ Matches):
+
 ```typescript
 {
   assistantOverrides: {
@@ -325,16 +336,18 @@ The dynamic variables flow is **properly implemented** with extensive logging:
 ### 6.1 Critical (Do Immediately)
 
 1. **Enable Webhook Signature Verification**
+
    ```typescript
    // Uncomment lines 175-179 in src/app/api/webhooks/vapi/route.ts
    const isValid = await verifySignature(request, body);
    if (!isValid) {
-     console.error('[VAPI_WEBHOOK] Invalid webhook signature');
-     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+     console.error("[VAPI_WEBHOOK] Invalid webhook signature");
+     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
    }
    ```
 
 2. **Set VAPI_WEBHOOK_SECRET in Production**
+
    ```bash
    # Add to Vercel environment variables
    VAPI_WEBHOOK_SECRET="your-secret-from-vapi-dashboard"
@@ -348,6 +361,7 @@ The dynamic variables flow is **properly implemented** with extensive logging:
 ### 6.2 High Priority (Do This Week)
 
 1. **Implement assistant-request Handler**
+
    ```typescript
    async function handleAssistantRequest(
      supabase: Awaited<ReturnType<typeof createServiceClient>>,
@@ -359,6 +373,7 @@ The dynamic variables flow is **properly implemented** with extensive logging:
    ```
 
 2. **Implement function-call Handler**
+
    ```typescript
    async function handleFunctionCall(
      supabase: Awaited<ReturnType<typeof createServiceClient>>,
@@ -377,6 +392,7 @@ The dynamic variables flow is **properly implemented** with extensive logging:
 ### 6.3 Medium Priority (Do This Month)
 
 1. **Implement speech-update Handler** (for real-time UI)
+
    ```typescript
    async function handleSpeechUpdate(
      supabase: Awaited<ReturnType<typeof createServiceClient>>,
@@ -415,6 +431,7 @@ The dynamic variables flow is **properly implemented** with extensive logging:
 ## 7. Implementation Plan
 
 ### Phase 1: Security Hardening (Week 1)
+
 **Priority**: 🔴 CRITICAL
 
 - [ ] Enable webhook signature verification
@@ -426,6 +443,7 @@ The dynamic variables flow is **properly implemented** with extensive logging:
 **Expected Outcome**: Secure webhook endpoint preventing unauthorized requests
 
 ### Phase 2: Event Coverage (Week 2-3)
+
 **Priority**: 🟡 HIGH
 
 - [ ] Implement `assistant-request` handler
@@ -445,6 +463,7 @@ The dynamic variables flow is **properly implemented** with extensive logging:
 **Expected Outcome**: Full VAPI feature support for interactive assistants
 
 ### Phase 3: Real-time Features (Week 4)
+
 **Priority**: 🟢 MEDIUM
 
 - [ ] Implement `speech-update` handler
@@ -455,6 +474,7 @@ The dynamic variables flow is **properly implemented** with extensive logging:
 **Expected Outcome**: Real-time call monitoring dashboard
 
 ### Phase 4: Database Cleanup (Week 5)
+
 **Priority**: 🟢 MEDIUM
 
 - [ ] Audit unused columns
@@ -466,6 +486,7 @@ The dynamic variables flow is **properly implemented** with extensive logging:
 **Expected Outcome**: Clean, well-documented database schema
 
 ### Phase 5: Monitoring & Observability (Week 6)
+
 **Priority**: 🟢 LOW
 
 - [ ] Add webhook metrics
@@ -483,28 +504,28 @@ The dynamic variables flow is **properly implemented** with extensive logging:
 
 ```typescript
 // tests/webhooks/vapi.test.ts
-describe('VAPI Webhook Handler', () => {
-  it('should verify valid HMAC signature', async () => {
+describe("VAPI Webhook Handler", () => {
+  it("should verify valid HMAC signature", async () => {
     // Test signature verification
   });
 
-  it('should reject invalid signature', async () => {
+  it("should reject invalid signature", async () => {
     // Test signature rejection
   });
 
-  it('should handle status-update event', async () => {
+  it("should handle status-update event", async () => {
     // Test status update logic
   });
 
-  it('should handle end-of-call-report event', async () => {
+  it("should handle end-of-call-report event", async () => {
     // Test full data population
   });
 
-  it('should trigger retry for retryable failures', async () => {
+  it("should trigger retry for retryable failures", async () => {
     // Test retry logic
   });
 
-  it('should mark as failed after max retries', async () => {
+  it("should mark as failed after max retries", async () => {
     // Test max retry limit
   });
 });
@@ -514,8 +535,8 @@ describe('VAPI Webhook Handler', () => {
 
 ```typescript
 // tests/integration/vapi-flow.test.ts
-describe('VAPI Call Flow', () => {
-  it('should complete full call lifecycle', async () => {
+describe("VAPI Call Flow", () => {
+  it("should complete full call lifecycle", async () => {
     // 1. Schedule call
     // 2. Execute call (via QStash simulation)
     // 3. Receive status-update webhook
@@ -523,11 +544,11 @@ describe('VAPI Call Flow', () => {
     // 5. Verify database state
   });
 
-  it('should retry failed calls with exponential backoff', async () => {
+  it("should retry failed calls with exponential backoff", async () => {
     // Test retry flow
   });
 
-  it('should pass dynamic variables correctly', async () => {
+  it("should pass dynamic variables correctly", async () => {
     // Test dynamic variable propagation
   });
 });
@@ -572,19 +593,23 @@ NEXT_PUBLIC_SITE_URL="https://odisai.net"    # ✅ Required
 ## 10. Related Files Reference
 
 ### Core Webhook System
+
 - `/src/app/api/webhooks/vapi/route.ts` - Main webhook handler (489 lines)
 - `/src/app/api/webhooks/execute-call/route.ts` - QStash execution handler (185 lines)
 - `/src/app/api/calls/schedule/route.ts` - Schedule API endpoint (279 lines)
 
 ### VAPI SDK Integration
+
 - `/src/lib/vapi/client.ts` - VAPI SDK wrapper (264 lines)
 
 ### Supporting Infrastructure
+
 - `/src/lib/qstash/client.ts` - QStash scheduling client
 - `/src/lib/supabase/server.ts` - Supabase client setup
 - `/src/lib/utils/business-hours.ts` - Time validation utilities
 
 ### Documentation
+
 - `/VAPI_WEBHOOK_FIXES.md` - Previous fixes and migration notes
 - `/VAPI_DYNAMIC_VARIABLES_ISSUE.md` - Dynamic variables debugging guide
 
@@ -597,6 +622,7 @@ The VAPI webhook system is **functionally operational** but requires **immediate
 ### Current Grade: B- (Good, but needs work)
 
 **Strengths**:
+
 - ✅ Core functionality working
 - ✅ Retry logic implemented
 - ✅ Dynamic variables properly flowing
@@ -604,6 +630,7 @@ The VAPI webhook system is **functionally operational** but requires **immediate
 - ✅ Proper error handling
 
 **Critical Issues**:
+
 - ❌ Webhook signature verification disabled
 - ❌ Missing interactive event handlers
 - ⚠️ Unused database columns
@@ -625,12 +652,14 @@ The VAPI webhook system is **functionally operational** but requires **immediate
 **Note**: The user mentioned providing Vercel logs but the image was not accessible in this session.
 
 To complete the log analysis, please provide:
+
 1. Screenshot or text export of recent Vercel logs
 2. Specific errors or warnings observed
 3. Timestamps of problematic webhook calls
 4. VAPI dashboard logs for the same timeframe
 
 With these logs, we can:
+
 - Identify any webhook delivery failures
 - Detect signature verification issues
 - Trace dynamic variable propagation

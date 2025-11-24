@@ -113,25 +113,25 @@ export default function Footer() {
           <div className="flex flex-col items-center justify-between space-y-4 md:flex-row md:space-y-0">
             {/* Copyright */}
             <div className="text-sm text-slate-500">
-              © 2025 Odis AI. All rights reserved.
+              © {new Date().getFullYear()} Odis AI. All rights reserved.
             </div>
 
             {/* Legal Links */}
             <div className="flex items-center space-x-6">
               <Link
-                href="/privacy"
+                href="/privacy-policy"
                 className="text-sm text-slate-500 transition-colors hover:text-teal-600"
               >
                 Privacy Policy
               </Link>
               <Link
-                href="/terms"
+                href="/terms-of-service"
                 className="text-sm text-slate-500 transition-colors hover:text-teal-600"
               >
                 Terms of Service
               </Link>
               <Link
-                href="/cookies"
+                href="/cookie-policy"
                 className="text-sm text-slate-500 transition-colors hover:text-teal-600"
               >
                 Cookie Policy

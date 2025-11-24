@@ -3,6 +3,7 @@
 ## Current Status
 
 ### ✅ Variables Already Being Passed
+
 Your code in `src/app/api/calls/schedule/route.ts:131-138` currently passes:
 
 ```typescript
@@ -21,17 +22,20 @@ const callVariables = {
 The following variables are referenced in your prompt but NOT being passed:
 
 **Critical (Required for basic functionality):**
+
 - `agent_name` - Name of AI assistant (e.g., "Sarah")
 - `appointment_date` - When the appointment occurred
 - `call_type` - "discharge" or "follow-up"
 - `emergency_phone` - After-hours emergency number
 
 **Important (Affects call flow):**
+
 - `sub_type` - "wellness" or "vaccination" (for discharge calls)
 - `condition` - Primary condition being treated (for follow-up calls)
 - `next_steps` - Follow-up care instructions
 
 **Optional (Enhanced functionality):**
+
 - `medications` - List of prescribed medications
 - `recheck_date` - Scheduled follow-up appointment date
 
@@ -92,9 +96,11 @@ const callVariables = {
   vet_name: validated.vetName ?? "",
 
   // Clinic information
-  clinic_name: validated.clinicName ?? process.env.DEFAULT_CLINIC_NAME ?? "our clinic",
+  clinic_name:
+    validated.clinicName ?? process.env.DEFAULT_CLINIC_NAME ?? "our clinic",
   clinic_phone: validated.clinicPhone ?? process.env.DEFAULT_CLINIC_PHONE ?? "",
-  emergency_phone: validated.emergencyPhone ?? process.env.DEFAULT_EMERGENCY_PHONE ?? "",
+  emergency_phone:
+    validated.emergencyPhone ?? process.env.DEFAULT_EMERGENCY_PHONE ?? "",
 
   // Agent information
   agent_name: validated.agentName ?? "Sarah",
@@ -209,18 +215,21 @@ server: {
 ## Deployment Steps
 
 1. **Update Schema/Validators**
+
    ```bash
    # Edit src/lib/retell/validators.ts
    pnpm typecheck
    ```
 
 2. **Update Scheduling Endpoint**
+
    ```bash
    # Edit src/app/api/calls/schedule/route.ts
    pnpm typecheck
    ```
 
 3. **Update Environment Variables**
+
    ```bash
    # Add to .env.local
    # Update src/env.js
@@ -234,6 +243,7 @@ server: {
    - Save
 
 5. **Test with Sample Data**
+
    ```bash
    # Use the test JSON above to POST to /api/calls/schedule
    # Monitor logs to verify variables are being passed
@@ -249,18 +259,21 @@ server: {
 ## Variable Formatting Best Practices
 
 ### Phone Numbers
+
 ❌ Don't pass: `"+15551234567"` or `"555-123-4567"`
 ✅ Do pass: `"five five five, one two three, four five six seven"`
 
 The assistant will read it naturally in voice.
 
 ### Dates
+
 ❌ Don't pass: `"2025-01-15"` or `"01/15/2025"`
 ✅ Do pass: `"January fifteenth, twenty twenty five"`
 
 Use the `date` filter in prompts for auto-formatting if needed: `{{"now" | date: "%B %d, %Y"}}`
 
 ### Currency/Numbers
+
 ❌ Don't pass: `"$50.00"` or `"2-3"`
 ✅ Do pass: `"fifty dollars"` or `"two to three"`
 
@@ -269,15 +282,19 @@ VAPI reads text naturally, so spell things out for voice.
 ## Common Issues & Solutions
 
 ### Issue: Variables showing as undefined in call
+
 **Solution**: Check that variable names in prompt exactly match what's being passed (snake_case, not camelCase)
 
 ### Issue: Assistant skips over variable placeholders
+
 **Solution**: Verify the assistant prompt actually contains `{{variable_name}}` placeholders
 
 ### Issue: TypeScript errors after adding new fields
+
 **Solution**: Update the Zod schema first, then TypeScript will infer types automatically
 
 ### Issue: Required fields not being sent from extension
+
 **Solution**: Update the browser extension to include new required fields, or make them optional with defaults
 
 ## Next Steps

@@ -14,6 +14,7 @@
 **File:** `VAPI_PRODUCTION_PROMPT.txt`
 
 **Best for:**
+
 - Discharge calls (wellness, vaccination)
 - Simple follow-up calls
 - Getting started quickly
@@ -26,6 +27,7 @@
 **File:** `VAPI_ENHANCED_PROMPT.txt`
 
 **Best for:**
+
 - Complex medical follow-ups
 - Post-surgical monitoring
 - Condition-specific assessment
@@ -37,38 +39,38 @@
 
 ### Core Variables (Always Required)
 
-| Variable | Example | Format |
-|----------|---------|--------|
-| `{{pet_name}}` | "Max" | String |
-| `{{owner_name}}` | "John Smith" | String |
-| `{{appointment_date}}` | "January tenth, twenty twenty five" | Spelled out |
-| `{{call_type}}` | "discharge" or "follow-up" | Enum |
-| `{{agent_name}}` | "Sarah" | First name only |
-| `{{clinic_name}}` | "Happy Paws Veterinary" | String |
-| `{{clinic_phone}}` | "five five five, one two three..." | Spelled out |
-| `{{emergency_phone}}` | "five five five, nine nine nine..." | Spelled out |
-| `{{discharge_summary_content}}` | "received vaccines..." | String |
+| Variable                        | Example                             | Format          |
+| ------------------------------- | ----------------------------------- | --------------- |
+| `{{pet_name}}`                  | "Max"                               | String          |
+| `{{owner_name}}`                | "John Smith"                        | String          |
+| `{{appointment_date}}`          | "January tenth, twenty twenty five" | Spelled out     |
+| `{{call_type}}`                 | "discharge" or "follow-up"          | Enum            |
+| `{{agent_name}}`                | "Sarah"                             | First name only |
+| `{{clinic_name}}`               | "Happy Paws Veterinary"             | String          |
+| `{{clinic_phone}}`              | "five five five, one two three..."  | Spelled out     |
+| `{{emergency_phone}}`           | "five five five, nine nine nine..." | Spelled out     |
+| `{{discharge_summary_content}}` | "received vaccines..."              | String          |
 
 ### Optional Variables (Basic)
 
-| Variable | When to Use | Example |
-|----------|-------------|---------|
-| `{{vet_name}}` | Optional | "Dr. Sarah Johnson" |
-| `{{sub_type}}` | Discharge calls | "wellness" or "vaccination" |
-| `{{condition}}` | Follow-up calls | "ear infection" |
-| `{{next_steps}}` | Any call | "Continue medication..." |
-| `{{medications}}` | Follow-up calls | "Otomax ear drops..." |
-| `{{recheck_date}}` | When scheduled | "January nineteenth, twenty twenty five" |
+| Variable           | When to Use     | Example                                  |
+| ------------------ | --------------- | ---------------------------------------- |
+| `{{vet_name}}`     | Optional        | "Dr. Sarah Johnson"                      |
+| `{{sub_type}}`     | Discharge calls | "wellness" or "vaccination"              |
+| `{{condition}}`    | Follow-up calls | "ear infection"                          |
+| `{{next_steps}}`   | Any call        | "Continue medication..."                 |
+| `{{medications}}`  | Follow-up calls | "Otomax ear drops..."                    |
+| `{{recheck_date}}` | When scheduled  | "January nineteenth, twenty twenty five" |
 
 ### Knowledge Base Variables (Enhanced Mode Only)
 
-| Variable | Type | Purpose |
-|----------|------|---------|
-| `{{assessment_questions}}` | Array | Condition-specific questions |
-| `{{normal_post_treatment_expectations}}` | Array | Normal recovery symptoms |
-| `{{warning_signs_to_monitor}}` | Array | Concerning symptoms to watch |
-| `{{emergency_criteria}}` | Array | ER-level symptoms |
-| `{{urgent_criteria}}` | Array | Same-day vet visit symptoms |
+| Variable                                 | Type  | Purpose                      |
+| ---------------------------------------- | ----- | ---------------------------- |
+| `{{assessment_questions}}`               | Array | Condition-specific questions |
+| `{{normal_post_treatment_expectations}}` | Array | Normal recovery symptoms     |
+| `{{warning_signs_to_monitor}}`           | Array | Concerning symptoms to watch |
+| `{{emergency_criteria}}`                 | Array | ER-level symptoms            |
+| `{{urgent_criteria}}`                    | Array | Same-day vet visit symptoms  |
 
 ## Implementation Checklist
 
@@ -83,6 +85,7 @@
 ### Step 2: Test with Sample Data ✅
 
 **Basic Discharge Call:**
+
 ```json
 {
   "phoneNumber": "+15551234567",
@@ -102,6 +105,7 @@
 ```
 
 **Basic Follow-Up Call:**
+
 ```json
 {
   "phoneNumber": "+15551234567",
@@ -145,6 +149,7 @@
 **Fix:** Check that the VAPI assistant prompt contains the variable placeholders
 
 **Verify:**
+
 ```bash
 # Check logs for variables being passed
 grep "Dynamic variables from database" /path/to/logs
@@ -167,17 +172,20 @@ grep "Dynamic variables from database" /path/to/logs
 ## Files Created
 
 ### Production Files ✅
+
 - `VAPI_PRODUCTION_PROMPT.txt` - Basic prompt (paste into VAPI)
 - `VAPI_ENHANCED_PROMPT.txt` - Advanced prompt with knowledge base
 - `src/lib/vapi/simple-types.ts` - TypeScript types for basic variables
 
 ### Documentation ✅
+
 - `VAPI_KNOWLEDGE_BASE_USAGE.md` - How to use knowledge base features
 - `VAPI_FINAL_SETUP.md` - This file (quick start guide)
 - `VAPI_DYNAMIC_VARIABLES_COMPLETE.md` - Full implementation details
 - `VAPI_VARIABLES_IMPLEMENTATION.md` - Technical implementation guide
 
 ### Audit & Analysis ✅
+
 - `VAPI_WEBHOOK_AUDIT_REPORT.md` - Comprehensive webhook analysis
 - `VAPI_WEBHOOK_IMPLEMENTATION_GUIDE.md` - Webhook fixes
 - `VAPI_AUDIT_SUMMARY.md` - Executive summary
@@ -185,17 +193,20 @@ grep "Dynamic variables from database" /path/to/logs
 ## Next Steps
 
 ### Immediate (Today)
+
 1. ✅ Update VAPI assistant prompt
 2. ✅ Test with sample data
 3. ✅ Verify variables work correctly
 
 ### This Week
+
 1. Deploy to production
 2. Monitor first 10-20 calls
 3. Gather feedback
 4. Refine prompt if needed
 
 ### Future (Optional)
+
 1. Enable enhanced mode with knowledge base
 2. Add more condition categories
 3. Customize assessment questions per condition
@@ -204,15 +215,18 @@ grep "Dynamic variables from database" /path/to/logs
 ## Support Resources
 
 **Basic Setup:**
+
 - This file (`VAPI_FINAL_SETUP.md`)
 - Production prompt (`VAPI_PRODUCTION_PROMPT.txt`)
 
 **Advanced Features:**
+
 - Knowledge base guide (`VAPI_KNOWLEDGE_BASE_USAGE.md`)
 - Full types reference (`src/lib/vapi/types.ts`)
 - Validator reference (`src/lib/vapi/validators.ts`)
 
 **Troubleshooting:**
+
 - Implementation guide (`VAPI_VARIABLES_IMPLEMENTATION.md`)
 - Webhook audit (`VAPI_WEBHOOK_AUDIT_REPORT.md`)
 

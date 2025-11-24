@@ -10,11 +10,13 @@ You have two options for VAPI calls:
 ## Current State
 
 ✅ **What's working now:**
+
 - Basic variables are passed and working perfectly
 - Simple discharge and follow-up calls
 - Manual prompts in the VAPI assistant
 
 ✅ **What's available but not yet used:**
+
 - Comprehensive veterinary knowledge base (14 condition categories)
 - Condition-specific assessment questions
 - Emergency and urgent criteria per condition
@@ -26,6 +28,7 @@ You have two options for VAPI calls:
 Use the production prompt (`VAPI_PRODUCTION_PROMPT.txt`) with just the basic variables.
 
 **Variables you pass:**
+
 ```typescript
 {
   pet_name: "Max",
@@ -72,7 +75,8 @@ if (validated.callType === "follow-up" && validated.condition) {
 
     // Knowledge base additions
     assessment_questions: knowledgeBase.assessmentQuestions,
-    normal_post_treatment_expectations: knowledgeBase.normalPostTreatmentExpectations,
+    normal_post_treatment_expectations:
+      knowledgeBase.normalPostTreatmentExpectations,
     warning_signs_to_monitor: knowledgeBase.warningSignsToMonitor,
     emergency_criteria: knowledgeBase.emergencyCriteria,
     urgent_criteria: knowledgeBase.urgentCriteria,
@@ -114,7 +118,8 @@ const callVariables = {
   clinic_name: "Happy Paws",
   clinic_phone: "five five five...",
   emergency_phone: "five five five...",
-  discharge_summary_content: "was prescribed Otomax for bacterial ear infection",
+  discharge_summary_content:
+    "was prescribed Otomax for bacterial ear infection",
 
   // Follow-up specific
   condition: "ear infection",
@@ -128,56 +133,60 @@ const callVariables = {
       question: "Is Luna still scratching or shaking her head as much?",
       priority: 1,
       concerning_responses: ["worse", "no improvement", "still shaking"],
-      follow_up_if_concerning: "Can you tell me more about how often that's happening?"
+      follow_up_if_concerning:
+        "Can you tell me more about how often that's happening?",
     },
     {
       question: "Have you noticed any improvement in the redness or smell?",
-      priority: 2
+      priority: 2,
     },
     {
-      question: "How's the medication application going? Any trouble getting it on?",
-      priority: 3
-    }
+      question:
+        "How's the medication application going? Any trouble getting it on?",
+      priority: 3,
+    },
   ],
 
   normal_post_treatment_expectations: [
     "some mild head shaking for the first day or two",
     "gradual reduction in scratching over three to five days",
-    "slight redness that improves by day three"
+    "slight redness that improves by day three",
   ],
 
   warning_signs_to_monitor: [
     "increased head shaking after three days",
     "worsening redness or swelling",
     "foul odor getting stronger",
-    "discharge from the ear"
+    "discharge from the ear",
   ],
 
   emergency_criteria: [
     "severe head tilt",
     "loss of balance",
     "inability to walk straight",
-    "facial paralysis on one side"
+    "facial paralysis on one side",
   ],
 
   urgent_criteria: [
     "significant swelling around the ear",
     "yelping when ear is touched",
     "bleeding from the ear canal",
-    "no improvement after five days of medication"
-  ]
+    "no improvement after five days of medication",
+  ],
 };
 ```
 
 ## When to Use Enhanced Mode
 
 **Use Basic Mode when:**
+
 - ✅ Simple discharge/wellness calls
 - ✅ Routine vaccination follow-ups
 - ✅ You want simple, predictable conversations
 - ✅ You're just getting started
 
 **Use Enhanced Mode when:**
+
 - ✅ Complex medical follow-ups
 - ✅ Post-surgical monitoring
 - ✅ Chronic condition management
@@ -187,16 +196,19 @@ const callVariables = {
 ## Migration Path
 
 ### Phase 1: Keep Using Basic (Current) ✅
+
 - You're here now
 - Everything works
 - No changes needed
 
 ### Phase 2: Test Enhanced on Follow-Ups
+
 - Keep discharge calls basic
 - Try enhanced mode for follow-up calls only
 - Compare call quality
 
 ### Phase 3: Full Enhanced Rollout
+
 - Use enhanced for all follow-up calls
 - Keep discharge simple or enhance if needed
 - Monitor and refine

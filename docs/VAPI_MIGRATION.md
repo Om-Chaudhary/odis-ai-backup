@@ -9,9 +9,11 @@ This document describes the complete migration from Retell AI to VAPI for the Od
 ### 1. Package Installation
 
 **Added:**
+
 - `@vapi-ai/server-sdk` (v0.10.2) - Server-side VAPI SDK for making phone calls
 
 **Existing:**
+
 - `@vapi-ai/web` (v2.5.0) - Already installed for browser-based test page
 - `retell-sdk` (v4.56.0) - Can be removed if no longer needed
 
@@ -44,7 +46,9 @@ vapi_calls (
 ### 3. New Files Created
 
 #### [src/lib/vapi/client.ts](../src/lib/vapi/client.ts)
+
 Server-side VAPI client wrapper providing:
+
 - `getVapiClient()` - Initialized VAPI client with API key
 - `createPhoneCall()` - Create outbound phone calls
 - `getCall()` - Retrieve call details
@@ -54,7 +58,9 @@ Server-side VAPI client wrapper providing:
 - `calculateTotalCost()` - Calculate total call cost
 
 #### [src/app/api/vapi/schedule/route.ts](../src/app/api/vapi/schedule/route.ts)
+
 New endpoint for scheduling VAPI calls:
+
 - **URL**: `POST /api/vapi/schedule`
 - **Authentication**: Bearer token or cookies
 - **Authorization**: Admin role required
@@ -65,7 +71,9 @@ New endpoint for scheduling VAPI calls:
   - Supports both immediate and scheduled calls
 
 #### [src/app/api/webhooks/vapi/route.ts](../src/app/api/webhooks/vapi/route.ts)
+
 VAPI webhook handler for call events:
+
 - **URL**: `POST /api/webhooks/vapi`
 - **Events**: `status-update`, `end-of-call-report`, `hang`
 - **Features**:
@@ -77,7 +85,9 @@ VAPI webhook handler for call events:
 ### 4. Modified Files
 
 #### [src/app/api/webhooks/execute-call/route.ts](../src/app/api/webhooks/execute-call/route.ts)
+
 Updated QStash execution webhook:
+
 - Changed from `retell_calls` to `vapi_calls` table
 - Changed from `createPhoneCall` (Retell) to `createPhoneCall` (VAPI)
 - Updated status mapping to use `mapVapiStatus()`
@@ -87,11 +97,14 @@ Updated QStash execution webhook:
   - `call_variables` → `dynamic_variables`
 
 #### [.env.example](../.env.example)
+
 Updated environment variables:
+
 - Replaced Retell configuration with VAPI configuration
 - Added comprehensive setup instructions
 
 **Old (Retell):**
+
 ```bash
 RETELL_API_KEY="key_xxx"
 RETELL_FROM_NUMBER="+1234567890"
@@ -99,6 +112,7 @@ RETELL_AGENT_ID="agent_xxx"
 ```
 
 **New (VAPI):**
+
 ```bash
 VAPI_PRIVATE_KEY="your-vapi-private-api-key-here"
 VAPI_ASSISTANT_ID="assistant-id-here"
@@ -110,6 +124,7 @@ VAPI_WEBHOOK_SECRET="your-webhook-secret-here"
 ## Environment Variables Required
 
 ### Server-Side (Required)
+
 ```bash
 VAPI_PRIVATE_KEY="sk_xxx"              # Private API key for server calls
 VAPI_ASSISTANT_ID="assistant_xxx"      # Your VAPI assistant ID
@@ -117,11 +132,13 @@ VAPI_PHONE_NUMBER_ID="phone_xxx"       # Your VAPI phone number ID
 ```
 
 ### Client-Side (Optional - for test page)
+
 ```bash
 NEXT_PUBLIC_VAPI_PUBLIC_KEY="pk_xxx"   # Public key for browser calls
 ```
 
 ### Webhook Security (Recommended)
+
 ```bash
 VAPI_WEBHOOK_SECRET="your_secret"      # For webhook signature verification
 ```
@@ -129,6 +146,7 @@ VAPI_WEBHOOK_SECRET="your_secret"      # For webhook signature verification
 ## API Endpoints
 
 ### Schedule a Call
+
 ```bash
 POST /api/vapi/schedule
 
@@ -164,6 +182,7 @@ Response:
 ```
 
 ### Webhook (VAPI → Your Server)
+
 ```bash
 POST /api/webhooks/vapi
 
@@ -228,6 +247,7 @@ Body:
 ## Testing the Migration
 
 ### 1. Test Scheduling
+
 ```bash
 curl -X POST http://localhost:3000/api/vapi/schedule \
   -H "Authorization: Bearer YOUR_TOKEN" \
@@ -247,6 +267,7 @@ curl -X POST http://localhost:3000/api/vapi/schedule \
 ```
 
 ### 2. Test Webhook (using ngrok for local testing)
+
 ```bash
 # Install ngrok if needed
 npm install -g ngrok
@@ -259,6 +280,7 @@ ngrok http 3000
 ```
 
 ### 3. Monitor Logs
+
 ```bash
 # Watch server logs
 pnpm dev
@@ -273,18 +295,21 @@ npx supabase logs
 ## Troubleshooting
 
 ### Call Not Created
+
 - Verify `VAPI_PRIVATE_KEY` is correct
 - Check `VAPI_ASSISTANT_ID` exists
 - Verify `VAPI_PHONE_NUMBER_ID` is active
 - Check phone number is in E.164 format (+1234567890)
 
 ### Webhook Not Receiving Events
+
 - Verify webhook URL is publicly accessible
 - Check `VAPI_WEBHOOK_SECRET` matches dashboard
 - Verify webhook is configured in VAPI dashboard
 - Check server logs for incoming requests
 
 ### Status Not Updating
+
 - Verify webhook signature verification
 - Check `vapi_calls` table RLS policies
 - Ensure database connection is working
@@ -292,15 +317,15 @@ npx supabase logs
 
 ## Key Differences: Retell vs VAPI
 
-| Feature | Retell AI | VAPI |
-|---------|-----------|------|
-| Phone Number | `from_number` | `phoneNumberId` |
-| Agent | `override_agent_id` | `assistantId` |
-| Variables | `retell_llm_dynamic_variables` | `assistantOverrides.variableValues` |
+| Feature        | Retell AI                                     | VAPI                                          |
+| -------------- | --------------------------------------------- | --------------------------------------------- |
+| Phone Number   | `from_number`                                 | `phoneNumberId`                               |
+| Agent          | `override_agent_id`                           | `assistantId`                                 |
+| Variables      | `retell_llm_dynamic_variables`                | `assistantOverrides.variableValues`           |
 | Webhook Events | `call_started`, `call_ended`, `call_analyzed` | `status-update`, `end-of-call-report`, `hang` |
-| Status Values | `registered`, `ongoing`, `ended` | `queued`, `ringing`, `in-progress`, `ended` |
-| Call ID | `call_id` | `id` |
-| Timestamp | Unix timestamp (seconds) | ISO 8601 string |
+| Status Values  | `registered`, `ongoing`, `ended`              | `queued`, `ringing`, `in-progress`, `ended`   |
+| Call ID        | `call_id`                                     | `id`                                          |
+| Timestamp      | Unix timestamp (seconds)                      | ISO 8601 string                               |
 
 ## Benefits of VAPI Migration
 

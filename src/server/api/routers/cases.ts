@@ -370,4 +370,112 @@ export const casesRouter = createTRPCRouter({
 
     return stats;
   }),
+
+  /**
+   * Get time series data for dashboard charts
+   */
+  getTimeSeriesStats: adminProcedure
+    .input(
+      z.object({
+        days: z.number().min(7).max(90).default(30),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const daysAgo = new Date();
+      daysAgo.setDate(daysAgo.getDate() - input.days);
+      const startDate = daysAgo.toISOString();
+
+      // Fetch cases created in the time period
+      const { data: casesData } = await ctx.serviceClient
+        .from("cases")
+        .select("created_at, status")
+        .gte("created_at", startDate)
+        .order("created_at", { ascending: true });
+
+      // Fetch SOAP notes created in the time period
+      const { data: soapNotesData } = await ctx.serviceClient
+        .from("soap_notes")
+        .select("created_at")
+        .gte("created_at", startDate)
+        .order("created_at", { ascending: true });
+
+      // Fetch discharge summaries created in the time period
+      const { data: dischargeSummariesData } = await ctx.serviceClient
+        .from("discharge_summaries")
+        .select("created_at")
+        .gte("created_at", startDate)
+        .order("created_at", { ascending: true });
+
+      // Generate array of dates for the period
+      const dateArray: string[] = [];
+      for (let i = 0; i < input.days; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() - (input.days - 1 - i));
+        dateArray.push(date.toISOString().split("T")[0] ?? "");
+      }
+
+      // Helper function to count items by date
+      const countByDate = (
+        data: Array<{ created_at: string }> | null,
+      ): Record<string, number> => {
+        const counts: Record<string, number> = {};
+        dateArray.forEach((date) => (counts[date] = 0));
+
+        data?.forEach((item) => {
+          const date = item.created_at.split("T")[0];
+          if (date && counts[date] !== undefined) {
+            counts[date]++;
+          }
+        });
+
+        return counts;
+      };
+
+      // Process data
+      const casesByDate = countByDate(casesData ?? []);
+      const soapNotesByDate = countByDate(soapNotesData ?? []);
+      const dischargeSummariesByDate = countByDate(
+        dischargeSummariesData ?? [],
+      );
+
+      // Count completed cases by date
+      const completedCasesByDate: Record<string, number> = {};
+      dateArray.forEach((date) => (completedCasesByDate[date] = 0));
+      casesData
+        ?.filter((c) => c.status === "completed")
+        .forEach((item) => {
+          const date = (item.created_at as string).split("T")[0];
+          if (date && completedCasesByDate[date] !== undefined) {
+            completedCasesByDate[date]++;
+          }
+        });
+
+      // Format for chart consumption
+      const chartData = dateArray.map((date) => ({
+        date,
+        casesCreated: casesByDate[date] ?? 0,
+        casesCompleted: completedCasesByDate[date] ?? 0,
+        soapNotes: soapNotesByDate[date] ?? 0,
+        dischargeSummaries: dischargeSummariesByDate[date] ?? 0,
+      }));
+
+      // Calculate totals
+      const totals = {
+        casesCreated: Object.values(casesByDate).reduce((a, b) => a + b, 0),
+        casesCompleted: Object.values(completedCasesByDate).reduce(
+          (a, b) => a + b,
+          0,
+        ),
+        soapNotes: Object.values(soapNotesByDate).reduce((a, b) => a + b, 0),
+        dischargeSummaries: Object.values(dischargeSummariesByDate).reduce(
+          (a, b) => a + b,
+          0,
+        ),
+      };
+
+      return {
+        chartData,
+        totals,
+      };
+    }),
 });

@@ -49,6 +49,7 @@ ODIS-134 and ODIS-135 introduce collaborative features that fundamentally change
    - ❌ No collaboration possible
 
 3. **Access Pattern**
+
    ```
    User A creates Template → Only User A can use it
    User B wants same template → Must recreate it manually (duplicated effort)
@@ -117,16 +118,17 @@ ODIS-134 and ODIS-135 introduce collaborative features that fundamentally change
 
 ### Template Discovery
 
-| Aspect | Before (ODIS-133) | After (ODIS-134) |
-|--------|------------------|------------------|
-| **My Templates** | Only templates I created | Templates I created + templates shared with me |
-| **Template Count** | Limited to my own | Potentially much larger (includes shared) |
-| **Template Source** | All created by me | Mix of created + received |
-| **Visual Indicator** | All look the same | Shared templates may have indicator (TBD in UI) |
+| Aspect               | Before (ODIS-133)        | After (ODIS-134)                                |
+| -------------------- | ------------------------ | ----------------------------------------------- |
+| **My Templates**     | Only templates I created | Templates I created + templates shared with me  |
+| **Template Count**   | Limited to my own        | Potentially much larger (includes shared)       |
+| **Template Source**  | All created by me        | Mix of created + received                       |
+| **Visual Indicator** | All look the same        | Shared templates may have indicator (TBD in UI) |
 
 ### Template Listing
 
 **Before:**
+
 ```swift
 // Templates query returned only owned templates
 let templates = try await supabase
@@ -137,6 +139,7 @@ let templates = try await supabase
 ```
 
 **After:**
+
 ```swift
 // Templates query returns owned + shared (via RLS policies)
 let templates = try await supabase
@@ -147,14 +150,14 @@ let templates = try await supabase
 
 ### Template Operations
 
-| Operation | Before | After | Notes |
-|-----------|--------|-------|-------|
-| **Create** | ✅ Private to creator | ✅ Private to creator | No change |
-| **Read/View** | ✅ Owner only | ✅ Owner + shared users | Automatic via RLS |
-| **Update/Edit** | ✅ Owner only | ✅ Owner only | Shared users have read-only access |
-| **Delete** | ✅ Owner only | ✅ Owner only | Deleting removes all shares |
-| **Share** | ❌ Not possible | ✅ Owner only | New capability |
-| **Unshare** | ❌ Not possible | ✅ Owner only | New capability |
+| Operation       | Before                | After                   | Notes                              |
+| --------------- | --------------------- | ----------------------- | ---------------------------------- |
+| **Create**      | ✅ Private to creator | ✅ Private to creator   | No change                          |
+| **Read/View**   | ✅ Owner only         | ✅ Owner + shared users | Automatic via RLS                  |
+| **Update/Edit** | ✅ Owner only         | ✅ Owner only           | Shared users have read-only access |
+| **Delete**      | ✅ Owner only         | ✅ Owner only           | Deleting removes all shares        |
+| **Share**       | ❌ Not possible       | ✅ Owner only           | New capability                     |
+| **Unshare**     | ❌ Not possible       | ✅ Owner only           | New capability                     |
 
 ---
 
@@ -197,26 +200,26 @@ let templates = try await supabase
 
 ### Template Permissions
 
-| Permission | Owner | Shared User | Other Users |
-|------------|-------|-------------|-------------|
-| View template | ✅ Yes | ✅ Yes | ❌ No |
-| Use template in cases | ✅ Yes | ✅ Yes | ❌ No |
-| Edit template | ✅ Yes | ❌ No | ❌ No |
-| Delete template | ✅ Yes | ❌ No | ❌ No |
-| Share template | ✅ Yes | ❌ No | ❌ No |
-| Unshare template | ✅ Yes | ❌ No | ❌ No |
-| View share list | ✅ Yes | ❌ No | ❌ No |
+| Permission            | Owner  | Shared User | Other Users |
+| --------------------- | ------ | ----------- | ----------- |
+| View template         | ✅ Yes | ✅ Yes      | ❌ No       |
+| Use template in cases | ✅ Yes | ✅ Yes      | ❌ No       |
+| Edit template         | ✅ Yes | ❌ No       | ❌ No       |
+| Delete template       | ✅ Yes | ❌ No       | ❌ No       |
+| Share template        | ✅ Yes | ❌ No       | ❌ No       |
+| Unshare template      | ✅ Yes | ❌ No       | ❌ No       |
+| View share list       | ✅ Yes | ❌ No       | ❌ No       |
 
 ### Case Permissions (Expected)
 
-| Permission | Owner | Shared User | Other Users |
-|------------|-------|-------------|-------------|
-| View case | ✅ Yes | ✅ Yes | ❌ No |
-| Edit SOAP notes | ✅ Yes | ✅ Yes (expected) | ❌ No |
-| View recordings | ✅ Yes | ✅ Yes | ❌ No |
-| Delete case | ✅ Yes | ❌ No | ❌ No |
-| Share case | ✅ Yes | ❌ No | ❌ No |
-| Unshare case | ✅ Yes | ❌ No | ❌ No |
+| Permission      | Owner  | Shared User       | Other Users |
+| --------------- | ------ | ----------------- | ----------- |
+| View case       | ✅ Yes | ✅ Yes            | ❌ No       |
+| Edit SOAP notes | ✅ Yes | ✅ Yes (expected) | ❌ No       |
+| View recordings | ✅ Yes | ✅ Yes            | ❌ No       |
+| Delete case     | ✅ Yes | ❌ No             | ❌ No       |
+| Share case      | ✅ Yes | ❌ No             | ❌ No       |
+| Unshare case    | ✅ Yes | ❌ No             | ❌ No       |
 
 ### Security Guarantees
 
@@ -236,6 +239,7 @@ let templates = try await supabase
 **Scenario:** Clinic wants all vets to use the same SOAP template for consistency.
 
 **Old Workflow (ODIS-133):**
+
 1. Senior vet creates template
 2. Manually shares template content (email, Slack, etc.)
 3. Each vet manually recreates template in their account
@@ -243,6 +247,7 @@ let templates = try await supabase
 5. No guarantee everyone uses the same version
 
 **New Workflow (ODIS-134):**
+
 1. Senior vet creates template once
 2. Shares template with all team vets via OdisAI
 3. Everyone immediately has access to same template
@@ -258,6 +263,7 @@ let templates = try await supabase
 **Scenario:** General vet needs specialist to review a complex case.
 
 **Old Workflow (ODIS-133):**
+
 1. General vet creates case and SOAP notes
 2. Manually exports or screenshots case info
 3. Sends to specialist via email/phone/text
@@ -266,6 +272,7 @@ let templates = try await supabase
 6. General vet manually updates case in OdisAI
 
 **New Workflow (ODIS-135):**
+
 1. General vet creates case and SOAP notes
 2. Shares case with specialist via OdisAI
 3. Specialist views complete case in their OdisAI account
@@ -282,6 +289,7 @@ let templates = try await supabase
 **Scenario:** Night vet needs to hand off ongoing case to day vet.
 
 **Old Workflow (ODIS-133):**
+
 1. Night vet documents case in OdisAI
 2. Writes manual handoff notes (paper or separate system)
 3. Day vet receives handoff notes
@@ -290,6 +298,7 @@ let templates = try await supabase
 6. Risk of missed information or duplication
 
 **New Workflow (ODIS-135):**
+
 1. Night vet documents case in OdisAI
 2. Shares case with day vet via OdisAI
 3. Day vet sees case in their dashboard immediately
@@ -306,6 +315,7 @@ let templates = try await supabase
 **Scenario:** Experienced vet training a new vet on proper documentation.
 
 **Old Workflow (ODIS-133):**
+
 1. Experienced vet creates example templates
 2. Screenshots or prints examples
 3. Shares via email or physically
@@ -314,6 +324,7 @@ let templates = try await supabase
 6. Training limited to theoretical examples
 
 **New Workflow (ODIS-134 + ODIS-135):**
+
 1. Experienced vet shares templates with trainee
 2. Trainee immediately has access to proven templates
 3. Experienced vet shares anonymized cases as examples
@@ -332,11 +343,13 @@ let templates = try await supabase
 #### Issue: "I shared a template but my colleague can't see it"
 
 **Possible Causes:**
+
 1. Colleague hasn't refreshed their template list
 2. Share didn't complete (network issue)
 3. Wrong user selected
 
 **Solutions:**
+
 1. Ask colleague to close and reopen templates screen
 2. Check share list - is colleague listed?
 3. Try sharing again
@@ -351,6 +364,7 @@ let templates = try await supabase
 **Why:** Only the template owner can edit to maintain template integrity.
 
 **Solution:** If you need changes:
+
 1. Contact template owner to request changes
 2. Or create your own copy and customize it
 
@@ -359,11 +373,13 @@ let templates = try await supabase
 #### Issue: "Shared template disappeared from my list"
 
 **Possible Causes:**
+
 1. Owner unshared the template
 2. Owner deleted the template
 3. Network sync issue
 
 **Solutions:**
+
 1. Contact template owner to verify sharing status
 2. Refresh template list
 3. Check with owner if template was deleted
@@ -375,11 +391,13 @@ let templates = try await supabase
 #### Issue: "I shared a case but colleague can't see it"
 
 **Possible Causes:**
+
 1. Colleague hasn't refreshed their case list
 2. Share didn't complete
 3. Wrong user selected
 
 **Solutions:**
+
 1. Ask colleague to refresh cases
 2. Check share list
 3. Try sharing again
@@ -450,12 +468,14 @@ let templates = try await supabase
 ### For Template Users
 
 ✅ **You can now:**
+
 - Share your templates with colleagues
 - Use templates shared with you
 - See who has access to your templates
 - Revoke access anytime
 
 ❌ **You cannot:**
+
 - Edit templates shared with you (read-only)
 - Share templates you don't own
 - Force sharing (owner must explicitly share)
@@ -463,12 +483,14 @@ let templates = try await supabase
 ### For Case Users (ODIS-135)
 
 ✅ **You can now:**
+
 - Share cases with colleagues for collaboration
 - View cases shared with you
 - Collaborate on SOAP notes
 - See complete case history
 
 ❌ **You cannot:**
+
 - Delete cases you don't own
 - Share cases you don't own
 - Access cases not shared with you
@@ -492,6 +514,7 @@ let templates = try await supabase
 **Questions or Issues?**
 
 Contact your OdisAI administrator or refer to the technical documentation in:
+
 - `00-OVERVIEW.md` - Feature overview
 - `02-SECURITY-CHANGES.md` - Security and permissions
 - `03-MIGRATION-GUIDE.md` - Technical migration details

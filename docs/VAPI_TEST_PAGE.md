@@ -12,6 +12,7 @@ The Vapi Test Page is an admin-only testing interface for the OdisAI Follow-Up A
 ## Purpose
 
 This page allows administrators to:
+
 - Test the OdisAI Follow-Up Assistant with custom data
 - Preview how the assistant will sound with different pet/owner/clinic information
 - Debug assistant behavior and prompts
@@ -66,7 +67,7 @@ The easiest way to test is using one of the built-in test scenarios:
 ### Creating Custom Test Scenarios
 
 1. Select **Custom (Manual Entry)** from the Test Scenario dropdown
-2. Fill in all required fields (marked with red asterisk *)
+2. Fill in all required fields (marked with red asterisk \*)
 3. Based on the **Call Type** you select, additional fields will appear:
    - **Discharge calls**: Show subType and nextSteps fields
    - **Follow-up calls**: Show condition, medications, nextSteps, and recheckDate fields
@@ -75,6 +76,7 @@ The easiest way to test is using one of the built-in test scenarios:
 ### Monitoring the Call
 
 The right panel displays:
+
 - **Call Status**: Current connection state (Connecting, Connected, Disconnected)
 - **Live Transcript**: Real-time conversation between you and the assistant
 
@@ -88,32 +90,32 @@ The assistant uses these variables to personalize the conversation. **All variab
 
 ### Core Variables (Required for ALL calls)
 
-| Variable | Purpose | Example |
-|----------|---------|---------|
-| `clinicName` | Clinic for callback reference | "Alum Rock Pet Hospital" |
-| `agentName` | Vet tech's first name only | "Sarah" (not "Dr. Sarah") |
-| `petName` | Pet's name used throughout conversation | "Bella" |
-| `ownerName` | Owner's name for personalization | "John Smith" |
-| `appointmentDate` | Spelled-out date for natural speech | "November eighth" (not "11/8") |
-| `callType` | Type of call | "discharge" or "follow-up" |
-| `clinicPhone` | Clinic phone spelled out | "five five five, two three four, five six seven eight" |
-| `emergencyPhone` | Emergency phone spelled out | "five five five, nine one one one, one one one one" |
-| `dischargeSummary` | Brief summary completing "{petName} [summary]" | "received a comprehensive wellness exam" |
+| Variable           | Purpose                                        | Example                                                |
+| ------------------ | ---------------------------------------------- | ------------------------------------------------------ |
+| `clinicName`       | Clinic for callback reference                  | "Alum Rock Pet Hospital"                               |
+| `agentName`        | Vet tech's first name only                     | "Sarah" (not "Dr. Sarah")                              |
+| `petName`          | Pet's name used throughout conversation        | "Bella"                                                |
+| `ownerName`        | Owner's name for personalization               | "John Smith"                                           |
+| `appointmentDate`  | Spelled-out date for natural speech            | "November eighth" (not "11/8")                         |
+| `callType`         | Type of call                                   | "discharge" or "follow-up"                             |
+| `clinicPhone`      | Clinic phone spelled out                       | "five five five, two three four, five six seven eight" |
+| `emergencyPhone`   | Emergency phone spelled out                    | "five five five, nine one one one, one one one one"    |
+| `dischargeSummary` | Brief summary completing "{petName} [summary]" | "received a comprehensive wellness exam"               |
 
 ### Discharge-Specific Variables (Optional)
 
-| Variable | Purpose | Example |
-|----------|---------|---------|
-| `subType` | Type of discharge visit | "wellness" or "vaccination" |
+| Variable    | Purpose                     | Example                                                   |
+| ----------- | --------------------------- | --------------------------------------------------------- |
+| `subType`   | Type of discharge visit     | "wellness" or "vaccination"                               |
 | `nextSteps` | Follow-up care instructions | "Bella's next wellness visit will be due in about a year" |
 
 ### Follow-Up Specific Variables (Optional)
 
-| Variable | Purpose | Example |
-|----------|---------|---------|
-| `condition` | What the pet was treated for | "vomiting and diarrhea" or "ear infection" |
-| `medications` | Prescribed medications | "metronidazole twice daily with food" |
-| `recheckDate` | Scheduled follow-up appointment | "November twentieth" (spelled out) |
+| Variable      | Purpose                         | Example                                    |
+| ------------- | ------------------------------- | ------------------------------------------ |
+| `condition`   | What the pet was treated for    | "vomiting and diarrhea" or "ear infection" |
+| `medications` | Prescribed medications          | "metronidazole twice daily with food"      |
+| `recheckDate` | Scheduled follow-up appointment | "November twentieth" (spelled out)         |
 
 ### Important Formatting Notes
 
@@ -134,6 +136,7 @@ The assistant uses these variables to personalize the conversation. **All variab
 ### Test Scenario Presets
 
 6 comprehensive preset scenarios covering common veterinary visit types:
+
 - Automatically populate all fields with realistic test data
 - Switch between scenarios instantly via dropdown
 - Cover both discharge and follow-up call types
@@ -142,6 +145,7 @@ The assistant uses these variables to personalize the conversation. **All variab
 ### Conditional Field Rendering
 
 The form intelligently shows/hides fields based on call type:
+
 - **Discharge calls**: Show subType and nextSteps fields
 - **Follow-up calls**: Show condition, medications, and recheckDate fields
 - Reduces clutter and confusion during testing
@@ -150,6 +154,7 @@ The form intelligently shows/hides fields based on call type:
 ### Real-Time Transcript
 
 The transcript panel shows:
+
 - **Assistant messages**: Displayed on the right with teal background
 - **User messages**: Displayed on the left with gray background
 - Auto-scrolling to latest message
@@ -157,7 +162,7 @@ The transcript panel shows:
 
 ### Smart Form Validation
 
-- Required fields marked with red asterisk (*)
+- Required fields marked with red asterisk (\*)
 - Context-sensitive help text for each field
 - Placeholder examples showing proper formatting
 - Disabled during active calls to prevent mid-call changes
@@ -165,6 +170,7 @@ The transcript panel shows:
 ### Debug Panel
 
 Toggle-able debug view showing:
+
 - Complete payload sent to VAPI SDK
 - Assistant ID being used
 - Variable values in JSON format
@@ -173,6 +179,7 @@ Toggle-able debug view showing:
 ### Browser-Based Calling
 
 Unlike the production Retell AI integration (which makes phone calls), this test page:
+
 - Uses your browser's microphone
 - Doesn't require a phone number
 - Provides instant feedback
@@ -192,6 +199,7 @@ Unlike the production Retell AI integration (which makes phone calls), this test
 ### Call Won't Connect
 
 **Possible causes**:
+
 1. Invalid Vapi public key
 2. Assistant ID not found (check that `0309c629-a3f2-43aa-b479-e2e783e564a7` is valid)
 3. Network issues blocking WebSocket connections
@@ -200,6 +208,7 @@ Unlike the production Retell AI integration (which makes phone calls), this test
 ### No Transcript Appearing
 
 **Possible causes**:
+
 1. Speech recognition not working (check microphone)
 2. Assistant not responding (check Vapi dashboard logs)
 3. Console errors (open DevTools to check)
@@ -265,13 +274,13 @@ The page listens for these events:
 
 ## Production vs Test Differences
 
-| Aspect | Test Page (Vapi) | Production (Retell AI) |
-|--------|------------------|------------------------|
-| Connection | Browser microphone | Phone call |
-| Cost | Lower per test | Standard phone rates |
-| Latency | Minimal (WebRTC) | Higher (phone network) |
-| Target | Internal testing | Customer calls |
-| Recording | Vapi dashboard | Retell dashboard |
+| Aspect     | Test Page (Vapi)   | Production (Retell AI) |
+| ---------- | ------------------ | ---------------------- |
+| Connection | Browser microphone | Phone call             |
+| Cost       | Lower per test     | Standard phone rates   |
+| Latency    | Minimal (WebRTC)   | Higher (phone network) |
+| Target     | Internal testing   | Customer calls         |
+| Recording  | Vapi dashboard     | Retell dashboard       |
 
 ## Security Notes
 
@@ -289,6 +298,7 @@ The page listens for these events:
 ## Support
 
 If you encounter issues not covered here:
+
 1. Check the browser console for errors
 2. Review [Vapi documentation](https://docs.vapi.ai)
 3. Contact the development team with:

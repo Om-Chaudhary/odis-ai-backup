@@ -4,6 +4,7 @@ import { createClient } from "~/lib/supabase/server";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
 import { getUser } from "~/server/actions/auth";
+import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)
@@ -71,23 +72,12 @@ export async function POST(request: NextRequest) {
     const { user, supabase } = await authenticateRequest(request);
 
     if (!user || !supabase) {
-      return NextResponse.json(
-        { error: "Unauthorized: Authentication required" },
-        { status: 401 },
-      );
-    }
-
-    // Verify admin role (optional - remove if all authenticated users should access)
-    const { data: profile } = await supabase
-      .from("users")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    if (profile?.role !== "admin") {
-      return NextResponse.json(
-        { error: "Unauthorized: Admin access required" },
-        { status: 403 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          { error: "Unauthorized: Authentication required" },
+          { status: 401 },
+        ),
       );
     }
 
@@ -107,19 +97,39 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      return NextResponse.json(
-        { error: `API Error: ${response.status} - ${errorText}` },
-        { status: response.status }
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          { error: `API Error: ${response.status} - ${errorText}` },
+          { status: response.status },
+        ),
       );
     }
 
-    const data = await response.json() as Record<string, unknown>;
-    return NextResponse.json(data);
+    const data = (await response.json()) as Record<string, unknown>;
+    return withCorsHeaders(request, NextResponse.json(data));
   } catch (error) {
     console.error("Error proxying SOAP generation:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to generate SOAP note" },
-      { status: 500 }
+    return withCorsHeaders(
+      request,
+      NextResponse.json(
+        {
+          error:
+            error instanceof Error
+              ? error.message
+              : "Failed to generate SOAP note",
+        },
+        { status: 500 },
+      ),
     );
   }
+}
+
+/**
+ * OPTIONS /api/generate-soap
+ *
+ * CORS preflight handler
+ */
+export function OPTIONS(request: NextRequest) {
+  return handleCorsPreflightRequest(request);
 }

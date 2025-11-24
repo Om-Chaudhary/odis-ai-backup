@@ -1,12 +1,13 @@
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
-import { createClient } from "~/lib/supabase/server";
-import { isFutureTime } from "~/lib/utils/business-hours";
-import { scheduleCallExecution } from "~/lib/qstash/client";
-import { getUser } from "~/server/actions/auth";
-import { createServerClient } from "@supabase/ssr";
-import { env } from "~/env";
-import { buildDynamicVariables } from "~/lib/vapi/knowledge-base";
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
+import { createClient } from '~/lib/supabase/server';
+import { isFutureTime } from '~/lib/utils/business-hours';
+import { scheduleCallExecution } from '~/lib/qstash/client';
+import { getUser } from '~/server/actions/auth';
+import { createServerClient } from '@supabase/ssr';
+import { env } from '~/env';
+import type { DynamicVariables } from '~/lib/vapi/types';
+import { buildDynamicVariables } from '~/lib/vapi/knowledge-base';
 
 /**
  * Request body schema for scheduling a VAPI call
@@ -25,11 +26,11 @@ interface ScheduleVapiCallRequest {
 
   // Appointment information
   appointmentDate: string; // Spelled out (e.g., "November eighth")
-  callType: "discharge" | "follow-up";
+  callType: 'discharge' | 'follow-up';
   dischargeSummary: string;
 
   // Discharge-specific fields
-  subType?: "wellness" | "vaccination";
+  subType?: 'wellness' | 'vaccination';
   nextSteps?: string;
 
   // Follow-up specific fields
@@ -39,7 +40,7 @@ interface ScheduleVapiCallRequest {
   recheckDate?: string;
 
   // Optional metadata
-  petSpecies?: "dog" | "cat" | "other";
+  petSpecies?: 'dog' | 'cat' | 'other';
   petAge?: number;
   petWeight?: number;
   daysSinceTreatment?: number;
@@ -61,8 +62,8 @@ interface ScheduleVapiCallRequest {
  */
 async function authenticateRequest(request: NextRequest) {
   // Check for Authorization header (browser extension)
-  const authHeader = request.headers.get("authorization");
-  if (authHeader?.startsWith("Bearer ")) {
+  const authHeader = request.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
     const token = authHeader.substring(7);
 
     // Create a Supabase client with the token
@@ -83,7 +84,7 @@ async function authenticateRequest(request: NextRequest) {
             Authorization: `Bearer ${token}`,
           },
         },
-      },
+      }
     );
 
     const {
@@ -118,7 +119,7 @@ async function authenticateRequest(request: NextRequest) {
  *
  * This endpoint is designed to accept requests from:
  * - Browser extension (IDEXX Neo integration) - uses Bearer token
- * - Any authenticated user - uses cookies or Bearer token
+ * - Admin dashboard - uses cookies
  * - External integrations - uses Bearer token
  */
 export async function POST(request: NextRequest) {
@@ -128,15 +129,29 @@ export async function POST(request: NextRequest) {
 
     if (!user || !supabase) {
       return NextResponse.json(
-        { error: "Unauthorized: Authentication required" },
-        { status: 401 },
+        { error: 'Unauthorized: Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // Verify admin role
+    const { data: profile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Unauthorized: Admin access required' },
+        { status: 403 }
       );
     }
 
     // Parse request body
     const body = (await request.json()) as ScheduleVapiCallRequest;
 
-    console.log("[VAPI_SCHEDULE] Received request", {
+    console.log('[VAPI_SCHEDULE] Received request', {
       phoneNumber: body.phoneNumber,
       petName: body.petName,
       scheduledFor: body.scheduledFor,
@@ -152,27 +167,12 @@ export async function POST(request: NextRequest) {
         appointmentDate: body.appointmentDate,
         callType: body.callType,
         clinicPhone: body.clinicPhone,
-        emergencyPhone: body.emergencyPhone ?? body.clinicPhone,
+        emergencyPhone: body.emergencyPhone || body.clinicPhone,
         dischargeSummary: body.dischargeSummary,
         subType: body.subType,
         nextSteps: body.nextSteps,
         condition: body.condition,
-        conditionCategory: body.conditionCategory as
-          | "dental"
-          | "gastrointestinal"
-          | "cardiac"
-          | "respiratory"
-          | "urinary"
-          | "endocrine"
-          | "dermatological"
-          | "neurological"
-          | "orthopedic"
-          | "ophthalmic"
-          | "behavioral"
-          | "wound-care"
-          | "post-surgical"
-          | "pain-management"
-          | undefined,
+        conditionCategory: body.conditionCategory as any,
         medications: body.medications,
         recheckDate: body.recheckDate,
         petSpecies: body.petSpecies,
@@ -188,48 +188,40 @@ export async function POST(request: NextRequest) {
     if (!variablesResult.validation.valid) {
       return NextResponse.json(
         {
-          error: "Validation failed",
+          error: 'Validation failed',
           details: variablesResult.validation.errors,
           warnings: variablesResult.validation.warnings,
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     // Get VAPI configuration
-    const assistantId =
-      body.assistantId ??
-      env.VAPI_ASSISTANT_ID ??
-      process.env.VAPI_ASSISTANT_ID;
-    const phoneNumberId =
-      body.phoneNumberId ??
-      env.VAPI_PHONE_NUMBER_ID ??
-      process.env.VAPI_PHONE_NUMBER_ID;
+    const assistantId = body.assistantId || env.VAPI_ASSISTANT_ID || process.env.VAPI_ASSISTANT_ID;
+    const phoneNumberId = body.phoneNumberId || env.VAPI_PHONE_NUMBER_ID || process.env.VAPI_PHONE_NUMBER_ID;
 
     if (!assistantId) {
       return NextResponse.json(
-        { error: "VAPI_ASSISTANT_ID not configured" },
-        { status: 500 },
+        { error: 'VAPI_ASSISTANT_ID not configured' },
+        { status: 500 }
       );
     }
 
     if (!phoneNumberId) {
       return NextResponse.json(
-        { error: "VAPI_PHONE_NUMBER_ID not configured" },
-        { status: 500 },
+        { error: 'VAPI_PHONE_NUMBER_ID not configured' },
+        { status: 500 }
       );
     }
 
     // Determine scheduled time (default to immediate if not provided)
-    const scheduledFor = body.scheduledFor
-      ? new Date(body.scheduledFor)
-      : new Date();
+    const scheduledFor = body.scheduledFor ? new Date(body.scheduledFor) : new Date();
 
     // Validate scheduled time is in the future
     if (!isFutureTime(scheduledFor)) {
       return NextResponse.json(
-        { error: "Scheduled time must be in the future" },
-        { status: 400 },
+        { error: 'Scheduled time must be in the future' },
+        { status: 400 }
       );
     }
 
@@ -238,21 +230,20 @@ export async function POST(request: NextRequest) {
 
     // Store scheduled call in database
     const { data: scheduledCall, error: dbError } = await supabase
-      .from("vapi_calls")
+      .from('scheduled_discharge_calls')
       .insert({
         user_id: user.id,
         assistant_id: assistantId,
         phone_number_id: phoneNumberId,
         customer_phone: body.phoneNumber,
         scheduled_for: scheduledFor.toISOString(),
-        status: "queued",
+        status: 'queued',
         dynamic_variables: variablesResult.variables,
         condition_category: variablesResult.knowledgeBase.conditionCategory,
         knowledge_base_used: variablesResult.knowledgeBase.displayName,
         metadata: {
           notes: body.notes,
-          timezone:
-            (body.metadata?.timezone as string) ?? "America/Los_Angeles",
+          timezone: (body.metadata?.timezone as string) ?? 'America/Los_Angeles',
           retry_count: 0,
           max_retries: 3,
           ...(body.metadata ?? {}),
@@ -262,48 +253,45 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (dbError) {
-      console.error("[VAPI_SCHEDULE] Database error", {
+      console.error('[VAPI_SCHEDULE] Database error', {
         error: dbError,
       });
       return NextResponse.json(
-        { error: "Failed to create scheduled call" },
-        { status: 500 },
+        { error: 'Failed to create scheduled call' },
+        { status: 500 }
       );
     }
 
     // Enqueue job in QStash
     let qstashMessageId: string;
     try {
-      qstashMessageId = await scheduleCallExecution(
-        scheduledCall.id,
-        scheduledFor,
-      );
+      qstashMessageId = await scheduleCallExecution(scheduledCall.id, scheduledFor);
     } catch (qstashError) {
-      console.error("[VAPI_SCHEDULE] QStash error", {
+      console.error('[VAPI_SCHEDULE] QStash error', {
         error: qstashError,
       });
 
       // Rollback database insert
-      await supabase.from("vapi_calls").delete().eq("id", scheduledCall.id);
+      await supabase.from('scheduled_discharge_calls').delete().eq('id', scheduledCall.id);
 
       return NextResponse.json(
-        { error: "Failed to schedule call execution" },
-        { status: 500 },
+        { error: 'Failed to schedule call execution' },
+        { status: 500 }
       );
     }
 
     // Update database with QStash message ID
     await supabase
-      .from("vapi_calls")
+      .from('scheduled_discharge_calls')
       .update({
         metadata: {
           ...scheduledCall.metadata,
           qstash_message_id: qstashMessageId,
         },
       })
-      .eq("id", scheduledCall.id);
+      .eq('id', scheduledCall.id);
 
-    console.log("[VAPI_SCHEDULE] Call scheduled successfully", {
+    console.log('[VAPI_SCHEDULE] Call scheduled successfully', {
       callId: scheduledCall.id,
       scheduledFor: scheduledFor.toISOString(),
       qstashMessageId,
@@ -324,15 +312,15 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[VAPI_SCHEDULE] Error", {
+    console.error('[VAPI_SCHEDULE] Error', {
       error: error instanceof Error ? error.message : String(error),
     });
 
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Internal server error",
+        error: error instanceof Error ? error.message : 'Internal server error',
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
@@ -342,8 +330,8 @@ export async function POST(request: NextRequest) {
  */
 export async function GET() {
   return NextResponse.json({
-    status: "ok",
-    message: "VAPI schedule call endpoint is active",
+    status: 'ok',
+    message: 'VAPI schedule call endpoint is active',
   });
 }
 
@@ -352,10 +340,10 @@ export async function GET() {
  */
 function formatPhoneNumber(phoneNumber: string): string {
   // Remove + and non-digits
-  const cleaned = phoneNumber.replace(/\D/g, "");
+  const cleaned = phoneNumber.replace(/\D/g, '');
 
   // US/Canada format
-  if (cleaned.length === 11 && cleaned.startsWith("1")) {
+  if (cleaned.length === 11 && cleaned.startsWith('1')) {
     return `+1 (${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7)}`;
   }
 

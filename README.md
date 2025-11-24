@@ -57,6 +57,7 @@ Built with the [T3 Stack](https://create.t3.gg/) and Supabase authentication wit
 - Email verification and OAuth callback handling
 
 **Key Files:**
+
 - `src/server/actions/auth.ts` - Authentication server actions
 - `src/app/(auth)/login/page.tsx` - Login page
 - `src/app/(auth)/signup/page.tsx` - Signup with onboarding
@@ -78,6 +79,7 @@ A personalized dashboard for veterinary professionals with:
   - **Security**: Password management, email verification status, login notifications, session management
 
 **Key Files:**
+
 - `src/app/dashboard/page.tsx` - Dashboard page
 - `src/components/dashboard/DashboardProfileHeader.tsx` - Profile header
 - `src/components/dashboard/DashboardProfileContent.tsx` - Settings tabs
@@ -87,11 +89,13 @@ A personalized dashboard for veterinary professionals with:
 Two-step guided onboarding process for new users:
 
 #### Step 1: Account Creation
+
 - Email and password registration
 - Real-time validation
 - Password strength requirements
 
 #### Step 2: PIMS Selection
+
 - **Practice Information Management System (PIMS) Integration**
 - Support for 6 major veterinary PIMS platforms:
   - IDEXX Neo
@@ -107,6 +111,7 @@ Two-step guided onboarding process for new users:
 - Multi-PIMS support for practices using multiple systems
 
 **Key Files:**
+
 - `src/components/onboarding/OnboardingContainer.tsx` - Orchestrates onboarding flow
 - `src/components/onboarding/AccountStep.tsx` - Account creation step
 - `src/components/onboarding/PIMSStep.tsx` - PIMS selection and configuration
@@ -117,11 +122,13 @@ Two-step guided onboarding process for new users:
 Comprehensive administrative interface for managing templates and testing AI features:
 
 #### Template Management Dashboard
+
 - Quick action cards for common tasks
 - Statistics and overview metrics
 - Direct links to template management
 
 #### SOAP Templates Management
+
 - **Data Table** with search and filtering:
   - Filter by user assignment
   - Filter by default status
@@ -145,6 +152,7 @@ Comprehensive administrative interface for managing templates and testing AI fea
   - Template versioning and management
 
 #### SOAP Playground (Testing Environment)
+
 - Load any template for testing
 - Sample transcription data for quick testing
 - Real-time SOAP note generation
@@ -158,6 +166,7 @@ Comprehensive administrative interface for managing templates and testing AI fea
   - Client Instructions
 
 **Key Files:**
+
 - `src/app/admin/page.tsx` - Admin dashboard
 - `src/app/admin/templates/soap/page.tsx` - Template list
 - `src/app/admin/templates/soap/new/page.tsx` - Create template
@@ -178,6 +187,7 @@ Powerful AI-driven SOAP note generation from veterinary transcriptions:
 - **Edge Function Integration**: Powered by Supabase edge functions (generate-soap-notes-v2)
 
 **Generated Sections:**
+
 - Subjective (Patient history and owner concerns)
 - Objective (Physical examination findings)
 - Assessment (Diagnosis and clinical interpretation)
@@ -185,6 +195,7 @@ Powerful AI-driven SOAP note generation from veterinary transcriptions:
 - Client Instructions (Take-home care instructions)
 
 **Key Files:**
+
 - `src/app/api/generate-soap/route.ts` - SOAP generation API endpoint
 - `src/server/api/routers/templates.ts` - Template management router
 - `src/server/api/routers/playground.ts` - Playground testing router
@@ -194,6 +205,7 @@ Powerful AI-driven SOAP note generation from veterinary transcriptions:
 Full-featured blog powered by Sanity CMS:
 
 #### Blog Features
+
 - **Content Management**: Headless CMS via Sanity
 - **Rich Content**: PortableText for rich text rendering
 - **Author Management**: Author profiles with bios and images
@@ -205,6 +217,7 @@ Full-featured blog powered by Sanity CMS:
   - Custom metadata per post
 
 #### Blog List Page
+
 - Dynamic post loading from Sanity
 - Post cards with featured images
 - Author information and publication dates
@@ -215,6 +228,7 @@ Full-featured blog powered by Sanity CMS:
 - Breadcrumb navigation
 
 #### Individual Blog Posts
+
 - Full rich text content rendering
 - Featured images with hover effects
 - Author bio section with avatar
@@ -225,6 +239,7 @@ Full-featured blog powered by Sanity CMS:
 - Custom typography and formatting
 
 **Key Files:**
+
 - `src/app/blog/page.tsx` - Blog list page
 - `src/app/blog/[slug]/page.tsx` - Individual blog post
 - `src/components/BlogLayout.tsx` - Blog card layout
@@ -236,6 +251,7 @@ Full-featured blog powered by Sanity CMS:
 Professional marketing landing page with:
 
 #### Sections
+
 - **Hero Section**:
   - Compelling headline and subheadline
   - Floating animation effects
@@ -277,6 +293,7 @@ Professional marketing landing page with:
   - Legal links (Privacy, Terms)
 
 #### Waitlist Modal
+
 - Modal-based signup form
 - Fields: Full name, email, practice name, role
 - Role selection (veterinarian, practice manager, technician, other)
@@ -287,6 +304,7 @@ Professional marketing landing page with:
 - Form validation
 
 **Key Files:**
+
 - `src/app/page.tsx` - Homepage
 - `src/components/Navigation.tsx` - Header navigation
 - `src/components/HeroFloating.tsx` - Hero section
@@ -303,6 +321,7 @@ Professional marketing landing page with:
 Comprehensive support resource center:
 
 #### Support Categories (6 Main Categories)
+
 1. **Getting Started**
    - Onboarding guides
    - Initial setup
@@ -339,17 +358,20 @@ Comprehensive support resource center:
    - How-to videos
 
 #### Contact Options
+
 - **Live Chat**: Instant support
 - **Email Support**: support@odis.ai
 - **Phone Support**: 1-800-ODIS-AI
 
 #### Additional Features
+
 - FAQ section
 - Resource downloads
 - Contact CTA
 - Breadcrumb navigation
 
 **Key Files:**
+
 - `src/app/support/page.tsx` - Support hub
 
 ### Analytics & Tracking
@@ -357,6 +379,7 @@ Comprehensive support resource center:
 Comprehensive user behavior tracking with PostHog:
 
 #### Tracked Events
+
 - **Landing Page Metrics**:
   - Page views with device type and viewport
   - Scroll depth tracking
@@ -382,11 +405,13 @@ Comprehensive user behavior tracking with PostHog:
   - Page navigation patterns
 
 #### Analytics Hooks
+
 - `useScrollTracking` - Scroll position monitoring
 - `useSectionVisibility` - Section intersection detection
 - `useDeviceDetection` - Device type and viewport tracking
 
 **Key Files:**
+
 - `src/lib/posthog.ts` - PostHog configuration
 - `src/components/PostHogProvider.tsx` - Analytics provider
 - `src/hooks/useScrollTracking.ts` - Scroll tracking
@@ -396,16 +421,19 @@ Comprehensive user behavior tracking with PostHog:
 ## Tech Stack
 
 ### Core Framework
+
 - [Next.js 15](https://nextjs.org) - React framework with App Router and Server Components
 - [React 19](https://react.dev) - UI library
 - [TypeScript 5](https://www.typescriptlang.org) - Type-safe JavaScript
 
 ### Backend & Database
+
 - [Supabase](https://supabase.com) - Backend-as-a-Service with PostgreSQL
 - [Drizzle ORM](https://orm.drizzle.team) - Type-safe SQL ORM
 - [tRPC](https://trpc.io) - End-to-end type-safe APIs
 
 ### UI & Styling
+
 - [Tailwind CSS 4](https://tailwindcss.com) - Utility-first CSS framework
 - [shadcn/ui](https://ui.shadcn.com) - Re-usable component library
 - [Radix UI](https://www.radix-ui.com) - Unstyled accessible components
@@ -413,17 +441,21 @@ Comprehensive user behavior tracking with PostHog:
 - [Lucide Icons](https://lucide.dev) - Icon library
 
 ### Content Management
+
 - [Sanity](https://www.sanity.io) - Headless CMS
 - [Portable Text](https://portabletext.org) - Rich text specification
 
 ### Analytics & Monitoring
+
 - [PostHog](https://posthog.com) - Product analytics and feature flags
 
 ### Forms & Validation
+
 - [React Hook Form](https://react-hook-form.com) - Form management
 - [Zod](https://zod.dev) - TypeScript-first schema validation
 
 ### Development Tools
+
 - [ESLint](https://eslint.org) - Code linting
 - [Prettier](https://prettier.io) - Code formatting
 - [pnpm](https://pnpm.io) - Fast, disk space efficient package manager
@@ -439,12 +471,14 @@ Comprehensive user behavior tracking with PostHog:
 ### Environment Setup
 
 1. **Clone the repository**
+
    ```bash
    git clone <repo-url>
    cd odis-ai-web
    ```
 
 2. **Copy environment variables template**
+
    ```bash
    cp .env.example .env.local
    ```
@@ -454,6 +488,7 @@ Comprehensive user behavior tracking with PostHog:
    Update `.env.local` with your environment-specific Supabase credentials:
 
    **For Development:**
+
    ```env
    # Database (Development)
    DATABASE_URL="postgresql://postgres.your-dev-ref:password@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
@@ -479,6 +514,7 @@ Comprehensive user behavior tracking with PostHog:
 4. **Additional environment files** (for different deployment environments)
 
    Create `.env.staging` for staging:
+
    ```env
    DATABASE_URL="postgresql://postgres.your-staging-ref:password@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
    NEXT_PUBLIC_SUPABASE_URL="https://your-staging-ref.supabase.co"
@@ -488,6 +524,7 @@ Comprehensive user behavior tracking with PostHog:
    ```
 
    Create `.env.production` for production:
+
    ```env
    DATABASE_URL="postgresql://postgres.your-prod-ref:password@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
    NEXT_PUBLIC_SUPABASE_URL="https://your-prod-ref.supabase.co"
@@ -499,11 +536,13 @@ Comprehensive user behavior tracking with PostHog:
 ### Installation
 
 1. **Install dependencies**
+
    ```bash
    pnpm install
    ```
 
 2. **Start the development server**
+
    ```bash
    pnpm dev
    ```
@@ -519,6 +558,7 @@ Comprehensive user behavior tracking with PostHog:
 ### Additional Setup
 
 #### Sanity CMS (Optional for Blog)
+
 ```bash
 # Install Sanity CLI globally
 pnpm install -g @sanity/cli
@@ -540,6 +580,7 @@ Access Sanity Studio at: `http://localhost:3000/studio`
 ### Local Development
 
 1. **Backend Setup**: Ensure `odis-ai-backend` is running locally or connected to dev environment
+
    ```bash
    cd ../odis-ai-backend
    supabase start
@@ -557,17 +598,18 @@ Access Sanity Studio at: `http://localhost:3000/studio`
 
 The app automatically uses different environments based on configuration:
 
-| Environment | Database | Purpose | Command |
-|-------------|----------|---------|---------|
-| Development | `odisai-dev` | Local development, testing | `pnpm dev` |
-| Staging | `odisai-staging` | Pre-production testing | `pnpm build && pnpm start` with `.env.staging` |
-| Production | `odisai-prod` | Live application | Deploy with `.env.production` |
+| Environment | Database         | Purpose                    | Command                                        |
+| ----------- | ---------------- | -------------------------- | ---------------------------------------------- |
+| Development | `odisai-dev`     | Local development, testing | `pnpm dev`                                     |
+| Staging     | `odisai-staging` | Pre-production testing     | `pnpm build && pnpm start` with `.env.staging` |
+| Production  | `odisai-prod`    | Live application           | Deploy with `.env.production`                  |
 
 ### Backend Synchronization
 
 When backend changes are deployed, you may need to update the web app:
 
 #### 1. Database Schema Changes
+
 ```bash
 # Check for new/changed data models
 cd ../odis-ai-backend
@@ -583,6 +625,7 @@ pnpm db:generate  # Generate new types
 ```
 
 #### 2. Edge Function Changes
+
 ```bash
 # Check for API endpoint changes
 cd ../odis-ai-backend/supabase/functions
@@ -595,6 +638,7 @@ cd ../odis-ai-web
 ```
 
 #### 3. Authentication Changes
+
 ```bash
 # Review auth-related changes
 # Update auth flows if needed
@@ -604,6 +648,7 @@ cd ../odis-ai-web
 ### Daily Development Process
 
 1. **Pull latest backend changes**
+
    ```bash
    cd ../odis-ai-backend
    git pull origin dev
@@ -615,6 +660,7 @@ cd ../odis-ai-web
    - Update web app code if needed
 
 3. **Web development**
+
    ```bash
    cd ../odis-ai-web
    git pull origin dev
@@ -630,6 +676,7 @@ cd ../odis-ai-web
    - Check analytics events
 
 5. **Code quality checks**
+
    ```bash
    pnpm check        # Run lint and typecheck
    pnpm lint:fix     # Fix linting issues
@@ -801,41 +848,41 @@ odis-ai-web/
 
 ### Public Pages
 
-| Route | Page | Description |
-|-------|------|-------------|
-| `/` | Landing Page | Marketing homepage with hero, pricing, testimonials, FAQ |
-| `/support` | Support Hub | Support resources, documentation, contact options |
-| `/blog` | Blog List | All blog posts from Sanity CMS |
-| `/blog/[slug]` | Blog Post | Individual blog post with rich content |
+| Route          | Page         | Description                                              |
+| -------------- | ------------ | -------------------------------------------------------- |
+| `/`            | Landing Page | Marketing homepage with hero, pricing, testimonials, FAQ |
+| `/support`     | Support Hub  | Support resources, documentation, contact options        |
+| `/blog`        | Blog List    | All blog posts from Sanity CMS                           |
+| `/blog/[slug]` | Blog Post    | Individual blog post with rich content                   |
 
 ### Authentication Pages
 
-| Route | Page | Description |
-|-------|------|-------------|
-| `/login` | Login | Sign in with email/password |
-| `/signup` | Signup | Sign up with onboarding flow (Account + PIMS) |
-| `/auth/callback` | Auth Callback | OAuth and email verification callback |
+| Route            | Page          | Description                                   |
+| ---------------- | ------------- | --------------------------------------------- |
+| `/login`         | Login         | Sign in with email/password                   |
+| `/signup`        | Signup        | Sign up with onboarding flow (Account + PIMS) |
+| `/auth/callback` | Auth Callback | OAuth and email verification callback         |
 
 ### Protected User Pages
 
-| Route | Page | Description |
-|-------|------|-------------|
+| Route        | Page           | Description                           |
+| ------------ | -------------- | ------------------------------------- |
 | `/dashboard` | User Dashboard | Profile, settings, account management |
 
 ### Protected Admin Pages
 
-| Route | Page | Description |
-|-------|------|-------------|
-| `/admin` | Admin Dashboard | Overview and quick actions |
-| `/admin/templates/soap` | Template List | Browse and manage SOAP templates |
-| `/admin/templates/soap/new` | Create Template | Create new SOAP template |
-| `/admin/templates/soap/[id]` | Edit Template | Edit existing SOAP template |
-| `/admin/soap-playground` | SOAP Playground | Test SOAP generation with sample data |
+| Route                        | Page            | Description                           |
+| ---------------------------- | --------------- | ------------------------------------- |
+| `/admin`                     | Admin Dashboard | Overview and quick actions            |
+| `/admin/templates/soap`      | Template List   | Browse and manage SOAP templates      |
+| `/admin/templates/soap/new`  | Create Template | Create new SOAP template              |
+| `/admin/templates/soap/[id]` | Edit Template   | Edit existing SOAP template           |
+| `/admin/soap-playground`     | SOAP Playground | Test SOAP generation with sample data |
 
 ### CMS Pages
 
-| Route | Page | Description |
-|-------|------|-------------|
+| Route     | Page          | Description                              |
+| --------- | ------------- | ---------------------------------------- |
 | `/studio` | Sanity Studio | Content management for blog (admin only) |
 
 ## API Routes & tRPC
@@ -843,6 +890,7 @@ odis-ai-web/
 ### REST API Routes
 
 #### SOAP Generation API
+
 ```typescript
 POST /api/generate-soap
 
@@ -869,8 +917,9 @@ Response: {
 ```
 
 #### tRPC Handler
+
 ```typescript
-GET/POST /api/trpc/[trpc]
+GET / POST / api / trpc / [trpc];
 // Handles all tRPC requests
 ```
 
@@ -879,20 +928,22 @@ GET/POST /api/trpc/[trpc]
 #### Waitlist Router (`waitlist`)
 
 **Public Procedures:**
+
 ```typescript
-waitlist.join
+waitlist.join;
 // Sign up to waitlist
 // Input: { name, email, practiceName, role }
 // Output: { success: boolean, message: string }
 ```
 
 **Protected Procedures:**
+
 ```typescript
-waitlist.getMyWaitlistStatus
+waitlist.getMyWaitlistStatus;
 // Get current user's waitlist status
 // Output: { status: string, joinedAt: Date }
 
-waitlist.updateWaitlistProfile
+waitlist.updateWaitlistProfile;
 // Update profile information
 // Input: { name?, practiceName?, role? }
 ```
@@ -900,33 +951,34 @@ waitlist.updateWaitlistProfile
 #### Templates Router (`templates`)
 
 **Admin-Only Procedures:**
+
 ```typescript
-templates.listSoapTemplates
+templates.listSoapTemplates;
 // List all SOAP templates with filtering
 // Input: { userId?: string, isDefault?: boolean }
 // Output: Template[]
 
-templates.getSoapTemplate
+templates.getSoapTemplate;
 // Get single template by ID
 // Input: { id: string }
 // Output: Template
 
-templates.createSoapTemplate
+templates.createSoapTemplate;
 // Create new SOAP template
 // Input: { name, displayName, sections, userId?, isDefault? }
 // Output: { success: boolean, templateId: string }
 
-templates.updateSoapTemplate
+templates.updateSoapTemplate;
 // Update existing template
 // Input: { id, name?, displayName?, sections?, userId?, isDefault? }
 // Output: { success: boolean }
 
-templates.deleteSoapTemplate
+templates.deleteSoapTemplate;
 // Delete template
 // Input: { id: string }
 // Output: { success: boolean }
 
-templates.listUsers
+templates.listUsers;
 // Get all users for assignment dropdown
 // Output: User[]
 ```
@@ -934,8 +986,9 @@ templates.listUsers
 #### Playground Router (`playground`)
 
 **Admin-Only Procedures:**
+
 ```typescript
-playground.getTemplatesForPlayground
+playground.getTemplatesForPlayground;
 // Get all templates with user information for testing
 // Output: Template[]
 ```
@@ -1077,6 +1130,7 @@ export default function ClientComponent() {
 ### Middleware Protection
 
 Routes are protected via middleware (`src/middleware.ts`):
+
 - Admin routes require `admin` role
 - Dashboard routes require authentication
 - Public routes are accessible to all
@@ -1102,6 +1156,7 @@ Routes are protected via middleware (`src/middleware.ts`):
 ### Manual Deployment
 
 1. **Build the application**
+
    ```bash
    pnpm build
    ```
@@ -1146,22 +1201,26 @@ SANITY_API_TOKEN
 ## Learn More
 
 ### Framework Documentation
+
 - [T3 Stack Documentation](https://create.t3.gg/)
 - [Next.js App Router](https://nextjs.org/docs/app)
 - [React Documentation](https://react.dev)
 
 ### Backend & Database
+
 - [Supabase Documentation](https://supabase.com/docs)
 - [Drizzle ORM Documentation](https://orm.drizzle.team)
 - [tRPC Documentation](https://trpc.io/docs)
 
 ### UI & Styling
+
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
 - [shadcn/ui Documentation](https://ui.shadcn.com)
 - [Radix UI Documentation](https://www.radix-ui.com/docs)
 - [Framer Motion Documentation](https://www.framer.com/motion/)
 
 ### Content & Analytics
+
 - [Sanity Documentation](https://www.sanity.io/docs)
 - [PostHog Documentation](https://posthog.com/docs)
 

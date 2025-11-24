@@ -7,6 +7,7 @@ Dynamic variables (pet_name, owner_name, etc.) are being stored in the database 
 ## Current Flow
 
 ### 1. **Schedule Call** (`/api/calls/schedule`)
+
 - Receives call data from browser extension or admin dashboard
 - Creates `callVariables` object with dynamic variables:
   ```typescript
@@ -22,6 +23,7 @@ Dynamic variables (pet_name, owner_name, etc.) are being stored in the database 
 - Stores in database with `dynamic_variables: callVariables` ✅ WORKING
 
 ### 2. **Execute Call** (`/api/webhooks/execute-call`)
+
 - QStash triggers this webhook at scheduled time
 - Retrieves call from database
 - Passes dynamic variables to VAPI:
@@ -33,6 +35,7 @@ Dynamic variables (pet_name, owner_name, etc.) are being stored in the database 
 - ❌ **POTENTIAL ISSUE**: If `call.dynamic_variables` is `null`, this creates an empty object
 
 ### 3. **VAPI Client** (`src/lib/vapi/client.ts`)
+
 - Receives parameters and calls VAPI SDK:
   ```typescript
   await vapi.calls.create({
@@ -73,13 +76,14 @@ Dynamic variables (pet_name, owner_name, etc.) are being stored in the database 
 4. **Empty Object Being Passed**
    - If `call.dynamic_variables` is `null` or `undefined`, then:
      ```typescript
-     variableValues: null as Record<string, unknown>
+     variableValues: null as Record<string, unknown>;
      ```
    - This creates `{ variableValues: null }` which VAPI might ignore
 
 ## Logging Added
 
 ### Schedule Route
+
 ```typescript
 console.log("[SCHEDULE_CALL] Dynamic variables prepared", {
   callVariables,
@@ -88,6 +92,7 @@ console.log("[SCHEDULE_CALL] Dynamic variables prepared", {
 ```
 
 ### Execute Call Route
+
 ```typescript
 console.log("[EXECUTE_CALL] Dynamic variables from database", {
   callId,
@@ -108,6 +113,7 @@ console.log("[EXECUTE_CALL] Calling VAPI API with parameters", {
 ```
 
 ### VAPI Client
+
 ```typescript
 console.log("[VAPI_CLIENT] Creating phone call with payload", {
   phoneNumber: params.phoneNumber,
@@ -122,6 +128,7 @@ console.log("[VAPI_CLIENT] Creating phone call with payload", {
 ## Debug Steps
 
 1. **Check Database Column Type**
+
    ```sql
    SELECT column_name, data_type, udt_name
    FROM information_schema.columns
@@ -129,6 +136,7 @@ console.log("[VAPI_CLIENT] Creating phone call with payload", {
    ```
 
 2. **Check Actual Data in Database**
+
    ```sql
    SELECT id, dynamic_variables, pg_typeof(dynamic_variables) as type
    FROM vapi_calls
@@ -191,7 +199,9 @@ console.log("[VAPI_CLIENT] Creating phone call with payload", {
 ## Potential Solutions
 
 ### Solution 1: Ensure JSONB Column Type
+
 If the column is not JSONB, migrate it:
+
 ```sql
 ALTER TABLE vapi_calls
 ALTER COLUMN dynamic_variables TYPE JSONB
@@ -199,8 +209,12 @@ USING dynamic_variables::JSONB;
 ```
 
 ### Solution 2: Add Null Check in Execute Route
+
 ```typescript
-const dynamicVariables = call.dynamic_variables as Record<string, unknown> | null;
+const dynamicVariables = call.dynamic_variables as Record<
+  string,
+  unknown
+> | null;
 
 if (!dynamicVariables || Object.keys(dynamicVariables).length === 0) {
   console.error("[EXECUTE_CALL] No dynamic variables found", {
@@ -211,6 +225,7 @@ if (!dynamicVariables || Object.keys(dynamicVariables).length === 0) {
 ```
 
 ### Solution 3: Don't Pass assistantOverrides if Empty
+
 ```typescript
 const vapiParams = {
   phoneNumber: call.customer_phone,
@@ -239,14 +254,14 @@ create_call({
   assistantId: "string",
   assistantOverrides: {
     variableValues: {
-      "key": "value"  // Dynamic variables as key-value pairs
-    }
+      key: "value", // Dynamic variables as key-value pairs
+    },
   },
   customer: {
-    number: "+1234567890"
+    number: "+1234567890",
   },
-  phoneNumberId: "string"
-})
+  phoneNumberId: "string",
+});
 ```
 
 Our implementation matches this structure, so the issue is likely in the data retrieval, not the API structure.

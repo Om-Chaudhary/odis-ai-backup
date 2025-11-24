@@ -4,6 +4,7 @@
 **Features:** Template Sharing (ODIS-134) & Case Sharing (ODIS-135)
 
 ## Table of Contents
+
 - [Overview](#overview)
 - [Repository Analysis](#repository-analysis)
 - [Expected API Changes](#expected-api-changes)
@@ -26,6 +27,7 @@ This document analyzes the API and service layer changes required to support tem
 **File:** `/Users/s0381806/Development/odis-ai-ios/OdisAI/Repositories/TemplateRepository.swift`
 
 **Current Methods:**
+
 ```swift
 protocol TemplateRepositoryProtocol {
     func fetchTemplate(id: UUID) async throws -> Template
@@ -39,6 +41,7 @@ protocol TemplateRepositoryProtocol {
 ```
 
 **Observations:**
+
 - ❌ No sharing-specific methods visible
 - ✅ Existing methods unchanged (backward compatible)
 - ✅ `fetchAllTemplates()` likely returns owned + shared templates via RLS
@@ -67,6 +70,7 @@ let templates: [Template.Response] = try await supabaseClient
 **File:** `/Users/s0381806/Development/odis-ai-ios/OdisAI/Repositories/CaseRepository.swift`
 
 **Current Methods:**
+
 ```swift
 protocol CaseRepositoryProtocol {
     func fetchAllCases() async throws -> [Case]
@@ -80,12 +84,14 @@ protocol CaseRepositoryProtocol {
 ```
 
 **Observations:**
+
 - ❌ No sharing-specific methods visible
 - ✅ Existing methods unchanged
 - ✅ Session validation added (unrelated to sharing)
 - ✅ `fetchAllCases()` likely returns owned + shared cases via RLS
 
 **Session Validation (New):**
+
 ```swift
 // Added for auth resilience, not sharing-specific
 private func validateSessionBeforeOperation() async throws {
@@ -104,6 +110,7 @@ While not visible in current Repository files, sharing operations require method
 #### 1. Creating Shares
 
 **Expected Method Signature:**
+
 ```swift
 // In TemplateRepository or dedicated SharingService
 func shareTemplate(
@@ -128,6 +135,7 @@ func shareCase(
 ```
 
 **Expected Implementation:**
+
 ```swift
 func shareTemplate(templateId: UUID, withUserId: UUID) async throws -> TemplateShare {
     let shareData: [[String: Any]] = [
@@ -162,6 +170,7 @@ func shareTemplate(templateId: UUID, withUserId: UUID) async throws -> TemplateS
 #### 2. Fetching Shares
 
 **Expected Method Signatures:**
+
 ```swift
 // Get all users a template is shared with
 func fetchTemplateShares(templateId: UUID) async throws -> [TemplateShare]
@@ -177,6 +186,7 @@ func fetchSharedCases() async throws -> [Case]
 ```
 
 **Expected Implementation:**
+
 ```swift
 func fetchTemplateShares(templateId: UUID) async throws -> [TemplateShare] {
     let shares: [TemplateShare.Response] = try await supabaseClient
@@ -212,6 +222,7 @@ func fetchSharedTemplates() async throws -> [Template] {
 #### 3. Revoking Shares
 
 **Expected Method Signatures:**
+
 ```swift
 // Revoke specific share
 func revokeTemplateShare(templateId: UUID, fromUserId: UUID) async throws
@@ -224,6 +235,7 @@ func revokeCaseShare(caseId: UUID, fromUserId: UUID) async throws
 ```
 
 **Expected Implementation:**
+
 ```swift
 func revokeTemplateShare(templateId: UUID, fromUserId: UUID) async throws {
     try await supabaseClient
@@ -306,6 +318,7 @@ struct CaseShare: Identifiable, Codable {
 For sharing UI, need to fetch users to share with:
 
 **Expected Service:**
+
 ```swift
 class UserService {
     let supabaseClient: SupabaseClient
@@ -323,6 +336,7 @@ class UserService {
 ```
 
 **Expected User Model:**
+
 ```swift
 struct User: Identifiable, Codable {
     let id: UUID
@@ -497,6 +511,7 @@ struct ShareRow: View {
 ### Expected Errors
 
 **1. Duplicate Share Error:**
+
 ```swift
 enum SharingError: LocalizedError {
     case duplicateShare
@@ -523,6 +538,7 @@ enum SharingError: LocalizedError {
 ```
 
 **2. Error Handling in Repository:**
+
 ```swift
 func shareTemplate(templateId: UUID, withUserId: UUID) async throws -> TemplateShare {
     do {
@@ -558,6 +574,7 @@ func shareTemplate(templateId: UUID, withUserId: UUID) async throws -> TemplateS
 ```
 
 **3. UI Error Handling:**
+
 ```swift
 struct TemplateDetailView: View {
     @StateObject var viewModel: TemplateDetailViewModel
@@ -586,6 +603,7 @@ struct TemplateDetailView: View {
 ### Query Optimization
 
 **1. Fetching Templates with Share Count:**
+
 ```swift
 // Instead of N+1 queries, use aggregation
 let templatesWithShareCount: [TemplateWithShareCount] = try await supabaseClient
@@ -599,6 +617,7 @@ let templatesWithShareCount: [TemplateWithShareCount] = try await supabaseClient
 ```
 
 **2. Batch Share Operations:**
+
 ```swift
 func shareWithMultipleUsers(
     templateId: UUID,
@@ -627,6 +646,7 @@ func shareWithMultipleUsers(
 ```
 
 **3. Caching Shared Templates:**
+
 ```swift
 class TemplateRepository: ObservableObject {
     private var sharedTemplatesCache: [Template]?
@@ -662,6 +682,7 @@ class TemplateRepository: ObservableObject {
 ### Pagination
 
 **For large share lists:**
+
 ```swift
 func fetchTemplateShares(
     templateId: UUID,
@@ -691,18 +712,22 @@ func fetchTemplateShares(
 ## Summary
 
 ### Current State
+
 - ✅ No breaking changes to existing Repository methods
 - ✅ RLS handles read access transparently
 - ✅ Session validation added (unrelated to sharing)
 - ❌ No sharing-specific methods visible in current codebase
 
 ### Expected Implementation
+
 The sharing features likely work through:
+
 1. **Database RLS Policies** - Handle read access automatically
 2. **Direct Supabase Calls** - ViewModels may call Supabase directly for share CRUD
 3. **Future Service Layer** - Dedicated sharing service to be added
 
 ### Recommended API Design
+
 - Dedicated `SharingService` for share operations
 - Keep Repository methods focused on core resources
 - Use ViewModels to orchestrate sharing UI logic
@@ -711,6 +736,7 @@ The sharing features likely work through:
 - Use pagination for large share lists
 
 ### Integration Points
+
 1. **TemplateRepository** - Already returns shared templates via RLS
 2. **CaseRepository** - Already returns shared cases via RLS (expected)
 3. **SharingService** - New service for share CRUD operations (expected)
@@ -718,6 +744,7 @@ The sharing features likely work through:
 5. **AnalyticsService** - Track sharing events (recommended)
 
 ### Performance Best Practices
+
 - ✅ Use indexes on foreign keys (already in migration)
 - ✅ Leverage RLS for query filtering
 - ✅ Batch share operations when possible

@@ -4,6 +4,7 @@
 **Features:** Template Sharing (ODIS-134) & Case Sharing (ODIS-135)
 
 ## Table of Contents
+
 - [Overview](#overview)
 - [ODIS-134: Template Sharing Schema](#odis-134-template-sharing-schema)
 - [ODIS-135: Case Sharing Schema](#odis-135-case-sharing-schema)
@@ -17,6 +18,7 @@
 Both features introduce junction tables to implement many-to-many sharing relationships between users and resources (templates or cases). The schema design follows PostgreSQL best practices with proper constraints, indexes, and timestamp tracking.
 
 ### Design Principles
+
 1. **Junction Table Pattern:** Separate tables for sharing relationships
 2. **Referential Integrity:** Foreign key constraints with cascade deletion
 3. **Uniqueness Constraints:** Prevent duplicate shares
@@ -33,6 +35,7 @@ Both features introduce junction tables to implement many-to-many sharing relati
 Junction table for sharing SOAP note templates between users.
 
 **Table Definition:**
+
 ```sql
 CREATE TABLE public.soap_template_shares (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -54,6 +57,7 @@ CREATE TABLE public.soap_template_shares (
 | `updated_at` | TIMESTAMPTZ | DEFAULT now() | When the share was last modified |
 
 **Constraints:**
+
 - **Primary Key:** `id` (UUID)
 - **Foreign Keys:**
   - `template_id` → `temp_soap_templates(id)` ON DELETE CASCADE
@@ -61,6 +65,7 @@ CREATE TABLE public.soap_template_shares (
 - **Unique Constraint:** `(template_id, shared_with_user_id)` - Prevents duplicate shares
 
 **Indexes:**
+
 ```sql
 CREATE INDEX idx_soap_template_shares_template_id
     ON public.soap_template_shares(template_id);
@@ -74,6 +79,7 @@ CREATE INDEX idx_soap_template_shares_shared_with_user_id
 Junction table for sharing discharge summary templates between users.
 
 **Table Definition:**
+
 ```sql
 CREATE TABLE public.discharge_template_shares (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -95,6 +101,7 @@ CREATE TABLE public.discharge_template_shares (
 | `updated_at` | TIMESTAMPTZ | DEFAULT now() | When the share was last modified |
 
 **Constraints:**
+
 - **Primary Key:** `id` (UUID)
 - **Foreign Keys:**
   - `template_id` → `temp_discharge_summary_templates(id)` ON DELETE CASCADE
@@ -102,6 +109,7 @@ CREATE TABLE public.discharge_template_shares (
 - **Unique Constraint:** `(template_id, shared_with_user_id)` - Prevents duplicate shares
 
 **Indexes:**
+
 ```sql
 CREATE INDEX idx_discharge_template_shares_template_id
     ON public.discharge_template_shares(template_id);
@@ -118,6 +126,7 @@ CREATE INDEX idx_discharge_template_shares_shared_with_user_id
 The existing `temp_soap_templates` table received updated RLS policies to enable shared access.
 
 **New Policy:**
+
 ```sql
 DROP POLICY IF EXISTS "Users can read shared soap templates"
     ON public.temp_soap_templates;
@@ -137,6 +146,7 @@ CREATE POLICY "Users can read shared soap templates"
 ```
 
 **Impact:**
+
 - Users can read templates they own (unchanged)
 - Users can read templates shared with them (new)
 - No changes to INSERT, UPDATE, DELETE policies
@@ -147,6 +157,7 @@ CREATE POLICY "Users can read shared soap templates"
 The existing `temp_discharge_summary_templates` table received updated RLS policies to enable shared access.
 
 **New Policy:**
+
 ```sql
 DROP POLICY IF EXISTS "Users can read shared discharge templates"
     ON public.temp_discharge_summary_templates;
@@ -166,6 +177,7 @@ CREATE POLICY "Users can read shared discharge templates"
 ```
 
 **Impact:**
+
 - Users can read templates they own (unchanged)
 - Users can read templates shared with them (new)
 - No changes to INSERT, UPDATE, DELETE policies
@@ -179,6 +191,7 @@ Based on the pattern established in ODIS-134, ODIS-135 likely introduces:
 #### case_shares (Expected)
 
 **Hypothetical Table Definition:**
+
 ```sql
 CREATE TABLE public.case_shares (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -191,6 +204,7 @@ CREATE TABLE public.case_shares (
 ```
 
 **Expected Indexes:**
+
 ```sql
 CREATE INDEX idx_case_shares_case_id
     ON public.case_shares(case_id);
@@ -206,6 +220,7 @@ CREATE INDEX idx_case_shares_shared_with_user_id
 #### cases
 
 **Expected Policy Changes:**
+
 ```sql
 -- Expected new policy for shared case access
 CREATE POLICY "Users can read shared cases"
@@ -298,6 +313,7 @@ case_shares ─────┘
 See `/Users/s0381806/Development/odis-ai-ios/apply_template_sharing_migration.sh` for the full migration script.
 
 **Key Steps:**
+
 1. Create sharing tables
 2. Create indexes
 3. Enable RLS
@@ -356,6 +372,7 @@ DROP TABLE IF EXISTS public.discharge_template_shares CASCADE;
 ### Index Performance Analysis
 
 **Queries Optimized:**
+
 ```sql
 -- Find all users who have access to a template
 SELECT shared_with_user_id
@@ -378,6 +395,7 @@ WHERE template_id = $1 AND shared_with_user_id = $2;
 ### Index Maintenance
 
 **Considerations:**
+
 - Indexes automatically maintained by PostgreSQL
 - Monitor index bloat with large datasets
 - Consider REINDEX if performance degrades
@@ -407,6 +425,7 @@ CREATE TRIGGER update_soap_template_shares_updated_at
 ```
 
 **Behavior:**
+
 - Fires on every UPDATE to `soap_template_shares`
 - Automatically sets `updated_at` to current timestamp
 - Prevents manual override of `updated_at`
@@ -429,6 +448,7 @@ CREATE TRIGGER update_discharge_template_shares_updated_at
 ```
 
 **Behavior:**
+
 - Fires on every UPDATE to `discharge_template_shares`
 - Automatically sets `updated_at` to current timestamp
 - Prevents manual override of `updated_at`
@@ -436,6 +456,7 @@ CREATE TRIGGER update_discharge_template_shares_updated_at
 ### Trigger Testing
 
 **Verify trigger functionality:**
+
 ```sql
 -- Insert a share
 INSERT INTO soap_template_shares (template_id, shared_with_user_id)
@@ -462,12 +483,14 @@ WHERE template_id = 'template-uuid';
 ## Data Migration Considerations
 
 ### Existing Data
+
 - No existing data migration required
 - All tables are new junction tables
 - Existing templates and cases remain unchanged
 - No data loss or transformation needed
 
 ### Backward Compatibility
+
 - Old queries continue to work
 - Apps without sharing support see only owned resources
 - Additive changes only; no breaking changes
@@ -475,19 +498,23 @@ WHERE template_id = 'template-uuid';
 ### Future Schema Evolution
 
 **Potential Enhancements:**
+
 1. **Permission Levels:**
+
    ```sql
    ALTER TABLE soap_template_shares
    ADD COLUMN permission_level VARCHAR(20) DEFAULT 'read';
    ```
 
 2. **Expiration Dates:**
+
    ```sql
    ALTER TABLE soap_template_shares
    ADD COLUMN expires_at TIMESTAMPTZ;
    ```
 
 3. **Share Metadata:**
+
    ```sql
    ALTER TABLE soap_template_shares
    ADD COLUMN share_message TEXT,
@@ -509,6 +536,7 @@ WHERE template_id = 'template-uuid';
 ### Expected Query Performance
 
 **Single Template Lookup (with shares):**
+
 ```sql
 EXPLAIN ANALYZE
 SELECT t.* FROM temp_soap_templates t
@@ -522,9 +550,11 @@ AND (
     )
 );
 ```
+
 **Expected:** < 5ms with proper indexes
 
 **All Templates for User (with shares):**
+
 ```sql
 EXPLAIN ANALYZE
 SELECT t.* FROM temp_soap_templates t
@@ -534,6 +564,7 @@ SELECT t.* FROM temp_soap_templates t
 JOIN soap_template_shares s ON t.id = s.template_id
 WHERE s.shared_with_user_id = auth.uid();
 ```
+
 **Expected:** < 50ms for typical user (< 100 templates)
 
 ### Optimization Tips
@@ -549,6 +580,7 @@ WHERE s.shared_with_user_id = auth.uid();
 The database schema changes for ODIS-134 and ODIS-135 follow a clean, scalable design pattern:
 
 **Strengths:**
+
 - ✅ Proper foreign key constraints with cascade deletion
 - ✅ Performance indexes on all foreign keys
 - ✅ Unique constraints prevent duplicate shares
@@ -557,6 +589,7 @@ The database schema changes for ODIS-134 and ODIS-135 follow a clean, scalable d
 - ✅ Backward compatible with existing data
 
 **Best Practices Followed:**
+
 - UUID primary keys for distributed systems
 - TIMESTAMPTZ for timezone-aware timestamps
 - Normalized junction table design
@@ -564,6 +597,7 @@ The database schema changes for ODIS-134 and ODIS-135 follow a clean, scalable d
 - Defensive constraint usage
 
 **Recommendations:**
+
 - Monitor index performance as data grows
 - Consider partitioning if share volumes exceed millions
 - Implement regular VACUUM and ANALYZE maintenance

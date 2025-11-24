@@ -4,6 +4,7 @@
 **Features:** Template Sharing (ODIS-134) & Case Sharing (ODIS-135)
 
 ## Table of Contents
+
 - [Overview](#overview)
 - [Row Level Security Policies](#row-level-security-policies)
 - [Migration Security](#migration-security)
@@ -15,6 +16,7 @@
 ## Overview
 
 Both ODIS-134 and ODIS-135 implement comprehensive security measures to ensure:
+
 1. **Data Privacy:** Users can only access resources they own or are explicitly shared with them
 2. **Access Control:** Fine-grained permissions for sharing operations
 3. **Audit Trail:** Complete tracking of sharing activities
@@ -52,15 +54,18 @@ CREATE POLICY "Users can read their own template shares"
 ```
 
 **Purpose:** Allow users to see:
+
 - Shares they created (for templates they own)
 - Shares where they are the recipient
 
 **Security Guarantees:**
+
 - Template owners can see all shares of their templates
 - Recipients can see shares granted to them
 - Users cannot see shares between other users
 
 **Attack Prevention:**
+
 - ✅ Prevents enumeration of other users' shares
 - ✅ Prevents discovery of templates you don't have access to
 - ✅ Prevents relationship mapping between users
@@ -83,11 +88,13 @@ CREATE POLICY "Template owners can create shares"
 **Purpose:** Only template owners can create shares
 
 **Security Guarantees:**
+
 - Users can only share their own templates
 - Cannot share templates owned by others
 - Cannot share templates shared with them (unless they own them)
 
 **Attack Prevention:**
+
 - ✅ Prevents unauthorized sharing of others' templates
 - ✅ Prevents privilege escalation
 - ✅ Prevents share flooding attacks
@@ -110,11 +117,13 @@ CREATE POLICY "Template owners can delete shares"
 **Purpose:** Only template owners can revoke shares
 
 **Security Guarantees:**
+
 - Users can revoke access to their templates
 - Recipients cannot delete shares (only owners can revoke)
 - Cannot delete shares of others' templates
 
 **Attack Prevention:**
+
 - ✅ Prevents denial-of-service by deleting others' shares
 - ✅ Ensures owners maintain control of their resources
 - ✅ Prevents unauthorized access revocation
@@ -124,6 +133,7 @@ CREATE POLICY "Template owners can delete shares"
 **Identical Structure:** The discharge template sharing table has the same three policies with identical logic, just referencing `temp_discharge_summary_templates` instead.
 
 **Policy Names:**
+
 1. "Users can read their own template shares"
 2. "Template owners can create shares"
 3. "Template owners can delete shares"
@@ -135,6 +145,7 @@ CREATE POLICY "Template owners can delete shares"
 #### temp_soap_templates - Updated SELECT Policy
 
 **Old Policy (Implicit):**
+
 ```sql
 -- Likely: Users can only read their own templates
 CREATE POLICY "Users can read own templates"
@@ -144,6 +155,7 @@ CREATE POLICY "Users can read own templates"
 ```
 
 **New Policy:**
+
 ```sql
 DROP POLICY IF EXISTS "Users can read shared soap templates"
     ON public.temp_soap_templates;
@@ -163,11 +175,13 @@ CREATE POLICY "Users can read shared soap templates"
 ```
 
 **Changes:**
+
 - **Added:** Shared template access via junction table check
 - **Preserved:** Original owner access
 - **Impact:** Users can now read templates shared with them
 
 **Security Analysis:**
+
 - ✅ Owner access unchanged
 - ✅ Shared access requires explicit share record
 - ✅ Cannot bypass sharing by guessing template IDs
@@ -202,6 +216,7 @@ Based on the template sharing pattern, case sharing likely implements similar po
 #### case_shares Policies (Expected)
 
 **1. SELECT Policy:**
+
 ```sql
 CREATE POLICY "Users can read their own case shares"
     ON public.case_shares
@@ -218,6 +233,7 @@ CREATE POLICY "Users can read their own case shares"
 ```
 
 **2. INSERT Policy:**
+
 ```sql
 CREATE POLICY "Case owners can create shares"
     ON public.case_shares
@@ -232,6 +248,7 @@ CREATE POLICY "Case owners can create shares"
 ```
 
 **3. DELETE Policy:**
+
 ```sql
 CREATE POLICY "Case owners can delete shares"
     ON public.case_shares
@@ -276,6 +293,7 @@ SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
 **Security Issues:**
+
 - ❌ Credentials in version control
 - ❌ Visible in git history
 - ❌ Accessible to anyone with repo access
@@ -298,6 +316,7 @@ fi
 ```
 
 **Security Benefits:**
+
 - ✅ No credentials in version control
 - ✅ Different keys per environment (dev/staging/prod)
 - ✅ Key rotation without code changes
@@ -350,6 +369,7 @@ execute_sql() {
 ```
 
 **Security Features:**
+
 - ✅ No credentials logged or displayed
 - ✅ Error responses don't expose sensitive data
 - ✅ HTTPS enforcement
@@ -378,25 +398,25 @@ Access Granted/Denied
 
 #### Template Sharing Permissions
 
-| Action | Owner | Recipient | Other User |
-|--------|-------|-----------|------------|
-| Read Template | ✅ | ✅ | ❌ |
-| Update Template | ✅ | ❌ | ❌ |
-| Delete Template | ✅ | ❌ | ❌ |
-| Create Share | ✅ | ❌ | ❌ |
-| Read Share | ✅ | ✅ | ❌ |
-| Delete Share | ✅ | ❌ | ❌ |
+| Action          | Owner | Recipient | Other User |
+| --------------- | ----- | --------- | ---------- |
+| Read Template   | ✅    | ✅        | ❌         |
+| Update Template | ✅    | ❌        | ❌         |
+| Delete Template | ✅    | ❌        | ❌         |
+| Create Share    | ✅    | ❌        | ❌         |
+| Read Share      | ✅    | ✅        | ❌         |
+| Delete Share    | ✅    | ❌        | ❌         |
 
 #### Case Sharing Permissions (Expected)
 
-| Action | Owner | Recipient | Other User |
-|--------|-------|-----------|------------|
-| Read Case | ✅ | ✅ | ❌ |
-| Update Case | ✅ | ❌ | ❌ |
-| Delete Case | ✅ | ❌ | ❌ |
-| Create Share | ✅ | ❌ | ❌ |
-| Read Share | ✅ | ✅ | ❌ |
-| Delete Share | ✅ | ❌ | ❌ |
+| Action       | Owner | Recipient | Other User |
+| ------------ | ----- | --------- | ---------- |
+| Read Case    | ✅    | ✅        | ❌         |
+| Update Case  | ✅    | ❌        | ❌         |
+| Delete Case  | ✅    | ❌        | ❌         |
+| Create Share | ✅    | ❌        | ❌         |
+| Read Share   | ✅    | ✅        | ❌         |
+| Delete Share | ✅    | ❌        | ❌         |
 
 ### Permission Escalation Prevention
 
@@ -409,6 +429,7 @@ VALUES ('template-owned-by-alice', 'bob-uuid');
 ```
 
 **RLS Policy Evaluation:**
+
 ```sql
 WITH CHECK (
     EXISTS (
@@ -431,6 +452,7 @@ WITH CHECK (
 **Guarantee:** Users cannot discover or access resources they shouldn't see
 
 **Mechanisms:**
+
 1. **RLS Policies:** Database-level enforcement
 2. **Explicit Sharing:** Access granted via explicit share records only
 3. **No Enumeration:** Cannot list all templates/cases
@@ -439,11 +461,13 @@ WITH CHECK (
 ### Sharing Metadata Privacy
 
 **What recipients can see:**
+
 - ✅ Template/case content (if shared)
 - ✅ Their own share record
 - ✅ When they received access (created_at)
 
 **What recipients CANNOT see:**
+
 - ❌ Other users who have access
 - ❌ Full list of owner's templates/cases
 - ❌ Owner's other sharing relationships
@@ -452,17 +476,20 @@ WITH CHECK (
 ### Deletion and Revocation
 
 **Cascade Deletion:**
+
 ```sql
 template_id UUID NOT NULL REFERENCES public.temp_soap_templates(id) ON DELETE CASCADE
 shared_with_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE
 ```
 
 **Scenarios:**
+
 1. **Template Deleted:** All shares automatically deleted
 2. **User Deleted:** All shares to/from that user deleted
 3. **Share Deleted:** Access immediately revoked
 
 **Privacy Implications:**
+
 - ✅ No orphaned shares
 - ✅ No lingering access after deletion
 - ✅ Clean audit trail
@@ -473,6 +500,7 @@ shared_with_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE
 ### RLS Policy Testing
 
 #### Test 1: Owner Can Read Own Templates
+
 ```sql
 -- As User A
 SELECT * FROM temp_soap_templates WHERE id = 'template-a-owns';
@@ -484,6 +512,7 @@ SELECT * FROM temp_soap_templates WHERE id = 'template-a-owns';
 ```
 
 #### Test 2: Recipient Can Read Shared Templates
+
 ```sql
 -- As User A (owner), create share
 INSERT INTO soap_template_shares (template_id, shared_with_user_id)
@@ -496,6 +525,7 @@ SELECT * FROM temp_soap_templates WHERE id = 'template-a-owns';
 ```
 
 #### Test 3: Non-Recipient Cannot Read Templates
+
 ```sql
 -- As User C (no share)
 SELECT * FROM temp_soap_templates WHERE id = 'template-a-owns';
@@ -503,6 +533,7 @@ SELECT * FROM temp_soap_templates WHERE id = 'template-a-owns';
 ```
 
 #### Test 4: Non-Owner Cannot Create Shares
+
 ```sql
 -- As User B (not owner)
 INSERT INTO soap_template_shares (template_id, shared_with_user_id)
@@ -511,6 +542,7 @@ VALUES ('template-a-owns', 'user-c-uuid');
 ```
 
 #### Test 5: Non-Owner Cannot Delete Shares
+
 ```sql
 -- As User B (recipient, not owner)
 DELETE FROM soap_template_shares
@@ -519,6 +551,7 @@ WHERE template_id = 'template-a-owns' AND shared_with_user_id = 'user-b-uuid';
 ```
 
 #### Test 6: Owner Can Delete Shares
+
 ```sql
 -- As User A (owner)
 DELETE FROM soap_template_shares
@@ -533,6 +566,7 @@ SELECT * FROM temp_soap_templates WHERE id = 'template-a-owns';
 ### SQL Injection Testing
 
 **RLS policies use parameterized queries via Supabase:**
+
 ```sql
 -- Attempt SQL injection
 template_id = "'; DROP TABLE soap_template_shares; --"
@@ -546,6 +580,7 @@ WHERE t.id = $1  -- $1 = "'; DROP TABLE soap_template_shares; --"
 ### Enumeration Attack Testing
 
 **Attempt to enumerate all templates:**
+
 ```sql
 -- As User B
 SELECT * FROM temp_soap_templates;
@@ -558,6 +593,7 @@ SELECT * FROM temp_soap_templates;
 ### Privilege Escalation Testing
 
 **Attempt to escalate privileges:**
+
 ```sql
 -- Attempt 1: Share template not owned
 INSERT INTO soap_template_shares (template_id, shared_with_user_id)
@@ -581,6 +617,7 @@ WHERE template_id = 'not-my-template';
 ### HIPAA Compliance
 
 **Relevant Requirements:**
+
 1. **Access Control:** ✅ RLS enforces minimum necessary access
 2. **Audit Trail:** ✅ created_at and updated_at track all sharing
 3. **User Authentication:** ✅ Supabase Auth with JWT tokens
@@ -588,6 +625,7 @@ WHERE template_id = 'not-my-template';
 5. **Encryption at Rest:** ✅ Supabase provides database encryption
 
 **Case Sharing HIPAA Implications:**
+
 - Medical case data may contain PHI (Protected Health Information)
 - Sharing must be logged and auditable
 - Access must be revocable
@@ -597,6 +635,7 @@ WHERE template_id = 'not-my-template';
 ### GDPR Compliance
 
 **Relevant Requirements:**
+
 1. **Right to Access:** ✅ Users can query their shares
 2. **Right to Erasure:** ✅ CASCADE DELETE removes all shares
 3. **Data Minimization:** ✅ Only necessary fields stored
@@ -604,6 +643,7 @@ WHERE template_id = 'not-my-template';
 5. **Accountability:** ✅ Audit trail via timestamps
 
 **Personal Data Handled:**
+
 - `shared_with_user_id` - References auth.users (personal data)
 - Audit trail timestamps
 - All data deletable via cascade
@@ -611,6 +651,7 @@ WHERE template_id = 'not-my-template';
 ### SOC 2 Compliance
 
 **Control Considerations:**
+
 1. **Access Control:** ✅ RLS policies enforce least privilege
 2. **Change Management:** ✅ Migration scripts versioned in git
 3. **Monitoring:** ⚠️ Consider adding access logging
@@ -620,6 +661,7 @@ WHERE template_id = 'not-my-template';
 ## Security Recommendations
 
 ### Immediate Actions
+
 - ✅ Environment variables for credentials (DONE)
 - ✅ RLS policies on all tables (DONE)
 - ✅ Cascade deletion configured (DONE)
@@ -627,6 +669,7 @@ WHERE template_id = 'not-my-template';
 ### Future Enhancements
 
 1. **Access Logging:**
+
    ```sql
    CREATE TABLE share_access_log (
        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -638,6 +681,7 @@ WHERE template_id = 'not-my-template';
    ```
 
 2. **Share Expiration:**
+
    ```sql
    ALTER TABLE soap_template_shares
    ADD COLUMN expires_at TIMESTAMPTZ;
@@ -665,6 +709,7 @@ WHERE template_id = 'not-my-template';
 ### Monitoring & Alerting
 
 **Recommended Metrics:**
+
 1. Share creation rate per user
 2. Failed authorization attempts
 3. Unusual access patterns
@@ -672,6 +717,7 @@ WHERE template_id = 'not-my-template';
 5. Shares to deleted users (shouldn't happen with CASCADE)
 
 **Alert Thresholds:**
+
 - \> 100 shares created per hour by single user
 - \> 50 failed auth attempts in 5 minutes
 - Rapid share creation/deletion cycles
@@ -680,6 +726,7 @@ WHERE template_id = 'not-my-template';
 ## Summary
 
 ### Security Strengths
+
 - ✅ Comprehensive RLS policies
 - ✅ No credentials in code
 - ✅ Least privilege access
@@ -690,14 +737,17 @@ WHERE template_id = 'not-my-template';
 - ✅ Privilege escalation prevention
 
 ### Security Posture
+
 **Overall Rating:** Strong ⭐⭐⭐⭐⭐
 
 **Compliance:**
+
 - HIPAA: ✅ Compliant
 - GDPR: ✅ Compliant
 - SOC 2: ✅ Mostly compliant (add access logging)
 
 **Risk Assessment:**
+
 - **Credential Exposure:** Low (environment variables)
 - **Unauthorized Access:** Very Low (RLS)
 - **Data Breach:** Very Low (RLS + encryption)
@@ -705,6 +755,7 @@ WHERE template_id = 'not-my-template';
 - **Denial of Service:** Medium (add rate limiting)
 
 **Recommendations:**
+
 1. Add access logging for compliance
 2. Implement rate limiting
 3. Monitor sharing patterns

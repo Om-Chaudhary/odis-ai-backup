@@ -161,6 +161,7 @@ Voice call management system using VAPI SDK for automated post-appointment follo
 ### Architecture Overview
 
 The VAPI integration consists of:
+
 1. **Scheduling System**: Schedule calls for future execution using QStash
 2. **Execution System**: Make outbound calls via VAPI
 3. **Webhook System**: Receive real-time call status updates
@@ -198,12 +199,14 @@ The VAPI integration consists of:
 ### Key Files
 
 **API Routes**:
+
 - `src/app/api/calls/schedule/route.ts` - Schedule new calls with QStash
 - `src/app/api/calls/execute/route.ts` - Execute scheduled calls via VAPI
 - `src/app/api/webhooks/vapi/route.ts` - Receive VAPI webhook events
 - `src/app/api/webhooks/execute-call/route.ts` - QStash webhook for execution
 
 **Core Libraries**:
+
 - `src/lib/vapi/client.ts` - VAPI client wrapper with type safety
 - `src/lib/vapi/validators.ts` - Zod schemas for input validation
 - `src/lib/vapi/types.ts` - TypeScript type definitions
@@ -212,6 +215,7 @@ The VAPI integration consists of:
 - `src/lib/idexx/transformer.ts` - IDEXX data transformation
 
 **UI Components**:
+
 - `src/components/dashboard/quick-call-dialog.tsx` - Quick call interface
 
 ### Call Flow
@@ -270,6 +274,7 @@ Variables are referenced in assistant prompts using `{{variable_name}}` syntax.
 ### Knowledge Base Structure
 
 Domain-specific knowledge organized by specialty in `src/lib/vapi/knowledge-base/`:
+
 - `behavioral.ts` - Behavioral issues and training
 - `cardiac.ts` - Heart conditions
 - `dental.ts` - Dental procedures and care
@@ -303,6 +308,7 @@ Handles date formatting, phone number formatting, and field mapping from IDEXX s
 ### Retry Logic
 
 Failed calls automatically retry with exponential backoff:
+
 - **Retry conditions**: dial-busy, dial-no-answer, voicemail
 - **Max retries**: 3 attempts
 - **Backoff**: 5, 10, 20 minutes
@@ -311,6 +317,7 @@ Failed calls automatically retry with exponential backoff:
 ### Auto-refresh Pattern
 
 The calls dashboard uses adaptive polling:
+
 - 5s interval when calls are in progress
 - 30s interval when all calls completed/failed
 - Pauses when browser tab hidden (Page Visibility API)
@@ -465,5 +472,6 @@ Currently no test suite exists. When adding tests:
 ## Documentation
 
 - **VAPI Integration**: See `VAPI_VARIABLES_IMPLEMENTATION.md` for dynamic variables setup
-- **VAPI Prompt**: See `VAPI_ASSISTANT_PROMPT.md` for assistant prompt configuration
+- **VAPI Prompt**: See `VAPI_SYSTEM_PROMPT.txt` for the complete assistant system prompt
+- **VAPI Variables**: See `VAPI_AI_EXTRACTION_VARIABLES.md` for all available dynamic variables (40+)
 - **Auto-refresh Architecture**: See `AUTO_REFRESH_ARCHITECTURE.md` for polling implementation details

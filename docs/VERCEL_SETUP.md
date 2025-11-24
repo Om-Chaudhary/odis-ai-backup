@@ -9,7 +9,7 @@ This guide shows how to configure environment variables in Vercel for the ODIS A
 You have one Vercel project that handles all environments through branch-based deployments:
 
 - **Development**: Deploys from `dev` branch
-- **Staging**: Deploys from `staging` branch  
+- **Staging**: Deploys from `staging` branch
 - **Production**: Deploys from `main` branch
 
 ### 2. Environment Variables Configuration
@@ -21,6 +21,7 @@ Configure environment variables with different scopes for each environment in yo
 **Project:** `odis-ai-web-dev`
 
 **Environment Variables:**
+
 ```bash
 # Database
 DATABASE_URL=postgresql://postgres.cfolejjpkgytbkfsavjv:LHCX4S11Mb6t03TxZseVLOwFG1Mh5774n3px@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true
@@ -43,6 +44,7 @@ NODE_ENV=development
 **Project:** `odis-ai-web-staging`
 
 **Environment Variables:**
+
 ```bash
 # Database
 DATABASE_URL=postgresql://postgres.zgfhxzvithljbfvzsrwv:jfVcunXHScBHgfrZEMytWaGGRpdwsAuW@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true
@@ -65,6 +67,7 @@ NODE_ENV=production
 **Project:** `odis-ai-web-prod`
 
 **Environment Variables:**
+
 ```bash
 # Database
 DATABASE_URL=postgresql://postgres.jjvjqjcitupulqiqnihy:qViDDEPopfieTQVIkQSEXxeyDipQtVbHskqu@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true
@@ -85,16 +88,19 @@ NODE_ENV=production
 ## 📋 Step-by-Step Vercel Setup
 
 ### 1. Install Vercel CLI (if not already installed)
+
 ```bash
 npm i -g vercel
 ```
 
 ### 2. Login to Vercel
+
 ```bash
 vercel login
 ```
 
 ### 3. Link Your Existing Project
+
 ```bash
 # In your project directory
 vercel link
@@ -111,6 +117,7 @@ vercel link
 You'll add each environment variable with different scopes (Development, Preview, Production):
 
 #### Add Development Environment Variables
+
 ```bash
 vercel env add DATABASE_URL
 # Paste: postgresql://postgres.cfolejjpkgytbkfsavjv:LHCX4S11Mb6t03TxZseVLOwFG1Mh5774n3px@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true
@@ -142,6 +149,7 @@ vercel env add NODE_ENV
 ```
 
 #### Add Staging Environment Variables
+
 ```bash
 vercel env add DATABASE_URL
 # Paste: postgresql://postgres.zgfhxzvithljbfvzsrwv:jfVcunXHScBHgfrZEMytWaGGRpdwsAuW@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true
@@ -173,6 +181,7 @@ vercel env add NODE_ENV
 ```
 
 #### Add Production Environment Variables
+
 ```bash
 vercel env add DATABASE_URL
 # Paste: postgresql://postgres.jjvjqjcitupulqiqnihy:qViDDEPopfieTQVIkQSEXxeyDipQtVbHskqu@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true
@@ -212,22 +221,23 @@ You can also configure environment variables through the Vercel dashboard:
 3. Go to Settings → Environment Variables
 4. Add each variable with the appropriate environment scope:
    - **Development**: For `dev` branch deployments
-   - **Preview**: For `staging` branch deployments  
+   - **Preview**: For `staging` branch deployments
    - **Production**: For `main` branch deployments
 
 ### Environment Variable Mapping
 
-| Variable | Development | Staging | Production |
-|----------|-------------|---------|------------|
-| `DATABASE_URL` | odisai-dev | odisai-staging | odisai-prod |
-| `NEXT_PUBLIC_SUPABASE_URL` | cfolejjpkgytbkfsavjv | zgfhxzvithljbfvzsrwv | jjvjqjcitupulqiqnihy |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | dev key | staging key | prod key |
-| `SUPABASE_SERVICE_ROLE_KEY` | dev key | staging key | prod key |
-| `NODE_ENV` | development | production | production |
+| Variable                        | Development          | Staging              | Production           |
+| ------------------------------- | -------------------- | -------------------- | -------------------- |
+| `DATABASE_URL`                  | odisai-dev           | odisai-staging       | odisai-prod          |
+| `NEXT_PUBLIC_SUPABASE_URL`      | cfolejjpkgytbkfsavjv | zgfhxzvithljbfvzsrwv | jjvjqjcitupulqiqnihy |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | dev key              | staging key          | prod key             |
+| `SUPABASE_SERVICE_ROLE_KEY`     | dev key              | staging key          | prod key             |
+| `NODE_ENV`                      | development          | production           | production           |
 
 ## 🚀 Deployment Workflow
 
 ### Development Deployment
+
 ```bash
 git checkout dev
 git push origin dev
@@ -235,6 +245,7 @@ git push origin dev
 ```
 
 ### Staging Deployment
+
 ```bash
 git checkout staging
 git merge dev
@@ -243,6 +254,7 @@ git push origin staging
 ```
 
 ### Production Deployment
+
 ```bash
 git checkout main
 git merge staging

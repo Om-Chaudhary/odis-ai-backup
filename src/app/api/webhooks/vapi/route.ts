@@ -224,7 +224,7 @@ async function handleStatusUpdate(
   supabase: Awaited<ReturnType<typeof createServiceClient>>,
   message: VapiWebhookPayload["message"],
 ) {
-  const call = message.call as VapiCallResponse;
+  const call = message.call!;
   if (!call?.id) {
     console.warn("[VAPI_WEBHOOK] status-update missing call data");
     return;
@@ -232,7 +232,7 @@ async function handleStatusUpdate(
 
   // Find the call in our database
   const { data: existingCall, error: findError } = await supabase
-    .from("vapi_calls")
+    .from("scheduled_discharge_calls")
     .select("id, metadata")
     .eq("vapi_call_id", call.id)
     .single();
@@ -256,7 +256,7 @@ async function handleStatusUpdate(
   }
 
   const { error: updateError } = await supabase
-    .from("vapi_calls")
+    .from("scheduled_discharge_calls")
     .update(updateData)
     .eq("id", existingCall.id);
 
@@ -280,7 +280,7 @@ async function handleEndOfCallReport(
   supabase: Awaited<ReturnType<typeof createServiceClient>>,
   message: VapiWebhookPayload["message"],
 ) {
-  const call = message.call as VapiCallResponse;
+  const call = message.call!;
   if (!call?.id) {
     console.warn("[VAPI_WEBHOOK] end-of-call-report missing call data");
     return;
@@ -288,7 +288,7 @@ async function handleEndOfCallReport(
 
   // Find the call in our database
   const { data: existingCall, error: findError } = await supabase
-    .from("vapi_calls")
+    .from("scheduled_discharge_calls")
     .select("id, metadata")
     .eq("vapi_call_id", call.id)
     .single();
@@ -416,7 +416,7 @@ async function handleEndOfCallReport(
 
   // Update the call in database
   const { error: updateError } = await supabase
-    .from("vapi_calls")
+    .from("scheduled_discharge_calls")
     .update(updateData)
     .eq("id", existingCall.id);
 
@@ -435,7 +435,7 @@ async function handleHangup(
   supabase: Awaited<ReturnType<typeof createServiceClient>>,
   message: VapiWebhookPayload["message"],
 ) {
-  const call = message.call as VapiCallResponse;
+  const call = message.call!;
   if (!call?.id) {
     console.warn("[VAPI_WEBHOOK] hang missing call data");
     return;
@@ -443,7 +443,7 @@ async function handleHangup(
 
   // Find the call in our database
   const { data: existingCall, error: findError } = await supabase
-    .from("vapi_calls")
+    .from("scheduled_discharge_calls")
     .select("id")
     .eq("vapi_call_id", call.id)
     .single();
@@ -458,7 +458,7 @@ async function handleHangup(
 
   // Update call to mark as ended
   const { error: updateError } = await supabase
-    .from("vapi_calls")
+    .from("scheduled_discharge_calls")
     .update({
       ended_reason: call.endedReason || "user-hangup",
       ended_at: call.endedAt || new Date().toISOString(),

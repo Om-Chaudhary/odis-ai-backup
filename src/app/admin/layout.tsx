@@ -40,18 +40,12 @@ export default async function AdminLayout({
 
   return (
     <DarkModeWrapper>
-      <div className="relative flex min-h-screen overflow-hidden bg-teal-50/60">
-        {/* Background Elements */}
-        <div className="pointer-events-none absolute inset-0">
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-teal-50/50 to-cyan-100/40" />
-        </div>
-
+      <div className="relative flex min-h-screen overflow-hidden bg-gradient-to-br from-cyan-50 via-teal-50 to-emerald-50">
         {/* Sidebar */}
-        <aside className="relative z-10 w-64 border-r border-slate-200 bg-white/90 shadow-xl backdrop-blur-md">
+        <aside className="relative z-10 w-64 border-r border-slate-200 bg-white shadow-lg">
           <div className="flex h-full flex-col">
             {/* Logo/Header */}
-            <div className="border-b border-slate-200 bg-gradient-to-r from-teal-50/50 to-cyan-100/40 p-6">
+            <div className="border-b border-slate-200 bg-gradient-to-br from-teal-50 to-cyan-50 p-6">
               <h1 className="font-display text-xl font-bold text-slate-800">
                 Admin Panel
               </h1>
@@ -105,11 +99,11 @@ export default async function AdminLayout({
             </nav>
 
             {/* Footer */}
-            <div className="space-y-2 border-t border-slate-200 bg-gradient-to-r from-teal-50/30 to-cyan-100/20 p-4">
+            <div className="space-y-2 border-t border-slate-200 bg-teal-50/50 p-4">
               <Link href="/dashboard">
                 <Button
                   variant="outline"
-                  className="w-full border-slate-200 bg-white/90 text-slate-700 transition-all hover:border-teal-500 hover:bg-teal-50 hover:text-teal-600 hover:shadow-md"
+                  className="w-full border-slate-200 bg-white text-slate-700 transition-all hover:border-teal-600 hover:bg-teal-50 hover:text-teal-700 hover:shadow-md"
                 >
                   Back to Dashboard
                 </Button>
@@ -152,7 +146,7 @@ function NavLink({
   return (
     <Link
       href={href}
-      className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 transition-all hover:bg-teal-50 hover:text-teal-600 ${className}`}
+      className={`group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 transition-all hover:bg-teal-50 hover:text-teal-700 ${className}`}
     >
       <span className="transition-transform group-hover:scale-110">{icon}</span>
       {children}

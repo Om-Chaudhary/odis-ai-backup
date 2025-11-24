@@ -517,6 +517,163 @@ export type Database = {
           },
         ]
       }
+      scheduled_discharge_calls: {
+        Row: {
+          assistant_id: string | null
+          call_analysis: Json | null
+          case_id: string | null
+          condition_category: string | null
+          cost: number | null
+          created_at: string
+          customer_phone: string | null
+          duration_seconds: number | null
+          dynamic_variables: Json
+          ended_at: string | null
+          ended_reason: string | null
+          id: string
+          knowledge_base_used: string | null
+          metadata: Json | null
+          phone_number_id: string | null
+          qstash_message_id: string | null
+          recording_url: string | null
+          scheduled_for: string | null
+          started_at: string | null
+          status: string | null
+          transcript: string | null
+          transcript_messages: Json | null
+          updated_at: string
+          user_id: string
+          vapi_call_id: string | null
+        }
+        Insert: {
+          assistant_id?: string | null
+          call_analysis?: Json | null
+          case_id?: string | null
+          condition_category?: string | null
+          cost?: number | null
+          created_at?: string
+          customer_phone?: string | null
+          duration_seconds?: number | null
+          dynamic_variables: Json
+          ended_at?: string | null
+          ended_reason?: string | null
+          id?: string
+          knowledge_base_used?: string | null
+          metadata?: Json | null
+          phone_number_id?: string | null
+          qstash_message_id?: string | null
+          recording_url?: string | null
+          scheduled_for?: string | null
+          started_at?: string | null
+          status?: string | null
+          transcript?: string | null
+          transcript_messages?: Json | null
+          updated_at?: string
+          user_id: string
+          vapi_call_id?: string | null
+        }
+        Update: {
+          assistant_id?: string | null
+          call_analysis?: Json | null
+          case_id?: string | null
+          condition_category?: string | null
+          cost?: number | null
+          created_at?: string
+          customer_phone?: string | null
+          duration_seconds?: number | null
+          dynamic_variables?: Json
+          ended_at?: string | null
+          ended_reason?: string | null
+          id?: string
+          knowledge_base_used?: string | null
+          metadata?: Json | null
+          phone_number_id?: string | null
+          qstash_message_id?: string | null
+          recording_url?: string | null
+          scheduled_for?: string | null
+          started_at?: string | null
+          status?: string | null
+          transcript?: string | null
+          transcript_messages?: Json | null
+          updated_at?: string
+          user_id?: string
+          vapi_call_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_discharge_calls_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scheduled_discharge_emails: {
+        Row: {
+          case_id: string | null
+          created_at: string
+          html_content: string
+          id: string
+          metadata: Json | null
+          qstash_message_id: string | null
+          recipient_email: string
+          recipient_name: string | null
+          resend_email_id: string | null
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+          subject: string
+          text_content: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          case_id?: string | null
+          created_at?: string
+          html_content: string
+          id?: string
+          metadata?: Json | null
+          qstash_message_id?: string | null
+          recipient_email: string
+          recipient_name?: string | null
+          resend_email_id?: string | null
+          scheduled_for: string
+          sent_at?: string | null
+          status?: string
+          subject: string
+          text_content?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          case_id?: string | null
+          created_at?: string
+          html_content?: string
+          id?: string
+          metadata?: Json | null
+          qstash_message_id?: string | null
+          recipient_email?: string
+          recipient_name?: string | null
+          resend_email_id?: string | null
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          text_content?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_discharge_emails_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       soap_notes: {
         Row: {
           assessment: string | null
@@ -884,6 +1041,87 @@ export type Database = {
             columns: ["default_discharge_template_id"]
             isOneToOne: false
             referencedRelation: "temp_discharge_summary_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vital_signs: {
+        Row: {
+          case_id: string | null
+          created_at: string | null
+          diastolic: number | null
+          extracted_from: string | null
+          id: string
+          measured_at: string | null
+          metadata: Json | null
+          notes: string | null
+          pulse: number | null
+          respiration: number | null
+          soap_note_id: string | null
+          source: string | null
+          systolic: number | null
+          temperature: number | null
+          temperature_unit: string | null
+          updated_at: string | null
+          user_id: string
+          weight: number | null
+          weight_unit: string | null
+        }
+        Insert: {
+          case_id?: string | null
+          created_at?: string | null
+          diastolic?: number | null
+          extracted_from?: string | null
+          id?: string
+          measured_at?: string | null
+          metadata?: Json | null
+          notes?: string | null
+          pulse?: number | null
+          respiration?: number | null
+          soap_note_id?: string | null
+          source?: string | null
+          systolic?: number | null
+          temperature?: number | null
+          temperature_unit?: string | null
+          updated_at?: string | null
+          user_id: string
+          weight?: number | null
+          weight_unit?: string | null
+        }
+        Update: {
+          case_id?: string | null
+          created_at?: string | null
+          diastolic?: number | null
+          extracted_from?: string | null
+          id?: string
+          measured_at?: string | null
+          metadata?: Json | null
+          notes?: string | null
+          pulse?: number | null
+          respiration?: number | null
+          soap_note_id?: string | null
+          source?: string | null
+          systolic?: number | null
+          temperature?: number | null
+          temperature_unit?: string | null
+          updated_at?: string | null
+          user_id?: string
+          weight?: number | null
+          weight_unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vital_signs_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vital_signs_soap_note_id_fkey"
+            columns: ["soap_note_id"]
+            isOneToOne: false
+            referencedRelation: "soap_notes"
             referencedColumns: ["id"]
           },
         ]

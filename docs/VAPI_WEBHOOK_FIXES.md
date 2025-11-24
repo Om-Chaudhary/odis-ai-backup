@@ -1,6 +1,7 @@
 # VAPI Webhook Fixes - Summary
 
 ## Overview
+
 This document summarizes the fixes applied to the VAPI webhook system and build errors in the OdisAI web application.
 
 ## Changes Made
@@ -49,6 +50,7 @@ async function verifySignature(
 ```
 
 **Features**:
+
 - ✅ HMAC-SHA256 signature generation and comparison
 - ✅ Timing-safe comparison to prevent timing attacks
 - ✅ Graceful development mode (allows unsigned requests if `VAPI_WEBHOOK_SECRET` is not set)
@@ -80,6 +82,7 @@ async function handleHangup(
 ```
 
 **Benefits**:
+
 - ✅ Full type safety in webhook handlers
 - ✅ Better IDE autocomplete and error detection
 - ✅ Eliminates unsafe `any` types
@@ -101,6 +104,7 @@ ON vapi_calls USING gin(metadata);
 ```
 
 **Use Cases**:
+
 - Retry tracking (`retry_count`, `max_retries`, `next_retry_at`)
 - QStash message IDs for scheduled calls
 - Last retry reason and failure tracking
@@ -297,6 +301,7 @@ CREATE INDEX idx_vapi_calls_metadata ON vapi_calls USING gin(metadata);
 **Cause**: Signature mismatch between VAPI and your server
 
 **Solutions**:
+
 1. Verify `VAPI_WEBHOOK_SECRET` matches VAPI dashboard configuration
 2. Check that VAPI is using SHA256 algorithm
 3. Ensure signature header is `x-vapi-signature`
@@ -307,6 +312,7 @@ CREATE INDEX idx_vapi_calls_metadata ON vapi_calls USING gin(metadata);
 **Cause**: QStash not configured or metadata not storing retry info
 
 **Solutions**:
+
 1. Verify `QSTASH_TOKEN` is set and valid
 2. Check `metadata` column exists in `vapi_calls` table
 3. Review logs for QStash scheduling errors
@@ -317,6 +323,7 @@ CREATE INDEX idx_vapi_calls_metadata ON vapi_calls USING gin(metadata);
 **Cause**: Call not found in database or RLS policy blocking update
 
 **Solutions**:
+
 1. Verify `vapi_call_id` is stored correctly during call creation
 2. Check webhook is using `createServiceClient` (bypasses RLS)
 3. Review Supabase logs for database errors
@@ -333,6 +340,7 @@ CREATE INDEX idx_vapi_calls_metadata ON vapi_calls USING gin(metadata);
 ## Latest Fix: Table Name Mismatch (2025-11-12)
 
 ### Problem
+
 The VAPI scheduled call system was failing with 404 errors when QStash tried to execute scheduled calls. The error logs showed:
 
 ```
@@ -348,6 +356,7 @@ The VAPI scheduled call system was failing with 404 errors when QStash tried to 
 ```
 
 ### Root Cause
+
 During the migration from Retell AI to VAPI, the table references were not updated consistently:
 
 1. **Schedule Endpoint** (`/api/calls/schedule`) was inserting into `retell_calls` table ❌
@@ -366,6 +375,7 @@ During the migration from Retell AI to VAPI, the table references were not updat
 Updated `/src/app/api/calls/schedule/route.ts` to use the correct `vapi_calls` table and field mappings:
 
 **Changes:**
+
 1. Changed table from `retell_calls` to `vapi_calls`
 2. Updated field mappings:
    - Removed `retell_call_id` (not needed for queued calls)
@@ -380,6 +390,7 @@ Updated `/src/app/api/calls/schedule/route.ts` to use the correct `vapi_calls` t
 3. Removed unused `formatPhoneNumber` function
 
 **Before:**
+
 ```typescript
 await supabase.from("retell_calls").insert({
   retell_call_id: `scheduled_${Date.now()}_${Math.random().toString(36).substring(7)}`,
@@ -390,10 +401,11 @@ await supabase.from("retell_calls").insert({
   status: "scheduled",
   created_by: user.id,
   // ...
-})
+});
 ```
 
 **After:**
+
 ```typescript
 await supabase.from("vapi_calls").insert({
   user_id: user.id,
@@ -410,7 +422,7 @@ await supabase.from("vapi_calls").insert({
     max_retries: 3,
     ...(body.metadata ?? {}),
   },
-})
+});
 ```
 
 ### Testing the Fix
@@ -418,6 +430,7 @@ await supabase.from("vapi_calls").insert({
 To test the fix:
 
 1. Schedule a call via the API:
+
    ```bash
    curl -X POST https://odisai.net/api/calls/schedule \
      -H "Content-Type: application/json" \
@@ -431,6 +444,7 @@ To test the fix:
    ```
 
 2. Check that the call record is created in `vapi_calls` table:
+
    ```sql
    SELECT id, customer_phone, status, scheduled_for
    FROM vapi_calls
@@ -462,6 +476,7 @@ NEXT_PUBLIC_SITE_URL="https://odisai.net"
 ## Changelog
 
 ### 2025-11-12
+
 - 🐛 **CRITICAL FIX**: Fixed table name mismatch in schedule endpoint (retell_calls → vapi_calls)
 - 🐛 Updated field mappings to match VAPI schema (agent_id → assistant_id, etc.)
 - 🧹 Removed unused `formatPhoneNumber` function

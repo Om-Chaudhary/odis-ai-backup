@@ -4,6 +4,7 @@
 **Target Audience:** DevOps Engineers, Database Administrators, Backend Developers
 
 ## Table of Contents
+
 - [Overview](#overview)
 - [Prerequisites](#prerequisites)
 - [Pre-Migration Checklist](#pre-migration-checklist)
@@ -19,6 +20,7 @@
 This guide provides step-by-step instructions for migrating your Supabase database to support template sharing (ODIS-134) and case sharing (ODIS-135) features.
 
 ### Migration Type
+
 - **Schema Migration:** Additive only (no data modification)
 - **Breaking Changes:** None
 - **Downtime Required:** No
@@ -27,6 +29,7 @@ This guide provides step-by-step instructions for migrating your Supabase databa
 ### What Gets Migrated
 
 **ODIS-134:**
+
 - 2 new junction tables (soap_template_shares, discharge_template_shares)
 - 4 new indexes
 - 6 new RLS policies
@@ -35,6 +38,7 @@ This guide provides step-by-step instructions for migrating your Supabase databa
 - 2 triggers
 
 **ODIS-135:**
+
 - Similar structure (exact schema TBD)
 - Expected: 1 new junction table (case_shares)
 - Expected: 2 new indexes
@@ -43,17 +47,20 @@ This guide provides step-by-step instructions for migrating your Supabase databa
 ## Prerequisites
 
 ### System Requirements
+
 - ✅ Supabase project (PostgreSQL 14+)
 - ✅ Bash shell (macOS, Linux, WSL on Windows)
 - ✅ curl installed
 - ✅ Network access to Supabase API
 
 ### Access Requirements
+
 - ✅ Supabase Service Role Key
 - ✅ Database admin permissions
 - ✅ Project admin access to Supabase Dashboard
 
 ### Backup Requirements
+
 - ✅ Recent database backup (< 24 hours old)
 - ✅ Backup verification completed
 - ✅ Rollback plan documented
@@ -63,12 +70,14 @@ This guide provides step-by-step instructions for migrating your Supabase databa
 ### 1. Create Database Backup
 
 **Via Supabase Dashboard:**
+
 1. Navigate to Database → Backups
 2. Click "Create Backup"
 3. Wait for backup completion
 4. Verify backup size and timestamp
 
 **Via CLI (if available):**
+
 ```bash
 supabase db dump -f backup_$(date +%Y%m%d_%H%M%S).sql
 ```
@@ -76,6 +85,7 @@ supabase db dump -f backup_$(date +%Y%m%d_%H%M%S).sql
 ### 2. Verify Existing Schema
 
 **Check required tables exist:**
+
 ```sql
 SELECT table_name
 FROM information_schema.tables
@@ -88,6 +98,7 @@ AND table_name IN (
 ```
 
 **Expected Output:**
+
 ```
            table_name
 ---------------------------------
@@ -114,17 +125,20 @@ AND tablename IN (
 ### 4. Obtain Service Role Key
 
 **Supabase Dashboard:**
+
 1. Navigate to Settings → API
 2. Locate "Service Role Key" (secret)
 3. Copy the key (starts with `eyJ...`)
 4. Store securely (do NOT commit to git)
 
 **Set Environment Variable:**
+
 ```bash
 export SUPABASE_SERVICE_ROLE_KEY='your-service-role-key-here'
 ```
 
 **Verify:**
+
 ```bash
 echo $SUPABASE_SERVICE_ROLE_KEY | wc -c
 # Should be > 200 characters
@@ -144,6 +158,7 @@ curl -s -I "$SUPABASE_URL" | head -n 1
 ### Step 1: Download Migration Script
 
 **From Repository:**
+
 ```bash
 cd /path/to/odis-ai-ios
 
@@ -157,11 +172,13 @@ chmod +x apply_template_sharing_migration.sh
 ### Step 2: Review Migration Script
 
 **Open and review:**
+
 ```bash
 cat apply_template_sharing_migration.sh | less
 ```
 
 **Verify:**
+
 - ✅ Correct Supabase URL
 - ✅ No hardcoded service role key
 - ✅ Uses environment variable
@@ -170,6 +187,7 @@ cat apply_template_sharing_migration.sh | less
 ### Step 3: Dry Run (Optional but Recommended)
 
 **Test environment variable:**
+
 ```bash
 # This should fail with helpful error
 unset SUPABASE_SERVICE_ROLE_KEY
@@ -183,11 +201,13 @@ export SUPABASE_SERVICE_ROLE_KEY='your-service-role-key-here'
 ### Step 4: Execute Migration
 
 **Run migration:**
+
 ```bash
 ./apply_template_sharing_migration.sh
 ```
 
 **Monitor Output:**
+
 ```
 =========================================
 Template Sharing Migration Script
@@ -215,6 +235,7 @@ Template sharing infrastructure is now ready
 ### Step 5: Verify Migration Success
 
 **Check tables created:**
+
 ```sql
 SELECT table_name
 FROM information_schema.tables
@@ -223,6 +244,7 @@ AND table_name LIKE '%_shares';
 ```
 
 **Expected Output:**
+
 ```
            table_name
 ---------------------------------
@@ -231,6 +253,7 @@ AND table_name LIKE '%_shares';
 ```
 
 **Check indexes:**
+
 ```sql
 SELECT tablename, indexname
 FROM pg_indexes
@@ -240,6 +263,7 @@ ORDER BY tablename, indexname;
 ```
 
 **Expected Output:**
+
 ```
          tablename          |                  indexname
 ----------------------------+---------------------------------------------
@@ -252,6 +276,7 @@ ORDER BY tablename, indexname;
 ```
 
 **Check RLS enabled:**
+
 ```sql
 SELECT tablename, rowsecurity
 FROM pg_tables
@@ -262,6 +287,7 @@ AND tablename LIKE '%_shares';
 **Expected:** All should show `rowsecurity = true`
 
 **Check policies:**
+
 ```sql
 SELECT schemaname, tablename, policyname
 FROM pg_policies
@@ -271,6 +297,7 @@ ORDER BY tablename, policyname;
 ```
 
 **Expected Output:**
+
 ```
  schemaname |         tablename          |           policyname
 ------------+----------------------------+--------------------------------
@@ -283,6 +310,7 @@ ORDER BY tablename, policyname;
 ```
 
 **Check triggers:**
+
 ```sql
 SELECT trigger_name, event_object_table
 FROM information_schema.triggers
@@ -291,6 +319,7 @@ AND event_object_table LIKE '%_shares';
 ```
 
 **Expected Output:**
+
 ```
               trigger_name               |     event_object_table
 -----------------------------------------+-----------------------------
@@ -309,6 +338,7 @@ AND event_object_table LIKE '%_shares';
 If migration script follows ODIS-134 pattern:
 
 **1. Obtain Script:**
+
 ```bash
 # Check if script exists
 ls -la apply_case_sharing_migration.sh
@@ -318,6 +348,7 @@ ls -la apply_case_sharing_migration.sh
 ```
 
 **2. Expected Script Structure:**
+
 ```bash
 #!/bin/bash
 SUPABASE_URL="https://nndjdbdnhnhxkasjgxqk.supabase.co"
@@ -330,6 +361,7 @@ SERVICE_ROLE_KEY="${SUPABASE_SERVICE_ROLE_KEY:-}"
 ```
 
 **3. Execute (when available):**
+
 ```bash
 export SUPABASE_SERVICE_ROLE_KEY='your-service-role-key-here'
 ./apply_case_sharing_migration.sh
@@ -340,6 +372,7 @@ export SUPABASE_SERVICE_ROLE_KEY='your-service-role-key-here'
 If script not available, apply migration via Supabase SQL Editor:
 
 **Create case_shares table:**
+
 ```sql
 -- Step 1: Create table
 CREATE TABLE IF NOT EXISTS public.case_shares (
@@ -438,6 +471,7 @@ GRANT USAGE ON SCHEMA public TO authenticated;
 ### Functional Testing
 
 **1. Test Share Creation:**
+
 ```sql
 -- As authenticated user, share a template you own
 INSERT INTO soap_template_shares (template_id, shared_with_user_id)
@@ -449,6 +483,7 @@ VALUES (
 ```
 
 **2. Test Share Reading:**
+
 ```sql
 -- As template owner
 SELECT * FROM soap_template_shares
@@ -462,6 +497,7 @@ WHERE id = 'your-template-uuid';
 ```
 
 **3. Test Share Deletion:**
+
 ```sql
 -- As template owner
 DELETE FROM soap_template_shares
@@ -476,6 +512,7 @@ WHERE id = 'your-template-uuid';
 ```
 
 **4. Test RLS Protection:**
+
 ```sql
 -- As user who doesn't own the template
 INSERT INTO soap_template_shares (template_id, shared_with_user_id)
@@ -489,6 +526,7 @@ VALUES (
 ### Performance Testing
 
 **1. Index Performance:**
+
 ```sql
 EXPLAIN ANALYZE
 SELECT * FROM soap_template_shares
@@ -498,6 +536,7 @@ WHERE template_id = 'test-uuid';
 ```
 
 **2. Policy Performance:**
+
 ```sql
 EXPLAIN ANALYZE
 SELECT * FROM temp_soap_templates
@@ -509,6 +548,7 @@ WHERE id = 'test-uuid';
 ### Data Integrity Testing
 
 **1. Unique Constraint:**
+
 ```sql
 -- Insert duplicate share
 INSERT INTO soap_template_shares (template_id, shared_with_user_id)
@@ -521,6 +561,7 @@ VALUES ('template-uuid', 'user-uuid');
 ```
 
 **2. Cascade Delete:**
+
 ```sql
 -- Create share
 INSERT INTO soap_template_shares (template_id, shared_with_user_id)
@@ -541,6 +582,7 @@ WHERE template_id = 'template-to-delete';
 ### When to Rollback
 
 Rollback if:
+
 - ❌ Migration script errors out midway
 - ❌ RLS policies not working as expected
 - ❌ Performance issues detected
@@ -659,11 +701,13 @@ AND tablename IN ('temp_soap_templates', 'temp_discharge_summary_templates', 'ca
 ### Issue: Environment Variable Not Set
 
 **Error:**
+
 ```
 ❌ Error: SUPABASE_SERVICE_ROLE_KEY environment variable not set
 ```
 
 **Solution:**
+
 ```bash
 export SUPABASE_SERVICE_ROLE_KEY='your-actual-service-role-key'
 ./apply_template_sharing_migration.sh
@@ -672,11 +716,13 @@ export SUPABASE_SERVICE_ROLE_KEY='your-actual-service-role-key'
 ### Issue: Permission Denied During Migration
 
 **Error:**
+
 ```
 Error: permission denied for schema public
 ```
 
 **Solution:**
+
 - Verify service role key is correct
 - Check key has not expired
 - Ensure using SERVICE role key, not ANON key
@@ -685,11 +731,13 @@ Error: permission denied for schema public
 ### Issue: Table Already Exists
 
 **Error:**
+
 ```
 ERROR: relation "soap_template_shares" already exists
 ```
 
 **Solution:**
+
 ```sql
 -- Check if migration already ran
 SELECT table_name FROM information_schema.tables
@@ -704,6 +752,7 @@ WHERE table_name = 'soap_template_shares';
 **Symptom:** Users can see templates they shouldn't
 
 **Diagnosis:**
+
 ```sql
 -- Check RLS is enabled
 SELECT tablename, rowsecurity
@@ -716,6 +765,7 @@ WHERE tablename = 'temp_soap_templates';
 ```
 
 **Solution:**
+
 ```sql
 -- Re-enable RLS if disabled
 ALTER TABLE temp_soap_templates ENABLE ROW LEVEL SECURITY;
@@ -729,6 +779,7 @@ ALTER TABLE temp_soap_templates ENABLE ROW LEVEL SECURITY;
 **Symptom:** Share queries taking > 100ms
 
 **Diagnosis:**
+
 ```sql
 EXPLAIN ANALYZE
 SELECT * FROM temp_soap_templates t
@@ -737,6 +788,7 @@ WHERE s.shared_with_user_id = 'user-uuid';
 ```
 
 **Solution:**
+
 ```sql
 -- Verify indexes exist
 SELECT indexname FROM pg_indexes
@@ -771,6 +823,7 @@ ANALYZE soap_template_shares;
 ### Deployment Steps
 
 **1. Notify Team:**
+
 ```
 Subject: Template Sharing Migration - [DATE] [TIME]
 Body:
@@ -781,6 +834,7 @@ Body:
 ```
 
 **2. Final Backup:**
+
 ```bash
 # Via Supabase Dashboard
 # Database → Backups → Create Backup
@@ -788,12 +842,14 @@ Body:
 ```
 
 **3. Execute Migration:**
+
 ```bash
 export SUPABASE_SERVICE_ROLE_KEY='prod-service-role-key'
 ./apply_template_sharing_migration.sh 2>&1 | tee migration_log_$(date +%Y%m%d_%H%M%S).log
 ```
 
 **4. Verify Migration:**
+
 ```bash
 # Run verification SQL queries (see Post-Migration Verification)
 # Check all tables, indexes, policies created
@@ -801,12 +857,14 @@ export SUPABASE_SERVICE_ROLE_KEY='prod-service-role-key'
 ```
 
 **5. Monitor Application:**
+
 - Check error rates
 - Monitor API response times
 - Verify sharing functionality in UI
 - Check Sentry/logging for errors
 
 **6. Document Completion:**
+
 ```
 Migration completed successfully at [TIMESTAMP]
 - Tables created: 2
@@ -819,6 +877,7 @@ Migration completed successfully at [TIMESTAMP]
 ### Post-Deployment Monitoring
 
 **First 24 Hours:**
+
 - [ ] Monitor error rates every hour
 - [ ] Check query performance metrics
 - [ ] Verify sharing functionality working
@@ -826,6 +885,7 @@ Migration completed successfully at [TIMESTAMP]
 - [ ] Check database metrics (CPU, memory, connections)
 
 **First Week:**
+
 - [ ] Monitor index usage statistics
 - [ ] Check for slow queries related to sharing
 - [ ] Review RLS policy performance
@@ -835,6 +895,7 @@ Migration completed successfully at [TIMESTAMP]
 ## Summary
 
 This migration guide provides comprehensive instructions for:
+
 - ✅ Pre-migration verification
 - ✅ Step-by-step migration execution
 - ✅ Post-migration validation
@@ -843,6 +904,7 @@ This migration guide provides comprehensive instructions for:
 - ✅ Production deployment best practices
 
 **Key Takeaways:**
+
 1. Always backup before migration
 2. Use environment variables for secrets
 3. Verify each step completes successfully

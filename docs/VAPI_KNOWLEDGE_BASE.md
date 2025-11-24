@@ -54,45 +54,45 @@ src/lib/vapi/
 
 The system includes **15 comprehensive knowledge base categories**:
 
-| Category | Conditions Covered | Common Medications |
-|----------|-------------------|-------------------|
-| **Gastrointestinal** | Vomiting, diarrhea, pancreatitis, gastroenteritis | Metronidazole, Cerenia, Famotidine |
-| **Post-Surgical** | Spay/neuter, mass removals, dental surgeries | Carprofen, Gabapentin, Cephalexin |
-| **Dermatological** | Allergies, hot spots, pyoderma, mange | Apoquel, Prednisone, Cephalexin |
-| **Respiratory** | Kennel cough, pneumonia, bronchitis | Doxycycline, Hydrocodone, Clavamox |
-| **Urinary** | UTIs, bladder stones, crystals | Clavamox, Baytril, Proin |
-| **Orthopedic** | Arthritis, limping, cruciate tears | Rimadyl, Galliprant, Dasuquin |
-| **Neurological** | Seizures, vestibular disease, IVDD | Phenobarbital, Keppra, Prednisone |
-| **Ophthalmic** | Conjunctivitis, corneal ulcers, glaucoma | Neopolybac, Gentamicin, Dorzolamide |
-| **Cardiac** | Heart murmurs, CHF, arrhythmias | Vetmedin, Lasix, Enalapril |
-| **Endocrine** | Diabetes, Cushing's, thyroid disease | Insulin, Vetoryl, Levothyroxine |
-| **Dental** | Periodontal disease, extractions | Clindamycin, Carprofen, Chlorhexidine |
-| **Wound Care** | Lacerations, abscesses, bite wounds | Clavamox, Silver sulfadiazine |
-| **Behavioral** | Anxiety, aggression, separation anxiety | Fluoxetine, Trazodone, Gabapentin |
-| **Pain Management** | Chronic/acute pain management | Tramadol, Gabapentin, Buprenorphine |
-| **General** | Fallback for uncategorized conditions | N/A |
+| Category             | Conditions Covered                                | Common Medications                    |
+| -------------------- | ------------------------------------------------- | ------------------------------------- |
+| **Gastrointestinal** | Vomiting, diarrhea, pancreatitis, gastroenteritis | Metronidazole, Cerenia, Famotidine    |
+| **Post-Surgical**    | Spay/neuter, mass removals, dental surgeries      | Carprofen, Gabapentin, Cephalexin     |
+| **Dermatological**   | Allergies, hot spots, pyoderma, mange             | Apoquel, Prednisone, Cephalexin       |
+| **Respiratory**      | Kennel cough, pneumonia, bronchitis               | Doxycycline, Hydrocodone, Clavamox    |
+| **Urinary**          | UTIs, bladder stones, crystals                    | Clavamox, Baytril, Proin              |
+| **Orthopedic**       | Arthritis, limping, cruciate tears                | Rimadyl, Galliprant, Dasuquin         |
+| **Neurological**     | Seizures, vestibular disease, IVDD                | Phenobarbital, Keppra, Prednisone     |
+| **Ophthalmic**       | Conjunctivitis, corneal ulcers, glaucoma          | Neopolybac, Gentamicin, Dorzolamide   |
+| **Cardiac**          | Heart murmurs, CHF, arrhythmias                   | Vetmedin, Lasix, Enalapril            |
+| **Endocrine**        | Diabetes, Cushing's, thyroid disease              | Insulin, Vetoryl, Levothyroxine       |
+| **Dental**           | Periodontal disease, extractions                  | Clindamycin, Carprofen, Chlorhexidine |
+| **Wound Care**       | Lacerations, abscesses, bite wounds               | Clavamox, Silver sulfadiazine         |
+| **Behavioral**       | Anxiety, aggression, separation anxiety           | Fluoxetine, Trazodone, Gabapentin     |
+| **Pain Management**  | Chronic/acute pain management                     | Tramadol, Gabapentin, Buprenorphine   |
+| **General**          | Fallback for uncategorized conditions             | N/A                                   |
 
 ## Usage
 
 ### Basic Usage
 
 ```typescript
-import { buildDynamicVariables } from '~/lib/vapi/knowledge-base';
+import { buildDynamicVariables } from "~/lib/vapi/knowledge-base";
 
 // Build variables with automatic knowledge base integration
 const result = buildDynamicVariables({
   baseVariables: {
-    clinicName: 'Alum Rock Pet Hospital',
-    agentName: 'Sarah',
-    petName: 'Bella',
-    ownerName: 'John Smith',
-    appointmentDate: 'November eighth',
-    callType: 'follow-up',
-    condition: 'vomiting and diarrhea',
-    clinicPhone: 'four zero eight, two five nine, eight seven six five',
-    emergencyPhone: 'four zero eight, eight six five, four three two one',
-    dischargeSummary: 'came in with acute gastroenteritis...',
-    medications: 'metronidazole twice daily',
+    clinicName: "Alum Rock Pet Hospital",
+    agentName: "Sarah",
+    petName: "Bella",
+    ownerName: "John Smith",
+    appointmentDate: "November eighth",
+    callType: "follow-up",
+    condition: "vomiting and diarrhea",
+    clinicPhone: "four zero eight, two five nine, eight seven six five",
+    emergencyPhone: "four zero eight, eight six five, four three two one",
+    dischargeSummary: "came in with acute gastroenteritis...",
+    medications: "metronidazole twice daily",
   },
 });
 
@@ -107,8 +107,10 @@ const result = buildDynamicVariables({
 
 ```typescript
 const result = buildDynamicVariables({
-  baseVariables: { /* ... */ },
-  conditionCategory: 'post-surgical',  // Explicit category
+  baseVariables: {
+    /* ... */
+  },
+  conditionCategory: "post-surgical", // Explicit category
 });
 ```
 
@@ -136,11 +138,11 @@ const result = buildDynamicVariables({
 ### Test Scenario Creation
 
 ```typescript
-import { createTestScenario } from '~/lib/vapi/knowledge-base';
+import { createTestScenario } from "~/lib/vapi/knowledge-base";
 
 const testVariables = createTestScenario({
-  clinicName: 'Test Clinic',
-  petName: 'Test Pet',
+  clinicName: "Test Clinic",
+  petName: "Test Pet",
   // ... minimal required fields
 });
 
@@ -155,56 +157,43 @@ Create a new file in `src/lib/vapi/knowledge-base/`:
 
 ```typescript
 // src/lib/vapi/knowledge-base/example.ts
-import type { ConditionKnowledgeBase } from '../types';
+import type { ConditionKnowledgeBase } from "../types";
 
 export const exampleKnowledge: ConditionKnowledgeBase = {
-  conditionCategory: 'example',
-  displayName: 'Example Conditions',
-  description: 'Description of conditions covered',
+  conditionCategory: "example",
+  displayName: "Example Conditions",
+  description: "Description of conditions covered",
 
   keywords: [
-    'keyword1',
-    'keyword2',
+    "keyword1",
+    "keyword2",
     // Keywords for auto-detection
   ],
 
   assessmentQuestions: [
     {
-      question: 'How is {{petName}} doing?',
-      context: 'General assessment',
-      expectedPositiveResponse: ['better', 'improved'],
-      concerningResponses: ['worse', 'same'],
-      followUpIfConcerning: 'Follow-up question if concerning',
+      question: "How is {{petName}} doing?",
+      context: "General assessment",
+      expectedPositiveResponse: ["better", "improved"],
+      concerningResponses: ["worse", "same"],
+      followUpIfConcerning: "Follow-up question if concerning",
       priority: 1,
       required: true,
     },
     // ... more questions
   ],
 
-  normalPostTreatmentExpectations: [
-    'Expected outcome 1',
-    'Expected outcome 2',
-  ],
+  normalPostTreatmentExpectations: ["Expected outcome 1", "Expected outcome 2"],
 
-  warningSignsToMonitor: [
-    'Warning sign 1',
-    'Warning sign 2',
-  ],
+  warningSignsToMonitor: ["Warning sign 1", "Warning sign 2"],
 
-  emergencyCriteria: [
-    'Emergency criterion 1',
-  ],
+  emergencyCriteria: ["Emergency criterion 1"],
 
-  urgentCriteria: [
-    'Urgent criterion 1',
-  ],
+  urgentCriteria: ["Urgent criterion 1"],
 
   typicalRecoveryDays: 7,
 
-  commonMedications: [
-    'medication1',
-    'medication2',
-  ],
+  commonMedications: ["medication1", "medication2"],
 };
 ```
 
@@ -214,11 +203,11 @@ Update `ConditionCategory` type in `src/lib/vapi/types.ts`:
 
 ```typescript
 export type ConditionCategory =
-  | 'gastrointestinal'
-  | 'post-surgical'
+  | "gastrointestinal"
+  | "post-surgical"
   // ... existing categories
-  | 'example'  // Add your new category
-  | 'general';
+  | "example" // Add your new category
+  | "general";
 ```
 
 ### Step 3: Register in Index
@@ -227,18 +216,21 @@ Update `src/lib/vapi/knowledge-base/index.ts`:
 
 ```typescript
 // 1. Import the knowledge base
-import { exampleKnowledge } from './example';
+import { exampleKnowledge } from "./example";
 
 // 2. Add to registry
-const KNOWLEDGE_BASE_REGISTRY: Record<ConditionCategory, ConditionKnowledgeBase> = {
+const KNOWLEDGE_BASE_REGISTRY: Record<
+  ConditionCategory,
+  ConditionKnowledgeBase
+> = {
   gastrointestinal: gastrointestinalKnowledge,
   // ... existing entries
-  example: exampleKnowledge,  // Add your new entry
+  example: exampleKnowledge, // Add your new entry
   general: generalKnowledge,
 };
 
 // 3. Export for direct access
-export { exampleKnowledge } from './example';
+export { exampleKnowledge } from "./example";
 ```
 
 ### Step 4: Update Validator (Optional)
@@ -247,7 +239,7 @@ Add keywords to the `inferConditionCategory` function in `src/lib/vapi/validator
 
 ```typescript
 if (/keyword1|keyword2|keyword3/.test(normalized)) {
-  return 'example';
+  return "example";
 }
 ```
 
@@ -261,13 +253,15 @@ The system provides two validation modes:
 
 ```typescript
 const result = buildDynamicVariables({
-  baseVariables: { /* ... */ },
-  strict: false,  // Default
+  baseVariables: {
+    /* ... */
+  },
+  strict: false, // Default
 });
 
 if (!result.validation.valid) {
-  console.error('Validation errors:', result.validation.errors);
-  console.warn('Warnings:', result.validation.warnings);
+  console.error("Validation errors:", result.validation.errors);
+  console.warn("Warnings:", result.validation.warnings);
   // Variables are still returned (with general knowledge base as fallback)
 }
 ```
@@ -277,11 +271,13 @@ if (!result.validation.valid) {
 ```typescript
 try {
   const result = buildDynamicVariables({
-    baseVariables: { /* ... */ },
-    strict: true,  // Throws on validation failure
+    baseVariables: {
+      /* ... */
+    },
+    strict: true, // Throws on validation failure
   });
 } catch (error) {
-  console.error('Validation failed:', error.message);
+  console.error("Validation failed:", error.message);
 }
 ```
 
@@ -290,6 +286,7 @@ try {
 #### Required Core Fields
 
 All calls require:
+
 - `clinicName` (non-empty string)
 - `agentName` (first name only, no titles)
 - `petName` (non-empty string)
@@ -303,10 +300,12 @@ All calls require:
 #### Call-Type Specific Rules
 
 **Discharge Calls:**
+
 - `subType` (optional): Must be "wellness" or "vaccination"
 - `nextSteps` (optional): Follow-up care instructions
 
 **Follow-Up Calls:**
+
 - `condition` (required): What pet was treated for
 - `medications` (optional): Prescribed medications
 - `recheckDate` (optional): Spelled-out date
@@ -329,7 +328,7 @@ Warnings are non-blocking but indicate potential issues:
 // ❌ BAD - Relies on auto-detection
 const result = buildDynamicVariables({
   baseVariables: {
-    condition: 'limping',
+    condition: "limping",
     // ...
   },
 });
@@ -337,8 +336,8 @@ const result = buildDynamicVariables({
 // ✅ GOOD - Explicit category
 const result = buildDynamicVariables({
   baseVariables: {
-    condition: 'limping',
-    conditionCategory: 'orthopedic',
+    condition: "limping",
+    conditionCategory: "orthopedic",
     // ...
   },
 });
@@ -348,36 +347,38 @@ const result = buildDynamicVariables({
 
 ```typescript
 // ❌ BAD
-clinicPhone: '(408) 259-8765'
-appointmentDate: '11/8/2024'
+clinicPhone: "(408) 259-8765";
+appointmentDate: "11/8/2024";
 
 // ✅ GOOD
-clinicPhone: 'four zero eight, two five nine, eight seven six five'
-appointmentDate: 'November eighth'
+clinicPhone: "four zero eight, two five nine, eight seven six five";
+appointmentDate: "November eighth";
 ```
 
 ### 3. Provide Comprehensive Discharge Summaries
 
 ```typescript
 // ❌ BAD
-dischargeSummary: 'had surgery'
+dischargeSummary: "had surgery";
 
 // ✅ GOOD
-dischargeSummary: `had her spay surgery three days ago on November seventh. The procedure went smoothly with no complications. Doctor Rodriguez performed the surgery and she recovered well from anesthesia. Her incision is a small abdominal incision with internal dissolvable sutures and external skin glue.`
+dischargeSummary: `had her spay surgery three days ago on November seventh. The procedure went smoothly with no complications. Doctor Rodriguez performed the surgery and she recovered well from anesthesia. Her incision is a small abdominal incision with internal dissolvable sutures and external skin glue.`;
 ```
 
 ### 4. Handle Validation Results Properly
 
 ```typescript
-const result = buildDynamicVariables({ /* ... */ });
+const result = buildDynamicVariables({
+  /* ... */
+});
 
 // Check validation
 if (!result.validation.valid) {
   // Log errors for debugging
-  console.error('Validation errors:', result.validation.errors);
+  console.error("Validation errors:", result.validation.errors);
 
   // Show warnings to user (non-blocking)
-  result.validation.warnings.forEach(warn => console.warn(warn));
+  result.validation.warnings.forEach((warn) => console.warn(warn));
 }
 
 // Always check if knowledge base is appropriate
@@ -387,6 +388,7 @@ console.log(`Using knowledge base: ${result.knowledgeBase.displayName}`);
 ### 5. Test with Edge Cases
 
 Always test with:
+
 - Missing required fields
 - Invalid field values
 - Mixed call types
@@ -404,6 +406,7 @@ Always test with:
 Main function for building complete variable sets with knowledge base integration.
 
 **Parameters:**
+
 - `baseVariables`: Partial\<DynamicVariables\> - Core variables to start with
 - `conditionCategory?`: ConditionCategory - Explicit category (recommended)
 - `strict?`: boolean - Whether to throw on validation errors (default: false)
@@ -411,6 +414,7 @@ Main function for building complete variable sets with knowledge base integratio
 - `customKnowledgeBase?`: Partial\<ConditionKnowledgeBase\> - Custom override
 
 **Returns:** BuildVariablesResult containing:
+
 - `variables`: Complete DynamicVariables object
 - `knowledgeBase`: Applied knowledge base
 - `validation`: ValidationResult with errors/warnings
@@ -445,6 +449,7 @@ Complete interface for VAPI call variables. See `src/lib/vapi/types.ts`.
 #### `ConditionKnowledgeBase`
 
 Knowledge base structure. Includes:
+
 - Assessment questions with priorities
 - Normal expectations
 - Warning signs
@@ -455,6 +460,7 @@ Knowledge base structure. Includes:
 #### `AssessmentQuestion`
 
 Individual assessment question structure:
+
 - `question`: The question text (supports {{petName}} substitution)
 - `context`: Why we're asking (for AI understanding)
 - `expectedPositiveResponse`: Array of good response patterns
@@ -470,7 +476,10 @@ Individual assessment question structure:
 Knowledge bases use an O(1) lookup registry - no iteration required:
 
 ```typescript
-const KNOWLEDGE_BASE_REGISTRY: Record<ConditionCategory, ConditionKnowledgeBase> = {
+const KNOWLEDGE_BASE_REGISTRY: Record<
+  ConditionCategory,
+  ConditionKnowledgeBase
+> = {
   gastrointestinal: gastrointestinalKnowledge,
   // ... all categories
 };
@@ -508,6 +517,7 @@ function getCachedValidation(variables: DynamicVariables): ValidationResult {
 **Cause:** Follow-up calls must specify what condition the pet was treated for.
 
 **Fix:**
+
 ```typescript
 baseVariables: {
   callType: 'follow-up',
@@ -521,6 +531,7 @@ baseVariables: {
 **Cause:** Condition description doesn't match any keywords.
 
 **Fix:** Explicitly set `conditionCategory`:
+
 ```typescript
 baseVariables: {
   condition: 'some rare condition',
@@ -534,10 +545,13 @@ baseVariables: {
 **Cause:** `useDefaults: false` was set.
 
 **Fix:**
+
 ```typescript
 buildDynamicVariables({
-  baseVariables: { /* ... */ },
-  useDefaults: true,  // Ensure this is true or omitted
+  baseVariables: {
+    /* ... */
+  },
+  useDefaults: true, // Ensure this is true or omitted
 });
 ```
 
@@ -561,6 +575,7 @@ Potential future improvements:
 ## Support
 
 For issues or questions about the knowledge base system:
+
 1. Check TypeScript compiler errors first (`pnpm typecheck`)
 2. Review validation warnings in console
 3. Examine knowledge base files for examples

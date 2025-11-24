@@ -46,7 +46,7 @@ async function handler(req: NextRequest) {
 
     // Fetch scheduled call from database
     const { data: call, error } = await supabase
-      .from("vapi_calls")
+      .from("scheduled_discharge_calls")
       .select("*")
       .eq("id", callId)
       .single();
@@ -139,7 +139,7 @@ async function handler(req: NextRequest) {
 
     // Update database with VAPI response
     await supabase
-      .from("vapi_calls")
+      .from("scheduled_discharge_calls")
       .update({
         vapi_call_id: response.id,
         status: mapVapiStatus(response.status),

@@ -11,6 +11,7 @@ Quick reference for implementing missing webhook handlers and security fixes.
 **File**: `/src/app/api/webhooks/vapi/route.ts`
 
 **Change** (Lines 175-179):
+
 ```typescript
 // BEFORE (Currently commented out):
 // const isValid = await verifySignature(request, body);
@@ -22,14 +23,15 @@ Quick reference for implementing missing webhook handlers and security fixes.
 // AFTER (Uncomment):
 const isValid = await verifySignature(request, body);
 if (!isValid) {
-  console.error('[VAPI_WEBHOOK] Invalid webhook signature');
-  return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+  console.error("[VAPI_WEBHOOK] Invalid webhook signature");
+  return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
 }
 ```
 
 ### Step 2: Add Environment Variable
 
 **Add to Vercel/Production**:
+
 ```bash
 VAPI_WEBHOOK_SECRET="your_webhook_secret_from_vapi_dashboard"
 ```
@@ -68,6 +70,7 @@ curl -X POST https://odisai.net/api/webhooks/vapi \
 ## Phase 2: Implement assistant-request Handler
 
 ### Purpose
+
 Allows VAPI assistant to request dynamic data during the call (e.g., fetch pet records, clinic hours, etc.)
 
 ### Implementation
@@ -77,6 +80,7 @@ Allows VAPI assistant to request dynamic data during the call (e.g., fetch pet r
 **Step 1: Add Event Handler**
 
 Add after line 201:
+
 ```typescript
 else if (message.type === "assistant-request") {
   return await handleAssistantRequest(supabase, message, request);
@@ -86,6 +90,7 @@ else if (message.type === "assistant-request") {
 **Step 2: Implement Handler Function**
 
 Add at the end of the file (before GET handler):
+
 ```typescript
 /**
  * Handle assistant-request webhook
@@ -129,10 +134,7 @@ async function handleAssistantRequest(
       callId: call.id,
       error: findError,
     });
-    return NextResponse.json(
-      { error: "Call not found" },
-      { status: 404 },
-    );
+    return NextResponse.json({ error: "Call not found" }, { status: 404 });
   }
 
   // Prepare response data based on request parameters
@@ -140,7 +142,10 @@ async function handleAssistantRequest(
 
   // Example: Return pet information if requested
   if (parameters.request === "pet_info") {
-    const dynamicVars = existingCall.dynamic_variables as Record<string, unknown>;
+    const dynamicVars = existingCall.dynamic_variables as Record<
+      string,
+      unknown
+    >;
     responseData.pet_name = dynamicVars?.pet_name;
     responseData.owner_name = dynamicVars?.owner_name;
     responseData.clinic_name = dynamicVars?.clinic_name;
@@ -161,7 +166,10 @@ async function handleAssistantRequest(
 
   // Example: Return emergency instructions if requested
   if (parameters.request === "emergency_instructions") {
-    const dynamicVars = existingCall.dynamic_variables as Record<string, unknown>;
+    const dynamicVars = existingCall.dynamic_variables as Record<
+      string,
+      unknown
+    >;
     responseData.emergency_phone = dynamicVars?.emergency_phone;
     responseData.emergency_message =
       "If you notice any of the following, please call us immediately: " +
@@ -182,6 +190,7 @@ async function handleAssistantRequest(
 ### Step 3: Update Interface
 
 Add to `VapiWebhookPayload` interface (around line 28):
+
 ```typescript
 interface VapiWebhookPayload {
   message: {
@@ -201,6 +210,7 @@ interface VapiWebhookPayload {
 ### Step 4: Configure in VAPI Assistant
 
 In your VAPI assistant configuration:
+
 ```json
 {
   "serverUrl": "https://odisai.net/api/webhooks/vapi",
@@ -213,6 +223,7 @@ In your VAPI assistant configuration:
 ## Phase 3: Implement function-call Handler
 
 ### Purpose
+
 Allows VAPI assistant to execute functions (send SMS, create appointments, send emails, etc.)
 
 ### Implementation
@@ -222,6 +233,7 @@ Allows VAPI assistant to execute functions (send SMS, create appointments, send 
 **Step 1: Add Event Handler**
 
 Add after assistant-request handler:
+
 ```typescript
 else if (message.type === "function-call") {
   return await handleFunctionCall(supabase, message, request);
@@ -279,7 +291,7 @@ async function handleFunctionCall(
     return NextResponse.json(
       {
         error: "Call not found",
-        result: "Failed to execute function: Call not found"
+        result: "Failed to execute function: Call not found",
       },
       { status: 404 },
     );
@@ -297,7 +309,11 @@ async function handleFunctionCall(
         break;
 
       case "schedule_appointment":
-        result = await executeScheduleAppointment(parameters, existingCall, supabase);
+        result = await executeScheduleAppointment(
+          parameters,
+          existingCall,
+          supabase,
+        );
         success = true;
         break;
 
@@ -515,6 +531,7 @@ In your VAPI assistant configuration, define available functions:
 ## Phase 4: Implement Real-time Transcription (Optional)
 
 ### Purpose
+
 Display live transcription in admin dashboard during calls
 
 ### Implementation
@@ -606,6 +623,7 @@ CREATE INDEX idx_call_transcripts_live_timestamp ON call_transcripts_live(timest
 ## Testing Checklist
 
 ### Phase 1: Security Testing
+
 - [ ] Webhook signature verification enabled
 - [ ] VAPI_WEBHOOK_SECRET set in production
 - [ ] Test with valid signature (should succeed)
@@ -614,6 +632,7 @@ CREATE INDEX idx_call_transcripts_live_timestamp ON call_transcripts_live(timest
 - [ ] Monitor logs for signature verification attempts
 
 ### Phase 2: assistant-request Testing
+
 - [ ] Configure server URL in VAPI assistant
 - [ ] Trigger assistant request for pet info
 - [ ] Verify data returned correctly
@@ -621,6 +640,7 @@ CREATE INDEX idx_call_transcripts_live_timestamp ON call_transcripts_live(timest
 - [ ] Test with missing call (should return 404)
 
 ### Phase 3: function-call Testing
+
 - [ ] Configure functions in VAPI assistant
 - [ ] Test send_sms function
 - [ ] Test schedule_appointment function
@@ -629,6 +649,7 @@ CREATE INDEX idx_call_transcripts_live_timestamp ON call_transcripts_live(timest
 - [ ] Verify database records created
 
 ### Phase 4: speech-update Testing
+
 - [ ] Create call_transcripts_live table
 - [ ] Start a test call
 - [ ] Verify real-time transcripts stored
@@ -640,6 +661,7 @@ CREATE INDEX idx_call_transcripts_live_timestamp ON call_transcripts_live(timest
 ## Deployment Steps
 
 1. **Code Changes**
+
    ```bash
    git checkout -b feature/vapi-webhook-improvements
    # Make changes as outlined above
@@ -658,6 +680,7 @@ CREATE INDEX idx_call_transcripts_live_timestamp ON call_transcripts_live(timest
    - Add new event types if implementing assistant-request or function-call
 
 4. **Database Migrations**
+
    ```bash
    # If implementing real-time transcription
    pnpm supabase migration new add_call_transcripts_live_table
@@ -666,6 +689,7 @@ CREATE INDEX idx_call_transcripts_live_timestamp ON call_transcripts_live(timest
    ```
 
 5. **Deploy**
+
    ```bash
    git checkout main
    git merge feature/vapi-webhook-improvements
@@ -686,6 +710,7 @@ CREATE INDEX idx_call_transcripts_live_timestamp ON call_transcripts_live(timest
 If issues occur after deployment:
 
 1. **Disable Signature Verification**
+
    ```typescript
    // Comment out lines 175-179 again temporarily
    // const isValid = await verifySignature(request, body);
@@ -700,6 +725,7 @@ If issues occur after deployment:
    - Revert to previous version
 
 3. **Git Revert**
+
    ```bash
    git revert HEAD
    git push origin main
@@ -717,21 +743,25 @@ If issues occur after deployment:
 ### Common Issues
 
 **Issue**: Signature verification failing
+
 - **Cause**: Mismatched secret or wrong algorithm
 - **Fix**: Verify `VAPI_WEBHOOK_SECRET` matches VAPI dashboard
 - **Fix**: Verify VAPI using SHA-256 algorithm
 
 **Issue**: assistant-request not receiving data
+
 - **Cause**: Server URL not configured in VAPI assistant
 - **Fix**: Add `serverUrl` to assistant configuration
 - **Fix**: Verify webhook handler returning correct JSON structure
 
 **Issue**: function-call not executing
+
 - **Cause**: Function not defined in VAPI assistant
 - **Fix**: Add function definition to assistant's model config
 - **Fix**: Verify function name matches handler switch case
 
 **Issue**: speech-update not storing transcripts
+
 - **Cause**: Table doesn't exist or wrong column types
 - **Fix**: Run migration to create `call_transcripts_live` table
 - **Fix**: Verify foreign key constraint on `call_id`

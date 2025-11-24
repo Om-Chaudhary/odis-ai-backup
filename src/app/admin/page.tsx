@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -15,162 +17,373 @@ import {
   FileText,
   Briefcase,
   Users,
-  Activity,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  FileCheck,
+  TrendingUp,
 } from "lucide-react";
-import { headers } from "next/headers";
-import { createCaller } from "~/server/api/root";
-import { createTRPCContext } from "~/server/api/trpc";
+import { api } from "~/trpc/client";
+import { useState } from "react";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "~/components/ui/chart";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
-export default async function AdminDashboard() {
-  const hdrs = await headers();
-  const ctx = await createTRPCContext({ headers: hdrs });
-  const caller = createCaller(ctx);
-  const stats = await caller.cases.getCaseStats();
+const TIME_RANGES = [
+  { label: "7 Days", value: 7 },
+  { label: "30 Days", value: 30 },
+  { label: "90 Days", value: 90 },
+] as const;
+
+export default function AdminDashboard() {
+  const [timeRange, setTimeRange] = useState(30);
+
+  const { data: timeSeriesData, isLoading } =
+    api.cases.getTimeSeriesStats.useQuery({
+      days: timeRange,
+    });
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="space-y-3">
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-teal-50 p-2">
-            <LayoutDashboard className="h-6 w-6 text-teal-600" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-teal-50 p-2">
+              <LayoutDashboard className="h-6 w-6 text-teal-600" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-slate-800">
+                Admin Dashboard
+              </h1>
+              <p className="text-base text-slate-600">
+                Track practice metrics and trends over time
+              </p>
+            </div>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-800">
-            Admin Dashboard
-          </h1>
+          <div className="flex gap-2">
+            {TIME_RANGES.map((range) => (
+              <Button
+                key={range.value}
+                variant={timeRange === range.value ? "default" : "outline"}
+                onClick={() => setTimeRange(range.value)}
+                className={
+                  timeRange === range.value
+                    ? "bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white"
+                    : "border-slate-200 text-slate-700 hover:bg-teal-50 hover:text-teal-700"
+                }
+              >
+                {range.label}
+              </Button>
+            ))}
+          </div>
         </div>
-        <p className="text-base text-slate-600">
-          Manage cases, templates, and users across your practice
-        </p>
       </div>
 
-      {/* Statistics Overview */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-slate-200 bg-white/90 shadow-sm backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-700">
-              Total Cases
-            </CardTitle>
-            <Briefcase className="h-4 w-4 text-teal-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-800">
-              {stats.totalCases}
-            </div>
-            <p className="text-xs text-slate-600">All veterinary cases</p>
-          </CardContent>
-        </Card>
+      {/* Summary Cards */}
+      {!isLoading && timeSeriesData && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card className="border-slate-200 bg-white shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-700">
+                Cases Created
+              </CardTitle>
+              <Briefcase className="h-4 w-4 text-teal-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-800">
+                {timeSeriesData.totals.casesCreated}
+              </div>
+              <p className="text-xs text-slate-600">Last {timeRange} days</p>
+            </CardContent>
+          </Card>
 
-        <Card className="border-slate-200 bg-white/90 shadow-sm backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-700">
-              Ongoing Cases
-            </CardTitle>
-            <Activity className="h-4 w-4 text-teal-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-800">
-              {stats.byStatus.ongoing}
-            </div>
-            <p className="text-xs text-slate-600">Currently active</p>
-          </CardContent>
-        </Card>
+          <Card className="border-slate-200 bg-white shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-700">
+                Cases Completed
+              </CardTitle>
+              <TrendingUp className="h-4 w-4 text-teal-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-800">
+                {timeSeriesData.totals.casesCompleted}
+              </div>
+              <p className="text-xs text-slate-600">Last {timeRange} days</p>
+            </CardContent>
+          </Card>
 
-        <Card className="border-slate-200 bg-white/90 shadow-sm backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-700">
-              Completed
-            </CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-teal-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-800">
-              {stats.byStatus.completed}
-            </div>
-            <p className="text-xs text-slate-600">Finished cases</p>
-          </CardContent>
-        </Card>
+          <Card className="border-slate-200 bg-white shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-700">
+                SOAP Notes
+              </CardTitle>
+              <ClipboardList className="h-4 w-4 text-teal-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-800">
+                {timeSeriesData.totals.soapNotes}
+              </div>
+              <p className="text-xs text-slate-600">Last {timeRange} days</p>
+            </CardContent>
+          </Card>
 
-        <Card className="border-slate-200 bg-white/90 shadow-sm backdrop-blur-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-700">
-              Needs Review
-            </CardTitle>
-            <AlertCircle className="h-4 w-4 text-teal-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-800">
-              {stats.byStatus.draft}
-            </div>
-            <p className="text-xs text-slate-600">Draft cases</p>
-          </CardContent>
-        </Card>
-      </div>
+          <Card className="border-slate-200 bg-white shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-slate-700">
+                Discharge Summaries
+              </CardTitle>
+              <FileText className="h-4 w-4 text-teal-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-slate-800">
+                {timeSeriesData.totals.dischargeSummaries}
+              </div>
+              <p className="text-xs text-slate-600">Last {timeRange} days</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-      {/* Case Type Breakdown */}
-      <Card className="border-slate-200 bg-white/90 shadow-sm backdrop-blur-sm">
+      {/* Cases Activity Chart */}
+      <Card className="border-slate-200 bg-white shadow-sm">
         <CardHeader>
-          <CardTitle className="text-slate-800">Case Distribution</CardTitle>
+          <CardTitle className="text-slate-800">Cases Activity</CardTitle>
           <CardDescription className="text-slate-600">
-            Breakdown by case type
+            Daily cases created and completed over time
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/10">
-                <Clock className="h-5 w-5 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-600">Checkup</p>
-                <p className="text-2xl font-bold text-slate-800">
-                  {stats.byType.checkup}
-                </p>
-              </div>
+          {isLoading ? (
+            <div className="flex h-[300px] items-center justify-center text-slate-500">
+              Loading chart data...
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-500/10">
-                <AlertCircle className="h-5 w-5 text-red-500" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-600">Emergency</p>
-                <p className="text-2xl font-bold text-slate-800">
-                  {stats.byType.emergency}
-                </p>
-              </div>
+          ) : timeSeriesData ? (
+            <ChartContainer
+              config={{
+                casesCreated: {
+                  label: "Cases Created",
+                  color: "hsl(174, 55%, 47%)",
+                },
+                casesCompleted: {
+                  label: "Cases Completed",
+                  color: "hsl(158, 64%, 52%)",
+                },
+              }}
+              className="h-[300px]"
+            >
+              <AreaChart data={timeSeriesData.chartData}>
+                <defs>
+                  <linearGradient
+                    id="fillCasesCreated"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop
+                      offset="5%"
+                      stopColor="hsl(174, 55%, 47%)"
+                      stopOpacity={0.8}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="hsl(174, 55%, 47%)"
+                      stopOpacity={0.1}
+                    />
+                  </linearGradient>
+                  <linearGradient
+                    id="fillCasesCompleted"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop
+                      offset="5%"
+                      stopColor="hsl(158, 64%, 52%)"
+                      stopOpacity={0.8}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="hsl(158, 64%, 52%)"
+                      stopOpacity={0.1}
+                    />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  className="stroke-slate-200"
+                />
+                <XAxis
+                  dataKey="date"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tickFormatter={(value: string) => {
+                    const date = new Date(value);
+                    return date.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    });
+                  }}
+                />
+                <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+                      labelFormatter={(value) => {
+                        const date = new Date(value);
+                        return date.toLocaleDateString("en-US", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                        });
+                      }}
+                    />
+                  }
+                />
+                <Area
+                  type="monotone"
+                  dataKey="casesCreated"
+                  stroke="hsl(174, 55%, 47%)"
+                  fillOpacity={1}
+                  fill="url(#fillCasesCreated)"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="casesCompleted"
+                  stroke="hsl(158, 64%, 52%)"
+                  fillOpacity={1}
+                  fill="url(#fillCasesCompleted)"
+                />
+              </AreaChart>
+            </ChartContainer>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      {/* Documentation Activity Chart */}
+      <Card className="border-slate-200 bg-white shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-slate-800">
+            Documentation Activity
+          </CardTitle>
+          <CardDescription className="text-slate-600">
+            SOAP notes and discharge summaries generated over time
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex h-[300px] items-center justify-center text-slate-500">
+              Loading chart data...
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/10">
-                <Activity className="h-5 w-5 text-purple-500" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-600">Surgery</p>
-                <p className="text-2xl font-bold text-slate-800">
-                  {stats.byType.surgery}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-500/10">
-                <FileCheck className="h-5 w-5 text-green-500" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-600">Follow-up</p>
-                <p className="text-2xl font-bold text-slate-800">
-                  {stats.byType.follow_up}
-                </p>
-              </div>
-            </div>
-          </div>
+          ) : timeSeriesData ? (
+            <ChartContainer
+              config={{
+                soapNotes: {
+                  label: "SOAP Notes",
+                  color: "hsl(199, 89%, 48%)",
+                },
+                dischargeSummaries: {
+                  label: "Discharge Summaries",
+                  color: "hsl(262, 83%, 58%)",
+                },
+              }}
+              className="h-[300px]"
+            >
+              <AreaChart data={timeSeriesData.chartData}>
+                <defs>
+                  <linearGradient
+                    id="fillSoapNotes"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop
+                      offset="5%"
+                      stopColor="hsl(199, 89%, 48%)"
+                      stopOpacity={0.8}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="hsl(199, 89%, 48%)"
+                      stopOpacity={0.1}
+                    />
+                  </linearGradient>
+                  <linearGradient
+                    id="fillDischargeSummaries"
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2="1"
+                  >
+                    <stop
+                      offset="5%"
+                      stopColor="hsl(262, 83%, 58%)"
+                      stopOpacity={0.8}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="hsl(262, 83%, 58%)"
+                      stopOpacity={0.1}
+                    />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  className="stroke-slate-200"
+                />
+                <XAxis
+                  dataKey="date"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tickFormatter={(value: string) => {
+                    const date = new Date(value);
+                    return date.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    });
+                  }}
+                />
+                <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+                      labelFormatter={(value) => {
+                        const date = new Date(value);
+                        return date.toLocaleDateString("en-US", {
+                          month: "long",
+                          day: "numeric",
+                          year: "numeric",
+                        });
+                      }}
+                    />
+                  }
+                />
+                <Area
+                  type="monotone"
+                  dataKey="soapNotes"
+                  stroke="hsl(199, 89%, 48%)"
+                  fillOpacity={1}
+                  fill="url(#fillSoapNotes)"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="dischargeSummaries"
+                  stroke="hsl(262, 83%, 58%)"
+                  fillOpacity={1}
+                  fill="url(#fillDischargeSummaries)"
+                />
+              </AreaChart>
+            </ChartContainer>
+          ) : null}
         </CardContent>
       </Card>
 
       {/* Quick Actions */}
-      <Card className="border-slate-200 bg-white/90 shadow-sm backdrop-blur-sm">
+      <Card className="border-slate-200 bg-white shadow-sm">
         <CardHeader className="pb-4">
           <CardTitle className="text-xl text-slate-800">
             Quick Actions
@@ -193,7 +406,7 @@ export default async function AdminDashboard() {
           </Link>
           <Link href="/admin/templates/soap" className="group">
             <Button
-              className="h-auto w-full flex-col gap-3 border-slate-200 bg-white/90 py-6 text-slate-700 transition-all hover:scale-[1.02] hover:bg-teal-50 hover:text-teal-600"
+              className="h-auto w-full flex-col gap-3 border-slate-200 bg-white py-6 text-slate-700 transition-all hover:scale-[1.02] hover:bg-teal-50 hover:text-teal-700"
               variant="outline"
             >
               <div className="rounded-lg bg-teal-50 p-2">
@@ -204,7 +417,7 @@ export default async function AdminDashboard() {
           </Link>
           <Link href="/admin/templates/discharge" className="group">
             <Button
-              className="h-auto w-full flex-col gap-3 border-slate-200 bg-white/90 py-6 text-slate-700 transition-all hover:scale-[1.02] hover:bg-teal-50 hover:text-teal-600"
+              className="h-auto w-full flex-col gap-3 border-slate-200 bg-white py-6 text-slate-700 transition-all hover:scale-[1.02] hover:bg-teal-50 hover:text-teal-700"
               variant="outline"
             >
               <div className="rounded-lg bg-teal-50 p-2">
@@ -215,7 +428,7 @@ export default async function AdminDashboard() {
           </Link>
           <Link href="/admin/cases" className="group">
             <Button
-              className="h-auto w-full flex-col gap-3 border-slate-200 bg-white/90 py-6 text-slate-700 transition-all hover:scale-[1.02] hover:bg-teal-50 hover:text-teal-600"
+              className="h-auto w-full flex-col gap-3 border-slate-200 bg-white py-6 text-slate-700 transition-all hover:scale-[1.02] hover:bg-teal-50 hover:text-teal-700"
               variant="outline"
             >
               <div className="rounded-lg bg-teal-50 p-2">
@@ -226,7 +439,7 @@ export default async function AdminDashboard() {
           </Link>
           <Link href="/admin/users" className="group">
             <Button
-              className="h-auto w-full flex-col gap-3 border-slate-200 bg-white/90 py-6 text-slate-700 transition-all hover:scale-[1.02] hover:bg-teal-50 hover:text-teal-600"
+              className="h-auto w-full flex-col gap-3 border-slate-200 bg-white py-6 text-slate-700 transition-all hover:scale-[1.02] hover:bg-teal-50 hover:text-teal-700"
               variant="outline"
             >
               <div className="rounded-lg bg-teal-50 p-2">
@@ -237,7 +450,7 @@ export default async function AdminDashboard() {
           </Link>
           <Link href="/admin/soap-playground" className="group">
             <Button
-              className="h-auto w-full flex-col gap-3 border-slate-200 bg-white/90 py-6 text-slate-700 transition-all hover:scale-[1.02] hover:bg-teal-50 hover:text-teal-600"
+              className="h-auto w-full flex-col gap-3 border-slate-200 bg-white py-6 text-slate-700 transition-all hover:scale-[1.02] hover:bg-teal-50 hover:text-teal-700"
               variant="outline"
             >
               <div className="rounded-lg bg-teal-50 p-2">

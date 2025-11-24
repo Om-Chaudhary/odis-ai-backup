@@ -4,6 +4,7 @@
 **Purpose:** Visual comparison of system state before and after implementing sharing features
 
 ## Table of Contents
+
 - [Database Schema Comparison](#database-schema-comparison)
 - [Security Model Comparison](#security-model-comparison)
 - [User Capabilities Comparison](#user-capabilities-comparison)
@@ -77,17 +78,18 @@ ACCESS: Owner + explicitly shared users
 
 ### New Tables Summary
 
-| Feature | Tables Added | Indexes Added | Triggers Added |
-|---------|-------------|---------------|----------------|
-| ODIS-134 | 2 (soap_template_shares, discharge_template_shares) | 4 | 2 |
-| ODIS-135 | 1 (case_shares) | 2 | 1 |
-| **Total** | **3** | **6** | **3** |
+| Feature   | Tables Added                                        | Indexes Added | Triggers Added |
+| --------- | --------------------------------------------------- | ------------- | -------------- |
+| ODIS-134  | 2 (soap_template_shares, discharge_template_shares) | 4             | 2              |
+| ODIS-135  | 1 (case_shares)                                     | 2             | 1              |
+| **Total** | **3**                                               | **6**         | **3**          |
 
 ## Security Model Comparison
 
 ### Before: Basic Ownership Model
 
 **RLS Policy (Simplified):**
+
 ```sql
 -- Users can only read their own templates
 CREATE POLICY "read_own_templates"
@@ -103,6 +105,7 @@ CREATE POLICY "read_own_templates"
 | Other User | ❌ | ❌ | ❌ |
 
 **Limitations:**
+
 - ❌ No collaboration possible
 - ❌ Templates isolated per user
 - ❌ No sharing mechanism
@@ -113,6 +116,7 @@ CREATE POLICY "read_own_templates"
 **RLS Policies (Enhanced):**
 
 **Template Access:**
+
 ```sql
 -- Users can read their own OR shared templates
 CREATE POLICY "read_own_and_shared_templates"
@@ -130,6 +134,7 @@ CREATE POLICY "read_own_and_shared_templates"
 ```
 
 **Share Management:**
+
 ```sql
 -- Only owners can create shares
 CREATE POLICY "owners_create_shares"
@@ -178,6 +183,7 @@ CREATE POLICY "owners_delete_shares"
 | Other User | ❌ | ❌ | ❌ | ❌ |
 
 **Capabilities:**
+
 - ✅ Secure collaboration
 - ✅ Owner maintains control
 - ✅ Recipients have read access
@@ -189,6 +195,7 @@ CREATE POLICY "owners_delete_shares"
 ### Before: Isolated Workflow
 
 **Template Management:**
+
 1. ❌ Create template (owner only)
 2. ❌ View own templates only
 3. ❌ Edit own templates only
@@ -198,6 +205,7 @@ CREATE POLICY "owners_delete_shares"
 7. ❌ Must duplicate for team use
 
 **User Experience:**
+
 ```
 Dr. Alice creates a template
     ↓
@@ -215,6 +223,7 @@ Result: Duplication and inconsistency
 ### After: Collaborative Workflow
 
 **Template Management:**
+
 1. ✅ Create template (owner only)
 2. ✅ View own + shared templates
 3. ✅ Edit own templates only
@@ -225,6 +234,7 @@ Result: Duplication and inconsistency
 8. ✅ Track who has access
 
 **User Experience:**
+
 ```
 Dr. Alice creates a template
     ↓
@@ -247,20 +257,21 @@ Result: Consistency and collaboration
 
 **New Capabilities:**
 
-| Capability | Before | After |
-|------------|--------|-------|
-| Share templates | ❌ | ✅ |
-| View shared templates | ❌ | ✅ |
-| Collaborate on cases | ❌ | ✅ |
-| Team standardization | ❌ | ✅ |
-| Revoke access | N/A | ✅ |
-| Track sharing | ❌ | ✅ |
+| Capability            | Before | After |
+| --------------------- | ------ | ----- |
+| Share templates       | ❌     | ✅    |
+| View shared templates | ❌     | ✅    |
+| Collaborate on cases  | ❌     | ✅    |
+| Team standardization  | ❌     | ✅    |
+| Revoke access         | N/A    | ✅    |
+| Track sharing         | ❌     | ✅    |
 
 ## Query Pattern Comparison
 
 ### Before: Simple Owner-Only Queries
 
 **Fetch User's Templates:**
+
 ```swift
 // Simple query - owner only
 let templates: [Template.Response] = try await supabaseClient
@@ -272,6 +283,7 @@ let templates: [Template.Response] = try await supabaseClient
 ```
 
 **Database Query:**
+
 ```sql
 SELECT * FROM temp_soap_templates
 WHERE user_id = 'current-user-id';
@@ -283,6 +295,7 @@ WHERE user_id = 'current-user-id';
 ### After: Owner + Shared Queries
 
 **Fetch User's Templates (Including Shared):**
+
 ```swift
 // Same client code - RLS handles sharing automatically!
 let templates: [Template.Response] = try await supabaseClient
@@ -294,6 +307,7 @@ let templates: [Template.Response] = try await supabaseClient
 ```
 
 **Database Query:**
+
 ```sql
 SELECT * FROM temp_soap_templates
 WHERE user_id = 'current-user-id'
@@ -310,6 +324,7 @@ WHERE user_id = 'current-user-id'
 ```
 
 **Performance Impact:**
+
 - **Before:** Single index scan (< 5ms)
 - **After:** Bitmap OR of two index scans (< 10ms)
 - **Overhead:** Minimal (~5ms) for enhanced functionality
@@ -317,6 +332,7 @@ WHERE user_id = 'current-user-id'
 ### New Query Patterns
 
 **Get Users Sharing a Template:**
+
 ```swift
 let shares: [TemplateShare.Response] = try await supabaseClient
     .from("soap_template_shares")
@@ -328,6 +344,7 @@ let shares: [TemplateShare.Response] = try await supabaseClient
 ```
 
 **Count Shared Templates:**
+
 ```swift
 let templates: [Template.Response] = try await supabaseClient
     .from("temp_soap_templates")
@@ -452,6 +469,7 @@ curl -X POST "${SUPABASE_URL}/rest/v1/..." \
 ```
 
 **Security Issues:**
+
 - ❌ Credentials committed to git
 - ❌ Visible in git history forever
 - ❌ Cannot rotate without code change
@@ -476,6 +494,7 @@ curl -X POST "${SUPABASE_URL}/rest/v1/..." \
 ```
 
 **Security Improvements:**
+
 - ✅ No credentials in code
 - ✅ Different keys per environment
 - ✅ Easy key rotation
@@ -483,6 +502,7 @@ curl -X POST "${SUPABASE_URL}/rest/v1/..." \
 - ✅ Follows 12-factor app principles
 
 **Usage:**
+
 ```bash
 # Set environment variable
 export SUPABASE_SERVICE_ROLE_KEY='your-production-key'
@@ -495,17 +515,18 @@ export SUPABASE_SERVICE_ROLE_KEY='your-production-key'
 
 ### Query Performance
 
-| Query Type | Before | After | Overhead |
-|------------|--------|-------|----------|
-| Fetch own templates | 5ms | 5ms | 0ms (unchanged) |
-| Fetch all templates | 10ms | 15ms | +5ms (includes shared) |
-| Fetch single template | 3ms | 5ms | +2ms (RLS check) |
-| Create template | 15ms | 15ms | 0ms (unchanged) |
-| Delete template | 10ms | 12ms | +2ms (cascade shares) |
-| **Share template** | N/A | 8ms | New operation |
-| **Revoke share** | N/A | 5ms | New operation |
+| Query Type            | Before | After | Overhead               |
+| --------------------- | ------ | ----- | ---------------------- |
+| Fetch own templates   | 5ms    | 5ms   | 0ms (unchanged)        |
+| Fetch all templates   | 10ms   | 15ms  | +5ms (includes shared) |
+| Fetch single template | 3ms    | 5ms   | +2ms (RLS check)       |
+| Create template       | 15ms   | 15ms  | 0ms (unchanged)        |
+| Delete template       | 10ms   | 12ms  | +2ms (cascade shares)  |
+| **Share template**    | N/A    | 8ms   | New operation          |
+| **Revoke share**      | N/A    | 5ms   | New operation          |
 
 **Analysis:**
+
 - Minimal overhead (< 5ms) for enhanced functionality
 - Index optimization keeps queries fast
 - Cascade operations slightly slower but automatic
@@ -514,12 +535,14 @@ export SUPABASE_SERVICE_ROLE_KEY='your-production-key'
 ### Index Usage
 
 **Before:**
+
 ```sql
 -- Single index per table
 CREATE INDEX idx_soap_templates_user_id ON temp_soap_templates(user_id);
 ```
 
 **After:**
+
 ```sql
 -- Original indexes (unchanged)
 CREATE INDEX idx_soap_templates_user_id ON temp_soap_templates(user_id);
@@ -532,6 +555,7 @@ CREATE INDEX idx_soap_template_shares_shared_with_user_id
 ```
 
 **Index Coverage:**
+
 - ✅ All foreign keys indexed
 - ✅ JOIN operations optimized
 - ✅ RLS policy evaluations fast
@@ -542,6 +566,7 @@ CREATE INDEX idx_soap_template_shares_shared_with_user_id
 ### Before: Basic Compliance
 
 **HIPAA:**
+
 - ✅ Data encrypted at rest
 - ✅ Data encrypted in transit
 - ✅ User authentication required
@@ -550,6 +575,7 @@ CREATE INDEX idx_soap_template_shares_shared_with_user_id
 - ❌ No access revocation logging
 
 **GDPR:**
+
 - ✅ Data minimization
 - ✅ Right to access (own data)
 - ✅ Right to erasure
@@ -559,6 +585,7 @@ CREATE INDEX idx_soap_template_shares_shared_with_user_id
 ### After: Enhanced Compliance
 
 **HIPAA:**
+
 - ✅ Data encrypted at rest
 - ✅ Data encrypted in transit
 - ✅ User authentication required
@@ -568,6 +595,7 @@ CREATE INDEX idx_soap_template_shares_shared_with_user_id
 - ✅ **Minimum necessary access** (explicit sharing only)
 
 **GDPR:**
+
 - ✅ Data minimization
 - ✅ Right to access (own data + shares)
 - ✅ Right to erasure (CASCADE delete)
@@ -576,6 +604,7 @@ CREATE INDEX idx_soap_template_shares_shared_with_user_id
 - ✅ **Purpose limitation** (sharing for specific collaboration)
 
 **SOC 2:**
+
 - ✅ Access control (RLS policies)
 - ✅ Change management (migration scripts in git)
 - ✅ **Monitoring ready** (timestamps for analytics)
@@ -585,46 +614,51 @@ CREATE INDEX idx_soap_template_shares_shared_with_user_id
 ## Summary of Changes
 
 ### Database Layer
-| Aspect | Before | After | Impact |
-|--------|--------|-------|--------|
-| Tables | 2 | 5 (+3 junction) | Additive |
-| Indexes | ~4 | ~10 (+6) | Performance |
-| RLS Policies | ~4 | ~12 (+8) | Security |
-| Triggers | ~0 | 3 (+3) | Automation |
-| Constraints | Basic | Enhanced | Data integrity |
+
+| Aspect       | Before | After           | Impact         |
+| ------------ | ------ | --------------- | -------------- |
+| Tables       | 2      | 5 (+3 junction) | Additive       |
+| Indexes      | ~4     | ~10 (+6)        | Performance    |
+| RLS Policies | ~4     | ~12 (+8)        | Security       |
+| Triggers     | ~0     | 3 (+3)          | Automation     |
+| Constraints  | Basic  | Enhanced        | Data integrity |
 
 ### Security Layer
-| Aspect | Before | After | Impact |
-|--------|--------|-------|--------|
-| Access Control | Owner only | Owner + shared | Enhanced |
-| Audit Trail | Basic | Comprehensive | Compliance |
-| Migration Security | Hardcoded keys | Environment vars | Secure |
-| Policy Coverage | Basic | Defense in depth | Robust |
-| Compliance | Partial | Full HIPAA/GDPR | Production-ready |
+
+| Aspect             | Before         | After            | Impact           |
+| ------------------ | -------------- | ---------------- | ---------------- |
+| Access Control     | Owner only     | Owner + shared   | Enhanced         |
+| Audit Trail        | Basic          | Comprehensive    | Compliance       |
+| Migration Security | Hardcoded keys | Environment vars | Secure           |
+| Policy Coverage    | Basic          | Defense in depth | Robust           |
+| Compliance         | Partial        | Full HIPAA/GDPR  | Production-ready |
 
 ### Application Layer
-| Aspect | Before | After | Impact |
-|--------|--------|-------|--------|
-| Repositories | Basic CRUD | Unchanged | Backward compatible |
-| Services | N/A | SharingService | New capability |
-| Data Models | Templates, Cases | +3 Share models | Additive |
-| UI Requirements | Simple | Sharing UI needed | New feature |
-| Analytics | Basic | Sharing metrics | Enhanced |
+
+| Aspect          | Before           | After             | Impact              |
+| --------------- | ---------------- | ----------------- | ------------------- |
+| Repositories    | Basic CRUD       | Unchanged         | Backward compatible |
+| Services        | N/A              | SharingService    | New capability      |
+| Data Models     | Templates, Cases | +3 Share models   | Additive            |
+| UI Requirements | Simple           | Sharing UI needed | New feature         |
+| Analytics       | Basic            | Sharing metrics   | Enhanced            |
 
 ### User Experience
-| Aspect | Before | After | Impact |
-|--------|--------|-------|--------|
-| Collaboration | None | Full sharing | Transformative |
-| Template Access | Own only | Own + shared | Expanded |
-| Case Access | Own only | Own + shared | Expanded |
-| Team Workflow | Isolated | Collaborative | Efficient |
-| Standardization | Manual | Automated via sharing | Improved |
+
+| Aspect          | Before   | After                 | Impact         |
+| --------------- | -------- | --------------------- | -------------- |
+| Collaboration   | None     | Full sharing          | Transformative |
+| Template Access | Own only | Own + shared          | Expanded       |
+| Case Access     | Own only | Own + shared          | Expanded       |
+| Team Workflow   | Isolated | Collaborative         | Efficient      |
+| Standardization | Manual   | Automated via sharing | Improved       |
 
 ## Conclusion
 
 The transformation from before to after represents a significant enhancement to the OdisAI platform:
 
 **Key Improvements:**
+
 1. ✅ **Collaboration:** From isolated to fully collaborative workflows
 2. ✅ **Security:** From basic to defense-in-depth security model
 3. ✅ **Compliance:** From partial to full HIPAA/GDPR compliance
@@ -632,12 +666,14 @@ The transformation from before to after represents a significant enhancement to 
 5. ✅ **Backward Compatibility:** Zero breaking changes to existing code
 
 **Migration Impact:**
+
 - **Downtime:** None (online migration)
 - **Code Changes:** Minimal (RLS handles most sharing logic)
 - **Data Loss:** None (additive only)
 - **Risk Level:** Low (comprehensive testing and rollback procedures)
 
 **Return on Investment:**
+
 - **Development Time:** ~3-4 days (based on commit timeline)
 - **User Value:** High (enables team collaboration)
 - **Technical Debt:** Low (follows best practices)
