@@ -63,12 +63,14 @@ export function PatientSelect({
         {label && (
           <Label>
             {label}
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && <span className="ml-1 text-red-500">*</span>}
           </Label>
         )}
-        <div className="flex items-center gap-2 p-3 border rounded-md">
-          <Spinner className="w-4 h-4" />
-          <span className="text-sm text-muted-foreground">Loading patients...</span>
+        <div className="flex items-center gap-2 rounded-md border p-3">
+          <Spinner className="h-4 w-4" />
+          <span className="text-muted-foreground text-sm">
+            Loading patients...
+          </span>
         </div>
       </div>
     );
@@ -80,10 +82,10 @@ export function PatientSelect({
         {label && (
           <Label>
             {label}
-            {required && <span className="text-red-500 ml-1">*</span>}
+            {required && <span className="ml-1 text-red-500">*</span>}
           </Label>
         )}
-        <div className="p-3 border border-red-500 rounded-md bg-red-50 dark:bg-red-950/20">
+        <div className="rounded-md border border-red-500 bg-red-50 p-3 dark:bg-red-950/20">
           <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
         </div>
       </div>
@@ -95,7 +97,7 @@ export function PatientSelect({
       {label && (
         <Label>
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="ml-1 text-red-500">*</span>}
         </Label>
       )}
 
@@ -117,11 +119,13 @@ export function PatientSelect({
           <SelectContent>
             {/* Option to clear selection */}
             <SelectItem value="__none__">
-              <span className="text-muted-foreground italic">No patient selected</span>
+              <span className="text-muted-foreground italic">
+                No patient selected
+              </span>
             </SelectItem>
 
             {patients.length === 0 ? (
-              <div className="p-2 text-sm text-muted-foreground text-center">
+              <div className="text-muted-foreground p-2 text-center text-sm">
                 No patients found
               </div>
             ) : (
@@ -129,8 +133,9 @@ export function PatientSelect({
                 <SelectItem key={patient.id} value={patient.id}>
                   <div className="flex flex-col">
                     <span className="font-medium">{patient.pet_name}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {patient.owner_name} • {formatPhoneNumber(patient.owner_phone)}
+                    <span className="text-muted-foreground text-xs">
+                      {patient.owner_name} •{" "}
+                      {formatPhoneNumber(patient.owner_phone)}
                     </span>
                   </div>
                 </SelectItem>
@@ -147,9 +152,9 @@ export function PatientSelect({
                     e.preventDefault();
                     onAddNew();
                   }}
-                  className="w-full flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-accent rounded-sm cursor-pointer"
+                  className="hover:bg-accent flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="h-4 w-4" />
                   <span>Add New Patient</span>
                 </button>
               </>
@@ -165,14 +170,14 @@ export function PatientSelect({
             onClick={onAddNew}
             title="Add new patient"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="h-4 w-4" />
           </Button>
         )}
       </div>
 
       {/* Show selected patient details */}
       {value && value !== "__none__" && (
-        <div className="p-3 border rounded-md bg-muted/50">
+        <div className="bg-muted/50 rounded-md border p-3">
           {(() => {
             const selectedPatient = patients.find((p) => p.id === value);
             if (!selectedPatient) return null;
@@ -180,12 +185,16 @@ export function PatientSelect({
             return (
               <div className="space-y-1 text-sm">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold text-lg">{selectedPatient.pet_name}</span>
+                  <span className="text-lg font-semibold">
+                    {selectedPatient.pet_name}
+                  </span>
                 </div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                   <div>
                     <span className="text-muted-foreground">Owner:</span>{" "}
-                    <span className="font-medium">{selectedPatient.owner_name}</span>
+                    <span className="font-medium">
+                      {selectedPatient.owner_name}
+                    </span>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Phone:</span>{" "}
@@ -207,9 +216,11 @@ export function PatientSelect({
                   )}
                 </div>
                 {selectedPatient.discharge_summary && (
-                  <div className="mt-2 pt-2 border-t">
-                    <span className="text-muted-foreground">Discharge Summary:</span>
-                    <p className="mt-1 text-xs line-clamp-2">
+                  <div className="mt-2 border-t pt-2">
+                    <span className="text-muted-foreground">
+                      Discharge Summary:
+                    </span>
+                    <p className="mt-1 line-clamp-2 text-xs">
                       {selectedPatient.discharge_summary}
                     </p>
                   </div>

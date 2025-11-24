@@ -41,10 +41,12 @@ export const generateSummarySchema = z.object({
 
   // VAPI call scheduling details (optional - only schedule call if provided)
   ownerPhone: z.string().optional(),
-  vapiScheduledFor: z.coerce.date({
-    required_error: "VAPI call scheduled time is required",
-    invalid_type_error: "Invalid date format",
-  }).optional(),
+  vapiScheduledFor: z.coerce
+    .date({
+      required_error: "VAPI call scheduled time is required",
+      invalid_type_error: "Invalid date format",
+    })
+    .optional(),
 
   // Additional VAPI variables to include in the call
   vapiVariables: z.record(z.any()).optional(),

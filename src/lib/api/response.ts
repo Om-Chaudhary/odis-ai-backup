@@ -56,7 +56,7 @@ export interface ApiResponse<T = unknown> {
  */
 export function successResponse<T>(
   data: T,
-  meta?: Record<string, unknown>
+  meta?: Record<string, unknown>,
 ): NextResponse<ApiResponse<T>> {
   return NextResponse.json(
     {
@@ -67,7 +67,7 @@ export function successResponse<T>(
         ...meta,
       },
     },
-    { status: 200 }
+    { status: 200 },
   );
 }
 
@@ -88,7 +88,7 @@ export function successResponse<T>(
  */
 export function errorResponse(
   error: ApiError,
-  status?: number
+  status?: number,
 ): NextResponse<ApiResponse> {
   const statusCode = status ?? error.status ?? 500;
 
@@ -104,7 +104,7 @@ export function errorResponse(
         timestamp: new Date().toISOString(),
       },
     },
-    { status: statusCode }
+    { status: statusCode },
   );
 }
 
@@ -128,7 +128,7 @@ export function errorResponse(
 export function successResponseWithStatus<T>(
   data: T,
   status: number,
-  meta?: Record<string, unknown>
+  meta?: Record<string, unknown>,
 ): NextResponse<ApiResponse<T>> {
   return NextResponse.json(
     {
@@ -139,7 +139,7 @@ export function successResponseWithStatus<T>(
         ...meta,
       },
     },
-    { status }
+    { status },
   );
 }
 
@@ -167,7 +167,7 @@ export function paginatedResponse<T>(
     page: number;
     perPage: number;
     totalPages: number;
-  }
+  },
 ): NextResponse<ApiResponse<T[]>> {
   return NextResponse.json(
     {
@@ -178,6 +178,6 @@ export function paginatedResponse<T>(
         pagination,
       },
     },
-    { status: 200 }
+    { status: 200 },
   );
 }

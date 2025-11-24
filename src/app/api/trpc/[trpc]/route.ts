@@ -18,14 +18,14 @@ const handler = (request: Request) => {
   } catch (error) {
     console.error("Environment validation failed:", error);
     return new Response(
-      JSON.stringify({ 
-        error: "Server configuration error", 
-        message: "Missing required environment variables" 
+      JSON.stringify({
+        error: "Server configuration error",
+        message: "Missing required environment variables",
       }),
-      { 
-        status: 500, 
-        headers: { "Content-Type": "application/json" } 
-      }
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      },
     );
   }
 
@@ -43,7 +43,7 @@ const handler = (request: Request) => {
         type,
         timestamp: new Date().toISOString(),
       });
-      
+
       // Log additional context for debugging
       if (error.code === "BAD_REQUEST") {
         console.error("Bad request details:", {

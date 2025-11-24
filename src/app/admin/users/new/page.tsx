@@ -23,7 +23,7 @@ export default function NewUserPage() {
 
   const handleSubmit = async (data: Record<string, unknown>) => {
     await createMutation.mutateAsync(
-      data as Parameters<typeof createMutation.mutateAsync>[0]
+      data as Parameters<typeof createMutation.mutateAsync>[0],
     );
   };
 
@@ -34,14 +34,14 @@ export default function NewUserPage() {
           <Button
             variant="ghost"
             size="sm"
-            className="gap-2 hover:bg-gradient-to-r hover:from-[#31aba3]/10 hover:to-[#2a9a92]/5 hover:text-[#31aba3] transition-colors"
+            className="gap-2 transition-colors hover:bg-gradient-to-r hover:from-[#31aba3]/10 hover:to-[#2a9a92]/5 hover:text-[#31aba3]"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Users
           </Button>
         </Link>
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+          <h1 className="bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-3xl font-bold tracking-tight text-transparent">
             Add New User
           </h1>
           <p className="text-base text-slate-600">

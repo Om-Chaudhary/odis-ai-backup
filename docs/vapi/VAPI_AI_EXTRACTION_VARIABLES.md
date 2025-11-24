@@ -85,13 +85,11 @@ Extracted from the patient section of the clinical record:
 ### Example: Enhanced Opening
 
 Instead of:
-
 ```
 "Hi {{owner_name}}, this is {{agent_name}} from {{clinic_name}}. I'm following up on {{pet_name}}'s recent appointment."
 ```
 
 You can use:
-
 ```
 "Hi {{owner_name}}, this is {{agent_name}} from {{clinic_name}}. I'm following up on {{patient_name}}'s recent {{case_type}} appointment on {{appointment_date}}."
 ```
@@ -99,19 +97,16 @@ You can use:
 ### Example: Medication Discussion
 
 Instead of:
-
 ```
 "How's it going with giving {{pet_name}} the medication?"
 ```
 
 You can use:
-
 ```
 "How's it going with giving {{patient_name}} the {{medication_names}}?"
 ```
 
 Or more detailed:
-
 ```
 "Just to confirm, {{patient_name}} should be taking {{medications_speech}}. How's that going?"
 ```
@@ -151,7 +146,6 @@ This means if you pass `medications: "Custom instructions"` in the API call, it 
 ## Best Practices
 
 1. **Fallback Gracefully:** Always provide defaults for optional extracted variables
-
    ```
    {{medications_speech || "the prescribed medications"}}
    ```
@@ -161,7 +155,6 @@ This means if you pass `medications: "Custom instructions"` in the API call, it 
    - `patient_name` over `pet_name` (more formal)
 
 3. **Conditional Content:** Use conditionals to only mention extracted data when available
-
    ```
    {{#if primary_diagnosis}}
    "I see we treated {{patient_name}} for {{primary_diagnosis}}."
@@ -169,7 +162,6 @@ This means if you pass `medications: "Custom instructions"` in the API call, it 
    ```
 
 4. **Combine with Manual Variables:** Extracted variables complement manual ones
-
    ```
    "{{patient_name}}'s {{primary_diagnosis}} treatment included {{discharge_summary_content}}."
    ```

@@ -28,7 +28,7 @@ export function transformIdexxToCallRequest(
   // Format phone numbers for voice
   const clinicPhoneFormatted = formatPhoneForVoice(pageData.clinic.phone);
   const emergencyPhoneFormatted = formatPhoneForVoice(
-    process.env.DEFAULT_EMERGENCY_PHONE ?? pageData.clinic.phone
+    process.env.DEFAULT_EMERGENCY_PHONE ?? pageData.clinic.phone,
   );
 
   return {
@@ -66,21 +66,57 @@ export function transformIdexxToCallRequest(
  */
 function formatDateForVoice(date: Date): string {
   const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
 
   const ordinals = [
-    "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth",
-    "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth", "sixteenth", "seventeenth",
-    "eighteenth", "nineteenth", "twentieth", "twenty first", "twenty second", "twenty third",
-    "twenty fourth", "twenty fifth", "twenty sixth", "twenty seventh", "twenty eighth",
-    "twenty ninth", "thirtieth", "thirty first"
+    "first",
+    "second",
+    "third",
+    "fourth",
+    "fifth",
+    "sixth",
+    "seventh",
+    "eighth",
+    "ninth",
+    "tenth",
+    "eleventh",
+    "twelfth",
+    "thirteenth",
+    "fourteenth",
+    "fifteenth",
+    "sixteenth",
+    "seventeenth",
+    "eighteenth",
+    "nineteenth",
+    "twentieth",
+    "twenty first",
+    "twenty second",
+    "twenty third",
+    "twenty fourth",
+    "twenty fifth",
+    "twenty sixth",
+    "twenty seventh",
+    "twenty eighth",
+    "twenty ninth",
+    "thirtieth",
+    "thirty first",
   ];
 
   const month = months[date.getMonth()];
   const day = ordinals[date.getDate() - 1];
-  const year = date.getFullYear().toString().split('').join(' '); // "2025" -> "2 0 2 5"
+  const year = date.getFullYear().toString().split("").join(" "); // "2025" -> "2 0 2 5"
 
   return `${month} ${day}, ${year}`;
 }
@@ -94,17 +130,37 @@ function formatPhoneForVoice(phone: string): string {
 
   // Map digits to words
   const digitWords: Record<string, string> = {
-    '0': 'zero', '1': 'one', '2': 'two', '3': 'three', '4': 'four',
-    '5': 'five', '6': 'six', '7': 'seven', '8': 'eight', '9': 'nine'
+    "0": "zero",
+    "1": "one",
+    "2": "two",
+    "3": "three",
+    "4": "four",
+    "5": "five",
+    "6": "six",
+    "7": "seven",
+    "8": "eight",
+    "9": "nine",
   };
 
   // Get the last 10 digits (US phone number)
   const phoneDigits = cleaned.slice(-10);
 
   // Format as "555, 123, 4567" -> "five five five, one two three, four five six seven"
-  const areaCode = phoneDigits.slice(0, 3).split('').map(d => digitWords[d]).join(' ');
-  const exchange = phoneDigits.slice(3, 6).split('').map(d => digitWords[d]).join(' ');
-  const subscriber = phoneDigits.slice(6).split('').map(d => digitWords[d]).join(' ');
+  const areaCode = phoneDigits
+    .slice(0, 3)
+    .split("")
+    .map((d) => digitWords[d])
+    .join(" ");
+  const exchange = phoneDigits
+    .slice(3, 6)
+    .split("")
+    .map((d) => digitWords[d])
+    .join(" ");
+  const subscriber = phoneDigits
+    .slice(6)
+    .split("")
+    .map((d) => digitWords[d])
+    .join(" ");
 
   return `${areaCode}, ${exchange}, ${subscriber}`;
 }

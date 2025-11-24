@@ -17,7 +17,6 @@ This document summarizes the changes made to integrate AI entity extraction data
 - Added comprehensive column documentation
 
 **Code Updates:**
-
 - `src/app/api/calls/schedule/route.ts`
 - `src/app/api/webhooks/vapi/route.ts`
 - `src/app/api/webhooks/execute-call/route.ts`
@@ -31,13 +30,11 @@ This document summarizes the changes made to integrate AI entity extraction data
 Created helper functions to extract VAPI dynamic variables from AI entity extraction data:
 
 **Functions:**
-
 - `extractVapiVariablesFromEntities()` - Extracts 40+ variables from NormalizedEntities
 - `formatMedicationsForSpeech()` - Formats medications for natural voice output
 - `mergeVapiVariables()` - Merges extracted and manual variables
 
 **Available Variables:**
-
 - Patient demographics: `patient_name`, `patient_species`, `patient_breed`, `patient_age`, `patient_sex`, `patient_weight`
 - Owner info: `owner_name_extracted`, `owner_phone_extracted`, `owner_email_extracted`
 - Clinical: `chief_complaint`, `visit_reason`, `presenting_symptoms`, `diagnoses`, `primary_diagnosis`
@@ -51,7 +48,6 @@ Created helper functions to extract VAPI dynamic variables from AI entity extrac
 **File:** `src/app/api/generate/discharge-summary/route.ts`
 
 **Changes:**
-
 1. **Query normalized_data table** - Checks for most recent AI extraction record
 2. **Fallback hierarchy** for entity extraction:
    - `normalized_data` table (most recent structured extraction)
@@ -77,7 +73,7 @@ Created helper functions to extract VAPI dynamic variables from AI entity extrac
      vetName: finalVetName,
      parsedFromSummary: parsedPetName,
      extractedVars: Object.keys(extractedVars).length,
-     source: "AI extraction" | "database" | "parsed from summary" | "default",
+     source: "AI extraction" | "database" | "parsed from summary" | "default"
    });
    ```
 
@@ -86,13 +82,11 @@ Created helper functions to extract VAPI dynamic variables from AI entity extrac
 **File:** `VAPI_PRODUCTION_PROMPT.txt`
 
 **Changes:**
-
 1. **Conditional variable blocks** - Variables only appear if they exist:
-
    ```handlebars
    {{#if next_steps}}
-     ### Next Steps
-     {{next_steps}}
+   ### Next Steps
+   {{next_steps}}
    {{/if}}
    ```
 
@@ -109,7 +103,6 @@ Created helper functions to extract VAPI dynamic variables from AI entity extrac
 **File:** `VAPI_AI_EXTRACTION_VARIABLES.md`
 
 Complete documentation of:
-
 - All 40+ AI-extracted variables
 - Usage examples and best practices
 - Variable precedence rules
@@ -139,27 +132,25 @@ Variables are merged in this order (later takes precedence):
 ## Example Flow
 
 ### Before Changes:
-
 ```json
 {
   "pet_name": "your pet",
   "owner_name": "Pet Owner",
   "vet_name": "",
-  "medications": "{{medications}}", // Literal variable name shown!
+  "medications": "{{medications}}",  // Literal variable name shown!
   "discharge_summary_content": "DISCHARGE INSTRUCTIONS FOR TYSON..."
 }
 ```
 
 ### After Changes:
-
 ```json
 {
-  "pet_name": "Tyson", // ✅ Extracted from summary
-  "owner_name": "John Smith", // ✅ From AI extraction
-  "vet_name": "Dr. Sarah Johnson", // ✅ From AI extraction
-  "patient_species": "dog", // ✅ From AI extraction
-  "primary_diagnosis": "Depression", // ✅ From AI extraction
-  "medications_speech": "Carprofen 75 milligrams twice daily by mouth for 7 days, and Cephalexin 500 milligrams three times daily by mouth for 10 days", // ✅ Formatted for voice
+  "pet_name": "Tyson",  // ✅ Extracted from summary
+  "owner_name": "John Smith",  // ✅ From AI extraction
+  "vet_name": "Dr. Sarah Johnson",  // ✅ From AI extraction
+  "patient_species": "dog",  // ✅ From AI extraction
+  "primary_diagnosis": "Depression",  // ✅ From AI extraction
+  "medications_speech": "Carprofen 75 milligrams twice daily by mouth for 7 days, and Cephalexin 500 milligrams three times daily by mouth for 10 days",  // ✅ Formatted for voice
   "discharge_summary_content": "DISCHARGE INSTRUCTIONS FOR TYSON..."
 }
 ```
@@ -170,7 +161,6 @@ To test the integration:
 
 1. **Create a case** with AI entity extraction
 2. **Generate discharge summary** via API:
-
    ```bash
    POST /api/generate/discharge-summary
    {
@@ -186,7 +176,6 @@ To test the integration:
    - `[SCHEDULE_CALL] Dynamic variables prepared`
 
 4. **Verify VAPI call** has correct variables:
-
    ```sql
    SELECT dynamic_variables
    FROM scheduled_discharge_calls

@@ -141,14 +141,10 @@ function mapEndedReasonToStatus(
  * Determine if a call should be retried based on ended reason
  */
 function shouldRetry(endedReason?: string): boolean {
-  const retryableReasons = [
-    "dial-busy",
-    "dial-no-answer",
-    "voicemail",
-  ];
+  const retryableReasons = ["dial-busy", "dial-no-answer", "voicemail"];
 
   return retryableReasons.some((reason) =>
-    endedReason?.toLowerCase().includes(reason.toLowerCase())
+    endedReason?.toLowerCase().includes(reason.toLowerCase()),
   );
 }
 
@@ -211,9 +207,12 @@ export async function POST(request: NextRequest) {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
     });
-    return NextResponse.json({ error: "Internal server error" }, {
-      status: 500,
-    });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      {
+        status: 500,
+      },
+    );
   }
 }
 
@@ -302,12 +301,14 @@ async function handleEndOfCallReport(
   }
 
   // Calculate duration
-  const durationSeconds = call.startedAt && call.endedAt
-    ? Math.floor(
-      (new Date(call.endedAt).getTime() - new Date(call.startedAt).getTime()) /
-        1000,
-    )
-    : null;
+  const durationSeconds =
+    call.startedAt && call.endedAt
+      ? Math.floor(
+          (new Date(call.endedAt).getTime() -
+            new Date(call.startedAt).getTime()) /
+            1000,
+        )
+      : null;
 
   // Calculate total cost
   const cost = calculateTotalCost(call.costs);
@@ -390,9 +391,10 @@ async function handleEndOfCallReport(
         console.error("[VAPI_WEBHOOK] Failed to schedule retry", {
           callId: call.id,
           dbId: existingCall.id,
-          error: qstashError instanceof Error
-            ? qstashError.message
-            : String(qstashError),
+          error:
+            qstashError instanceof Error
+              ? qstashError.message
+              : String(qstashError),
         });
         // Keep status as failed if retry scheduling fails
         updateData.status = "failed";

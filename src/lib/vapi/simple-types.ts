@@ -71,7 +71,7 @@ export interface SimpleDynamicVariables {
  * Type guard to check if variables are valid
  */
 export function isValidDynamicVariables(
-  variables: unknown
+  variables: unknown,
 ): variables is SimpleDynamicVariables {
   if (typeof variables !== "object" || variables === null) return false;
 

@@ -74,10 +74,11 @@ export function SoapTemplateForm({
       client_instructions_template: "",
       client_instructions_prompt: "",
       system_prompt_addition: "",
-    }
+    },
   );
 
-  const { data: users, isLoading: usersLoading } = api.templates.listUsers.useQuery();
+  const { data: users, isLoading: usersLoading } =
+    api.templates.listUsers.useQuery();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,9 +92,11 @@ export function SoapTemplateForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Basic Information */}
-      <Card className="rounded-xl border-border shadow-md">
+      <Card className="border-border rounded-xl shadow-md">
         <CardHeader className="bg-primary/5 pb-3">
-          <CardTitle className="text-lg text-foreground">Basic Information</CardTitle>
+          <CardTitle className="text-foreground text-lg">
+            Basic Information
+          </CardTitle>
           <CardDescription className="text-sm">
             Template identification and display settings
           </CardDescription>
@@ -101,7 +104,10 @@ export function SoapTemplateForm({
         <CardContent className="space-y-4 pt-6">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="template_id" className="text-sm font-semibold text-foreground">
+              <Label
+                htmlFor="template_id"
+                className="text-foreground text-sm font-semibold"
+              >
                 Template ID <span className="text-destructive">*</span>
               </Label>
               <Input
@@ -109,12 +115,15 @@ export function SoapTemplateForm({
                 value={formData.template_id}
                 onChange={(e) => updateField("template_id", e.target.value)}
                 required
-                className="shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
+                className="focus:ring-primary/20 shadow-sm transition-all focus:ring-2"
                 placeholder="e.g., soap_general"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="template_name" className="text-sm font-semibold text-foreground">
+              <Label
+                htmlFor="template_name"
+                className="text-foreground text-sm font-semibold"
+              >
                 Template Name <span className="text-destructive">*</span>
               </Label>
               <Input
@@ -122,12 +131,15 @@ export function SoapTemplateForm({
                 value={formData.template_name}
                 onChange={(e) => updateField("template_name", e.target.value)}
                 required
-                className="shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
+                className="focus:ring-primary/20 shadow-sm transition-all focus:ring-2"
                 placeholder="e.g., General SOAP"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="display_name" className="text-sm font-semibold text-foreground">
+              <Label
+                htmlFor="display_name"
+                className="text-foreground text-sm font-semibold"
+              >
                 Display Name <span className="text-destructive">*</span>
               </Label>
               <Input
@@ -135,12 +147,15 @@ export function SoapTemplateForm({
                 value={formData.display_name}
                 onChange={(e) => updateField("display_name", e.target.value)}
                 required
-                className="shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
+                className="focus:ring-primary/20 shadow-sm transition-all focus:ring-2"
                 placeholder="e.g., General Practice SOAP Note"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="person_name" className="text-sm font-semibold text-foreground">
+              <Label
+                htmlFor="person_name"
+                className="text-foreground text-sm font-semibold"
+              >
                 Person Name <span className="text-destructive">*</span>
               </Label>
               <Input
@@ -148,12 +163,15 @@ export function SoapTemplateForm({
                 value={formData.person_name}
                 onChange={(e) => updateField("person_name", e.target.value)}
                 required
-                className="shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
+                className="focus:ring-primary/20 shadow-sm transition-all focus:ring-2"
                 placeholder="e.g., Patient"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="icon_name" className="text-sm font-semibold text-foreground">
+              <Label
+                htmlFor="icon_name"
+                className="text-foreground text-sm font-semibold"
+              >
                 Icon Name <span className="text-destructive">*</span>
               </Label>
               <Input
@@ -161,12 +179,15 @@ export function SoapTemplateForm({
                 value={formData.icon_name}
                 onChange={(e) => updateField("icon_name", e.target.value)}
                 required
-                className="shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
+                className="focus:ring-primary/20 shadow-sm transition-all focus:ring-2"
                 placeholder="e.g., Stethoscope"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="user_id" className="text-sm font-semibold text-foreground">
+              <Label
+                htmlFor="user_id"
+                className="text-foreground text-sm font-semibold"
+              >
                 Assign to User
               </Label>
               <Select
@@ -197,17 +218,20 @@ export function SoapTemplateForm({
               </Select>
             </div>
           </div>
-          <div className="flex items-center space-x-3 rounded-lg border border-border bg-muted/30 p-4">
+          <div className="border-border bg-muted/30 flex items-center space-x-3 rounded-lg border p-4">
             <Switch
               id="is_default"
               checked={formData.is_default}
               onCheckedChange={(checked) => updateField("is_default", checked)}
             />
             <div className="space-y-0.5">
-              <Label htmlFor="is_default" className="text-sm font-semibold text-foreground cursor-pointer">
+              <Label
+                htmlFor="is_default"
+                className="text-foreground cursor-pointer text-sm font-semibold"
+              >
                 Set as default template
               </Label>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Default templates are available to all users
               </p>
             </div>
@@ -217,15 +241,40 @@ export function SoapTemplateForm({
 
       {/* SOAP Sections */}
       {[
-        { key: "subjective", label: "Subjective", icon: "💭", description: "Patient's reported symptoms and concerns" },
-        { key: "objective", label: "Objective", icon: "📊", description: "Observable and measurable findings" },
-        { key: "assessment", label: "Assessment", icon: "🔍", description: "Clinical interpretation and diagnosis" },
-        { key: "plan", label: "Plan", icon: "📋", description: "Treatment plan and next steps" },
-        { key: "client_instructions", label: "Client Instructions", icon: "📝", description: "Patient guidance and directions" },
+        {
+          key: "subjective",
+          label: "Subjective",
+          icon: "💭",
+          description: "Patient's reported symptoms and concerns",
+        },
+        {
+          key: "objective",
+          label: "Objective",
+          icon: "📊",
+          description: "Observable and measurable findings",
+        },
+        {
+          key: "assessment",
+          label: "Assessment",
+          icon: "🔍",
+          description: "Clinical interpretation and diagnosis",
+        },
+        {
+          key: "plan",
+          label: "Plan",
+          icon: "📋",
+          description: "Treatment plan and next steps",
+        },
+        {
+          key: "client_instructions",
+          label: "Client Instructions",
+          icon: "📝",
+          description: "Patient guidance and directions",
+        },
       ].map((section) => (
-        <Card key={section.key} className="rounded-xl border-border shadow-md">
+        <Card key={section.key} className="border-border rounded-xl shadow-md">
           <CardHeader className="bg-muted/30 pb-3">
-            <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+            <CardTitle className="text-foreground flex items-center gap-2 text-lg">
               <span className="text-xl">{section.icon}</span>
               {section.label}
             </CardTitle>
@@ -235,36 +284,50 @@ export function SoapTemplateForm({
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
             <div className="space-y-2">
-              <Label htmlFor={`${section.key}_template`} className="text-sm font-semibold text-foreground">
+              <Label
+                htmlFor={`${section.key}_template`}
+                className="text-foreground text-sm font-semibold"
+              >
                 {section.label} Template
               </Label>
               <Textarea
                 id={`${section.key}_template`}
-                value={(formData[`${section.key}_template` as keyof typeof formData] as string) ?? ""}
+                value={
+                  (formData[
+                    `${section.key}_template` as keyof typeof formData
+                  ] as string) ?? ""
+                }
                 onChange={(e) =>
                   updateField(`${section.key}_template`, e.target.value)
                 }
-                className="shadow-sm font-mono text-sm transition-all focus:ring-2 focus:ring-primary/20 max-h-32 min-h-[160px] resize-none overflow-y-auto"
+                className="focus:ring-primary/20 max-h-32 min-h-[160px] resize-none overflow-y-auto font-mono text-sm shadow-sm transition-all focus:ring-2"
                 placeholder="Enter template content..."
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 The base template structure for this section
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor={`${section.key}_prompt`} className="text-sm font-semibold text-foreground">
+              <Label
+                htmlFor={`${section.key}_prompt`}
+                className="text-foreground text-sm font-semibold"
+              >
                 {section.label} AI Prompt
               </Label>
               <Textarea
                 id={`${section.key}_prompt`}
-                value={(formData[`${section.key}_prompt` as keyof typeof formData] as string) ?? ""}
+                value={
+                  (formData[
+                    `${section.key}_prompt` as keyof typeof formData
+                  ] as string) ?? ""
+                }
                 onChange={(e) =>
                   updateField(`${section.key}_prompt`, e.target.value)
                 }
-                className="shadow-sm transition-all focus:ring-2 focus:ring-primary/20 max-h-24 min-h-[120px] resize-none overflow-y-auto"
+                className="focus:ring-primary/20 max-h-24 min-h-[120px] resize-none overflow-y-auto shadow-sm transition-all focus:ring-2"
                 placeholder="Enter AI generation prompt..."
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Instructions for AI to generate content for this section
               </p>
             </div>
@@ -273,9 +336,9 @@ export function SoapTemplateForm({
       ))}
 
       {/* System Prompt */}
-      <Card className="rounded-xl border-border shadow-md">
+      <Card className="border-border rounded-xl shadow-md">
         <CardHeader className="bg-muted/30 pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg text-foreground">
+          <CardTitle className="text-foreground flex items-center gap-2 text-lg">
             <span className="text-xl">⚙️</span>
             System Prompt Addition
           </CardTitle>
@@ -284,7 +347,10 @@ export function SoapTemplateForm({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2 pt-4">
-          <Label htmlFor="system_prompt_addition" className="text-sm font-semibold text-foreground">
+          <Label
+            htmlFor="system_prompt_addition"
+            className="text-foreground text-sm font-semibold"
+          >
             System Instructions
           </Label>
           <Textarea
@@ -293,19 +359,20 @@ export function SoapTemplateForm({
             onChange={(e) =>
               updateField("system_prompt_addition", e.target.value)
             }
-            className="shadow-sm transition-all focus:ring-2 focus:ring-primary/20 max-h-40 min-h-[200px] resize-none overflow-y-auto"
+            className="focus:ring-primary/20 max-h-40 min-h-[200px] resize-none overflow-y-auto shadow-sm transition-all focus:ring-2"
             placeholder="Enter additional system instructions..."
           />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             Global instructions that apply to all sections of this template
           </p>
         </CardContent>
       </Card>
 
       {/* Submit Button */}
-      <div className="sticky bottom-0 z-20 flex items-center justify-between gap-4 rounded-lg border border-border bg-card/95 p-4 shadow-lg backdrop-blur-sm">
-        <p className="text-sm text-muted-foreground">
-          {initialData?.id ? "Update" : "Create"} your template to make it available for use
+      <div className="border-border bg-card/95 sticky bottom-0 z-20 flex items-center justify-between gap-4 rounded-lg border p-4 shadow-lg backdrop-blur-sm">
+        <p className="text-muted-foreground text-sm">
+          {initialData?.id ? "Update" : "Create"} your template to make it
+          available for use
         </p>
         <Button
           type="submit"

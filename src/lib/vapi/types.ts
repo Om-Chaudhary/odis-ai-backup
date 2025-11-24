@@ -10,21 +10,21 @@
  * Each category has its own specific assessment questions and criteria
  */
 export type ConditionCategory =
-  | 'gastrointestinal'
-  | 'dermatological'
-  | 'respiratory'
-  | 'urinary'
-  | 'orthopedic'
-  | 'post-surgical'
-  | 'neurological'
-  | 'ophthalmic'
-  | 'cardiac'
-  | 'endocrine'
-  | 'dental'
-  | 'wound-care'
-  | 'behavioral'
-  | 'pain-management'
-  | 'general'; // Fallback category
+  | "gastrointestinal"
+  | "dermatological"
+  | "respiratory"
+  | "urinary"
+  | "orthopedic"
+  | "post-surgical"
+  | "neurological"
+  | "ophthalmic"
+  | "cardiac"
+  | "endocrine"
+  | "dental"
+  | "wound-care"
+  | "behavioral"
+  | "pain-management"
+  | "general"; // Fallback category
 
 /**
  * Assessment question structure for dynamic conversation flow
@@ -92,7 +92,7 @@ export interface DynamicVariables {
   appointmentDate: string;
 
   /** Type of follow-up call */
-  callType: 'discharge' | 'follow-up';
+  callType: "discharge" | "follow-up";
 
   /** Clinic phone number spelled out for natural speech */
   clinicPhone: string;
@@ -108,7 +108,7 @@ export interface DynamicVariables {
   // ============================================
 
   /** Type of discharge visit */
-  subType?: 'wellness' | 'vaccination';
+  subType?: "wellness" | "vaccination";
 
   /** Follow-up care instructions for discharge calls */
   nextSteps?: string;
@@ -171,7 +171,7 @@ export interface DynamicVariables {
   // ============================================
 
   /** Pet species (for species-specific guidance) */
-  petSpecies?: 'dog' | 'cat' | 'other';
+  petSpecies?: "dog" | "cat" | "other";
 
   /** Pet age in years (for age-appropriate guidance) */
   petAge?: number;

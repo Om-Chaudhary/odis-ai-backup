@@ -340,13 +340,9 @@ export function withAuth<T = unknown>(
       return await handler(request, auth.data, context);
     } catch (error) {
       console.error("[API] Error in authenticated route:", error);
-      return errorResponse(
-        "Internal server error",
-        500,
-        {
-          message: error instanceof Error ? error.message : "Unknown error",
-        },
-      );
+      return errorResponse("Internal server error", 500, {
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   };
 }

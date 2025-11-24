@@ -9,7 +9,7 @@
  * Run `pnpm update-types` to sync with latest database schema.
  */
 
-export interface ScheduledCall {
+export interface ScheduledCall extends Record<string, unknown> {
   id: string;
   user_id: string;
   assistant_id: string;
@@ -24,7 +24,7 @@ export interface ScheduledCall {
   updated_at: string;
 }
 
-export interface ScheduledEmail {
+export interface ScheduledEmail extends Record<string, unknown> {
   id: string;
   user_id: string;
   recipient_email: string;
@@ -41,7 +41,7 @@ export interface ScheduledEmail {
   updated_at: string;
 }
 
-export interface User {
+export interface User extends Record<string, unknown> {
   id: string;
   email: string;
   created_at: string;

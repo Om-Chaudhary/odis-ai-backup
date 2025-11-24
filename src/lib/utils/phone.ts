@@ -19,7 +19,7 @@
  */
 export function normalizePhoneNumber(
   phone: string | null | undefined,
-  defaultCountryCode = "1"
+  defaultCountryCode = "1",
 ): string | null {
   if (!phone) return null;
 
@@ -39,7 +39,11 @@ export function normalizePhoneNumber(
   }
 
   // If already starts with + and looks valid, return as-is
-  if (phone.startsWith("+") && digitsOnly.length >= 10 && digitsOnly.length <= 15) {
+  if (
+    phone.startsWith("+") &&
+    digitsOnly.length >= 10 &&
+    digitsOnly.length <= 15
+  ) {
     return `+${digitsOnly}`;
   }
 
@@ -64,7 +68,9 @@ export function normalizePhoneNumber(
  * @param phone - Phone number in any format
  * @returns Formatted phone number (e.g., "(415) 297-5859") or original if invalid
  */
-export function formatPhoneNumberForDisplay(phone: string | null | undefined): string {
+export function formatPhoneNumberForDisplay(
+  phone: string | null | undefined,
+): string {
   if (!phone) return "";
 
   const normalized = normalizePhoneNumber(phone);
@@ -98,7 +104,9 @@ export function formatPhoneNumberForDisplay(phone: string | null | undefined): s
  * @param email - Email address in any format
  * @returns Normalized email or null if invalid
  */
-export function normalizeEmail(email: string | null | undefined): string | null {
+export function normalizeEmail(
+  email: string | null | undefined,
+): string | null {
   if (!email) return null;
 
   // Trim whitespace and convert to lowercase

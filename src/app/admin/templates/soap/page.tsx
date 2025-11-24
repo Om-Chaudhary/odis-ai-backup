@@ -25,7 +25,10 @@ export default function SoapTemplatesPage() {
 
   // Share dialog state
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<{ id: string; name: string } | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   // Query templates
   const {
@@ -100,14 +103,14 @@ export default function SoapTemplatesPage() {
       <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-primary/10 p-2">
-              <ClipboardList className="h-6 w-6 text-primary" />
+            <div className="bg-primary/10 rounded-lg p-2">
+              <ClipboardList className="text-primary h-6 w-6" />
             </div>
             <h1 className="text-3xl font-bold tracking-tight">
               SOAP Templates
             </h1>
           </div>
-          <p className="text-base text-muted-foreground">
+          <p className="text-muted-foreground text-base">
             Manage SOAP note templates and assign them to users
           </p>
         </div>
@@ -131,8 +134,8 @@ export default function SoapTemplatesPage() {
           {isLoading ? (
             <div className="flex items-center justify-center p-16">
               <div className="flex flex-col items-center gap-3">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">
+                <Loader2 className="text-primary h-8 w-8 animate-spin" />
+                <p className="text-muted-foreground text-sm">
                   Loading templates...
                 </p>
               </div>
@@ -156,12 +159,12 @@ export default function SoapTemplatesPage() {
             />
           ) : (
             <div className="flex flex-col items-center justify-center gap-6 py-16 text-center">
-              <div className="rounded-full bg-muted p-8">
-                <ClipboardList className="h-12 w-12 text-muted-foreground" />
+              <div className="bg-muted rounded-full p-8">
+                <ClipboardList className="text-muted-foreground h-12 w-12" />
               </div>
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold">No templates found</h3>
-                <p className="max-w-sm text-sm text-muted-foreground">
+                <p className="text-muted-foreground max-w-sm text-sm">
                   Get started by creating your first SOAP template
                 </p>
               </div>

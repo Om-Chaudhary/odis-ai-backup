@@ -198,11 +198,11 @@ export function mapVapiStatus(
     string,
     "queued" | "ringing" | "in_progress" | "completed" | "failed" | "cancelled"
   > = {
-    "queued": "queued",
-    "ringing": "ringing",
+    queued: "queued",
+    ringing: "ringing",
     "in-progress": "in_progress",
-    "forwarding": "in_progress",
-    "ended": "completed",
+    forwarding: "in_progress",
+    ended: "completed",
   };
 
   const mappedStatus = statusMap[vapiStatus.toLowerCase()];
@@ -244,7 +244,7 @@ export function shouldMarkAsFailed(endedReason?: string): boolean {
   ];
 
   return failedReasons.some((reason) =>
-    endedReason.toLowerCase().includes(reason.toLowerCase())
+    endedReason.toLowerCase().includes(reason.toLowerCase()),
   );
 }
 

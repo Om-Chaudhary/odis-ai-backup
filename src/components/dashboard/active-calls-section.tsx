@@ -35,15 +35,13 @@ export function ActiveCallsSection({ calls }: ActiveCallsSectionProps) {
     <div className="space-y-3">
       <div className="flex items-center gap-2">
         <div className="relative">
-          <Phone className="w-5 h-5 text-primary" />
+          <Phone className="text-primary h-5 w-5" />
           <span className="absolute -top-1 -right-1 flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
+            <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500"></span>
           </span>
         </div>
-        <h2 className="text-lg font-semibold">
-          Active Calls ({calls.length})
-        </h2>
+        <h2 className="text-lg font-semibold">Active Calls ({calls.length})</h2>
       </div>
 
       <div className="grid gap-3">
@@ -62,9 +60,9 @@ function ActiveCallCard({ call }: { call: CallDetailResponse }) {
     STATUS_LABELS[call.status as keyof typeof STATUS_LABELS] ?? call.status;
 
   return (
-    <Card className="relative overflow-hidden border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background">
+    <Card className="border-primary/20 from-primary/5 via-background to-background relative overflow-hidden border-2 bg-gradient-to-br">
       {/* Animated gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 animate-gradient-x" />
+      <div className="animate-gradient-x absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10" />
 
       <div className="relative p-4">
         <div className="flex items-start justify-between gap-4">
@@ -74,13 +72,13 @@ function ActiveCallCard({ call }: { call: CallDetailResponse }) {
             <div>
               {call.patient ? (
                 <div className="space-y-1">
-                  <h3 className="text-xl font-bold flex items-center gap-2">
+                  <h3 className="flex items-center gap-2 text-xl font-bold">
                     {call.patient.pet_name}
                     <Badge variant="outline" className="text-xs font-normal">
                       Patient
                     </Badge>
                   </h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     {call.patient.owner_name} •{" "}
                     {formatPhoneNumber(call.patient.owner_phone)}
                   </p>
@@ -90,7 +88,7 @@ function ActiveCallCard({ call }: { call: CallDetailResponse }) {
                   <h3 className="text-xl font-bold">
                     {call.call_variables?.pet_name ?? "Unknown Pet"}
                   </h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     {formatPhoneNumber(call.phone_number)}
                   </p>
                 </div>
@@ -100,7 +98,9 @@ function ActiveCallCard({ call }: { call: CallDetailResponse }) {
             {/* Status and timestamp */}
             <div className="flex flex-wrap items-center gap-3 text-sm">
               <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${statusColor} animate-pulse`} />
+                <span
+                  className={`h-2 w-2 rounded-full ${statusColor} animate-pulse`}
+                />
                 <span className="font-medium">{statusLabel}</span>
               </div>
               <span className="text-muted-foreground">
@@ -116,15 +116,17 @@ function ActiveCallCard({ call }: { call: CallDetailResponse }) {
 
             {/* Additional info */}
             {call.patient && (
-              <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+              <div className="text-muted-foreground flex flex-wrap gap-4 text-xs">
                 {call.patient.vet_name && (
                   <div>
-                    <span className="font-medium">Vet:</span> {call.patient.vet_name}
+                    <span className="font-medium">Vet:</span>{" "}
+                    {call.patient.vet_name}
                   </div>
                 )}
                 {call.patient.clinic_name && (
                   <div>
-                    <span className="font-medium">Clinic:</span> {call.patient.clinic_name}
+                    <span className="font-medium">Clinic:</span>{" "}
+                    {call.patient.clinic_name}
                   </div>
                 )}
               </div>
@@ -134,7 +136,7 @@ function ActiveCallCard({ call }: { call: CallDetailResponse }) {
           {/* Right side: Visual indicator and actions */}
           <div className="flex flex-col items-end gap-3">
             {/* Animated orb indicator */}
-            <div className="w-[60px] h-[60px]">
+            <div className="h-[60px] w-[60px]">
               <Orb
                 colors={
                   call.status === "in_progress"
@@ -150,7 +152,7 @@ function ActiveCallCard({ call }: { call: CallDetailResponse }) {
             <div className="flex gap-2">
               <Link href={`/dashboard/calls/${call.id}`}>
                 <Button size="sm" variant="outline" className="gap-2">
-                  <ExternalLink className="w-3 h-3" />
+                  <ExternalLink className="h-3 w-3" />
                   View
                 </Button>
               </Link>
@@ -160,7 +162,7 @@ function ActiveCallCard({ call }: { call: CallDetailResponse }) {
       </div>
 
       {/* Pulse border effect */}
-      <div className="absolute inset-0 rounded-lg border-2 border-primary/30 animate-pulse pointer-events-none" />
+      <div className="border-primary/30 pointer-events-none absolute inset-0 animate-pulse rounded-lg border-2" />
     </Card>
   );
 }

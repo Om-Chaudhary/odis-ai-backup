@@ -3,11 +3,23 @@
 import { useState } from "react";
 import { api } from "~/trpc/client";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
 import { Textarea } from "~/components/ui/textarea";
 import { Label } from "~/components/ui/label";
 import { Input } from "~/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import { toast } from "sonner";
 import { Loader2, Copy, FlaskConical } from "lucide-react";
 
@@ -70,7 +82,8 @@ export default function SoapPlayground() {
   const [soapResult, setSoapResult] = useState<SoapResponse | null>(null);
 
   // Fetch templates
-  const { data: templates, isLoading: templatesLoading } = api.playground.getTemplatesForPlayground.useQuery();
+  const { data: templates, isLoading: templatesLoading } =
+    api.playground.getTemplatesForPlayground.useQuery();
 
   const handleTemplateSelect = (id: string) => {
     setSelectedTemplateId(id);
@@ -151,11 +164,16 @@ export default function SoapPlayground() {
 
       if (hasTemplateOverrides) {
         payload.template = {};
-        if (subjectiveTemplate.trim()) payload.template.subjective_template = subjectiveTemplate.trim();
-        if (objectiveTemplate.trim()) payload.template.objective_template = objectiveTemplate.trim();
-        if (subjectivePrompt.trim()) payload.template.subjective_prompt = subjectivePrompt.trim();
-        if (objectivePrompt.trim()) payload.template.objective_prompt = objectivePrompt.trim();
-        if (systemPromptAddition.trim()) payload.template.system_prompt_addition = systemPromptAddition.trim();
+        if (subjectiveTemplate.trim())
+          payload.template.subjective_template = subjectiveTemplate.trim();
+        if (objectiveTemplate.trim())
+          payload.template.objective_template = objectiveTemplate.trim();
+        if (subjectivePrompt.trim())
+          payload.template.subjective_prompt = subjectivePrompt.trim();
+        if (objectivePrompt.trim())
+          payload.template.objective_prompt = objectivePrompt.trim();
+        if (systemPromptAddition.trim())
+          payload.template.system_prompt_addition = systemPromptAddition.trim();
       }
 
       const response = await fetch("/api/generate-soap", {
@@ -176,7 +194,9 @@ export default function SoapPlayground() {
       toast.success("SOAP note generated successfully!");
     } catch (error) {
       console.error("Error generating SOAP note:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to generate SOAP note");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to generate SOAP note",
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -190,9 +210,12 @@ export default function SoapPlayground() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h1 className="text-4xl font-bold tracking-tight text-foreground">SOAP Playground</h1>
-        <p className="text-lg text-muted-foreground">
-          Test the generate-soap-notes-v2 edge function with different templates and inputs
+        <h1 className="text-foreground text-4xl font-bold tracking-tight">
+          SOAP Playground
+        </h1>
+        <p className="text-muted-foreground text-lg">
+          Test the generate-soap-notes-v2 edge function with different templates
+          and inputs
         </p>
       </div>
 
@@ -203,33 +226,56 @@ export default function SoapPlayground() {
           <Card>
             <CardHeader>
               <CardTitle>Template Selection</CardTitle>
-              <CardDescription>Select a template to prefill the fields below</CardDescription>
+              <CardDescription>
+                Select a template to prefill the fields below
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="template-select">Choose Template</Label>
-                <Select value={selectedTemplateId} onValueChange={handleTemplateSelect} disabled={templatesLoading}>
+                <Select
+                  value={selectedTemplateId}
+                  onValueChange={handleTemplateSelect}
+                  disabled={templatesLoading}
+                >
                   <SelectTrigger id="template-select">
-                    <SelectValue placeholder={templatesLoading ? "Loading templates..." : "Select a template"} />
+                    <SelectValue
+                      placeholder={
+                        templatesLoading
+                          ? "Loading templates..."
+                          : "Select a template"
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    {templates?.map((template: {
-                      id: string;
-                      template_name: string;
-                      user?: { email?: string | null } | null;
-                    }) => (
-                      <SelectItem key={template.id} value={template.id}>
-                        {template.template_name} - {template.user?.email ?? "No user"}
-                      </SelectItem>
-                    ))}
+                    {templates?.map(
+                      (template: {
+                        id: string;
+                        template_name: string;
+                        user?: { email?: string | null } | null;
+                      }) => (
+                        <SelectItem key={template.id} value={template.id}>
+                          {template.template_name} -{" "}
+                          {template.user?.email ?? "No user"}
+                        </SelectItem>
+                      ),
+                    )}
                   </SelectContent>
                 </Select>
               </div>
               <div className="flex gap-2">
-                <Button onClick={handleLoadSample} variant="outline" className="flex-1">
+                <Button
+                  onClick={handleLoadSample}
+                  variant="outline"
+                  className="flex-1"
+                >
                   Load Sample
                 </Button>
-                <Button onClick={handleClearAll} variant="outline" className="flex-1">
+                <Button
+                  onClick={handleClearAll}
+                  variant="outline"
+                  className="flex-1"
+                >
                   Clear All
                 </Button>
               </div>
@@ -240,7 +286,9 @@ export default function SoapPlayground() {
           <Card>
             <CardHeader>
               <CardTitle>Transcription</CardTitle>
-              <CardDescription>The appointment transcription to process (required)</CardDescription>
+              <CardDescription>
+                The appointment transcription to process (required)
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Textarea
@@ -256,7 +304,9 @@ export default function SoapPlayground() {
           <Card>
             <CardHeader>
               <CardTitle>Template & User IDs</CardTitle>
-              <CardDescription>Optional identifiers for the request</CardDescription>
+              <CardDescription>
+                Optional identifiers for the request
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -284,7 +334,9 @@ export default function SoapPlayground() {
           <Card>
             <CardHeader>
               <CardTitle>Template Overrides</CardTitle>
-              <CardDescription>Optional template customizations</CardDescription>
+              <CardDescription>
+                Optional template customizations
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -341,7 +393,12 @@ export default function SoapPlayground() {
           </Card>
 
           {/* Generate Button */}
-          <Button onClick={handleGenerate} disabled={isGenerating || !transcription.trim()} className="w-full" size="lg">
+          <Button
+            onClick={handleGenerate}
+            disabled={isGenerating || !transcription.trim()}
+            className="w-full"
+            size="lg"
+          >
             {isGenerating ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -361,14 +418,18 @@ export default function SoapPlayground() {
           <Card>
             <CardHeader>
               <CardTitle>Results</CardTitle>
-              <CardDescription>Generated SOAP note sections will appear here</CardDescription>
+              <CardDescription>
+                Generated SOAP note sections will appear here
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {!soapResult && (
-                <div className="flex min-h-[400px] items-center justify-center text-muted-foreground">
+                <div className="text-muted-foreground flex min-h-[400px] items-center justify-center">
                   <div className="text-center">
                     <FlaskConical className="mx-auto mb-4 h-12 w-12 opacity-50" />
-                    <p>No results yet. Generate a SOAP note to see the output.</p>
+                    <p>
+                      No results yet. Generate a SOAP note to see the output.
+                    </p>
                   </div>
                 </div>
               )}
@@ -383,14 +444,18 @@ export default function SoapPlayground() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => copyToClipboard(soapResult.subjective, "Subjective")}
+                          onClick={() =>
+                            copyToClipboard(soapResult.subjective, "Subjective")
+                          }
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <p className="whitespace-pre-wrap text-sm">{soapResult.subjective}</p>
+                      <p className="text-sm whitespace-pre-wrap">
+                        {soapResult.subjective}
+                      </p>
                     </CardContent>
                   </Card>
 
@@ -402,14 +467,18 @@ export default function SoapPlayground() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => copyToClipboard(soapResult.objective, "Objective")}
+                          onClick={() =>
+                            copyToClipboard(soapResult.objective, "Objective")
+                          }
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <p className="whitespace-pre-wrap text-sm">{soapResult.objective}</p>
+                      <p className="text-sm whitespace-pre-wrap">
+                        {soapResult.objective}
+                      </p>
                     </CardContent>
                   </Card>
 
@@ -421,14 +490,18 @@ export default function SoapPlayground() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => copyToClipboard(soapResult.assessment, "Assessment")}
+                          onClick={() =>
+                            copyToClipboard(soapResult.assessment, "Assessment")
+                          }
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <p className="whitespace-pre-wrap text-sm">{soapResult.assessment}</p>
+                      <p className="text-sm whitespace-pre-wrap">
+                        {soapResult.assessment}
+                      </p>
                     </CardContent>
                   </Card>
 
@@ -437,13 +510,21 @@ export default function SoapPlayground() {
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <CardTitle className="text-lg">Plan</CardTitle>
-                        <Button variant="ghost" size="sm" onClick={() => copyToClipboard(soapResult.plan, "Plan")}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            copyToClipboard(soapResult.plan, "Plan")
+                          }
+                        >
                           <Copy className="h-4 w-4" />
                         </Button>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <p className="whitespace-pre-wrap text-sm">{soapResult.plan}</p>
+                      <p className="text-sm whitespace-pre-wrap">
+                        {soapResult.plan}
+                      </p>
                     </CardContent>
                   </Card>
 
@@ -451,18 +532,27 @@ export default function SoapPlayground() {
                   <Card>
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">Client Instructions</CardTitle>
+                        <CardTitle className="text-lg">
+                          Client Instructions
+                        </CardTitle>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => copyToClipboard(soapResult.clientInstructions, "Client Instructions")}
+                          onClick={() =>
+                            copyToClipboard(
+                              soapResult.clientInstructions,
+                              "Client Instructions",
+                            )
+                          }
                         >
                           <Copy className="h-4 w-4" />
                         </Button>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <p className="whitespace-pre-wrap text-sm">{soapResult.clientInstructions}</p>
+                      <p className="text-sm whitespace-pre-wrap">
+                        {soapResult.clientInstructions}
+                      </p>
                     </CardContent>
                   </Card>
                 </div>

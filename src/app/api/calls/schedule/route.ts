@@ -135,13 +135,15 @@ export async function POST(request: NextRequest) {
       discharge_summary_content: validated.dischargeSummary,
 
       // Conditional fields based on call_type
-      ...(validated.callType === "discharge" && validated.subType && {
-        sub_type: validated.subType,
-      }),
+      ...(validated.callType === "discharge" &&
+        validated.subType && {
+          sub_type: validated.subType,
+        }),
 
-      ...(validated.callType === "follow-up" && validated.condition && {
-        condition: validated.condition,
-      }),
+      ...(validated.callType === "follow-up" &&
+        validated.condition && {
+          condition: validated.condition,
+        }),
 
       // Follow-up instructions
       ...(validated.nextSteps && { next_steps: validated.nextSteps }),
@@ -202,7 +204,10 @@ export async function POST(request: NextRequest) {
       });
 
       // Rollback database insert
-      await supabase.from("scheduled_discharge_calls").delete().eq("id", scheduledCall.id);
+      await supabase
+        .from("scheduled_discharge_calls")
+        .delete()
+        .eq("id", scheduledCall.id);
 
       return NextResponse.json(
         { error: "Failed to schedule call execution" },

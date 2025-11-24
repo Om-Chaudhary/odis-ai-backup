@@ -82,7 +82,8 @@ function formatEntityExtractionForPrompt(entities: NormalizedEntities): string {
   if (entities.patient.breed) sections.push(`Breed: ${entities.patient.breed}`);
   if (entities.patient.age) sections.push(`Age: ${entities.patient.age}`);
   if (entities.patient.sex) sections.push(`Sex: ${entities.patient.sex}`);
-  if (entities.patient.weight) sections.push(`Weight: ${entities.patient.weight}`);
+  if (entities.patient.weight)
+    sections.push(`Weight: ${entities.patient.weight}`);
   sections.push(`Owner: ${entities.patient.owner.name || "Not specified"}`);
   sections.push("");
 
@@ -174,7 +175,9 @@ function formatEntityExtractionForPrompt(entities: NormalizedEntities): string {
   }
 
   if (entities.clinical.followUpInstructions) {
-    sections.push(`\nFollow-up Instructions: ${entities.clinical.followUpInstructions}`);
+    sections.push(
+      `\nFollow-up Instructions: ${entities.clinical.followUpInstructions}`,
+    );
   }
 
   if (entities.clinical.followUpDate) {
@@ -207,7 +210,8 @@ function createUserPrompt(
     if (patientData.species) sections.push(`Species: ${patientData.species}`);
     if (patientData.breed) sections.push(`Breed: ${patientData.breed}`);
     if (patientData.age) sections.push(`Age: ${patientData.age}`);
-    if (patientData.owner_name) sections.push(`Owner: ${patientData.owner_name}`);
+    if (patientData.owner_name)
+      sections.push(`Owner: ${patientData.owner_name}`);
     sections.push("");
   }
 
@@ -338,9 +342,7 @@ export async function generateDischargeSummaryWithRetry(
       // Retry on API errors
       if (error instanceof Anthropic.APIError) {
         const isRetryable =
-          error.status === 429 ||
-          error.status === 500 ||
-          error.status === 503;
+          error.status === 429 || error.status === 500 || error.status === 503;
 
         if (!isRetryable || attempt === maxRetries - 1) {
           throw lastError;
@@ -358,5 +360,7 @@ export async function generateDischargeSummaryWithRetry(
     }
   }
 
-  throw lastError || new Error("Discharge summary generation failed after retries");
+  throw (
+    lastError || new Error("Discharge summary generation failed after retries")
+  );
 }

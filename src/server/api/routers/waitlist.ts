@@ -32,7 +32,8 @@ export const waitlistRouter = createTRPCRouter({
         const supabase = await createServiceClient();
         const posthog = PostHogClient();
 
-        const ipHeader = ctx.headers.get("x-forwarded-for") ??
+        const ipHeader =
+          ctx.headers.get("x-forwarded-for") ??
           ctx.headers.get("x-real-ip") ??
           null;
         const userAgent = ctx.headers.get("user-agent") ?? undefined;
@@ -112,25 +113,24 @@ export const waitlistRouter = createTRPCRouter({
     }),
 
   // Example protected procedure - requires authentication
-  getMyWaitlistStatus: protectedProcedure
-    .query(async ({ ctx }) => {
-      const { data, error } = await ctx.supabase
-        .from("waitlist_signups")
-        .select("*")
-        .eq("email", ctx.user.email)
-        .single<WaitlistSignup>();
+  getMyWaitlistStatus: protectedProcedure.query(async ({ ctx }) => {
+    const { data, error } = await ctx.supabase
+      .from("waitlist_signups")
+      .select("*")
+      .eq("email", ctx.user.email)
+      .single<WaitlistSignup>();
 
-      if (error && error.code !== "PGRST116") {
-        throw error;
-      }
+    if (error && error.code !== "PGRST116") {
+      throw error;
+    }
 
-      return {
-        isOnWaitlist: !!data,
-        status: data?.status ?? null,
-        joinedAt: data?.created_at ?? null,
-        // Note: position field doesn't exist in the schema, removing it
-      };
-    }),
+    return {
+      isOnWaitlist: !!data,
+      status: data?.status ?? null,
+      joinedAt: data?.created_at ?? null,
+      // Note: position field doesn't exist in the schema, removing it
+    };
+  }),
 
   // Another example protected procedure
   updateWaitlistProfile: protectedProcedure

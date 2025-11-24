@@ -5,7 +5,6 @@
 **📄 `VAPI_SYSTEM_PROMPT.txt`** - **USE THIS FILE**
 
 This is the consolidated, authoritative VAPI system prompt that includes:
-
 - ✅ All conversation flows (discharge & follow-up)
 - ✅ 40+ AI-extracted dynamic variables
 - ✅ Conditional blocks to prevent literal variable names
@@ -20,19 +19,16 @@ This is the consolidated, authoritative VAPI system prompt that includes:
 ## Legacy Files (For Reference Only)
 
 ### `VAPI_PRODUCTION_PROMPT.txt`
-
 - **Status:** Legacy (superseded by VAPI_SYSTEM_PROMPT.txt)
 - **Content:** Original production prompt with conditionals added
 - **Recommend:** Archive or delete after verification
 
 ### `VAPI_ENHANCED_PROMPT.txt`
-
 - **Status:** Legacy (superseded by VAPI_SYSTEM_PROMPT.txt)
 - **Content:** Enhanced prompt with knowledge base references
 - **Recommend:** Archive or delete after verification
 
 ### `docs/VAPI_ASSISTANT_PROMPT.md`
-
 - **Status:** Legacy documentation
 - **Content:** Older markdown version of prompt
 - **Recommend:** Archive or delete after verification
@@ -42,25 +38,21 @@ This is the consolidated, authoritative VAPI system prompt that includes:
 ## Documentation Files (Keep)
 
 ### `VAPI_AI_EXTRACTION_VARIABLES.md`
-
 - **Status:** Active documentation
 - **Purpose:** Complete reference of all 40+ AI-extracted variables
 - **Usage:** Technical reference for developers
 
 ### `VAPI_AI_EXTRACTION_INTEGRATION_SUMMARY.md`
-
 - **Status:** Active documentation
 - **Purpose:** Integration guide and implementation summary
 - **Usage:** Developer onboarding and troubleshooting
 
 ### `VAPI_KNOWLEDGE_BASE_USAGE.md`
-
 - **Status:** Active documentation
 - **Purpose:** Knowledge base system documentation
 - **Usage:** Understanding condition-specific responses
 
 ### `VAPI_FINAL_SETUP.md`
-
 - **Status:** Active documentation
 - **Purpose:** Setup and configuration guide
 - **Usage:** Initial VAPI setup instructions
@@ -74,7 +66,6 @@ This is the consolidated, authoritative VAPI system prompt that includes:
    - Test with sample calls to verify variable substitution
 
 2. **Archive Legacy Files**
-
    ```bash
    mkdir -p archive/vapi-prompts
    mv VAPI_PRODUCTION_PROMPT.txt archive/vapi-prompts/

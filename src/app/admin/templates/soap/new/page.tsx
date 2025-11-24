@@ -22,21 +22,29 @@ export default function NewSoapTemplatePage() {
   });
 
   const handleSubmit = async (data: Record<string, unknown>) => {
-    await createMutation.mutateAsync(data as Parameters<typeof createMutation.mutateAsync>[0]);
+    await createMutation.mutateAsync(
+      data as Parameters<typeof createMutation.mutateAsync>[0],
+    );
   };
 
   return (
     <div className="space-y-4">
       <div className="space-y-3">
         <Link href="/admin/templates/soap">
-          <Button variant="ghost" size="sm" className="gap-2 hover:bg-primary/10 hover:text-primary">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hover:bg-primary/10 hover:text-primary gap-2"
+          >
             <ArrowLeft className="h-4 w-4" />
             Back to Templates
           </Button>
         </Link>
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Create SOAP Template</h1>
-          <p className="text-base text-muted-foreground">
+          <h1 className="text-foreground text-3xl font-bold tracking-tight">
+            Create SOAP Template
+          </h1>
+          <p className="text-muted-foreground text-base">
             Create a new SOAP note template with customizable sections
           </p>
         </div>

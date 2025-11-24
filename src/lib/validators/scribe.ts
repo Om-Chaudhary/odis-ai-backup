@@ -24,7 +24,13 @@ export const NormalizeRequestSchema = z.object({
 
   // Optional: Hint about input type for better extraction
   inputType: z
-    .enum(["transcript", "soap_note", "visit_notes", "discharge_summary", "other"])
+    .enum([
+      "transcript",
+      "soap_note",
+      "visit_notes",
+      "discharge_summary",
+      "other",
+    ])
     .optional()
     .default("other"),
 
@@ -191,7 +197,9 @@ export type NormalizeResponse = z.infer<typeof NormalizeResponseSchema>;
 /**
  * Parse weight string to kilograms
  */
-export function parseWeightToKg(weightStr: string | undefined): number | undefined {
+export function parseWeightToKg(
+  weightStr: string | undefined,
+): number | undefined {
   if (!weightStr) return undefined;
 
   const match = /^([\d.]+)\s*(kg|lbs?|pounds?)?$/i.exec(weightStr);
@@ -230,14 +238,20 @@ export function parseAgeToDOB(ageStr: string | undefined): string | undefined {
 
   if (totalMonths === 0) return undefined;
 
-  const dob = new Date(now.getFullYear(), now.getMonth() - totalMonths, now.getDate());
+  const dob = new Date(
+    now.getFullYear(),
+    now.getMonth() - totalMonths,
+    now.getDate(),
+  );
   return dob.toISOString();
 }
 
 /**
  * Sanitize phone number to E.164 format
  */
-export function sanitizePhoneNumber(phone: string | undefined): string | undefined {
+export function sanitizePhoneNumber(
+  phone: string | undefined,
+): string | undefined {
   if (!phone) return undefined;
 
   const digits = phone.replace(/\D/g, "");

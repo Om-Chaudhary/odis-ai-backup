@@ -160,7 +160,7 @@ export default function SupportPage() {
       <Navigation />
 
       {/* Hero Section */}
-      <section className="relative px-4 pb-16 pt-32 sm:px-6 sm:pt-40">
+      <section className="relative px-4 pt-32 pb-16 sm:px-6 sm:pt-40">
         <div className="mx-auto max-w-7xl text-center">
           <div className="mb-6 inline-flex items-center justify-center rounded-full bg-[#31aba3]/10 px-4 py-2">
             <HelpCircle className="mr-2 h-5 w-5 text-[#31aba3]" />
@@ -199,7 +199,7 @@ export default function SupportPage() {
               return (
                 <Card
                   key={index}
-                  className="group cursor-pointer border-gray-200 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+                  className="group cursor-pointer border-gray-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                 >
                   <CardHeader>
                     <div
@@ -221,8 +221,8 @@ export default function SupportPage() {
                           key={topicIndex}
                           className="flex items-start text-sm text-gray-600"
                         >
-                          <span className="mr-2 mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#31aba3]" />
-                          <span className="group-hover:text-[#31aba3] transition-colors">
+                          <span className="mt-1.5 mr-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#31aba3]" />
+                          <span className="transition-colors group-hover:text-[#31aba3]">
                             {topic}
                           </span>
                         </li>
@@ -315,13 +315,13 @@ export default function SupportPage() {
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link
                 href="/contact"
-                className="inline-flex items-center rounded-lg bg-[#31aba3] px-6 py-3 font-semibold text-white transition-all hover:bg-[#2a9589] hover:scale-105"
+                className="inline-flex items-center rounded-lg bg-[#31aba3] px-6 py-3 font-semibold text-white transition-all hover:scale-105 hover:bg-[#2a9589]"
               >
                 Contact Support
               </Link>
               <Link
                 href="/blog"
-                className="inline-flex items-center rounded-lg border-2 border-[#31aba3] px-6 py-3 font-semibold text-[#31aba3] transition-all hover:bg-[#31aba3]/5 hover:scale-105"
+                className="inline-flex items-center rounded-lg border-2 border-[#31aba3] px-6 py-3 font-semibold text-[#31aba3] transition-all hover:scale-105 hover:bg-[#31aba3]/5"
               >
                 Visit Blog
               </Link>

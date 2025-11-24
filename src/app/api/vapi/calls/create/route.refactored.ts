@@ -14,7 +14,10 @@
 
 import type { NextRequest } from "next/server";
 import { withAuth, successResponse, errorResponse } from "~/lib/api/auth";
-import { createVapiCall, type CreateVapiCallInput } from "~/lib/vapi/call-manager";
+import {
+  createVapiCall,
+  type CreateVapiCallInput,
+} from "~/lib/vapi/call-manager";
 import { z } from "zod";
 
 /* ========================================
@@ -29,11 +32,18 @@ const CreateCallSchema = z.object({
   ownerName: z.string().min(1, "Owner name is required"),
   ownerPhone: z
     .string()
-    .regex(/^\+[1-9]\d{1,14}$/, "Phone must be in E.164 format (e.g., +14155551234)"),
-  appointmentDate: z.string().min(1, "Appointment date is required (spelled out)"),
+    .regex(
+      /^\+[1-9]\d{1,14}$/,
+      "Phone must be in E.164 format (e.g., +14155551234)",
+    ),
+  appointmentDate: z
+    .string()
+    .min(1, "Appointment date is required (spelled out)"),
   callType: z.enum(["discharge", "follow-up"]),
   clinicPhone: z.string().min(1, "Clinic phone is required (spelled out)"),
-  emergencyPhone: z.string().min(1, "Emergency phone is required (spelled out)"),
+  emergencyPhone: z
+    .string()
+    .min(1, "Emergency phone is required (spelled out)"),
   dischargeSummary: z.string().min(1, "Discharge summary is required"),
 
   // Optional discharge fields

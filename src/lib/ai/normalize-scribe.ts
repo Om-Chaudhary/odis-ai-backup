@@ -147,7 +147,9 @@ export async function extractEntities(
   inputType?: string,
 ): Promise<NormalizedEntities> {
   if (!input || input.trim().length < 50) {
-    throw new Error("Input too short for entity extraction (minimum 50 characters)");
+    throw new Error(
+      "Input too short for entity extraction (minimum 50 characters)",
+    );
   }
 
   try {
@@ -263,7 +265,9 @@ export function createExtractionSummary(entities: NormalizedEntities): string {
     entities.clinical.medications?.length
       ? `Medications: ${entities.clinical.medications.length} prescribed`
       : "",
-    entities.warnings?.length ? `Warnings: ${entities.warnings.join("; ")}` : "",
+    entities.warnings?.length
+      ? `Warnings: ${entities.warnings.join("; ")}`
+      : "",
   ]
     .filter(Boolean)
     .join(" | ");
@@ -296,9 +300,7 @@ export async function extractEntitiesWithRetry(
       // Retry on API errors
       if (error instanceof Anthropic.APIError) {
         const isRetryable =
-          error.status === 429 ||
-          error.status === 500 ||
-          error.status === 503;
+          error.status === 429 || error.status === 500 || error.status === 503;
 
         if (!isRetryable || attempt === maxRetries - 1) {
           throw lastError;

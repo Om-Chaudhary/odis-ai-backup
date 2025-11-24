@@ -84,7 +84,8 @@ export default function Demo2LandingPage() {
               </span>
             </h2>
             <p className="mx-auto mt-4 max-w-2xl font-serif text-lg text-slate-600">
-              You tried other solutions, but they added friction instead of solving it.
+              You tried other solutions, but they added friction instead of
+              solving it.
             </p>
           </div>
 
@@ -97,7 +98,9 @@ export default function Demo2LandingPage() {
                 Clunky and Disruptive
               </h3>
               <p className="font-serif text-slate-600">
-                Dictation systems that require constant correction, mobile apps that interrupt your workflow, or physical scribes that get in the way of patient exams.
+                Dictation systems that require constant correction, mobile apps
+                that interrupt your workflow, or physical scribes that get in
+                the way of patient exams.
               </p>
             </div>
 
@@ -109,7 +112,9 @@ export default function Demo2LandingPage() {
                 No Real Integration
               </h3>
               <p className="font-serif text-slate-600">
-                Copy-paste nightmares, manual data entry, or notes that don&apos;t fit your PIMS format. You end up spending just as much time fixing and transferring.
+                Copy-paste nightmares, manual data entry, or notes that
+                don&apos;t fit your PIMS format. You end up spending just as
+                much time fixing and transferring.
               </p>
             </div>
 
@@ -121,7 +126,9 @@ export default function Demo2LandingPage() {
                 Expensive with Hidden Costs
               </h3>
               <p className="font-serif text-slate-600">
-                High monthly fees, per-note charges that add up fast, or human scribes at $30-50/hour. Plus the hidden cost of training and managing another system.
+                High monthly fees, per-note charges that add up fast, or human
+                scribes at $30-50/hour. Plus the hidden cost of training and
+                managing another system.
               </p>
             </div>
           </div>
@@ -139,7 +146,8 @@ export default function Demo2LandingPage() {
               </span>
             </h2>
             <p className="mx-auto mt-4 max-w-2xl font-serif text-lg text-slate-600">
-              OdisAI is the AI veterinary scribe built from the ground up for seamless, friction-free documentation.
+              OdisAI is the AI veterinary scribe built from the ground up for
+              seamless, friction-free documentation.
             </p>
           </div>
 
@@ -154,7 +162,9 @@ export default function Demo2LandingPage() {
                     Truly Hands-Free
                   </h3>
                   <p className="font-serif text-slate-600">
-                    No apps to toggle, buttons to press, or commands to speak. OdisAI simply listens and captures everything naturally—zero disruption to your workflow.
+                    No apps to toggle, buttons to press, or commands to speak.
+                    OdisAI simply listens and captures everything naturally—zero
+                    disruption to your workflow.
                   </p>
                 </div>
               </div>
@@ -168,7 +178,9 @@ export default function Demo2LandingPage() {
                     Real PIMS Integration
                   </h3>
                   <p className="font-serif text-slate-600">
-                    One-click transfer to Avimark, Cornerstone, ezyVet, and more. Notes are formatted exactly how your PIMS expects them—no reformatting or manual entry required.
+                    One-click transfer to Avimark, Cornerstone, ezyVet, and
+                    more. Notes are formatted exactly how your PIMS expects
+                    them—no reformatting or manual entry required.
                   </p>
                 </div>
               </div>
@@ -182,7 +194,9 @@ export default function Demo2LandingPage() {
                     Transparent, Predictable Pricing
                   </h3>
                   <p className="font-serif text-slate-600">
-                    Simple flat-rate pricing with unlimited notes. No per-appointment fees, no surprise charges. Know exactly what you&apos;re paying each month.
+                    Simple flat-rate pricing with unlimited notes. No
+                    per-appointment fees, no surprise charges. Know exactly what
+                    you&apos;re paying each month.
                   </p>
                 </div>
               </div>
@@ -196,7 +210,9 @@ export default function Demo2LandingPage() {
                     Works Immediately
                   </h3>
                   <p className="font-serif text-slate-600">
-                    No complex training, no workflow changes, no steep learning curve. Start using OdisAI in your first appointment with 5 minutes of setup.
+                    No complex training, no workflow changes, no steep learning
+                    curve. Start using OdisAI in your first appointment with 5
+                    minutes of setup.
                   </p>
                 </div>
               </div>
@@ -260,7 +276,8 @@ export default function Demo2LandingPage() {
             Experience Documentation That Works
           </h2>
           <p className="mx-auto mt-4 max-w-2xl font-serif text-lg text-teal-50">
-            See why veterinarians are switching from clunky scribes to OdisAI for seamless, integrated documentation.
+            See why veterinarians are switching from clunky scribes to OdisAI
+            for seamless, integrated documentation.
           </p>
 
           <div className="mt-8 flex justify-center">

@@ -66,9 +66,7 @@ export const termsOfServiceSections: ComplianceSection[] = [
           <li>Provide accurate, current, and complete information</li>
           <li>Maintain and update your information to keep it accurate</li>
           <li>Maintain the security of your password and account</li>
-          <li>
-            Notify us immediately of any unauthorized use of your account
-          </li>
+          <li>Notify us immediately of any unauthorized use of your account</li>
           <li>Accept responsibility for all activities under your account</li>
         </ul>
       </>
@@ -83,9 +81,7 @@ export const termsOfServiceSections: ComplianceSection[] = [
         <ul>
           <li>Violate any applicable laws or regulations</li>
           <li>Infringe on intellectual property rights of others</li>
-          <li>
-            Transmit viruses, malware, or other malicious code
-          </li>
+          <li>Transmit viruses, malware, or other malicious code</li>
           <li>Attempt to gain unauthorized access to our systems</li>
           <li>Interfere with or disrupt our Services</li>
           <li>Use our Services for any unlawful purpose</li>
@@ -175,9 +171,7 @@ export const termsOfServiceSections: ComplianceSection[] = [
     title: "Contact Information",
     content: (
       <>
-        <p>
-          For questions about these Terms, please contact us at:
-        </p>
+        <p>For questions about these Terms, please contact us at:</p>
         <div className="mt-4 rounded-lg border bg-slate-50 p-4">
           <p>
             <strong>{COMPANY_NAME}</strong>

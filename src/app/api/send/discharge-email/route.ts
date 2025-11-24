@@ -9,7 +9,6 @@ import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
 import { normalizeEmail } from "~/lib/utils/phone";
 
-
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)
  */

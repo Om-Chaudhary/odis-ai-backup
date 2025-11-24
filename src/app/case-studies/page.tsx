@@ -36,8 +36,7 @@ const highlights = [
   {
     icon: Award,
     title: "Industry Leaders",
-    description:
-      "Success stories from award-winning veterinary professionals",
+    description: "Success stories from award-winning veterinary professionals",
     color: "text-purple-600",
     bgColor: "bg-purple-50",
   },
@@ -71,7 +70,7 @@ export default function CaseStudiesPage() {
       <Navigation />
 
       {/* Hero Section */}
-      <section className="relative px-4 pb-16 pt-32 sm:px-6 sm:pt-40">
+      <section className="relative px-4 pt-32 pb-16 sm:px-6 sm:pt-40">
         <div className="mx-auto max-w-7xl text-center">
           <div className="mb-6 inline-flex items-center justify-center rounded-full bg-[#31aba3]/10 px-4 py-2">
             <BookOpen className="mr-2 h-5 w-5 text-[#31aba3]" />
@@ -214,7 +213,9 @@ export default function CaseStudiesPage() {
                   <CardContent>
                     <div className="flex items-center justify-between text-sm text-gray-500">
                       <span>{study.readTime}</span>
-                      <span>{format(new Date(study.publishedAt), "MMM yyyy")}</span>
+                      <span>
+                        {format(new Date(study.publishedAt), "MMM yyyy")}
+                      </span>
                     </div>
                   </CardContent>
                 </Card>

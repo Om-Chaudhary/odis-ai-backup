@@ -78,7 +78,7 @@ export const GoogleGeminiEffectDemo2 = ({
         >
           {/* Dollar Sign - Top Left (Expensive) */}
           <motion.div
-            className="absolute -left-20 -top-20 flex flex-col items-center gap-1"
+            className="absolute -top-20 -left-20 flex flex-col items-center gap-1"
             style={{ scale: dollarScale }}
             animate={{
               rotate: [-5, 5, -5],
@@ -90,14 +90,19 @@ export const GoogleGeminiEffectDemo2 = ({
             }}
           >
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-red-50 to-white shadow-xl md:h-20 md:w-20">
-              <DollarSign className="h-8 w-8 text-red-600 md:h-10 md:w-10" strokeWidth={2.5} />
+              <DollarSign
+                className="h-8 w-8 text-red-600 md:h-10 md:w-10"
+                strokeWidth={2.5}
+              />
             </div>
-            <span className="text-[10px] font-semibold text-red-600 md:text-xs">Expensive</span>
+            <span className="text-[10px] font-semibold text-red-600 md:text-xs">
+              Expensive
+            </span>
           </motion.div>
 
           {/* Wifi Off - Top Right (No Integration) */}
           <motion.div
-            className="absolute -right-20 -top-16 flex flex-col items-center gap-1"
+            className="absolute -top-16 -right-20 flex flex-col items-center gap-1"
             style={{ scale: wifiScale }}
             animate={{
               y: [0, -10, 0],
@@ -110,13 +115,18 @@ export const GoogleGeminiEffectDemo2 = ({
           >
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-50 to-white shadow-xl md:h-20 md:w-20">
               <div className="relative">
-                <Wifi className="h-8 w-8 text-orange-600 md:h-10 md:w-10" strokeWidth={2} />
+                <Wifi
+                  className="h-8 w-8 text-orange-600 md:h-10 md:w-10"
+                  strokeWidth={2}
+                />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="h-0.5 w-10 rotate-45 bg-orange-600 md:h-1 md:w-12"></div>
                 </div>
               </div>
             </div>
-            <span className="text-[10px] font-semibold text-orange-600 md:text-xs">No PIMS</span>
+            <span className="text-[10px] font-semibold text-orange-600 md:text-xs">
+              No PIMS
+            </span>
           </motion.div>
 
           {/* Copy - Bottom Left (Manual Work) */}
@@ -133,14 +143,19 @@ export const GoogleGeminiEffectDemo2 = ({
             }}
           >
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-yellow-50 to-white shadow-xl md:h-20 md:w-20">
-              <Copy className="h-8 w-8 text-yellow-600 md:h-10 md:w-10" strokeWidth={2} />
+              <Copy
+                className="h-8 w-8 text-yellow-600 md:h-10 md:w-10"
+                strokeWidth={2}
+              />
             </div>
-            <span className="text-[10px] font-semibold text-yellow-600 md:text-xs">Copy/Paste</span>
+            <span className="text-[10px] font-semibold text-yellow-600 md:text-xs">
+              Copy/Paste
+            </span>
           </motion.div>
 
           {/* Alert - Bottom Right (Friction/Errors) */}
           <motion.div
-            className="absolute -bottom-20 -right-16 flex flex-col items-center gap-1"
+            className="absolute -right-16 -bottom-20 flex flex-col items-center gap-1"
             style={{ scale: alertScale }}
             animate={{
               x: [0, 10, 0],
@@ -152,9 +167,14 @@ export const GoogleGeminiEffectDemo2 = ({
             }}
           >
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-50 to-white shadow-xl md:h-20 md:w-20">
-              <AlertCircle className="h-8 w-8 text-slate-600 md:h-10 md:w-10" strokeWidth={2} />
+              <AlertCircle
+                className="h-8 w-8 text-slate-600 md:h-10 md:w-10"
+                strokeWidth={2}
+              />
             </div>
-            <span className="text-[10px] font-semibold text-slate-600 md:text-xs">Friction</span>
+            <span className="text-[10px] font-semibold text-slate-600 md:text-xs">
+              Friction
+            </span>
           </motion.div>
 
           {/* Center text showing "Old Scribe" */}

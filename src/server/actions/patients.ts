@@ -105,13 +105,20 @@ export async function updatePatient(input: UpdatePatientInput) {
 
     // Build update object with only provided fields
     const updateData: Partial<CallPatient> = {};
-    if (validatedInput.pet_name !== undefined) updateData.pet_name = validatedInput.pet_name;
-    if (validatedInput.owner_name !== undefined) updateData.owner_name = validatedInput.owner_name;
-    if (validatedInput.owner_phone !== undefined) updateData.owner_phone = validatedInput.owner_phone;
-    if (validatedInput.vet_name !== undefined) updateData.vet_name = validatedInput.vet_name;
-    if (validatedInput.clinic_name !== undefined) updateData.clinic_name = validatedInput.clinic_name;
-    if (validatedInput.clinic_phone !== undefined) updateData.clinic_phone = validatedInput.clinic_phone;
-    if (validatedInput.discharge_summary !== undefined) updateData.discharge_summary = validatedInput.discharge_summary;
+    if (validatedInput.pet_name !== undefined)
+      updateData.pet_name = validatedInput.pet_name;
+    if (validatedInput.owner_name !== undefined)
+      updateData.owner_name = validatedInput.owner_name;
+    if (validatedInput.owner_phone !== undefined)
+      updateData.owner_phone = validatedInput.owner_phone;
+    if (validatedInput.vet_name !== undefined)
+      updateData.vet_name = validatedInput.vet_name;
+    if (validatedInput.clinic_name !== undefined)
+      updateData.clinic_name = validatedInput.clinic_name;
+    if (validatedInput.clinic_phone !== undefined)
+      updateData.clinic_phone = validatedInput.clinic_phone;
+    if (validatedInput.discharge_summary !== undefined)
+      updateData.discharge_summary = validatedInput.discharge_summary;
 
     // Update patient
     const { data, error } = await supabase

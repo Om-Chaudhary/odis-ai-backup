@@ -5,8 +5,12 @@
  * Integrates with knowledge base system, Supabase storage, and VAPI API.
  */
 
-import { buildDynamicVariables, type DynamicVariables, type ConditionCategory } from './knowledge-base';
-import { createServiceClient } from '~/lib/supabase/server';
+import {
+  buildDynamicVariables,
+  type DynamicVariables,
+  type ConditionCategory,
+} from "./knowledge-base";
+import { createServiceClient } from "~/lib/supabase/server";
 
 /**
  * Input parameters for creating a VAPI call
@@ -19,13 +23,13 @@ export interface CreateVapiCallInput {
   ownerName: string;
   ownerPhone: string; // E.164 format: +1234567890
   appointmentDate: string; // Spelled out: "November eighth"
-  callType: 'discharge' | 'follow-up';
+  callType: "discharge" | "follow-up";
   clinicPhone: string; // Spelled out for natural speech
   emergencyPhone: string; // Spelled out for natural speech
   dischargeSummary: string;
 
   // Optional discharge fields
-  subType?: 'wellness' | 'vaccination';
+  subType?: "wellness" | "vaccination";
   nextSteps?: string;
 
   // Optional follow-up fields
@@ -35,7 +39,7 @@ export interface CreateVapiCallInput {
   recheckDate?: string; // Spelled out
 
   // Optional metadata
-  petSpecies?: 'dog' | 'cat' | 'other';
+  petSpecies?: "dog" | "cat" | "other";
   petAge?: number;
   petWeight?: number;
   daysSinceTreatment?: number;
@@ -98,7 +102,7 @@ export interface VapiCallStatus {
  */
 export async function createVapiCall(
   input: CreateVapiCallInput,
-  userId: string
+  userId: string,
 ): Promise<CreateVapiCallResult> {
   try {
     // Step 1: Build dynamic variables with knowledge base integration
@@ -139,19 +143,20 @@ export async function createVapiCall(
 
     // Step 2: Get VAPI configuration
     const assistantId = input.assistantId || process.env.VAPI_ASSISTANT_ID;
-    const phoneNumberId = input.phoneNumberId || process.env.VAPI_PHONE_NUMBER_ID;
+    const phoneNumberId =
+      input.phoneNumberId || process.env.VAPI_PHONE_NUMBER_ID;
 
     if (!assistantId) {
       return {
         success: false,
-        errors: ['VAPI_ASSISTANT_ID not configured'],
+        errors: ["VAPI_ASSISTANT_ID not configured"],
       };
     }
 
     if (!phoneNumberId) {
       return {
         success: false,
-        errors: ['VAPI_PHONE_NUMBER_ID not configured'],
+        errors: ["VAPI_PHONE_NUMBER_ID not configured"],
       };
     }
 
@@ -159,25 +164,28 @@ export async function createVapiCall(
     const supabase = await createServiceClient();
 
     const { data: callRecord, error: insertError } = await supabase
-      .from('scheduled_discharge_calls')
+      .from("scheduled_discharge_calls")
       .insert({
         user_id: userId,
         assistant_id: assistantId,
         phone_number_id: phoneNumberId,
         customer_phone: input.ownerPhone,
         scheduled_for: input.scheduledFor || null,
-        status: input.scheduledFor ? 'queued' : 'pending',
+        status: input.scheduledFor ? "queued" : "pending",
         dynamic_variables: variablesBuildResult.variables,
-        condition_category: variablesBuildResult.knowledgeBase.conditionCategory,
+        condition_category:
+          variablesBuildResult.knowledgeBase.conditionCategory,
         knowledge_base_used: variablesBuildResult.knowledgeBase.displayName,
       })
-      .select('id')
+      .select("id")
       .single();
 
     if (insertError || !callRecord) {
       return {
         success: false,
-        errors: [`Failed to store call record: ${insertError?.message || 'Unknown error'}`],
+        errors: [
+          `Failed to store call record: ${insertError?.message || "Unknown error"}`,
+        ],
       };
     }
 
@@ -187,14 +195,16 @@ export async function createVapiCall(
     return {
       success: true,
       databaseId: callRecord.id,
-      status: input.scheduledFor ? 'queued' : 'pending',
+      status: input.scheduledFor ? "queued" : "pending",
       warnings: variablesBuildResult.validation.warnings,
       scheduledFor: input.scheduledFor,
     };
   } catch (error) {
     return {
       success: false,
-      errors: [error instanceof Error ? error.message : 'Unknown error occurred'],
+      errors: [
+        error instanceof Error ? error.message : "Unknown error occurred",
+      ],
     };
   }
 }
@@ -208,15 +218,15 @@ export async function createVapiCall(
  */
 export async function getVapiCallStatus(
   callId: string,
-  userId: string
+  userId: string,
 ): Promise<VapiCallStatus | null> {
   const supabase = await createServiceClient();
 
   const { data, error } = await supabase
-    .from('scheduled_discharge_calls')
-    .select('*')
-    .eq('id', callId)
-    .eq('user_id', userId)
+    .from("scheduled_discharge_calls")
+    .select("*")
+    .eq("id", callId)
+    .eq("user_id", userId)
     .single();
 
   if (error || !data) {
@@ -256,22 +266,22 @@ export async function listVapiCalls(
     conditionCategory?: string;
     limit?: number;
     offset?: number;
-  }
+  },
 ): Promise<VapiCallStatus[]> {
   const supabase = await createServiceClient();
 
   let query = supabase
-    .from('scheduled_discharge_calls')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+    .from("scheduled_discharge_calls")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
 
   if (filters?.status) {
-    query = query.eq('status', filters.status);
+    query = query.eq("status", filters.status);
   }
 
   if (filters?.conditionCategory) {
-    query = query.eq('condition_category', filters.conditionCategory);
+    query = query.eq("condition_category", filters.conditionCategory);
   }
 
   if (filters?.limit) {
@@ -279,7 +289,10 @@ export async function listVapiCalls(
   }
 
   if (filters?.offset) {
-    query = query.range(filters.offset, filters.offset + (filters.limit || 10) - 1);
+    query = query.range(
+      filters.offset,
+      filters.offset + (filters.limit || 10) - 1,
+    );
   }
 
   const { data, error } = await query;
@@ -327,7 +340,7 @@ export async function updateVapiCall(
     transcriptMessages?: any;
     callAnalysis?: any;
     cost?: number;
-  }
+  },
 ): Promise<boolean> {
   const supabase = await createServiceClient();
 
@@ -337,17 +350,19 @@ export async function updateVapiCall(
   if (updates.endedReason) updateData.ended_reason = updates.endedReason;
   if (updates.startedAt) updateData.started_at = updates.startedAt;
   if (updates.endedAt) updateData.ended_at = updates.endedAt;
-  if (updates.durationSeconds !== undefined) updateData.duration_seconds = updates.durationSeconds;
+  if (updates.durationSeconds !== undefined)
+    updateData.duration_seconds = updates.durationSeconds;
   if (updates.recordingUrl) updateData.recording_url = updates.recordingUrl;
   if (updates.transcript) updateData.transcript = updates.transcript;
-  if (updates.transcriptMessages) updateData.transcript_messages = updates.transcriptMessages;
+  if (updates.transcriptMessages)
+    updateData.transcript_messages = updates.transcriptMessages;
   if (updates.callAnalysis) updateData.call_analysis = updates.callAnalysis;
   if (updates.cost !== undefined) updateData.cost = updates.cost;
 
   const { error } = await supabase
-    .from('scheduled_discharge_calls')
+    .from("scheduled_discharge_calls")
     .update(updateData)
-    .eq('vapi_call_id', vapiCallId);
+    .eq("vapi_call_id", vapiCallId);
 
   return !error;
 }

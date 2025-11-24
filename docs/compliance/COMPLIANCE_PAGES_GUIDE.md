@@ -265,11 +265,11 @@ export default function CookiePolicyPage() {
 
 ```typescript
 interface ComplianceDocumentProps {
-  title: string; // Document title (e.g., "Privacy Policy")
-  lastUpdated: string; // Last updated date
-  effectiveDate?: string; // Optional effective date
+  title: string;              // Document title (e.g., "Privacy Policy")
+  lastUpdated: string;        // Last updated date
+  effectiveDate?: string;     // Optional effective date
   sections: ComplianceSection[]; // Array of content sections
-  className?: string; // Optional additional CSS classes
+  className?: string;         // Optional additional CSS classes
 }
 ```
 
@@ -277,9 +277,9 @@ interface ComplianceDocumentProps {
 
 ```typescript
 interface ComplianceSection {
-  id: string; // Unique identifier for anchor links
-  title: string; // Section heading
-  content: React.ReactNode; // Section content (JSX)
+  id: string;                  // Unique identifier for anchor links
+  title: string;               // Section heading
+  content: React.ReactNode;    // Section content (JSX)
   subsections?: ComplianceSection[]; // Optional nested sections
 }
 ```

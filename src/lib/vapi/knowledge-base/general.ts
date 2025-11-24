@@ -5,33 +5,33 @@
  * Provides general wellness and recovery assessment questions.
  */
 
-import type { ConditionKnowledgeBase } from '../types';
+import type { ConditionKnowledgeBase } from "../types";
 
 export const generalKnowledge: ConditionKnowledgeBase = {
-  conditionCategory: 'general',
-  displayName: 'General Follow-Up',
+  conditionCategory: "general",
+  displayName: "General Follow-Up",
   description:
-    'General wellness follow-up for conditions not fitting specific categories or multi-system issues',
+    "General wellness follow-up for conditions not fitting specific categories or multi-system issues",
 
   keywords: [],
 
   assessmentQuestions: [
     {
       question: `Overall, how is {{petName}} doing compared to when we first saw {{petName}}?`,
-      context: 'General progress assessment',
+      context: "General progress assessment",
       expectedPositiveResponse: [
-        'better',
-        'improved',
-        'doing well',
-        'much better',
-        'back to normal',
+        "better",
+        "improved",
+        "doing well",
+        "much better",
+        "back to normal",
       ],
       concerningResponses: [
-        'worse',
-        'no improvement',
-        'declining',
-        'same',
-        'getting worse',
+        "worse",
+        "no improvement",
+        "declining",
+        "same",
+        "getting worse",
       ],
       followUpIfConcerning: `Can you describe what's concerning you most about {{petName}}'s condition?`,
       priority: 1,
@@ -39,19 +39,19 @@ export const generalKnowledge: ConditionKnowledgeBase = {
     },
     {
       question: `How's {{petName}}'s appetite and energy level?`,
-      context: 'Basic wellness indicators',
+      context: "Basic wellness indicators",
       expectedPositiveResponse: [
-        'eating well',
-        'good energy',
-        'active',
-        'normal',
+        "eating well",
+        "good energy",
+        "active",
+        "normal",
       ],
       concerningResponses: [
-        'not eating',
-        'lethargic',
-        'weak',
-        'no appetite',
-        'no energy',
+        "not eating",
+        "lethargic",
+        "weak",
+        "no appetite",
+        "no energy",
       ],
       followUpIfConcerning: `Is this a sudden change or gradual? And is {{petName}} drinking water normally?`,
       priority: 1,
@@ -59,18 +59,18 @@ export const generalKnowledge: ConditionKnowledgeBase = {
     },
     {
       question: `Have you been able to give the medications as prescribed?`,
-      context: 'Medication compliance',
+      context: "Medication compliance",
       expectedPositiveResponse: [
-        'yes',
-        'every dose',
-        'no problems',
-        'following directions',
+        "yes",
+        "every dose",
+        "no problems",
+        "following directions",
       ],
       concerningResponses: [
-        'missing doses',
-        'having trouble',
-        'pet won\'t take it',
-        'ran out',
+        "missing doses",
+        "having trouble",
+        "pet won't take it",
+        "ran out",
       ],
       followUpIfConcerning: `What's making it difficult to give the medication? We can help with techniques or different formulations.`,
       priority: 2,
@@ -78,34 +78,26 @@ export const generalKnowledge: ConditionKnowledgeBase = {
     },
     {
       question: `Are there any new symptoms or concerns that have developed since the visit?`,
-      context: 'Identify new issues or complications',
+      context: "Identify new issues or complications",
       expectedPositiveResponse: [
-        'no',
-        'nothing new',
-        'everything else is fine',
+        "no",
+        "nothing new",
+        "everything else is fine",
       ],
-      concerningResponses: [
-        'yes',
-        'new symptoms',
-        'something else wrong',
-      ],
+      concerningResponses: ["yes", "new symptoms", "something else wrong"],
       followUpIfConcerning: `Can you describe the new symptoms you're seeing? When did they start?`,
       priority: 2,
       required: true,
     },
     {
       question: `Is {{petName}} eating and drinking normally?`,
-      context: 'Basic physiological function',
-      expectedPositiveResponse: [
-        'yes',
-        'normally',
-        'good intake',
-      ],
+      context: "Basic physiological function",
+      expectedPositiveResponse: ["yes", "normally", "good intake"],
       concerningResponses: [
-        'not eating',
-        'not drinking',
-        'very little',
-        'refusing',
+        "not eating",
+        "not drinking",
+        "very little",
+        "refusing",
       ],
       followUpIfConcerning: `How long has it been since {{petName}} ate or drank? Prolonged refusal needs evaluation.`,
       priority: 2,
@@ -113,19 +105,14 @@ export const generalKnowledge: ConditionKnowledgeBase = {
     },
     {
       question: `Are {{petName}}'s bathroom habits normal - urinating and defecating regularly?`,
-      context: 'Elimination assessment',
-      expectedPositiveResponse: [
-        'yes',
-        'normal',
-        'regular',
-        'no problems',
-      ],
+      context: "Elimination assessment",
+      expectedPositiveResponse: ["yes", "normal", "regular", "no problems"],
       concerningResponses: [
-        'not urinating',
-        'not defecating',
-        'straining',
-        'diarrhea',
-        'accidents',
+        "not urinating",
+        "not defecating",
+        "straining",
+        "diarrhea",
+        "accidents",
       ],
       followUpIfConcerning: `Which is the issue - urination or defecation? And for how long has this been a problem?`,
       priority: 3,
@@ -133,17 +120,9 @@ export const generalKnowledge: ConditionKnowledgeBase = {
     },
     {
       question: `Do you have any questions or concerns about {{petName}}'s recovery?`,
-      context: 'Open-ended owner concerns',
-      expectedPositiveResponse: [
-        'no',
-        'everything seems fine',
-        'no concerns',
-      ],
-      concerningResponses: [
-        'yes',
-        'worried about',
-        'concerned',
-      ],
+      context: "Open-ended owner concerns",
+      expectedPositiveResponse: ["no", "everything seems fine", "no concerns"],
+      concerningResponses: ["yes", "worried about", "concerned"],
       followUpIfConcerning: `What are you most concerned about? Let's discuss that.`,
       priority: 3,
       required: false,
@@ -195,9 +174,9 @@ export const generalKnowledge: ConditionKnowledgeBase = {
 
   commonMedications: [
     // General medications that could apply across conditions
-    'antibiotics',
-    'pain medication',
-    'anti-inflammatory',
-    'supportive care',
+    "antibiotics",
+    "pain medication",
+    "anti-inflammatory",
+    "supportive care",
   ],
 };

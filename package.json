@@ -14,7 +14,7 @@
     "preview": "next build && next start",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "update-types": "npx supabase gen types --lang=typescript --project-id \"$PROJECT_REF\" > database.types.ts",
+    "update-types": "node scripts/update-types.js",
     "prepare": "husky"
   },
   "dependencies": {

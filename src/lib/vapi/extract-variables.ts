@@ -17,7 +17,7 @@ import type { NormalizedEntities } from "~/lib/validators/scribe";
  * @returns Object with dynamic variables for VAPI
  */
 export function extractVapiVariablesFromEntities(
-  entities: NormalizedEntities | null | undefined
+  entities: NormalizedEntities | null | undefined,
 ): Record<string, string> {
   if (!entities) {
     return {};
@@ -38,9 +38,12 @@ export function extractVapiVariablesFromEntities(
     if (patient.weight) variables.patient_weight = patient.weight;
 
     // Owner information
-    if (patient.owner?.name) variables.owner_name_extracted = patient.owner.name;
-    if (patient.owner?.phone) variables.owner_phone_extracted = patient.owner.phone;
-    if (patient.owner?.email) variables.owner_email_extracted = patient.owner.email;
+    if (patient.owner?.name)
+      variables.owner_name_extracted = patient.owner.name;
+    if (patient.owner?.phone)
+      variables.owner_phone_extracted = patient.owner.phone;
+    if (patient.owner?.email)
+      variables.owner_email_extracted = patient.owner.email;
   }
 
   // Clinical Information
@@ -63,13 +66,18 @@ export function extractVapiVariablesFromEntities(
       const vitals = clinical.vitalSigns;
       if (vitals.temperature) variables.vital_temperature = vitals.temperature;
       if (vitals.heartRate) variables.vital_heart_rate = vitals.heartRate;
-      if (vitals.respiratoryRate) variables.vital_respiratory_rate = vitals.respiratoryRate;
+      if (vitals.respiratoryRate)
+        variables.vital_respiratory_rate = vitals.respiratoryRate;
       if (vitals.weight) variables.vital_weight = vitals.weight;
     }
 
     // Physical exam and findings
-    if (clinical.physicalExamFindings && clinical.physicalExamFindings.length > 0) {
-      variables.physical_exam_findings = clinical.physicalExamFindings.join(", ");
+    if (
+      clinical.physicalExamFindings &&
+      clinical.physicalExamFindings.length > 0
+    ) {
+      variables.physical_exam_findings =
+        clinical.physicalExamFindings.join(", ");
     }
 
     // Diagnoses
@@ -78,8 +86,12 @@ export function extractVapiVariablesFromEntities(
       variables.primary_diagnosis = clinical.diagnoses[0] ?? "";
     }
 
-    if (clinical.differentialDiagnoses && clinical.differentialDiagnoses.length > 0) {
-      variables.differential_diagnoses = clinical.differentialDiagnoses.join(", ");
+    if (
+      clinical.differentialDiagnoses &&
+      clinical.differentialDiagnoses.length > 0
+    ) {
+      variables.differential_diagnoses =
+        clinical.differentialDiagnoses.join(", ");
     }
 
     // Medications - format for natural speech
@@ -164,7 +176,7 @@ export function extractVapiVariablesFromEntities(
  */
 export function mergeVapiVariables(
   extractedVars: Record<string, string>,
-  manualVars: Record<string, unknown>
+  manualVars: Record<string, unknown>,
 ): Record<string, unknown> {
   return {
     ...extractedVars,
@@ -192,7 +204,7 @@ export function formatMedicationsForSpeech(
     frequency?: string;
     duration?: string;
     route?: string;
-  }>
+  }>,
 ): string {
   if (!medications || medications.length === 0) {
     return "";

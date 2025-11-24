@@ -26,7 +26,10 @@ export function DateGroupSection({ calls }: DateGroupSectionProps) {
   const groupedCalls = groupByDate(calls);
 
   // Track which sections are open (default: today and yesterday open)
-  const [openSections, setOpenSections] = useState<string[]>(["today", "yesterday"]);
+  const [openSections, setOpenSections] = useState<string[]>([
+    "today",
+    "yesterday",
+  ]);
 
   return (
     <div className="space-y-4">
@@ -50,22 +53,24 @@ export function DateGroupSection({ calls }: DateGroupSectionProps) {
             <AccordionItem
               key={group}
               value={group}
-              className="border rounded-lg overflow-hidden"
+              className="overflow-hidden rounded-lg border"
             >
-              <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/50 transition-colors">
-                <div className="flex items-center gap-3 flex-1">
-                  <Calendar className="w-5 h-5 text-primary" />
+              <AccordionTrigger className="hover:bg-muted/50 px-6 py-4 transition-colors hover:no-underline">
+                <div className="flex flex-1 items-center gap-3">
+                  <Calendar className="text-primary h-5 w-5" />
                   <div className="flex items-center gap-3">
-                    <h3 className="text-lg font-semibold">{groupLabel.label}</h3>
+                    <h3 className="text-lg font-semibold">
+                      {groupLabel.label}
+                    </h3>
                     <Badge variant="secondary">{callsInGroup.length}</Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground ml-auto mr-4">
+                  <p className="text-muted-foreground mr-4 ml-auto text-sm">
                     {groupLabel.description}
                   </p>
                 </div>
               </AccordionTrigger>
 
-              <AccordionContent className="px-6 pb-4 pt-2">
+              <AccordionContent className="px-6 pt-2 pb-4">
                 <CallsDataTable data={callsInGroup} />
               </AccordionContent>
             </AccordionItem>
@@ -75,10 +80,10 @@ export function DateGroupSection({ calls }: DateGroupSectionProps) {
 
       {/* Empty state if no calls */}
       {calls.length === 0 && (
-        <div className="text-center py-12 border-2 border-dashed rounded-lg">
-          <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No calls yet</h3>
-          <p className="text-sm text-muted-foreground">
+        <div className="rounded-lg border-2 border-dashed py-12 text-center">
+          <Calendar className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
+          <h3 className="mb-2 text-lg font-semibold">No calls yet</h3>
+          <p className="text-muted-foreground text-sm">
             Click &quot;New Call&quot; to initiate your first call
           </p>
         </div>

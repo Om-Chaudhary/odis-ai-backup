@@ -25,7 +25,11 @@ export function getDateGroup(timestamp: string | Date): DateGroup {
   const oneWeekAgo = new Date(today);
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
-  const callDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const callDate = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+  );
 
   if (callDate.getTime() === today.getTime()) {
     return "today";
@@ -41,7 +45,10 @@ export function getDateGroup(timestamp: string | Date): DateGroup {
 /**
  * Get label and description for a date group
  */
-export function getDateGroupLabel(group: DateGroup, count: number): DateGroupLabel {
+export function getDateGroupLabel(
+  group: DateGroup,
+  count: number,
+): DateGroupLabel {
   const labels: Record<DateGroup, { label: string; description: string }> = {
     today: {
       label: "Today",
@@ -73,7 +80,7 @@ export function getDateGroupLabel(group: DateGroup, count: number): DateGroupLab
  * @returns Map of date groups to items
  */
 export function groupByDate<T extends { created_at: string }>(
-  items: T[]
+  items: T[],
 ): Map<DateGroup, T[]> {
   const groups = new Map<DateGroup, T[]>([
     ["today", []],
@@ -93,12 +100,20 @@ export function groupByDate<T extends { created_at: string }>(
 /**
  * Sort date groups in chronological order (today first, older last)
  */
-export const DATE_GROUP_ORDER: DateGroup[] = ["today", "yesterday", "this_week", "older"];
+export const DATE_GROUP_ORDER: DateGroup[] = [
+  "today",
+  "yesterday",
+  "this_week",
+  "older",
+];
 
 /**
  * Format a date for display in a specific group
  */
-export function formatDateInGroup(timestamp: string | Date, group: DateGroup): string {
+export function formatDateInGroup(
+  timestamp: string | Date,
+  group: DateGroup,
+): string {
   const date = new Date(timestamp);
 
   if (group === "today" || group === "yesterday") {
@@ -113,7 +128,8 @@ export function formatDateInGroup(timestamp: string | Date, group: DateGroup): s
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
-      year: date.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
+      year:
+        date.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
     });
   }
 }

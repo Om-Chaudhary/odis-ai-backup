@@ -114,7 +114,7 @@ export class CallRepository extends BaseRepository<ScheduledCall> {
       status?: CallStatus;
       orderBy?: "scheduled_for" | "created_at";
       ascending?: boolean;
-    }
+    },
   ): Promise<ScheduledCall[]> {
     this.logger.debug("Finding calls by user ID", { userId, options });
 
@@ -173,7 +173,7 @@ export class CallRepository extends BaseRepository<ScheduledCall> {
   async findByTimeRange(
     startTime: string,
     endTime: string,
-    status?: CallStatus
+    status?: CallStatus,
   ): Promise<ScheduledCall[]> {
     this.logger.debug("Finding calls by time range", {
       startTime,
@@ -226,7 +226,7 @@ export class CallRepository extends BaseRepository<ScheduledCall> {
   async updateStatus(
     callId: string,
     status: CallStatus,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
   ): Promise<ScheduledCall> {
     this.logger.info("Updating call status", { callId, status, metadata });
 
@@ -260,7 +260,7 @@ export class CallRepository extends BaseRepository<ScheduledCall> {
    */
   async setVapiCallId(
     callId: string,
-    vapiCallId: string
+    vapiCallId: string,
   ): Promise<ScheduledCall> {
     this.logger.info("Setting VAPI call ID", { callId, vapiCallId });
 

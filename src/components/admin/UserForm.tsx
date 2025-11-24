@@ -27,7 +27,13 @@ interface UserFormProps {
     email: string | null;
     first_name: string | null;
     last_name: string | null;
-    role: "veterinarian" | "vet_tech" | "admin" | "practice_owner" | "client" | null;
+    role:
+      | "veterinarian"
+      | "vet_tech"
+      | "admin"
+      | "practice_owner"
+      | "client"
+      | null;
     clinic_name: string | null;
     license_number: string | null;
     onboarding_completed: boolean | null;
@@ -75,9 +81,9 @@ export function UserForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Basic Information */}
-      <Card className="rounded-xl border-slate-200 shadow-lg bg-white/80 backdrop-blur-sm">
-        <CardHeader className="bg-gradient-to-r from-[#31aba3]/10 to-[#2a9a92]/5 border-b border-slate-200 pb-3">
-          <CardTitle className="text-lg text-slate-900 flex items-center gap-2">
+      <Card className="rounded-xl border-slate-200 bg-white/80 shadow-lg backdrop-blur-sm">
+        <CardHeader className="border-b border-slate-200 bg-gradient-to-r from-[#31aba3]/10 to-[#2a9a92]/5 pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg text-slate-900">
             <User className="h-5 w-5 text-[#31aba3]" />
             Basic Information
           </CardTitle>
@@ -88,7 +94,10 @@ export function UserForm({
         <CardContent className="space-y-4 pt-6">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="first_name" className="text-sm font-semibold text-slate-700">
+              <Label
+                htmlFor="first_name"
+                className="text-sm font-semibold text-slate-700"
+              >
                 First Name <span className="text-destructive">*</span>
               </Label>
               <Input
@@ -96,12 +105,15 @@ export function UserForm({
                 value={formData.first_name}
                 onChange={(e) => updateField("first_name", e.target.value)}
                 required
-                className="shadow-sm transition-all focus:ring-2 focus:ring-[#31aba3]/20 focus:border-[#31aba3] border-slate-200"
+                className="border-slate-200 shadow-sm transition-all focus:border-[#31aba3] focus:ring-2 focus:ring-[#31aba3]/20"
                 placeholder="Enter first name"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="last_name" className="text-sm font-semibold text-slate-700">
+              <Label
+                htmlFor="last_name"
+                className="text-sm font-semibold text-slate-700"
+              >
                 Last Name <span className="text-destructive">*</span>
               </Label>
               <Input
@@ -109,12 +121,15 @@ export function UserForm({
                 value={formData.last_name}
                 onChange={(e) => updateField("last_name", e.target.value)}
                 required
-                className="shadow-sm transition-all focus:ring-2 focus:ring-[#31aba3]/20 focus:border-[#31aba3] border-slate-200"
+                className="border-slate-200 shadow-sm transition-all focus:border-[#31aba3] focus:ring-2 focus:ring-[#31aba3]/20"
                 placeholder="Enter last name"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-semibold text-slate-700">
+              <Label
+                htmlFor="email"
+                className="text-sm font-semibold text-slate-700"
+              >
                 Email <span className="text-destructive">*</span>
               </Label>
               <Input
@@ -124,17 +139,20 @@ export function UserForm({
                 onChange={(e) => updateField("email", e.target.value)}
                 required
                 disabled={mode === "edit"}
-                className="shadow-sm transition-all focus:ring-2 focus:ring-[#31aba3]/20 focus:border-[#31aba3] border-slate-200 disabled:opacity-60"
+                className="border-slate-200 shadow-sm transition-all focus:border-[#31aba3] focus:ring-2 focus:ring-[#31aba3]/20 disabled:opacity-60"
                 placeholder="user@example.com"
               />
               {mode === "edit" && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Email cannot be changed after creation
                 </p>
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="role" className="text-sm font-semibold text-slate-700">
+              <Label
+                htmlFor="role"
+                className="text-sm font-semibold text-slate-700"
+              >
                 Role <span className="text-destructive">*</span>
               </Label>
               <Select
@@ -142,7 +160,7 @@ export function UserForm({
                 onValueChange={(value) => updateField("role", value)}
                 required
               >
-                <SelectTrigger className="shadow-sm border-slate-200">
+                <SelectTrigger className="border-slate-200 shadow-sm">
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
@@ -160,9 +178,9 @@ export function UserForm({
 
       {/* Authentication */}
       {mode === "create" && (
-        <Card className="rounded-xl border-slate-200 shadow-lg bg-white/80 backdrop-blur-sm">
-          <CardHeader className="bg-gradient-to-r from-[#31aba3]/10 to-[#2a9a92]/5 border-b border-slate-200 pb-3">
-            <CardTitle className="text-lg text-slate-900 flex items-center gap-2">
+        <Card className="rounded-xl border-slate-200 bg-white/80 shadow-lg backdrop-blur-sm">
+          <CardHeader className="border-b border-slate-200 bg-gradient-to-r from-[#31aba3]/10 to-[#2a9a92]/5 pb-3">
+            <CardTitle className="flex items-center gap-2 text-lg text-slate-900">
               <Lock className="h-5 w-5 text-[#31aba3]" />
               Authentication
             </CardTitle>
@@ -172,7 +190,10 @@ export function UserForm({
           </CardHeader>
           <CardContent className="space-y-4 pt-6">
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-semibold text-slate-700">
+              <Label
+                htmlFor="password"
+                className="text-sm font-semibold text-slate-700"
+              >
                 Password <span className="text-destructive">*</span>
               </Label>
               <Input
@@ -182,10 +203,10 @@ export function UserForm({
                 onChange={(e) => updateField("password", e.target.value)}
                 required={mode === "create"}
                 minLength={8}
-                className="shadow-sm transition-all focus:ring-2 focus:ring-[#31aba3]/20 focus:border-[#31aba3] border-slate-200"
+                className="border-slate-200 shadow-sm transition-all focus:border-[#31aba3] focus:ring-2 focus:ring-[#31aba3]/20"
                 placeholder="Minimum 8 characters"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Password must be at least 8 characters long
               </p>
             </div>
@@ -194,9 +215,9 @@ export function UserForm({
       )}
 
       {/* Professional Information */}
-      <Card className="rounded-xl border-slate-200 shadow-lg bg-white/80 backdrop-blur-sm">
-        <CardHeader className="bg-gradient-to-r from-[#31aba3]/10 to-[#2a9a92]/5 border-b border-slate-200 pb-3">
-          <CardTitle className="text-lg text-slate-900 flex items-center gap-2">
+      <Card className="rounded-xl border-slate-200 bg-white/80 shadow-lg backdrop-blur-sm">
+        <CardHeader className="border-b border-slate-200 bg-gradient-to-r from-[#31aba3]/10 to-[#2a9a92]/5 pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg text-slate-900">
             <Briefcase className="h-5 w-5 text-[#31aba3]" />
             Professional Information
           </CardTitle>
@@ -207,26 +228,32 @@ export function UserForm({
         <CardContent className="space-y-4 pt-6">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="clinic_name" className="text-sm font-semibold text-slate-700">
+              <Label
+                htmlFor="clinic_name"
+                className="text-sm font-semibold text-slate-700"
+              >
                 Clinic Name
               </Label>
               <Input
                 id="clinic_name"
                 value={formData.clinic_name}
                 onChange={(e) => updateField("clinic_name", e.target.value)}
-                className="shadow-sm transition-all focus:ring-2 focus:ring-[#31aba3]/20 focus:border-[#31aba3] border-slate-200"
+                className="border-slate-200 shadow-sm transition-all focus:border-[#31aba3] focus:ring-2 focus:ring-[#31aba3]/20"
                 placeholder="Enter clinic name"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="license_number" className="text-sm font-semibold text-slate-700">
+              <Label
+                htmlFor="license_number"
+                className="text-sm font-semibold text-slate-700"
+              >
                 License Number
               </Label>
               <Input
                 id="license_number"
                 value={formData.license_number}
                 onChange={(e) => updateField("license_number", e.target.value)}
-                className="shadow-sm transition-all focus:ring-2 focus:ring-[#31aba3]/20 focus:border-[#31aba3] border-slate-200"
+                className="border-slate-200 shadow-sm transition-all focus:border-[#31aba3] focus:ring-2 focus:ring-[#31aba3]/20"
                 placeholder="Enter license number"
               />
             </div>
@@ -242,7 +269,7 @@ export function UserForm({
             <div className="space-y-0.5">
               <Label
                 htmlFor="onboarding_completed"
-                className="text-sm font-semibold text-slate-900 cursor-pointer"
+                className="cursor-pointer text-sm font-semibold text-slate-900"
               >
                 Onboarding Completed
               </Label>
@@ -256,14 +283,14 @@ export function UserForm({
 
       {/* Submit Button */}
       <div className="sticky bottom-0 z-20 flex items-center justify-between gap-4 rounded-lg border-2 border-[#31aba3]/20 bg-white/95 p-4 shadow-xl backdrop-blur-sm">
-        <p className="text-sm text-slate-700 font-medium">
+        <p className="text-sm font-medium text-slate-700">
           {mode === "create" ? "Create" : "Update"} user account to save changes
         </p>
         <Button
           type="submit"
           disabled={isSubmitting}
           size="lg"
-          className="gap-2 bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white shadow-lg hover:shadow-xl hover:shadow-[#31aba3]/30 transition-all hover:scale-105"
+          className="gap-2 bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl hover:shadow-[#31aba3]/30"
         >
           {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
           {mode === "create" ? "Create User" : "Update User"}

@@ -83,7 +83,8 @@ export default function Demo1LandingPage() {
               </span>
             </h2>
             <p className="mx-auto mt-4 max-w-2xl font-serif text-lg text-slate-600">
-              You became a veterinarian to care for animals, not to spend hours on paperwork.
+              You became a veterinarian to care for animals, not to spend hours
+              on paperwork.
             </p>
           </div>
 
@@ -96,7 +97,9 @@ export default function Demo1LandingPage() {
                 Hours Lost Daily
               </h3>
               <p className="font-serif text-slate-600">
-                Veterinarians spend 2-3 hours every day writing SOAP notes and documentation—time that could be spent caring for patients or living your life.
+                Veterinarians spend 2-3 hours every day writing SOAP notes and
+                documentation—time that could be spent caring for patients or
+                living your life.
               </p>
             </div>
 
@@ -108,7 +111,8 @@ export default function Demo1LandingPage() {
                 Quality Suffers Under Pressure
               </h3>
               <p className="font-serif text-slate-600">
-                When time is tight, documentation gets rushed or postponed. This affects patient care continuity and creates compliance gaps.
+                When time is tight, documentation gets rushed or postponed. This
+                affects patient care continuity and creates compliance gaps.
               </p>
             </div>
 
@@ -120,7 +124,9 @@ export default function Demo1LandingPage() {
                 Work Follows You Home
               </h3>
               <p className="font-serif text-slate-600">
-                Staying late to finish notes or taking work home has become the norm. The paperwork burden never ends, affecting your work-life balance.
+                Staying late to finish notes or taking work home has become the
+                norm. The paperwork burden never ends, affecting your work-life
+                balance.
               </p>
             </div>
           </div>
@@ -138,7 +144,9 @@ export default function Demo1LandingPage() {
               </span>
             </h2>
             <p className="mx-auto mt-4 max-w-2xl font-serif text-lg text-slate-600">
-              OdisAI listens to your appointments and creates complete, accurate SOAP notes automatically—so you can focus entirely on your patients.
+              OdisAI listens to your appointments and creates complete, accurate
+              SOAP notes automatically—so you can focus entirely on your
+              patients.
             </p>
           </div>
 
@@ -153,7 +161,9 @@ export default function Demo1LandingPage() {
                     Eyes on Patients, Not Screens
                   </h3>
                   <p className="font-serif text-slate-600">
-                    Maintain eye contact and connection with pets and their owners. OdisAI captures everything in the background while you focus on what you do best—providing exceptional care.
+                    Maintain eye contact and connection with pets and their
+                    owners. OdisAI captures everything in the background while
+                    you focus on what you do best—providing exceptional care.
                   </p>
                 </div>
               </div>
@@ -167,7 +177,9 @@ export default function Demo1LandingPage() {
                     Thorough, Consistent Documentation
                   </h3>
                   <p className="font-serif text-slate-600">
-                    Every appointment gets complete SOAP notes with all essential details captured. No more rushed or incomplete records when you&apos;re running behind.
+                    Every appointment gets complete SOAP notes with all
+                    essential details captured. No more rushed or incomplete
+                    records when you&apos;re running behind.
                   </p>
                 </div>
               </div>
@@ -181,7 +193,9 @@ export default function Demo1LandingPage() {
                     Leave On Time
                   </h3>
                   <p className="font-serif text-slate-600">
-                    Notes are ready immediately after each appointment. No more staying late to catch up on documentation or sacrificing your evening to paperwork.
+                    Notes are ready immediately after each appointment. No more
+                    staying late to catch up on documentation or sacrificing
+                    your evening to paperwork.
                   </p>
                 </div>
               </div>
@@ -195,7 +209,9 @@ export default function Demo1LandingPage() {
                     Works With Your Workflow
                   </h3>
                   <p className="font-serif text-slate-600">
-                    Seamlessly integrates with Avimark, Cornerstone, ezyVet, and other PIMS. One click transfers notes into your existing system.
+                    Seamlessly integrates with Avimark, Cornerstone, ezyVet, and
+                    other PIMS. One click transfers notes into your existing
+                    system.
                   </p>
                 </div>
               </div>
@@ -256,7 +272,8 @@ export default function Demo1LandingPage() {
             Get Back Your Time
           </h2>
           <p className="mx-auto mt-4 max-w-2xl font-serif text-lg text-teal-50">
-            Join veterinarians who are spending less time on paperwork and more time doing what they love—caring for animals.
+            Join veterinarians who are spending less time on paperwork and more
+            time doing what they love—caring for animals.
           </p>
 
           <div className="mt-8 flex justify-center">

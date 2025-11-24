@@ -3,7 +3,14 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
-import { Pencil, Trash2, Loader2, ArrowUpDown, CheckCircle2, XCircle } from "lucide-react";
+import {
+  Pencil,
+  Trash2,
+  Loader2,
+  ArrowUpDown,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
 import Link from "next/link";
 import type { Database } from "~/database.types";
 
@@ -48,7 +55,7 @@ export const getColumns = ({
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="-ml-4 h-8 font-semibold hover:bg-transparent hover:text-foreground"
+          className="hover:text-foreground -ml-4 h-8 font-semibold hover:bg-transparent"
         >
           Name
           <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
@@ -60,8 +67,8 @@ export const getColumns = ({
       const displayName =
         user.first_name && user.last_name
           ? `${user.first_name} ${user.last_name}`
-          : user.email ?? "Unknown";
-      return <div className="font-medium text-foreground">{displayName}</div>;
+          : (user.email ?? "Unknown");
+      return <div className="text-foreground font-medium">{displayName}</div>;
     },
   },
   {
@@ -71,7 +78,7 @@ export const getColumns = ({
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="-ml-4 h-8 font-semibold hover:bg-transparent hover:text-foreground"
+          className="hover:text-foreground -ml-4 h-8 font-semibold hover:bg-transparent"
         >
           Email
           <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
@@ -87,7 +94,8 @@ export const getColumns = ({
     header: () => <div className="font-semibold">Role</div>,
     cell: ({ row }) => {
       const role = row.original.role;
-      if (!role) return <span className="text-sm text-muted-foreground">N/A</span>;
+      if (!role)
+        return <span className="text-muted-foreground text-sm">N/A</span>;
 
       return (
         <Badge
@@ -105,9 +113,9 @@ export const getColumns = ({
     cell: ({ row }) => {
       const clinicName = row.original.clinic_name;
       return (
-        <div className="text-sm text-foreground">
+        <div className="text-foreground text-sm">
           {clinicName ?? (
-            <span className="italic text-muted-foreground/70">Not set</span>
+            <span className="text-muted-foreground/70 italic">Not set</span>
           )}
         </div>
       );
@@ -115,7 +123,7 @@ export const getColumns = ({
   },
   {
     accessorKey: "onboarding_completed",
-    header: () => <div className="font-semibold text-center">Onboarded</div>,
+    header: () => <div className="text-center font-semibold">Onboarded</div>,
     cell: ({ row }) => {
       const isCompleted = row.original.onboarding_completed;
       return (
@@ -136,7 +144,7 @@ export const getColumns = ({
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="-ml-4 h-8 font-semibold hover:bg-transparent hover:text-foreground"
+          className="hover:text-foreground -ml-4 h-8 font-semibold hover:bg-transparent"
         >
           Created
           <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
@@ -146,7 +154,7 @@ export const getColumns = ({
     cell: ({ row }) => {
       const date = new Date(row.original.created_at);
       return (
-        <div className="text-sm text-foreground">
+        <div className="text-foreground text-sm">
           {date.toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
@@ -168,7 +176,7 @@ export const getColumns = ({
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 opacity-0 transition-all hover:bg-primary/10 hover:text-primary group-hover:opacity-100"
+              className="hover:bg-primary/10 hover:text-primary h-9 w-9 opacity-0 transition-all group-hover:opacity-100"
             >
               <Pencil className="h-4 w-4" />
               <span className="sr-only">Edit</span>
@@ -182,11 +190,11 @@ export const getColumns = ({
                 user.id,
                 user.first_name && user.last_name
                   ? `${user.first_name} ${user.last_name}`
-                  : user.email ?? "this user"
+                  : (user.email ?? "this user"),
               )
             }
             disabled={isDeleting}
-            className="h-9 w-9 opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+            className="hover:bg-destructive/10 hover:text-destructive h-9 w-9 opacity-0 transition-all group-hover:opacity-100"
           >
             {isDeleting ? (
               <Loader2 className="h-4 w-4 animate-spin" />

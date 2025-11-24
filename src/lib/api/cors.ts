@@ -42,7 +42,13 @@ export const IDEXX_ALLOWED_ORIGINS = [
 /**
  * Allowed HTTP methods for CORS
  */
-export const CORS_ALLOWED_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"] as const;
+export const CORS_ALLOWED_METHODS = [
+  "GET",
+  "POST",
+  "PUT",
+  "DELETE",
+  "OPTIONS",
+] as const;
 
 /**
  * Allowed headers for CORS
@@ -82,9 +88,10 @@ export function getCorsHeaders(
     "Access-Control-Allow-Origin": isAllowed ? origin : "*",
 
     // Allow credentials (cookies, authorization headers)
-    ...(allowCredentials && isAllowed && {
-      "Access-Control-Allow-Credentials": "true",
-    }),
+    ...(allowCredentials &&
+      isAllowed && {
+        "Access-Control-Allow-Credentials": "true",
+      }),
 
     // Allowed methods
     "Access-Control-Allow-Methods": CORS_ALLOWED_METHODS.join(", "),
@@ -142,9 +149,7 @@ export function isOriginAllowed(origin: string): boolean {
  * @param request - The NextRequest object
  * @returns NextResponse with CORS headers
  */
-export function handleCorsPreflightRequest(
-  request: NextRequest,
-): NextResponse {
+export function handleCorsPreflightRequest(request: NextRequest): NextResponse {
   const origin = request.headers.get("origin");
   const corsHeaders = getCorsHeaders(origin);
 

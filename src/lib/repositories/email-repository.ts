@@ -83,7 +83,7 @@ export class EmailRepository extends BaseRepository<ScheduledEmail> {
       status?: EmailStatus;
       orderBy?: "scheduled_for" | "created_at" | "sent_at";
       ascending?: boolean;
-    }
+    },
   ): Promise<ScheduledEmail[]> {
     this.logger.debug("Finding emails by user ID", { userId, options });
 
@@ -137,7 +137,7 @@ export class EmailRepository extends BaseRepository<ScheduledEmail> {
    */
   async findByRecipient(
     recipientEmail: string,
-    limit = 50
+    limit = 50,
   ): Promise<ScheduledEmail[]> {
     this.logger.debug("Finding emails by recipient", {
       recipientEmail,
@@ -183,7 +183,7 @@ export class EmailRepository extends BaseRepository<ScheduledEmail> {
   async findByTimeRange(
     startTime: string,
     endTime: string,
-    status?: EmailStatus
+    status?: EmailStatus,
   ): Promise<ScheduledEmail[]> {
     this.logger.debug("Finding emails by time range", {
       startTime,
@@ -236,7 +236,7 @@ export class EmailRepository extends BaseRepository<ScheduledEmail> {
   async updateStatus(
     emailId: string,
     status: EmailStatus,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
   ): Promise<ScheduledEmail> {
     this.logger.info("Updating email status", { emailId, status, metadata });
 
@@ -275,7 +275,7 @@ export class EmailRepository extends BaseRepository<ScheduledEmail> {
   async markAsSent(
     emailId: string,
     sentAt?: string,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
   ): Promise<ScheduledEmail> {
     this.logger.info("Marking email as sent", { emailId, sentAt, metadata });
 
@@ -312,7 +312,7 @@ export class EmailRepository extends BaseRepository<ScheduledEmail> {
    */
   async markAsFailed(
     emailId: string,
-    errorMessage: string
+    errorMessage: string,
   ): Promise<ScheduledEmail> {
     this.logger.warn("Marking email as failed", { emailId, errorMessage });
 

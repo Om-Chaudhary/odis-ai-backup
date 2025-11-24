@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json() as Record<string, unknown>;
+    const body = (await request.json()) as Record<string, unknown>;
 
     const response = await fetch(
       `${env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/generate-soap-notes-v2`,
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
           Authorization: `Bearer ${env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify(body),
-      }
+      },
     );
 
     if (!response.ok) {

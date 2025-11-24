@@ -42,7 +42,7 @@ export default function Footer() {
 
             {/* Quick Links */}
             <div>
-              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-900">
+              <h3 className="mb-4 text-sm font-semibold tracking-wider text-slate-900 uppercase">
                 Quick Links
               </h3>
               <ul className="space-y-3">
@@ -75,7 +75,7 @@ export default function Footer() {
 
             {/* Resources */}
             <div>
-              <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-900">
+              <h3 className="mb-4 text-sm font-semibold tracking-wider text-slate-900 uppercase">
                 Resources
               </h3>
               <ul className="space-y-3">

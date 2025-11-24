@@ -203,10 +203,7 @@ export async function GET(request: NextRequest) {
       console.error("[FIND_CASE] Cases query error", casesError);
       return withCorsHeaders(
         request,
-        NextResponse.json(
-          { error: "Failed to fetch cases" },
-          { status: 500 },
-        ),
+        NextResponse.json({ error: "Failed to fetch cases" }, { status: 500 }),
       );
     }
 
@@ -218,14 +215,14 @@ export async function GET(request: NextRequest) {
         .select("*", { count: "exact", head: true })
         .eq("case_id", caseData.id);
 
-      soapNoteCounts.set(caseData.id, count || 0);
+      soapNoteCounts.set(caseData.id, count ?? 0);
     }
 
     // Format response with content flags
     const formattedCases = cases.map((c) => {
       const metadata = c.metadata as Record<string, unknown> | null;
       const hasEntityExtraction = !!metadata?.entities;
-      const hasSoapNotes = (soapNoteCounts.get(c.id) || 0) > 0;
+      const hasSoapNotes = (soapNoteCounts.get(c.id) ?? 0) > 0;
 
       return {
         id: c.id,
@@ -235,7 +232,7 @@ export async function GET(request: NextRequest) {
         patient: c.patients,
         hasEntityExtraction,
         hasSoapNotes,
-        soapNoteCount: soapNoteCounts.get(c.id) || 0,
+        soapNoteCount: soapNoteCounts.get(c.id) ?? 0,
       };
     });
 
@@ -254,7 +251,9 @@ export async function GET(request: NextRequest) {
       }
 
       // If same priority, prefer newer
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      return (
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
     });
 
     console.log("[FIND_CASE] Found cases", {
@@ -278,7 +277,8 @@ export async function GET(request: NextRequest) {
       request,
       NextResponse.json(
         {
-          error: error instanceof Error ? error.message : "Internal server error",
+          error:
+            error instanceof Error ? error.message : "Internal server error",
         },
         { status: 500 },
       ),

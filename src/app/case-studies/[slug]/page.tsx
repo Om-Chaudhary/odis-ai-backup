@@ -51,21 +51,15 @@ export async function generateMetadata({ params }: CaseStudyPageProps) {
   const canonical = `${origin}/case-studies/${caseStudy.slug}`;
 
   return {
-    title:
-      caseStudy.metaTitle ??
-      `${caseStudy.title} - Case Study | OdisAI`,
-    description:
-      caseStudy.metaDescription ?? caseStudy.summary,
+    title: caseStudy.metaTitle ?? `${caseStudy.title} - Case Study | OdisAI`,
+    description: caseStudy.metaDescription ?? caseStudy.summary,
     keywords: caseStudy.keywords?.join(", "),
     alternates: {
       canonical,
     },
     openGraph: {
-      title:
-        caseStudy.metaTitle ??
-        `${caseStudy.title} - Case Study`,
-      description:
-        caseStudy.metaDescription ?? caseStudy.summary,
+      title: caseStudy.metaTitle ?? `${caseStudy.title} - Case Study`,
+      description: caseStudy.metaDescription ?? caseStudy.summary,
       url: canonical,
       images: [{ url: caseStudy.image }],
       type: "article",
@@ -73,11 +67,8 @@ export async function generateMetadata({ params }: CaseStudyPageProps) {
     },
     twitter: {
       card: "summary_large_image",
-      title:
-        caseStudy.metaTitle ??
-        `${caseStudy.title} - Case Study`,
-      description:
-        caseStudy.metaDescription ?? caseStudy.summary,
+      title: caseStudy.metaTitle ?? `${caseStudy.title} - Case Study`,
+      description: caseStudy.metaDescription ?? caseStudy.summary,
       images: [caseStudy.image],
     },
   };
@@ -112,7 +103,7 @@ export default async function CaseStudyPage({ params }: CaseStudyPageProps) {
       <Navigation />
 
       {/* Breadcrumb */}
-      <div className="container relative mx-auto px-4 pb-4 pt-24">
+      <div className="relative container mx-auto px-4 pt-24 pb-4">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -251,8 +242,7 @@ export default async function CaseStudyPage({ params }: CaseStudyPageProps) {
               "@type": "Article",
               mainEntityOfPage: canonical,
               headline: caseStudy.metaTitle ?? caseStudy.title,
-              description:
-                caseStudy.metaDescription ?? caseStudy.summary,
+              description: caseStudy.metaDescription ?? caseStudy.summary,
               image: caseStudy.image,
               datePublished: caseStudy.publishedAt,
               author: {

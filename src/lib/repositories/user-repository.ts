@@ -40,7 +40,7 @@ export class UserRepository extends BaseRepository<User> {
   async findByEmail(email: string): Promise<User | null> {
     this.logger.debug("Finding user by email", { email });
 
-    const { data, error} = await this.supabase
+    const { data, error } = await this.supabase
       .from(this.tableName)
       .select("*")
       .eq("email", email.toLowerCase())
@@ -143,10 +143,7 @@ export class UserRepository extends BaseRepository<User> {
    * const users = await userRepo.searchByEmail("%example.com%", 20);
    * ```
    */
-  async searchByEmail(
-    emailPattern: string,
-    limit = 20
-  ): Promise<User[]> {
+  async searchByEmail(emailPattern: string, limit = 20): Promise<User[]> {
     this.logger.debug("Searching users by email pattern", {
       emailPattern,
       limit,

@@ -35,11 +35,13 @@ const logger = createLogger("repository");
  * @template T - The row type for this table
  */
 export abstract class BaseRepository<T extends Record<string, unknown>> {
-  protected logger = logger.child(this.tableName);
+  protected get logger() {
+    return logger.child(this.tableName);
+  }
 
   constructor(
     protected supabase: SupabaseClient,
-    protected tableName: string
+    protected tableName: string,
   ) {}
 
   /**
@@ -164,7 +166,7 @@ export abstract class BaseRepository<T extends Record<string, unknown>> {
       limit?: number;
       offset?: number;
       orderBy?: { column: string; ascending?: boolean };
-    }
+    },
   ): Promise<T[]> {
     this.logger.debug("Finding multiple records", { criteria, options });
 
@@ -189,7 +191,7 @@ export abstract class BaseRepository<T extends Record<string, unknown>> {
     if (options?.offset) {
       query = query.range(
         options.offset,
-        options.offset + (options.limit ?? 10) - 1
+        options.offset + (options.limit ?? 10) - 1,
       );
     }
 

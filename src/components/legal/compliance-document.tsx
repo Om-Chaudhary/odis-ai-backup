@@ -58,7 +58,7 @@ export function ComplianceDocument({
       {/* Skip to content link for accessibility */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-white focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+        className="focus:bg-primary focus:ring-ring sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:px-4 focus:py-2 focus:text-white focus:ring-2 focus:ring-offset-2 focus:outline-none"
       >
         Skip to content
       </a>
@@ -100,17 +100,17 @@ export function ComplianceDocument({
             <li key={section.id}>
               <button
                 onClick={() => scrollToSection(section.id)}
-                className="text-left text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 print:text-black"
+                className="text-primary focus:ring-ring text-left hover:underline focus:ring-2 focus:ring-offset-2 focus:outline-none print:text-black"
               >
                 {index + 1}. {section.title}
               </button>
               {section.subsections && section.subsections.length > 0 && (
-                <ol className="ml-6 mt-2 space-y-1">
+                <ol className="mt-2 ml-6 space-y-1">
                   {section.subsections.map((subsection, subIndex) => (
                     <li key={subsection.id}>
                       <button
                         onClick={() => scrollToSection(subsection.id)}
-                        className="text-left text-slate-600 hover:text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 print:text-black"
+                        className="hover:text-primary focus:ring-ring text-left text-slate-600 hover:underline focus:ring-2 focus:ring-offset-2 focus:outline-none print:text-black"
                       >
                         {index + 1}.{subIndex + 1} {subsection.title}
                       </button>
@@ -140,7 +140,7 @@ export function ComplianceDocument({
               >
                 {index + 1}. {section.title}
               </h2>
-              <div className="prose prose-slate max-w-none text-base leading-relaxed text-slate-700 prose-headings:font-semibold prose-headings:text-slate-900 prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:font-semibold prose-strong:text-slate-900 prose-ul:my-4 prose-ul:list-disc prose-ul:pl-6 prose-ol:my-4 prose-ol:list-decimal prose-ol:pl-6 prose-li:my-1 print:text-sm">
+              <div className="prose prose-slate prose-headings:font-semibold prose-headings:text-slate-900 prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:font-semibold prose-strong:text-slate-900 prose-ul:my-4 prose-ul:list-disc prose-ul:pl-6 prose-ol:my-4 prose-ol:list-decimal prose-ol:pl-6 prose-li:my-1 max-w-none text-base leading-relaxed text-slate-700 print:text-sm">
                 {section.content}
               </div>
 
@@ -159,7 +159,7 @@ export function ComplianceDocument({
                       >
                         {index + 1}.{subIndex + 1} {subsection.title}
                       </h3>
-                      <div className="prose prose-slate max-w-none text-base leading-relaxed text-slate-700 prose-headings:font-semibold prose-headings:text-slate-900 prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:font-semibold prose-strong:text-slate-900 prose-ul:my-4 prose-ul:list-disc prose-ul:pl-6 prose-ol:my-4 prose-ol:list-decimal prose-ol:pl-6 prose-li:my-1 print:text-sm">
+                      <div className="prose prose-slate prose-headings:font-semibold prose-headings:text-slate-900 prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:font-semibold prose-strong:text-slate-900 prose-ul:my-4 prose-ul:list-disc prose-ul:pl-6 prose-ol:my-4 prose-ol:list-decimal prose-ol:pl-6 prose-li:my-1 max-w-none text-base leading-relaxed text-slate-700 print:text-sm">
                         {subsection.content}
                       </div>
                     </div>
@@ -176,7 +176,7 @@ export function ComplianceDocument({
         onClick={scrollToTop}
         size="icon"
         className={cn(
-          "fixed bottom-8 right-8 z-50 shadow-lg transition-all duration-300 print:hidden",
+          "fixed right-8 bottom-8 z-50 shadow-lg transition-all duration-300 print:hidden",
           showBackToTop
             ? "translate-y-0 opacity-100"
             : "pointer-events-none translate-y-4 opacity-0",

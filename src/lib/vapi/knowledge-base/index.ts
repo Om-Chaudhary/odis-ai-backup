@@ -12,37 +12,40 @@ import type {
   DynamicVariables,
   BuildVariablesOptions,
   BuildVariablesResult,
-} from '../types';
+} from "../types";
 
 import {
   validateDynamicVariables,
   inferConditionCategory,
   hasRequiredFieldsForCallType,
-} from '../validators';
+} from "../validators";
 
-import { gastrointestinalKnowledge } from './gastrointestinal';
-import { postSurgicalKnowledge } from './post-surgical';
-import { dermatologicalKnowledge } from './dermatological';
-import { respiratoryKnowledge } from './respiratory';
-import { urinaryKnowledge } from './urinary';
-import { orthopedicKnowledge } from './orthopedic';
-import { neurologicalKnowledge } from './neurological';
-import { ophthalmicKnowledge } from './ophthalmic';
-import { cardiacKnowledge } from './cardiac';
-import { endocrineKnowledge } from './endocrine';
-import { dentalKnowledge } from './dental';
-import { woundCareKnowledge } from './wound-care';
-import { behavioralKnowledge } from './behavioral';
-import { painManagementKnowledge } from './pain-management';
-import { generalKnowledge } from './general';
+import { gastrointestinalKnowledge } from "./gastrointestinal";
+import { postSurgicalKnowledge } from "./post-surgical";
+import { dermatologicalKnowledge } from "./dermatological";
+import { respiratoryKnowledge } from "./respiratory";
+import { urinaryKnowledge } from "./urinary";
+import { orthopedicKnowledge } from "./orthopedic";
+import { neurologicalKnowledge } from "./neurological";
+import { ophthalmicKnowledge } from "./ophthalmic";
+import { cardiacKnowledge } from "./cardiac";
+import { endocrineKnowledge } from "./endocrine";
+import { dentalKnowledge } from "./dental";
+import { woundCareKnowledge } from "./wound-care";
+import { behavioralKnowledge } from "./behavioral";
+import { painManagementKnowledge } from "./pain-management";
+import { generalKnowledge } from "./general";
 
 /**
  * Registry of all available knowledge bases
  * All condition categories now have comprehensive knowledge bases implemented
  */
-const KNOWLEDGE_BASE_REGISTRY: Record<ConditionCategory, ConditionKnowledgeBase> = {
+const KNOWLEDGE_BASE_REGISTRY: Record<
+  ConditionCategory,
+  ConditionKnowledgeBase
+> = {
   gastrointestinal: gastrointestinalKnowledge,
-  'post-surgical': postSurgicalKnowledge,
+  "post-surgical": postSurgicalKnowledge,
   dermatological: dermatologicalKnowledge,
   respiratory: respiratoryKnowledge,
   urinary: urinaryKnowledge,
@@ -52,9 +55,9 @@ const KNOWLEDGE_BASE_REGISTRY: Record<ConditionCategory, ConditionKnowledgeBase>
   cardiac: cardiacKnowledge,
   endocrine: endocrineKnowledge,
   dental: dentalKnowledge,
-  'wound-care': woundCareKnowledge,
+  "wound-care": woundCareKnowledge,
   behavioral: behavioralKnowledge,
-  'pain-management': painManagementKnowledge,
+  "pain-management": painManagementKnowledge,
   general: generalKnowledge,
 };
 
@@ -64,7 +67,9 @@ const KNOWLEDGE_BASE_REGISTRY: Record<ConditionCategory, ConditionKnowledgeBase>
  * @param category - The condition category
  * @returns The knowledge base for the specified category (always returns a valid knowledge base)
  */
-export function getKnowledgeBase(category: ConditionCategory): ConditionKnowledgeBase {
+export function getKnowledgeBase(
+  category: ConditionCategory,
+): ConditionKnowledgeBase {
   return KNOWLEDGE_BASE_REGISTRY[category];
 }
 
@@ -89,7 +94,7 @@ export function getAllKnowledgeBases(): ConditionKnowledgeBase[] {
  */
 export function determineConditionCategory(
   condition: string | undefined,
-  explicitCategory?: ConditionCategory
+  explicitCategory?: ConditionCategory,
 ): ConditionCategory {
   // If explicitly provided, use that
   if (explicitCategory) {
@@ -102,7 +107,7 @@ export function determineConditionCategory(
   }
 
   // Default to general
-  return 'general';
+  return "general";
 }
 
 /**
@@ -119,18 +124,29 @@ export function determineConditionCategory(
  * @returns Complete build result with variables, knowledge base, and validation info
  * @throws Error if strict mode is enabled and validation fails
  */
-export function buildDynamicVariables(options: BuildVariablesOptions): BuildVariablesResult {
-  const { baseVariables, conditionCategory: explicitCategory, strict = false, useDefaults = true, customKnowledgeBase } = options;
+export function buildDynamicVariables(
+  options: BuildVariablesOptions,
+): BuildVariablesResult {
+  const {
+    baseVariables,
+    conditionCategory: explicitCategory,
+    strict = false,
+    useDefaults = true,
+    customKnowledgeBase,
+  } = options;
 
   const warnings: string[] = [];
 
   try {
     // Step 1: Determine condition category
-    const category = determineConditionCategory(baseVariables.condition, explicitCategory);
+    const category = determineConditionCategory(
+      baseVariables.condition,
+      explicitCategory,
+    );
 
-    if (category === 'general' && baseVariables.callType === 'follow-up') {
+    if (category === "general" && baseVariables.callType === "follow-up") {
       warnings.push(
-        `Could not determine specific condition category from "${baseVariables.condition}". Using general knowledge base. For better results, explicitly set conditionCategory.`
+        `Could not determine specific condition category from "${baseVariables.condition}". Using general knowledge base. For better results, explicitly set conditionCategory.`,
       );
     }
 
@@ -142,10 +158,11 @@ export function buildDynamicVariables(options: BuildVariablesOptions): BuildVari
       knowledgeBase = {
         conditionCategory: category,
         displayName: customKnowledgeBase.displayName ?? `Custom ${category}`,
-        description: customKnowledgeBase.description ?? '',
+        description: customKnowledgeBase.description ?? "",
         keywords: customKnowledgeBase.keywords ?? [],
         assessmentQuestions: customKnowledgeBase.assessmentQuestions ?? [],
-        normalPostTreatmentExpectations: customKnowledgeBase.normalPostTreatmentExpectations ?? [],
+        normalPostTreatmentExpectations:
+          customKnowledgeBase.normalPostTreatmentExpectations ?? [],
         warningSignsToMonitor: customKnowledgeBase.warningSignsToMonitor ?? [],
         emergencyCriteria: customKnowledgeBase.emergencyCriteria ?? [],
         urgentCriteria: customKnowledgeBase.urgentCriteria ?? [],
@@ -166,12 +183,20 @@ export function buildDynamicVariables(options: BuildVariablesOptions): BuildVari
     // Step 4: If useDefaults is true and knowledge base exists, merge knowledge base data
     if (useDefaults && knowledgeBase) {
       // Only add knowledge base fields if they're not already provided
-      if (!completeVariables.assessmentQuestions && knowledgeBase.assessmentQuestions.length > 0) {
-        completeVariables.assessmentQuestions = knowledgeBase.assessmentQuestions;
+      if (
+        !completeVariables.assessmentQuestions &&
+        knowledgeBase.assessmentQuestions.length > 0
+      ) {
+        completeVariables.assessmentQuestions =
+          knowledgeBase.assessmentQuestions;
       }
 
-      if (!completeVariables.warningSignsToMonitor && knowledgeBase.warningSignsToMonitor.length > 0) {
-        completeVariables.warningSignsToMonitor = knowledgeBase.warningSignsToMonitor;
+      if (
+        !completeVariables.warningSignsToMonitor &&
+        knowledgeBase.warningSignsToMonitor.length > 0
+      ) {
+        completeVariables.warningSignsToMonitor =
+          knowledgeBase.warningSignsToMonitor;
       }
 
       if (
@@ -182,11 +207,17 @@ export function buildDynamicVariables(options: BuildVariablesOptions): BuildVari
           knowledgeBase.normalPostTreatmentExpectations;
       }
 
-      if (!completeVariables.emergencyCriteria && knowledgeBase.emergencyCriteria.length > 0) {
+      if (
+        !completeVariables.emergencyCriteria &&
+        knowledgeBase.emergencyCriteria.length > 0
+      ) {
         completeVariables.emergencyCriteria = knowledgeBase.emergencyCriteria;
       }
 
-      if (!completeVariables.urgentCriteria && knowledgeBase.urgentCriteria.length > 0) {
+      if (
+        !completeVariables.urgentCriteria &&
+        knowledgeBase.urgentCriteria.length > 0
+      ) {
         completeVariables.urgentCriteria = knowledgeBase.urgentCriteria;
       }
     }
@@ -199,13 +230,15 @@ export function buildDynamicVariables(options: BuildVariablesOptions): BuildVari
 
     // Step 6: Check for required fields
     if (!hasRequiredFieldsForCallType(completeVariables)) {
-      validation.errors.push('Missing required fields for call type');
+      validation.errors.push("Missing required fields for call type");
       validation.valid = false;
     }
 
     // If validation failed and strict mode is on, throw
     if (!validation.valid && strict) {
-      throw new Error(`Variable validation failed:\n${validation.errors.join('\n')}`);
+      throw new Error(
+        `Variable validation failed:\n${validation.errors.join("\n")}`,
+      );
     }
 
     return {
@@ -222,10 +255,12 @@ export function buildDynamicVariables(options: BuildVariablesOptions): BuildVari
     // In non-strict mode, return error information with general knowledge base
     return {
       variables: baseVariables as DynamicVariables,
-      knowledgeBase: getKnowledgeBase('general'),
+      knowledgeBase: getKnowledgeBase("general"),
       validation: {
         valid: false,
-        errors: [error instanceof Error ? error.message : 'Unknown error occurred'],
+        errors: [
+          error instanceof Error ? error.message : "Unknown error occurred",
+        ],
         warnings,
       },
       warnings,
@@ -243,7 +278,7 @@ export function buildDynamicVariables(options: BuildVariablesOptions): BuildVari
  * @returns Complete variable set with knowledge base data
  */
 export function createTestScenario(
-  baseVariables: Partial<DynamicVariables>
+  baseVariables: Partial<DynamicVariables>,
 ): DynamicVariables {
   const result = buildDynamicVariables({
     baseVariables,
@@ -252,8 +287,11 @@ export function createTestScenario(
   });
 
   if (!result.validation.valid) {
-    console.warn('Test scenario validation warnings:', result.validation.warnings);
-    console.error('Test scenario validation errors:', result.validation.errors);
+    console.warn(
+      "Test scenario validation warnings:",
+      result.validation.warnings,
+    );
+    console.error("Test scenario validation errors:", result.validation.errors);
   }
 
   return result.variables;
@@ -265,16 +303,18 @@ export function createTestScenario(
  * @param variables - Variables to validate
  * @returns Formatted error message or null if valid
  */
-export function getValidationErrorMessage(variables: Partial<DynamicVariables>): string | null {
+export function getValidationErrorMessage(
+  variables: Partial<DynamicVariables>,
+): string | null {
   const validation = validateDynamicVariables(variables, false);
 
   if (!validation.valid) {
-    const errorList = validation.errors.map((e) => `• ${e}`).join('\n');
+    const errorList = validation.errors.map((e) => `• ${e}`).join("\n");
     return `Please fix the following issues:\n\n${errorList}`;
   }
 
   if (validation.warnings.length > 0) {
-    const warningList = validation.warnings.map((w) => `• ${w}`).join('\n');
+    const warningList = validation.warnings.map((w) => `• ${w}`).join("\n");
     return `Warnings:\n\n${warningList}`;
   }
 
@@ -290,23 +330,26 @@ export type {
   ValidationResult,
   BuildVariablesOptions,
   BuildVariablesResult,
-} from '../types';
+} from "../types";
 
-export { validateDynamicVariables, inferConditionCategory } from '../validators';
+export {
+  validateDynamicVariables,
+  inferConditionCategory,
+} from "../validators";
 
 // Export all knowledge bases for direct access if needed
-export { gastrointestinalKnowledge } from './gastrointestinal';
-export { postSurgicalKnowledge } from './post-surgical';
-export { dermatologicalKnowledge } from './dermatological';
-export { respiratoryKnowledge } from './respiratory';
-export { urinaryKnowledge } from './urinary';
-export { orthopedicKnowledge } from './orthopedic';
-export { neurologicalKnowledge } from './neurological';
-export { ophthalmicKnowledge } from './ophthalmic';
-export { cardiacKnowledge } from './cardiac';
-export { endocrineKnowledge } from './endocrine';
-export { dentalKnowledge } from './dental';
-export { woundCareKnowledge } from './wound-care';
-export { behavioralKnowledge } from './behavioral';
-export { painManagementKnowledge } from './pain-management';
-export { generalKnowledge } from './general';
+export { gastrointestinalKnowledge } from "./gastrointestinal";
+export { postSurgicalKnowledge } from "./post-surgical";
+export { dermatologicalKnowledge } from "./dermatological";
+export { respiratoryKnowledge } from "./respiratory";
+export { urinaryKnowledge } from "./urinary";
+export { orthopedicKnowledge } from "./orthopedic";
+export { neurologicalKnowledge } from "./neurological";
+export { ophthalmicKnowledge } from "./ophthalmic";
+export { cardiacKnowledge } from "./cardiac";
+export { endocrineKnowledge } from "./endocrine";
+export { dentalKnowledge } from "./dental";
+export { woundCareKnowledge } from "./wound-care";
+export { behavioralKnowledge } from "./behavioral";
+export { painManagementKnowledge } from "./pain-management";
+export { generalKnowledge } from "./general";

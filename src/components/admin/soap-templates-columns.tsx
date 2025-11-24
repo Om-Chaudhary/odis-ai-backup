@@ -8,7 +8,8 @@ import Link from "next/link";
 import type { Database } from "~/database.types";
 
 // Type for the SOAP template row from database
-type SoapTemplateRow = Database["public"]["Tables"]["temp_soap_templates"]["Row"];
+type SoapTemplateRow =
+  Database["public"]["Tables"]["temp_soap_templates"]["Row"];
 
 // Type for user fields returned from the join
 type UserFields = {
@@ -41,7 +42,7 @@ export const getColumns = ({
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="-ml-4 h-8 font-semibold hover:bg-transparent hover:text-foreground"
+          className="hover:text-foreground -ml-4 h-8 font-semibold hover:bg-transparent"
         >
           Template Name
           <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
@@ -49,7 +50,7 @@ export const getColumns = ({
       );
     },
     cell: ({ row }) => (
-      <div className="font-medium text-foreground">
+      <div className="text-foreground font-medium">
         {row.getValue("template_name")}
       </div>
     ),
@@ -61,7 +62,7 @@ export const getColumns = ({
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="-ml-4 h-8 font-semibold hover:bg-transparent hover:text-foreground"
+          className="hover:text-foreground -ml-4 h-8 font-semibold hover:bg-transparent"
         >
           Display Name
           <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
@@ -86,7 +87,7 @@ export const getColumns = ({
       const user = row.original.user;
       if (!user) {
         return (
-          <span className="text-sm italic text-muted-foreground/70">
+          <span className="text-muted-foreground/70 text-sm italic">
             Unassigned
           </span>
         );
@@ -95,7 +96,7 @@ export const getColumns = ({
         user.first_name && user.last_name
           ? `${user.first_name} ${user.last_name}`
           : user.email;
-      return <span className="text-sm text-foreground">{displayName}</span>;
+      return <span className="text-foreground text-sm">{displayName}</span>;
     },
   },
   {
@@ -121,7 +122,7 @@ export const getColumns = ({
             variant="ghost"
             size="icon"
             onClick={() => onShare(template.id, template.display_name)}
-            className="h-9 w-9 opacity-0 transition-all hover:bg-blue-500/10 hover:text-blue-500 group-hover:opacity-100"
+            className="h-9 w-9 opacity-0 transition-all group-hover:opacity-100 hover:bg-blue-500/10 hover:text-blue-500"
           >
             <Share2 className="h-4 w-4" />
             <span className="sr-only">Share</span>
@@ -130,7 +131,7 @@ export const getColumns = ({
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 opacity-0 transition-all hover:bg-primary/10 hover:text-primary group-hover:opacity-100"
+              className="hover:bg-primary/10 hover:text-primary h-9 w-9 opacity-0 transition-all group-hover:opacity-100"
             >
               <Pencil className="h-4 w-4" />
               <span className="sr-only">Edit</span>
@@ -141,7 +142,7 @@ export const getColumns = ({
             size="icon"
             onClick={() => onDelete(template.id, template.display_name)}
             disabled={isDeleting}
-            className="h-9 w-9 opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+            className="hover:bg-destructive/10 hover:text-destructive h-9 w-9 opacity-0 transition-all group-hover:opacity-100"
           >
             {isDeleting ? (
               <Loader2 className="h-4 w-4 animate-spin" />

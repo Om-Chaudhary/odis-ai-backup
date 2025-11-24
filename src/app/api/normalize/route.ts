@@ -19,21 +19,13 @@
  */
 
 import type { NextRequest } from "next/server";
-import { withAuth, successResponse, errorResponse } from "~/lib/api/auth";
+import { errorResponse, successResponse, withAuth } from "~/lib/api/auth";
 import { handleCorsPreflightRequest } from "~/lib/api/cors";
 import {
   NormalizeRequestSchema,
   type NormalizeResponse,
 } from "~/lib/validators/scribe";
-import {
-  extractEntitiesWithRetry,
-  createExtractionSummary,
-  analyzeExtractionQuality,
-} from "~/lib/ai/normalize-scribe";
-import {
-  storeNormalizedEntities,
-  fetchCaseWithEntities,
-} from "~/lib/db/scribe-transactions";
+import { CasesService } from "~/lib/services/cases-service";
 
 /* ========================================
    Main API Handler
@@ -44,137 +36,132 @@ import {
  *
  * Extract structured clinical entities from veterinary text
  */
-export const POST = withAuth<NormalizeResponse>(async (request, { user, supabase }, context) => {
-  const startTime = Date.now();
+export const POST = withAuth<NormalizeResponse>(
+  async (request, { user, supabase }) => {
+    const startTime = Date.now();
 
-  try {
-    // Step 1: Parse and validate request body
-    const body = await request.json();
-    const validation = NormalizeRequestSchema.safeParse(body);
+    try {
+      // Step 1: Parse and validate request body
+      const body = await request.json();
+      const validation = NormalizeRequestSchema.safeParse(body);
 
-    if (!validation.success) {
-      return errorResponse("Validation failed", 400, {
-        errors: validation.error.errors.map((e) => ({
-          field: e.path.join("."),
-          message: e.message,
-        })),
-      }, request);
-    }
-
-    const { input, caseId, inputType, metadata } = validation.data;
-
-    // Step 2: If case ID provided, check if already normalized
-    if (caseId) {
-      const existingCase = await fetchCaseWithEntities(
-        supabase,
-        caseId,
-        user.id,
-      );
-
-      if (!existingCase.success) {
-        return errorResponse("Case not found or access denied", 404, {
-          details: existingCase.error,
-        }, request);
-      }
-
-      // Warn if case already has entities (but allow update)
-      if (existingCase.entities) {
-        console.warn(
-          `[NORMALIZE] Case ${caseId} already has entities. Will update.`,
+      if (!validation.success) {
+        return errorResponse(
+          "Validation failed",
+          400,
+          {
+            errors: validation.error.errors.map((e) => ({
+              field: e.path.join("."),
+              message: e.message,
+            })),
+          },
+          request,
         );
       }
-    }
 
-    // Step 3: Validate input length
-    if (input.trim().length < 50) {
+      const { input, inputType } = validation.data;
+
+      // Step 2: Validate input length
+      if (input.trim().length < 50) {
+        return errorResponse(
+          "Input too short for entity extraction (minimum 50 characters)",
+          400,
+          undefined,
+          request,
+        );
+      }
+
+      console.log(
+        `[NORMALIZE] Starting ingestion via CasesService for user ${user.id} (${input.length} chars)`,
+      );
+
+      // Step 3: Call CasesService
+      const result = await CasesService.ingest(supabase, user.id, {
+        mode: "text",
+        source: "mobile_app", // Assumption: This endpoint is primarily mobile/web
+        text: input,
+        options: {
+          inputType: inputType,
+          // metadata could be passed if service supported it, but for now we focus on entities
+        },
+      });
+
+      // Step 4: Fetch formatted data for response (Compatibility Mode)
+      const { data: caseData, error: caseError } = await supabase
+        .from("cases")
+        .select(
+          `
+        *,
+        patient:patients(*)
+      `,
+        )
+        .eq("id", result.caseId)
+        .single();
+
+      if (caseError || !caseData) {
+        throw new Error("Failed to retrieve case after ingestion");
+      }
+
+      // Format patient data (Supabase returns array or object depending on relation, but usually object for single)
+      // In database.types, it is defined as OneToMany usually, but here we want the specific patient.
+      // Actually `cases` doesn't point to `patients` via FK, `patients` points to `cases`.
+      // So `patient:patients(*)` works as a reverse lookup.
+      // Since a case can technically have multiple patients (though logically one per visit usually),
+      // we grab the first one.
+      const patientData = Array.isArray(caseData.patient)
+        ? caseData.patient[0]
+        : caseData.patient;
+
+      if (!patientData) {
+        throw new Error("Patient not found for case");
+      }
+
+      // Step 5: Build success response
+      const processingTime = Date.now() - startTime;
+
+      const response: NormalizeResponse = {
+        success: true,
+        data: {
+          case: {
+            id: caseData.id,
+            type: caseData.type ?? "checkup",
+            status: caseData.status ?? "ongoing",
+            metadata: (caseData.metadata as Record<string, unknown>) ?? {},
+            created_at: caseData.created_at ?? new Date().toISOString(),
+          },
+          patient: {
+            id: patientData.id,
+            name: patientData.name,
+            species: patientData.species ?? "unknown",
+            owner_name: patientData.owner_name ?? "Unknown",
+          },
+          entities: result.entities,
+        },
+        metadata: {
+          confidence: result.entities.confidence.overall,
+          warnings: result.entities.warnings,
+          processingTime,
+        },
+      };
+
+      console.log(
+        `[NORMALIZE] Success! Processed case ${result.caseId} in ${processingTime}ms`,
+      );
+
+      return successResponse(response, 200, request);
+    } catch (error) {
+      console.error("[NORMALIZE] Unexpected error:", error);
       return errorResponse(
-        "Input too short for entity extraction (minimum 50 characters)",
-        400,
-        undefined,
+        "Internal server error",
+        500,
+        {
+          message: error instanceof Error ? error.message : "Unknown error",
+        },
         request,
       );
     }
-
-    // Step 4: Extract entities using AI
-    console.log(
-      `[NORMALIZE] Starting entity extraction for user ${user.id} (${input.length} chars, type: ${inputType || "other"})`,
-    );
-
-    let entities;
-    try {
-      entities = await extractEntitiesWithRetry(input, inputType, 3);
-    } catch (aiError) {
-      console.error("[NORMALIZE] AI entity extraction failed:", aiError);
-      return errorResponse("AI entity extraction failed", 500, {
-        message: aiError instanceof Error ? aiError.message : "Unknown AI error",
-      }, request);
-    }
-
-    // Log extraction summary
-    const summary = createExtractionSummary(entities);
-    console.log(`[NORMALIZE] AI extraction: ${summary}`);
-
-    // Analyze quality
-    const quality = analyzeExtractionQuality(entities);
-    if (!quality.isHighConfidence) {
-      console.warn(
-        `[NORMALIZE] Low confidence extraction: ${quality.missingCriticalFields.join(", ")}`,
-      );
-    }
-
-    // Step 5: Store entities in case.metadata
-    const dbResult = await storeNormalizedEntities(
-      supabase,
-      user.id,
-      entities,
-      caseId, // Will update if provided, create if not
-      {
-        ...metadata,
-        input_length: input.length,
-        input_type: inputType,
-      },
-    );
-
-    if (!dbResult.success) {
-      console.error("[NORMALIZE] Database storage failed:", dbResult.error);
-      return errorResponse("Failed to store extracted entities", 500, {
-        error: dbResult.error,
-        details: dbResult.details,
-      }, request);
-    }
-
-    // Step 6: Build success response
-    const processingTime = Date.now() - startTime;
-
-    const response: NormalizeResponse = {
-      success: true,
-      data: {
-        case: {
-          ...dbResult.case,
-          type: dbResult.case.type as NormalizeResponse["data"]["case"]["type"],
-        },
-        patient: dbResult.patient,
-        entities: dbResult.entities,
-      },
-      metadata: {
-        confidence: entities.confidence.overall,
-        warnings: entities.warnings,
-        processingTime,
-      },
-    };
-
-    console.log(
-      `[NORMALIZE] Success! ${caseId ? "Updated" : "Created"} case ${dbResult.case.id} in ${processingTime}ms`,
-    );
-
-    return successResponse(response, caseId ? 200 : 201, request);
-  } catch (error) {
-    console.error("[NORMALIZE] Unexpected error:", error);
-    return errorResponse("Internal server error", 500, {
-      message: error instanceof Error ? error.message : "Unknown error",
-    }, request);
-  }
-});
+  },
+);
 
 /* ========================================
    GET Handler - Check Entity Extraction Status
@@ -194,7 +181,7 @@ export const GET = withAuth<{
     confidence: number | undefined;
     extractedAt: string | undefined;
   } | null;
-}>(async (request, { user, supabase }, context) => {
+}>(async (request, { supabase }) => {
   try {
     const { searchParams } = new URL(request.url);
     const caseId = searchParams.get("caseId");
@@ -204,33 +191,47 @@ export const GET = withAuth<{
     }
 
     // Fetch case with entities
-    const result = await fetchCaseWithEntities(supabase, caseId, user.id);
+    const result = await CasesService.getCaseWithEntities(supabase, caseId);
 
-    if (!result.success) {
-      return errorResponse("Case not found or access denied", 404, {
-        details: result.error,
-      }, request);
+    if (!result) {
+      return errorResponse(
+        "Case not found or access denied",
+        404,
+        undefined,
+        request,
+      );
     }
 
     const hasEntities = !!result.entities;
+    const entities = result.entities;
 
-    return successResponse({
-      caseId,
-      hasEntities,
-      entities: hasEntities
-        ? {
-            patientName: result.entities?.patient.name,
-            caseType: result.entities?.caseType,
-            confidence: result.entities?.confidence.overall,
-            extractedAt: result.entities?.extractedAt,
-          }
-        : null,
-    }, 200, request);
+    return successResponse(
+      {
+        caseId,
+        hasEntities,
+        entities:
+          hasEntities && entities
+            ? {
+                patientName: entities.patient.name,
+                caseType: entities.caseType,
+                confidence: entities.confidence.overall,
+                extractedAt: entities.extractedAt,
+              }
+            : null,
+      },
+      200,
+      request,
+    );
   } catch (error) {
     console.error("[NORMALIZE] GET error:", error);
-    return errorResponse("Failed to check entity extraction status", 500, {
-      message: error instanceof Error ? error.message : "Unknown error",
-    }, request);
+    return errorResponse(
+      "Failed to check entity extraction status",
+      500,
+      {
+        message: error instanceof Error ? error.message : "Unknown error",
+      },
+      request,
+    );
   }
 });
 

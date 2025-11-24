@@ -1,5 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import type { Database } from "~/database.types";
+import { type createClient } from "~/lib/supabase/server";
 
 // Auth types
 export type AuthUser = User;
@@ -68,3 +69,13 @@ export type MiddlewareConfig = {
   authRoutes: string[];
   redirectTo: string;
 };
+
+/* ========================================
+   Supabase Client Types
+   ======================================== */
+
+/**
+ * Type-safe Supabase client matching the pattern used throughout the codebase
+ * Use this type for service methods that accept a Supabase client
+ */
+export type SupabaseClientType = Awaited<ReturnType<typeof createClient>>;

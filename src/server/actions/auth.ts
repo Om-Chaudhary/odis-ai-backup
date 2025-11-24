@@ -81,14 +81,12 @@ export async function getUser() {
 
   // If user doesn't exist in our users table, create them
   if (userError && userError.code === "PGRST116") {
-    const { error: insertError } = await supabase
-      .from("users")
-      .insert({
-        id: user.id,
-        email: user.email!,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
+    const { error: insertError } = await supabase.from("users").insert({
+      id: user.id,
+      email: user.email!,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
 
     if (insertError) {
       console.error("Error creating user profile:", insertError);

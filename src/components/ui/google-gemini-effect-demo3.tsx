@@ -99,16 +99,23 @@ export const GoogleGeminiEffectDemo3 = ({
               }}
             >
               <div className="flex flex-col items-center gap-2">
-                <Clock className="h-12 w-12 text-teal-600 md:h-16 md:w-16" strokeWidth={2} />
-                <span className="font-mono text-xs font-bold text-teal-700 md:text-sm">+2-3hr</span>
+                <Clock
+                  className="h-12 w-12 text-teal-600 md:h-16 md:w-16"
+                  strokeWidth={2}
+                />
+                <span className="font-mono text-xs font-bold text-teal-700 md:text-sm">
+                  +2-3hr
+                </span>
               </div>
             </motion.div>
-            <span className="text-[10px] font-semibold text-teal-600 md:text-xs">Time Saved</span>
+            <span className="text-[10px] font-semibold text-teal-600 md:text-xs">
+              Time Saved
+            </span>
           </motion.div>
 
           {/* Revenue Growth - Top Right */}
           <motion.div
-            className="absolute -right-16 -top-20 flex flex-col items-center gap-1"
+            className="absolute -top-20 -right-16 flex flex-col items-center gap-1"
             style={{ scale: revenueScale }}
             animate={{
               y: [0, -15, 0],
@@ -121,11 +128,19 @@ export const GoogleGeminiEffectDemo3 = ({
           >
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-white shadow-xl md:h-20 md:w-20">
               <div className="flex items-center">
-                <DollarSign className="h-8 w-8 text-emerald-600 md:h-10 md:w-10" strokeWidth={2.5} />
-                <Plus className="h-5 w-5 text-emerald-600 md:h-6 md:w-6" strokeWidth={3} />
+                <DollarSign
+                  className="h-8 w-8 text-emerald-600 md:h-10 md:w-10"
+                  strokeWidth={2.5}
+                />
+                <Plus
+                  className="h-5 w-5 text-emerald-600 md:h-6 md:w-6"
+                  strokeWidth={3}
+                />
               </div>
             </div>
-            <span className="text-[10px] font-semibold text-emerald-600 md:text-xs">Revenue</span>
+            <span className="text-[10px] font-semibold text-emerald-600 md:text-xs">
+              Revenue
+            </span>
           </motion.div>
 
           {/* More Patients - Bottom Left */}
@@ -143,16 +158,24 @@ export const GoogleGeminiEffectDemo3 = ({
           >
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-50 to-white shadow-xl md:h-20 md:w-20">
               <div className="flex items-center">
-                <Users className="h-7 w-7 text-teal-600 md:h-9 md:w-9" strokeWidth={2} />
-                <Plus className="h-4 w-4 text-teal-600 md:h-5 md:w-5" strokeWidth={3} />
+                <Users
+                  className="h-7 w-7 text-teal-600 md:h-9 md:w-9"
+                  strokeWidth={2}
+                />
+                <Plus
+                  className="h-4 w-4 text-teal-600 md:h-5 md:w-5"
+                  strokeWidth={3}
+                />
               </div>
             </div>
-            <span className="text-[10px] font-semibold text-teal-600 md:text-xs">Patients</span>
+            <span className="text-[10px] font-semibold text-teal-600 md:text-xs">
+              Patients
+            </span>
           </motion.div>
 
           {/* Capacity Counter - Bottom Right */}
           <motion.div
-            className="absolute -bottom-20 -right-16 flex flex-col items-center gap-1"
+            className="absolute -right-16 -bottom-20 flex flex-col items-center gap-1"
             style={{ opacity: growthOpacity }}
             animate={{
               x: [0, 10, 0],
@@ -165,16 +188,27 @@ export const GoogleGeminiEffectDemo3 = ({
           >
             <div className="flex gap-1">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-100 to-white shadow-md md:h-9 md:w-9">
-                <CheckCircle className="h-4 w-4 text-emerald-600 md:h-5 md:w-5" strokeWidth={2} />
+                <CheckCircle
+                  className="h-4 w-4 text-emerald-600 md:h-5 md:w-5"
+                  strokeWidth={2}
+                />
               </div>
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-100 to-white shadow-md md:h-9 md:w-9">
-                <CheckCircle className="h-4 w-4 text-emerald-600 md:h-5 md:w-5" strokeWidth={2} />
+                <CheckCircle
+                  className="h-4 w-4 text-emerald-600 md:h-5 md:w-5"
+                  strokeWidth={2}
+                />
               </div>
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-100 to-white shadow-md md:h-9 md:w-9">
-                <CheckCircle className="h-4 w-4 text-emerald-600 md:h-5 md:w-5" strokeWidth={2} />
+                <CheckCircle
+                  className="h-4 w-4 text-emerald-600 md:h-5 md:w-5"
+                  strokeWidth={2}
+                />
               </div>
             </div>
-            <span className="text-[10px] font-semibold text-emerald-600 md:text-xs">Capacity</span>
+            <span className="text-[10px] font-semibold text-emerald-600 md:text-xs">
+              Capacity
+            </span>
           </motion.div>
         </motion.div>
 

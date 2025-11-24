@@ -39,7 +39,7 @@ export default function PrivacyPolicyPage() {
           <nav className="flex items-center justify-between">
             <a
               href="/"
-              className="text-lg font-semibold text-slate-900 hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              className="hover:text-primary focus:ring-ring text-lg font-semibold text-slate-900 focus:ring-2 focus:ring-offset-2 focus:outline-none"
             >
               ← Back to Home
             </a>
@@ -67,19 +67,19 @@ export default function PrivacyPolicyPage() {
             <div className="mt-4 flex justify-center gap-6">
               <a
                 href="/privacy-policy"
-                className="hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                className="hover:text-primary focus:ring-ring focus:ring-2 focus:ring-offset-2 focus:outline-none"
               >
                 Privacy Policy
               </a>
               <a
                 href="/terms-of-service"
-                className="hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                className="hover:text-primary focus:ring-ring focus:ring-2 focus:ring-offset-2 focus:outline-none"
               >
                 Terms of Service
               </a>
               <a
                 href="/cookie-policy"
-                className="hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                className="hover:text-primary focus:ring-ring focus:ring-2 focus:ring-offset-2 focus:outline-none"
               >
                 Cookie Policy
               </a>

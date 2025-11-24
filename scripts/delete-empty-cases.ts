@@ -46,10 +46,12 @@ async function deleteEmptyCases() {
     return;
   }
 
-  console.log(`\nFound ${cases.length} cases without transcriptions/SOAP notes:`);
+  console.log(
+    `\nFound ${cases.length} cases without transcriptions/SOAP notes:`,
+  );
   cases.forEach((c, i) => {
     console.log(
-      `${i + 1}. ID: ${c.id} | Pet: ${c.pet_name} | Owner: ${c.owner_name} | Created: ${new Date(c.created_at).toLocaleString()}`
+      `${i + 1}. ID: ${c.id} | Pet: ${c.pet_name} | Owner: ${c.owner_name} | Created: ${new Date(c.created_at).toLocaleString()}`,
     );
   });
 

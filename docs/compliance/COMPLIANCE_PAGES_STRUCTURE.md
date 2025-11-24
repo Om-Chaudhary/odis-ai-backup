@@ -425,17 +425,17 @@ User Journey
 
 ## Quick Reference
 
-| Item            | Location                                       | Purpose                |
-| --------------- | ---------------------------------------------- | ---------------------- |
-| Component       | `src/components/legal/compliance-document.tsx` | Reusable template      |
-| Privacy content | `src/app/privacy-policy/content.tsx`           | Privacy policy text    |
-| Privacy page    | `src/app/privacy-policy/page.tsx`              | Privacy route          |
-| Terms content   | `src/app/terms-of-service/content.tsx`         | Terms text             |
-| Terms page      | `src/app/terms-of-service/page.tsx`            | Terms route            |
-| Footer          | `src/components/Footer.tsx`                    | Links to pages         |
-| Quick start     | `QUICK_START_COMPLIANCE.md`                    | 15-min setup           |
-| Full guide      | `COMPLIANCE_PAGES_GUIDE.md`                    | Comprehensive docs     |
-| Summary         | `IMPLEMENTATION_SUMMARY.md`                    | Implementation details |
+| Item | Location | Purpose |
+|------|----------|---------|
+| Component | `src/components/legal/compliance-document.tsx` | Reusable template |
+| Privacy content | `src/app/privacy-policy/content.tsx` | Privacy policy text |
+| Privacy page | `src/app/privacy-policy/page.tsx` | Privacy route |
+| Terms content | `src/app/terms-of-service/content.tsx` | Terms text |
+| Terms page | `src/app/terms-of-service/page.tsx` | Terms route |
+| Footer | `src/components/Footer.tsx` | Links to pages |
+| Quick start | `QUICK_START_COMPLIANCE.md` | 15-min setup |
+| Full guide | `COMPLIANCE_PAGES_GUIDE.md` | Comprehensive docs |
+| Summary | `IMPLEMENTATION_SUMMARY.md` | Implementation details |
 
 ---
 
