@@ -70,13 +70,18 @@
       "mcp__playwright__browser_wait_for",
       "mcp__playwright__browser_type",
       "mcp__playwright__browser_console_messages",
-      "Bash(npx mcp-remote:*)"
+      "Bash(npx mcp-remote:*)",
+      "Bash(node -e:*)",
+      "Bash(openssl rand:*)",
+      "Bash(/usr/local/bin/node:*)",
+      "mcp__vapi-mcp__list_assistants",
+      "mcp__vapi-mcp__get_assistant",
+      "WebFetch(domain:docs.vapi.ai)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "shadcn"
-  ]
+  "enabledMcpjsonServers": ["shadcn", "vapi-mcp", "playwright"]
 }
