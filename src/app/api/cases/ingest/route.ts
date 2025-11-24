@@ -1,0 +1,134 @@
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { createClient } from "~/lib/supabase/server";
+import { createServerClient } from "@supabase/ssr";
+import { env } from "~/env";
+import { getUser } from "~/server/actions/auth";
+import { CasesService } from "~/lib/services/cases-service";
+import type { IngestPayload } from "~/types/services";
+import { z } from "zod";
+
+// --- Schemas ---
+const IngestPayloadSchema = z.discriminatedUnion("mode", [
+  z.object({
+    mode: z.literal("text"),
+    source: z.enum([
+      "mobile_app",
+      "web_dashboard",
+      "idexx_extension",
+      "ezyvet_api",
+    ]),
+    text: z.string().min(1),
+    options: z
+      .object({
+        autoSchedule: z.boolean().optional(),
+        inputType: z.string().optional(),
+      })
+      .optional(),
+  }),
+  z.object({
+    mode: z.literal("structured"),
+    source: z.enum([
+      "mobile_app",
+      "web_dashboard",
+      "idexx_extension",
+      "ezyvet_api",
+    ]),
+    data: z.record(z.any()),
+    options: z
+      .object({
+        autoSchedule: z.boolean().optional(),
+      })
+      .optional(),
+  }),
+]);
+
+// --- Auth Helper ---
+async function authenticateRequest(request: NextRequest) {
+  // Check for Authorization header (browser extension/API)
+  const authHeader = request.headers.get("authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.substring(7);
+
+    const supabase = createServerClient(
+      env.NEXT_PUBLIC_SUPABASE_URL,
+      env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          getAll() {
+            return [];
+          },
+          setAll() {
+            // No-op for token-based auth
+          },
+        },
+        global: {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      },
+    );
+
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    if (error || !user) return { user: null, supabase: null };
+    return { user, supabase };
+  }
+
+  // Fall back to cookie-based auth (web app)
+  const user = await getUser();
+  if (!user) return { user: null, supabase: null };
+
+  const supabase = await createClient();
+  return { user, supabase };
+}
+
+// --- Route Handler ---
+export async function POST(request: NextRequest) {
+  try {
+    // 1. Auth
+    const { user, supabase } = await authenticateRequest(request);
+    if (!user || !supabase) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        {
+          status: 401,
+        },
+      );
+    }
+
+    // 2. Parse & Validate
+    const body = await request.json();
+    const validation = IngestPayloadSchema.safeParse(body);
+
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          error: "Validation failed",
+          details: validation.error.format(),
+        },
+        { status: 400 },
+      );
+    }
+
+    const payload = validation.data as IngestPayload;
+
+    // 3. Execute Service
+    const result = await CasesService.ingest(supabase, user.id, payload);
+
+    // 4. Response
+    return NextResponse.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error("[CASES_INGEST] Error:", error);
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : "Internal Server Error",
+      },
+      { status: 500 },
+    );
+  }
+}
