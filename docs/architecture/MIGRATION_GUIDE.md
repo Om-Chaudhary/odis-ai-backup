@@ -123,7 +123,7 @@ ORDER BY ordinal_position;
 pnpm update-types
 ```
 
-This will update `database.types.ts` with the new table name.
+This will update `src/database.types.ts` with the new table name.
 
 ### 3. Test the Integration
 

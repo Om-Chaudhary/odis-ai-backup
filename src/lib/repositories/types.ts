@@ -5,7 +5,7 @@
  * These types match the database schema for scheduled_discharge_calls,
  * scheduled_discharge_emails, and other tables.
  *
- * Note: These are temporary types until database.types.ts is regenerated.
+ * Note: These are temporary types until src/database.types.ts is regenerated.
  * Run `pnpm update-types` to sync with latest database schema.
  */
 

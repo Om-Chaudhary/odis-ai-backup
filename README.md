@@ -826,7 +826,7 @@ odis-ai-web/
 │   │   ├── client.ts               # Client setup
 │   │   └── react.tsx               # React integration
 │   ├── types/                       # TypeScript types
-│   ├── database.types.ts            # Supabase generated types
+│   ├── database.types.ts            # Supabase generated types (src/database.types.ts)
 │   └── middleware.ts                # Next.js middleware
 ├── public/                          # Static assets
 │   ├── images/                     # Images and logos

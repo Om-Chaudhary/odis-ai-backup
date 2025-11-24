@@ -895,4 +895,4 @@ Contact the backend team or refer to:
 
 - Main codebase: `/src/app/api/`
 - CLAUDE.md for architecture details
-- Supabase schema: `database.types.ts`
+- Supabase schema: `src/database.types.ts`
