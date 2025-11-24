@@ -23,11 +23,11 @@ export const privacyPolicySections: ComplianceSection[] = [
     content: (
       <>
         <p>
-          Welcome to {COMPANY_NAME}. We are committed to protecting your
-          privacy and ensuring the security of your personal information. This
-          Privacy Policy explains how we collect, use, disclose, and safeguard
-          your information when you use our services, including our website,
-          Chrome extension, and related applications.
+          Welcome to {COMPANY_NAME}. We are committed to protecting your privacy
+          and ensuring the security of your personal information. This Privacy
+          Policy explains how we collect, use, disclose, and safeguard your
+          information when you use our services, including our website, Chrome
+          extension, and related applications.
         </p>
         <p>
           By using our services, you agree to the collection and use of
@@ -60,8 +60,8 @@ export const privacyPolicySections: ComplianceSection[] = [
             </p>
             <ul>
               <li>
-                <strong>Account Information:</strong> Name, email address,
-                phone number, and password
+                <strong>Account Information:</strong> Name, email address, phone
+                number, and password
               </li>
               <li>
                 <strong>Profile Information:</strong> Professional title,
@@ -383,8 +383,8 @@ export const privacyPolicySections: ComplianceSection[] = [
                 functionality and personalization (e.g., language preferences)
               </li>
               <li>
-                <strong>Analytics Cookies:</strong> Help us understand how
-                users interact with our services
+                <strong>Analytics Cookies:</strong> Help us understand how users
+                interact with our services
               </li>
               <li>
                 <strong>Marketing Cookies:</strong> Used to deliver relevant
@@ -456,8 +456,8 @@ export const privacyPolicySections: ComplianceSection[] = [
               </li>
             </ul>
             <p className="mt-4">
-              [TODO: Update this list based on your actual extension
-              permissions in manifest.json]
+              [TODO: Update this list based on your actual extension permissions
+              in manifest.json]
             </p>
           </>
         ),
@@ -482,8 +482,8 @@ export const privacyPolicySections: ComplianceSection[] = [
               </li>
             </ul>
             <p className="mt-4">
-              You can review and revoke permissions at any time through Chrome's
-              extension settings (chrome://extensions/).
+              You can review and revoke permissions at any time through
+              Chrome&apos;s extension settings (chrome://extensions/).
             </p>
           </>
         ),
@@ -522,7 +522,7 @@ export const privacyPolicySections: ComplianceSection[] = [
               </li>
               <li>
                 <strong>Right to Erasure:</strong> Request deletion of your
-                personal data ("right to be forgotten")
+                personal data (&quot;right to be forgotten&quot;)
               </li>
               <li>
                 <strong>Right to Restriction:</strong> Request restriction of
@@ -599,14 +599,14 @@ export const privacyPolicySections: ComplianceSection[] = [
     content: (
       <>
         <p>
-          Our services are not intended for children under the age of 13 (or
-          16 in the EU/EEA). We do not knowingly collect personal information
-          from children under these ages.
+          Our services are not intended for children under the age of 13 (or 16
+          in the EU/EEA). We do not knowingly collect personal information from
+          children under these ages.
         </p>
         <p>
-          If you are a parent or guardian and believe your child has provided
-          us with personal information, please contact us at {CONTACT_EMAIL}.
-          We will delete such information from our systems promptly.
+          If you are a parent or guardian and believe your child has provided us
+          with personal information, please contact us at {CONTACT_EMAIL}. We
+          will delete such information from our systems promptly.
         </p>
       </>
     ),
@@ -644,12 +644,12 @@ export const privacyPolicySections: ComplianceSection[] = [
           We may update this Privacy Policy from time to time to reflect changes
           in our practices, technology, legal requirements, or other factors.
         </p>
-        <p>
-          We will notify you of any material changes by:
-        </p>
+        <p>We will notify you of any material changes by:</p>
         <ul>
           <li>Posting the updated policy on this page</li>
-          <li>Updating the "Last Updated" date at the top of this policy</li>
+          <li>
+            Updating the &quot;Last Updated&quot; date at the top of this policy
+          </li>
           <li>
             Sending you an email notification (for significant changes that
             materially affect your rights)
