@@ -66,7 +66,14 @@ export default tseslint.config(
     },
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: [
+            "*.test.ts",
+            "*.test.tsx",
+            "vitest.config.ts",
+            "src/test/**/*",
+          ],
+        },
       },
     },
   },
