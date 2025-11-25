@@ -6,6 +6,7 @@ import { createPhoneCall } from "~/lib/vapi/client";
 import { mapVapiStatus } from "~/lib/vapi/client";
 import { CasesService } from "~/lib/services/cases-service";
 import { buildDynamicVariables } from "~/lib/vapi/knowledge-base";
+import { extractVapiVariablesFromEntities } from "~/lib/vapi/extract-variables";
 import { normalizeVariablesToSnakeCase } from "~/lib/vapi/utils";
 
 /**
@@ -105,8 +106,13 @@ async function handler(req: NextRequest) {
         );
         if (caseInfo?.entities) {
           console.log("[EXECUTE_CALL] Enriching with fresh case data", {
-            caseId: call.case_id,
+            callId: call.case_id,
           });
+
+          // Extract AI-extracted variables (species, breed, age, diagnoses, etc.)
+          const extractedVars = extractVapiVariablesFromEntities(
+            caseInfo.entities,
+          );
 
           // Re-generate variables from fresh entities
           // We treat the stored variables as "Defaults"/Context (like clinic name)
@@ -142,6 +148,31 @@ async function handler(req: NextRequest) {
                 ?.map((m) => `${m.name} ${m.dosage ?? ""} ${m.frequency ?? ""}`)
                 .join(", "),
               nextSteps: caseInfo.entities.clinical.followUpInstructions,
+
+              // Include species/breed/age if available from entities
+              petSpecies:
+                caseInfo.entities.patient.species === "dog" ||
+                caseInfo.entities.patient.species === "cat"
+                  ? caseInfo.entities.patient.species
+                  : caseInfo.entities.patient.species
+                    ? "other"
+                    : undefined,
+              petAge: caseInfo.entities.patient.age
+                ? (() => {
+                    const num = parseFloat(
+                      caseInfo.entities.patient.age.replace(/[^0-9.]/g, ""),
+                    );
+                    return isNaN(num) ? undefined : num;
+                  })()
+                : undefined,
+              petWeight: caseInfo.entities.patient.weight
+                ? (() => {
+                    const num = parseFloat(
+                      caseInfo.entities.patient.weight.replace(/[^0-9.]/g, ""),
+                    );
+                    return isNaN(num) ? undefined : num;
+                  })()
+                : undefined,
             },
             strict: false,
             useDefaults: true,
@@ -159,12 +190,14 @@ async function handler(req: NextRequest) {
             },
           );
 
-          // Merge: Fresh Clinical Vars > Stored Vars
-          // Note: freshVars.variables are in camelCase, stored vars are in snake_case
-          // We'll normalize everything to snake_case before sending to VAPI
+          // Merge: Extracted AI vars (snake_case) + Fresh Clinical Vars (camelCase) + Stored Vars (snake_case)
+          // Extracted vars are merged first, then fresh vars normalized, then stored vars override
           dynamicVariables = {
-            ...dynamicVariables,
-            ...freshVars.variables,
+            ...extractedVars, // Already snake_case (patient_species, patient_breed, etc.)
+            ...normalizeVariablesToSnakeCase(
+              freshVars.variables as unknown as Record<string, unknown>,
+            ), // Convert camelCase to snake_case
+            ...dynamicVariables, // Stored vars override (preserves manual overrides)
           };
 
           console.log("[EXECUTE_CALL] Merged variables (mixed format)", {
