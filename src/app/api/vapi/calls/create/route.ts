@@ -20,6 +20,10 @@ import {
   type CreateVapiCallInput,
 } from "~/lib/vapi/call-manager";
 import { z } from "zod";
+import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
+import { createServerClient } from "@supabase/ssr";
+import { env } from "~/env";
+import { getUser } from "~/server/actions/auth";
 
 /**
  * Request body validation schema
@@ -88,17 +92,68 @@ const CreateCallSchema = z.object({
   phoneNumberId: z.string().optional(),
 });
 
+/**
+ * Authenticate user from either cookies (web app) or Authorization header (extension)
+ */
+async function authenticateRequest(request: NextRequest) {
+  // Check for Authorization header (browser extension)
+  const authHeader = request.headers.get("authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.substring(7);
+
+    // Create a Supabase client with the token
+    const supabase = createServerClient(
+      env.NEXT_PUBLIC_SUPABASE_URL,
+      env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      {
+        cookies: {
+          getAll() {
+            return [];
+          },
+          setAll() {
+            // No-op for token-based auth
+          },
+        },
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      },
+    );
+
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      return { user: null, supabase: null };
+    }
+
+    return { user, supabase };
+  }
+
+  // Fall back to cookie-based auth (web app)
+  const user = await getUser();
+  if (!user) {
+    return { user: null, supabase: null };
+  }
+
+  const supabase = await createClient();
+  return { user, supabase };
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Step 1: Authenticate user
-    const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { user, supabase } = await authenticateRequest(request);
 
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user || !supabase) {
+      return withCorsHeaders(
+        request,
+        NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+      );
     }
 
     // Step 2: Parse and validate request body
@@ -106,15 +161,18 @@ export async function POST(request: NextRequest) {
     const validation = CreateCallSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        {
-          error: "Validation failed",
-          errors: validation.error.errors.map((e) => ({
-            field: e.path.join("."),
-            message: e.message,
-          })),
-        },
-        { status: 400 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          {
+            error: "Validation failed",
+            errors: validation.error.errors.map((e) => ({
+              field: e.path.join("."),
+              message: e.message,
+            })),
+          },
+          { status: 400 },
+        ),
       );
     }
 
@@ -122,17 +180,20 @@ export async function POST(request: NextRequest) {
 
     // Step 3: Additional validation for follow-up calls
     if (input.callType === "follow-up" && !input.condition) {
-      return NextResponse.json(
-        {
-          error: "Validation failed",
-          errors: [
-            {
-              field: "condition",
-              message: "Condition is required for follow-up calls",
-            },
-          ],
-        },
-        { status: 400 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          {
+            error: "Validation failed",
+            errors: [
+              {
+                field: "condition",
+                message: "Condition is required for follow-up calls",
+              },
+            ],
+          },
+          { status: 400 },
+        ),
       );
     }
 
@@ -140,41 +201,57 @@ export async function POST(request: NextRequest) {
     const result = await createVapiCall(input, user.id);
 
     if (!result.success) {
-      return NextResponse.json(
-        {
-          error: "Failed to create call",
-          errors: result.errors,
-          warnings: result.warnings,
-        },
-        { status: 400 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          {
+            error: "Failed to create call",
+            errors: result.errors,
+            warnings: result.warnings,
+          },
+          { status: 400 },
+        ),
       );
     }
 
     // Step 5: Return success response
-    return NextResponse.json(
-      {
-        success: true,
-        data: {
-          callId: result.databaseId,
-          status: result.status,
-          scheduledFor: result.scheduledFor,
-          message: result.scheduledFor
-            ? "Call queued successfully and will be placed at the scheduled time"
-            : "Call created successfully and will be processed shortly",
+    return withCorsHeaders(
+      request,
+      NextResponse.json(
+        {
+          success: true,
+          data: {
+            callId: result.databaseId,
+            status: result.status,
+            scheduledFor: result.scheduledFor,
+            message: result.scheduledFor
+              ? "Call queued successfully and will be placed at the scheduled time"
+              : "Call created successfully and will be processed shortly",
+          },
+          warnings: result.warnings,
         },
-        warnings: result.warnings,
-      },
-      { status: 201 },
+        { status: 201 },
+      ),
     );
   } catch (error) {
     console.error("Error creating VAPI call:", error);
-    return NextResponse.json(
-      {
-        error: "Internal server error",
-        message:
-          error instanceof Error ? error.message : "Unknown error occurred",
-      },
-      { status: 500 },
+    return withCorsHeaders(
+      request,
+      NextResponse.json(
+        {
+          error: "Internal server error",
+          message:
+            error instanceof Error ? error.message : "Unknown error occurred",
+        },
+        { status: 500 },
+      ),
     );
   }
+}
+
+/**
+ * CORS preflight handler
+ */
+export function OPTIONS(request: NextRequest) {
+  return handleCorsPreflightRequest(request);
 }
