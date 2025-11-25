@@ -857,6 +857,45 @@ export class DischargeOrchestrator {
         ? (summaryResult.data as { content?: string }).content
         : undefined;
 
+    // Fetch user settings for call variables
+    const { data: userSettings, error: userError } = await this.supabase
+      .from("users")
+      .select(
+        "clinic_name, clinic_phone, clinic_email, first_name, last_name, test_mode_enabled, test_contact_name, test_contact_phone",
+      )
+      .eq("id", this.user.id)
+      .single();
+
+    if (userError) {
+      console.warn(
+        "[ORCHESTRATOR] Failed to fetch user settings for call scheduling:",
+        userError,
+      );
+      // Continue with defaults
+    }
+
+    // Build agent name from user's first name or default to "Sarah"
+    const agentName = userSettings?.first_name ?? "Sarah";
+
+    // Determine if test mode is enabled
+    const testModeEnabled = userSettings?.test_mode_enabled ?? false;
+
+    if (testModeEnabled) {
+      console.log(
+        "[ORCHESTRATOR] Test mode enabled - calls will be redirected to test contact",
+        {
+          testContactPhone: userSettings?.test_contact_phone,
+          testContactName: userSettings?.test_contact_name,
+        },
+      );
+
+      if (!userSettings?.test_contact_phone) {
+        throw new Error(
+          "Test mode is enabled but test contact phone is not configured in user settings",
+        );
+      }
+    }
+
     const scheduledCall = await CasesService.scheduleDischargeCall(
       this.supabase,
       this.user.id,
@@ -864,6 +903,10 @@ export class DischargeOrchestrator {
       {
         scheduledAt: options.scheduledFor ?? new Date(),
         summaryContent,
+        clinicName: userSettings?.clinic_name ?? "Your Clinic",
+        clinicPhone: userSettings?.clinic_phone ?? "",
+        emergencyPhone: userSettings?.clinic_phone ?? "", // Using clinic phone as emergency phone
+        agentName,
       },
     );
 

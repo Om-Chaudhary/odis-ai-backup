@@ -2,6 +2,8 @@ import { type NormalizedEntities } from "~/lib/validators/scribe";
 import { extractEntitiesWithRetry } from "~/lib/ai/normalize-scribe";
 import { scheduleCallExecution } from "~/lib/qstash/client";
 import { buildDynamicVariables } from "~/lib/vapi/knowledge-base";
+import { extractVapiVariablesFromEntities } from "~/lib/vapi/extract-variables";
+import { normalizeVariablesToSnakeCase } from "~/lib/vapi/utils";
 import { env } from "~/env";
 
 // Type imports
@@ -345,11 +347,14 @@ export const CasesService = {
     const entities = caseInfo.entities;
     if (!entities) throw new Error("Case has no entities");
 
-    // 2. Build Dynamic Variables
+    // 2. Extract AI-extracted variables (species, breed, age, diagnoses, etc.)
+    const extractedVars = extractVapiVariablesFromEntities(entities);
+
+    // 3. Build Dynamic Variables with knowledge base integration
     const variablesResult = buildDynamicVariables({
       baseVariables: {
         clinicName: options.clinicName ?? "Your Clinic",
-        agentName: "Sarah",
+        agentName: options.agentName ?? "Sarah",
         petName: entities.patient.name,
         ownerName: entities.patient.owner.name,
         appointmentDate: "today",
@@ -363,20 +368,99 @@ export const CasesService = {
           ?.map((m) => `${m.name} ${m.dosage ?? ""} ${m.frequency ?? ""}`)
           .join(", "),
         nextSteps: entities.clinical.followUpInstructions,
+
+        // Include species/breed/age if available from entities
+        // Note: petSpecies is limited to "dog" | "cat" | "other" for buildDynamicVariables
+        // but extractedVars will include full patient_species (dog, cat, bird, rabbit, etc.)
+        petSpecies:
+          entities.patient.species === "dog" ||
+          entities.patient.species === "cat"
+            ? entities.patient.species
+            : entities.patient.species
+              ? "other"
+              : undefined,
+        petAge: entities.patient.age
+          ? (() => {
+              const num = parseFloat(
+                entities.patient.age.replace(/[^0-9.]/g, ""),
+              );
+              return isNaN(num) ? undefined : num;
+            })()
+          : undefined,
+        petWeight: entities.patient.weight
+          ? (() => {
+              const num = parseFloat(
+                entities.patient.weight.replace(/[^0-9.]/g, ""),
+              );
+              return isNaN(num) ? undefined : num;
+            })()
+          : undefined,
       },
       strict: false,
       useDefaults: true,
     });
 
-    // 3. Insert Scheduled Call
-    const scheduledAt = options.scheduledAt ?? new Date();
+    // 4. Merge extracted variables with buildDynamicVariables result
+    // Extracted vars (snake_case) are merged first, then buildDynamicVariables vars (camelCase)
+    // are normalized and merged, with manual vars taking precedence
+    const mergedVariables = {
+      ...extractedVars, // Already snake_case (patient_species, patient_breed, etc.)
+      ...normalizeVariablesToSnakeCase(
+        variablesResult.variables as unknown as Record<string, unknown>,
+      ), // Convert camelCase to snake_case
+    };
 
+    // 3. Insert Scheduled Call
     const assistantId = options.assistantId ?? env.VAPI_ASSISTANT_ID;
     const phoneNumberId = options.phoneNumberId ?? env.VAPI_PHONE_NUMBER_ID;
 
-    const customerPhone = entities.patient.owner.phone ?? "";
-    if (!customerPhone) {
+    // Get customer phone (with test mode support)
+    let customerPhone = entities.patient.owner.phone ?? "";
+
+    // Check if test mode is enabled
+    const { data: userSettings } = await supabase
+      .from("users")
+      .select("test_mode_enabled, test_contact_phone, test_contact_name")
+      .eq("id", userId)
+      .single();
+
+    const testModeEnabled = userSettings?.test_mode_enabled ?? false;
+
+    if (testModeEnabled) {
+      if (!userSettings?.test_contact_phone) {
+        throw new Error(
+          "Test mode is enabled but test contact phone is not configured",
+        );
+      }
+
+      console.log(
+        "[CasesService] Test mode enabled - redirecting call to test contact",
+        {
+          originalPhone: customerPhone,
+          testPhone: userSettings.test_contact_phone,
+          testContactName: userSettings.test_contact_name,
+        },
+      );
+
+      customerPhone = userSettings.test_contact_phone;
+    } else if (!customerPhone) {
       throw new Error("Patient phone number is required to schedule call");
+    }
+
+    // Determine scheduled time
+    // In test mode, schedule for 1 minute from now
+    // Otherwise, use provided time or default to immediate
+    let scheduledAt: Date;
+    if (testModeEnabled) {
+      scheduledAt = new Date(Date.now() + 60 * 1000); // 1 minute from now
+      console.log(
+        "[CasesService] Test mode enabled - scheduling for 1 minute from now",
+        {
+          scheduledAt: scheduledAt.toISOString(),
+        },
+      );
+    } else {
+      scheduledAt = options.scheduledAt ?? new Date();
     }
 
     const scheduledCallInsert = {
@@ -387,7 +471,7 @@ export const CasesService = {
       customer_phone: customerPhone,
       scheduled_for: scheduledAt.toISOString(),
       status: "queued" as const,
-      dynamic_variables: variablesResult.variables,
+      dynamic_variables: mergedVariables, // Use merged variables with AI-extracted data
       metadata: {
         notes: options.notes,
         retry_count: 0,
