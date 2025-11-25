@@ -133,9 +133,9 @@ const jsonLd = {
       url: siteUrl,
       logo: {
         "@type": "ImageObject",
-        url: `${siteUrl}/odis-logo.svg`,
-        width: 200,
-        height: 60,
+        url: `${siteUrl}/icon-128.png`,
+        width: 128,
+        height: 128,
       },
       description:
         "Leading provider of veterinary practice management software",

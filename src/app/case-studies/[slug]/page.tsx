@@ -95,7 +95,7 @@ export default async function CaseStudyPage({ params }: CaseStudyPageProps) {
   const proto = hdrs.get("x-forwarded-proto") ?? "https";
   const origin = `${proto}://${host}`;
   const canonical = `${origin}/case-studies/${caseStudy.slug}`;
-  const logoUrl = `${origin}/odis-logo.svg`;
+  const logoUrl = `${origin}/icon-128.png`;
 
   return (
     <div className="relative">

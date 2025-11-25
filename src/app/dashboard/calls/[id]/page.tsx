@@ -651,7 +651,7 @@ export default function CallDetailPage() {
                           <MessageAvatar
                             src={
                               isAgent
-                                ? "/odis-logo.png"
+                                ? "/icon-128.png"
                                 : "https://api.dicebear.com/7.x/avataaars/svg?seed=user"
                             }
                             name={isAgent ? "AI" : "User"}

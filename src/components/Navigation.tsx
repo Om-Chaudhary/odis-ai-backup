@@ -67,9 +67,7 @@ export default function Navigation() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="flex h-20 items-center justify-between">
             <div className="relative z-10 flex items-center gap-2">
-              <div className="relative z-10 flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-cyan-600">
-                <Logo size="md" />
-              </div>
+              <Logo size="lg" className="h-8 w-8" />
               <span
                 className={`font-display relative z-10 text-xl font-bold transition-colors duration-300 ${
                   isScrolled

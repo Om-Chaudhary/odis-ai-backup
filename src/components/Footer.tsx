@@ -15,9 +15,7 @@ export default function Footer() {
             {/* Company Info */}
             <div className="lg:col-span-2">
               <div className="mb-4 flex items-center space-x-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-cyan-600">
-                  <Logo size="md" />
-                </div>
+                <Logo size="lg" className="h-8 w-8" />
                 <span className="font-display text-xl font-semibold text-slate-900">
                   Odis AI
                 </span>

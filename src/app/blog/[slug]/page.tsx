@@ -262,7 +262,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const proto = hdrs.get("x-forwarded-proto") ?? "https";
   const origin = `${proto}://${host}`;
   const canonical = `${origin}/blog/${post.slug.current}`;
-  const logoUrl = `${origin}/odis-logo.svg`;
+  const logoUrl = `${origin}/icon-128.png`;
   const ogImage = post.mainImage
     ? urlFor(post.mainImage).width(1200).height(630).url()
     : undefined;
