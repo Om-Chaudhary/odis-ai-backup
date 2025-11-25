@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Settings, Search, Plus, RefreshCw, TestTube } from "lucide-react";
@@ -20,6 +20,12 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 
 const PAGE_SIZE = 10;
+
+/** Tracks which case is currently being processed and what type of discharge */
+interface LoadingState {
+  caseId: string;
+  type: "call" | "email" | "both";
+}
 
 /**
  * Check if a value is a placeholder (missing data indicator) and convert to undefined
@@ -45,6 +51,10 @@ export function CasesDashboardClient() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentPage, setCurrentPage] = useState(1);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [loadingCase, setLoadingCase] = useState<LoadingState | null>(null);
+
+  // Ref to prevent double-clicks
+  const isProcessingRef = useRef(false);
 
   // Format date for API (YYYY-MM-DD)
   const dateString = useMemo(() => {
@@ -87,6 +97,11 @@ export function CasesDashboardClient() {
     onError: (error) => {
       toast.error(error.message || "Failed to trigger discharge");
     },
+    onSettled: () => {
+      // Clear loading state when mutation completes (success or error)
+      setLoadingCase(null);
+      isProcessingRef.current = false;
+    },
   });
 
   const updateSettingsMutation = api.cases.updateDischargeSettings.useMutation({
@@ -128,6 +143,16 @@ export function CasesDashboardClient() {
 
   // Handlers
   const handleTriggerCall = async (caseId: string, patientId: string) => {
+    // Prevent double-clicks and concurrent mutations
+    if (isProcessingRef.current || loadingCase !== null) {
+      console.log("[Dashboard] Ignoring duplicate call trigger", {
+        caseId,
+        isProcessing: isProcessingRef.current,
+        loadingCase,
+      });
+      return;
+    }
+
     const caseData = cases.find((c) => c.id === caseId);
     if (!caseData) return;
 
@@ -151,6 +176,10 @@ export function CasesDashboardClient() {
       return;
     }
 
+    // Set loading state BEFORE mutation to prevent race conditions
+    isProcessingRef.current = true;
+    setLoadingCase({ caseId, type: "call" });
+
     toast.info("Initiating discharge call...");
     triggerDischargeMutation.mutate({
       caseId,
@@ -165,6 +194,16 @@ export function CasesDashboardClient() {
   };
 
   const handleTriggerEmail = async (caseId: string, patientId: string) => {
+    // Prevent double-clicks and concurrent mutations
+    if (isProcessingRef.current || loadingCase !== null) {
+      console.log("[Dashboard] Ignoring duplicate email trigger", {
+        caseId,
+        isProcessing: isProcessingRef.current,
+        loadingCase,
+      });
+      return;
+    }
+
     const caseData = cases.find((c) => c.id === caseId);
     if (!caseData) return;
 
@@ -188,6 +227,10 @@ export function CasesDashboardClient() {
       return;
     }
 
+    // Set loading state BEFORE mutation to prevent race conditions
+    isProcessingRef.current = true;
+    setLoadingCase({ caseId, type: "email" });
+
     toast.info("Sending discharge email...");
     triggerDischargeMutation.mutate({
       caseId,
@@ -202,6 +245,16 @@ export function CasesDashboardClient() {
   };
 
   const handleTriggerBoth = async (caseId: string, patientId: string) => {
+    // Prevent double-clicks and concurrent mutations
+    if (isProcessingRef.current || loadingCase !== null) {
+      console.log("[Dashboard] Ignoring duplicate both trigger", {
+        caseId,
+        isProcessing: isProcessingRef.current,
+        loadingCase,
+      });
+      return;
+    }
+
     const caseData = cases.find((c) => c.id === caseId);
     if (!caseData) return;
 
@@ -241,6 +294,10 @@ export function CasesDashboardClient() {
           : "Email address is missing. Only call will be made. Please enter the owner's email address to also send an email.",
       );
     }
+
+    // Set loading state BEFORE mutation to prevent race conditions
+    isProcessingRef.current = true;
+    setLoadingCase({ caseId, type: "both" });
 
     toast.info("Initiating discharge call and email...");
     triggerDischargeMutation.mutate({
@@ -407,6 +464,15 @@ export function CasesDashboardClient() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {paginatedCases.map((c) => {
             const backendCase = backendCases.find((bc) => bc.id === c.id);
+            // Only show loading for the specific case being processed
+            const isThisCaseLoading = loadingCase?.caseId === c.id;
+            const isLoadingCall =
+              isThisCaseLoading &&
+              (loadingCase?.type === "call" || loadingCase?.type === "both");
+            const isLoadingEmail =
+              isThisCaseLoading &&
+              (loadingCase?.type === "email" || loadingCase?.type === "both");
+
             return (
               <CaseCard
                 key={c.id}
@@ -421,8 +487,8 @@ export function CasesDashboardClient() {
                 testContactName={settings.testContactName}
                 testContactEmail={settings.testContactEmail}
                 testContactPhone={settings.testContactPhone}
-                isLoadingCall={triggerDischargeMutation.isPending}
-                isLoadingEmail={triggerDischargeMutation.isPending}
+                isLoadingCall={isLoadingCall}
+                isLoadingEmail={isLoadingEmail}
                 isLoadingUpdate={updatePatientMutation.isPending}
               />
             );
