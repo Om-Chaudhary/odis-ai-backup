@@ -366,7 +366,7 @@ export const CasesService = {
         .eq("case_id", caseId)
         .order("created_at", { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (transcriptionData?.transcript) {
         try {
