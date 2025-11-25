@@ -21,6 +21,24 @@ import { format } from "date-fns";
 
 const PAGE_SIZE = 10;
 
+/**
+ * Check if a value is a placeholder (missing data indicator) and convert to undefined
+ */
+function normalizePlaceholder(
+  value: string | undefined | null,
+): string | undefined {
+  if (!value) return undefined;
+  const placeholders = [
+    "Unknown Patient",
+    "Unknown Species",
+    "Unknown Breed",
+    "Unknown Owner",
+    "No email address",
+    "No phone number",
+  ];
+  return placeholders.includes(value) ? undefined : value;
+}
+
 export function CasesDashboardClient() {
   // State
   const [searchTerm, setSearchTerm] = useState("");
@@ -102,19 +120,45 @@ export function CasesDashboardClient() {
     testContactPhone: "",
   };
 
+  // Helper to check if a value is a valid (non-placeholder) contact
+  function hasValidContact(value: string | undefined | null): value is string {
+    const normalized = normalizePlaceholder(value);
+    return normalized !== undefined && normalized.trim().length > 0;
+  }
+
   // Handlers
   const handleTriggerCall = async (caseId: string, patientId: string) => {
     const caseData = cases.find((c) => c.id === caseId);
     if (!caseData) return;
+
+    // Use test contact info if test mode is enabled, otherwise use patient contact info
+    const phone = settings.testModeEnabled
+      ? settings.testContactPhone
+      : normalizePlaceholder(caseData.patient.owner_phone);
+    const ownerName = settings.testModeEnabled
+      ? settings.testContactName
+      : normalizePlaceholder(caseData.patient.owner_name);
+    const ownerEmail = settings.testModeEnabled
+      ? settings.testContactEmail
+      : normalizePlaceholder(caseData.patient.owner_email);
+
+    if (!hasValidContact(phone)) {
+      toast.error(
+        settings.testModeEnabled
+          ? "Test phone number is required. Please configure test contact information in settings."
+          : "Phone number is required to send a discharge call. Please enter the owner's phone number first.",
+      );
+      return;
+    }
 
     toast.info("Initiating discharge call...");
     triggerDischargeMutation.mutate({
       caseId,
       patientId,
       patientData: {
-        ownerName: caseData.patient.owner_name,
-        ownerEmail: caseData.patient.owner_email || undefined,
-        ownerPhone: caseData.patient.owner_phone,
+        ownerName,
+        ownerEmail,
+        ownerPhone: phone,
       },
       dischargeType: "call",
     });
@@ -124,14 +168,34 @@ export function CasesDashboardClient() {
     const caseData = cases.find((c) => c.id === caseId);
     if (!caseData) return;
 
+    // Use test contact info if test mode is enabled, otherwise use patient contact info
+    const email = settings.testModeEnabled
+      ? settings.testContactEmail
+      : normalizePlaceholder(caseData.patient.owner_email);
+    const ownerName = settings.testModeEnabled
+      ? settings.testContactName
+      : normalizePlaceholder(caseData.patient.owner_name);
+    const ownerPhone = settings.testModeEnabled
+      ? settings.testContactPhone
+      : normalizePlaceholder(caseData.patient.owner_phone);
+
+    if (!hasValidContact(email)) {
+      toast.error(
+        settings.testModeEnabled
+          ? "Test email address is required. Please configure test contact information in settings."
+          : "Email address is required to send a discharge email. Please enter the owner's email address first.",
+      );
+      return;
+    }
+
     toast.info("Sending discharge email...");
     triggerDischargeMutation.mutate({
       caseId,
       patientId,
       patientData: {
-        ownerName: caseData.patient.owner_name,
-        ownerEmail: caseData.patient.owner_email || undefined,
-        ownerPhone: caseData.patient.owner_phone,
+        ownerName,
+        ownerEmail: email,
+        ownerPhone,
       },
       dischargeType: "email",
     });
@@ -141,14 +205,51 @@ export function CasesDashboardClient() {
     const caseData = cases.find((c) => c.id === caseId);
     if (!caseData) return;
 
+    // Use test contact info if test mode is enabled, otherwise use patient contact info
+    const phone = settings.testModeEnabled
+      ? settings.testContactPhone
+      : normalizePlaceholder(caseData.patient.owner_phone);
+    const email = settings.testModeEnabled
+      ? settings.testContactEmail
+      : normalizePlaceholder(caseData.patient.owner_email);
+    const ownerName = settings.testModeEnabled
+      ? settings.testContactName
+      : normalizePlaceholder(caseData.patient.owner_name);
+
+    const hasPhone = hasValidContact(phone);
+    const hasEmail = hasValidContact(email);
+
+    if (!hasPhone && !hasEmail) {
+      toast.error(
+        settings.testModeEnabled
+          ? "At least one test contact method is required. Please configure test contact information in settings."
+          : "At least one contact method is required. Please enter the owner's phone number or email address first.",
+      );
+      return;
+    }
+
+    if (!hasPhone) {
+      toast.warning(
+        settings.testModeEnabled
+          ? "Test phone number is missing. Only email will be sent."
+          : "Phone number is missing. Only email will be sent. Please enter the owner's phone number to also send a call.",
+      );
+    } else if (!hasEmail) {
+      toast.warning(
+        settings.testModeEnabled
+          ? "Test email address is missing. Only call will be made."
+          : "Email address is missing. Only call will be made. Please enter the owner's email address to also send an email.",
+      );
+    }
+
     toast.info("Initiating discharge call and email...");
     triggerDischargeMutation.mutate({
       caseId,
       patientId,
       patientData: {
-        ownerName: caseData.patient.owner_name,
-        ownerEmail: caseData.patient.owner_email || undefined,
-        ownerPhone: caseData.patient.owner_phone,
+        ownerName,
+        ownerEmail: email,
+        ownerPhone: phone,
       },
       dischargeType: "both",
     });
@@ -167,15 +268,16 @@ export function CasesDashboardClient() {
   };
 
   const handleSaveSettings = (newSettings: DischargeSettings) => {
+    // Only send non-empty values to avoid validation errors
     updateSettingsMutation.mutate({
-      clinicName: newSettings.clinicName,
-      clinicPhone: newSettings.clinicPhone,
-      clinicEmail: newSettings.clinicEmail,
-      emergencyPhone: newSettings.emergencyPhone,
+      clinicName: newSettings.clinicName || undefined,
+      clinicPhone: newSettings.clinicPhone || undefined,
+      clinicEmail: newSettings.clinicEmail || undefined,
+      emergencyPhone: newSettings.emergencyPhone || undefined,
       testModeEnabled: newSettings.testModeEnabled,
-      testContactName: newSettings.testContactName,
-      testContactEmail: newSettings.testContactEmail,
-      testContactPhone: newSettings.testContactPhone,
+      testContactName: newSettings.testContactName ?? undefined,
+      testContactEmail: newSettings.testContactEmail ?? undefined,
+      testContactPhone: newSettings.testContactPhone ?? undefined,
     });
   };
 
