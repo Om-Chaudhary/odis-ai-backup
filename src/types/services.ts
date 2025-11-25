@@ -19,8 +19,10 @@ export type IngestMode = "text" | "structured";
  * Source of ingested data
  */
 export type IngestSource =
+  | "manual"
   | "mobile_app"
   | "web_dashboard"
+  | "idexx_neo"
   | "idexx_extension"
   | "ezyvet_api";
 
@@ -29,22 +31,22 @@ export type IngestSource =
  */
 export type IngestPayload =
   | {
-      mode: "text";
-      source: IngestSource;
-      text: string;
-      options?: {
-        autoSchedule?: boolean;
-        inputType?: string; // e.g. "soap_note", "transcript"
-      };
-    }
-  | {
-      mode: "structured";
-      source: IngestSource;
-      data: Record<string, unknown>; // Raw JSON from IDEXX/Extension
-      options?: {
-        autoSchedule?: boolean;
-      };
+    mode: "text";
+    source: IngestSource;
+    text: string;
+    options?: {
+      autoSchedule?: boolean;
+      inputType?: string; // e.g. "soap_note", "transcript"
     };
+  }
+  | {
+    mode: "structured";
+    source: IngestSource;
+    data: Record<string, unknown>; // Raw JSON from IDEXX/Extension
+    options?: {
+      autoSchedule?: boolean;
+    };
+  };
 
 /**
  * Options for scheduling a discharge call

@@ -18,8 +18,10 @@ const RawDataInputSchema = z.object({
   rawData: z.object({
     mode: z.enum(["text", "structured"]),
     source: z.enum([
+      "manual",
       "mobile_app",
       "web_dashboard",
+      "idexx_neo",
       "idexx_extension",
       "ezyvet_api",
     ]),

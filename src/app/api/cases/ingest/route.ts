@@ -14,8 +14,10 @@ const IngestPayloadSchema = z.discriminatedUnion("mode", [
   z.object({
     mode: z.literal("text"),
     source: z.enum([
+      "manual",
       "mobile_app",
       "web_dashboard",
+      "idexx_neo",
       "idexx_extension",
       "ezyvet_api",
     ]),
@@ -30,8 +32,10 @@ const IngestPayloadSchema = z.discriminatedUnion("mode", [
   z.object({
     mode: z.literal("structured"),
     source: z.enum([
+      "manual",
       "mobile_app",
       "web_dashboard",
+      "idexx_neo",
       "idexx_extension",
       "ezyvet_api",
     ]),
@@ -149,8 +153,9 @@ export async function POST(request: NextRequest) {
       request,
       NextResponse.json(
         {
-          error:
-            error instanceof Error ? error.message : "Internal Server Error",
+          error: error instanceof Error
+            ? error.message
+            : "Internal Server Error",
         },
         { status: 500 },
       ),
