@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { usePostHog } from "posthog-js/react";
 import Navigation from "~/components/Navigation";
-import Hero from "~/components/HeroFloating";
+import Hero from "~/components/hero/HeroTwoColumn";
 import TrustLogos from "~/components/TrustLogos";
 import Testimonials from "~/components/Testimonials";
 import { Pricing } from "~/components/blocks/pricing";
