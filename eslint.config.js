@@ -71,7 +71,7 @@ export default tseslint.config(
             "*.test.ts",
             "*.test.tsx",
             "vitest.config.ts",
-            "src/test/**/*",
+            "src/test/**/*.ts",
           ],
         },
       },
