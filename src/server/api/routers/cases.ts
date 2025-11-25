@@ -291,8 +291,19 @@ export const casesRouter = createTRPCRouter({
         const token = session.data.session?.access_token;
 
         // Use absolute URL for server-side fetch (required for Next.js server components)
+        // In development, use localhost; in production, use the configured site URL or default to production
         const baseUrl =
-          process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+          process.env.NEXT_PUBLIC_SITE_URL ??
+          (process.env.NODE_ENV === "development"
+            ? "http://localhost:3000"
+            : "https://odisai.net");
+
+        console.log("[triggerDischarge] Calling orchestrator", {
+          baseUrl,
+          caseId: input.caseId,
+          hasToken: !!token,
+        });
+
         const response = await fetch(`${baseUrl}/api/discharge/orchestrate`, {
           method: "POST",
           headers: {
@@ -307,9 +318,18 @@ export const casesRouter = createTRPCRouter({
           }),
         });
 
+        console.log("[triggerDischarge] Response status:", response.status);
+
         if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error ?? "Failed to trigger discharge");
+          const errorData = await response.json().catch(() => ({}));
+          console.error(
+            "[triggerDischarge] Error response:",
+            JSON.stringify(errorData, null, 2),
+          );
+          throw new Error(
+            errorData.error ??
+              `HTTP ${response.status}: Failed to trigger discharge`,
+          );
         }
 
         const result = await response.json();
@@ -320,6 +340,7 @@ export const casesRouter = createTRPCRouter({
           data: result.data,
         };
       } catch (error) {
+        console.error("[triggerDischarge] Exception:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message:
