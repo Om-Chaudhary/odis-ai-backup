@@ -79,6 +79,7 @@ fetch("https://yourapp.com/api/data", {
 - [`auth.ts`](./auth.ts) - Main authentication utilities
 - [`USAGE_EXAMPLES.md`](./USAGE_EXAMPLES.md) - Comprehensive usage guide
 - [`README.md`](./README.md) - This file
+- [`ORCHESTRATION_API_GUIDE.md`](./ORCHESTRATION_API_GUIDE.md) - Complete orchestration API guide for data verification
 
 ## API Reference
 
@@ -331,10 +332,29 @@ vi.spyOn(auth, "authenticateUser").mockResolvedValue({
 });
 ```
 
+## API Endpoints
+
+### Discharge Orchestration
+
+The discharge orchestration endpoint provides a unified API for executing multi-step discharge workflows:
+
+- **Endpoint:** `POST /api/discharge/orchestrate`
+- **Guide:** [`ORCHESTRATION_API_GUIDE.md`](./ORCHESTRATION_API_GUIDE.md) - Complete API guide with data verification scenarios
+- **Quick Reference:** See [dual-mode-api documentation](../implementation/features/dual-mode-api/API_QUICK_REFERENCE.md)
+
+**Features:**
+
+- ✅ Dual input modes (raw data or existing case)
+- ✅ Step-by-step workflow execution
+- ✅ Parallel execution support
+- ✅ Comprehensive data verification
+- ✅ IDEXX extension integration ready
+
 ## Questions?
 
 - See [`USAGE_EXAMPLES.md`](./USAGE_EXAMPLES.md) for detailed examples
 - See [`auth.ts`](./auth.ts) for implementation details
+- See [`ORCHESTRATION_API_GUIDE.md`](./ORCHESTRATION_API_GUIDE.md) for orchestration API verification
 
 ## Contributing
 

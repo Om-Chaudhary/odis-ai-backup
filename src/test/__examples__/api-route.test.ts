@@ -4,13 +4,12 @@
  * This demonstrates how to test API route handlers
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { POST } from "~/app/api/normalize/route";
+import { beforeEach, describe, it, vi } from "vitest";
 import {
-  createMockRequest,
   createAuthenticatedRequest,
-  getJsonResponse,
   createMockContext,
+  createMockRequest,
+  getJsonResponse,
 } from "../api-utils";
 
 // Mock dependencies
