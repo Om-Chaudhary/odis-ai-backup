@@ -6,33 +6,13 @@
  * - Entity extraction data (when SOAP notes unavailable)
  */
 
-import Anthropic from "@anthropic-ai/sdk";
-import { env } from "~/env";
+import { getDischargeSummaryLLM } from "~/lib/llamaindex/config";
+import {
+  extractApiErrorStatus,
+  extractTextFromResponse,
+} from "~/lib/llamaindex/utils";
+import type { ChatMessage } from "llamaindex";
 import type { NormalizedEntities } from "~/lib/validators/scribe";
-
-/* ========================================
-   Configuration
-   ======================================== */
-
-const ANTHROPIC_MODEL = "claude-sonnet-4-20250514";
-const MAX_TOKENS = 4000;
-const TEMPERATURE = 0.3;
-
-/* ========================================
-   AI Client
-   ======================================== */
-
-function getAnthropicClient(): Anthropic {
-  if (!env.ANTHROPIC_API_KEY) {
-    throw new Error(
-      "ANTHROPIC_API_KEY not configured. Add it to your environment variables.",
-    );
-  }
-
-  return new Anthropic({
-    apiKey: env.ANTHROPIC_API_KEY,
-  });
-}
 
 /* ========================================
    Prompt Engineering
@@ -82,8 +62,9 @@ function formatEntityExtractionForPrompt(entities: NormalizedEntities): string {
   if (entities.patient.breed) sections.push(`Breed: ${entities.patient.breed}`);
   if (entities.patient.age) sections.push(`Age: ${entities.patient.age}`);
   if (entities.patient.sex) sections.push(`Sex: ${entities.patient.sex}`);
-  if (entities.patient.weight)
+  if (entities.patient.weight) {
     sections.push(`Weight: ${entities.patient.weight}`);
+  }
   sections.push(`Owner: ${entities.patient.owner.name || "Not specified"}`);
   sections.push("");
 
@@ -210,8 +191,9 @@ function createUserPrompt(
     if (patientData.species) sections.push(`Species: ${patientData.species}`);
     if (patientData.breed) sections.push(`Breed: ${patientData.breed}`);
     if (patientData.age) sections.push(`Age: ${patientData.age}`);
-    if (patientData.owner_name)
+    if (patientData.owner_name) {
       sections.push(`Owner: ${patientData.owner_name}`);
+    }
     sections.push("");
   }
 
@@ -266,7 +248,7 @@ export async function generateDischargeSummary(
   }
 
   try {
-    const anthropic = getAnthropicClient();
+    const llm = getDischargeSummaryLLM();
 
     console.log("[DISCHARGE_AI] Generating discharge summary", {
       hasSoapContent: !!soapContent,
@@ -274,43 +256,43 @@ export async function generateDischargeSummary(
       hasTemplate: !!template,
     });
 
-    const response = await anthropic.messages.create({
-      model: ANTHROPIC_MODEL,
-      max_tokens: MAX_TOKENS,
-      temperature: TEMPERATURE,
-      system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: createUserPrompt(
-            soapContent ?? null,
-            entityExtraction ?? null,
-            patientData ?? null,
-            template,
-          ),
-        },
-      ],
-    });
+    const messages: ChatMessage[] = [
+      {
+        role: "system",
+        content: SYSTEM_PROMPT,
+      },
+      {
+        role: "user",
+        content: createUserPrompt(
+          soapContent ?? null,
+          entityExtraction ?? null,
+          patientData ?? null,
+          template,
+        ),
+      },
+    ];
 
-    const content = response.content[0];
-    if (!content || content.type !== "text") {
-      throw new Error("Unexpected response type from Claude API");
-    }
+    const response = await llm.chat({ messages });
+
+    // Extract text content from LlamaIndex response (handles both string and array formats)
+    const summaryText = extractTextFromResponse(response);
 
     console.log("[DISCHARGE_AI] Successfully generated discharge summary", {
-      contentLength: content.text.length,
+      contentLength: summaryText.length,
     });
 
-    return content.text.trim();
+    return summaryText.trim();
   } catch (error) {
-    if (error instanceof Anthropic.APIError) {
-      console.error("[DISCHARGE_AI] Anthropic API error:", {
-        status: error.status,
-        message: error.message,
+    // Extract API error status if present
+    const statusCode = extractApiErrorStatus(error);
+    if (statusCode !== null) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown LlamaIndex API error";
+      console.error("[DISCHARGE_AI] LlamaIndex API error:", {
+        status: statusCode,
+        message: errorMessage,
       });
-      throw new Error(
-        `Anthropic API error (${error.status}): ${error.message}`,
-      );
+      throw new Error(`LlamaIndex API error (${statusCode}): ${errorMessage}`);
     }
 
     console.error("[DISCHARGE_AI] Unexpected error:", error);
@@ -340,9 +322,11 @@ export async function generateDischargeSummaryWithRetry(
       }
 
       // Retry on API errors
-      if (error instanceof Anthropic.APIError) {
+      const statusCode = extractApiErrorStatus(error);
+
+      if (statusCode !== null) {
         const isRetryable =
-          error.status === 429 || error.status === 500 || error.status === 503;
+          statusCode === 429 || statusCode === 500 || statusCode === 503;
 
         if (!isRetryable || attempt === maxRetries - 1) {
           throw lastError;
@@ -350,7 +334,9 @@ export async function generateDischargeSummaryWithRetry(
 
         const delay = Math.pow(2, attempt) * 1000;
         console.warn(
-          `[DISCHARGE_AI] Generation failed (attempt ${attempt + 1}/${maxRetries}), retrying in ${delay}ms...`,
+          `[DISCHARGE_AI] Generation failed (attempt ${
+            attempt + 1
+          }/${maxRetries}), retrying in ${delay}ms...`,
         );
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
@@ -361,6 +347,6 @@ export async function generateDischargeSummaryWithRetry(
   }
 
   throw (
-    lastError || new Error("Discharge summary generation failed after retries")
+    lastError ?? new Error("Discharge summary generation failed after retries")
   );
 }

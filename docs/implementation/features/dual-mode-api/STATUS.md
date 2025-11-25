@@ -1,7 +1,7 @@
 # Dual-Mode API Implementation Status
 
 **Last Updated:** 2025-11-25  
-**Overall Progress:** 2/9 tasks complete ✅
+**Overall Progress:** 4/9 tasks complete ✅
 
 ## Task Status
 
@@ -30,19 +30,37 @@
     - `src/lib/validators/orchestration.ts` - Zod schemas for validation
     - `src/types/orchestration.ts` - TypeScript type definitions
 
-### Phase 2: AI Refactoring
+### Phase 2: AI Refactoring ✅ COMPLETE
 
-- [ ] **Task 2: Refactor Entity Extraction** (45 min)
-  - Status: ⚪ Waiting for Task 1
-  - Assigned to: [Agent Name]
-  - Depends on: Task 1
+- [x] **Task 2: Refactor Entity Extraction** (45 min)
+  - Status: ✅ Complete
+  - Completed: 2025-11-25
+  - Assigned to: Claude
+  - Depends on: Task 1 ✅
   - Guide: [tasks/TASK_2_REFACTOR_ENTITY_EXTRACTION.md](./tasks/TASK_2_REFACTOR_ENTITY_EXTRACTION.md)
+  - **Files Modified:**
+    - `src/lib/ai/normalize-scribe.ts` - Replaced Anthropic SDK with LlamaIndex
+  - **Changes:**
+    - Removed direct Anthropic SDK dependency
+    - Updated to use `getEntityExtractionLLM()` from LlamaIndex config
+    - Updated response parsing to handle LlamaIndex response format
+    - Updated error handling for LlamaIndex error structure
+    - Preserved all existing functionality (prompts, validation, retry logic)
 
-- [ ] **Task 3: Refactor Discharge Summary** (45 min)
-  - Status: ⚪ Waiting for Task 1
-  - Assigned to: [Agent Name]
-  - Depends on: Task 1
+- [x] **Task 3: Refactor Discharge Summary** (45 min)
+  - Status: ✅ Complete
+  - Completed: 2025-11-25
+  - Assigned to: Claude
+  - Depends on: Task 1 ✅
   - Guide: [tasks/TASK_3_REFACTOR_DISCHARGE_SUMMARY.md](./tasks/TASK_3_REFACTOR_DISCHARGE_SUMMARY.md)
+  - **Files Modified:**
+    - `src/lib/ai/generate-discharge.ts` - Replaced Anthropic SDK with LlamaIndex
+  - **Changes:**
+    - Removed direct Anthropic SDK dependency
+    - Updated to use `getDischargeSummaryLLM()` from LlamaIndex config
+    - Updated response parsing to handle LlamaIndex response format
+    - Updated error handling for LlamaIndex error structure
+    - Preserved all existing functionality (prompts, validation, retry logic)
 
 ### Phase 3: Orchestration Core
 
@@ -86,22 +104,15 @@
 
 These tasks are now UNBLOCKED and ready to start:
 
-- ✅ Task 2: Refactor Entity Extraction (depends on Task 1 ✅)
-- ✅ Task 3: Refactor Discharge Summary (depends on Task 1 ✅)
 - ✅ Task 5: Execution Plan Builder (depends on Task 4 ✅)
 
 ## Next Steps
 
-### Immediate (Phase 2 - AI Refactoring)
+### Immediate (Phase 3 - Orchestration Core)
 
-1. **Task 2**: Refactor entity extraction to use LlamaIndex ← Ready to start
-2. **Task 3**: Refactor discharge summary to use LlamaIndex ← Ready to start
-
-### After Phase 2
-
-3. **Task 5**: Create execution plan builder (Task 4 complete ✅)
-4. **Task 6**: Create discharge orchestrator (depends on Task 5)
-5. **Task 7**: Create orchestration endpoint (depends on Task 6)
+1. **Task 5**: Create execution plan builder (Task 4 complete ✅) ← Ready to start
+2. **Task 6**: Create discharge orchestrator (depends on Task 5)
+3. **Task 7**: Create orchestration endpoint (depends on Task 6)
 
 ## Notes
 
@@ -145,4 +156,49 @@ These tasks are now UNBLOCKED and ready to start:
 
 ### What's Next
 
-Phase 2 tasks (2 & 3) can now proceed in parallel - both depend only on Task 1 which is complete.
+Phase 2 is complete! Phase 3 tasks can now proceed - Task 5 is ready to start.
+
+## Phase 2 Completion Summary
+
+**Completed:** 2025-11-25  
+**Duration:** ~45 minutes  
+**Status:** ✅ All Phase 2 tasks complete
+
+### What Was Accomplished
+
+#### Task 2: Entity Extraction Refactoring
+
+- Replaced direct Anthropic SDK calls with LlamaIndex
+- Updated `extractEntities()` to use `getEntityExtractionLLM()`
+- Converted message format to LlamaIndex `ChatMessage[]` structure
+- Updated response parsing to handle LlamaIndex response format (string or array)
+- Updated error handling to work with LlamaIndex error structure
+- Preserved all existing functionality:
+  - Same system and user prompts
+  - Same JSON parsing and cleaning logic
+  - Same Zod validation
+  - Same retry logic with exponential backoff
+  - Same function signature and return type
+
+#### Task 3: Discharge Summary Refactoring
+
+- Replaced direct Anthropic SDK calls with LlamaIndex
+- Updated `generateDischargeSummary()` to use `getDischargeSummaryLLM()`
+- Converted message format to LlamaIndex `ChatMessage[]` structure
+- Updated response parsing to handle LlamaIndex response format (string or array)
+- Updated error handling to work with LlamaIndex error structure
+- Preserved all existing functionality:
+  - Same system and user prompts
+  - Same input validation
+  - Same plain text output format
+  - Same retry logic with exponential backoff
+  - Same function signature and return type
+
+### Verification
+
+✅ TypeScript compilation passed (`pnpm typecheck`)  
+✅ No linting errors  
+✅ All imports resolve correctly  
+✅ Response parsing handles both string and array formats  
+✅ Error handling adapted for LlamaIndex error structure  
+✅ Function signatures unchanged (no breaking changes)
