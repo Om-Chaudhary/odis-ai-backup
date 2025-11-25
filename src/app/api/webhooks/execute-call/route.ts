@@ -6,6 +6,7 @@ import { createPhoneCall } from "~/lib/vapi/client";
 import { mapVapiStatus } from "~/lib/vapi/client";
 import { CasesService } from "~/lib/services/cases-service";
 import { buildDynamicVariables } from "~/lib/vapi/knowledge-base";
+import { normalizeVariablesToSnakeCase } from "~/lib/vapi/utils";
 
 /**
  * Execute Call Webhook
@@ -84,6 +85,17 @@ async function handler(req: NextRequest) {
       unknown
     > | null;
 
+    console.log("[EXECUTE_CALL] Initial variables from database", {
+      callId,
+      variableCount: dynamicVariables
+        ? Object.keys(dynamicVariables).length
+        : 0,
+      sampleKeys: dynamicVariables
+        ? Object.keys(dynamicVariables).slice(0, 5)
+        : [],
+      format: "snake_case (from database)",
+    });
+
     // --- ENRICHMENT: Fetch latest case data if linked ---
     if (call.case_id) {
       try {
@@ -115,6 +127,8 @@ async function handler(req: NextRequest) {
                   | "follow-up"
                   | undefined) ?? "discharge",
               clinicPhone: (dynamicVariables?.clinic_phone as string) ?? "",
+              emergencyPhone:
+                (dynamicVariables?.emergency_phone as string) ?? "",
 
               // Fresh Clinical Data overrides
               dischargeSummary:
@@ -133,17 +147,33 @@ async function handler(req: NextRequest) {
             useDefaults: true,
           });
 
-          // Merge: Fresh Clinical Vars > Stored Vars
-          // Wait, if I want fresh clinical vars to win, I should merge them ON TOP of stored.
-          // But stored vars might have specific "discharge_summary_content" which is a text block.
-          // Fresh variables from `buildDynamicVariables` uses `generateSummaryFromEntities` default if I passed it.
-          // I passed `discharge_summary: dynamicVariables.discharge_summary_content`. So I preserved the summary.
-          // But I updated `medications` and `nextSteps` from fresh entities.
+          console.log(
+            "[EXECUTE_CALL] Fresh variables from buildDynamicVariables",
+            {
+              callId,
+              variableCount: Object.keys(freshVars.variables).length,
+              sampleKeys: Object.keys(freshVars.variables).slice(0, 5),
+              format: "camelCase (from buildDynamicVariables)",
+              warning:
+                "These are camelCase and need to be converted to snake_case for VAPI",
+            },
+          );
 
+          // Merge: Fresh Clinical Vars > Stored Vars
+          // Note: freshVars.variables are in camelCase, stored vars are in snake_case
+          // We'll normalize everything to snake_case before sending to VAPI
           dynamicVariables = {
             ...dynamicVariables,
             ...freshVars.variables,
           };
+
+          console.log("[EXECUTE_CALL] Merged variables (mixed format)", {
+            callId,
+            variableCount: Object.keys(dynamicVariables).length,
+            sampleKeys: Object.keys(dynamicVariables).slice(0, 10),
+            format: "mixed (snake_case + camelCase)",
+            note: "Will be normalized to snake_case before sending to VAPI",
+          });
         }
       } catch (enrichError) {
         console.error(
@@ -154,11 +184,22 @@ async function handler(req: NextRequest) {
       }
     }
 
-    console.log("[EXECUTE_CALL] Final Dynamic variables", {
+    // CRITICAL: Normalize all variables to snake_case format for VAPI
+    // VAPI system prompt expects snake_case variables ({{pet_name}}, {{owner_name}}, etc.)
+    const normalizedVariables = normalizeVariablesToSnakeCase(dynamicVariables);
+
+    console.log("[EXECUTE_CALL] Normalized variables (ready for VAPI)", {
       callId,
-      variableCount: dynamicVariables
-        ? Object.keys(dynamicVariables).length
-        : 0,
+      variableCount: Object.keys(normalizedVariables).length,
+      sampleKeys: Object.keys(normalizedVariables).slice(0, 10),
+      format: "snake_case (normalized)",
+      keyExamples: {
+        pet_name: normalizedVariables.pet_name,
+        owner_name: normalizedVariables.owner_name,
+        clinic_name: normalizedVariables.clinic_name,
+        agent_name: normalizedVariables.agent_name,
+        appointment_date: normalizedVariables.appointment_date,
+      },
     });
 
     // Get VAPI configuration
@@ -182,15 +223,17 @@ async function handler(req: NextRequest) {
     }
 
     // Prepare VAPI call parameters
+    // Use normalized snake_case variables that match the system prompt placeholders
     const vapiParams = {
       phoneNumber: call.customer_phone,
       assistantId,
       phoneNumberId,
-      assistantOverrides: dynamicVariables
-        ? {
-            variableValues: dynamicVariables,
-          }
-        : undefined,
+      assistantOverrides:
+        Object.keys(normalizedVariables).length > 0
+          ? {
+              variableValues: normalizedVariables,
+            }
+          : undefined,
     };
 
     console.log("[EXECUTE_CALL] Calling VAPI API with parameters", {
@@ -199,6 +242,21 @@ async function handler(req: NextRequest) {
       assistantId,
       phoneNumberId,
       hasAssistantOverrides: !!vapiParams.assistantOverrides,
+      variableCount: Object.keys(normalizedVariables).length,
+      variableKeys: Object.keys(normalizedVariables),
+      criticalVariables: {
+        pet_name: normalizedVariables.pet_name,
+        owner_name: normalizedVariables.owner_name,
+        clinic_name: normalizedVariables.clinic_name,
+        agent_name: normalizedVariables.agent_name,
+        appointment_date: normalizedVariables.appointment_date,
+        call_type: normalizedVariables.call_type,
+        discharge_summary_content:
+          normalizedVariables.discharge_summary_content &&
+          typeof normalizedVariables.discharge_summary_content === "string"
+            ? `${normalizedVariables.discharge_summary_content.substring(0, 50)}...`
+            : undefined,
+      },
     });
 
     // Execute call via VAPI

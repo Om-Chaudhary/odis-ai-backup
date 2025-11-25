@@ -16,6 +16,10 @@ export default tseslint.config(
       "out/**",
       "build/**",
       "next-env.d.ts",
+      "src/test/**",
+      "**/*.test.ts",
+      "**/*.test.tsx",
+      "vitest.config.ts",
     ],
   },
   ...compat.extends("next/core-web-vitals"),
@@ -66,7 +70,10 @@ export default tseslint.config(
     },
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        projectService: {
+          allowDefaultProject: ["*.test.ts", "*.test.tsx", "vitest.config.ts"],
+        },
+        tsconfigRootDir: import.meta.dirname,
       },
     },
   },

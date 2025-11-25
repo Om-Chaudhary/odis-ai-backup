@@ -12,6 +12,7 @@ docs/
 ├── architecture/      # System architecture and design docs
 ├── compliance/        # Compliance and legal documentation
 ├── deployment/        # Deployment guides and setup
+├── implementation/    # Implementation project guides
 ├── integrations/      # Third-party integration guides
 ├── testing/           # Testing guides and strategies
 ├── vapi/              # VAPI voice call integration docs
@@ -27,10 +28,12 @@ docs/
 **Structure:** Organized by date (YYYY-MM-DD format)
 
 **Examples:**
+
 - `daily/2025-11-02/` - Notes from November 2, 2025
 - `daily/2025-11-24/` - Today's notes
 
 **When to use:**
+
 - Daily standup notes
 - Session-specific documentation
 - Temporary notes that may be archived later
@@ -45,17 +48,20 @@ docs/
 **Purpose:** Frequently referenced guides and documentation that don't fit into specific domains.
 
 **Contents:**
+
 - Migration guides
 - Implementation summaries
 - Quick start guides
 - General project documentation
 
 **Examples:**
+
 - `MIGRATION_V2.md` - Migration guide for v2
 - `IMPLEMENTATION_SUMMARY.md` - High-level implementation overview
 - `TESTING_STRATEGY.md` - Testing approach
 
 **When to use:**
+
 - Documentation you reference regularly
 - Guides that span multiple domains
 - General project knowledge
@@ -67,15 +73,18 @@ docs/
 **Purpose:** Complete API reference and integration guides.
 
 **Key Files:**
+
 - `API_REFERENCE.md` - Complete API reference (start here)
 - `README.md` - API authentication and overview
 - `USAGE_EXAMPLES.md` - Code examples
 - `chrome-extension-api-reference.md` - Extension-specific API docs
 
 **Subdirectories:**
+
 - `endpoints/` - Individual endpoint documentation (auto-generated)
 
 **When to use:**
+
 - Integrating with the API
 - Understanding authentication
 - Finding endpoint details
@@ -88,12 +97,14 @@ docs/
 **Purpose:** System design, architecture decisions, and technical deep-dives.
 
 **Contents:**
+
 - System architecture diagrams
 - Design decisions
 - Migration guides
 - Normalization architecture
 
 **When to use:**
+
 - Understanding system design
 - Planning major changes
 - Onboarding new developers
@@ -105,11 +116,13 @@ docs/
 **Purpose:** Legal, compliance, and regulatory documentation.
 
 **Contents:**
+
 - Compliance page guides
 - Legal requirements
 - Privacy documentation
 
 **When to use:**
+
 - Building compliance features
 - Understanding legal requirements
 - Privacy policy updates
@@ -121,11 +134,13 @@ docs/
 **Purpose:** Deployment guides and infrastructure setup.
 
 **Contents:**
+
 - Vercel setup guides
 - Environment configuration
 - CI/CD documentation
 
 **When to use:**
+
 - Setting up new environments
 - Deploying to production
 - Configuring infrastructure
@@ -137,12 +152,14 @@ docs/
 **Purpose:** Third-party integration guides and documentation.
 
 **Contents:**
+
 - Chrome extension integration
 - Retell AI scheduling
 - IDEXX integration
 - Other third-party services
 
 **When to use:**
+
 - Integrating with external services
 - Understanding integration architecture
 - Troubleshooting integrations
@@ -154,12 +171,14 @@ docs/
 **Purpose:** Testing guides, strategies, and best practices.
 
 **Contents:**
+
 - Testing strategy
 - Testing guides
 - Priority matrices
 - Quick start guides
 
 **When to use:**
+
 - Writing tests
 - Understanding test coverage
 - Planning test strategy
@@ -171,6 +190,7 @@ docs/
 **Purpose:** VAPI voice call integration documentation.
 
 **Contents:**
+
 - Integration guides
 - Variable documentation
 - Webhook guides
@@ -178,6 +198,7 @@ docs/
 - Prompts (`prompts/` subdirectory)
 
 **When to use:**
+
 - Setting up VAPI calls
 - Understanding dynamic variables
 - Configuring webhooks
@@ -185,27 +206,61 @@ docs/
 
 ---
 
+## 🛠️ Implementation (`implementation/`)
+
+**Purpose:** Implementation guides organized by features (ongoing work) and sessions (date-based notes).
+
+**Structure:**
+
+- `features/` - Important/ongoing feature documentation
+- `sessions/` - Date-based implementation session notes
+
+**Contents:**
+
+- Feature-specific implementation plans
+- Task breakdowns for parallel execution
+- Step-by-step implementation guides
+- Daily implementation progress notes
+
+**Active Features:**
+
+- `features/dual-mode-api/` - Dual-Mode API Architecture with LlamaIndex
+
+**When to use:**
+
+- Planning major feature implementations
+- Breaking down complex tasks
+- Coordinating parallel development
+- Tracking daily implementation progress
+- Understanding implementation approach
+
+**See:** [`implementation/README.md`](./implementation/README.md) for feature list and details.
+
+---
+
 ## 📝 Quick Reference
 
 ### Where to find...
 
-| What you need | Where to look |
-|---------------|---------------|
-| API endpoints | `api/API_REFERENCE.md` |
-| Daily notes | `daily/YYYY-MM-DD/` |
-| Migration guides | `reference/MIGRATION_*.md` |
-| Architecture decisions | `architecture/` |
-| Testing guides | `testing/` |
-| VAPI setup | `vapi/VAPI_FINAL_SETUP.md` |
-| Deployment | `deployment/` |
-| Compliance | `compliance/` |
+| What you need           | Where to look              |
+| ----------------------- | -------------------------- |
+| API endpoints           | `api/API_REFERENCE.md`     |
+| Daily notes             | `daily/YYYY-MM-DD/`        |
+| Migration guides        | `reference/MIGRATION_*.md` |
+| Architecture decisions  | `architecture/`            |
+| Testing guides          | `testing/`                 |
+| VAPI setup              | `vapi/VAPI_FINAL_SETUP.md` |
+| Deployment              | `deployment/`              |
+| Compliance              | `compliance/`              |
+| Implementation projects | `implementation/`          |
 
 ### Adding new documentation
 
 1. **Daily notes:** Create `daily/YYYY-MM-DD/` directory
 2. **API docs:** Add to `api/` or `api/endpoints/`
 3. **Reference docs:** Add to `reference/`
-4. **Domain-specific:** Add to appropriate domain folder (`vapi/`, `testing/`, etc.)
+4. **Implementation projects:** Create `implementation/[project-name]/` directory
+5. **Domain-specific:** Add to appropriate domain folder (`vapi/`, `testing/`, etc.)
 
 ### Documentation standards
 
@@ -226,6 +281,7 @@ docs/
 - **Voice Calls:** `vapi/`
 - **Chrome Extension:** `integrations/EXTENSION_DISCHARGE_INTEGRATION.md`
 - **Testing:** `testing/TESTING_GUIDE.md`
+- **Implementation Projects:** `implementation/`
 
 ### By Date
 
@@ -257,4 +313,3 @@ docs/
 ---
 
 **Last Updated:** November 24, 2025
-

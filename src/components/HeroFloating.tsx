@@ -6,7 +6,6 @@ import { EnhancedButton } from "~/components/ui/enhanced-button";
 import WaitlistModal from "./WaitlistModal";
 import { ArrowRight } from "lucide-react";
 import { LightRays } from "~/components/ui/light-rays";
-import Image from "next/image";
 import { useDeviceDetection } from "~/hooks/useDeviceDetection";
 
 export default function HeroFloating() {
@@ -305,27 +304,6 @@ export default function HeroFloating() {
               >
                 Join Waitlist - it&apos;s free
               </EnhancedButton>
-            </div>
-
-            {/* Dashboard Mockup */}
-            <div
-              className={`relative mx-auto mt-16 max-w-5xl transition-all duration-1000 ease-out ${
-                isVisible
-                  ? "animate-fade-in-up opacity-100"
-                  : "translate-y-8 opacity-0"
-              }`}
-              style={{ transitionDelay: "0.6s" }}
-            >
-              <div className="relative rounded-xl bg-gray-900/5 p-2 ring-1 ring-gray-900/10 ring-inset lg:-m-4 lg:rounded-2xl lg:p-4">
-                <Image
-                  src="/images/hero/dashboard-mockup.png"
-                  alt="Odis AI Dashboard"
-                  width={1200}
-                  height={800}
-                  className="rounded-md shadow-2xl ring-1 ring-gray-900/10"
-                  priority
-                />
-              </div>
             </div>
           </div>
         </div>

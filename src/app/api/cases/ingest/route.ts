@@ -14,8 +14,10 @@ const IngestPayloadSchema = z.discriminatedUnion("mode", [
   z.object({
     mode: z.literal("text"),
     source: z.enum([
+      "manual",
       "mobile_app",
       "web_dashboard",
+      "idexx_neo",
       "idexx_extension",
       "ezyvet_api",
     ]),
@@ -30,8 +32,10 @@ const IngestPayloadSchema = z.discriminatedUnion("mode", [
   z.object({
     mode: z.literal("structured"),
     source: z.enum([
+      "manual",
       "mobile_app",
       "web_dashboard",
+      "idexx_neo",
       "idexx_extension",
       "ezyvet_api",
     ]),
@@ -91,7 +95,7 @@ export async function GET(request: NextRequest) {
     request,
     NextResponse.json({
       message: "Cases ingest endpoint is available",
-      methods: ["POST"],
+      methods: ["POST", "OPTIONS"],
       endpoint: "/api/cases/ingest",
     }),
   );
@@ -163,4 +167,50 @@ export async function POST(request: NextRequest) {
  */
 export function OPTIONS(request: NextRequest) {
   return handleCorsPreflightRequest(request);
+}
+
+/**
+ * Handle unsupported HTTP methods
+ * This helps debug 405 errors by providing clear error messages
+ */
+export async function PUT(request: NextRequest) {
+  return withCorsHeaders(
+    request,
+    NextResponse.json(
+      {
+        error: "Method Not Allowed",
+        message: "PUT method is not supported. Use POST instead.",
+        allowedMethods: ["GET", "POST", "OPTIONS"],
+      },
+      { status: 405 },
+    ),
+  );
+}
+
+export async function DELETE(request: NextRequest) {
+  return withCorsHeaders(
+    request,
+    NextResponse.json(
+      {
+        error: "Method Not Allowed",
+        message: "DELETE method is not supported. Use POST instead.",
+        allowedMethods: ["GET", "POST", "OPTIONS"],
+      },
+      { status: 405 },
+    ),
+  );
+}
+
+export async function PATCH(request: NextRequest) {
+  return withCorsHeaders(
+    request,
+    NextResponse.json(
+      {
+        error: "Method Not Allowed",
+        message: "PATCH method is not supported. Use POST instead.",
+        allowedMethods: ["GET", "POST", "OPTIONS"],
+      },
+      { status: 405 },
+    ),
+  );
 }

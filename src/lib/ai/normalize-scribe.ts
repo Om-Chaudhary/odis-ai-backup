@@ -8,36 +8,16 @@
  * SOAP generation happens later using the extracted entities
  */
 
-import Anthropic from "@anthropic-ai/sdk";
-import { env } from "~/env";
+import { getEntityExtractionLLM } from "~/lib/llamaindex/config";
 import {
-  NormalizedEntitiesSchema,
+  extractApiErrorStatus,
+  extractTextFromResponse,
+} from "~/lib/llamaindex/utils";
+import type { ChatMessage } from "llamaindex";
+import {
   type NormalizedEntities,
+  NormalizedEntitiesSchema,
 } from "~/lib/validators/scribe";
-
-/* ========================================
-   Configuration
-   ======================================== */
-
-const ANTHROPIC_MODEL = "claude-haiku-4-5-20251001";
-const MAX_TOKENS = 4096;
-const TEMPERATURE = 0.1; // Very low temperature for consistent entity extraction
-
-/* ========================================
-   AI Client
-   ======================================== */
-
-function getAnthropicClient(): Anthropic {
-  if (!env.ANTHROPIC_API_KEY) {
-    throw new Error(
-      "ANTHROPIC_API_KEY not configured. Add it to your environment variables.",
-    );
-  }
-
-  return new Anthropic({
-    apiKey: env.ANTHROPIC_API_KEY,
-  });
-}
 
 /* ========================================
    Prompt Engineering
@@ -153,39 +133,39 @@ export async function extractEntities(
   }
 
   try {
-    const anthropic = getAnthropicClient();
+    const llm = getEntityExtractionLLM();
 
-    const response = await anthropic.messages.create({
-      model: ANTHROPIC_MODEL,
-      max_tokens: MAX_TOKENS,
-      temperature: TEMPERATURE,
-      system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: createUserPrompt(input, inputType),
-        },
-      ],
-    });
+    const messages: ChatMessage[] = [
+      {
+        role: "system",
+        content: SYSTEM_PROMPT,
+      },
+      {
+        role: "user",
+        content: createUserPrompt(input, inputType),
+      },
+    ];
 
-    const content = response.content[0];
-    if (!content || content.type !== "text") {
-      throw new Error("Unexpected response type from Claude API");
-    }
+    const response = await llm.chat({ messages });
+
+    // Extract text content from LlamaIndex response (handles both string and array formats)
+    const responseText = extractTextFromResponse(response);
 
     // Parse JSON response
     let parsedResponse: unknown;
     try {
-      const cleanedText = content.text
+      const cleanedText = responseText
         .replace(/```json\s*/g, "")
         .replace(/```\s*/g, "")
         .trim();
 
       parsedResponse = JSON.parse(cleanedText);
     } catch (parseError) {
-      console.error("Failed to parse AI response:", content.text);
+      console.error("Failed to parse AI response:", responseText);
       throw new Error(
-        `Invalid JSON response from AI: ${parseError instanceof Error ? parseError.message : "Unknown error"}`,
+        `Invalid JSON response from AI: ${
+          parseError instanceof Error ? parseError.message : "Unknown error"
+        }`,
       );
     }
 
@@ -211,12 +191,15 @@ export async function extractEntities(
 
     return entities;
   } catch (error) {
-    if (error instanceof Anthropic.APIError) {
-      throw new Error(
-        `Anthropic API error (${error.status}): ${error.message}`,
-      );
+    // Extract API error status if present
+    const statusCode = extractApiErrorStatus(error);
+    if (statusCode !== null) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown LlamaIndex API error";
+      throw new Error(`LlamaIndex API error (${statusCode}): ${errorMessage}`);
     }
 
+    // Re-throw other errors as-is
     throw error;
   }
 }
@@ -233,7 +216,7 @@ export function analyzeExtractionQuality(entities: NormalizedEntities): {
   isHighConfidence: boolean;
   missingCriticalFields: string[];
 } {
-  const warnings = entities.warnings || [];
+  const warnings = entities.warnings ?? [];
   const missingFields: string[] = [];
 
   // Check for critical missing fields
@@ -298,9 +281,11 @@ export async function extractEntitiesWithRetry(
       }
 
       // Retry on API errors
-      if (error instanceof Anthropic.APIError) {
+      const statusCode = extractApiErrorStatus(error);
+
+      if (statusCode !== null) {
         const isRetryable =
-          error.status === 429 || error.status === 500 || error.status === 503;
+          statusCode === 429 || statusCode === 500 || statusCode === 503;
 
         if (!isRetryable || attempt === maxRetries - 1) {
           throw lastError;
@@ -308,7 +293,9 @@ export async function extractEntitiesWithRetry(
 
         const delay = Math.pow(2, attempt) * 1000;
         console.warn(
-          `Entity extraction failed (attempt ${attempt + 1}/${maxRetries}), retrying in ${delay}ms...`,
+          `Entity extraction failed (attempt ${
+            attempt + 1
+          }/${maxRetries}), retrying in ${delay}ms...`,
         );
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
@@ -318,7 +305,7 @@ export async function extractEntitiesWithRetry(
     }
   }
 
-  throw lastError || new Error("Entity extraction failed after retries");
+  throw lastError ?? new Error("Entity extraction failed after retries");
 }
 
 /* ========================================

@@ -19,8 +19,10 @@ export type IngestMode = "text" | "structured";
  * Source of ingested data
  */
 export type IngestSource =
+  | "manual"
   | "mobile_app"
   | "web_dashboard"
+  | "idexx_neo"
   | "idexx_extension"
   | "ezyvet_api";
 

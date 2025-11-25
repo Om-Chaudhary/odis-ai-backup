@@ -103,13 +103,39 @@ export async function createPhoneCall(
     assistantOverrides: params.assistantOverrides,
   };
 
+  // Log variable format verification
+  const variableValues = params.assistantOverrides?.variableValues;
+  const variableKeys = variableValues ? Object.keys(variableValues) : [];
+  const sampleVariables = variableValues
+    ? {
+        pet_name: variableValues.pet_name,
+        owner_name: variableValues.owner_name,
+        clinic_name: variableValues.clinic_name,
+        agent_name: variableValues.agent_name,
+        appointment_date: variableValues.appointment_date,
+      }
+    : {};
+
   console.log("[VAPI_CLIENT] Creating phone call with payload", {
     phoneNumber: params.phoneNumber,
     assistantId: params.assistantId,
     phoneNumberId: params.phoneNumberId,
     hasAssistantOverrides: !!params.assistantOverrides,
-    assistantOverrides: params.assistantOverrides,
-    fullPayload: callPayload,
+    variableCount: variableKeys.length,
+    variableFormat: "snake_case (expected by VAPI)",
+    sampleVariableKeys: variableKeys.slice(0, 10),
+    sampleVariables,
+    // Log full variable values for debugging (truncate long values)
+    variableValues: variableValues
+      ? Object.fromEntries(
+          Object.entries(variableValues).map(([key, value]) => [
+            key,
+            typeof value === "string" && value.length > 100
+              ? `${value.substring(0, 100)}...`
+              : value,
+          ]),
+        )
+      : undefined,
   });
 
   try {

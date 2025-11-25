@@ -129,31 +129,38 @@ export const CasesService = {
     caseId: string;
     entities: NormalizedEntities;
   }> {
-    // 1. Try to find existing case for this patient today
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // 1. Try to find existing case for this patient
+    // Discharges can be sent anytime after a case is created, so we look for
+    // cases within a reasonable window (90 days) that are ongoing or completed
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    ninetyDaysAgo.setHours(0, 0, 0, 0);
 
-    // We search for patients first
-    const { data: existingPatients, error: patientSearchError } = await supabase
-      .from("patients")
-      .select("id, case_id, name, owner_name")
-      .eq("name", entities.patient.name)
-      .eq("owner_name", entities.patient.owner.name)
-      .gte("created_at", today.toISOString());
+    // Search for cases with matching patient name and owner
+    // Filter by status (ongoing or completed) and recent date
+    const { data: existingCases, error: caseSearchError } = await supabase
+      .from("cases")
+      .select("id, status, created_at, patients!inner(name, owner_name)")
+      .eq("patients.name", entities.patient.name)
+      .eq("patients.owner_name", entities.patient.owner.name)
+      .in("status", ["ongoing", "completed"])
+      .gte("created_at", ninetyDaysAgo.toISOString())
+      .order("created_at", { ascending: false })
+      .limit(1);
 
-    if (patientSearchError) {
+    if (caseSearchError) {
       console.error(
-        "[CasesService] Error searching for patients:",
-        patientSearchError,
+        "[CasesService] Error searching for cases:",
+        caseSearchError,
       );
     }
 
     let caseId: string | null = null;
 
-    if (existingPatients && existingPatients.length > 0) {
-      const match = existingPatients[0];
+    if (existingCases && existingCases.length > 0) {
+      const match = existingCases[0];
       if (match) {
-        caseId = match.case_id;
+        caseId = match.id;
       }
     }
 
