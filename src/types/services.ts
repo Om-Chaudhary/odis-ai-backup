@@ -31,22 +31,22 @@ export type IngestSource =
  */
 export type IngestPayload =
   | {
-    mode: "text";
-    source: IngestSource;
-    text: string;
-    options?: {
-      autoSchedule?: boolean;
-      inputType?: string; // e.g. "soap_note", "transcript"
-    };
-  }
+      mode: "text";
+      source: IngestSource;
+      text: string;
+      options?: {
+        autoSchedule?: boolean;
+        inputType?: string; // e.g. "soap_note", "transcript"
+      };
+    }
   | {
-    mode: "structured";
-    source: IngestSource;
-    data: Record<string, unknown>; // Raw JSON from IDEXX/Extension
-    options?: {
-      autoSchedule?: boolean;
+      mode: "structured";
+      source: IngestSource;
+      data: Record<string, unknown>; // Raw JSON from IDEXX/Extension
+      options?: {
+        autoSchedule?: boolean;
+      };
     };
-  };
 
 /**
  * Options for scheduling a discharge call

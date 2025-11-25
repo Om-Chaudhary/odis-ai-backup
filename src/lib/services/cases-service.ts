@@ -293,14 +293,12 @@ export const CasesService = {
   async getCaseWithEntities(
     supabase: SupabaseClientType,
     caseId: string,
-  ): Promise<
-    {
-      case: CaseRow;
-      entities: NormalizedEntities | undefined;
-      patient: PatientRow | PatientRow[] | null;
-      metadata: CaseMetadata;
-    } | null
-  > {
+  ): Promise<{
+    case: CaseRow;
+    entities: NormalizedEntities | undefined;
+    patient: PatientRow | PatientRow[] | null;
+    metadata: CaseMetadata;
+  } | null> {
     const { data: caseData, error } = await supabase
       .from("cases")
       .select(
@@ -358,8 +356,8 @@ export const CasesService = {
         callType: "discharge",
         clinicPhone: options.clinicPhone ?? "",
         emergencyPhone: options.emergencyPhone ?? options.clinicPhone ?? "",
-        dischargeSummary: options.summaryContent ??
-          generateSummaryFromEntities(entities),
+        dischargeSummary:
+          options.summaryContent ?? generateSummaryFromEntities(entities),
 
         medications: entities.clinical.medications
           ?.map((m) => `${m.name} ${m.dosage ?? ""} ${m.frequency ?? ""}`)
@@ -485,29 +483,26 @@ function mapIdexxToEntities(data: Record<string, unknown>): NormalizedEntities {
     "unknown",
   ] as const;
   type ValidSpecies = (typeof validSpecies)[number];
-  const rawSpecies = typeof data.species === "string"
-    ? data.species.toLowerCase()
-    : "unknown";
+  const rawSpecies =
+    typeof data.species === "string" ? data.species.toLowerCase() : "unknown";
   const species: ValidSpecies = validSpecies.includes(
-      rawSpecies as ValidSpecies,
-    )
+    rawSpecies as ValidSpecies,
+  )
     ? (rawSpecies as ValidSpecies)
     : "unknown";
 
-  const clientFirstName = typeof data.client_first_name === "string"
-    ? data.client_first_name
-    : "";
-  const clientLastName = typeof data.client_last_name === "string"
-    ? data.client_last_name
-    : "";
-  const ownerName = typeof data.owner_name === "string"
-    ? data.owner_name
-    : "Unknown";
-  const phone = typeof data.phone_number === "string"
-    ? data.phone_number
-    : typeof data.mobile_number === "string"
-    ? data.mobile_number
-    : undefined;
+  const clientFirstName =
+    typeof data.client_first_name === "string" ? data.client_first_name : "";
+  const clientLastName =
+    typeof data.client_last_name === "string" ? data.client_last_name : "";
+  const ownerName =
+    typeof data.owner_name === "string" ? data.owner_name : "Unknown";
+  const phone =
+    typeof data.phone_number === "string"
+      ? data.phone_number
+      : typeof data.mobile_number === "string"
+        ? data.mobile_number
+        : undefined;
   const email = typeof data.email === "string" ? data.email : undefined;
 
   return {
@@ -515,9 +510,10 @@ function mapIdexxToEntities(data: Record<string, unknown>): NormalizedEntities {
       name: petName,
       species: species,
       owner: {
-        name: clientFirstName && clientLastName
-          ? `${clientFirstName} ${clientLastName}`
-          : ownerName,
+        name:
+          clientFirstName && clientLastName
+            ? `${clientFirstName} ${clientLastName}`
+            : ownerName,
         phone: phone,
         email: email,
       },

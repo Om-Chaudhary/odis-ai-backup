@@ -114,9 +114,7 @@ export class ExecutionPlan {
     if (this.failedSteps.has(stepName)) return false;
 
     // Check if dependencies are met
-    return config.dependencies.every((dep) =>
-      this.completedSteps.has(dep),
-    );
+    return config.dependencies.every((dep) => this.completedSteps.has(dep));
   }
 
   /**
@@ -239,4 +237,3 @@ export class ExecutionPlan {
     return Array.from(this.failedSteps);
   }
 }
-
