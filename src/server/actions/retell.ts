@@ -10,8 +10,7 @@ import {
   type ScheduleCallInput,
   type ImportCallsInput,
 } from "~/lib/retell/validators";
-import { createPhoneCall, getCall } from "~/lib/retell/client";
-import type { RetellCallResponse } from "~/lib/retell/client";
+import { createPhoneCall } from "~/lib/retell/client";
 
 /**
  * Check if user is admin
