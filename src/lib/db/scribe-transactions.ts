@@ -14,9 +14,7 @@ import {
   parseWeightToKg,
   parseAgeToDOB,
   sanitizePhoneNumber,
-  CaseTypeSchema,
 } from "~/lib/validators/scribe";
-import type { z } from "zod";
 
 /* ========================================
    Type Definitions
@@ -116,7 +114,7 @@ export async function storeNormalizedEntities(
       ...additionalMetadata,
       entities: entities, // Store full extracted entities
       confidence: entities.confidence,
-      warnings: entities.warnings || [],
+      warnings: entities.warnings ?? [],
       extractedAt: entities.extractedAt,
       inputType: entities.inputType,
     };
@@ -300,13 +298,13 @@ async function upsertPatient(
       case_id: caseId,
       name: patient.name,
       species: patient.species,
-      breed: patient.breed || null,
-      sex: patient.sex || null,
-      date_of_birth: dateOfBirth || null,
-      weight_kg: weightKg || null,
+      breed: patient.breed ?? null,
+      sex: patient.sex ?? null,
+      date_of_birth: dateOfBirth ?? null,
+      weight_kg: weightKg ?? null,
       owner_name: patient.owner.name,
-      owner_email: patient.owner.email || null,
-      owner_phone: ownerPhone || null,
+      owner_email: patient.owner.email ?? null,
+      owner_phone: ownerPhone ?? null,
     };
 
     const { data: newPatient, error: insertError } = await supabase
@@ -405,7 +403,7 @@ export async function fetchCaseWithEntities(
         metadata: Record<string, unknown>;
         created_at: string;
       },
-      entities: entities || null,
+      entities: entities ?? null,
       patient: patientData
         ? {
             ...patientData,

@@ -385,8 +385,8 @@ export function VapiTestPage() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-slate-500">
-                Select a preset scenario or choose "Custom" to manually
-                configure all fields
+                Select a preset scenario or choose &quot;Custom&quot; to
+                manually configure all fields
               </p>
             </div>
 
@@ -435,7 +435,8 @@ export function VapiTestPage() {
                   className="border-slate-300 placeholder:text-slate-400"
                 />
                 <p className="text-xs text-slate-500">
-                  First name only (e.g., "Sarah", not "Dr. Sarah")
+                  First name only (e.g., &quot;Sarah&quot;, not &quot;Dr.
+                  Sarah&quot;)
                 </p>
               </div>
 
@@ -492,8 +493,8 @@ export function VapiTestPage() {
                   className="border-slate-300 placeholder:text-slate-400"
                 />
                 <p className="text-xs text-slate-500">
-                  Spell out the date for natural speech (e.g., "November
-                  eighth")
+                  Spell out the date for natural speech (e.g., &quot;November
+                  eighth&quot;)
                 </p>
               </div>
 
@@ -587,7 +588,8 @@ export function VapiTestPage() {
                   className="border-slate-300 placeholder:text-slate-400"
                 />
                 <p className="text-xs text-slate-500">
-                  Brief summary that completes: "{variables.petName} [summary]"
+                  Brief summary that completes: &quot;{variables.petName}{" "}
+                  [summary]&quot;
                 </p>
               </div>
             </div>

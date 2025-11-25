@@ -210,7 +210,7 @@ export function formatMedicationsForSpeech(
     return "";
   }
 
-  const formatted = medications.map((med, index) => {
+  const formatted = medications.map((med) => {
     const parts = [med.name];
 
     // Add dosage (convert "mg" to "milligrams" for speech)

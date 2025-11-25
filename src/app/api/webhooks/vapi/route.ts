@@ -37,75 +37,75 @@ interface VapiWebhookPayload {
   };
 }
 
-/**
- * Verify webhook signature from VAPI
- * VAPI sends a signature in the x-vapi-signature header using HMAC-SHA256
- */
-async function verifySignature(
-  request: NextRequest,
-  body: string,
-): Promise<boolean> {
-  const signature = request.headers.get("x-vapi-signature");
-  const secret = process.env.VAPI_WEBHOOK_SECRET;
-
-  if (!secret) {
-    console.warn(
-      "[VAPI_WEBHOOK] No VAPI_WEBHOOK_SECRET configured - webhook signature not verified",
-    );
-    return true; // Allow in development
-  }
-
-  if (!signature) {
-    console.error("[VAPI_WEBHOOK] No signature provided in request");
-    return false;
-  }
-
-  try {
-    // Create HMAC using the webhook secret
-    const encoder = new TextEncoder();
-    const key = await crypto.subtle.importKey(
-      "raw",
-      encoder.encode(secret),
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"],
-    );
-
-    // Generate signature from request body
-    const signatureBuffer = await crypto.subtle.sign(
-      "HMAC",
-      key,
-      encoder.encode(body),
-    );
-
-    // Convert to hex string
-    const computedSignature = Array.from(new Uint8Array(signatureBuffer))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-
-    // Timing-safe comparison
-    return timingSafeEqual(signature, computedSignature);
-  } catch (error) {
-    console.error("[VAPI_WEBHOOK] Signature verification error:", error);
-    return false;
-  }
-}
-
-/**
- * Timing-safe string comparison to prevent timing attacks
- */
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) {
-    return false;
-  }
-
-  let result = 0;
-  for (let i = 0; i < a.length; i++) {
-    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
-
-  return result === 0;
-}
+// /**
+//  * Verify webhook signature from VAPI
+//  * VAPI sends a signature in the x-vapi-signature header using HMAC-SHA256
+//  */
+// async function _verifySignature(
+//   request: NextRequest,
+//   body: string,
+// ): Promise<boolean> {
+//   const signature = request.headers.get("x-vapi-signature");
+//   const secret = process.env.VAPI_WEBHOOK_SECRET;
+//
+//   if (!secret) {
+//     console.warn(
+//       "[VAPI_WEBHOOK] No VAPI_WEBHOOK_SECRET configured - webhook signature not verified",
+//     );
+//     return true; // Allow in development
+//   }
+//
+//   if (!signature) {
+//     console.error("[VAPI_WEBHOOK] No signature provided in request");
+//     return false;
+//   }
+//
+//   try {
+//     // Create HMAC using the webhook secret
+//     const encoder = new TextEncoder();
+//     const key = await crypto.subtle.importKey(
+//       "raw",
+//       encoder.encode(secret),
+//       { name: "HMAC", hash: "SHA-256" },
+//       false,
+//       ["sign"],
+//     );
+//
+//     // Generate signature from request body
+//     const signatureBuffer = await crypto.subtle.sign(
+//       "HMAC",
+//       key,
+//       encoder.encode(body),
+//     );
+//
+//     // Convert to hex string
+//     const computedSignature = Array.from(new Uint8Array(signatureBuffer))
+//       .map((b) => b.toString(16).padStart(2, "0"))
+//       .join("");
+//
+//     // Timing-safe comparison
+//     return timingSafeEqual(signature, computedSignature);
+//   } catch (error) {
+//     console.error("[VAPI_WEBHOOK] Signature verification error:", error);
+//     return false;
+//   }
+// }
+//
+// /**
+//  * Timing-safe string comparison to prevent timing attacks
+//  */
+// function timingSafeEqual(a: string, b: string): boolean {
+//   if (a.length !== b.length) {
+//     return false;
+//   }
+//
+//   let result = 0;
+//   for (let i = 0; i < a.length; i++) {
+//     result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+//   }
+//
+//   return result === 0;
+// }
 
 /**
  * Map VAPI ended reason to our internal status

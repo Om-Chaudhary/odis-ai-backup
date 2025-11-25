@@ -68,7 +68,7 @@ export function validateDynamicVariables(
     variables.callType !== "follow-up"
   ) {
     errors.push(
-      `callType must be "discharge" or "follow-up", got "${variables.callType}"`,
+      `callType must be "discharge" or "follow-up", got "${variables.callType as string}"`,
     );
   }
 

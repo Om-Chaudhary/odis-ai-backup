@@ -7,7 +7,6 @@
 
 import {
   buildDynamicVariables,
-  type DynamicVariables,
   type ConditionCategory,
 } from "./knowledge-base";
 import { createServiceClient } from "~/lib/supabase/server";
@@ -78,8 +77,8 @@ export interface VapiCallStatus {
   durationSeconds: number | null;
   recordingUrl: string | null;
   transcript: string | null;
-  transcriptMessages: any | null;
-  callAnalysis: any | null;
+  transcriptMessages: unknown;
+  callAnalysis: unknown;
   conditionCategory: string | null;
   knowledgeBaseUsed: string | null;
   cost: number | null;
@@ -142,9 +141,9 @@ export async function createVapiCall(
     }
 
     // Step 2: Get VAPI configuration
-    const assistantId = input.assistantId || process.env.VAPI_ASSISTANT_ID;
+    const assistantId = input.assistantId ?? process.env.VAPI_ASSISTANT_ID;
     const phoneNumberId =
-      input.phoneNumberId || process.env.VAPI_PHONE_NUMBER_ID;
+      input.phoneNumberId ?? process.env.VAPI_PHONE_NUMBER_ID;
 
     if (!assistantId) {
       return {
@@ -170,7 +169,7 @@ export async function createVapiCall(
         assistant_id: assistantId,
         phone_number_id: phoneNumberId,
         customer_phone: input.ownerPhone,
-        scheduled_for: input.scheduledFor || null,
+        scheduled_for: input.scheduledFor ?? null,
         status: input.scheduledFor ? "queued" : "pending",
         dynamic_variables: variablesBuildResult.variables,
         condition_category:
@@ -291,7 +290,7 @@ export async function listVapiCalls(
   if (filters?.offset) {
     query = query.range(
       filters.offset,
-      filters.offset + (filters.limit || 10) - 1,
+      filters.offset + (filters.limit ?? 10) - 1,
     );
   }
 
@@ -337,14 +336,14 @@ export async function updateVapiCall(
     durationSeconds?: number;
     recordingUrl?: string;
     transcript?: string;
-    transcriptMessages?: any;
-    callAnalysis?: any;
+    transcriptMessages?: unknown;
+    callAnalysis?: unknown;
     cost?: number;
   },
 ): Promise<boolean> {
   const supabase = await createServiceClient();
 
-  const updateData: any = {};
+  const updateData: Record<string, unknown> = {};
 
   if (updates.status) updateData.status = updates.status;
   if (updates.endedReason) updateData.ended_reason = updates.endedReason;

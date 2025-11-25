@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     let body: unknown;
     try {
       body = await request.json();
-    } catch (error) {
+    } catch {
       return withCorsHeaders(
         request,
         NextResponse.json(

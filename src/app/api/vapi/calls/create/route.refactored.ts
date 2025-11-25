@@ -12,7 +12,6 @@
  * 3. Test thoroughly
  */
 
-import type { NextRequest } from "next/server";
 import { withAuth, successResponse, errorResponse } from "~/lib/api/auth";
 import {
   createVapiCall,
