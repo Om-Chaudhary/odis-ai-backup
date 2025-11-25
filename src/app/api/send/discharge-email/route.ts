@@ -8,6 +8,7 @@ import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
 import { normalizeEmail } from "~/lib/utils/phone";
+import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)
@@ -98,9 +99,12 @@ export async function POST(request: NextRequest) {
     const { user, supabase } = await authenticateRequest(request);
 
     if (!user || !supabase) {
-      return NextResponse.json(
-        { error: "Unauthorized: Authentication required" },
-        { status: 401 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          { error: "Unauthorized: Authentication required" },
+          { status: 401 },
+        ),
       );
     }
 
@@ -114,9 +118,12 @@ export async function POST(request: NextRequest) {
       : null;
 
     if (validated.recipientEmail && !normalizedEmail) {
-      return NextResponse.json(
-        { error: "Invalid email address format" },
-        { status: 400 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          { error: "Invalid email address format" },
+          { status: 400 },
+        ),
       );
     }
 
@@ -130,9 +137,12 @@ export async function POST(request: NextRequest) {
 
     // Validate scheduled time is in the future
     if (!isFutureTime(validated.scheduledFor)) {
-      return NextResponse.json(
-        { error: "Scheduled time must be in the future" },
-        { status: 400 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          { error: "Scheduled time must be in the future" },
+          { status: 400 },
+        ),
       );
     }
 
@@ -158,9 +168,12 @@ export async function POST(request: NextRequest) {
       console.error("[SEND_EMAIL] Database error", {
         error: dbError,
       });
-      return NextResponse.json(
-        { error: "Failed to create scheduled email" },
-        { status: 500 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          { error: "Failed to create scheduled email" },
+          { status: 500 },
+        ),
       );
     }
 
@@ -182,9 +195,12 @@ export async function POST(request: NextRequest) {
         .delete()
         .eq("id", scheduledEmail.id);
 
-      return NextResponse.json(
-        { error: "Failed to schedule email delivery" },
-        { status: 500 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          { error: "Failed to schedule email delivery" },
+          { status: 500 },
+        ),
       );
     }
 
@@ -203,27 +219,34 @@ export async function POST(request: NextRequest) {
     });
 
     // Return success response
-    return NextResponse.json({
-      success: true,
-      data: {
-        emailId: scheduledEmail.id,
-        scheduledFor: validated.scheduledFor.toISOString(),
-        qstashMessageId,
-        recipientEmail: normalizedEmail,
-        recipientName: validated.recipientName,
-        subject: validated.subject,
-      },
-    });
+    return withCorsHeaders(
+      request,
+      NextResponse.json({
+        success: true,
+        data: {
+          emailId: scheduledEmail.id,
+          scheduledFor: validated.scheduledFor.toISOString(),
+          qstashMessageId,
+          recipientEmail: normalizedEmail,
+          recipientName: validated.recipientName,
+          subject: validated.subject,
+        },
+      }),
+    );
   } catch (error) {
     console.error("[SEND_EMAIL] Error", {
       error: error instanceof Error ? error.message : String(error),
     });
 
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Internal server error",
-      },
-      { status: 500 },
+    return withCorsHeaders(
+      request,
+      NextResponse.json(
+        {
+          error:
+            error instanceof Error ? error.message : "Internal server error",
+        },
+        { status: 500 },
+      ),
     );
   }
 }
@@ -231,9 +254,19 @@ export async function POST(request: NextRequest) {
 /**
  * Health check endpoint
  */
-export async function GET() {
-  return NextResponse.json({
-    status: "ok",
-    message: "Send discharge email endpoint is active",
-  });
+export async function GET(request: NextRequest) {
+  return withCorsHeaders(
+    request,
+    NextResponse.json({
+      status: "ok",
+      message: "Send discharge email endpoint is active",
+    }),
+  );
+}
+
+/**
+ * CORS preflight handler
+ */
+export function OPTIONS(request: NextRequest) {
+  return handleCorsPreflightRequest(request);
 }

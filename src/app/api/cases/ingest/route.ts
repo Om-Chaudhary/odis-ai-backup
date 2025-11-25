@@ -7,6 +7,7 @@ import { getUser } from "~/server/actions/auth";
 import { CasesService } from "~/lib/services/cases-service";
 import type { IngestPayload } from "~/types/services";
 import { z } from "zod";
+import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
 
 // --- Schemas ---
 const IngestPayloadSchema = z.discriminatedUnion("mode", [
@@ -85,12 +86,15 @@ async function authenticateRequest(request: NextRequest) {
 }
 
 // --- Route Handler ---
-export async function GET() {
-  return NextResponse.json({
-    message: "Cases ingest endpoint is available",
-    methods: ["POST"],
-    endpoint: "/api/cases/ingest",
-  });
+export async function GET(request: NextRequest) {
+  return withCorsHeaders(
+    request,
+    NextResponse.json({
+      message: "Cases ingest endpoint is available",
+      methods: ["POST"],
+      endpoint: "/api/cases/ingest",
+    }),
+  );
 }
 
 export async function POST(request: NextRequest) {
@@ -98,11 +102,14 @@ export async function POST(request: NextRequest) {
     // 1. Auth
     const { user, supabase } = await authenticateRequest(request);
     if (!user || !supabase) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        {
-          status: 401,
-        },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          { error: "Unauthorized" },
+          {
+            status: 401,
+          },
+        ),
       );
     }
 
@@ -111,12 +118,15 @@ export async function POST(request: NextRequest) {
     const validation = IngestPayloadSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        {
-          error: "Validation failed",
-          details: validation.error.format(),
-        },
-        { status: 400 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          {
+            error: "Validation failed",
+            details: validation.error.format(),
+          },
+          { status: 400 },
+        ),
       );
     }
 
@@ -126,17 +136,31 @@ export async function POST(request: NextRequest) {
     const result = await CasesService.ingest(supabase, user.id, payload);
 
     // 4. Response
-    return NextResponse.json({
-      success: true,
-      data: result,
-    });
+    return withCorsHeaders(
+      request,
+      NextResponse.json({
+        success: true,
+        data: result,
+      }),
+    );
   } catch (error) {
     console.error("[CASES_INGEST] Error:", error);
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Internal Server Error",
-      },
-      { status: 500 },
+    return withCorsHeaders(
+      request,
+      NextResponse.json(
+        {
+          error:
+            error instanceof Error ? error.message : "Internal Server Error",
+        },
+        { status: 500 },
+      ),
     );
   }
+}
+
+/**
+ * CORS preflight handler
+ */
+export function OPTIONS(request: NextRequest) {
+  return handleCorsPreflightRequest(request);
 }

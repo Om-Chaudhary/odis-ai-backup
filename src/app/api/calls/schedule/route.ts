@@ -7,6 +7,7 @@ import { scheduleCallExecution } from "~/lib/qstash/client";
 import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
+import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)
@@ -79,9 +80,12 @@ export async function POST(request: NextRequest) {
     const { user, supabase } = await authenticateRequest(request);
 
     if (!user || !supabase) {
-      return NextResponse.json(
-        { error: "Unauthorized: Authentication required" },
-        { status: 401 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          { error: "Unauthorized: Authentication required" },
+          { status: 401 },
+        ),
       );
     }
 
@@ -101,9 +105,12 @@ export async function POST(request: NextRequest) {
 
     // Validate scheduled time is in the future
     if (!isFutureTime(scheduledFor)) {
-      return NextResponse.json(
-        { error: "Scheduled time must be in the future" },
-        { status: 400 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          { error: "Scheduled time must be in the future" },
+          { status: 400 },
+        ),
       );
     }
 
@@ -185,9 +192,12 @@ export async function POST(request: NextRequest) {
       console.error("[SCHEDULE_CALL] Database error", {
         error: dbError,
       });
-      return NextResponse.json(
-        { error: "Failed to create scheduled call" },
-        { status: 500 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          { error: "Failed to create scheduled call" },
+          { status: 500 },
+        ),
       );
     }
 
@@ -209,9 +219,12 @@ export async function POST(request: NextRequest) {
         .delete()
         .eq("id", scheduledCall.id);
 
-      return NextResponse.json(
-        { error: "Failed to schedule call execution" },
-        { status: 500 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          { error: "Failed to schedule call execution" },
+          { status: 500 },
+        ),
       );
     }
 
@@ -233,27 +246,34 @@ export async function POST(request: NextRequest) {
     });
 
     // Return success response
-    return NextResponse.json({
-      success: true,
-      data: {
-        callId: scheduledCall.id,
-        scheduledFor: finalScheduledTime.toISOString(),
-        qstashMessageId,
-        petName: validated.petName,
-        ownerName: validated.ownerName,
-        phoneNumber: validated.phoneNumber,
-      },
-    });
+    return withCorsHeaders(
+      request,
+      NextResponse.json({
+        success: true,
+        data: {
+          callId: scheduledCall.id,
+          scheduledFor: finalScheduledTime.toISOString(),
+          qstashMessageId,
+          petName: validated.petName,
+          ownerName: validated.ownerName,
+          phoneNumber: validated.phoneNumber,
+        },
+      }),
+    );
   } catch (error) {
     console.error("[SCHEDULE_CALL] Error", {
       error: error instanceof Error ? error.message : String(error),
     });
 
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Internal server error",
-      },
-      { status: 500 },
+    return withCorsHeaders(
+      request,
+      NextResponse.json(
+        {
+          error:
+            error instanceof Error ? error.message : "Internal server error",
+        },
+        { status: 500 },
+      ),
     );
   }
 }
@@ -261,9 +281,19 @@ export async function POST(request: NextRequest) {
 /**
  * Health check endpoint
  */
-export async function GET() {
-  return NextResponse.json({
-    status: "ok",
-    message: "Schedule call endpoint is active",
-  });
+export async function GET(request: NextRequest) {
+  return withCorsHeaders(
+    request,
+    NextResponse.json({
+      status: "ok",
+      message: "Schedule call endpoint is active",
+    }),
+  );
+}
+
+/**
+ * CORS preflight handler
+ */
+export function OPTIONS(request: NextRequest) {
+  return handleCorsPreflightRequest(request);
 }
