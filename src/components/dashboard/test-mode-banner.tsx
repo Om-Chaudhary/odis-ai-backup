@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TestTube, X, Settings2 } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import {
@@ -36,6 +36,17 @@ export function TestModeBanner({
   const [testContactEmail, setTestContactEmail] = useState(
     settings.testContactEmail ?? "",
   );
+
+  // Sync local state when settings change
+  useEffect(() => {
+    setTestContactName(settings.testContactName ?? "");
+    setTestContactPhone(settings.testContactPhone ?? "");
+    setTestContactEmail(settings.testContactEmail ?? "");
+  }, [
+    settings.testContactName,
+    settings.testContactPhone,
+    settings.testContactEmail,
+  ]);
 
   if (!settings.testModeEnabled) {
     return null;

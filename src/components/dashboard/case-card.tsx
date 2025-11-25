@@ -51,6 +51,28 @@ function isPlaceholder(value: string): boolean {
   return placeholders.includes(value);
 }
 
+/**
+ * Check if a contact value is valid (not a placeholder and not empty)
+ */
+function hasValidContact(value: string | undefined | null): boolean {
+  if (!value) return false;
+  return !isPlaceholder(value) && value.trim().length > 0;
+}
+
+/**
+ * Get the effective contact value - use test contact if test mode is enabled, otherwise use patient contact
+ */
+function getEffectiveContact(
+  patientValue: string | undefined | null,
+  testValue: string | undefined | null,
+  testModeEnabled: boolean,
+): string | undefined | null {
+  if (testModeEnabled && hasValidContact(testValue)) {
+    return testValue;
+  }
+  return patientValue;
+}
+
 interface CaseCardProps {
   caseData: DashboardCase;
   backendCaseData?: BackendCase;
@@ -130,6 +152,18 @@ export function CaseCard({
     });
     setIsEditing(false);
   };
+
+  // Get effective contact values (test contact when test mode is enabled)
+  const effectivePhone = getEffectiveContact(
+    caseData.patient.owner_phone,
+    testContactPhone,
+    testModeEnabled,
+  );
+  const effectiveEmail = getEffectiveContact(
+    caseData.patient.owner_email,
+    testContactEmail,
+    testModeEnabled,
+  );
 
   const SpeciesIcon =
     caseData.patient.species?.toLowerCase() === "feline" ? Cat : Dog;
@@ -416,10 +450,18 @@ export function CaseCard({
               onClick={() => onTriggerCall(caseData.id)}
               disabled={
                 isLoadingCall ||
+                !hasValidContact(effectivePhone) ||
                 (!!caseData.scheduled_discharge_call &&
                   ["queued", "ringing", "in_progress", "completed"].includes(
                     caseData.scheduled_discharge_call.status ?? "",
                   ))
+              }
+              title={
+                !hasValidContact(effectivePhone)
+                  ? testModeEnabled
+                    ? "Test phone number is required"
+                    : "Phone number is required"
+                  : undefined
               }
             >
               {isLoadingCall ? (
@@ -432,7 +474,20 @@ export function CaseCard({
               variant="outline"
               className="w-full"
               onClick={() => onTriggerBoth(caseData.id)}
-              disabled={isLoadingCall || isLoadingEmail}
+              disabled={
+                isLoadingCall ||
+                isLoadingEmail ||
+                (!hasValidContact(effectivePhone) &&
+                  !hasValidContact(effectiveEmail))
+              }
+              title={
+                !hasValidContact(effectivePhone) &&
+                !hasValidContact(effectiveEmail)
+                  ? testModeEnabled
+                    ? "At least one test contact method is required"
+                    : "At least one contact method is required"
+                  : undefined
+              }
             >
               {isLoadingCall || isLoadingEmail ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -449,10 +504,18 @@ export function CaseCard({
               onClick={() => onTriggerEmail(caseData.id)}
               disabled={
                 isLoadingEmail ||
+                !hasValidContact(effectiveEmail) ||
                 (!!caseData.scheduled_discharge_email &&
                   ["queued", "sent"].includes(
                     caseData.scheduled_discharge_email.status ?? "",
                   ))
+              }
+              title={
+                !hasValidContact(effectiveEmail)
+                  ? testModeEnabled
+                    ? "Test email address is required"
+                    : "Email address is required"
+                  : undefined
               }
             >
               {isLoadingEmail ? (
@@ -470,10 +533,18 @@ export function CaseCard({
               onClick={() => onTriggerCall(caseData.id)}
               disabled={
                 isLoadingCall ||
+                !hasValidContact(effectivePhone) ||
                 (!!caseData.scheduled_discharge_call &&
                   ["queued", "ringing", "in_progress", "completed"].includes(
                     caseData.scheduled_discharge_call.status ?? "",
                   ))
+              }
+              title={
+                !hasValidContact(effectivePhone)
+                  ? testModeEnabled
+                    ? "Test phone number is required"
+                    : "Phone number is required"
+                  : undefined
               }
             >
               {isLoadingCall ? (
@@ -489,10 +560,18 @@ export function CaseCard({
               onClick={() => onTriggerEmail(caseData.id)}
               disabled={
                 isLoadingEmail ||
+                !hasValidContact(effectiveEmail) ||
                 (!!caseData.scheduled_discharge_email &&
                   ["queued", "sent"].includes(
                     caseData.scheduled_discharge_email.status ?? "",
                   ))
+              }
+              title={
+                !hasValidContact(effectiveEmail)
+                  ? testModeEnabled
+                    ? "Test email address is required"
+                    : "Email address is required"
+                  : undefined
               }
             >
               {isLoadingEmail ? (
