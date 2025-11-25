@@ -154,7 +154,7 @@ export default function CaseStudiesPage() {
       >
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {caseStudies.map((study, index) => (
+            {caseStudies.map((study) => (
               <Link
                 key={study.id}
                 href={`/case-studies/${study.slug}`}

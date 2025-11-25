@@ -23,9 +23,9 @@ export const termsOfServiceSections: ComplianceSection[] = [
     content: (
       <>
         <p>
-          Welcome to {COMPANY_NAME}. These Terms of Service ("Terms") govern
-          your access to and use of our website, applications, and services
-          (collectively, the "Services").
+          Welcome to {COMPANY_NAME}. These Terms of Service (&quot;Terms&quot;)
+          govern your access to and use of our website, applications, and
+          services (collectively, the &quot;Services&quot;).
         </p>
         <p>
           By accessing or using our Services, you agree to be bound by these
@@ -131,10 +131,10 @@ export const termsOfServiceSections: ComplianceSection[] = [
     content: (
       <>
         <p>
-          OUR SERVICES ARE PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT
-          WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT
-          LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-          PURPOSE, AND NON-INFRINGEMENT.
+          OUR SERVICES ARE PROVIDED &quot;AS IS&quot; AND &quot;AS
+          AVAILABLE&quot; WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
+          IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY,
+          FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
         </p>
       </>
     ),

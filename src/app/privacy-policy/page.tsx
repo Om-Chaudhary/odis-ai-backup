@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ComplianceDocument } from "~/components/legal/compliance-document";
 import {
   privacyPolicySections,
@@ -37,12 +38,12 @@ export default function PrivacyPolicyPage() {
       <header className="border-b bg-white">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <nav className="flex items-center justify-between">
-            <a
+            <Link
               href="/"
               className="hover:text-primary focus:ring-ring text-lg font-semibold text-slate-900 focus:ring-2 focus:ring-offset-2 focus:outline-none"
             >
               ← Back to Home
-            </a>
+            </Link>
           </nav>
         </div>
       </header>
@@ -65,24 +66,24 @@ export default function PrivacyPolicyPage() {
               © {new Date().getFullYear()} {COMPANY_NAME}. All rights reserved.
             </p>
             <div className="mt-4 flex justify-center gap-6">
-              <a
+              <Link
                 href="/privacy-policy"
                 className="hover:text-primary focus:ring-ring focus:ring-2 focus:ring-offset-2 focus:outline-none"
               >
                 Privacy Policy
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/terms-of-service"
                 className="hover:text-primary focus:ring-ring focus:ring-2 focus:ring-offset-2 focus:outline-none"
               >
                 Terms of Service
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/cookie-policy"
                 className="hover:text-primary focus:ring-ring focus:ring-2 focus:ring-offset-2 focus:outline-none"
               >
                 Cookie Policy
-              </a>
+              </Link>
             </div>
           </div>
         </div>
