@@ -337,7 +337,7 @@ export const casesRouter = createTRPCRouter({
     const { data, error } = await ctx.supabase
       .from("users")
       .select(
-        "clinic_name, clinic_phone, clinic_email, first_name, last_name, test_mode_enabled, test_contact_name, test_contact_email, test_contact_phone",
+        "clinic_name, clinic_phone, clinic_email, emergency_phone, first_name, last_name, test_mode_enabled, test_contact_name, test_contact_email, test_contact_phone",
       )
       .eq("id", ctx.user.id)
       .single();
@@ -360,7 +360,7 @@ export const casesRouter = createTRPCRouter({
       clinicName: data?.clinic_name ?? "",
       clinicPhone: data?.clinic_phone ?? "",
       clinicEmail: data?.clinic_email ?? "",
-      emergencyPhone: data?.clinic_phone ?? "", // Using clinic phone as default
+      emergencyPhone: data?.emergency_phone ?? data?.clinic_phone ?? "",
       vetName,
       testModeEnabled: data?.test_mode_enabled ?? false,
       testContactName: data?.test_contact_name ?? "",
@@ -398,6 +398,9 @@ export const casesRouter = createTRPCRouter({
       if (input.clinicEmail !== undefined) {
         updateData.clinic_email = input.clinicEmail;
       }
+      if (input.emergencyPhone !== undefined) {
+        updateData.emergency_phone = input.emergencyPhone;
+      }
       if (input.testModeEnabled !== undefined) {
         updateData.test_mode_enabled = input.testModeEnabled;
       }
@@ -410,9 +413,6 @@ export const casesRouter = createTRPCRouter({
       if (input.testContactPhone !== undefined) {
         updateData.test_contact_phone = input.testContactPhone;
       }
-
-      // Note: emergencyPhone can be stored in metadata if needed in the future
-      // For now, we're using clinic_phone as the default
 
       const { error } = await ctx.supabase
         .from("users")
