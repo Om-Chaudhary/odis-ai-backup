@@ -325,8 +325,8 @@ async function handleEndOfCallReport(
     duration_seconds: durationSeconds,
     recording_url: call.recordingUrl,
     transcript: call.transcript,
-    transcript_messages: call.messages ? call.messages : null,
-    call_analysis: call.analysis ? call.analysis : null,
+    transcript_messages: call.messages ?? null,
+    call_analysis: call.analysis ?? null,
     cost,
   };
 
@@ -462,8 +462,8 @@ async function handleHangup(
   const { error: updateError } = await supabase
     .from("scheduled_discharge_calls")
     .update({
-      ended_reason: call.endedReason || "user-hangup",
-      ended_at: call.endedAt || new Date().toISOString(),
+      ended_reason: call.endedReason ?? "user-hangup",
+      ended_at: call.endedAt ?? new Date().toISOString(),
     })
     .eq("id", existingCall.id);
 

@@ -107,12 +107,13 @@ async function handler(req: NextRequest) {
               agentName: (dynamicVariables?.agent_name as string) ?? "Sarah",
               petName: caseInfo.entities.patient.name,
               ownerName: caseInfo.entities.patient.owner.name,
-              appointmentDate:
-                (dynamicVariables?.appointment_date as string) ?? "today",
-              callType: ((dynamicVariables?.call_type as
-                | "discharge"
-                | "follow-up"
-                | undefined) ?? "discharge") as "discharge" | "follow-up",
+              appointmentDate: (dynamicVariables?.appointment_date ??
+                "today") as string,
+              callType:
+                (dynamicVariables?.call_type as
+                  | "discharge"
+                  | "follow-up"
+                  | undefined) ?? "discharge",
               clinicPhone: (dynamicVariables?.clinic_phone as string) ?? "",
 
               // Fresh Clinical Data overrides
