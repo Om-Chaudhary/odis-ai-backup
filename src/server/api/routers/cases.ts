@@ -290,22 +290,22 @@ export const casesRouter = createTRPCRouter({
         const session = await ctx.supabase.auth.getSession();
         const token = session.data.session?.access_token;
 
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_SITE_URL}/api/discharge/orchestrate`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-              input: {
-                existingCase: { caseId: input.caseId },
-              },
-              steps: orchestrationSteps,
-            }),
+        // Use absolute URL for server-side fetch (required for Next.js server components)
+        const baseUrl =
+          process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+        const response = await fetch(`${baseUrl}/api/discharge/orchestrate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
-        );
+          body: JSON.stringify({
+            input: {
+              existingCase: { caseId: input.caseId },
+            },
+            steps: orchestrationSteps,
+          }),
+        });
 
         if (!response.ok) {
           const errorData = await response.json();

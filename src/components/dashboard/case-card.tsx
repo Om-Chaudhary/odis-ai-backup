@@ -79,7 +79,6 @@ interface CaseCardProps {
   settings?: DischargeSettings;
   onTriggerCall: (id: string) => void;
   onTriggerEmail: (id: string) => void;
-  onTriggerBoth?: (id: string) => void;
   onUpdatePatient: (patientId: string, data: PatientUpdateInput) => void;
   testModeEnabled?: boolean;
   testContactName?: string;
@@ -96,7 +95,6 @@ export function CaseCard({
   settings,
   onTriggerCall,
   onTriggerEmail,
-  onTriggerBoth,
   onUpdatePatient,
   testModeEnabled = false,
   testContactName = "",
@@ -442,147 +440,62 @@ export function CaseCard({
       </CardContent>
 
       <CardFooter className="bg-muted/30 p-4">
-        {onTriggerBoth ? (
-          <div className="grid w-full grid-cols-3 gap-2">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => onTriggerCall(caseData.id)}
-              disabled={
-                isLoadingCall ||
-                !hasValidContact(effectivePhone) ||
-                (!!caseData.scheduled_discharge_call &&
-                  ["queued", "ringing", "in_progress", "completed"].includes(
-                    caseData.scheduled_discharge_call.status ?? "",
-                  ))
-              }
-              title={
-                !hasValidContact(effectivePhone)
-                  ? testModeEnabled
-                    ? "Test phone number is required"
-                    : "Phone number is required"
-                  : undefined
-              }
-            >
-              {isLoadingCall ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Phone className="h-4 w-4" />
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => onTriggerBoth(caseData.id)}
-              disabled={
-                isLoadingCall ||
-                isLoadingEmail ||
-                (!hasValidContact(effectivePhone) &&
-                  !hasValidContact(effectiveEmail))
-              }
-              title={
-                !hasValidContact(effectivePhone) &&
-                !hasValidContact(effectiveEmail)
-                  ? testModeEnabled
-                    ? "At least one test contact method is required"
-                    : "At least one contact method is required"
-                  : undefined
-              }
-            >
-              {isLoadingCall || isLoadingEmail ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  <Phone className="mr-1 h-3.5 w-3.5" />
-                  <Mail className="h-3.5 w-3.5" />
-                </>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => onTriggerEmail(caseData.id)}
-              disabled={
-                isLoadingEmail ||
-                !hasValidContact(effectiveEmail) ||
-                (!!caseData.scheduled_discharge_email &&
-                  ["queued", "sent"].includes(
-                    caseData.scheduled_discharge_email.status ?? "",
-                  ))
-              }
-              title={
-                !hasValidContact(effectiveEmail)
-                  ? testModeEnabled
-                    ? "Test email address is required"
-                    : "Email address is required"
-                  : undefined
-              }
-            >
-              {isLoadingEmail ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Mail className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-        ) : (
-          <div className="grid w-full grid-cols-2 gap-3">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => onTriggerCall(caseData.id)}
-              disabled={
-                isLoadingCall ||
-                !hasValidContact(effectivePhone) ||
-                (!!caseData.scheduled_discharge_call &&
-                  ["queued", "ringing", "in_progress", "completed"].includes(
-                    caseData.scheduled_discharge_call.status ?? "",
-                  ))
-              }
-              title={
-                !hasValidContact(effectivePhone)
-                  ? testModeEnabled
-                    ? "Test phone number is required"
-                    : "Phone number is required"
-                  : undefined
-              }
-            >
-              {isLoadingCall ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Phone className="mr-2 h-4 w-4" />
-              )}
-              Call Owner
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => onTriggerEmail(caseData.id)}
-              disabled={
-                isLoadingEmail ||
-                !hasValidContact(effectiveEmail) ||
-                (!!caseData.scheduled_discharge_email &&
-                  ["queued", "sent"].includes(
-                    caseData.scheduled_discharge_email.status ?? "",
-                  ))
-              }
-              title={
-                !hasValidContact(effectiveEmail)
-                  ? testModeEnabled
-                    ? "Test email address is required"
-                    : "Email address is required"
-                  : undefined
-              }
-            >
-              {isLoadingEmail ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Mail className="mr-2 h-4 w-4" />
-              )}
-              Email Owner
-            </Button>
-          </div>
-        )}
+        <div className="grid w-full grid-cols-2 gap-3">
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => onTriggerCall(caseData.id)}
+            disabled={
+              isLoadingCall ||
+              !hasValidContact(effectivePhone) ||
+              (!!caseData.scheduled_discharge_call &&
+                ["queued", "ringing", "in_progress", "completed"].includes(
+                  caseData.scheduled_discharge_call.status ?? "",
+                ))
+            }
+            title={
+              !hasValidContact(effectivePhone)
+                ? testModeEnabled
+                  ? "Test phone number is required"
+                  : "Phone number is required"
+                : undefined
+            }
+          >
+            {isLoadingCall ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Phone className="mr-2 h-4 w-4" />
+            )}
+            Call Owner
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => onTriggerEmail(caseData.id)}
+            disabled={
+              isLoadingEmail ||
+              !hasValidContact(effectiveEmail) ||
+              (!!caseData.scheduled_discharge_email &&
+                ["queued", "sent"].includes(
+                  caseData.scheduled_discharge_email.status ?? "",
+                ))
+            }
+            title={
+              !hasValidContact(effectiveEmail)
+                ? testModeEnabled
+                  ? "Test email address is required"
+                  : "Email address is required"
+                : undefined
+            }
+          >
+            {isLoadingEmail ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Mail className="mr-2 h-4 w-4" />
+            )}
+            Email Owner
+          </Button>
+        </div>
       </CardFooter>
 
       {/* Debug Modal */}

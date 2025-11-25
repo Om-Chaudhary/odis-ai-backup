@@ -156,16 +156,12 @@ export function CasesDashboardClient() {
     const caseData = cases.find((c) => c.id === caseId);
     if (!caseData) return;
 
-    // Use test contact info if test mode is enabled, otherwise use patient contact info
+    // Keep the actual owner name, but override phone/email for test mode
+    const ownerName = normalizePlaceholder(caseData.patient.owner_name);
+    const ownerEmail = normalizePlaceholder(caseData.patient.owner_email);
     const phone = settings.testModeEnabled
       ? settings.testContactPhone
       : normalizePlaceholder(caseData.patient.owner_phone);
-    const ownerName = settings.testModeEnabled
-      ? settings.testContactName
-      : normalizePlaceholder(caseData.patient.owner_name);
-    const ownerEmail = settings.testModeEnabled
-      ? settings.testContactEmail
-      : normalizePlaceholder(caseData.patient.owner_email);
 
     if (!hasValidContact(phone)) {
       toast.error(
@@ -207,16 +203,12 @@ export function CasesDashboardClient() {
     const caseData = cases.find((c) => c.id === caseId);
     if (!caseData) return;
 
-    // Use test contact info if test mode is enabled, otherwise use patient contact info
+    // Keep the actual owner name, but override phone/email for test mode
+    const ownerName = normalizePlaceholder(caseData.patient.owner_name);
+    const ownerPhone = normalizePlaceholder(caseData.patient.owner_phone);
     const email = settings.testModeEnabled
       ? settings.testContactEmail
       : normalizePlaceholder(caseData.patient.owner_email);
-    const ownerName = settings.testModeEnabled
-      ? settings.testContactName
-      : normalizePlaceholder(caseData.patient.owner_name);
-    const ownerPhone = settings.testModeEnabled
-      ? settings.testContactPhone
-      : normalizePlaceholder(caseData.patient.owner_phone);
 
     if (!hasValidContact(email)) {
       toast.error(
@@ -241,74 +233,6 @@ export function CasesDashboardClient() {
         ownerPhone,
       },
       dischargeType: "email",
-    });
-  };
-
-  const handleTriggerBoth = async (caseId: string, patientId: string) => {
-    // Prevent double-clicks and concurrent mutations
-    if (isProcessingRef.current || loadingCase !== null) {
-      console.log("[Dashboard] Ignoring duplicate both trigger", {
-        caseId,
-        isProcessing: isProcessingRef.current,
-        loadingCase,
-      });
-      return;
-    }
-
-    const caseData = cases.find((c) => c.id === caseId);
-    if (!caseData) return;
-
-    // Use test contact info if test mode is enabled, otherwise use patient contact info
-    const phone = settings.testModeEnabled
-      ? settings.testContactPhone
-      : normalizePlaceholder(caseData.patient.owner_phone);
-    const email = settings.testModeEnabled
-      ? settings.testContactEmail
-      : normalizePlaceholder(caseData.patient.owner_email);
-    const ownerName = settings.testModeEnabled
-      ? settings.testContactName
-      : normalizePlaceholder(caseData.patient.owner_name);
-
-    const hasPhone = hasValidContact(phone);
-    const hasEmail = hasValidContact(email);
-
-    if (!hasPhone && !hasEmail) {
-      toast.error(
-        settings.testModeEnabled
-          ? "At least one test contact method is required. Please configure test contact information in settings."
-          : "At least one contact method is required. Please enter the owner's phone number or email address first.",
-      );
-      return;
-    }
-
-    if (!hasPhone) {
-      toast.warning(
-        settings.testModeEnabled
-          ? "Test phone number is missing. Only email will be sent."
-          : "Phone number is missing. Only email will be sent. Please enter the owner's phone number to also send a call.",
-      );
-    } else if (!hasEmail) {
-      toast.warning(
-        settings.testModeEnabled
-          ? "Test email address is missing. Only call will be made."
-          : "Email address is missing. Only call will be made. Please enter the owner's email address to also send an email.",
-      );
-    }
-
-    // Set loading state BEFORE mutation to prevent race conditions
-    isProcessingRef.current = true;
-    setLoadingCase({ caseId, type: "both" });
-
-    toast.info("Initiating discharge call and email...");
-    triggerDischargeMutation.mutate({
-      caseId,
-      patientId,
-      patientData: {
-        ownerName,
-        ownerEmail: email,
-        ownerPhone: phone,
-      },
-      dischargeType: "both",
     });
   };
 
@@ -481,7 +405,6 @@ export function CasesDashboardClient() {
                 settings={settings}
                 onTriggerCall={(id) => handleTriggerCall(id, c.patient.id)}
                 onTriggerEmail={(id) => handleTriggerEmail(id, c.patient.id)}
-                onTriggerBoth={(id) => handleTriggerBoth(id, c.patient.id)}
                 onUpdatePatient={handleUpdatePatient}
                 testModeEnabled={settings.testModeEnabled}
                 testContactName={settings.testContactName}
