@@ -19,7 +19,7 @@
 
 ## High-Level Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                        VAPI Voice AI                             │
 │                     (External Service)                           │
@@ -89,7 +89,7 @@
 
 ### Overview
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                         API Endpoints                            │
 ├─────────────────────────────────────────────────────────────────┤
@@ -139,7 +139,7 @@ Content-Type: application/json
 
 **Data Flow**:
 
-```
+```text
 Request → Get call from DB → Retrieve RAG context → Enrich variables → Create VAPI call
 ```
 
@@ -249,7 +249,7 @@ Authorization: Bearer <token>
 
 ### Flow 1: Call Execution with RAG (Complete Flow)
 
-```
+```text
 ┌────────────┐
 │  QStash    │ Scheduled trigger
 │  Webhook   │
@@ -347,7 +347,7 @@ Authorization: Bearer <token>
 
 ### Flow 2: RAG Context Retrieval (Detailed)
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────┐
 │  retrieveCaseContextByCaseId(caseId)                         │
 │  (src/lib/vapi/rag/retrieval.ts)                           │
@@ -434,7 +434,7 @@ Total Time: 50-100ms (with parallel queries)
 
 ### Flow 3: Duplicate Patient Handling
 
-```
+```text
 ┌──────────────────────────────────────────────────────────────┐
 │  retrieveCaseContextByPhone(phone, petName)                  │
 │  (Fallback when case_id not available)                      │
@@ -495,7 +495,7 @@ Total Time: 50-100ms (with parallel queries)
 
 ### Sequence 1: Call Execution End-to-End
 
-```
+```text
 QStash      Execute API    RAG Service    Supabase DB    VAPI Service
   │             │              │               │              │
   │─────────────>│              │               │              │
@@ -559,7 +559,7 @@ QStash      Execute API    RAG Service    Supabase DB    VAPI Service
 
 ### Sequence 2: RAG Context Retrieval (Detailed)
 
-```
+```text
 Execute API   RAG Service    Patients     Discharge     SOAP      Prev Calls
                              Table        Summaries     Notes     Table
     │             │            │             │            │           │
@@ -609,7 +609,7 @@ Execute API   RAG Service    Patients     Discharge     SOAP      Prev Calls
 
 ### Query Performance Analysis
 
-```
+```text
 ┌────────────────────────────────────────────────────────────┐
 │  Query Performance (measured)                              │
 ├────────────────────────────────────────────────────────────┤
@@ -658,7 +658,7 @@ Execute API   RAG Service    Patients     Discharge     SOAP      Prev Calls
 
 ### Error Flow Diagram
 
-```
+```text
 ┌────────────────────────────────────────────────────────────┐
 │  retrieveCaseContextByCaseId(caseId)                       │
 └─────────────┬──────────────────────────────────────────────┘
@@ -768,7 +768,7 @@ Execute API   RAG Service    Patients     Discharge     SOAP      Prev Calls
 
 ### File Structure
 
-```
+```text
 src/
 ├── app/api/
 │   ├── calls/
