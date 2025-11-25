@@ -57,7 +57,12 @@ export const ExtractedPatientSchema = z.object({
   owner: z.object({
     name: z.string(), // Allow empty string if not present in notes
     phone: z.string().optional(),
-    email: z.string().email().optional().or(z.literal("")),
+    email: z
+      .string()
+      .email()
+      .optional()
+      .or(z.literal(""))
+      .or(z.literal("unknown")),
   }),
 });
 
