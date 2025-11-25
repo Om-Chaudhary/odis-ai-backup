@@ -42,11 +42,11 @@ export const casesRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       // Parse date or use today
       const selectedDate = input.date ? new Date(input.date) : new Date();
-      selectedDate.setHours(0, 0, 0, 0);
+      selectedDate.setUTCHours(0, 0, 0, 0);
 
       // Calculate end of day
       const endOfDay = new Date(selectedDate);
-      endOfDay.setHours(23, 59, 59, 999);
+      endOfDay.setUTCHours(23, 59, 59, 999);
 
       // Get total count - filter cases created on the selected date
       const { count } = await ctx.supabase
