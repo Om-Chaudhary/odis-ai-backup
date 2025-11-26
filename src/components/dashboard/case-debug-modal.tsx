@@ -162,11 +162,13 @@ export function CaseDebugModal({
             <Card>
               <CardHeader className="p-2 pb-1">
                 <CardTitle className="text-xs font-semibold">
-                  Discharge Summaries ({caseData.discharge_summaries.length})
+                  Discharge Summaries (
+                  {caseData.discharge_summaries?.length ?? 0})
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-2 pt-0">
-                {caseData.discharge_summaries.length === 0 ? (
+                {!caseData.discharge_summaries ||
+                caseData.discharge_summaries.length === 0 ? (
                   <p className="text-muted-foreground text-[10px] italic">
                     No discharge summaries
                   </p>

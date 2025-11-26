@@ -23,6 +23,9 @@ import {
   Loader2,
   Bug,
   PlayCircle,
+  FileText,
+  User,
+  Stethoscope,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { DischargeStatusBadge } from "./discharge-status-badge";
@@ -184,53 +187,42 @@ export function CaseCard({
               >
                 {caseData.patient.name}
               </h3>
-              <p className="text-muted-foreground mt-1 text-sm">
-                <span
-                  className={cn(
-                    isPlaceholder(caseData.patient.breed) &&
-                      "text-amber-600 italic dark:text-amber-500",
-                  )}
-                >
-                  {caseData.patient.breed}
-                </span>{" "}
-                •{" "}
-                <span
-                  className={cn(
-                    isPlaceholder(caseData.patient.species) &&
-                      "text-amber-600 italic dark:text-amber-500",
-                  )}
-                >
-                  {caseData.patient.species}
-                </span>
-              </p>
             </div>
           </div>
           <div className="flex flex-col items-end gap-1.5">
             <div className="flex items-center gap-2">
-              {settings && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 w-7 p-0"
-                  onClick={() => setIsDischargeDebugOpen(true)}
-                  title="Debug discharge variables"
-                >
-                  <PlayCircle className="h-3.5 w-3.5" />
-                  <span className="sr-only">Debug Discharge</span>
-                </Button>
-              )}
-              {backendCaseData && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 w-7 p-0"
-                  onClick={() => setIsDebugOpen(true)}
-                  title="Debug case data"
-                >
-                  <Bug className="h-3.5 w-3.5" />
-                  <span className="sr-only">Debug</span>
-                </Button>
-              )}
+              {/* Only show discharge debug if there's actual data to preview */}
+              {settings &&
+                (backendCaseData?.discharge_summaries?.[0] != null ||
+                  backendCaseData?.soap_notes?.[0] != null ||
+                  backendCaseData?.transcriptions?.[0] != null) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={() => setIsDischargeDebugOpen(true)}
+                    title="Debug discharge variables"
+                  >
+                    <PlayCircle className="h-3.5 w-3.5" />
+                    <span className="sr-only">Debug Discharge</span>
+                  </Button>
+                )}
+              {/* Only show debug button if there's actual case data */}
+              {backendCaseData &&
+                (backendCaseData.transcriptions?.[0] != null ||
+                  backendCaseData.soap_notes?.[0] != null ||
+                  backendCaseData.discharge_summaries?.[0] != null) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={() => setIsDebugOpen(true)}
+                    title="Debug case data"
+                  >
+                    <Bug className="h-3.5 w-3.5" />
+                    <span className="sr-only">Debug</span>
+                  </Button>
+                )}
               <div className="text-muted-foreground flex items-center gap-0.5 text-[10px] leading-none whitespace-nowrap">
                 <Calendar className="h-2.5 w-2.5" />
                 {formatDistanceToNow(new Date(caseData.created_at), {
@@ -354,89 +346,125 @@ export function CaseCard({
             </div>
           ) : (
             <div className="grid gap-2 text-sm">
-              <div className="flex items-center gap-2 font-medium">
-                <span
-                  className={cn(
-                    "truncate",
-                    isPlaceholder(caseData.patient.owner_name) &&
-                      "text-amber-600 italic dark:text-amber-500",
-                  )}
-                >
-                  {caseData.patient.owner_name}
-                </span>
-              </div>
-              <div className="text-muted-foreground flex items-center gap-2">
-                <Phone className="h-3.5 w-3.5" />
-                <span
-                  className={cn(
-                    "truncate",
-                    isPlaceholder(caseData.patient.owner_phone) &&
-                      "font-medium text-amber-600 italic dark:text-amber-500",
-                  )}
-                >
-                  {caseData.patient.owner_phone}
-                </span>
-              </div>
-              <div className="text-muted-foreground flex items-center gap-2">
-                <Mail className="h-3.5 w-3.5" />
-                <span
-                  className={cn(
-                    "truncate",
-                    isPlaceholder(caseData.patient.owner_email) &&
-                      "font-medium text-amber-600 italic dark:text-amber-500",
-                  )}
-                >
-                  {caseData.patient.owner_email}
-                </span>
-              </div>
+              {caseData.patient.owner_name &&
+                !isPlaceholder(caseData.patient.owner_name) && (
+                  <div className="flex items-center gap-2 font-medium">
+                    <User className="text-muted-foreground h-3.5 w-3.5" />
+                    <span className="truncate">
+                      {caseData.patient.owner_name}
+                    </span>
+                  </div>
+                )}
+              {caseData.patient.owner_phone &&
+                !isPlaceholder(caseData.patient.owner_phone) && (
+                  <div className="text-muted-foreground flex items-center gap-2">
+                    <Phone className="h-3.5 w-3.5" />
+                    <span className="truncate">
+                      {caseData.patient.owner_phone}
+                    </span>
+                  </div>
+                )}
+              {caseData.patient.owner_email &&
+                !isPlaceholder(caseData.patient.owner_email) && (
+                  <div className="text-muted-foreground flex items-center gap-2">
+                    <Mail className="h-3.5 w-3.5" />
+                    <span className="truncate">
+                      {caseData.patient.owner_email}
+                    </span>
+                  </div>
+                )}
+              {/* Show message if all contact info is missing */}
+              {!caseData.patient.owner_name &&
+                !caseData.patient.owner_phone &&
+                !caseData.patient.owner_email && (
+                  <div className="text-xs text-amber-600 italic dark:text-amber-500">
+                    No owner information available
+                  </div>
+                )}
             </div>
           )}
         </div>
 
-        <Separator />
-
-        {/* Status Section */}
-        <div className="space-y-3">
-          <h4 className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
-            Discharge Status
-          </h4>
-
-          <div className="grid gap-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm">
-                <Phone className="text-muted-foreground h-4 w-4" />
-                <span>Call</span>
+        {/* Case Content Section - Show if there's any data */}
+        {(backendCaseData?.transcriptions?.[0] != null ||
+          backendCaseData?.soap_notes?.[0] != null ||
+          backendCaseData?.discharge_summaries?.[0] != null) && (
+          <>
+            <Separator />
+            <div className="space-y-3">
+              <h4 className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
+                Case Data
+              </h4>
+              <div className="grid gap-2 text-sm">
+                {backendCaseData?.transcriptions?.[0] && (
+                  <div className="flex items-center gap-2">
+                    <FileText className="text-muted-foreground h-3.5 w-3.5" />
+                    <span className="text-muted-foreground text-xs">
+                      Transcription available
+                    </span>
+                  </div>
+                )}
+                {backendCaseData?.soap_notes?.[0] && (
+                  <div className="flex items-center gap-2">
+                    <Stethoscope className="text-muted-foreground h-3.5 w-3.5" />
+                    <span className="text-muted-foreground text-xs">
+                      SOAP note available
+                    </span>
+                  </div>
+                )}
+                {backendCaseData?.discharge_summaries?.[0] && (
+                  <div className="flex items-center gap-2">
+                    <FileText className="text-muted-foreground h-3.5 w-3.5" />
+                    <span className="text-muted-foreground text-xs">
+                      Discharge summary available
+                    </span>
+                  </div>
+                )}
               </div>
-              {caseData.scheduled_discharge_call ? (
-                <DischargeStatusBadge
-                  status={caseData.scheduled_discharge_call.status}
-                  type="call"
-                />
-              ) : (
-                <span className="text-muted-foreground text-xs italic">
-                  Not scheduled
-                </span>
-              )}
             </div>
+          </>
+        )}
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm">
-                <Mail className="text-muted-foreground h-4 w-4" />
-                <span>Email</span>
+        {/* Discharge Status Section - Only show if there are scheduled items */}
+        {(caseData.scheduled_discharge_call != null ||
+          caseData.scheduled_discharge_email != null) && (
+          <>
+            <Separator />
+            <div className="space-y-3">
+              <h4 className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
+                Discharge Status
+              </h4>
+
+              <div className="grid gap-3">
+                {caseData.scheduled_discharge_call && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="text-muted-foreground h-4 w-4" />
+                      <span>Call</span>
+                    </div>
+                    <DischargeStatusBadge
+                      status={caseData.scheduled_discharge_call.status}
+                      type="call"
+                    />
+                  </div>
+                )}
+
+                {caseData.scheduled_discharge_email && (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mail className="text-muted-foreground h-4 w-4" />
+                      <span>Email</span>
+                    </div>
+                    <DischargeStatusBadge
+                      status={caseData.scheduled_discharge_email.status}
+                      type="email"
+                    />
+                  </div>
+                )}
               </div>
-              {caseData.scheduled_discharge_email ? (
-                <DischargeStatusBadge
-                  status={caseData.scheduled_discharge_email.status}
-                  type="email"
-                />
-              ) : (
-                <span className="text-muted-foreground text-xs italic">
-                  Not scheduled
-                </span>
-              )}
             </div>
-          </div>
-        </div>
+          </>
+        )}
       </CardContent>
 
       <CardFooter className="bg-muted/30 p-4">
