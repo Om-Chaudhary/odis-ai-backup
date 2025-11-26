@@ -12,6 +12,41 @@ export type EmailStatus = "queued" | "sent" | "failed" | "cancelled" | null;
 export type CaseStatus = "draft" | "ongoing" | "completed" | "reviewed";
 
 /**
+ * Vapi Call Analysis Structure
+ */
+export interface CallAnalysis {
+  summary?: string;
+  structuredData?: Record<string, unknown>;
+  successEvaluation?: string | boolean;
+  sentiment?: string;
+}
+
+/**
+ * Detailed Call Information
+ */
+export interface CallDetails {
+  id: string;
+  status: CallStatus;
+  scheduled_for: string | null;
+  started_at: string | null;
+  ended_at: string | null;
+  duration_seconds: number | null;
+  recording_url: string | null;
+  transcript: string | null;
+  call_analysis: CallAnalysis | null;
+  cost: number | null;
+  customer_phone: string | null;
+  case_id: string | null;
+  ended_reason?: string | null;
+  patient?: {
+    id: string;
+    name: string;
+    species: string;
+    owner_name: string;
+  };
+}
+
+/**
  * Backend response type - matches Supabase relation structure
  */
 export interface BackendCase {

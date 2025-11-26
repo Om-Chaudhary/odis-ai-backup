@@ -11,6 +11,7 @@ import {
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Separator } from "~/components/ui/separator";
+import Link from "next/link";
 import {
   Phone,
   Mail,
@@ -437,16 +438,21 @@ export function CaseCard({
 
               <div className="grid gap-3">
                 {caseData.scheduled_discharge_call && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Phone className="text-muted-foreground h-4 w-4" />
-                      <span>Call</span>
+                  <Link
+                    href={`/calls/${caseData.scheduled_discharge_call.id}`}
+                    className="hover:bg-muted/50 -m-1 block rounded-md p-1 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Phone className="text-muted-foreground h-4 w-4" />
+                        <span>Call</span>
+                      </div>
+                      <DischargeStatusBadge
+                        status={caseData.scheduled_discharge_call.status}
+                        type="call"
+                      />
                     </div>
-                    <DischargeStatusBadge
-                      status={caseData.scheduled_discharge_call.status}
-                      type="call"
-                    />
-                  </div>
+                  </Link>
                 )}
 
                 {caseData.scheduled_discharge_email && (
