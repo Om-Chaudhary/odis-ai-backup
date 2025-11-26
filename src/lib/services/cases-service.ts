@@ -673,7 +673,7 @@ export const CasesService = {
         },
       );
     } else {
-      scheduledAt = options.scheduledAt ?? new Date();
+      scheduledAt = options.scheduledAt ?? new Date(Date.now() + 60 * 2000);
     }
 
     // Check if a call already exists for this case
