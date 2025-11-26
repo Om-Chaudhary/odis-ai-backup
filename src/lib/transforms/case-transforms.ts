@@ -18,7 +18,7 @@ export function transformBackendCaseToDashboardCase(
   }
 
   // Get latest discharge summary (most recent)
-  const dischargeSummary = backendCase.discharge_summaries.sort((a, b) => {
+  const dischargeSummary = backendCase.discharge_summaries?.sort((a, b) => {
     const dateA = new Date(a.created_at).getTime();
     const dateB = new Date(b.created_at).getTime();
     return dateB - dateA; // Most recent first
@@ -62,7 +62,7 @@ export function transformBackendCaseToDashboardCase(
     scheduled_discharge_call: scheduledCall
       ? {
           id: scheduledCall.id,
-          status: scheduledCall.status,
+          status: scheduledCall.status ?? "queued", // Default to "queued" if null
           scheduled_for: scheduledCall.scheduled_for,
           ended_at: scheduledCall.ended_at,
           vapi_call_id: scheduledCall.vapi_call_id,
@@ -71,7 +71,7 @@ export function transformBackendCaseToDashboardCase(
     scheduled_discharge_email: scheduledEmail
       ? {
           id: scheduledEmail.id,
-          status: scheduledEmail.status,
+          status: scheduledEmail.status ?? "queued", // Default to "queued" if null
           scheduled_for: scheduledEmail.scheduled_for,
           sent_at: scheduledEmail.sent_at,
         }

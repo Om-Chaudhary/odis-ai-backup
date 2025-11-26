@@ -28,10 +28,21 @@ export interface BackendCase {
     owner_email: string | null;
     owner_phone: string;
   }>;
-  discharge_summaries: Array<{
+  discharge_summaries?: Array<{
     id: string;
     content: string;
     created_at: string;
+  }>;
+  soap_notes?: Array<{
+    id: string;
+    subjective?: string | null;
+    objective?: string | null;
+    assessment?: string | null;
+    plan?: string | null;
+  }>;
+  transcriptions?: Array<{
+    id: string;
+    transcript: string;
   }>;
   scheduled_discharge_calls: Array<{
     id: string;
