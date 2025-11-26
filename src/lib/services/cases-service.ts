@@ -2,6 +2,8 @@ import { type NormalizedEntities } from "~/lib/validators/scribe";
 import { extractEntitiesWithRetry } from "~/lib/ai/normalize-scribe";
 import { scheduleCallExecution } from "~/lib/qstash/client";
 import { buildDynamicVariables } from "~/lib/vapi/knowledge-base";
+import { extractVapiVariablesFromEntities } from "~/lib/vapi/extract-variables";
+import { normalizeVariablesToSnakeCase } from "~/lib/vapi/utils";
 import { env } from "~/env";
 
 // Type imports
@@ -297,6 +299,10 @@ export const CasesService = {
     case: CaseRow;
     entities: NormalizedEntities | undefined;
     patient: PatientRow | PatientRow[] | null;
+    soapNotes: Database["public"]["Tables"]["soap_notes"]["Row"][] | null;
+    dischargeSummaries:
+      | Database["public"]["Tables"]["discharge_summaries"]["Row"][]
+      | null;
     metadata: CaseMetadata;
   } | null> {
     const { data: caseData, error } = await supabase
@@ -304,7 +310,9 @@ export const CasesService = {
       .select(
         `
                 *,
-                patient:patients(*)
+                patient:patients(*),
+                soap_notes(*),
+                discharge_summaries(*)
             `,
       )
       .eq("id", caseId)
@@ -321,10 +329,24 @@ export const CasesService = {
       ? (caseData.patient[0] ?? null)
       : (caseData.patient ?? null);
 
+    const soapNotes = Array.isArray(caseData.soap_notes)
+      ? caseData.soap_notes
+      : caseData.soap_notes
+        ? [caseData.soap_notes]
+        : null;
+
+    const dischargeSummaries = Array.isArray(caseData.discharge_summaries)
+      ? caseData.discharge_summaries
+      : caseData.discharge_summaries
+        ? [caseData.discharge_summaries]
+        : null;
+
     return {
       case: caseData,
       entities,
       patient,
+      soapNotes,
+      dischargeSummaries,
       metadata,
     };
   },
@@ -339,17 +361,213 @@ export const CasesService = {
     options: CaseScheduleOptions,
   ): Promise<ScheduledDischargeCall> {
     // 1. Fetch Case Data to build variables
-    const caseInfo = await this.getCaseWithEntities(supabase, caseId);
+    let caseInfo = await this.getCaseWithEntities(supabase, caseId);
     if (!caseInfo) throw new Error("Case not found");
 
-    const entities = caseInfo.entities;
+    let entities = caseInfo.entities;
+
+    // 1a. Enrich entities with database values (database takes priority)
+    if (entities && caseInfo.patient) {
+      // Handle both single patient and array of patients
+      const patient = Array.isArray(caseInfo.patient)
+        ? caseInfo.patient[0]
+        : caseInfo.patient;
+
+      if (patient) {
+        // Enrich patient demographics from database
+        if (patient.species)
+          entities.patient.species =
+            patient.species as NormalizedEntities["patient"]["species"];
+        if (patient.breed) entities.patient.breed = patient.breed;
+        if (patient.sex)
+          entities.patient.sex =
+            patient.sex as NormalizedEntities["patient"]["sex"];
+        if (patient.weight_kg)
+          entities.patient.weight = `${patient.weight_kg} kg`;
+
+        // Enrich owner information from database
+        if (patient.owner_name)
+          entities.patient.owner.name = patient.owner_name;
+        if (patient.owner_phone)
+          entities.patient.owner.phone = patient.owner_phone;
+        if (patient.owner_email)
+          entities.patient.owner.email = patient.owner_email;
+
+        console.log(
+          "[CasesService] Enriched entities with patient database values",
+          {
+            caseId,
+            enrichedFields: {
+              species: patient.species,
+              breed: patient.breed,
+              sex: patient.sex,
+              weight: patient.weight_kg,
+              ownerName: patient.owner_name,
+              ownerPhone: patient.owner_phone,
+            },
+          },
+        );
+      }
+    }
+
+    // 1b. Enrich with client instructions from SOAP notes or discharge summaries
+    if (entities) {
+      let clientInstructions: string | null = null;
+
+      // Priority 1: SOAP notes client_instructions
+      if (caseInfo.soapNotes && caseInfo.soapNotes.length > 0) {
+        const latestSoapNote = caseInfo.soapNotes[0];
+        if (latestSoapNote?.client_instructions) {
+          clientInstructions = latestSoapNote.client_instructions;
+          console.log(
+            "[CasesService] Using client instructions from SOAP notes",
+            {
+              caseId,
+              source: "soap_notes.client_instructions",
+              preview: clientInstructions.substring(0, 100),
+            },
+          );
+        } else if (latestSoapNote?.plan) {
+          // Priority 2: SOAP notes plan
+          clientInstructions = latestSoapNote.plan;
+          console.log("[CasesService] Using plan from SOAP notes", {
+            caseId,
+            source: "soap_notes.plan",
+            preview: clientInstructions.substring(0, 100),
+          });
+        }
+      }
+
+      // Priority 3: Discharge summaries content
+      if (
+        !clientInstructions &&
+        caseInfo.dischargeSummaries &&
+        caseInfo.dischargeSummaries.length > 0
+      ) {
+        const latestDischargeSummary = caseInfo.dischargeSummaries[0];
+        if (latestDischargeSummary?.content) {
+          clientInstructions = latestDischargeSummary.content;
+          console.log("[CasesService] Using discharge summary content", {
+            caseId,
+            source: "discharge_summaries.content",
+            preview: clientInstructions.substring(0, 100),
+          });
+        }
+      }
+
+      // Add to entities if found
+      if (clientInstructions) {
+        entities.clinical.followUpInstructions = clientInstructions;
+        console.log(
+          "[CasesService] Enriched entities with client instructions",
+          {
+            caseId,
+            instructionsLength: clientInstructions.length,
+          },
+        );
+      }
+    }
+
+    // 2. Fallback: If entities are missing or incomplete, try extracting from transcription
+    if (!entities || this.isEntitiesIncomplete(entities)) {
+      console.log(
+        "[CasesService] Entities missing or incomplete, attempting extraction from transcription",
+        {
+          caseId,
+          hasEntities: !!entities,
+          missingFields: entities
+            ? this.getMissingEntityFields(entities)
+            : ["all"],
+        },
+      );
+
+      // Fetch transcription text
+      const { data: transcriptionData } = await supabase
+        .from("transcriptions")
+        .select("transcript")
+        .eq("case_id", caseId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (transcriptionData?.transcript) {
+        try {
+          // Extract entities from transcription
+          const extractedEntities = await extractEntitiesWithRetry(
+            transcriptionData.transcript,
+            "transcript",
+          );
+
+          // Merge with existing entities (if any), with extracted taking precedence
+          entities = entities
+            ? this.mergeEntitiesForExtraction(entities, extractedEntities)
+            : extractedEntities;
+
+          // Update case metadata with enriched entities
+          const updatedMetadata: CaseMetadata = {
+            ...caseInfo.metadata,
+            entities,
+          };
+
+          await supabase
+            .from("cases")
+            .update({ metadata: updatedMetadata })
+            .eq("id", caseId);
+
+          console.log(
+            "[CasesService] Successfully extracted and merged entities from transcription",
+            {
+              caseId,
+              extractedFields: this.getExtractedFields(extractedEntities),
+            },
+          );
+
+          // Refresh case info with updated entities
+          caseInfo = await this.getCaseWithEntities(supabase, caseId);
+          if (!caseInfo) throw new Error("Case not found after update");
+          entities = caseInfo.entities;
+        } catch (extractionError) {
+          console.error(
+            "[CasesService] Failed to extract entities from transcription",
+            {
+              caseId,
+              error: extractionError,
+            },
+          );
+          // Continue with existing entities (or throw if none)
+          if (!entities) {
+            throw new Error(
+              "Case has no entities and extraction from transcription failed",
+            );
+          }
+        }
+      } else {
+        // No transcription available
+        if (!entities) {
+          throw new Error(
+            "Case has no entities and no transcription available for extraction",
+          );
+        }
+        console.warn(
+          "[CasesService] Entities incomplete but no transcription found",
+          {
+            caseId,
+            missingFields: this.getMissingEntityFields(entities),
+          },
+        );
+      }
+    }
+
     if (!entities) throw new Error("Case has no entities");
 
-    // 2. Build Dynamic Variables
+    // 2. Extract AI-extracted variables (species, breed, age, diagnoses, etc.)
+    const extractedVars = extractVapiVariablesFromEntities(entities);
+
+    // 3. Build Dynamic Variables with knowledge base integration
     const variablesResult = buildDynamicVariables({
       baseVariables: {
         clinicName: options.clinicName ?? "Your Clinic",
-        agentName: "Sarah",
+        agentName: options.agentName ?? "Sarah",
         petName: entities.patient.name,
         ownerName: entities.patient.owner.name,
         appointmentDate: "today",
@@ -363,82 +581,389 @@ export const CasesService = {
           ?.map((m) => `${m.name} ${m.dosage ?? ""} ${m.frequency ?? ""}`)
           .join(", "),
         nextSteps: entities.clinical.followUpInstructions,
+
+        // Include species/breed/age if available from entities
+        // Note: petSpecies is limited to "dog" | "cat" | "other" for buildDynamicVariables
+        // but extractedVars will include full patient_species (dog, cat, bird, rabbit, etc.)
+        petSpecies:
+          entities.patient.species === "dog" ||
+          entities.patient.species === "cat"
+            ? entities.patient.species
+            : entities.patient.species
+              ? "other"
+              : undefined,
+        petAge: entities.patient.age
+          ? (() => {
+              const num = parseFloat(
+                entities.patient.age.replace(/[^0-9.]/g, ""),
+              );
+              return isNaN(num) ? undefined : num;
+            })()
+          : undefined,
+        petWeight: entities.patient.weight
+          ? (() => {
+              const num = parseFloat(
+                entities.patient.weight.replace(/[^0-9.]/g, ""),
+              );
+              return isNaN(num) ? undefined : num;
+            })()
+          : undefined,
       },
       strict: false,
       useDefaults: true,
     });
 
-    // 3. Insert Scheduled Call
-    const scheduledAt = options.scheduledAt ?? new Date();
+    // 4. Merge extracted variables with buildDynamicVariables result
+    // Extracted vars (snake_case) are merged first, then buildDynamicVariables vars (camelCase)
+    // are normalized and merged, with manual vars taking precedence
+    const mergedVariables = {
+      ...extractedVars, // Already snake_case (patient_species, patient_breed, etc.)
+      ...normalizeVariablesToSnakeCase(
+        variablesResult.variables as unknown as Record<string, unknown>,
+      ), // Convert camelCase to snake_case
+    };
 
+    // 3. Insert Scheduled Call
     const assistantId = options.assistantId ?? env.VAPI_ASSISTANT_ID;
     const phoneNumberId = options.phoneNumberId ?? env.VAPI_PHONE_NUMBER_ID;
 
-    const customerPhone = entities.patient.owner.phone ?? "";
-    if (!customerPhone) {
+    // Get customer phone (with test mode support)
+    let customerPhone = entities.patient.owner.phone ?? "";
+
+    // Check if test mode is enabled
+    const { data: userSettings } = await supabase
+      .from("users")
+      .select("test_mode_enabled, test_contact_phone, test_contact_name")
+      .eq("id", userId)
+      .single();
+
+    const testModeEnabled = userSettings?.test_mode_enabled ?? false;
+
+    if (testModeEnabled) {
+      if (!userSettings?.test_contact_phone) {
+        throw new Error(
+          "Test mode is enabled but test contact phone is not configured",
+        );
+      }
+
+      console.log(
+        "[CasesService] Test mode enabled - redirecting call to test contact",
+        {
+          originalPhone: customerPhone,
+          testPhone: userSettings.test_contact_phone,
+          testContactName: userSettings.test_contact_name,
+        },
+      );
+
+      customerPhone = userSettings.test_contact_phone;
+    } else if (!customerPhone) {
       throw new Error("Patient phone number is required to schedule call");
     }
 
-    const scheduledCallInsert = {
-      user_id: userId,
-      case_id: caseId,
-      assistant_id: assistantId ?? "",
-      phone_number_id: phoneNumberId ?? "",
-      customer_phone: customerPhone,
-      scheduled_for: scheduledAt.toISOString(),
-      status: "queued" as const,
-      dynamic_variables: variablesResult.variables,
-      metadata: {
-        notes: options.notes,
-        retry_count: 0,
-        max_retries: 3,
-      } as ScheduledCallMetadata,
-    };
-
-    const { data: scheduledCall, error } = await supabase
-      .from("scheduled_discharge_calls")
-      .insert(scheduledCallInsert)
-      .select()
-      .single();
-
-    if (error || !scheduledCall) {
-      throw new Error(
-        `Failed to schedule call: ${error?.message ?? "Unknown error"}`,
+    // Determine scheduled time
+    // In test mode, schedule for 1 minute from now
+    // Otherwise, use provided time or default to immediate
+    let scheduledAt: Date;
+    if (testModeEnabled) {
+      scheduledAt = new Date(Date.now() + 60 * 1000); // 1 minute from now
+      console.log(
+        "[CasesService] Test mode enabled - scheduling for 1 minute from now",
+        {
+          scheduledAt: scheduledAt.toISOString(),
+        },
       );
+    } else {
+      scheduledAt = options.scheduledAt ?? new Date();
     }
 
-    // 4. Trigger QStash
-    const qstashMessageId = await scheduleCallExecution(
-      scheduledCall.id,
-      scheduledAt,
-    );
-
-    // Update with QStash ID
-    const updatedMetadata: ScheduledCallMetadata = {
-      ...(scheduledCall.metadata as ScheduledCallMetadata),
-      qstash_message_id: qstashMessageId,
-    };
-
-    const { error: updateError } = await supabase
+    // Check if a call already exists for this case
+    // If it exists, update it instead of creating a new one to persist status
+    const { data: existingCall } = await supabase
       .from("scheduled_discharge_calls")
-      .update({
-        metadata: updatedMetadata,
-      })
-      .eq("id", scheduledCall.id);
+      .select("id, status, vapi_call_id, scheduled_for")
+      .eq("case_id", caseId)
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (updateError) {
-      console.error(
-        "[CasesService] Error updating QStash message ID:",
-        updateError,
+    let scheduledCall: ScheduledDischargeCall;
+
+    if (existingCall) {
+      // Update existing call - preserve status if call is already in progress/completed
+      // Only update to "queued" if status is null or if explicitly resetting
+      const currentStatus = existingCall.status;
+      const shouldPreserveStatus =
+        currentStatus &&
+        (currentStatus === "in_progress" ||
+          currentStatus === "ringing" ||
+          currentStatus === "completed");
+
+      const updateData = {
+        assistant_id: assistantId ?? "",
+        phone_number_id: phoneNumberId ?? "",
+        customer_phone: customerPhone,
+        scheduled_for: scheduledAt.toISOString(),
+        status: shouldPreserveStatus
+          ? (currentStatus as
+              | "queued"
+              | "in_progress"
+              | "ringing"
+              | "completed"
+              | "failed"
+              | "canceled")
+          : ("queued" as const),
+        dynamic_variables: mergedVariables,
+        metadata: {
+          notes: options.notes,
+          retry_count: 0,
+          max_retries: 3,
+        } as ScheduledCallMetadata,
+      };
+
+      const { data: updatedCall, error: updateError } = await supabase
+        .from("scheduled_discharge_calls")
+        .update(updateData)
+        .eq("id", existingCall.id)
+        .select()
+        .single();
+
+      if (updateError || !updatedCall) {
+        throw new Error(
+          `Failed to update existing call: ${updateError?.message ?? "Unknown error"}`,
+        );
+      }
+
+      scheduledCall = updatedCall as ScheduledDischargeCall;
+
+      console.log("[CasesService] Updated existing call for case", {
+        caseId,
+        callId: scheduledCall.id,
+        preservedStatus: shouldPreserveStatus,
+        status: scheduledCall.status,
+      });
+
+      // If updating an existing call, only reschedule QStash if the scheduled time changed
+      // or if there's no existing QStash message ID
+      const existingMetadata = scheduledCall.metadata;
+      const hasExistingQStashId = !!existingMetadata?.qstash_message_id;
+      const scheduledTimeChanged =
+        existingCall.scheduled_for !== scheduledAt.toISOString();
+
+      if (!hasExistingQStashId || scheduledTimeChanged) {
+        // Reschedule QStash for the updated time
+        const qstashMessageId = await scheduleCallExecution(
+          scheduledCall.id,
+          scheduledAt,
+        );
+
+        const updatedMetadata: ScheduledCallMetadata = {
+          ...existingMetadata,
+          qstash_message_id: qstashMessageId,
+        };
+
+        const { error: updateError } = await supabase
+          .from("scheduled_discharge_calls")
+          .update({
+            metadata: updatedMetadata,
+          })
+          .eq("id", scheduledCall.id);
+
+        if (updateError) {
+          console.error(
+            "[CasesService] Error updating QStash message ID:",
+            updateError,
+          );
+          // Don't throw - call was updated successfully
+        }
+      }
+    } else {
+      // Create new call
+      const scheduledCallInsert = {
+        user_id: userId,
+        case_id: caseId,
+        assistant_id: assistantId ?? "",
+        phone_number_id: phoneNumberId ?? "",
+        customer_phone: customerPhone,
+        scheduled_for: scheduledAt.toISOString(),
+        status: "queued" as const,
+        dynamic_variables: mergedVariables, // Use merged variables with AI-extracted data
+        metadata: {
+          notes: options.notes,
+          retry_count: 0,
+          max_retries: 3,
+        } as ScheduledCallMetadata,
+      };
+
+      const { data: newCall, error } = await supabase
+        .from("scheduled_discharge_calls")
+        .insert(scheduledCallInsert)
+        .select()
+        .single();
+
+      if (error || !newCall) {
+        throw new Error(
+          `Failed to schedule call: ${error?.message ?? "Unknown error"}`,
+        );
+      }
+
+      scheduledCall = newCall as ScheduledDischargeCall;
+
+      // 4. Trigger QStash for new call
+      const qstashMessageId = await scheduleCallExecution(
+        scheduledCall.id,
+        scheduledAt,
       );
-      // Don't throw - call was scheduled successfully
+
+      // Update with QStash ID
+      const updatedMetadata: ScheduledCallMetadata = {
+        ...(scheduledCall.metadata ?? {}),
+        qstash_message_id: qstashMessageId,
+      };
+
+      const { error: updateError } = await supabase
+        .from("scheduled_discharge_calls")
+        .update({
+          metadata: updatedMetadata,
+        })
+        .eq("id", scheduledCall.id);
+
+      if (updateError) {
+        console.error(
+          "[CasesService] Error updating QStash message ID:",
+          updateError,
+        );
+        // Don't throw - call was scheduled successfully
+      }
     }
 
-    return scheduledCall as ScheduledDischargeCall;
+    return scheduledCall;
   },
 
   /**
-   * Merge logic for entities
+   * Check if entities are incomplete (missing critical fields like species, breed, age)
+   */
+  isEntitiesIncomplete(entities: NormalizedEntities): boolean {
+    const missingFields = this.getMissingEntityFields(entities);
+    // Consider incomplete if missing species, breed, age, or weight
+    return (
+      missingFields.includes("species") ||
+      missingFields.includes("breed") ||
+      missingFields.includes("age") ||
+      missingFields.includes("weight")
+    );
+  },
+
+  /**
+   * Get list of missing entity fields
+   */
+  getMissingEntityFields(entities: NormalizedEntities): string[] {
+    const missing: string[] = [];
+    if (!entities.patient.species || entities.patient.species === "unknown") {
+      missing.push("species");
+    }
+    if (!entities.patient.breed) {
+      missing.push("breed");
+    }
+    if (!entities.patient.age) {
+      missing.push("age");
+    }
+    if (!entities.patient.weight) {
+      missing.push("weight");
+    }
+    return missing;
+  },
+
+  /**
+   * Get list of successfully extracted fields (for logging)
+   */
+  getExtractedFields(entities: NormalizedEntities): string[] {
+    const extracted: string[] = [];
+    if (entities.patient.species && entities.patient.species !== "unknown") {
+      extracted.push("species");
+    }
+    if (entities.patient.breed) {
+      extracted.push("breed");
+    }
+    if (entities.patient.age) {
+      extracted.push("age");
+    }
+    if (entities.patient.weight) {
+      extracted.push("weight");
+    }
+    return extracted;
+  },
+
+  /**
+   * Merge two entity sets, with extractedEntities taking precedence for missing fields
+   * Used when re-extracting from transcription to fill in missing data
+   */
+  mergeEntitiesForExtraction(
+    existing: NormalizedEntities,
+    extracted: NormalizedEntities,
+  ): NormalizedEntities {
+    return {
+      ...existing,
+      patient: {
+        ...existing.patient,
+        // Use extracted values if existing is missing/unknown
+        species:
+          existing.patient.species && existing.patient.species !== "unknown"
+            ? existing.patient.species
+            : (extracted.patient.species ?? existing.patient.species),
+        breed: existing.patient.breed ?? extracted.patient.breed,
+        age: existing.patient.age ?? extracted.patient.age,
+        sex:
+          existing.patient.sex && existing.patient.sex !== "unknown"
+            ? existing.patient.sex
+            : (extracted.patient.sex ?? existing.patient.sex),
+        weight: existing.patient.weight ?? extracted.patient.weight,
+        owner: {
+          ...existing.patient.owner,
+          name: existing.patient.owner.name ?? extracted.patient.owner.name,
+          phone: existing.patient.owner.phone ?? extracted.patient.owner.phone,
+          email: existing.patient.owner.email ?? extracted.patient.owner.email,
+        },
+      },
+      clinical: {
+        ...existing.clinical,
+        // Merge clinical data, preferring extracted for missing fields
+        chiefComplaint:
+          existing.clinical.chiefComplaint ?? extracted.clinical.chiefComplaint,
+        visitReason:
+          existing.clinical.visitReason ?? extracted.clinical.visitReason,
+        presentingSymptoms:
+          (existing.clinical.presentingSymptoms?.length ?? 0 > 0)
+            ? existing.clinical.presentingSymptoms
+            : extracted.clinical.presentingSymptoms,
+        diagnoses:
+          (existing.clinical.diagnoses?.length ?? 0 > 0)
+            ? existing.clinical.diagnoses
+            : extracted.clinical.diagnoses,
+        medications:
+          (existing.clinical.medications?.length ?? 0 > 0)
+            ? existing.clinical.medications
+            : extracted.clinical.medications,
+        followUpInstructions:
+          existing.clinical.followUpInstructions ??
+          extracted.clinical.followUpInstructions,
+        recheckRequired:
+          existing.clinical.recheckRequired ??
+          extracted.clinical.recheckRequired,
+      },
+      // Keep existing caseType and confidence, but update extractedAt
+      caseType: existing.caseType ?? extracted.caseType,
+      confidence: existing.confidence,
+      extractedAt: extracted.extractedAt ?? existing.extractedAt,
+      warnings: [
+        ...(existing.warnings ?? []),
+        ...(extracted.warnings ?? []),
+      ].filter((w, i, arr) => arr.indexOf(w) === i), // Remove duplicates
+    };
+  },
+
+  /**
+   * Merge logic for entities (used during case creation/update)
    */
   mergeEntities(
     current: NormalizedEntities | undefined,

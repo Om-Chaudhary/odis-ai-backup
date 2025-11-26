@@ -59,6 +59,7 @@ export interface CaseScheduleOptions {
   clinicName?: string;
   clinicPhone?: string;
   emergencyPhone?: string;
+  agentName?: string;
   summaryContent?: string;
 }
 

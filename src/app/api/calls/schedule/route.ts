@@ -100,8 +100,62 @@ export async function POST(request: NextRequest) {
       scheduledFor: validated.scheduledFor?.toISOString(),
     });
 
-    // Determine scheduled time (default to immediate if not provided)
-    const scheduledFor = validated.scheduledFor ?? new Date();
+    // Fetch user settings (always needed for test mode check)
+    let clinicName = validated.clinicName;
+    let clinicPhone = validated.clinicPhone;
+    let emergencyPhone = validated.emergencyPhone;
+    let agentName = validated.agentName ?? "Sarah";
+    let testModeEnabled = false;
+
+    // Fetch user settings to check test mode and fill in missing clinic settings
+    const { data: userSettings, error: userError } = await supabase
+      .from("users")
+      .select(
+        "clinic_name, clinic_phone, first_name, test_mode_enabled, test_contact_phone",
+      )
+      .eq("id", user.id)
+      .single();
+
+    if (!userError && userSettings) {
+      // Fill in missing clinic settings
+      if (!clinicName || !clinicPhone || !emergencyPhone) {
+        clinicName = clinicName ?? userSettings.clinic_name ?? "Your Clinic";
+        clinicPhone = clinicPhone ?? userSettings.clinic_phone ?? "";
+        emergencyPhone =
+          emergencyPhone ?? userSettings.clinic_phone ?? clinicPhone ?? "";
+      }
+
+      // Use user's first name as agent name if not provided
+      if (!validated.agentName && userSettings.first_name) {
+        agentName = userSettings.first_name;
+      }
+
+      // Handle test mode (always check, even if clinic settings are provided)
+      testModeEnabled = userSettings.test_mode_enabled ?? false;
+      if (testModeEnabled && userSettings.test_contact_phone) {
+        console.log("[SCHEDULE_CALL] Test mode enabled - overriding phone", {
+          originalPhone: validated.phoneNumber,
+          testPhone: userSettings.test_contact_phone,
+        });
+        validated.phoneNumber = userSettings.test_contact_phone;
+      }
+    }
+
+    // Determine scheduled time
+    // In test mode, schedule for 1 minute from now
+    // Otherwise, use provided time or default to immediate
+    let scheduledFor: Date;
+    if (testModeEnabled) {
+      scheduledFor = new Date(Date.now() + 60 * 1000); // 1 minute from now
+      console.log(
+        "[SCHEDULE_CALL] Test mode enabled - scheduling for 1 minute from now",
+        {
+          scheduledFor: scheduledFor.toISOString(),
+        },
+      );
+    } else {
+      scheduledFor = validated.scheduledFor ?? new Date();
+    }
 
     // Validate scheduled time is in the future
     if (!isFutureTime(scheduledFor)) {
@@ -132,11 +186,11 @@ export async function POST(request: NextRequest) {
       call_type: validated.callType,
 
       // Agent/clinic information
-      agent_name: validated.agentName ?? "Sarah",
+      agent_name: agentName,
       vet_name: validated.vetName ?? "",
-      clinic_name: validated.clinicName,
-      clinic_phone: validated.clinicPhone,
-      emergency_phone: validated.emergencyPhone,
+      clinic_name: clinicName,
+      clinic_phone: clinicPhone,
+      emergency_phone: emergencyPhone,
 
       // Clinical details
       discharge_summary_content: validated.dischargeSummary,
@@ -164,6 +218,7 @@ export async function POST(request: NextRequest) {
       callVariables,
       variableCount: Object.keys(callVariables).length,
       callType: validated.callType,
+      testModeActive: body.metadata?.test_mode_enabled === true,
     });
 
     // Store scheduled call in database

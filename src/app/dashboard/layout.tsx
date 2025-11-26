@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -64,9 +64,8 @@ export default function DashboardLayout({
         />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 px-4 py-10 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl space-y-6">{children}</div>
+      <div className="relative z-10 flex flex-1 flex-col gap-4 p-4">
+        <div className="mx-auto w-full max-w-6xl space-y-6">{children}</div>
       </div>
     </div>
   );

@@ -989,6 +989,7 @@ export type Database = {
           created_at: string;
           default_discharge_template_id: string | null;
           email: string | null;
+          emergency_phone: string | null;
           first_name: string | null;
           id: string;
           last_name: string | null;
@@ -997,6 +998,10 @@ export type Database = {
           pims_credentials: Json | null;
           pims_systems: Json | null;
           role: Database["public"]["Enums"]["user_role"] | null;
+          test_contact_email: string | null;
+          test_contact_name: string | null;
+          test_contact_phone: string | null;
+          test_mode_enabled: boolean | null;
           updated_at: string;
         };
         Insert: {
@@ -1007,6 +1012,7 @@ export type Database = {
           created_at?: string;
           default_discharge_template_id?: string | null;
           email?: string | null;
+          emergency_phone?: string | null;
           first_name?: string | null;
           id?: string;
           last_name?: string | null;
@@ -1015,6 +1021,10 @@ export type Database = {
           pims_credentials?: Json | null;
           pims_systems?: Json | null;
           role?: Database["public"]["Enums"]["user_role"] | null;
+          test_contact_email?: string | null;
+          test_contact_name?: string | null;
+          test_contact_phone?: string | null;
+          test_mode_enabled?: boolean | null;
           updated_at?: string;
         };
         Update: {
@@ -1025,6 +1035,7 @@ export type Database = {
           created_at?: string;
           default_discharge_template_id?: string | null;
           email?: string | null;
+          emergency_phone?: string | null;
           first_name?: string | null;
           id?: string;
           last_name?: string | null;
@@ -1033,6 +1044,10 @@ export type Database = {
           pims_credentials?: Json | null;
           pims_systems?: Json | null;
           role?: Database["public"]["Enums"]["user_role"] | null;
+          test_contact_email?: string | null;
+          test_contact_name?: string | null;
+          test_contact_phone?: string | null;
+          test_mode_enabled?: boolean | null;
           updated_at?: string;
         };
         Relationships: [
@@ -1383,7 +1398,7 @@ export type CompositeTypes<
     schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never,
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals;
 }
