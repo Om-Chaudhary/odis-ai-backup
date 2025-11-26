@@ -292,8 +292,7 @@ export const casesRouter = createTRPCRouter({
 
         // Use absolute URL for server-side fetch (required for Next.js server components)
         // In development, use localhost; in production, use the configured site URL or default to production
-        const baseUrl =
-          process.env.NEXT_PUBLIC_SITE_URL ??
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ??
           (process.env.NODE_ENV === "development"
             ? "http://localhost:3000"
             : "https://odisai.net");
@@ -320,19 +319,63 @@ export const casesRouter = createTRPCRouter({
 
         console.log("[triggerDischarge] Response status:", response.status);
 
+        const result = await response.json().catch(() => ({}));
+
+        // Handle partial success: if the orchestrator returns 500 but critical steps succeeded
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
           console.error(
             "[triggerDischarge] Error response:",
-            JSON.stringify(errorData, null, 2),
+            JSON.stringify(result, null, 2),
           );
+
+          // Check if the intended actions actually succeeded despite the error
+          const intendedCall = input.dischargeType === "call" ||
+            input.dischargeType === "both";
+          const intendedEmail = input.dischargeType === "email" ||
+            input.dischargeType === "both";
+
+          const callSucceeded = result.data?.call?.callId;
+          const emailSucceeded = result.data?.emailSchedule?.emailId;
+
+          // If the intended actions succeeded, treat as partial success
+          const criticalActionSucceeded = (intendedCall && callSucceeded) ??
+            (intendedEmail && emailSucceeded);
+
+          if (criticalActionSucceeded) {
+            console.log(
+              "[triggerDischarge] Partial success - critical actions completed despite orchestrator error",
+              {
+                callSucceeded: !!callSucceeded,
+                emailSucceeded: !!emailSucceeded,
+                failedSteps: result.data?.failedSteps,
+              },
+            );
+
+            // Add failed steps as warnings
+            if (
+              result.data?.failedSteps && result.data.failedSteps.length > 0
+            ) {
+              warnings.push(
+                `Some optional steps failed: ${
+                  (result.data.failedSteps as string[]).join(", ")
+                }`,
+              );
+            }
+
+            return {
+              success: true,
+              warnings,
+              data: result.data,
+              partialSuccess: true, // Flag to indicate not all steps succeeded
+            };
+          }
+
+          // Critical actions failed - throw error
           throw new Error(
-            errorData.error ??
+            result.error ??
               `HTTP ${response.status}: Failed to trigger discharge`,
           );
         }
-
-        const result = await response.json();
 
         return {
           success: true,
@@ -343,10 +386,9 @@ export const casesRouter = createTRPCRouter({
         console.error("[triggerDischarge] Exception:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message:
-            error instanceof Error
-              ? error.message
-              : "Failed to trigger discharge",
+          message: error instanceof Error
+            ? error.message
+            : "Failed to trigger discharge",
         });
       }
     }),
@@ -372,10 +414,9 @@ export const casesRouter = createTRPCRouter({
     }
 
     // Build vet name from first and last name
-    const vetName =
-      data?.first_name && data?.last_name
-        ? `${data.first_name} ${data.last_name}`
-        : "";
+    const vetName = data?.first_name && data?.last_name
+      ? `${data.first_name} ${data.last_name}`
+      : "";
 
     return {
       clinicName: data?.clinic_name ?? "",
@@ -528,11 +569,10 @@ export const casesRouter = createTRPCRouter({
         filteredData = data.filter((c) => {
           const patientName =
             (c.patient as unknown as { name?: string })?.name?.toLowerCase() ??
-            "";
-          const ownerName =
-            (
-              c.patient as unknown as { owner_name?: string }
-            )?.owner_name?.toLowerCase() ?? "";
+              "";
+          const ownerName = (
+            c.patient as unknown as { owner_name?: string }
+          )?.owner_name?.toLowerCase() ?? "";
           return (
             patientName.includes(searchLower) || ownerName.includes(searchLower)
           );
@@ -780,10 +820,10 @@ export const casesRouter = createTRPCRouter({
       byStatus: {
         draft: statusData?.filter((c) => c.status === "draft").length ?? 0,
         ongoing: statusData?.filter((c) => c.status === "ongoing").length ?? 0,
-        completed:
-          statusData?.filter((c) => c.status === "completed").length ?? 0,
-        reviewed:
-          statusData?.filter((c) => c.status === "reviewed").length ?? 0,
+        completed: statusData?.filter((c) => c.status === "completed").length ??
+          0,
+        reviewed: statusData?.filter((c) => c.status === "reviewed").length ??
+          0,
       },
       byType: {
         checkup: typeData?.filter((c) => c.type === "checkup").length ?? 0,
