@@ -299,6 +299,10 @@ export const CasesService = {
     case: CaseRow;
     entities: NormalizedEntities | undefined;
     patient: PatientRow | PatientRow[] | null;
+    soapNotes: Database["public"]["Tables"]["soap_notes"]["Row"][] | null;
+    dischargeSummaries:
+      | Database["public"]["Tables"]["discharge_summaries"]["Row"][]
+      | null;
     metadata: CaseMetadata;
   } | null> {
     const { data: caseData, error } = await supabase
@@ -306,7 +310,9 @@ export const CasesService = {
       .select(
         `
                 *,
-                patient:patients(*)
+                patient:patients(*),
+                soap_notes(*),
+                discharge_summaries(*)
             `,
       )
       .eq("id", caseId)
@@ -323,10 +329,24 @@ export const CasesService = {
       ? (caseData.patient[0] ?? null)
       : (caseData.patient ?? null);
 
+    const soapNotes = Array.isArray(caseData.soap_notes)
+      ? caseData.soap_notes
+      : caseData.soap_notes
+        ? [caseData.soap_notes]
+        : null;
+
+    const dischargeSummaries = Array.isArray(caseData.discharge_summaries)
+      ? caseData.discharge_summaries
+      : caseData.discharge_summaries
+        ? [caseData.discharge_summaries]
+        : null;
+
     return {
       case: caseData,
       entities,
       patient,
+      soapNotes,
+      dischargeSummaries,
       metadata,
     };
   },
@@ -345,6 +365,108 @@ export const CasesService = {
     if (!caseInfo) throw new Error("Case not found");
 
     let entities = caseInfo.entities;
+
+    // 1a. Enrich entities with database values (database takes priority)
+    if (entities && caseInfo.patient) {
+      // Handle both single patient and array of patients
+      const patient = Array.isArray(caseInfo.patient)
+        ? caseInfo.patient[0]
+        : caseInfo.patient;
+
+      if (patient) {
+        // Enrich patient demographics from database
+        if (patient.species)
+          entities.patient.species =
+            patient.species as NormalizedEntities["patient"]["species"];
+        if (patient.breed) entities.patient.breed = patient.breed;
+        if (patient.sex)
+          entities.patient.sex =
+            patient.sex as NormalizedEntities["patient"]["sex"];
+        if (patient.weight_kg)
+          entities.patient.weight = `${patient.weight_kg} kg`;
+
+        // Enrich owner information from database
+        if (patient.owner_name)
+          entities.patient.owner.name = patient.owner_name;
+        if (patient.owner_phone)
+          entities.patient.owner.phone = patient.owner_phone;
+        if (patient.owner_email)
+          entities.patient.owner.email = patient.owner_email;
+
+        console.log(
+          "[CasesService] Enriched entities with patient database values",
+          {
+            caseId,
+            enrichedFields: {
+              species: patient.species,
+              breed: patient.breed,
+              sex: patient.sex,
+              weight: patient.weight_kg,
+              ownerName: patient.owner_name,
+              ownerPhone: patient.owner_phone,
+            },
+          },
+        );
+      }
+    }
+
+    // 1b. Enrich with client instructions from SOAP notes or discharge summaries
+    if (entities) {
+      let clientInstructions: string | null = null;
+
+      // Priority 1: SOAP notes client_instructions
+      if (caseInfo.soapNotes && caseInfo.soapNotes.length > 0) {
+        const latestSoapNote = caseInfo.soapNotes[0];
+        if (latestSoapNote?.client_instructions) {
+          clientInstructions = latestSoapNote.client_instructions;
+          console.log(
+            "[CasesService] Using client instructions from SOAP notes",
+            {
+              caseId,
+              source: "soap_notes.client_instructions",
+              preview: clientInstructions.substring(0, 100),
+            },
+          );
+        } else if (latestSoapNote?.plan) {
+          // Priority 2: SOAP notes plan
+          clientInstructions = latestSoapNote.plan;
+          console.log("[CasesService] Using plan from SOAP notes", {
+            caseId,
+            source: "soap_notes.plan",
+            preview: clientInstructions.substring(0, 100),
+          });
+        }
+      }
+
+      // Priority 3: Discharge summaries content
+      if (
+        !clientInstructions &&
+        caseInfo.dischargeSummaries &&
+        caseInfo.dischargeSummaries.length > 0
+      ) {
+        const latestDischargeSummary = caseInfo.dischargeSummaries[0];
+        if (latestDischargeSummary?.content) {
+          clientInstructions = latestDischargeSummary.content;
+          console.log("[CasesService] Using discharge summary content", {
+            caseId,
+            source: "discharge_summaries.content",
+            preview: clientInstructions.substring(0, 100),
+          });
+        }
+      }
+
+      // Add to entities if found
+      if (clientInstructions) {
+        entities.clinical.followUpInstructions = clientInstructions;
+        console.log(
+          "[CasesService] Enriched entities with client instructions",
+          {
+            caseId,
+            instructionsLength: clientInstructions.length,
+          },
+        );
+      }
+    }
 
     // 2. Fallback: If entities are missing or incomplete, try extracting from transcription
     if (!entities || this.isEntitiesIncomplete(entities)) {
@@ -554,62 +676,168 @@ export const CasesService = {
       scheduledAt = options.scheduledAt ?? new Date();
     }
 
-    const scheduledCallInsert = {
-      user_id: userId,
-      case_id: caseId,
-      assistant_id: assistantId ?? "",
-      phone_number_id: phoneNumberId ?? "",
-      customer_phone: customerPhone,
-      scheduled_for: scheduledAt.toISOString(),
-      status: "queued" as const,
-      dynamic_variables: mergedVariables, // Use merged variables with AI-extracted data
-      metadata: {
-        notes: options.notes,
-        retry_count: 0,
-        max_retries: 3,
-      } as ScheduledCallMetadata,
-    };
-
-    const { data: scheduledCall, error } = await supabase
+    // Check if a call already exists for this case
+    // If it exists, update it instead of creating a new one to persist status
+    const { data: existingCall } = await supabase
       .from("scheduled_discharge_calls")
-      .insert(scheduledCallInsert)
-      .select()
-      .single();
+      .select("id, status, vapi_call_id, scheduled_for")
+      .eq("case_id", caseId)
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (error || !scheduledCall) {
-      throw new Error(
-        `Failed to schedule call: ${error?.message ?? "Unknown error"}`,
+    let scheduledCall: ScheduledDischargeCall;
+
+    if (existingCall) {
+      // Update existing call - preserve status if call is already in progress/completed
+      // Only update to "queued" if status is null or if explicitly resetting
+      const currentStatus = existingCall.status;
+      const shouldPreserveStatus =
+        currentStatus &&
+        (currentStatus === "in_progress" ||
+          currentStatus === "ringing" ||
+          currentStatus === "completed");
+
+      const updateData = {
+        assistant_id: assistantId ?? "",
+        phone_number_id: phoneNumberId ?? "",
+        customer_phone: customerPhone,
+        scheduled_for: scheduledAt.toISOString(),
+        status: shouldPreserveStatus
+          ? (currentStatus as
+              | "queued"
+              | "in_progress"
+              | "ringing"
+              | "completed"
+              | "failed"
+              | "canceled")
+          : ("queued" as const),
+        dynamic_variables: mergedVariables,
+        metadata: {
+          notes: options.notes,
+          retry_count: 0,
+          max_retries: 3,
+        } as ScheduledCallMetadata,
+      };
+
+      const { data: updatedCall, error: updateError } = await supabase
+        .from("scheduled_discharge_calls")
+        .update(updateData)
+        .eq("id", existingCall.id)
+        .select()
+        .single();
+
+      if (updateError || !updatedCall) {
+        throw new Error(
+          `Failed to update existing call: ${updateError?.message ?? "Unknown error"}`,
+        );
+      }
+
+      scheduledCall = updatedCall as ScheduledDischargeCall;
+
+      console.log("[CasesService] Updated existing call for case", {
+        caseId,
+        callId: scheduledCall.id,
+        preservedStatus: shouldPreserveStatus,
+        status: scheduledCall.status,
+      });
+
+      // If updating an existing call, only reschedule QStash if the scheduled time changed
+      // or if there's no existing QStash message ID
+      const existingMetadata = scheduledCall.metadata;
+      const hasExistingQStashId = !!existingMetadata?.qstash_message_id;
+      const scheduledTimeChanged =
+        existingCall.scheduled_for !== scheduledAt.toISOString();
+
+      if (!hasExistingQStashId || scheduledTimeChanged) {
+        // Reschedule QStash for the updated time
+        const qstashMessageId = await scheduleCallExecution(
+          scheduledCall.id,
+          scheduledAt,
+        );
+
+        const updatedMetadata: ScheduledCallMetadata = {
+          ...existingMetadata,
+          qstash_message_id: qstashMessageId,
+        };
+
+        const { error: updateError } = await supabase
+          .from("scheduled_discharge_calls")
+          .update({
+            metadata: updatedMetadata,
+          })
+          .eq("id", scheduledCall.id);
+
+        if (updateError) {
+          console.error(
+            "[CasesService] Error updating QStash message ID:",
+            updateError,
+          );
+          // Don't throw - call was updated successfully
+        }
+      }
+    } else {
+      // Create new call
+      const scheduledCallInsert = {
+        user_id: userId,
+        case_id: caseId,
+        assistant_id: assistantId ?? "",
+        phone_number_id: phoneNumberId ?? "",
+        customer_phone: customerPhone,
+        scheduled_for: scheduledAt.toISOString(),
+        status: "queued" as const,
+        dynamic_variables: mergedVariables, // Use merged variables with AI-extracted data
+        metadata: {
+          notes: options.notes,
+          retry_count: 0,
+          max_retries: 3,
+        } as ScheduledCallMetadata,
+      };
+
+      const { data: newCall, error } = await supabase
+        .from("scheduled_discharge_calls")
+        .insert(scheduledCallInsert)
+        .select()
+        .single();
+
+      if (error || !newCall) {
+        throw new Error(
+          `Failed to schedule call: ${error?.message ?? "Unknown error"}`,
+        );
+      }
+
+      scheduledCall = newCall as ScheduledDischargeCall;
+
+      // 4. Trigger QStash for new call
+      const qstashMessageId = await scheduleCallExecution(
+        scheduledCall.id,
+        scheduledAt,
       );
+
+      // Update with QStash ID
+      const updatedMetadata: ScheduledCallMetadata = {
+        ...(scheduledCall.metadata ?? {}),
+        qstash_message_id: qstashMessageId,
+      };
+
+      const { error: updateError } = await supabase
+        .from("scheduled_discharge_calls")
+        .update({
+          metadata: updatedMetadata,
+        })
+        .eq("id", scheduledCall.id);
+
+      if (updateError) {
+        console.error(
+          "[CasesService] Error updating QStash message ID:",
+          updateError,
+        );
+        // Don't throw - call was scheduled successfully
+      }
     }
 
-    // 4. Trigger QStash
-    const qstashMessageId = await scheduleCallExecution(
-      scheduledCall.id,
-      scheduledAt,
-    );
-
-    // Update with QStash ID
-    const updatedMetadata: ScheduledCallMetadata = {
-      ...(scheduledCall.metadata as ScheduledCallMetadata),
-      qstash_message_id: qstashMessageId,
-    };
-
-    const { error: updateError } = await supabase
-      .from("scheduled_discharge_calls")
-      .update({
-        metadata: updatedMetadata,
-      })
-      .eq("id", scheduledCall.id);
-
-    if (updateError) {
-      console.error(
-        "[CasesService] Error updating QStash message ID:",
-        updateError,
-      );
-      // Don't throw - call was scheduled successfully
-    }
-
-    return scheduledCall as ScheduledDischargeCall;
+    return scheduledCall;
   },
 
   /**
