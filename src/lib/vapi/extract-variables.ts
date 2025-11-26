@@ -113,6 +113,12 @@ export function extractVapiVariablesFromEntities(
       variables.medication_names = clinical.medications
         .map((m) => m.name)
         .join(", ");
+
+      // Extract frequency for medication reminders (use first medication as representative)
+      const firstMed = clinical.medications[0];
+      if (firstMed?.frequency) {
+        variables.medication_frequency = firstMed.frequency;
+      }
     }
 
     // Treatments and procedures

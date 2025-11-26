@@ -107,6 +107,10 @@ async function handler(req: NextRequest) {
         if (caseInfo?.entities) {
           console.log("[EXECUTE_CALL] Enriching with fresh case data", {
             callId: call.case_id,
+            casePatientName: caseInfo.entities.patient.name,
+            caseOwnerName: caseInfo.entities.patient.owner.name,
+            storedPetName: dynamicVariables?.pet_name,
+            storedOwnerName: dynamicVariables?.owner_name,
           });
 
           // Extract AI-extracted variables (species, breed, age, diagnoses, etc.)
@@ -123,8 +127,22 @@ async function handler(req: NextRequest) {
               clinicName:
                 (dynamicVariables?.clinic_name as string) ?? "Your Clinic",
               agentName: (dynamicVariables?.agent_name as string) ?? "Sarah",
-              petName: caseInfo.entities.patient.name,
-              ownerName: caseInfo.entities.patient.owner.name,
+              // Fallback to stored pet_name if case entities have empty/unknown patient name
+              petName:
+                caseInfo.entities.patient.name &&
+                caseInfo.entities.patient.name !== "unknown" &&
+                caseInfo.entities.patient.name.trim() !== ""
+                  ? caseInfo.entities.patient.name
+                  : ((dynamicVariables?.pet_name as string | undefined) ??
+                    "unknown"),
+              // Fallback to stored owner_name if case entities have empty/unknown owner name
+              ownerName:
+                caseInfo.entities.patient.owner.name &&
+                caseInfo.entities.patient.owner.name !== "unknown" &&
+                caseInfo.entities.patient.owner.name.trim() !== ""
+                  ? caseInfo.entities.patient.owner.name
+                  : ((dynamicVariables?.owner_name as string | undefined) ??
+                    "unknown"),
               appointmentDate: (dynamicVariables?.appointment_date ??
                 "today") as string,
               callType:
@@ -265,6 +283,45 @@ async function handler(req: NextRequest) {
         Object.keys(normalizedVariables).length > 0
           ? {
               variableValues: normalizedVariables,
+              // CALL TRANSFER CONFIGURATION
+              // ===========================
+              // To enable call transfers, configure the "transferCall" function in your VAPI assistant:
+              //
+              // 1. In VAPI Dashboard → Assistants → [Your Assistant] → Functions
+              // 2. Add a "transferCall" function with the following configuration:
+              //    {
+              //      "type": "function",
+              //      "function": {
+              //        "name": "transferCall",
+              //        "description": "Transfer the call to the clinic or emergency line",
+              //        "parameters": {
+              //          "type": "object",
+              //          "properties": {
+              //            "destination": {
+              //              "type": "string",
+              //              "enum": ["clinic", "emergency"],
+              //              "description": "Where to transfer the call"
+              //            }
+              //          },
+              //          "required": ["destination"]
+              //        }
+              //      }
+              //    }
+              // 3. Configure transfer destinations in the assistant:
+              //    - clinic → {{clinic_phone}} variable
+              //    - emergency → {{emergency_phone}} variable
+              //
+              // The system prompt (VAPI_SYSTEM_PROMPT.txt) is already designed to identify
+              // when transfers are needed and guide the conversation appropriately.
+              //
+              // Once configured, the assistant will be able to:
+              // - Identify urgent/emergency situations during the call
+              // - Offer to transfer the owner to the clinic or emergency line
+              // - Execute the transfer seamlessly when the owner agrees
+              //
+              // Note: Call transfers are handled by VAPI's infrastructure and do not
+              // require additional code changes here. The variables below (clinic_phone,
+              // emergency_phone) will be used by the assistant for transfer destinations.
             }
           : undefined,
     };
@@ -287,7 +344,10 @@ async function handler(req: NextRequest) {
         discharge_summary_content:
           normalizedVariables.discharge_summary_content &&
           typeof normalizedVariables.discharge_summary_content === "string"
-            ? `${normalizedVariables.discharge_summary_content.substring(0, 50)}...`
+            ? `${normalizedVariables.discharge_summary_content.substring(
+                0,
+                50,
+              )}...`
             : undefined,
       },
     });

@@ -14,7 +14,8 @@ export function DischargeStatusBadge({
   type: _type,
   className,
 }: DischargeStatusBadgeProps) {
-  if (!status) return null;
+  // Default to "queued" if status is null/undefined to ensure badge is always visible
+  const displayStatus = status ?? "queued";
 
   const getStatusConfig = (s: string) => {
     switch (s) {
@@ -71,7 +72,7 @@ export function DischargeStatusBadge({
     }
   };
 
-  const config = getStatusConfig(status);
+  const config = getStatusConfig(displayStatus);
   const Icon = config.icon;
 
   return (
@@ -83,7 +84,7 @@ export function DischargeStatusBadge({
         <Icon
           className={cn(
             "h-3.5 w-3.5",
-            status === "in_progress" && "animate-spin",
+            displayStatus === "in_progress" && "animate-spin",
           )}
         />
       )}
