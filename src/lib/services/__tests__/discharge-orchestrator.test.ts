@@ -72,8 +72,64 @@ describe("DischargeOrchestrator", () => {
     vi.clearAllMocks();
 
     mockUser = createMockUser({ id: "user-123" });
-    mockSupabase = {
-      from: vi.fn().mockReturnValue({
+
+    // Create a more comprehensive mock that handles different query patterns
+    const createTableMock = (tableName: string) => {
+      if (tableName === "users") {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: {
+                  clinic_name: "Test Clinic",
+                  clinic_phone: "555-123-4567",
+                  clinic_email: "clinic@test.com",
+                  first_name: "Test",
+                  last_name: "User",
+                  test_mode_enabled: false,
+                  test_contact_name: null,
+                  test_contact_phone: null,
+                },
+                error: null,
+              }),
+            }),
+          }),
+        };
+      }
+
+      if (tableName === "scheduled_discharge_emails") {
+        return {
+          insert: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: {
+                  id: "email-123",
+                  user_id: "user-123",
+                  case_id: "case-123",
+                  recipient_email: "owner@example.com",
+                  recipient_name: "John",
+                  subject: "Test Subject",
+                  html_content: "<p>Test</p>",
+                  text_content: "Test",
+                  scheduled_for: new Date().toISOString(),
+                  status: "queued",
+                  metadata: {},
+                },
+                error: null,
+              }),
+            }),
+          }),
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null }),
+          }),
+          delete: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({ error: null }),
+          }),
+        };
+      }
+
+      // Default mock for other tables (discharge_summaries, etc.)
+      return {
         insert: vi.fn().mockReturnValue({
           select: vi.fn().mockReturnValue({
             single: vi.fn().mockResolvedValue({
@@ -103,7 +159,11 @@ describe("DischargeOrchestrator", () => {
         delete: vi.fn().mockReturnValue({
           eq: vi.fn().mockResolvedValue({ error: null }),
         }),
-      }),
+      };
+    };
+
+    mockSupabase = {
+      from: vi.fn((tableName: string) => createTableMock(tableName)),
     } as unknown as SupabaseClientType;
 
     orchestrator = new DischargeOrchestrator(mockSupabase, mockUser);
@@ -158,6 +218,8 @@ describe("DischargeOrchestrator", () => {
           patient: { name: "Max", owner: { name: "John" } },
           clinical: {},
         } as any,
+        soapNotes: null,
+        dischargeSummaries: null,
         metadata: {} as any,
       });
 
@@ -219,6 +281,8 @@ describe("DischargeOrchestrator", () => {
         case: { id: "case-123" } as any,
         patient: { name: "Max" } as any,
         entities: {} as any,
+        soapNotes: null,
+        dischargeSummaries: null,
         metadata: {} as any,
       });
 
@@ -271,6 +335,8 @@ describe("DischargeOrchestrator", () => {
         case: { id: "case-123" } as any,
         patient: { name: "Max", owner_name: "John" } as any,
         entities: {} as any,
+        soapNotes: null,
+        dischargeSummaries: null,
         metadata: {} as any,
       });
 
@@ -387,6 +453,8 @@ describe("DischargeOrchestrator", () => {
         case: { id: "case-123" } as any,
         patient: {} as any,
         entities: {} as any,
+        soapNotes: null,
+        dischargeSummaries: null,
         metadata: {} as any,
       });
 
@@ -424,6 +492,8 @@ describe("DischargeOrchestrator", () => {
         case: { id: "case-123" } as any,
         patient: { name: "Max" } as any,
         entities: {} as any,
+        soapNotes: null,
+        dischargeSummaries: null,
         metadata: {} as any,
       });
 
