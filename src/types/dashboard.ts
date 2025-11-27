@@ -109,6 +109,7 @@ export interface DischargeSettings {
   testContactName?: string;
   testContactEmail?: string;
   testContactPhone?: string;
+  voicemailDetectionEnabled?: boolean;
 }
 
 export interface PatientUpdateInput {

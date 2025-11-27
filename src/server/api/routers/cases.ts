@@ -404,7 +404,7 @@ export const casesRouter = createTRPCRouter({
     const { data, error } = await ctx.supabase
       .from("users")
       .select(
-        "clinic_name, clinic_phone, clinic_email, emergency_phone, first_name, last_name, test_mode_enabled, test_contact_name, test_contact_email, test_contact_phone",
+        "clinic_name, clinic_phone, clinic_email, emergency_phone, first_name, last_name, test_mode_enabled, test_contact_name, test_contact_email, test_contact_phone, voicemail_detection_enabled",
       )
       .eq("id", ctx.user.id)
       .single();
@@ -433,6 +433,7 @@ export const casesRouter = createTRPCRouter({
       testContactName: data?.test_contact_name ?? "",
       testContactEmail: data?.test_contact_email ?? "",
       testContactPhone: data?.test_contact_phone ?? "",
+      voicemailDetectionEnabled: data?.voicemail_detection_enabled ?? false,
     };
   }),
 
@@ -450,6 +451,7 @@ export const casesRouter = createTRPCRouter({
         testContactName: z.string().optional(),
         testContactEmail: z.string().optional(),
         testContactPhone: z.string().optional(),
+        voicemailDetectionEnabled: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -479,6 +481,10 @@ export const casesRouter = createTRPCRouter({
       }
       if (input.testContactPhone !== undefined) {
         updateData.test_contact_phone = input.testContactPhone;
+      }
+      if (input.voicemailDetectionEnabled !== undefined) {
+        updateData.voicemail_detection_enabled =
+          input.voicemailDetectionEnabled;
       }
 
       const { error } = await ctx.supabase

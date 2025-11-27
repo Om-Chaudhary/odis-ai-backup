@@ -273,6 +273,41 @@ async function handler(req: NextRequest) {
       );
     }
 
+    // Fetch user's voicemail detection setting from database
+    const { data: userData } = await supabase
+      .from("users")
+      .select("voicemail_detection_enabled")
+      .eq("id", call.user_id)
+      .single();
+
+    const voicemailEnabled = userData?.voicemail_detection_enabled ?? false;
+
+    console.log("[EXECUTE_CALL] Voicemail detection setting", {
+      callId,
+      userId: call.user_id,
+      voicemailEnabled,
+    });
+
+    // Prepare voicemail tool configuration (if enabled)
+    const voicemailTool = voicemailEnabled
+      ? [
+          {
+            type: "voicemail" as const,
+            function: {
+              name: "leave_voicemail",
+              description:
+                "Leave a voicemail message when voicemail is detected",
+            },
+            messages: [
+              {
+                type: "request-start",
+                content: `Hi {{owner_name}}, this is {{agent_name}} from {{clinic_name}}. I'm checking in on {{pet_name}} after the appointment on {{appointment_date}}. Everything looked great from our end. If you have any questions or concerns about {{pet_name}}, please give us a call at {{clinic_phone}}. For emergencies, you can reach {{emergency_phone}} anytime. Take care!`,
+              },
+            ],
+          },
+        ]
+      : undefined;
+
     // Prepare VAPI call parameters
     // Use normalized snake_case variables that match the system prompt placeholders
     const vapiParams = {
@@ -280,48 +315,16 @@ async function handler(req: NextRequest) {
       assistantId,
       phoneNumberId,
       assistantOverrides:
-        Object.keys(normalizedVariables).length > 0
+        Object.keys(normalizedVariables).length > 0 || voicemailTool
           ? {
-              variableValues: normalizedVariables,
-              // CALL TRANSFER CONFIGURATION
-              // ===========================
-              // To enable call transfers, configure the "transferCall" function in your VAPI assistant:
-              //
-              // 1. In VAPI Dashboard → Assistants → [Your Assistant] → Functions
-              // 2. Add a "transferCall" function with the following configuration:
-              //    {
-              //      "type": "function",
-              //      "function": {
-              //        "name": "transferCall",
-              //        "description": "Transfer the call to the clinic or emergency line",
-              //        "parameters": {
-              //          "type": "object",
-              //          "properties": {
-              //            "destination": {
-              //              "type": "string",
-              //              "enum": ["clinic", "emergency"],
-              //              "description": "Where to transfer the call"
-              //            }
-              //          },
-              //          "required": ["destination"]
-              //        }
-              //      }
-              //    }
-              // 3. Configure transfer destinations in the assistant:
-              //    - clinic → {{clinic_phone}} variable
-              //    - emergency → {{emergency_phone}} variable
-              //
-              // The system prompt (VAPI_SYSTEM_PROMPT.txt) is already designed to identify
-              // when transfers are needed and guide the conversation appropriately.
-              //
-              // Once configured, the assistant will be able to:
-              // - Identify urgent/emergency situations during the call
-              // - Offer to transfer the owner to the clinic or emergency line
-              // - Execute the transfer seamlessly when the owner agrees
-              //
-              // Note: Call transfers are handled by VAPI's infrastructure and do not
-              // require additional code changes here. The variables below (clinic_phone,
-              // emergency_phone) will be used by the assistant for transfer destinations.
+              variableValues:
+                Object.keys(normalizedVariables).length > 0
+                  ? normalizedVariables
+                  : undefined,
+              // VOICEMAIL CONFIGURATION (controlled by feature flag)
+              // ====================================================
+              // Toggle voicemail detection in src/flags.ts or via Vercel Edge Config
+              tools: voicemailTool,
             }
           : undefined,
     };

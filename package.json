@@ -66,6 +66,7 @@
     "date-fns-tz": "^3.2.0",
     "embla-carousel-auto-scroll": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
+    "flags": "^4.0.2",
     "framer-motion": "^12.23.24",
     "geist": "^1.5.1",
     "html-escaper": "^3.0.3",

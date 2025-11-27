@@ -375,23 +375,29 @@ export const CasesService = {
 
       if (patient) {
         // Enrich patient demographics from database
-        if (patient.species)
+        if (patient.species) {
           entities.patient.species =
             patient.species as NormalizedEntities["patient"]["species"];
+        }
         if (patient.breed) entities.patient.breed = patient.breed;
-        if (patient.sex)
+        if (patient.sex) {
           entities.patient.sex =
             patient.sex as NormalizedEntities["patient"]["sex"];
-        if (patient.weight_kg)
+        }
+        if (patient.weight_kg) {
           entities.patient.weight = `${patient.weight_kg} kg`;
+        }
 
         // Enrich owner information from database
-        if (patient.owner_name)
+        if (patient.owner_name) {
           entities.patient.owner.name = patient.owner_name;
-        if (patient.owner_phone)
+        }
+        if (patient.owner_phone) {
           entities.patient.owner.phone = patient.owner_phone;
-        if (patient.owner_email)
+        }
+        if (patient.owner_email) {
           entities.patient.owner.email = patient.owner_email;
+        }
 
         console.log(
           "[CasesService] Enriched entities with patient database values",
@@ -673,7 +679,7 @@ export const CasesService = {
         },
       );
     } else {
-      scheduledAt = options.scheduledAt ?? new Date();
+      scheduledAt = options.scheduledAt ?? new Date(Date.now() + 60 * 2000);
     }
 
     // Check if a call already exists for this case
@@ -730,7 +736,9 @@ export const CasesService = {
 
       if (updateError || !updatedCall) {
         throw new Error(
-          `Failed to update existing call: ${updateError?.message ?? "Unknown error"}`,
+          `Failed to update existing call: ${
+            updateError?.message ?? "Unknown error"
+          }`,
         );
       }
 

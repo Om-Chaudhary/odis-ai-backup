@@ -42,6 +42,18 @@ export interface CreatePhoneCallParams {
   /** Dynamic variables to pass to the assistant */
   assistantOverrides?: {
     variableValues?: Record<string, unknown>;
+    /** Tools to enable/override for this call (e.g., voicemail tool) */
+    tools?: Array<{
+      type: "voicemail";
+      function: {
+        name: string;
+        description: string;
+      };
+      messages?: Array<{
+        type: string;
+        content: string;
+      }>;
+    }>;
   };
 }
 

@@ -9,6 +9,7 @@ import { EmptyState } from "./empty-state";
 import { DayPaginationControls } from "./day-pagination-controls";
 import { DischargeSettingsPanel } from "./discharge-settings-panel";
 import { TestModeBanner } from "./test-mode-banner";
+import { VoicemailFlagToggle } from "./voicemail-flag-toggle";
 import { api } from "~/trpc/client";
 import type {
   DashboardCase,
@@ -133,6 +134,7 @@ export function CasesDashboardClient() {
     testContactName: "",
     testContactEmail: "",
     testContactPhone: "",
+    voicemailDetectionEnabled: false,
   };
 
   // Helper to check if a value is a valid (non-placeholder) contact
@@ -259,6 +261,14 @@ export function CasesDashboardClient() {
       testContactName: newSettings.testContactName ?? undefined,
       testContactEmail: newSettings.testContactEmail ?? undefined,
       testContactPhone: newSettings.testContactPhone ?? undefined,
+      voicemailDetectionEnabled: newSettings.voicemailDetectionEnabled,
+    });
+  };
+
+  const handleToggleVoicemail = (enabled: boolean) => {
+    handleSaveSettings({
+      ...settings,
+      voicemailDetectionEnabled: enabled,
     });
   };
 
@@ -287,6 +297,13 @@ export function CasesDashboardClient() {
       <TestModeBanner
         settings={settings}
         onUpdate={handleSaveSettings}
+        isLoading={updateSettingsMutation.isPending}
+      />
+
+      {/* Voicemail Detection Toggle */}
+      <VoicemailFlagToggle
+        enabled={settings.voicemailDetectionEnabled ?? false}
+        onToggle={handleToggleVoicemail}
         isLoading={updateSettingsMutation.isPending}
       />
 
