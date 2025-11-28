@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import { Checkbox } from "~/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -23,10 +24,10 @@ import {
   ChevronDown,
   FileText,
   FileCheck,
-  Circle,
   CheckCircle2,
   Database,
   Tag,
+  CircleDot,
 } from "lucide-react";
 import { cn } from "~/lib/utils";
 import type { QuickFilterId } from "./quick-filters";
@@ -199,7 +200,7 @@ export function CasesFilterBar({
                       htmlFor="status-filter"
                       className="flex items-center gap-1.5 text-xs font-medium text-slate-600"
                     >
-                      <Circle className="h-3 w-3" />
+                      <CircleDot className="h-3 w-3" />
                       Status
                     </Label>
                     <Select
@@ -256,115 +257,67 @@ export function CasesFilterBar({
                   </div>
 
                   <div className="space-y-3">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newFilters = new Set(quickFilters);
-                        if (newFilters.has("missingDischarge")) {
-                          newFilters.delete("missingDischarge");
-                        } else {
-                          newFilters.add("missingDischarge");
-                          newFilters.delete("missingSoap");
-                        }
-                        onQuickFiltersChange(newFilters);
-                      }}
+                    <label
+                      htmlFor="missing-discharge"
                       className={cn(
-                        "flex w-full items-center space-x-3 rounded-lg border p-3 text-left transition-colors hover:bg-slate-50",
+                        "flex w-full cursor-pointer items-center space-x-3 rounded-lg border p-3 transition-colors hover:bg-slate-50",
                         quickFilters.has("missingDischarge")
                           ? "border-[#31aba3] bg-teal-50/50"
                           : "border-slate-200",
                       )}
                     >
-                      <div
-                        className={cn(
-                          "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2",
-                          quickFilters.has("missingDischarge")
-                            ? "border-[#31aba3] bg-[#31aba3]"
-                            : "border-slate-300",
-                        )}
-                      >
-                        {quickFilters.has("missingDischarge") && (
-                          <Circle className="h-2 w-2 fill-white text-white" />
-                        )}
-                      </div>
+                      <Checkbox
+                        id="missing-discharge"
+                        checked={quickFilters.has("missingDischarge")}
+                        onCheckedChange={(checked) => {
+                          const newFilters = new Set(quickFilters);
+                          if (checked) {
+                            newFilters.add("missingDischarge");
+                          } else {
+                            newFilters.delete("missingDischarge");
+                          }
+                          onQuickFiltersChange(newFilters);
+                        }}
+                        className="border-slate-300"
+                      />
                       <div className="flex flex-1 items-center gap-2">
                         <FileCheck className="h-4 w-4 shrink-0 text-teal-600" />
                         <span className="text-sm font-medium text-slate-700">
                           Missing Discharge
                         </span>
                       </div>
-                    </button>
+                    </label>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newFilters = new Set(quickFilters);
-                        if (newFilters.has("missingSoap")) {
-                          newFilters.delete("missingSoap");
-                        } else {
-                          newFilters.add("missingSoap");
-                          newFilters.delete("missingDischarge");
-                        }
-                        onQuickFiltersChange(newFilters);
-                      }}
+                    <label
+                      htmlFor="missing-soap"
                       className={cn(
-                        "flex w-full items-center space-x-3 rounded-lg border p-3 text-left transition-colors hover:bg-slate-50",
+                        "flex w-full cursor-pointer items-center space-x-3 rounded-lg border p-3 transition-colors hover:bg-slate-50",
                         quickFilters.has("missingSoap")
                           ? "border-[#31aba3] bg-blue-50/50"
                           : "border-slate-200",
                       )}
                     >
-                      <div
-                        className={cn(
-                          "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2",
-                          quickFilters.has("missingSoap")
-                            ? "border-[#31aba3] bg-[#31aba3]"
-                            : "border-slate-300",
-                        )}
-                      >
-                        {quickFilters.has("missingSoap") && (
-                          <Circle className="h-2 w-2 fill-white text-white" />
-                        )}
-                      </div>
+                      <Checkbox
+                        id="missing-soap"
+                        checked={quickFilters.has("missingSoap")}
+                        onCheckedChange={(checked) => {
+                          const newFilters = new Set(quickFilters);
+                          if (checked) {
+                            newFilters.add("missingSoap");
+                          } else {
+                            newFilters.delete("missingSoap");
+                          }
+                          onQuickFiltersChange(newFilters);
+                        }}
+                        className="border-slate-300"
+                      />
                       <div className="flex flex-1 items-center gap-2">
                         <FileText className="h-4 w-4 shrink-0 text-blue-600" />
                         <span className="text-sm font-medium text-slate-700">
                           Missing SOAP
                         </span>
                       </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onQuickFiltersChange(new Set());
-                      }}
-                      className={cn(
-                        "flex w-full items-center space-x-3 rounded-lg border p-3 text-left transition-colors hover:bg-slate-50",
-                        quickFilters.size === 0
-                          ? "border-[#31aba3] bg-slate-50"
-                          : "border-slate-200",
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2",
-                          quickFilters.size === 0
-                            ? "border-[#31aba3] bg-[#31aba3]"
-                            : "border-slate-300",
-                        )}
-                      >
-                        {quickFilters.size === 0 && (
-                          <Circle className="h-2 w-2 fill-white text-white" />
-                        )}
-                      </div>
-                      <div className="flex flex-1 items-center gap-2">
-                        <Circle className="h-4 w-4 shrink-0 text-slate-400" />
-                        <span className="text-sm font-medium text-slate-700">
-                          No Quick Filter
-                        </span>
-                      </div>
-                    </button>
+                    </label>
                   </div>
                 </div>
               </div>
