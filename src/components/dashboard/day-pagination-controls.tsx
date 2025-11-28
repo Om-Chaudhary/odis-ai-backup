@@ -20,12 +20,14 @@ interface DayPaginationControlsProps {
   currentDate: Date;
   onDateChange: (date: Date) => void;
   totalItems: number;
+  isLoading?: boolean;
 }
 
 export function DayPaginationControls({
   currentDate,
   onDateChange,
   totalItems,
+  isLoading = false,
 }: DayPaginationControlsProps) {
   const goToPreviousDay = () => {
     const previousDay = subDays(currentDate, 1);
@@ -44,8 +46,9 @@ export function DayPaginationControls({
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if user is typing in an input
+      // Ignore if loading or user is typing in an input
       if (
+        isLoading ||
         document.activeElement instanceof HTMLInputElement ||
         document.activeElement instanceof HTMLTextAreaElement
       ) {
@@ -76,7 +79,7 @@ export function DayPaginationControls({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentDate, onDateChange]);
+  }, [currentDate, onDateChange, isLoading]);
 
   const formatDateDisplay = (date: Date) => {
     if (isToday(date)) {
@@ -102,6 +105,7 @@ export function DayPaginationControls({
                 variant="ghost"
                 size="icon"
                 onClick={goToPreviousDay}
+                disabled={isLoading}
                 className="hover:bg-muted h-9 w-9 rounded-l-md rounded-r-none border-r"
                 aria-label="Previous Day"
               >
@@ -121,27 +125,36 @@ export function DayPaginationControls({
                 {formatDateDisplay(currentDate)}
               </span>
               <div className="flex items-center gap-1.5">
-                <span className="text-muted-foreground text-[10px]">
-                  {totalItems} {totalItems === 1 ? "case" : "cases"}
-                </span>
-                {!isToday(currentDate) && (
+                {isLoading ? (
+                  <span className="text-muted-foreground text-[10px]">
+                    Loading...
+                  </span>
+                ) : (
                   <>
-                    <span className="text-muted-foreground/50 text-[10px]">
-                      •
+                    <span className="text-muted-foreground text-[10px]">
+                      {totalItems} {totalItems === 1 ? "case" : "cases"}
                     </span>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button
-                          onClick={goToToday}
-                          className="text-muted-foreground hover:text-foreground text-[10px] underline-offset-2 transition-colors hover:underline"
-                        >
-                          Go to Today
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Jump to Today (T)</p>
-                      </TooltipContent>
-                    </Tooltip>
+                    {!isToday(currentDate) && (
+                      <>
+                        <span className="text-muted-foreground/50 text-[10px]">
+                          •
+                        </span>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button
+                              onClick={goToToday}
+                              disabled={isLoading}
+                              className="text-muted-foreground hover:text-foreground text-[10px] underline-offset-2 transition-colors hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              Go to Today
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Jump to Today (T)</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </>
+                    )}
                   </>
                 )}
               </div>
@@ -156,7 +169,7 @@ export function DayPaginationControls({
                 size="icon"
                 onClick={goToNextDay}
                 className="hover:bg-muted h-9 w-9 rounded-l-none rounded-r-md border-l"
-                disabled={isToday(currentDate)}
+                disabled={isToday(currentDate) || isLoading}
                 aria-label="Next Day"
               >
                 <ChevronRight className="h-4 w-4" />
