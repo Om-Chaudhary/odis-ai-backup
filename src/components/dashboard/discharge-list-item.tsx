@@ -400,7 +400,7 @@ export function DischargeListItem({
                 In Progress
               </Button>
             ) : workflowStatus === "completed" ? (
-              <Link href={`/dashboard/cases/${caseData.id}`}>
+              <Link href={`/dashboard/discharges/${caseData.id}`}>
                 <Button
                   variant="outline"
                   size="sm"
@@ -460,7 +460,7 @@ export function DischargeListItem({
             )}
 
             {/* View Details Button */}
-            <Link href={`/dashboard/cases/${caseData.id}`}>
+            <Link href={`/dashboard/discharges/${caseData.id}`}>
               <Button
                 variant="ghost"
                 size="icon"

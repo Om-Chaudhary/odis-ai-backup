@@ -1,15 +1,30 @@
 "use client";
 
-import { useParams } from "next/navigation";
-import { CaseDetailClient } from "~/components/dashboard/case-detail-client";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
-export default function CaseDetailPage() {
+/**
+ * Redirect from old route /dashboard/cases/[id] to new route /dashboard/discharges/[id]
+ * This maintains backward compatibility for any bookmarked or shared links
+ */
+export default function CaseDetailPageRedirect() {
   const params = useParams();
+  const router = useRouter();
   const id = params?.id as string;
 
-  if (!id) {
-    return <div>Loading...</div>;
-  }
+  useEffect(() => {
+    if (id) {
+      router.replace(`/dashboard/discharges/${id}`);
+    }
+  }, [id, router]);
 
-  return <CaseDetailClient caseId={id} />;
+  return (
+    <div className="flex h-[50vh] items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
+        <p className="text-muted-foreground text-sm">Redirecting...</p>
+      </div>
+    </div>
+  );
 }
