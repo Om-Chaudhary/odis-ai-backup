@@ -150,6 +150,63 @@ export function DischargeSettingsForm({
           System Configuration
         </h4>
 
+        {/* Default Schedule Delay Override */}
+        <div className="grid gap-2 rounded-lg border p-3 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="defaultScheduleDelayMinutes" className="text-base">
+              Default Schedule Delay (Minutes)
+            </Label>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p className="text-sm">
+                    Override the default scheduling delay for calls and emails.
+                    Leave empty to use system defaults (2 minutes for calls,
+                    immediate for emails). This applies to all new schedules.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <Input
+            id="defaultScheduleDelayMinutes"
+            type="number"
+            min="0"
+            placeholder="e.g. 5 (leave empty for defaults)"
+            {...register("defaultScheduleDelayMinutes", {
+              valueAsNumber: true,
+              validate: (value) => {
+                if (
+                  value === undefined ||
+                  value === null ||
+                  Number.isNaN(value)
+                ) {
+                  return true; // Allow empty/null/NaN
+                }
+                return value >= 0 || "Delay must be 0 or greater";
+              },
+            })}
+            onChange={(e) => {
+              const value = e.target.value;
+              setValue(
+                "defaultScheduleDelayMinutes",
+                value === "" ? null : Number.parseInt(value, 10),
+                { shouldDirty: true },
+              );
+            }}
+          />
+          <p className="text-muted-foreground text-xs">
+            {watch("defaultScheduleDelayMinutes") !== null &&
+            watch("defaultScheduleDelayMinutes") !== undefined &&
+            typeof watch("defaultScheduleDelayMinutes") === "number"
+              ? `Calls and emails will be scheduled ${watch("defaultScheduleDelayMinutes")} minutes from now`
+              : "Using system defaults (2 min for calls, immediate for emails)"}
+          </p>
+        </div>
+
         {/* Voicemail Detection Toggle */}
         <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
           <div className="space-y-0.5">

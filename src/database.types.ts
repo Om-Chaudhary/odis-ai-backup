@@ -1003,6 +1003,7 @@ export type Database = {
           clinic_phone: string | null;
           created_at: string;
           default_discharge_template_id: string | null;
+          default_schedule_delay_minutes: number | null;
           email: string | null;
           emergency_phone: string | null;
           first_name: string | null;
@@ -1027,6 +1028,7 @@ export type Database = {
           clinic_phone?: string | null;
           created_at?: string;
           default_discharge_template_id?: string | null;
+          default_schedule_delay_minutes?: number | null;
           email?: string | null;
           emergency_phone?: string | null;
           first_name?: string | null;
@@ -1051,6 +1053,7 @@ export type Database = {
           clinic_phone?: string | null;
           created_at?: string;
           default_discharge_template_id?: string | null;
+          default_schedule_delay_minutes?: number | null;
           email?: string | null;
           emergency_phone?: string | null;
           first_name?: string | null;

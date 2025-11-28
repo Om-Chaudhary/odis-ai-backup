@@ -19,12 +19,6 @@ export interface TranscriptMessage {
   secondsFromStart?: number;
 }
 
-export interface CallAnalysis {
-  summary?: string;
-  successEvaluation?: string;
-  structuredData?: Record<string, unknown>;
-}
-
 /**
  * Vapi Call Analysis Structure
  */
@@ -177,6 +171,7 @@ export interface DischargeSettings {
   testContactEmail?: string;
   testContactPhone?: string;
   voicemailDetectionEnabled?: boolean;
+  defaultScheduleDelayMinutes?: number | null; // Override default scheduling delay (null = use defaults)
 }
 
 export interface PatientUpdateInput {

@@ -34,6 +34,7 @@ export function SettingsPageClient() {
     testContactEmail: "",
     testContactPhone: "",
     voicemailDetectionEnabled: false,
+    defaultScheduleDelayMinutes: null,
   };
 
   const handleSave = (newSettings: DischargeSettings) => {
@@ -48,6 +49,8 @@ export function SettingsPageClient() {
       testContactEmail: newSettings.testContactEmail ?? undefined,
       testContactPhone: newSettings.testContactPhone ?? undefined,
       voicemailDetectionEnabled: newSettings.voicemailDetectionEnabled,
+      defaultScheduleDelayMinutes:
+        newSettings.defaultScheduleDelayMinutes ?? null,
     });
   };
 

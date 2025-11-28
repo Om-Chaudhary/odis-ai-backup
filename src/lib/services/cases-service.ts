@@ -436,7 +436,7 @@ export const CasesService = {
             {
               caseId,
               source: "soap_notes.client_instructions",
-              preview: clientInstructions.substring(0, 100),
+              preview: clientInstructions?.substring(0, 100) ?? "",
             },
           );
         } else if (latestSoapNote?.plan) {
@@ -445,7 +445,7 @@ export const CasesService = {
           console.log("[CasesService] Using plan from SOAP notes", {
             caseId,
             source: "soap_notes.plan",
-            preview: clientInstructions.substring(0, 100),
+            preview: clientInstructions?.substring(0, 100) ?? "",
           });
         }
       }
@@ -462,7 +462,7 @@ export const CasesService = {
           console.log("[CasesService] Using discharge summary content", {
             caseId,
             source: "discharge_summaries.content",
-            preview: clientInstructions.substring(0, 100),
+            preview: clientInstructions?.substring(0, 100) ?? "",
           });
         }
       }
@@ -642,14 +642,18 @@ export const CasesService = {
     // Get customer phone (with test mode support)
     let customerPhone = entities.patient.owner.phone ?? "";
 
-    // Check if test mode is enabled
+    // Check if test mode is enabled and get schedule override
     const { data: userSettings } = await supabase
       .from("users")
-      .select("test_mode_enabled, test_contact_phone, test_contact_name")
+      .select(
+        "test_mode_enabled, test_contact_phone, test_contact_name, default_schedule_delay_minutes",
+      )
       .eq("id", userId)
       .single();
 
     const testModeEnabled = userSettings?.test_mode_enabled ?? false;
+    const defaultScheduleDelayMinutes =
+      userSettings?.default_schedule_delay_minutes;
 
     if (testModeEnabled) {
       if (!userSettings?.test_contact_phone) {
@@ -672,20 +676,46 @@ export const CasesService = {
       throw new Error("Patient phone number is required to schedule call");
     }
 
-    // Determine scheduled time
-    // In test mode, schedule for 1 minute from now
-    // Otherwise, use provided time or default to immediate
+    // Determine scheduled time using server time
+    // Always use server time to avoid timezone and clock drift issues
+    const serverNow = new Date();
     let scheduledAt: Date;
-    if (testModeEnabled) {
-      scheduledAt = new Date(Date.now() + 60 * 1000); // 1 minute from now
-      console.log(
-        "[CasesService] Test mode enabled - scheduling for 1 minute from now",
-        {
-          scheduledAt: scheduledAt.toISOString(),
-        },
-      );
+
+    if (options.scheduledAt) {
+      // Validate that provided scheduled time is in the future
+      if (options.scheduledAt <= serverNow) {
+        throw new Error(
+          `Scheduled time must be in the future. Provided: ${options.scheduledAt.toISOString()}, Server now: ${serverNow.toISOString()}`,
+        );
+      }
+      scheduledAt = options.scheduledAt;
     } else {
-      scheduledAt = options.scheduledAt ?? new Date(Date.now() + 60 * 2000);
+      // Use user's default schedule delay override if set, otherwise use system defaults
+      let delayMinutes: number;
+      if (
+        defaultScheduleDelayMinutes !== null &&
+        defaultScheduleDelayMinutes !== undefined
+      ) {
+        delayMinutes = defaultScheduleDelayMinutes;
+        console.log("[CasesService] Using user override for schedule delay", {
+          delayMinutes,
+          serverNow: serverNow.toISOString(),
+        });
+      } else if (testModeEnabled) {
+        // Test mode: schedule for 1 minute from server time
+        delayMinutes = 1;
+      } else {
+        // Normal mode: schedule for 2 minutes from server time
+        delayMinutes = 2;
+      }
+
+      scheduledAt = new Date(serverNow.getTime() + delayMinutes * 60 * 1000);
+      console.log("[CasesService] Scheduling call", {
+        delayMinutes,
+        testModeEnabled,
+        serverNow: serverNow.toISOString(),
+        scheduledAt: scheduledAt.toISOString(),
+      });
     }
 
     // Check if a call already exists for this case

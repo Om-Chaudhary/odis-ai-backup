@@ -27,10 +27,17 @@ export async function scheduleCallExecution(
   callId: string,
   scheduledFor: Date,
 ): Promise<string> {
-  const delay = Math.floor((scheduledFor.getTime() - Date.now()) / 1000); // seconds
+  // Calculate delay using server time to ensure accuracy
+  // scheduledFor should already be validated to be in the future
+  const serverNow = Date.now();
+  const delay = Math.floor((scheduledFor.getTime() - serverNow) / 1000); // seconds
 
   if (delay < 0) {
-    throw new Error("Cannot schedule call in the past");
+    throw new Error(
+      `Cannot schedule call in the past. Scheduled: ${scheduledFor.toISOString()}, Server now: ${new Date(
+        serverNow,
+      ).toISOString()}`,
+    );
   }
 
   const webhookUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/execute-call`;
@@ -71,10 +78,17 @@ export async function scheduleEmailExecution(
   emailId: string,
   scheduledFor: Date,
 ): Promise<string> {
-  const delay = Math.floor((scheduledFor.getTime() - Date.now()) / 1000); // seconds
+  // Calculate delay using server time to ensure accuracy
+  // scheduledFor should already be validated to be in the future
+  const serverNow = Date.now();
+  const delay = Math.floor((scheduledFor.getTime() - serverNow) / 1000); // seconds
 
   if (delay < 0) {
-    throw new Error("Cannot schedule email in the past");
+    throw new Error(
+      `Cannot schedule email in the past. Scheduled: ${scheduledFor.toISOString()}, Server now: ${new Date(
+        serverNow,
+      ).toISOString()}`,
+    );
   }
 
   const webhookUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/execute-discharge-email`;
