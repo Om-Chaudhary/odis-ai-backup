@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import type { CallStatus, EmailStatus } from "~/types/dashboard";
+import { startOfWeek, startOfMonth } from "date-fns";
 
 // Type helpers for Supabase responses
 type SupabasePatient = {
@@ -557,7 +558,11 @@ export const dashboardRouter = createTRPCRouter({
   }),
 
   /**
-   * Get comprehensive case statistics
+   * Get comprehensive case statistics including coverage metrics and completion rates
+   *
+   * @param input.startDate - Optional start date filter (ISO string)
+   * @param input.endDate - Optional end date filter (ISO string)
+   * @returns CaseStats with all metrics including new coverage and completion data
    */
   getCaseStats: protectedProcedure
     .input(
@@ -571,10 +576,58 @@ export const dashboardRouter = createTRPCRouter({
       const startDate = input.startDate ? new Date(input.startDate) : undefined;
       const endDate = input.endDate ? new Date(input.endDate) : undefined;
 
-      // Get all cases
+      // Helper function to calculate percentage
+      const calculatePercentage = (part: number, total: number): number => {
+        return total > 0 ? Math.round((part / total) * 100) : 0;
+      };
+
+      // Helper function to get date boundaries
+      const getDateBoundaries = () => {
+        const now = new Date();
+        return {
+          weekStart: startOfWeek(now, { weekStartsOn: 1 }), // Monday
+          monthStart: startOfMonth(now),
+        };
+      };
+
+      // Type definition for case with relations
+      type CaseWithRelations = {
+        id: string;
+        status: string | null;
+        source: string | null;
+        created_at: string | null;
+        discharge_summaries: Array<{ id: string }> | null;
+        soap_notes: Array<{ id: string }> | null;
+      };
+
+      // Helper function to check if case has discharge summary
+      const hasDischargeSummary = (caseData: CaseWithRelations): boolean => {
+        return (
+          Array.isArray(caseData.discharge_summaries) &&
+          caseData.discharge_summaries.length > 0
+        );
+      };
+
+      // Helper function to check if case has SOAP note
+      const hasSoapNote = (caseData: CaseWithRelations): boolean => {
+        return (
+          Array.isArray(caseData.soap_notes) && caseData.soap_notes.length > 0
+        );
+      };
+
+      // Single query to get all cases with relations for efficient calculation
       let casesQuery = ctx.supabase
         .from("cases")
-        .select("id, status, source, created_at")
+        .select(
+          `
+          id,
+          status,
+          source,
+          created_at,
+          discharge_summaries(id),
+          soap_notes(id)
+        `,
+        )
         .eq("user_id", userId);
 
       if (startDate) {
@@ -590,12 +643,16 @@ export const dashboardRouter = createTRPCRouter({
 
       const totalCases = allCases?.length ?? 0;
 
-      // Cases this week
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      // Calculate date boundaries (consistent for all "this week/month" calculations)
+      const { weekStart, monthStart } = getDateBoundaries();
+
+      // Cases this week (using consistent weekStart calculation)
       const casesThisWeek =
-        allCases?.filter((c) => new Date(c.created_at) >= oneWeekAgo).length ??
-        0;
+        allCases?.filter((c) => {
+          if (!c.created_at) return false;
+          const caseCreatedAt = new Date(c.created_at);
+          return caseCreatedAt >= weekStart;
+        }).length ?? 0;
 
       // By status
       const byStatus = {
@@ -696,6 +753,129 @@ export const dashboardRouter = createTRPCRouter({
 
       const { count: emailsSentCount } = await emailsQuery;
 
+      // Initialize counters
+      let totalNeedingDischarge = 0;
+      let thisWeekNeedingDischarge = 0;
+      let thisMonthNeedingDischarge = 0;
+
+      let totalNeedingSoap = 0;
+      let thisWeekNeedingSoap = 0;
+      let thisMonthNeedingSoap = 0;
+
+      let totalWithDischarge = 0;
+      let totalWithSoap = 0;
+
+      let completedCasesTotal = 0;
+      let completedCasesThisWeek = 0;
+      let createdCasesThisWeek = 0;
+      let completedCasesThisMonth = 0;
+      let createdCasesThisMonth = 0;
+
+      // Process each case
+      allCases?.forEach((c) => {
+        // Skip cases with null created_at for date-based calculations
+        if (!c.created_at) {
+          // Still count for total metrics but skip date-based calculations
+          const hasDischarge = hasDischargeSummary(c as CaseWithRelations);
+          const hasSoap = hasSoapNote(c as CaseWithRelations);
+          const isCompleted = c.status === "completed";
+
+          if (!hasDischarge) {
+            totalNeedingDischarge++;
+          } else {
+            totalWithDischarge++;
+          }
+
+          if (!hasSoap) {
+            totalNeedingSoap++;
+          } else {
+            totalWithSoap++;
+          }
+
+          if (isCompleted) {
+            completedCasesTotal++;
+          }
+
+          return; // Skip date-based calculations
+        }
+
+        const caseCreatedAt = new Date(c.created_at);
+        const hasDischarge = hasDischargeSummary(c as CaseWithRelations);
+        const hasSoap = hasSoapNote(c as CaseWithRelations);
+        const isCompleted = c.status === "completed";
+
+        // Cases needing discharge
+        if (!hasDischarge) {
+          totalNeedingDischarge++;
+          if (caseCreatedAt >= weekStart) {
+            thisWeekNeedingDischarge++;
+          }
+          if (caseCreatedAt >= monthStart) {
+            thisMonthNeedingDischarge++;
+          }
+        } else {
+          totalWithDischarge++;
+        }
+
+        // Cases needing SOAP
+        if (!hasSoap) {
+          totalNeedingSoap++;
+          if (caseCreatedAt >= weekStart) {
+            thisWeekNeedingSoap++;
+          }
+          if (caseCreatedAt >= monthStart) {
+            thisMonthNeedingSoap++;
+          }
+        } else {
+          totalWithSoap++;
+        }
+
+        // Completion rate calculations
+        if (isCompleted) {
+          completedCasesTotal++;
+        }
+
+        // This week metrics
+        if (caseCreatedAt >= weekStart) {
+          createdCasesThisWeek++;
+          if (isCompleted) {
+            completedCasesThisWeek++;
+          }
+        }
+
+        // This month metrics
+        if (caseCreatedAt >= monthStart) {
+          createdCasesThisMonth++;
+          if (isCompleted) {
+            completedCasesThisMonth++;
+          }
+        }
+      });
+
+      // Calculate coverage percentages
+      const soapCoveragePercentage = calculatePercentage(
+        totalWithSoap,
+        totalCases,
+      );
+      const dischargeCoveragePercentage = calculatePercentage(
+        totalWithDischarge,
+        totalCases,
+      );
+
+      // Calculate completion rates
+      const completionRateOverall = calculatePercentage(
+        completedCasesTotal,
+        totalCases,
+      );
+      const completionRateThisWeek = calculatePercentage(
+        completedCasesThisWeek,
+        createdCasesThisWeek,
+      );
+      const completionRateThisMonth = calculatePercentage(
+        completedCasesThisMonth,
+        createdCasesThisMonth,
+      );
+
       return {
         total: totalCases,
         thisWeek: casesThisWeek,
@@ -705,6 +885,45 @@ export const dashboardRouter = createTRPCRouter({
         dischargeSummaries: dischargeSummariesCount ?? 0,
         callsCompleted: callsCompletedCount ?? 0,
         emailsSent: emailsSentCount ?? 0,
+        casesNeedingDischarge: {
+          total: totalNeedingDischarge,
+          thisWeek: thisWeekNeedingDischarge,
+          thisMonth: thisMonthNeedingDischarge,
+        },
+        casesNeedingSoap: {
+          total: totalNeedingSoap,
+          thisWeek: thisWeekNeedingSoap,
+          thisMonth: thisMonthNeedingSoap,
+        },
+        soapCoverage: {
+          percentage: soapCoveragePercentage,
+          totalCases,
+          casesWithSoap: totalWithSoap,
+          casesNeedingSoap: totalNeedingSoap,
+        },
+        dischargeCoverage: {
+          percentage: dischargeCoveragePercentage,
+          totalCases,
+          casesWithDischarge: totalWithDischarge,
+          casesNeedingDischarge: totalNeedingDischarge,
+        },
+        completionRate: {
+          overall: {
+            completed: completedCasesTotal,
+            total: totalCases,
+            percentage: completionRateOverall,
+          },
+          thisWeek: {
+            completed: completedCasesThisWeek,
+            created: createdCasesThisWeek,
+            percentage: completionRateThisWeek,
+          },
+          thisMonth: {
+            completed: completedCasesThisMonth,
+            created: createdCasesThisMonth,
+            percentage: completionRateThisMonth,
+          },
+        },
       };
     }),
 

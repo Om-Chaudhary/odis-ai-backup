@@ -9,6 +9,7 @@ import { Badge } from "~/components/ui/badge";
 import { CaseCard } from "./case-card";
 import { EmptyState } from "./empty-state";
 import { DayPaginationControls } from "./day-pagination-controls";
+import { DateFilterButtonGroup } from "./date-filter-button-group";
 import { api } from "~/trpc/client";
 import type {
   DashboardCase,
@@ -329,9 +330,9 @@ export function DischargesTab({
         </div>
       </div>
 
-      {/* Day Pagination */}
-      {!isLoading && casesData && (
-        <div className="animate-card-in-delay-2">
+      {/* Day Pagination and Date Filter */}
+      <div className="animate-card-in-delay-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        {!isLoading && casesData && (
           <DayPaginationControls
             currentDate={currentDate}
             onDateChange={(date) => {
@@ -340,8 +341,9 @@ export function DischargesTab({
             }}
             totalItems={casesData.pagination.total}
           />
-        </div>
-      )}
+        )}
+        <DateFilterButtonGroup />
+      </div>
 
       {/* Content */}
       {isLoading ? (
