@@ -7,12 +7,12 @@
 ## 📊 Overall Progress
 
 **Total Assignments:** 10  
-**Completed:** 1  
+**Completed:** 2  
 **In Progress:** 0  
-**Ready:** 7  
+**Ready:** 6  
 **Blocked:** 2
 
-**Progress:** 10% (1/10)
+**Progress:** 20% (2/10)
 
 ---
 
@@ -20,7 +20,7 @@
 
 | ID  | Assignment                                                                           | Status      | Agent               | Branch                         | PR                                                    | Started          | Completed        | Notes                                     |
 | --- | ------------------------------------------------------------------------------------ | ----------- | ------------------- | ------------------------------ | ----------------------------------------------------- | ---------------- | ---------------- | ----------------------------------------- |
-| A1  | [Date Filter Button Group](./assignments/A1-date-filter-button-group.md)             | ✅ Complete | Agent-A1-DateFilter | feat/assignment-A1-date-filter | -                                                     | 2025-11-27 20:58 | 2025-11-27 20:58 | Implementation complete, ready for A5     |
+| A1  | [Date Filter Button Group](./assignments/A1-date-filter-button-group.md)             | ✅ Complete | Agent-A1-DateFilter | feat/assignment-A1-date-filter | [#40](https://github.com/Odis-AI/odis-ai-web/pull/40) | 2025-11-27 20:58 | 2025-11-27 20:58 | Implementation complete, ready for A5     |
 | A2  | [Cases Needing Attention Card](./assignments/A2-cases-needing-attention-card.md)     | 🔄 Ready    | -                   | -                              | -                                                     | -                | -                | A10 complete, ready to start              |
 | A3  | [Enhanced Stat Cards](./assignments/A3-enhanced-stat-cards.md)                       | 🔄 Ready    | -                   | -                              | -                                                     | -                | -                | A10 complete, ready to start              |
 | A4  | [Collapsible Activity Timeline](./assignments/A4-collapsible-activity-timeline.md)   | 🔄 Ready    | -                   | -                              | -                                                     | -                | -                | -                                         |
@@ -45,10 +45,10 @@
 
 ### Phase 1: Foundation (Priority)
 
-- [ ] **A10: Backend Metrics Queries** - Required for A2, A3, A6
+- [x] **A10: Backend Metrics Queries** - Required for A2, A3, A6
 - [x] **A1: Date Filter Button Group** - Required for A5
 
-**Status:** 1/2 complete
+**Status:** 2/2 complete
 
 ### Phase 2: Overview Tab
 
@@ -79,8 +79,8 @@
 
 ```
 A10 (Backend Metrics) ──┐
-                        ├──> A2 (Cases Needing Attention) [⏸️ Blocked]
-                        └──> A3 (Enhanced Stat Cards) [⏸️ Blocked]
+                        ├──> A2 (Cases Needing Attention) [🔄 Ready]
+                        └──> A3 (Enhanced Stat Cards) [🔄 Ready]
 
 A1 (Date Filter) ───────> A5 (Cases Tab Filters) [🔄 Ready]
                         └──> Overview Tab Integration [✅ Complete]
@@ -150,8 +150,11 @@ A9 (Discharges Cards) ──> [🔄 Ready]
 
 ### Ready to Start (No Dependencies)
 
-- **A10** - Backend Metrics Queries ⚠️ **HIGH PRIORITY** (blocks A2, A3, A6) - In Progress
+- ~~**A10** - Backend Metrics Queries~~ ✅ **COMPLETE**
+- ~~**A1** - Date Filter Button Group~~ ✅ **COMPLETE**
 - **A5** - Cases Tab Filter Button Groups ⚠️ **HIGH PRIORITY** (A1 complete)
+- **A2** - Cases Needing Attention Card ⚠️ **HIGH PRIORITY** (A10 complete)
+- **A3** - Enhanced Stat Cards ⚠️ **HIGH PRIORITY** (A10 complete)
 - **A4** - Collapsible Activity Timeline
 - **A7** - Enhanced Case Cards
 - **A8** - Discharges Tab Status Summary
@@ -159,9 +162,7 @@ A9 (Discharges Cards) ──> [🔄 Ready]
 
 ### Waiting on Dependencies
 
-- **A2** - Waiting on A10
-- **A3** - Waiting on A10
-- **A6** - Waiting on A5 and A10
+- **A6** - Waiting on A5 (A10 complete)
 
 ---
 
@@ -169,7 +170,7 @@ A9 (Discharges Cards) ──> [🔄 Ready]
 
 ### By Priority
 
-- **High Priority:** 1/5 complete
+- **High Priority:** 2/5 complete
 - **Medium Priority:** 0/5 complete
 
 ### By Tab
@@ -177,7 +178,7 @@ A9 (Discharges Cards) ──> [🔄 Ready]
 - **Overview Tab:** 0/3 complete (date filter integrated)
 - **Cases Tab:** 0/3 complete (date filter integrated)
 - **Discharges Tab:** 0/2 complete (date filter integrated)
-- **Foundation:** 1/2 complete
+- **Foundation:** 2/2 complete
 
 ### By Estimated Time
 

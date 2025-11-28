@@ -26,6 +26,7 @@ import {
   getDateRangeFromPreset,
   type DateRangePreset,
 } from "~/lib/utils/date-ranges";
+import { CasesNeedingAttentionCard } from "./cases-needing-attention-card";
 
 function StatCard({
   title,
@@ -78,65 +79,6 @@ function StatCard({
           <div className="transition-smooth flex h-12 w-12 items-center justify-center rounded-full bg-[#31aba3]/10 group-hover:bg-[#31aba3]/20">
             <Icon className="h-6 w-6 text-[#31aba3]" />
           </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function SourceBreakdownCard({
-  bySource,
-}: {
-  bySource: Record<string, number>;
-}) {
-  const sourceColors: Record<string, string> = {
-    manual: "bg-slate-500",
-    idexx_neo: "bg-blue-500",
-    cornerstone: "bg-purple-500",
-    ezyvet: "bg-green-500",
-    avimark: "bg-orange-500",
-  };
-
-  const sources = Object.entries(bySource).sort((a, b) => b[1] - a[1]);
-  const total = sources.reduce((sum, [, count]) => sum + count, 0);
-
-  return (
-    <Card className="transition-smooth rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold">Case Sources</CardTitle>
-      </CardHeader>
-      <CardContent className="animate-card-content-in">
-        <div className="space-y-3">
-          {sources.map(([source, count]) => {
-            const percentage = total > 0 ? (count / total) * 100 : 0;
-            const displayName =
-              source === "manual"
-                ? "Manual"
-                : source
-                    .replace(/_/g, " ")
-                    .replace(/\b\w/g, (l) => l.toUpperCase());
-            const color = sourceColors[source] ?? "bg-slate-400";
-
-            return (
-              <div key={source}>
-                <div className="mb-1 flex items-center justify-between text-sm">
-                  <span className="font-medium text-slate-700">
-                    {displayName}
-                  </span>
-                  <span className="text-slate-600">
-                    <NumberTicker value={count} delay={1200} /> (
-                    {percentage.toFixed(0)}%)
-                  </span>
-                </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                  <div
-                    className={`h-full ${color} transition-all duration-300`}
-                    style={{ width: `${percentage}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })}
         </div>
       </CardContent>
     </Card>
@@ -209,11 +151,20 @@ function RecentCasesList({
   );
 }
 
+/**
+ * OverviewTab - Dashboard overview with statistics and recent activity
+ *
+ * Note: The `startDate` and `endDate` props are kept for backward compatibility
+ * but are ignored. Date filtering is now handled via URL query parameter "dateRange"
+ * using the DateFilterButtonGroup component.
+ */
 export function OverviewTab({
   startDate: _startDate,
   endDate: _endDate,
 }: {
+  /** @deprecated Use dateRange URL query parameter instead */
   startDate?: string | null;
+  /** @deprecated Use dateRange URL query parameter instead */
   endDate?: string | null;
 }) {
   const [dateRange] = useQueryState("dateRange", {
@@ -320,13 +271,23 @@ export function OverviewTab({
         </div>
       )}
 
-      {/* Source Breakdown and Recent Cases */}
+      {/* Cases Needing Attention and Recent Cases */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {stats?.bySource && Object.keys(stats.bySource).length > 0 && (
-          <div className="animate-card-in-delay-1">
-            <SourceBreakdownCard bySource={stats.bySource} />
-          </div>
-        )}
+        <div className="animate-card-in-delay-1">
+          <CasesNeedingAttentionCard
+            casesNeedingDischarge={
+              stats?.casesNeedingDischarge ?? {
+                total: 0,
+                thisWeek: 0,
+                thisMonth: 0,
+              }
+            }
+            casesNeedingSoap={
+              stats?.casesNeedingSoap ?? { total: 0, thisWeek: 0, thisMonth: 0 }
+            }
+            totalCases={stats?.total ?? 0}
+          />
+        </div>
         {allCasesData && (
           <div className="animate-card-in-delay-2">
             <RecentCasesList cases={allCasesData.cases.slice(0, 5)} />

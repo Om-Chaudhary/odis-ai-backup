@@ -25,11 +25,20 @@ import {
 type ViewMode = "grid" | "list";
 const VIEW_STORAGE_KEY = "cases-view-mode";
 
+/**
+ * CasesTab - Display and manage all cases with filtering
+ *
+ * Note: The `startDate` and `endDate` props are kept for backward compatibility
+ * but are ignored. Date filtering is now handled via URL query parameter "dateRange"
+ * using the DateFilterButtonGroup component.
+ */
 export function CasesTab({
   startDate: _startDate,
   endDate: _endDate,
 }: {
+  /** @deprecated Use dateRange URL query parameter instead */
   startDate?: string | null;
+  /** @deprecated Use dateRange URL query parameter instead */
   endDate?: string | null;
 }) {
   const [page, setPage] = useState(1);

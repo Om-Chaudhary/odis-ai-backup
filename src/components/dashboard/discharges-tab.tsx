@@ -46,11 +46,23 @@ function normalizePlaceholder(
   return placeholders.includes(value) ? undefined : value;
 }
 
+/**
+ * DischargesTab - Manage discharge calls and emails for cases
+ *
+ * Note: The `startDate` and `endDate` props are kept for backward compatibility
+ * but are ignored. Date filtering is now handled via URL query parameter "dateRange"
+ * using the DateFilterButtonGroup component.
+ *
+ * When a date range is selected (not "all"), the start date of that range is used
+ * for the day navigation. When "all" is selected, day navigation works normally.
+ */
 export function DischargesTab({
   startDate: _startDate,
   endDate: _endDate,
 }: {
+  /** @deprecated Use dateRange URL query parameter instead */
   startDate?: string | null;
+  /** @deprecated Use dateRange URL query parameter instead */
   endDate?: string | null;
 }) {
   const router = useRouter();
