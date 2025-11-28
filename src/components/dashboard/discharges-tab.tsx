@@ -10,6 +10,11 @@ import { CaseCard } from "./case-card";
 import { EmptyState } from "./empty-state";
 import { DayPaginationControls } from "./day-pagination-controls";
 import { DateFilterButtonGroup } from "./date-filter-button-group";
+import {
+  getDateRangeFromPreset,
+  isValidDateRangePreset,
+} from "~/lib/utils/date-ranges";
+import { useQueryState } from "nuqs";
 import { api } from "~/trpc/client";
 import type {
   DashboardCase,
@@ -46,11 +51,23 @@ function normalizePlaceholder(
   return placeholders.includes(value) ? undefined : value;
 }
 
+/**
+ * DischargesTab - Manage discharge calls and emails for cases
+ *
+ * Note: The `startDate` and `endDate` props are kept for backward compatibility
+ * but are ignored. Date filtering is now handled via URL query parameter "dateRange"
+ * using the DateFilterButtonGroup component.
+ *
+ * When a date range is selected (not "all"), the start date of that range is used
+ * for the day navigation. When "all" is selected, day navigation works normally.
+ */
 export function DischargesTab({
   startDate: _startDate,
   endDate: _endDate,
 }: {
+  /** @deprecated Use dateRange URL query parameter instead */
   startDate?: string | null;
+  /** @deprecated Use dateRange URL query parameter instead */
   endDate?: string | null;
 }) {
   const router = useRouter();
@@ -61,13 +78,32 @@ export function DischargesTab({
   const [currentPage, setCurrentPage] = useState(1);
   const [loadingCase, setLoadingCase] = useState<LoadingState | null>(null);
 
+  // Date range filter from URL
+  const [dateRange] = useQueryState("dateRange", {
+    defaultValue: "all",
+  });
+
+  // Validate and get date range
+  const preset = isValidDateRangePreset(dateRange) ? dateRange : "all";
+  const { startDate: rangeStartDate } = getDateRangeFromPreset(preset);
+
+  // When a date range is selected (not "all"), use the start date for day navigation
+  // When "all" is selected, use the currentDate state (day navigation works normally)
+  const effectiveDate = useMemo(() => {
+    if (preset === "all") {
+      return currentDate;
+    }
+    // Use the start date of the selected range
+    return rangeStartDate ?? currentDate;
+  }, [preset, rangeStartDate, currentDate]);
+
   // Ref to prevent double-clicks
   const isProcessingRef = useRef(false);
 
   // Format date for API (YYYY-MM-DD)
   const dateString = useMemo(() => {
-    return format(currentDate, "yyyy-MM-dd");
-  }, [currentDate]);
+    return format(effectiveDate, "yyyy-MM-dd");
+  }, [effectiveDate]);
 
   // tRPC Queries
   const {
@@ -334,10 +370,14 @@ export function DischargesTab({
       <div className="animate-card-in-delay-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {!isLoading && casesData && (
           <DayPaginationControls
-            currentDate={currentDate}
+            currentDate={effectiveDate}
             onDateChange={(date) => {
-              setCurrentDate(date);
-              setCurrentPage(1); // Reset to first page when changing date
+              // Only allow date changes when "all" is selected
+              // When a specific range is selected, the date is controlled by the filter
+              if (preset === "all") {
+                setCurrentDate(date);
+                setCurrentPage(1); // Reset to first page when changing date
+              }
             }}
             totalItems={casesData.pagination.total}
           />

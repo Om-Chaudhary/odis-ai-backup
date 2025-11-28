@@ -19,17 +19,26 @@ import { useQueryState } from "nuqs";
 import { DateFilterButtonGroup } from "./date-filter-button-group";
 import {
   getDateRangeFromPreset,
-  type DateRangePreset,
+  isValidDateRangePreset,
 } from "~/lib/utils/date-ranges";
 
 type ViewMode = "grid" | "list";
 const VIEW_STORAGE_KEY = "cases-view-mode";
 
+/**
+ * CasesTab - Display and manage all cases with filtering
+ *
+ * Note: The `startDate` and `endDate` props are kept for backward compatibility
+ * but are ignored. Date filtering is now handled via URL query parameter "dateRange"
+ * using the DateFilterButtonGroup component.
+ */
 export function CasesTab({
   startDate: _startDate,
   endDate: _endDate,
 }: {
+  /** @deprecated Use dateRange URL query parameter instead */
   startDate?: string | null;
+  /** @deprecated Use dateRange URL query parameter instead */
   endDate?: string | null;
 }) {
   const [page, setPage] = useState(1);
@@ -42,10 +51,13 @@ export function CasesTab({
     defaultValue: "all",
   });
 
+  // Validate and safely convert preset to dates
+  const preset = isValidDateRangePreset(dateRange) ? dateRange : "all";
   const { startDate: calculatedStartDate, endDate: calculatedEndDate } =
-    getDateRangeFromPreset((dateRange as DateRangePreset) ?? "all");
+    getDateRangeFromPreset(preset);
 
   // Convert dates to ISO strings for API calls
+  // Note: Dates are converted to UTC ISO strings. Backend should handle timezone appropriately.
   const startDate = calculatedStartDate?.toISOString() ?? null;
   const endDate = calculatedEndDate?.toISOString() ?? null;
 
