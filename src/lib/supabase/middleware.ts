@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 import { env } from "~/env";
+import { AUTH_PARAMS } from "~/lib/constants/auth";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -17,13 +18,13 @@ export async function updateSession(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
+            request.cookies.set(name, value),
           );
           supabaseResponse = NextResponse.next({
             request,
           });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(name, value, options),
           );
         },
       },
@@ -38,6 +39,9 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Check if dashboard route has auth_token parameter (Chrome extension auth)
+  const hasAuthToken = request.nextUrl.searchParams.has(AUTH_PARAMS.AUTH_TOKEN);
+
   if (
     !user &&
     !request.nextUrl.pathname.startsWith("/login") &&
@@ -50,7 +54,8 @@ export async function updateSession(request: NextRequest) {
     !request.nextUrl.pathname.startsWith("/privacy-policy") &&
     !request.nextUrl.pathname.startsWith("/terms-of-service") &&
     !request.nextUrl.pathname.startsWith("/cookie-policy") &&
-    request.nextUrl.pathname !== "/"
+    request.nextUrl.pathname !== "/" &&
+    !(request.nextUrl.pathname === "/dashboard" && hasAuthToken)
   ) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone();

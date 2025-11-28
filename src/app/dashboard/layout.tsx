@@ -9,7 +9,9 @@ import { DashboardBreadcrumb } from "~/components/dashboard/dashboard-breadcrumb
 import { getUser } from "~/server/actions/auth";
 import { createClient } from "~/lib/supabase/server";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import type { Metadata } from "next";
+import { AUTH_PARAMS } from "~/lib/constants/auth";
 
 export const metadata: Metadata = {
   title: "Dashboard | Odis AI",
@@ -26,8 +28,39 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Check for auth_token parameter (Chrome extension auth)
+  // Since layouts can't access searchParams directly in Next.js 15,
+  // we check the referer header as a fallback
+  let hasAuthToken = false;
+  try {
+    const headersList = await headers();
+    const referer = headersList.get("referer");
+    if (referer) {
+      const refererUrl = new URL(referer);
+      hasAuthToken = refererUrl.searchParams.has(AUTH_PARAMS.AUTH_TOKEN);
+    }
+  } catch {
+    // If referer parsing fails, we'll rely on middleware and page-level checks
+    // The middleware already allows /dashboard with auth_token, and the page
+    // component will handle the token processing
+  }
+
   const user = await getUser();
 
+  // Allow access if auth_token is present (will be processed by ExtensionAuthHandler)
+  // The middleware already allows /dashboard with auth_token parameter,
+  // so we need to also allow it here to prevent redirect before token processing
+  if (!user && !hasAuthToken) {
+    redirect("/login");
+  }
+
+  // If we have auth_token but no user yet, render minimal layout
+  // ExtensionAuthHandler will process the token and trigger a re-render
+  if (hasAuthToken && !user) {
+    return <div className="relative flex min-h-screen w-full">{children}</div>;
+  }
+
+  // At this point, user must be non-null (TypeScript assertion)
   if (!user) {
     redirect("/login");
   }
