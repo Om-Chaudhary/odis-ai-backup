@@ -27,6 +27,10 @@ Create a Status Summary Bar component for the Discharges tab that provides a qui
 - [ ] Filters update case list
 - [ ] Responsive on mobile/tablet/desktop
 - [ ] Styling matches design system
+- [ ] **Animations:** Smooth entry animation (`animate-card-in`)
+- [ ] **Glassmorphism:** Standard card glassmorphism with `backdrop-blur-md`
+- [ ] **Button Transitions:** Smooth state changes on filter buttons
+- [ ] **Number Updates:** Smooth transitions when counts change
 
 ## 📁 Files to Create/Modify
 
@@ -74,7 +78,7 @@ export function StatusSummaryBar({
   activeFilter = "all",
 }: StatusSummaryBarProps) {
   return (
-    <Card className="border-teal-200/40 bg-gradient-to-br from-teal-50/20 via-white/70 to-white/70">
+    <Card className="animate-card-in transition-smooth rounded-xl border border-teal-200/40 bg-gradient-to-br from-teal-50/20 via-white/70 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md hover:from-teal-50/25 hover:via-white/75 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
       <CardContent className="p-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           {/* Summary Stats */}
@@ -109,7 +113,8 @@ export function StatusSummaryBar({
                 size="sm"
                 onClick={() => onFilterChange("all")}
                 className={cn(
-                  activeFilter === "all" && "bg-[#31aba3] text-white"
+                  "transition-smooth hover:scale-[1.01]",
+                  activeFilter === "all" && "bg-[#31aba3] text-white shadow-sm hover:bg-[#2a9a92]"
                 )}
               >
                 All
@@ -215,10 +220,25 @@ import { StatusSummaryBar } from "~/components/dashboard/status-summary-bar";
    - [ ] Multiple filters work together
    - [ ] Handles zero cases gracefully
 
+## 🎨 Animation & Effects Requirements
+
+**Glassmorphism:**
+
+- Standard card glassmorphism: `backdrop-blur-md` with teal gradient
+
+**Animations:**
+
+- Entry: `animate-card-in` for smooth appearance
+- Filter buttons: `transition-smooth` with hover scale
+- Count updates: Smooth number transitions
+
+**See:** [Animation and Effects Guidelines](../01-GENERAL/animation-and-effects.md)
+
 ## 📚 Related Documentation
 
 - [Discharges Tab Redesign](../02-TABS/discharges-tab/redesign-plan.md)
 - [Design System](../01-GENERAL/design-system.md)
+- [Animation and Effects](../01-GENERAL/animation-and-effects.md)
 
 ## 🔗 Dependencies
 

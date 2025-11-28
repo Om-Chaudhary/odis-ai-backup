@@ -94,7 +94,7 @@ export function CasesNeedingAttentionCard({
   };
 
   return (
-    <Card className="border-amber-200/40 bg-gradient-to-br from-amber-50/20 via-white/70 to-white/70">
+    <Card className="animate-card-in-delay-1 transition-smooth border-amber-200/40 bg-gradient-to-br from-amber-50/20 via-white/70 to-white/70 shadow-lg shadow-amber-500/5 backdrop-blur-md hover:scale-[1.01] hover:from-amber-50/25 hover:via-white/75 hover:to-white/75 hover:shadow-xl hover:shadow-amber-500/10">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <AlertTriangle className="h-5 w-5 text-amber-600" />
@@ -151,14 +151,14 @@ export function CasesNeedingAttentionCard({
         <div className="flex gap-2 pt-2">
           <Button
             variant="outline"
-            className="flex-1 border-amber-500 text-amber-700 hover:bg-amber-50"
+            className="transition-smooth flex-1 border-amber-500 text-amber-700 hover:bg-amber-50 hover:scale-[1.01] hover:shadow-sm"
             onClick={handleViewDischarges}
           >
             View Cases Missing Discharges
           </Button>
           <Button
             variant="outline"
-            className="flex-1 border-amber-500 text-amber-700 hover:bg-amber-50"
+            className="transition-smooth flex-1 border-amber-500 text-amber-700 hover:bg-amber-50 hover:scale-[1.01] hover:shadow-sm"
             onClick={handleViewSoap}
           >
             View Cases Missing SOAP
@@ -206,9 +206,25 @@ import { CasesNeedingAttentionCard } from "~/components/dashboard/cases-needing-
    - [ ] Works with date filter
    - [ ] Updates when data changes
 
+## 🎨 Animation & Effects Requirements
+
+**Glassmorphism:**
+
+- Amber glassmorphism: `border-amber-200/40 bg-gradient-to-br from-amber-50/20 via-white/70 to-white/70 backdrop-blur-md`
+- Hover: Enhanced opacity and shadow
+
+**Animations:**
+
+- Entry: `animate-card-in-delay-1` for staggered appearance
+- Progress bars: Smooth value transitions
+- Buttons: `transition-smooth` with subtle hover scale
+
+**See:** [Animation and Effects Guidelines](../01-GENERAL/animation-and-effects.md)
+
 ## 📚 Related Documentation
 
 - [Cases Needing Attention Card Spec](../03-COMPONENTS/cases-needing-attention-card.md)
+- [Animation and Effects](../01-GENERAL/animation-and-effects.md)
 - [Overview Tab Redesign](../02-TABS/overview-tab/redesign-plan.md)
 - [Backend Metrics Assignment](./A10-backend-metrics-queries.md)
 

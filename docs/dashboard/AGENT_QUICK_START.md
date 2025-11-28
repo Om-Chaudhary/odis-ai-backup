@@ -60,12 +60,50 @@ className = "inline-flex rounded-lg border border-slate-200 bg-slate-50/50 p-1";
 // Inactive button: variant="ghost"
 ```
 
-### Cards
+### Cards (with Glassmorphism)
 
 ```typescript
 className =
-  "rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5";
+  "rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10 transition-smooth";
 ```
+
+## ✨ Animation & Effects
+
+### Glassmorphism Cards
+
+**Standard Card:**
+
+```typescript
+className =
+  "rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10 transition-smooth";
+```
+
+**With Entry Animation:**
+
+```typescript
+className =
+  "animate-card-in rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md ...";
+```
+
+### Smooth Transitions
+
+```typescript
+className = "transition-smooth"; // 200ms ease-in-out
+className = "hover:scale-[1.02]"; // Subtle hover scale
+className = "hover:shadow-xl"; // Shadow increase on hover
+```
+
+### Staggered Entry Animations
+
+```typescript
+// For card grids
+className = "animate-card-in"; // First card
+className = "animate-card-in-delay-1"; // +100ms
+className = "animate-card-in-delay-2"; // +200ms
+className = "animate-card-in-delay-3"; // +300ms
+```
+
+**See:** [Animation and Effects Guidelines](./01-GENERAL/animation-and-effects.md)
 
 ## 🔧 Common Patterns
 

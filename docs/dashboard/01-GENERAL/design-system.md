@@ -135,6 +135,34 @@ All spacing uses multiples of 4px:
 .element-spacing: 8px (space-2);
 ```
 
+## ✨ Animation & Effects
+
+**See:** [Animation and Effects Guidelines](./animation-and-effects.md) for complete documentation
+
+### Quick Reference
+
+**Glassmorphism Card:**
+
+```typescript
+className =
+  "rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10";
+```
+
+**Smooth Transitions:**
+
+```typescript
+className = "transition-smooth"; // 200ms ease-in-out
+```
+
+**Staggered Entry:**
+
+```typescript
+className = "animate-card-in"; // First
+className = "animate-card-in-delay-1"; // +100ms
+className = "animate-card-in-delay-2"; // +200ms
+className = "animate-card-in-delay-3"; // +300ms
+```
+
 ## 🔤 Typography
 
 ### Font Families

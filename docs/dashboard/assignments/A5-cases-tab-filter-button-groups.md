@@ -28,6 +28,10 @@ Replace dropdown filters (Status and Source) in the Cases tab with button groups
 - [ ] Styling matches design system
 - [ ] Responsive on mobile/tablet/desktop
 - [ ] Keyboard accessible
+- [ ] **Animations:** Smooth transitions (200ms) on button state changes
+- [ ] **Glassmorphism:** Subtle backdrop blur on button group containers
+- [ ] **Hover Effects:** Subtle scale (1.01x) and shadow increase
+- [ ] **Active State:** Smooth color transition when selection changes
 
 ## 📁 Files to Modify
 
@@ -62,7 +66,7 @@ export function FilterButtonGroup<T extends string>({
   return (
     <div
       className={cn(
-        "inline-flex rounded-lg border border-slate-200 bg-slate-50/50 p-1",
+        "inline-flex rounded-lg border border-slate-200 bg-slate-50/50 p-1 backdrop-blur-sm transition-smooth",
         className
       )}
     >
@@ -73,6 +77,7 @@ export function FilterButtonGroup<T extends string>({
           size="sm"
           onClick={() => onChange(option.value)}
           className={cn(
+            "transition-smooth hover:scale-[1.01]",
             value === option.value &&
               "bg-[#31aba3] text-white shadow-sm hover:bg-[#2a9a92]"
           )}
@@ -171,11 +176,27 @@ import { DateFilterButtonGroup } from "~/components/dashboard/date-filter-button
    - [ ] Works with view mode toggle
    - [ ] Works with existing case queries
 
+## 🎨 Animation & Effects Requirements
+
+**Glassmorphism:**
+
+- Button group container: `backdrop-blur-sm` for subtle glass effect
+- Background: `bg-slate-50/50` for semi-transparent base
+
+**Animations:**
+
+- Button state changes: `transition-smooth` (200ms)
+- Hover: `hover:scale-[1.01]` for subtle feedback
+- Active state: Smooth color transition from ghost to teal
+
+**See:** [Animation and Effects Guidelines](../01-GENERAL/animation-and-effects.md)
+
 ## 📚 Related Documentation
 
 - [Cases Tab Redesign](../02-TABS/cases-tab/redesign-plan.md)
 - [Date Filter Button Group Spec](../03-COMPONENTS/date-filter-button-group.md)
 - [Design System](../01-GENERAL/design-system.md)
+- [Animation and Effects](../01-GENERAL/animation-and-effects.md)
 
 ## 🔗 Dependencies
 

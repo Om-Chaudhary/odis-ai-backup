@@ -27,6 +27,11 @@ Enhance case cards in the Discharges tab to show detailed contact validation, di
 - [ ] "View Details" button added
 - [ ] All information clearly organized
 - [ ] Responsive on mobile/tablet/desktop
+- [ ] **Animations:** Staggered entry for card grid
+- [ ] **Glassmorphism:** Standard card glassmorphism with `backdrop-blur-md`
+- [ ] **Hover Effects:** Subtle scale (1.02x) and shadow increase
+- [ ] **Status Indicators:** Smooth icon/color transitions
+- [ ] **Button Transitions:** Smooth hover states
 
 ## 📁 Files to Create/Modify
 
@@ -224,10 +229,27 @@ import { formatDistanceToNow } from "date-fns";
    - [ ] Navigation works
    - [ ] Handles missing data gracefully
 
+## 🎨 Animation & Effects Requirements
+
+**Glassmorphism:**
+
+- Standard card glassmorphism: `backdrop-blur-md` with gradient background
+- Hover: Enhanced opacity and shadow
+
+**Animations:**
+
+- Entry: Staggered with `animate-card-in` classes
+- Hover: `hover:scale-[1.02]` with shadow increase
+- Status indicators: Smooth icon/color transitions
+- Buttons: `transition-smooth` with hover effects
+
+**See:** [Animation and Effects Guidelines](../01-GENERAL/animation-and-effects.md)
+
 ## 📚 Related Documentation
 
 - [Discharges Tab Redesign](../02-TABS/discharges-tab/redesign-plan.md)
 - [Design System](../01-GENERAL/design-system.md)
+- [Animation and Effects](../01-GENERAL/animation-and-effects.md)
 
 ## 🔗 Dependencies
 

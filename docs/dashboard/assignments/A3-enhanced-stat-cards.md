@@ -28,6 +28,11 @@ Enhance existing stat cards in the Overview tab to show trends, actionable conte
 - [ ] Trend icons display correctly (green up, red down)
 - [ ] All cards follow design system
 - [ ] Responsive on mobile/tablet/desktop
+- [ ] **Animations:** Staggered entry (`animate-card-in`, `animate-card-in-delay-1`, etc.)
+- [ ] **Glassmorphism:** Standard card glassmorphism with `backdrop-blur-md`
+- [ ] **Number Ticker:** Animated number counting for stat values
+- [ ] **Hover Effects:** Subtle scale (1.02x) and shadow increase
+- [ ] **Trend Icons:** Smooth color transitions
 
 ## 📁 Files to Create/Modify
 
@@ -148,9 +153,9 @@ export function StatCard({
   return (
     <Card
       className={cn(
-        "transition-smooth hover:shadow-lg cursor-pointer",
+        "transition-smooth rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md cursor-pointer hover:scale-[1.02] hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10",
         variantStyles[variant],
-        onClick && "hover:translate-y-[-1px]"
+        onClick && "hover:-translate-y-0.5"
       )}
       onClick={onClick}
     >
@@ -199,10 +204,28 @@ export function StatCard({
    - [ ] Updates when date filter changes
    - [ ] Shows correct values
 
+## 🎨 Animation & Effects Requirements
+
+**Glassmorphism:**
+
+- Standard card glassmorphism: `backdrop-blur-md` with gradient background
+- Variant-specific borders (default: teal, warning: amber, success: emerald)
+
+**Animations:**
+
+- Entry: Staggered with `animate-card-in` classes (100ms delays)
+- Content: `animate-card-content-in` for inner content
+- Number values: Use `NumberTicker` component for animated counting
+- Trend icons: `transition-smooth` for color changes
+- Hover: `hover:scale-[1.02]` with shadow increase
+
+**See:** [Animation and Effects Guidelines](../01-GENERAL/animation-and-effects.md)
+
 ## 📚 Related Documentation
 
 - [Overview Tab Redesign](../02-TABS/overview-tab/redesign-plan.md)
 - [Design System](../01-GENERAL/design-system.md)
+- [Animation and Effects](../01-GENERAL/animation-and-effects.md)
 - [Backend Metrics Assignment](./A10-backend-metrics-queries.md)
 
 ## 🔗 Dependencies

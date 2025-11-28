@@ -34,6 +34,11 @@ Enhance case cards in both grid and list views to show more actionable informati
 - [ ] Both views are responsive
 - [ ] Quick actions work correctly
 - [ ] Follows design system
+- [ ] **Animations:** Staggered entry for card grid (`animate-card-in` with delays)
+- [ ] **Glassmorphism:** Standard card glassmorphism with `backdrop-blur-md`
+- [ ] **Hover Effects:** Subtle scale (1.02x) and shadow increase
+- [ ] **Completion Indicators:** Smooth icon/color transitions
+- [ ] **Dropdown Menu:** Smooth open/close animation
 
 ## 📁 Files to Modify
 
@@ -193,10 +198,27 @@ Similar enhancements but more compact:
    - [ ] Completion status reflects actual data
    - [ ] Handles missing data gracefully
 
+## 🎨 Animation & Effects Requirements
+
+**Glassmorphism:**
+
+- Grid cards: Standard glassmorphism with `backdrop-blur-md`
+- List items: Lighter glassmorphism for compact view
+
+**Animations:**
+
+- Entry: Staggered with `animate-card-in` classes for grid
+- Hover: `hover:scale-[1.02]` with shadow increase
+- Completion indicators: Smooth icon/color transitions
+- Dropdown menu: Smooth fade + scale animation
+
+**See:** [Animation and Effects Guidelines](../01-GENERAL/animation-and-effects.md)
+
 ## 📚 Related Documentation
 
 - [Cases Tab Redesign](../02-TABS/cases-tab/redesign-plan.md)
 - [Design System](../01-GENERAL/design-system.md)
+- [Animation and Effects](../01-GENERAL/animation-and-effects.md)
 
 ## 🔗 Dependencies
 

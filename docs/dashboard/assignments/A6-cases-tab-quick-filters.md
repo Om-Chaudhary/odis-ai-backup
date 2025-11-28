@@ -27,6 +27,10 @@ Create a Quick Filters component for the Cases tab that provides one-click filte
 - [ ] Filters integrate with status/source filters
 - [ ] URL query parameters update
 - [ ] Responsive on mobile/tablet/desktop
+- [ ] **Animations:** Smooth transitions on selection changes
+- [ ] **Hover Effects:** Subtle scale (1.02x) on chip hover
+- [ ] **Active State:** Smooth color transition when toggled
+- [ ] **Icons:** Smooth icon animations
 
 ## 📁 Files to Create/Modify
 
@@ -105,11 +109,12 @@ export function QuickFilters({
             size="sm"
             onClick={() => handleToggle(filter.id)}
             className={cn(
+              "transition-smooth hover:scale-[1.02]",
               isActive &&
-                "bg-[#31aba3] text-white border-[#31aba3] hover:bg-[#2a9a92]"
+                "bg-[#31aba3] text-white border-[#31aba3] hover:bg-[#2a9a92] shadow-sm"
             )}
           >
-            <Icon className="mr-2 h-4 w-4" />
+            <Icon className="transition-smooth mr-2 h-4 w-4" />
             {filter.label}
           </Button>
         );
@@ -213,10 +218,22 @@ export function CasesTab() {
    - [ ] Works with search
    - [ ] Works with date filter
 
+## 🎨 Animation & Effects Requirements
+
+**Animations:**
+
+- Toggle: `transition-smooth` for color/background changes
+- Hover: `hover:scale-[1.02]` for subtle feedback
+- Icons: Smooth transitions on state change
+- Active state: Smooth transition to teal background
+
+**See:** [Animation and Effects Guidelines](../01-GENERAL/animation-and-effects.md)
+
 ## 📚 Related Documentation
 
 - [Cases Tab Redesign](../02-TABS/cases-tab/redesign-plan.md)
 - [Design System](../01-GENERAL/design-system.md)
+- [Animation and Effects](../01-GENERAL/animation-and-effects.md)
 
 ## 🔗 Dependencies
 

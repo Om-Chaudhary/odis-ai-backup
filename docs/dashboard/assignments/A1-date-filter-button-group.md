@@ -28,6 +28,9 @@ Create a reusable `DateFilterButtonGroup` component that replaces dropdown date 
 - [ ] Responsive on mobile/tablet/desktop
 - [ ] Keyboard accessible
 - [ ] Follows design system from `docs/dashboard/01-GENERAL/design-system.md`
+- [ ] **Animations:** Smooth transitions (200ms) on button state changes
+- [ ] **Glassmorphism:** Subtle backdrop blur on container (`backdrop-blur-sm`)
+- [ ] **Hover Effects:** Subtle scale (1.01x) and shadow increase on hover
 
 ## 📁 Files to Create/Modify
 
@@ -86,7 +89,7 @@ export function DateFilterButtonGroup({
   return (
     <div
       className={cn(
-        "inline-flex rounded-lg border border-slate-200 bg-slate-50/50 p-1",
+        "inline-flex rounded-lg border border-slate-200 bg-slate-50/50 p-1 backdrop-blur-sm transition-smooth",
         className
       )}
     >
@@ -97,6 +100,7 @@ export function DateFilterButtonGroup({
           size="sm"
           onClick={() => handleChange(preset.value)}
           className={cn(
+            "transition-smooth hover:scale-[1.01]",
             value === preset.value &&
               "bg-[#31aba3] text-white shadow-sm hover:bg-[#2a9a92]"
           )}
@@ -203,10 +207,26 @@ Integrate alongside existing day navigation (see redesign plan for details).
    - [ ] Screen reader announces selection
    - [ ] Focus indicators visible
 
+## 🎨 Animation & Effects Requirements
+
+**Glassmorphism:**
+
+- Container: `backdrop-blur-sm` for subtle glass effect
+- Background: `bg-slate-50/50` for semi-transparent base
+
+**Animations:**
+
+- Button state changes: `transition-smooth` (200ms)
+- Hover: `hover:scale-[1.01]` for subtle feedback
+- Active state: Smooth color transition
+
+**See:** [Animation and Effects Guidelines](../01-GENERAL/animation-and-effects.md)
+
 ## 📚 Related Documentation
 
 - [Date Filter Button Group Spec](../03-COMPONENTS/date-filter-button-group.md)
 - [Design System](../01-GENERAL/design-system.md)
+- [Animation and Effects](../01-GENERAL/animation-and-effects.md)
 - [Overview Tab Redesign](../02-TABS/overview-tab/redesign-plan.md)
 - [Cases Tab Redesign](../02-TABS/cases-tab/redesign-plan.md)
 - [Discharges Tab Redesign](../02-TABS/discharges-tab/redesign-plan.md)

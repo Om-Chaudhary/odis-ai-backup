@@ -23,10 +23,14 @@ Refactor the Activity Timeline component to be collapsible by default, showing 5
 - [ ] Timeline collapsed by default (shows 5 items)
 - [ ] "Show More" button appears when more than 5 items
 - [ ] "Show Less" button appears when expanded
-- [ ] Smooth animation on expand/collapse
+- [ ] Smooth animation on expand/collapse (200ms)
 - [ ] All functionality preserved
 - [ ] Responsive on mobile/tablet/desktop
 - [ ] Keyboard accessible
+- [ ] **Animations:** Smooth expand/collapse with `Collapsible` component
+- [ ] **Glassmorphism:** Standard card glassmorphism with `backdrop-blur-md`
+- [ ] **Entry Animation:** Card content fades in (`animate-card-content-in`)
+- [ ] **Button Transitions:** Smooth icon rotation and text change
 
 ## 📁 Files to Modify
 
@@ -59,14 +63,14 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
   // ... existing empty state handling ...
 
   return (
-    <Card>
+    <Card className="transition-smooth rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Activity className="h-5 w-5 text-slate-600" />
           Recent Activity
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="animate-card-content-in">
         <div className="space-y-0">
           {itemsToShow.map((activity, index) => (
             <ActivityItemComponent
@@ -82,16 +86,16 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
             <CollapsibleTrigger asChild>
               <Button
                 variant="ghost"
-                className="mt-4 w-full"
+                className="transition-smooth mt-4 w-full hover:bg-slate-50"
               >
                 {isExpanded ? (
                   <>
-                    <ChevronUp className="mr-2 h-4 w-4" />
+                    <ChevronUp className="transition-smooth mr-2 h-4 w-4" />
                     Show Less
                   </>
                 ) : (
                   <>
-                    <ChevronDown className="mr-2 h-4 w-4" />
+                    <ChevronDown className="transition-smooth mr-2 h-4 w-4" />
                     Show More ({activities.length - INITIAL_ITEMS_TO_SHOW} more items)
                   </>
                 )}
@@ -145,9 +149,25 @@ npx shadcn@latest add collapsible
    - [ ] Screen reader announces state
    - [ ] Focus management correct
 
+## 🎨 Animation & Effects Requirements
+
+**Glassmorphism:**
+
+- Standard card glassmorphism: `backdrop-blur-md` with gradient background
+
+**Animations:**
+
+- Entry: `animate-card-content-in` for content fade-in
+- Expand/Collapse: Smooth height transition (200ms) via Collapsible component
+- Button icons: Smooth rotation with `transition-smooth`
+- Activity items: Fade in as they appear
+
+**See:** [Animation and Effects Guidelines](../01-GENERAL/animation-and-effects.md)
+
 ## 📚 Related Documentation
 
 - [Activity Timeline Component Docs](../03-COMPONENTS/activity-timeline.md)
+- [Animation and Effects](../01-GENERAL/animation-and-effects.md)
 - [Overview Tab Redesign](../02-TABS/overview-tab/redesign-plan.md)
 
 ## 🔗 Dependencies
