@@ -6,6 +6,7 @@ import { GeistMono } from "geist/font/mono";
 import "~/styles/globals.css";
 import ClientPostHogProvider from "~/components/ClientPostHogProvider";
 import { TRPCReactProvider } from "~/trpc/Provider";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { env } from "~/env.js";
 
 const outfit = Outfit({
@@ -165,7 +166,9 @@ export default function RootLayout({
         className={`font-sans ${outfit.variable} ${inter.variable} ${lora.variable} ${geistMono.variable}`}
       >
         <ClientPostHogProvider>
-          <TRPCReactProvider>{children}</TRPCReactProvider>
+          <TRPCReactProvider>
+            <NuqsAdapter>{children}</NuqsAdapter>
+          </TRPCReactProvider>
         </ClientPostHogProvider>
       </body>
     </html>
