@@ -77,6 +77,7 @@ export const casesRouter = createTRPCRouter({
           type,
           created_at,
           scheduled_at,
+          metadata,
           patients!inner (
             id,
             name,
@@ -138,8 +139,9 @@ export const casesRouter = createTRPCRouter({
 
       // Apply readiness filtering if requested
       let filteredCases = data ?? [];
+      const userEmail = ctx.user.email;
+
       if (input.readinessFilter !== "all" && filteredCases.length > 0) {
-        const userEmail = ctx.user.email;
         filteredCases = filteredCases.filter((caseData) => {
           // Type assertion: the query returns data compatible with BackendCase structure
           // The query may not include all BackendCase fields, but has the fields needed for readiness check
@@ -157,8 +159,29 @@ export const casesRouter = createTRPCRouter({
         });
       }
 
+      // Sort cases by readiness: ready cases first, then by created_at
+      const sortedCases = filteredCases.sort((a, b) => {
+        const aReadiness = checkCaseDischargeReadiness(
+          a as unknown as BackendCase,
+          userEmail,
+        );
+        const bReadiness = checkCaseDischargeReadiness(
+          b as unknown as BackendCase,
+          userEmail,
+        );
+
+        // Primary sort: ready cases first
+        if (aReadiness.isReady && !bReadiness.isReady) return -1;
+        if (!aReadiness.isReady && bReadiness.isReady) return 1;
+
+        // Secondary sort: by created_at (newest first)
+        return (
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      });
+
       return {
-        cases: filteredCases,
+        cases: sortedCases,
         pagination: {
           page: input.page,
           pageSize: input.pageSize,
@@ -166,6 +189,7 @@ export const casesRouter = createTRPCRouter({
           totalPages: Math.ceil((count ?? 0) / input.pageSize),
         },
         date: selectedDate.toISOString().split("T")[0], // Return date in YYYY-MM-DD format
+        userEmail: ctx.user.email, // Include user email for transform layer
       };
     }),
 

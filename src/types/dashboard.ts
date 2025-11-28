@@ -72,6 +72,29 @@ export interface BackendCase {
   type: "checkup" | "emergency" | "surgery" | "follow_up" | null;
   created_at: string;
   scheduled_at: string | null;
+  metadata?: {
+    idexx?: {
+      notes?: string;
+      client_id?: string;
+      patient_id?: string;
+      client_name?: string;
+      provider_id?: string;
+      client_email?: string;
+      client_phone?: string;
+      extracted_at?: string;
+      patient_name?: string;
+      patient_breed?: string | null;
+      provider_name?: string;
+      appointment_id?: string;
+      extracted_from?: string;
+      patient_species?: string | null;
+      appointment_type?: string;
+      appointment_reason?: string;
+      appointment_status?: string;
+      appointment_duration?: number;
+    };
+    [key: string]: unknown;
+  } | null;
   patients: Array<{
     id: string;
     name: string;
@@ -151,6 +174,10 @@ export interface DashboardCase {
   };
   /** Indicates if this case has clinical notes (SOAP notes, transcriptions, or discharge summaries) */
   has_clinical_notes: boolean;
+  /** Indicates if this case is ready for discharge (has content + valid contact) */
+  is_ready_for_discharge: boolean;
+  /** List of requirements missing for discharge readiness */
+  missing_requirements: string[];
   scheduled_discharge_calls: Array<{
     id: string;
     status: CallStatus;

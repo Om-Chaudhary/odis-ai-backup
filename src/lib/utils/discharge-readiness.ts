@@ -1,4 +1,5 @@
 import type { BackendCase } from "~/types/dashboard";
+import { hasValidContact } from "./dashboard-helpers";
 
 /**
  * Discharge requirements for a specific user
@@ -83,91 +84,78 @@ export function getUserDischargeRequirements(
 /**
  * Check if a case meets discharge readiness requirements for a specific user
  *
+ * A case is ready for discharge when BOTH conditions are met:
+ * 1. Content Available: Clinical notes OR IDEXX metadata notes
+ * 2. Contact Available: Valid phone OR valid email
+ *
  * @param caseData - The case data to check
- * @param userEmail - User's email address
+ * @param userEmail - User's email address (optional, for future user-specific requirements)
  * @returns Readiness result with status and missing requirements
  */
 export function checkCaseDischargeReadiness(
   caseData: BackendCase,
-  userEmail: string | null | undefined,
+  _userEmail: string | null | undefined,
 ): DischargeReadinessResult {
-  const requirements = getUserDischargeRequirements(userEmail);
   const missingRequirements: string[] = [];
 
-  // Check if case exists (always required)
-  if (requirements.requiresCase && !caseData.id) {
-    missingRequirements.push("Case record");
-  }
+  // === CONDITION 1: Content Available ===
+  let hasContent = false;
 
-  // Check SOAP notes
-  const hasSoapNotes =
-    (caseData.soap_notes?.length ?? 0) > 0 &&
-    caseData.soap_notes?.some(
-      (note) =>
-        Boolean(note.subjective) ||
-        Boolean(note.objective) ||
-        Boolean(note.assessment) ||
-        Boolean(note.plan),
-    );
-
-  if (requirements.requiresSoapNotes && !hasSoapNotes) {
-    missingRequirements.push("SOAP notes");
-  }
-
-  // Check discharge summary
-  const hasDischargeSummary =
-    (caseData.discharge_summaries?.length ?? 0) > 0 &&
-    caseData.discharge_summaries?.some(
-      (summary) => summary.content && summary.content.trim().length > 0,
-    );
-
-  if (requirements.requiresDischargeSummary && !hasDischargeSummary) {
-    missingRequirements.push("Discharge summary");
-  }
-
-  // Check transcription
-  const hasTranscription =
-    (caseData.transcriptions?.length ?? 0) > 0 &&
-    caseData.transcriptions?.some(
-      (transcription) =>
-        transcription.transcript && transcription.transcript.trim().length > 0,
-    );
-
-  if (requirements.requiresTranscription && !hasTranscription) {
-    missingRequirements.push("Transcription");
-  }
-
-  // Determine if ready based on requirements
-  // Check if case has any clinical notes
-  const hasAnyClinicalNotes =
-    // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
-    hasSoapNotes || hasDischargeSummary || hasTranscription;
-
-  let isReady: boolean;
-
-  if (requirements.requireAll) {
-    // All requirements must be met (AND logic)
-    isReady = missingRequirements.length === 0;
+  if (caseData.source === "idexx_neo") {
+    // IDEXX Neo cases: check metadata.idexx.notes
+    const idexxNotes = caseData.metadata?.idexx?.notes;
+    hasContent = Boolean(idexxNotes && idexxNotes.trim().length > 0);
+    if (!hasContent) {
+      missingRequirements.push("IDEXX appointment notes");
+    }
   } else {
-    // For garrybath and default: need at least one clinical note type
-    // If no specific requirements are set, just check for any clinical notes
-    const hasSpecificRequirements =
-      requirements.requiresSoapNotes ||
-      requirements.requiresDischargeSummary ||
-      requirements.requiresTranscription;
+    // Manual/other cases: check clinical notes (SOAP, discharge summary, or transcription)
+    const hasSoapNotes = (caseData.soap_notes?.length ?? 0) > 0 &&
+      caseData.soap_notes?.some(
+        (note) =>
+          Boolean(note.subjective) ||
+          Boolean(note.objective) ||
+          Boolean(note.assessment) ||
+          Boolean(note.plan),
+      );
 
-    if (hasSpecificRequirements) {
-      // Some specific requirements exist, check those
-      isReady = missingRequirements.length === 0;
-    } else {
-      // No specific requirements (like garrybath) - just need any clinical notes
-      // Since missingRequirements will be empty (no requirements), just check for notes
-      isReady = Boolean(hasAnyClinicalNotes);
+    const hasDischargeSummary =
+      (caseData.discharge_summaries?.length ?? 0) > 0 &&
+      caseData.discharge_summaries?.some(
+        (summary) => summary.content && summary.content.trim().length > 0,
+      );
+
+    const hasTranscription = (caseData.transcriptions?.length ?? 0) > 0 &&
+      caseData.transcriptions?.some(
+        (transcription) =>
+          transcription.transcript &&
+          transcription.transcript.trim().length > 0,
+      );
+
+    hasContent = Boolean(hasSoapNotes) ||
+      Boolean(hasDischargeSummary) ||
+      Boolean(hasTranscription);
+
+    if (!hasContent) {
+      missingRequirements.push(
+        "Clinical notes (SOAP, discharge summary, or transcription)",
+      );
     }
   }
 
+  // === CONDITION 2: Contact Available ===
+  const patient = caseData.patients?.[0];
+  const hasValidPhone = hasValidContact(patient?.owner_phone ?? null);
+  const hasValidEmail = hasValidContact(patient?.owner_email ?? null);
+  const hasContact = hasValidPhone || hasValidEmail;
+
+  if (!hasContact) {
+    missingRequirements.push("Contact info (phone or email)");
+  }
+
+  // Case is ready when BOTH content AND contact are available
   return {
-    isReady,
+    isReady: hasContent && hasContact,
     missingRequirements,
   };
 }

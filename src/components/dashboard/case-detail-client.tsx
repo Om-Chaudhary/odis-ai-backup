@@ -39,6 +39,7 @@ import {
   isPlaceholder,
   getEffectiveContact,
 } from "~/lib/utils/dashboard-helpers";
+import { checkCaseDischargeReadiness } from "~/lib/utils/discharge-readiness";
 import { Badge } from "~/components/ui/badge";
 import {
   Accordion,
@@ -119,18 +120,13 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
   const handleTriggerCall = async () => {
     if (!caseData || !patient || isProcessingRef.current) return;
 
-    // Check for clinical notes requirement
-    // Calculate has_clinical_notes from available data arrays
-    const hasSoapNotes = (caseData.soap_notes?.length ?? 0) > 0;
-    const hasTranscriptions = (caseData.transcriptions?.length ?? 0) > 0;
-    const hasDischargeSummaries =
-      (caseData.discharge_summaries?.length ?? 0) > 0;
-    const hasClinicalNotes =
-      hasSoapNotes || hasTranscriptions || hasDischargeSummaries;
+    // Check discharge readiness (content + contact validation)
+    // Note: caseData from getCaseDetail includes metadata, so readiness check will work for both workflows
+    const readiness = checkCaseDischargeReadiness(caseData, null);
 
-    if (!hasClinicalNotes) {
+    if (!readiness.isReady) {
       toast.error(
-        "Clinical notes required: Add SOAP notes, transcription, or discharge summary before starting discharge call",
+        `Cannot start discharge call. Missing: ${readiness.missingRequirements.join(", ")}`,
       );
       return;
     }
@@ -141,6 +137,7 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
       settings.testModeEnabled ?? false,
     );
 
+    // Additional check for phone specifically (since readiness checks for phone OR email)
     if (!phone || isPlaceholder(phone)) {
       toast.error(
         settings.testModeEnabled

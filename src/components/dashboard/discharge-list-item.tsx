@@ -14,8 +14,8 @@ import {
   Save,
   Loader2,
   Eye,
-  FileText,
   CheckCircle2,
+  AlertCircle,
   MoreHorizontal,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -313,23 +313,19 @@ export function DischargeListItem({
     }
 
     // Default: Ready
+    const tooltipMessage = !caseData.is_ready_for_discharge
+      ? `Missing: ${caseData.missing_requirements.join(", ")}`
+      : !hasValidContact(effectivePhone)
+        ? "Valid phone number required"
+        : "Start discharge call";
+
     return (
       <Button
         onClick={() => onTriggerCall(caseData.id)}
-        disabled={
-          isLoadingCall ||
-          !hasValidContact(effectivePhone) ||
-          !caseData.has_clinical_notes
-        }
+        disabled={isLoadingCall || !caseData.is_ready_for_discharge}
         size="sm"
         className="transition-smooth gap-2 hover:shadow-md"
-        title={
-          !caseData.has_clinical_notes
-            ? "Clinical notes required to start discharge call"
-            : !hasValidContact(effectivePhone)
-              ? "Valid phone number required"
-              : "Start discharge call"
-        }
+        title={tooltipMessage}
       >
         {isLoadingCall ? (
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -346,6 +342,9 @@ export function DischargeListItem({
       className={cn(
         "group transition-smooth relative overflow-hidden rounded-lg border border-l-4 border-slate-200 bg-white shadow-sm hover:border-slate-300 hover:shadow-md",
         getStatusBorderColor(workflowStatus),
+        // Muted styling for non-ready cases
+        !caseData.is_ready_for_discharge &&
+          "border-slate-100 bg-slate-50/50 opacity-75",
       )}
     >
       <CardContent className="p-4">
@@ -504,9 +503,7 @@ export function DischargeListItem({
                   <DropdownMenuItem
                     onClick={() => onTriggerEmail(caseData.id)}
                     disabled={
-                      isLoadingEmail ||
-                      !hasValidContact(effectiveEmail) ||
-                      !caseData.has_clinical_notes
+                      isLoadingEmail || !caseData.is_ready_for_discharge
                     }
                   >
                     <Mail className="mr-2 h-4 w-4" />
@@ -538,29 +535,29 @@ export function DischargeListItem({
             isValid={hasValidContact(effectiveEmail)}
             testMode={false}
           />
-          {/* Clinical Notes Indicator */}
+          {/* Discharge Readiness Indicator */}
           <div
             className={cn(
               "flex items-center gap-1.5 rounded px-2 py-0.5 text-xs",
-              caseData.has_clinical_notes
+              caseData.is_ready_for_discharge
                 ? "bg-emerald-50 text-emerald-700"
                 : "bg-amber-50 text-amber-700",
             )}
             title={
-              caseData.has_clinical_notes
-                ? "Clinical notes available - ready for discharge"
-                : "Clinical notes required - add SOAP notes, transcription, or discharge summary"
+              caseData.is_ready_for_discharge
+                ? "Ready for discharge"
+                : `Missing: ${caseData.missing_requirements.join(", ")}`
             }
           >
-            {caseData.has_clinical_notes ? (
+            {caseData.is_ready_for_discharge ? (
               <>
                 <CheckCircle2 className="h-3.5 w-3.5" />
-                <span className="font-medium">Notes Ready</span>
+                <span className="font-medium">Ready</span>
               </>
             ) : (
               <>
-                <FileText className="h-3.5 w-3.5" />
-                <span className="font-medium">Notes Required</span>
+                <AlertCircle className="h-3.5 w-3.5" />
+                <span className="font-medium">Not Ready</span>
               </>
             )}
           </div>

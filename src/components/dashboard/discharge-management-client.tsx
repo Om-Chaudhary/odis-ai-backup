@@ -128,9 +128,12 @@ export function DischargeManagementClient() {
   // Transform backend data to UI shape
   const cases: DashboardCase[] = useMemo(() => {
     return casesData?.cases
-      ? transformBackendCasesToDashboardCases(casesData.cases)
+      ? transformBackendCasesToDashboardCases(
+          casesData.cases,
+          casesData.userEmail,
+        )
       : [];
-  }, [casesData?.cases]);
+  }, [casesData?.cases, casesData?.userEmail]);
 
   const settings: DischargeSettings = settingsData ?? {
     clinicName: "",
