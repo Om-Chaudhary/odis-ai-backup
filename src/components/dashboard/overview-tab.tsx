@@ -74,7 +74,7 @@ function StatCard({
         "transition-smooth rounded-xl border shadow-lg backdrop-blur-md",
         variantStyles[variant],
         onClick &&
-          "cursor-pointer hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-xl",
+          "group cursor-pointer hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-xl",
       )}
       onClick={onClick}
     >
@@ -254,13 +254,10 @@ export function OverviewTab({
             value={stats?.total ?? 0}
             subtitle={
               stats?.thisWeek ? (
-                <>
-                  <TrendingUp className="inline h-3 w-3 text-emerald-600" />
-                  <span className="ml-1">
-                    +<NumberTicker value={stats.thisWeek} delay={1000} /> this
-                    week
-                  </span>
-                </>
+                <span>
+                  +<NumberTicker value={stats.thisWeek} delay={1000} /> this
+                  week
+                </span>
               ) : (
                 "No change this week"
               )

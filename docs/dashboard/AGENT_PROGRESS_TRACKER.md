@@ -8,8 +8,8 @@
 
 **Total Assignments:** 10  
 **Completed:** 3  
-**In Progress:** 0  
-**Ready:** 5  
+**In Progress:** 1  
+**Ready:** 4  
 **Blocked:** 2
 
 **Progress:** 30% (3/10)
@@ -26,7 +26,7 @@
 | A4  | [Collapsible Activity Timeline](./assignments/A4-collapsible-activity-timeline.md)   | 🔄 Ready       | -                      | -                                 | -                                                     | -                | -                | -                                         |
 | A5  | [Cases Tab Filter Button Groups](./assignments/A5-cases-tab-filter-button-groups.md) | 🔄 Ready       | -                      | -                                 | -                                                     | -                | -                | A1 complete, ready to start               |
 | A6  | [Cases Tab Quick Filters](./assignments/A6-cases-tab-quick-filters.md)               | ⏸️ Blocked     | -                      | -                                 | -                                                     | -                | -                | Waiting on A5 (A10 complete)              |
-| A7  | [Enhanced Case Cards](./assignments/A7-enhanced-case-cards.md)                       | 🔄 Ready       | -                      | -                                 | -                                                     | -                | -                | -                                         |
+| A7  | [Enhanced Case Cards](./assignments/A7-enhanced-case-cards.md)                       | 🟡 In Progress | Agent-A7-CaseCards     | feat/assignment-A7-case-cards     | -                                                     | 2025-01-27 15:00 | -                | Started implementation                    |
 | A8  | [Discharges Tab Status Summary](./assignments/A8-discharges-status-summary.md)       | 🔄 Ready       | -                      | -                                 | -                                                     | -                | -                | -                                         |
 | A9  | [Discharges Tab Enhanced Cards](./assignments/A9-discharges-enhanced-cards.md)       | 🔄 Ready       | -                      | -                                 | -                                                     | -                | -                | -                                         |
 | A10 | [Backend Metrics Queries](./assignments/A10-backend-metrics-queries.md)              | ✅ Complete    | Agent-A10-Metrics      | feat/assignment-A10-metrics       | [#41](https://github.com/Odis-AI/odis-ai-web/pull/41) | 2025-01-27 12:00 | 2025-01-27 13:00 | **Priority: Do First** - Ready for A2, A3 |
