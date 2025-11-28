@@ -13,7 +13,9 @@
 
 ## Quick Links
 
+- **[AGENT_ONBOARDING.md](AGENT_ONBOARDING.md)** ⭐ **Start Here** - Complete context and quick start for new agents
 - **[Complete Index](INDEX.md)** - Full documentation index and structure
+- **[STATUS.md](STATUS.md)** - Current implementation progress tracker
 - [Assignments Index](assignments/README.md) - All task assignments
 - [Component Specifications](specifications/README.md) - Detailed component specs
 - [Data Models](data-models/README.md) - Backend queries and data structures
@@ -44,11 +46,14 @@ Each assignment is self-contained and can be worked on concurrently:
 
 ## Getting Started
 
-1. Review [assignments/README.md](assignments/README.md) to see all available tasks
-2. Pick an assignment from the list
-3. Read the full assignment document
-4. Review related specifications and design system docs
-5. Begin implementation following the implementation guide
+**New agents:** Start with [AGENT_ONBOARDING.md](AGENT_ONBOARDING.md) for complete context and step-by-step guide.
+
+1. Read [AGENT_ONBOARDING.md](AGENT_ONBOARDING.md) - Complete onboarding guide
+2. Check [STATUS.md](STATUS.md) - See available tasks and current progress
+3. Pick an assignment from [assignments/README.md](assignments/README.md)
+4. Read the full assignment document
+5. Review related specifications and design system docs
+6. Begin implementation following the implementation guide
 
 ---
 

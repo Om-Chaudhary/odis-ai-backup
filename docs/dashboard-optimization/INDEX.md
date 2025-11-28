@@ -9,6 +9,9 @@
 docs/dashboard-optimization/
 ├── 00-OVERVIEW.md              # Project overview and quick links
 ├── INDEX.md                    # This file - complete index
+├── AGENT_ONBOARDING.md         # ⭐ Complete onboarding guide for new agents
+├── EXECUTION_STRATEGY.md       # Multi-agent coordination plan
+├── STATUS.md                   # Implementation progress tracker
 │
 ├── assignments/                # Individual task assignments
 │   ├── README.md              # Assignment index
@@ -122,12 +125,15 @@ Each assignment document includes:
 
 ## Getting Started for Sub-Agents
 
-1. **Read:** [00-OVERVIEW.md](./00-OVERVIEW.md) for project context
-2. **Browse:** [assignments/README.md](./assignments/README.md) for available tasks
-3. **Select:** Pick an assignment (A1, A2, A5-A9 can start immediately)
-4. **Review:** Read the full assignment document
-5. **Check:** Review related specifications and design system docs
-6. **Implement:** Follow implementation guidelines
+**New agents:** Start here → [AGENT_ONBOARDING.md](./AGENT_ONBOARDING.md)
+
+1. **Read:** [AGENT_ONBOARDING.md](./AGENT_ONBOARDING.md) ⭐ **Complete context and quick start**
+2. **Check:** [STATUS.md](./STATUS.md) - See available tasks and current progress
+3. **Browse:** [assignments/README.md](./assignments/README.md) for available tasks
+4. **Select:** Pick an assignment (A1, A2, A5-A9 can start immediately)
+5. **Review:** Read the full assignment document
+6. **Check:** Review related specifications and design system docs
+7. **Implement:** Follow implementation guidelines
 
 ## Concurrent Work Support
 
