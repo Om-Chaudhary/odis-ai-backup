@@ -326,16 +326,15 @@ export function CasesDashboardClient() {
       </div>
 
       {/* Day Pagination */}
-      {!isLoading && casesData && (
-        <DayPaginationControls
-          currentDate={currentDate}
-          onDateChange={(date) => {
-            setCurrentDate(date);
-            setCurrentPage(1); // Reset to first page when changing date
-          }}
-          totalItems={casesData.pagination.total}
-        />
-      )}
+      <DayPaginationControls
+        currentDate={currentDate}
+        onDateChange={(date) => {
+          setCurrentDate(date);
+          setCurrentPage(1); // Reset to first page when changing date
+        }}
+        totalItems={casesData?.pagination.total ?? 0}
+        isLoading={isLoading}
+      />
 
       {/* Content */}
       {isLoading ? (
