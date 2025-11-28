@@ -1026,15 +1026,12 @@ export const dashboardRouter = createTRPCRouter({
       };
 
       let cases: CaseWithPatients[] | null;
-      let count: number | null;
 
       if (needsPostFiltering) {
         // Fetch all matching cases (we'll filter after enrichment)
-        const {
-          data: allCases,
-          count: totalCount,
-          error,
-        } = await query.order("created_at", { ascending: false });
+        const { data: allCases, error } = await query.order("created_at", {
+          ascending: false,
+        });
 
         if (error) {
           throw new TRPCError({
@@ -1045,12 +1042,7 @@ export const dashboardRouter = createTRPCRouter({
         }
 
         cases = allCases as CaseWithPatients[] | null;
-        count = totalCount;
       } else {
-        // Get total count before pagination
-        const { count: totalCount } = await query;
-        count = totalCount;
-
         // Apply pagination
         const from = (input.page - 1) * input.pageSize;
         const to = from + input.pageSize - 1;

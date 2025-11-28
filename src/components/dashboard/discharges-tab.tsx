@@ -129,9 +129,11 @@ export function DischargesTab({
   });
 
   // Transform backend data to UI shape
-  const cases: DashboardCase[] = casesData?.cases
-    ? transformBackendCasesToDashboardCases(casesData.cases)
-    : [];
+  const cases: DashboardCase[] = useMemo(() => {
+    return casesData?.cases
+      ? transformBackendCasesToDashboardCases(casesData.cases)
+      : [];
+  }, [casesData?.cases]);
 
   // Keep reference to backend cases for debug modal
   const backendCases = casesData?.cases ?? [];
