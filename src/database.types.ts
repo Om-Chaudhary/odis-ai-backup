@@ -539,10 +539,15 @@ export type Database = {
           scheduled_for: string | null;
           started_at: string | null;
           status: string | null;
+          stereo_recording_url: string | null;
+          structured_data: Json | null;
+          success_evaluation: string | null;
+          summary: string | null;
           transcript: string | null;
           transcript_messages: Json | null;
           updated_at: string;
           user_id: string;
+          user_sentiment: string | null;
           vapi_call_id: string | null;
         };
         Insert: {
@@ -566,10 +571,15 @@ export type Database = {
           scheduled_for?: string | null;
           started_at?: string | null;
           status?: string | null;
+          stereo_recording_url?: string | null;
+          structured_data?: Json | null;
+          success_evaluation?: string | null;
+          summary?: string | null;
           transcript?: string | null;
           transcript_messages?: Json | null;
           updated_at?: string;
           user_id: string;
+          user_sentiment?: string | null;
           vapi_call_id?: string | null;
         };
         Update: {
@@ -593,10 +603,15 @@ export type Database = {
           scheduled_for?: string | null;
           started_at?: string | null;
           status?: string | null;
+          stereo_recording_url?: string | null;
+          structured_data?: Json | null;
+          success_evaluation?: string | null;
+          summary?: string | null;
           transcript?: string | null;
           transcript_messages?: Json | null;
           updated_at?: string;
           user_id?: string;
+          user_sentiment?: string | null;
           vapi_call_id?: string | null;
         };
         Relationships: [
@@ -988,6 +1003,7 @@ export type Database = {
           clinic_phone: string | null;
           created_at: string;
           default_discharge_template_id: string | null;
+          default_schedule_delay_minutes: number | null;
           email: string | null;
           emergency_phone: string | null;
           first_name: string | null;
@@ -1003,6 +1019,7 @@ export type Database = {
           test_contact_phone: string | null;
           test_mode_enabled: boolean | null;
           updated_at: string;
+          voicemail_detection_enabled: boolean | null;
         };
         Insert: {
           avatar_url?: string | null;
@@ -1011,6 +1028,7 @@ export type Database = {
           clinic_phone?: string | null;
           created_at?: string;
           default_discharge_template_id?: string | null;
+          default_schedule_delay_minutes?: number | null;
           email?: string | null;
           emergency_phone?: string | null;
           first_name?: string | null;
@@ -1026,6 +1044,7 @@ export type Database = {
           test_contact_phone?: string | null;
           test_mode_enabled?: boolean | null;
           updated_at?: string;
+          voicemail_detection_enabled?: boolean | null;
         };
         Update: {
           avatar_url?: string | null;
@@ -1034,6 +1053,7 @@ export type Database = {
           clinic_phone?: string | null;
           created_at?: string;
           default_discharge_template_id?: string | null;
+          default_schedule_delay_minutes?: number | null;
           email?: string | null;
           emergency_phone?: string | null;
           first_name?: string | null;
@@ -1049,6 +1069,7 @@ export type Database = {
           test_contact_phone?: string | null;
           test_mode_enabled?: boolean | null;
           updated_at?: string;
+          voicemail_detection_enabled?: boolean | null;
         };
         Relationships: [
           {

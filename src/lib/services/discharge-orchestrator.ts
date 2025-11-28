@@ -720,8 +720,23 @@ export class DischargeOrchestrator {
     const patient = caseInfo ? this.normalizePatient(caseInfo.patient) : null;
     const recipientName = patient?.owner_name ?? undefined;
 
-    // Determine scheduled time
-    const scheduledFor = options.scheduledFor ?? new Date();
+    // Determine scheduled time using server time
+    // Always use server time to avoid timezone and clock drift issues
+    const serverNow = new Date();
+    let scheduledFor: Date;
+
+    if (options.scheduledFor) {
+      // Validate that provided scheduled time is in the future
+      if (options.scheduledFor <= serverNow) {
+        throw new Error(
+          `Scheduled time must be in the future. Provided: ${options.scheduledFor.toISOString()}, Server now: ${serverNow.toISOString()}`,
+        );
+      }
+      scheduledFor = options.scheduledFor;
+    } else {
+      // Default: use server time (send immediately)
+      scheduledFor = serverNow;
+    }
 
     // Insert scheduled email
     const { data: scheduledEmail, error: dbError } = await this.supabase
@@ -857,11 +872,11 @@ export class DischargeOrchestrator {
         ? (summaryResult.data as { content?: string }).content
         : undefined;
 
-    // Fetch user settings for call variables
+    // Fetch user settings for call variables and schedule override
     const { data: userSettings, error: userError } = await this.supabase
       .from("users")
       .select(
-        "clinic_name, clinic_phone, clinic_email, first_name, last_name, test_mode_enabled, test_contact_name, test_contact_phone",
+        "clinic_name, clinic_phone, clinic_email, first_name, last_name, test_mode_enabled, test_contact_name, test_contact_phone, default_schedule_delay_minutes",
       )
       .eq("id", this.user.id)
       .single();
@@ -896,12 +911,30 @@ export class DischargeOrchestrator {
       }
     }
 
+    // Use server time for scheduling
+    // Pass the user's default schedule delay override to CasesService
+    const serverNow = new Date();
+    let scheduledAt: Date | undefined;
+
+    if (options.scheduledFor) {
+      // Validate that provided scheduled time is in the future
+      if (options.scheduledFor <= serverNow) {
+        throw new Error(
+          `Scheduled time must be in the future. Provided: ${options.scheduledFor.toISOString()}, Server now: ${serverNow.toISOString()}`,
+        );
+      }
+      scheduledAt = options.scheduledFor;
+    }
+    // If not provided, CasesService will use server time defaults with user override
+
+    // Pass the user's default schedule delay override via scheduledAt
+    // If scheduledAt is undefined, CasesService will use the override from user settings
     const scheduledCall = await CasesService.scheduleDischargeCall(
       this.supabase,
       this.user.id,
       caseId,
       {
-        scheduledAt: options.scheduledFor ?? new Date(),
+        scheduledAt,
         summaryContent,
         clinicName: userSettings?.clinic_name ?? "Your Clinic",
         clinicPhone: userSettings?.clinic_phone ?? "",

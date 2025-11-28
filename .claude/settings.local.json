@@ -79,7 +79,12 @@
       "WebFetch(domain:docs.vapi.ai)",
       "Bash(tree:*)",
       "Bash(git pull:*)",
-      "Bash(git merge-base:*)"
+      "Bash(git merge-base:*)",
+      "Bash(rsync:*)",
+      "Bash(/Users/s0381806/Development/odis-ai-web/ )",
+      "Bash(/Users/s0381806/Development/odis-ai/apps/web/)",
+      "Bash(pnpm nx run:*)",
+      "Read(//Users/s0381806/Development/**)"
     ],
     "deny": [],
     "ask": []

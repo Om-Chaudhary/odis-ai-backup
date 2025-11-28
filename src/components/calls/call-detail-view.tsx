@@ -231,12 +231,19 @@ export function CallDetailView({ initialCall }: CallDetailViewProps) {
                       className={cn(
                         "font-medium capitalize",
                         call.call_analysis.successEvaluation === "true" ||
-                          call.call_analysis.successEvaluation === true
+                          call.call_analysis.successEvaluation === true ||
+                          call.call_analysis.successEvaluation === "success"
                           ? "text-green-600"
                           : "text-amber-600",
                       )}
                     >
-                      {String(call.call_analysis.successEvaluation)}
+                      {typeof call.call_analysis.successEvaluation === "boolean"
+                        ? call.call_analysis.successEvaluation
+                          ? "Success"
+                          : "Failed"
+                        : String(
+                            call.call_analysis.successEvaluation ?? "Unknown",
+                          )}
                     </span>
                   </div>
                 </>

@@ -34,30 +34,22 @@ export default function DashboardProfileContent({
 }: DashboardProfileContentProps) {
   return (
     <Tabs defaultValue="personal" className="space-y-6">
-      <TabsList className="relative grid w-full grid-cols-3 overflow-hidden border border-slate-200/60 bg-white/90 shadow-xl backdrop-blur-md">
-        {/* Subtle gradient background for tabs list */}
-        <div
-          className="absolute inset-0 opacity-5"
-          style={{
-            background:
-              "linear-gradient(135deg, rgba(49, 171, 163, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)",
-          }}
-        />
+      <TabsList className="relative grid w-full grid-cols-3 overflow-hidden border border-slate-100 bg-white shadow-sm">
         <TabsTrigger
           value="personal"
-          className="relative z-10 transition-all hover:bg-[#31aba3]/10 data-[state=active]:scale-105 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#31aba3] data-[state=active]:to-[#10b981] data-[state=active]:text-white data-[state=active]:shadow-xl"
+          className="relative z-10 transition-all hover:bg-slate-50 data-[state=active]:bg-[#31aba3] data-[state=active]:text-white data-[state=active]:shadow-sm"
         >
           Personal
         </TabsTrigger>
         <TabsTrigger
           value="account"
-          className="relative z-10 transition-all hover:bg-[#31aba3]/10 data-[state=active]:scale-105 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#31aba3] data-[state=active]:to-[#10b981] data-[state=active]:text-white data-[state=active]:shadow-xl"
+          className="relative z-10 transition-all hover:bg-slate-50 data-[state=active]:bg-[#31aba3] data-[state=active]:text-white data-[state=active]:shadow-sm"
         >
           Account
         </TabsTrigger>
         <TabsTrigger
           value="security"
-          className="relative z-10 transition-all hover:bg-[#31aba3]/10 data-[state=active]:scale-105 data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#31aba3] data-[state=active]:to-[#10b981] data-[state=active]:text-white data-[state=active]:shadow-xl"
+          className="relative z-10 transition-all hover:bg-slate-50 data-[state=active]:bg-[#31aba3] data-[state=active]:text-white data-[state=active]:shadow-sm"
         >
           Security
         </TabsTrigger>
@@ -65,16 +57,8 @@ export default function DashboardProfileContent({
 
       {/* Personal Information */}
       <TabsContent value="personal" className="space-y-6">
-        <Card className="relative overflow-hidden border-slate-200/60 bg-white/90 shadow-xl backdrop-blur-md">
-          {/* Subtle gradient background */}
-          <div
-            className="absolute inset-0 opacity-5"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(49, 171, 163, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)",
-            }}
-          />
-          <CardHeader className="relative z-10 border-b border-slate-200/60 bg-gradient-to-r from-emerald-50/80 to-teal-50/50">
+        <Card className="relative overflow-hidden rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md transition-all hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
+          <CardHeader className="relative z-10 border-b border-slate-100 bg-slate-50/50">
             <CardTitle className="text-xl font-semibold text-slate-900">
               Personal Information
             </CardTitle>
@@ -82,7 +66,7 @@ export default function DashboardProfileContent({
               Update your personal details and profile information.
             </CardDescription>
           </CardHeader>
-          <CardContent className="relative z-10 space-y-6">
+          <CardContent className="relative z-10 space-y-6 pt-6">
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="firstName">First Name</Label>
@@ -156,16 +140,8 @@ export default function DashboardProfileContent({
 
       {/* Account Settings */}
       <TabsContent value="account" className="space-y-6">
-        <Card className="relative overflow-hidden border-slate-200/60 bg-white/90 shadow-xl backdrop-blur-md">
-          {/* Subtle gradient background */}
-          <div
-            className="absolute inset-0 opacity-5"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(49, 171, 163, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)",
-            }}
-          />
-          <CardHeader className="relative z-10 border-b border-slate-200/60 bg-gradient-to-r from-emerald-50/80 to-teal-50/50">
+        <Card className="relative overflow-hidden rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md transition-all hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
+          <CardHeader className="relative z-10 border-b border-slate-100 bg-slate-50/50">
             <CardTitle className="text-xl font-semibold text-slate-900">
               Account Settings
             </CardTitle>
@@ -173,7 +149,7 @@ export default function DashboardProfileContent({
               Manage your account preferences and settings.
             </CardDescription>
           </CardHeader>
-          <CardContent className="relative z-10 space-y-6">
+          <CardContent className="relative z-10 space-y-6 pt-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <Label className="text-base text-slate-900">
@@ -190,14 +166,14 @@ export default function DashboardProfileContent({
                 Active
               </Badge>
             </div>
-            <Separator className="bg-slate-200" />
+            <Separator className="bg-slate-100" />
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <Label className="text-base text-slate-900">User ID</Label>
                 <p className="font-mono text-sm text-slate-600">{user.id}</p>
               </div>
             </div>
-            <Separator className="bg-slate-200" />
+            <Separator className="bg-slate-100" />
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <Label className="text-base text-slate-900">Data Export</Label>
@@ -207,7 +183,7 @@ export default function DashboardProfileContent({
               </div>
               <Button
                 variant="outline"
-                className="border-slate-300 transition-all hover:border-[#31aba3] hover:bg-teal-50 hover:text-[#31aba3] hover:shadow-md"
+                className="border-slate-200 transition-all hover:border-[#31aba3] hover:bg-teal-50 hover:text-[#31aba3]"
               >
                 Export Data
               </Button>
@@ -218,16 +194,8 @@ export default function DashboardProfileContent({
 
       {/* Security Settings */}
       <TabsContent value="security" className="space-y-6">
-        <Card className="relative overflow-hidden border-slate-200/60 bg-white/90 shadow-xl backdrop-blur-md">
-          {/* Subtle gradient background */}
-          <div
-            className="absolute inset-0 opacity-5"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(49, 171, 163, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)",
-            }}
-          />
-          <CardHeader className="relative z-10 border-b border-slate-200/60 bg-gradient-to-r from-emerald-50/80 to-teal-50/50">
+        <Card className="relative overflow-hidden rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md transition-all hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
+          <CardHeader className="relative z-10 border-b border-slate-100 bg-slate-50/50">
             <CardTitle className="text-xl font-semibold text-slate-900">
               Security Settings
             </CardTitle>
@@ -235,7 +203,7 @@ export default function DashboardProfileContent({
               Manage your account security and authentication.
             </CardDescription>
           </CardHeader>
-          <CardContent className="relative z-10 space-y-6">
+          <CardContent className="relative z-10 space-y-6 pt-6">
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
@@ -244,13 +212,13 @@ export default function DashboardProfileContent({
                 </div>
                 <Button
                   variant="outline"
-                  className="border-slate-300 transition-all hover:border-[#31aba3] hover:bg-teal-50 hover:text-[#31aba3] hover:shadow-md"
+                  className="border-slate-200 transition-all hover:border-[#31aba3] hover:bg-teal-50 hover:text-[#31aba3]"
                 >
                   <Key className="mr-2 h-4 w-4" />
                   Change Password
                 </Button>
               </div>
-              <Separator className="bg-slate-200" />
+              <Separator className="bg-slate-100" />
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <Label className="text-base text-slate-900">
@@ -271,7 +239,7 @@ export default function DashboardProfileContent({
                   {user.email_confirmed_at ? "Verified" : "Unverified"}
                 </Badge>
               </div>
-              <Separator className="bg-slate-200" />
+              <Separator className="bg-slate-100" />
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <Label className="text-base text-slate-900">
@@ -283,7 +251,7 @@ export default function DashboardProfileContent({
                 </div>
                 <Switch defaultChecked />
               </div>
-              <Separator className="bg-slate-200" />
+              <Separator className="bg-slate-100" />
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
                   <Label className="text-base text-slate-900">
@@ -295,7 +263,7 @@ export default function DashboardProfileContent({
                 </div>
                 <Button
                   variant="outline"
-                  className="border-slate-300 transition-all hover:border-[#31aba3] hover:bg-teal-50 hover:text-[#31aba3] hover:shadow-md"
+                  className="border-slate-200 transition-all hover:border-[#31aba3] hover:bg-teal-50 hover:text-[#31aba3]"
                 >
                   <Shield className="mr-2 h-4 w-4" />
                   View Sessions

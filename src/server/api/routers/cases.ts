@@ -99,13 +99,18 @@ export const casesRouter = createTRPCRouter({
             status,
             scheduled_for,
             ended_at,
-            vapi_call_id
+            vapi_call_id,
+            transcript,
+            recording_url,
+            duration_seconds,
+            created_at
           ),
           scheduled_discharge_emails (
             id,
             status,
             scheduled_for,
-            sent_at
+            sent_at,
+            created_at
           )
         `,
         )
@@ -133,6 +138,73 @@ export const casesRouter = createTRPCRouter({
         },
         date: selectedDate.toISOString().split("T")[0], // Return date in YYYY-MM-DD format
       };
+    }),
+
+  /**
+   * Get single case with all related data (user's own cases only)
+   */
+  getCaseDetail: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      // First check if case exists and belongs to user
+      const { data: caseCheck, error: caseCheckError } = await ctx.supabase
+        .from("cases")
+        .select("id, user_id")
+        .eq("id", input.id)
+        .single();
+
+      if (caseCheckError || !caseCheck) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Case not found",
+          cause: caseCheckError,
+        });
+      }
+
+      // Verify ownership
+      if (caseCheck.user_id !== ctx.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have access to this case",
+        });
+      }
+
+      // Now fetch full case details with all relations (using left joins)
+      const { data, error } = await ctx.supabase
+        .from("cases")
+        .select(
+          `
+          id, status, created_at, scheduled_at,
+          patients (
+            id, name, species, breed,
+            owner_name, owner_email, owner_phone
+          ),
+          transcriptions (id, transcript, created_at),
+          soap_notes (id, subjective, objective, assessment, plan, created_at),
+          discharge_summaries (id, content, created_at),
+          scheduled_discharge_calls (
+            id, status, scheduled_for, ended_at, ended_reason, started_at,
+            vapi_call_id, transcript, transcript_messages, call_analysis,
+            summary, success_evaluation, structured_data, user_sentiment,
+            recording_url, stereo_recording_url, duration_seconds, cost, created_at
+          ),
+          scheduled_discharge_emails (
+            id, status, scheduled_for, sent_at, created_at
+          )
+        `,
+        )
+        .eq("id", input.id)
+        .single();
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch case details",
+          cause: error,
+        });
+      }
+
+      return data;
     }),
 
   /**
@@ -206,6 +278,7 @@ export const casesRouter = createTRPCRouter({
           ownerPhone: z.string().optional(),
         }),
         dischargeType: z.enum(["email", "call", "both"]),
+        scheduledAt: z.string().datetime().optional(), // ISO 8601 datetime string
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -259,6 +332,24 @@ export const casesRouter = createTRPCRouter({
         scheduleCall: false,
       };
 
+      // Parse scheduledAt if provided, otherwise use user's default override or system defaults
+      // Always use server time to avoid timezone and clock drift issues
+      const serverNow = new Date();
+      let scheduledFor: Date | undefined;
+
+      if (input.scheduledAt) {
+        const clientScheduledTime = new Date(input.scheduledAt);
+        // Validate that the scheduled time is in the future (using server time)
+        if (clientScheduledTime <= serverNow) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Scheduled time must be in the future",
+          });
+        }
+        scheduledFor = clientScheduledTime;
+      }
+      // If not provided, the orchestrator/service will use user's default override or system defaults
+
       // Handle email discharge
       if (input.dischargeType === "email" || input.dischargeType === "both") {
         if (input.patientData.ownerEmail) {
@@ -266,7 +357,7 @@ export const casesRouter = createTRPCRouter({
           orchestrationSteps.scheduleEmail = {
             recipientEmail: input.patientData.ownerEmail,
             recipientName: input.patientData.ownerName ?? "Pet Owner",
-            scheduledFor: new Date(),
+            scheduledFor,
           };
         } else {
           warnings.push("Email skipped - no email address provided");
@@ -278,7 +369,7 @@ export const casesRouter = createTRPCRouter({
         if (input.patientData.ownerPhone) {
           orchestrationSteps.scheduleCall = {
             phoneNumber: input.patientData.ownerPhone,
-            scheduledFor: new Date(),
+            scheduledFor,
           };
         } else {
           warnings.push("Call skipped - no phone number provided");
@@ -404,7 +495,7 @@ export const casesRouter = createTRPCRouter({
     const { data, error } = await ctx.supabase
       .from("users")
       .select(
-        "clinic_name, clinic_phone, clinic_email, emergency_phone, first_name, last_name, test_mode_enabled, test_contact_name, test_contact_email, test_contact_phone",
+        "clinic_name, clinic_phone, clinic_email, emergency_phone, first_name, last_name, test_mode_enabled, test_contact_name, test_contact_email, test_contact_phone, voicemail_detection_enabled, default_schedule_delay_minutes",
       )
       .eq("id", ctx.user.id)
       .single();
@@ -433,6 +524,8 @@ export const casesRouter = createTRPCRouter({
       testContactName: data?.test_contact_name ?? "",
       testContactEmail: data?.test_contact_email ?? "",
       testContactPhone: data?.test_contact_phone ?? "",
+      voicemailDetectionEnabled: data?.voicemail_detection_enabled ?? false,
+      defaultScheduleDelayMinutes: data?.default_schedule_delay_minutes ?? null,
     };
   }),
 
@@ -450,11 +543,18 @@ export const casesRouter = createTRPCRouter({
         testContactName: z.string().optional(),
         testContactEmail: z.string().optional(),
         testContactPhone: z.string().optional(),
+        voicemailDetectionEnabled: z.boolean().optional(),
+        defaultScheduleDelayMinutes: z
+          .number()
+          .int()
+          .min(0)
+          .nullable()
+          .optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       // Build update object only with defined fields
-      const updateData: Record<string, string | boolean> = {};
+      const updateData: Record<string, string | boolean | number | null> = {};
 
       if (input.clinicName !== undefined) {
         updateData.clinic_name = input.clinicName;
@@ -479,6 +579,14 @@ export const casesRouter = createTRPCRouter({
       }
       if (input.testContactPhone !== undefined) {
         updateData.test_contact_phone = input.testContactPhone;
+      }
+      if (input.voicemailDetectionEnabled !== undefined) {
+        updateData.voicemail_detection_enabled =
+          input.voicemailDetectionEnabled;
+      }
+      if (input.defaultScheduleDelayMinutes !== undefined) {
+        updateData.default_schedule_delay_minutes =
+          input.defaultScheduleDelayMinutes;
       }
 
       const { error } = await ctx.supabase

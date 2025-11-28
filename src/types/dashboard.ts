@@ -11,6 +11,14 @@ export type EmailStatus = "queued" | "sent" | "failed" | "cancelled" | null;
 
 export type CaseStatus = "draft" | "ongoing" | "completed" | "reviewed";
 
+export interface TranscriptMessage {
+  role: "assistant" | "user" | "system";
+  message: string;
+  time?: number;
+  endTime?: number;
+  secondsFromStart?: number;
+}
+
 /**
  * Vapi Call Analysis Structure
  */
@@ -85,12 +93,25 @@ export interface BackendCase {
     scheduled_for: string | null;
     ended_at: string | null;
     vapi_call_id: string | null;
+    transcript: string | null;
+    transcript_messages: TranscriptMessage[] | null;
+    call_analysis: CallAnalysis | null;
+    summary: string | null;
+    success_evaluation: string | null;
+    structured_data: Record<string, unknown> | null;
+    user_sentiment: string | null;
+    recording_url: string | null;
+    stereo_recording_url: string | null;
+    duration_seconds: number | null;
+    cost: number | null;
+    created_at: string;
   }>;
   scheduled_discharge_emails: Array<{
     id: string;
     status: EmailStatus;
     scheduled_for: string | null;
     sent_at: string | null;
+    created_at: string;
   }>;
 }
 
@@ -116,19 +137,24 @@ export interface DashboardCase {
     content: string;
     created_at: string;
   };
-  scheduled_discharge_call?: {
+  scheduled_discharge_calls: Array<{
     id: string;
     status: CallStatus;
     scheduled_for: string | null;
     ended_at: string | null;
     vapi_call_id: string | null;
-  };
-  scheduled_discharge_email?: {
+    transcript: string | null;
+    recording_url: string | null;
+    duration_seconds: number | null;
+    created_at: string;
+  }>;
+  scheduled_discharge_emails: Array<{
     id: string;
     status: EmailStatus;
     scheduled_for: string | null;
     sent_at: string | null;
-  };
+    created_at: string;
+  }>;
 }
 
 /**
@@ -144,6 +170,8 @@ export interface DischargeSettings {
   testContactName?: string;
   testContactEmail?: string;
   testContactPhone?: string;
+  voicemailDetectionEnabled?: boolean;
+  defaultScheduleDelayMinutes?: number | null; // Override default scheduling delay (null = use defaults)
 }
 
 export interface PatientUpdateInput {
@@ -168,4 +196,161 @@ export interface TriggerDischargeInput {
     ownerPhone?: string;
   };
   dischargeType: "call" | "email" | "both";
+}
+
+/**
+ * Detailed case view - extends BackendCase with proper typing
+ */
+export interface DetailedCase extends BackendCase {
+  transcriptions?: Array<{
+    id: string;
+    transcript: string;
+    created_at: string;
+  }>;
+  soap_notes?: Array<{
+    id: string;
+    subjective?: string | null;
+    objective?: string | null;
+    assessment?: string | null;
+    plan?: string | null;
+    created_at: string;
+  }>;
+  scheduled_discharge_calls: Array<{
+    id: string;
+    status: CallStatus;
+    scheduled_for: string | null;
+    ended_at: string | null;
+    vapi_call_id: string | null;
+    created_at: string;
+    transcript: string | null;
+    transcript_messages: TranscriptMessage[] | null;
+    call_analysis: CallAnalysis | null;
+    summary: string | null;
+    success_evaluation: string | null;
+    structured_data: Record<string, unknown> | null;
+    user_sentiment: string | null;
+    recording_url: string | null;
+    stereo_recording_url: string | null;
+    duration_seconds: number | null;
+    cost: number | null;
+  }>;
+  scheduled_discharge_emails: Array<{
+    id: string;
+    status: EmailStatus;
+    scheduled_for: string | null;
+    sent_at: string | null;
+    created_at: string;
+  }>;
+}
+
+/**
+ * Discharge timeline item for displaying call/email history
+ */
+export interface DischargeTimeline {
+  type: "call" | "email";
+  status: CallStatus | EmailStatus;
+  scheduledFor: string | null;
+  completedAt: string | null;
+  id: string;
+  createdAt: string;
+}
+
+/**
+ * Dashboard quick stats
+ */
+export interface DashboardStats {
+  activeCases: number;
+  completedCalls: number;
+  pendingCalls: number;
+  successRate: number;
+  trends: {
+    cases: "up" | "down" | "stable";
+    calls: "up" | "down" | "stable";
+  };
+}
+
+/**
+ * Activity item for timeline
+ */
+export interface ActivityItem {
+  id: string;
+  type:
+    | "case_created"
+    | "call_completed"
+    | "call_scheduled"
+    | "discharge_summary";
+  timestamp: string;
+  description: string;
+  metadata: Record<string, unknown>;
+}
+
+/**
+ * Weekly activity data point for chart
+ */
+export interface WeeklyActivityData {
+  date: string;
+  cases: number;
+  calls: number;
+  completedCalls: number;
+}
+
+/**
+ * Call performance metrics
+ */
+export interface CallPerformanceMetrics {
+  totalCalls: number;
+  averageDuration: number;
+  totalCost: number;
+  successRate: number;
+  sentimentBreakdown: {
+    positive: number;
+    neutral: number;
+    negative: number;
+  };
+}
+
+/**
+ * Upcoming scheduled item
+ */
+export interface UpcomingItem {
+  id: string;
+  type: "call" | "email";
+  scheduledFor: string | null;
+  status: CallStatus | EmailStatus;
+  description: string;
+  metadata: Record<string, unknown>;
+}
+
+/**
+ * Case list item for dashboard cases tab
+ */
+export interface CaseListItem {
+  id: string;
+  status: CaseStatus;
+  source: string | null;
+  created_at: string;
+  patient: {
+    id: string;
+    name: string;
+    species: string;
+    owner_name: string;
+  };
+  hasSoapNote: boolean;
+  hasDischargeSummary: boolean;
+  hasDischargeCall: boolean;
+  hasDischargeEmail: boolean;
+}
+
+/**
+ * Comprehensive case statistics for dashboard overview
+ */
+export interface CaseStats {
+  total: number;
+  thisWeek: number;
+  byStatus: Record<CaseStatus, number>;
+  bySource: Record<string, number>;
+  soapNotes: number;
+  dischargeSummaries: number;
+  callsCompleted: number;
+  emailsSent: number;
 }
