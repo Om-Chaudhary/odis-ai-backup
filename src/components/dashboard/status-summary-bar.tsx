@@ -1,8 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "~/components/ui/card";
-import { Button } from "~/components/ui/button";
-import { cn } from "~/lib/utils";
+import { FilterButtonGroup } from "./filter-button-group";
 
 interface StatusSummaryBarProps {
   totalCases: number;
@@ -73,68 +72,21 @@ export function StatusSummaryBar({
 
           {/* Quick Filters */}
           {onFilterChange && (
-            <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50/50 p-1">
-              <Button
-                variant={activeFilter === "all" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => onFilterChange("all")}
-                className={cn(
-                  "transition-smooth hover:scale-[1.01]",
-                  activeFilter === "all" &&
-                    "bg-[#31aba3] text-white shadow-sm hover:bg-[#2a9a92]",
-                )}
-              >
-                All
-              </Button>
-              <Button
-                variant={activeFilter === "ready" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => onFilterChange("ready")}
-                className={cn(
-                  "transition-smooth hover:scale-[1.01]",
-                  activeFilter === "ready" &&
-                    "bg-[#31aba3] text-white shadow-sm hover:bg-[#2a9a92]",
-                )}
-              >
-                Ready
-              </Button>
-              <Button
-                variant={activeFilter === "pending" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => onFilterChange("pending")}
-                className={cn(
-                  "transition-smooth hover:scale-[1.01]",
-                  activeFilter === "pending" &&
-                    "bg-[#31aba3] text-white shadow-sm hover:bg-[#2a9a92]",
-                )}
-              >
-                Pending
-              </Button>
-              <Button
-                variant={activeFilter === "completed" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => onFilterChange("completed")}
-                className={cn(
-                  "transition-smooth hover:scale-[1.01]",
-                  activeFilter === "completed" &&
-                    "bg-[#31aba3] text-white shadow-sm hover:bg-[#2a9a92]",
-                )}
-              >
-                Completed
-              </Button>
-              <Button
-                variant={activeFilter === "failed" ? "default" : "ghost"}
-                size="sm"
-                onClick={() => onFilterChange("failed")}
-                className={cn(
-                  "transition-smooth hover:scale-[1.01]",
-                  activeFilter === "failed" &&
-                    "bg-[#31aba3] text-white shadow-sm hover:bg-[#2a9a92]",
-                )}
-              >
-                Failed
-              </Button>
-            </div>
+            <FilterButtonGroup
+              options={[
+                { value: "all", label: "All" },
+                { value: "ready", label: "Ready" },
+                { value: "pending", label: "Pending" },
+                { value: "completed", label: "Completed" },
+                { value: "failed", label: "Failed" },
+              ]}
+              value={activeFilter}
+              onChange={(value) =>
+                onFilterChange(
+                  value as "all" | "ready" | "pending" | "completed" | "failed",
+                )
+              }
+            />
           )}
         </div>
       </CardContent>
