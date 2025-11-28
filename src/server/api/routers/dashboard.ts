@@ -967,6 +967,7 @@ export const dashboardRouter = createTRPCRouter({
           status,
           source,
           created_at,
+          scheduled_at,
           discharge_summaries(id),
           soap_notes(id)
         `,
@@ -1325,6 +1326,7 @@ export const dashboardRouter = createTRPCRouter({
           status,
           source,
           created_at,
+          scheduled_at,
           patients!inner (
             id,
             name,

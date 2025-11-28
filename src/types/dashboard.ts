@@ -343,6 +343,7 @@ export interface CaseListItem {
   status: CaseStatus;
   source: string | null;
   created_at: string;
+  scheduled_at?: string;
   patient: {
     id: string;
     name: string;

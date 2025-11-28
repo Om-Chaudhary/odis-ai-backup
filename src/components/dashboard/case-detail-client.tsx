@@ -22,6 +22,9 @@ import {
   Calendar,
   MessageSquare,
   Send,
+  Heart,
+  Thermometer,
+  Scale,
 } from "lucide-react";
 import { format } from "date-fns";
 import { api } from "~/trpc/client";
@@ -97,15 +100,19 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
   };
 
   // Extract patient data
+  // Note: Only 'name' is required (NOT NULL) in schema. All other fields are nullable.
   const patient = caseData?.patients?.[0] as
     | {
         id: string;
-        name: string;
-        species: string;
-        breed: string;
-        owner_name: string;
-        owner_email: string | null;
-        owner_phone: string;
+        name: string; // Required in schema
+        species?: string | null; // Nullable in schema
+        breed?: string | null; // Nullable in schema
+        owner_name?: string | null; // Nullable in schema
+        owner_email?: string | null; // Nullable in schema
+        owner_phone?: string | null; // Nullable in schema
+        date_of_birth?: string | null; // Nullable in schema
+        sex?: string | null; // Nullable in schema
+        weight_kg?: number | null; // Nullable in schema
       }
     | undefined;
 
@@ -133,7 +140,7 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
       caseId: caseData.id,
       patientId: patient.id,
       patientData: {
-        ownerName: patient.owner_name,
+        ownerName: patient.owner_name ?? undefined,
         ownerEmail: patient.owner_email ?? undefined,
         ownerPhone: phone,
       },
@@ -190,6 +197,42 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
     sent_at?: string | null;
     created_at: string;
   }>;
+  const vitalSigns = (caseData?.vital_signs ?? []) as Array<{
+    id: string;
+    temperature?: number | null;
+    temperature_unit?: string | null;
+    pulse?: number | null;
+    respiration?: number | null;
+    weight?: number | null;
+    weight_unit?: string | null;
+    systolic?: number | null;
+    diastolic?: number | null;
+    notes?: string | null;
+    measured_at?: string | null;
+    source?: string | null;
+    created_at: string;
+  }>;
+
+  // Extract appointment metadata if available (from IDEXX, etc.)
+  // Note: metadata is nullable jsonb field, and idexx structure only exists when source = 'idexx_neo'
+  // We need to safely check if metadata exists and has the idexx property
+  const appointmentMetadata =
+    caseData?.metadata &&
+    typeof caseData.metadata === "object" &&
+    !Array.isArray(caseData.metadata) &&
+    "idexx" in caseData.metadata
+      ? (caseData.metadata as {
+          idexx?: {
+            appointment_type?: string;
+            appointment_reason?: string;
+            appointment_status?: string;
+            provider_name?: string;
+            appointment_duration?: number;
+            notes?: string;
+          };
+          [key: string]: unknown;
+        })
+      : null;
 
   const SpeciesIcon = patient?.species?.toLowerCase() === "feline" ? Cat : Dog;
 
@@ -247,11 +290,12 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
                   ? patient.name
                   : "Unknown Patient"}
               </h1>
-              {patient?.species && (
+              {(patient?.species != null ||
+                (patient?.breed != null && !isPlaceholder(patient.breed))) && (
                 <p className="text-muted-foreground mt-1 text-lg">
-                  {patient.species}
-                  {patient.breed && !isPlaceholder(patient.breed)
-                    ? ` • ${patient.breed}`
+                  {patient.species ?? ""}
+                  {patient.breed != null && !isPlaceholder(patient.breed)
+                    ? `${patient.species != null ? " • " : ""}${patient.breed}`
                     : ""}
                 </p>
               )}
@@ -335,50 +379,153 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
                           <p className="font-medium text-slate-900">
                             {patient.name}
                           </p>
-                          <div className="text-muted-foreground flex flex-wrap gap-2 text-sm">
-                            {patient.species && <span>{patient.species}</span>}
-                            {patient.breed && !isPlaceholder(patient.breed) && (
-                              <>
-                                <span>•</span>
-                                <span>{patient.breed}</span>
-                              </>
-                            )}
-                          </div>
+                          {(patient.species != null ||
+                            (patient.breed != null &&
+                              !isPlaceholder(patient.breed))) && (
+                            <div className="text-muted-foreground flex flex-wrap gap-2 text-sm">
+                              {patient.species != null && (
+                                <span>{patient.species}</span>
+                              )}
+                              {patient.breed != null &&
+                                !isPlaceholder(patient.breed) && (
+                                  <>
+                                    {patient.species != null && <span>•</span>}
+                                    <span>{patient.breed}</span>
+                                  </>
+                                )}
+                            </div>
+                          )}
+                          {(patient.date_of_birth != null ||
+                            patient.sex != null ||
+                            patient.weight_kg != null) && (
+                            <div className="text-muted-foreground mt-2 space-y-1 text-xs">
+                              {patient.date_of_birth != null && (
+                                <div>
+                                  DOB:{" "}
+                                  {format(
+                                    new Date(patient.date_of_birth),
+                                    "MMM d, yyyy",
+                                  )}
+                                </div>
+                              )}
+                              {patient.sex != null && (
+                                <div>Sex: {patient.sex}</div>
+                              )}
+                              {patient.weight_kg != null && (
+                                <div>
+                                  Weight: {patient.weight_kg} kg
+                                  {patient.weight_kg !== 0 &&
+                                    ` (${(patient.weight_kg * 2.20462).toFixed(
+                                      1,
+                                    )} lbs)`}
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
                     <div className="space-y-4">
-                      <div>
-                        <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
-                          Owner
-                        </p>
-                        <p className="font-medium text-slate-900">
-                          {patient.owner_name}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
-                          Contact
-                        </p>
-                        <div className="space-y-2 text-sm">
-                          {patient.owner_phone &&
-                            !isPlaceholder(patient.owner_phone) && (
-                              <div className="text-muted-foreground flex items-center gap-2">
-                                <Phone className="h-4 w-4" />
-                                <span>{patient.owner_phone}</span>
+                      {(patient.owner_name != null ||
+                        (patient.owner_phone != null &&
+                          !isPlaceholder(patient.owner_phone)) ||
+                        (patient.owner_email != null &&
+                          !isPlaceholder(patient.owner_email))) && (
+                        <>
+                          {patient.owner_name != null &&
+                            !isPlaceholder(patient.owner_name) && (
+                              <div>
+                                <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
+                                  Owner
+                                </p>
+                                <p className="font-medium text-slate-900">
+                                  {patient.owner_name}
+                                </p>
                               </div>
                             )}
-                          {patient.owner_email &&
-                            !isPlaceholder(patient.owner_email) && (
-                              <div className="text-muted-foreground flex items-center gap-2">
-                                <Mail className="h-4 w-4" />
-                                <span>{patient.owner_email}</span>
-                              </div>
-                            )}
-                        </div>
-                      </div>
+                          <div>
+                            <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
+                              Contact
+                            </p>
+                            <div className="space-y-2 text-sm">
+                              {patient.owner_phone != null &&
+                                !isPlaceholder(patient.owner_phone) && (
+                                  <div className="text-muted-foreground flex items-center gap-2">
+                                    <Phone className="h-4 w-4" />
+                                    <span>{patient.owner_phone}</span>
+                                  </div>
+                                )}
+                              {patient.owner_email != null &&
+                                !isPlaceholder(patient.owner_email) && (
+                                  <div className="text-muted-foreground flex items-center gap-2">
+                                    <Mail className="h-4 w-4" />
+                                    <span>{patient.owner_email}</span>
+                                  </div>
+                                )}
+                              {(!patient.owner_phone ||
+                                isPlaceholder(patient.owner_phone)) &&
+                                (!patient.owner_email ||
+                                  isPlaceholder(patient.owner_email)) && (
+                                  <p className="text-muted-foreground text-xs italic">
+                                    No contact information available
+                                  </p>
+                                )}
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
+                  {/* Appointment Metadata */}
+                  {appointmentMetadata?.idexx && (
+                    <div className="rounded-lg border border-slate-200 bg-slate-50/50 p-4">
+                      <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
+                        Appointment Details
+                      </p>
+                      <div className="grid gap-2 text-sm md:grid-cols-2">
+                        {appointmentMetadata.idexx.appointment_type && (
+                          <div>
+                            <span className="text-muted-foreground">
+                              Type:{" "}
+                            </span>
+                            <span className="font-medium">
+                              {appointmentMetadata.idexx.appointment_type}
+                            </span>
+                          </div>
+                        )}
+                        {appointmentMetadata.idexx.appointment_reason && (
+                          <div>
+                            <span className="text-muted-foreground">
+                              Reason:{" "}
+                            </span>
+                            <span className="font-medium">
+                              {appointmentMetadata.idexx.appointment_reason}
+                            </span>
+                          </div>
+                        )}
+                        {appointmentMetadata.idexx.provider_name && (
+                          <div>
+                            <span className="text-muted-foreground">
+                              Provider:{" "}
+                            </span>
+                            <span className="font-medium">
+                              {appointmentMetadata.idexx.provider_name}
+                            </span>
+                          </div>
+                        )}
+                        {appointmentMetadata.idexx.appointment_status && (
+                          <div>
+                            <span className="text-muted-foreground">
+                              Status:{" "}
+                            </span>
+                            <span className="font-medium">
+                              {appointmentMetadata.idexx.appointment_status}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p className="text-muted-foreground text-sm">
@@ -459,6 +606,167 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
               </div>
             </AccordionContent>
           </AccordionItem>
+
+          {/* Vital Signs Section */}
+          {vitalSigns.length > 0 && (
+            <AccordionItem value="vitals" className="border-b border-slate-200">
+              <AccordionTrigger className="py-6 text-left hover:no-underline">
+                <div className="flex items-center gap-3">
+                  <Activity className="text-muted-foreground h-5 w-5" />
+                  <div>
+                    <h2 className="text-xl font-semibold text-slate-900">
+                      Vital Signs
+                    </h2>
+                    <p className="text-muted-foreground mt-0.5 text-sm">
+                      {vitalSigns.length} measurement
+                      {vitalSigns.length !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pt-2 pb-6">
+                <div className="space-y-4">
+                  {vitalSigns.map((vitals) => (
+                    <div
+                      key={vitals.id}
+                      className="rounded-lg border border-slate-200 bg-slate-50/50 p-6"
+                    >
+                      <div className="mb-4 flex items-center justify-between">
+                        <span className="text-muted-foreground text-xs">
+                          {vitals.measured_at
+                            ? format(
+                                new Date(vitals.measured_at),
+                                "MMM d, yyyy 'at' h:mm a",
+                              )
+                            : format(
+                                new Date(vitals.created_at),
+                                "MMM d, yyyy 'at' h:mm a",
+                              )}
+                        </span>
+                        {vitals.source && (
+                          <Badge variant="outline" className="text-xs">
+                            {vitals.source}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                        {vitals.temperature !== null &&
+                          vitals.temperature !== undefined && (
+                            <div className="flex items-center gap-2">
+                              <div className="rounded-full bg-red-50 p-2 text-red-600">
+                                <Thermometer className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground text-xs font-medium">
+                                  Temperature
+                                </p>
+                                <p className="font-semibold">
+                                  {vitals.temperature}
+                                  {vitals.temperature_unit === "F"
+                                    ? "°F"
+                                    : vitals.temperature_unit === "C"
+                                      ? "°C"
+                                      : ""}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        {vitals.pulse !== null &&
+                          vitals.pulse !== undefined && (
+                            <div className="flex items-center gap-2">
+                              <div className="rounded-full bg-pink-50 p-2 text-pink-600">
+                                <Heart className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground text-xs font-medium">
+                                  Pulse
+                                </p>
+                                <p className="font-semibold">
+                                  {vitals.pulse} bpm
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        {vitals.respiration !== null &&
+                          vitals.respiration !== undefined && (
+                            <div className="flex items-center gap-2">
+                              <div className="rounded-full bg-blue-50 p-2 text-blue-600">
+                                <Activity className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground text-xs font-medium">
+                                  Respiration
+                                </p>
+                                <p className="font-semibold">
+                                  {vitals.respiration} /min
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        {vitals.weight !== null &&
+                          vitals.weight !== undefined && (
+                            <div className="flex items-center gap-2">
+                              <div className="rounded-full bg-green-50 p-2 text-green-600">
+                                <Scale className="h-4 w-4" />
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground text-xs font-medium">
+                                  Weight
+                                </p>
+                                <p className="font-semibold">
+                                  {vitals.weight}{" "}
+                                  {vitals.weight_unit === "kg"
+                                    ? "kg"
+                                    : vitals.weight_unit === "lb"
+                                      ? "lbs"
+                                      : (vitals.weight_unit ?? "")}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        {(vitals.systolic !== null &&
+                          vitals.systolic !== undefined) ||
+                        (vitals.diastolic !== null &&
+                          vitals.diastolic !== undefined) ? (
+                          <div className="flex items-center gap-2">
+                            <div className="rounded-full bg-purple-50 p-2 text-purple-600">
+                              <Activity className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground text-xs font-medium">
+                                Blood Pressure
+                              </p>
+                              <p className="font-semibold">
+                                {vitals.systolic !== null &&
+                                vitals.systolic !== undefined &&
+                                vitals.diastolic !== null &&
+                                vitals.diastolic !== undefined
+                                  ? `${vitals.systolic}/${vitals.diastolic} mmHg`
+                                  : vitals.systolic !== null &&
+                                      vitals.systolic !== undefined
+                                    ? `Systolic: ${vitals.systolic} mmHg`
+                                    : vitals.diastolic !== null &&
+                                        vitals.diastolic !== undefined
+                                      ? `Diastolic: ${vitals.diastolic} mmHg`
+                                      : ""}
+                              </p>
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                      {vitals.notes && (
+                        <div className="mt-4 border-t border-slate-200 pt-4">
+                          <p className="text-muted-foreground text-sm">
+                            {vitals.notes}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )}
 
           {/* Discharge Summaries Section */}
           <AccordionItem
