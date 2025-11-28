@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import {
   FolderOpen,
   FileText,
-  FileCheck,
   Phone,
   TrendingUp,
   TrendingDown,
@@ -71,16 +70,16 @@ function StatCard({
   return (
     <Card
       className={cn(
-        "transition-smooth rounded-xl border shadow-lg backdrop-blur-md",
+        "transition-smooth flex h-full flex-col rounded-xl border shadow-lg backdrop-blur-md",
         variantStyles[variant],
         onClick &&
           "group cursor-pointer hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-xl",
       )}
       onClick={onClick}
     >
-      <CardContent className="p-6">
-        <div className="animate-card-content-in flex items-center justify-between">
-          <div className="flex-1">
+      <CardContent className="flex flex-1 flex-col p-6">
+        <div className="animate-card-content-in flex flex-1 items-center justify-between">
+          <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-slate-600">{title}</p>
             <div className="mt-2 flex items-baseline gap-2">
               <p className="text-3xl font-bold tracking-tight text-slate-900">
@@ -95,7 +94,7 @@ function StatCard({
               </p>
               {trend && trend !== "stable" && (
                 <TrendIcon
-                  className={`h-4 w-4 ${trendColor} transition-smooth`}
+                  className={`h-4 w-4 ${trendColor} transition-smooth flex-shrink-0`}
                 />
               )}
             </div>
@@ -105,7 +104,7 @@ function StatCard({
               </p>
             )}
           </div>
-          <div className="transition-smooth flex h-12 w-12 items-center justify-center rounded-full bg-[#31aba3]/10 group-hover:bg-[#31aba3]/20">
+          <div className="transition-smooth ml-3 flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-[#31aba3]/10 group-hover:bg-[#31aba3]/20">
             <Icon className="h-6 w-6 text-[#31aba3]" />
           </div>
         </div>
@@ -247,8 +246,8 @@ export function OverviewTab({
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="animate-card-in">
+      <div className="grid auto-rows-fr gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="animate-card-in h-full">
           <StatCard
             title="Total Cases"
             value={stats?.total ?? 0}
@@ -266,7 +265,7 @@ export function OverviewTab({
             trend={stats?.thisWeek ? ("up" as const) : ("stable" as const)}
           />
         </div>
-        <div className="animate-card-in-delay-1">
+        <div className="animate-card-in-delay-1 h-full">
           <StatCard
             title="Missing Discharges"
             value={stats?.casesNeedingDischarge?.thisWeek ?? 0}
@@ -278,7 +277,7 @@ export function OverviewTab({
             }}
           />
         </div>
-        <div className="animate-card-in-delay-2">
+        <div className="animate-card-in-delay-2 h-full">
           <StatCard
             title="SOAP Coverage"
             value={stats?.soapCoverage?.percentage ?? 0}
@@ -295,7 +294,7 @@ export function OverviewTab({
             }}
           />
         </div>
-        <div className="animate-card-in-delay-3">
+        <div className="animate-card-in-delay-3 h-full">
           <StatCard
             title="Communications"
             value={(stats?.callsCompleted ?? 0) + (stats?.emailsSent ?? 0)}
@@ -338,7 +337,23 @@ export function OverviewTab({
         </div>
         {allCasesData && (
           <div className="animate-card-in-delay-2">
-            <RecentCasesList cases={allCasesData.cases.slice(0, 5)} />
+            <RecentCasesList
+              cases={allCasesData.cases
+                .filter(
+                  (c): c is typeof c & { created_at: string } =>
+                    c.created_at !== null,
+                )
+                .slice(0, 5)
+                .map((c) => ({
+                  id: c.id,
+                  patient: {
+                    name: c.patient.name,
+                    owner_name: c.patient.owner_name,
+                  },
+                  created_at: c.created_at,
+                  status: c.status ?? "unknown",
+                }))}
+            />
           </div>
         )}
       </div>
