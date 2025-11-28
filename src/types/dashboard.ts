@@ -285,6 +285,20 @@ export interface ActivityItem {
 }
 
 /**
+ * Daily activity aggregate for timeline view
+ */
+export interface DailyActivityAggregate {
+  date: string;
+  dateLabel: string; // e.g., "Today", "Yesterday", "Jan 15"
+  casesCreated: number;
+  dischargeSummariesGenerated: number;
+  callsCompleted: number;
+  callsScheduled: number;
+  emailsSent: number;
+  soapNotesCreated: number;
+}
+
+/**
  * Weekly activity data point for chart
  */
 export interface WeeklyActivityData {

@@ -14,13 +14,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { WeeklyActivityChart } from "./weekly-activity-chart";
-import { ActivityTimeline } from "./activity-timeline";
+import { DailyActivityTimeline } from "./daily-activity-timeline";
 import { OverviewTabSkeleton } from "./dashboard-skeleton";
-import { EmptyState } from "./empty-state";
 import { NumberTicker } from "~/components/ui/number-ticker";
-import Link from "next/link";
-import { Button } from "~/components/ui/button";
-import { formatDistanceToNow } from "date-fns";
 import { useQueryState } from "nuqs";
 import { useRouter } from "next/navigation";
 import { DateFilterButtonGroup } from "./date-filter-button-group";
@@ -114,76 +110,6 @@ function StatCard({
   );
 }
 
-function RecentCasesList({
-  cases,
-}: {
-  cases: Array<{
-    id: string;
-    patient: { name: string; owner_name: string };
-    created_at: string;
-    status: string;
-  }>;
-}) {
-  return (
-    <Card className="transition-smooth rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg font-semibold">Recent Cases</CardTitle>
-        <Link href="/dashboard?tab=cases">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-[#31aba3] hover:bg-[#31aba3]/5"
-          >
-            View All
-          </Button>
-        </Link>
-      </CardHeader>
-      <CardContent className="animate-card-content-in">
-        {cases.length === 0 ? (
-          <EmptyState
-            icon={FolderOpen}
-            title="No cases yet"
-            description="Cases will appear here once they are created"
-            size="sm"
-            className="min-h-[200px]"
-          />
-        ) : (
-          <div className="space-y-3">
-            {cases.map((c) => (
-              <Link
-                key={c.id}
-                href={`/dashboard/cases/${c.id}`}
-                className="block rounded-lg border border-slate-100 p-3 transition-colors hover:bg-slate-50"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-medium text-slate-900">
-                      {c.patient.name}
-                    </p>
-                    <p className="text-sm text-slate-600">
-                      {c.patient.owner_name}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <span className="inline-flex items-center rounded-md border-0 bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
-                      {c.status}
-                    </span>
-                    <p className="mt-1 text-xs text-slate-500">
-                      {formatDistanceToNow(new Date(c.created_at), {
-                        addSuffix: true,
-                      })}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
 /**
  * OverviewTab - Dashboard overview with statistics and recent activity
  *
@@ -217,19 +143,23 @@ export function OverviewTab({
   const { data: activities, isLoading: activitiesLoading } =
     api.dashboard.getRecentActivity.useQuery({ startDate, endDate });
 
+  const { data: dailyActivities, isLoading: dailyActivitiesLoading } =
+    api.dashboard.getDailyActivityAggregates.useQuery({
+      startDate,
+      endDate,
+      days: 7,
+    });
+
   const { data: weeklyData, isLoading: weeklyLoading } =
     api.dashboard.getWeeklyActivity.useQuery({ startDate, endDate });
 
-  const { data: allCasesData } = api.dashboard.getAllCases.useQuery({
-    page: 1,
-    pageSize: 5,
-    startDate,
-    endDate,
-  });
-
   const router = useRouter();
 
-  const isLoading = statsLoading || activitiesLoading || weeklyLoading;
+  const isLoading =
+    statsLoading ||
+    activitiesLoading ||
+    weeklyLoading ||
+    dailyActivitiesLoading;
 
   if (isLoading) {
     return <OverviewTabSkeleton />;
@@ -323,50 +253,27 @@ export function OverviewTab({
         </div>
       )}
 
-      {/* Cases Needing Attention and Recent Cases */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <div className="animate-card-in-delay-1">
-          <CasesNeedingAttentionCard
-            casesNeedingDischarge={
-              stats?.casesNeedingDischarge ?? {
-                total: 0,
-                thisWeek: 0,
-                thisMonth: 0,
-              }
+      {/* Cases Needing Attention */}
+      <div className="animate-card-in-delay-1">
+        <CasesNeedingAttentionCard
+          casesNeedingDischarge={
+            stats?.casesNeedingDischarge ?? {
+              total: 0,
+              thisWeek: 0,
+              thisMonth: 0,
             }
-            casesNeedingSoap={
-              stats?.casesNeedingSoap ?? { total: 0, thisWeek: 0, thisMonth: 0 }
-            }
-            totalCases={stats?.total ?? 0}
-          />
-        </div>
-        {allCasesData && (
-          <div className="animate-card-in-delay-2">
-            <RecentCasesList
-              cases={allCasesData.cases
-                .filter(
-                  (c): c is typeof c & { created_at: string } =>
-                    c.created_at !== null,
-                )
-                .slice(0, 5)
-                .map((c) => ({
-                  id: c.id,
-                  patient: {
-                    name: c.patient.name,
-                    owner_name: c.patient.owner_name,
-                  },
-                  created_at: c.created_at,
-                  status: c.status ?? "unknown",
-                }))}
-            />
-          </div>
-        )}
+          }
+          casesNeedingSoap={
+            stats?.casesNeedingSoap ?? { total: 0, thisWeek: 0, thisMonth: 0 }
+          }
+          totalCases={stats?.total ?? 0}
+        />
       </div>
 
-      {/* Activity Timeline */}
-      {activities && (
+      {/* Daily Activity Timeline */}
+      {dailyActivities && (
         <div className="animate-card-in-delay-3">
-          <ActivityTimeline activities={activities} />
+          <DailyActivityTimeline activities={dailyActivities} />
         </div>
       )}
     </div>
