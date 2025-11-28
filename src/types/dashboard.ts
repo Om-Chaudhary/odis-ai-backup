@@ -60,6 +60,8 @@ export interface CallDetails {
 export interface BackendCase {
   id: string;
   status: CaseStatus;
+  source: string | null;
+  type: "checkup" | "emergency" | "surgery" | "follow_up" | null;
   created_at: string;
   scheduled_at: string | null;
   patients: Array<{
@@ -121,6 +123,8 @@ export interface BackendCase {
 export interface DashboardCase {
   id: string;
   status: CaseStatus;
+  source: string | null;
+  type: "checkup" | "emergency" | "surgery" | "follow_up" | null;
   created_at: string;
   scheduled_at: string | null;
   patient: {
@@ -342,6 +346,7 @@ export interface CaseListItem {
   id: string;
   status: CaseStatus;
   source: string | null;
+  type: "checkup" | "emergency" | "surgery" | "follow_up" | null;
   created_at: string;
   scheduled_at?: string;
   patient: {

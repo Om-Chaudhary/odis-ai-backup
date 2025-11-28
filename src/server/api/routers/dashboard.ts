@@ -1327,6 +1327,7 @@ export const dashboardRouter = createTRPCRouter({
           id,
           status,
           source,
+          type,
           created_at,
           scheduled_at,
           patients!inner (
@@ -1368,6 +1369,7 @@ export const dashboardRouter = createTRPCRouter({
         id: string;
         status: string | null;
         source: string | null;
+        type: "checkup" | "emergency" | "surgery" | "follow_up" | null;
         created_at: string | null;
         patients: SupabasePatientsResponse;
       };
@@ -1528,6 +1530,7 @@ export const dashboardRouter = createTRPCRouter({
           id: c.id,
           status: c.status,
           source: c.source,
+          type: c.type,
           created_at: c.created_at,
           patient: {
             id: patient?.id ?? "",

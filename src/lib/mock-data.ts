@@ -16,6 +16,8 @@ export const MOCK_CASES: DashboardCase[] = [
   {
     id: "case-1",
     status: "ongoing",
+    source: "idexx_neo",
+    type: "checkup",
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
     scheduled_at: null,
     patient: {
@@ -58,6 +60,8 @@ export const MOCK_CASES: DashboardCase[] = [
   {
     id: "case-2",
     status: "completed",
+    source: "chrome_extension",
+    type: "follow_up",
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
     scheduled_at: null,
     patient: {
@@ -92,6 +96,8 @@ export const MOCK_CASES: DashboardCase[] = [
   {
     id: "case-3",
     status: "draft",
+    source: "manual",
+    type: "emergency",
     created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 mins ago
     scheduled_at: null,
     patient: {
@@ -110,6 +116,8 @@ export const MOCK_CASES: DashboardCase[] = [
   {
     id: "case-4",
     status: "ongoing",
+    source: "idexx_neo",
+    type: "surgery",
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // Yesterday
     scheduled_at: null,
     patient: {

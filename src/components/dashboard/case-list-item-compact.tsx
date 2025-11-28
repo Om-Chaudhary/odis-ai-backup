@@ -12,11 +12,14 @@ import {
   Phone,
   Mail,
   Calendar,
+  Database,
+  FileCode,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { CaseListItem } from "~/types/dashboard";
 import { cn } from "~/lib/utils";
 import { QuickActionsMenu } from "~/components/dashboard/quick-actions-menu";
+import { Badge } from "~/components/ui/badge";
 
 interface CaseListItemCompactProps {
   caseData: CaseListItem;
@@ -37,22 +40,48 @@ function getStatusIconBgColor(status: string) {
   }
 }
 
+function formatSource(source: string | null): string {
+  if (!source) return "Manual";
+  return source
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function getSourceIcon(source: string | null) {
+  if (!source) return FileCode;
+  if (source.includes("idexx")) return Database;
+  return FileCode;
+}
+
+function getTypeColor(type: string | null): string {
+  switch (type) {
+    case "checkup":
+      return "bg-blue-500/10 text-blue-600 border-blue-200";
+    case "emergency":
+      return "bg-red-500/10 text-red-600 border-red-200";
+    case "surgery":
+      return "bg-purple-500/10 text-purple-600 border-purple-200";
+    case "follow_up":
+      return "bg-green-500/10 text-green-600 border-green-200";
+    default:
+      return "bg-slate-500/10 text-slate-600 border-slate-200";
+  }
+}
+
+function formatType(type: string | null): string {
+  if (!type) return "Unknown";
+  return type
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 export function CaseListItemCompact({ caseData }: CaseListItemCompactProps) {
   const SpeciesIcon =
     caseData.patient.species?.toLowerCase() === "feline" ? Cat : Dog;
 
-  // Get most recent activity timestamp
-  const timestamps = [
-    caseData.scheduled_at,
-    caseData.soapNoteTimestamp,
-    caseData.dischargeSummaryTimestamp,
-    caseData.dischargeCallTimestamp,
-    caseData.dischargeEmailTimestamp,
-  ].filter(Boolean) as string[];
-  const mostRecentActivity =
-    timestamps.length > 0
-      ? new Date(Math.max(...timestamps.map((t) => new Date(t).getTime())))
-      : new Date(caseData.created_at);
+  // Prioritize scheduled_at for date display
 
   return (
     <Card className="group transition-smooth rounded-lg border border-slate-200 bg-white shadow-sm hover:border-slate-300 hover:shadow-md">
@@ -71,10 +100,44 @@ export function CaseListItemCompact({ caseData }: CaseListItemCompactProps) {
           {/* Main Content Area */}
           <div className="min-w-0 flex-1">
             {/* Patient Name */}
-            <div className="mb-3">
+            <div className="mb-1.5">
               <h3 className="truncate text-base font-semibold text-slate-900">
                 {caseData.patient.name}
               </h3>
+              {caseData.patient.owner_name && (
+                <p className="mt-0.5 truncate text-xs text-slate-500">
+                  {caseData.patient.owner_name}
+                </p>
+              )}
+            </div>
+            <div className="mb-2 flex flex-wrap items-center gap-1.5">
+              {caseData.source && (
+                <Badge
+                  variant="outline"
+                  className="h-5 gap-1 border-slate-200 bg-slate-50/50 px-1.5 text-[10px] font-medium text-slate-600"
+                >
+                  {(() => {
+                    const SourceIcon = getSourceIcon(caseData.source);
+                    return (
+                      <>
+                        <SourceIcon className="h-2.5 w-2.5" />
+                        {formatSource(caseData.source)}
+                      </>
+                    );
+                  })()}
+                </Badge>
+              )}
+              {caseData.type && (
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "h-5 border px-1.5 text-[10px] font-medium",
+                    getTypeColor(caseData.type),
+                  )}
+                >
+                  {formatType(caseData.type)}
+                </Badge>
+              )}
             </div>
 
             {/* Content Indicators - Horizontal for list view, only render border if there are indicators */}
@@ -114,11 +177,18 @@ export function CaseListItemCompact({ caseData }: CaseListItemCompactProps) {
 
             {/* Date Info */}
             <div className="flex items-center gap-1.5 text-xs text-slate-500">
-              <Calendar className="h-3 w-3" />
+              <Calendar className="h-3 w-3 shrink-0" />
               <span>
-                {timestamps.length > 0
-                  ? `Updated ${formatDistanceToNow(mostRecentActivity, { addSuffix: true })}`
-                  : `Created ${formatDistanceToNow(new Date(caseData.created_at), { addSuffix: true })}`}
+                {caseData.scheduled_at ? (
+                  <>
+                    Scheduled{" "}
+                    {formatDistanceToNow(new Date(caseData.scheduled_at), {
+                      addSuffix: true,
+                    })}
+                  </>
+                ) : (
+                  "Not scheduled"
+                )}
               </span>
             </div>
           </div>

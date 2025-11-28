@@ -12,11 +12,14 @@ import {
   FileCheck,
   Phone,
   Mail,
+  Database,
+  FileCode,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { CaseListItem } from "~/types/dashboard";
 import { cn } from "~/lib/utils";
 import { QuickActionsMenu } from "~/components/dashboard/quick-actions-menu";
+import { Badge } from "~/components/ui/badge";
 
 interface CaseListCardProps {
   caseData: CaseListItem;
@@ -36,6 +39,43 @@ function getStatusIconBgColor(status: string) {
     default:
       return "bg-slate-100 text-slate-500";
   }
+}
+
+function formatSource(source: string | null): string {
+  if (!source) return "Manual";
+  return source
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function getSourceIcon(source: string | null) {
+  if (!source) return FileCode;
+  if (source.includes("idexx")) return Database;
+  return FileCode;
+}
+
+function getTypeColor(type: string | null): string {
+  switch (type) {
+    case "checkup":
+      return "bg-blue-500/10 text-blue-600 border-blue-200";
+    case "emergency":
+      return "bg-red-500/10 text-red-600 border-red-200";
+    case "surgery":
+      return "bg-purple-500/10 text-purple-600 border-purple-200";
+    case "follow_up":
+      return "bg-green-500/10 text-green-600 border-green-200";
+    default:
+      return "bg-slate-500/10 text-slate-600 border-slate-200";
+  }
+}
+
+function formatType(type: string | null): string {
+  if (!type) return "Unknown";
+  return type
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 export function CaseListCard({ caseData, index = 0 }: CaseListCardProps) {
@@ -86,6 +126,40 @@ export function CaseListCard({ caseData, index = 0 }: CaseListCardProps) {
                   <h3 className="mb-1.5 truncate text-lg font-semibold text-slate-900">
                     {caseData.patient.name}
                   </h3>
+                  {caseData.patient.owner_name && (
+                    <p className="mb-1.5 truncate text-xs text-slate-500">
+                      {caseData.patient.owner_name}
+                    </p>
+                  )}
+                  <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                    {caseData.source && (
+                      <Badge
+                        variant="outline"
+                        className="h-5 gap-1 border-slate-200 bg-slate-50/50 px-1.5 text-[10px] font-medium text-slate-600"
+                      >
+                        {(() => {
+                          const SourceIcon = getSourceIcon(caseData.source);
+                          return (
+                            <>
+                              <SourceIcon className="h-2.5 w-2.5" />
+                              {formatSource(caseData.source)}
+                            </>
+                          );
+                        })()}
+                      </Badge>
+                    )}
+                    {caseData.type && (
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "h-5 border px-1.5 text-[10px] font-medium",
+                          getTypeColor(caseData.type),
+                        )}
+                      >
+                        {formatType(caseData.type)}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
                 {/* Quick Actions Menu */}
                 <QuickActionsMenu
@@ -98,12 +172,15 @@ export function CaseListCard({ caseData, index = 0 }: CaseListCardProps) {
               <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
                 <Calendar className="h-3 w-3 shrink-0" />
                 <span className="truncate">
-                  {caseData.scheduled_at ? "Scheduled" : "Created"}{" "}
-                  {formatDistanceToNow(
-                    new Date(caseData.scheduled_at ?? caseData.created_at),
-                    {
-                      addSuffix: true,
-                    },
+                  {caseData.scheduled_at ? (
+                    <>
+                      Scheduled{" "}
+                      {formatDistanceToNow(new Date(caseData.scheduled_at), {
+                        addSuffix: true,
+                      })}
+                    </>
+                  ) : (
+                    "Not scheduled"
                   )}
                 </span>
               </div>

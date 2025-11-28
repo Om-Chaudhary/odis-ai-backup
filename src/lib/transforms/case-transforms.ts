@@ -46,6 +46,8 @@ export function transformBackendCaseToDashboardCase(
   return {
     id: backendCase.id,
     status: backendCase.status,
+    source: backendCase.source,
+    type: backendCase.type,
     created_at: backendCase.created_at,
     scheduled_at: backendCase.scheduled_at,
     patient: {

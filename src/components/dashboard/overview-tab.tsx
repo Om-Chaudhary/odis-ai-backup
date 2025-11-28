@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { api } from "~/trpc/client";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
+import { Card, CardContent } from "~/components/ui/card";
 import {
   FolderOpen,
   FileText,
@@ -140,7 +140,7 @@ export function OverviewTab({
   const { data: stats, isLoading: statsLoading } =
     api.dashboard.getCaseStats.useQuery({ startDate, endDate });
 
-  const { data: activities, isLoading: activitiesLoading } =
+  const { isLoading: activitiesLoading } =
     api.dashboard.getRecentActivity.useQuery({ startDate, endDate });
 
   const { data: dailyActivities, isLoading: dailyActivitiesLoading } =

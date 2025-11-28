@@ -67,6 +67,8 @@ export const casesRouter = createTRPCRouter({
           `
           id,
           status,
+          source,
+          type,
           created_at,
           scheduled_at,
           patients!inner (

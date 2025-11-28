@@ -18,6 +18,8 @@ import {
   RefreshCw,
   MoreHorizontal,
   Eye,
+  Database,
+  FileCode,
 } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
@@ -41,6 +43,7 @@ import {
 } from "~/lib/utils/dashboard-helpers";
 import { ContactIndicator } from "~/components/dashboard/contact-indicator";
 import { DischargeStatusIndicator } from "~/components/dashboard/discharge-status-indicator";
+import { Badge } from "~/components/ui/badge";
 
 type WorkflowStatus = "completed" | "in_progress" | "failed" | "ready";
 
@@ -90,6 +93,47 @@ function getStatusColor(status: WorkflowStatus) {
     default:
       return "bg-amber-500";
   }
+}
+
+function formatSource(source: string | null): string {
+  if (!source) return "Manual";
+  return source
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function getSourceIcon(source: string | null) {
+  if (!source) return FileCode;
+  if (source.includes("idexx")) return Database;
+  return FileCode;
+}
+
+function getTypeColor(
+  type: "checkup" | "emergency" | "surgery" | "follow_up" | null,
+): string {
+  switch (type) {
+    case "checkup":
+      return "bg-blue-500/10 text-blue-600 border-blue-200";
+    case "emergency":
+      return "bg-red-500/10 text-red-600 border-red-200";
+    case "surgery":
+      return "bg-purple-500/10 text-purple-600 border-purple-200";
+    case "follow_up":
+      return "bg-green-500/10 text-green-600 border-green-200";
+    default:
+      return "bg-slate-500/10 text-slate-600 border-slate-200";
+  }
+}
+
+function formatType(
+  type: "checkup" | "emergency" | "surgery" | "follow_up" | null,
+): string {
+  if (!type) return "Unknown";
+  return type
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 interface CaseCardProps {
@@ -272,11 +316,11 @@ export function CaseCard({
     <Card className="group transition-smooth relative overflow-hidden rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md hover:scale-[1.02] hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
       <CardContent className="p-5">
         {/* Header Section */}
-        <div className="mb-3 flex items-start justify-between">
+        <div className="mb-4 flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div
               className={cn(
-                "flex h-12 w-12 items-center justify-center rounded-full transition-colors",
+                "flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors",
                 workflowStatus === "completed"
                   ? "bg-emerald-100 text-emerald-600"
                   : workflowStatus === "failed"
@@ -288,11 +332,11 @@ export function CaseCard({
             >
               <SpeciesIcon className="h-6 w-6" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="mb-1.5 flex items-center gap-2">
                 <h3
                   className={cn(
-                    "text-lg font-semibold tracking-tight text-slate-900",
+                    "truncate text-lg font-semibold tracking-tight text-slate-900",
                     isPlaceholder(caseData.patient.name) &&
                       "text-amber-600 italic",
                   )}
@@ -302,19 +346,54 @@ export function CaseCard({
                 {/* Status Dot */}
                 <div
                   className={cn(
-                    "h-2 w-2 rounded-full",
+                    "h-2 w-2 shrink-0 rounded-full",
                     getStatusColor(workflowStatus),
                   )}
                   title={`Status: ${workflowStatus.replace("_", " ")}`}
                 />
               </div>
+              <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                {caseData.source && (
+                  <Badge
+                    variant="outline"
+                    className="h-5 gap-1 border-slate-200 bg-slate-50/50 px-1.5 text-[10px] font-medium text-slate-600"
+                  >
+                    {(() => {
+                      const SourceIcon = getSourceIcon(caseData.source);
+                      return (
+                        <>
+                          <SourceIcon className="h-2.5 w-2.5" />
+                          {formatSource(caseData.source)}
+                        </>
+                      );
+                    })()}
+                  </Badge>
+                )}
+                {caseData.type && (
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "h-5 border px-1.5 text-[10px] font-medium",
+                      getTypeColor(caseData.type),
+                    )}
+                  >
+                    {formatType(caseData.type)}
+                  </Badge>
+                )}
+              </div>
               <div className="text-muted-foreground flex items-center gap-2 text-xs">
-                <Calendar className="h-3 w-3" />
-                <span>
-                  Created{" "}
-                  {formatDistanceToNow(new Date(caseData.created_at), {
-                    addSuffix: true,
-                  })}
+                <Calendar className="h-3 w-3 shrink-0" />
+                <span className="truncate">
+                  {caseData.scheduled_at ? (
+                    <>
+                      Scheduled{" "}
+                      {formatDistanceToNow(new Date(caseData.scheduled_at), {
+                        addSuffix: true,
+                      })}
+                    </>
+                  ) : (
+                    "Not scheduled"
+                  )}
                 </span>
               </div>
             </div>
