@@ -15,13 +15,19 @@ import { Search, Filter, Plus, LayoutGrid, List } from "lucide-react";
 import { CaseListCard } from "./case-list-card";
 import { CaseListItemCompact } from "./case-list-item-compact";
 import Link from "next/link";
+import { useQueryState } from "nuqs";
+import { DateFilterButtonGroup } from "./date-filter-button-group";
+import {
+  getDateRangeFromPreset,
+  type DateRangePreset,
+} from "~/lib/utils/date-ranges";
 
 type ViewMode = "grid" | "list";
 const VIEW_STORAGE_KEY = "cases-view-mode";
 
 export function CasesTab({
-  startDate,
-  endDate,
+  startDate: _startDate,
+  endDate: _endDate,
 }: {
   startDate?: string | null;
   endDate?: string | null;
@@ -31,6 +37,17 @@ export function CasesTab({
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
   const [sourceFilter, setSourceFilter] = useState<string | undefined>();
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+
+  const [dateRange] = useQueryState("dateRange", {
+    defaultValue: "all",
+  });
+
+  const { startDate: calculatedStartDate, endDate: calculatedEndDate } =
+    getDateRangeFromPreset((dateRange as DateRangePreset) ?? "all");
+
+  // Convert dates to ISO strings for API calls
+  const startDate = calculatedStartDate?.toISOString() ?? null;
+  const endDate = calculatedEndDate?.toISOString() ?? null;
 
   // Load view preference from localStorage on mount
   useEffect(() => {
@@ -117,7 +134,8 @@ export function CasesTab({
           />
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <DateFilterButtonGroup />
           <Select
             value={statusFilter ?? "all"}
             onValueChange={(value) => {
