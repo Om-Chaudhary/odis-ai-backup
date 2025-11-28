@@ -13,6 +13,7 @@
 
 ## Quick Links
 
+- **[Complete Index](INDEX.md)** - Full documentation index and structure
 - [Assignments Index](assignments/README.md) - All task assignments
 - [Component Specifications](specifications/README.md) - Detailed component specs
 - [Data Models](data-models/README.md) - Backend queries and data structures
