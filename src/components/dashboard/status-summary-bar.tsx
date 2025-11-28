@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "~/components/ui/card";
+import { NumberTicker } from "~/components/ui/number-ticker";
 import { FilterButtonGroup } from "./filter-button-group";
 
 interface StatusSummaryBarProps {
@@ -35,36 +36,44 @@ export function StatusSummaryBar({
           {/* Summary Stats */}
           <div className="flex flex-wrap items-center gap-4 text-sm">
             <div>
-              <span className="font-medium text-slate-700">{totalCases}</span>
+              <span className="font-medium text-slate-700">
+                <NumberTicker value={totalCases} delay={0} />
+              </span>
               <span className="text-slate-500"> cases</span>
             </div>
             <div>
-              <span className="font-medium text-emerald-700">{readyCases}</span>
+              <span className="font-medium text-emerald-700">
+                <NumberTicker value={readyCases} delay={100} />
+              </span>
               <span className="text-slate-500"> ready</span>
             </div>
             <div>
-              <span className="font-medium text-amber-700">{pendingCases}</span>
+              <span className="font-medium text-amber-700">
+                <NumberTicker value={pendingCases} delay={200} />
+              </span>
               <span className="text-slate-500"> pending</span>
             </div>
             <div>
               <span className="font-medium text-blue-700">
-                {completedCases}
+                <NumberTicker value={completedCases} delay={300} />
               </span>
               <span className="text-slate-500"> completed</span>
             </div>
             <div>
-              <span className="font-medium text-red-700">{failedCases}</span>
+              <span className="font-medium text-red-700">
+                <NumberTicker value={failedCases} delay={400} />
+              </span>
               <span className="text-slate-500"> failed</span>
             </div>
             <div>
               <span className="font-medium text-blue-700">
-                {scheduledCalls}
+                <NumberTicker value={scheduledCalls} delay={500} />
               </span>
               <span className="text-slate-500"> calls</span>
             </div>
             <div>
               <span className="font-medium text-blue-700">
-                {scheduledEmails}
+                <NumberTicker value={scheduledEmails} delay={600} />
               </span>
               <span className="text-slate-500"> emails</span>
             </div>

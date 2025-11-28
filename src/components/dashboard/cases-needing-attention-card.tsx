@@ -45,14 +45,10 @@ export function CasesNeedingAttentionCard({
       : 0;
 
   const handleViewDischarges = () => {
-    // TODO: Query parameter handling will be implemented in A6 (Quick Filters)
-    // Currently navigates to Cases tab, but filtering will be added in future assignment
     router.push("/dashboard?tab=cases&missingDischarge=true");
   };
 
   const handleViewSoap = () => {
-    // TODO: Query parameter handling will be implemented in A6 (Quick Filters)
-    // Currently navigates to Cases tab, but filtering will be added in future assignment
     router.push("/dashboard?tab=cases&missingSoap=true");
   };
 

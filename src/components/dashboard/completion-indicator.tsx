@@ -10,7 +10,7 @@ import {
   Mail,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { format } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { cn } from "~/lib/utils";
 
 interface CompletionIndicatorProps {
@@ -32,7 +32,7 @@ const TYPE_CONFIG: Record<
 };
 
 /**
- * Format timestamp safely, handling invalid dates
+ * Format timestamp as relative time (e.g., "2 hours ago"), handling invalid dates
  */
 function formatTimestamp(timestamp: string): string {
   try {
@@ -40,7 +40,7 @@ function formatTimestamp(timestamp: string): string {
     if (isNaN(date.getTime())) {
       return "Invalid date";
     }
-    return format(date, "MMM d, h:mm a");
+    return formatDistanceToNow(date, { addSuffix: true });
   } catch {
     return "Invalid date";
   }

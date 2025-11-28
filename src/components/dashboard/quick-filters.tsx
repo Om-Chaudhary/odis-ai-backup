@@ -3,6 +3,11 @@
 import { useCallback } from "react";
 import { Button } from "~/components/ui/button";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
+import {
   AlertCircle,
   FileText,
   Calendar,
@@ -22,14 +27,40 @@ interface QuickFilter {
   id: QuickFilterId;
   label: string;
   icon: LucideIcon;
+  tooltip: string;
 }
 
 const QUICK_FILTERS: QuickFilter[] = [
-  { id: "missingDischarge", label: "Missing Discharge", icon: AlertCircle },
-  { id: "missingSoap", label: "Missing SOAP", icon: FileText },
-  { id: "today", label: "Today", icon: Calendar },
-  { id: "thisWeek", label: "This Week", icon: Calendar },
-  { id: "recent", label: "Recent", icon: Clock },
+  {
+    id: "missingDischarge",
+    label: "Missing Discharge",
+    icon: AlertCircle,
+    tooltip: "Show cases missing discharge summaries",
+  },
+  {
+    id: "missingSoap",
+    label: "Missing SOAP",
+    icon: FileText,
+    tooltip: "Show cases missing SOAP notes",
+  },
+  {
+    id: "today",
+    label: "Today",
+    icon: Calendar,
+    tooltip: "Show cases created today",
+  },
+  {
+    id: "thisWeek",
+    label: "This Week",
+    icon: Calendar,
+    tooltip: "Show cases created this week",
+  },
+  {
+    id: "recent",
+    label: "Recent",
+    icon: Clock,
+    tooltip: "Show cases created in the last 7 days",
+  },
 ];
 
 interface QuickFiltersProps {
@@ -80,7 +111,7 @@ export function QuickFilters({
         const Icon = filter.icon;
         const isActive = selected.has(filter.id);
 
-        return (
+        const button = (
           <Button
             key={filter.id}
             variant={isActive ? "default" : "outline"}
@@ -96,6 +127,15 @@ export function QuickFilters({
             <Icon className="transition-smooth mr-2 h-4 w-4" />
             {filter.label}
           </Button>
+        );
+
+        return (
+          <Tooltip key={filter.id}>
+            <TooltipTrigger asChild>{button}</TooltipTrigger>
+            <TooltipContent>
+              <p>{filter.tooltip}</p>
+            </TooltipContent>
+          </Tooltip>
         );
       })}
     </div>
