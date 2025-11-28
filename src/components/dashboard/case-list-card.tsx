@@ -61,7 +61,16 @@ export function CaseListCard({ caseData, index = 0 }: CaseListCardProps) {
     >
       <CardContent className="overflow-hidden p-5">
         {/* Header Section */}
-        <div className="mb-4">
+        <div
+          className={
+            caseData.hasSoapNote ||
+            caseData.hasDischargeSummary ||
+            caseData.hasDischargeCall ||
+            caseData.hasDischargeEmail
+              ? "mb-4"
+              : "mb-3"
+          }
+        >
           <div className="flex items-start gap-3">
             <div
               className={cn(
@@ -98,9 +107,12 @@ export function CaseListCard({ caseData, index = 0 }: CaseListCardProps) {
           </div>
         </div>
 
-        {/* Content Indicators - Vertical stack for card view, always render to maintain consistent spacing */}
-        <div className="min-h-[120px]">
-          <div className="flex flex-col gap-2">
+        {/* Content Indicators - Only show if there's content */}
+        {(caseData.hasSoapNote ||
+          caseData.hasDischargeSummary ||
+          caseData.hasDischargeCall ||
+          caseData.hasDischargeEmail) && (
+          <div className="mb-4 flex flex-col gap-2">
             {caseData.hasSoapNote && (
               <div className="flex items-center gap-1.5 rounded-md border border-blue-200/60 bg-blue-50/50 px-2 py-1.5 text-xs font-medium text-blue-700">
                 <FileText className="h-3.5 w-3.5 shrink-0 text-blue-600" />
@@ -126,7 +138,7 @@ export function CaseListCard({ caseData, index = 0 }: CaseListCardProps) {
               </div>
             )}
           </div>
-        </div>
+        )}
       </CardContent>
 
       <CardFooter className="border-t border-slate-100 bg-slate-50/30 p-4">
