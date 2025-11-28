@@ -1,6 +1,5 @@
-import { getUser, signOut } from "~/server/actions/auth";
+import { getUser } from "~/server/actions/auth";
 import { redirect } from "next/navigation";
-import { Button } from "~/components/ui/button";
 import { createClient } from "~/lib/supabase/server";
 import DashboardProfileHeader from "~/components/dashboard/DashboardProfileHeader";
 import { DashboardContentWithTabs } from "~/components/dashboard/dashboard-content-with-tabs";
@@ -30,18 +29,6 @@ export default async function DashboardPage() {
 
       <div className="animate-fade-in-up stagger-2">
         <DashboardContentWithTabs />
-      </div>
-
-      <div className="animate-fade-in-up stagger-3 flex justify-center py-8">
-        <form action={signOut}>
-          <Button
-            type="submit"
-            variant="ghost"
-            className="transition-smooth text-slate-500 hover:bg-red-50 hover:text-red-600"
-          >
-            Sign Out
-          </Button>
-        </form>
       </div>
     </div>
   );

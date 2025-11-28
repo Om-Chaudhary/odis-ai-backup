@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Home, Settings, PhoneCall, Command } from "lucide-react";
+import { Home, Settings, PhoneCall, Command, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -16,8 +16,10 @@ import {
   SidebarSeparator,
 } from "~/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { Button } from "~/components/ui/button";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "~/server/actions/auth";
 import type { User } from "@supabase/supabase-js";
 
 // Menu items
@@ -147,6 +149,18 @@ export function AppSidebar({ user, profile, ...props }: AppSidebarProps) {
                 </span>
               </div>
             </div>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <form action={signOut} className="w-full">
+              <Button
+                type="submit"
+                variant="ghost"
+                className="w-full justify-start text-slate-700 transition-all hover:bg-red-50 hover:text-red-600"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
+              </Button>
+            </form>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
