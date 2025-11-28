@@ -1026,6 +1026,7 @@ export const dashboardRouter = createTRPCRouter({
       };
 
       let cases: CaseWithPatients[] | null;
+      let count: number | null = null;
 
       if (needsPostFiltering) {
         // Fetch all matching cases (we'll filter after enrichment)
@@ -1047,19 +1048,24 @@ export const dashboardRouter = createTRPCRouter({
         const from = (input.page - 1) * input.pageSize;
         const to = from + input.pageSize - 1;
 
-        const { data: paginatedCases, error } = await query
+        const {
+          data: paginatedCases,
+          error: queryError,
+          count: queryCount,
+        } = await query
           .order("created_at", { ascending: false })
           .range(from, to);
 
-        if (error) {
+        if (queryError) {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
             message: "Failed to fetch cases",
-            cause: error,
+            cause: queryError,
           });
         }
 
         cases = paginatedCases as CaseWithPatients[] | null;
+        count = queryCount;
       }
 
       // Batch fetch all related data to avoid N+1 queries
@@ -1219,7 +1225,11 @@ export const dashboardRouter = createTRPCRouter({
       }
 
       // Calculate pagination
-      const filteredTotal = filteredCases.length;
+      // When not doing post-filtering, use the count from the query
+      // When doing post-filtering, use the length of filtered cases
+      const filteredTotal = needsPostFiltering
+        ? filteredCases.length
+        : (count ?? filteredCases.length);
       let paginatedCases = filteredCases;
       const totalPages = Math.ceil(filteredTotal / input.pageSize);
 
