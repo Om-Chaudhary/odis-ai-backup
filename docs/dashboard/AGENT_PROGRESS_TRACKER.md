@@ -7,12 +7,12 @@
 ## 📊 Overall Progress
 
 **Total Assignments:** 10  
-**Completed:** 3  
-**In Progress:** 0  
-**Ready:** 5  
+**Completed:** 4  
+**In Progress:** 2  
+**Ready:** 2  
 **Blocked:** 2
 
-**Progress:** 30% (3/10)
+**Progress:** 40% (4/10)
 
 ---
 
@@ -21,12 +21,12 @@
 | ID  | Assignment                                                                           | Status         | Agent                  | Branch                            | PR                                                    | Started          | Completed        | Notes                                     |
 | --- | ------------------------------------------------------------------------------------ | -------------- | ---------------------- | --------------------------------- | ----------------------------------------------------- | ---------------- | ---------------- | ----------------------------------------- |
 | A1  | [Date Filter Button Group](./assignments/A1-date-filter-button-group.md)             | ✅ Complete    | Agent-A1-DateFilter    | feat/assignment-A1-date-filter    | [#40](https://github.com/Odis-AI/odis-ai-web/pull/40) | 2025-11-27 20:58 | 2025-11-27 20:58 | Implementation complete, ready for A5     |
-| A2  | [Cases Needing Attention Card](./assignments/A2-cases-needing-attention-card.md)     | 🟡 In Progress | Agent-A2-AttentionCard | feat/assignment-A2-attention-card | [#42](https://github.com/Odis-AI/odis-ai-web/pull/42) | 2025-11-27 21:00 | -                | PR created, ready for review              |
-| A3  | [Enhanced Stat Cards](./assignments/A3-enhanced-stat-cards.md)                       | ✅ Complete    | Agent-A3-StatCards     | feat/assignment-A3-stat-cards     | -                                                     | 2025-01-27 14:00 | 2025-01-27 14:30 | Implementation complete, ready for PR     |
+| A2  | [Cases Needing Attention Card](./assignments/A2-cases-needing-attention-card.md)     | ✅ Complete    | Agent-A2-AttentionCard | feat/assignment-A2-attention-card | [#42](https://github.com/Odis-AI/odis-ai-web/pull/42) | 2025-11-27 21:00 | 2025-11-27 21:25 | PR merged, replaces SourceBreakdownCard   |
+| A3  | [Enhanced Stat Cards](./assignments/A3-enhanced-stat-cards.md)                       | ✅ Complete    | Agent-A3-StatCards     | feat/assignment-A3-stat-cards     | [#43](https://github.com/Odis-AI/odis-ai-web/pull/43) | 2025-01-27 14:00 | 2025-01-27 14:30 | PR created, ready for review              |
 | A4  | [Collapsible Activity Timeline](./assignments/A4-collapsible-activity-timeline.md)   | 🔄 Ready       | -                      | -                                 | -                                                     | -                | -                | -                                         |
-| A5  | [Cases Tab Filter Button Groups](./assignments/A5-cases-tab-filter-button-groups.md) | 🔄 Ready       | -                      | -                                 | -                                                     | -                | -                | A1 complete, ready to start               |
+| A5  | [Cases Tab Filter Button Groups](./assignments/A5-cases-tab-filter-button-groups.md) | 🟡 In Progress | Agent-A5-FilterButtons | feat/assignment-A5-filter-buttons | -                                                     | 2025-01-27 16:00 | -                | Started implementation                    |
 | A6  | [Cases Tab Quick Filters](./assignments/A6-cases-tab-quick-filters.md)               | ⏸️ Blocked     | -                      | -                                 | -                                                     | -                | -                | Waiting on A5 (A10 complete)              |
-| A7  | [Enhanced Case Cards](./assignments/A7-enhanced-case-cards.md)                       | 🔄 Ready       | -                      | -                                 | -                                                     | -                | -                | -                                         |
+| A7  | [Enhanced Case Cards](./assignments/A7-enhanced-case-cards.md)                       | 🟡 In Progress | Agent-A7-CaseCards     | feat/assignment-A7-case-cards     | -                                                     | 2025-01-27 15:00 | -                | Started implementation                    |
 | A8  | [Discharges Tab Status Summary](./assignments/A8-discharges-status-summary.md)       | 🔄 Ready       | -                      | -                                 | -                                                     | -                | -                | -                                         |
 | A9  | [Discharges Tab Enhanced Cards](./assignments/A9-discharges-enhanced-cards.md)       | 🔄 Ready       | -                      | -                                 | -                                                     | -                | -                | -                                         |
 | A10 | [Backend Metrics Queries](./assignments/A10-backend-metrics-queries.md)              | ✅ Complete    | Agent-A10-Metrics      | feat/assignment-A10-metrics       | [#41](https://github.com/Odis-AI/odis-ai-web/pull/41) | 2025-01-27 12:00 | 2025-01-27 13:00 | **Priority: Do First** - Ready for A2, A3 |
@@ -52,11 +52,11 @@
 
 ### Phase 2: Overview Tab
 
-- [ ] **A2: Cases Needing Attention Card** - After A10
+- [x] **A2: Cases Needing Attention Card** - After A10
 - [x] **A3: Enhanced Stat Cards** - After A10
 - [ ] **A4: Collapsible Activity Timeline** - No dependencies
 
-**Status:** 1/3 complete
+**Status:** 2/3 complete
 
 ### Phase 3: Cases Tab
 
@@ -79,8 +79,8 @@
 
 ```
 A10 (Backend Metrics) ──┐
-                        ├──> A2 (Cases Needing Attention) [🔄 Ready]
-                        └──> A3 (Enhanced Stat Cards) [🔄 Ready]
+                        ├──> A2 (Cases Needing Attention) [✅ Complete]
+                        └──> A3 (Enhanced Stat Cards) [✅ Complete]
 
 A1 (Date Filter) ───────> A5 (Cases Tab Filters) [🔄 Ready]
                         └──> Overview Tab Integration [✅ Complete]
@@ -152,9 +152,9 @@ A9 (Discharges Cards) ──> [🔄 Ready]
 
 - ~~**A10** - Backend Metrics Queries~~ ✅ **COMPLETE**
 - ~~**A1** - Date Filter Button Group~~ ✅ **COMPLETE**
+- ~~**A2** - Cases Needing Attention Card~~ ✅ **COMPLETE**
+- ~~**A3** - Enhanced Stat Cards~~ ✅ **COMPLETE**
 - **A5** - Cases Tab Filter Button Groups ⚠️ **HIGH PRIORITY** (A1 complete)
-- **A2** - Cases Needing Attention Card ⚠️ **HIGH PRIORITY** (A10 complete)
-- **A3** - Enhanced Stat Cards ⚠️ **HIGH PRIORITY** (A10 complete)
 - **A4** - Collapsible Activity Timeline
 - **A7** - Enhanced Case Cards
 - **A8** - Discharges Tab Status Summary
@@ -170,12 +170,12 @@ A9 (Discharges Cards) ──> [🔄 Ready]
 
 ### By Priority
 
-- **High Priority:** 2/5 complete
+- **High Priority:** 4/5 complete
 - **Medium Priority:** 0/5 complete
 
 ### By Tab
 
-- **Overview Tab:** 1/3 complete (date filter integrated, stat cards enhanced)
+- **Overview Tab:** 2/3 complete (A2, A3 complete, date filter integrated)
 - **Cases Tab:** 0/3 complete (date filter integrated)
 - **Discharges Tab:** 0/2 complete (date filter integrated)
 - **Foundation:** 2/2 complete
@@ -209,5 +209,5 @@ _Archive resolved issues here with resolution date_
 
 ---
 
-**Last Agent Update:** 2025-01-27 14:30 by Agent-A3-StatCards  
+**Last Agent Update:** 2025-11-27 21:25 by Agent-A2-AttentionCard  
 **Last Reviewed By:** _[Project maintainer name]_
