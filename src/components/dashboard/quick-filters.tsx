@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback } from "react";
 import { Button } from "~/components/ui/button";
 import {
   AlertCircle,
@@ -37,20 +38,41 @@ interface QuickFiltersProps {
   className?: string;
 }
 
+/**
+ * QuickFilters component for one-click filtering of common case scenarios
+ *
+ * Provides filter chips for: Missing Discharge, Missing SOAP, Today, This Week, and Recent.
+ * Supports multiple selection with visual feedback and smooth animations.
+ *
+ * @param selected - Set of currently selected filter IDs
+ * @param onChange - Callback when filters change, receives new Set of selected filter IDs
+ * @param className - Optional additional CSS classes
+ *
+ * @example
+ * ```tsx
+ * <QuickFilters
+ *   selected={new Set(["missingDischarge", "today"])}
+ *   onChange={(filters) => setFilters(filters)}
+ * />
+ * ```
+ */
 export function QuickFilters({
   selected,
   onChange,
   className,
 }: QuickFiltersProps) {
-  const handleToggle = (filterId: QuickFilterId) => {
-    const newSelected = new Set(selected);
-    if (newSelected.has(filterId)) {
-      newSelected.delete(filterId);
-    } else {
-      newSelected.add(filterId);
-    }
-    onChange(newSelected);
-  };
+  const handleToggle = useCallback(
+    (filterId: QuickFilterId) => {
+      const newSelected = new Set(selected);
+      if (newSelected.has(filterId)) {
+        newSelected.delete(filterId);
+      } else {
+        newSelected.add(filterId);
+      }
+      onChange(newSelected);
+    },
+    [selected, onChange],
+  );
 
   return (
     <div className={cn("flex flex-wrap gap-2", className)}>

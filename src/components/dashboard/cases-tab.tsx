@@ -16,7 +16,7 @@ import {
   getDateRangeFromPreset,
   type DateRangePreset,
 } from "~/lib/utils/date-ranges";
-import { startOfDay, endOfDay, startOfWeek, subDays, format } from "date-fns";
+import { startOfDay, endOfDay, startOfWeek, subDays } from "date-fns";
 
 type ViewMode = "grid" | "list";
 const VIEW_STORAGE_KEY = "cases-view-mode";
@@ -77,8 +77,20 @@ export function CasesTab({
   // Convert string to Set for easier manipulation
   const quickFilters = useMemo(() => {
     if (!quickFiltersStr) return new Set<QuickFilterId>();
+    const validFilterIds: QuickFilterId[] = [
+      "missingDischarge",
+      "missingSoap",
+      "today",
+      "thisWeek",
+      "recent",
+    ];
     return new Set(
-      quickFiltersStr.split(",").filter(Boolean) as QuickFilterId[],
+      quickFiltersStr
+        .split(",")
+        .filter(Boolean)
+        .filter((id): id is QuickFilterId =>
+          validFilterIds.includes(id as QuickFilterId),
+        ),
     );
   }, [quickFiltersStr]);
 
@@ -267,13 +279,6 @@ export function CasesTab({
             ))}
           </div>
         )
-      ) : data?.cases.length === 0 ? (
-        <div className="animate-card-in-delay-2 rounded-xl border border-slate-200 bg-slate-50 p-12 text-center">
-          <p className="text-lg font-medium text-slate-900">No cases found</p>
-          <p className="mt-1 text-sm text-slate-600">
-            Try adjusting your filters or create a new case
-          </p>
-        </div>
       ) : filteredCases.length === 0 ? (
         <div className="animate-card-in-delay-2 rounded-xl border border-slate-200 bg-slate-50 p-12 text-center">
           <p className="text-lg font-medium text-slate-900">No cases found</p>

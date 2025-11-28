@@ -948,8 +948,30 @@ export const dashboardRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
-      const startDate = input.startDate ? new Date(input.startDate) : undefined;
-      const endDate = input.endDate ? new Date(input.endDate) : undefined;
+
+      // Validate and parse dates
+      let startDate: Date | undefined;
+      let endDate: Date | undefined;
+
+      if (input.startDate) {
+        startDate = new Date(input.startDate);
+        if (isNaN(startDate.getTime())) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Invalid startDate format",
+          });
+        }
+      }
+
+      if (input.endDate) {
+        endDate = new Date(input.endDate);
+        if (isNaN(endDate.getTime())) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Invalid endDate format",
+          });
+        }
+      }
 
       // Build base query
       let query = ctx.supabase
@@ -990,111 +1012,201 @@ export const dashboardRouter = createTRPCRouter({
         query = query.lte("created_at", end.toISOString());
       }
 
-      // Get total count before pagination
-      const { count } = await query;
+      // If missingDischarge or missingSoap filters are active, we need to fetch all cases
+      // to filter properly, then paginate. Otherwise, paginate first for better performance.
+      const needsPostFiltering =
+        input.missingDischarge === true || input.missingSoap === true;
 
-      // Apply pagination
-      const from = (input.page - 1) * input.pageSize;
-      const to = from + input.pageSize - 1;
+      type CaseWithPatients = {
+        id: string;
+        status: string | null;
+        source: string | null;
+        created_at: string | null;
+        patients: SupabasePatientsResponse;
+      };
 
-      query = query.order("created_at", { ascending: false }).range(from, to);
+      let cases: CaseWithPatients[] | null;
+      let count: number | null;
 
-      const { data: cases, error } = await query;
+      if (needsPostFiltering) {
+        // Fetch all matching cases (we'll filter after enrichment)
+        const {
+          data: allCases,
+          count: totalCount,
+          error,
+        } = await query.order("created_at", { ascending: false });
 
-      if (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch cases",
-          cause: error,
-        });
+        if (error) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to fetch cases",
+            cause: error,
+          });
+        }
+
+        cases = allCases as CaseWithPatients[] | null;
+        count = totalCount;
+      } else {
+        // Get total count before pagination
+        const { count: totalCount } = await query;
+        count = totalCount;
+
+        // Apply pagination
+        const from = (input.page - 1) * input.pageSize;
+        const to = from + input.pageSize - 1;
+
+        const { data: paginatedCases, error } = await query
+          .order("created_at", { ascending: false })
+          .range(from, to);
+
+        if (error) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to fetch cases",
+            cause: error,
+          });
+        }
+
+        cases = paginatedCases as CaseWithPatients[] | null;
       }
 
-      // For each case, check if it has SOAP notes, discharge summaries, calls, emails
-      // Also fetch latest timestamps for completed items
-      const enrichedCases = await Promise.all(
-        (cases ?? []).map(async (c) => {
-          const [
-            { data: soapNotes },
-            { data: dischargeSummaries },
-            { data: calls },
-            { data: emails },
-          ] = await Promise.all([
-            ctx.supabase
+      // Batch fetch all related data to avoid N+1 queries
+      const caseIds = (cases ?? []).map((c: CaseWithPatients) => c.id);
+
+      const [
+        { data: allSoapNotes },
+        { data: allDischargeSummaries },
+        { data: allCalls },
+        { data: allEmails },
+      ] = await Promise.all([
+        caseIds.length > 0
+          ? ctx.supabase
               .from("soap_notes")
-              .select("id, created_at")
-              .eq("case_id", c.id)
+              .select("case_id, id, created_at")
+              .in("case_id", caseIds)
               .order("created_at", { ascending: false })
-              .limit(1),
-            ctx.supabase
+          : Promise.resolve({ data: [] }),
+        caseIds.length > 0
+          ? ctx.supabase
               .from("discharge_summaries")
-              .select("id, created_at")
-              .eq("case_id", c.id)
+              .select("case_id, id, created_at")
+              .in("case_id", caseIds)
               .order("created_at", { ascending: false })
-              .limit(1),
-            ctx.supabase
+          : Promise.resolve({ data: [] }),
+        caseIds.length > 0
+          ? ctx.supabase
               .from("scheduled_discharge_calls")
-              .select("id, created_at, ended_at")
-              .eq("case_id", c.id)
+              .select("case_id, id, created_at, ended_at")
+              .in("case_id", caseIds)
               .order("created_at", { ascending: false })
-              .limit(1),
-            ctx.supabase
+          : Promise.resolve({ data: [] }),
+        caseIds.length > 0
+          ? ctx.supabase
               .from("scheduled_discharge_emails")
-              .select("id, created_at, sent_at")
-              .eq("case_id", c.id)
+              .select("case_id, id, created_at, sent_at")
+              .in("case_id", caseIds)
               .order("created_at", { ascending: false })
-              .limit(1),
-          ]);
+          : Promise.resolve({ data: [] }),
+      ]);
 
-          const patients = (c.patients as SupabasePatientsResponse) ?? [];
-          const patient = patients[0];
+      // Group related data by case_id for efficient lookup
+      type SoapNote = { case_id: string; id: string; created_at: string };
+      type DischargeSummary = {
+        case_id: string;
+        id: string;
+        created_at: string;
+      };
+      type Call = {
+        case_id: string;
+        id: string;
+        created_at: string;
+        ended_at: string | null;
+      };
+      type Email = {
+        case_id: string;
+        id: string;
+        created_at: string;
+        sent_at: string | null;
+      };
 
-          // Get latest timestamps (use ended_at for calls, sent_at for emails, created_at for others)
-          const soapNoteTimestamp =
-            soapNotes && soapNotes.length > 0
-              ? soapNotes[0]?.created_at
-              : undefined;
-          const dischargeSummaryTimestamp =
-            dischargeSummaries && dischargeSummaries.length > 0
-              ? dischargeSummaries[0]?.created_at
-              : undefined;
-          const dischargeCallTimestamp =
-            calls && calls.length > 0
-              ? (calls[0]?.ended_at ?? calls[0]?.created_at)
-              : undefined;
-          const dischargeEmailTimestamp =
-            emails && emails.length > 0
-              ? (emails[0]?.sent_at ?? emails[0]?.created_at)
-              : undefined;
+      const soapNotesByCase = new Map<string, SoapNote>();
+      const dischargeSummariesByCase = new Map<string, DischargeSummary>();
+      const callsByCase = new Map<string, Call>();
+      const emailsByCase = new Map<string, Email>();
 
-          return {
-            id: c.id,
-            status: c.status,
-            source: c.source,
-            created_at: c.created_at,
-            patient: {
-              id: patient?.id ?? "",
-              name: patient?.name ?? "Unknown",
-              species: patient?.species ?? "Unknown",
-              owner_name: patient?.owner_name ?? "Unknown",
-            },
-            hasSoapNote: (soapNotes?.length ?? 0) > 0,
-            hasDischargeSummary: (dischargeSummaries?.length ?? 0) > 0,
-            hasDischargeCall: (calls?.length ?? 0) > 0,
-            hasDischargeEmail: (emails?.length ?? 0) > 0,
-            soapNoteTimestamp,
-            dischargeSummaryTimestamp,
-            dischargeCallTimestamp,
-            dischargeEmailTimestamp,
-          };
-        }),
-      );
+      // Get latest entry for each case (data is already ordered by created_at desc)
+      for (const note of (allSoapNotes ?? []) as SoapNote[]) {
+        if (note?.case_id && !soapNotesByCase.has(note.case_id)) {
+          soapNotesByCase.set(note.case_id, note);
+        }
+      }
+
+      for (const summary of (allDischargeSummaries ??
+        []) as DischargeSummary[]) {
+        if (
+          summary?.case_id &&
+          !dischargeSummariesByCase.has(summary.case_id)
+        ) {
+          dischargeSummariesByCase.set(summary.case_id, summary);
+        }
+      }
+
+      for (const call of (allCalls ?? []) as Call[]) {
+        if (call?.case_id && !callsByCase.has(call.case_id)) {
+          callsByCase.set(call.case_id, call);
+        }
+      }
+
+      for (const email of (allEmails ?? []) as Email[]) {
+        if (email?.case_id && !emailsByCase.has(email.case_id)) {
+          emailsByCase.set(email.case_id, email);
+        }
+      }
+
+      // Enrich cases with related data
+      const enrichedCases = (cases ?? []).map((c: CaseWithPatients) => {
+        const soapNote = soapNotesByCase.get(c.id);
+        const dischargeSummary = dischargeSummariesByCase.get(c.id);
+        const call = callsByCase.get(c.id);
+        const email = emailsByCase.get(c.id);
+
+        const patients = c.patients ?? [];
+        const patient = patients[0];
+
+        // Get latest timestamps (use ended_at for calls, sent_at for emails, created_at for others)
+        const soapNoteTimestamp = soapNote?.created_at;
+        const dischargeSummaryTimestamp = dischargeSummary?.created_at;
+        const dischargeCallTimestamp = call?.ended_at ?? call?.created_at;
+        const dischargeEmailTimestamp = email?.sent_at ?? email?.created_at;
+
+        return {
+          id: c.id,
+          status: c.status,
+          source: c.source,
+          created_at: c.created_at,
+          patient: {
+            id: patient?.id ?? "",
+            name: patient?.name ?? "Unknown",
+            species: patient?.species ?? "Unknown",
+            owner_name: patient?.owner_name ?? "Unknown",
+          },
+          hasSoapNote: !!soapNote,
+          hasDischargeSummary: !!dischargeSummary,
+          hasDischargeCall: !!call,
+          hasDischargeEmail: !!email,
+          soapNoteTimestamp,
+          dischargeSummaryTimestamp,
+          dischargeCallTimestamp,
+          dischargeEmailTimestamp,
+        };
+      });
 
       // Apply client-side filters (search, missing discharge, missing SOAP)
       let filteredCases = enrichedCases;
       if (input.search) {
         const searchLower = input.search.toLowerCase();
         filteredCases = filteredCases.filter(
-          (c) =>
+          (c: (typeof enrichedCases)[0]) =>
             c.patient.name.toLowerCase().includes(searchLower) ||
             (c.patient.owner_name?.toLowerCase() ?? "").includes(searchLower),
         );
@@ -1102,25 +1214,37 @@ export const dashboardRouter = createTRPCRouter({
 
       // Apply missing discharge filter
       if (input.missingDischarge === true) {
-        filteredCases = filteredCases.filter((c) => !c.hasDischargeSummary);
+        filteredCases = filteredCases.filter(
+          (c: (typeof enrichedCases)[0]) => !c.hasDischargeSummary,
+        );
       }
 
       // Apply missing SOAP filter
       if (input.missingSoap === true) {
-        filteredCases = filteredCases.filter((c) => !c.hasSoapNote);
+        filteredCases = filteredCases.filter(
+          (c: (typeof enrichedCases)[0]) => !c.hasSoapNote,
+        );
       }
 
-      // Adjust pagination total based on filtered results
+      // Calculate pagination
       const filteredTotal = filteredCases.length;
-      const adjustedTotalPages = Math.ceil(filteredTotal / input.pageSize);
+      let paginatedCases = filteredCases;
+      const totalPages = Math.ceil(filteredTotal / input.pageSize);
+
+      // Apply pagination if we fetched all cases (post-filtering scenario)
+      if (needsPostFiltering) {
+        const from = (input.page - 1) * input.pageSize;
+        const to = from + input.pageSize;
+        paginatedCases = filteredCases.slice(from, to);
+      }
 
       return {
-        cases: filteredCases,
+        cases: paginatedCases,
         pagination: {
           page: input.page,
           pageSize: input.pageSize,
           total: filteredTotal,
-          totalPages: adjustedTotalPages,
+          totalPages,
         },
       };
     }),
