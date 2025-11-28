@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { api } from "~/trpc/client";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
@@ -11,30 +11,32 @@ import Link from "next/link";
 import { useQueryState } from "nuqs";
 import { DateFilterButtonGroup } from "./date-filter-button-group";
 import { FilterButtonGroup } from "./filter-button-group";
+import { QuickFilters, type QuickFilterId } from "./quick-filters";
 import {
   getDateRangeFromPreset,
   type DateRangePreset,
 } from "~/lib/utils/date-ranges";
+import { startOfDay, endOfDay, startOfWeek, subDays } from "date-fns";
 
 type ViewMode = "grid" | "list";
 const VIEW_STORAGE_KEY = "cases-view-mode";
 
-const STATUS_OPTIONS = [
+const STATUS_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "all", label: "All" },
   { value: "draft", label: "Draft" },
   { value: "ongoing", label: "Ongoing" },
   { value: "completed", label: "Completed" },
   { value: "reviewed", label: "Reviewed" },
-] as const;
+];
 
-const SOURCE_OPTIONS = [
+const SOURCE_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "all", label: "All" },
   { value: "manual", label: "Manual" },
   { value: "idexx_neo", label: "IDEXX Neo" },
   { value: "cornerstone", label: "Cornerstone" },
   { value: "ezyvet", label: "ezyVet" },
   { value: "avimark", label: "AVImark" },
-] as const;
+];
 
 /**
  * CasesTab - Display and manage all cases with filtering
@@ -68,8 +70,58 @@ export function CasesTab({
     defaultValue: "all",
   });
 
+  const [quickFiltersStr, setQuickFiltersStr] = useQueryState("quickFilters", {
+    defaultValue: "",
+  });
+
+  // Convert string to Set for easier manipulation
+  const quickFilters = useMemo(() => {
+    if (!quickFiltersStr) return new Set<QuickFilterId>();
+    const validFilterIds: QuickFilterId[] = [
+      "missingDischarge",
+      "missingSoap",
+      "today",
+      "thisWeek",
+      "recent",
+    ];
+    return new Set(
+      quickFiltersStr
+        .split(",")
+        .filter(Boolean)
+        .filter((id): id is QuickFilterId =>
+          validFilterIds.includes(id as QuickFilterId),
+        ),
+    );
+  }, [quickFiltersStr]);
+
+  // Calculate date range from quick filters or dateRange preset
   const { startDate: calculatedStartDate, endDate: calculatedEndDate } =
-    getDateRangeFromPreset((dateRange as DateRangePreset) ?? "all");
+    useMemo(() => {
+      // Date-based quick filters override the dateRange preset
+      if (quickFilters.has("today")) {
+        const today = new Date();
+        return {
+          startDate: startOfDay(today),
+          endDate: endOfDay(today),
+        };
+      }
+      if (quickFilters.has("thisWeek")) {
+        const now = new Date();
+        return {
+          startDate: startOfWeek(now, { weekStartsOn: 1 }),
+          endDate: endOfDay(now),
+        };
+      }
+      if (quickFilters.has("recent")) {
+        const now = new Date();
+        return {
+          startDate: startOfDay(subDays(now, 1)),
+          endDate: endOfDay(now),
+        };
+      }
+      // Fall back to dateRange preset
+      return getDateRangeFromPreset((dateRange as DateRangePreset) ?? "all");
+    }, [quickFilters, dateRange]);
 
   // Convert dates to ISO strings for API calls
   const startDate = calculatedStartDate?.toISOString() ?? null;
@@ -100,7 +152,12 @@ export function CasesTab({
     search: search || undefined,
     startDate,
     endDate,
+    missingDischarge: quickFilters.has("missingDischarge") ? true : undefined,
+    missingSoap: quickFilters.has("missingSoap") ? true : undefined,
   });
+
+  // Use cases directly from backend (backend handles filtering)
+  const filteredCases = data?.cases ?? [];
 
   return (
     <div className="animate-tab-content space-y-6">
@@ -141,6 +198,22 @@ export function CasesTab({
             </Button>
           </Link>
         </div>
+      </div>
+
+      {/* Quick Filters */}
+      <div className="animate-card-in-delay-1">
+        <label className="mb-2 block text-sm font-medium text-slate-700">
+          Quick Filters
+        </label>
+        <QuickFilters
+          selected={quickFilters}
+          onChange={(selected) => {
+            const newValue =
+              selected.size === 0 ? "" : Array.from(selected).join(",");
+            void setQuickFiltersStr(newValue);
+            setPage(1); // Reset pagination
+          }}
+        />
       </div>
 
       {/* Filters */}
@@ -206,7 +279,7 @@ export function CasesTab({
             ))}
           </div>
         )
-      ) : data?.cases.length === 0 ? (
+      ) : filteredCases.length === 0 ? (
         <div className="animate-card-in-delay-2 rounded-xl border border-slate-200 bg-slate-50 p-12 text-center">
           <p className="text-lg font-medium text-slate-900">No cases found</p>
           <p className="mt-1 text-sm text-slate-600">
@@ -217,7 +290,7 @@ export function CasesTab({
         <>
           {viewMode === "grid" ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {data?.cases.map((caseData, index) => (
+              {filteredCases.map((caseData, index) => (
                 <CaseListCard
                   key={caseData.id}
                   caseData={caseData}
@@ -227,7 +300,7 @@ export function CasesTab({
             </div>
           ) : (
             <div className="space-y-2">
-              {data?.cases.map((caseData) => (
+              {filteredCases.map((caseData) => (
                 <CaseListItemCompact key={caseData.id} caseData={caseData} />
               ))}
             </div>
