@@ -57,7 +57,7 @@ export default function DashboardProfileContent({
 
       {/* Personal Information */}
       <TabsContent value="personal" className="space-y-6">
-        <Card className="relative overflow-hidden border-slate-100 bg-white shadow-sm">
+        <Card className="relative overflow-hidden rounded-xl border border-white/30 bg-white/85 shadow-md backdrop-blur-sm transition-all hover:bg-white/90 hover:shadow-lg">
           <CardHeader className="relative z-10 border-b border-slate-100 bg-slate-50/50">
             <CardTitle className="text-xl font-semibold text-slate-900">
               Personal Information
@@ -140,7 +140,7 @@ export default function DashboardProfileContent({
 
       {/* Account Settings */}
       <TabsContent value="account" className="space-y-6">
-        <Card className="relative overflow-hidden border-slate-100 bg-white shadow-sm">
+        <Card className="relative overflow-hidden rounded-xl border border-white/30 bg-white/85 shadow-md backdrop-blur-sm transition-all hover:bg-white/90 hover:shadow-lg">
           <CardHeader className="relative z-10 border-b border-slate-100 bg-slate-50/50">
             <CardTitle className="text-xl font-semibold text-slate-900">
               Account Settings
@@ -194,7 +194,7 @@ export default function DashboardProfileContent({
 
       {/* Security Settings */}
       <TabsContent value="security" className="space-y-6">
-        <Card className="relative overflow-hidden border-slate-100 bg-white shadow-sm">
+        <Card className="relative overflow-hidden rounded-xl border border-white/30 bg-white/85 shadow-md backdrop-blur-sm transition-all hover:bg-white/90 hover:shadow-lg">
           <CardHeader className="relative z-10 border-b border-slate-100 bg-slate-50/50">
             <CardTitle className="text-xl font-semibold text-slate-900">
               Security Settings

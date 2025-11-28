@@ -265,9 +265,9 @@ export function DischargesTab({
   const paginatedCases = filteredCases; // Already paginated by backend
 
   return (
-    <div className="space-y-6">
+    <div className="animate-tab-content space-y-6">
       {/* Header */}
-      <div className="animate-fade-in-down flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="animate-card-in flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
             <h2 className="text-2xl font-bold tracking-tight">
@@ -313,7 +313,7 @@ export function DischargesTab({
       </div>
 
       {/* Filters */}
-      <div className="animate-fade-in-up stagger-1 flex items-center gap-2">
+      <div className="animate-card-in-delay-1 flex items-center gap-2">
         <div className="relative flex-1 md:max-w-sm">
           <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
           <Input
@@ -331,7 +331,7 @@ export function DischargesTab({
 
       {/* Day Pagination */}
       {!isLoading && casesData && (
-        <div className="animate-fade-in-up stagger-2">
+        <div className="animate-card-in-delay-2">
           <DayPaginationControls
             currentDate={currentDate}
             onDateChange={(date) => {
@@ -354,7 +354,7 @@ export function DischargesTab({
           ))}
         </div>
       ) : filteredCases.length === 0 ? (
-        <div className="animate-fade-in-up">
+        <div className="animate-card-in-delay-2">
           <EmptyState />
         </div>
       ) : (
@@ -373,8 +373,8 @@ export function DischargesTab({
             return (
               <div
                 key={c.id}
-                className="animate-fade-in-up"
-                style={{ animationDelay: `${index * 0.05}s` }}
+                className="animate-card-in"
+                style={{ animationDelay: `${0.2 + index * 0.05}s` }}
               >
                 <CaseCard
                   caseData={c}

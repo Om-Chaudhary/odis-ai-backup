@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { BarChart3 } from "lucide-react";
 import {
@@ -20,6 +21,17 @@ interface WeeklyActivityChartProps {
 }
 
 export function WeeklyActivityChart({ data }: WeeklyActivityChartProps) {
+  const [shouldAnimate, setShouldAnimate] = useState(false);
+
+  // Trigger animation after numbers start (1500ms delay)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShouldAnimate(true);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   // Transform data for chart display
   const chartData = data.map((item) => ({
     date: format(parseISO(item.date), "MMM dd"),
@@ -28,14 +40,14 @@ export function WeeklyActivityChart({ data }: WeeklyActivityChartProps) {
   }));
 
   return (
-    <Card className="border-slate-100 bg-white shadow-sm">
+    <Card className="rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md transition-all hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <BarChart3 className="h-5 w-5 text-slate-600" />
           Weekly Activity
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="animate-card-content-in">
         {data.length === 0 ? (
           <div className="py-8 text-center">
             <BarChart3 className="mx-auto h-12 w-12 text-slate-300" />
@@ -73,12 +85,18 @@ export function WeeklyActivityChart({ data }: WeeklyActivityChartProps) {
                 fill="#31aba3"
                 radius={[4, 4, 0, 0]}
                 maxBarSize={60}
+                isAnimationActive={shouldAnimate}
+                animationBegin={0}
+                animationDuration={1000}
               />
               <Bar
                 dataKey="Calls"
                 fill="#8b5cf6"
                 radius={[4, 4, 0, 0]}
                 maxBarSize={60}
+                isAnimationActive={shouldAnimate}
+                animationBegin={200}
+                animationDuration={1000}
               />
             </BarChart>
           </ResponsiveContainer>

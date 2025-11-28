@@ -22,7 +22,7 @@ export function StatsCard({
   iconBgColor = "bg-[#31aba3]/10",
 }: StatsCardProps) {
   return (
-    <Card className="border-slate-100 bg-white shadow-sm transition-all hover:shadow-md">
+    <Card className="rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md transition-all hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-slate-600">
           {title}

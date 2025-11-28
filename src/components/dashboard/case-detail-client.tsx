@@ -410,7 +410,7 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
                   onTimeUpdate={setCurrentTime}
                 />
 
-                <Card className="border-slate-100 shadow-sm">
+                <Card className="rounded-xl border border-white/30 bg-white/85 shadow-md backdrop-blur-sm transition-all hover:bg-white/90 hover:shadow-lg">
                   <CardHeader className="border-b bg-slate-50/50 pb-3">
                     <CardTitle className="text-base font-medium">
                       Live Transcript

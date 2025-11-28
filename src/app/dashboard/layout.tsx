@@ -42,8 +42,49 @@ export default async function DashboardLayout({
 
   return (
     <SidebarProvider>
-      <div className="relative flex min-h-screen w-full bg-slate-50/50">
-        <div className="dotted-background fixed inset-0 z-0" />
+      <div className="relative flex min-h-screen w-full bg-gradient-to-b from-emerald-50 via-emerald-100/40 to-emerald-50/30">
+        {/* Background Effects */}
+        <div className="pointer-events-none fixed inset-0 z-0">
+          {/* Animated gradient overlays */}
+          <div
+            style={{
+              background:
+                "radial-gradient(circle at 30% 40%, rgba(49, 171, 163, 0.08) 0%, rgba(49, 171, 163, 0.04) 40%, transparent 70%)",
+            }}
+            className="animate-gradient-move absolute inset-0 opacity-50 blur-sm"
+          />
+          <div
+            style={{
+              background:
+                "radial-gradient(circle at 70% 60%, rgba(49, 171, 163, 0.06) 0%, rgba(49, 171, 163, 0.03) 50%, transparent 80%)",
+            }}
+            className="animate-gradient-move-reverse absolute inset-0 opacity-40 blur-sm"
+          />
+          {/* Floating orbs */}
+          <div
+            style={{
+              background:
+                "radial-gradient(circle, rgba(49, 171, 163, 0.04) 0%, transparent 60%)",
+            }}
+            className="animate-float-slow absolute top-1/4 left-1/4 h-[400px] w-[400px] rounded-full opacity-30 blur-3xl"
+          />
+          <div
+            style={{
+              background:
+                "radial-gradient(circle, rgba(49, 171, 163, 0.03) 0%, transparent 60%)",
+            }}
+            className="animate-float-slow-reverse absolute right-1/3 bottom-1/3 h-[300px] w-[300px] rounded-full opacity-25 blur-3xl"
+          />
+        </div>
+        {/* Dotted background pattern */}
+        <div
+          style={{
+            backgroundImage:
+              "radial-gradient(circle, #31aba3 1px, transparent 1px)",
+            backgroundSize: "40px 40px",
+          }}
+          className="pointer-events-none fixed inset-0 z-0 opacity-10"
+        />
         <AppSidebar user={user} profile={profile} className="z-20" />
         <SidebarInset className="relative z-10 bg-transparent">
           <header className="transition-smooth flex h-16 shrink-0 items-center gap-2 ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">

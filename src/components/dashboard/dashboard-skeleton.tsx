@@ -5,7 +5,10 @@ export function DashboardStatsSkeleton() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {[...Array(4)].map((_, i) => (
-        <Card key={i} className="border-slate-100 bg-white shadow-sm">
+        <Card
+          key={i}
+          className="rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md"
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <Skeleton className="h-4 w-24" />
             <Skeleton className="h-8 w-8 rounded-full" />
@@ -22,7 +25,7 @@ export function DashboardStatsSkeleton() {
 
 export function ActivityTimelineSkeleton() {
   return (
-    <Card className="border-slate-100 bg-white shadow-sm">
+    <Card className="rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md">
       <CardHeader>
         <Skeleton className="h-6 w-32" />
       </CardHeader>
@@ -45,7 +48,7 @@ export function ActivityTimelineSkeleton() {
 
 export function WeeklyChartSkeleton() {
   return (
-    <Card className="border-slate-100 bg-white shadow-sm">
+    <Card className="rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md">
       <CardHeader>
         <Skeleton className="h-6 w-32" />
       </CardHeader>
@@ -58,7 +61,7 @@ export function WeeklyChartSkeleton() {
 
 export function UpcomingItemsSkeleton() {
   return (
-    <Card className="border-slate-100 bg-white shadow-sm">
+    <Card className="rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md">
       <CardHeader>
         <Skeleton className="h-6 w-36" />
       </CardHeader>
@@ -87,7 +90,7 @@ export function UpcomingItemsSkeleton() {
 
 export function CallPerformanceSkeleton() {
   return (
-    <Card className="border-slate-100 bg-white shadow-sm">
+    <Card className="rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md">
       <CardHeader>
         <Skeleton className="h-6 w-36" />
       </CardHeader>
@@ -108,7 +111,7 @@ export function CallPerformanceSkeleton() {
 
 export function QuickActionsSkeleton() {
   return (
-    <Card className="border-slate-100 bg-white shadow-sm">
+    <Card className="rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md">
       <CardHeader>
         <Skeleton className="h-6 w-28" />
       </CardHeader>
@@ -125,7 +128,7 @@ export function QuickActionsSkeleton() {
 
 export function SourceBreakdownSkeleton() {
   return (
-    <Card className="border-slate-100 bg-white shadow-sm">
+    <Card className="rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md">
       <CardHeader>
         <Skeleton className="h-6 w-32" />
       </CardHeader>
@@ -148,7 +151,7 @@ export function SourceBreakdownSkeleton() {
 
 export function RecentCasesSkeleton() {
   return (
-    <Card className="border-slate-100 bg-white shadow-sm">
+    <Card className="rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md">
       <CardHeader className="flex flex-row items-center justify-between">
         <Skeleton className="h-6 w-32" />
         <Skeleton className="h-8 w-20" />
@@ -178,7 +181,7 @@ export function RecentCasesSkeleton() {
 
 export function OverviewTabSkeleton() {
   return (
-    <div className="space-y-6">
+    <div className="animate-skeleton-pulse space-y-6">
       {/* Stats Cards */}
       <DashboardStatsSkeleton />
 

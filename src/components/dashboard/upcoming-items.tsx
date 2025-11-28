@@ -13,7 +13,7 @@ interface UpcomingItemsProps {
 
 export function UpcomingItems({ items }: UpcomingItemsProps) {
   return (
-    <Card className="border-slate-100 bg-white shadow-sm">
+    <Card className="rounded-xl border border-white/30 bg-white/85 shadow-md backdrop-blur-sm transition-all hover:bg-white/90 hover:shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Clock className="h-5 w-5 text-slate-600" />

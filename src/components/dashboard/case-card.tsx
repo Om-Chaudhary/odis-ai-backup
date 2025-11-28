@@ -294,7 +294,7 @@ export function CaseCard({
   };
 
   return (
-    <Card className="group transition-smooth relative overflow-hidden border-slate-100 bg-white shadow-sm hover:scale-[1.02] hover:border-slate-200 hover:shadow-md">
+    <Card className="group transition-smooth relative overflow-hidden rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md hover:scale-[1.02] hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
       <CardContent className="p-5">
         {/* Header Section */}
         <div className="mb-4 flex items-start justify-between">
