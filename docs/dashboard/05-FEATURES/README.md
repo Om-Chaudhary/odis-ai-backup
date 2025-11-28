@@ -8,26 +8,30 @@ Active features being developed:
 
 ### Dashboard Optimization (Current)
 
-**Status:** 🟡 In Progress  
-**PR:** [#38](https://github.com/Odis-AI/odis-ai-web/pull/38)  
-**Location:** `features/current/dashboard-optimization/`
+**Status:** 🟡 Documentation Complete - Ready for Implementation  
+**Docs PR:** [#38 - Dashboard Optimization Documentation](https://github.com/Odis-AI/odis-ai-web/pull/38)  
+**Implementation Branch:** `feat/dashboard-optimization-implementation` (to be created)  
+**Location:** `05-FEATURES/current/dashboard-optimization/`
 
 **Description:** Comprehensive dashboard redesign focusing on actionable metrics, improved UX, and standardized components.
 
 **Components:**
 
-- Date filter button group
-- Enhanced stat cards
-- Cases needing attention card
-- Condensed activity timeline
-- Beautiful data viewers (SOAP notes, discharge summaries, transcripts)
+- Date filter button group (A1)
+- Enhanced stat cards (A3)
+- Cases needing attention card (A2)
+- Collapsible activity timeline (A4)
+- Enhanced case cards (A7)
+- Discharges status summary (A8)
+- Enhanced discharges cards (A9)
+- Backend metrics queries (A10)
 
 **Documentation:**
 
-- [Feature Overview](./current/dashboard-optimization/00-OVERVIEW.md)
-- [Status Tracking](./current/dashboard-optimization/STATUS.md)
-- [Assignments](./current/dashboard-optimization/assignments/)
-- [Agent Onboarding](./current/dashboard-optimization/AGENT_ONBOARDING.md)
+- [Feature Overview](./current/dashboard-optimization/README.md)
+- [Implementation Assignments](../../assignments/) - All assignments (A1-A10)
+- [Agent Quick Start Guide](../../AGENT_QUICK_START.md)
+- [Implementation Assignments Overview](../../IMPLEMENTATION_ASSIGNMENTS.md)
 
 ---
 
