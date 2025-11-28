@@ -469,9 +469,69 @@ Currently no test suite exists. When adding tests:
 
 5. **Environment Variables**: Variables starting with `NEXT_PUBLIC_` are exposed to the browser. Never put secrets in public env vars.
 
-## Documentation
+## Documentation Structure
 
-- **VAPI Integration**: See `VAPI_VARIABLES_IMPLEMENTATION.md` for dynamic variables setup
-- **VAPI Prompt**: See `VAPI_SYSTEM_PROMPT.txt` for the complete assistant system prompt
-- **VAPI Variables**: See `VAPI_AI_EXTRACTION_VARIABLES.md` for all available dynamic variables (40+)
-- **Auto-refresh Architecture**: See `AUTO_REFRESH_ARCHITECTURE.md` for polling implementation details
+**IMPORTANT**: All documentation MUST follow this structure. Never create documentation files in the root directory.
+
+```
+docs/
+├── api/                      # API documentation and guides
+│   ├── README.md            # API overview
+│   └── *.md                 # Specific API docs
+├── architecture/            # System architecture documentation
+│   └── *.md                # Architecture decision records, patterns
+├── compliance/              # Compliance and legal documentation
+│   └── *.md                # HIPAA, data privacy, etc.
+├── dashboard/               # Dashboard-specific documentation
+│   ├── 01-GENERAL/         # General dashboard concepts
+│   ├── 02-TABS/            # Tab-specific documentation
+│   ├── 03-COMPONENTS/      # Component documentation
+│   ├── 04-PATTERNS/        # Design patterns
+│   ├── 05-FEATURES/        # Feature documentation
+│   ├── 06-DATA-VIEWS/      # Data view patterns
+│   ├── 07-TESTING/         # Dashboard testing guides
+│   ├── 08-REPORTS/         # Status and progress reports
+│   ├── 09-AGENTS/          # Agent/worker documentation
+│   └── README.md           # Dashboard docs overview
+├── deployment/              # Deployment guides
+│   └── *.md                # Deployment procedures
+├── development/             # Development guides
+│   └── *.md                # Development workflows
+├── implementation/          # Implementation guides
+│   ├── features/           # Feature-specific guides
+│   ├── projects/           # Project-specific guides
+│   └── *.md               # General implementation docs
+├── integrations/            # Third-party integrations
+│   └── *.md                # Integration guides
+├── reference/               # Reference documentation
+│   └── *.md                # API references, migrations
+├── testing/                 # Testing documentation
+│   └── *.md                # Test strategies, guides, reports
+├── vapi/                    # VAPI-specific documentation
+│   ├── prompts/            # VAPI prompt templates
+│   └── *.md               # VAPI guides and setup
+├── CLAUDE.md               # This file (AI assistant guide)
+├── README.md               # Documentation index
+└── QUICK_REFERENCE.md      # Quick reference guide
+```
+
+### Documentation Guidelines
+
+1. **Never create docs in root**: All `.md` files belong in `/docs` following the structure above
+2. **Choose the right category**:
+   - API docs → `/docs/api/`
+   - Testing/verification → `/docs/testing/`
+   - Features → `/docs/implementation/features/`
+   - Architecture → `/docs/architecture/`
+   - Integration guides → `/docs/integrations/`
+3. **Use descriptive names**: Files should be UPPER_SNAKE_CASE for guides, kebab-case for feature docs
+4. **Update README.md**: Add new docs to the relevant README.md file in their directory
+
+### Key Documentation Files
+
+- **VAPI Integration**: `/docs/vapi/VAPI_VARIABLES_IMPLEMENTATION.md`
+- **VAPI Prompt**: `/docs/vapi/prompts/VAPI_SYSTEM_PROMPT.txt`
+- **VAPI Variables**: `/docs/vapi/VAPI_AI_EXTRACTION_VARIABLES.md`
+- **Testing Strategy**: `/docs/testing/TESTING_STRATEGY.md`
+- **Dashboard Guide**: `/docs/dashboard/README.md`
+- **API Reference**: `/docs/api/API_REFERENCE.md`

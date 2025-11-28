@@ -43,6 +43,14 @@ export function transformBackendCaseToDashboardCase(
     return dateB - dateA; // Most recent first
   })[0];
 
+  // Check if case has clinical notes (SOAP notes, transcriptions, or discharge summaries)
+  const hasSoapNotes = (backendCase.soap_notes?.length ?? 0) > 0;
+  const hasTranscriptions = (backendCase.transcriptions?.length ?? 0) > 0;
+  const hasDischargeSummaries =
+    (backendCase.discharge_summaries?.length ?? 0) > 0;
+  const has_clinical_notes =
+    hasSoapNotes || hasTranscriptions || hasDischargeSummaries;
+
   return {
     id: backendCase.id,
     status: backendCase.status,
@@ -66,6 +74,7 @@ export function transformBackendCaseToDashboardCase(
           created_at: dischargeSummary.created_at,
         }
       : undefined,
+    has_clinical_notes,
     scheduled_discharge_calls: backendCase.scheduled_discharge_calls
       .map((call) => ({
         id: call.id,

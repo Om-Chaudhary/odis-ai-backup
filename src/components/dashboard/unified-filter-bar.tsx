@@ -3,6 +3,7 @@
 import { FilterButtonGroup } from "./filter-button-group";
 import { DateFilterButtonGroup } from "./date-filter-button-group";
 import { DayPaginationControls } from "./day-pagination-controls";
+import type { DischargeReadinessFilter } from "~/types/dashboard";
 
 interface UnifiedFilterBarProps {
   /** Current selected date for day navigation */
@@ -20,6 +21,11 @@ interface UnifiedFilterBarProps {
   onStatusFilterChange: (
     filter: "all" | "ready" | "pending" | "completed" | "failed",
   ) => void;
+
+  /** Current readiness filter value */
+  readinessFilter: DischargeReadinessFilter;
+  /** Callback when readiness filter changes */
+  onReadinessFilterChange: (filter: DischargeReadinessFilter) => void;
 }
 
 /**
@@ -53,6 +59,8 @@ export function UnifiedFilterBar({
   isLoading = false,
   statusFilter,
   onStatusFilterChange,
+  readinessFilter,
+  onReadinessFilterChange,
 }: UnifiedFilterBarProps) {
   return (
     <div className="space-y-4">
@@ -64,23 +72,39 @@ export function UnifiedFilterBar({
         isLoading={isLoading}
       />
 
-      {/* Filter Row: Date Range Presets and Status Filters */}
+      {/* Filter Row: Date Range Presets, Status Filters, and Readiness Filters */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {/* Date Range Presets */}
         <DateFilterButtonGroup />
 
-        {/* Status Filter Buttons */}
-        <FilterButtonGroup<"all" | "ready" | "pending" | "completed" | "failed">
-          options={[
-            { value: "all", label: "All" },
-            { value: "ready", label: "Ready" },
-            { value: "pending", label: "Pending" },
-            { value: "completed", label: "Completed" },
-            { value: "failed", label: "Failed" },
-          ]}
-          value={statusFilter}
-          onChange={onStatusFilterChange}
-        />
+        {/* Filter Groups: Status and Readiness */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Status Filter Buttons */}
+          <FilterButtonGroup<
+            "all" | "ready" | "pending" | "completed" | "failed"
+          >
+            options={[
+              { value: "all", label: "All" },
+              { value: "ready", label: "Ready" },
+              { value: "pending", label: "Pending" },
+              { value: "completed", label: "Completed" },
+              { value: "failed", label: "Failed" },
+            ]}
+            value={statusFilter}
+            onChange={onStatusFilterChange}
+          />
+
+          {/* Readiness Filter Buttons */}
+          <FilterButtonGroup<DischargeReadinessFilter>
+            options={[
+              { value: "all", label: "All Cases" },
+              { value: "ready_for_discharge", label: "Ready for Discharge" },
+              { value: "not_ready", label: "Not Ready" },
+            ]}
+            value={readinessFilter}
+            onChange={onReadinessFilterChange}
+          />
+        </div>
       </div>
     </div>
   );

@@ -119,6 +119,22 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
   const handleTriggerCall = async () => {
     if (!caseData || !patient || isProcessingRef.current) return;
 
+    // Check for clinical notes requirement
+    // Calculate has_clinical_notes from available data arrays
+    const hasSoapNotes = (caseData.soap_notes?.length ?? 0) > 0;
+    const hasTranscriptions = (caseData.transcriptions?.length ?? 0) > 0;
+    const hasDischargeSummaries =
+      (caseData.discharge_summaries?.length ?? 0) > 0;
+    const hasClinicalNotes =
+      hasSoapNotes || hasTranscriptions || hasDischargeSummaries;
+
+    if (!hasClinicalNotes) {
+      toast.error(
+        "Clinical notes required: Add SOAP notes, transcription, or discharge summary before starting discharge call",
+      );
+      return;
+    }
+
     const phone = getEffectiveContact(
       patient.owner_phone,
       settings.testContactPhone,

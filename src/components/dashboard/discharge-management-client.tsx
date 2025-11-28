@@ -22,6 +22,7 @@ import {
 } from "~/lib/utils/dashboard-helpers";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import type { DischargeReadinessFilter } from "~/types/dashboard";
 
 const PAGE_SIZE = 10;
 
@@ -69,6 +70,8 @@ export function DischargeManagementClient() {
   const [statusFilter, setStatusFilter] = useState<
     "all" | "ready" | "pending" | "completed" | "failed"
   >("all");
+  const [readinessFilter, setReadinessFilter] =
+    useState<DischargeReadinessFilter>("all");
 
   // Ref to prevent double-clicks
   const isProcessingRef = useRef(false);
@@ -87,6 +90,7 @@ export function DischargeManagementClient() {
     page: currentPage,
     pageSize: PAGE_SIZE,
     date: dateString,
+    readinessFilter,
   });
 
   const { data: settingsData, refetch: refetchSettings } =
@@ -260,7 +264,9 @@ export function DischargeManagementClient() {
     setCurrentPage(1); // Reset to first page when changing date
   }, []);
 
-  // Filtering (client-side for search and status, server-side for pagination)
+  // Filtering (client-side for search and status, server-side for pagination and readiness)
+  // Note: Readiness filtering happens on the backend based on user-specific requirements.
+  // Cases returned from the backend already meet readiness requirements when readinessFilter is applied.
   const filteredCases = useMemo(() => {
     return cases.filter((c) => {
       // Search filter
@@ -281,6 +287,11 @@ export function DischargeManagementClient() {
         const hasNoDischarge =
           c.scheduled_discharge_calls.length === 0 &&
           c.scheduled_discharge_emails.length === 0;
+        // Enhanced: Ready status filter now works with readiness filter.
+        // When "ready" status is selected, cases must have valid contact and no discharge attempts.
+        // Discharge readiness requirements (SOAP notes, discharge summary, transcription, etc.)
+        // are checked on the backend via the readinessFilter parameter.
+        // To show only cases ready for discharge, select both "Ready" status and "Ready for Discharge" readiness filter.
         return (hasValidPhone || hasValidEmail) && hasNoDischarge;
       }
 
@@ -400,6 +411,11 @@ export function DischargeManagementClient() {
         statusFilter={statusFilter}
         onStatusFilterChange={(filter) => {
           setStatusFilter(filter);
+          setCurrentPage(1); // Reset to first page when changing filter
+        }}
+        readinessFilter={readinessFilter}
+        onReadinessFilterChange={(filter) => {
+          setReadinessFilter(filter);
           setCurrentPage(1); // Reset to first page when changing filter
         }}
       />

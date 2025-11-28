@@ -11,6 +11,14 @@ export type EmailStatus = "queued" | "sent" | "failed" | "cancelled" | null;
 
 export type CaseStatus = "draft" | "ongoing" | "completed" | "reviewed";
 
+/**
+ * Discharge readiness filter options
+ */
+export type DischargeReadinessFilter =
+  | "all"
+  | "ready_for_discharge"
+  | "not_ready";
+
 export interface TranscriptMessage {
   role: "assistant" | "user" | "system";
   message: string;
@@ -141,6 +149,8 @@ export interface DashboardCase {
     content: string;
     created_at: string;
   };
+  /** Indicates if this case has clinical notes (SOAP notes, transcriptions, or discharge summaries) */
+  has_clinical_notes: boolean;
   scheduled_discharge_calls: Array<{
     id: string;
     status: CallStatus;

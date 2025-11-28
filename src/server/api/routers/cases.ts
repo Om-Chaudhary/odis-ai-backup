@@ -5,6 +5,8 @@ import {
   protectedProcedure,
 } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
+import { checkCaseDischargeReadiness } from "~/lib/utils/discharge-readiness";
+import type { BackendCase } from "~/types/dashboard";
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -37,6 +39,10 @@ export const casesRouter = createTRPCRouter({
         page: z.number().min(1).default(1),
         pageSize: z.number().min(5).max(50).default(10),
         date: z.string().optional(), // ISO date string (YYYY-MM-DD)
+        readinessFilter: z
+          .enum(["all", "ready_for_discharge", "not_ready"])
+          .optional()
+          .default("all"),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -130,8 +136,29 @@ export const casesRouter = createTRPCRouter({
         });
       }
 
+      // Apply readiness filtering if requested
+      let filteredCases = data ?? [];
+      if (input.readinessFilter !== "all" && filteredCases.length > 0) {
+        const userEmail = ctx.user.email;
+        filteredCases = filteredCases.filter((caseData) => {
+          // Type assertion: the query returns data compatible with BackendCase structure
+          // The query may not include all BackendCase fields, but has the fields needed for readiness check
+          const readiness = checkCaseDischargeReadiness(
+            caseData as unknown as BackendCase,
+            userEmail,
+          );
+          if (input.readinessFilter === "ready_for_discharge") {
+            return readiness.isReady;
+          }
+          if (input.readinessFilter === "not_ready") {
+            return !readiness.isReady;
+          }
+          return true;
+        });
+      }
+
       return {
-        cases: data ?? [],
+        cases: filteredCases,
         pagination: {
           page: input.page,
           pageSize: input.pageSize,

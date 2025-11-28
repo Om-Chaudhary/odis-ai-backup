@@ -29,6 +29,7 @@ export const MOCK_CASES: DashboardCase[] = [
       owner_email: "john.doe@example.com",
       owner_phone: "+1 (555) 987-6543",
     },
+    has_clinical_notes: true,
     discharge_summary: {
       id: "ds-1",
       content: "Patient is recovering well from anesthesia...",
@@ -73,6 +74,7 @@ export const MOCK_CASES: DashboardCase[] = [
       owner_email: "jane.smith@example.com",
       owner_phone: "+1 (555) 456-7890",
     },
+    has_clinical_notes: true,
     discharge_summary: {
       id: "ds-2",
       content: "Routine checkup completed. Vaccinations updated.",
@@ -109,6 +111,7 @@ export const MOCK_CASES: DashboardCase[] = [
       owner_email: "mike.j@example.com",
       owner_phone: "+1 (555) 111-2222",
     },
+    has_clinical_notes: false,
     scheduled_discharge_calls: [],
     scheduled_discharge_emails: [],
     // No discharge summary or scheduled items yet
@@ -129,6 +132,7 @@ export const MOCK_CASES: DashboardCase[] = [
       owner_email: "sarah.w@example.com",
       owner_phone: "+1 (555) 333-4444",
     },
+    has_clinical_notes: true,
     discharge_summary: {
       id: "ds-4",
       content: "Surgery successful. Monitoring recovery.",
