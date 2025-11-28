@@ -3,8 +3,6 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import { Separator } from "~/components/ui/separator";
 import {
   ArrowLeft,
   Loader2,
@@ -20,9 +18,10 @@ import {
   Activity,
   CheckCircle,
   AlertCircle,
-  ChevronDown,
-  ChevronUp,
   Play,
+  Calendar,
+  MessageSquare,
+  Send,
 } from "lucide-react";
 import { format } from "date-fns";
 import { api } from "~/trpc/client";
@@ -31,15 +30,15 @@ import { DischargeStatusBadge } from "./discharge-status-badge";
 import { SOAPNoteDisplay } from "./soap-note-display";
 import { CallAudioPlayer } from "./call-audio-player";
 import { SyncedTranscript } from "./synced-transcript";
-import { EmptyState } from "./empty-state";
 import type { DischargeSettings, TranscriptMessage } from "~/types/dashboard";
 import { cn, formatDuration } from "~/lib/utils";
 import { Badge } from "~/components/ui/badge";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "../ui/collapsible";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "~/components/ui/accordion";
 
 interface CaseDetailClientProps {
   caseId: string;
@@ -79,7 +78,6 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
   const router = useRouter();
   const isProcessingRef = useRef(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [isSecondaryOpen, setIsSecondaryOpen] = useState(false);
 
   // Fetch case detail
   const {
@@ -169,8 +167,56 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
     });
   };
 
-  // Determine latest call
-  const latestCall = caseData?.scheduled_discharge_calls?.[0]; // Backend should sort by created_at desc
+  // Extract and sort data
+  const latestCall = caseData?.scheduled_discharge_calls?.[0];
+  const allCalls = (caseData?.scheduled_discharge_calls ?? []) as Array<{
+    id: string;
+    status: string;
+    scheduled_for?: string | null;
+    ended_at?: string | null;
+    ended_reason?: string | null;
+    started_at?: string | null;
+    vapi_call_id?: string | null;
+    transcript?: string | null;
+    transcript_messages?: unknown;
+    call_analysis?: unknown;
+    summary?: string | null;
+    success_evaluation?: string | null;
+    structured_data?: unknown;
+    user_sentiment?: string | null;
+    recording_url?: string | null;
+    stereo_recording_url?: string | null;
+    duration_seconds?: number | null;
+    cost?: number | null;
+    created_at: string;
+  }>;
+  const soapNotes = (caseData?.soap_notes ?? []) as Array<{
+    id: string;
+    subjective?: string | null;
+    objective?: string | null;
+    assessment?: string | null;
+    plan?: string | null;
+    created_at: string;
+  }>;
+  const transcriptions = (caseData?.transcriptions ?? []) as Array<{
+    id: string;
+    transcript?: string | null;
+    created_at: string;
+  }>;
+  const dischargeSummaries = (caseData?.discharge_summaries ?? []) as Array<{
+    id: string;
+    content?: string | null;
+    created_at: string;
+  }>;
+  const scheduledEmails = (caseData?.scheduled_discharge_emails ??
+    []) as Array<{
+    id: string;
+    status: string;
+    scheduled_for?: string | null;
+    sent_at?: string | null;
+    created_at: string;
+  }>;
+
   const SpeciesIcon = patient?.species?.toLowerCase() === "feline" ? Cat : Dog;
 
   if (isLoading) {
@@ -199,95 +245,429 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
   }
 
   return (
-    <div className="space-y-8 pb-16">
+    <div className="space-y-12 pb-16">
       {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-        <div className="space-y-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-foreground -ml-2"
-            onClick={() => router.back()}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
-          </Button>
+      <div className="space-y-6">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground hover:text-foreground -ml-2"
+          onClick={() => router.back()}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Dashboard
+        </Button>
 
-          <div className="flex items-start gap-4">
-            <div className="bg-primary/10 text-primary flex h-16 w-16 items-center justify-center rounded-2xl shadow-sm">
-              {patient ? (
-                <SpeciesIcon className="h-8 w-8" />
-              ) : (
-                <FileText className="h-8 w-8" />
-              )}
-            </div>
-            <div className="space-y-1">
-              <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+        <div className="flex items-start gap-6">
+          <div className="bg-primary/5 text-primary border-primary/10 flex h-20 w-20 items-center justify-center rounded-xl border">
+            {patient ? (
+              <SpeciesIcon className="h-10 w-10" />
+            ) : (
+              <FileText className="h-10 w-10" />
+            )}
+          </div>
+          <div className="flex-1 space-y-3">
+            <div>
+              <h1 className="text-4xl font-bold tracking-tight text-slate-900">
                 {patient?.name && !isPlaceholder(patient.name)
                   ? patient.name
                   : "Unknown Patient"}
               </h1>
-              <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                <Badge variant="outline" className="capitalize">
+              {patient?.species && (
+                <p className="text-muted-foreground mt-1 text-lg">
+                  {patient.species}
+                  {patient.breed && !isPlaceholder(patient.breed)
+                    ? ` • ${patient.breed}`
+                    : ""}
+                </p>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+              {caseData.status && (
+                <Badge
+                  variant="outline"
+                  className="border-slate-200 bg-slate-50 text-slate-700 capitalize"
+                >
                   {caseData.status}
                 </Badge>
-                <span>•</span>
-                <span>
-                  Created {format(new Date(caseData.created_at), "MMM d, yyyy")}
-                </span>
-              </div>
+              )}
+              {caseData.type && typeof caseData.type === "string" && (
+                <Badge
+                  variant="outline"
+                  className="border-slate-200 bg-slate-50 text-slate-700 capitalize"
+                >
+                  {caseData.type.replace("_", " ")}
+                </Badge>
+              )}
+              {caseData.visibility && (
+                <Badge
+                  variant="outline"
+                  className="border-slate-200 bg-slate-50 text-slate-700 capitalize"
+                >
+                  {caseData.visibility}
+                </Badge>
+              )}
+              <span className="text-muted-foreground">•</span>
+              <span className="text-muted-foreground">
+                Created {format(new Date(caseData.created_at), "MMM d, yyyy")}
+              </span>
+              {caseData.scheduled_at && (
+                <>
+                  <span className="text-muted-foreground">•</span>
+                  <span className="text-muted-foreground flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    Scheduled{" "}
+                    {format(new Date(caseData.scheduled_at), "MMM d, yyyy")}
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>
-
-        {/* Primary Actions */}
-        <div className="flex gap-2">
-          {(!latestCall ||
-            latestCall.status === "completed" ||
-            latestCall.status === "failed" ||
-            latestCall.status === "cancelled") && (
-            <Button
-              size="lg"
-              className="shadow-primary/20 shadow-lg transition-all hover:scale-105"
-              onClick={handleTriggerCall}
-              disabled={
-                triggerDischargeMutation.isPending || isProcessingRef.current
-              }
-            >
-              {triggerDischargeMutation.isPending ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Phone className="mr-2 h-4 w-4" />
-              )}
-              Start Discharge Call
-            </Button>
-          )}
-        </div>
       </div>
 
-      {/* Call Status / Player Section - The Hero */}
-      {latestCall ? (
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Main Content (2 cols) */}
-          <div className="space-y-6 lg:col-span-2">
-            {/* Status Banner */}
-            <Card
-              className={cn(
-                "overflow-hidden border-l-4",
-                latestCall.status === "completed"
-                  ? "border-l-green-500"
-                  : latestCall.status === "failed"
-                    ? "border-l-red-500"
-                    : latestCall.status === "in_progress"
-                      ? "border-l-blue-500"
-                      : "border-l-slate-300",
+      {/* Main Content - Expandable Sections */}
+      <div className="space-y-8">
+        <Accordion
+          type="multiple"
+          defaultValue={["patient"]}
+          className="w-full"
+        >
+          {/* Patient Information Section */}
+          <AccordionItem value="patient" className="border-b border-slate-200">
+            <AccordionTrigger className="py-6 text-left hover:no-underline">
+              <div className="flex items-center gap-3">
+                <User className="text-muted-foreground h-5 w-5" />
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900">
+                    Patient Information
+                  </h2>
+                  <p className="text-muted-foreground mt-0.5 text-sm">
+                    Owner details and contact information
+                  </p>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pt-2 pb-6">
+              {patient ? (
+                <div className="space-y-6">
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
+                          Patient
+                        </p>
+                        <div className="space-y-2">
+                          <p className="font-medium text-slate-900">
+                            {patient.name}
+                          </p>
+                          <div className="text-muted-foreground flex flex-wrap gap-2 text-sm">
+                            {patient.species && <span>{patient.species}</span>}
+                            {patient.breed && !isPlaceholder(patient.breed) && (
+                              <>
+                                <span>•</span>
+                                <span>{patient.breed}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
+                          Owner
+                        </p>
+                        <p className="font-medium text-slate-900">
+                          {patient.owner_name}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
+                          Contact
+                        </p>
+                        <div className="space-y-2 text-sm">
+                          {patient.owner_phone &&
+                            !isPlaceholder(patient.owner_phone) && (
+                              <div className="text-muted-foreground flex items-center gap-2">
+                                <Phone className="h-4 w-4" />
+                                <span>{patient.owner_phone}</span>
+                              </div>
+                            )}
+                          {patient.owner_email &&
+                            !isPlaceholder(patient.owner_email) && (
+                              <div className="text-muted-foreground flex items-center gap-2">
+                                <Mail className="h-4 w-4" />
+                                <span>{patient.owner_email}</span>
+                              </div>
+                            )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  No patient information available
+                </p>
               )}
-            >
-              <CardContent className="p-6">
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Clinical Notes Section */}
+          <AccordionItem value="clinical" className="border-b border-slate-200">
+            <AccordionTrigger className="py-6 text-left hover:no-underline">
+              <div className="flex items-center gap-3">
+                <Stethoscope className="text-muted-foreground h-5 w-5" />
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900">
+                    Clinical Notes
+                  </h2>
+                  <p className="text-muted-foreground mt-0.5 text-sm">
+                    {soapNotes.length > 0 || transcriptions.length > 0
+                      ? `${soapNotes.length} SOAP note${
+                          soapNotes.length !== 1 ? "s" : ""
+                        }, ${transcriptions.length} transcription${
+                          transcriptions.length !== 1 ? "s" : ""
+                        }`
+                      : "No clinical notes"}
+                  </p>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pt-2 pb-6">
+              <div className="space-y-8">
+                {soapNotes.length > 0 && (
+                  <div>
+                    <h3 className="text-muted-foreground mb-4 text-sm font-medium tracking-wide uppercase">
+                      SOAP Notes
+                    </h3>
+                    <SOAPNoteDisplay notes={soapNotes} />
+                  </div>
+                )}
+                {transcriptions.length > 0 && (
+                  <div>
+                    <h3 className="text-muted-foreground mb-4 text-sm font-medium tracking-wide uppercase">
+                      Transcriptions
+                    </h3>
+                    <div className="space-y-4">
+                      {transcriptions.map((transcription) => (
+                        <div
+                          key={transcription.id}
+                          className="rounded-lg border border-slate-200 bg-slate-50/50 p-4"
+                        >
+                          <div className="mb-2 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <FileText className="text-muted-foreground h-4 w-4" />
+                              <span className="text-muted-foreground text-xs">
+                                {format(
+                                  new Date(transcription.created_at),
+                                  "MMM d, yyyy 'at' h:mm a",
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                          {transcription.transcript && (
+                            <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap">
+                              {transcription.transcript}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {soapNotes.length === 0 && transcriptions.length === 0 && (
+                  <p className="text-muted-foreground py-8 text-center text-sm">
+                    No clinical notes available
+                  </p>
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Discharge Summaries Section */}
+          <AccordionItem
+            value="discharge"
+            className="border-b border-slate-200"
+          >
+            <AccordionTrigger className="py-6 text-left hover:no-underline">
+              <div className="flex items-center gap-3">
+                <FileText className="text-muted-foreground h-5 w-5" />
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900">
+                    Discharge Summaries
+                  </h2>
+                  <p className="text-muted-foreground mt-0.5 text-sm">
+                    {dischargeSummaries.length > 0
+                      ? `${dischargeSummaries.length} summary${
+                          dischargeSummaries.length !== 1 ? "ies" : "y"
+                        }`
+                      : "No discharge summaries"}
+                  </p>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pt-2 pb-6">
+              {dischargeSummaries.length > 0 ? (
+                <div className="space-y-4">
+                  {dischargeSummaries.map((summary) => (
+                    <div
+                      key={summary.id}
+                      className="rounded-lg border border-slate-200 bg-slate-50/50 p-6"
+                    >
+                      <div className="mb-3 flex items-center justify-between">
+                        <span className="text-muted-foreground text-xs">
+                          {format(
+                            new Date(summary.created_at),
+                            "MMM d, yyyy 'at' h:mm a",
+                          )}
+                        </span>
+                      </div>
+                      {summary.content && (
+                        <div className="prose prose-sm max-w-none">
+                          <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                            {summary.content}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground py-8 text-center text-sm">
+                  No discharge summaries available
+                </p>
+              )}
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Communications Section */}
+          <AccordionItem
+            value="communications"
+            className="border-b border-slate-200"
+          >
+            <AccordionTrigger className="py-6 text-left hover:no-underline">
+              <div className="flex items-center gap-3">
+                <MessageSquare className="text-muted-foreground h-5 w-5" />
+                <div>
+                  <h2 className="text-xl font-semibold text-slate-900">
+                    Communications
+                  </h2>
+                  <p className="text-muted-foreground mt-0.5 text-sm">
+                    {scheduledEmails.length > 0 || allCalls.length > 0
+                      ? `${scheduledEmails.length} email${
+                          scheduledEmails.length !== 1 ? "s" : ""
+                        }, ${allCalls.length} call${allCalls.length !== 1 ? "s" : ""}`
+                      : "No communications"}
+                  </p>
+                </div>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pt-2 pb-6">
+              <div className="space-y-6">
+                {scheduledEmails.length > 0 && (
+                  <div>
+                    <h3 className="text-muted-foreground mb-4 text-sm font-medium tracking-wide uppercase">
+                      Scheduled Emails
+                    </h3>
+                    <div className="space-y-3">
+                      {scheduledEmails.map((email) => (
+                        <div
+                          key={email.id}
+                          className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50/50 p-4"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Send className="text-muted-foreground h-4 w-4" />
+                            <div>
+                              <p className="font-medium text-slate-900">
+                                {email.status === "sent"
+                                  ? "Sent"
+                                  : email.status === "queued"
+                                    ? "Queued"
+                                    : email.status === "failed"
+                                      ? "Failed"
+                                      : "Cancelled"}
+                              </p>
+                              <p className="text-muted-foreground text-xs">
+                                {email.sent_at
+                                  ? `Sent ${format(new Date(email.sent_at), "MMM d, yyyy 'at' h:mm a")}`
+                                  : email.scheduled_for
+                                    ? `Scheduled for ${format(new Date(email.scheduled_for), "MMM d, yyyy 'at' h:mm a")}`
+                                    : `Created ${format(new Date(email.created_at), "MMM d, yyyy 'at' h:mm a")}`}
+                              </p>
+                            </div>
+                          </div>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              email.status === "sent"
+                                ? "border-green-200 bg-green-50 text-green-700"
+                                : email.status === "failed"
+                                  ? "border-red-200 bg-red-50 text-red-700"
+                                  : "border-slate-200 bg-slate-50 text-slate-700",
+                            )}
+                          >
+                            {email.status}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {allCalls.length > 0 && (
+                  <div>
+                    <h3 className="text-muted-foreground mb-4 text-sm font-medium tracking-wide uppercase">
+                      Discharge Calls
+                    </h3>
+                    <p className="text-muted-foreground mb-4 text-sm">
+                      {allCalls.length} call{allCalls.length !== 1 ? "s" : ""}{" "}
+                      scheduled. See details below.
+                    </p>
+                  </div>
+                )}
+                {scheduledEmails.length === 0 && allCalls.length === 0 && (
+                  <p className="text-muted-foreground py-8 text-center text-sm">
+                    No communications available
+                  </p>
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
+
+      {/* Discharge Calls Section - At Bottom */}
+      {allCalls.length > 0 && (
+        <div className="space-y-6 border-t border-slate-200 pt-12">
+          <div>
+            <h2 className="text-2xl font-semibold text-slate-900">
+              Discharge Calls
+            </h2>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Call recordings, transcripts, and analysis
+            </p>
+          </div>
+
+          {latestCall && (
+            <div className="space-y-6">
+              {/* Latest Call Status */}
+              <div
+                className={cn(
+                  "rounded-lg border-l-4 bg-slate-50/50 p-6",
+                  latestCall.status === "completed"
+                    ? "border-l-green-500"
+                    : latestCall.status === "failed"
+                      ? "border-l-red-500"
+                      : latestCall.status === "in_progress"
+                        ? "border-l-blue-500"
+                        : "border-l-slate-300",
+                )}
+              >
                 <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-semibold">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-lg font-semibold text-slate-900">
                         {latestCall.status === "completed"
                           ? "Call Completed"
                           : latestCall.status === "failed"
@@ -303,19 +683,30 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
                         type="call"
                       />
                     </div>
-                    <p className="text-muted-foreground text-sm">
+                    <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
                       {latestCall.started_at && (
-                        <>
+                        <span>
                           Started{" "}
                           {format(new Date(latestCall.started_at), "h:mm a")}
+                        </span>
+                      )}
+                      {latestCall.ended_at && (
+                        <>
+                          <span>•</span>
+                          <span>
+                            Ended{" "}
+                            {format(new Date(latestCall.ended_at), "h:mm a")}
+                          </span>
                         </>
                       )}
                       {latestCall.ended_reason && (
-                        <> • Reason: {latestCall.ended_reason}</>
+                        <>
+                          <span>•</span>
+                          <span>Reason: {latestCall.ended_reason}</span>
+                        </>
                       )}
-                    </p>
+                    </div>
                   </div>
-
                   {latestCall.status === "in_progress" && (
                     <div className="flex h-3 w-3">
                       <span className="absolute inline-flex h-3 w-3 animate-ping rounded-full bg-blue-400 opacity-75"></span>
@@ -324,9 +715,9 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
                   )}
                 </div>
 
-                {/* Metrics Row */}
+                {/* Metrics */}
                 {latestCall.status === "completed" && (
-                  <div className="mt-6 grid grid-cols-3 gap-4 border-t pt-6">
+                  <div className="mt-6 grid grid-cols-3 gap-4 border-t border-slate-200 pt-6">
                     <div className="flex items-center gap-3">
                       <div className="rounded-full bg-blue-50 p-2 text-blue-600">
                         <Clock className="h-4 w-4" />
@@ -380,190 +771,129 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
                     </div>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+              </div>
 
-            {/* Summary */}
-            {latestCall.summary && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="text-primary h-5 w-5" />
+              {/* Call Summary */}
+              {latestCall.summary && (
+                <div className="rounded-lg border border-slate-200 bg-slate-50/50 p-6">
+                  <h3 className="mb-3 flex items-center gap-2 font-semibold text-slate-900">
+                    <FileText className="h-5 w-5" />
                     Call Summary
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="leading-relaxed text-slate-700">
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed">
                     {latestCall.summary}
                   </p>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Audio Player & Transcript */}
-            {latestCall.recording_url && (
-              <div className="space-y-6">
-                <CallAudioPlayer
-                  url={
-                    latestCall.stereo_recording_url ?? latestCall.recording_url
-                  }
-                  duration={latestCall.duration_seconds ?? undefined}
-                  onTimeUpdate={setCurrentTime}
-                />
-
-                <Card className="rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md transition-all hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
-                  <CardHeader className="border-b bg-slate-50/50 pb-3">
-                    <CardTitle className="text-base font-medium">
-                      Live Transcript
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <SyncedTranscript
-                      messages={
-                        (latestCall.transcript_messages as TranscriptMessage[]) ??
-                        []
-                      }
-                      currentTime={currentTime}
-                      onMessageClick={(_time) => {
-                        // This will be handled by passing a seek function to the audio player ideally,
-                        // For now, just visual sync
-                      }}
-                      className="h-[500px] p-4"
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-          </div>
-
-          {/* Sidebar Content */}
-          <div className="space-y-6">
-            {/* Patient Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <User className="h-4 w-4" />
-                  Patient Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 text-sm">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-muted-foreground text-xs">Name</p>
-                    <p className="font-medium">{patient?.name}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">Species</p>
-                    <p className="font-medium">{patient?.species ?? "N/A"}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">Breed</p>
-                    <p className="font-medium">{patient?.breed ?? "N/A"}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">Owner</p>
-                    <p className="font-medium">{patient?.owner_name}</p>
-                  </div>
                 </div>
-                <Separator />
-                <div>
-                  <p className="text-muted-foreground mb-1 text-xs">Contact</p>
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                      <Phone className="text-muted-foreground h-3 w-3" />
-                      <span>{patient?.owner_phone}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Mail className="text-muted-foreground h-3 w-3" />
-                      <span>{patient?.owner_email}</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+              )}
 
-            {/* Success Evaluation */}
-            {latestCall.success_evaluation && (
-              <Card
-                className={cn(
-                  "border-l-4",
-                  typeof latestCall.success_evaluation === "string" &&
-                    latestCall.success_evaluation
-                      .toLowerCase()
-                      .includes("success")
-                    ? "border-l-green-500"
-                    : "border-l-amber-500",
-                )}
-              >
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-base">
+              {/* Success Evaluation */}
+              {latestCall.success_evaluation && (
+                <div
+                  className={cn(
+                    "rounded-lg border-l-4 bg-slate-50/50 p-6",
+                    typeof latestCall.success_evaluation === "string" &&
+                      latestCall.success_evaluation
+                        .toLowerCase()
+                        .includes("success")
+                      ? "border-l-green-500"
+                      : "border-l-amber-500",
+                  )}
+                >
+                  <h3 className="mb-3 flex items-center gap-2 font-semibold text-slate-900">
                     {typeof latestCall.success_evaluation === "string" &&
                     latestCall.success_evaluation
                       .toLowerCase()
                       .includes("success") ? (
-                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <CheckCircle className="h-5 w-5 text-green-600" />
                     ) : (
-                      <AlertCircle className="h-4 w-4 text-amber-600" />
+                      <AlertCircle className="h-5 w-5 text-amber-600" />
                     )}
                     Success Evaluation
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-sm text-slate-600">
-                  {latestCall.success_evaluation}
-                </CardContent>
-              </Card>
-            )}
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {latestCall.success_evaluation}
+                  </p>
+                </div>
+              )}
 
-            {/* Clinical Context (Collapsible) */}
-            <Collapsible
-              open={isSecondaryOpen}
-              onOpenChange={setIsSecondaryOpen}
-            >
-              <CollapsibleTrigger asChild>
-                <Button variant="outline" className="w-full justify-between">
-                  <span className="flex items-center gap-2">
-                    <Stethoscope className="h-4 w-4" />
-                    Clinical Context
-                  </span>
-                  {isSecondaryOpen ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="mt-4 space-y-4">
-                {caseData.discharge_summaries?.[0] && (
-                  <Card>
-                    <CardHeader className="py-3">
-                      <CardTitle className="text-sm">
-                        Discharge Summary
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="text-muted-foreground max-h-40 overflow-y-auto py-3 text-xs">
-                      {caseData.discharge_summaries[0].content}
-                    </CardContent>
-                  </Card>
-                )}
-                {caseData.soap_notes?.[0] && (
-                  <SOAPNoteDisplay notes={[caseData.soap_notes[0]]} />
-                )}
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
+              {/* Audio Player & Transcript */}
+              {latestCall.recording_url && (
+                <div className="space-y-6">
+                  <CallAudioPlayer
+                    url={
+                      latestCall.stereo_recording_url ??
+                      latestCall.recording_url
+                    }
+                    duration={latestCall.duration_seconds ?? undefined}
+                    onTimeUpdate={setCurrentTime}
+                  />
+
+                  <div className="rounded-lg border border-slate-200 bg-slate-50/50">
+                    <div className="border-b border-slate-200 bg-slate-100/50 px-6 py-3">
+                      <h3 className="font-medium text-slate-900">
+                        Live Transcript
+                      </h3>
+                    </div>
+                    <div className="p-0">
+                      <SyncedTranscript
+                        messages={
+                          (latestCall.transcript_messages as TranscriptMessage[]) ??
+                          []
+                        }
+                        currentTime={currentTime}
+                        onMessageClick={(_time) => {
+                          // This will be handled by passing a seek function to the audio player ideally,
+                          // For now, just visual sync
+                        }}
+                        className="h-[500px] p-4"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Trigger Call Button */}
+              {(!latestCall ||
+                latestCall.status === "completed" ||
+                latestCall.status === "failed" ||
+                latestCall.status === "cancelled") && (
+                <div className="flex justify-end">
+                  <Button
+                    onClick={handleTriggerCall}
+                    disabled={
+                      triggerDischargeMutation.isPending ||
+                      isProcessingRef.current
+                    }
+                  >
+                    {triggerDischargeMutation.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Phone className="mr-2 h-4 w-4" />
+                    )}
+                    Start New Discharge Call
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {allCalls.length === 0 && (
+            <div className="rounded-lg border border-slate-200 bg-slate-50/50 p-12 text-center">
+              <Phone className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
+              <h3 className="mb-2 font-semibold text-slate-900">
+                No Calls Yet
+              </h3>
+              <p className="text-muted-foreground mb-6 text-sm">
+                Start a discharge call to see live transcripts, audio recording,
+                and AI analysis here.
+              </p>
+              <Button onClick={handleTriggerCall}>
+                <Play className="mr-2 h-4 w-4" />
+                Start First Call
+              </Button>
+            </div>
+          )}
         </div>
-      ) : (
-        <EmptyState
-          icon={Phone}
-          title="No Calls Yet"
-          description="Start a discharge call to see live transcripts, audio recording, and AI analysis here."
-          action={
-            <Button onClick={handleTriggerCall}>
-              <Play className="mr-2 h-4 w-4" />
-              Start First Call
-            </Button>
-          }
-        />
       )}
     </div>
   );

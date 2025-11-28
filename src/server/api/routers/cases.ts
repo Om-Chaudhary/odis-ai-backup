@@ -170,11 +170,12 @@ export const casesRouter = createTRPCRouter({
       }
 
       // Now fetch full case details with all relations (using left joins)
+      // Note: Supabase doesn't support ordering in nested selects, so we'll sort in JS
       const { data, error } = await ctx.supabase
         .from("cases")
         .select(
           `
-          id, status, created_at, scheduled_at,
+          id, status, type, visibility, created_at, updated_at, scheduled_at,
           patients (
             id, name, species, breed,
             owner_name, owner_email, owner_phone
@@ -202,6 +203,45 @@ export const casesRouter = createTRPCRouter({
           message: "Failed to fetch case details",
           cause: error,
         });
+      }
+
+      // Sort related data by date (newest first)
+      if (data) {
+        if (Array.isArray(data.transcriptions)) {
+          data.transcriptions.sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          );
+        }
+        if (Array.isArray(data.soap_notes)) {
+          data.soap_notes.sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          );
+        }
+        if (Array.isArray(data.discharge_summaries)) {
+          data.discharge_summaries.sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          );
+        }
+        if (Array.isArray(data.scheduled_discharge_calls)) {
+          data.scheduled_discharge_calls.sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          );
+        }
+        if (Array.isArray(data.scheduled_discharge_emails)) {
+          data.scheduled_discharge_emails.sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          );
+        }
       }
 
       return data;
