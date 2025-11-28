@@ -4,24 +4,16 @@ import Link from "next/link";
 import { Card, CardContent, CardFooter } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
-import {
-  Dog,
-  Cat,
-  FileText,
-  FileCheck,
-  Phone,
-  Mail,
-  Eye,
-  Circle,
-  CheckCircle2,
-  Calendar,
-} from "lucide-react";
+import { Dog, Cat, Eye, Calendar } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { CaseListItem } from "~/types/dashboard";
 import { cn } from "~/lib/utils";
+import { CompletionIndicator } from "~/components/dashboard/completion-indicator";
+import { QuickActionsMenu } from "~/components/dashboard/quick-actions-menu";
 
 interface CaseListCardProps {
   caseData: CaseListItem;
+  index?: number; // For staggered animations
 }
 
 function getSourceBadge(source: string | null) {
@@ -145,12 +137,27 @@ function getStatusIconBgColor(status: string) {
   }
 }
 
-export function CaseListCard({ caseData }: CaseListCardProps) {
+export function CaseListCard({ caseData, index = 0 }: CaseListCardProps) {
   const SpeciesIcon =
     caseData.patient.species?.toLowerCase() === "feline" ? Cat : Dog;
 
+  // Determine animation delay class based on index
+  const animationClass =
+    index === 0
+      ? "animate-card-in"
+      : index === 1
+        ? "animate-card-in-delay-1"
+        : index === 2
+          ? "animate-card-in-delay-2"
+          : "animate-card-in-delay-3";
+
   return (
-    <Card className="group transition-smooth relative overflow-hidden rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md hover:scale-[1.02] hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
+    <Card
+      className={cn(
+        "group transition-smooth relative overflow-hidden rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md hover:scale-[1.02] hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10",
+        animationClass,
+      )}
+    >
       <CardContent className="overflow-hidden p-5">
         {/* Header Section */}
         <div className="mb-4">
@@ -192,6 +199,12 @@ export function CaseListCard({ caseData }: CaseListCardProps) {
                 </span>
               </div>
             </div>
+            {/* Quick Actions Menu */}
+            <QuickActionsMenu
+              caseId={caseData.id}
+              hasSoapNote={caseData.hasSoapNote}
+              hasDischargeSummary={caseData.hasDischargeSummary}
+            />
           </div>
         </div>
 
@@ -207,69 +220,32 @@ export function CaseListCard({ caseData }: CaseListCardProps) {
           </div>
         </div>
 
-        {/* Workflow Indicators Section */}
-        <div className="mb-4 min-h-[2.5rem]">
-          <div className="flex flex-wrap items-center gap-2">
-            {/* SOAP Note */}
-            <div className="flex shrink-0 items-center gap-1.5">
-              <div className="flex shrink-0 items-center justify-center">
-                {caseData.hasSoapNote ? (
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                ) : (
-                  <Circle className="h-4 w-4 text-slate-300" />
-                )}
-              </div>
-              <div className="flex items-center gap-1 text-xs text-slate-600">
-                <FileText className="h-3 w-3 shrink-0" />
-                <span>SOAP</span>
-              </div>
-            </div>
-
-            {/* Discharge Summary */}
-            <div className="flex shrink-0 items-center gap-1.5">
-              <div className="flex shrink-0 items-center justify-center">
-                {caseData.hasDischargeSummary ? (
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                ) : (
-                  <Circle className="h-4 w-4 text-slate-300" />
-                )}
-              </div>
-              <div className="flex items-center gap-1 text-xs text-slate-600">
-                <FileCheck className="h-3 w-3 shrink-0" />
-                <span>Summary</span>
-              </div>
-            </div>
-
-            {/* Discharge Call */}
-            <div className="flex shrink-0 items-center gap-1.5">
-              <div className="flex shrink-0 items-center justify-center">
-                {caseData.hasDischargeCall ? (
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                ) : (
-                  <Circle className="h-4 w-4 text-slate-300" />
-                )}
-              </div>
-              <div className="flex items-center gap-1 text-xs text-slate-600">
-                <Phone className="h-3 w-3 shrink-0" />
-                <span>Call</span>
-              </div>
-            </div>
-
-            {/* Discharge Email */}
-            <div className="flex shrink-0 items-center gap-1.5">
-              <div className="flex shrink-0 items-center justify-center">
-                {caseData.hasDischargeEmail ? (
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                ) : (
-                  <Circle className="h-4 w-4 text-slate-300" />
-                )}
-              </div>
-              <div className="flex items-center gap-1 text-xs text-slate-600">
-                <Mail className="h-3 w-3 shrink-0" />
-                <span>Email</span>
-              </div>
-            </div>
-          </div>
+        {/* Completion Indicators Section */}
+        <div className="mb-4 space-y-2">
+          <CompletionIndicator
+            type="soap"
+            completed={caseData.hasSoapNote}
+            timestamp={caseData.soapNoteTimestamp}
+            size="md"
+          />
+          <CompletionIndicator
+            type="discharge"
+            completed={caseData.hasDischargeSummary}
+            timestamp={caseData.dischargeSummaryTimestamp}
+            size="md"
+          />
+          <CompletionIndicator
+            type="call"
+            completed={caseData.hasDischargeCall}
+            timestamp={caseData.dischargeCallTimestamp}
+            size="md"
+          />
+          <CompletionIndicator
+            type="email"
+            completed={caseData.hasDischargeEmail}
+            timestamp={caseData.dischargeEmailTimestamp}
+            size="md"
+          />
         </div>
       </CardContent>
 

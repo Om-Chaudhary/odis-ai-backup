@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import type { CallStatus, EmailStatus } from "~/types/dashboard";
-import { startOfWeek, startOfMonth } from "date-fns";
+import { startOfMonth, startOfWeek } from "date-fns";
 
 // Type helpers for Supabase responses
 type SupabasePatient = {
