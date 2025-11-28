@@ -32,19 +32,28 @@ export const MOCK_CASES: DashboardCase[] = [
       content: "Patient is recovering well from anesthesia...",
       created_at: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
     },
-    scheduled_discharge_call: {
-      id: "call-1",
-      status: "queued",
-      scheduled_for: new Date(Date.now() + 1000 * 60 * 30).toISOString(), // in 30 mins
-      ended_at: null,
-      vapi_call_id: "vapi-123",
-    },
-    scheduled_discharge_email: {
-      id: "email-1",
-      status: "sent",
-      scheduled_for: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
-      sent_at: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
-    },
+    scheduled_discharge_calls: [
+      {
+        id: "call-1",
+        status: "queued",
+        scheduled_for: new Date(Date.now() + 1000 * 60 * 30).toISOString(), // in 30 mins
+        ended_at: null,
+        vapi_call_id: "vapi-123",
+        transcript: null,
+        recording_url: null,
+        duration_seconds: null,
+        created_at: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+      },
+    ],
+    scheduled_discharge_emails: [
+      {
+        id: "email-1",
+        status: "sent",
+        scheduled_for: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
+        sent_at: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
+        created_at: new Date(Date.now() - 1000 * 60 * 10).toISOString(),
+      },
+    ],
   },
   {
     id: "case-2",
@@ -65,13 +74,20 @@ export const MOCK_CASES: DashboardCase[] = [
       content: "Routine checkup completed. Vaccinations updated.",
       created_at: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString(),
     },
-    scheduled_discharge_call: {
-      id: "call-2",
-      status: "completed",
-      scheduled_for: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-      ended_at: new Date(Date.now() - 1000 * 60 * 60 * 2.9).toISOString(),
-      vapi_call_id: "vapi-456",
-    },
+    scheduled_discharge_calls: [
+      {
+        id: "call-2",
+        status: "completed",
+        scheduled_for: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
+        ended_at: new Date(Date.now() - 1000 * 60 * 60 * 2.9).toISOString(),
+        vapi_call_id: "vapi-456",
+        transcript: "Call transcript here...",
+        recording_url: "https://example.com/recording.mp3",
+        duration_seconds: 180,
+        created_at: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
+      },
+    ],
+    scheduled_discharge_emails: [],
   },
   {
     id: "case-3",
@@ -87,6 +103,8 @@ export const MOCK_CASES: DashboardCase[] = [
       owner_email: "mike.j@example.com",
       owner_phone: "+1 (555) 111-2222",
     },
+    scheduled_discharge_calls: [],
+    scheduled_discharge_emails: [],
     // No discharge summary or scheduled items yet
   },
   {
@@ -108,12 +126,19 @@ export const MOCK_CASES: DashboardCase[] = [
       content: "Surgery successful. Monitoring recovery.",
       created_at: new Date(Date.now() - 1000 * 60 * 60 * 23).toISOString(),
     },
-    scheduled_discharge_call: {
-      id: "call-4",
-      status: "failed",
-      scheduled_for: new Date(Date.now() - 1000 * 60 * 60 * 22).toISOString(),
-      ended_at: new Date(Date.now() - 1000 * 60 * 60 * 21.9).toISOString(),
-      vapi_call_id: "vapi-789",
-    },
+    scheduled_discharge_calls: [
+      {
+        id: "call-4",
+        status: "failed",
+        scheduled_for: new Date(Date.now() - 1000 * 60 * 60 * 22).toISOString(),
+        ended_at: new Date(Date.now() - 1000 * 60 * 60 * 21.9).toISOString(),
+        vapi_call_id: "vapi-789",
+        transcript: null,
+        recording_url: null,
+        duration_seconds: null,
+        created_at: new Date(Date.now() - 1000 * 60 * 60 * 22).toISOString(),
+      },
+    ],
+    scheduled_discharge_emails: [],
   },
 ];

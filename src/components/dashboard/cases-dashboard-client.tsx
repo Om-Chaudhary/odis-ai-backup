@@ -1,15 +1,14 @@
 "use client";
 
 import { useState, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Settings, Search, Plus, RefreshCw, TestTube } from "lucide-react";
+import { Badge } from "~/components/ui/badge";
 import { CaseCard } from "./case-card";
 import { EmptyState } from "./empty-state";
 import { DayPaginationControls } from "./day-pagination-controls";
-import { DischargeSettingsPanel } from "./discharge-settings-panel";
-import { TestModeBanner } from "./test-mode-banner";
-import { VoicemailFlagToggle } from "./voicemail-flag-toggle";
 import { api } from "~/trpc/client";
 import type {
   DashboardCase,
@@ -47,11 +46,12 @@ function normalizePlaceholder(
 }
 
 export function CasesDashboardClient() {
+  const router = useRouter();
+
   // State
   const [searchTerm, setSearchTerm] = useState("");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentPage, setCurrentPage] = useState(1);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [loadingCase, setLoadingCase] = useState<LoadingState | null>(null);
 
   // Ref to prevent double-clicks
@@ -102,17 +102,6 @@ export function CasesDashboardClient() {
       // Clear loading state when mutation completes (success or error)
       setLoadingCase(null);
       isProcessingRef.current = false;
-    },
-  });
-
-  const updateSettingsMutation = api.cases.updateDischargeSettings.useMutation({
-    onSuccess: () => {
-      toast.success("Settings saved successfully");
-      setIsSettingsOpen(false);
-      void refetchSettings();
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to save settings");
     },
   });
 
@@ -250,28 +239,6 @@ export function CasesDashboardClient() {
     });
   };
 
-  const handleSaveSettings = (newSettings: DischargeSettings) => {
-    // Only send non-empty values to avoid validation errors
-    updateSettingsMutation.mutate({
-      clinicName: newSettings.clinicName || undefined,
-      clinicPhone: newSettings.clinicPhone || undefined,
-      clinicEmail: newSettings.clinicEmail || undefined,
-      emergencyPhone: newSettings.emergencyPhone || undefined,
-      testModeEnabled: newSettings.testModeEnabled,
-      testContactName: newSettings.testContactName ?? undefined,
-      testContactEmail: newSettings.testContactEmail ?? undefined,
-      testContactPhone: newSettings.testContactPhone ?? undefined,
-      voicemailDetectionEnabled: newSettings.voicemailDetectionEnabled,
-    });
-  };
-
-  const handleToggleVoicemail = (enabled: boolean) => {
-    handleSaveSettings({
-      ...settings,
-      voicemailDetectionEnabled: enabled,
-    });
-  };
-
   const handleRefresh = () => {
     void refetchCases();
     void refetchSettings();
@@ -293,26 +260,23 @@ export function CasesDashboardClient() {
 
   return (
     <div className="space-y-6 p-6 pb-16">
-      {/* Test Mode Banner */}
-      <TestModeBanner
-        settings={settings}
-        onUpdate={handleSaveSettings}
-        isLoading={updateSettingsMutation.isPending}
-      />
-
-      {/* Voicemail Detection Toggle */}
-      <VoicemailFlagToggle
-        enabled={settings.voicemailDetectionEnabled ?? false}
-        onToggle={handleToggleVoicemail}
-        isLoading={updateSettingsMutation.isPending}
-      />
-
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Discharge Dashboard
-          </h1>
+        <div className="space-y-1">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold tracking-tight">
+              Discharge Dashboard
+            </h1>
+            {settings.testModeEnabled && (
+              <Badge
+                variant="outline"
+                className="gap-1 border-amber-500/50 bg-amber-50 text-amber-700"
+              >
+                <TestTube className="h-3 w-3" />
+                Test Mode Active
+              </Badge>
+            )}
+          </div>
           <p className="text-muted-foreground">
             Manage automated follow-ups and discharge summaries.
           </p>
@@ -332,27 +296,11 @@ export function CasesDashboardClient() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setIsSettingsOpen(true)}
+            onClick={() => router.push("/dashboard/settings")}
           >
             <Settings className="mr-2 h-4 w-4" />
             Settings
           </Button>
-          {!settings.testModeEnabled && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                handleSaveSettings({
-                  ...settings,
-                  testModeEnabled: true,
-                })
-              }
-              className="border-amber-600/30 text-amber-700 hover:bg-amber-50 hover:text-amber-900"
-            >
-              <TestTube className="mr-2 h-4 w-4" />
-              Enable Test Mode
-            </Button>
-          )}
           <Button size="sm">
             <Plus className="mr-2 h-4 w-4" />
             New Case
@@ -377,7 +325,7 @@ export function CasesDashboardClient() {
         </div>
       </div>
 
-      {/* Day Pagination - Moved to top */}
+      {/* Day Pagination */}
       {!isLoading && casesData && (
         <DayPaginationControls
           currentDate={currentDate}
@@ -435,15 +383,6 @@ export function CasesDashboardClient() {
           })}
         </div>
       )}
-
-      {/* Settings Panel */}
-      <DischargeSettingsPanel
-        open={isSettingsOpen}
-        onOpenChange={setIsSettingsOpen}
-        settings={settings}
-        onSave={handleSaveSettings}
-        isLoading={updateSettingsMutation.isPending}
-      />
     </div>
   );
 }

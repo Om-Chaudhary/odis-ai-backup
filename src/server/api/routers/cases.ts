@@ -99,13 +99,18 @@ export const casesRouter = createTRPCRouter({
             status,
             scheduled_for,
             ended_at,
-            vapi_call_id
+            vapi_call_id,
+            transcript,
+            recording_url,
+            duration_seconds,
+            created_at
           ),
           scheduled_discharge_emails (
             id,
             status,
             scheduled_for,
-            sent_at
+            sent_at,
+            created_at
           )
         `,
         )
@@ -133,6 +138,73 @@ export const casesRouter = createTRPCRouter({
         },
         date: selectedDate.toISOString().split("T")[0], // Return date in YYYY-MM-DD format
       };
+    }),
+
+  /**
+   * Get single case with all related data (user's own cases only)
+   */
+  getCaseDetail: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      // First check if case exists and belongs to user
+      const { data: caseCheck, error: caseCheckError } = await ctx.supabase
+        .from("cases")
+        .select("id, user_id")
+        .eq("id", input.id)
+        .single();
+
+      if (caseCheckError || !caseCheck) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Case not found",
+          cause: caseCheckError,
+        });
+      }
+
+      // Verify ownership
+      if (caseCheck.user_id !== ctx.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You do not have access to this case",
+        });
+      }
+
+      // Now fetch full case details with all relations (using left joins)
+      const { data, error } = await ctx.supabase
+        .from("cases")
+        .select(
+          `
+          id, status, created_at, scheduled_at,
+          patients (
+            id, name, species, breed,
+            owner_name, owner_email, owner_phone
+          ),
+          transcriptions (id, transcript, created_at),
+          soap_notes (id, subjective, objective, assessment, plan, created_at),
+          discharge_summaries (id, content, created_at),
+          scheduled_discharge_calls (
+            id, status, scheduled_for, ended_at, ended_reason, started_at,
+            vapi_call_id, transcript, transcript_messages, call_analysis,
+            summary, success_evaluation, structured_data, user_sentiment,
+            recording_url, stereo_recording_url, duration_seconds, cost, created_at
+          ),
+          scheduled_discharge_emails (
+            id, status, scheduled_for, sent_at, created_at
+          )
+        `,
+        )
+        .eq("id", input.id)
+        .single();
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch case details",
+          cause: error,
+        });
+      }
+
+      return data;
     }),
 
   /**

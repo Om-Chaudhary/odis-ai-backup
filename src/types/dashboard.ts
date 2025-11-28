@@ -11,6 +11,20 @@ export type EmailStatus = "queued" | "sent" | "failed" | "cancelled" | null;
 
 export type CaseStatus = "draft" | "ongoing" | "completed" | "reviewed";
 
+export interface TranscriptMessage {
+  role: "assistant" | "user" | "system";
+  message: string;
+  time?: number;
+  endTime?: number;
+  secondsFromStart?: number;
+}
+
+export interface CallAnalysis {
+  summary?: string;
+  successEvaluation?: string;
+  structuredData?: Record<string, unknown>;
+}
+
 /**
  * Backend response type - matches Supabase relation structure
  */
@@ -50,12 +64,25 @@ export interface BackendCase {
     scheduled_for: string | null;
     ended_at: string | null;
     vapi_call_id: string | null;
+    transcript: string | null;
+    transcript_messages: TranscriptMessage[] | null;
+    call_analysis: CallAnalysis | null;
+    summary: string | null;
+    success_evaluation: string | null;
+    structured_data: Record<string, unknown> | null;
+    user_sentiment: string | null;
+    recording_url: string | null;
+    stereo_recording_url: string | null;
+    duration_seconds: number | null;
+    cost: number | null;
+    created_at: string;
   }>;
   scheduled_discharge_emails: Array<{
     id: string;
     status: EmailStatus;
     scheduled_for: string | null;
     sent_at: string | null;
+    created_at: string;
   }>;
 }
 
@@ -81,19 +108,24 @@ export interface DashboardCase {
     content: string;
     created_at: string;
   };
-  scheduled_discharge_call?: {
+  scheduled_discharge_calls: Array<{
     id: string;
     status: CallStatus;
     scheduled_for: string | null;
     ended_at: string | null;
     vapi_call_id: string | null;
-  };
-  scheduled_discharge_email?: {
+    transcript: string | null;
+    recording_url: string | null;
+    duration_seconds: number | null;
+    created_at: string;
+  }>;
+  scheduled_discharge_emails: Array<{
     id: string;
     status: EmailStatus;
     scheduled_for: string | null;
     sent_at: string | null;
-  };
+    created_at: string;
+  }>;
 }
 
 /**
@@ -134,4 +166,61 @@ export interface TriggerDischargeInput {
     ownerPhone?: string;
   };
   dischargeType: "call" | "email" | "both";
+}
+
+/**
+ * Detailed case view - extends BackendCase with proper typing
+ */
+export interface DetailedCase extends BackendCase {
+  transcriptions?: Array<{
+    id: string;
+    transcript: string;
+    created_at: string;
+  }>;
+  soap_notes?: Array<{
+    id: string;
+    subjective?: string | null;
+    objective?: string | null;
+    assessment?: string | null;
+    plan?: string | null;
+    created_at: string;
+  }>;
+  scheduled_discharge_calls: Array<{
+    id: string;
+    status: CallStatus;
+    scheduled_for: string | null;
+    ended_at: string | null;
+    vapi_call_id: string | null;
+    created_at: string;
+    transcript: string | null;
+    transcript_messages: TranscriptMessage[] | null;
+    call_analysis: CallAnalysis | null;
+    summary: string | null;
+    success_evaluation: string | null;
+    structured_data: Record<string, unknown> | null;
+    user_sentiment: string | null;
+    recording_url: string | null;
+    stereo_recording_url: string | null;
+    duration_seconds: number | null;
+    cost: number | null;
+  }>;
+  scheduled_discharge_emails: Array<{
+    id: string;
+    status: EmailStatus;
+    scheduled_for: string | null;
+    sent_at: string | null;
+    created_at: string;
+  }>;
+}
+
+/**
+ * Discharge timeline item for displaying call/email history
+ */
+export interface DischargeTimeline {
+  type: "call" | "email";
+  status: CallStatus | EmailStatus;
+  scheduledFor: string | null;
+  completedAt: string | null;
+  id: string;
+  createdAt: string;
 }

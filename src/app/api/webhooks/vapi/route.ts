@@ -13,14 +13,7 @@ import {
  * VAPI Webhook Handler
  *
  * Receives real-time notifications from VAPI when call events occur.
- *
- * Common webhook events:
- * - status-update: Call status changed
- * - end-of-call-report: Call ended with complete data
- * - hang: Call was hung up
- * - speech-update: Transcription update
- *
- * Enhanced with automatic retry logic for failed calls.
+ * Syncs call data, status, analysis, and artifacts to Supabase.
  *
  * Documentation: https://docs.vapi.ai/server_url
  */
@@ -28,7 +21,26 @@ import {
 interface VapiWebhookPayload {
   message: {
     type: string;
-    call?: VapiCallResponse;
+    call?: VapiCallResponse & {
+      endedReason?: string;
+      startedAt?: string;
+      endedAt?: string;
+      recordingUrl?: string;
+      transcript?: string;
+      messages?: unknown[];
+      analysis?: {
+        summary?: string;
+        successEvaluation?: string;
+        structuredData?: Record<string, unknown>;
+      };
+      costs?: Array<{ amount: number; description: string }>;
+    };
+    artifact?: {
+      recordingUrl?: string;
+      stereoRecordingUrl?: string;
+      logUrl?: string;
+      structuredOutputs?: Record<string, unknown>;
+    };
     status?: string;
     endedReason?: string;
     phoneNumber?: string;
@@ -36,76 +48,6 @@ interface VapiWebhookPayload {
     [key: string]: unknown;
   };
 }
-
-// /**
-//  * Verify webhook signature from VAPI
-//  * VAPI sends a signature in the x-vapi-signature header using HMAC-SHA256
-//  */
-// async function _verifySignature(
-//   request: NextRequest,
-//   body: string,
-// ): Promise<boolean> {
-//   const signature = request.headers.get("x-vapi-signature");
-//   const secret = process.env.VAPI_WEBHOOK_SECRET;
-//
-//   if (!secret) {
-//     console.warn(
-//       "[VAPI_WEBHOOK] No VAPI_WEBHOOK_SECRET configured - webhook signature not verified",
-//     );
-//     return true; // Allow in development
-//   }
-//
-//   if (!signature) {
-//     console.error("[VAPI_WEBHOOK] No signature provided in request");
-//     return false;
-//   }
-//
-//   try {
-//     // Create HMAC using the webhook secret
-//     const encoder = new TextEncoder();
-//     const key = await crypto.subtle.importKey(
-//       "raw",
-//       encoder.encode(secret),
-//       { name: "HMAC", hash: "SHA-256" },
-//       false,
-//       ["sign"],
-//     );
-//
-//     // Generate signature from request body
-//     const signatureBuffer = await crypto.subtle.sign(
-//       "HMAC",
-//       key,
-//       encoder.encode(body),
-//     );
-//
-//     // Convert to hex string
-//     const computedSignature = Array.from(new Uint8Array(signatureBuffer))
-//       .map((b) => b.toString(16).padStart(2, "0"))
-//       .join("");
-//
-//     // Timing-safe comparison
-//     return timingSafeEqual(signature, computedSignature);
-//   } catch (error) {
-//     console.error("[VAPI_WEBHOOK] Signature verification error:", error);
-//     return false;
-//   }
-// }
-//
-// /**
-//  * Timing-safe string comparison to prevent timing attacks
-//  */
-// function timingSafeEqual(a: string, b: string): boolean {
-//   if (a.length !== b.length) {
-//     return false;
-//   }
-//
-//   let result = 0;
-//   for (let i = 0; i < a.length; i++) {
-//     result |= a.charCodeAt(i) ^ b.charCodeAt(i);
-//   }
-//
-//   return result === 0;
-// }
 
 /**
  * Map VAPI ended reason to our internal status
@@ -150,9 +92,6 @@ function shouldRetry(endedReason?: string): boolean {
 
 /**
  * Calculate retry delay with exponential backoff
- *
- * @param retryCount - Current retry count (0-based)
- * @returns Delay in minutes
  */
 function calculateRetryDelay(retryCount: number): number {
   // Exponential backoff: 5, 10, 20 minutes
@@ -164,17 +103,7 @@ function calculateRetryDelay(retryCount: number): number {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Get the raw body for signature verification
     const body = await request.text();
-
-    // Verify webhook signature
-    // const isValid = await verifySignature(request, body);
-    // if (!isValid) {
-    //   console.error('[VAPI_WEBHOOK] Invalid webhook signature');
-    //   return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
-    // }
-
-    // Parse webhook payload
     const payload = JSON.parse(body) as VapiWebhookPayload;
     const { message } = payload;
 
@@ -183,7 +112,7 @@ export async function POST(request: NextRequest) {
       callId: message.call?.id,
     });
 
-    // Get Supabase service client (bypasses RLS since webhooks have no auth context)
+    // Get Supabase service client (bypasses RLS)
     const supabase = await createServiceClient();
 
     // Handle different message types
@@ -197,7 +126,6 @@ export async function POST(request: NextRequest) {
       console.log("[VAPI_WEBHOOK] Unhandled message type:", message.type);
     }
 
-    // Return success response
     return NextResponse.json({
       success: true,
       message: "Webhook processed",
@@ -229,7 +157,6 @@ async function handleStatusUpdate(
     return;
   }
 
-  // Find the call in our database
   const { data: existingCall, error: findError } = await supabase
     .from("scheduled_discharge_calls")
     .select("id, metadata")
@@ -244,7 +171,6 @@ async function handleStatusUpdate(
     return;
   }
 
-  // Update call status
   const mappedStatus = mapVapiStatus(call.status);
   const updateData: Record<string, unknown> = {
     status: mappedStatus,
@@ -285,7 +211,6 @@ async function handleEndOfCallReport(
     return;
   }
 
-  // Find the call in our database
   const { data: existingCall, error: findError } = await supabase
     .from("scheduled_discharge_calls")
     .select("id, metadata")
@@ -316,6 +241,19 @@ async function handleEndOfCallReport(
   // Determine final status
   const finalStatus = mapEndedReasonToStatus(call.endedReason);
 
+  // Extract analysis data
+  const analysis = call.analysis ?? {};
+  const artifact = message.artifact ?? {};
+
+  // Simple sentiment extraction from summary or success evaluation if not provided explicitly
+  // VAPI doesn't standardly provide a 'sentiment' field, so we derive it or expect it in structured data
+  let userSentiment = "neutral";
+  if (analysis.successEvaluation?.toLowerCase().includes("success")) {
+    userSentiment = "positive";
+  } else if (analysis.successEvaluation?.toLowerCase().includes("fail")) {
+    userSentiment = "negative";
+  }
+
   // Prepare update data
   const updateData: Record<string, unknown> = {
     status: finalStatus,
@@ -323,10 +261,15 @@ async function handleEndOfCallReport(
     started_at: call.startedAt,
     ended_at: call.endedAt,
     duration_seconds: durationSeconds,
-    recording_url: call.recordingUrl,
+    recording_url: call.recordingUrl ?? artifact.recordingUrl,
+    stereo_recording_url: artifact.stereoRecordingUrl,
     transcript: call.transcript,
     transcript_messages: call.messages ?? null,
-    call_analysis: call.analysis ?? null,
+    call_analysis: analysis,
+    summary: analysis.summary,
+    success_evaluation: analysis.successEvaluation,
+    structured_data: analysis.structuredData ?? artifact.structuredOutputs,
+    user_sentiment: userSentiment,
     cost,
   };
 
@@ -336,6 +279,8 @@ async function handleEndOfCallReport(
     endedReason: call.endedReason,
     duration: durationSeconds,
     cost,
+    hasStereo: !!artifact.stereoRecordingUrl,
+    hasSummary: !!analysis.summary,
   });
 
   // Handle retry logic for failed calls
@@ -345,7 +290,6 @@ async function handleEndOfCallReport(
     const maxRetries = (metadata.max_retries as number) ?? 3;
 
     if (retryCount < maxRetries) {
-      // Calculate retry delay with exponential backoff
       const delayMinutes = calculateRetryDelay(retryCount);
       const nextRetryAt = new Date(Date.now() + delayMinutes * 60 * 1000);
 
@@ -358,7 +302,6 @@ async function handleEndOfCallReport(
         nextRetryAt: nextRetryAt.toISOString(),
       });
 
-      // Update metadata with retry info
       updateData.metadata = {
         ...metadata,
         retry_count: retryCount + 1,
@@ -366,19 +309,16 @@ async function handleEndOfCallReport(
         last_retry_reason: call.endedReason,
       };
 
-      // Reset status to queued for retry
       updateData.status = "queued";
 
-      // Re-enqueue in QStash
       try {
         const messageId = await scheduleCallExecution(
           existingCall.id,
           nextRetryAt,
         );
 
-        // Add QStash message ID to metadata
         updateData.metadata = {
-          ...(updateData.metadata ?? {}),
+          ...(updateData.metadata as Record<string, unknown>),
           qstash_message_id: messageId,
         };
 
@@ -396,7 +336,6 @@ async function handleEndOfCallReport(
               ? qstashError.message
               : String(qstashError),
         });
-        // Keep status as failed if retry scheduling fails
         updateData.status = "failed";
       }
     } else {
@@ -407,7 +346,6 @@ async function handleEndOfCallReport(
         maxRetries,
       });
 
-      // Mark as permanently failed
       updateData.metadata = {
         ...metadata,
         final_failure: true,
@@ -416,7 +354,6 @@ async function handleEndOfCallReport(
     }
   }
 
-  // Update the call in database
   const { error: updateError } = await supabase
     .from("scheduled_discharge_calls")
     .update(updateData)
@@ -443,7 +380,6 @@ async function handleHangup(
     return;
   }
 
-  // Find the call in our database
   const { data: existingCall, error: findError } = await supabase
     .from("scheduled_discharge_calls")
     .select("id")
@@ -458,7 +394,6 @@ async function handleHangup(
     return;
   }
 
-  // Update call to mark as ended
   const { error: updateError } = await supabase
     .from("scheduled_discharge_calls")
     .update({
@@ -479,9 +414,6 @@ async function handleHangup(
   });
 }
 
-/**
- * Health check endpoint
- */
 export async function GET() {
   return NextResponse.json({
     status: "ok",
