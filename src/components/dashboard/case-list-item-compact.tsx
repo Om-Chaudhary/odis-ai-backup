@@ -133,7 +133,7 @@ export function CaseListItemCompact({ caseData }: CaseListItemCompactProps) {
     caseData.patient.species?.toLowerCase() === "feline" ? Cat : Dog;
 
   return (
-    <Card className="group transition-smooth rounded-xl border border-white/30 bg-white/85 shadow-md backdrop-blur-sm hover:bg-white/90 hover:shadow-lg">
+    <Card className="group transition-smooth rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
       <CardContent className="p-4">
         <div className="flex items-center gap-4">
           {/* Patient Icon */}
