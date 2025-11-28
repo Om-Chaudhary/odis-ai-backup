@@ -95,7 +95,7 @@ function SourceBreakdownCard({
   const total = sources.reduce((sum, [, count]) => sum + count, 0);
 
   return (
-    <Card className="rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md transition-all hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
+    <Card className="transition-smooth rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
       <CardHeader>
         <CardTitle className="text-lg font-semibold">Case Sources</CardTitle>
       </CardHeader>
@@ -148,7 +148,7 @@ function RecentCasesList({
   }>;
 }) {
   return (
-    <Card className="rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md transition-all hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
+    <Card className="transition-smooth rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg font-semibold">Recent Cases</CardTitle>
         <Link href="/dashboard?tab=cases">
@@ -234,6 +234,18 @@ export function OverviewTab({
 
   return (
     <div className="animate-tab-content space-y-6">
+      {/* Header */}
+      <div className="animate-card-in flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+            Overview
+          </h2>
+          <p className="text-sm text-slate-600">
+            View your case statistics and recent activity
+          </p>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="animate-card-in">
