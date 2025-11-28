@@ -9,6 +9,9 @@
 - **[Date Filter Button Group](./date-filter-button-group.md)** - Modern button group for date filtering
 - **[Cases Needing Attention Card](./cases-needing-attention-card.md)** - Actionable metrics card
 - **[Data View Container](./data-view-container.md)** - Container for data viewers
+- **[Weekly Activity Chart](./weekly-activity-chart.md)** - Weekly activity visualization
+- **[Activity Timeline](./activity-timeline.md)** - Recent activity timeline (collapsible)
+- **[Day Pagination Controls](./day-pagination-controls.md)** - Day-by-day navigation component
 
 ### Data Viewers
 
@@ -42,8 +45,8 @@
 
 - Stat Cards
 - Cases Needing Attention Card
-- Activity Timeline
-- Weekly Activity Chart
+- [Activity Timeline](./activity-timeline.md)
+- [Weekly Activity Chart](./weekly-activity-chart.md)
 
 **Cases Tab:**
 
@@ -54,7 +57,7 @@
 **Discharges Tab:**
 
 - Case Card
-- Day Pagination Controls
+- [Day Pagination Controls](./day-pagination-controls.md)
 - Status Summary Bar
 
 ## 📝 Adding a New Component
