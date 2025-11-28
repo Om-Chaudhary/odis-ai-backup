@@ -4,19 +4,13 @@ import { useState, useEffect } from "react";
 import { api } from "~/trpc/client";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
-import { Search, Filter, Plus, LayoutGrid, List } from "lucide-react";
+import { Search, Plus, LayoutGrid, List } from "lucide-react";
 import { CaseListCard } from "./case-list-card";
 import { CaseListItemCompact } from "./case-list-item-compact";
 import Link from "next/link";
 import { useQueryState } from "nuqs";
 import { DateFilterButtonGroup } from "./date-filter-button-group";
+import { FilterButtonGroup } from "./filter-button-group";
 import {
   getDateRangeFromPreset,
   type DateRangePreset,
@@ -24,6 +18,23 @@ import {
 
 type ViewMode = "grid" | "list";
 const VIEW_STORAGE_KEY = "cases-view-mode";
+
+const STATUS_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "draft", label: "Draft" },
+  { value: "ongoing", label: "Ongoing" },
+  { value: "completed", label: "Completed" },
+  { value: "reviewed", label: "Reviewed" },
+] as const;
+
+const SOURCE_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "manual", label: "Manual" },
+  { value: "idexx_neo", label: "IDEXX Neo" },
+  { value: "cornerstone", label: "Cornerstone" },
+  { value: "ezyvet", label: "ezyVet" },
+  { value: "avimark", label: "AVImark" },
+] as const;
 
 /**
  * CasesTab - Display and manage all cases with filtering
@@ -43,11 +54,17 @@ export function CasesTab({
 }) {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string | undefined>();
-  const [sourceFilter, setSourceFilter] = useState<string | undefined>();
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
   const [dateRange] = useQueryState("dateRange", {
+    defaultValue: "all",
+  });
+
+  const [statusFilter, setStatusFilter] = useQueryState("status", {
+    defaultValue: "all",
+  });
+
+  const [sourceFilter, setSourceFilter] = useQueryState("source", {
     defaultValue: "all",
   });
 
@@ -75,13 +92,11 @@ export function CasesTab({
   const { data, isLoading } = api.dashboard.getAllCases.useQuery({
     page,
     pageSize: 20,
-    status: statusFilter as
-      | "draft"
-      | "ongoing"
-      | "completed"
-      | "reviewed"
-      | undefined,
-    source: sourceFilter,
+    status:
+      statusFilter && statusFilter !== "all"
+        ? (statusFilter as "draft" | "ongoing" | "completed" | "reviewed")
+        : undefined,
+    source: sourceFilter && sourceFilter !== "all" ? sourceFilter : undefined,
     search: search || undefined,
     startDate,
     endDate,
@@ -143,48 +158,30 @@ export function CasesTab({
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-4">
           <DateFilterButtonGroup />
-          <Select
-            value={statusFilter ?? "all"}
-            onValueChange={(value) => {
-              setStatusFilter(value === "all" ? undefined : value);
-              setPage(1);
-            }}
-          >
-            <SelectTrigger className="w-[150px]">
-              <Filter className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="ongoing">Ongoing</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="reviewed">Reviewed</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={sourceFilter ?? "all"}
-            onValueChange={(value) => {
-              setSourceFilter(value === "all" ? undefined : value);
-              setPage(1);
-            }}
-          >
-            <SelectTrigger className="w-[150px]">
-              <Filter className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Source" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Sources</SelectItem>
-              <SelectItem value="manual">Manual</SelectItem>
-              <SelectItem value="idexx_neo">IDEXX Neo</SelectItem>
-              <SelectItem value="cornerstone">Cornerstone</SelectItem>
-              <SelectItem value="ezyvet">ezyVet</SelectItem>
-              <SelectItem value="avimark">AVImark</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-slate-700">Status</label>
+            <FilterButtonGroup
+              options={STATUS_OPTIONS}
+              value={statusFilter ?? "all"}
+              onChange={(value) => {
+                void setStatusFilter(value === "all" ? null : value);
+                setPage(1);
+              }}
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-slate-700">Source</label>
+            <FilterButtonGroup
+              options={SOURCE_OPTIONS}
+              value={sourceFilter ?? "all"}
+              onChange={(value) => {
+                void setSourceFilter(value === "all" ? null : value);
+                setPage(1);
+              }}
+            />
+          </div>
         </div>
       </div>
 
@@ -221,25 +218,17 @@ export function CasesTab({
           {viewMode === "grid" ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {data?.cases.map((caseData, index) => (
-                <div
+                <CaseListCard
                   key={caseData.id}
-                  className="animate-card-in"
-                  style={{ animationDelay: `${0.2 + index * 0.05}s` }}
-                >
-                  <CaseListCard caseData={caseData} />
-                </div>
+                  caseData={caseData}
+                  index={index % 4}
+                />
               ))}
             </div>
           ) : (
             <div className="space-y-2">
-              {data?.cases.map((caseData, index) => (
-                <div
-                  key={caseData.id}
-                  className="animate-card-in"
-                  style={{ animationDelay: `${0.2 + index * 0.05}s` }}
-                >
-                  <CaseListItemCompact caseData={caseData} />
-                </div>
+              {data?.cases.map((caseData) => (
+                <CaseListItemCompact key={caseData.id} caseData={caseData} />
               ))}
             </div>
           )}

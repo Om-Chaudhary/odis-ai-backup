@@ -339,6 +339,10 @@ export interface CaseListItem {
   hasDischargeSummary: boolean;
   hasDischargeCall: boolean;
   hasDischargeEmail: boolean;
+  soapNoteTimestamp?: string;
+  dischargeSummaryTimestamp?: string;
+  dischargeCallTimestamp?: string;
+  dischargeEmailTimestamp?: string;
 }
 
 /**

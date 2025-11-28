@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import type { CallStatus, EmailStatus } from "~/types/dashboard";
-import { startOfWeek, startOfMonth } from "date-fns";
+import { startOfMonth, startOfWeek } from "date-fns";
 
 // Type helpers for Supabase responses
 type SupabasePatient = {
@@ -1008,6 +1008,7 @@ export const dashboardRouter = createTRPCRouter({
       }
 
       // For each case, check if it has SOAP notes, discharge summaries, calls, emails
+      // Also fetch latest timestamps for completed items
       const enrichedCases = await Promise.all(
         (cases ?? []).map(async (c) => {
           const [
@@ -1018,28 +1019,51 @@ export const dashboardRouter = createTRPCRouter({
           ] = await Promise.all([
             ctx.supabase
               .from("soap_notes")
-              .select("id")
+              .select("id, created_at")
               .eq("case_id", c.id)
+              .order("created_at", { ascending: false })
               .limit(1),
             ctx.supabase
               .from("discharge_summaries")
-              .select("id")
+              .select("id, created_at")
               .eq("case_id", c.id)
+              .order("created_at", { ascending: false })
               .limit(1),
             ctx.supabase
               .from("scheduled_discharge_calls")
-              .select("id")
+              .select("id, created_at, ended_at")
               .eq("case_id", c.id)
+              .order("created_at", { ascending: false })
               .limit(1),
             ctx.supabase
               .from("scheduled_discharge_emails")
-              .select("id")
+              .select("id, created_at, sent_at")
               .eq("case_id", c.id)
+              .order("created_at", { ascending: false })
               .limit(1),
           ]);
 
           const patients = (c.patients as SupabasePatientsResponse) ?? [];
           const patient = patients[0];
+
+          // Get latest timestamps (use ended_at for calls, sent_at for emails, created_at for others)
+          const soapNoteTimestamp =
+            soapNotes && soapNotes.length > 0
+              ? soapNotes[0]?.created_at
+              : undefined;
+          const dischargeSummaryTimestamp =
+            dischargeSummaries && dischargeSummaries.length > 0
+              ? dischargeSummaries[0]?.created_at
+              : undefined;
+          const dischargeCallTimestamp =
+            calls && calls.length > 0
+              ? (calls[0]?.ended_at ?? calls[0]?.created_at)
+              : undefined;
+          const dischargeEmailTimestamp =
+            emails && emails.length > 0
+              ? (emails[0]?.sent_at ?? emails[0]?.created_at)
+              : undefined;
+
           return {
             id: c.id,
             status: c.status,
@@ -1055,6 +1079,10 @@ export const dashboardRouter = createTRPCRouter({
             hasDischargeSummary: (dischargeSummaries?.length ?? 0) > 0,
             hasDischargeCall: (calls?.length ?? 0) > 0,
             hasDischargeEmail: (emails?.length ?? 0) > 0,
+            soapNoteTimestamp,
+            dischargeSummaryTimestamp,
+            dischargeCallTimestamp,
+            dischargeEmailTimestamp,
           };
         }),
       );
