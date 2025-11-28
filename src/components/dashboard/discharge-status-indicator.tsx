@@ -84,8 +84,7 @@ export function DischargeStatusIndicator({
   // Handle in_progress/ringing status
   if (status === "in_progress" || status === "ringing" || status === "queued") {
     const isQueued = status === "queued";
-    const scheduledFor = (latest as { scheduled_for?: string | null })
-      .scheduled_for;
+    const scheduledFor = latest.scheduled_for;
     return (
       <div className="transition-smooth flex items-center gap-2 text-sm">
         {isQueued ? (

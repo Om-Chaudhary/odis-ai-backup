@@ -397,20 +397,6 @@ export function CaseCard({
               <div className="font-medium text-slate-900">
                 {caseData.patient.owner_name}
               </div>
-              <div className="flex min-w-0 flex-col gap-1 text-xs text-slate-500">
-                {effectivePhone && (
-                  <div className="flex items-center gap-1.5">
-                    <Phone className="h-3 w-3 shrink-0 text-slate-400" />
-                    <span className="break-words">{effectivePhone}</span>
-                  </div>
-                )}
-                {effectiveEmail && (
-                  <div className="flex items-start gap-1.5">
-                    <Mail className="mt-0.5 h-3 w-3 shrink-0 text-slate-400" />
-                    <span className="break-words">{effectiveEmail}</span>
-                  </div>
-                )}
-              </div>
             </div>
           ) : (
             <div className="space-y-2">

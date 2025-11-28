@@ -54,7 +54,6 @@ export function CompletionIndicator({
   size = "md",
 }: CompletionIndicatorProps) {
   const config = TYPE_CONFIG[type];
-  const Icon = config.icon;
 
   const iconSize = size === "sm" ? "h-3.5 w-3.5" : "h-4 w-4";
   const textSize = size === "sm" ? "text-xs" : "text-sm";
