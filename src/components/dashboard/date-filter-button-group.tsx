@@ -27,7 +27,7 @@ export function DateFilterButtonGroup({
 
   const presets: Array<{ value: DateRangePreset; label: string }> = [
     { value: "all", label: "All Time" },
-    { value: "1d", label: "Day" },
+    { value: "1d", label: "Last Day" },
     { value: "3d", label: "3D" },
     { value: "30d", label: "30D" },
   ];

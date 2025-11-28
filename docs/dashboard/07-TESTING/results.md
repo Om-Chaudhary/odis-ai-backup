@@ -25,7 +25,67 @@
 
 ## Issues Found
 
-### Issue #1: Date Filter Button Text Inconsistency
+### Issue #1: Cases Tab - Filter UI Layout Not Intuitive
+
+**Location**: Cases Tab - Filter Section  
+**Severity**: High  
+**State**: Both
+
+**Description**:
+The Cases tab filter section has poor visual hierarchy and layout. Multiple filter groups (Quick Filters, Search, Date Range, Status, Source) are stacked vertically, creating visual clutter. There's redundancy between Quick Filters date options ("Today", "This Week", "Recent") and Date Range filters ("All Time", "Last Day", "3D", "30D"). The search bar is isolated between filter groups, breaking the visual flow.
+
+**Current Structure**:
+
+- Header: "All Cases" + View Toggle + "New Case" button
+- Quick Filters: "Missing Discharge", "Missing SOAP", "Today", "This Week", "Recent"
+- Search bar (isolated)
+- Date Range: "All Time", "Last Day", "3D", "30D"
+- Status: "All", "Draft", "Ongoing", "Completed", "Reviewed" (button group)
+- Source: "All", "Manual", "IDEXX Neo", "Cornerstone", "ezyVet", "AVImark" (button group)
+
+**Problems**:
+
+1. Too many separate filter sections (5 groups)
+2. Redundant date filters in Quick Filters and Date Range
+3. Vertical stacking takes excessive space
+4. Search bar breaks visual flow
+5. No clear visual hierarchy
+6. Button groups for Status/Source create clutter (11 buttons total)
+
+**Steps to Reproduce**:
+
+1. Navigate to `/dashboard?tab=cases`
+2. Observe filter section layout
+3. Notice multiple filter groups stacked vertically
+4. See redundant date options in Quick Filters and Date Range
+
+**Expected Behavior**:
+
+- Cleaner, more intuitive filter layout
+- Reduced visual clutter
+- Better use of horizontal space
+- Clear visual hierarchy
+- No redundant filter options
+
+**Visual Notes**:
+
+- Screenshot: `13-cases-tab-layout-issue.png` (full page)
+- All filter groups are in separate sections
+- Vertical stacking creates long scroll before cases appear
+- Status and Source button groups take significant space
+
+**Responsive Impact**:
+
+- Mobile: Filters stack vertically (expected, but still cluttered)
+- Tablet: Same vertical stacking
+- Desktop: Wasted horizontal space, everything stacked
+
+**Additional Notes**:
+See `docs/dashboard/07-TESTING/UI_SIMPLIFICATION_BRAINSTORM.md` for detailed simplification proposals and design options.
+
+---
+
+### Issue #2: Date Filter Button Text Inconsistency
 
 **Location**: Overview Tab Header / Cases Tab  
 **Severity**: Low  
@@ -63,7 +123,7 @@ The URL correctly updates to `?dateRange=1d`, so functionality works, only text 
 
 ---
 
-### Issue #2: Stat Cards Height Measurement - RESOLVED
+### Issue #3: Stat Cards Height Measurement - RESOLVED
 
 **Location**: Overview Tab - Stat Cards Grid  
 **Severity**: N/A (Working as Expected)  
@@ -102,7 +162,7 @@ All stat card containers have consistent heights: **134px height, 456px width**.
 
 ---
 
-### Issue #3: Sidebar Toggle State - RESOLVED
+### Issue #4: Sidebar Toggle State - RESOLVED
 
 **Location**: Sidebar / Main Content Area  
 **Severity**: N/A (Working as Expected)  
@@ -141,7 +201,7 @@ Sidebar correctly moves off-screen (left: -256px) when collapsed. The sidebar wr
 
 ---
 
-### Issue #4: Cases Tab - Empty State with Date Filter
+### Issue #5: Cases Tab - Empty State with Date Filter
 
 **Location**: Cases Tab  
 **Severity**: Low  
@@ -178,7 +238,7 @@ This is more of a UX improvement than a bug. The functionality works correctly (
 
 ---
 
-### Issue #5: Discharges Tab - All Zero Counts
+### Issue #6: Discharges Tab - All Zero Counts
 
 **Location**: Discharges Tab  
 **Severity**: Low  
@@ -216,7 +276,7 @@ This may be expected if there are genuinely no discharge cases in the system, or
 
 ---
 
-### Issue #6: Mobile View - Tab Labels Hidden
+### Issue #7: Mobile View - Tab Labels Hidden
 
 **Location**: Mobile Viewport (375px)  
 **Severity**: Medium  
@@ -254,7 +314,7 @@ This is a design decision - icon-only tabs are common on mobile. Should verify t
 
 ---
 
-### Issue #7: Mobile View - Stat Cards Data - RESOLVED
+### Issue #8: Mobile View - Stat Cards Data - RESOLVED
 
 **Location**: Mobile Viewport - Overview Tab  
 **Severity**: N/A (Working as Expected)  
@@ -296,14 +356,16 @@ Mobile shows correct values after data loads: Total Cases: 289, Missing Discharg
 
 ## Positive Observations
 
+4. **Loading Indicators**: Consider adding skeleton loaders or spinners during tRPC queries for better UX feedback
 1. **Smooth Tab Transitions**: Tab switching is smooth with no visible loading delays
-2. **Consistent Styling**: All cards, buttons, and UI elements maintain consistent styling across tabs
-3. **Clear Visual Hierarchy**: Headings, subheadings, and content are well-organized
-4. **Good Empty States**: Empty states provide helpful guidance text
-5. **Accessible Structure**: Semantic HTML elements (headings, navigation, regions) are used correctly
-6. **URL State Management**: Filters and tabs correctly update URL parameters for shareable/bookmarkable states
-7. **Loading States**: tRPC queries show appropriate loading behavior
-8. **Case Card Information**: Case cards display comprehensive information (status, source, indicators, dates)
+1. **Consistent Styling**: All cards, buttons, and UI elements maintain consistent styling across tabs
+1. **Clear Visual Hierarchy**: Headings, subheadings, and content are well-organized
+1. **Good Empty States**: Empty states provide helpful guidance text
+1. **Accessible Structure**: Semantic HTML elements (headings, navigation, regions) are used correctly
+1. **Performance Optimization**: Consider query debouncing for rapid filter changes to reduce server load
+1. **URL State Management**: Filters and tabs correctly update URL parameters for shareable/bookmarkable states
+1. **Loading States**: tRPC queries show appropriate loading behavior
+1. **Case Card Information**: Case cards display comprehensive information (status, source, indicators, dates)
 
 ---
 
@@ -311,11 +373,12 @@ Mobile shows correct values after data loads: Total Cases: 289, Missing Discharg
 
 ### High Priority
 
-1. **Consistent Date Filter Text**: Make date filter button text consistent across all locations (Issue #1)
+1. **Cases Tab Filter UI Redesign**: Simplify and reorganize filter layout for better UX (Issue #1) - See `UI_SIMPLIFICATION_BRAINSTORM.md` for proposals
+2. **Consistent Date Filter Text**: Make date filter button text consistent across all locations (Issue #2)
 
 ### Medium Priority
 
-1. **Enhanced Empty State Messages**: Make empty state messages more specific when filters are active
+1. **Enhanced Empty State Messages**: Make empty state messages more specific when filters are active (e.g., "No cases found in the last day matching your filters")
 2. **Mobile Tab Accessibility**: Add ARIA labels for icon-only tabs on mobile (currently rely on text content which is hidden)
 3. **Button ARIA Labels**: Consider adding `aria-label` attributes to icon-only buttons for better screen reader support
 
@@ -354,13 +417,13 @@ Mobile shows correct values after data loads: Total Cases: 289, Missing Discharg
 ### ⚠️ Partially Tested
 
 - [x] Sidebar collapse/expand (sidebar correctly moves off-screen to left: -256px when collapsed)
-- [ ] All date filter presets (tested Day and All Time, need 3D and 30D)
-- [ ] Quick filters in Cases tab (visible but not tested)
-- [ ] Status filters in Cases tab (visible but not tested)
-- [ ] Source filters in Cases tab (visible but not tested)
-- [ ] Search functionality
-- [ ] Pagination
-- [ ] Responsive breakpoints (tablet, other mobile sizes)
+- [x] Date filter presets (tested Day and All Time; 3D and 30D visible but not individually tested)
+- [x] Quick filters in Cases tab (tested "Missing Discharge"; others visible but not individually tested)
+- [x] Status filters in Cases tab (tested "Draft"; others visible but not individually tested)
+- [x] Source filters in Cases tab (tested "All" as default; individual sources visible but not tested)
+- [x] Search functionality (tested with "Rocky" query)
+- [ ] Pagination (visible but not tested - need to test with >20 cases)
+- [x] Responsive breakpoints (tested 375px, 414px, 768px, 1440px, 1920px)
 
 ### ✅ Completed (Phases 8-10)
 
@@ -507,8 +570,10 @@ When "Day" filter is active:
 
 **Tested Scenarios:**
 
-1. **Empty State with Multiple Filters**: When "Missing Discharge" + "Draft" + "Day" filters are combined, shows "No cases found" with helpful message: "Try adjusting your filters or create a new case"
-   - ✅ Empty state message is clear and actionable
+1. **Empty State with Multiple Filters**: When "Missing Discharge" + "Draft" + "Day" filters are combined, shows:
+   - Heading: "No cases found"
+   - Description: "No cases found for the selected date range. Try adjusting your date filter or create a new case."
+   - ✅ Empty state message is clear and actionable, specifically mentions date range
    - ✅ Empty state appears immediately when filters return no results
    - ✅ URL correctly reflects active filters: `?tab=cases&quickFilters=missingDischarge&status=draft&dateRange=1d`
 
@@ -563,13 +628,46 @@ When "Day" filter is active:
 - ✅ No double-click issues detected
 - ✅ State remains consistent during rapid interactions
 - ✅ No UI glitches or visual artifacts
+
+### Overview Tab
+
 - ✅ Loading states prevent duplicate queries
 
 ---
 
 ## Phase 10: Performance Testing
 
+### Cases Tab
+
+3. `03-cases-tab-initial.png` - Cases tab in grid view (1920x1080)
+4. `04-cases-tab-list-view.png` - Cases tab in list view (1920x1080)
+5. `07-cases-tab-from-missing-discharges-click.png` - Cases tab after clicking Missing Discharges card (1920x1080)
+
 ### Load Time Metrics
+
+12. `12-cases-tab-empty-state-date-range.png` - Cases tab empty state with date range message (Missing Discharge + Draft + Last Day filters) (1920x1080)
+13. `13-cases-tab-layout-issue.png` - Cases tab full page showing filter layout issues (1920x1080, full page)
+
+### Discharges Tab
+
+5. `05-discharges-tab-initial.png` - Discharges tab showing empty state (1920x1080)
+
+**Filter Combinations Captured:**
+
+- ✅ No filters (default state)
+- ✅ Quick filter: "Missing Discharge" only
+- ✅ Multiple filters: "Missing Discharge" + "Draft" + "Day" (empty state)
+- ✅ Date filter: "Last Day" (in combination with other filters)
+- ✅ Status filter: "Draft" (in combination with other filters)
+
+**Menu States Captured:**
+
+- ✅ Sidebar expanded
+- ✅ Sidebar collapsed (after toggle)
+- ✅ Cases tab active (grid view)
+- ✅ Cases tab active (list view)
+- ✅ Overview tab active
+- ✅ Discharges tab active
 
 **Measured Performance (Desktop, 1920x1080):**
 
@@ -617,15 +715,11 @@ When "Day" filter is active:
 
 1. `01-initial-desktop-sidebar-expanded.png` - Overview tab with sidebar expanded (1920x1080)
 2. `02-sidebar-after-toggle-click.png` - Overview tab after sidebar toggle click (1920x1080)
-3. `03-cases-tab-initial.png` - Cases tab in grid view (1920x1080)
-4. `04-cases-tab-list-view.png` - Cases tab in list view (1920x1080)
-5. `05-discharges-tab-initial.png` - Discharges tab showing empty state (1920x1080)
-6. `06-mobile-overview.png` - Overview tab on mobile viewport (375x667)
-7. `07-cases-tab-from-missing-discharges-click.png` - Cases tab after clicking Missing Discharges card (1920x1080)
-8. `08-tablet-overview.png` - Overview tab on tablet viewport (768x1024)
-9. `09-mobile-414px-overview.png` - Overview tab on mobile viewport (414x896)
-10. `10-desktop-1440px-overview.png` - Overview tab on desktop viewport (1440x900)
-11. `11-cases-tab-multiple-filters.png` - Cases tab with multiple filters active (Missing Discharge + Draft + Day) showing empty state (1920x1080)
+3. `06-mobile-overview.png` - Overview tab on mobile viewport (375x667)
+4. `08-tablet-overview.png` - Overview tab on tablet viewport (768x1024)
+5. `09-mobile-414px-overview.png` - Overview tab on mobile viewport (414x896)
+6. `10-desktop-1440px-overview.png` - Overview tab on desktop viewport (1440x900)
+7. `11-cases-tab-multiple-filters.png` - Cases tab with multiple filters active (Missing Discharge + Draft + Day) showing empty state (1920x1080)
 
 **Screenshot Location**: `.playwright-mcp/` directory
 

@@ -10,10 +10,15 @@ docs/dashboard/
 ├── README.md (this file)
 │
 ├── 01-GENERAL/
+│   ├── 00-INDEX.md                  # Complete navigation index
 │   ├── dashboard-principles.md      # Core design principles
 │   ├── design-system.md             # Complete design system
-│   ├── component-library.md         # Shared components catalog
-│   └── standardization-guide.md     # Standards and patterns
+│   ├── DATE_FILTERING_GUIDE.md      # Date filtering guide
+│   ├── README_DATE_FILTERING.md     # Date filtering reference
+│   ├── DASHBOARD_NAVIGATION.md      # Navigation guide
+│   ├── DASHBOARD_ANIMATIONS.md      # Animations guide
+│   ├── DASHBOARD_UI_IMPROVEMENTS.md # UI improvements
+│   └── DASHBOARD_STANDARDIZATION_SUMMARY.md # Standardization summary
 │
 ├── 02-TABS/
 │   ├── overview-tab/
@@ -41,17 +46,44 @@ docs/dashboard/
 │
 ├── 05-FEATURES/
 │   ├── README.md                    # Features index
+│   ├── IMPLEMENTATION_ASSIGNMENTS.md # Implementation assignments
+│   ├── implement-full-dashboard-layout.plan.md # Layout plan
 │   ├── current/                     # Active/current features
 │   │   ├── dashboard-optimization/  # Current optimization work
 │   │   └── [feature-name]/          # Other active features
 │   └── archive/                     # Completed features
 │       └── [feature-name]/          # Historical features
 │
-└── 06-DATA-VIEWS/
-    ├── README.md                    # Data views index
-    ├── soap-note-viewer.md          # SOAP note viewer
-    ├── discharge-summary-viewer.md  # Discharge summary viewer
-    └── transcript-viewer.md         # Transcript viewer
+├── 06-DATA-VIEWS/
+│   ├── README.md                    # Data views index
+│   ├── soap-note-viewer.md          # SOAP note viewer
+│   ├── discharge-summary-viewer.md  # Discharge summary viewer
+│   └── transcript-viewer.md         # Transcript viewer
+│
+├── 07-TESTING/
+│   ├── README.md                    # Testing documentation index
+│   ├── EXECUTION_PROMPT.md          # Prompt for testing agents
+│   ├── strategy.md                  # Testing strategy
+│   ├── checklist.md                 # Test checklist
+│   ├── results.md                   # Test results
+│   └── [testing-guides].md          # Tab-specific and cross-cutting tests
+│
+├── 08-REPORTS/
+│   ├── README.md                    # Reports index
+│   ├── STATUS_REPORT.md             # Status report
+│   ├── DASHBOARD_IMPLEMENTATION_STATUS.md # Implementation status
+│   └── VISUAL_COMPARISON.md         # Visual comparison
+│
+├── 09-AGENTS/
+│   ├── README.md                    # Agent documentation index
+│   ├── AGENT_PROGRESS_TRACKER.md    # Agent progress tracking
+│   ├── AGENT_QUICK_START.md         # Agent quick start guide
+│   └── AGENT_ASSIGNMENT_TEMPLATE.md # Assignment template
+│
+└── assignments/
+    ├── A1-date-filter-button-group.md
+    ├── A2-cases-needing-attention-card.md
+    └── [A3-A10].md                  # Other assignments
 ```
 
 ## 🎯 How to Use This Documentation
@@ -149,7 +181,8 @@ All new work should follow these guidelines.
 
 **Start Here:**
 
-- **[00-INDEX.md](./00-INDEX.md)** - Complete navigation index
+- **[Documentation Index](./01-GENERAL/00-INDEX.md)** - Complete navigation index
+- **[Testing Documentation](./07-TESTING/README.md)** - Testing guides and results
 
 **Foundational Docs (Read First):**
 
@@ -160,12 +193,19 @@ All new work should follow these guidelines.
 
 - [Dashboard Optimization Feature](./05-FEATURES/current/dashboard-optimization/)
 - [Active Features](./05-FEATURES/README.md)
+- [Implementation Assignments](./05-FEATURES/IMPLEMENTATION_ASSIGNMENTS.md)
+
+**Status & Reports:**
+
+- [Status Reports](./08-REPORTS/README.md)
+- [Agent Progress](./09-AGENTS/AGENT_PROGRESS_TRACKER.md)
 
 **Reference Docs:**
 
 - [Tab Documentation](./02-TABS/README.md)
 - [Component Catalog](./03-COMPONENTS/README.md)
 - [Data Views](./06-DATA-VIEWS/README.md)
+- [Testing Guides](./07-TESTING/README.md)
 
 ---
 

@@ -23,6 +23,9 @@ export type QuickFilterId =
   | "thisWeek"
   | "recent";
 
+// Action-based quick filters (not date-based)
+export type ActionQuickFilterId = "missingDischarge" | "missingSoap";
+
 interface QuickFilter {
   id: QuickFilterId;
   label: string;
@@ -63,6 +66,11 @@ const QUICK_FILTERS: QuickFilter[] = [
   },
 ];
 
+// Action-based quick filters only (for the simplified UI)
+export const ACTION_QUICK_FILTERS: QuickFilter[] = QUICK_FILTERS.filter(
+  (filter) => filter.id === "missingDischarge" || filter.id === "missingSoap",
+);
+
 interface QuickFiltersProps {
   selected: Set<QuickFilterId>;
   onChange: (selected: Set<QuickFilterId>) => void;
@@ -87,10 +95,19 @@ interface QuickFiltersProps {
  * />
  * ```
  */
+interface QuickFiltersProps {
+  selected: Set<QuickFilterId>;
+  onChange: (selected: Set<QuickFilterId>) => void;
+  className?: string;
+  /** If true, only show action-based filters (Missing Discharge, Missing SOAP) */
+  actionOnly?: boolean;
+}
+
 export function QuickFilters({
   selected,
   onChange,
   className,
+  actionOnly = false,
 }: QuickFiltersProps) {
   const handleToggle = useCallback(
     (filterId: QuickFilterId) => {
@@ -105,9 +122,11 @@ export function QuickFilters({
     [selected, onChange],
   );
 
+  const filtersToShow = actionOnly ? ACTION_QUICK_FILTERS : QUICK_FILTERS;
+
   return (
     <div className={cn("flex flex-wrap gap-2", className)}>
-      {QUICK_FILTERS.map((filter) => {
+      {filtersToShow.map((filter) => {
         const Icon = filter.icon;
         const isActive = selected.has(filter.id);
 
