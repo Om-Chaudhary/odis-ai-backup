@@ -353,4 +353,43 @@ export interface CaseStats {
   dischargeSummaries: number;
   callsCompleted: number;
   emailsSent: number;
+  casesNeedingDischarge: {
+    total: number;
+    thisWeek: number;
+    thisMonth: number;
+  };
+  casesNeedingSoap: {
+    total: number;
+    thisWeek: number;
+    thisMonth: number;
+  };
+  soapCoverage: {
+    percentage: number;
+    totalCases: number;
+    casesWithSoap: number;
+    casesNeedingSoap: number;
+  };
+  dischargeCoverage: {
+    percentage: number;
+    totalCases: number;
+    casesWithDischarge: number;
+    casesNeedingDischarge: number;
+  };
+  completionRate: {
+    overall: {
+      completed: number;
+      total: number;
+      percentage: number;
+    };
+    thisWeek: {
+      completed: number;
+      created: number;
+      percentage: number;
+    };
+    thisMonth: {
+      completed: number;
+      created: number;
+      percentage: number;
+    };
+  };
 }

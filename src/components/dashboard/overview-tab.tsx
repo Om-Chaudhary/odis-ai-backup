@@ -24,7 +24,7 @@ import { useQueryState } from "nuqs";
 import { DateFilterButtonGroup } from "./date-filter-button-group";
 import {
   getDateRangeFromPreset,
-  isValidDateRangePreset,
+  type DateRangePreset,
 } from "~/lib/utils/date-ranges";
 import { CasesNeedingAttentionCard } from "./cases-needing-attention-card";
 
@@ -171,13 +171,10 @@ export function OverviewTab({
     defaultValue: "all",
   });
 
-  // Validate and safely convert preset to dates
-  const preset = isValidDateRangePreset(dateRange) ? dateRange : "all";
   const { startDate: calculatedStartDate, endDate: calculatedEndDate } =
-    getDateRangeFromPreset(preset);
+    getDateRangeFromPreset((dateRange as DateRangePreset) ?? "all");
 
   // Convert dates to ISO strings for API calls
-  // Note: Dates are converted to UTC ISO strings. Backend should handle timezone appropriately.
   const startDate = calculatedStartDate?.toISOString() ?? null;
   const endDate = calculatedEndDate?.toISOString() ?? null;
 

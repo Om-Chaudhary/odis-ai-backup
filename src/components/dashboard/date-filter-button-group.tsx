@@ -3,35 +3,11 @@
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 import { useQueryState } from "nuqs";
-import {
-  type DateRangePreset,
-  isValidDateRangePreset,
-} from "~/lib/utils/date-ranges";
+import type { DateRangePreset } from "~/lib/utils/date-ranges";
 
-/**
- * DateFilterButtonGroup - A reusable button group for date range selection
- *
- * Supports both controlled and uncontrolled modes:
- * - **Uncontrolled** (default): Automatically syncs with URL query parameter "dateRange"
- * - **Controlled**: Use `value` and `onChange` props to manage state externally
- *
- * @example
- * // Uncontrolled (URL-synced)
- * <DateFilterButtonGroup />
- *
- * @example
- * // Controlled
- * <DateFilterButtonGroup
- *   value={selectedRange}
- *   onChange={setSelectedRange}
- * />
- */
 interface DateFilterButtonGroupProps {
-  /** Controlled value - when provided, component is controlled */
   value?: DateRangePreset;
-  /** Callback when selection changes - when provided, component is controlled */
   onChange?: (preset: DateRangePreset) => void;
-  /** Additional CSS classes */
   className?: string;
 }
 
@@ -42,17 +18,7 @@ export function DateFilterButtonGroup({
 }: DateFilterButtonGroupProps) {
   const [urlValue, setUrlValue] = useQueryState("dateRange", {
     defaultValue: "all",
-    parse: (value) => {
-      // Validate the value at runtime to prevent invalid states
-      if (isValidDateRangePreset(value)) {
-        return value;
-      }
-      // Invalid value - default to "all"
-      console.warn(
-        `Invalid dateRange query parameter: ${value}. Defaulting to "all".`,
-      );
-      return "all";
-    },
+    parse: (value) => (value as DateRangePreset) || "all",
     serialize: (value) => value,
   });
 

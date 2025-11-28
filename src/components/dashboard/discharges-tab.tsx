@@ -10,11 +10,6 @@ import { CaseCard } from "./case-card";
 import { EmptyState } from "./empty-state";
 import { DayPaginationControls } from "./day-pagination-controls";
 import { DateFilterButtonGroup } from "./date-filter-button-group";
-import {
-  getDateRangeFromPreset,
-  isValidDateRangePreset,
-} from "~/lib/utils/date-ranges";
-import { useQueryState } from "nuqs";
 import { api } from "~/trpc/client";
 import type {
   DashboardCase,
@@ -78,32 +73,13 @@ export function DischargesTab({
   const [currentPage, setCurrentPage] = useState(1);
   const [loadingCase, setLoadingCase] = useState<LoadingState | null>(null);
 
-  // Date range filter from URL
-  const [dateRange] = useQueryState("dateRange", {
-    defaultValue: "all",
-  });
-
-  // Validate and get date range
-  const preset = isValidDateRangePreset(dateRange) ? dateRange : "all";
-  const { startDate: rangeStartDate } = getDateRangeFromPreset(preset);
-
-  // When a date range is selected (not "all"), use the start date for day navigation
-  // When "all" is selected, use the currentDate state (day navigation works normally)
-  const effectiveDate = useMemo(() => {
-    if (preset === "all") {
-      return currentDate;
-    }
-    // Use the start date of the selected range
-    return rangeStartDate ?? currentDate;
-  }, [preset, rangeStartDate, currentDate]);
-
   // Ref to prevent double-clicks
   const isProcessingRef = useRef(false);
 
   // Format date for API (YYYY-MM-DD)
   const dateString = useMemo(() => {
-    return format(effectiveDate, "yyyy-MM-dd");
-  }, [effectiveDate]);
+    return format(currentDate, "yyyy-MM-dd");
+  }, [currentDate]);
 
   // tRPC Queries
   const {
@@ -370,14 +346,10 @@ export function DischargesTab({
       <div className="animate-card-in-delay-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         {!isLoading && casesData && (
           <DayPaginationControls
-            currentDate={effectiveDate}
+            currentDate={currentDate}
             onDateChange={(date) => {
-              // Only allow date changes when "all" is selected
-              // When a specific range is selected, the date is controlled by the filter
-              if (preset === "all") {
-                setCurrentDate(date);
-                setCurrentPage(1); // Reset to first page when changing date
-              }
+              setCurrentDate(date);
+              setCurrentPage(1); // Reset to first page when changing date
             }}
             totalItems={casesData.pagination.total}
           />

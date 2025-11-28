@@ -48,15 +48,15 @@
 - [x] **A10: Backend Metrics Queries** - Required for A2, A3, A6
 - [x] **A1: Date Filter Button Group** - Required for A5
 
-**Status:** 1/2 complete
+**Status:** 2/2 complete
 
 ### Phase 2: Overview Tab
 
-- [x] **A2: Cases Needing Attention Card** - After A10
+- [ ] **A2: Cases Needing Attention Card** - After A10
 - [ ] **A3: Enhanced Stat Cards** - After A10
 - [ ] **A4: Collapsible Activity Timeline** - No dependencies
 
-**Status:** 1/3 complete
+**Status:** 0/3 complete
 
 ### Phase 3: Cases Tab
 
@@ -79,11 +79,11 @@
 
 ```
 A10 (Backend Metrics) ──┐
-                        ├──> A2 (Cases Needing Attention) [✅ Complete]
+                        ├──> A2 (Cases Needing Attention) [🔄 Ready]
                         └──> A3 (Enhanced Stat Cards) [🔄 Ready]
 
-A1 (Date Filter) ───────> A5 (Cases Tab Filters) [⏸️ Blocked]
-                        └──> Overview Tab Integration
+A1 (Date Filter) ───────> A5 (Cases Tab Filters) [🔄 Ready]
+                        └──> Overview Tab Integration [✅ Complete]
 
 A5 (Filter Button Groups) ──> A6 (Quick Filters) [⏸️ Blocked]
 
@@ -151,7 +151,10 @@ A9 (Discharges Cards) ──> [🔄 Ready]
 ### Ready to Start (No Dependencies)
 
 - ~~**A10** - Backend Metrics Queries~~ ✅ **COMPLETE**
-- **A1** - Date Filter Button Group ⚠️ **HIGH PRIORITY** (blocks A5)
+- ~~**A1** - Date Filter Button Group~~ ✅ **COMPLETE**
+- **A5** - Cases Tab Filter Button Groups ⚠️ **HIGH PRIORITY** (A1 complete)
+- **A2** - Cases Needing Attention Card ⚠️ **HIGH PRIORITY** (A10 complete)
+- **A3** - Enhanced Stat Cards ⚠️ **HIGH PRIORITY** (A10 complete)
 - **A4** - Collapsible Activity Timeline
 - **A7** - Enhanced Case Cards
 - **A8** - Discharges Tab Status Summary
@@ -159,15 +162,7 @@ A9 (Discharges Cards) ──> [🔄 Ready]
 
 ### Waiting on Dependencies
 
-<<<<<<< Updated upstream
-
-- **A2** - ~~Waiting on A10~~ ✅ A10 complete, ready to start
-- **A3** - ~~Waiting on A10~~ ✅ A10 complete, ready to start
-- **A5** - Waiting on A1
-- # **A6** - Waiting on A5 (A10 complete)
-- **A3** - Waiting on A10
-- **A6** - Waiting on A5 and A10
-  > > > > > > > Stashed changes
+- **A6** - Waiting on A5 (A10 complete)
 
 ---
 
@@ -175,21 +170,15 @@ A9 (Discharges Cards) ──> [🔄 Ready]
 
 ### By Priority
 
-- **High Priority:** 1/5 complete
+- **High Priority:** 2/5 complete
 - **Medium Priority:** 0/5 complete
 
 ### By Tab
 
-<<<<<<< Updated upstream
-
-- **Overview Tab:** 0/3 complete
-- **Cases Tab:** 0/3 complete
-- # **Discharges Tab:** 0/2 complete
-- **Overview Tab:** 1/3 complete (A2 complete, date filter integrated)
+- **Overview Tab:** 0/3 complete (date filter integrated)
 - **Cases Tab:** 0/3 complete (date filter integrated)
 - **Discharges Tab:** 0/2 complete (date filter integrated)
-  > > > > > > > Stashed changes
-- **Foundation:** 1/2 complete
+- **Foundation:** 2/2 complete
 
 ### By Estimated Time
 
