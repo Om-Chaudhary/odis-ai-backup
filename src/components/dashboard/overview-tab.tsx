@@ -20,6 +20,12 @@ import { NumberTicker } from "~/components/ui/number-ticker";
 import Link from "next/link";
 import { Button } from "~/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
+import { useQueryState } from "nuqs";
+import { DateFilterButtonGroup } from "./date-filter-button-group";
+import {
+  getDateRangeFromPreset,
+  type DateRangePreset,
+} from "~/lib/utils/date-ranges";
 
 function StatCard({
   title,
@@ -204,12 +210,23 @@ function RecentCasesList({
 }
 
 export function OverviewTab({
-  startDate,
-  endDate,
+  startDate: _startDate,
+  endDate: _endDate,
 }: {
   startDate?: string | null;
   endDate?: string | null;
 }) {
+  const [dateRange] = useQueryState("dateRange", {
+    defaultValue: "all",
+  });
+
+  const { startDate: calculatedStartDate, endDate: calculatedEndDate } =
+    getDateRangeFromPreset((dateRange as DateRangePreset) ?? "all");
+
+  // Convert dates to ISO strings for API calls
+  const startDate = calculatedStartDate?.toISOString() ?? null;
+  const endDate = calculatedEndDate?.toISOString() ?? null;
+
   const { data: stats, isLoading: statsLoading } =
     api.dashboard.getCaseStats.useQuery({ startDate, endDate });
 
@@ -244,6 +261,7 @@ export function OverviewTab({
             View your case statistics and recent activity
           </p>
         </div>
+        <DateFilterButtonGroup />
       </div>
 
       {/* Stats Cards */}
