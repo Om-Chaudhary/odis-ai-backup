@@ -16,6 +16,7 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import type { CaseListItem } from "~/types/dashboard";
 import { cn } from "~/lib/utils";
+import { QuickActionsMenu } from "~/components/dashboard/quick-actions-menu";
 
 interface CaseListItemCompactProps {
   caseData: CaseListItem;
@@ -42,6 +43,7 @@ export function CaseListItemCompact({ caseData }: CaseListItemCompactProps) {
 
   // Get most recent activity timestamp
   const timestamps = [
+    caseData.scheduled_at,
     caseData.soapNoteTimestamp,
     caseData.dischargeSummaryTimestamp,
     caseData.dischargeCallTimestamp,
@@ -122,9 +124,9 @@ export function CaseListItemCompact({ caseData }: CaseListItemCompactProps) {
           </div>
 
           {/* Actions - Right Side - Aligned to top */}
-          <div className="flex shrink-0 items-start pt-1">
+          <div className="flex shrink-0 items-start gap-2 pt-1">
             {/* View Details - Primary Action */}
-            <Link href={`/dashboard/cases/${caseData.id}`}>
+            <Link href={`/dashboard/discharges/${caseData.id}`}>
               <Button
                 variant="default"
                 size="sm"
@@ -134,6 +136,13 @@ export function CaseListItemCompact({ caseData }: CaseListItemCompactProps) {
                 <span className="hidden sm:inline">View</span>
               </Button>
             </Link>
+            {/* Quick Actions Menu */}
+            <QuickActionsMenu
+              caseId={caseData.id}
+              hasSoapNote={caseData.hasSoapNote}
+              hasDischargeSummary={caseData.hasDischargeSummary}
+              patientName={caseData.patient.name}
+            />
           </div>
         </div>
       </CardContent>

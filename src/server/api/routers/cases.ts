@@ -176,13 +176,20 @@ export const casesRouter = createTRPCRouter({
         .select(
           `
           id, status, type, visibility, created_at, updated_at, scheduled_at,
+          source, external_id, metadata,
           patients (
             id, name, species, breed,
-            owner_name, owner_email, owner_phone
+            owner_name, owner_email, owner_phone,
+            date_of_birth, sex, weight_kg
           ),
           transcriptions (id, transcript, created_at),
           soap_notes (id, subjective, objective, assessment, plan, created_at),
           discharge_summaries (id, content, created_at),
+          vital_signs (
+            id, temperature, temperature_unit, pulse, respiration,
+            weight, weight_unit, systolic, diastolic, notes,
+            measured_at, source, created_at
+          ),
           scheduled_discharge_calls (
             id, status, scheduled_for, ended_at, ended_reason, started_at,
             vapi_call_id, transcript, transcript_messages, call_analysis,
@@ -795,6 +802,54 @@ export const casesRouter = createTRPCRouter({
       }
 
       return data;
+    }),
+
+  /**
+   * Delete case (user can only delete their own cases)
+   */
+  deleteMyCase: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user.id;
+
+      // First verify the case belongs to the user
+      const { data: caseData, error: fetchError } = await ctx.supabase
+        .from("cases")
+        .select("id, user_id")
+        .eq("id", input.id)
+        .single();
+
+      if (fetchError || !caseData) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Case not found",
+          cause: fetchError,
+        });
+      }
+
+      if (caseData.user_id !== userId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You can only delete your own cases",
+        });
+      }
+
+      // Delete the case (cascade will handle related records)
+      const { error } = await ctx.supabase
+        .from("cases")
+        .delete()
+        .eq("id", input.id)
+        .eq("user_id", userId); // Double-check ownership in delete query
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to delete case",
+          cause: error,
+        });
+      }
+
+      return { success: true };
     }),
 
   /**

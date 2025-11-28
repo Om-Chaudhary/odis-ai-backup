@@ -92,15 +92,19 @@ export function CaseListCard({ caseData, index = 0 }: CaseListCardProps) {
                   caseId={caseData.id}
                   hasSoapNote={caseData.hasSoapNote}
                   hasDischargeSummary={caseData.hasDischargeSummary}
+                  patientName={caseData.patient.name}
                 />
               </div>
               <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
                 <Calendar className="h-3 w-3 shrink-0" />
                 <span className="truncate">
-                  Created{" "}
-                  {formatDistanceToNow(new Date(caseData.created_at), {
-                    addSuffix: true,
-                  })}
+                  {caseData.scheduled_at ? "Scheduled" : "Created"}{" "}
+                  {formatDistanceToNow(
+                    new Date(caseData.scheduled_at ?? caseData.created_at),
+                    {
+                      addSuffix: true,
+                    },
+                  )}
                 </span>
               </div>
             </div>
@@ -142,7 +146,7 @@ export function CaseListCard({ caseData, index = 0 }: CaseListCardProps) {
       </CardContent>
 
       <CardFooter className="border-t border-slate-100 bg-slate-50/30 p-4">
-        <Link href={`/dashboard/cases/${caseData.id}`} className="w-full">
+        <Link href={`/dashboard/discharges/${caseData.id}`} className="w-full">
           <Button
             variant="outline"
             size="sm"
