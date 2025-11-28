@@ -6,9 +6,9 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Settings, Search, Plus, RefreshCw, TestTube } from "lucide-react";
 import { Badge } from "~/components/ui/badge";
-import { CaseCard } from "./case-card";
+import { DischargeListItem } from "./discharge-list-item";
 import { EmptyState } from "./empty-state";
-import { DayPaginationControls } from "./day-pagination-controls";
+import { UnifiedFilterBar } from "./unified-filter-bar";
 import { api } from "~/trpc/client";
 import type {
   DashboardCase,
@@ -45,7 +45,19 @@ function normalizePlaceholder(
   return placeholders.includes(value) ? undefined : value;
 }
 
-export function CasesDashboardClient() {
+/**
+ * DischargeManagementClient - Combined discharge management interface
+ *
+ * Merges functionality from DischargesTab and CasesDashboardClient:
+ * - Status summary bar with filtering
+ * - Date range presets
+ * - Day pagination
+ * - Search functionality
+ * - Status filtering (ready/pending/completed/failed)
+ * - New Case button
+ * - All discharge trigger functionality
+ */
+export function DischargeManagementClient() {
   const router = useRouter();
 
   // State
@@ -53,6 +65,9 @@ export function CasesDashboardClient() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentPage, setCurrentPage] = useState(1);
   const [loadingCase, setLoadingCase] = useState<LoadingState | null>(null);
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "ready" | "pending" | "completed" | "failed"
+  >("all");
 
   // Ref to prevent double-clicks
   const isProcessingRef = useRef(false);
@@ -109,9 +124,6 @@ export function CasesDashboardClient() {
   const cases: DashboardCase[] = casesData?.cases
     ? transformBackendCasesToDashboardCases(casesData.cases)
     : [];
-
-  // Keep reference to backend cases for debug modal
-  const backendCases = casesData?.cases ?? [];
 
   const settings: DischargeSettings = settingsData ?? {
     clinicName: "",
@@ -251,15 +263,64 @@ export function CasesDashboardClient() {
     setCurrentPage(1); // Reset to first page when changing date
   }, []);
 
-  // Filtering (client-side for search, server-side for pagination)
-  const filteredCases = cases.filter((c) => {
-    if (!searchTerm) return true;
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      c.patient.name.toLowerCase().includes(searchLower) ||
-      c.patient.owner_name.toLowerCase().includes(searchLower)
-    );
-  });
+  // Filtering (client-side for search and status, server-side for pagination)
+  const filteredCases = useMemo(() => {
+    return cases.filter((c) => {
+      // Search filter
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch =
+          c.patient.name.toLowerCase().includes(searchLower) ||
+          c.patient.owner_name.toLowerCase().includes(searchLower);
+        if (!matchesSearch) return false;
+      }
+
+      // Status filter
+      if (statusFilter === "all") return true;
+
+      if (statusFilter === "ready") {
+        const hasValidPhone = hasValidContact(c.patient.owner_phone);
+        const hasValidEmail = hasValidContact(c.patient.owner_email);
+        const hasNoDischarge =
+          c.scheduled_discharge_calls.length === 0 &&
+          c.scheduled_discharge_emails.length === 0;
+        return (hasValidPhone || hasValidEmail) && hasNoDischarge;
+      }
+
+      if (statusFilter === "pending") {
+        return (
+          c.scheduled_discharge_calls.some((call) =>
+            ["queued", "ringing", "in_progress"].includes(call.status ?? ""),
+          ) ||
+          c.scheduled_discharge_emails.some(
+            (email) => email.status === "queued",
+          )
+        );
+      }
+
+      if (statusFilter === "completed") {
+        const hasCompletedCall = c.scheduled_discharge_calls.some(
+          (call) => call.status === "completed",
+        );
+        const hasSentEmail = c.scheduled_discharge_emails.some(
+          (email) => email.status === "sent",
+        );
+        return c.status === "completed" || hasCompletedCall || hasSentEmail;
+      }
+
+      if (statusFilter === "failed") {
+        const hasFailedCall = c.scheduled_discharge_calls.some(
+          (call) => call.status === "failed",
+        );
+        const hasFailedEmail = c.scheduled_discharge_emails.some(
+          (email) => email.status === "failed",
+        );
+        return hasFailedCall || hasFailedEmail;
+      }
+
+      return true;
+    });
+  }, [cases, searchTerm, statusFilter]);
 
   // Pagination from backend
   const paginatedCases = filteredCases; // Already paginated by backend
@@ -267,16 +328,16 @@ export function CasesDashboardClient() {
   return (
     <div className="space-y-6 p-6 pb-16">
       {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="animate-card-in flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold tracking-tight">
-              Discharge Dashboard
+              Discharge Management
             </h1>
             {settings.testModeEnabled && (
               <Badge
                 variant="outline"
-                className="gap-1 border-amber-500/50 bg-amber-50 text-amber-700"
+                className="animate-pulse-glow gap-1 border-amber-500/50 bg-amber-50 text-amber-700"
               >
                 <TestTube className="h-3 w-3" />
                 Test Mode Active
@@ -293,6 +354,7 @@ export function CasesDashboardClient() {
             size="sm"
             onClick={handleRefresh}
             disabled={isLoading}
+            className="transition-smooth"
           >
             <RefreshCw
               className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
@@ -303,6 +365,7 @@ export function CasesDashboardClient() {
             variant="outline"
             size="sm"
             onClick={() => router.push("/dashboard/settings")}
+            className="transition-smooth"
           >
             <Settings className="mr-2 h-4 w-4" />
             Settings
@@ -315,13 +378,13 @@ export function CasesDashboardClient() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-2">
+      <div className="animate-card-in-delay-1 flex items-center gap-2">
         <div className="relative flex-1 md:max-w-sm">
           <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
           <Input
             type="search"
             placeholder="Search patients or owners..."
-            className="pl-9"
+            className="transition-smooth pl-9 focus:ring-2"
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
@@ -331,30 +394,36 @@ export function CasesDashboardClient() {
         </div>
       </div>
 
-      {/* Day Pagination */}
-      <DayPaginationControls
+      {/* Unified Filter Bar - Date controls, date presets, and status filters */}
+      <UnifiedFilterBar
         currentDate={currentDate}
         onDateChange={handleDateChange}
         totalItems={casesData?.pagination.total ?? 0}
         isLoading={isLoading}
+        statusFilter={statusFilter}
+        onStatusFilterChange={(filter) => {
+          setStatusFilter(filter);
+          setCurrentPage(1); // Reset to first page when changing filter
+        }}
       />
 
       {/* Content */}
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-2">
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="bg-muted/10 h-[300px] animate-pulse rounded-xl border"
+              className="bg-muted/10 h-24 animate-pulse rounded-lg border"
             />
           ))}
         </div>
       ) : filteredCases.length === 0 ? (
-        <EmptyState />
+        <div className="animate-card-in-delay-2">
+          <EmptyState />
+        </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {paginatedCases.map((c) => {
-            const backendCase = backendCases.find((bc) => bc.id === c.id);
+        <div className="space-y-2">
+          {paginatedCases.map((c, index) => {
             // Only show loading for the specific case being processed
             const isThisCaseLoading = loadingCase?.caseId === c.id;
             const isLoadingCall =
@@ -365,22 +434,26 @@ export function CasesDashboardClient() {
               (loadingCase?.type === "email" || loadingCase?.type === "both");
 
             return (
-              <CaseCard
+              <div
                 key={c.id}
-                caseData={c}
-                backendCaseData={backendCase}
-                settings={settings}
-                onTriggerCall={(id) => handleTriggerCall(id, c.patient.id)}
-                onTriggerEmail={(id) => handleTriggerEmail(id, c.patient.id)}
-                onUpdatePatient={handleUpdatePatient}
-                testModeEnabled={settings.testModeEnabled}
-                testContactName={settings.testContactName}
-                testContactEmail={settings.testContactEmail}
-                testContactPhone={settings.testContactPhone}
-                isLoadingCall={isLoadingCall}
-                isLoadingEmail={isLoadingEmail}
-                isLoadingUpdate={updatePatientMutation.isPending}
-              />
+                className="animate-card-in"
+                style={{ animationDelay: `${0.1 + index * 0.02}s` }}
+              >
+                <DischargeListItem
+                  caseData={c}
+                  settings={settings}
+                  onTriggerCall={(id) => handleTriggerCall(id, c.patient.id)}
+                  onTriggerEmail={(id) => handleTriggerEmail(id, c.patient.id)}
+                  onUpdatePatient={handleUpdatePatient}
+                  testModeEnabled={settings.testModeEnabled}
+                  testContactName={settings.testContactName}
+                  testContactEmail={settings.testContactEmail}
+                  testContactPhone={settings.testContactPhone}
+                  isLoadingCall={isLoadingCall}
+                  isLoadingEmail={isLoadingEmail}
+                  isLoadingUpdate={updatePatientMutation.isPending}
+                />
+              </div>
             );
           })}
         </div>
