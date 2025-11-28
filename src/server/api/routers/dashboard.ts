@@ -8,8 +8,10 @@ import { startOfMonth, startOfWeek } from "date-fns";
 type SupabasePatient = {
   id: string;
   name: string;
-  species: string;
-  owner_name?: string;
+  species?: string | null;
+  owner_name?: string | null;
+  owner_phone?: string | null;
+  owner_email?: string | null;
 };
 
 type SupabasePatientsResponse = SupabasePatient[];
@@ -882,13 +884,13 @@ export const dashboardRouter = createTRPCRouter({
             };
             missingDischarge: boolean;
             missingSoap: boolean;
-            missingContact: boolean;
+            missingContact: true;
             priority: number;
-          } => c !== null,
+          } => c !== null && c.missingContact === true,
         )
         .sort((a, b) => {
           // Sort by priority (higher first), then by date (newer first)
-          if (b.priority !== a.priority) {
+          if (a.priority !== b.priority) {
             return b.priority - a.priority;
           }
           return (

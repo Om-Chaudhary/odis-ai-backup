@@ -9,7 +9,7 @@ import {
 } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
-import { AlertTriangle, FileText, ClipboardList, Phone } from "lucide-react";
+import { AlertTriangle, Phone } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
@@ -28,25 +28,15 @@ interface CasesNeedingAttentionCardProps {
     thisWeek: number;
     thisMonth: number;
   };
-  totalCases: number;
 }
 
 export function CasesNeedingAttentionCard({
   casesNeedingDischarge,
   casesNeedingSoap,
-  totalCases,
 }: CasesNeedingAttentionCardProps) {
   const router = useRouter();
   const { data: casesNeedingAttention, isLoading } =
     api.dashboard.getCasesNeedingAttention.useQuery({ limit: 5 });
-
-  const handleViewDischarges = () => {
-    router.push("/dashboard?tab=cases&missingDischarge=true");
-  };
-
-  const handleViewSoap = () => {
-    router.push("/dashboard?tab=cases&missingSoap=true");
-  };
 
   return (
     <Card
@@ -91,83 +81,85 @@ export function CasesNeedingAttentionCard({
           />
         ) : (
           <div className="space-y-2.5">
-            {casesNeedingAttention.map((c) => (
-              <Link
-                key={c.id}
-                href={`/dashboard/discharges/${c.id}`}
-                className="block rounded-lg border border-amber-200 bg-amber-50/50 p-3 transition-all hover:border-amber-300 hover:bg-amber-50 hover:shadow-sm"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-slate-900">
-                        {c.patient.name || "Unknown Patient"}
+            {casesNeedingAttention
+              .filter((c): c is NonNullable<typeof c> => c !== null)
+              .map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/dashboard/discharges/${c.id}`}
+                  className="block rounded-lg border border-amber-200 bg-amber-50/50 p-3 transition-all hover:border-amber-300 hover:bg-amber-50 hover:shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-semibold text-slate-900">
+                          {c.patient?.name || "Unknown Patient"}
+                        </p>
+                        {c.patient?.species && (
+                          <span className="text-xs font-normal text-slate-500">
+                            {c.patient.species}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-0.5 text-xs text-slate-600">
+                        {(() => {
+                          const ownerName = c.patient?.owner_name;
+                          if (
+                            !ownerName ||
+                            ownerName === "null" ||
+                            ownerName === "undefined" ||
+                            ownerName.trim() === ""
+                          ) {
+                            return "No owner name";
+                          }
+                          return ownerName;
+                        })()}
                       </p>
-                      {c.patient.species && (
-                        <span className="text-xs font-normal text-slate-500">
-                          {c.patient.species}
-                        </span>
+                      {!c.patient?.owner_phone && !c.patient?.owner_email && (
+                        <p className="mt-1 text-xs font-medium text-red-600">
+                          Missing phone and email
+                        </p>
                       )}
+                      {c.patient?.owner_phone && !c.patient?.owner_email && (
+                        <p className="mt-1 text-xs font-medium text-amber-600">
+                          Missing email
+                        </p>
+                      )}
+                      {!c.patient?.owner_phone && c.patient?.owner_email && (
+                        <p className="mt-1 text-xs font-medium text-amber-600">
+                          Missing phone
+                        </p>
+                      )}
+                      <div className="mt-1.5">
+                        <Badge
+                          variant="outline"
+                          className="h-5 border-red-400 bg-red-100/50 px-1.5 text-xs font-medium text-red-700"
+                        >
+                          <Phone className="mr-1 h-3 w-3" />
+                          Missing Contact Info
+                        </Badge>
+                      </div>
                     </div>
-                    <p className="mt-0.5 text-xs text-slate-600">
-                      {(() => {
-                        const ownerName = c.patient.owner_name;
-                        if (
-                          !ownerName ||
-                          ownerName === "null" ||
-                          ownerName === "undefined" ||
-                          ownerName.trim() === ""
-                        ) {
-                          return "No owner name";
-                        }
-                        return ownerName;
-                      })()}
-                    </p>
-                    {!c.patient.owner_phone && !c.patient.owner_email && (
-                      <p className="mt-1 text-xs font-medium text-red-600">
-                        Missing phone and email
-                      </p>
-                    )}
-                    {c.patient.owner_phone && !c.patient.owner_email && (
-                      <p className="mt-1 text-xs font-medium text-amber-600">
-                        Missing email
-                      </p>
-                    )}
-                    {!c.patient.owner_phone && c.patient.owner_email && (
-                      <p className="mt-1 text-xs font-medium text-amber-600">
-                        Missing phone
-                      </p>
-                    )}
-                    <div className="mt-1.5">
-                      <Badge
-                        variant="outline"
-                        className="h-5 border-red-400 bg-red-100/50 px-1.5 text-xs font-medium text-red-700"
+                    <div className="flex shrink-0 flex-col items-end gap-1.5">
+                      <span
+                        className={cn(
+                          "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium",
+                          c.status === "ongoing"
+                            ? "border-blue-200 bg-blue-50 text-blue-700"
+                            : "border-slate-200 bg-slate-50 text-slate-700",
+                        )}
                       >
-                        <Phone className="mr-1 h-3 w-3" />
-                        Missing Contact Info
-                      </Badge>
+                        {c.status ?? "unknown"}
+                      </span>
+                      <p className="text-xs text-slate-500">
+                        {formatDistanceToNow(new Date(c.created_at), {
+                          addSuffix: true,
+                        })}
+                      </p>
                     </div>
                   </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1.5">
-                    <span
-                      className={cn(
-                        "inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium",
-                        c.status === "ongoing"
-                          ? "border-blue-200 bg-blue-50 text-blue-700"
-                          : "border-slate-200 bg-slate-50 text-slate-700",
-                      )}
-                    >
-                      {c.status}
-                    </span>
-                    <p className="text-xs text-slate-500">
-                      {formatDistanceToNow(new Date(c.created_at), {
-                        addSuffix: true,
-                      })}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            ))}
+                </Link>
+              ))}
           </div>
         )}
 

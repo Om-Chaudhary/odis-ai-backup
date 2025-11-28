@@ -266,7 +266,6 @@ export function OverviewTab({
           casesNeedingSoap={
             stats?.casesNeedingSoap ?? { total: 0, thisWeek: 0, thisMonth: 0 }
           }
-          totalCases={stats?.total ?? 0}
         />
       </div>
 
