@@ -16,7 +16,6 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import type { CaseListItem } from "~/types/dashboard";
 import { cn } from "~/lib/utils";
-import { Badge } from "~/components/ui/badge";
 
 interface CaseListItemCompactProps {
   caseData: CaseListItem;
@@ -76,48 +75,36 @@ export function CaseListItemCompact({ caseData }: CaseListItemCompactProps) {
               </h3>
             </div>
 
-            {/* Status Section - Only show what exists, all horizontal */}
+            {/* Content Indicators - Horizontal for list view, only render border if there are indicators */}
             {(caseData.hasSoapNote ||
               caseData.hasDischargeSummary ||
               caseData.hasDischargeCall ||
               caseData.hasDischargeEmail) && (
               <div className="mb-3 border-b border-slate-100 pb-3">
-                <div className="flex flex-nowrap items-center gap-2 overflow-x-auto">
+                <div className="flex flex-wrap items-center gap-2">
                   {caseData.hasSoapNote && (
-                    <Badge
-                      variant="outline"
-                      className="shrink-0 gap-1.5 border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700"
-                    >
-                      <FileText className="h-3.5 w-3.5 text-emerald-600" />
-                      SOAP
-                    </Badge>
+                    <div className="flex items-center gap-1.5 rounded-md border border-blue-200/60 bg-blue-50/50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                      <FileText className="h-3.5 w-3.5 text-blue-600" />
+                      <span>SOAP Note</span>
+                    </div>
                   )}
                   {caseData.hasDischargeSummary && (
-                    <Badge
-                      variant="outline"
-                      className="shrink-0 gap-1.5 border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700"
-                    >
-                      <FileCheck className="h-3.5 w-3.5 text-emerald-600" />
-                      Discharge
-                    </Badge>
+                    <div className="flex items-center gap-1.5 rounded-md border border-teal-200/60 bg-teal-50/50 px-2 py-0.5 text-xs font-medium text-teal-700">
+                      <FileCheck className="h-3.5 w-3.5 text-teal-600" />
+                      <span>Discharge Summary</span>
+                    </div>
                   )}
                   {caseData.hasDischargeCall && (
-                    <Badge
-                      variant="outline"
-                      className="shrink-0 gap-1.5 border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700"
-                    >
-                      <Phone className="h-3.5 w-3.5 text-emerald-600" />
-                      Call Sent
-                    </Badge>
+                    <div className="flex items-center gap-1.5 rounded-md border border-indigo-200/60 bg-indigo-50/50 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                      <Phone className="h-3.5 w-3.5 text-indigo-600" />
+                      <span>Call Sent</span>
+                    </div>
                   )}
                   {caseData.hasDischargeEmail && (
-                    <Badge
-                      variant="outline"
-                      className="shrink-0 gap-1.5 border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700"
-                    >
-                      <Mail className="h-3.5 w-3.5 text-emerald-600" />
-                      Email Sent
-                    </Badge>
+                    <div className="flex items-center gap-1.5 rounded-md border border-amber-200/60 bg-amber-50/50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                      <Mail className="h-3.5 w-3.5 text-amber-600" />
+                      <span>Email Sent</span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -134,8 +121,8 @@ export function CaseListItemCompact({ caseData }: CaseListItemCompactProps) {
             </div>
           </div>
 
-          {/* Actions - Right Side */}
-          <div className="flex shrink-0 items-center">
+          {/* Actions - Right Side - Aligned to top */}
+          <div className="flex shrink-0 items-start pt-1">
             {/* View Details - Primary Action */}
             <Link href={`/dashboard/cases/${caseData.id}`}>
               <Button

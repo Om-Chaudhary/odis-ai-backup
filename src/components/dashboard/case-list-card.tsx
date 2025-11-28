@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Card, CardContent, CardFooter } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
-import { Badge } from "~/components/ui/badge";
 import {
   Dog,
   Cat,
@@ -22,112 +21,6 @@ import { QuickActionsMenu } from "~/components/dashboard/quick-actions-menu";
 interface CaseListCardProps {
   caseData: CaseListItem;
   index?: number; // For staggered animations
-}
-
-function getSourceBadge(source: string | null) {
-  const sourceMap: Record<
-    string,
-    { label: string; color: string; bgColor: string }
-  > = {
-    manual: {
-      label: "Manual",
-      color: "text-slate-700",
-      bgColor: "bg-slate-100",
-    },
-    idexx_neo: {
-      label: "IDEXX Neo",
-      color: "text-blue-700",
-      bgColor: "bg-blue-100",
-    },
-    cornerstone: {
-      label: "Cornerstone",
-      color: "text-purple-700",
-      bgColor: "bg-purple-100",
-    },
-    ezyvet: {
-      label: "ezyVet",
-      color: "text-green-700",
-      bgColor: "bg-green-100",
-    },
-    avimark: {
-      label: "AVImark",
-      color: "text-orange-700",
-      bgColor: "bg-orange-100",
-    },
-  };
-
-  const sourceKey = source ?? "manual";
-  const config = sourceMap[sourceKey] ?? sourceMap.manual!;
-
-  return (
-    <Badge
-      className={cn(
-        "rounded-md border-0 text-xs font-medium",
-        config.bgColor,
-        config.color,
-      )}
-    >
-      {config.label}
-    </Badge>
-  );
-}
-
-function getStatusBadge(status: string) {
-  const statusMap: Record<
-    string,
-    { label: string; color: string; bgColor: string }
-  > = {
-    draft: {
-      label: "Draft",
-      color: "text-slate-700",
-      bgColor: "bg-slate-100",
-    },
-    ongoing: {
-      label: "Ongoing",
-      color: "text-blue-700",
-      bgColor: "bg-blue-100",
-    },
-    completed: {
-      label: "Completed",
-      color: "text-emerald-700",
-      bgColor: "bg-emerald-100",
-    },
-    reviewed: {
-      label: "Reviewed",
-      color: "text-purple-700",
-      bgColor: "bg-purple-100",
-    },
-  };
-
-  const statusKey = status ?? "draft";
-  const config = statusMap[statusKey] ?? statusMap.draft!;
-
-  return (
-    <Badge
-      className={cn(
-        "rounded-md border-0 text-xs font-medium",
-        config.bgColor,
-        config.color,
-      )}
-    >
-      {config.label}
-    </Badge>
-  );
-}
-
-function getStatusDotColor(status: string) {
-  switch (status) {
-    case "draft":
-      return "bg-slate-500";
-    case "ongoing":
-      return "bg-blue-500";
-    case "completed":
-      return "bg-emerald-500";
-    case "reviewed":
-      return "bg-purple-500";
-    default:
-      return "bg-slate-500";
-  }
 }
 
 function getStatusIconBgColor(status: string) {
@@ -205,52 +98,35 @@ export function CaseListCard({ caseData, index = 0 }: CaseListCardProps) {
           </div>
         </div>
 
-        {/* Status Section - Only show what exists, all horizontal */}
-        {(caseData.hasSoapNote ||
-          caseData.hasDischargeSummary ||
-          caseData.hasDischargeCall ||
-          caseData.hasDischargeEmail) && (
-          <div>
-            <div className="flex flex-nowrap items-center gap-2 overflow-x-auto">
-              {caseData.hasSoapNote && (
-                <Badge
-                  variant="outline"
-                  className="shrink-0 gap-1.5 border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700"
-                >
-                  <FileText className="h-3.5 w-3.5 text-emerald-600" />
-                  SOAP
-                </Badge>
-              )}
-              {caseData.hasDischargeSummary && (
-                <Badge
-                  variant="outline"
-                  className="shrink-0 gap-1.5 border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700"
-                >
-                  <FileCheck className="h-3.5 w-3.5 text-emerald-600" />
-                  Discharge
-                </Badge>
-              )}
-              {caseData.hasDischargeCall && (
-                <Badge
-                  variant="outline"
-                  className="shrink-0 gap-1.5 border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700"
-                >
-                  <Phone className="h-3.5 w-3.5 text-emerald-600" />
-                  Call Sent
-                </Badge>
-              )}
-              {caseData.hasDischargeEmail && (
-                <Badge
-                  variant="outline"
-                  className="shrink-0 gap-1.5 border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700"
-                >
-                  <Mail className="h-3.5 w-3.5 text-emerald-600" />
-                  Email Sent
-                </Badge>
-              )}
-            </div>
+        {/* Content Indicators - Vertical stack for card view, always render to maintain consistent spacing */}
+        <div className="min-h-[120px]">
+          <div className="flex flex-col gap-2">
+            {caseData.hasSoapNote && (
+              <div className="flex items-center gap-1.5 rounded-md border border-blue-200/60 bg-blue-50/50 px-2 py-1.5 text-xs font-medium text-blue-700">
+                <FileText className="h-3.5 w-3.5 shrink-0 text-blue-600" />
+                <span>SOAP Note</span>
+              </div>
+            )}
+            {caseData.hasDischargeSummary && (
+              <div className="flex items-center gap-1.5 rounded-md border border-teal-200/60 bg-teal-50/50 px-2 py-1.5 text-xs font-medium text-teal-700">
+                <FileCheck className="h-3.5 w-3.5 shrink-0 text-teal-600" />
+                <span>Discharge Summary</span>
+              </div>
+            )}
+            {caseData.hasDischargeCall && (
+              <div className="flex items-center gap-1.5 rounded-md border border-indigo-200/60 bg-indigo-50/50 px-2 py-1.5 text-xs font-medium text-indigo-700">
+                <Phone className="h-3.5 w-3.5 shrink-0 text-indigo-600" />
+                <span>Call Sent</span>
+              </div>
+            )}
+            {caseData.hasDischargeEmail && (
+              <div className="flex items-center gap-1.5 rounded-md border border-amber-200/60 bg-amber-50/50 px-2 py-1.5 text-xs font-medium text-amber-700">
+                <Mail className="h-3.5 w-3.5 shrink-0 text-amber-600" />
+                <span>Email Sent</span>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </CardContent>
 
       <CardFooter className="border-t border-slate-100 bg-slate-50/30 p-4">
