@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import type { CallStatus, EmailStatus } from "~/types/dashboard";
+import { startOfWeek, startOfMonth } from "date-fns";
 
 // Type helpers for Supabase responses
 type SupabasePatient = {
@@ -696,6 +697,145 @@ export const dashboardRouter = createTRPCRouter({
 
       const { count: emailsSentCount } = await emailsQuery;
 
+      // Get cases with their related discharge_summaries and soap_notes for efficient calculation
+      let casesWithRelationsQuery = ctx.supabase
+        .from("cases")
+        .select(
+          `
+          id,
+          status,
+          created_at,
+          discharge_summaries(id),
+          soap_notes(id)
+        `,
+        )
+        .eq("user_id", userId);
+
+      if (startDate) {
+        casesWithRelationsQuery = casesWithRelationsQuery.gte(
+          "created_at",
+          startDate.toISOString(),
+        );
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        casesWithRelationsQuery = casesWithRelationsQuery.lte(
+          "created_at",
+          end.toISOString(),
+        );
+      }
+
+      const { data: casesWithRelations } = await casesWithRelationsQuery;
+
+      // Calculate date boundaries
+      const now = new Date();
+      const weekStart = startOfWeek(now, { weekStartsOn: 1 }); // Monday
+      const monthStart = startOfMonth(now);
+
+      // Initialize counters
+      let totalNeedingDischarge = 0;
+      let thisWeekNeedingDischarge = 0;
+      let thisMonthNeedingDischarge = 0;
+
+      let totalNeedingSoap = 0;
+      let thisWeekNeedingSoap = 0;
+      let thisMonthNeedingSoap = 0;
+
+      let totalWithDischarge = 0;
+      let totalWithSoap = 0;
+
+      let completedCasesTotal = 0;
+      let completedCasesThisWeek = 0;
+      let createdCasesThisWeek = 0;
+      let completedCasesThisMonth = 0;
+      let createdCasesThisMonth = 0;
+
+      // Process each case
+      casesWithRelations?.forEach((c) => {
+        const caseCreatedAt = new Date(c.created_at ?? now);
+        // Handle relations - can be array, single object, or null
+        const dischargeSummaries = c.discharge_summaries;
+        const hasDischarge =
+          (Array.isArray(dischargeSummaries) &&
+            dischargeSummaries.length > 0) ||
+          (dischargeSummaries && !Array.isArray(dischargeSummaries));
+        const soapNotes = c.soap_notes;
+        const hasSoap =
+          (Array.isArray(soapNotes) && soapNotes.length > 0) ||
+          (soapNotes && !Array.isArray(soapNotes));
+        const isCompleted = c.status === "completed";
+
+        // Cases needing discharge
+        if (!hasDischarge) {
+          totalNeedingDischarge++;
+          if (caseCreatedAt >= weekStart) {
+            thisWeekNeedingDischarge++;
+          }
+          if (caseCreatedAt >= monthStart) {
+            thisMonthNeedingDischarge++;
+          }
+        } else {
+          totalWithDischarge++;
+        }
+
+        // Cases needing SOAP
+        if (!hasSoap) {
+          totalNeedingSoap++;
+          if (caseCreatedAt >= weekStart) {
+            thisWeekNeedingSoap++;
+          }
+          if (caseCreatedAt >= monthStart) {
+            thisMonthNeedingSoap++;
+          }
+        } else {
+          totalWithSoap++;
+        }
+
+        // Completion rate calculations
+        if (isCompleted) {
+          completedCasesTotal++;
+        }
+
+        // This week metrics
+        if (caseCreatedAt >= weekStart) {
+          createdCasesThisWeek++;
+          if (isCompleted) {
+            completedCasesThisWeek++;
+          }
+        }
+
+        // This month metrics
+        if (caseCreatedAt >= monthStart) {
+          createdCasesThisMonth++;
+          if (isCompleted) {
+            completedCasesThisMonth++;
+          }
+        }
+      });
+
+      // Calculate coverage percentages
+      const soapCoveragePercentage =
+        totalCases > 0 ? Math.round((totalWithSoap / totalCases) * 100) : 0;
+      const dischargeCoveragePercentage =
+        totalCases > 0
+          ? Math.round((totalWithDischarge / totalCases) * 100)
+          : 0;
+
+      // Calculate completion rates
+      const completionRateOverall =
+        totalCases > 0
+          ? Math.round((completedCasesTotal / totalCases) * 100)
+          : 0;
+      const completionRateThisWeek =
+        createdCasesThisWeek > 0
+          ? Math.round((completedCasesThisWeek / createdCasesThisWeek) * 100)
+          : 0;
+      const completionRateThisMonth =
+        createdCasesThisMonth > 0
+          ? Math.round((completedCasesThisMonth / createdCasesThisMonth) * 100)
+          : 0;
+
       return {
         total: totalCases,
         thisWeek: casesThisWeek,
@@ -705,6 +845,45 @@ export const dashboardRouter = createTRPCRouter({
         dischargeSummaries: dischargeSummariesCount ?? 0,
         callsCompleted: callsCompletedCount ?? 0,
         emailsSent: emailsSentCount ?? 0,
+        casesNeedingDischarge: {
+          total: totalNeedingDischarge,
+          thisWeek: thisWeekNeedingDischarge,
+          thisMonth: thisMonthNeedingDischarge,
+        },
+        casesNeedingSoap: {
+          total: totalNeedingSoap,
+          thisWeek: thisWeekNeedingSoap,
+          thisMonth: thisMonthNeedingSoap,
+        },
+        soapCoverage: {
+          percentage: soapCoveragePercentage,
+          totalCases,
+          casesWithSoap: totalWithSoap,
+          casesNeedingSoap: totalNeedingSoap,
+        },
+        dischargeCoverage: {
+          percentage: dischargeCoveragePercentage,
+          totalCases,
+          casesWithDischarge: totalWithDischarge,
+          casesNeedingDischarge: totalNeedingDischarge,
+        },
+        completionRate: {
+          overall: {
+            completed: completedCasesTotal,
+            total: totalCases,
+            percentage: completionRateOverall,
+          },
+          thisWeek: {
+            completed: completedCasesThisWeek,
+            created: createdCasesThisWeek,
+            percentage: completionRateThisWeek,
+          },
+          thisMonth: {
+            completed: completedCasesThisMonth,
+            created: createdCasesThisMonth,
+            percentage: completionRateThisMonth,
+          },
+        },
       };
     }),
 
