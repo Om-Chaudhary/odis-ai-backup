@@ -8,6 +8,12 @@ import {
   mapVapiStatus,
   shouldMarkAsFailed,
 } from "~/lib/vapi/client";
+import {
+  formatInboundCallData,
+  mapInboundCallToUser,
+  shouldMarkInboundCallAsFailed,
+} from "~/lib/vapi/inbound-calls";
+import { loggers } from "~/lib/logger";
 
 /**
  * VAPI Webhook Handler
@@ -98,16 +104,47 @@ function calculateRetryDelay(retryCount: number): number {
   return Math.pow(2, retryCount) * 5;
 }
 
+const logger = loggers.webhook.child("vapi");
+
 /**
  * Handle incoming webhook from VAPI
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.text();
-    const payload = JSON.parse(body) as VapiWebhookPayload;
+
+    // Validate payload structure
+    if (!body) {
+      logger.warn("Empty webhook payload received");
+      return NextResponse.json({ error: "Empty payload" }, { status: 400 });
+    }
+
+    let payload: VapiWebhookPayload;
+    try {
+      payload = JSON.parse(body) as VapiWebhookPayload;
+    } catch (parseError) {
+      logger.error("Invalid JSON in webhook payload", {
+        error:
+          parseError instanceof Error ? parseError.message : String(parseError),
+      });
+      return NextResponse.json(
+        { error: "Invalid JSON payload" },
+        { status: 400 },
+      );
+    }
+
     const { message } = payload;
 
-    console.log("[VAPI_WEBHOOK] Received event", {
+    // Validate message structure
+    if (!message || typeof message !== "object") {
+      logger.warn("Invalid webhook payload structure", { payload });
+      return NextResponse.json(
+        { error: "Invalid payload structure" },
+        { status: 400 },
+      );
+    }
+
+    logger.info("Received webhook event", {
       type: message.type,
       callId: message.call?.id,
     });
@@ -115,13 +152,24 @@ export async function POST(request: NextRequest) {
     // Get Supabase service client (bypasses RLS)
     const supabase = await createServiceClient();
 
+    // Detect call direction (inbound vs outbound)
+    const call = message.call;
+    const isInbound = call?.type === "inboundPhoneCall";
+
+    console.log("[VAPI_WEBHOOK] Call direction detected", {
+      type: message.type,
+      callId: call?.id,
+      callType: call?.type,
+      isInbound,
+    });
+
     // Handle different message types
     if (message.type === "status-update") {
-      await handleStatusUpdate(supabase, message);
+      await handleStatusUpdate(supabase, message, isInbound);
     } else if (message.type === "end-of-call-report") {
-      await handleEndOfCallReport(supabase, message);
+      await handleEndOfCallReport(supabase, message, isInbound);
     } else if (message.type === "hang") {
-      await handleHangup(supabase, message);
+      await handleHangup(supabase, message, isInbound);
     } else {
       console.log("[VAPI_WEBHOOK] Unhandled message type:", message.type);
     }
@@ -131,10 +179,7 @@ export async function POST(request: NextRequest) {
       message: "Webhook processed",
     });
   } catch (error) {
-    console.error("[VAPI_WEBHOOK] Error", {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-    });
+    logger.logError("Webhook processing failed", error as Error);
     return NextResponse.json(
       { error: "Internal server error" },
       {
@@ -150,23 +195,39 @@ export async function POST(request: NextRequest) {
 async function handleStatusUpdate(
   supabase: Awaited<ReturnType<typeof createServiceClient>>,
   message: VapiWebhookPayload["message"],
+  isInbound: boolean,
 ) {
-  const call = message.call!;
+  const call = message.call;
   if (!call?.id) {
-    console.warn("[VAPI_WEBHOOK] status-update missing call data");
+    logger.warn("Status update missing call data", {
+      messageType: message.type,
+      isInbound,
+    });
     return;
   }
 
+  const tableName = isInbound
+    ? "inbound_vapi_calls"
+    : "scheduled_discharge_calls";
+
   const { data: existingCall, error: findError } = await supabase
-    .from("scheduled_discharge_calls")
+    .from(tableName)
     .select("id, metadata")
     .eq("vapi_call_id", call.id)
     .single();
 
   if (findError || !existingCall) {
-    console.warn("[VAPI_WEBHOOK] Call not found in database", {
+    // For inbound calls, create the record if it doesn't exist
+    if (isInbound && findError?.code === "PGRST116") {
+      await createInboundCallRecord(supabase, call);
+      return;
+    }
+
+    logger.warn("Call not found in database", {
       callId: call.id,
-      error: findError,
+      table: tableName,
+      error: findError?.message,
+      errorCode: findError?.code,
     });
     return;
   }
@@ -181,21 +242,24 @@ async function handleStatusUpdate(
   }
 
   const { error: updateError } = await supabase
-    .from("scheduled_discharge_calls")
+    .from(tableName)
     .update(updateData)
     .eq("id", existingCall.id);
 
   if (updateError) {
-    console.error("[VAPI_WEBHOOK] Failed to update call status", {
+    logger.error("Failed to update call status", {
       callId: call.id,
-      error: updateError,
+      table: tableName,
+      error: updateError.message,
+      errorCode: updateError.code,
+    });
+  } else {
+    logger.info("Call status updated", {
+      callId: call.id,
+      table: tableName,
+      status: mappedStatus,
     });
   }
-
-  console.log("[VAPI_WEBHOOK] Status updated", {
-    callId: call.id,
-    status: mappedStatus,
-  });
 }
 
 /**
@@ -204,27 +268,166 @@ async function handleStatusUpdate(
 async function handleEndOfCallReport(
   supabase: Awaited<ReturnType<typeof createServiceClient>>,
   message: VapiWebhookPayload["message"],
+  isInbound: boolean,
 ) {
-  const call = message.call!;
+  const call = message.call;
   if (!call?.id) {
-    console.warn("[VAPI_WEBHOOK] end-of-call-report missing call data");
+    logger.warn("End-of-call report missing call data", {
+      messageType: message.type,
+      isInbound,
+    });
     return;
   }
 
+  const tableName = isInbound
+    ? "inbound_vapi_calls"
+    : "scheduled_discharge_calls";
+
   const { data: existingCall, error: findError } = await supabase
-    .from("scheduled_discharge_calls")
+    .from(tableName)
     .select("id, metadata")
     .eq("vapi_call_id", call.id)
     .single();
 
   if (findError || !existingCall) {
-    console.warn("[VAPI_WEBHOOK] Call not found in database", {
+    // For inbound calls, create the record if it doesn't exist
+    if (isInbound && findError?.code === "PGRST116") {
+      const newCallId = await createInboundCallRecord(supabase, call);
+      if (!newCallId) {
+        console.error("[VAPI_WEBHOOK] Failed to create inbound call record");
+        return;
+      }
+      // Re-fetch the newly created call
+      const { data: newCall } = await supabase
+        .from(tableName)
+        .select("id, metadata")
+        .eq("id", newCallId)
+        .single();
+      if (!newCall) {
+        console.error("[VAPI_WEBHOOK] Failed to fetch newly created call");
+        return;
+      }
+      // Continue with update using new call
+      return handleInboundCallEnd(supabase, call, message, newCall);
+    }
+
+    logger.warn("Call not found in database for end-of-call report", {
       callId: call.id,
-      error: findError,
+      table: tableName,
+      error: findError?.message,
+      errorCode: findError?.code,
     });
     return;
   }
 
+  // Route to appropriate handler
+  if (isInbound) {
+    await handleInboundCallEnd(supabase, call, message, existingCall);
+  } else {
+    await handleOutboundCallEnd(supabase, call, message, existingCall);
+  }
+}
+
+/**
+ * Handle inbound call end
+ */
+async function handleInboundCallEnd(
+  supabase: Awaited<ReturnType<typeof createServiceClient>>,
+  call: VapiCallResponse & {
+    endedReason?: string;
+    startedAt?: string;
+    endedAt?: string;
+    recordingUrl?: string;
+    transcript?: string;
+    messages?: unknown[];
+    analysis?: {
+      summary?: string;
+      successEvaluation?: string;
+      structuredData?: Record<string, unknown>;
+    };
+    costs?: Array<{ amount: number; description: string }>;
+  },
+  message: VapiWebhookPayload["message"],
+  existingCall: { id: string; metadata: unknown },
+) {
+  // Map assistant to clinic/user
+  const { clinicName, userId } = await mapInboundCallToUser(call);
+
+  // Format call data
+  const callData = formatInboundCallData(call, clinicName, userId);
+
+  // Determine final status
+  let finalStatus = mapVapiStatus(call.status);
+  if (call.endedReason) {
+    if (shouldMarkInboundCallAsFailed(call.endedReason)) {
+      finalStatus = "failed";
+    } else if (
+      call.endedReason === "customer-ended-call" ||
+      call.endedReason === "assistant-ended-call"
+    ) {
+      finalStatus = "completed";
+    } else if (call.endedReason.includes("cancelled")) {
+      finalStatus = "cancelled";
+    }
+  }
+
+  callData.status = finalStatus;
+
+  // Extract artifact data
+  const artifact = message.artifact ?? {};
+
+  // Update with artifact data if available
+  if (artifact.stereoRecordingUrl) {
+    callData.stereo_recording_url = artifact.stereoRecordingUrl;
+  }
+  if (artifact.structuredOutputs) {
+    callData.structured_data = artifact.structuredOutputs;
+  }
+
+  logger.info("Inbound call ended", {
+    callId: call.id,
+    status: finalStatus,
+    endedReason: call.endedReason,
+    clinicName,
+    userId,
+  });
+
+  const { error: updateError } = await supabase
+    .from("inbound_vapi_calls")
+    .update(callData)
+    .eq("id", existingCall.id);
+
+  if (updateError) {
+    logger.error("Failed to update inbound call", {
+      callId: call.id,
+      error: updateError.message,
+      errorCode: updateError.code,
+    });
+  }
+}
+
+/**
+ * Handle outbound call end (existing logic)
+ */
+async function handleOutboundCallEnd(
+  supabase: Awaited<ReturnType<typeof createServiceClient>>,
+  call: VapiCallResponse & {
+    endedReason?: string;
+    startedAt?: string;
+    endedAt?: string;
+    recordingUrl?: string;
+    transcript?: string;
+    messages?: unknown[];
+    analysis?: {
+      summary?: string;
+      successEvaluation?: string;
+      structuredData?: Record<string, unknown>;
+    };
+    costs?: Array<{ amount: number; description: string }>;
+  },
+  message: VapiWebhookPayload["message"],
+  existingCall: { id: string; metadata: unknown },
+) {
   // Calculate duration
   const durationSeconds =
     call.startedAt && call.endedAt
@@ -368,34 +571,88 @@ async function handleEndOfCallReport(
 }
 
 /**
+ * Create inbound call record if it doesn't exist
+ */
+async function createInboundCallRecord(
+  supabase: Awaited<ReturnType<typeof createServiceClient>>,
+  call: VapiCallResponse,
+): Promise<string | null> {
+  // Map assistant to clinic/user
+  const { clinicName, userId } = await mapInboundCallToUser(call);
+
+  // Format call data
+  const callData = formatInboundCallData(call, clinicName, userId);
+
+  const { data: newCall, error: insertError } = await supabase
+    .from("inbound_vapi_calls")
+    .insert(callData)
+    .select("id")
+    .single();
+
+  if (insertError || !newCall) {
+    logger.error("Failed to create inbound call record", {
+      callId: call.id,
+      error: insertError?.message,
+      errorCode: insertError?.code,
+    });
+    return null;
+  }
+
+  logger.info("Created inbound call record", {
+    callId: call.id,
+    dbId: newCall.id,
+    clinicName,
+    userId,
+  });
+
+  return newCall.id;
+}
+
+/**
  * Handle hang webhook
  */
 async function handleHangup(
   supabase: Awaited<ReturnType<typeof createServiceClient>>,
   message: VapiWebhookPayload["message"],
+  isInbound: boolean,
 ) {
-  const call = message.call!;
+  const call = message.call;
   if (!call?.id) {
-    console.warn("[VAPI_WEBHOOK] hang missing call data");
+    logger.warn("Hangup event missing call data", {
+      messageType: message.type,
+      isInbound,
+    });
     return;
   }
 
+  const tableName = isInbound
+    ? "inbound_vapi_calls"
+    : "scheduled_discharge_calls";
+
   const { data: existingCall, error: findError } = await supabase
-    .from("scheduled_discharge_calls")
+    .from(tableName)
     .select("id")
     .eq("vapi_call_id", call.id)
     .single();
 
   if (findError || !existingCall) {
-    console.warn("[VAPI_WEBHOOK] Call not found in database for hang event", {
+    // For inbound calls, create the record if it doesn't exist
+    if (isInbound && findError?.code === "PGRST116") {
+      await createInboundCallRecord(supabase, call);
+      return;
+    }
+
+    logger.warn("Call not found in database for hangup event", {
       callId: call.id,
-      error: findError,
+      table: tableName,
+      error: findError?.message,
+      errorCode: findError?.code,
     });
     return;
   }
 
   const { error: updateError } = await supabase
-    .from("scheduled_discharge_calls")
+    .from(tableName)
     .update({
       ended_reason: call.endedReason ?? "user-hangup",
       ended_at: call.endedAt ?? new Date().toISOString(),
@@ -403,15 +660,18 @@ async function handleHangup(
     .eq("id", existingCall.id);
 
   if (updateError) {
-    console.error("[VAPI_WEBHOOK] Failed to update hangup", {
+    logger.error("Failed to update hangup", {
       callId: call.id,
-      error: updateError,
+      table: tableName,
+      error: updateError.message,
+      errorCode: updateError.code,
+    });
+  } else {
+    logger.info("Hangup processed", {
+      callId: call.id,
+      table: tableName,
     });
   }
-
-  console.log("[VAPI_WEBHOOK] Hangup processed", {
-    callId: call.id,
-  });
 }
 
 export async function GET() {

@@ -156,7 +156,7 @@ export type Database = {
           type: Database["public"]["Enums"]["CaseType"] | null;
           updated_at: string | null;
           user_id: string | null;
-          visibility: Database["public"]["Enums"]["CaseVisibility"] | null;
+          visibility: Database["public"]["Enums"]["CaseVisibility"];
         };
         Insert: {
           created_at?: string | null;
@@ -169,7 +169,7 @@ export type Database = {
           type?: Database["public"]["Enums"]["CaseType"] | null;
           updated_at?: string | null;
           user_id?: string | null;
-          visibility?: Database["public"]["Enums"]["CaseVisibility"] | null;
+          visibility?: Database["public"]["Enums"]["CaseVisibility"];
         };
         Update: {
           created_at?: string | null;
@@ -182,7 +182,7 @@ export type Database = {
           type?: Database["public"]["Enums"]["CaseType"] | null;
           updated_at?: string | null;
           user_id?: string | null;
-          visibility?: Database["public"]["Enums"]["CaseVisibility"] | null;
+          visibility?: Database["public"]["Enums"]["CaseVisibility"];
         };
         Relationships: [
           {
@@ -193,6 +193,36 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      clinic_assistants: {
+        Row: {
+          assistant_id: string;
+          clinic_name: string;
+          created_at: string;
+          id: string;
+          is_active: boolean;
+          phone_number_id: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          assistant_id: string;
+          clinic_name: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          phone_number_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          assistant_id?: string;
+          clinic_name?: string;
+          created_at?: string;
+          id?: string;
+          is_active?: boolean;
+          phone_number_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
       discharge_summaries: {
         Row: {
@@ -301,6 +331,123 @@ export type Database = {
           },
         ];
       };
+      error_logs: {
+        Row: {
+          case_id: string | null;
+          created_at: string | null;
+          error_code: string | null;
+          error_data: Json | null;
+          error_message: string;
+          error_type: string;
+          event_id: string | null;
+          id: string;
+          platform: string;
+          request_data: Json | null;
+          resolution_notes: string | null;
+          resolved: boolean | null;
+          resolved_at: string | null;
+          response_data: Json | null;
+          source: string | null;
+          stack_trace: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          case_id?: string | null;
+          created_at?: string | null;
+          error_code?: string | null;
+          error_data?: Json | null;
+          error_message: string;
+          error_type: string;
+          event_id?: string | null;
+          id?: string;
+          platform: string;
+          request_data?: Json | null;
+          resolution_notes?: string | null;
+          resolved?: boolean | null;
+          resolved_at?: string | null;
+          response_data?: Json | null;
+          source?: string | null;
+          stack_trace?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          case_id?: string | null;
+          created_at?: string | null;
+          error_code?: string | null;
+          error_data?: Json | null;
+          error_message?: string;
+          error_type?: string;
+          event_id?: string | null;
+          id?: string;
+          platform?: string;
+          request_data?: Json | null;
+          resolution_notes?: string | null;
+          resolved?: boolean | null;
+          resolved_at?: string | null;
+          response_data?: Json | null;
+          source?: string | null;
+          stack_trace?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "error_logs_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "cases";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "error_logs_event_id_fkey";
+            columns: ["event_id"];
+            isOneToOne: false;
+            referencedRelation: "user_events";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      feature_usage: {
+        Row: {
+          created_at: string | null;
+          feature_category: string;
+          feature_name: string;
+          first_used_at: string | null;
+          id: string;
+          last_used_at: string | null;
+          metadata: Json | null;
+          platform: string;
+          updated_at: string | null;
+          usage_count: number | null;
+          user_id: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          feature_category: string;
+          feature_name: string;
+          first_used_at?: string | null;
+          id?: string;
+          last_used_at?: string | null;
+          metadata?: Json | null;
+          platform: string;
+          updated_at?: string | null;
+          usage_count?: number | null;
+          user_id?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          feature_category?: string;
+          feature_name?: string;
+          first_used_at?: string | null;
+          id?: string;
+          last_used_at?: string | null;
+          metadata?: Json | null;
+          platform?: string;
+          updated_at?: string | null;
+          usage_count?: number | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       generations: {
         Row: {
           case_id: string | null;
@@ -352,6 +499,96 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      inbound_vapi_calls: {
+        Row: {
+          assistant_id: string;
+          call_analysis: Json | null;
+          clinic_name: string | null;
+          cost: number | null;
+          created_at: string;
+          customer_number: string | null;
+          customer_phone: string | null;
+          duration_seconds: number | null;
+          ended_at: string | null;
+          ended_reason: string | null;
+          id: string;
+          metadata: Json | null;
+          phone_number_id: string | null;
+          recording_url: string | null;
+          started_at: string | null;
+          status: string;
+          stereo_recording_url: string | null;
+          structured_data: Json | null;
+          success_evaluation: string | null;
+          summary: string | null;
+          transcript: string | null;
+          transcript_messages: Json | null;
+          type: string;
+          updated_at: string;
+          user_id: string | null;
+          user_sentiment: string | null;
+          vapi_call_id: string;
+        };
+        Insert: {
+          assistant_id: string;
+          call_analysis?: Json | null;
+          clinic_name?: string | null;
+          cost?: number | null;
+          created_at?: string;
+          customer_number?: string | null;
+          customer_phone?: string | null;
+          duration_seconds?: number | null;
+          ended_at?: string | null;
+          ended_reason?: string | null;
+          id?: string;
+          metadata?: Json | null;
+          phone_number_id?: string | null;
+          recording_url?: string | null;
+          started_at?: string | null;
+          status?: string;
+          stereo_recording_url?: string | null;
+          structured_data?: Json | null;
+          success_evaluation?: string | null;
+          summary?: string | null;
+          transcript?: string | null;
+          transcript_messages?: Json | null;
+          type?: string;
+          updated_at?: string;
+          user_id?: string | null;
+          user_sentiment?: string | null;
+          vapi_call_id: string;
+        };
+        Update: {
+          assistant_id?: string;
+          call_analysis?: Json | null;
+          clinic_name?: string | null;
+          cost?: number | null;
+          created_at?: string;
+          customer_number?: string | null;
+          customer_phone?: string | null;
+          duration_seconds?: number | null;
+          ended_at?: string | null;
+          ended_reason?: string | null;
+          id?: string;
+          metadata?: Json | null;
+          phone_number_id?: string | null;
+          recording_url?: string | null;
+          started_at?: string | null;
+          status?: string;
+          stereo_recording_url?: string | null;
+          structured_data?: Json | null;
+          success_evaluation?: string | null;
+          summary?: string | null;
+          transcript?: string | null;
+          transcript_messages?: Json | null;
+          type?: string;
+          updated_at?: string;
+          user_id?: string | null;
+          user_sentiment?: string | null;
+          vapi_call_id?: string;
+        };
+        Relationships: [];
       };
       patients: {
         Row: {
@@ -538,7 +775,7 @@ export type Database = {
           recording_url: string | null;
           scheduled_for: string | null;
           started_at: string | null;
-          status: string | null;
+          status: string;
           stereo_recording_url: string | null;
           structured_data: Json | null;
           success_evaluation: string | null;
@@ -570,7 +807,7 @@ export type Database = {
           recording_url?: string | null;
           scheduled_for?: string | null;
           started_at?: string | null;
-          status?: string | null;
+          status?: string;
           stereo_recording_url?: string | null;
           structured_data?: Json | null;
           success_evaluation?: string | null;
@@ -602,7 +839,7 @@ export type Database = {
           recording_url?: string | null;
           scheduled_for?: string | null;
           started_at?: string | null;
-          status?: string | null;
+          status?: string;
           stereo_recording_url?: string | null;
           structured_data?: Json | null;
           success_evaluation?: string | null;
@@ -688,6 +925,72 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      session_analytics: {
+        Row: {
+          actions_performed: string[] | null;
+          app_version: string | null;
+          cases_created: number | null;
+          created_at: string | null;
+          device_info: Json | null;
+          discharges_sent: number | null;
+          duration_seconds: number | null;
+          ended_at: string | null;
+          event_count: number | null;
+          extension_version: string | null;
+          features_used: string[] | null;
+          id: string;
+          metadata: Json | null;
+          platform: string;
+          session_id: string;
+          started_at: string | null;
+          updated_at: string | null;
+          user_agent: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          actions_performed?: string[] | null;
+          app_version?: string | null;
+          cases_created?: number | null;
+          created_at?: string | null;
+          device_info?: Json | null;
+          discharges_sent?: number | null;
+          duration_seconds?: number | null;
+          ended_at?: string | null;
+          event_count?: number | null;
+          extension_version?: string | null;
+          features_used?: string[] | null;
+          id?: string;
+          metadata?: Json | null;
+          platform: string;
+          session_id: string;
+          started_at?: string | null;
+          updated_at?: string | null;
+          user_agent?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          actions_performed?: string[] | null;
+          app_version?: string | null;
+          cases_created?: number | null;
+          created_at?: string | null;
+          device_info?: Json | null;
+          discharges_sent?: number | null;
+          duration_seconds?: number | null;
+          ended_at?: string | null;
+          event_count?: number | null;
+          extension_version?: string | null;
+          features_used?: string[] | null;
+          id?: string;
+          metadata?: Json | null;
+          platform?: string;
+          session_id?: string;
+          started_at?: string | null;
+          updated_at?: string | null;
+          user_agent?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
       };
       soap_notes: {
         Row: {
@@ -995,6 +1298,108 @@ export type Database = {
           },
         ];
       };
+      user_events: {
+        Row: {
+          case_id: string | null;
+          created_at: string | null;
+          discharge_summary_id: string | null;
+          error_code: string | null;
+          error_message: string | null;
+          event_action: string;
+          event_category: string;
+          event_type: string;
+          id: string;
+          metadata: Json | null;
+          patient_id: string | null;
+          platform: string;
+          properties: Json | null;
+          scheduled_call_id: string | null;
+          scheduled_email_id: string | null;
+          session_id: string | null;
+          source: string | null;
+          success: boolean | null;
+          user_id: string | null;
+        };
+        Insert: {
+          case_id?: string | null;
+          created_at?: string | null;
+          discharge_summary_id?: string | null;
+          error_code?: string | null;
+          error_message?: string | null;
+          event_action: string;
+          event_category: string;
+          event_type: string;
+          id?: string;
+          metadata?: Json | null;
+          patient_id?: string | null;
+          platform: string;
+          properties?: Json | null;
+          scheduled_call_id?: string | null;
+          scheduled_email_id?: string | null;
+          session_id?: string | null;
+          source?: string | null;
+          success?: boolean | null;
+          user_id?: string | null;
+        };
+        Update: {
+          case_id?: string | null;
+          created_at?: string | null;
+          discharge_summary_id?: string | null;
+          error_code?: string | null;
+          error_message?: string | null;
+          event_action?: string;
+          event_category?: string;
+          event_type?: string;
+          id?: string;
+          metadata?: Json | null;
+          patient_id?: string | null;
+          platform?: string;
+          properties?: Json | null;
+          scheduled_call_id?: string | null;
+          scheduled_email_id?: string | null;
+          session_id?: string | null;
+          source?: string | null;
+          success?: boolean | null;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_events_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "cases";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "user_events_discharge_summary_id_fkey";
+            columns: ["discharge_summary_id"];
+            isOneToOne: false;
+            referencedRelation: "discharge_summaries";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "user_events_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "user_events_scheduled_call_id_fkey";
+            columns: ["scheduled_call_id"];
+            isOneToOne: false;
+            referencedRelation: "scheduled_discharge_calls";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "user_events_scheduled_email_id_fkey";
+            columns: ["scheduled_email_id"];
+            isOneToOne: false;
+            referencedRelation: "scheduled_discharge_emails";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       users: {
         Row: {
           avatar_url: string | null;
@@ -1206,6 +1611,70 @@ export type Database = {
       };
     };
     Views: {
+      analytics_daily_active_users: {
+        Row: {
+          active_users: number | null;
+          date: string | null;
+          platform: string | null;
+          total_events: number | null;
+        };
+        Relationships: [];
+      };
+      analytics_discharge_workflow: {
+        Row: {
+          calls_completed: number | null;
+          calls_scheduled: number | null;
+          completion_rate: number | null;
+          date: string | null;
+          emails_scheduled: number | null;
+          emails_sent: number | null;
+          platform: string | null;
+          workflows_completed: number | null;
+          workflows_failed: number | null;
+          workflows_started: number | null;
+        };
+        Relationships: [];
+      };
+      analytics_error_summary: {
+        Row: {
+          affected_users: number | null;
+          error_count: number | null;
+          error_type: string | null;
+          first_occurrence: string | null;
+          last_occurrence: string | null;
+          platform: string | null;
+          resolved_count: number | null;
+          unresolved_count: number | null;
+        };
+        Relationships: [];
+      };
+      analytics_feature_adoption: {
+        Row: {
+          avg_uses_per_user: number | null;
+          feature_category: string | null;
+          feature_name: string | null;
+          last_used: string | null;
+          platform: string | null;
+          total_uses: number | null;
+          unique_users: number | null;
+        };
+        Relationships: [];
+      };
+      analytics_session_metrics: {
+        Row: {
+          avg_cases_created: number | null;
+          avg_discharges_sent: number | null;
+          avg_duration_seconds: number | null;
+          avg_events_per_session: number | null;
+          completed_sessions: number | null;
+          date: string | null;
+          platform: string | null;
+          total_cases_created: number | null;
+          total_discharges_sent: number | null;
+          total_sessions: number | null;
+        };
+        Relationships: [];
+      };
       templates_enhanced: {
         Row: {
           category: string | null;
@@ -1282,6 +1751,28 @@ export type Database = {
           period_start: string;
           quantity: number;
           resource_type: string;
+        }[];
+      };
+      get_platform_comparison: {
+        Args: { p_days?: number };
+        Returns: {
+          active_users: number;
+          avg_events_per_user: number;
+          avg_session_duration: number;
+          platform: string;
+          total_events: number;
+          total_sessions: number;
+        }[];
+      };
+      get_user_engagement_stats: {
+        Args: { p_days?: number; p_user_id: string };
+        Returns: {
+          avg_session_duration: number;
+          cases_created: number;
+          discharges_sent: number;
+          total_events: number;
+          total_sessions: number;
+          unique_features: number;
         }[];
       };
       set_user_default_soap_template: {

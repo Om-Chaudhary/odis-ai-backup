@@ -58,6 +58,12 @@ export default async function DashboardPage({
     );
   }
 
+  // At this point, user must be non-null (TypeScript assertion)
+  // We've already handled the cases where user is null
+  if (!user) {
+    redirect("/login");
+  }
+
   // Get full user profile from database
   const supabase = await createClient();
   const { data: profile } = await supabase
