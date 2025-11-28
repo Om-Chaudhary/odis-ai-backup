@@ -194,25 +194,17 @@ export function CasesTab({
           {viewMode === "grid" ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {data?.cases.map((caseData, index) => (
-                <div
+                <CaseListCard
                   key={caseData.id}
-                  className="animate-card-in"
-                  style={{ animationDelay: `${0.2 + index * 0.05}s` }}
-                >
-                  <CaseListCard caseData={caseData} />
-                </div>
+                  caseData={caseData}
+                  index={index % 4}
+                />
               ))}
             </div>
           ) : (
             <div className="space-y-2">
-              {data?.cases.map((caseData, index) => (
-                <div
-                  key={caseData.id}
-                  className="animate-card-in"
-                  style={{ animationDelay: `${0.2 + index * 0.05}s` }}
-                >
-                  <CaseListItemCompact caseData={caseData} />
-                </div>
+              {data?.cases.map((caseData) => (
+                <CaseListItemCompact key={caseData.id} caseData={caseData} />
               ))}
             </div>
           )}

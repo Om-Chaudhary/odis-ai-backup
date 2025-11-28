@@ -9,6 +9,7 @@ import { Badge } from "~/components/ui/badge";
 import { CaseCard } from "./case-card";
 import { EmptyState } from "./empty-state";
 import { DayPaginationControls } from "./day-pagination-controls";
+import { StatusSummaryBar } from "./status-summary-bar";
 import { api } from "~/trpc/client";
 import type {
   DashboardCase,
@@ -59,6 +60,9 @@ export function DischargesTab({
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentPage, setCurrentPage] = useState(1);
   const [loadingCase, setLoadingCase] = useState<LoadingState | null>(null);
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "ready" | "pending" | "completed" | "failed"
+  >("all");
 
   // Ref to prevent double-clicks
   const isProcessingRef = useRef(false);
@@ -137,6 +141,67 @@ export function DischargesTab({
     const normalized = normalizePlaceholder(value);
     return normalized !== undefined && normalized.trim().length > 0;
   }
+
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const ready = cases.filter((c) => {
+      const hasValidPhone = hasValidContact(c.patient.owner_phone);
+      const hasValidEmail = hasValidContact(c.patient.owner_email);
+      const hasNoDischarge =
+        c.scheduled_discharge_calls.length === 0 &&
+        c.scheduled_discharge_emails.length === 0;
+      return (hasValidPhone || hasValidEmail) && hasNoDischarge;
+    }).length;
+
+    const pending = cases.filter((c) => {
+      return (
+        c.scheduled_discharge_calls.some((call) =>
+          ["queued", "ringing", "in_progress"].includes(call.status ?? ""),
+        ) ||
+        c.scheduled_discharge_emails.some((email) => email.status === "queued")
+      );
+    }).length;
+
+    const completed = cases.filter((c) => {
+      const hasCompletedCall = c.scheduled_discharge_calls.some(
+        (call) => call.status === "completed",
+      );
+      const hasSentEmail = c.scheduled_discharge_emails.some(
+        (email) => email.status === "sent",
+      );
+      return c.status === "completed" || hasCompletedCall || hasSentEmail;
+    }).length;
+
+    const failed = cases.filter((c) => {
+      const hasFailedCall = c.scheduled_discharge_calls.some(
+        (call) => call.status === "failed",
+      );
+      const hasFailedEmail = c.scheduled_discharge_emails.some(
+        (email) => email.status === "failed",
+      );
+      return hasFailedCall || hasFailedEmail;
+    }).length;
+
+    const scheduledCalls = cases.reduce(
+      (acc, c) => acc + c.scheduled_discharge_calls.length,
+      0,
+    );
+
+    const scheduledEmails = cases.reduce(
+      (acc, c) => acc + c.scheduled_discharge_emails.length,
+      0,
+    );
+
+    return {
+      total: cases.length,
+      ready,
+      pending,
+      completed,
+      failed,
+      scheduledCalls,
+      scheduledEmails,
+    };
+  }, [cases]);
 
   // Handlers
   const handleTriggerCall = async (caseId: string, patientId: string) => {
@@ -251,15 +316,64 @@ export function DischargesTab({
     toast.success("Dashboard refreshed");
   };
 
-  // Filtering (client-side for search, server-side for pagination)
-  const filteredCases = cases.filter((c) => {
-    if (!searchTerm) return true;
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      c.patient.name.toLowerCase().includes(searchLower) ||
-      c.patient.owner_name.toLowerCase().includes(searchLower)
-    );
-  });
+  // Filtering (client-side for search and status, server-side for pagination)
+  const filteredCases = useMemo(() => {
+    return cases.filter((c) => {
+      // Search filter
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch =
+          c.patient.name.toLowerCase().includes(searchLower) ||
+          c.patient.owner_name.toLowerCase().includes(searchLower);
+        if (!matchesSearch) return false;
+      }
+
+      // Status filter
+      if (statusFilter === "all") return true;
+
+      if (statusFilter === "ready") {
+        const hasValidPhone = hasValidContact(c.patient.owner_phone);
+        const hasValidEmail = hasValidContact(c.patient.owner_email);
+        const hasNoDischarge =
+          c.scheduled_discharge_calls.length === 0 &&
+          c.scheduled_discharge_emails.length === 0;
+        return (hasValidPhone || hasValidEmail) && hasNoDischarge;
+      }
+
+      if (statusFilter === "pending") {
+        return (
+          c.scheduled_discharge_calls.some((call) =>
+            ["queued", "ringing", "in_progress"].includes(call.status ?? ""),
+          ) ||
+          c.scheduled_discharge_emails.some(
+            (email) => email.status === "queued",
+          )
+        );
+      }
+
+      if (statusFilter === "completed") {
+        const hasCompletedCall = c.scheduled_discharge_calls.some(
+          (call) => call.status === "completed",
+        );
+        const hasSentEmail = c.scheduled_discharge_emails.some(
+          (email) => email.status === "sent",
+        );
+        return c.status === "completed" || hasCompletedCall || hasSentEmail;
+      }
+
+      if (statusFilter === "failed") {
+        const hasFailedCall = c.scheduled_discharge_calls.some(
+          (call) => call.status === "failed",
+        );
+        const hasFailedEmail = c.scheduled_discharge_emails.some(
+          (email) => email.status === "failed",
+        );
+        return hasFailedCall || hasFailedEmail;
+      }
+
+      return true;
+    });
+  }, [cases, searchTerm, statusFilter]);
 
   // Pagination from backend
   const paginatedCases = filteredCases; // Already paginated by backend
@@ -341,6 +455,24 @@ export function DischargesTab({
             totalItems={casesData.pagination.total}
           />
         </div>
+      )}
+
+      {/* Status Summary Bar */}
+      {!isLoading && (
+        <StatusSummaryBar
+          totalCases={stats.total}
+          readyCases={stats.ready}
+          pendingCases={stats.pending}
+          completedCases={stats.completed}
+          failedCases={stats.failed}
+          scheduledCalls={stats.scheduledCalls}
+          scheduledEmails={stats.scheduledEmails}
+          onFilterChange={(filter) => {
+            setStatusFilter(filter);
+            setCurrentPage(1); // Reset to first page when changing filter
+          }}
+          activeFilter={statusFilter}
+        />
       )}
 
       {/* Content */}
