@@ -942,6 +942,8 @@ export const dashboardRouter = createTRPCRouter({
         search: z.string().optional(),
         startDate: z.string().nullable().optional(),
         endDate: z.string().nullable().optional(),
+        missingDischarge: z.boolean().optional(),
+        missingSoap: z.boolean().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -1087,24 +1089,38 @@ export const dashboardRouter = createTRPCRouter({
         }),
       );
 
-      // Apply client-side search filter if provided
+      // Apply client-side filters (search, missing discharge, missing SOAP)
       let filteredCases = enrichedCases;
       if (input.search) {
         const searchLower = input.search.toLowerCase();
-        filteredCases = enrichedCases.filter(
+        filteredCases = filteredCases.filter(
           (c) =>
             c.patient.name.toLowerCase().includes(searchLower) ||
             (c.patient.owner_name?.toLowerCase() ?? "").includes(searchLower),
         );
       }
 
+      // Apply missing discharge filter
+      if (input.missingDischarge === true) {
+        filteredCases = filteredCases.filter((c) => !c.hasDischargeSummary);
+      }
+
+      // Apply missing SOAP filter
+      if (input.missingSoap === true) {
+        filteredCases = filteredCases.filter((c) => !c.hasSoapNote);
+      }
+
+      // Adjust pagination total based on filtered results
+      const filteredTotal = filteredCases.length;
+      const adjustedTotalPages = Math.ceil(filteredTotal / input.pageSize);
+
       return {
         cases: filteredCases,
         pagination: {
           page: input.page,
           pageSize: input.pageSize,
-          total: count ?? 0,
-          totalPages: Math.ceil((count ?? 0) / input.pageSize),
+          total: filteredTotal,
+          totalPages: adjustedTotalPages,
         },
       };
     }),
