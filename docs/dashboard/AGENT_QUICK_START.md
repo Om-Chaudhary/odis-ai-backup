@@ -33,6 +33,8 @@ git checkout -b feat/assignment-A[X]-[description]
 
 See [IMPLEMENTATION_ASSIGNMENTS.md](./IMPLEMENTATION_ASSIGNMENTS.md) for complete list.
 
+**📊 Progress Tracking:** Update [AGENT_PROGRESS_TRACKER.md](./AGENT_PROGRESS_TRACKER.md) when starting/completing assignments.
+
 ### Foundation Tasks (Do First)
 
 - **A10: Backend Metrics Queries** - Required for A2, A3
@@ -179,7 +181,7 @@ export function MyComponent({ ... }: Props) {
   - Related component/pattern docs if applicable
 - [ ] Check [IMPLEMENTATION_ASSIGNMENTS.md](./IMPLEMENTATION_ASSIGNMENTS.md) for dependencies
 - [ ] Verify dependencies are complete (if any)
-- [ ] Update assignment status in `IMPLEMENTATION_ASSIGNMENTS.md` to "🟡 In Progress"
+- [ ] **Update [AGENT_PROGRESS_TRACKER.md](./AGENT_PROGRESS_TRACKER.md)** - Mark assignment as "🟡 In Progress" with your agent ID and branch name
 
 ### During Implementation
 
@@ -200,7 +202,7 @@ export function MyComponent({ ... }: Props) {
 - [ ] Keyboard accessible
 - [ ] No console errors
 - [ ] Tested with real data
-- [ ] Updated assignment status in `IMPLEMENTATION_ASSIGNMENTS.md` to "✅ Complete"
+- [ ] **Updated [AGENT_PROGRESS_TRACKER.md](./AGENT_PROGRESS_TRACKER.md)** - Mark assignment as "✅ Complete" with PR link
 - [ ] Create PR targeting `feat/dashboard-optimization-implementation`
 
 ## 🐛 Common Issues

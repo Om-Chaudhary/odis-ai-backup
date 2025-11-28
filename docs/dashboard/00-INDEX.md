@@ -24,6 +24,11 @@
 - [Design Patterns](./04-PATTERNS/)
 - [Data Views](./06-DATA-VIEWS/)
 
+**Tracking Agent Progress?**
+
+- [Agent Progress Tracker](./AGENT_PROGRESS_TRACKER.md) - Real-time progress tracking
+- [Implementation Assignments](./IMPLEMENTATION_ASSIGNMENTS.md) - Assignment details
+
 ## 📁 Documentation Structure
 
 ```
