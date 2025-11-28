@@ -45,18 +45,29 @@ export function CasesNeedingAttentionCard({
       : 0;
 
   const handleViewDischarges = () => {
+    // TODO: Query parameter handling will be implemented in A6 (Quick Filters)
+    // Currently navigates to Cases tab, but filtering will be added in future assignment
     router.push("/dashboard?tab=cases&missingDischarge=true");
   };
 
   const handleViewSoap = () => {
+    // TODO: Query parameter handling will be implemented in A6 (Quick Filters)
+    // Currently navigates to Cases tab, but filtering will be added in future assignment
     router.push("/dashboard?tab=cases&missingSoap=true");
   };
 
   return (
-    <Card className="animate-card-in-delay-1 transition-smooth border-amber-200/40 bg-gradient-to-br from-amber-50/20 via-white/70 to-white/70 shadow-lg shadow-amber-500/5 backdrop-blur-md hover:scale-[1.01] hover:from-amber-50/25 hover:via-white/75 hover:to-white/75 hover:shadow-xl hover:shadow-amber-500/10">
+    <Card
+      className="animate-card-in-delay-1 transition-smooth border-amber-200/40 bg-gradient-to-br from-amber-50/20 via-white/70 to-white/70 shadow-lg shadow-amber-500/5 backdrop-blur-md hover:scale-[1.01] hover:from-amber-50/25 hover:via-white/75 hover:to-white/75 hover:shadow-xl hover:shadow-amber-500/10"
+      aria-label="Cases needing attention"
+      role="region"
+    >
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5 text-amber-600" />
+          <AlertTriangle
+            className="h-5 w-5 text-amber-600"
+            aria-hidden="true"
+          />
           Cases Needing Attention
         </CardTitle>
         <CardDescription>
@@ -120,15 +131,21 @@ export function CasesNeedingAttentionCard({
             variant="outline"
             className="transition-smooth flex-1 border-amber-500 text-amber-700 hover:scale-[1.01] hover:bg-amber-50 hover:shadow-sm"
             onClick={handleViewDischarges}
+            aria-label="View cases missing discharge summaries"
           >
-            View Cases Missing Discharges
+            <span className="hidden sm:inline">
+              View Cases Missing Discharges
+            </span>
+            <span className="sm:hidden">Missing Discharges</span>
           </Button>
           <Button
             variant="outline"
             className="transition-smooth flex-1 border-amber-500 text-amber-700 hover:scale-[1.01] hover:bg-amber-50 hover:shadow-sm"
             onClick={handleViewSoap}
+            aria-label="View cases missing SOAP notes"
           >
-            View Cases Missing SOAP
+            <span className="hidden sm:inline">View Cases Missing SOAP</span>
+            <span className="sm:hidden">Missing SOAP</span>
           </Button>
         </div>
       </CardContent>

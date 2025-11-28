@@ -11,6 +11,7 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
+  AlertCircle,
   type LucideIcon,
 } from "lucide-react";
 import { WeeklyActivityChart } from "./weekly-activity-chart";
@@ -21,12 +22,14 @@ import Link from "next/link";
 import { Button } from "~/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { useQueryState } from "nuqs";
+import { useRouter } from "next/navigation";
 import { DateFilterButtonGroup } from "./date-filter-button-group";
 import {
   getDateRangeFromPreset,
   type DateRangePreset,
 } from "~/lib/utils/date-ranges";
 import { CasesNeedingAttentionCard } from "./cases-needing-attention-card";
+import { cn } from "~/lib/utils";
 
 function StatCard({
   title,
@@ -34,12 +37,18 @@ function StatCard({
   subtitle,
   icon: Icon,
   trend,
+  variant = "default",
+  onClick,
+  valueSuffix,
 }: {
   title: string;
   value: string | number;
   subtitle?: string | ReactNode;
   icon: LucideIcon;
   trend?: "up" | "down" | "stable";
+  variant?: "default" | "warning" | "success";
+  onClick?: () => void;
+  valueSuffix?: string;
 }) {
   const TrendIcon =
     trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
@@ -50,8 +59,25 @@ function StatCard({
         ? "text-red-600"
         : "text-slate-400";
 
+  const variantStyles = {
+    default:
+      "border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-teal-500/5 hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-teal-500/10",
+    warning:
+      "border-amber-200/40 bg-gradient-to-br from-amber-50/20 via-white/70 to-white/70 shadow-amber-500/5 hover:from-amber-50/25 hover:via-white/75 hover:to-white/75 hover:shadow-amber-500/10",
+    success:
+      "border-emerald-200/40 bg-gradient-to-br from-emerald-50/20 via-white/70 to-white/70 shadow-emerald-500/5 hover:from-emerald-50/25 hover:via-white/75 hover:to-white/75 hover:shadow-emerald-500/10",
+  };
+
   return (
-    <Card className="transition-smooth rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
+    <Card
+      className={cn(
+        "transition-smooth rounded-xl border shadow-lg backdrop-blur-md",
+        variantStyles[variant],
+        onClick &&
+          "cursor-pointer hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-xl",
+      )}
+      onClick={onClick}
+    >
       <CardContent className="p-6">
         <div className="animate-card-content-in flex items-center justify-between">
           <div className="flex-1">
@@ -59,12 +85,15 @@ function StatCard({
             <div className="mt-2 flex items-baseline gap-2">
               <p className="text-3xl font-bold tracking-tight text-slate-900">
                 {typeof value === "number" ? (
-                  <NumberTicker value={value} delay={800} />
+                  <>
+                    <NumberTicker value={value} delay={800} />
+                    {valueSuffix}
+                  </>
                 ) : (
                   value
                 )}
               </p>
-              {trend && (
+              {trend && trend !== "stable" && (
                 <TrendIcon
                   className={`h-4 w-4 ${trendColor} transition-smooth`}
                 />
@@ -194,6 +223,8 @@ export function OverviewTab({
     endDate,
   });
 
+  const router = useRouter();
+
   const isLoading = statsLoading || activitiesLoading || weeklyLoading;
 
   if (isLoading) {
@@ -222,10 +253,17 @@ export function OverviewTab({
             title="Total Cases"
             value={stats?.total ?? 0}
             subtitle={
-              <span>
-                <NumberTicker value={stats?.thisWeek ?? 0} delay={1000} /> this
-                week
-              </span>
+              stats?.thisWeek ? (
+                <>
+                  <TrendingUp className="inline h-3 w-3 text-emerald-600" />
+                  <span className="ml-1">
+                    +<NumberTicker value={stats.thisWeek} delay={1000} /> this
+                    week
+                  </span>
+                </>
+              ) : (
+                "No change this week"
+              )
             }
             icon={FolderOpen}
             trend={stats?.thisWeek ? ("up" as const) : ("stable" as const)}
@@ -233,18 +271,31 @@ export function OverviewTab({
         </div>
         <div className="animate-card-in-delay-1">
           <StatCard
-            title="SOAP Notes"
-            value={stats?.soapNotes ?? 0}
-            subtitle="Generated"
-            icon={FileText}
+            title="Missing Discharges"
+            value={stats?.casesNeedingDischarge?.thisWeek ?? 0}
+            subtitle={`${stats?.casesNeedingDischarge?.total ?? 0} total`}
+            icon={AlertCircle}
+            variant="warning"
+            onClick={() => {
+              router.push("/dashboard?tab=cases&missingDischarge=true");
+            }}
           />
         </div>
         <div className="animate-card-in-delay-2">
           <StatCard
-            title="Discharge Summaries"
-            value={stats?.dischargeSummaries ?? 0}
-            subtitle="Created"
-            icon={FileCheck}
+            title="SOAP Coverage"
+            value={stats?.soapCoverage?.percentage ?? 0}
+            valueSuffix="%"
+            subtitle={`${stats?.casesNeedingSoap?.total ?? 0} cases need SOAP`}
+            icon={FileText}
+            variant={
+              (stats?.soapCoverage?.percentage ?? 0) >= 80
+                ? "success"
+                : "warning"
+            }
+            onClick={() => {
+              router.push("/dashboard?tab=cases&missingSoap=true");
+            }}
           />
         </div>
         <div className="animate-card-in-delay-3">
