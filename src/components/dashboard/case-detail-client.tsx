@@ -31,6 +31,7 @@ import { DischargeStatusBadge } from "./discharge-status-badge";
 import { SOAPNoteDisplay } from "./soap-note-display";
 import { CallAudioPlayer } from "./call-audio-player";
 import { SyncedTranscript } from "./synced-transcript";
+import { EmptyState } from "./empty-state";
 import type { DischargeSettings, TranscriptMessage } from "~/types/dashboard";
 import { cn, formatDuration } from "~/lib/utils";
 import { Badge } from "~/components/ui/badge";
@@ -552,20 +553,17 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
           </div>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed p-16 text-center">
-          <div className="bg-muted rounded-full p-4">
-            <Phone className="text-muted-foreground h-8 w-8" />
-          </div>
-          <h3 className="mt-4 text-lg font-semibold">No Calls Yet</h3>
-          <p className="text-muted-foreground mt-2 max-w-sm">
-            Start a discharge call to see live transcripts, audio recording, and
-            AI analysis here.
-          </p>
-          <Button className="mt-6" onClick={handleTriggerCall}>
-            <Play className="mr-2 h-4 w-4" />
-            Start First Call
-          </Button>
-        </div>
+        <EmptyState
+          icon={Phone}
+          title="No Calls Yet"
+          description="Start a discharge call to see live transcripts, audio recording, and AI analysis here."
+          action={
+            <Button onClick={handleTriggerCall}>
+              <Play className="mr-2 h-4 w-4" />
+              Start First Call
+            </Button>
+          }
+        />
       )}
     </div>
   );

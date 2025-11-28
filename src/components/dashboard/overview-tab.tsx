@@ -16,6 +16,7 @@ import {
 import { WeeklyActivityChart } from "./weekly-activity-chart";
 import { ActivityTimeline } from "./activity-timeline";
 import { OverviewTabSkeleton } from "./dashboard-skeleton";
+import { EmptyState } from "./empty-state";
 import { NumberTicker } from "~/components/ui/number-ticker";
 import Link from "next/link";
 import { Button } from "~/components/ui/button";
@@ -139,9 +140,13 @@ function RecentCasesList({
       </CardHeader>
       <CardContent className="animate-card-content-in">
         {cases.length === 0 ? (
-          <div className="py-8 text-center text-sm text-slate-500">
-            No cases yet
-          </div>
+          <EmptyState
+            icon={FolderOpen}
+            title="No cases yet"
+            description="Cases will appear here once they are created"
+            size="sm"
+            className="min-h-[200px]"
+          />
         ) : (
           <div className="space-y-3">
             {cases.map((c) => (

@@ -71,7 +71,7 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "animate-in fade-in-50 slide-in-from-bottom-4 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-gradient-to-br from-slate-50/50 via-white to-slate-50/30 text-center duration-500",
+        "animate-in fade-in-50 slide-in-from-bottom-4 flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200/60 bg-gradient-to-br from-white/40 via-white/30 to-white/20 text-center shadow-lg shadow-slate-200/20 backdrop-blur-md duration-500",
         currentSize.container,
         className,
       )}
@@ -84,19 +84,39 @@ export function EmptyState({
         )}
       >
         {/* Floating background circle */}
-        <div className="absolute inset-0 animate-[float_3s_ease-in-out_infinite] rounded-full bg-gradient-to-br from-teal-100/40 via-blue-100/30 to-purple-100/20 blur-xl" />
+        <div
+          className="absolute inset-0 rounded-full bg-gradient-to-br from-teal-100/40 via-blue-100/30 to-purple-100/20 blur-xl"
+          style={{
+            animation: "float 3s ease-in-out infinite",
+          }}
+        />
 
         {/* Icon container with bounce animation */}
-        <div className="relative z-10 flex animate-[bounce-gentle_2s_ease-in-out_infinite] items-center justify-center rounded-full bg-gradient-to-br from-white to-slate-50 p-4 shadow-lg ring-1 shadow-teal-500/10 ring-slate-200/50">
+        <div
+          className="relative z-10 flex items-center justify-center rounded-full bg-gradient-to-br from-white/80 via-white/60 to-white/40 p-4 shadow-lg ring-1 shadow-teal-500/10 ring-white/50 backdrop-blur-sm"
+          style={{
+            animation: "bounce-gentle 2s ease-in-out infinite",
+          }}
+        >
           <Icon className={cn("text-slate-400", currentSize.icon)} />
         </div>
 
         {/* Sparkle effect */}
         <div className="absolute -top-1 -right-1 z-20">
-          <div className="h-2 w-2 animate-[sparkle_2s_ease-in-out_infinite] rounded-full bg-teal-400/60" />
+          <div
+            className="h-2 w-2 rounded-full bg-teal-400/60"
+            style={{
+              animation: "sparkle 2s ease-in-out infinite",
+            }}
+          />
         </div>
         <div className="absolute -bottom-1 -left-1 z-20">
-          <div className="h-1.5 w-1.5 animate-[sparkle_2s_ease-in-out_infinite_0.5s] rounded-full bg-blue-400/60" />
+          <div
+            className="h-1.5 w-1.5 rounded-full bg-blue-400/60"
+            style={{
+              animation: "sparkle 2s ease-in-out infinite 0.5s",
+            }}
+          />
         </div>
       </div>
 

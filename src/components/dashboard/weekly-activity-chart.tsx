@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { BarChart3 } from "lucide-react";
+import { EmptyState } from "../dashboard/empty-state";
 import {
   BarChart,
   Bar,
@@ -49,10 +50,13 @@ export function WeeklyActivityChart({ data }: WeeklyActivityChartProps) {
       </CardHeader>
       <CardContent className="animate-card-content-in">
         {data.length === 0 ? (
-          <div className="py-8 text-center">
-            <BarChart3 className="mx-auto h-12 w-12 text-slate-300" />
-            <p className="mt-2 text-sm text-slate-500">No activity data</p>
-          </div>
+          <EmptyState
+            icon={BarChart3}
+            title="No activity data"
+            description="Activity data will appear here once cases and calls are recorded"
+            size="sm"
+            className="min-h-[200px]"
+          />
         ) : (
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={chartData}>

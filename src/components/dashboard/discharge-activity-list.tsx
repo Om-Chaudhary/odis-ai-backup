@@ -1,6 +1,7 @@
 import { format, formatDistanceToNow } from "date-fns";
 import { Phone, Mail, FileText, PlayCircle, Clock } from "lucide-react";
 import { DischargeStatusBadge } from "./discharge-status-badge";
+import { EmptyState } from "./empty-state";
 import { Button } from "~/components/ui/button";
 import type { DashboardCase } from "~/types/dashboard";
 import { cn } from "~/lib/utils";
@@ -46,17 +47,13 @@ export function DischargeActivityList({
 
   if (activities.length === 0) {
     return (
-      <div className="flex h-32 flex-col items-center justify-center space-y-2 rounded-md border border-dashed p-4 text-center">
-        <div className="bg-muted rounded-full p-2">
-          <Clock className="text-muted-foreground h-4 w-4" />
-        </div>
-        <div className="space-y-0.5">
-          <p className="text-sm font-medium">No discharge activity</p>
-          <p className="text-muted-foreground text-xs">
-            Start by calling or emailing the owner
-          </p>
-        </div>
-      </div>
+      <EmptyState
+        icon={Clock}
+        title="No discharge activity"
+        description="Start by calling or emailing the owner"
+        size="sm"
+        className="h-32"
+      />
     );
   }
 

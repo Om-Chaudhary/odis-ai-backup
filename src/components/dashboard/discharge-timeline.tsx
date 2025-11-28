@@ -3,6 +3,7 @@
 import { format } from "date-fns";
 import { Phone, Mail, Clock } from "lucide-react";
 import { DischargeStatusBadge } from "./discharge-status-badge";
+import { EmptyState } from "./empty-state";
 import type { DischargeTimeline as DischargeTimelineType } from "~/types/dashboard";
 
 interface DischargeTimelineProps {
@@ -12,9 +13,13 @@ interface DischargeTimelineProps {
 export function DischargeTimeline({ items }: DischargeTimelineProps) {
   if (items.length === 0) {
     return (
-      <div className="text-muted-foreground py-4 text-center text-sm">
-        No discharge communications scheduled yet
-      </div>
+      <EmptyState
+        icon={Clock}
+        title="No discharge communications scheduled yet"
+        description="Schedule calls or emails to see them appear here"
+        size="sm"
+        className="min-h-[150px]"
+      />
     );
   }
 
