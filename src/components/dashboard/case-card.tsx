@@ -34,6 +34,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import { ContactIndicator } from "~/components/dashboard/contact-indicator";
+import { DischargeStatusIndicator } from "~/components/dashboard/discharge-status-indicator";
 
 // --- Helper Functions ---
 
@@ -465,74 +467,121 @@ export function CaseCard({
           )}
         </div>
 
-        {/* Activity Summary */}
-        <div className="mb-4 min-h-[2.5rem] text-sm">
-          {latestActivity ? (
-            <div className="flex items-start gap-3">
-              <div
-                className={cn(
-                  "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
-                  latestActivity.status === "completed" ||
-                    latestActivity.status === "sent"
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-600"
-                    : latestActivity.status === "failed"
-                      ? "border-red-200 bg-red-50 text-red-600"
-                      : "border-slate-200 bg-slate-100 text-slate-500",
-                )}
-              >
-                {latestActivity.type === "call" ? (
-                  <Phone className="h-3 w-3" />
-                ) : (
-                  <Mail className="h-3 w-3" />
-                )}
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <span className="font-medium text-slate-900">
-                  {latestActivity.status === "completed" && "Call Completed"}
-                  {latestActivity.status === "sent" && "Email Sent"}
-                  {latestActivity.status === "failed" && "Attempt Failed"}
-                  {(latestActivity.status === "ringing" ||
-                    latestActivity.status === "in_progress") &&
-                    "Call in Progress"}
-                  {latestActivity.status === "queued" && "Queued"}
-                </span>
-                <span className="text-xs text-slate-500">
-                  {formatDistanceToNow(latestActivity.date, {
-                    addSuffix: true,
-                  })}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 text-slate-400 italic">
-              <AlertCircle className="h-4 w-4" />
-              <span>No discharge activity yet</span>
-            </div>
-          )}
+        {/* Contact Information Section */}
+        <div className="mb-4 space-y-2">
+          <h4 className="text-xs font-medium tracking-wider text-slate-500 uppercase">
+            Contact Information
+          </h4>
+          <ContactIndicator
+            type="phone"
+            value={effectivePhone ?? undefined}
+            isValid={hasValidContact(effectivePhone)}
+            testMode={testModeEnabled}
+          />
+          <ContactIndicator
+            type="email"
+            value={effectiveEmail ?? undefined}
+            isValid={hasValidContact(effectiveEmail)}
+            testMode={testModeEnabled}
+          />
         </div>
+
+        {/* Discharge Status Section */}
+        <div className="mb-4 space-y-2">
+          <h4 className="text-xs font-medium tracking-wider text-slate-500 uppercase">
+            Discharge Status
+          </h4>
+          <DischargeStatusIndicator
+            type="call"
+            calls={caseData.scheduled_discharge_calls}
+            testMode={testModeEnabled}
+          />
+          <DischargeStatusIndicator
+            type="email"
+            emails={caseData.scheduled_discharge_emails}
+            testMode={testModeEnabled}
+          />
+        </div>
+
+        {/* Last Activity */}
+        {latestActivity && (
+          <div className="mb-4 text-xs text-slate-500">
+            Last activity:{" "}
+            {formatDistanceToNow(latestActivity.date, {
+              addSuffix: true,
+            })}
+          </div>
+        )}
+
+        {/* Error Display - Show warnings for missing contacts */}
+        {(!hasValidContact(effectivePhone) ||
+          !hasValidContact(effectiveEmail)) && (
+          <div
+            className={cn(
+              "mb-4 rounded-lg border p-3 text-sm",
+              !hasValidContact(effectivePhone) &&
+                !hasValidContact(effectiveEmail)
+                ? "border-red-200 bg-red-50/50 text-red-700"
+                : "border-amber-200 bg-amber-50/50 text-amber-700",
+            )}
+          >
+            <div className="flex items-start gap-2">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="flex-1">
+                {!hasValidContact(effectivePhone) &&
+                  !hasValidContact(effectiveEmail) && (
+                    <span>Phone and email required for discharge</span>
+                  )}
+                {!hasValidContact(effectivePhone) &&
+                  hasValidContact(effectiveEmail) && (
+                    <span>Phone number required for discharge call</span>
+                  )}
+                {hasValidContact(effectivePhone) &&
+                  !hasValidContact(effectiveEmail) && (
+                    <span>Email address required for discharge email</span>
+                  )}
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
 
       <CardFooter className="border-t border-slate-100 bg-slate-50/50 p-3 pl-5">
-        <div className="grid w-full grid-cols-[1fr_auto] gap-2">
-          {renderPrimaryAction()}
+        <div className="flex w-full flex-col gap-2">
+          <div className="grid w-full grid-cols-[1fr_auto] gap-2">
+            {renderPrimaryAction()}
 
-          {/* Secondary Actions (Email) */}
-          {workflowStatus !== "in_progress" && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="transition-smooth shrink-0 text-slate-400 hover:bg-[#31aba3]/5 hover:text-[#31aba3]"
-              onClick={() => onTriggerEmail(caseData.id)}
-              disabled={isLoadingEmail || !hasValidContact(effectiveEmail)}
-              title="Send Discharge Email"
-            >
-              {isLoadingEmail ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Mail className="h-4 w-4" />
-              )}
-            </Button>
-          )}
+            {/* Secondary Actions (Email) */}
+            {workflowStatus !== "in_progress" && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="transition-smooth shrink-0 text-slate-400 hover:bg-[#31aba3]/5 hover:text-[#31aba3]"
+                onClick={() => onTriggerEmail(caseData.id)}
+                disabled={isLoadingEmail || !hasValidContact(effectiveEmail)}
+                title="Send Discharge Email"
+              >
+                {isLoadingEmail ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Mail className="h-4 w-4" />
+                )}
+              </Button>
+            )}
+          </div>
+
+          {/* View Details Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="transition-smooth w-full justify-start gap-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            asChild
+          >
+            <Link href={`/dashboard/cases/${caseData.id}`}>
+              <Eye className="h-4 w-4" />
+              View Details
+            </Link>
+          </Button>
         </div>
       </CardFooter>
     </Card>
