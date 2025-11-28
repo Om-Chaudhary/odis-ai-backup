@@ -34,47 +34,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import {
+  isPlaceholder,
+  hasValidContact,
+  getEffectiveContact,
+} from "~/lib/utils/dashboard-helpers";
 import { ContactIndicator } from "~/components/dashboard/contact-indicator";
 import { DischargeStatusIndicator } from "~/components/dashboard/discharge-status-indicator";
-
-// --- Helper Functions ---
-
-/**
- * Check if a value is a placeholder (missing data indicator)
- */
-function isPlaceholder(value: string): boolean {
-  const placeholders = [
-    "Unknown Patient",
-    "Unknown Species",
-    "Unknown Breed",
-    "Unknown Owner",
-    "No email address",
-    "No phone number",
-  ];
-  return placeholders.includes(value);
-}
-
-/**
- * Check if a contact value is valid (not a placeholder and not empty)
- */
-function hasValidContact(value: string | undefined | null): boolean {
-  if (!value) return false;
-  return !isPlaceholder(value) && value.trim().length > 0;
-}
-
-/**
- * Get the effective contact value - use test contact if test mode is enabled, otherwise use patient contact
- */
-function getEffectiveContact(
-  patientValue: string | undefined | null,
-  testValue: string | undefined | null,
-  testModeEnabled: boolean,
-): string | undefined | null {
-  if (testModeEnabled && hasValidContact(testValue)) {
-    return testValue ?? null;
-  }
-  return patientValue ?? null;
-}
 
 type WorkflowStatus = "completed" | "in_progress" | "failed" | "ready";
 
@@ -235,6 +201,13 @@ export function CaseCard({
 
   const latestActivity = allActivities[0];
 
+  // Check if there are any scheduled calls or emails
+  const hasDischargeActivity =
+    (caseData.scheduled_discharge_calls &&
+      caseData.scheduled_discharge_calls.length > 0) ||
+    (caseData.scheduled_discharge_emails &&
+      caseData.scheduled_discharge_emails.length > 0);
+
   // --- Action Button Logic ---
   const renderPrimaryAction = () => {
     if (workflowStatus === "in_progress") {
@@ -299,7 +272,7 @@ export function CaseCard({
     <Card className="group transition-smooth relative overflow-hidden rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md hover:scale-[1.02] hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
       <CardContent className="p-5">
         {/* Header Section */}
-        <div className="mb-4 flex items-start justify-between">
+        <div className="mb-3 flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div
               className={cn(
@@ -376,7 +349,7 @@ export function CaseCard({
         </div>
 
         {/* Owner & Contact Section */}
-        <div className="-mx-2 mb-4 rounded-lg bg-slate-50 p-3">
+        <div className="-mx-2 mb-3 rounded-lg bg-slate-50 p-3">
           {!isEditing ? (
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
@@ -454,7 +427,9 @@ export function CaseCard({
         </div>
 
         {/* Contact Information Section */}
-        <div className="mb-4 space-y-2">
+        <div
+          className={cn("space-y-2", hasDischargeActivity ? "mb-4" : "mb-3")}
+        >
           <h4 className="text-xs font-medium tracking-wider text-slate-500 uppercase">
             Contact Information
           </h4>
@@ -472,26 +447,28 @@ export function CaseCard({
           />
         </div>
 
-        {/* Discharge Status Section */}
-        <div className="mb-4 space-y-2">
-          <h4 className="text-xs font-medium tracking-wider text-slate-500 uppercase">
-            Discharge Status
-          </h4>
-          <DischargeStatusIndicator
-            type="call"
-            calls={caseData.scheduled_discharge_calls}
-            testMode={testModeEnabled}
-          />
-          <DischargeStatusIndicator
-            type="email"
-            emails={caseData.scheduled_discharge_emails}
-            testMode={testModeEnabled}
-          />
-        </div>
+        {/* Discharge Status Section - Only show if there are calls or emails */}
+        {hasDischargeActivity && (
+          <div className="mb-3 space-y-2">
+            <h4 className="text-xs font-medium tracking-wider text-slate-500 uppercase">
+              Discharge Status
+            </h4>
+            <DischargeStatusIndicator
+              type="call"
+              calls={caseData.scheduled_discharge_calls}
+              testMode={testModeEnabled}
+            />
+            <DischargeStatusIndicator
+              type="email"
+              emails={caseData.scheduled_discharge_emails}
+              testMode={testModeEnabled}
+            />
+          </div>
+        )}
 
         {/* Last Activity */}
         {latestActivity && (
-          <div className="mb-4 text-xs text-slate-500">
+          <div className="mb-3 text-xs text-slate-500">
             Last activity:{" "}
             {formatDistanceToNow(latestActivity.date, {
               addSuffix: true,
@@ -504,7 +481,7 @@ export function CaseCard({
           !hasValidContact(effectiveEmail)) && (
           <div
             className={cn(
-              "mb-4 rounded-lg border p-3 text-sm",
+              "mb-3 rounded-lg border p-2.5 text-sm",
               !hasValidContact(effectivePhone) &&
                 !hasValidContact(effectiveEmail)
                 ? "border-red-200 bg-red-50/50 text-red-700"

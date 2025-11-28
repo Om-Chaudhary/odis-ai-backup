@@ -23,50 +23,35 @@ import type {
   DischargeSettings,
 } from "~/types/dashboard";
 import { cn } from "~/lib/utils";
+import {
+  isPlaceholder,
+  hasValidContact,
+  getEffectiveContact,
+} from "~/lib/utils/dashboard-helpers";
 import { ContactIndicator } from "./contact-indicator";
 import { DischargeStatusIndicator } from "./discharge-status-indicator";
 
-// --- Helper Functions ---
-
 /**
- * Check if a value is a placeholder (missing data indicator)
+ * Workflow status for a discharge case
+ * - ready: Case has valid contact info and no discharge initiated
+ * - in_progress: Discharge call/email is currently queued, ringing, or in progress
+ * - completed: Discharge call completed or email sent, or case marked as completed
+ * - failed: Discharge call or email failed
  */
-function isPlaceholder(value: string): boolean {
-  const placeholders = [
-    "Unknown Patient",
-    "Unknown Species",
-    "Unknown Breed",
-    "Unknown Owner",
-    "No email address",
-    "No phone number",
-  ];
-  return placeholders.includes(value);
-}
-
-/**
- * Check if a contact value is valid (not a placeholder and not empty)
- */
-function hasValidContact(value: string | undefined | null): boolean {
-  if (!value) return false;
-  return !isPlaceholder(value) && value.trim().length > 0;
-}
-
-/**
- * Get the effective contact value - use test contact if test mode is enabled, otherwise use patient contact
- */
-function getEffectiveContact(
-  patientValue: string | undefined | null,
-  testValue: string | undefined | null,
-  testModeEnabled: boolean,
-): string | undefined | null {
-  if (testModeEnabled && hasValidContact(testValue)) {
-    return testValue ?? null;
-  }
-  return patientValue ?? null;
-}
-
 type WorkflowStatus = "completed" | "in_progress" | "failed" | "ready";
 
+/**
+ * Determines the current workflow status of a case based on its discharge state
+ *
+ * Priority order:
+ * 1. in_progress - if any call/email is active
+ * 2. completed - if case is completed or has successful discharge
+ * 3. failed - if any discharge attempt failed
+ * 4. ready - default state when case is ready for discharge
+ *
+ * @param caseData - The case data to evaluate
+ * @returns The current workflow status
+ */
 function getCaseWorkflowStatus(caseData: DashboardCase): WorkflowStatus {
   // Check for in-progress calls/emails
   const hasActiveCall = caseData.scheduled_discharge_calls.some((c) =>
@@ -101,6 +86,12 @@ function getCaseWorkflowStatus(caseData: DashboardCase): WorkflowStatus {
   return "ready";
 }
 
+/**
+ * Returns the Tailwind CSS background color class for a workflow status
+ *
+ * @param status - The workflow status
+ * @returns Tailwind CSS class for the status color
+ */
 function getStatusColor(status: WorkflowStatus) {
   switch (status) {
     case "completed":
@@ -116,20 +107,56 @@ function getStatusColor(status: WorkflowStatus) {
 }
 
 interface DischargeListItemProps {
+  /** The case data to display */
   caseData: DashboardCase;
+  /** Discharge settings (optional, currently unused but kept for compatibility) */
   settings?: DischargeSettings;
+  /** Callback to trigger a discharge call for this case */
   onTriggerCall: (id: string) => void;
+  /** Callback to trigger a discharge email for this case */
   onTriggerEmail: (id: string) => void;
+  /** Callback to update patient information */
   onUpdatePatient: (patientId: string, data: PatientUpdateInput) => void;
+  /** Whether test mode is enabled (uses test contacts instead of patient contacts) */
   testModeEnabled?: boolean;
+  /** Test contact name (used when test mode is enabled) */
   testContactName?: string;
+  /** Test contact email (used when test mode is enabled) */
   testContactEmail?: string;
+  /** Test contact phone (used when test mode is enabled) */
   testContactPhone?: string;
+  /** Whether a call is currently being triggered for this case */
   isLoadingCall?: boolean;
+  /** Whether an email is currently being sent for this case */
   isLoadingEmail?: boolean;
+  /** Whether patient information is currently being updated */
   isLoadingUpdate?: boolean;
 }
 
+/**
+ * DischargeListItem - Individual case item in the discharge management list
+ *
+ * Displays a compact card view of a case with:
+ * - Patient and owner information (editable inline)
+ * - Contact indicators (phone/email) with validation
+ * - Discharge status indicators (call/email status)
+ * - Action buttons (Call, Email, View) based on workflow status
+ * - Warning messages for missing contact information
+ *
+ * Supports test mode where test contacts override patient contacts for discharge operations.
+ * Provides inline editing of owner information with save/cancel functionality.
+ *
+ * @example
+ * ```tsx
+ * <DischargeListItem
+ *   caseData={case}
+ *   onTriggerCall={(id) => handleCall(id)}
+ *   onTriggerEmail={(id) => handleEmail(id)}
+ *   onUpdatePatient={(patientId, data) => updatePatient(patientId, data)}
+ *   testModeEnabled={false}
+ * />
+ * ```
+ */
 export function DischargeListItem({
   caseData,
   settings: _settings,

@@ -32,6 +32,10 @@ import { CallAudioPlayer } from "./call-audio-player";
 import { SyncedTranscript } from "./synced-transcript";
 import type { DischargeSettings, TranscriptMessage } from "~/types/dashboard";
 import { cn, formatDuration } from "~/lib/utils";
+import {
+  isPlaceholder,
+  getEffectiveContact,
+} from "~/lib/utils/dashboard-helpers";
 import { Badge } from "~/components/ui/badge";
 import {
   Accordion,
@@ -42,36 +46,6 @@ import {
 
 interface CaseDetailClientProps {
   caseId: string;
-}
-
-/**
- * Check if a value is a placeholder
- */
-function isPlaceholder(value: string | undefined | null): boolean {
-  if (!value) return false;
-  const placeholders = [
-    "Unknown Patient",
-    "Unknown Species",
-    "Unknown Breed",
-    "Unknown Owner",
-    "No email address",
-    "No phone number",
-  ];
-  return placeholders.includes(value);
-}
-
-/**
- * Get effective contact value
- */
-function getEffectiveContact(
-  patientValue: string | undefined | null,
-  testValue: string | undefined | null,
-  testModeEnabled: boolean,
-): string | undefined | null {
-  if (testModeEnabled && testValue && testValue.trim().length > 0) {
-    return testValue;
-  }
-  return patientValue;
 }
 
 export function CaseDetailClient({ caseId }: CaseDetailClientProps) {

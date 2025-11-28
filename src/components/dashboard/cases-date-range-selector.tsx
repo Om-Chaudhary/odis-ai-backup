@@ -11,6 +11,9 @@ import { cn } from "~/lib/utils";
 import type { DateRangePreset } from "~/lib/utils/date-ranges";
 import { getDateRangeFromPreset } from "~/lib/utils/date-ranges";
 
+/**
+ * Available date range preset options for the selector
+ */
 const DATE_RANGE_OPTIONS: Array<{ value: DateRangePreset; label: string }> = [
   { value: "all", label: "All Time" },
   { value: "1d", label: "Last Day" },
@@ -19,11 +22,28 @@ const DATE_RANGE_OPTIONS: Array<{ value: DateRangePreset; label: string }> = [
 ];
 
 interface CasesDateRangeSelectorProps {
+  /** Currently selected date range preset, or null if none selected */
   selectedPreset: DateRangePreset | null;
+  /** Callback when a preset is selected */
   onPresetSelect: (preset: DateRangePreset) => void;
+  /** Optional additional CSS classes */
   className?: string;
 }
 
+/**
+ * CasesDateRangeSelector - Date range preset selector for cases filtering
+ *
+ * Provides a dropdown interface for selecting common date range presets
+ * (All Time, Last Day, 3D, 30D) to filter cases by creation date.
+ *
+ * @example
+ * ```tsx
+ * <CasesDateRangeSelector
+ *   selectedPreset="30d"
+ *   onPresetSelect={(preset) => setDateRange(preset)}
+ * />
+ * ```
+ */
 export function CasesDateRangeSelector({
   selectedPreset,
   onPresetSelect,
@@ -79,8 +99,19 @@ export function CasesDateRangeSelector({
 }
 
 /**
- * Helper function to apply a date range preset to a date navigator
- * Returns the date that should be set based on the preset
+ * Helper function to convert a date range preset to a specific date
+ *
+ * When a preset is selected, this function returns the end date (most recent date)
+ * of that range, which can be used to set the date navigator. Returns null for
+ * "all" preset to indicate no date restriction.
+ *
+ * @param preset - The date range preset to convert
+ * @returns The end date of the range, or null for "all" preset
+ *
+ * @example
+ * ```tsx
+ * const date = getDateFromPreset("30d"); // Returns date 30 days ago
+ * ```
  */
 export function getDateFromPreset(preset: DateRangePreset): Date | null {
   if (preset === "all") {

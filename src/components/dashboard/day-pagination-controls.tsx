@@ -8,6 +8,8 @@ import {
   isToday,
   isYesterday,
   isTomorrow,
+  startOfDay,
+  endOfDay,
 } from "date-fns";
 import {
   Tooltip,
@@ -22,9 +24,11 @@ interface DayPaginationControlsProps {
   /** Callback when date changes */
   onDateChange: (date: Date) => void;
   /** Total number of items for the current date */
-  totalItems: number;
+  totalItems?: number;
   /** Whether data is currently loading */
   isLoading?: boolean;
+  /** Optional additional CSS classes */
+  className?: string;
 }
 
 /**
@@ -53,6 +57,7 @@ export function DayPaginationControls({
   onDateChange,
   totalItems,
   isLoading = false,
+  className,
 }: DayPaginationControlsProps) {
   // Use ref to avoid including onDateChange in useEffect dependencies
   // This prevents unnecessary re-registration of event listeners
@@ -130,7 +135,7 @@ export function DayPaginationControls({
 
   return (
     <TooltipProvider>
-      <div className="w-full py-2">
+      <div className={className ?? "w-full py-2"}>
         <div
           className={`flex w-full items-center justify-between ${GLASSMORPHISM_CLASSES}`}
         >
@@ -167,14 +172,18 @@ export function DayPaginationControls({
                   </span>
                 ) : (
                   <>
-                    <span className="text-muted-foreground text-[10px]">
-                      {totalItems} {totalItems === 1 ? "case" : "cases"}
-                    </span>
+                    {totalItems !== undefined && (
+                      <span className="text-muted-foreground text-[10px]">
+                        {totalItems} {totalItems === 1 ? "case" : "cases"}
+                      </span>
+                    )}
                     {!isToday(currentDate) && (
                       <>
-                        <span className="text-muted-foreground/50 text-[10px]">
-                          •
-                        </span>
+                        {totalItems !== undefined && (
+                          <span className="text-muted-foreground/50 text-[10px]">
+                            •
+                          </span>
+                        )}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <button
@@ -219,4 +228,25 @@ export function DayPaginationControls({
       </div>
     </TooltipProvider>
   );
+}
+
+/**
+ * Helper function to get start and end of day for a given date
+ *
+ * @param date - The date to get the day range for
+ * @returns Object with startDate and endDate for the given day
+ *
+ * @example
+ * ```tsx
+ * const { startDate, endDate } = getDayDateRange(new Date());
+ * ```
+ */
+export function getDayDateRange(date: Date): {
+  startDate: Date;
+  endDate: Date;
+} {
+  return {
+    startDate: startOfDay(date),
+    endDate: endOfDay(date),
+  };
 }

@@ -16,6 +16,10 @@ import type {
   PatientUpdateInput,
 } from "~/types/dashboard";
 import { transformBackendCasesToDashboardCases } from "~/lib/transforms/case-transforms";
+import {
+  normalizePlaceholder,
+  hasValidContact,
+} from "~/lib/utils/dashboard-helpers";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -28,34 +32,31 @@ interface LoadingState {
 }
 
 /**
- * Check if a value is a placeholder (missing data indicator) and convert to undefined
- */
-function normalizePlaceholder(
-  value: string | undefined | null,
-): string | undefined {
-  if (!value) return undefined;
-  const placeholders = [
-    "Unknown Patient",
-    "Unknown Species",
-    "Unknown Breed",
-    "Unknown Owner",
-    "No email address",
-    "No phone number",
-  ];
-  return placeholders.includes(value) ? undefined : value;
-}
-
-/**
- * DischargeManagementClient - Combined discharge management interface
+ * DischargeManagementClient - Main discharge management interface
  *
- * Merges functionality from DischargesTab and CasesDashboardClient:
- * - Status summary bar with filtering
- * - Date range presets
- * - Day pagination
- * - Search functionality
- * - Status filtering (ready/pending/completed/failed)
- * - New Case button
- * - All discharge trigger functionality
+ * Comprehensive component that merges functionality from DischargesTab and
+ * CasesDashboardClient to provide a unified discharge management experience.
+ *
+ * Features:
+ * - Day-by-day date navigation with keyboard shortcuts
+ * - Date range preset filtering (All Time, Last Day, 3D, 30D)
+ * - Status filtering (All, Ready, Pending, Completed, Failed)
+ * - Search by patient or owner name
+ * - Discharge call/email triggering
+ * - Inline patient information editing
+ * - Test mode support for safe testing
+ * - Real-time status updates
+ *
+ * The component handles all discharge-related operations including:
+ * - Triggering discharge calls via VAPI
+ * - Sending discharge emails
+ * - Updating patient contact information
+ * - Managing loading states and preventing duplicate actions
+ *
+ * @example
+ * ```tsx
+ * <DischargeManagementClient />
+ * ```
  */
 export function DischargeManagementClient() {
   const router = useRouter();
@@ -139,12 +140,6 @@ export function DischargeManagementClient() {
     testContactPhone: "",
     voicemailDetectionEnabled: false,
   };
-
-  // Helper to check if a value is a valid (non-placeholder) contact
-  function hasValidContact(value: string | undefined | null): value is string {
-    const normalized = normalizePlaceholder(value);
-    return normalized !== undefined && normalized.trim().length > 0;
-  }
 
   // Handlers
   const handleTriggerCall = async (caseId: string, patientId: string) => {

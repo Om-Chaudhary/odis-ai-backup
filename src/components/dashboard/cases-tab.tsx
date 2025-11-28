@@ -9,7 +9,10 @@ import { CaseListItemCompact } from "./case-list-item-compact";
 import { EmptyState } from "./empty-state";
 import { useQueryState } from "nuqs";
 import { CasesFilterBar } from "./cases-filter-bar";
-import { CasesDateNavigator, getDayDateRange } from "./cases-date-navigator";
+import {
+  DayPaginationControls,
+  getDayDateRange,
+} from "./day-pagination-controls";
 import { getDateFromPreset } from "./cases-date-range-selector";
 import type { QuickFilterId } from "./quick-filters";
 import type { DateRangePreset } from "~/lib/utils/date-ranges";
@@ -186,7 +189,7 @@ export function CasesTab({
 
       {/* Date Navigator */}
       <div className="animate-card-in-delay-1">
-        <CasesDateNavigator
+        <DayPaginationControls
           currentDate={currentDate}
           onDateChange={(date) => {
             void setDateStr(format(startOfDay(date), "yyyy-MM-dd"));
@@ -194,6 +197,7 @@ export function CasesTab({
             setPage(1);
           }}
           isLoading={isLoading}
+          className="w-full"
         />
       </div>
 

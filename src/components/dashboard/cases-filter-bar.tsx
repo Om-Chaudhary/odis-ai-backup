@@ -60,30 +60,65 @@ const SOURCE_OPTIONS: Array<{
 ];
 
 interface CasesFilterBarProps {
-  // Search
+  /** Current search query string */
   search: string;
+  /** Callback when search query changes */
   onSearchChange: (value: string) => void;
 
-  // Quick Filters (only Missing Discharge and Missing SOAP)
+  /** Set of active quick filter IDs (only Missing Discharge and Missing SOAP) */
   quickFilters: Set<QuickFilterId>;
+  /** Callback when quick filters change */
   onQuickFiltersChange: (filters: Set<QuickFilterId>) => void;
 
-  // Status
+  /** Current status filter value */
   statusFilter: string;
+  /** Callback when status filter changes */
   onStatusFilterChange: (value: string) => void;
 
-  // Source
+  /** Current source filter value */
   sourceFilter: string;
+  /** Callback when source filter changes */
   onSourceFilterChange: (value: string) => void;
 
-  // Date Range Preset
+  /** Current date range preset, or null if none selected */
   dateRangePreset: DateRangePreset | null;
+  /** Callback when date range preset changes */
   onDateRangePresetChange: (preset: DateRangePreset | null) => void;
 
-  // Clear all filters
+  /** Callback to clear all active filters */
   onClearFilters: () => void;
 }
 
+/**
+ * CasesFilterBar - Comprehensive filter interface for the cases tab
+ *
+ * Provides a collapsible filter panel with:
+ * - Search input for patient/owner names
+ * - Date range preset selector
+ * - Status filter dropdown (Draft, Ongoing, Completed, Reviewed)
+ * - Source filter dropdown (Manual, IDEXX Neo, Cornerstone, etc.)
+ * - Quick filter checkboxes (Missing Discharge, Missing SOAP)
+ *
+ * The filter panel shows an active filter count badge and provides a "Clear All"
+ * button when filters are active.
+ *
+ * @example
+ * ```tsx
+ * <CasesFilterBar
+ *   search={searchQuery}
+ *   onSearchChange={setSearchQuery}
+ *   quickFilters={activeQuickFilters}
+ *   onQuickFiltersChange={setQuickFilters}
+ *   statusFilter={status}
+ *   onStatusFilterChange={setStatus}
+ *   sourceFilter={source}
+ *   onSourceFilterChange={setSource}
+ *   dateRangePreset={dateRange}
+ *   onDateRangePresetChange={setDateRange}
+ *   onClearFilters={handleClearFilters}
+ * />
+ * ```
+ */
 export function CasesFilterBar({
   search,
   onSearchChange,
