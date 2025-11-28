@@ -83,7 +83,7 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
                 )}
               </Button>
             </CollapsibleTrigger>
-            <CollapsibleContent>
+            <CollapsibleContent className="mt-4">
               <div className="space-y-0">
                 {remainingItems.map((activity, index) => (
                   <ActivityItemComponent
