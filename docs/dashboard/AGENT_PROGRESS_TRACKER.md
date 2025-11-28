@@ -45,10 +45,10 @@
 
 ### Phase 1: Foundation (Priority)
 
-- [ ] **A10: Backend Metrics Queries** - Required for A2, A3, A6
+- [x] **A10: Backend Metrics Queries** - Required for A2, A3, A6
 - [ ] **A1: Date Filter Button Group** - Required for A5
 
-**Status:** 0/2 complete
+**Status:** 1/2 complete
 
 ### Phase 2: Overview Tab
 
@@ -150,7 +150,7 @@ A9 (Discharges Cards) ──> [🔄 Ready]
 
 ### Ready to Start (No Dependencies)
 
-- **A10** - Backend Metrics Queries ⚠️ **HIGH PRIORITY** (blocks A2, A3, A6)
+- ~~**A10** - Backend Metrics Queries~~ ✅ **COMPLETE**
 - **A1** - Date Filter Button Group ⚠️ **HIGH PRIORITY** (blocks A5)
 - **A4** - Collapsible Activity Timeline
 - **A7** - Enhanced Case Cards
@@ -159,10 +159,10 @@ A9 (Discharges Cards) ──> [🔄 Ready]
 
 ### Waiting on Dependencies
 
-- **A2** - Waiting on A10
-- **A3** - Waiting on A10
+- **A2** - ~~Waiting on A10~~ ✅ A10 complete, ready to start
+- **A3** - ~~Waiting on A10~~ ✅ A10 complete, ready to start
 - **A5** - Waiting on A1
-- **A6** - Waiting on A5 and A10
+- **A6** - Waiting on A5 (A10 complete)
 
 ---
 
@@ -170,7 +170,7 @@ A9 (Discharges Cards) ──> [🔄 Ready]
 
 ### By Priority
 
-- **High Priority:** 0/5 complete
+- **High Priority:** 1/5 complete
 - **Medium Priority:** 0/5 complete
 
 ### By Tab
