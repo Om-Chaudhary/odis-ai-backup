@@ -6,14 +6,16 @@ import { Button } from "~/components/ui/button";
 import { LayoutGrid, List } from "lucide-react";
 import { CaseListCard } from "./case-list-card";
 import { CaseListItemCompact } from "./case-list-item-compact";
+import { EmptyState } from "./empty-state";
 import { useQueryState } from "nuqs";
 import { CasesFilterBar } from "./cases-filter-bar";
+import { CasesDateNavigator, getDayDateRange } from "./cases-date-navigator";
+import { getDateFromPreset } from "./cases-date-range-selector";
 import type { QuickFilterId } from "./quick-filters";
-import {
-  getDateRangeFromPreset,
-  type DateRangePreset,
-} from "~/lib/utils/date-ranges";
+import type { DateRangePreset } from "~/lib/utils/date-ranges";
+import { getDateRangeFromPreset } from "~/lib/utils/date-ranges";
 import type { CaseStatus } from "~/types/dashboard";
+import { format, parseISO, startOfDay } from "date-fns";
 
 type ViewMode = "grid" | "list";
 const VIEW_STORAGE_KEY = "cases-view-mode";
@@ -38,9 +40,33 @@ export function CasesTab({
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
-  const [dateRange, setDateRange] = useQueryState("dateRange", {
-    defaultValue: "all",
+  // Date navigation - use date query param or default to today
+  const [dateStr, setDateStr] = useQueryState("date", {
+    defaultValue: format(startOfDay(new Date()), "yyyy-MM-dd"),
   });
+
+  // Date range preset for quick jumps
+  const [dateRangePreset, setDateRangePreset] = useQueryState("dateRange", {
+    parse: (value): DateRangePreset | null => {
+      const validPresets: DateRangePreset[] = ["all", "1d", "3d", "30d"];
+      return validPresets.includes(value as DateRangePreset)
+        ? (value as DateRangePreset)
+        : null;
+    },
+    serialize: (value) => value ?? "",
+  });
+
+  // Current date from query param or today
+  const currentDate = useMemo(() => {
+    if (dateStr) {
+      try {
+        return parseISO(dateStr);
+      } catch {
+        return startOfDay(new Date());
+      }
+    }
+    return startOfDay(new Date());
+  }, [dateStr]);
 
   const [statusFilter, setStatusFilter] = useQueryState("status", {
     defaultValue: "all",
@@ -74,11 +100,18 @@ export function CasesTab({
     );
   }, [quickFiltersStr]);
 
-  // Calculate date range from dateRange preset (date-based quick filters removed)
+  // Calculate date range based on current date or preset
   const { startDate: calculatedStartDate, endDate: calculatedEndDate } =
     useMemo(() => {
-      return getDateRangeFromPreset((dateRange as DateRangePreset) ?? "all");
-    }, [dateRange]);
+      // If a date range preset is selected, use that
+      if (dateRangePreset && dateRangePreset !== "all") {
+        return getDateRangeFromPreset(dateRangePreset);
+      }
+
+      // Otherwise, use the current selected date (single day)
+      const { startDate, endDate } = getDayDateRange(currentDate);
+      return { startDate, endDate };
+    }, [dateRangePreset, currentDate]);
 
   // Convert dates to ISO strings for API calls
   const startDate = calculatedStartDate?.toISOString() ?? null;
@@ -151,8 +184,21 @@ export function CasesTab({
         </div>
       </div>
 
-      {/* Unified Filter Bar */}
+      {/* Date Navigator */}
       <div className="animate-card-in-delay-1">
+        <CasesDateNavigator
+          currentDate={currentDate}
+          onDateChange={(date) => {
+            void setDateStr(format(startOfDay(date), "yyyy-MM-dd"));
+            void setDateRangePreset(null); // Clear preset when manually navigating
+            setPage(1);
+          }}
+          isLoading={isLoading}
+        />
+      </div>
+
+      {/* Unified Filter Bar */}
+      <div className="animate-card-in-delay-1 flex flex-col gap-3">
         <CasesFilterBar
           search={search}
           onSearchChange={(value) => {
@@ -166,11 +212,6 @@ export function CasesTab({
             void setQuickFiltersStr(newValue);
             setPage(1);
           }}
-          dateRange={(dateRange as DateRangePreset) ?? "all"}
-          onDateRangeChange={(preset) => {
-            void setDateRange(preset);
-            setPage(1);
-          }}
           statusFilter={statusFilter ?? "all"}
           onStatusFilterChange={(value) => {
             void setStatusFilter(value === "all" ? null : value);
@@ -181,12 +222,29 @@ export function CasesTab({
             void setSourceFilter(value === "all" ? null : value);
             setPage(1);
           }}
+          dateRangePreset={dateRangePreset ?? null}
+          onDateRangePresetChange={(preset) => {
+            void setDateRangePreset(preset);
+            // If preset is "all", clear the date filter
+            if (preset === "all") {
+              void setDateStr(null);
+            } else if (preset) {
+              // Otherwise, set the date to the end date of the range
+              const dateFromPreset = getDateFromPreset(preset);
+              if (dateFromPreset) {
+                void setDateStr(
+                  format(startOfDay(dateFromPreset), "yyyy-MM-dd"),
+                );
+              }
+            }
+            setPage(1);
+          }}
           onClearFilters={() => {
             setSearch("");
             void setQuickFiltersStr("");
-            void setDateRange("all");
             void setStatusFilter(null);
             void setSourceFilter(null);
+            void setDateRangePreset(null);
             setPage(1);
           }}
         />
@@ -214,18 +272,15 @@ export function CasesTab({
           </div>
         )
       ) : filteredCases.length === 0 ? (
-        <div className="animate-card-in-delay-2 rounded-xl border border-slate-200 bg-slate-50 p-12 text-center">
-          <p className="text-lg font-medium text-slate-900">No cases found</p>
-          <p className="mt-1 text-sm text-slate-600">
-            {dateRange && dateRange !== "all" ? (
-              <>
-                No cases found for the selected date range. Try adjusting your
-                date filter or create a new case.
-              </>
-            ) : (
-              <>Try adjusting your filters or create a new case</>
-            )}
-          </p>
+        <div className="animate-card-in-delay-2">
+          <EmptyState
+            title="No cases found"
+            description={
+              dateRangePreset && dateRangePreset !== "all"
+                ? "No cases found for the selected date range. Try adjusting your date filter or create a new case."
+                : "Try adjusting your filters or create a new case"
+            }
+          />
         </div>
       ) : (
         <>
