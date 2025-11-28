@@ -29,6 +29,10 @@ Create a new `CasesNeedingAttentionCard` component that replaces the "Case Sourc
 - [ ] Responsive on mobile/tablet/desktop
 - [ ] Replaces Case Sources card in Overview tab
 - [ ] Uses data from enhanced `getCaseStats` query
+- [ ] **Animations:** Staggered entry animation (`animate-card-in-delay-1`)
+- [ ] **Glassmorphism:** Amber glassmorphism with `backdrop-blur-md`
+- [ ] **Hover Effects:** Subtle scale and shadow increase
+- [ ] **Progress Bars:** Smooth animation when values change
 
 ## 📁 Files to Create/Modify
 
