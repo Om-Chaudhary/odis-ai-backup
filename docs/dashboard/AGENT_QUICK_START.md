@@ -1,14 +1,33 @@
 # Agent Quick Start Guide
 
-> **Purpose:** Quick reference for agents starting dashboard redesign assignments  
+> **Purpose:** Complete guide for agents starting dashboard redesign assignments  
 > **Last Updated:** 2025-11-28
 
 ## 🚀 Getting Started
 
 1. **Read Your Assignment** - Open your assigned document in `docs/dashboard/assignments/`
-2. **Check Dependencies** - Verify all dependencies are complete
+2. **Check Dependencies** - Verify all dependencies are complete in `IMPLEMENTATION_ASSIGNMENTS.md`
 3. **Review Related Docs** - Read linked documentation
 4. **Start Implementation** - Follow the step-by-step guide
+
+## 📋 Quick Start Commands
+
+```bash
+# 1. Checkout the implementation branch
+git fetch origin
+git checkout feat/dashboard-optimization-implementation
+git pull origin feat/dashboard-optimization-implementation
+
+# 2. Create your feature branch
+git checkout -b feat/assignment-A[X]-[description]
+
+# Example:
+# git checkout -b feat/assignment-A1-date-filter-button-group
+# git checkout -b feat/assignment-A10-backend-metrics-queries
+
+# 3. Start working on your assignment
+# Read the full assignment document in docs/dashboard/assignments/A[X]-*.md
+```
 
 ## 📋 Assignment Overview
 
@@ -149,15 +168,40 @@ export function MyComponent({ ... }: Props) {
 }
 ```
 
-## ✅ Before Submitting
+## ✅ Implementation Checklist
+
+### Before Starting
+
+- [ ] Read the full assignment document: `docs/dashboard/assignments/A[X]-*.md`
+- [ ] Review related documentation:
+  - [Design System](./01-GENERAL/design-system.md)
+  - [Dashboard Principles](./01-GENERAL/dashboard-principles.md)
+  - Related component/pattern docs if applicable
+- [ ] Check [IMPLEMENTATION_ASSIGNMENTS.md](./IMPLEMENTATION_ASSIGNMENTS.md) for dependencies
+- [ ] Verify dependencies are complete (if any)
+- [ ] Update assignment status in `IMPLEMENTATION_ASSIGNMENTS.md` to "🟡 In Progress"
+
+### During Implementation
+
+- [ ] Follow code style guidelines from [CLAUDE.md](../../CLAUDE.md)
+- [ ] Match design system specifications exactly
+- [ ] Use TypeScript strict mode
+- [ ] Follow React Server Components pattern (minimize `"use client"`)
+- [ ] Test acceptance criteria as you implement
+- [ ] Make frequent, descriptive commits
+
+### Before Submitting
 
 - [ ] All acceptance criteria met
-- [ ] Code follows design system
+- [ ] Code compiles without errors (`pnpm typecheck`)
+- [ ] No linting errors (`pnpm lint`)
+- [ ] Component renders correctly
 - [ ] Responsive on mobile/tablet/desktop
 - [ ] Keyboard accessible
 - [ ] No console errors
 - [ ] Tested with real data
-- [ ] Updated related documentation if needed
+- [ ] Updated assignment status in `IMPLEMENTATION_ASSIGNMENTS.md` to "✅ Complete"
+- [ ] Create PR targeting `feat/dashboard-optimization-implementation`
 
 ## 🐛 Common Issues
 
@@ -185,6 +229,79 @@ export function MyComponent({ ... }: Props) {
 2. Review related documentation links
 3. Check existing similar components for patterns
 4. Review design system for styling guidance
+
+## 🎯 Cursor Agent Mode Launch Prompt
+
+Copy and paste this prompt into Cursor Agent Mode to start your assignment:
+
+```
+I need you to implement Assignment A[X]: [Assignment Name] from the dashboard optimization project.
+
+## Context
+- Repository: odis-ai-web
+- Branch: feat/dashboard-optimization-implementation
+- Assignment: docs/dashboard/assignments/A[X]-[assignment-name].md
+- Design System: docs/dashboard/01-GENERAL/design-system.md
+- Dashboard Principles: docs/dashboard/01-GENERAL/dashboard-principles.md
+
+## Your Task
+1. Read the full assignment document: docs/dashboard/assignments/A[X]-[assignment-name].md
+2. Check dependencies in docs/dashboard/IMPLEMENTATION_ASSIGNMENTS.md
+3. Create feature branch: feat/assignment-A[X]-[description]
+4. Implement according to the assignment specifications
+5. Follow all acceptance criteria
+6. Update assignment status in IMPLEMENTATION_ASSIGNMENTS.md when starting/completing
+
+## Requirements
+- Follow TypeScript strict mode
+- Use React Server Components pattern (minimize "use client")
+- Match design system exactly (colors, spacing, animations)
+- Ensure responsive design (mobile/tablet/desktop)
+- Make keyboard accessible
+- Follow code style from CLAUDE.md
+
+## Deliverables
+- Working implementation meeting all acceptance criteria
+- PR targeting feat/dashboard-optimization-implementation
+- Updated status in IMPLEMENTATION_ASSIGNMENTS.md
+
+Start by reading the assignment document and checking dependencies.
+```
+
+**Replace `A[X]` and `[Assignment Name]` with your specific assignment number and name.**
+
+## 📝 PR Description Template
+
+When creating your PR, use this template:
+
+```markdown
+# Assignment A[X]: [Assignment Name]
+
+## Overview
+
+[Brief description of what was implemented]
+
+## Changes Made
+
+- [List of key changes]
+
+## Files Modified/Created
+
+- `path/to/file1.tsx` - [description]
+- `path/to/file2.ts` - [description]
+
+## Testing
+
+- [ ] All acceptance criteria met
+- [ ] Tested on mobile/tablet/desktop
+- [ ] Keyboard navigation works
+- [ ] No console errors
+
+## Related
+
+- Assignment: docs/dashboard/assignments/A[X]-\*.md
+- Dependencies: [List any dependencies if applicable]
+```
 
 ---
 
