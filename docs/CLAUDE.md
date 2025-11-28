@@ -482,6 +482,13 @@ docs/
 │   └── *.md                # Architecture decision records, patterns
 ├── compliance/              # Compliance and legal documentation
 │   └── *.md                # HIPAA, data privacy, etc.
+├── cursor-commands/         # Cursor commands and rules
+│   ├── browser-testing/     # Visual testing workflows
+│   ├── component-development/ # Component dev workflows
+│   ├── api-testing/         # API testing workflows
+│   ├── debugging/           # Debugging workflows
+│   ├── templates/          # Command templates
+│   └── README.md           # Commands overview
 ├── dashboard/               # Dashboard-specific documentation
 │   ├── 01-GENERAL/         # General dashboard concepts
 │   ├── 02-TABS/            # Tab-specific documentation
@@ -524,14 +531,29 @@ docs/
    - Features → `/docs/implementation/features/`
    - Architecture → `/docs/architecture/`
    - Integration guides → `/docs/integrations/`
+   - Cursor commands → `/docs/cursor-commands/`
 3. **Use descriptive names**: Files should be UPPER_SNAKE_CASE for guides, kebab-case for feature docs
 4. **Update README.md**: Add new docs to the relevant README.md file in their directory
 
 ### Key Documentation Files
 
+- **Cursor Commands**: `/docs/cursor-commands/README.md` - Cursor commands and workflows
+- **Visual Testing**: `/docs/cursor-commands/browser-testing/` - Browser testing workflows
 - **VAPI Integration**: `/docs/vapi/VAPI_VARIABLES_IMPLEMENTATION.md`
 - **VAPI Prompt**: `/docs/vapi/prompts/VAPI_SYSTEM_PROMPT.txt`
 - **VAPI Variables**: `/docs/vapi/VAPI_AI_EXTRACTION_VARIABLES.md`
 - **Testing Strategy**: `/docs/testing/TESTING_STRATEGY.md`
 - **Dashboard Guide**: `/docs/dashboard/README.md`
 - **API Reference**: `/docs/api/API_REFERENCE.md`
+
+### Cursor Commands & Rules
+
+For project-specific Cursor commands and workflows, see:
+
+- **`.cursorrules`** (project root) - Quick reference rules
+- **`docs/cursor-commands/`** - Detailed command documentation
+  - Browser testing workflows
+  - Component development commands
+  - API testing commands
+  - Debugging workflows
+  - Command templates

@@ -11,6 +11,7 @@ docs/
 ├── api/               # API documentation and guides
 ├── architecture/      # System architecture and design docs
 ├── compliance/        # Compliance and legal documentation
+├── cursor-commands/   # Cursor commands and rules
 ├── deployment/        # Deployment guides and setup
 ├── implementation/    # Implementation project guides
 ├── integrations/      # Third-party integration guides
@@ -166,6 +167,36 @@ docs/
 
 ---
 
+## ⌨️ Cursor Commands (`cursor-commands/`)
+
+**Purpose:** Cursor-specific commands, rules, and workflow documentation.
+
+**Contents:**
+
+- Browser testing workflows (Playwright MCP)
+- Component development commands
+- API testing commands
+- Debugging workflows
+- Command templates
+
+**When to use:**
+
+- Visual testing in browser
+- Component development workflows
+- API endpoint testing
+- Debugging issues
+- Creating new commands
+
+**Key Files:**
+
+- `README.md` - Commands overview
+- `browser-testing/tool-comparison.md` - Browser tool analysis
+- `browser-testing/visual-test-commands.md` - Visual testing reference
+
+**See also:** `.cursorrules` in project root for quick reference rules.
+
+---
+
 ## 🧪 Testing (`testing/`)
 
 **Purpose:** Testing guides, strategies, and best practices.
@@ -242,25 +273,27 @@ docs/
 
 ### Where to find...
 
-| What you need           | Where to look              |
-| ----------------------- | -------------------------- |
-| API endpoints           | `api/API_REFERENCE.md`     |
-| Daily notes             | `daily/YYYY-MM-DD/`        |
-| Migration guides        | `reference/MIGRATION_*.md` |
-| Architecture decisions  | `architecture/`            |
-| Testing guides          | `testing/`                 |
-| VAPI setup              | `vapi/VAPI_FINAL_SETUP.md` |
-| Deployment              | `deployment/`              |
-| Compliance              | `compliance/`              |
-| Implementation projects | `implementation/`          |
+| What you need           | Where to look               |
+| ----------------------- | --------------------------- |
+| API endpoints           | `api/API_REFERENCE.md`      |
+| Cursor commands         | `cursor-commands/README.md` |
+| Daily notes             | `daily/YYYY-MM-DD/`         |
+| Migration guides        | `reference/MIGRATION_*.md`  |
+| Architecture decisions  | `architecture/`             |
+| Testing guides          | `testing/`                  |
+| VAPI setup              | `vapi/VAPI_FINAL_SETUP.md`  |
+| Deployment              | `deployment/`               |
+| Compliance              | `compliance/`               |
+| Implementation projects | `implementation/`           |
 
 ### Adding new documentation
 
 1. **Daily notes:** Create `daily/YYYY-MM-DD/` directory
 2. **API docs:** Add to `api/` or `api/endpoints/`
-3. **Reference docs:** Add to `reference/`
-4. **Implementation projects:** Create `implementation/[project-name]/` directory
-5. **Domain-specific:** Add to appropriate domain folder (`vapi/`, `testing/`, etc.)
+3. **Cursor commands:** Add to `cursor-commands/` following existing structure
+4. **Reference docs:** Add to `reference/`
+5. **Implementation projects:** Create `implementation/[project-name]/` directory
+6. **Domain-specific:** Add to appropriate domain folder (`vapi/`, `testing/`, etc.)
 
 ### Documentation standards
 
@@ -277,6 +310,7 @@ docs/
 ### By Topic
 
 - **Authentication:** `api/README.md`
+- **Cursor Commands:** `cursor-commands/README.md`
 - **Database:** `architecture/NORMALIZATION_ARCHITECTURE.md`
 - **Voice Calls:** `vapi/`
 - **Chrome Extension:** `integrations/EXTENSION_DISCHARGE_INTEGRATION.md`
