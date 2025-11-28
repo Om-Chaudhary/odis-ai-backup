@@ -374,6 +374,11 @@ export const CasesService = {
         : caseInfo.patient;
 
       if (patient) {
+        // Enrich patient name from database (database takes priority)
+        if (patient.name && patient.name.trim() !== "") {
+          entities.patient.name = patient.name;
+        }
+
         // Enrich patient demographics from database
         if (patient.species) {
           entities.patient.species =
@@ -404,6 +409,7 @@ export const CasesService = {
           {
             caseId,
             enrichedFields: {
+              name: patient.name,
               species: patient.species,
               breed: patient.breed,
               sex: patient.sex,
