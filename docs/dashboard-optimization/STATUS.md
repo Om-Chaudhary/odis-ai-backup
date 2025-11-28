@@ -1,8 +1,8 @@
 # Dashboard Optimization - Implementation Status
 
-> **Last Updated:** [Update timestamp when tasks complete]  
+> **Last Updated:** 2025-11-28 - Ready for agent assignment  
 > **Branch:** `feat/dashboard-optimization-implementation`  
-> **Project Status:** 🟡 In Progress
+> **Project Status:** 🟡 Ready to Start Implementation
 
 ## 📊 Progress Overview
 
@@ -97,9 +97,11 @@ These tasks depend on A2 (Backend Metrics Queries) completing first.
 
 ## 📚 Related Documentation
 
+- **[AGENT_ONBOARDING.md](AGENT_ONBOARDING.md)** ⭐ **Start Here** - Complete onboarding guide for new agents
 - [Execution Strategy](EXECUTION_STRATEGY.md) - How to coordinate multiple agents
 - [Assignments Index](assignments/README.md) - All task details
 - [Quick Start Guide](QUICK-START.md) - Getting started
+- [Ready for Agents Checklist](READY_FOR_AGENTS.md) - Pre-flight checklist
 
 ---
 
