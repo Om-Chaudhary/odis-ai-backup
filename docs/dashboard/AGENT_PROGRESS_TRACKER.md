@@ -7,29 +7,29 @@
 ## 📊 Overall Progress
 
 **Total Assignments:** 10  
-**Completed:** 4  
+**Completed:** 5  
 **In Progress:** 2  
-**Ready:** 2  
-**Blocked:** 2
+**Ready:** 1  
+**Blocked:** 1
 
-**Progress:** 40% (4/10)
+**Progress:** 50% (5/10)
 
 ---
 
 ## 🎯 Assignment Status
 
-| ID  | Assignment                                                                           | Status         | Agent                  | Branch                            | PR                                                    | Started          | Completed        | Notes                                     |
-| --- | ------------------------------------------------------------------------------------ | -------------- | ---------------------- | --------------------------------- | ----------------------------------------------------- | ---------------- | ---------------- | ----------------------------------------- |
-| A1  | [Date Filter Button Group](./assignments/A1-date-filter-button-group.md)             | ✅ Complete    | Agent-A1-DateFilter    | feat/assignment-A1-date-filter    | [#40](https://github.com/Odis-AI/odis-ai-web/pull/40) | 2025-11-27 20:58 | 2025-11-27 20:58 | Implementation complete, ready for A5     |
-| A2  | [Cases Needing Attention Card](./assignments/A2-cases-needing-attention-card.md)     | ✅ Complete    | Agent-A2-AttentionCard | feat/assignment-A2-attention-card | [#42](https://github.com/Odis-AI/odis-ai-web/pull/42) | 2025-11-27 21:00 | 2025-11-27 21:25 | PR merged, replaces SourceBreakdownCard   |
-| A3  | [Enhanced Stat Cards](./assignments/A3-enhanced-stat-cards.md)                       | ✅ Complete    | Agent-A3-StatCards     | feat/assignment-A3-stat-cards     | [#43](https://github.com/Odis-AI/odis-ai-web/pull/43) | 2025-01-27 14:00 | 2025-01-27 14:30 | PR created, ready for review              |
-| A4  | [Collapsible Activity Timeline](./assignments/A4-collapsible-activity-timeline.md)   | 🟡 In Progress | Agent-A4-Timeline       | feat/assignment-A4-timeline        | -                                                     | 2025-01-27 17:00 | -                | Started implementation                    |
-| A5  | [Cases Tab Filter Button Groups](./assignments/A5-cases-tab-filter-button-groups.md) | 🟡 In Progress | Agent-A5-FilterButtons | feat/assignment-A5-filter-buttons | -                                                     | 2025-01-27 16:00 | -                | Started implementation                    |
-| A6  | [Cases Tab Quick Filters](./assignments/A6-cases-tab-quick-filters.md)               | ⏸️ Blocked     | -                      | -                                 | -                                                     | -                | -                | Waiting on A5 (A10 complete)              |
-| A7  | [Enhanced Case Cards](./assignments/A7-enhanced-case-cards.md)                       | 🟡 In Progress | Agent-A7-CaseCards     | feat/assignment-A7-case-cards     | -                                                     | 2025-01-27 15:00 | -                | Started implementation                    |
-| A8  | [Discharges Tab Status Summary](./assignments/A8-discharges-status-summary.md)       | 🔄 Ready       | -                      | -                                 | -                                                     | -                | -                | -                                         |
-| A9  | [Discharges Tab Enhanced Cards](./assignments/A9-discharges-enhanced-cards.md)       | 🔄 Ready       | -                      | -                                 | -                                                     | -                | -                | -                                         |
-| A10 | [Backend Metrics Queries](./assignments/A10-backend-metrics-queries.md)              | ✅ Complete    | Agent-A10-Metrics      | feat/assignment-A10-metrics       | [#41](https://github.com/Odis-AI/odis-ai-web/pull/41) | 2025-01-27 12:00 | 2025-01-27 13:00 | **Priority: Do First** - Ready for A2, A3 |
+| ID  | Assignment                                                                           | Status         | Agent                  | Branch                            | PR                                                    | Started          | Completed        | Notes                                       |
+| --- | ------------------------------------------------------------------------------------ | -------------- | ---------------------- | --------------------------------- | ----------------------------------------------------- | ---------------- | ---------------- | ------------------------------------------- |
+| A1  | [Date Filter Button Group](./assignments/A1-date-filter-button-group.md)             | ✅ Complete    | Agent-A1-DateFilter    | feat/assignment-A1-date-filter    | [#40](https://github.com/Odis-AI/odis-ai-web/pull/40) | 2025-11-27 20:58 | 2025-11-27 20:58 | Implementation complete, ready for A5       |
+| A2  | [Cases Needing Attention Card](./assignments/A2-cases-needing-attention-card.md)     | ✅ Complete    | Agent-A2-AttentionCard | feat/assignment-A2-attention-card | [#42](https://github.com/Odis-AI/odis-ai-web/pull/42) | 2025-11-27 21:00 | 2025-11-27 21:25 | PR merged, replaces SourceBreakdownCard     |
+| A3  | [Enhanced Stat Cards](./assignments/A3-enhanced-stat-cards.md)                       | ✅ Complete    | Agent-A3-StatCards     | feat/assignment-A3-stat-cards     | [#43](https://github.com/Odis-AI/odis-ai-web/pull/43) | 2025-01-27 14:00 | 2025-01-27 14:30 | PR created, ready for review                |
+| A4  | [Collapsible Activity Timeline](./assignments/A4-collapsible-activity-timeline.md)   | ✅ Complete    | Agent-A4-Timeline      | feat/assignment-A4-timeline       | [#45](https://github.com/Odis-AI/odis-ai-web/pull/45) | 2025-01-27 17:00 | 2025-01-27 17:30 | PR merged, collapsible timeline implemented |
+| A5  | [Cases Tab Filter Button Groups](./assignments/A5-cases-tab-filter-button-groups.md) | 🟡 In Progress | Agent-A5-FilterButtons | feat/assignment-A5-filter-buttons | -                                                     | 2025-01-27 16:00 | -                | Started implementation                      |
+| A6  | [Cases Tab Quick Filters](./assignments/A6-cases-tab-quick-filters.md)               | ⏸️ Blocked     | -                      | -                                 | -                                                     | -                | -                | Waiting on A5 (A10 complete)                |
+| A7  | [Enhanced Case Cards](./assignments/A7-enhanced-case-cards.md)                       | 🟡 In Progress | Agent-A7-CaseCards     | feat/assignment-A7-case-cards     | -                                                     | 2025-01-27 15:00 | -                | Started implementation                      |
+| A8  | [Discharges Tab Status Summary](./assignments/A8-discharges-status-summary.md)       | 🔄 Ready       | -                      | -                                 | -                                                     | -                | -                | -                                           |
+| A9  | [Discharges Tab Enhanced Cards](./assignments/A9-discharges-enhanced-cards.md)       | 🔄 Ready       | -                      | -                                 | -                                                     | -                | -                | -                                           |
+| A10 | [Backend Metrics Queries](./assignments/A10-backend-metrics-queries.md)              | ✅ Complete    | Agent-A10-Metrics      | feat/assignment-A10-metrics       | [#41](https://github.com/Odis-AI/odis-ai-web/pull/41) | 2025-01-27 12:00 | 2025-01-27 13:00 | **Priority: Do First** - Ready for A2, A3   |
 
 **Legend:**
 
@@ -87,7 +87,7 @@ A1 (Date Filter) ───────> A5 (Cases Tab Filters) [🔄 Ready]
 
 A5 (Filter Button Groups) ──> A6 (Quick Filters) [⏸️ Blocked]
 
-A4 (Activity Timeline) ──> [🔄 Ready]
+A4 (Activity Timeline) ──> [✅ Complete]
 A7 (Enhanced Case Cards) ──> [🔄 Ready]
 A8 (Status Summary) ────> [🔄 Ready]
 A9 (Discharges Cards) ──> [🔄 Ready]
@@ -154,8 +154,8 @@ A9 (Discharges Cards) ──> [🔄 Ready]
 - ~~**A1** - Date Filter Button Group~~ ✅ **COMPLETE**
 - ~~**A2** - Cases Needing Attention Card~~ ✅ **COMPLETE**
 - ~~**A3** - Enhanced Stat Cards~~ ✅ **COMPLETE**
+- ~~**A4** - Collapsible Activity Timeline~~ ✅ **COMPLETE**
 - **A5** - Cases Tab Filter Button Groups ⚠️ **HIGH PRIORITY** (A1 complete)
-- **A4** - Collapsible Activity Timeline
 - **A7** - Enhanced Case Cards
 - **A8** - Discharges Tab Status Summary
 - **A9** - Discharges Tab Enhanced Cards
@@ -209,5 +209,5 @@ _Archive resolved issues here with resolution date_
 
 ---
 
-**Last Agent Update:** 2025-01-27 17:30 by Agent-A4-Timeline  
+**Last Agent Update:** 2025-01-27 18:30 by Agent-A9-DischargeCards  
 **Last Reviewed By:** _[Project maintainer name]_
