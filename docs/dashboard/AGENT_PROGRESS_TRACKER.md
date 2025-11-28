@@ -54,9 +54,9 @@
 
 - [x] **A2: Cases Needing Attention Card** - After A10
 - [x] **A3: Enhanced Stat Cards** - After A10
-- [ ] **A4: Collapsible Activity Timeline** - No dependencies
+- [x] **A4: Collapsible Activity Timeline** - No dependencies
 
-**Status:** 2/3 complete
+**Status:** 3/3 complete
 
 ### Phase 3: Cases Tab
 
@@ -175,7 +175,7 @@ A9 (Discharges Cards) ──> [🔄 Ready]
 
 ### By Tab
 
-- **Overview Tab:** 2/3 complete (A2, A3 complete, date filter integrated)
+- **Overview Tab:** 3/3 complete (A2, A3, A4 complete, date filter integrated)
 - **Cases Tab:** 0/3 complete (date filter integrated)
 - **Discharges Tab:** 0/2 complete (date filter integrated)
 - **Foundation:** 2/2 complete
@@ -209,5 +209,5 @@ _Archive resolved issues here with resolution date_
 
 ---
 
-**Last Agent Update:** 2025-11-27 21:25 by Agent-A2-AttentionCard  
+**Last Agent Update:** 2025-01-27 17:30 by Agent-A4-Timeline  
 **Last Reviewed By:** _[Project maintainer name]_
