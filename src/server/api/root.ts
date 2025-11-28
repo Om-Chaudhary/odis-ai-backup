@@ -4,6 +4,7 @@ import { playgroundRouter } from "~/server/api/routers/playground";
 import { casesRouter } from "~/server/api/routers/cases";
 import { sharingRouter } from "~/server/api/routers/sharing";
 import { usersRouter } from "~/server/api/routers/users";
+import { dashboardRouter } from "~/server/api/routers/dashboard";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
 /**
@@ -18,6 +19,7 @@ export const appRouter = createTRPCRouter({
   cases: casesRouter,
   sharing: sharingRouter,
   users: usersRouter,
+  dashboard: dashboardRouter,
 });
 
 export type AppRouter = typeof appRouter;

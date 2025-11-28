@@ -1,6 +1,20 @@
+import { useEffect } from "react";
 import { Button } from "~/components/ui/button";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
-import { format, addDays, subDays, isToday } from "date-fns";
+import {
+  format,
+  addDays,
+  subDays,
+  isToday,
+  isYesterday,
+  isTomorrow,
+} from "date-fns";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
 
 interface DayPaginationControlsProps {
   currentDate: Date;
@@ -27,52 +41,126 @@ export function DayPaginationControls({
     onDateChange(new Date());
   };
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input
+      if (
+        document.activeElement instanceof HTMLInputElement ||
+        document.activeElement instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+
+      switch (e.key) {
+        case "ArrowLeft":
+          {
+            const previousDay = subDays(currentDate, 1);
+            onDateChange(previousDay);
+          }
+          break;
+        case "ArrowRight":
+          if (!isToday(currentDate)) {
+            const nextDay = addDays(currentDate, 1);
+            onDateChange(nextDay);
+          }
+          break;
+        case "t":
+        case "T":
+          if (!isToday(currentDate)) {
+            onDateChange(new Date());
+          }
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [currentDate, onDateChange]);
+
   const formatDateDisplay = (date: Date) => {
     if (isToday(date)) {
       return "Today";
     }
-    return format(date, "EEEE, MMMM d, yyyy");
+    if (isYesterday(date)) {
+      return "Yesterday";
+    }
+    if (isTomorrow(date)) {
+      return "Tomorrow";
+    }
+    return format(date, "EEE, MMM d, yyyy");
   };
 
   return (
-    <div className="bg-card flex items-center justify-between rounded-lg border p-4">
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={goToPreviousDay}
-          className="h-9"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          <span className="ml-1 hidden sm:inline">Previous Day</span>
-        </Button>
-        <div className="flex flex-col items-center gap-1 px-4">
-          <div className="flex items-center gap-2">
+    <TooltipProvider>
+      <div className="flex items-center justify-center gap-3 py-2">
+        <div className="bg-card flex items-center rounded-md border shadow-sm">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={goToPreviousDay}
+                className="hover:bg-muted h-9 w-9 rounded-r-none border-r"
+                aria-label="Previous Day"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Previous Day (←)</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <div className="flex min-w-[160px] items-center justify-center gap-2 px-4">
             <Calendar className="text-muted-foreground h-4 w-4" />
-            <span className="text-sm font-medium">
-              {formatDateDisplay(currentDate)}
-            </span>
+            <div className="flex flex-col items-start leading-none">
+              <span className="text-sm font-medium">
+                {formatDateDisplay(currentDate)}
+              </span>
+              <span className="text-muted-foreground text-[10px]">
+                {totalItems} {totalItems === 1 ? "case" : "cases"}
+              </span>
+            </div>
           </div>
-          <div className="text-muted-foreground text-xs">
-            {totalItems} {totalItems === 1 ? "case" : "cases"}
-          </div>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={goToNextDay}
+                className="hover:bg-muted h-9 w-9 rounded-l-none border-l"
+                disabled={isToday(currentDate)}
+                aria-label="Next Day"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Next Day (→)</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={goToNextDay}
-          className="h-9"
-          disabled={isToday(currentDate)}
-        >
-          <span className="mr-1 hidden sm:inline">Next Day</span>
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+
+        {!isToday(currentDate) && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={goToToday}
+                className="text-muted-foreground hover:text-foreground h-9"
+              >
+                Go to Today
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Jump to Today (T)</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
       </div>
-      {!isToday(currentDate) && (
-        <Button variant="outline" size="sm" onClick={goToToday} className="h-9">
-          Go to Today
-        </Button>
-      )}
-    </div>
+    </TooltipProvider>
   );
 }

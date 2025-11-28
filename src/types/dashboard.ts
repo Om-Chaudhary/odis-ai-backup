@@ -254,3 +254,103 @@ export interface DischargeTimeline {
   id: string;
   createdAt: string;
 }
+
+/**
+ * Dashboard quick stats
+ */
+export interface DashboardStats {
+  activeCases: number;
+  completedCalls: number;
+  pendingCalls: number;
+  successRate: number;
+  trends: {
+    cases: "up" | "down" | "stable";
+    calls: "up" | "down" | "stable";
+  };
+}
+
+/**
+ * Activity item for timeline
+ */
+export interface ActivityItem {
+  id: string;
+  type:
+    | "case_created"
+    | "call_completed"
+    | "call_scheduled"
+    | "discharge_summary";
+  timestamp: string;
+  description: string;
+  metadata: Record<string, unknown>;
+}
+
+/**
+ * Weekly activity data point for chart
+ */
+export interface WeeklyActivityData {
+  date: string;
+  cases: number;
+  calls: number;
+  completedCalls: number;
+}
+
+/**
+ * Call performance metrics
+ */
+export interface CallPerformanceMetrics {
+  totalCalls: number;
+  averageDuration: number;
+  totalCost: number;
+  successRate: number;
+  sentimentBreakdown: {
+    positive: number;
+    neutral: number;
+    negative: number;
+  };
+}
+
+/**
+ * Upcoming scheduled item
+ */
+export interface UpcomingItem {
+  id: string;
+  type: "call" | "email";
+  scheduledFor: string | null;
+  status: CallStatus | EmailStatus;
+  description: string;
+  metadata: Record<string, unknown>;
+}
+
+/**
+ * Case list item for dashboard cases tab
+ */
+export interface CaseListItem {
+  id: string;
+  status: CaseStatus;
+  source: string | null;
+  created_at: string;
+  patient: {
+    id: string;
+    name: string;
+    species: string;
+    owner_name: string;
+  };
+  hasSoapNote: boolean;
+  hasDischargeSummary: boolean;
+  hasDischargeCall: boolean;
+  hasDischargeEmail: boolean;
+}
+
+/**
+ * Comprehensive case statistics for dashboard overview
+ */
+export interface CaseStats {
+  total: number;
+  thisWeek: number;
+  byStatus: Record<CaseStatus, number>;
+  bySource: Record<string, number>;
+  soapNotes: number;
+  dischargeSummaries: number;
+  callsCompleted: number;
+  emailsSent: number;
+}

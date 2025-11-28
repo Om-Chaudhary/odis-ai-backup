@@ -151,7 +151,7 @@ export function DischargeSettingsForm({
         </h4>
 
         {/* Default Schedule Delay Override */}
-        <div className="grid gap-2 rounded-lg border p-3 shadow-sm">
+        <div className="grid gap-2 rounded-lg border border-slate-100 p-3 shadow-sm">
           <div className="flex items-center gap-2">
             <Label htmlFor="defaultScheduleDelayMinutes" className="text-base">
               Default Schedule Delay (Minutes)
@@ -208,7 +208,7 @@ export function DischargeSettingsForm({
         </div>
 
         {/* Voicemail Detection Toggle */}
-        <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm">
+        <div className="flex items-center justify-between rounded-lg border border-slate-100 p-3 shadow-sm">
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
               <Label htmlFor="voicemail-detection" className="text-base">
@@ -245,7 +245,7 @@ export function DischargeSettingsForm({
 
         {/* Test Mode Toggle */}
         <div
-          className={`flex flex-col gap-4 rounded-lg border p-4 shadow-sm transition-colors ${isTestMode ? "border-amber-200 bg-amber-50/50" : ""}`}
+          className={`flex flex-col gap-4 rounded-lg border p-4 shadow-sm transition-colors ${isTestMode ? "border-amber-200 bg-amber-50/50" : "border-slate-100"}`}
         >
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">

@@ -247,7 +247,10 @@ export function CaseCard({
     if (workflowStatus === "completed") {
       return (
         <Link href={`/dashboard/cases/${caseData.id}`} className="w-full">
-          <Button variant="outline" className="w-full gap-2">
+          <Button
+            variant="outline"
+            className="transition-smooth w-full gap-2 hover:bg-slate-50"
+          >
             <Eye className="h-4 w-4" />
             View Details
           </Button>
@@ -261,7 +264,7 @@ export function CaseCard({
           onClick={() => onTriggerCall(caseData.id)}
           disabled={isLoadingCall || !hasValidContact(effectivePhone)}
           variant="destructive"
-          className="w-full gap-2"
+          className="transition-smooth w-full gap-2"
         >
           {isLoadingCall ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -278,7 +281,7 @@ export function CaseCard({
       <Button
         onClick={() => onTriggerCall(caseData.id)}
         disabled={isLoadingCall || !hasValidContact(effectivePhone)}
-        className="w-full gap-2"
+        className="transition-smooth w-full gap-2 hover:shadow-md"
       >
         {isLoadingCall ? (
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -291,32 +294,45 @@ export function CaseCard({
   };
 
   return (
-    <Card className="group relative overflow-hidden transition-all hover:shadow-md">
-      {/* Status Strip */}
-      <div
-        className={cn(
-          "absolute top-0 bottom-0 left-0 w-1.5",
-          getStatusColor(workflowStatus),
-        )}
-      />
-
-      <CardContent className="p-4 pl-5">
+    <Card className="group transition-smooth relative overflow-hidden border-slate-100 bg-white shadow-sm hover:scale-[1.02] hover:border-slate-200 hover:shadow-md">
+      <CardContent className="p-5">
         {/* Header Section */}
         <div className="mb-4 flex items-start justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-muted/50 flex h-12 w-12 items-center justify-center rounded-full">
-              <SpeciesIcon className="text-muted-foreground h-6 w-6" />
+            <div
+              className={cn(
+                "flex h-12 w-12 items-center justify-center rounded-full transition-colors",
+                workflowStatus === "completed"
+                  ? "bg-emerald-100 text-emerald-600"
+                  : workflowStatus === "failed"
+                    ? "bg-red-100 text-red-600"
+                    : workflowStatus === "in_progress"
+                      ? "bg-blue-100 text-blue-600"
+                      : "bg-slate-100 text-slate-500",
+              )}
+            >
+              <SpeciesIcon className="h-6 w-6" />
             </div>
             <div>
-              <h3
-                className={cn(
-                  "text-lg font-semibold tracking-tight",
-                  isPlaceholder(caseData.patient.name) &&
-                    "text-amber-600 italic dark:text-amber-500",
-                )}
-              >
-                {caseData.patient.name}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3
+                  className={cn(
+                    "text-lg font-semibold tracking-tight text-slate-900",
+                    isPlaceholder(caseData.patient.name) &&
+                      "text-amber-600 italic",
+                  )}
+                >
+                  {caseData.patient.name}
+                </h3>
+                {/* Status Dot */}
+                <div
+                  className={cn(
+                    "h-2 w-2 rounded-full",
+                    getStatusColor(workflowStatus),
+                  )}
+                  title={`Status: ${workflowStatus.replace("_", " ")}`}
+                />
+              </div>
               <div className="text-muted-foreground flex items-center gap-2 text-xs">
                 <Calendar className="h-3 w-3" />
                 <span>
@@ -332,8 +348,12 @@ export function CaseCard({
           {/* Context Menu for extra actions */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="text-muted-foreground h-4 w-4" />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="transition-smooth h-8 w-8 text-slate-400 hover:text-slate-600"
+              >
+                <MoreHorizontal className="h-4 w-4" />
                 <span className="sr-only">Open menu</span>
               </Button>
             </DropdownMenuTrigger>
@@ -354,17 +374,17 @@ export function CaseCard({
         </div>
 
         {/* Owner & Contact Section */}
-        <div className="bg-muted/20 -mx-2 mb-4 rounded-md p-2.5">
+        <div className="-mx-2 mb-4 rounded-lg bg-slate-50 p-3">
           {!isEditing ? (
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
+                <span className="text-xs font-medium tracking-wider text-slate-500 uppercase">
                   Owner
                 </span>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="text-muted-foreground hover:text-primary h-5 w-5 rounded-full"
+                  className="transition-smooth h-5 w-5 rounded-full text-slate-400 hover:text-[#31aba3]"
                   onClick={handleStartEdit}
                   disabled={isLoadingUpdate}
                 >
@@ -372,19 +392,19 @@ export function CaseCard({
                   <span className="sr-only">Edit owner info</span>
                 </Button>
               </div>
-              <div className="truncate leading-none font-medium">
+              <div className="font-medium text-slate-900">
                 {caseData.patient.owner_name}
               </div>
-              <div className="text-muted-foreground flex min-w-0 flex-col gap-1 text-xs">
+              <div className="flex min-w-0 flex-col gap-1 text-xs text-slate-500">
                 {effectivePhone && (
-                  <div className="flex items-center gap-1">
-                    <Phone className="h-3 w-3 shrink-0" />
+                  <div className="flex items-center gap-1.5">
+                    <Phone className="h-3 w-3 shrink-0 text-slate-400" />
                     <span className="break-words">{effectivePhone}</span>
                   </div>
                 )}
                 {effectiveEmail && (
-                  <div className="flex items-start gap-1">
-                    <Mail className="mt-0.5 h-3 w-3 shrink-0" />
+                  <div className="flex items-start gap-1.5">
+                    <Mail className="mt-0.5 h-3 w-3 shrink-0 text-slate-400" />
                     <span className="break-words">{effectiveEmail}</span>
                   </div>
                 )}
@@ -394,7 +414,7 @@ export function CaseCard({
             <div className="space-y-2">
               <Input
                 size={1}
-                className="h-7 w-full text-xs"
+                className="h-7 w-full bg-white text-xs"
                 value={editForm.owner_name}
                 onChange={(e) =>
                   setEditForm({ ...editForm, owner_name: e.target.value })
@@ -402,7 +422,7 @@ export function CaseCard({
                 placeholder="Owner Name"
               />
               <Input
-                className="h-7 w-full text-xs"
+                className="h-7 w-full bg-white text-xs"
                 value={editForm.owner_phone}
                 onChange={(e) =>
                   setEditForm({ ...editForm, owner_phone: e.target.value })
@@ -410,7 +430,7 @@ export function CaseCard({
                 placeholder="Phone"
               />
               <Input
-                className="h-7 w-full text-xs"
+                className="h-7 w-full bg-white text-xs"
                 value={editForm.owner_email}
                 onChange={(e) =>
                   setEditForm({ ...editForm, owner_email: e.target.value })
@@ -421,7 +441,7 @@ export function CaseCard({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="hover:text-destructive h-6 px-2 text-xs"
+                  className="transition-smooth h-6 px-2 text-xs hover:text-red-600"
                   onClick={handleCancel}
                   disabled={isLoadingUpdate}
                 >
@@ -429,7 +449,7 @@ export function CaseCard({
                 </Button>
                 <Button
                   size="sm"
-                  className="h-6 px-2 text-xs"
+                  className="transition-smooth h-6 bg-[#31aba3] px-2 text-xs hover:bg-[#2a9a92]"
                   onClick={handleSave}
                   disabled={isLoadingUpdate}
                 >
@@ -448,16 +468,16 @@ export function CaseCard({
         {/* Activity Summary */}
         <div className="mb-4 min-h-[2.5rem] text-sm">
           {latestActivity ? (
-            <div className="flex items-start gap-2.5">
+            <div className="flex items-start gap-3">
               <div
                 className={cn(
                   "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
                   latestActivity.status === "completed" ||
                     latestActivity.status === "sent"
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400"
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-600"
                     : latestActivity.status === "failed"
-                      ? "border-red-200 bg-red-50 text-red-600 dark:border-red-800 dark:bg-red-950/30 dark:text-red-400"
-                      : "bg-muted border-muted-foreground/20 text-muted-foreground",
+                      ? "border-red-200 bg-red-50 text-red-600"
+                      : "border-slate-200 bg-slate-100 text-slate-500",
                 )}
               >
                 {latestActivity.type === "call" ? (
@@ -467,7 +487,7 @@ export function CaseCard({
                 )}
               </div>
               <div className="flex flex-col gap-0.5">
-                <span className="font-medium">
+                <span className="font-medium text-slate-900">
                   {latestActivity.status === "completed" && "Call Completed"}
                   {latestActivity.status === "sent" && "Email Sent"}
                   {latestActivity.status === "failed" && "Attempt Failed"}
@@ -476,7 +496,7 @@ export function CaseCard({
                     "Call in Progress"}
                   {latestActivity.status === "queued" && "Queued"}
                 </span>
-                <span className="text-muted-foreground text-xs">
+                <span className="text-xs text-slate-500">
                   {formatDistanceToNow(latestActivity.date, {
                     addSuffix: true,
                   })}
@@ -484,7 +504,7 @@ export function CaseCard({
               </div>
             </div>
           ) : (
-            <div className="text-muted-foreground/70 flex items-center gap-2 italic">
+            <div className="flex items-center gap-2 text-slate-400 italic">
               <AlertCircle className="h-4 w-4" />
               <span>No discharge activity yet</span>
             </div>
@@ -492,7 +512,7 @@ export function CaseCard({
         </div>
       </CardContent>
 
-      <CardFooter className="bg-muted/10 border-t p-3 pl-5">
+      <CardFooter className="border-t border-slate-100 bg-slate-50/50 p-3 pl-5">
         <div className="grid w-full grid-cols-[1fr_auto] gap-2">
           {renderPrimaryAction()}
 
@@ -501,7 +521,7 @@ export function CaseCard({
             <Button
               variant="ghost"
               size="icon"
-              className="text-muted-foreground shrink-0"
+              className="transition-smooth shrink-0 text-slate-400 hover:bg-[#31aba3]/5 hover:text-[#31aba3]"
               onClick={() => onTriggerEmail(caseData.id)}
               disabled={isLoadingEmail || !hasValidContact(effectiveEmail)}
               title="Send Discharge Email"
