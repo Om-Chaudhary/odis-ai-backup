@@ -1,15 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Calendar,
-  Home,
-  Settings,
-  PhoneCall,
-  Users,
-  CircleHelp,
-  Command,
-} from "lucide-react";
+import { Home, Settings, PhoneCall, Command } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -40,16 +32,8 @@ const mainNavItems = [
     url: "/dashboard/cases",
     icon: PhoneCall,
   },
-  {
-    title: "Patients",
-    url: "/dashboard/patients",
-    icon: Users,
-  },
-  {
-    title: "Schedule",
-    url: "/dashboard/schedule",
-    icon: Calendar,
-  },
+  // Removed: Patients, Schedule - pages not implemented yet
+  // These can be re-added when pages are created
 ];
 
 const systemItems = [
@@ -58,11 +42,8 @@ const systemItems = [
     url: "/dashboard/settings",
     icon: Settings,
   },
-  {
-    title: "Help & Support",
-    url: "/dashboard/support",
-    icon: CircleHelp,
-  },
+  // Removed: Help & Support - page not implemented yet
+  // This can be re-added when page is created
 ];
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {

@@ -11,6 +11,8 @@ import {
   Briefcase,
   Users,
   Phone,
+  Flag,
+  FlaskConical,
 } from "lucide-react";
 import { Toaster } from "sonner";
 import { DarkModeWrapper } from "~/components/DarkModeWrapper";
@@ -95,6 +97,15 @@ export default async function AdminLayout({
               </div>
               <NavLink href="/admin/vapi-test" icon={<Phone size={20} />}>
                 Vapi Test
+              </NavLink>
+              <NavLink
+                href="/admin/soap-playground"
+                icon={<FlaskConical size={20} />}
+              >
+                SOAP Playground
+              </NavLink>
+              <NavLink href="/admin/feature-flags" icon={<Flag size={20} />}>
+                Feature Flags
               </NavLink>
             </nav>
 
