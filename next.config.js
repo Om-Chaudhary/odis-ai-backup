@@ -9,8 +9,6 @@ const config = {
   // Specify the correct workspace root to avoid lockfile detection issues
   turbopack: {
     root: "/Users/s0381806/Development/odis-ai-web",
-    // Increase concurrency for faster builds
-    maxConcurrency: 14,
   },
   async rewrites() {
     return [
