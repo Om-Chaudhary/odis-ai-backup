@@ -16,7 +16,6 @@ export function ContactIndicator({
   testMode: _testMode = false,
 }: ContactIndicatorProps) {
   const Icon = type === "phone" ? Phone : Mail;
-
   if (!isValid) {
     return (
       <div className="flex items-center gap-1.5 text-xs">

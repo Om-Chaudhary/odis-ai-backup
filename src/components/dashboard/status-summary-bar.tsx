@@ -81,7 +81,9 @@ export function StatusSummaryBar({
 
           {/* Quick Filters */}
           {onFilterChange && (
-            <FilterButtonGroup
+            <FilterButtonGroup<
+              "all" | "ready" | "pending" | "completed" | "failed"
+            >
               options={[
                 { value: "all", label: "All" },
                 { value: "ready", label: "Ready" },
@@ -89,12 +91,8 @@ export function StatusSummaryBar({
                 { value: "completed", label: "Completed" },
                 { value: "failed", label: "Failed" },
               ]}
-              value={activeFilter}
-              onChange={(value) =>
-                onFilterChange(
-                  value as "all" | "ready" | "pending" | "completed" | "failed",
-                )
-              }
+              value={activeFilter as "all" | "ready" | "pending" | "completed" | "failed"}
+              onChange={(value) => onFilterChange(value)}
             />
           )}
         </div>

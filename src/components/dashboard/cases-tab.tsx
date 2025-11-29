@@ -290,7 +290,7 @@ export function CasesTab({
         <>
           {viewMode === "grid" ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredCases.map((caseData, index) => (
+              {filteredCases.map((caseData) => (
                 <CaseListCard
                   key={caseData.id}
                   caseData={{
@@ -298,7 +298,6 @@ export function CasesTab({
                     status: (caseData.status ?? "draft") as CaseStatus,
                     created_at: caseData.created_at ?? new Date().toISOString(),
                   }}
-                  index={index % 4}
                 />
               ))}
             </div>

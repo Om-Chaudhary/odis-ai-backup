@@ -135,6 +135,9 @@ export function DischargeManagementClient() {
       : [];
   }, [casesData?.cases, casesData?.userEmail]);
 
+  // Keep reference to backend cases for debug modal
+  const backendCases = casesData?.cases ?? [];
+
   const settings: DischargeSettings = settingsData ?? {
     clinicName: "",
     clinicPhone: "",
