@@ -1,9 +1,17 @@
 "use client";
 
-import { FilterButtonGroup } from "./filter-button-group";
-import { DateFilterButtonGroup } from "./date-filter-button-group";
 import { DayPaginationControls } from "./day-pagination-controls";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import { Label } from "~/components/ui/label";
 import type { DischargeReadinessFilter } from "~/types/dashboard";
+import type { DateRangePreset } from "~/lib/utils/date-ranges";
+import { useQueryState } from "nuqs";
 
 interface UnifiedFilterBarProps {
   /** Current selected date for day navigation */
@@ -32,13 +40,13 @@ interface UnifiedFilterBarProps {
  * UnifiedFilterBar - Combined filter interface for discharge management
  *
  * Combines date navigation, date range presets, and status filters into a
- * clean, standardized interface. Used in the discharge management page to
- * provide consistent filtering UX.
+ * clean, standardized interface using Select dropdowns for compact, intuitive filtering.
  *
  * Features:
  * - Day-by-day date navigation with keyboard shortcuts
- * - Date range preset buttons (All Time, Last Day, 3D, 30D)
- * - Status filter buttons (All, Ready, Pending, Completed, Failed)
+ * - Date range preset dropdown (All Time, Last Day, 3D, 30D)
+ * - Status filter dropdown (All, Ready, Pending, Completed, Failed)
+ * - Readiness filter dropdown (All Cases, Ready for Discharge, Not Ready)
  *
  * @example
  * ```tsx
@@ -49,6 +57,8 @@ interface UnifiedFilterBarProps {
  *   isLoading={isLoading}
  *   statusFilter={status}
  *   onStatusFilterChange={setStatus}
+ *   readinessFilter={readiness}
+ *   onReadinessFilterChange={setReadiness}
  * />
  * ```
  */
@@ -62,6 +72,13 @@ export function UnifiedFilterBar({
   readinessFilter,
   onReadinessFilterChange,
 }: UnifiedFilterBarProps) {
+  // Date range preset state (uses URL state for persistence)
+  const [dateRange, setDateRange] = useQueryState("dateRange", {
+    defaultValue: "all",
+    parse: (value) => (value as DateRangePreset) || "all",
+    serialize: (value) => value,
+  });
+
   return (
     <div className="space-y-4">
       {/* Full-width Date Navigator */}
@@ -72,38 +89,98 @@ export function UnifiedFilterBar({
         isLoading={isLoading}
       />
 
-      {/* Filter Row: Date Range Presets, Status Filters, and Readiness Filters */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        {/* Date Range Presets */}
-        <DateFilterButtonGroup />
-
-        {/* Filter Groups: Status and Readiness */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Status Filter Buttons */}
-          <FilterButtonGroup<
-            "all" | "ready" | "pending" | "completed" | "failed"
+      {/* Filter Row: Date Range, Status, and Readiness Selects */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-4">
+        {/* Date Range Filter */}
+        <div className="flex min-w-0 flex-col gap-2 sm:max-w-[180px] sm:min-w-[140px]">
+          <Label
+            htmlFor="date-range-filter"
+            className="text-xs font-medium text-slate-700"
           >
-            options={[
-              { value: "all", label: "All" },
-              { value: "ready", label: "Ready" },
-              { value: "pending", label: "Pending" },
-              { value: "completed", label: "Completed" },
-              { value: "failed", label: "Failed" },
-            ]}
-            value={statusFilter}
-            onChange={onStatusFilterChange}
-          />
+            Date Range
+          </Label>
+          <Select
+            value={dateRange}
+            onValueChange={(value) => setDateRange(value as DateRangePreset)}
+          >
+            <SelectTrigger
+              id="date-range-filter"
+              className="w-full sm:w-[140px]"
+              size="sm"
+            >
+              <SelectValue placeholder="Select range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="1d">Last Day</SelectItem>
+              <SelectItem value="3d">3D</SelectItem>
+              <SelectItem value="30d">30D</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-          {/* Readiness Filter Buttons */}
-          <FilterButtonGroup<DischargeReadinessFilter>
-            options={[
-              { value: "all", label: "All Cases" },
-              { value: "ready_for_discharge", label: "Ready for Discharge" },
-              { value: "not_ready", label: "Not Ready" },
-            ]}
+        {/* Status Filter */}
+        <div className="flex min-w-0 flex-col gap-2 sm:max-w-[180px] sm:min-w-[140px]">
+          <Label
+            htmlFor="status-filter"
+            className="text-xs font-medium text-slate-700"
+          >
+            Status
+          </Label>
+          <Select
+            value={statusFilter}
+            onValueChange={(value) =>
+              onStatusFilterChange(
+                value as "all" | "ready" | "pending" | "completed" | "failed",
+              )
+            }
+          >
+            <SelectTrigger
+              id="status-filter"
+              className="w-full sm:w-[140px]"
+              size="sm"
+            >
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="ready">Ready</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="failed">Failed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Readiness Filter */}
+        <div className="flex min-w-0 flex-col gap-2 sm:max-w-[200px] sm:min-w-[160px]">
+          <Label
+            htmlFor="readiness-filter"
+            className="text-xs font-medium text-slate-700"
+          >
+            Readiness
+          </Label>
+          <Select
             value={readinessFilter}
-            onChange={onReadinessFilterChange}
-          />
+            onValueChange={(value) =>
+              onReadinessFilterChange(value as DischargeReadinessFilter)
+            }
+          >
+            <SelectTrigger
+              id="readiness-filter"
+              className="w-full sm:w-[160px]"
+              size="sm"
+            >
+              <SelectValue placeholder="Select readiness" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Cases</SelectItem>
+              <SelectItem value="ready_for_discharge">
+                Ready for Discharge
+              </SelectItem>
+              <SelectItem value="not_ready">Not Ready</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>
