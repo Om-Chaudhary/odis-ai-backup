@@ -88,10 +88,12 @@ See [visual-test-commands.md](./visual-test-commands.md) for complete command re
 
 See the [examples/](./examples/) directory for:
 
+- **[General Browser Test Template](./examples/general-browser-test.md)** - **START HERE** - Reusable template for any browser test
 - Component visual testing
 - Page-level testing
 - Responsive design verification
 - Accessibility checks
+- Project-specific examples (discharge management, case details)
 
 ## Related Documentation
 

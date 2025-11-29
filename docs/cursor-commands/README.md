@@ -60,6 +60,7 @@ cursor-commands/
 
 ### Dashboard Testing
 
+- **[General Browser Test Template](./browser-testing/examples/general-browser-test.md)** - **START HERE** - Reusable template for any browser test
 - **[Test Discharge Management](./browser-testing/examples/test-discharge-management.md)** - Test the discharge management interface with filters, search, and actions
 - **[Test Case Detail Page](./browser-testing/examples/test-case-detail-page.md)** - Test case detail page with all sections and interactions
 
