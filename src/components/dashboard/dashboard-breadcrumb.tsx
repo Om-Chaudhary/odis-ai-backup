@@ -23,7 +23,7 @@ export function DashboardBreadcrumb() {
       case "dashboard":
         return "Dashboard";
       case "cases":
-        return "Discharges";
+        return "Discharge Management";
       case "patients":
         return "Patients";
       case "schedule":

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { BarChart3 } from "lucide-react";
+import { EmptyState } from "../dashboard/empty-state";
 import {
   BarChart,
   Bar,
@@ -41,18 +42,21 @@ export function WeeklyActivityChart({ data }: WeeklyActivityChartProps) {
 
   return (
     <Card className="transition-smooth rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base font-semibold text-slate-900">
           <BarChart3 className="h-5 w-5 text-slate-600" />
           Weekly Activity
         </CardTitle>
       </CardHeader>
-      <CardContent className="animate-card-content-in">
+      <CardContent className="animate-card-content-in pt-0">
         {data.length === 0 ? (
-          <div className="py-8 text-center">
-            <BarChart3 className="mx-auto h-12 w-12 text-slate-300" />
-            <p className="mt-2 text-sm text-slate-500">No activity data</p>
-          </div>
+          <EmptyState
+            icon={BarChart3}
+            title="No activity data"
+            description="Activity data will appear here once cases and calls are recorded"
+            size="sm"
+            className="min-h-[200px]"
+          />
         ) : (
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={chartData}>

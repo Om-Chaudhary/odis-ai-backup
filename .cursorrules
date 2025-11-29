@@ -1,0 +1,95 @@
+# Cursor Rules for ODIS AI Web
+
+Project-specific rules and patterns for Cursor AI assistant.
+
+## Quick Reference
+
+- **Detailed Commands**: See `docs/cursor-commands/` for complete workflows
+- **Project Guide**: See `docs/CLAUDE.md` for architecture and patterns
+- **Testing**: See `docs/testing/` for testing strategies
+
+## Project Structure
+
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript (strict mode)
+- **Styling**: Tailwind CSS 4
+- **UI**: shadcn/ui (Radix UI primitives)
+- **Database**: Supabase (PostgreSQL)
+- **API**: tRPC + Next.js Server Actions
+
+## Key Patterns
+
+### Server Actions vs API Routes
+
+- Use **Server Actions** for most server-side operations
+- Use **API Routes** only for webhooks or external integrations
+
+### Supabase Clients
+
+- **Standard client**: `createClient()` - Respects RLS, uses cookies
+- **Service client**: `createServiceClient()` - Bypasses RLS, admin only
+
+### React Hooks
+
+- Use **ref pattern** for polling to avoid unstable callbacks
+- Minimize `use client` - prefer Server Components
+
+## Visual Testing
+
+**Use Playwright MCP** for visual testing workflows.
+
+See `docs/cursor-commands/browser-testing/` for:
+- Tool comparison (Cursor vs Playwright MCP)
+- Visual testing commands
+- Component verification workflows
+
+## Common Workflows
+
+### Visual Testing
+- Navigate: `browser_navigate("http://localhost:3000/dashboard")`
+- Screenshot: `browser_take_screenshot("name.png")`
+- Snapshot: `browser_snapshot()` for accessibility tree
+- See: `docs/cursor-commands/browser-testing/visual-test-commands.md`
+
+### Component Development
+- Use shadcn/ui CLI: `npx shadcn@latest add [component]`
+- Test visually in browser
+- See: `docs/cursor-commands/component-development/component-commands.md`
+
+### API Testing
+- Monitor network: `browser_network_requests()`
+- Check console: `browser_console_messages()`
+- See: `docs/cursor-commands/api-testing/api-test-commands.md`
+
+### Debugging
+- Check errors: `browser_console_messages().filter(m => m.level === 'error')`
+- Analyze network: `browser_network_requests()`
+- See: `docs/cursor-commands/debugging/debug-commands.md`
+
+## Documentation
+
+- **Never create docs in root** - All `.md` files go in `docs/`
+- **Follow structure** - See `docs/README.md` for organization
+- **Use templates** - See `docs/cursor-commands/templates/` for new commands
+
+## Code Style
+
+- **TypeScript**: Strict mode, prefer interfaces over types
+- **Formatting**: Prettier (auto-format on commit)
+- **Linting**: ESLint with Next.js config
+- **Naming**: lowercase-with-dashes for directories, PascalCase for components
+
+## Important Notes
+
+1. **Supabase RLS**: Service client bypasses RLS - use carefully
+2. **React Hooks**: Use refs for data-dependent callbacks
+3. **Server Components**: Default to Server Components, mark `"use client"` only when needed
+4. **Environment Variables**: `NEXT_PUBLIC_` vars are exposed to browser - never put secrets there
+
+## Links
+
+- [Cursor Commands Documentation](./docs/cursor-commands/README.md)
+- [Project Guide](./docs/CLAUDE.md)
+- [Testing Strategy](./docs/testing/TESTING_STRATEGY.md)
+- [API Reference](./docs/api/API_REFERENCE.md)
+

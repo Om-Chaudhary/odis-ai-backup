@@ -26,6 +26,12 @@ export function getTRPCClientLinks() {
     }),
     httpBatchLink({
       url: `${getBaseUrl()}/api/trpc`,
+      fetch(url, options) {
+        return fetch(url, {
+          ...options,
+          credentials: "include", // Include cookies for authentication
+        });
+      },
     }),
   ];
   return links;

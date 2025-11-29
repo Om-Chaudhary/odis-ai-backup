@@ -2,11 +2,12 @@
 
 import type { ComponentProps } from "react";
 import { useCallback } from "react";
-import { ArrowDownIcon } from "lucide-react";
+import { ArrowDownIcon, type LucideIcon, MessageSquare } from "lucide-react";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
+import { EmptyState } from "~/components/dashboard/empty-state";
 
 export type ConversationProps = ComponentProps<typeof StickToBottom>;
 
@@ -37,7 +38,7 @@ export type ConversationEmptyStateProps = Omit<
 > & {
   title?: React.ReactNode;
   description?: React.ReactNode;
-  icon?: React.ReactNode;
+  icon?: React.ReactNode | LucideIcon;
 };
 
 export const ConversationEmptyState = ({
@@ -47,27 +48,55 @@ export const ConversationEmptyState = ({
   icon,
   children,
   ...props
-}: ConversationEmptyStateProps) => (
-  <div
-    className={cn(
-      "flex size-full flex-col items-center justify-center gap-3 p-8 text-center",
-      className,
-    )}
-    {...props}
-  >
-    {children ?? (
-      <>
-        {icon && <div className="text-muted-foreground">{icon}</div>}
-        <div className="space-y-1">
-          <h3 className="text-sm font-medium">{title}</h3>
-          {description && (
-            <p className="text-muted-foreground text-sm">{description}</p>
-          )}
-        </div>
-      </>
-    )}
-  </div>
-);
+}: ConversationEmptyStateProps) => {
+  // If children are provided, use them directly (for custom empty states)
+  if (children) {
+    return (
+      <div
+        className={cn(
+          "flex size-full flex-col items-center justify-center gap-3 p-8 text-center",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  }
+
+  // Determine the icon to use
+  const IconComponent =
+    typeof icon === "function" ? icon : icon ? undefined : MessageSquare;
+
+  // Convert ReactNode title/description to string if needed
+  const titleText =
+    typeof title === "string"
+      ? title
+      : title && typeof title === "object"
+        ? "No messages yet" // React element or object, use default
+        : title != null
+          ? String(title)
+          : "No messages yet";
+  const descriptionText =
+    typeof description === "string"
+      ? description
+      : description && typeof description === "object"
+        ? "Start a conversation to see messages here" // React element or object, use default
+        : description != null
+          ? String(description)
+          : "Start a conversation to see messages here";
+
+  return (
+    <EmptyState
+      icon={IconComponent}
+      title={titleText}
+      description={descriptionText}
+      size="md"
+      className={cn("size-full", className)}
+      {...props}
+    />
+  );
+};
 
 export type ConversationScrollButtonProps = ComponentProps<typeof Button>;
 

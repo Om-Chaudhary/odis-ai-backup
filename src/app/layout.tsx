@@ -101,6 +101,15 @@ export const metadata: Metadata = {
   verification: {
     google: process.env.GOOGLE_SITE_VERIFICATION,
   },
+  icons: {
+    icon: [
+      { url: "/icon-128.png", sizes: "128x128", type: "image/png" },
+      { url: "/icon-128.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-128.png", sizes: "16x16", type: "image/png" },
+    ],
+    apple: [{ url: "/icon-128.png", sizes: "180x180", type: "image/png" }],
+    shortcut: "/icon-128.png",
+  },
 };
 
 // JSON-LD structured data

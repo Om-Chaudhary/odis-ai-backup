@@ -5,6 +5,8 @@ import {
   protectedProcedure,
 } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
+import { checkCaseDischargeReadiness } from "~/lib/utils/discharge-readiness";
+import type { BackendCase } from "~/types/dashboard";
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -37,6 +39,10 @@ export const casesRouter = createTRPCRouter({
         page: z.number().min(1).default(1),
         pageSize: z.number().min(5).max(50).default(10),
         date: z.string().optional(), // ISO date string (YYYY-MM-DD)
+        readinessFilter: z
+          .enum(["all", "ready_for_discharge", "not_ready"])
+          .optional()
+          .default("all"),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -67,8 +73,11 @@ export const casesRouter = createTRPCRouter({
           `
           id,
           status,
+          source,
+          type,
           created_at,
           scheduled_at,
+          metadata,
           patients!inner (
             id,
             name,
@@ -128,8 +137,51 @@ export const casesRouter = createTRPCRouter({
         });
       }
 
+      // Apply readiness filtering if requested
+      let filteredCases = data ?? [];
+      const userEmail = ctx.user.email;
+
+      if (input.readinessFilter !== "all" && filteredCases.length > 0) {
+        filteredCases = filteredCases.filter((caseData) => {
+          // Type assertion: the query returns data compatible with BackendCase structure
+          // The query may not include all BackendCase fields, but has the fields needed for readiness check
+          const readiness = checkCaseDischargeReadiness(
+            caseData as unknown as BackendCase,
+            userEmail,
+          );
+          if (input.readinessFilter === "ready_for_discharge") {
+            return readiness.isReady;
+          }
+          if (input.readinessFilter === "not_ready") {
+            return !readiness.isReady;
+          }
+          return true;
+        });
+      }
+
+      // Sort cases by readiness: ready cases first, then by created_at
+      const sortedCases = filteredCases.sort((a, b) => {
+        const aReadiness = checkCaseDischargeReadiness(
+          a as unknown as BackendCase,
+          userEmail,
+        );
+        const bReadiness = checkCaseDischargeReadiness(
+          b as unknown as BackendCase,
+          userEmail,
+        );
+
+        // Primary sort: ready cases first
+        if (aReadiness.isReady && !bReadiness.isReady) return -1;
+        if (!aReadiness.isReady && bReadiness.isReady) return 1;
+
+        // Secondary sort: by created_at (newest first)
+        return (
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+      });
+
       return {
-        cases: data ?? [],
+        cases: sortedCases,
         pagination: {
           page: input.page,
           pageSize: input.pageSize,
@@ -137,6 +189,7 @@ export const casesRouter = createTRPCRouter({
           totalPages: Math.ceil((count ?? 0) / input.pageSize),
         },
         date: selectedDate.toISOString().split("T")[0], // Return date in YYYY-MM-DD format
+        userEmail: ctx.user.email, // Include user email for transform layer
       };
     }),
 
@@ -170,18 +223,26 @@ export const casesRouter = createTRPCRouter({
       }
 
       // Now fetch full case details with all relations (using left joins)
+      // Note: Supabase doesn't support ordering in nested selects, so we'll sort in JS
       const { data, error } = await ctx.supabase
         .from("cases")
         .select(
           `
-          id, status, created_at, scheduled_at,
+          id, status, type, visibility, created_at, updated_at, scheduled_at,
+          source, external_id, metadata,
           patients (
             id, name, species, breed,
-            owner_name, owner_email, owner_phone
+            owner_name, owner_email, owner_phone,
+            date_of_birth, sex, weight_kg
           ),
           transcriptions (id, transcript, created_at),
           soap_notes (id, subjective, objective, assessment, plan, created_at),
           discharge_summaries (id, content, created_at),
+          vital_signs (
+            id, temperature, temperature_unit, pulse, respiration,
+            weight, weight_unit, systolic, diastolic, notes,
+            measured_at, source, created_at
+          ),
           scheduled_discharge_calls (
             id, status, scheduled_for, ended_at, ended_reason, started_at,
             vapi_call_id, transcript, transcript_messages, call_analysis,
@@ -202,6 +263,45 @@ export const casesRouter = createTRPCRouter({
           message: "Failed to fetch case details",
           cause: error,
         });
+      }
+
+      // Sort related data by date (newest first)
+      if (data) {
+        if (Array.isArray(data.transcriptions)) {
+          data.transcriptions.sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          );
+        }
+        if (Array.isArray(data.soap_notes)) {
+          data.soap_notes.sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          );
+        }
+        if (Array.isArray(data.discharge_summaries)) {
+          data.discharge_summaries.sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          );
+        }
+        if (Array.isArray(data.scheduled_discharge_calls)) {
+          data.scheduled_discharge_calls.sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          );
+        }
+        if (Array.isArray(data.scheduled_discharge_emails)) {
+          data.scheduled_discharge_emails.sort(
+            (a, b) =>
+              new Date(b.created_at).getTime() -
+              new Date(a.created_at).getTime(),
+          );
+        }
       }
 
       return data;
@@ -755,6 +855,54 @@ export const casesRouter = createTRPCRouter({
       }
 
       return data;
+    }),
+
+  /**
+   * Delete case (user can only delete their own cases)
+   */
+  deleteMyCase: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user.id;
+
+      // First verify the case belongs to the user
+      const { data: caseData, error: fetchError } = await ctx.supabase
+        .from("cases")
+        .select("id, user_id")
+        .eq("id", input.id)
+        .single();
+
+      if (fetchError || !caseData) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Case not found",
+          cause: fetchError,
+        });
+      }
+
+      if (caseData.user_id !== userId) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You can only delete your own cases",
+        });
+      }
+
+      // Delete the case (cascade will handle related records)
+      const { error } = await ctx.supabase
+        .from("cases")
+        .delete()
+        .eq("id", input.id)
+        .eq("user_id", userId); // Double-check ownership in delete query
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to delete case",
+          cause: error,
+        });
+      }
+
+      return { success: true };
     }),
 
   /**

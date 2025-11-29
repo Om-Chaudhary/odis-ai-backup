@@ -16,6 +16,8 @@ export const MOCK_CASES: DashboardCase[] = [
   {
     id: "case-1",
     status: "ongoing",
+    source: "idexx_neo",
+    type: "checkup",
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
     scheduled_at: null,
     patient: {
@@ -27,6 +29,9 @@ export const MOCK_CASES: DashboardCase[] = [
       owner_email: "john.doe@example.com",
       owner_phone: "+1 (555) 987-6543",
     },
+    has_clinical_notes: true,
+    is_ready_for_discharge: true,
+    missing_requirements: [],
     discharge_summary: {
       id: "ds-1",
       content: "Patient is recovering well from anesthesia...",
@@ -58,6 +63,8 @@ export const MOCK_CASES: DashboardCase[] = [
   {
     id: "case-2",
     status: "completed",
+    source: "chrome_extension",
+    type: "follow_up",
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 hours ago
     scheduled_at: null,
     patient: {
@@ -69,6 +76,9 @@ export const MOCK_CASES: DashboardCase[] = [
       owner_email: "jane.smith@example.com",
       owner_phone: "+1 (555) 456-7890",
     },
+    has_clinical_notes: true,
+    is_ready_for_discharge: true,
+    missing_requirements: [],
     discharge_summary: {
       id: "ds-2",
       content: "Routine checkup completed. Vaccinations updated.",
@@ -92,6 +102,8 @@ export const MOCK_CASES: DashboardCase[] = [
   {
     id: "case-3",
     status: "draft",
+    source: "manual",
+    type: "emergency",
     created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 mins ago
     scheduled_at: null,
     patient: {
@@ -103,6 +115,11 @@ export const MOCK_CASES: DashboardCase[] = [
       owner_email: "mike.j@example.com",
       owner_phone: "+1 (555) 111-2222",
     },
+    has_clinical_notes: false,
+    is_ready_for_discharge: false,
+    missing_requirements: [
+      "Clinical notes (SOAP, discharge summary, or transcription)",
+    ],
     scheduled_discharge_calls: [],
     scheduled_discharge_emails: [],
     // No discharge summary or scheduled items yet
@@ -110,6 +127,8 @@ export const MOCK_CASES: DashboardCase[] = [
   {
     id: "case-4",
     status: "ongoing",
+    source: "idexx_neo",
+    type: "surgery",
     created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // Yesterday
     scheduled_at: null,
     patient: {
@@ -121,6 +140,9 @@ export const MOCK_CASES: DashboardCase[] = [
       owner_email: "sarah.w@example.com",
       owner_phone: "+1 (555) 333-4444",
     },
+    has_clinical_notes: true,
+    is_ready_for_discharge: true,
+    missing_requirements: [],
     discharge_summary: {
       id: "ds-4",
       content: "Surgery successful. Monitoring recovery.",

@@ -561,9 +561,95 @@ export class DischargeOrchestrator {
     // Get patient data
     const patient = this.normalizePatient(caseInfo.patient);
 
-    // Generate summary
+    // Extract SOAP content from the case data (ODIS-8: Ensure fresh consultation data)
+    let soapContent: string | null = null;
+    let soapContentSource: string | null = null;
+
+    if (caseInfo.soapNotes && caseInfo.soapNotes.length > 0) {
+      // Get the most recent SOAP note (sorted by created_at desc)
+      const latestSoapNote = caseInfo.soapNotes[0];
+
+      if (latestSoapNote) {
+        // Check staleness of SOAP note
+        const soapNoteAge = latestSoapNote.created_at
+          ? Date.now() - new Date(latestSoapNote.created_at).getTime()
+          : null;
+        const isStale = soapNoteAge && soapNoteAge > 24 * 60 * 60 * 1000; // 24 hours
+
+        if (isStale) {
+          console.warn("[ORCHESTRATOR] SOAP notes may be stale", {
+            caseId,
+            soapNoteId: latestSoapNote.id,
+            createdAt: latestSoapNote.created_at,
+            ageHours: Math.round((soapNoteAge ?? 0) / (60 * 60 * 1000)),
+          });
+        }
+
+        // Priority 1: Use client_instructions (most relevant for discharge)
+        if (latestSoapNote.client_instructions) {
+          soapContent = latestSoapNote.client_instructions;
+          soapContentSource = "client_instructions";
+          console.log(
+            "[ORCHESTRATOR] Using SOAP client_instructions for summary",
+            {
+              caseId,
+              soapNoteId: latestSoapNote.id,
+              contentLength: soapContent.length,
+              isStale,
+            },
+          );
+        }
+        // Priority 2: Combine full SOAP sections
+        else {
+          const sections: string[] = [];
+          if (latestSoapNote.subjective) {
+            sections.push(`Subjective:\n${latestSoapNote.subjective}`);
+          }
+          if (latestSoapNote.objective) {
+            sections.push(`Objective:\n${latestSoapNote.objective}`);
+          }
+          if (latestSoapNote.assessment) {
+            sections.push(`Assessment:\n${latestSoapNote.assessment}`);
+          }
+          if (latestSoapNote.plan) {
+            sections.push(`Plan:\n${latestSoapNote.plan}`);
+          }
+
+          if (sections.length > 0) {
+            soapContent = sections.join("\n\n");
+            soapContentSource = "combined_sections";
+            console.log(
+              "[ORCHESTRATOR] Using combined SOAP sections for summary",
+              {
+                caseId,
+                soapNoteId: latestSoapNote.id,
+                sectionsUsed: sections.length,
+                contentLength: soapContent.length,
+                isStale,
+              },
+            );
+          }
+        }
+      }
+    } else {
+      console.warn("[ORCHESTRATOR] No SOAP notes found for case", {
+        caseId,
+        fallbackToEntities: !!caseInfo.entities,
+      });
+    }
+
+    // Log summary generation context for monitoring
+    console.log("[ORCHESTRATOR] Generating discharge summary", {
+      caseId,
+      hasSoapContent: !!soapContent,
+      soapContentSource,
+      soapContentLength: soapContent?.length ?? 0,
+      hasEntities: !!caseInfo.entities,
+    });
+
+    // Generate summary with SOAP content if available
     const summaryContent = await generateDischargeSummaryWithRetry({
-      soapContent: null, // Could fetch SOAP note if needed
+      soapContent, // Now includes fresh SOAP notes from database
       entityExtraction: caseInfo.entities ?? null,
       patientData: {
         name: patient?.name ?? undefined,

@@ -18,6 +18,8 @@ import {
   RefreshCw,
   MoreHorizontal,
   Eye,
+  Database,
+  FileCode,
 } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
@@ -34,47 +36,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import {
+  isPlaceholder,
+  hasValidContact,
+  getEffectiveContact,
+} from "~/lib/utils/dashboard-helpers";
 import { ContactIndicator } from "~/components/dashboard/contact-indicator";
 import { DischargeStatusIndicator } from "~/components/dashboard/discharge-status-indicator";
-
-// --- Helper Functions ---
-
-/**
- * Check if a value is a placeholder (missing data indicator)
- */
-function isPlaceholder(value: string): boolean {
-  const placeholders = [
-    "Unknown Patient",
-    "Unknown Species",
-    "Unknown Breed",
-    "Unknown Owner",
-    "No email address",
-    "No phone number",
-  ];
-  return placeholders.includes(value);
-}
-
-/**
- * Check if a contact value is valid (not a placeholder and not empty)
- */
-function hasValidContact(value: string | undefined | null): boolean {
-  if (!value) return false;
-  return !isPlaceholder(value) && value.trim().length > 0;
-}
-
-/**
- * Get the effective contact value - use test contact if test mode is enabled, otherwise use patient contact
- */
-function getEffectiveContact(
-  patientValue: string | undefined | null,
-  testValue: string | undefined | null,
-  testModeEnabled: boolean,
-): string | undefined | null {
-  if (testModeEnabled && hasValidContact(testValue)) {
-    return testValue ?? null;
-  }
-  return patientValue ?? null;
-}
+import { Badge } from "~/components/ui/badge";
 
 type WorkflowStatus = "completed" | "in_progress" | "failed" | "ready";
 
@@ -124,6 +93,47 @@ function getStatusColor(status: WorkflowStatus) {
     default:
       return "bg-amber-500";
   }
+}
+
+function formatSource(source: string | null): string {
+  if (!source) return "Manual";
+  return source
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function getSourceIcon(source: string | null) {
+  if (!source) return FileCode;
+  if (source.includes("idexx")) return Database;
+  return FileCode;
+}
+
+function getTypeColor(
+  type: "checkup" | "emergency" | "surgery" | "follow_up" | null,
+): string {
+  switch (type) {
+    case "checkup":
+      return "bg-blue-500/10 text-blue-600 border-blue-200";
+    case "emergency":
+      return "bg-red-500/10 text-red-600 border-red-200";
+    case "surgery":
+      return "bg-purple-500/10 text-purple-600 border-purple-200";
+    case "follow_up":
+      return "bg-green-500/10 text-green-600 border-green-200";
+    default:
+      return "bg-slate-500/10 text-slate-600 border-slate-200";
+  }
+}
+
+function formatType(
+  type: "checkup" | "emergency" | "surgery" | "follow_up" | null,
+): string {
+  if (!type) return "Unknown";
+  return type
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 interface CaseCardProps {
@@ -235,6 +245,13 @@ export function CaseCard({
 
   const latestActivity = allActivities[0];
 
+  // Check if there are any scheduled calls or emails
+  const hasDischargeActivity =
+    (caseData.scheduled_discharge_calls &&
+      caseData.scheduled_discharge_calls.length > 0) ||
+    (caseData.scheduled_discharge_emails &&
+      caseData.scheduled_discharge_emails.length > 0);
+
   // --- Action Button Logic ---
   const renderPrimaryAction = () => {
     if (workflowStatus === "in_progress") {
@@ -248,7 +265,7 @@ export function CaseCard({
 
     if (workflowStatus === "completed") {
       return (
-        <Link href={`/dashboard/cases/${caseData.id}`} className="w-full">
+        <Link href={`/dashboard/discharges/${caseData.id}`} className="w-full">
           <Button
             variant="outline"
             className="transition-smooth w-full gap-2 hover:bg-slate-50"
@@ -303,7 +320,7 @@ export function CaseCard({
           <div className="flex items-center gap-3">
             <div
               className={cn(
-                "flex h-12 w-12 items-center justify-center rounded-full transition-colors",
+                "flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors",
                 workflowStatus === "completed"
                   ? "bg-emerald-100 text-emerald-600"
                   : workflowStatus === "failed"
@@ -315,11 +332,11 @@ export function CaseCard({
             >
               <SpeciesIcon className="h-6 w-6" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="mb-1.5 flex items-center gap-2">
                 <h3
                   className={cn(
-                    "text-lg font-semibold tracking-tight text-slate-900",
+                    "truncate text-lg font-semibold tracking-tight text-slate-900",
                     isPlaceholder(caseData.patient.name) &&
                       "text-amber-600 italic",
                   )}
@@ -329,19 +346,54 @@ export function CaseCard({
                 {/* Status Dot */}
                 <div
                   className={cn(
-                    "h-2 w-2 rounded-full",
+                    "h-2 w-2 shrink-0 rounded-full",
                     getStatusColor(workflowStatus),
                   )}
                   title={`Status: ${workflowStatus.replace("_", " ")}`}
                 />
               </div>
+              <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                {caseData.source && (
+                  <Badge
+                    variant="outline"
+                    className="h-5 gap-1 border-slate-200 bg-slate-50/50 px-1.5 text-[10px] font-medium text-slate-600"
+                  >
+                    {(() => {
+                      const SourceIcon = getSourceIcon(caseData.source);
+                      return (
+                        <>
+                          <SourceIcon className="h-2.5 w-2.5" />
+                          {formatSource(caseData.source)}
+                        </>
+                      );
+                    })()}
+                  </Badge>
+                )}
+                {caseData.type && (
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "h-5 border px-1.5 text-[10px] font-medium",
+                      getTypeColor(caseData.type),
+                    )}
+                  >
+                    {formatType(caseData.type)}
+                  </Badge>
+                )}
+              </div>
               <div className="text-muted-foreground flex items-center gap-2 text-xs">
-                <Calendar className="h-3 w-3" />
-                <span>
-                  Created{" "}
-                  {formatDistanceToNow(new Date(caseData.created_at), {
-                    addSuffix: true,
-                  })}
+                <Calendar className="h-3 w-3 shrink-0" />
+                <span className="truncate">
+                  {caseData.scheduled_at ? (
+                    <>
+                      Scheduled{" "}
+                      {formatDistanceToNow(new Date(caseData.scheduled_at), {
+                        addSuffix: true,
+                      })}
+                    </>
+                  ) : (
+                    "Not scheduled"
+                  )}
                 </span>
               </div>
             </div>
@@ -361,7 +413,7 @@ export function CaseCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
-                <Link href={`/dashboard/cases/${caseData.id}`}>
+                <Link href={`/dashboard/discharges/${caseData.id}`}>
                   <Eye className="mr-2 h-4 w-4" /> View Details
                 </Link>
               </DropdownMenuItem>
@@ -376,7 +428,7 @@ export function CaseCard({
         </div>
 
         {/* Owner & Contact Section */}
-        <div className="-mx-2 mb-4 rounded-lg bg-slate-50 p-3">
+        <div className="-mx-2 mb-3 rounded-lg bg-slate-50 p-3">
           {!isEditing ? (
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
@@ -454,7 +506,9 @@ export function CaseCard({
         </div>
 
         {/* Contact Information Section */}
-        <div className="mb-4 space-y-2">
+        <div
+          className={cn("space-y-2", hasDischargeActivity ? "mb-4" : "mb-3")}
+        >
           <h4 className="text-xs font-medium tracking-wider text-slate-500 uppercase">
             Contact Information
           </h4>
@@ -472,26 +526,28 @@ export function CaseCard({
           />
         </div>
 
-        {/* Discharge Status Section */}
-        <div className="mb-4 space-y-2">
-          <h4 className="text-xs font-medium tracking-wider text-slate-500 uppercase">
-            Discharge Status
-          </h4>
-          <DischargeStatusIndicator
-            type="call"
-            calls={caseData.scheduled_discharge_calls}
-            testMode={testModeEnabled}
-          />
-          <DischargeStatusIndicator
-            type="email"
-            emails={caseData.scheduled_discharge_emails}
-            testMode={testModeEnabled}
-          />
-        </div>
+        {/* Discharge Status Section - Only show if there are calls or emails */}
+        {hasDischargeActivity && (
+          <div className="mb-3 space-y-2">
+            <h4 className="text-xs font-medium tracking-wider text-slate-500 uppercase">
+              Discharge Status
+            </h4>
+            <DischargeStatusIndicator
+              type="call"
+              calls={caseData.scheduled_discharge_calls}
+              testMode={testModeEnabled}
+            />
+            <DischargeStatusIndicator
+              type="email"
+              emails={caseData.scheduled_discharge_emails}
+              testMode={testModeEnabled}
+            />
+          </div>
+        )}
 
         {/* Last Activity */}
         {latestActivity && (
-          <div className="mb-4 text-xs text-slate-500">
+          <div className="mb-3 text-xs text-slate-500">
             Last activity:{" "}
             {formatDistanceToNow(latestActivity.date, {
               addSuffix: true,
@@ -504,7 +560,7 @@ export function CaseCard({
           !hasValidContact(effectiveEmail)) && (
           <div
             className={cn(
-              "mb-4 rounded-lg border p-3 text-sm",
+              "mb-3 rounded-lg border p-2.5 text-sm",
               !hasValidContact(effectivePhone) &&
                 !hasValidContact(effectiveEmail)
                 ? "border-red-200 bg-red-50/50 text-red-700"
@@ -563,7 +619,7 @@ export function CaseCard({
             className="transition-smooth w-full justify-start gap-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
             asChild
           >
-            <Link href={`/dashboard/cases/${caseData.id}`}>
+            <Link href={`/dashboard/discharges/${caseData.id}`}>
               <Eye className="h-4 w-4" />
               View Details
             </Link>

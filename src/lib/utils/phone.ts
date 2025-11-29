@@ -1,133 +1,87 @@
 /**
- * Contact information normalization utilities
- * Handles phone numbers and email addresses
+ * Phone Number Utilities
+ *
+ * Functions for formatting and validating phone numbers
  */
 
 /**
- * Normalize a phone number to E.164 format
+ * Formats a phone number from E.164 format to readable format
  *
- * Handles common US phone formats:
- * - (415) 297-5859
- * - 415-297-5859
- * - 415.297.5859
- * - 4152975859
- * - +14152975859
+ * @param phone - Phone number in E.164 format (e.g., +14155551234) or null
+ * @returns Formatted phone number or "N/A" if null
  *
- * @param phone - Phone number in any common format
- * @param defaultCountryCode - Country code to prepend if missing (default: "1" for US)
- * @returns Phone number in E.164 format (+14152975859) or null if invalid
+ * @example
+ * formatPhoneNumber("+14155551234") // Returns "+1 (415) 555-1234"
+ * formatPhoneNumber(null) // Returns "N/A"
+ */
+export function formatPhoneNumber(phone: string | null): string {
+  if (!phone) return "N/A";
+
+  // Format E.164 to readable format
+  const cleaned = phone.replace(/^\+/, "");
+
+  // US/Canada format: +1 (XXX) XXX-XXXX
+  if (cleaned.length === 11 && cleaned.startsWith("1")) {
+    return `+1 (${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7)}`;
+  }
+
+  // Return as-is if not US/Canada format
+  return phone;
+}
+
+/**
+ * Normalizes a phone number to E.164 format
+ * Removes all non-digit characters except leading +
+ *
+ * @param phone - Phone number in any format
+ * @returns Normalized phone number in E.164 format or null if invalid
  */
 export function normalizePhoneNumber(
   phone: string | null | undefined,
-  defaultCountryCode = "1",
 ): string | null {
   if (!phone) return null;
 
-  // Remove all non-digit characters
-  const digitsOnly = phone.replace(/\D/g, "");
+  // Remove all non-digit characters except leading +
+  const cleaned = phone.trim();
+  if (!cleaned) return null;
 
-  if (!digitsOnly) return null;
+  // If it starts with +, keep it, otherwise add +
+  const digits = cleaned.replace(/\D/g, "");
+  if (digits.length === 0) return null;
 
-  // If already has country code (11 digits for US: 1 + 10), use it
-  if (digitsOnly.length === 11 && digitsOnly.startsWith("1")) {
-    return `+${digitsOnly}`;
-  }
-
-  // If 10 digits (US phone without country code), prepend default country code
-  if (digitsOnly.length === 10) {
-    return `+${defaultCountryCode}${digitsOnly}`;
-  }
-
-  // If already starts with + and looks valid, return as-is
-  if (
-    phone.startsWith("+") &&
-    digitsOnly.length >= 10 &&
-    digitsOnly.length <= 15
-  ) {
-    return `+${digitsOnly}`;
-  }
-
-  // For other lengths, prepend country code and hope for the best
-  // This handles international numbers that might be missing the +
-  if (digitsOnly.length >= 10 && digitsOnly.length <= 15) {
-    // If first digit is 1 and total is > 11, assume it's international without +
-    if (digitsOnly.startsWith("1") && digitsOnly.length > 11) {
-      return `+${digitsOnly}`;
+  // If it doesn't start with +, add it
+  if (!cleaned.startsWith("+")) {
+    // If it's a US number (10 digits or 11 starting with 1), add +1
+    if (digits.length === 10) {
+      return `+1${digits}`;
     }
-    // Otherwise, prepend default country code
-    return `+${defaultCountryCode}${digitsOnly}`;
+    if (digits.length === 11 && digits.startsWith("1")) {
+      return `+${digits}`;
+    }
+    return `+${digits}`;
   }
 
-  // Invalid length
-  return null;
+  return cleaned.startsWith("+") ? cleaned : `+${digits}`;
 }
 
 /**
- * Format a phone number for display (US format)
- *
- * @param phone - Phone number in any format
- * @returns Formatted phone number (e.g., "(415) 297-5859") or original if invalid
- */
-export function formatPhoneNumberForDisplay(
-  phone: string | null | undefined,
-): string {
-  if (!phone) return "";
-
-  const normalized = normalizePhoneNumber(phone);
-  if (!normalized) return phone;
-
-  // Remove + and country code for US numbers
-  const digitsOnly = normalized.replace(/\D/g, "");
-
-  // US format (11 digits: 1 + area code + number)
-  if (digitsOnly.length === 11 && digitsOnly.startsWith("1")) {
-    const withoutCountryCode = digitsOnly.substring(1);
-    return `(${withoutCountryCode.substring(0, 3)}) ${withoutCountryCode.substring(3, 6)}-${withoutCountryCode.substring(6)}`;
-  }
-
-  // 10 digit format (no country code)
-  if (digitsOnly.length === 10) {
-    return `(${digitsOnly.substring(0, 3)}) ${digitsOnly.substring(3, 6)}-${digitsOnly.substring(6)}`;
-  }
-
-  // For non-US numbers, return normalized format
-  return normalized;
-}
-
-/**
- * Normalize an email address
- *
- * - Trims whitespace
- * - Converts to lowercase
- * - Validates basic email format
+ * Normalizes an email address to lowercase and trims whitespace
  *
  * @param email - Email address in any format
- * @returns Normalized email or null if invalid
+ * @returns Normalized email address or null if invalid
  */
 export function normalizeEmail(
   email: string | null | undefined,
 ): string | null {
   if (!email) return null;
 
-  // Trim whitespace and convert to lowercase
   const normalized = email.trim().toLowerCase();
 
-  // Basic email validation regex
-  const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
-
+  // Basic email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(normalized)) {
     return null;
   }
 
   return normalized;
-}
-
-/**
- * Validate if a string is a valid email address
- *
- * @param email - Email address to validate
- * @returns true if valid email format
- */
-export function isValidEmail(email: string | null | undefined): boolean {
-  return normalizeEmail(email) !== null;
 }

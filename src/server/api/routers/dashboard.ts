@@ -2,13 +2,16 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import type { CallStatus, EmailStatus } from "~/types/dashboard";
+import { startOfMonth, startOfWeek } from "date-fns";
 
 // Type helpers for Supabase responses
 type SupabasePatient = {
   id: string;
   name: string;
-  species: string;
-  owner_name?: string;
+  species?: string | null;
+  owner_name?: string | null;
+  owner_phone?: string | null;
+  owner_email?: string | null;
 };
 
 type SupabasePatientsResponse = SupabasePatient[];
@@ -281,6 +284,202 @@ export const dashboardRouter = createTRPCRouter({
         .slice(0, 10);
 
       return activities;
+    }),
+
+  /**
+   * Get daily activity aggregates for timeline view (last 7 days)
+   */
+  getDailyActivityAggregates: protectedProcedure
+    .input(
+      z.object({
+        startDate: z.string().nullable().optional(),
+        endDate: z.string().nullable().optional(),
+        days: z.number().min(1).max(30).default(7),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.user.id;
+      const days = input.days ?? 7;
+
+      // Calculate date range
+      const endDate = input.endDate ? new Date(input.endDate) : new Date();
+      endDate.setHours(23, 59, 59, 999);
+
+      const startDate = input.startDate
+        ? new Date(input.startDate)
+        : new Date();
+      startDate.setDate(startDate.getDate() - (days - 1));
+      startDate.setHours(0, 0, 0, 0);
+
+      // Initialize daily aggregates map
+      const dailyAggregates = new Map<
+        string,
+        {
+          date: string;
+          casesCreated: number;
+          dischargeSummariesGenerated: number;
+          callsCompleted: number;
+          callsScheduled: number;
+          emailsSent: number;
+          soapNotesCreated: number;
+        }
+      >();
+
+      // Initialize all days in range with zero counts
+      for (let i = 0; i < days; i++) {
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + i);
+        date.setHours(0, 0, 0, 0);
+        const dateKey = date.toISOString().split("T")[0];
+        if (dateKey) {
+          dailyAggregates.set(dateKey, {
+            date: dateKey,
+            casesCreated: 0,
+            dischargeSummariesGenerated: 0,
+            callsCompleted: 0,
+            callsScheduled: 0,
+            emailsSent: 0,
+            soapNotesCreated: 0,
+          });
+        }
+      }
+
+      // Fetch all data in parallel
+      const [
+        { data: cases },
+        { data: dischargeSummaries },
+        { data: calls },
+        { data: emails },
+        { data: soapNotes },
+      ] = await Promise.all([
+        ctx.supabase
+          .from("cases")
+          .select("created_at")
+          .eq("user_id", userId)
+          .gte("created_at", startDate.toISOString())
+          .lte("created_at", endDate.toISOString()),
+        ctx.supabase
+          .from("discharge_summaries")
+          .select("created_at")
+          .eq("user_id", userId)
+          .gte("created_at", startDate.toISOString())
+          .lte("created_at", endDate.toISOString()),
+        ctx.supabase
+          .from("scheduled_discharge_calls")
+          .select("created_at, status, ended_at")
+          .eq("user_id", userId)
+          .gte("created_at", startDate.toISOString())
+          .lte("created_at", endDate.toISOString()),
+        ctx.supabase
+          .from("scheduled_discharge_emails")
+          .select("created_at, status, sent_at")
+          .eq("user_id", userId)
+          .gte("created_at", startDate.toISOString())
+          .lte("created_at", endDate.toISOString()),
+        ctx.supabase
+          .from("soap_notes")
+          .select("created_at, cases!inner(user_id)")
+          .eq("cases.user_id", userId)
+          .gte("created_at", startDate.toISOString())
+          .lte("created_at", endDate.toISOString()),
+      ]);
+
+      // Aggregate cases
+      cases?.forEach((c) => {
+        const created = String(c.created_at ?? "");
+        const dateKey = created.split("T")[0];
+        if (dateKey) {
+          const aggregate = dailyAggregates.get(dateKey);
+          if (aggregate) {
+            aggregate.casesCreated++;
+          }
+        }
+      });
+
+      // Aggregate discharge summaries
+      dischargeSummaries?.forEach((s) => {
+        const created = String(s.created_at ?? "");
+        const dateKey = created.split("T")[0];
+        if (dateKey) {
+          const aggregate = dailyAggregates.get(dateKey);
+          if (aggregate) {
+            aggregate.dischargeSummariesGenerated++;
+          }
+        }
+      });
+
+      // Aggregate calls
+      calls?.forEach((c) => {
+        const created = String(c.created_at ?? "");
+        const dateKey = created.split("T")[0];
+        if (dateKey) {
+          const aggregate = dailyAggregates.get(dateKey);
+          if (aggregate) {
+            if (c.status === "completed") {
+              aggregate.callsCompleted++;
+            } else if (
+              c.status === "queued" ||
+              c.status === "ringing" ||
+              c.status === "in_progress"
+            ) {
+              aggregate.callsScheduled++;
+            }
+          }
+        }
+      });
+
+      // Aggregate emails
+      emails?.forEach((e) => {
+        const created = String(e.created_at ?? "");
+        const dateKey = created.split("T")[0];
+        if (dateKey) {
+          const aggregate = dailyAggregates.get(dateKey);
+          if (aggregate && e.status === "sent") {
+            aggregate.emailsSent++;
+          }
+        }
+      });
+
+      // Aggregate SOAP notes
+      soapNotes?.forEach((n) => {
+        const created = String(n.created_at ?? "");
+        const dateKey = created.split("T")[0];
+        if (dateKey) {
+          const aggregate = dailyAggregates.get(dateKey);
+          if (aggregate) {
+            aggregate.soapNotesCreated++;
+          }
+        }
+      });
+
+      // Format dates and create result array
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      const formatDateLabel = (dateStr: string): string => {
+        const date = new Date(dateStr + "T00:00:00");
+        const dateTime = date.getTime();
+
+        if (dateTime === today.getTime()) {
+          return "Today";
+        }
+        if (dateTime === yesterday.getTime()) {
+          return "Yesterday";
+        }
+        return date.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        });
+      };
+
+      return Array.from(dailyAggregates.values())
+        .map((agg) => ({
+          ...agg,
+          dateLabel: formatDateLabel(agg.date),
+        }))
+        .sort((a, b) => b.date.localeCompare(a.date)); // Most recent first
     }),
 
   /**
@@ -557,7 +756,158 @@ export const dashboardRouter = createTRPCRouter({
   }),
 
   /**
-   * Get comprehensive case statistics
+   * Get cases needing attention with full details
+   */
+  getCasesNeedingAttention: protectedProcedure
+    .input(
+      z.object({
+        limit: z.number().min(1).max(20).default(5),
+        startDate: z.string().nullable().optional(),
+        endDate: z.string().nullable().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.user.id;
+      const startDate = input.startDate ? new Date(input.startDate) : undefined;
+      const endDate = input.endDate ? new Date(input.endDate) : undefined;
+
+      // Get cases with missing discharge or SOAP notes
+      let casesQuery = ctx.supabase
+        .from("cases")
+        .select(
+          `
+          id,
+          status,
+          created_at,
+          type,
+          patients!inner (
+            id,
+            name,
+            owner_name,
+            owner_phone,
+            owner_email,
+            species
+          ),
+          discharge_summaries (id),
+          soap_notes (id)
+        `,
+        )
+        .eq("user_id", userId)
+        .in("status", ["ongoing", "draft"]);
+
+      if (startDate) {
+        casesQuery = casesQuery.gte("created_at", startDate.toISOString());
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        casesQuery = casesQuery.lte("created_at", end.toISOString());
+      }
+
+      const { data: cases } = await casesQuery.order("created_at", {
+        ascending: false,
+      });
+
+      if (!cases) return [];
+
+      // Filter cases that need attention
+      const casesNeedingAttention = cases
+        .map((c) => {
+          const patients = (c.patients as SupabasePatientsResponse) ?? [];
+          const patient = patients[0];
+          const dischargeSummaries = Array.isArray(c.discharge_summaries)
+            ? c.discharge_summaries
+            : [];
+          const soapNotes = Array.isArray(c.soap_notes) ? c.soap_notes : [];
+
+          const missingDischarge = dischargeSummaries.length === 0;
+          const missingSoap = soapNotes.length === 0;
+          const missingContact = !patient?.owner_phone && !patient?.owner_email;
+
+          // Case needs attention if missing contact info (most important for discharge)
+          const needsAttention = missingContact;
+
+          if (!needsAttention) return null;
+
+          // Normalize null/undefined values
+          const normalizeString = (
+            value: string | null | undefined,
+          ): string | null => {
+            if (!value) return null;
+            const trimmed = String(value).trim();
+            if (
+              trimmed === "" ||
+              trimmed === "null" ||
+              trimmed === "undefined" ||
+              trimmed.toLowerCase() === "null null" ||
+              trimmed.toLowerCase().startsWith("null ")
+            ) {
+              return null;
+            }
+            return trimmed;
+          };
+
+          return {
+            id: c.id,
+            status: c.status,
+            created_at: String(c.created_at ?? new Date().toISOString()),
+            type: c.type,
+            patient: {
+              id: patient?.id ?? "",
+              name: normalizeString(patient?.name) ?? "Unknown Patient",
+              owner_name: normalizeString(patient?.owner_name),
+              owner_phone: normalizeString(patient?.owner_phone),
+              owner_email: normalizeString(patient?.owner_email),
+              species: normalizeString(patient?.species),
+            },
+            missingDischarge,
+            missingSoap,
+            missingContact,
+            priority: missingContact ? 1 : 0,
+          };
+        })
+        .filter(
+          (
+            c,
+          ): c is {
+            id: string;
+            status: string | null;
+            created_at: string;
+            type: string | null;
+            patient: {
+              id: string;
+              name: string;
+              owner_name: string | null;
+              owner_phone: string | null;
+              owner_email: string | null;
+              species: string | null;
+            };
+            missingDischarge: boolean;
+            missingSoap: boolean;
+            missingContact: true;
+            priority: number;
+          } => c !== null && c.missingContact === true,
+        )
+        .sort((a, b) => {
+          // Sort by priority (higher first), then by date (newer first)
+          if (a.priority !== b.priority) {
+            return b.priority - a.priority;
+          }
+          return (
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+        })
+        .slice(0, input.limit);
+
+      return casesNeedingAttention;
+    }),
+
+  /**
+   * Get comprehensive case statistics including coverage metrics and completion rates
+   *
+   * @param input.startDate - Optional start date filter (ISO string)
+   * @param input.endDate - Optional end date filter (ISO string)
+   * @returns CaseStats with all metrics including new coverage and completion data
    */
   getCaseStats: protectedProcedure
     .input(
@@ -571,10 +921,59 @@ export const dashboardRouter = createTRPCRouter({
       const startDate = input.startDate ? new Date(input.startDate) : undefined;
       const endDate = input.endDate ? new Date(input.endDate) : undefined;
 
-      // Get all cases
+      // Helper function to calculate percentage
+      const calculatePercentage = (part: number, total: number): number => {
+        return total > 0 ? Math.round((part / total) * 100) : 0;
+      };
+
+      // Helper function to get date boundaries
+      const getDateBoundaries = () => {
+        const now = new Date();
+        return {
+          weekStart: startOfWeek(now, { weekStartsOn: 1 }), // Monday
+          monthStart: startOfMonth(now),
+        };
+      };
+
+      // Type definition for case with relations
+      type CaseWithRelations = {
+        id: string;
+        status: string | null;
+        source: string | null;
+        created_at: string | null;
+        discharge_summaries: Array<{ id: string }> | null;
+        soap_notes: Array<{ id: string }> | null;
+      };
+
+      // Helper function to check if case has discharge summary
+      const hasDischargeSummary = (caseData: CaseWithRelations): boolean => {
+        return (
+          Array.isArray(caseData.discharge_summaries) &&
+          caseData.discharge_summaries.length > 0
+        );
+      };
+
+      // Helper function to check if case has SOAP note
+      const hasSoapNote = (caseData: CaseWithRelations): boolean => {
+        return (
+          Array.isArray(caseData.soap_notes) && caseData.soap_notes.length > 0
+        );
+      };
+
+      // Single query to get all cases with relations for efficient calculation
       let casesQuery = ctx.supabase
         .from("cases")
-        .select("id, status, source, created_at")
+        .select(
+          `
+          id,
+          status,
+          source,
+          created_at,
+          scheduled_at,
+          discharge_summaries(id),
+          soap_notes(id)
+        `,
+        )
         .eq("user_id", userId);
 
       if (startDate) {
@@ -590,12 +989,16 @@ export const dashboardRouter = createTRPCRouter({
 
       const totalCases = allCases?.length ?? 0;
 
-      // Cases this week
-      const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      // Calculate date boundaries (consistent for all "this week/month" calculations)
+      const { weekStart, monthStart } = getDateBoundaries();
+
+      // Cases this week (using consistent weekStart calculation)
       const casesThisWeek =
-        allCases?.filter((c) => new Date(c.created_at) >= oneWeekAgo).length ??
-        0;
+        allCases?.filter((c) => {
+          if (!c.created_at) return false;
+          const caseCreatedAt = new Date(c.created_at);
+          return caseCreatedAt >= weekStart;
+        }).length ?? 0;
 
       // By status
       const byStatus = {
@@ -696,6 +1099,129 @@ export const dashboardRouter = createTRPCRouter({
 
       const { count: emailsSentCount } = await emailsQuery;
 
+      // Initialize counters
+      let totalNeedingDischarge = 0;
+      let thisWeekNeedingDischarge = 0;
+      let thisMonthNeedingDischarge = 0;
+
+      let totalNeedingSoap = 0;
+      let thisWeekNeedingSoap = 0;
+      let thisMonthNeedingSoap = 0;
+
+      let totalWithDischarge = 0;
+      let totalWithSoap = 0;
+
+      let completedCasesTotal = 0;
+      let completedCasesThisWeek = 0;
+      let createdCasesThisWeek = 0;
+      let completedCasesThisMonth = 0;
+      let createdCasesThisMonth = 0;
+
+      // Process each case
+      allCases?.forEach((c) => {
+        // Skip cases with null created_at for date-based calculations
+        if (!c.created_at) {
+          // Still count for total metrics but skip date-based calculations
+          const hasDischarge = hasDischargeSummary(c as CaseWithRelations);
+          const hasSoap = hasSoapNote(c as CaseWithRelations);
+          const isCompleted = c.status === "completed";
+
+          if (!hasDischarge) {
+            totalNeedingDischarge++;
+          } else {
+            totalWithDischarge++;
+          }
+
+          if (!hasSoap) {
+            totalNeedingSoap++;
+          } else {
+            totalWithSoap++;
+          }
+
+          if (isCompleted) {
+            completedCasesTotal++;
+          }
+
+          return; // Skip date-based calculations
+        }
+
+        const caseCreatedAt = new Date(c.created_at);
+        const hasDischarge = hasDischargeSummary(c as CaseWithRelations);
+        const hasSoap = hasSoapNote(c as CaseWithRelations);
+        const isCompleted = c.status === "completed";
+
+        // Cases needing discharge
+        if (!hasDischarge) {
+          totalNeedingDischarge++;
+          if (caseCreatedAt >= weekStart) {
+            thisWeekNeedingDischarge++;
+          }
+          if (caseCreatedAt >= monthStart) {
+            thisMonthNeedingDischarge++;
+          }
+        } else {
+          totalWithDischarge++;
+        }
+
+        // Cases needing SOAP
+        if (!hasSoap) {
+          totalNeedingSoap++;
+          if (caseCreatedAt >= weekStart) {
+            thisWeekNeedingSoap++;
+          }
+          if (caseCreatedAt >= monthStart) {
+            thisMonthNeedingSoap++;
+          }
+        } else {
+          totalWithSoap++;
+        }
+
+        // Completion rate calculations
+        if (isCompleted) {
+          completedCasesTotal++;
+        }
+
+        // This week metrics
+        if (caseCreatedAt >= weekStart) {
+          createdCasesThisWeek++;
+          if (isCompleted) {
+            completedCasesThisWeek++;
+          }
+        }
+
+        // This month metrics
+        if (caseCreatedAt >= monthStart) {
+          createdCasesThisMonth++;
+          if (isCompleted) {
+            completedCasesThisMonth++;
+          }
+        }
+      });
+
+      // Calculate coverage percentages
+      const soapCoveragePercentage = calculatePercentage(
+        totalWithSoap,
+        totalCases,
+      );
+      const dischargeCoveragePercentage = calculatePercentage(
+        totalWithDischarge,
+        totalCases,
+      );
+
+      // Calculate completion rates
+      const completionRateOverall = calculatePercentage(
+        completedCasesTotal,
+        totalCases,
+      );
+      const completionRateThisWeek = calculatePercentage(
+        completedCasesThisWeek,
+        createdCasesThisWeek,
+      );
+      const completionRateThisMonth = calculatePercentage(
+        completedCasesThisMonth,
+        createdCasesThisMonth,
+      );
+
       return {
         total: totalCases,
         thisWeek: casesThisWeek,
@@ -705,6 +1231,45 @@ export const dashboardRouter = createTRPCRouter({
         dischargeSummaries: dischargeSummariesCount ?? 0,
         callsCompleted: callsCompletedCount ?? 0,
         emailsSent: emailsSentCount ?? 0,
+        casesNeedingDischarge: {
+          total: totalNeedingDischarge,
+          thisWeek: thisWeekNeedingDischarge,
+          thisMonth: thisMonthNeedingDischarge,
+        },
+        casesNeedingSoap: {
+          total: totalNeedingSoap,
+          thisWeek: thisWeekNeedingSoap,
+          thisMonth: thisMonthNeedingSoap,
+        },
+        soapCoverage: {
+          percentage: soapCoveragePercentage,
+          totalCases,
+          casesWithSoap: totalWithSoap,
+          casesNeedingSoap: totalNeedingSoap,
+        },
+        dischargeCoverage: {
+          percentage: dischargeCoveragePercentage,
+          totalCases,
+          casesWithDischarge: totalWithDischarge,
+          casesNeedingDischarge: totalNeedingDischarge,
+        },
+        completionRate: {
+          overall: {
+            completed: completedCasesTotal,
+            total: totalCases,
+            percentage: completionRateOverall,
+          },
+          thisWeek: {
+            completed: completedCasesThisWeek,
+            created: createdCasesThisWeek,
+            percentage: completionRateThisWeek,
+          },
+          thisMonth: {
+            completed: completedCasesThisMonth,
+            created: createdCasesThisMonth,
+            percentage: completionRateThisMonth,
+          },
+        },
       };
     }),
 
@@ -723,12 +1288,36 @@ export const dashboardRouter = createTRPCRouter({
         search: z.string().optional(),
         startDate: z.string().nullable().optional(),
         endDate: z.string().nullable().optional(),
+        missingDischarge: z.boolean().optional(),
+        missingSoap: z.boolean().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
-      const startDate = input.startDate ? new Date(input.startDate) : undefined;
-      const endDate = input.endDate ? new Date(input.endDate) : undefined;
+
+      // Validate and parse dates
+      let startDate: Date | undefined;
+      let endDate: Date | undefined;
+
+      if (input.startDate) {
+        startDate = new Date(input.startDate);
+        if (isNaN(startDate.getTime())) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Invalid startDate format",
+          });
+        }
+      }
+
+      if (input.endDate) {
+        endDate = new Date(input.endDate);
+        if (isNaN(endDate.getTime())) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Invalid endDate format",
+          });
+        }
+      }
 
       // Build base query
       let query = ctx.supabase
@@ -738,7 +1327,9 @@ export const dashboardRouter = createTRPCRouter({
           id,
           status,
           source,
+          type,
           created_at,
+          scheduled_at,
           patients!inner (
             id,
             name,
@@ -769,95 +1360,243 @@ export const dashboardRouter = createTRPCRouter({
         query = query.lte("created_at", end.toISOString());
       }
 
-      // Get total count before pagination
-      const { count } = await query;
+      // If missingDischarge or missingSoap filters are active, we need to fetch all cases
+      // to filter properly, then paginate. Otherwise, paginate first for better performance.
+      const needsPostFiltering =
+        input.missingDischarge === true || input.missingSoap === true;
 
-      // Apply pagination
-      const from = (input.page - 1) * input.pageSize;
-      const to = from + input.pageSize - 1;
+      type CaseWithPatients = {
+        id: string;
+        status: string | null;
+        source: string | null;
+        type: "checkup" | "emergency" | "surgery" | "follow_up" | null;
+        created_at: string | null;
+        patients: SupabasePatientsResponse;
+      };
 
-      query = query.order("created_at", { ascending: false }).range(from, to);
+      let cases: CaseWithPatients[] | null;
+      let count: number | null = null;
 
-      const { data: cases, error } = await query;
-
-      if (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch cases",
-          cause: error,
+      if (needsPostFiltering) {
+        // Fetch all matching cases (we'll filter after enrichment)
+        const { data: allCases, error } = await query.order("created_at", {
+          ascending: false,
         });
+
+        if (error) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to fetch cases",
+            cause: error,
+          });
+        }
+
+        cases = allCases as CaseWithPatients[] | null;
+      } else {
+        // Apply pagination
+        const from = (input.page - 1) * input.pageSize;
+        const to = from + input.pageSize - 1;
+
+        const {
+          data: paginatedCases,
+          error: queryError,
+          count: queryCount,
+        } = await query
+          .order("created_at", { ascending: false })
+          .range(from, to);
+
+        if (queryError) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to fetch cases",
+            cause: queryError,
+          });
+        }
+
+        cases = paginatedCases as CaseWithPatients[] | null;
+        count = queryCount;
       }
 
-      // For each case, check if it has SOAP notes, discharge summaries, calls, emails
-      const enrichedCases = await Promise.all(
-        (cases ?? []).map(async (c) => {
-          const [
-            { data: soapNotes },
-            { data: dischargeSummaries },
-            { data: calls },
-            { data: emails },
-          ] = await Promise.all([
-            ctx.supabase
+      // Batch fetch all related data to avoid N+1 queries
+      const caseIds = (cases ?? []).map((c: CaseWithPatients) => c.id);
+
+      const [
+        { data: allSoapNotes },
+        { data: allDischargeSummaries },
+        { data: allCalls },
+        { data: allEmails },
+      ] = await Promise.all([
+        caseIds.length > 0
+          ? ctx.supabase
               .from("soap_notes")
-              .select("id")
-              .eq("case_id", c.id)
-              .limit(1),
-            ctx.supabase
+              .select("case_id, id, created_at")
+              .in("case_id", caseIds)
+              .order("created_at", { ascending: false })
+          : Promise.resolve({ data: [] }),
+        caseIds.length > 0
+          ? ctx.supabase
               .from("discharge_summaries")
-              .select("id")
-              .eq("case_id", c.id)
-              .limit(1),
-            ctx.supabase
+              .select("case_id, id, created_at")
+              .in("case_id", caseIds)
+              .order("created_at", { ascending: false })
+          : Promise.resolve({ data: [] }),
+        caseIds.length > 0
+          ? ctx.supabase
               .from("scheduled_discharge_calls")
-              .select("id")
-              .eq("case_id", c.id)
-              .limit(1),
-            ctx.supabase
+              .select("case_id, id, created_at, ended_at")
+              .in("case_id", caseIds)
+              .order("created_at", { ascending: false })
+          : Promise.resolve({ data: [] }),
+        caseIds.length > 0
+          ? ctx.supabase
               .from("scheduled_discharge_emails")
-              .select("id")
-              .eq("case_id", c.id)
-              .limit(1),
-          ]);
+              .select("case_id, id, created_at, sent_at")
+              .in("case_id", caseIds)
+              .order("created_at", { ascending: false })
+          : Promise.resolve({ data: [] }),
+      ]);
 
-          const patients = (c.patients as SupabasePatientsResponse) ?? [];
-          const patient = patients[0];
-          return {
-            id: c.id,
-            status: c.status,
-            source: c.source,
-            created_at: c.created_at,
-            patient: {
-              id: patient?.id ?? "",
-              name: patient?.name ?? "Unknown",
-              species: patient?.species ?? "Unknown",
-              owner_name: patient?.owner_name ?? "Unknown",
-            },
-            hasSoapNote: (soapNotes?.length ?? 0) > 0,
-            hasDischargeSummary: (dischargeSummaries?.length ?? 0) > 0,
-            hasDischargeCall: (calls?.length ?? 0) > 0,
-            hasDischargeEmail: (emails?.length ?? 0) > 0,
-          };
-        }),
-      );
+      // Group related data by case_id for efficient lookup
+      type SoapNote = { case_id: string; id: string; created_at: string };
+      type DischargeSummary = {
+        case_id: string;
+        id: string;
+        created_at: string;
+      };
+      type Call = {
+        case_id: string;
+        id: string;
+        created_at: string;
+        ended_at: string | null;
+      };
+      type Email = {
+        case_id: string;
+        id: string;
+        created_at: string;
+        sent_at: string | null;
+      };
 
-      // Apply client-side search filter if provided
+      const soapNotesByCase = new Map<string, SoapNote>();
+      const dischargeSummariesByCase = new Map<string, DischargeSummary>();
+      const callsByCase = new Map<string, Call>();
+      const emailsByCase = new Map<string, Email>();
+
+      // Get latest entry for each case (data is already ordered by created_at desc)
+      for (const note of (allSoapNotes ?? []) as SoapNote[]) {
+        if (note?.case_id && !soapNotesByCase.has(note.case_id)) {
+          soapNotesByCase.set(note.case_id, note);
+        }
+      }
+
+      for (const summary of (allDischargeSummaries ??
+        []) as DischargeSummary[]) {
+        if (
+          summary?.case_id &&
+          !dischargeSummariesByCase.has(summary.case_id)
+        ) {
+          dischargeSummariesByCase.set(summary.case_id, summary);
+        }
+      }
+
+      for (const call of (allCalls ?? []) as Call[]) {
+        if (call?.case_id && !callsByCase.has(call.case_id)) {
+          callsByCase.set(call.case_id, call);
+        }
+      }
+
+      for (const email of (allEmails ?? []) as Email[]) {
+        if (email?.case_id && !emailsByCase.has(email.case_id)) {
+          emailsByCase.set(email.case_id, email);
+        }
+      }
+
+      // Enrich cases with related data
+      const enrichedCases = (cases ?? []).map((c: CaseWithPatients) => {
+        const soapNote = soapNotesByCase.get(c.id);
+        const dischargeSummary = dischargeSummariesByCase.get(c.id);
+        const call = callsByCase.get(c.id);
+        const email = emailsByCase.get(c.id);
+
+        const patients = c.patients ?? [];
+        const patient = patients[0];
+
+        // Get latest timestamps (use ended_at for calls, sent_at for emails, created_at for others)
+        const soapNoteTimestamp = soapNote?.created_at;
+        const dischargeSummaryTimestamp = dischargeSummary?.created_at;
+        const dischargeCallTimestamp = call?.ended_at ?? call?.created_at;
+        const dischargeEmailTimestamp = email?.sent_at ?? email?.created_at;
+
+        return {
+          id: c.id,
+          status: c.status,
+          source: c.source,
+          type: c.type,
+          created_at: c.created_at,
+          patient: {
+            id: patient?.id ?? "",
+            name: patient?.name ?? "Unknown",
+            species: patient?.species ?? "Unknown",
+            owner_name: patient?.owner_name ?? "Unknown",
+          },
+          hasSoapNote: !!soapNote,
+          hasDischargeSummary: !!dischargeSummary,
+          hasDischargeCall: !!call,
+          hasDischargeEmail: !!email,
+          soapNoteTimestamp,
+          dischargeSummaryTimestamp,
+          dischargeCallTimestamp,
+          dischargeEmailTimestamp,
+        };
+      });
+
+      // Apply client-side filters (search, missing discharge, missing SOAP)
       let filteredCases = enrichedCases;
       if (input.search) {
         const searchLower = input.search.toLowerCase();
-        filteredCases = enrichedCases.filter(
-          (c) =>
+        filteredCases = filteredCases.filter(
+          (c: (typeof enrichedCases)[0]) =>
             c.patient.name.toLowerCase().includes(searchLower) ||
             (c.patient.owner_name?.toLowerCase() ?? "").includes(searchLower),
         );
       }
 
+      // Apply missing discharge filter
+      if (input.missingDischarge === true) {
+        filteredCases = filteredCases.filter(
+          (c: (typeof enrichedCases)[0]) => !c.hasDischargeSummary,
+        );
+      }
+
+      // Apply missing SOAP filter
+      if (input.missingSoap === true) {
+        filteredCases = filteredCases.filter(
+          (c: (typeof enrichedCases)[0]) => !c.hasSoapNote,
+        );
+      }
+
+      // Calculate pagination
+      // When not doing post-filtering, use the count from the query
+      // When doing post-filtering, use the length of filtered cases
+      const filteredTotal = needsPostFiltering
+        ? filteredCases.length
+        : (count ?? filteredCases.length);
+      let paginatedCases = filteredCases;
+      const totalPages = Math.ceil(filteredTotal / input.pageSize);
+
+      // Apply pagination if we fetched all cases (post-filtering scenario)
+      if (needsPostFiltering) {
+        const from = (input.page - 1) * input.pageSize;
+        const to = from + input.pageSize;
+        paginatedCases = filteredCases.slice(from, to);
+      }
+
       return {
-        cases: filteredCases,
+        cases: paginatedCases,
         pagination: {
           page: input.page,
           pageSize: input.pageSize,
-          total: count ?? 0,
-          totalPages: Math.ceil((count ?? 0) / input.pageSize),
+          total: filteredTotal,
+          totalPages,
         },
       };
     }),

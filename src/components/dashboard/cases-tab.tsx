@@ -1,36 +1,124 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { api } from "~/trpc/client";
-import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
-import { Search, Filter, Plus, LayoutGrid, List } from "lucide-react";
+import { LayoutGrid, List } from "lucide-react";
 import { CaseListCard } from "./case-list-card";
 import { CaseListItemCompact } from "./case-list-item-compact";
-import Link from "next/link";
+import { EmptyState } from "./empty-state";
+import { useQueryState } from "nuqs";
+import { CasesFilterBar } from "./cases-filter-bar";
+import {
+  DayPaginationControls,
+  getDayDateRange,
+} from "./day-pagination-controls";
+import { getDateFromPreset } from "./cases-date-range-selector";
+import type { QuickFilterId } from "./quick-filters";
+import type { DateRangePreset } from "~/lib/utils/date-ranges";
+import { getDateRangeFromPreset } from "~/lib/utils/date-ranges";
+import type { CaseStatus } from "~/types/dashboard";
+import { format, parseISO, startOfDay } from "date-fns";
 
 type ViewMode = "grid" | "list";
 const VIEW_STORAGE_KEY = "cases-view-mode";
 
+/**
+ * CasesTab - Display and manage all cases with filtering
+ *
+ * Note: The `startDate` and `endDate` props are kept for backward compatibility
+ * but are ignored. Date filtering is now handled via URL query parameter "dateRange"
+ * using the DateFilterButtonGroup component.
+ */
 export function CasesTab({
-  startDate,
-  endDate,
+  startDate: _startDate,
+  endDate: _endDate,
 }: {
+  /** @deprecated Use dateRange URL query parameter instead */
   startDate?: string | null;
+  /** @deprecated Use dateRange URL query parameter instead */
   endDate?: string | null;
 }) {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string | undefined>();
-  const [sourceFilter, setSourceFilter] = useState<string | undefined>();
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+
+  // Date navigation - use date query param or default to today
+  const [dateStr, setDateStr] = useQueryState("date", {
+    defaultValue: format(startOfDay(new Date()), "yyyy-MM-dd"),
+  });
+
+  // Date range preset for quick jumps
+  const [dateRangePreset, setDateRangePreset] = useQueryState("dateRange", {
+    parse: (value): DateRangePreset | null => {
+      const validPresets: DateRangePreset[] = ["all", "1d", "3d", "30d"];
+      return validPresets.includes(value as DateRangePreset)
+        ? (value as DateRangePreset)
+        : null;
+    },
+    serialize: (value) => value ?? "",
+  });
+
+  // Current date from query param or today
+  const currentDate = useMemo(() => {
+    if (dateStr) {
+      try {
+        return parseISO(dateStr);
+      } catch {
+        return startOfDay(new Date());
+      }
+    }
+    return startOfDay(new Date());
+  }, [dateStr]);
+
+  const [statusFilter, setStatusFilter] = useQueryState("status", {
+    defaultValue: "all",
+  });
+
+  const [sourceFilter, setSourceFilter] = useQueryState("source", {
+    defaultValue: "all",
+  });
+
+  const [quickFiltersStr, setQuickFiltersStr] = useQueryState("quickFilters", {
+    defaultValue: "",
+  });
+
+  // Convert string to Set for easier manipulation
+  const quickFilters = useMemo(() => {
+    if (!quickFiltersStr) return new Set<QuickFilterId>();
+    const validFilterIds: QuickFilterId[] = [
+      "missingDischarge",
+      "missingSoap",
+      "today",
+      "thisWeek",
+      "recent",
+    ];
+    return new Set(
+      quickFiltersStr
+        .split(",")
+        .filter(Boolean)
+        .filter((id): id is QuickFilterId =>
+          validFilterIds.includes(id as QuickFilterId),
+        ),
+    );
+  }, [quickFiltersStr]);
+
+  // Calculate date range based on current date or preset
+  const { startDate: calculatedStartDate, endDate: calculatedEndDate } =
+    useMemo(() => {
+      // If a date range preset is selected, use that
+      if (dateRangePreset && dateRangePreset !== "all") {
+        return getDateRangeFromPreset(dateRangePreset);
+      }
+
+      // Otherwise, use the current selected date (single day)
+      const { startDate, endDate } = getDayDateRange(currentDate);
+      return { startDate, endDate };
+    }, [dateRangePreset, currentDate]);
+
+  // Convert dates to ISO strings for API calls
+  const startDate = calculatedStartDate?.toISOString() ?? null;
+  const endDate = calculatedEndDate?.toISOString() ?? null;
 
   // Load view preference from localStorage on mount
   useEffect(() => {
@@ -49,17 +137,20 @@ export function CasesTab({
   const { data, isLoading } = api.dashboard.getAllCases.useQuery({
     page,
     pageSize: 20,
-    status: statusFilter as
-      | "draft"
-      | "ongoing"
-      | "completed"
-      | "reviewed"
-      | undefined,
-    source: sourceFilter,
+    status:
+      statusFilter && statusFilter !== "all"
+        ? (statusFilter as "draft" | "ongoing" | "completed" | "reviewed")
+        : undefined,
+    source: sourceFilter && sourceFilter !== "all" ? sourceFilter : undefined,
     search: search || undefined,
     startDate,
     endDate,
+    missingDischarge: quickFilters.has("missingDischarge") ? true : undefined,
+    missingSoap: quickFilters.has("missingSoap") ? true : undefined,
   });
+
+  // Use cases directly from backend (backend handles filtering)
+  const filteredCases = data?.cases ?? [];
 
   return (
     <div className="animate-tab-content space-y-6">
@@ -93,72 +184,74 @@ export function CasesTab({
               <List className="h-4 w-4" />
             </Button>
           </div>
-          <Link href="/dashboard/cases?action=new">
-            <Button className="transition-smooth gap-2 hover:shadow-md">
-              <Plus className="h-4 w-4" />
-              New Case
-            </Button>
-          </Link>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="animate-card-in-delay-1 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
-          <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <Input
-            placeholder="Search by patient or owner name..."
-            className="transition-smooth pl-9 focus:ring-2"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1); // Reset to first page on search
-            }}
-          />
-        </div>
+      {/* Date Navigator */}
+      <div className="animate-card-in-delay-1">
+        <DayPaginationControls
+          currentDate={currentDate}
+          onDateChange={(date) => {
+            void setDateStr(format(startOfDay(date), "yyyy-MM-dd"));
+            void setDateRangePreset(null); // Clear preset when manually navigating
+            setPage(1);
+          }}
+          isLoading={isLoading}
+          className="w-full"
+        />
+      </div>
 
-        <div className="flex gap-2">
-          <Select
-            value={statusFilter ?? "all"}
-            onValueChange={(value) => {
-              setStatusFilter(value === "all" ? undefined : value);
-              setPage(1);
-            }}
-          >
-            <SelectTrigger className="w-[150px]">
-              <Filter className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="ongoing">Ongoing</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="reviewed">Reviewed</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={sourceFilter ?? "all"}
-            onValueChange={(value) => {
-              setSourceFilter(value === "all" ? undefined : value);
-              setPage(1);
-            }}
-          >
-            <SelectTrigger className="w-[150px]">
-              <Filter className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Source" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Sources</SelectItem>
-              <SelectItem value="manual">Manual</SelectItem>
-              <SelectItem value="idexx_neo">IDEXX Neo</SelectItem>
-              <SelectItem value="cornerstone">Cornerstone</SelectItem>
-              <SelectItem value="ezyvet">ezyVet</SelectItem>
-              <SelectItem value="avimark">AVImark</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      {/* Unified Filter Bar */}
+      <div className="animate-card-in-delay-1 flex flex-col gap-3">
+        <CasesFilterBar
+          search={search}
+          onSearchChange={(value) => {
+            setSearch(value);
+            setPage(1);
+          }}
+          quickFilters={quickFilters}
+          onQuickFiltersChange={(selected) => {
+            const newValue =
+              selected.size === 0 ? "" : Array.from(selected).join(",");
+            void setQuickFiltersStr(newValue);
+            setPage(1);
+          }}
+          statusFilter={statusFilter ?? "all"}
+          onStatusFilterChange={(value) => {
+            void setStatusFilter(value === "all" ? null : value);
+            setPage(1);
+          }}
+          sourceFilter={sourceFilter ?? "all"}
+          onSourceFilterChange={(value) => {
+            void setSourceFilter(value === "all" ? null : value);
+            setPage(1);
+          }}
+          dateRangePreset={dateRangePreset ?? null}
+          onDateRangePresetChange={(preset) => {
+            void setDateRangePreset(preset);
+            // If preset is "all", clear the date filter
+            if (preset === "all") {
+              void setDateStr(null);
+            } else if (preset) {
+              // Otherwise, set the date to the end date of the range
+              const dateFromPreset = getDateFromPreset(preset);
+              if (dateFromPreset) {
+                void setDateStr(
+                  format(startOfDay(dateFromPreset), "yyyy-MM-dd"),
+                );
+              }
+            }
+            setPage(1);
+          }}
+          onClearFilters={() => {
+            setSearch("");
+            void setQuickFiltersStr("");
+            void setStatusFilter(null);
+            void setSourceFilter(null);
+            void setDateRangePreset(null);
+            setPage(1);
+          }}
+        />
       </div>
 
       {/* Cases List */}
@@ -182,29 +275,44 @@ export function CasesTab({
             ))}
           </div>
         )
-      ) : data?.cases.length === 0 ? (
-        <div className="animate-card-in-delay-2 rounded-xl border border-slate-200 bg-slate-50 p-12 text-center">
-          <p className="text-lg font-medium text-slate-900">No cases found</p>
-          <p className="mt-1 text-sm text-slate-600">
-            Try adjusting your filters or create a new case
-          </p>
+      ) : filteredCases.length === 0 ? (
+        <div className="animate-card-in-delay-2">
+          <EmptyState
+            title="No cases found"
+            description={
+              dateRangePreset && dateRangePreset !== "all"
+                ? "No cases found for the selected date range. Try adjusting your date filter or create a new case."
+                : "Try adjusting your filters or create a new case"
+            }
+          />
         </div>
       ) : (
         <>
           {viewMode === "grid" ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {data?.cases.map((caseData, index) => (
+              {filteredCases.map((caseData, index) => (
                 <CaseListCard
                   key={caseData.id}
-                  caseData={caseData}
+                  caseData={{
+                    ...caseData,
+                    status: (caseData.status ?? "draft") as CaseStatus,
+                    created_at: caseData.created_at ?? new Date().toISOString(),
+                  }}
                   index={index % 4}
                 />
               ))}
             </div>
           ) : (
             <div className="space-y-2">
-              {data?.cases.map((caseData) => (
-                <CaseListItemCompact key={caseData.id} caseData={caseData} />
+              {filteredCases.map((caseData) => (
+                <CaseListItemCompact
+                  key={caseData.id}
+                  caseData={{
+                    ...caseData,
+                    status: (caseData.status ?? "draft") as CaseStatus,
+                    created_at: caseData.created_at ?? new Date().toISOString(),
+                  }}
+                />
               ))}
             </div>
           )}

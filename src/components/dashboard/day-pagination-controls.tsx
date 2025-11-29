@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useCallback, useMemo, useRef } from "react";
 import { Button } from "~/components/ui/button";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import {
@@ -8,6 +8,8 @@ import {
   isToday,
   isYesterday,
   isTomorrow,
+  startOfDay,
+  endOfDay,
 } from "date-fns";
 import {
   Tooltip,
@@ -17,31 +19,69 @@ import {
 } from "~/components/ui/tooltip";
 
 interface DayPaginationControlsProps {
+  /** Current selected date */
   currentDate: Date;
+  /** Callback when date changes */
   onDateChange: (date: Date) => void;
-  totalItems: number;
+  /** Total number of items for the current date */
+  totalItems?: number;
+  /** Whether data is currently loading */
   isLoading?: boolean;
+  /** Optional additional CSS classes */
+  className?: string;
 }
 
+/**
+ * DayPaginationControls - Date navigation component with keyboard shortcuts
+ *
+ * Provides day-by-day navigation with previous/next buttons and keyboard shortcuts.
+ * Supports "Today", "Yesterday", and "Tomorrow" labels for better UX.
+ *
+ * Keyboard shortcuts:
+ * - ArrowLeft: Previous day
+ * - ArrowRight: Next day (disabled if already at today)
+ * - T: Jump to today
+ *
+ * @example
+ * ```tsx
+ * <DayPaginationControls
+ *   currentDate={new Date()}
+ *   onDateChange={(date) => setDate(date)}
+ *   totalItems={10}
+ *   isLoading={false}
+ * />
+ * ```
+ */
 export function DayPaginationControls({
   currentDate,
   onDateChange,
   totalItems,
   isLoading = false,
+  className,
 }: DayPaginationControlsProps) {
-  const goToPreviousDay = () => {
+  // Use ref to avoid including onDateChange in useEffect dependencies
+  // This prevents unnecessary re-registration of event listeners
+  const onDateChangeRef = useRef(onDateChange);
+  useEffect(() => {
+    onDateChangeRef.current = onDateChange;
+  }, [onDateChange]);
+
+  const goToPreviousDay = useCallback(() => {
     const previousDay = subDays(currentDate, 1);
     onDateChange(previousDay);
-  };
+  }, [currentDate, onDateChange]);
 
-  const goToNextDay = () => {
+  const goToNextDay = useCallback(() => {
     const nextDay = addDays(currentDate, 1);
     onDateChange(nextDay);
-  };
+  }, [currentDate, onDateChange]);
 
-  const goToToday = () => {
-    onDateChange(new Date());
-  };
+  const goToToday = useCallback(() => {
+    const today = new Date();
+    // Reset time to start of day for consistency
+    today.setHours(0, 0, 0, 0);
+    onDateChange(today);
+  }, [onDateChange]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -56,22 +96,23 @@ export function DayPaginationControls({
       }
 
       switch (e.key) {
-        case "ArrowLeft":
-          {
-            const previousDay = subDays(currentDate, 1);
-            onDateChange(previousDay);
-          }
+        case "ArrowLeft": {
+          const previousDay = subDays(currentDate, 1);
+          onDateChangeRef.current(previousDay);
           break;
+        }
         case "ArrowRight":
           if (!isToday(currentDate)) {
             const nextDay = addDays(currentDate, 1);
-            onDateChange(nextDay);
+            onDateChangeRef.current(nextDay);
           }
           break;
         case "t":
         case "T":
           if (!isToday(currentDate)) {
-            onDateChange(new Date());
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            onDateChangeRef.current(today);
           }
           break;
       }
@@ -79,25 +120,25 @@ export function DayPaginationControls({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentDate, onDateChange, isLoading]);
+  }, [currentDate, isLoading]);
 
-  const formatDateDisplay = (date: Date) => {
-    if (isToday(date)) {
-      return "Today";
-    }
-    if (isYesterday(date)) {
-      return "Yesterday";
-    }
-    if (isTomorrow(date)) {
-      return "Tomorrow";
-    }
-    return format(date, "EEE, MMM d, yyyy");
-  };
+  const formatDateDisplay = useMemo(() => {
+    if (isToday(currentDate)) return "Today";
+    if (isYesterday(currentDate)) return "Yesterday";
+    if (isTomorrow(currentDate)) return "Tomorrow";
+    return format(currentDate, "EEE, MMM d, yyyy");
+  }, [currentDate]);
+
+  // Glassmorphism styling constants for maintainability
+  const GLASSMORPHISM_CLASSES =
+    "rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md transition-all hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10";
 
   return (
     <TooltipProvider>
-      <div className="w-full py-2">
-        <div className="bg-card flex w-full items-center justify-between rounded-md border shadow-sm">
+      <div className={className ?? "w-full py-2"}>
+        <div
+          className={`flex w-full items-center justify-between ${GLASSMORPHISM_CLASSES}`}
+        >
           {/* Left: Previous Day Button */}
           <Tooltip>
             <TooltipTrigger asChild>
@@ -106,7 +147,7 @@ export function DayPaginationControls({
                 size="icon"
                 onClick={goToPreviousDay}
                 disabled={isLoading}
-                className="hover:bg-muted h-9 w-9 rounded-l-md rounded-r-none border-r"
+                className="hover:bg-muted h-9 w-9 rounded-l-md rounded-r-none border-r focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
                 aria-label="Previous Day"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -122,7 +163,7 @@ export function DayPaginationControls({
             <Calendar className="text-muted-foreground hidden h-4 w-4 sm:block" />
             <div className="flex flex-col items-center leading-none">
               <span className="text-xs font-medium sm:text-sm">
-                {formatDateDisplay(currentDate)}
+                {formatDateDisplay}
               </span>
               <div className="flex items-center gap-1.5">
                 {isLoading ? (
@@ -131,14 +172,18 @@ export function DayPaginationControls({
                   </span>
                 ) : (
                   <>
-                    <span className="text-muted-foreground text-[10px]">
-                      {totalItems} {totalItems === 1 ? "case" : "cases"}
-                    </span>
+                    {totalItems !== undefined && (
+                      <span className="text-muted-foreground text-[10px]">
+                        {totalItems} {totalItems === 1 ? "case" : "cases"}
+                      </span>
+                    )}
                     {!isToday(currentDate) && (
                       <>
-                        <span className="text-muted-foreground/50 text-[10px]">
-                          •
-                        </span>
+                        {totalItems !== undefined && (
+                          <span className="text-muted-foreground/50 text-[10px]">
+                            •
+                          </span>
+                        )}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <button
@@ -168,7 +213,7 @@ export function DayPaginationControls({
                 variant="ghost"
                 size="icon"
                 onClick={goToNextDay}
-                className="hover:bg-muted h-9 w-9 rounded-l-none rounded-r-md border-l"
+                className="hover:bg-muted h-9 w-9 rounded-l-none rounded-r-md border-l focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2"
                 disabled={isToday(currentDate) || isLoading}
                 aria-label="Next Day"
               >
@@ -183,4 +228,25 @@ export function DayPaginationControls({
       </div>
     </TooltipProvider>
   );
+}
+
+/**
+ * Helper function to get start and end of day for a given date
+ *
+ * @param date - The date to get the day range for
+ * @returns Object with startDate and endDate for the given day
+ *
+ * @example
+ * ```tsx
+ * const { startDate, endDate } = getDayDateRange(new Date());
+ * ```
+ */
+export function getDayDateRange(date: Date): {
+  startDate: Date;
+  endDate: Date;
+} {
+  return {
+    startDate: startOfDay(date),
+    endDate: endOfDay(date),
+  };
 }

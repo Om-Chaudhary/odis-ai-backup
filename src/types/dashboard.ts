@@ -11,6 +11,14 @@ export type EmailStatus = "queued" | "sent" | "failed" | "cancelled" | null;
 
 export type CaseStatus = "draft" | "ongoing" | "completed" | "reviewed";
 
+/**
+ * Discharge readiness filter options
+ */
+export type DischargeReadinessFilter =
+  | "all"
+  | "ready_for_discharge"
+  | "not_ready";
+
 export interface TranscriptMessage {
   role: "assistant" | "user" | "system";
   message: string;
@@ -60,8 +68,33 @@ export interface CallDetails {
 export interface BackendCase {
   id: string;
   status: CaseStatus;
+  source: string | null;
+  type: "checkup" | "emergency" | "surgery" | "follow_up" | null;
   created_at: string;
   scheduled_at: string | null;
+  metadata?: {
+    idexx?: {
+      notes?: string;
+      client_id?: string;
+      patient_id?: string;
+      client_name?: string;
+      provider_id?: string;
+      client_email?: string;
+      client_phone?: string;
+      extracted_at?: string;
+      patient_name?: string;
+      patient_breed?: string | null;
+      provider_name?: string;
+      appointment_id?: string;
+      extracted_from?: string;
+      patient_species?: string | null;
+      appointment_type?: string;
+      appointment_reason?: string;
+      appointment_status?: string;
+      appointment_duration?: number;
+    };
+    [key: string]: unknown;
+  } | null;
   patients: Array<{
     id: string;
     name: string;
@@ -121,6 +154,8 @@ export interface BackendCase {
 export interface DashboardCase {
   id: string;
   status: CaseStatus;
+  source: string | null;
+  type: "checkup" | "emergency" | "surgery" | "follow_up" | null;
   created_at: string;
   scheduled_at: string | null;
   patient: {
@@ -137,6 +172,12 @@ export interface DashboardCase {
     content: string;
     created_at: string;
   };
+  /** Indicates if this case has clinical notes (SOAP notes, transcriptions, or discharge summaries) */
+  has_clinical_notes: boolean;
+  /** Indicates if this case is ready for discharge (has content + valid contact) */
+  is_ready_for_discharge: boolean;
+  /** List of requirements missing for discharge readiness */
+  missing_requirements: string[];
   scheduled_discharge_calls: Array<{
     id: string;
     status: CallStatus;
@@ -285,6 +326,20 @@ export interface ActivityItem {
 }
 
 /**
+ * Daily activity aggregate for timeline view
+ */
+export interface DailyActivityAggregate {
+  date: string;
+  dateLabel: string; // e.g., "Today", "Yesterday", "Jan 15"
+  casesCreated: number;
+  dischargeSummariesGenerated: number;
+  callsCompleted: number;
+  callsScheduled: number;
+  emailsSent: number;
+  soapNotesCreated: number;
+}
+
+/**
  * Weekly activity data point for chart
  */
 export interface WeeklyActivityData {
@@ -328,7 +383,9 @@ export interface CaseListItem {
   id: string;
   status: CaseStatus;
   source: string | null;
+  type: "checkup" | "emergency" | "surgery" | "follow_up" | null;
   created_at: string;
+  scheduled_at?: string;
   patient: {
     id: string;
     name: string;
@@ -339,6 +396,10 @@ export interface CaseListItem {
   hasDischargeSummary: boolean;
   hasDischargeCall: boolean;
   hasDischargeEmail: boolean;
+  soapNoteTimestamp?: string;
+  dischargeSummaryTimestamp?: string;
+  dischargeCallTimestamp?: string;
+  dischargeEmailTimestamp?: string;
 }
 
 /**
@@ -353,4 +414,43 @@ export interface CaseStats {
   dischargeSummaries: number;
   callsCompleted: number;
   emailsSent: number;
+  casesNeedingDischarge: {
+    total: number;
+    thisWeek: number;
+    thisMonth: number;
+  };
+  casesNeedingSoap: {
+    total: number;
+    thisWeek: number;
+    thisMonth: number;
+  };
+  soapCoverage: {
+    percentage: number;
+    totalCases: number;
+    casesWithSoap: number;
+    casesNeedingSoap: number;
+  };
+  dischargeCoverage: {
+    percentage: number;
+    totalCases: number;
+    casesWithDischarge: number;
+    casesNeedingDischarge: number;
+  };
+  completionRate: {
+    overall: {
+      completed: number;
+      total: number;
+      percentage: number;
+    };
+    thisWeek: {
+      completed: number;
+      created: number;
+      percentage: number;
+    };
+    thisMonth: {
+      completed: number;
+      created: number;
+      percentage: number;
+    };
+  };
 }

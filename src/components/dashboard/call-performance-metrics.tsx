@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { TrendingUp, Clock, DollarSign, Smile, Meh, Frown } from "lucide-react";
+import { EmptyState } from "./empty-state";
 import type { CallPerformanceMetrics } from "~/types/dashboard";
 
 interface CallPerformanceMetricsProps {
@@ -35,12 +36,13 @@ export function CallPerformanceMetricsComponent({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="py-8 text-center">
-            <TrendingUp className="mx-auto h-12 w-12 text-slate-300" />
-            <p className="mt-2 text-sm text-slate-500">
-              No completed calls yet
-            </p>
-          </div>
+          <EmptyState
+            icon={TrendingUp}
+            title="No completed calls yet"
+            description="Performance metrics will appear here once calls are completed"
+            size="sm"
+            className="min-h-[200px]"
+          />
         </CardContent>
       </Card>
     );

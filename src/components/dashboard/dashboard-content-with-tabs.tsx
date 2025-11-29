@@ -4,9 +4,8 @@ import { useQueryState, parseAsStringLiteral } from "nuqs";
 import { DashboardNavigation } from "./dashboard-navigation";
 import { OverviewTab } from "./overview-tab";
 import { CasesTab } from "./cases-tab";
-import { DischargesTab } from "./discharges-tab";
 
-const TAB_VALUES = ["overview", "cases", "discharges"] as const;
+const TAB_VALUES = ["overview", "cases"] as const;
 
 export function DashboardContentWithTabs() {
   const [tab] = useQueryState(
@@ -25,9 +24,6 @@ export function DashboardContentWithTabs() {
         <OverviewTab startDate={startDate} endDate={endDate} />
       )}
       {tab === "cases" && <CasesTab startDate={startDate} endDate={endDate} />}
-      {tab === "discharges" && (
-        <DischargesTab startDate={startDate} endDate={endDate} />
-      )}
     </div>
   );
 }

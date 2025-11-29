@@ -3,131 +3,27 @@
 import Link from "next/link";
 import { Card, CardContent, CardFooter } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
-import { Badge } from "~/components/ui/badge";
 import {
   Dog,
   Cat,
+  Eye,
+  Calendar,
   FileText,
   FileCheck,
   Phone,
   Mail,
-  Eye,
-  Circle,
-  CheckCircle2,
-  Calendar,
+  Database,
+  FileCode,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { CaseListItem } from "~/types/dashboard";
 import { cn } from "~/lib/utils";
+import { QuickActionsMenu } from "~/components/dashboard/quick-actions-menu";
+import { Badge } from "~/components/ui/badge";
 
 interface CaseListCardProps {
   caseData: CaseListItem;
-}
-
-function getSourceBadge(source: string | null) {
-  const sourceMap: Record<
-    string,
-    { label: string; color: string; bgColor: string }
-  > = {
-    manual: {
-      label: "Manual",
-      color: "text-slate-700",
-      bgColor: "bg-slate-100",
-    },
-    idexx_neo: {
-      label: "IDEXX Neo",
-      color: "text-blue-700",
-      bgColor: "bg-blue-100",
-    },
-    cornerstone: {
-      label: "Cornerstone",
-      color: "text-purple-700",
-      bgColor: "bg-purple-100",
-    },
-    ezyvet: {
-      label: "ezyVet",
-      color: "text-green-700",
-      bgColor: "bg-green-100",
-    },
-    avimark: {
-      label: "AVImark",
-      color: "text-orange-700",
-      bgColor: "bg-orange-100",
-    },
-  };
-
-  const sourceKey = source ?? "manual";
-  const config = sourceMap[sourceKey] ?? sourceMap.manual!;
-
-  return (
-    <Badge
-      className={cn(
-        "rounded-md border-0 text-xs font-medium",
-        config.bgColor,
-        config.color,
-      )}
-    >
-      {config.label}
-    </Badge>
-  );
-}
-
-function getStatusBadge(status: string) {
-  const statusMap: Record<
-    string,
-    { label: string; color: string; bgColor: string }
-  > = {
-    draft: {
-      label: "Draft",
-      color: "text-slate-700",
-      bgColor: "bg-slate-100",
-    },
-    ongoing: {
-      label: "Ongoing",
-      color: "text-blue-700",
-      bgColor: "bg-blue-100",
-    },
-    completed: {
-      label: "Completed",
-      color: "text-emerald-700",
-      bgColor: "bg-emerald-100",
-    },
-    reviewed: {
-      label: "Reviewed",
-      color: "text-purple-700",
-      bgColor: "bg-purple-100",
-    },
-  };
-
-  const statusKey = status ?? "draft";
-  const config = statusMap[statusKey] ?? statusMap.draft!;
-
-  return (
-    <Badge
-      className={cn(
-        "rounded-md border-0 text-xs font-medium",
-        config.bgColor,
-        config.color,
-      )}
-    >
-      {config.label}
-    </Badge>
-  );
-}
-
-function getStatusDotColor(status: string) {
-  switch (status) {
-    case "draft":
-      return "bg-slate-500";
-    case "ongoing":
-      return "bg-blue-500";
-    case "completed":
-      return "bg-emerald-500";
-    case "reviewed":
-      return "bg-purple-500";
-    default:
-      return "bg-slate-500";
-  }
+  index?: number; // For staggered animations
 }
 
 function getStatusIconBgColor(status: string) {
@@ -145,139 +41,193 @@ function getStatusIconBgColor(status: string) {
   }
 }
 
-export function CaseListCard({ caseData }: CaseListCardProps) {
+function formatSource(source: string | null): string {
+  if (!source) return "Manual";
+  return source
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function getSourceIcon(source: string | null) {
+  if (!source) return FileCode;
+  if (source.includes("idexx")) return Database;
+  return FileCode;
+}
+
+function getTypeColor(type: string | null): string {
+  switch (type) {
+    case "checkup":
+      return "bg-blue-500/10 text-blue-600 border-blue-200";
+    case "emergency":
+      return "bg-red-500/10 text-red-600 border-red-200";
+    case "surgery":
+      return "bg-purple-500/10 text-purple-600 border-purple-200";
+    case "follow_up":
+      return "bg-green-500/10 text-green-600 border-green-200";
+    default:
+      return "bg-slate-500/10 text-slate-600 border-slate-200";
+  }
+}
+
+function formatType(type: string | null): string {
+  if (!type) return "Unknown";
+  return type
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+export function CaseListCard({ caseData, index = 0 }: CaseListCardProps) {
   const SpeciesIcon =
     caseData.patient.species?.toLowerCase() === "feline" ? Cat : Dog;
 
+  // Determine animation delay class based on index
+  const animationClass =
+    index === 0
+      ? "animate-card-in"
+      : index === 1
+        ? "animate-card-in-delay-1"
+        : index === 2
+          ? "animate-card-in-delay-2"
+          : "animate-card-in-delay-3";
+
   return (
-    <Card className="group transition-smooth relative overflow-hidden rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md hover:scale-[1.02] hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
+    <Card
+      className={cn(
+        "group transition-smooth relative overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm hover:border-slate-300 hover:shadow-md",
+        animationClass,
+      )}
+    >
       <CardContent className="overflow-hidden p-5">
         {/* Header Section */}
-        <div className="mb-4">
+        <div
+          className={
+            caseData.hasSoapNote ||
+            caseData.hasDischargeSummary ||
+            caseData.hasDischargeCall ||
+            caseData.hasDischargeEmail
+              ? "mb-4"
+              : "mb-3"
+          }
+        >
           <div className="flex items-start gap-3">
             <div
               className={cn(
-                "flex h-12 w-12 shrink-0 items-center justify-center rounded-full transition-colors",
+                "flex h-12 w-12 shrink-0 items-center justify-center rounded-lg transition-colors",
                 getStatusIconBgColor(caseData.status),
               )}
             >
               <SpeciesIcon className="h-6 w-6" />
             </div>
             <div className="min-w-0 flex-1">
-              <div className="mb-1 flex flex-wrap items-center gap-2">
-                <h3 className="truncate text-lg font-semibold tracking-tight text-slate-900">
-                  {caseData.patient.name}
-                </h3>
-                {/* Status Dot */}
-                <div
-                  className={cn(
-                    "h-2 w-2 shrink-0 rounded-full",
-                    getStatusDotColor(caseData.status),
+              <div className="mb-2 flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <h3 className="mb-1.5 truncate text-lg font-semibold text-slate-900">
+                    {caseData.patient.name}
+                  </h3>
+                  {caseData.patient.owner_name && (
+                    <p className="mb-1.5 truncate text-xs text-slate-500">
+                      {caseData.patient.owner_name}
+                    </p>
                   )}
-                  title={`Status: ${caseData.status}`}
-                />
-                {/* Status and Source Badges */}
-                <div className="flex shrink-0 flex-wrap items-center gap-1.5">
-                  {getStatusBadge(caseData.status)}
-                  {getSourceBadge(caseData.source)}
+                  <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                    {caseData.source && (
+                      <Badge
+                        variant="outline"
+                        className="h-5 gap-1 border-slate-200 bg-slate-50/50 px-1.5 text-[10px] font-medium text-slate-600"
+                      >
+                        {(() => {
+                          const SourceIcon = getSourceIcon(caseData.source);
+                          return (
+                            <>
+                              <SourceIcon className="h-2.5 w-2.5" />
+                              {formatSource(caseData.source)}
+                            </>
+                          );
+                        })()}
+                      </Badge>
+                    )}
+                    {caseData.type && (
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "h-5 border px-1.5 text-[10px] font-medium",
+                          getTypeColor(caseData.type),
+                        )}
+                      >
+                        {formatType(caseData.type)}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
+                {/* Quick Actions Menu */}
+                <QuickActionsMenu
+                  caseId={caseData.id}
+                  hasSoapNote={caseData.hasSoapNote}
+                  hasDischargeSummary={caseData.hasDischargeSummary}
+                  patientName={caseData.patient.name}
+                />
               </div>
-              <div className="text-muted-foreground flex items-center gap-2 text-xs">
+              <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
                 <Calendar className="h-3 w-3 shrink-0" />
                 <span className="truncate">
-                  Created{" "}
-                  {formatDistanceToNow(new Date(caseData.created_at), {
-                    addSuffix: true,
-                  })}
+                  {caseData.scheduled_at ? (
+                    <>
+                      Scheduled{" "}
+                      {formatDistanceToNow(new Date(caseData.scheduled_at), {
+                        addSuffix: true,
+                      })}
+                    </>
+                  ) : (
+                    "Not scheduled"
+                  )}
                 </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Owner Section */}
-        <div className="-mx-2 mb-4 rounded-lg bg-slate-50 p-3">
-          <div className="min-w-0 space-y-1.5">
-            <span className="text-xs font-medium tracking-wider text-slate-500 uppercase">
-              Owner
-            </span>
-            <div className="truncate font-medium text-slate-900">
-              {caseData.patient.owner_name}
-            </div>
+        {/* Content Indicators - Only show if there's content */}
+        {(caseData.hasSoapNote ||
+          caseData.hasDischargeSummary ||
+          caseData.hasDischargeCall ||
+          caseData.hasDischargeEmail) && (
+          <div className="mb-4 flex flex-col gap-2">
+            {caseData.hasSoapNote && (
+              <div className="flex items-center gap-1.5 rounded-md border border-blue-200/60 bg-blue-50/50 px-2 py-1.5 text-xs font-medium text-blue-700">
+                <FileText className="h-3.5 w-3.5 shrink-0 text-blue-600" />
+                <span>SOAP Note</span>
+              </div>
+            )}
+            {caseData.hasDischargeSummary && (
+              <div className="flex items-center gap-1.5 rounded-md border border-teal-200/60 bg-teal-50/50 px-2 py-1.5 text-xs font-medium text-teal-700">
+                <FileCheck className="h-3.5 w-3.5 shrink-0 text-teal-600" />
+                <span>Discharge Summary</span>
+              </div>
+            )}
+            {caseData.hasDischargeCall && (
+              <div className="flex items-center gap-1.5 rounded-md border border-indigo-200/60 bg-indigo-50/50 px-2 py-1.5 text-xs font-medium text-indigo-700">
+                <Phone className="h-3.5 w-3.5 shrink-0 text-indigo-600" />
+                <span>Call Sent</span>
+              </div>
+            )}
+            {caseData.hasDischargeEmail && (
+              <div className="flex items-center gap-1.5 rounded-md border border-amber-200/60 bg-amber-50/50 px-2 py-1.5 text-xs font-medium text-amber-700">
+                <Mail className="h-3.5 w-3.5 shrink-0 text-amber-600" />
+                <span>Email Sent</span>
+              </div>
+            )}
           </div>
-        </div>
-
-        {/* Workflow Indicators Section */}
-        <div className="mb-4 min-h-[2.5rem]">
-          <div className="flex flex-wrap items-center gap-2">
-            {/* SOAP Note */}
-            <div className="flex shrink-0 items-center gap-1.5">
-              <div className="flex shrink-0 items-center justify-center">
-                {caseData.hasSoapNote ? (
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                ) : (
-                  <Circle className="h-4 w-4 text-slate-300" />
-                )}
-              </div>
-              <div className="flex items-center gap-1 text-xs text-slate-600">
-                <FileText className="h-3 w-3 shrink-0" />
-                <span>SOAP</span>
-              </div>
-            </div>
-
-            {/* Discharge Summary */}
-            <div className="flex shrink-0 items-center gap-1.5">
-              <div className="flex shrink-0 items-center justify-center">
-                {caseData.hasDischargeSummary ? (
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                ) : (
-                  <Circle className="h-4 w-4 text-slate-300" />
-                )}
-              </div>
-              <div className="flex items-center gap-1 text-xs text-slate-600">
-                <FileCheck className="h-3 w-3 shrink-0" />
-                <span>Summary</span>
-              </div>
-            </div>
-
-            {/* Discharge Call */}
-            <div className="flex shrink-0 items-center gap-1.5">
-              <div className="flex shrink-0 items-center justify-center">
-                {caseData.hasDischargeCall ? (
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                ) : (
-                  <Circle className="h-4 w-4 text-slate-300" />
-                )}
-              </div>
-              <div className="flex items-center gap-1 text-xs text-slate-600">
-                <Phone className="h-3 w-3 shrink-0" />
-                <span>Call</span>
-              </div>
-            </div>
-
-            {/* Discharge Email */}
-            <div className="flex shrink-0 items-center gap-1.5">
-              <div className="flex shrink-0 items-center justify-center">
-                {caseData.hasDischargeEmail ? (
-                  <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                ) : (
-                  <Circle className="h-4 w-4 text-slate-300" />
-                )}
-              </div>
-              <div className="flex items-center gap-1 text-xs text-slate-600">
-                <Mail className="h-3 w-3 shrink-0" />
-                <span>Email</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
       </CardContent>
 
-      <CardFooter className="border-t border-slate-100 bg-slate-50/50 p-3 pl-5">
-        <Link href={`/dashboard/cases/${caseData.id}`} className="w-full">
+      <CardFooter className="border-t border-slate-100 bg-slate-50/30 p-4">
+        <Link href={`/dashboard/discharges/${caseData.id}`} className="w-full">
           <Button
             variant="outline"
-            className="transition-smooth w-full gap-2 hover:bg-slate-50"
+            size="sm"
+            className="transition-smooth w-full gap-2 hover:bg-white"
           >
             <Eye className="h-4 w-4" />
             View Details

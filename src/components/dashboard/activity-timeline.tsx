@@ -1,7 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
-import { Activity } from "lucide-react";
+import { Button } from "~/components/ui/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "~/components/ui/collapsible";
+import { Activity, ChevronDown, ChevronUp } from "lucide-react";
 import { ActivityItemComponent } from "./activity-item";
 import type { ActivityItem } from "~/types/dashboard";
 
@@ -9,7 +16,11 @@ interface ActivityTimelineProps {
   activities: ActivityItem[];
 }
 
+const INITIAL_ITEMS_TO_SHOW = 5;
+
 export function ActivityTimeline({ activities }: ActivityTimelineProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   if (activities.length === 0) {
     return (
       <Card className="transition-smooth rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
@@ -29,8 +40,12 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
     );
   }
 
+  const hasMore = activities.length > INITIAL_ITEMS_TO_SHOW;
+  const initialItems = activities.slice(0, INITIAL_ITEMS_TO_SHOW);
+  const remainingItems = activities.slice(INITIAL_ITEMS_TO_SHOW);
+
   return (
-    <Card className="rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md transition-all hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
+    <Card className="transition-smooth rounded-xl border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 shadow-lg shadow-teal-500/5 backdrop-blur-md hover:from-white/75 hover:via-teal-50/25 hover:to-white/75 hover:shadow-xl hover:shadow-teal-500/10">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Activity className="h-5 w-5 text-slate-600" />
@@ -39,14 +54,48 @@ export function ActivityTimeline({ activities }: ActivityTimelineProps) {
       </CardHeader>
       <CardContent className="animate-card-content-in">
         <div className="space-y-0">
-          {activities.map((activity, index) => (
+          {initialItems.map((activity, index) => (
             <ActivityItemComponent
               key={activity.id}
               activity={activity}
-              isLast={index === activities.length - 1}
+              isLast={index === initialItems.length - 1 && !hasMore}
             />
           ))}
         </div>
+
+        {hasMore && (
+          <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="transition-smooth mt-4 w-full hover:bg-slate-50"
+              >
+                {isExpanded ? (
+                  <>
+                    <ChevronUp className="transition-smooth mr-2 h-4 w-4" />
+                    Show Less
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="transition-smooth mr-2 h-4 w-4" />
+                    Show More ({remainingItems.length} more items)
+                  </>
+                )}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4">
+              <div className="space-y-0">
+                {remainingItems.map((activity, index) => (
+                  <ActivityItemComponent
+                    key={activity.id}
+                    activity={activity}
+                    isLast={index === remainingItems.length - 1}
+                  />
+                ))}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
       </CardContent>
     </Card>
   );
