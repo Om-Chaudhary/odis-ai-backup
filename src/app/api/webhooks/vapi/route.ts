@@ -279,6 +279,26 @@ async function handleEndOfCallReport(
     return;
   }
 
+  // Log the complete call payload for debugging
+  console.log("[VAPI_WEBHOOK] End-of-call-report received", {
+    callId: call.id,
+    isInbound,
+    callStatus: call.status,
+    hasStartedAt: !!call.startedAt,
+    hasEndedAt: !!call.endedAt,
+    hasTranscript: !!call.transcript,
+    hasMessages: !!call.messages,
+    messagesCount: call.messages?.length ?? 0,
+    hasRecordingUrl: !!call.recordingUrl,
+    hasCosts: !!call.costs,
+    costsCount: call.costs?.length ?? 0,
+    hasAnalysis: !!call.analysis,
+    hasArtifact: !!message.artifact,
+    // Log field names to identify structure
+    callKeys: Object.keys(call),
+    artifactKeys: message.artifact ? Object.keys(message.artifact) : [],
+  });
+
   const tableName = isInbound
     ? "inbound_vapi_calls"
     : "scheduled_discharge_calls";
@@ -476,14 +496,33 @@ async function handleOutboundCallEnd(
     cost,
   };
 
-  console.log("[VAPI_WEBHOOK] Call ended", {
+  console.log("[VAPI_WEBHOOK] Call ended - extracted data", {
     callId: call.id,
+    dbId: existingCall.id,
     status: finalStatus,
     endedReason: call.endedReason,
+    // Timestamps
+    startedAt: call.startedAt,
+    endedAt: call.endedAt,
     duration: durationSeconds,
-    cost,
-    hasStereo: !!artifact.stereoRecordingUrl,
+    // Cost
+    rawCosts: call.costs,
+    calculatedCost: cost,
+    // Media
+    hasRecording: !!call.recordingUrl,
+    hasStereoRecording: !!artifact.stereoRecordingUrl,
+    recordingUrl: call.recordingUrl,
+    stereoRecordingUrl: artifact.stereoRecordingUrl,
+    // Transcript
+    hasTranscript: !!call.transcript,
+    transcriptLength: call.transcript?.length,
+    hasMessages: !!call.messages,
+    messagesCount: call.messages?.length,
+    // Analysis
     hasSummary: !!analysis.summary,
+    hasSuccessEvaluation: !!analysis.successEvaluation,
+    hasStructuredData: !!analysis.structuredData,
+    userSentiment,
   });
 
   // Handle retry logic for failed calls
