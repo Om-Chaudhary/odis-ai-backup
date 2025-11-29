@@ -47,6 +47,18 @@ interface VapiWebhookPayload {
       logUrl?: string;
       structuredOutputs?: Record<string, unknown>;
     };
+    // For end-of-call-report, these fields are directly on message (not nested in call)
+    analysis?: {
+      summary?: string;
+      successEvaluation?: string;
+      structuredData?: Record<string, unknown>;
+    };
+    startedAt?: string;
+    endedAt?: string;
+    transcript?: string;
+    recordingUrl?: string;
+    stereoRecordingUrl?: string;
+    cost?: number;
     status?: string;
     endedReason?: string;
     phoneNumber?: string;
@@ -264,6 +276,9 @@ async function handleStatusUpdate(
 
 /**
  * Handle end-of-call-report webhook
+ *
+ * IMPORTANT: VAPI puts some fields directly on `message` for end-of-call-report events,
+ * not nested inside `message.call`. We need to check both locations.
  */
 async function handleEndOfCallReport(
   supabase: Awaited<ReturnType<typeof createServiceClient>>,
@@ -279,22 +294,61 @@ async function handleEndOfCallReport(
     return;
   }
 
+  // VAPI sends some fields directly on message for end-of-call-report
+  // Merge message-level fields into call object for consistent handling
+  const enrichedCall = {
+    ...call,
+    // Prefer message-level fields (VAPI's primary location for end-of-call-report)
+    startedAt: message.startedAt ?? call.startedAt,
+    endedAt: message.endedAt ?? call.endedAt,
+    transcript: message.transcript ?? call.transcript,
+    recordingUrl: message.recordingUrl ?? call.recordingUrl,
+    endedReason: message.endedReason ?? call.endedReason,
+    analysis: message.analysis ?? call.analysis,
+    // Cost comes as a single number on message, but as array on call
+    costs:
+      call.costs ??
+      (message.cost
+        ? [{ amount: message.cost, description: "total" }]
+        : undefined),
+  };
+
   // Log the complete call payload for debugging
   console.log("[VAPI_WEBHOOK] End-of-call-report received", {
     callId: call.id,
     isInbound,
     callStatus: call.status,
-    hasStartedAt: !!call.startedAt,
-    hasEndedAt: !!call.endedAt,
-    hasTranscript: !!call.transcript,
-    hasMessages: !!call.messages,
-    messagesCount: call.messages?.length ?? 0,
-    hasRecordingUrl: !!call.recordingUrl,
-    hasCosts: !!call.costs,
-    costsCount: call.costs?.length ?? 0,
-    hasAnalysis: !!call.analysis,
+    // Check both message-level and call-level fields
+    messageLevel: {
+      hasStartedAt: !!message.startedAt,
+      hasEndedAt: !!message.endedAt,
+      hasTranscript: !!message.transcript,
+      hasRecordingUrl: !!message.recordingUrl,
+      hasCost: !!message.cost,
+      hasAnalysis: !!message.analysis,
+      hasEndedReason: !!message.endedReason,
+    },
+    callLevel: {
+      hasStartedAt: !!call.startedAt,
+      hasEndedAt: !!call.endedAt,
+      hasTranscript: !!call.transcript,
+      hasMessages: !!call.messages,
+      messagesCount: call.messages?.length ?? 0,
+      hasRecordingUrl: !!call.recordingUrl,
+      hasCosts: !!call.costs,
+      costsCount: call.costs?.length ?? 0,
+      hasAnalysis: !!call.analysis,
+    },
+    enrichedCall: {
+      hasStartedAt: !!enrichedCall.startedAt,
+      hasEndedAt: !!enrichedCall.endedAt,
+      hasTranscript: !!enrichedCall.transcript,
+      hasRecordingUrl: !!enrichedCall.recordingUrl,
+      hasCosts: !!enrichedCall.costs,
+    },
     hasArtifact: !!message.artifact,
     // Log field names to identify structure
+    messageKeys: Object.keys(message),
     callKeys: Object.keys(call),
     artifactKeys: message.artifact ? Object.keys(message.artifact) : [],
   });
@@ -312,7 +366,7 @@ async function handleEndOfCallReport(
   if (findError || !existingCall) {
     // For inbound calls, create the record if it doesn't exist
     if (isInbound && findError?.code === "PGRST116") {
-      const newCallId = await createInboundCallRecord(supabase, call);
+      const newCallId = await createInboundCallRecord(supabase, enrichedCall);
       if (!newCallId) {
         console.error("[VAPI_WEBHOOK] Failed to create inbound call record");
         return;
@@ -327,8 +381,8 @@ async function handleEndOfCallReport(
         console.error("[VAPI_WEBHOOK] Failed to fetch newly created call");
         return;
       }
-      // Continue with update using new call
-      return handleInboundCallEnd(supabase, call, message, newCall);
+      // Continue with update using enriched call data
+      return handleInboundCallEnd(supabase, enrichedCall, message, newCall);
     }
 
     logger.warn("Call not found in database for end-of-call report", {
@@ -340,11 +394,11 @@ async function handleEndOfCallReport(
     return;
   }
 
-  // Route to appropriate handler
+  // Route to appropriate handler with enriched call data
   if (isInbound) {
-    await handleInboundCallEnd(supabase, call, message, existingCall);
+    await handleInboundCallEnd(supabase, enrichedCall, message, existingCall);
   } else {
-    await handleOutboundCallEnd(supabase, call, message, existingCall);
+    await handleOutboundCallEnd(supabase, enrichedCall, message, existingCall);
   }
 }
 
