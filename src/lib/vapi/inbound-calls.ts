@@ -8,6 +8,7 @@
 import { createServiceClient } from "~/lib/supabase/server";
 import type { VapiCallResponse } from "./client";
 import { loggers } from "~/lib/logger";
+import { getClinicByName } from "~/lib/clinics/utils";
 
 const logger = loggers.vapi.child("inbound-calls");
 
@@ -42,25 +43,39 @@ export async function getClinicByAssistantId(
   }
 
   if (clinicAssistant?.clinic_name) {
-    // Find a user from this clinic to get user_id
-    const { data: user, error: userError } = await supabase
-      .from("users")
-      .select("id, clinic_name")
-      .eq("clinic_name", clinicAssistant.clinic_name)
-      .limit(1)
-      .maybeSingle();
+    // Use clinic lookup utility to get clinic record
+    const clinic = await getClinicByName(clinicAssistant.clinic_name, supabase);
 
-    if (userError) {
-      logger.warn("Error finding user for clinic", {
+    if (clinic) {
+      // Find a user from this clinic to get user_id
+      const { data: user, error: userError } = await supabase
+        .from("users")
+        .select("id, clinic_name")
+        .eq("clinic_name", clinicAssistant.clinic_name)
+        .limit(1)
+        .maybeSingle();
+
+      if (userError) {
+        logger.warn("Error finding user for clinic", {
+          clinicName: clinicAssistant.clinic_name,
+          error: userError.message,
+        });
+      }
+
+      return {
+        clinicName: clinic.name, // Use clinic.name for consistency
+        userId: user?.id ?? null,
+      };
+    } else {
+      logger.warn("Clinic not found in clinics table", {
         clinicName: clinicAssistant.clinic_name,
-        error: userError.message,
       });
+      // Fallback to clinic_name from clinic_assistants
+      return {
+        clinicName: clinicAssistant.clinic_name,
+        userId: null,
+      };
     }
-
-    return {
-      clinicName: clinicAssistant.clinic_name,
-      userId: user?.id ?? null,
-    };
   }
 
   // Fallback: try to find user directly by assistant_id if stored on users table

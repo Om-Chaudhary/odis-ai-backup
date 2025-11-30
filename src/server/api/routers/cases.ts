@@ -7,6 +7,7 @@ import {
 import { TRPCError } from "@trpc/server";
 import { checkCaseDischargeReadiness } from "~/lib/utils/discharge-readiness";
 import type { BackendCase } from "~/types/dashboard";
+import { getClinicByUserId } from "~/lib/clinics/utils";
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -638,6 +639,7 @@ export const casesRouter = createTRPCRouter({
 
   /**
    * Get user's VAPI discharge settings
+   * Enriches with clinic table data when available, falls back to user table for backward compatibility
    */
   getDischargeSettings: protectedProcedure.query(async ({ ctx }) => {
     const { data, error } = await ctx.supabase
@@ -656,6 +658,12 @@ export const casesRouter = createTRPCRouter({
       });
     }
 
+    // Get clinic data from clinic table (preferred) with fallback to user table
+    const clinic = await getClinicByUserId(ctx.user.id, ctx.supabase);
+    const clinicName = clinic?.name ?? data?.clinic_name ?? "";
+    const clinicPhone = clinic?.phone ?? data?.clinic_phone ?? "";
+    const clinicEmail = clinic?.email ?? data?.clinic_email ?? "";
+
     // Build vet name from first and last name
     const vetName =
       data?.first_name && data?.last_name
@@ -663,10 +671,10 @@ export const casesRouter = createTRPCRouter({
         : "";
 
     return {
-      clinicName: data?.clinic_name ?? "",
-      clinicPhone: data?.clinic_phone ?? "",
-      clinicEmail: data?.clinic_email ?? "",
-      emergencyPhone: data?.emergency_phone ?? data?.clinic_phone ?? "",
+      clinicName,
+      clinicPhone,
+      clinicEmail,
+      emergencyPhone: data?.emergency_phone ?? clinicPhone ?? "",
       vetName,
       testModeEnabled: data?.test_mode_enabled ?? false,
       testContactName: data?.test_contact_name ?? "",

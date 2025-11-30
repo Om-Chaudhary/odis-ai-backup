@@ -7,8 +7,12 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "~/database.types";
+import { loggers } from "~/lib/logger";
+import { SUPABASE_ERROR_CODES } from "./constants";
 
 type SupabaseClientType = SupabaseClient<Database>;
+
+const logger = loggers.database.child("clinics");
 
 /* ========================================
    Clinic Lookup
@@ -20,14 +24,35 @@ type SupabaseClientType = SupabaseClient<Database>;
  * Uses the user's clinic_name field to find matching clinic record.
  * This supports the RLS pattern where users.clinic_name matches clinics.name.
  *
- * @param userId - Authenticated user ID
+ * @param userId - Authenticated user ID (must be valid UUID)
  * @param supabase - Supabase client with user context
- * @returns Clinic record or null if not found
+ * @returns Clinic record or null if:
+ *   - User ID is invalid
+ *   - User has no clinic_name set
+ *   - User's clinic_name is empty
+ *   - Clinic not found in clinics table
+ *   - Clinic is inactive
+ *   - Database error occurs (logged)
+ *
+ * @example
+ * ```ts
+ * const clinic = await getClinicByUserId(user.id, supabase);
+ * if (clinic) {
+ *   console.log(`User's clinic: ${clinic.name}`);
+ * }
+ * ```
  */
 export async function getClinicByUserId(
   userId: string,
   supabase: SupabaseClientType,
 ): Promise<Database["public"]["Tables"]["clinics"]["Row"] | null> {
+  if (!userId || typeof userId !== "string") {
+    logger.error("Invalid user ID provided", {
+      userId,
+    });
+    return null;
+  }
+
   // Get user's clinic_name
   const { data: user, error: userError } = await supabase
     .from("users")
@@ -36,15 +61,23 @@ export async function getClinicByUserId(
     .single();
 
   if (userError || !user?.clinic_name) {
-    console.error("[getClinicByUserId] Failed to get user clinic_name", {
+    logger.error("Failed to get user clinic_name", {
       userId,
-      error: userError,
+      error: userError?.message,
+      errorCode: userError?.code,
     });
     return null;
   }
 
   // Find clinic by name (case-insensitive, trimmed)
   const clinicName = user.clinic_name.trim();
+  if (!clinicName) {
+    logger.error("User has empty clinic_name", {
+      userId,
+    });
+    return null;
+  }
+
   const { data: clinic, error: clinicError } = await supabase
     .from("clinics")
     .select("*")
@@ -53,17 +86,19 @@ export async function getClinicByUserId(
     .maybeSingle(); // Use maybeSingle() to handle not found gracefully
 
   // Handle errors (excluding "not found" which is expected)
-  if (clinicError && clinicError.code !== "PGRST116") {
-    console.error("[getClinicByUserId] Error finding clinic", {
+  if (clinicError && clinicError.code !== SUPABASE_ERROR_CODES.NOT_FOUND) {
+    logger.error("Error finding clinic", {
       clinicName,
-      error: clinicError,
+      error: clinicError.message,
+      errorCode: clinicError.code,
     });
     return null;
   }
 
   if (!clinic) {
-    console.error("[getClinicByUserId] Clinic not found", {
+    logger.debug("Clinic not found", {
       clinicName,
+      userId,
     });
     return null;
   }
@@ -74,14 +109,33 @@ export async function getClinicByUserId(
 /**
  * Get clinic by name (for backward compatibility)
  *
- * @param clinicName - Clinic name to search for
+ * @param clinicName - Clinic name to search for (case-insensitive match)
  * @param supabase - Supabase client
- * @returns Clinic record or null if not found
+ * @returns Clinic record or null if:
+ *   - Clinic name is invalid or empty
+ *   - Clinic not found
+ *   - Clinic is inactive
+ *   - Database error occurs (logged)
+ *
+ * @example
+ * ```ts
+ * const clinic = await getClinicByName("Alum Rock Animal Hospital", supabase);
+ * if (clinic) {
+ *   console.log(`Found clinic: ${clinic.id}`);
+ * }
+ * ```
  */
 export async function getClinicByName(
   clinicName: string,
   supabase: SupabaseClientType,
 ): Promise<Database["public"]["Tables"]["clinics"]["Row"] | null> {
+  if (!clinicName?.trim()) {
+    logger.error("Invalid clinic name provided", {
+      clinicName,
+    });
+    return null;
+  }
+
   const { data: clinic, error } = await supabase
     .from("clinics")
     .select("*")
@@ -90,22 +144,112 @@ export async function getClinicByName(
     .maybeSingle(); // Use maybeSingle() to handle not found gracefully
 
   // Handle errors (excluding "not found" which is expected)
-  if (error && error.code !== "PGRST116") {
-    console.error("[getClinicByName] Error finding clinic", {
+  if (error && error.code !== SUPABASE_ERROR_CODES.NOT_FOUND) {
+    logger.error("Error finding clinic", {
       clinicName,
-      error,
+      error: error.message,
+      errorCode: error.code,
     });
     return null;
   }
 
   if (!clinic) {
-    console.error("[getClinicByName] Clinic not found", {
+    logger.debug("Clinic not found", {
       clinicName,
     });
     return null;
   }
 
   return clinic;
+}
+
+/**
+ * Get clinic by UUID
+ *
+ * Retrieves a clinic record by its unique identifier.
+ * Useful when you have a clinic ID (e.g., from appointments table).
+ *
+ * @param clinicId - Clinic UUID (must be valid UUID format)
+ * @param supabase - Supabase client
+ * @returns Clinic record or null if:
+ *   - Clinic ID is invalid (not a UUID format)
+ *   - Clinic not found
+ *   - Clinic is inactive
+ *   - Database error occurs (logged)
+ *
+ * @example
+ * ```ts
+ * const clinic = await getClinicById(appointment.clinic_id, supabase);
+ * if (clinic) {
+ *   console.log(`Clinic: ${clinic.name}`);
+ * }
+ * ```
+ */
+export async function getClinicById(
+  clinicId: string,
+  supabase: SupabaseClientType,
+): Promise<Database["public"]["Tables"]["clinics"]["Row"] | null> {
+  // Validate UUID format
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!clinicId || typeof clinicId !== "string" || !uuidRegex.test(clinicId)) {
+    logger.error("Invalid clinic ID format", {
+      clinicId,
+    });
+    return null;
+  }
+
+  const { data: clinic, error } = await supabase
+    .from("clinics")
+    .select("*")
+    .eq("id", clinicId)
+    .eq("is_active", true)
+    .maybeSingle(); // Use maybeSingle() to handle not found gracefully
+
+  // Handle errors (excluding "not found" which is expected)
+  if (error && error.code !== SUPABASE_ERROR_CODES.NOT_FOUND) {
+    logger.error("Error finding clinic", {
+      clinicId,
+      error: error.message,
+      errorCode: error.code,
+    });
+    return null;
+  }
+
+  if (!clinic) {
+    logger.debug("Clinic not found", {
+      clinicId,
+    });
+    return null;
+  }
+
+  return clinic;
+}
+
+/**
+ * Get clinic ID from user ID (convenience wrapper)
+ *
+ * Quick access to clinic ID without fetching the full clinic object.
+ * Useful when you only need the clinic UUID.
+ *
+ * @param userId - User ID
+ * @param supabase - Supabase client with user context
+ * @returns Clinic UUID or null if not found
+ *
+ * @example
+ * ```ts
+ * const clinicId = await getUserClinicId(user.id, supabase);
+ * if (clinicId) {
+ *   // Use clinicId for appointments, providers, etc.
+ * }
+ * ```
+ */
+export async function getUserClinicId(
+  userId: string,
+  supabase: SupabaseClientType,
+): Promise<string | null> {
+  const clinic = await getClinicByUserId(userId, supabase);
+  return clinic?.id ?? null;
 }
 
 /* ========================================
@@ -144,7 +288,7 @@ export async function getOrCreateProvider(
 ): Promise<string | null> {
   // Validate provider name
   if (!providerName || providerName.trim().length === 0) {
-    console.error("[getOrCreateProvider] Invalid provider name", {
+    logger.error("Invalid provider name", {
       clinicId,
       neoProviderId,
       providerName,
@@ -154,8 +298,8 @@ export async function getOrCreateProvider(
 
   // Validate role
   const validRole = VALID_PROVIDER_ROLES.includes(
-      role as (typeof VALID_PROVIDER_ROLES)[number],
-    )
+    role as (typeof VALID_PROVIDER_ROLES)[number],
+  )
     ? (role as (typeof VALID_PROVIDER_ROLES)[number])
     : "veterinarian";
 
@@ -168,12 +312,13 @@ export async function getOrCreateProvider(
     .eq("is_active", true)
     .maybeSingle(); // Use maybeSingle() instead of single() to handle not found gracefully
 
-  if (findError && findError.code !== "PGRST116") {
-    // PGRST116 = no rows returned (not an error for our use case)
-    console.error("[getOrCreateProvider] Error finding provider", {
+  if (findError && findError.code !== SUPABASE_ERROR_CODES.NOT_FOUND) {
+    // NOT_FOUND = no rows returned (not an error for our use case)
+    logger.error("Error finding provider", {
       clinicId,
       neoProviderId,
-      error: findError,
+      error: findError.message,
+      errorCode: findError.code,
     });
     return null;
   }
@@ -200,7 +345,8 @@ export async function getOrCreateProvider(
   // If creation failed, it might be a race condition - try to find again
   if (createError) {
     // Check if it's a unique constraint violation (race condition)
-    const isUniqueViolation = createError.code === "23505" || // PostgreSQL unique violation
+    const isUniqueViolation =
+      createError.code === SUPABASE_ERROR_CODES.UNIQUE_VIOLATION ||
       createError.message.includes("duplicate") ||
       createError.message.includes("unique");
 
@@ -216,14 +362,12 @@ export async function getOrCreateProvider(
         .maybeSingle();
 
       if (retryError || !retryProvider) {
-        console.error(
-          "[getOrCreateProvider] Failed to find provider after race condition",
-          {
-            clinicId,
-            neoProviderId,
-            error: retryError,
-          },
-        );
+        logger.error("Failed to find provider after race condition", {
+          clinicId,
+          neoProviderId,
+          error: retryError?.message,
+          errorCode: retryError?.code,
+        });
         return null;
       }
 
@@ -231,17 +375,18 @@ export async function getOrCreateProvider(
     }
 
     // Some other error occurred
-    console.error("[getOrCreateProvider] Failed to create provider", {
+    logger.error("Failed to create provider", {
       clinicId,
       neoProviderId,
       providerName,
-      error: createError,
+      error: createError.message,
+      errorCode: createError.code,
     });
     return null;
   }
 
   if (!newProvider) {
-    console.error("[getOrCreateProvider] Provider creation returned no data", {
+    logger.error("Provider creation returned no data", {
       clinicId,
       neoProviderId,
       providerName,
@@ -249,11 +394,185 @@ export async function getOrCreateProvider(
     return null;
   }
 
-  console.log("[getOrCreateProvider] Created new provider", {
+  logger.info("Created new provider", {
     providerId: newProvider.id,
     neoProviderId,
     providerName,
   });
 
   return newProvider.id;
+}
+
+/* ========================================
+   Clinic Creation
+   ======================================== */
+
+/**
+ * Find or create clinic record
+ *
+ * Looks up clinic by name. If not found, creates a new clinic record.
+ * Handles race conditions where multiple requests try to create the same clinic.
+ *
+ * @param clinicName - Clinic name (required, must not be empty)
+ * @param supabase - Supabase client
+ * @param clinicData - Optional additional clinic data (email, phone, address, pims_type)
+ *   - email: Must be valid email format if provided
+ *   - phone: Must be 10-15 digits if provided
+ * @returns Clinic UUID or null if:
+ *   - Clinic name is invalid or empty
+ *   - Email format is invalid (if provided)
+ *   - Phone format is invalid (if provided)
+ *   - Clinic creation fails (logged)
+ *   - Database error occurs (logged)
+ *
+ * @example
+ * ```ts
+ * const clinicId = await getOrCreateClinic(
+ *   "Alum Rock Animal Hospital",
+ *   supabase,
+ *   {
+ *     email: "info@alumrockvet.com",
+ *     phone: "+1-555-123-4567",
+ *     pims_type: "idexx_neo"
+ *   }
+ * );
+ * ```
+ */
+export async function getOrCreateClinic(
+  clinicName: string,
+  supabase: SupabaseClientType,
+  clinicData?: {
+    email?: string | null;
+    phone?: string | null;
+    address?: string | null;
+    pims_type?: string;
+  },
+): Promise<string | null> {
+  // Validate clinic name
+  if (!clinicName || clinicName.trim().length === 0) {
+    logger.error("Invalid clinic name", {
+      clinicName,
+    });
+    return null;
+  }
+
+  // Validate email format if provided
+  if (clinicData?.email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(clinicData.email)) {
+      logger.error("Invalid email format", {
+        email: clinicData.email,
+        clinicName,
+      });
+      return null;
+    }
+  }
+
+  // Validate phone format if provided (basic E.164 or common formats)
+  if (clinicData?.phone) {
+    const phoneDigits = clinicData.phone.replace(/\D/g, "");
+    // Basic validation: should have 10-15 digits (E.164 allows up to 15)
+    if (phoneDigits.length < 10 || phoneDigits.length > 15) {
+      logger.error("Invalid phone format", {
+        phone: clinicData.phone,
+        clinicName,
+      });
+      return null;
+    }
+  }
+
+  const trimmedName = clinicName.trim();
+
+  // First, try to find existing clinic
+  const { data: existingClinic, error: findError } = await supabase
+    .from("clinics")
+    .select("id")
+    .ilike("name", trimmedName)
+    .eq("is_active", true)
+    .maybeSingle(); // Use maybeSingle() instead of single() to handle not found gracefully
+
+  if (findError && findError.code !== SUPABASE_ERROR_CODES.NOT_FOUND) {
+    // NOT_FOUND = no rows returned (not an error for our use case)
+    logger.error("Error finding clinic", {
+      clinicName: trimmedName,
+      error: findError.message,
+      errorCode: findError.code,
+    });
+    return null;
+  }
+
+  if (existingClinic) {
+    return existingClinic.id;
+  }
+
+  // Clinic not found - create new one
+  // Handle race condition: if two requests try to create simultaneously,
+  // the second will fail due to unique constraint, so we retry the lookup
+  const insertData: Database["public"]["Tables"]["clinics"]["Insert"] = {
+    name: trimmedName,
+    email: clinicData?.email ?? null,
+    phone: clinicData?.phone ?? null,
+    address: clinicData?.address ?? null,
+    pims_type: clinicData?.pims_type ?? "idexx_neo",
+    is_active: true,
+  };
+
+  const { data: newClinic, error: createError } = await supabase
+    .from("clinics")
+    .insert(insertData)
+    .select("id")
+    .single();
+
+  // If creation failed, it might be a race condition - try to find again
+  if (createError) {
+    // Check if it's a unique constraint violation (race condition)
+    const isUniqueViolation =
+      createError.code === SUPABASE_ERROR_CODES.UNIQUE_VIOLATION ||
+      createError.message.includes("duplicate") ||
+      createError.message.includes("unique");
+
+    if (isUniqueViolation) {
+      // Race condition: clinic was created by another request
+      // Retry lookup
+      const { data: retryClinic, error: retryError } = await supabase
+        .from("clinics")
+        .select("id")
+        .ilike("name", trimmedName)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (retryError || !retryClinic) {
+        logger.error("Failed to find clinic after race condition", {
+          clinicName: trimmedName,
+          error: retryError?.message,
+          errorCode: retryError?.code,
+        });
+        return null;
+      }
+
+      return retryClinic.id;
+    }
+
+    // Some other error occurred
+    logger.error("Failed to create clinic", {
+      clinicName: trimmedName,
+      error: createError.message,
+      errorCode: createError.code,
+    });
+    return null;
+  }
+
+  if (!newClinic) {
+    logger.error("Clinic creation returned no data", {
+      clinicName: trimmedName,
+    });
+    return null;
+  }
+
+  logger.info("Created new clinic", {
+    clinicId: newClinic.id,
+    clinicName: trimmedName,
+  });
+
+  return newClinic.id;
 }

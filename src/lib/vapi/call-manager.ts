@@ -10,6 +10,7 @@ import {
   type ConditionCategory,
 } from "./knowledge-base";
 import { createServiceClient } from "~/lib/supabase/server";
+import { getClinicByUserId } from "~/lib/clinics/utils";
 
 /**
  * Input parameters for creating a VAPI call
@@ -104,10 +105,25 @@ export async function createVapiCall(
   userId: string,
 ): Promise<CreateVapiCallResult> {
   try {
+    // Step 0: Optionally validate and enrich clinic data from clinic table
+    // This ensures clinic information is consistent with the clinic registry
+    const supabase = await createServiceClient();
+    const clinic = await getClinicByUserId(userId, supabase);
+
+    // If clinic is found in table, prefer clinic table data for consistency
+    // but fallback to input values for backward compatibility
+    const validatedClinicName = clinic?.name ?? input.clinicName;
+    // If clinic table has phone, use it as base but prefer formatted input for voice
+    // If no clinic phone, fallback to input
+    const validatedClinicPhone =
+      clinic?.phone && !input.clinicPhone
+        ? clinic.phone // Use clinic phone if input not provided
+        : input.clinicPhone; // Prefer formatted input for voice
+
     // Step 1: Build dynamic variables with knowledge base integration
     const variablesBuildResult = buildDynamicVariables({
       baseVariables: {
-        clinicName: input.clinicName,
+        clinicName: validatedClinicName,
         agentName: input.agentName,
         petName: input.petName,
         ownerName: input.ownerName,
@@ -160,7 +176,7 @@ export async function createVapiCall(
     }
 
     // Step 3: Store call record in Supabase
-    const supabase = await createServiceClient();
+    // Note: supabase client already created in Step 0
 
     const { data: callRecord, error: insertError } = await supabase
       .from("scheduled_discharge_calls")
@@ -183,7 +199,9 @@ export async function createVapiCall(
       return {
         success: false,
         errors: [
-          `Failed to store call record: ${insertError?.message || "Unknown error"}`,
+          `Failed to store call record: ${
+            insertError?.message || "Unknown error"
+          }`,
         ],
       };
     }
@@ -349,12 +367,14 @@ export async function updateVapiCall(
   if (updates.endedReason) updateData.ended_reason = updates.endedReason;
   if (updates.startedAt) updateData.started_at = updates.startedAt;
   if (updates.endedAt) updateData.ended_at = updates.endedAt;
-  if (updates.durationSeconds !== undefined)
+  if (updates.durationSeconds !== undefined) {
     updateData.duration_seconds = updates.durationSeconds;
+  }
   if (updates.recordingUrl) updateData.recording_url = updates.recordingUrl;
   if (updates.transcript) updateData.transcript = updates.transcript;
-  if (updates.transcriptMessages)
+  if (updates.transcriptMessages) {
     updateData.transcript_messages = updates.transcriptMessages;
+  }
   if (updates.callAnalysis) updateData.call_analysis = updates.callAnalysis;
   if (updates.cost !== undefined) updateData.cost = updates.cost;
 

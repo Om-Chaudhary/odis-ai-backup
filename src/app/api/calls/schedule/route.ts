@@ -8,6 +8,7 @@ import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
 import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
+import { getClinicByUserId } from "~/lib/clinics/utils";
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)
@@ -116,13 +117,26 @@ export async function POST(request: NextRequest) {
       .eq("id", user.id)
       .single();
 
+    // Get clinic data from clinic table (preferred) with fallback to user table
+    const clinic = await getClinicByUserId(user.id, supabase);
+
     if (!userError && userSettings) {
       // Fill in missing clinic settings
+      // Prefer clinic table data, fallback to user table for backward compatibility
       if (!clinicName || !clinicPhone || !emergencyPhone) {
-        clinicName = clinicName ?? userSettings.clinic_name ?? "Your Clinic";
-        clinicPhone = clinicPhone ?? userSettings.clinic_phone ?? "";
+        clinicName =
+          clinicName ??
+          clinic?.name ??
+          userSettings.clinic_name ??
+          "Your Clinic";
+        clinicPhone =
+          clinicPhone ?? clinic?.phone ?? userSettings.clinic_phone ?? "";
         emergencyPhone =
-          emergencyPhone ?? userSettings.clinic_phone ?? clinicPhone ?? "";
+          emergencyPhone ??
+          clinic?.phone ??
+          userSettings.clinic_phone ??
+          clinicPhone ??
+          "";
       }
 
       // Use user's first name as agent name if not provided
