@@ -11,7 +11,12 @@
  * - Support for multiple key versions
  */
 
-import { createCipheriv, createDecipheriv, pbkdf2Sync, randomBytes } from "crypto";
+import {
+  createCipheriv,
+  createDecipheriv,
+  pbkdf2Sync,
+  randomBytes,
+} from "crypto";
 import { env } from "~/env";
 
 const ALGORITHM = "aes-256-gcm";
@@ -29,7 +34,8 @@ const PBKDF2_ITERATIONS = 100000; // OWASP recommended minimum
  */
 function deriveKey(keyId: string): Buffer {
   // Try versioned key first (IDEXX_ENCRYPTION_KEY_V1, etc.)
-  const versionedKey = process.env[`IDEXX_ENCRYPTION_KEY_${keyId.toUpperCase()}`];
+  const versionedKey =
+    process.env[`IDEXX_ENCRYPTION_KEY_${keyId.toUpperCase()}`];
   if (versionedKey) {
     return deriveKeyFromString(versionedKey, keyId);
   }
@@ -66,7 +72,13 @@ function deriveKey(keyId: string): Buffer {
 function deriveKeyFromString(keyString: string, salt: string): Buffer {
   // Use keyId as salt to ensure different keys for different keyIds
   const saltBuffer = Buffer.from(salt, "utf8");
-  return pbkdf2Sync(keyString, saltBuffer, PBKDF2_ITERATIONS, KEY_LENGTH, "sha256");
+  return pbkdf2Sync(
+    keyString,
+    saltBuffer,
+    PBKDF2_ITERATIONS,
+    KEY_LENGTH,
+    "sha256",
+  );
 }
 
 /**
@@ -111,7 +123,11 @@ export function encrypt(
     if (error instanceof Error && error.message.includes("not configured")) {
       throw error;
     }
-    throw new Error(`Encryption failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+    throw new Error(
+      `Encryption failed: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`,
+    );
   }
 }
 
@@ -149,11 +165,14 @@ export function decrypt(encrypted: Buffer, keyId: string): string {
   } catch (error) {
     if (error instanceof Error) {
       // Authentication failure (tampered data or wrong key)
-      if (error.message.includes("Unsupported state") || error.message.includes("bad decrypt")) {
+      if (
+        error.message.includes("Unsupported state") ||
+        error.message.includes("bad decrypt")
+      ) {
         throw new Error(
           `Decryption failed: Authentication tag verification failed. ` +
-          `This usually means the encryption key is incorrect or the data was tampered with. ` +
-          `Key ID used: ${keyId}`,
+            `This usually means the encryption key is incorrect or the data was tampered with. ` +
+            `Key ID used: ${keyId}`,
         );
       }
       if (error.message.includes("not configured")) {
@@ -164,4 +183,3 @@ export function decrypt(encrypted: Buffer, keyId: string): string {
     throw new Error("Decryption failed: Unknown error");
   }
 }
-
