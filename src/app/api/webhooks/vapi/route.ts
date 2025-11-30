@@ -72,6 +72,7 @@ interface VapiWebhookPayload {
  */
 function mapEndedReasonToStatus(
   endedReason?: string,
+  metadata?: Record<string, unknown>,
 ): "completed" | "failed" | "cancelled" {
   if (!endedReason) return "completed";
 
@@ -88,8 +89,21 @@ function mapEndedReasonToStatus(
     return "cancelled";
   }
 
+  // Voicemail handling: if voicemail detection was enabled and voicemail was detected,
+  // mark as completed (message was successfully left)
+  if (
+    endedReason.toLowerCase().includes("voicemail") &&
+    metadata?.voicemail_detection_enabled === true
+  ) {
+    console.log("[VAPI_WEBHOOK] Voicemail detected with detection enabled - marking as completed", {
+      endedReason,
+      voicemailDetectionEnabled: metadata.voicemail_detection_enabled,
+    });
+    return "completed";
+  }
+
   // Failed calls
-  if (shouldMarkAsFailed(endedReason)) {
+  if (shouldMarkAsFailed(endedReason, metadata)) {
     return "failed";
   }
 
@@ -99,8 +113,25 @@ function mapEndedReasonToStatus(
 
 /**
  * Determine if a call should be retried based on ended reason
+ * Excludes voicemail from retry if voicemail detection was enabled (message was successfully left)
  */
-function shouldRetry(endedReason?: string): boolean {
+function shouldRetry(
+  endedReason?: string,
+  metadata?: Record<string, unknown>,
+): boolean {
+  // If voicemail was detected and voicemail detection was enabled, don't retry
+  // (the message was successfully left, so call is complete)
+  if (
+    endedReason?.toLowerCase().includes("voicemail") &&
+    metadata?.voicemail_detection_enabled === true
+  ) {
+    console.log("[VAPI_WEBHOOK] Voicemail with detection enabled - skipping retry", {
+      endedReason,
+      voicemailDetectionEnabled: metadata.voicemail_detection_enabled,
+    });
+    return false;
+  }
+
   const retryableReasons = ["dial-busy", "dial-no-answer", "voicemail"];
 
   return retryableReasons.some((reason) =>
@@ -515,8 +546,11 @@ async function handleOutboundCallEnd(
   // Calculate total cost
   const cost = calculateTotalCost(call.costs);
 
-  // Determine final status
-  const finalStatus = mapEndedReasonToStatus(call.endedReason);
+  // Extract metadata to check voicemail detection flag
+  const metadata = (existingCall.metadata as Record<string, unknown>) ?? {};
+
+  // Determine final status (check metadata for voicemail detection flag)
+  const finalStatus = mapEndedReasonToStatus(call.endedReason, metadata);
 
   // Extract analysis data
   const analysis = call.analysis ?? {};
@@ -579,9 +613,8 @@ async function handleOutboundCallEnd(
     userSentiment,
   });
 
-  // Handle retry logic for failed calls
-  if (finalStatus === "failed" && shouldRetry(call.endedReason)) {
-    const metadata = (existingCall.metadata as Record<string, unknown>) ?? {};
+  // Handle retry logic for failed calls (pass metadata to check voicemail detection)
+  if (finalStatus === "failed" && shouldRetry(call.endedReason, metadata)) {
     const retryCount = (metadata.retry_count as number) ?? 0;
     const maxRetries = (metadata.max_retries as number) ?? 3;
 
