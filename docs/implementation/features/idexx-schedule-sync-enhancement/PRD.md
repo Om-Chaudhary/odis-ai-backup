@@ -10,6 +10,7 @@ Version 2.0 | November 29, 2024
 | Date             | November 29, 2024                |
 | Author           | Engineering Team                 |
 | Status           | Updated with Automation Strategy |
+| Related Tickets  | ODIS-48, ODIS-63, ODIS-64        |
 
 ---
 
@@ -255,7 +256,12 @@ FR-3: Monitoring & Operations
 
 6. Technical Implementation
 
-6.1 Database Schema
+**Related Jira Tickets:**
+
+- [ODIS-63](https://odisai.atlassian.net/browse/ODIS-63) - Migrate existing users to clinic schedule schema
+- [ODIS-64](https://odisai.atlassian.net/browse/ODIS-64) - Add clinic lookup utilities and integrate with existing code
+
+  6.1 Database Schema
 
 New Tables for Automation
 
@@ -600,6 +606,8 @@ CMD cron && tail -f /var/log/cron.log
 ---
 
 7. API Specifications
+
+**Related Jira Ticket:** [ODIS-48](https://odisai.atlassian.net/browse/ODIS-48) - Schedule sync API endpoint
 
 7.1 Credential Management APIs
 

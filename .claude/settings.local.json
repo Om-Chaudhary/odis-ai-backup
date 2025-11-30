@@ -84,11 +84,16 @@
       "Bash(/Users/s0381806/Development/odis-ai-web/ )",
       "Bash(/Users/s0381806/Development/odis-ai/apps/web/)",
       "Bash(pnpm nx run:*)",
-      "Read(//Users/s0381806/Development/**)"
+      "Read(//Users/s0381806/Development/**)",
+      "Bash(xargs:*)"
     ],
     "deny": [],
     "ask": []
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["shadcn", "vapi-mcp", "playwright"]
+  "enabledMcpjsonServers": [
+    "shadcn",
+    "vapi-mcp",
+    "playwright"
+  ]
 }
