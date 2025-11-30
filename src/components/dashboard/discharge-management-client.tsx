@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
-import { Settings, Search, Plus, RefreshCw, TestTube } from "lucide-react";
+import { Settings, Plus, RefreshCw, TestTube } from "lucide-react";
 import { Badge } from "~/components/ui/badge";
 import { DischargeListItem } from "./discharge-list-item";
 import { EmptyState } from "./empty-state";
@@ -23,6 +22,9 @@ import {
 import { toast } from "sonner";
 import { format } from "date-fns";
 import type { DischargeReadinessFilter } from "~/types/dashboard";
+import type { DateRangePreset } from "~/lib/utils/date-ranges";
+import { getDateRangeFromPreset } from "~/lib/utils/date-ranges";
+import { useQueryState } from "nuqs";
 
 const PAGE_SIZE = 10;
 
@@ -72,14 +74,39 @@ export function DischargeManagementClient() {
   >("all");
   const [readinessFilter, setReadinessFilter] =
     useState<DischargeReadinessFilter>("all");
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  // Date range preset state (uses URL state for persistence)
+  // Note: setDateRange is managed by UnifiedFilterBar component
+  const [dateRange] = useQueryState("dateRange", {
+    defaultValue: "all",
+    parse: (value) => (value as DateRangePreset) || "all",
+    serialize: (value) => value,
+  });
 
   // Ref to prevent double-clicks
   const isProcessingRef = useRef(false);
 
-  // Format date for API (YYYY-MM-DD)
-  const dateString = useMemo(() => {
-    return format(currentDate, "yyyy-MM-dd");
-  }, [currentDate]);
+  // Calculate date parameters based on dateRange
+  const dateParams = useMemo(() => {
+    if (dateRange === "3d" || dateRange === "30d") {
+      // Range mode: use startDate and endDate
+      const { startDate, endDate } = getDateRangeFromPreset(dateRange);
+      return {
+        startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
+        endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
+      };
+    } else if (dateRange === "1d") {
+      // "Last Day" mode: use date range for yesterday to today
+      const { startDate, endDate } = getDateRangeFromPreset(dateRange);
+      return {
+        startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
+        endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
+      };
+    }
+    // "all" mode: use single date parameter (day navigation)
+    return { date: format(currentDate, "yyyy-MM-dd") };
+  }, [dateRange, currentDate]);
 
   // tRPC Queries
   const {
@@ -89,12 +116,36 @@ export function DischargeManagementClient() {
   } = api.cases.listMyCasesToday.useQuery({
     page: currentPage,
     pageSize: PAGE_SIZE,
-    date: dateString,
+    ...dateParams,
     readinessFilter,
   });
 
+  // Query for most recent case date (only on initial load)
+  const { data: mostRecentDate } = api.cases.getMostRecentCaseDate.useQuery(
+    undefined,
+    { enabled: isInitialLoad },
+  );
+
   const { data: settingsData, refetch: refetchSettings } =
     api.cases.getDischargeSettings.useQuery();
+
+  // Auto-navigate to most recent day with cases on initial load
+  useEffect(() => {
+    if (
+      isInitialLoad &&
+      mostRecentDate &&
+      casesData &&
+      casesData.cases.length === 0
+    ) {
+      // Today has no cases, navigate to most recent date with cases
+      const mostRecentDateObj = new Date(mostRecentDate);
+      setCurrentDate(mostRecentDateObj);
+      setIsInitialLoad(false);
+    } else if (isInitialLoad && casesData) {
+      // Initial load complete (either has cases today or no cases at all)
+      setIsInitialLoad(false);
+    }
+  }, [isInitialLoad, mostRecentDate, casesData]);
 
   // tRPC Mutations
   const updatePatientMutation = api.cases.updatePatientInfo.useMutation({
@@ -134,9 +185,6 @@ export function DischargeManagementClient() {
         )
       : [];
   }, [casesData?.cases, casesData?.userEmail]);
-
-  // Keep reference to backend cases for debug modal
-  const backendCases = casesData?.cases ?? [];
 
   const settings: DischargeSettings = settingsData ?? {
     clinicName: "",
@@ -391,24 +439,7 @@ export function DischargeManagementClient() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="animate-card-in-delay-1 flex items-center gap-2">
-        <div className="relative flex-1 md:max-w-sm">
-          <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
-          <Input
-            type="search"
-            placeholder="Search patients or owners..."
-            className="transition-smooth pl-9 focus:ring-2"
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1); // Reset to first page on search
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Unified Filter Bar - Date controls, date presets, and status filters */}
+      {/* Unified Filter Bar - Search, date controls, date presets, and status filters */}
       <UnifiedFilterBar
         currentDate={currentDate}
         onDateChange={handleDateChange}
@@ -423,6 +454,11 @@ export function DischargeManagementClient() {
         onReadinessFilterChange={(filter) => {
           setReadinessFilter(filter);
           setCurrentPage(1); // Reset to first page when changing filter
+        }}
+        searchTerm={searchTerm}
+        onSearchChange={(term) => {
+          setSearchTerm(term);
+          setCurrentPage(1); // Reset to first page on search
         }}
       />
 

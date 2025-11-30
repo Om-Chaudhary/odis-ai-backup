@@ -5,6 +5,7 @@ Complete checklist and verification guide for enabling voicemail detection in VA
 ## Overview
 
 When voicemail detection is enabled:
+
 - VAPI automatically detects voicemail systems
 - Leaves a personalized message using dynamic variables
 - Ends the call after leaving the message
@@ -23,25 +24,28 @@ When voicemail detection is enabled:
 ### 1. Database Configuration
 
 - [ ] Verify migration has been applied:
+
   ```sql
-  SELECT column_name, data_type, column_default 
-  FROM information_schema.columns 
-  WHERE table_name = 'users' 
+  SELECT column_name, data_type, column_default
+  FROM information_schema.columns
+  WHERE table_name = 'users'
   AND column_name = 'voicemail_detection_enabled';
   ```
+
   Should return: `boolean DEFAULT false`
 
 - [ ] Enable voicemail detection for your user:
+
   ```sql
-  UPDATE users 
-  SET voicemail_detection_enabled = true 
+  UPDATE users
+  SET voicemail_detection_enabled = true
   WHERE id = 'your-user-id';
   ```
 
 - [ ] Verify setting:
   ```sql
-  SELECT id, voicemail_detection_enabled 
-  FROM users 
+  SELECT id, voicemail_detection_enabled
+  FROM users
   WHERE id = 'your-user-id';
   ```
 
@@ -77,16 +81,17 @@ When voicemail detection is enabled:
 The voicemail message template is defined in `src/app/api/webhooks/execute-call/route.ts` (lines 301-305):
 
 ```
-Hi {{owner_name}}, this is {{agent_name}} from {{clinic_name}}. 
-I'm checking in on {{pet_name}} after the appointment on {{appointment_date}}. 
-Everything looked great from our end. 
-If you have any questions or concerns about {{pet_name}}, 
-please give us a call at {{clinic_phone}}. 
-For emergencies, you can reach {{emergency_phone}} anytime. 
+Hi {{owner_name}}, this is {{agent_name}} from {{clinic_name}}.
+I'm checking in on {{pet_name}} after the appointment on {{appointment_date}}.
+Everything looked great from our end.
+If you have any questions or concerns about {{pet_name}},
+please give us a call at {{clinic_phone}}.
+For emergencies, you can reach {{emergency_phone}} anytime.
 Take care!
 ```
 
 **Required Variables** (must be provided in dynamic variables):
+
 - `{{owner_name}}` - Pet owner's name
 - `{{agent_name}}` - Agent/technician name
 - `{{clinic_name}}` - Clinic name
@@ -102,8 +107,8 @@ Take care!
 1. Schedule a call with voicemail detection enabled
 2. Check the call record in `scheduled_discharge_calls`:
    ```sql
-   SELECT id, metadata, vapi_call_id 
-   FROM scheduled_discharge_calls 
+   SELECT id, metadata, vapi_call_id
+   FROM scheduled_discharge_calls
    WHERE id = 'your-call-id';
    ```
 3. Verify `metadata.voicemail_detection_enabled` is `true`
@@ -112,7 +117,7 @@ Take care!
 
 1. Check logs for `[EXECUTE_CALL]` entries
 2. Look for log entry: `"Voicemail detection setting"` with `voicemailEnabled: true`
-3. Look for log entry: `"Calling VAPI API with parameters"` 
+3. Look for log entry: `"Calling VAPI API with parameters"`
 4. Verify `voicemailTool` is included in the payload
 
 #### Test 3: Test Voicemail Detection
@@ -142,6 +147,7 @@ Take care!
 **Symptoms**: Logs show `voicemailEnabled: false` or no `voicemailTool` in VAPI payload
 
 **Solutions**:
+
 1. Check user setting:
    ```sql
    SELECT voicemail_detection_enabled FROM users WHERE id = 'your-user-id';
@@ -154,6 +160,7 @@ Take care!
 **Symptoms**: Calls ending with voicemail are marked as "failed" and retried
 
 **Solutions**:
+
 1. Verify voicemail detection flag is stored in call metadata
 2. Check webhook handler logs for voicemail processing
 3. Ensure webhook handler checks `metadata.voicemail_detection_enabled`
@@ -164,6 +171,7 @@ Take care!
 **Symptoms**: Message says "{{owner_name}}" instead of actual name
 
 **Solutions**:
+
 1. Verify dynamic variables are being passed correctly
 2. Check variable names use snake_case (e.g., `owner_name`, not `ownerName`)
 3. Verify variables are in `assistantOverrides.variableValues`
@@ -174,6 +182,7 @@ Take care!
 **Symptoms**: Call doesn't leave voicemail when it should
 
 **Solutions**:
+
 1. Verify voicemail tool is included in `assistantOverrides.tools`
 2. Check VAPI assistant supports voicemail tool
 3. Review VAPI documentation for voicemail detection requirements

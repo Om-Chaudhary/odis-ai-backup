@@ -26,6 +26,7 @@ This allows the webhook handler to determine if voicemail detection was enabled 
 **File**: `src/app/api/webhooks/vapi/route.ts`
 
 The `mapEndedReasonToStatus` function now:
+
 - Accepts optional metadata parameter
 - Checks if voicemail detection was enabled when voicemail is detected
 - Marks voicemail calls as **"completed"** (not "failed") when detection is enabled
@@ -36,7 +37,7 @@ function mapEndedReasonToStatus(
   metadata?: Record<string, unknown>,
 ): "completed" | "failed" | "cancelled" {
   // ...
-  
+
   // Voicemail handling: if voicemail detection was enabled and voicemail was detected,
   // mark as completed (message was successfully left)
   if (
@@ -45,7 +46,7 @@ function mapEndedReasonToStatus(
   ) {
     return "completed";
   }
-  
+
   // ...
 }
 ```
@@ -55,6 +56,7 @@ function mapEndedReasonToStatus(
 **File**: `src/app/api/webhooks/vapi/route.ts`
 
 The `shouldRetry` function now:
+
 - Accepts optional metadata parameter
 - Excludes voicemail from retry when voicemail detection is enabled
 - Prevents retrying successful voicemail messages
@@ -72,7 +74,7 @@ function shouldRetry(
   ) {
     return false;
   }
-  
+
   // ...
 }
 ```
@@ -82,6 +84,7 @@ function shouldRetry(
 **File**: `src/lib/vapi/client.ts`
 
 The `shouldMarkAsFailed` function now:
+
 - Accepts optional metadata parameter
 - Excludes voicemail from failed status when voicemail detection is enabled
 - Ensures voicemail calls are not marked as failed when message is successfully left
@@ -98,7 +101,7 @@ export function shouldMarkAsFailed(
   ) {
     return false;
   }
-  
+
   // ...
 }
 ```

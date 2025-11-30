@@ -9,9 +9,12 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { Label } from "~/components/ui/label";
+import { Input } from "~/components/ui/input";
+import { Search } from "lucide-react";
 import type { DischargeReadinessFilter } from "~/types/dashboard";
 import type { DateRangePreset } from "~/lib/utils/date-ranges";
 import { useQueryState } from "nuqs";
+import { useEffect } from "react";
 
 interface UnifiedFilterBarProps {
   /** Current selected date for day navigation */
@@ -34,6 +37,11 @@ interface UnifiedFilterBarProps {
   readinessFilter: DischargeReadinessFilter;
   /** Callback when readiness filter changes */
   onReadinessFilterChange: (filter: DischargeReadinessFilter) => void;
+
+  /** Search term */
+  searchTerm: string;
+  /** Callback when search term changes */
+  onSearchChange: (term: string) => void;
 }
 
 /**
@@ -71,6 +79,8 @@ export function UnifiedFilterBar({
   onStatusFilterChange,
   readinessFilter,
   onReadinessFilterChange,
+  searchTerm,
+  onSearchChange,
 }: UnifiedFilterBarProps) {
   // Date range preset state (uses URL state for persistence)
   const [dateRange, setDateRange] = useQueryState("dateRange", {
@@ -79,15 +89,54 @@ export function UnifiedFilterBar({
     serialize: (value) => value,
   });
 
+  // Reset to today when switching from range mode back to day mode
+  useEffect(() => {
+    if (dateRange === "all" || dateRange === "1d") {
+      const today = new Date();
+      const currentDateStr = currentDate.toISOString().split("T")[0];
+      const todayStr = today.toISOString().split("T")[0];
+      // Only reset if we're not already on today
+      if (currentDateStr !== todayStr) {
+        onDateChange(today);
+      }
+    }
+  }, [dateRange, currentDate, onDateChange]);
+
+  // Show day navigation only when date range is "all" or "1d"
+  const showDayNavigation = dateRange === "all" || dateRange === "1d";
+
   return (
     <div className="space-y-4">
-      {/* Full-width Date Navigator */}
-      <DayPaginationControls
-        currentDate={currentDate}
-        onDateChange={onDateChange}
-        totalItems={totalItems}
-        isLoading={isLoading}
-      />
+      {/* Search Bar - First element, full width on mobile, constrained on desktop */}
+      <div className="relative flex-1 md:max-w-sm">
+        <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
+        <Input
+          type="search"
+          placeholder="Search patients or owners..."
+          className="transition-smooth pl-9 focus:ring-2"
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+        />
+      </div>
+
+      {/* Conditional Day Navigation - Only show for "all" or "1d" */}
+      {showDayNavigation ? (
+        <DayPaginationControls
+          currentDate={currentDate}
+          onDateChange={onDateChange}
+          totalItems={totalItems}
+          isLoading={isLoading}
+        />
+      ) : (
+        <div className="text-muted-foreground text-sm">
+          Showing cases from{" "}
+          {dateRange === "3d"
+            ? "last 3 days"
+            : dateRange === "30d"
+              ? "last 30 days"
+              : "selected range"}
+        </div>
+      )}
 
       {/* Filter Row: Date Range, Status, and Readiness Selects */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-4">
