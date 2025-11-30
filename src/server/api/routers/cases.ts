@@ -38,7 +38,9 @@ export const casesRouter = createTRPCRouter({
       z.object({
         page: z.number().min(1).default(1),
         pageSize: z.number().min(5).max(50).default(10),
-        date: z.string().optional(), // ISO date string (YYYY-MM-DD)
+        date: z.string().optional(), // Single day (YYYY-MM-DD)
+        startDate: z.string().optional(), // Range start (YYYY-MM-DD)
+        endDate: z.string().optional(), // Range end (YYYY-MM-DD)
         readinessFilter: z
           .enum(["all", "ready_for_discharge", "not_ready"])
           .optional()
@@ -46,21 +48,32 @@ export const casesRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      // Parse date or use today
-      const selectedDate = input.date ? new Date(input.date) : new Date();
-      selectedDate.setUTCHours(0, 0, 0, 0);
+      // Determine date range: use startDate/endDate if provided, otherwise use single date
+      let startDate: Date;
+      let endDate: Date;
 
-      // Calculate end of day
-      const endOfDay = new Date(selectedDate);
-      endOfDay.setUTCHours(23, 59, 59, 999);
+      if (input.startDate && input.endDate) {
+        // Date range mode
+        startDate = new Date(input.startDate);
+        startDate.setUTCHours(0, 0, 0, 0);
+        endDate = new Date(input.endDate);
+        endDate.setUTCHours(23, 59, 59, 999);
+      } else {
+        // Single date mode (backward compatible)
+        const selectedDate = input.date ? new Date(input.date) : new Date();
+        selectedDate.setUTCHours(0, 0, 0, 0);
+        endDate = new Date(selectedDate);
+        endDate.setUTCHours(23, 59, 59, 999);
+        startDate = selectedDate;
+      }
 
-      // Get total count - filter cases created on the selected date
+      // Get total count - filter cases created within the date range
       const { count } = await ctx.supabase
         .from("cases")
         .select("id", { count: "exact", head: true })
         .eq("user_id", ctx.user.id)
-        .gte("created_at", selectedDate.toISOString())
-        .lte("created_at", endOfDay.toISOString());
+        .gte("created_at", startDate.toISOString())
+        .lte("created_at", endDate.toISOString());
 
       // Calculate pagination range
       const from = (input.page - 1) * input.pageSize;
@@ -124,8 +137,8 @@ export const casesRouter = createTRPCRouter({
         `,
         )
         .eq("user_id", ctx.user.id)
-        .gte("created_at", selectedDate.toISOString())
-        .lte("created_at", endOfDay.toISOString())
+        .gte("created_at", startDate.toISOString())
+        .lte("created_at", endDate.toISOString())
         .order("created_at", { ascending: false })
         .range(from, to);
 
@@ -188,10 +201,45 @@ export const casesRouter = createTRPCRouter({
           total: count ?? 0,
           totalPages: Math.ceil((count ?? 0) / input.pageSize),
         },
-        date: selectedDate.toISOString().split("T")[0], // Return date in YYYY-MM-DD format
+        date: startDate.toISOString().split("T")[0], // Return start date in YYYY-MM-DD format
         userEmail: ctx.user.email, // Include user email for transform layer
       };
     }),
+
+  /**
+   * Get the most recent date that has at least one case for the current user
+   * Used for auto-navigation on initial page load
+   */
+  getMostRecentCaseDate: protectedProcedure.query(async ({ ctx }) => {
+    // Query to find the most recent date with cases
+    const { data, error } = await ctx.supabase
+      .from("cases")
+      .select("created_at")
+      .eq("user_id", ctx.user.id)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to fetch most recent case date",
+        cause: error,
+      });
+    }
+
+    if (!data || data.length === 0) {
+      return null;
+    }
+
+    // Extract date part (YYYY-MM-DD) from the most recent case
+    const mostRecentCase = data[0];
+    if (!mostRecentCase?.created_at) {
+      return null;
+    }
+
+    const date = new Date(mostRecentCase.created_at);
+    return date.toISOString().split("T")[0] ?? null;
+  }),
 
   /**
    * Get single case with all related data (user's own cases only)
