@@ -374,6 +374,8 @@ async function handler(req: NextRequest) {
         metadata: {
           ...metadata,
           executed_at: new Date().toISOString(),
+          // Store voicemail detection flag for webhook handler reference
+          voicemail_detection_enabled: voicemailEnabled,
         },
       })
       .eq("id", callId);

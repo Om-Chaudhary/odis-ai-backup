@@ -261,8 +261,20 @@ export function mapVapiStatus(
  * @param endedReason - VAPI ended reason
  * @returns True if call should be marked as failed
  */
-export function shouldMarkAsFailed(endedReason?: string): boolean {
+export function shouldMarkAsFailed(
+  endedReason?: string,
+  metadata?: Record<string, unknown>,
+): boolean {
   if (!endedReason) return false;
+
+  // If voicemail was detected and voicemail detection was enabled, don't mark as failed
+  // (the message was successfully left, so call is complete)
+  if (
+    endedReason.toLowerCase().includes("voicemail") &&
+    metadata?.voicemail_detection_enabled === true
+  ) {
+    return false;
+  }
 
   const failedReasons = [
     "dial-busy",
