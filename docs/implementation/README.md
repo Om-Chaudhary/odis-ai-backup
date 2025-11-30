@@ -52,6 +52,15 @@ features/[feature-name]/
 - [Complete Task Breakdown](./features/dual-mode-api/PARALLEL_TASKS.md)
 - [Task List](./features/dual-mode-api/tasks/)
 
+#### IDEXX Schedule Sync Enhancement
+
+**Status:** Planning  
+**Description:** Automated Playwright-based reconciliation system for IDEXX Neo schedule sync, eliminating manual intervention and solving the "stale consultation notes" problem.
+
+**Quick Links:**
+
+- [Product Requirements Document](./features/IDEXX_SCHEDULE_SYNC_ENHANCEMENT_PRD.md)
+
 ## 📅 Sessions (`sessions/`)
 
 **Purpose:** Date-based implementation session notes, similar to `docs/daily/` but focused on implementation work.
