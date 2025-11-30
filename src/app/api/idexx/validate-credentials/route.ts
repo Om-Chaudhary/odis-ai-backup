@@ -14,37 +14,13 @@ import { createClient } from "~/lib/supabase/server";
 import { getUser } from "~/server/actions/auth";
 import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
 import { IdexxCredentialManager } from "~/lib/idexx/credential-manager";
+import { validateIdexxCredentials } from "~/lib/idexx/validation";
 
 const validateCredentialsSchema = z.object({
   username: z.string().optional(),
   password: z.string().optional(),
   clinicId: z.string().uuid().optional().nullable(),
 });
-
-/**
- * Validate IDEXX credentials by attempting login
- *
- * TODO: Implement actual IDEXX Neo login validation using Playwright
- * For now, this is a placeholder that returns true if credentials are non-empty
- */
-async function validateIdexxCredentials(
-  username: string,
-  password: string,
-): Promise<{ valid: boolean; error?: string }> {
-  // Placeholder validation - in production, this should:
-  // 1. Use Playwright to navigate to IDEXX Neo login page
-  // 2. Fill in username and password
-  // 3. Submit form and check for successful authentication
-  // 4. Return true if login successful, false otherwise
-
-  if (!username || !password) {
-    return { valid: false, error: "Username and password are required" };
-  }
-
-  // For now, accept any non-empty credentials
-  // TODO: Replace with actual IDEXX Neo login validation
-  return { valid: true };
-}
 
 /**
  * Log credential operation to audit log
@@ -179,40 +155,7 @@ export async function POST(request: NextRequest) {
     const validationResult = await validateIdexxCredentials(username, password);
     const lastValidated = new Date().toISOString();
 
-    // Update last_used_at if using stored credentials
-    if (usingStoredCredentials && validationResult.valid) {
-      try {
-        // The getCredentials method already updates last_used_at, but we can also update it here
-        // for validation operations
-        await supabase
-          .from("idexx_credentials")
-          .update({ last_used_at: lastValidated })
-          .eq("user_id", user.id)
-          .eq("is_active", true)
-          .then(() => {
-            if (validated.clinicId !== undefined) {
-              if (validated.clinicId === null) {
-                return supabase
-                  .from("idexx_credentials")
-                  .update({ last_used_at: lastValidated })
-                  .eq("user_id", user.id)
-                  .is("clinic_id", null)
-                  .eq("is_active", true);
-              } else {
-                return supabase
-                  .from("idexx_credentials")
-                  .update({ last_used_at: lastValidated })
-                  .eq("user_id", user.id)
-                  .eq("clinic_id", validated.clinicId)
-                  .eq("is_active", true);
-              }
-            }
-          });
-      } catch (error) {
-        console.error("[VALIDATE_CREDENTIALS] Failed to update last_used_at:", error);
-        // Don't fail the request
-      }
-    }
+    // Note: getCredentials() already updates last_used_at, so no need to update again here
 
     // Log validation result
     await logAuditEvent(

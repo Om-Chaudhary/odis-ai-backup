@@ -13,37 +13,19 @@ import { createClient } from "~/lib/supabase/server";
 import { getUser } from "~/server/actions/auth";
 import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
 import { IdexxCredentialManager } from "~/lib/idexx/credential-manager";
+import { validateIdexxCredentials } from "~/lib/idexx/validation";
 
 const configureCredentialsSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
+  username: z
+    .string()
+    .min(1, "Username is required")
+    .max(255, "Username must be 255 characters or less"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .max(500, "Password must be 500 characters or less"),
   clinicId: z.string().uuid().optional().nullable(),
 });
-
-/**
- * Validate IDEXX credentials by attempting login
- *
- * TODO: Implement actual IDEXX Neo login validation using Playwright
- * For now, this is a placeholder that returns true if credentials are non-empty
- */
-async function validateIdexxCredentials(
-  username: string,
-  password: string,
-): Promise<{ valid: boolean; error?: string }> {
-  // Placeholder validation - in production, this should:
-  // 1. Use Playwright to navigate to IDEXX Neo login page
-  // 2. Fill in username and password
-  // 3. Submit form and check for successful authentication
-  // 4. Return true if login successful, false otherwise
-
-  if (!username || !password) {
-    return { valid: false, error: "Username and password are required" };
-  }
-
-  // For now, accept any non-empty credentials
-  // TODO: Replace with actual IDEXX Neo login validation
-  return { valid: true };
-}
 
 /**
  * Log credential operation to audit log

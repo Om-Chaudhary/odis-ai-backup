@@ -17,7 +17,6 @@ import { env } from "~/env";
 const ALGORITHM = "aes-256-gcm";
 const KEY_LENGTH = 32; // 256 bits
 const IV_LENGTH = 12; // 96 bits for GCM (recommended)
-const SALT_LENGTH = 16;
 const TAG_LENGTH = 16;
 const PBKDF2_ITERATIONS = 100000; // OWASP recommended minimum
 
@@ -113,6 +112,7 @@ export function encrypt(
       throw error;
     }
     throw new Error(`Encryption failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+  }
 }
 
 /**
@@ -150,7 +150,11 @@ export function decrypt(encrypted: Buffer, keyId: string): string {
     if (error instanceof Error) {
       // Authentication failure (tampered data or wrong key)
       if (error.message.includes("Unsupported state") || error.message.includes("bad decrypt")) {
-        throw new Error("Decryption failed: Authentication tag verification failed. Data may be corrupted or key is incorrect.");
+        throw new Error(
+          `Decryption failed: Authentication tag verification failed. ` +
+          `This usually means the encryption key is incorrect or the data was tampered with. ` +
+          `Key ID used: ${keyId}`,
+        );
       }
       if (error.message.includes("not configured")) {
         throw error;
