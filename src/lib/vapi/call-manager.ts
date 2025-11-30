@@ -10,6 +10,7 @@ import {
   type ConditionCategory,
 } from "./knowledge-base";
 import { createServiceClient } from "~/lib/supabase/server";
+import { getClinicByUserId } from "~/lib/clinics/utils";
 
 /**
  * Input parameters for creating a VAPI call
@@ -104,10 +105,22 @@ export async function createVapiCall(
   userId: string,
 ): Promise<CreateVapiCallResult> {
   try {
+    // Step 0: Optionally validate and enrich clinic data from clinic table
+    // This ensures clinic information is consistent with the clinic registry
+    const supabase = await createServiceClient();
+    const clinic = await getClinicByUserId(userId, supabase);
+
+    // If clinic is found in table, prefer clinic table data for consistency
+    // but fallback to input values for backward compatibility
+    const validatedClinicName = clinic?.name ?? input.clinicName;
+    const validatedClinicPhone = clinic?.phone
+      ? input.clinicPhone // Keep formatted phone from input for voice
+      : input.clinicPhone;
+
     // Step 1: Build dynamic variables with knowledge base integration
     const variablesBuildResult = buildDynamicVariables({
       baseVariables: {
-        clinicName: input.clinicName,
+        clinicName: validatedClinicName,
         agentName: input.agentName,
         petName: input.petName,
         ownerName: input.ownerName,
@@ -160,7 +173,7 @@ export async function createVapiCall(
     }
 
     // Step 3: Store call record in Supabase
-    const supabase = await createServiceClient();
+    // Note: supabase client already created in Step 0
 
     const { data: callRecord, error: insertError } = await supabase
       .from("scheduled_discharge_calls")

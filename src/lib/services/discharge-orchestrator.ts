@@ -17,6 +17,7 @@ import { generateDischargeSummaryWithRetry } from "~/lib/ai/generate-discharge";
 import { scheduleEmailExecution } from "~/lib/qstash/client";
 import { htmlToPlainText, isValidEmail } from "~/lib/resend/client";
 import type { OrchestrationRequest } from "~/lib/validators/orchestration";
+import { getClinicByUserId } from "~/lib/clinics/utils";
 import type {
   CallResult,
   EmailResult,
@@ -975,6 +976,13 @@ export class DischargeOrchestrator {
       // Continue with defaults
     }
 
+    // Get clinic data from clinic table (preferred) with fallback to user table
+    const clinic = await getClinicByUserId(this.user.id, this.supabase);
+    const clinicName =
+      clinic?.name ?? userSettings?.clinic_name ?? "Your Clinic";
+    const clinicPhone = clinic?.phone ?? userSettings?.clinic_phone ?? "";
+    const clinicEmail = clinic?.email ?? userSettings?.clinic_email ?? null;
+
     // Build agent name from user's first name or default to "Sarah"
     const agentName = userSettings?.first_name ?? "Sarah";
 
@@ -1015,6 +1023,7 @@ export class DischargeOrchestrator {
 
     // Pass the user's default schedule delay override via scheduledAt
     // If scheduledAt is undefined, CasesService will use the override from user settings
+    // Use clinic table data when available, fallback to user table for backward compatibility
     const scheduledCall = await CasesService.scheduleDischargeCall(
       this.supabase,
       this.user.id,
@@ -1022,9 +1031,9 @@ export class DischargeOrchestrator {
       {
         scheduledAt,
         summaryContent,
-        clinicName: userSettings?.clinic_name ?? "Your Clinic",
-        clinicPhone: userSettings?.clinic_phone ?? "",
-        emergencyPhone: userSettings?.clinic_phone ?? "", // Using clinic phone as emergency phone
+        clinicName,
+        clinicPhone,
+        emergencyPhone: clinicPhone, // Using clinic phone as emergency phone
         agentName,
       },
     );
