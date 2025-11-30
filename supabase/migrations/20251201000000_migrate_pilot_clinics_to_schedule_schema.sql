@@ -107,22 +107,8 @@ FROM users u
 INNER JOIN clinics c ON c.name = TRIM(u.clinic_name)
 WHERE u.clinic_name IN ('Alum Rock Animal Hospital', 'Del Valle Pet Hospital')
   AND u.role IN ('veterinarian', 'vet_tech', 'practice_owner')
-  -- Avoid duplicates: check if provider with same name already exists for this clinic
-  AND NOT EXISTS (
-    SELECT 1 
-    FROM providers p 
-    WHERE p.clinic_id = c.id 
-      AND p.name = TRIM(
-        CONCAT(
-          COALESCE(u.first_name, ''),
-          CASE 
-            WHEN u.first_name IS NOT NULL AND u.last_name IS NOT NULL THEN ' ' 
-            ELSE '' 
-          END,
-          COALESCE(u.last_name, '')
-        )
-      )
-  )
+  -- Note: Multiple users with the same name are allowed (each gets unique neo_provider_id UUID)
+  -- The ON CONFLICT clause handles any actual duplicates based on (clinic_id, neo_provider_id)
 ON CONFLICT (clinic_id, neo_provider_id) DO NOTHING;
 
 -- ============================================================================
@@ -218,3 +204,177 @@ ON CONFLICT (clinic_id, neo_provider_id) DO NOTHING;
 --    - Run migration
 --    - Run validation queries after migration to verify
 --    - Test RLS policies work correctly
+
+-- ============================================================================
+-- USER DATA MIGRATION: Transfer data from drkchaudhary@gmail.com to jattvc@gmail.com
+-- ============================================================================
+-- This section transfers all data from drkchaudhary@gmail.com to jattvc@gmail.com
+-- and then deletes the old user account.
+--
+-- Data to transfer:
+--   - 29 cases
+--   - 29 transcriptions
+--   - 15 patients
+--   - 1 temp_soap_templates
+--   - 1 temp_discharge_summary_templates
+--   - Plus any other related records
+
+DO $$
+DECLARE
+  source_user_id UUID;
+  target_user_id UUID;
+  transferred_count INTEGER;
+BEGIN
+  -- Get user IDs
+  SELECT id INTO source_user_id FROM users WHERE email = 'drkchaudhary@gmail.com';
+  SELECT id INTO target_user_id FROM users WHERE email = 'jattvc@gmail.com';
+  
+  -- Verify both users exist
+  IF source_user_id IS NULL THEN
+    RAISE NOTICE 'Source user drkchaudhary@gmail.com not found. Skipping data transfer.';
+    RETURN;
+  END IF;
+  
+  IF target_user_id IS NULL THEN
+    RAISE EXCEPTION 'Target user jattvc@gmail.com not found. Cannot transfer data.';
+  END IF;
+  
+  RAISE NOTICE 'Transferring data from user % to user %', source_user_id, target_user_id;
+  
+  -- Transfer cases
+  UPDATE cases SET user_id = target_user_id WHERE user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % cases', transferred_count;
+  
+  -- Transfer transcriptions
+  UPDATE transcriptions SET user_id = target_user_id WHERE user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % transcriptions', transferred_count;
+  
+  -- Transfer patients
+  UPDATE patients SET user_id = target_user_id WHERE user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % patients', transferred_count;
+  
+  -- Transfer discharge_summaries
+  UPDATE discharge_summaries SET user_id = target_user_id WHERE user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % discharge_summaries', transferred_count;
+  
+  -- Transfer temp_soap_templates
+  UPDATE temp_soap_templates SET user_id = target_user_id WHERE user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % temp_soap_templates', transferred_count;
+  
+  -- Transfer temp_discharge_summary_templates
+  UPDATE temp_discharge_summary_templates SET user_id = target_user_id WHERE user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % temp_discharge_summary_templates', transferred_count;
+  
+  -- Transfer scheduled_discharge_calls
+  UPDATE scheduled_discharge_calls SET user_id = target_user_id WHERE user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % scheduled_discharge_calls', transferred_count;
+  
+  -- Transfer scheduled_discharge_emails
+  UPDATE scheduled_discharge_emails SET user_id = target_user_id WHERE user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % scheduled_discharge_emails', transferred_count;
+  
+  -- Transfer clinic_messages (assigned_to_user_id)
+  UPDATE clinic_messages SET assigned_to_user_id = target_user_id WHERE assigned_to_user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % clinic_messages', transferred_count;
+  
+  -- Transfer call_patients
+  UPDATE call_patients SET user_id = target_user_id WHERE user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % call_patients', transferred_count;
+  
+  -- Transfer case_shares (shared_by_user_id)
+  UPDATE case_shares SET shared_by_user_id = target_user_id WHERE shared_by_user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % case_shares (shared_by)', transferred_count;
+  
+  -- Transfer case_shares (shared_with_user_id)
+  UPDATE case_shares SET shared_with_user_id = target_user_id WHERE shared_with_user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % case_shares (shared_with)', transferred_count;
+  
+  -- Transfer discharge_template_shares (shared_by_user_id)
+  UPDATE discharge_template_shares SET shared_by_user_id = target_user_id WHERE shared_by_user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % discharge_template_shares (shared_by)', transferred_count;
+  
+  -- Transfer discharge_template_shares (shared_with_user_id)
+  UPDATE discharge_template_shares SET shared_with_user_id = target_user_id WHERE shared_with_user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % discharge_template_shares (shared_with)', transferred_count;
+  
+  -- Transfer soap_template_shares (shared_by_user_id)
+  UPDATE soap_template_shares SET shared_by_user_id = target_user_id WHERE shared_by_user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % soap_template_shares (shared_by)', transferred_count;
+  
+  -- Transfer soap_template_shares (shared_with_user_id)
+  UPDATE soap_template_shares SET shared_with_user_id = target_user_id WHERE shared_with_user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % soap_template_shares (shared_with)', transferred_count;
+  
+  -- Transfer error_logs
+  UPDATE error_logs SET user_id = target_user_id WHERE user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % error_logs', transferred_count;
+  
+  -- Transfer feature_usage
+  UPDATE feature_usage SET user_id = target_user_id WHERE user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % feature_usage', transferred_count;
+  
+  -- Transfer idexx_credentials
+  UPDATE idexx_credentials SET user_id = target_user_id WHERE user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % idexx_credentials', transferred_count;
+  
+  -- Transfer idexx_sync_audit_log
+  UPDATE idexx_sync_audit_log SET user_id = target_user_id WHERE user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % idexx_sync_audit_log', transferred_count;
+  
+  -- Transfer idexx_sync_sessions
+  UPDATE idexx_sync_sessions SET user_id = target_user_id WHERE user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % idexx_sync_sessions', transferred_count;
+  
+  -- Transfer inbound_vapi_calls
+  UPDATE inbound_vapi_calls SET user_id = target_user_id WHERE user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % inbound_vapi_calls', transferred_count;
+  
+  -- Transfer session_analytics
+  UPDATE session_analytics SET user_id = target_user_id WHERE user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % session_analytics', transferred_count;
+  
+  -- Transfer user_events
+  UPDATE user_events SET user_id = target_user_id WHERE user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % user_events', transferred_count;
+  
+  -- Transfer vital_signs
+  UPDATE vital_signs SET user_id = target_user_id WHERE user_id = source_user_id;
+  GET DIAGNOSTICS transferred_count = ROW_COUNT;
+  RAISE NOTICE 'Transferred % vital_signs', transferred_count;
+  
+  RAISE NOTICE 'Data transfer complete. Deleting source user...';
+  
+  -- Delete from public.users (this will cascade to any remaining references)
+  DELETE FROM users WHERE id = source_user_id;
+  RAISE NOTICE 'Deleted user from public.users';
+  
+  -- Delete from auth.users (Supabase auth table)
+  DELETE FROM auth.users WHERE id = source_user_id;
+  RAISE NOTICE 'Deleted user from auth.users';
+  
+  RAISE NOTICE 'User data migration complete!';
+END $$;
