@@ -599,8 +599,7 @@ export class DischargeOrchestrator {
               isStale,
             },
           );
-        }
-        // Priority 2: Combine full SOAP sections
+        } // Priority 2: Combine full SOAP sections
         else {
           const sections: string[] = [];
           if (latestSoapNote.subjective) {
@@ -981,7 +980,8 @@ export class DischargeOrchestrator {
     const clinicName =
       clinic?.name ?? userSettings?.clinic_name ?? "Your Clinic";
     const clinicPhone = clinic?.phone ?? userSettings?.clinic_phone ?? "";
-    const clinicEmail = clinic?.email ?? userSettings?.clinic_email ?? null;
+    // Note: clinicEmail is available but not currently used in scheduleDischargeCall
+    // Keeping for potential future use
 
     // Build agent name from user's first name or default to "Sarah"
     const agentName = userSettings?.first_name ?? "Sarah";
