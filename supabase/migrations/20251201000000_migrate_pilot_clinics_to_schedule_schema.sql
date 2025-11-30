@@ -262,12 +262,36 @@ BEGIN
   RAISE NOTICE 'Transferred % discharge_summaries', transferred_count;
   
   -- Transfer temp_soap_templates
-  UPDATE temp_soap_templates SET user_id = target_user_id WHERE user_id = source_user_id;
+  -- Handle unique constraint: only one default template per user
+  -- If target user already has a default template, set source template to non-default before transfer
+  UPDATE temp_soap_templates 
+  SET 
+    is_default = CASE 
+      WHEN is_default = true AND EXISTS (
+        SELECT 1 FROM temp_soap_templates 
+        WHERE user_id = target_user_id AND is_default = true
+      ) THEN false
+      ELSE is_default
+    END,
+    user_id = target_user_id 
+  WHERE user_id = source_user_id;
   GET DIAGNOSTICS transferred_count = ROW_COUNT;
   RAISE NOTICE 'Transferred % temp_soap_templates', transferred_count;
   
   -- Transfer temp_discharge_summary_templates
-  UPDATE temp_discharge_summary_templates SET user_id = target_user_id WHERE user_id = source_user_id;
+  -- Handle unique constraint: only one default template per user
+  -- If target user already has a default template, set source template to non-default before transfer
+  UPDATE temp_discharge_summary_templates 
+  SET 
+    is_default = CASE 
+      WHEN is_default = true AND EXISTS (
+        SELECT 1 FROM temp_discharge_summary_templates 
+        WHERE user_id = target_user_id AND is_default = true
+      ) THEN false
+      ELSE is_default
+    END,
+    user_id = target_user_id 
+  WHERE user_id = source_user_id;
   GET DIAGNOSTICS transferred_count = ROW_COUNT;
   RAISE NOTICE 'Transferred % temp_discharge_summary_templates', transferred_count;
   
