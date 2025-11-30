@@ -69,6 +69,7 @@ async function authenticateRequest(request: NextRequest) {
 
 /**
  * Check if appointment already exists
+ * Returns the appointment ID if found, null otherwise
  */
 async function findExistingAppointment(
   supabase: SupabaseClientType,
@@ -77,31 +78,46 @@ async function findExistingAppointment(
 ): Promise<string | null> {
   // First try: by neo_appointment_id + clinic_id + date
   if (appointment.neo_appointment_id) {
-    const { data: existing } = await supabase
+    const { data: existing, error } = await supabase
       .from("appointments")
       .select("id")
       .eq("clinic_id", clinicId)
       .eq("neo_appointment_id", appointment.neo_appointment_id)
       .eq("date", appointment.date)
-      .single();
+      .maybeSingle(); // Use maybeSingle() to handle not found gracefully
 
-    if (existing) {
+    // If error is not "no rows" error, log it
+    if (error && error.code !== "PGRST116") {
+      console.error("[findExistingAppointment] Error querying by neo_appointment_id", {
+        error,
+        neoAppointmentId: appointment.neo_appointment_id,
+      });
+      // Continue to fallback method
+    } else if (existing) {
       return existing.id;
     }
   }
 
   // Second try: by date + start_time + patient_name + clinic_id
   if (appointment.patient_name && appointment.start_time) {
-    const { data: existing } = await supabase
+    const { data: existing, error } = await supabase
       .from("appointments")
       .select("id")
       .eq("clinic_id", clinicId)
       .eq("date", appointment.date)
       .eq("start_time", appointment.start_time)
       .eq("patient_name", appointment.patient_name)
-      .single();
+      .maybeSingle(); // Use maybeSingle() to handle not found gracefully
 
-    if (existing) {
+    // If error is not "no rows" error, log it
+    if (error && error.code !== "PGRST116") {
+      console.error("[findExistingAppointment] Error querying by date/time/patient", {
+        error,
+        date: appointment.date,
+        startTime: appointment.start_time,
+        patientName: appointment.patient_name,
+      });
+    } else if (existing) {
       return existing.id;
     }
   }
@@ -171,14 +187,26 @@ async function processAppointment(
         .select("id")
         .single();
 
-      if (updateError || !updated) {
+      if (updateError) {
+        // Don't expose internal database error details
+        const errorMessage =
+          updateError.code === "PGRST116"
+            ? "Appointment not found for update"
+            : "Failed to update appointment";
         return {
           success: false,
           appointmentId: null,
           created: false,
-          error: `Failed to update appointment: ${
-            updateError?.message ?? "Unknown error"
-          }`,
+          error: errorMessage,
+        };
+      }
+
+      if (!updated) {
+        return {
+          success: false,
+          appointmentId: null,
+          created: false,
+          error: "Appointment not found for update",
         };
       }
 
@@ -195,14 +223,26 @@ async function processAppointment(
         .select("id")
         .single();
 
-      if (insertError || !inserted) {
+      if (insertError) {
+        // Don't expose internal database error details
+        const errorMessage =
+          insertError.code === "23505"
+            ? "Appointment already exists (duplicate)"
+            : "Failed to create appointment";
         return {
           success: false,
           appointmentId: null,
           created: false,
-          error: `Failed to create appointment: ${
-            insertError?.message ?? "Unknown error"
-          }`,
+          error: errorMessage,
+        };
+      }
+
+      if (!inserted) {
+        return {
+          success: false,
+          appointmentId: null,
+          created: false,
+          error: "Failed to create appointment",
         };
       }
 
@@ -368,11 +408,12 @@ export async function POST(request: NextRequest) {
       hasErrors && totalProcessed === 0 ? "failed" : "completed";
 
     // Update schedule_syncs record
+    // Truncate error message if too long (database constraint)
     const errorMessage =
       errors.length > 0
-        ? `Failed to process ${errors.length} appointment(s): ${errors
-            .map((e) => e.error)
-            .join("; ")}`
+        ? `Failed to process ${errors.length} appointment(s). First error: ${
+            errors[0]?.error ?? "Unknown error"
+          }${errors.length > 1 ? ` (+${errors.length - 1} more)` : ""}`
         : null;
 
     const { error: updateError } = await supabase

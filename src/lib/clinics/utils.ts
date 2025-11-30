@@ -50,12 +50,20 @@ export async function getClinicByUserId(
     .select("*")
     .ilike("name", clinicName)
     .eq("is_active", true)
-    .single();
+    .maybeSingle(); // Use maybeSingle() to handle not found gracefully
 
-  if (clinicError || !clinic) {
-    console.error("[getClinicByUserId] Clinic not found", {
+  // Handle errors (excluding "not found" which is expected)
+  if (clinicError && clinicError.code !== "PGRST116") {
+    console.error("[getClinicByUserId] Error finding clinic", {
       clinicName,
       error: clinicError,
+    });
+    return null;
+  }
+
+  if (!clinic) {
+    console.error("[getClinicByUserId] Clinic not found", {
+      clinicName,
     });
     return null;
   }
@@ -79,12 +87,20 @@ export async function getClinicByName(
     .select("*")
     .ilike("name", clinicName.trim())
     .eq("is_active", true)
-    .single();
+    .maybeSingle(); // Use maybeSingle() to handle not found gracefully
 
-  if (error || !clinic) {
-    console.error("[getClinicByName] Clinic not found", {
+  // Handle errors (excluding "not found" which is expected)
+  if (error && error.code !== "PGRST116") {
+    console.error("[getClinicByName] Error finding clinic", {
       clinicName,
       error,
+    });
+    return null;
+  }
+
+  if (!clinic) {
+    console.error("[getClinicByName] Clinic not found", {
+      clinicName,
     });
     return null;
   }
@@ -109,6 +125,16 @@ export async function getClinicByName(
  * @param role - Provider role (default: "veterinarian")
  * @returns Provider UUID
  */
+/**
+ * Valid provider roles
+ */
+const VALID_PROVIDER_ROLES = [
+  "veterinarian",
+  "vet_tech",
+  "receptionist",
+  "other",
+] as const;
+
 export async function getOrCreateProvider(
   clinicId: string,
   neoProviderId: string,
@@ -116,6 +142,23 @@ export async function getOrCreateProvider(
   supabase: SupabaseClientType,
   role = "veterinarian",
 ): Promise<string | null> {
+  // Validate provider name
+  if (!providerName || providerName.trim().length === 0) {
+    console.error("[getOrCreateProvider] Invalid provider name", {
+      clinicId,
+      neoProviderId,
+      providerName,
+    });
+    return null;
+  }
+
+  // Validate role
+  const validRole = VALID_PROVIDER_ROLES.includes(
+      role as (typeof VALID_PROVIDER_ROLES)[number],
+    )
+    ? (role as (typeof VALID_PROVIDER_ROLES)[number])
+    : "veterinarian";
+
   // First, try to find existing provider
   const { data: existingProvider, error: findError } = await supabase
     .from("providers")
@@ -123,31 +166,85 @@ export async function getOrCreateProvider(
     .eq("clinic_id", clinicId)
     .eq("neo_provider_id", neoProviderId)
     .eq("is_active", true)
-    .single();
+    .maybeSingle(); // Use maybeSingle() instead of single() to handle not found gracefully
+
+  if (findError && findError.code !== "PGRST116") {
+    // PGRST116 = no rows returned (not an error for our use case)
+    console.error("[getOrCreateProvider] Error finding provider", {
+      clinicId,
+      neoProviderId,
+      error: findError,
+    });
+    return null;
+  }
 
   if (existingProvider) {
     return existingProvider.id;
   }
 
   // Provider not found - create new one
+  // Handle race condition: if two requests try to create simultaneously,
+  // the second will fail due to unique constraint, so we retry the lookup
   const { data: newProvider, error: createError } = await supabase
     .from("providers")
     .insert({
       clinic_id: clinicId,
       neo_provider_id: neoProviderId,
-      name: providerName,
-      role: role,
+      name: providerName.trim(),
+      role: validRole,
       is_active: true,
     })
     .select("id")
     .single();
 
-  if (createError || !newProvider) {
+  // If creation failed, it might be a race condition - try to find again
+  if (createError) {
+    // Check if it's a unique constraint violation (race condition)
+    const isUniqueViolation = createError.code === "23505" || // PostgreSQL unique violation
+      createError.message.includes("duplicate") ||
+      createError.message.includes("unique");
+
+    if (isUniqueViolation) {
+      // Race condition: provider was created by another request
+      // Retry lookup
+      const { data: retryProvider, error: retryError } = await supabase
+        .from("providers")
+        .select("id")
+        .eq("clinic_id", clinicId)
+        .eq("neo_provider_id", neoProviderId)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (retryError || !retryProvider) {
+        console.error(
+          "[getOrCreateProvider] Failed to find provider after race condition",
+          {
+            clinicId,
+            neoProviderId,
+            error: retryError,
+          },
+        );
+        return null;
+      }
+
+      return retryProvider.id;
+    }
+
+    // Some other error occurred
     console.error("[getOrCreateProvider] Failed to create provider", {
       clinicId,
       neoProviderId,
       providerName,
       error: createError,
+    });
+    return null;
+  }
+
+  if (!newProvider) {
+    console.error("[getOrCreateProvider] Provider creation returned no data", {
+      clinicId,
+      neoProviderId,
+      providerName,
     });
     return null;
   }
