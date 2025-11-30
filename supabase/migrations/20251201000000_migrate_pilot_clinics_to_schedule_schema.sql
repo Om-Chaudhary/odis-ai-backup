@@ -82,11 +82,8 @@ SET
 INSERT INTO providers (clinic_id, neo_provider_id, name, role, is_active)
 SELECT 
   c.id as clinic_id,
-  -- Generate neo_provider_id from user metadata or create UUID
-  COALESCE(
-    (u.metadata->>'neo_provider_id')::text,
-    gen_random_uuid()::text
-  ) as neo_provider_id,
+  -- Generate neo_provider_id as UUID (users table doesn't have metadata column)
+  gen_random_uuid()::text as neo_provider_id,
   -- Build full name from first_name and last_name
   TRIM(
     CONCAT(
