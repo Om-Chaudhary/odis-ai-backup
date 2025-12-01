@@ -23,6 +23,8 @@ export interface StoredCredential {
   lastUsedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  username_encrypted: unknown;
+  password_encrypted: unknown;
 }
 
 /**
@@ -145,10 +147,20 @@ export class IdexxCredentialManager {
 
     // Decrypt credentials
     try {
-      const usernameEncryptedBuffer = Buffer.from(credential.username_encrypted as unknown as Uint8Array);
-      const passwordEncryptedBuffer = Buffer.from(credential.password_encrypted as unknown as Uint8Array);
-      const username = decrypt(usernameEncryptedBuffer, credential.encryptionKeyId);
-      const password = decrypt(passwordEncryptedBuffer, credential.encryptionKeyId);
+      const usernameEncryptedBuffer = Buffer.from(
+        credential.username_encrypted as Uint8Array,
+      );
+      const passwordEncryptedBuffer = Buffer.from(
+        credential.password_encrypted as Uint8Array,
+      );
+      const username = decrypt(
+        usernameEncryptedBuffer,
+        credential.encryptionKeyId,
+      );
+      const password = decrypt(
+        passwordEncryptedBuffer,
+        credential.encryptionKeyId,
+      );
 
       // Update last_used_at
       await this.supabase
@@ -158,7 +170,8 @@ export class IdexxCredentialManager {
 
       return { username, password };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       throw new Error(`Failed to decrypt credentials: ${errorMessage}`);
     }
   }
@@ -173,7 +186,10 @@ export class IdexxCredentialManager {
    * @param password - IDEXX password
    * @returns true if credentials are valid, false otherwise
    */
-  async validateCredentials(username: string, password: string): Promise<boolean> {
+  async validateCredentials(
+    username: string,
+    password: string,
+  ): Promise<boolean> {
     // TODO: Implement actual IDEXX Neo login validation
     // This could use Playwright to navigate to IDEXX Neo login page
     // and verify successful authentication
@@ -216,7 +232,9 @@ export class IdexxCredentialManager {
       .eq("is_active", true);
 
     if (fetchError) {
-      throw new Error(`Failed to fetch credentials for rotation: ${fetchError.message}`);
+      throw new Error(
+        `Failed to fetch credentials for rotation: ${fetchError.message}`,
+      );
     }
 
     if (!credentials || credentials.length === 0) {
@@ -229,10 +247,20 @@ export class IdexxCredentialManager {
     for (const credential of credentials) {
       try {
         // Decrypt with old key
-        const usernameEncryptedBuffer = Buffer.from(credential.username_encrypted as unknown as Uint8Array);
-        const passwordEncryptedBuffer = Buffer.from(credential.password_encrypted as unknown as Uint8Array);
-        const username = decrypt(usernameEncryptedBuffer, credential.encryption_key_id);
-        const password = decrypt(passwordEncryptedBuffer, credential.encryption_key_id);
+        const usernameEncryptedBuffer = Buffer.from(
+          credential.username_encrypted as unknown as Uint8Array,
+        );
+        const passwordEncryptedBuffer = Buffer.from(
+          credential.password_encrypted as unknown as Uint8Array,
+        );
+        const username = decrypt(
+          usernameEncryptedBuffer,
+          credential.encryption_key_id,
+        );
+        const password = decrypt(
+          passwordEncryptedBuffer,
+          credential.encryption_key_id,
+        );
 
         // Re-encrypt with new key
         const { encrypted: usernameEncryptedNew } = encrypt(username, newKeyId);
@@ -250,14 +278,21 @@ export class IdexxCredentialManager {
           .eq("id", credential.id);
 
         if (updateError) {
-          console.error(`Failed to rotate credential ${credential.id}:`, updateError);
+          console.error(
+            `Failed to rotate credential ${credential.id}:`,
+            updateError,
+          );
           continue;
         }
 
         rotatedCount++;
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error";
-        console.error(`Failed to decrypt credential ${credential.id} for rotation:`, errorMessage);
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+        console.error(
+          `Failed to decrypt credential ${credential.id} for rotation:`,
+          errorMessage,
+        );
         // Continue with other credentials
       }
     }
@@ -271,7 +306,10 @@ export class IdexxCredentialManager {
    * @param userId - User ID
    * @param clinicId - Optional clinic ID (if provided, only deactivates credentials for that clinic)
    */
-  async deactivateCredentials(userId: string, clinicId?: string | null): Promise<void> {
+  async deactivateCredentials(
+    userId: string,
+    clinicId?: string | null,
+  ): Promise<void> {
     let query = this.supabase
       .from("idexx_credentials")
       .update({ is_active: false, updated_at: new Date().toISOString() })

@@ -10,7 +10,7 @@ import {
   ScheduleSyncRequestSchema,
 } from "~/lib/schedule/validators";
 import { getClinicByUserId, getOrCreateProvider } from "~/lib/clinics/utils";
-import type { Database } from "~/database.types";
+import type { Database, Json } from "~/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type SupabaseClientType = SupabaseClient<Database>;
@@ -88,10 +88,13 @@ async function findExistingAppointment(
 
     // If error is not "no rows" error, log it
     if (error && error.code !== "PGRST116") {
-      console.error("[findExistingAppointment] Error querying by neo_appointment_id", {
-        error,
-        neoAppointmentId: appointment.neo_appointment_id,
-      });
+      console.error(
+        "[findExistingAppointment] Error querying by neo_appointment_id",
+        {
+          error,
+          neoAppointmentId: appointment.neo_appointment_id,
+        },
+      );
       // Continue to fallback method
     } else if (existing) {
       return existing.id;
@@ -111,12 +114,15 @@ async function findExistingAppointment(
 
     // If error is not "no rows" error, log it
     if (error && error.code !== "PGRST116") {
-      console.error("[findExistingAppointment] Error querying by date/time/patient", {
-        error,
-        date: appointment.date,
-        startTime: appointment.start_time,
-        patientName: appointment.patient_name,
-      });
+      console.error(
+        "[findExistingAppointment] Error querying by date/time/patient",
+        {
+          error,
+          date: appointment.date,
+          startTime: appointment.start_time,
+          patientName: appointment.patient_name,
+        },
+      );
     } else if (existing) {
       return existing.id;
     }
@@ -175,7 +181,7 @@ async function processAppointment(
         notes: appointment.notes ?? null,
         provider_id: providerId,
         source: "neo", // IDEXX Neo
-        metadata: appointment.metadata ?? {},
+        metadata: (appointment.metadata ?? {}) as Json,
       };
 
     if (existingAppointmentId) {
@@ -296,7 +302,7 @@ export async function POST(request: NextRequest) {
     let body: unknown;
     try {
       body = await request.json();
-    } catch (error) {
+    } catch {
       return withCorsHeaders(
         request,
         NextResponse.json(
@@ -380,6 +386,8 @@ export async function POST(request: NextRequest) {
 
     for (let i = 0; i < appointments.length; i++) {
       const appointment = appointments[i];
+      if (!appointment) continue;
+
       const result = await processAppointment(
         supabase,
         appointment,

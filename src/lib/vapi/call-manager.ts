@@ -113,12 +113,6 @@ export async function createVapiCall(
     // If clinic is found in table, prefer clinic table data for consistency
     // but fallback to input values for backward compatibility
     const validatedClinicName = clinic?.name ?? input.clinicName;
-    // If clinic table has phone, use it as base but prefer formatted input for voice
-    // If no clinic phone, fallback to input
-    const validatedClinicPhone =
-      clinic?.phone && !input.clinicPhone
-        ? clinic.phone // Use clinic phone if input not provided
-        : input.clinicPhone; // Prefer formatted input for voice
 
     // Step 1: Build dynamic variables with knowledge base integration
     const variablesBuildResult = buildDynamicVariables({
