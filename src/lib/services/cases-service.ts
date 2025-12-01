@@ -367,60 +367,7 @@ export const CasesService = {
     let entities = caseInfo.entities;
 
     // 1a. Enrich entities with database values (database takes priority)
-    if (entities && caseInfo.patient) {
-      // Handle both single patient and array of patients
-      const patient = Array.isArray(caseInfo.patient)
-        ? caseInfo.patient[0]
-        : caseInfo.patient;
-
-      if (patient) {
-        // Enrich patient name from database (database takes priority)
-        if (patient.name && patient.name.trim() !== "") {
-          entities.patient.name = patient.name;
-        }
-
-        // Enrich patient demographics from database
-        if (patient.species) {
-          entities.patient.species =
-            patient.species as NormalizedEntities["patient"]["species"];
-        }
-        if (patient.breed) entities.patient.breed = patient.breed;
-        if (patient.sex) {
-          entities.patient.sex =
-            patient.sex as NormalizedEntities["patient"]["sex"];
-        }
-        if (patient.weight_kg) {
-          entities.patient.weight = `${patient.weight_kg} kg`;
-        }
-
-        // Enrich owner information from database
-        if (patient.owner_name) {
-          entities.patient.owner.name = patient.owner_name;
-        }
-        if (patient.owner_phone) {
-          entities.patient.owner.phone = patient.owner_phone;
-        }
-        if (patient.owner_email) {
-          entities.patient.owner.email = patient.owner_email;
-        }
-
-        console.log(
-          "[CasesService] Enriched entities with patient database values",
-          {
-            caseId,
-            enrichedFields: {
-              name: patient.name,
-              species: patient.species,
-              breed: patient.breed,
-              sex: patient.sex,
-              weight: patient.weight_kg,
-              ownerName: patient.owner_name,
-              ownerPhone: patient.owner_phone,
-            },
-          },
-        );
-      }
-    }
+    this.enrichEntitiesWithPatient(entities, caseInfo.patient);
 
     // 1b. Enrich with client instructions from SOAP notes or discharge summaries
     if (entities) {
@@ -538,6 +485,10 @@ export const CasesService = {
           caseInfo = await this.getCaseWithEntities(supabase, caseId);
           if (!caseInfo) throw new Error("Case not found after update");
           entities = caseInfo.entities;
+
+          // Re-apply database enrichment after re-fetch
+          // This ensures database values take priority even after transcription extraction
+          this.enrichEntitiesWithPatient(entities, caseInfo.patient);
         } catch (extractionError) {
           console.error(
             "[CasesService] Failed to extract entities from transcription",
@@ -916,6 +867,78 @@ export const CasesService = {
       missing.push("weight");
     }
     return missing;
+  },
+
+  /**
+   * Enrich entities with database patient values
+   *
+   * Database values take priority over AI-extracted metadata values.
+   * This ensures accurate patient information even when AI extraction fails.
+   *
+   * @param entities - The entities object to enrich (modified in place)
+   * @param patient - Patient record from database (single or array)
+   */
+  enrichEntitiesWithPatient(
+    entities: NormalizedEntities | undefined,
+    patient: PatientRow | PatientRow[] | null,
+  ): void {
+    if (!entities || !patient) {
+      return;
+    }
+
+    // Handle both single patient and array of patients
+    const patientData = Array.isArray(patient) ? patient[0] : patient;
+
+    if (!patientData) {
+      return;
+    }
+
+    // Enrich patient name from database (database takes priority)
+    if (patientData.name && patientData.name.trim() !== "") {
+      entities.patient.name = patientData.name;
+    }
+
+    // Enrich patient demographics from database
+    if (patientData.species) {
+      entities.patient.species =
+        patientData.species as NormalizedEntities["patient"]["species"];
+    }
+    if (patientData.breed) {
+      entities.patient.breed = patientData.breed;
+    }
+    if (patientData.sex) {
+      entities.patient.sex =
+        patientData.sex as NormalizedEntities["patient"]["sex"];
+    }
+    if (patientData.weight_kg) {
+      entities.patient.weight = `${patientData.weight_kg} kg`;
+    }
+
+    // Enrich owner information from database
+    if (patientData.owner_name) {
+      entities.patient.owner.name = patientData.owner_name;
+    }
+    if (patientData.owner_phone) {
+      entities.patient.owner.phone = patientData.owner_phone;
+    }
+    if (patientData.owner_email) {
+      entities.patient.owner.email = patientData.owner_email;
+    }
+
+    console.log(
+      "[CasesService] Enriched entities with patient database values",
+      {
+        enrichedFields: {
+          name: patientData.name,
+          species: patientData.species,
+          breed: patientData.breed,
+          sex: patientData.sex,
+          weight: patientData.weight_kg,
+          ownerName: patientData.owner_name,
+          ownerPhone: patientData.owner_phone,
+        },
+      },
+    );
   },
 
   /**
