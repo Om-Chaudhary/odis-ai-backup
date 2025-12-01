@@ -1,20 +1,15 @@
 {
   "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
+      }
+    },
     "shadcn": {
       "command": "npx",
       "args": ["shadcn@latest", "mcp"]
-    },
-    "vapi-mcp": {
-      "command": "npx",
-      "args": [
-        "mcp-remote",
-        "https://mcp.vapi.ai/mcp",
-        "--header",
-        "Authorization: Bearer ${VAPI_TOKEN}"
-      ],
-      "env": {
-        "VAPI_TOKEN": "eb6d0702-e660-46a7-9fe4-71c4a5264e23"
-      }
     },
     "playwright": {
       "command": "npx",

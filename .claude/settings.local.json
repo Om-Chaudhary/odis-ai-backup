@@ -85,15 +85,17 @@
       "Bash(/Users/s0381806/Development/odis-ai/apps/web/)",
       "Bash(pnpm nx run:*)",
       "Read(//Users/s0381806/Development/**)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "mcp__Notion__notion-search",
+      "mcp__Notion__notion-fetch",
+      "mcp__github__search_repositories",
+      "mcp__Notion__notion-update-page",
+      "mcp__Notion__notion-move-pages",
+      "mcp__Notion__notion-create-pages"
     ],
     "deny": [],
     "ask": []
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "shadcn",
-    "vapi-mcp",
-    "playwright"
-  ]
+  "enabledMcpjsonServers": ["shadcn", "vapi-mcp", "playwright"]
 }
