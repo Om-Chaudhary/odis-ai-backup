@@ -14,7 +14,7 @@ import { Search } from "lucide-react";
 import type { DischargeReadinessFilter } from "~/types/dashboard";
 import type { DateRangePreset } from "~/lib/utils/date-ranges";
 import { useQueryState } from "nuqs";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 interface UnifiedFilterBarProps {
   /** Current selected date for day navigation */
@@ -89,18 +89,23 @@ export function UnifiedFilterBar({
     serialize: (value) => value,
   });
 
-  // Reset to today when switching from range mode back to day mode
+  // Track previous dateRange to detect when it changes
+  const prevDateRangeRef = useRef(dateRange);
+
+  // Reset to today ONLY when switching FROM range mode (3d/30d) TO day mode (all/1d)
+  // This allows day-by-day navigation to work without being reset
   useEffect(() => {
-    if (dateRange === "all" || dateRange === "1d") {
-      const today = new Date();
-      const currentDateStr = currentDate.toISOString().split("T")[0];
-      const todayStr = today.toISOString().split("T")[0];
-      // Only reset if we're not already on today
-      if (currentDateStr !== todayStr) {
-        onDateChange(today);
-      }
+    const previousRange = prevDateRangeRef.current;
+    prevDateRangeRef.current = dateRange;
+
+    // Only reset when switching FROM range mode TO day mode
+    const wasInRangeMode = previousRange === "3d" || previousRange === "30d";
+    const nowInDayMode = dateRange === "all" || dateRange === "1d";
+
+    if (wasInRangeMode && nowInDayMode) {
+      onDateChange(new Date());
     }
-  }, [dateRange, currentDate, onDateChange]);
+  }, [dateRange, onDateChange]);
 
   // Show day navigation only when date range is "all" or "1d"
   const showDayNavigation = dateRange === "all" || dateRange === "1d";
