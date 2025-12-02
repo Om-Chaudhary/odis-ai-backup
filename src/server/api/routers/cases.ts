@@ -101,7 +101,7 @@ export const casesRouter = createTRPCRouter({
           created_at,
           scheduled_at,
           metadata,
-          patients!inner (
+          patients (
             id,
             name,
             species,

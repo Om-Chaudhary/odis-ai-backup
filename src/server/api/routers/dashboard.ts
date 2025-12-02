@@ -1330,7 +1330,7 @@ export const dashboardRouter = createTRPCRouter({
           type,
           created_at,
           scheduled_at,
-          patients!inner (
+          patients (
             id,
             name,
             species,
