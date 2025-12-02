@@ -88,7 +88,13 @@ export function DischargeManagementClient() {
   const isProcessingRef = useRef(false);
 
   // Calculate date parameters based on dateRange
+  // IMPORTANT: When search term is active, override date filters to search all time
   const dateParams = useMemo(() => {
+    // If searching, ignore date filters and search all time
+    if (searchTerm.trim()) {
+      return {}; // No date filters = search all time
+    }
+
     if (dateRange === "3d" || dateRange === "30d") {
       // Range mode: use startDate and endDate
       const { startDate, endDate } = getDateRangeFromPreset(dateRange);
@@ -106,7 +112,7 @@ export function DischargeManagementClient() {
     }
     // "all" mode: use single date parameter (day navigation)
     return { date: format(currentDate, "yyyy-MM-dd") };
-  }, [dateRange, currentDate]);
+  }, [dateRange, currentDate, searchTerm]);
 
   // tRPC Queries
   const {

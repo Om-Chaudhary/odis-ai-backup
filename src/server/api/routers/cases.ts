@@ -50,8 +50,10 @@ export const casesRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       // Determine date range: use startDate/endDate if provided, otherwise use single date
-      let startDate: Date;
-      let endDate: Date;
+      // If no date parameters provided at all, search all time (used when search is active)
+      let startDate: Date | null = null;
+      let endDate: Date | null = null;
+      const hasDateFilter = !!(input.startDate ?? input.endDate ?? input.date);
 
       if (input.startDate && input.endDate) {
         // Date range mode
@@ -59,29 +61,36 @@ export const casesRouter = createTRPCRouter({
         startDate.setUTCHours(0, 0, 0, 0);
         endDate = new Date(input.endDate);
         endDate.setUTCHours(23, 59, 59, 999);
-      } else {
+      } else if (input.date) {
         // Single date mode (backward compatible)
-        const selectedDate = input.date ? new Date(input.date) : new Date();
+        const selectedDate = new Date(input.date);
         selectedDate.setUTCHours(0, 0, 0, 0);
         endDate = new Date(selectedDate);
         endDate.setUTCHours(23, 59, 59, 999);
         startDate = selectedDate;
       }
+      // else: no date filter = search all time (startDate and endDate remain null)
 
-      // Get total count - filter cases created within the date range
-      const { count } = await ctx.supabase
+      // Get total count - optionally filter cases created within the date range
+      let countQuery = ctx.supabase
         .from("cases")
         .select("id", { count: "exact", head: true })
-        .eq("user_id", ctx.user.id)
-        .gte("created_at", startDate.toISOString())
-        .lte("created_at", endDate.toISOString());
+        .eq("user_id", ctx.user.id);
+
+      if (hasDateFilter && startDate && endDate) {
+        countQuery = countQuery
+          .gte("created_at", startDate.toISOString())
+          .lte("created_at", endDate.toISOString());
+      }
+
+      const { count } = await countQuery;
 
       // Calculate pagination range
       const from = (input.page - 1) * input.pageSize;
       const to = from + input.pageSize - 1;
 
       // Get paginated data with all relations
-      const { data, error } = await ctx.supabase
+      let dataQuery = ctx.supabase
         .from("cases")
         .select(
           `
@@ -137,9 +146,16 @@ export const casesRouter = createTRPCRouter({
           )
         `,
         )
-        .eq("user_id", ctx.user.id)
-        .gte("created_at", startDate.toISOString())
-        .lte("created_at", endDate.toISOString())
+        .eq("user_id", ctx.user.id);
+
+      // Apply date filter only if date parameters were provided
+      if (hasDateFilter && startDate && endDate) {
+        dataQuery = dataQuery
+          .gte("created_at", startDate.toISOString())
+          .lte("created_at", endDate.toISOString());
+      }
+
+      const { data, error } = await dataQuery
         .order("created_at", { ascending: false })
         .range(from, to);
 
@@ -202,7 +218,9 @@ export const casesRouter = createTRPCRouter({
           total: count ?? 0,
           totalPages: Math.ceil((count ?? 0) / input.pageSize),
         },
-        date: startDate.toISOString().split("T")[0], // Return start date in YYYY-MM-DD format
+        date: startDate
+          ? startDate.toISOString().split("T")[0]
+          : new Date().toISOString().split("T")[0], // Return start date in YYYY-MM-DD format, or today if no filter
         userEmail: ctx.user.email, // Include user email for transform layer
       };
     }),

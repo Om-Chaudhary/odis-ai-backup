@@ -10,11 +10,12 @@ import {
 } from "~/components/ui/select";
 import { Label } from "~/components/ui/label";
 import { Input } from "~/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, Info } from "lucide-react";
 import type { DischargeReadinessFilter } from "~/types/dashboard";
 import type { DateRangePreset } from "~/lib/utils/date-ranges";
 import { useQueryState } from "nuqs";
 import { useEffect, useRef } from "react";
+import { Badge } from "~/components/ui/badge";
 
 interface UnifiedFilterBarProps {
   /** Current selected date for day navigation */
@@ -110,29 +111,44 @@ export function UnifiedFilterBar({
   // Show day navigation only when date range is "all" or "1d"
   const showDayNavigation = dateRange === "all" || dateRange === "1d";
 
+  // Check if search is active
+  const isSearchActive = searchTerm.trim().length > 0;
+
   return (
     <div className="space-y-4">
       {/* Search Bar - First element, full width on mobile, constrained on desktop */}
-      <div className="relative flex-1 md:max-w-sm">
-        <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
-        <Input
-          type="search"
-          placeholder="Search patients or owners..."
-          className="transition-smooth pl-9 focus:ring-2"
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-        />
+      <div className="flex-1 space-y-2 md:max-w-sm">
+        <div className="relative">
+          <Search className="text-muted-foreground absolute top-2.5 left-2.5 h-4 w-4" />
+          <Input
+            type="search"
+            placeholder="Search patients or owners..."
+            className="transition-smooth pl-9 focus:ring-2"
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+          />
+        </div>
+        {/* Show indicator when search overrides date filters */}
+        {isSearchActive && (
+          <Badge
+            variant="secondary"
+            className="gap-1.5 border-blue-200 bg-blue-50 text-blue-700"
+          >
+            <Info className="h-3 w-3" />
+            Searching all cases (date filter overridden)
+          </Badge>
+        )}
       </div>
 
-      {/* Conditional Day Navigation - Only show for "all" or "1d" */}
-      {showDayNavigation ? (
+      {/* Conditional Day Navigation - Only show for "all" or "1d" (and not when searching) */}
+      {showDayNavigation && !isSearchActive ? (
         <DayPaginationControls
           currentDate={currentDate}
           onDateChange={onDateChange}
           totalItems={totalItems}
           isLoading={isLoading}
         />
-      ) : (
+      ) : !isSearchActive ? (
         <div className="text-muted-foreground text-sm">
           Showing cases from{" "}
           {dateRange === "3d"
@@ -141,7 +157,7 @@ export function UnifiedFilterBar({
               ? "last 30 days"
               : "selected range"}
         </div>
-      )}
+      ) : null}
 
       {/* Filter Row: Date Range, Status, and Readiness Selects */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-4">
