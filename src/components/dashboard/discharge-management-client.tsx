@@ -476,7 +476,7 @@ export function DischargeManagementClient() {
         const hasSentEmail = c.scheduled_discharge_emails.some(
           (email) => email.status === "sent",
         );
-        return c.status === "completed" ?? hasCompletedCall ?? hasSentEmail;
+        return c.status === "completed" && hasCompletedCall && hasSentEmail;
       }
 
       if (statusFilter === "failed") {
