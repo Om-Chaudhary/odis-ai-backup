@@ -273,37 +273,56 @@ async function handler(req: NextRequest) {
       );
     }
 
-    // Fetch user's voicemail detection setting from database
+    // Fetch user's voicemail settings from database
     const { data: userData } = await supabase
       .from("users")
-      .select("voicemail_detection_enabled")
+      .select("voicemail_detection_enabled, voicemail_hangup_on_detection")
       .eq("id", call.user_id)
       .single();
 
     const voicemailEnabled = userData?.voicemail_detection_enabled ?? false;
+    const voicemailHangup = userData?.voicemail_hangup_on_detection ?? false;
 
-    console.log("[EXECUTE_CALL] Voicemail detection setting", {
+    console.log("[EXECUTE_CALL] Voicemail detection settings", {
       callId,
       userId: call.user_id,
       voicemailEnabled,
+      voicemailHangup,
+      behavior: voicemailHangup
+        ? "hang up on voicemail"
+        : voicemailEnabled
+          ? "leave voicemail message"
+          : "disabled",
     });
 
-    // Prepare voicemail tool configuration (if enabled)
+    // Prepare voicemail tool configuration
+    // - If voicemail detection enabled AND hangup is true: leave message empty to trigger hangup
+    // - If voicemail detection enabled AND hangup is false: provide message content
+    // - If voicemail detection disabled: don't include tool
     const voicemailTool = voicemailEnabled
       ? [
           {
             type: "voicemail" as const,
             function: {
               name: "leave_voicemail",
-              description:
-                "Leave a voicemail message when voicemail is detected",
+              description: voicemailHangup
+                ? "Hang up when voicemail is detected"
+                : "Leave a voicemail message when voicemail is detected",
             },
-            messages: [
-              {
-                type: "request-start",
-                content: `Hi {{owner_name}}, this is {{agent_name}} from {{clinic_name}}. I'm checking in on {{pet_name}} after the appointment on {{appointment_date}}. Everything looked great from our end. If you have any questions or concerns about {{pet_name}}, please give us a call at {{clinic_phone}}. For emergencies, you can reach {{emergency_phone}} anytime. Take care!`,
-              },
-            ],
+            // Setting message to empty string makes VAPI hang up instead of leaving a message
+            messages: voicemailHangup
+              ? [
+                  {
+                    type: "request-start",
+                    content: "", // Empty message = hang up on voicemail
+                  },
+                ]
+              : [
+                  {
+                    type: "request-start",
+                    content: `Hi {{owner_name}}, this is {{agent_name}} from {{clinic_name}}. I'm checking in on {{pet_name}} after the appointment on {{appointment_date}}. Everything looked great from our end. If you have any questions or concerns about {{pet_name}}, please give us a call at {{clinic_phone}}. For emergencies, you can reach {{emergency_phone}} anytime. Take care!`,
+                  },
+                ],
           },
         ]
       : undefined;
@@ -374,8 +393,9 @@ async function handler(req: NextRequest) {
         metadata: {
           ...metadata,
           executed_at: new Date().toISOString(),
-          // Store voicemail detection flag for webhook handler reference
+          // Store voicemail settings for webhook handler reference
           voicemail_detection_enabled: voicemailEnabled,
+          voicemail_hangup_on_detection: voicemailHangup,
         },
       })
       .eq("id", callId);

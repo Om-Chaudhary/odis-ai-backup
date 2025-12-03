@@ -663,7 +663,7 @@ export const casesRouter = createTRPCRouter({
     const { data, error } = await ctx.supabase
       .from("users")
       .select(
-        "clinic_name, clinic_phone, clinic_email, emergency_phone, first_name, last_name, test_mode_enabled, test_contact_name, test_contact_email, test_contact_phone, voicemail_detection_enabled, default_schedule_delay_minutes",
+        "clinic_name, clinic_phone, clinic_email, emergency_phone, first_name, last_name, test_mode_enabled, test_contact_name, test_contact_email, test_contact_phone, voicemail_detection_enabled, voicemail_hangup_on_detection, default_schedule_delay_minutes",
       )
       .eq("id", ctx.user.id)
       .single();
@@ -699,6 +699,7 @@ export const casesRouter = createTRPCRouter({
       testContactEmail: data?.test_contact_email ?? "",
       testContactPhone: data?.test_contact_phone ?? "",
       voicemailDetectionEnabled: data?.voicemail_detection_enabled ?? false,
+      voicemailHangupOnDetection: data?.voicemail_hangup_on_detection ?? false,
       defaultScheduleDelayMinutes: data?.default_schedule_delay_minutes ?? null,
     };
   }),
@@ -718,6 +719,7 @@ export const casesRouter = createTRPCRouter({
         testContactEmail: z.string().optional(),
         testContactPhone: z.string().optional(),
         voicemailDetectionEnabled: z.boolean().optional(),
+        voicemailHangupOnDetection: z.boolean().optional(),
         defaultScheduleDelayMinutes: z
           .number()
           .int()
@@ -757,6 +759,10 @@ export const casesRouter = createTRPCRouter({
       if (input.voicemailDetectionEnabled !== undefined) {
         updateData.voicemail_detection_enabled =
           input.voicemailDetectionEnabled;
+      }
+      if (input.voicemailHangupOnDetection !== undefined) {
+        updateData.voicemail_hangup_on_detection =
+          input.voicemailHangupOnDetection;
       }
       if (input.defaultScheduleDelayMinutes !== undefined) {
         updateData.default_schedule_delay_minutes =

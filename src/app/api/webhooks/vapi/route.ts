@@ -89,17 +89,26 @@ function mapEndedReasonToStatus(
     return "cancelled";
   }
 
-  // Voicemail handling: if voicemail detection was enabled and voicemail was detected,
-  // mark as completed (message was successfully left)
+  // Voicemail handling:
+  // - If voicemail detection enabled and hangup is false: mark as completed (message was left)
+  // - If voicemail detection enabled and hangup is true: mark as failed (no message left, retry needed)
   if (
     endedReason.toLowerCase().includes("voicemail") &&
     metadata?.voicemail_detection_enabled === true
   ) {
-    console.log("[VAPI_WEBHOOK] Voicemail detected with detection enabled - marking as completed", {
+    const hangupOnVoicemail = metadata?.voicemail_hangup_on_detection === true;
+
+    console.log("[VAPI_WEBHOOK] Voicemail detected with detection enabled", {
       endedReason,
       voicemailDetectionEnabled: metadata.voicemail_detection_enabled,
+      hangupOnVoicemail,
+      outcome: hangupOnVoicemail
+        ? "failed (hung up)"
+        : "completed (message left)",
     });
-    return "completed";
+
+    // If configured to hang up on voicemail, treat as failed so it can be retried
+    return hangupOnVoicemail ? "failed" : "completed";
   }
 
   // Failed calls
@@ -113,23 +122,33 @@ function mapEndedReasonToStatus(
 
 /**
  * Determine if a call should be retried based on ended reason
- * Excludes voicemail from retry if voicemail detection was enabled (message was successfully left)
+ * - Excludes voicemail from retry if voicemail detection was enabled AND hangup is false (message was left)
+ * - Includes voicemail in retry if hangup is true (agent hung up without leaving message)
  */
 function shouldRetry(
   endedReason?: string,
   metadata?: Record<string, unknown>,
 ): boolean {
-  // If voicemail was detected and voicemail detection was enabled, don't retry
-  // (the message was successfully left, so call is complete)
+  // Voicemail retry logic:
+  // - If hangup on voicemail is enabled: RETRY (agent hung up, try again later)
+  // - If hangup is disabled (leave message): DON'T RETRY (message was successfully left)
   if (
     endedReason?.toLowerCase().includes("voicemail") &&
     metadata?.voicemail_detection_enabled === true
   ) {
-    console.log("[VAPI_WEBHOOK] Voicemail with detection enabled - skipping retry", {
+    const hangupOnVoicemail = metadata?.voicemail_hangup_on_detection === true;
+
+    console.log("[VAPI_WEBHOOK] Voicemail retry decision", {
       endedReason,
       voicemailDetectionEnabled: metadata.voicemail_detection_enabled,
+      hangupOnVoicemail,
+      willRetry: hangupOnVoicemail,
+      reason: hangupOnVoicemail
+        ? "Hung up on voicemail - will retry to reach live person"
+        : "Message left successfully - no retry needed",
     });
-    return false;
+
+    return hangupOnVoicemail;
   }
 
   const retryableReasons = ["dial-busy", "dial-no-answer", "voicemail"];

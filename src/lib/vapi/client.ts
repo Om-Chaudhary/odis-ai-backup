@@ -259,6 +259,7 @@ export function mapVapiStatus(
  * Determines if a call should be marked as failed based on ended reason
  *
  * @param endedReason - VAPI ended reason
+ * @param metadata - Call metadata including voicemail settings
  * @returns True if call should be marked as failed
  */
 export function shouldMarkAsFailed(
@@ -267,13 +268,15 @@ export function shouldMarkAsFailed(
 ): boolean {
   if (!endedReason) return false;
 
-  // If voicemail was detected and voicemail detection was enabled, don't mark as failed
-  // (the message was successfully left, so call is complete)
+  // Voicemail handling:
+  // - If voicemail detection enabled AND hangup is false: DON'T mark as failed (message was left)
+  // - If voicemail detection enabled AND hangup is true: MARK as failed (hung up without message)
   if (
     endedReason.toLowerCase().includes("voicemail") &&
     metadata?.voicemail_detection_enabled === true
   ) {
-    return false;
+    const hangupOnVoicemail = metadata?.voicemail_hangup_on_detection === true;
+    return hangupOnVoicemail; // Failed only if we hung up without leaving message
   }
 
   const failedReasons = [
