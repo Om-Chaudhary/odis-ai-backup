@@ -31,10 +31,16 @@ export type PartialBackendCase = Omit<
  *
  * @param backendCase - The backend case data
  * @param userEmail - Optional user email for user-specific readiness rules
+ * @param testModeEnabled - Whether test mode is enabled
+ * @param testContactEmail - Test contact email address
+ * @param testContactPhone - Test contact phone number
  */
 export function transformBackendCaseToDashboardCase(
   backendCase: BackendCase | PartialBackendCase,
   userEmail?: string | null,
+  testModeEnabled = false,
+  testContactEmail?: string | null,
+  testContactPhone?: string | null,
 ): DashboardCase {
   // Get first patient (should only be one due to !inner join)
   const patient = backendCase.patients[0];
@@ -61,6 +67,9 @@ export function transformBackendCaseToDashboardCase(
   const readiness = checkCaseDischargeReadiness(
     backendCase as BackendCase,
     userEmail,
+    testModeEnabled,
+    testContactEmail,
+    testContactPhone,
   );
 
   return {
@@ -130,10 +139,16 @@ export function transformBackendCaseToDashboardCase(
  *
  * @param backendCases - Array of backend case data
  * @param userEmail - Optional user email for user-specific readiness rules
+ * @param testModeEnabled - Whether test mode is enabled
+ * @param testContactEmail - Test contact email address
+ * @param testContactPhone - Test contact phone number
  */
 export function transformBackendCasesToDashboardCases(
   backendCases: (BackendCase | PartialBackendCase)[],
   userEmail?: string | null,
+  testModeEnabled = false,
+  testContactEmail?: string | null,
+  testContactPhone?: string | null,
 ): DashboardCase[] {
   return backendCases
     .filter((caseData) => {
@@ -147,6 +162,12 @@ export function transformBackendCasesToDashboardCases(
       return hasPatient;
     })
     .map((caseData) =>
-      transformBackendCaseToDashboardCase(caseData, userEmail),
+      transformBackendCaseToDashboardCase(
+        caseData,
+        userEmail,
+        testModeEnabled,
+        testContactEmail,
+        testContactPhone,
+      ),
     );
 }

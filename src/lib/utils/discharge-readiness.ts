@@ -86,15 +86,21 @@ export function getUserDischargeRequirements(
  *
  * A case is ready for discharge when BOTH conditions are met:
  * 1. Content Available: Clinical notes OR IDEXX metadata notes
- * 2. Contact Available: Valid phone OR valid email
+ * 2. Contact Available: Valid phone OR valid email (OR test mode is enabled)
  *
  * @param caseData - The case data to check
- * @param userEmail - User's email address (optional, for future user-specific requirements)
+ * @param _userEmail - User's email address (optional, for future user-specific requirements)
+ * @param testModeEnabled - Whether test mode is enabled (bypasses contact requirement)
+ * @param testContactEmail - Test email address (used to check if test mode has valid contact)
+ * @param testContactPhone - Test phone number (used to check if test mode has valid contact)
  * @returns Readiness result with status and missing requirements
  */
 export function checkCaseDischargeReadiness(
   caseData: BackendCase,
   _userEmail: string | null | undefined,
+  testModeEnabled = false,
+  testContactEmail?: string | null,
+  testContactPhone?: string | null,
 ): DischargeReadinessResult {
   const missingRequirements: string[] = [];
 
@@ -110,7 +116,8 @@ export function checkCaseDischargeReadiness(
     }
   } else {
     // Manual/other cases: check clinical notes (SOAP, discharge summary, or transcription)
-    const hasSoapNotes = (caseData.soap_notes?.length ?? 0) > 0 &&
+    const hasSoapNotes =
+      (caseData.soap_notes?.length ?? 0) > 0 &&
       caseData.soap_notes?.some(
         (note) =>
           Boolean(note.subjective) ||
@@ -125,14 +132,16 @@ export function checkCaseDischargeReadiness(
         (summary) => summary.content && summary.content.trim().length > 0,
       );
 
-    const hasTranscription = (caseData.transcriptions?.length ?? 0) > 0 &&
+    const hasTranscription =
+      (caseData.transcriptions?.length ?? 0) > 0 &&
       caseData.transcriptions?.some(
         (transcription) =>
           transcription.transcript &&
           transcription.transcript.trim().length > 0,
       );
 
-    hasContent = Boolean(hasSoapNotes) ||
+    hasContent =
+      Boolean(hasSoapNotes) ||
       Boolean(hasDischargeSummary) ||
       Boolean(hasTranscription);
 
@@ -149,13 +158,25 @@ export function checkCaseDischargeReadiness(
   const hasValidEmail = hasValidContact(patient?.owner_email ?? null);
   const hasContact = hasValidPhone || hasValidEmail;
 
-  if (!hasContact) {
-    missingRequirements.push("Contact info (phone or email)");
+  // In test mode, check if test contact info is available
+  const hasTestContact =
+    testModeEnabled &&
+    (hasValidContact(testContactEmail ?? null) ||
+      hasValidContact(testContactPhone ?? null));
+
+  const hasAnyContact = hasContact || hasTestContact;
+
+  if (!hasAnyContact) {
+    if (testModeEnabled) {
+      missingRequirements.push("Test contact info (configure in settings)");
+    } else {
+      missingRequirements.push("Contact info (phone or email)");
+    }
   }
 
   // Case is ready when BOTH content AND contact are available
   return {
-    isReady: hasContent && hasContact,
+    isReady: hasContent && hasAnyContact,
     missingRequirements,
   };
 }

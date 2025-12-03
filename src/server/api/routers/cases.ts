@@ -167,6 +167,17 @@ export const casesRouter = createTRPCRouter({
         });
       }
 
+      // Fetch user settings for test mode
+      const { data: userSettings } = await ctx.supabase
+        .from("users")
+        .select("test_mode_enabled, test_contact_email, test_contact_phone")
+        .eq("id", ctx.user.id)
+        .single();
+
+      const testModeEnabled = userSettings?.test_mode_enabled ?? false;
+      const testContactEmail = userSettings?.test_contact_email ?? null;
+      const testContactPhone = userSettings?.test_contact_phone ?? null;
+
       // Apply readiness filtering if requested
       let filteredCases = data ?? [];
       const userEmail = ctx.user.email;
@@ -178,6 +189,9 @@ export const casesRouter = createTRPCRouter({
           const readiness = checkCaseDischargeReadiness(
             caseData as unknown as BackendCase,
             userEmail,
+            testModeEnabled,
+            testContactEmail,
+            testContactPhone,
           );
           if (input.readinessFilter === "ready_for_discharge") {
             return readiness.isReady;
@@ -194,10 +208,16 @@ export const casesRouter = createTRPCRouter({
         const aReadiness = checkCaseDischargeReadiness(
           a as unknown as BackendCase,
           userEmail,
+          testModeEnabled,
+          testContactEmail,
+          testContactPhone,
         );
         const bReadiness = checkCaseDischargeReadiness(
           b as unknown as BackendCase,
           userEmail,
+          testModeEnabled,
+          testContactEmail,
+          testContactPhone,
         );
 
         // Primary sort: ready cases first
@@ -222,6 +242,11 @@ export const casesRouter = createTRPCRouter({
           ? startDate.toISOString().split("T")[0]
           : new Date().toISOString().split("T")[0], // Return start date in YYYY-MM-DD format, or today if no filter
         userEmail: ctx.user.email, // Include user email for transform layer
+        testModeSettings: {
+          enabled: testModeEnabled,
+          testContactEmail,
+          testContactPhone,
+        },
       };
     }),
 

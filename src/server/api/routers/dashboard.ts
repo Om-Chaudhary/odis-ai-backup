@@ -75,9 +75,29 @@ export const dashboardRouter = createTRPCRouter({
       calls?.filter((c) => c.status === "queued" || c.status === "ringing")
         .length ?? 0;
 
-    // Calculate success rate
-    const successRate =
+    // Calculate call success rate
+    const callSuccessRate =
       completedCalls > 0 ? Math.round((completedCalls / totalCalls) * 100) : 0;
+
+    // Get email stats
+    const { data: emails } = await ctx.supabase
+      .from("scheduled_discharge_emails")
+      .select("status, created_at")
+      .eq("user_id", userId);
+
+    const totalEmails = emails?.length ?? 0;
+    const sentEmails = emails?.filter((e) => e.status === "sent").length ?? 0;
+    const queuedEmails =
+      emails?.filter((e) => e.status === "queued").length ?? 0;
+    const failedEmails =
+      emails?.filter((e) => e.status === "failed").length ?? 0;
+
+    // Calculate email success rate (sent / (sent + failed))
+    const completedEmailAttempts = sentEmails + failedEmails;
+    const emailSuccessRate =
+      completedEmailAttempts > 0
+        ? Math.round((sentEmails / completedEmailAttempts) * 100)
+        : 0;
 
     // Get previous week's completed calls for trend
     const oneWeekAgo = new Date();
@@ -87,19 +107,37 @@ export const dashboardRouter = createTRPCRouter({
         (c) => c.status === "completed" && new Date(c.created_at) < oneWeekAgo,
       ).length ?? 0;
 
+    // Get previous week's sent emails for trend
+    const previousWeekEmails =
+      emails?.filter(
+        (e) => e.status === "sent" && new Date(e.created_at) < oneWeekAgo,
+      ).length ?? 0;
+
     const casesTrend: "up" | "down" | "stable" =
       activeCases > 0 ? "up" : "stable";
     const callsTrend: "up" | "down" | "stable" =
       completedCalls > previousWeekCalls ? "up" : "down";
+    const emailsTrend: "up" | "down" | "stable" =
+      sentEmails > previousWeekEmails ? "up" : "down";
 
     return {
       activeCases,
+      // Call stats
       completedCalls,
       pendingCalls,
-      successRate,
+      successRate: callSuccessRate, // Keep for backward compatibility
+      callSuccessRate,
+      // Email stats
+      totalEmails,
+      sentEmails,
+      queuedEmails,
+      failedEmails,
+      emailSuccessRate,
+      // Trends
       trends: {
         cases: casesTrend,
         calls: callsTrend,
+        emails: emailsTrend,
       },
     };
   }),
@@ -580,6 +618,69 @@ export const dashboardRouter = createTRPCRouter({
 
       return Array.from(dailyData.values());
     }),
+
+  /**
+   * Get email performance metrics
+   */
+  getEmailPerformance: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.user.id;
+
+    // Get all emails for this user
+    const { data: emails } = await ctx.supabase
+      .from("scheduled_discharge_emails")
+      .select("status, created_at, sent_at, scheduled_for")
+      .eq("user_id", userId);
+
+    const totalEmails = emails?.length ?? 0;
+
+    if (totalEmails === 0) {
+      return {
+        totalEmails: 0,
+        sentEmails: 0,
+        queuedEmails: 0,
+        failedEmails: 0,
+        successRate: 0,
+        emailsThisWeek: 0,
+        emailsToday: 0,
+      };
+    }
+
+    // Count by status
+    const sentEmails = emails?.filter((e) => e.status === "sent").length ?? 0;
+    const queuedEmails =
+      emails?.filter((e) => e.status === "queued").length ?? 0;
+    const failedEmails =
+      emails?.filter((e) => e.status === "failed").length ?? 0;
+
+    // Calculate success rate (sent / (sent + failed))
+    const completedEmails = sentEmails + failedEmails;
+    const successRate =
+      completedEmails > 0
+        ? Math.round((sentEmails / completedEmails) * 100)
+        : 0;
+
+    // Get emails this week
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const emailsThisWeek =
+      emails?.filter((e) => new Date(e.created_at) >= oneWeekAgo).length ?? 0;
+
+    // Get emails today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const emailsToday =
+      emails?.filter((e) => new Date(e.created_at) >= today).length ?? 0;
+
+    return {
+      totalEmails,
+      sentEmails,
+      queuedEmails,
+      failedEmails,
+      successRate,
+      emailsThisWeek,
+      emailsToday,
+    };
+  }),
 
   /**
    * Get call performance metrics

@@ -188,9 +188,12 @@ export function DischargeManagementClient() {
       ? transformBackendCasesToDashboardCases(
           casesData.cases,
           casesData.userEmail,
+          casesData.testModeSettings?.enabled ?? false,
+          casesData.testModeSettings?.testContactEmail,
+          casesData.testModeSettings?.testContactPhone,
         )
       : [];
-  }, [casesData?.cases, casesData?.userEmail]);
+  }, [casesData?.cases, casesData?.userEmail, casesData?.testModeSettings]);
 
   const settings: DischargeSettings = settingsData ?? {
     clinicName: "",

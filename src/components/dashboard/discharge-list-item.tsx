@@ -262,8 +262,8 @@ export function DischargeListItem({
     setIsEditing(false);
   };
 
-  // Render primary action button
-  const renderPrimaryAction = () => {
+  // Render primary action buttons (Call and Email side by side)
+  const renderPrimaryActions = () => {
     if (workflowStatus === "in_progress") {
       return (
         <Button disabled className="gap-2" variant="secondary" size="sm">
@@ -288,52 +288,128 @@ export function DischargeListItem({
       );
     }
 
+    // For failed and ready states, show both Call and Email buttons
+    const canCall = hasValidContact(effectivePhone);
+    const canEmail = hasValidContact(effectiveEmail);
+    const isReady = caseData.is_ready_for_discharge;
+
+    // Determine tooltip messages
+    const callTooltip = !isReady
+      ? `Missing: ${caseData.missing_requirements.join(", ")}`
+      : !canCall
+        ? "Valid phone number required"
+        : testModeEnabled
+          ? `Test call to ${testContactPhone}`
+          : "Start discharge call";
+
+    const emailTooltip = !isReady
+      ? `Missing: ${caseData.missing_requirements.join(", ")}`
+      : !canEmail
+        ? "Valid email address required"
+        : testModeEnabled
+          ? `Test email to ${testContactEmail}`
+          : "Send discharge email";
+
     if (workflowStatus === "failed") {
+      // Check which type failed
+      const hasFailedCall = caseData.scheduled_discharge_calls.some(
+        (c) => c.status === "failed",
+      );
+      const hasFailedEmail = caseData.scheduled_discharge_emails.some(
+        (e) => e.status === "failed",
+      );
+
       return (
+        <div className="flex items-center gap-1.5">
+          {hasFailedCall && (
+            <Button
+              onClick={() => onTriggerCall(caseData.id)}
+              disabled={isLoadingCall || !canCall || !isReady}
+              variant="destructive"
+              size="sm"
+              className="transition-smooth gap-1.5"
+              title={callTooltip}
+            >
+              {isLoadingCall ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Phone className="h-4 w-4" />
+              )}
+              Retry Call
+            </Button>
+          )}
+          {hasFailedEmail && (
+            <Button
+              onClick={() => onTriggerEmail(caseData.id)}
+              disabled={isLoadingEmail || !canEmail || !isReady}
+              variant="destructive"
+              size="sm"
+              className="transition-smooth gap-1.5"
+              title={emailTooltip}
+            >
+              {isLoadingEmail ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Mail className="h-4 w-4" />
+              )}
+              Retry Email
+            </Button>
+          )}
+          {!hasFailedCall && !hasFailedEmail && (
+            // Fallback if status is failed but no specific failed items
+            <Button
+              onClick={() => onTriggerCall(caseData.id)}
+              disabled={isLoadingCall || !canCall || !isReady}
+              variant="destructive"
+              size="sm"
+              className="transition-smooth gap-1.5"
+              title={callTooltip}
+            >
+              {isLoadingCall ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Phone className="h-4 w-4" />
+              )}
+              Retry
+            </Button>
+          )}
+        </div>
+      );
+    }
+
+    // Default: Ready - show both Call and Email buttons
+    return (
+      <div className="flex items-center gap-1.5">
         <Button
           onClick={() => onTriggerCall(caseData.id)}
-          disabled={isLoadingCall || !hasValidContact(effectivePhone)}
-          variant="destructive"
+          disabled={isLoadingCall || !isReady || !canCall}
           size="sm"
-          className="transition-smooth gap-2"
-          title={
-            !hasValidContact(effectivePhone)
-              ? "Valid phone number required"
-              : "Retry discharge call"
-          }
+          className="transition-smooth gap-1.5 hover:shadow-md"
+          title={callTooltip}
         >
           {isLoadingCall ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <Phone className="h-4 w-4" />
           )}
-          Retry
+          Call
         </Button>
-      );
-    }
-
-    // Default: Ready
-    const tooltipMessage = !caseData.is_ready_for_discharge
-      ? `Missing: ${caseData.missing_requirements.join(", ")}`
-      : !hasValidContact(effectivePhone)
-        ? "Valid phone number required"
-        : "Start discharge call";
-
-    return (
-      <Button
-        onClick={() => onTriggerCall(caseData.id)}
-        disabled={isLoadingCall || !caseData.is_ready_for_discharge}
-        size="sm"
-        className="transition-smooth gap-2 hover:shadow-md"
-        title={tooltipMessage}
-      >
-        {isLoadingCall ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <Phone className="h-4 w-4" />
-        )}
-        Call
-      </Button>
+        <Button
+          onClick={() => onTriggerEmail(caseData.id)}
+          disabled={isLoadingEmail || !isReady || !canEmail}
+          size="sm"
+          variant="outline"
+          className="transition-smooth gap-1.5 hover:bg-slate-50 hover:shadow-md"
+          title={emailTooltip}
+        >
+          {isLoadingEmail ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Mail className="h-4 w-4" />
+          )}
+          Email
+        </Button>
+      </div>
     );
   };
 
@@ -484,9 +560,9 @@ export function DischargeListItem({
             )}
           </div>
 
-          {/* Primary Action & Overflow Menu */}
+          {/* Primary Actions & Overflow Menu */}
           <div className="flex shrink-0 items-center gap-2">
-            {renderPrimaryAction()}
+            {renderPrimaryActions()}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -499,17 +575,6 @@ export function DischargeListItem({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {workflowStatus !== "in_progress" && (
-                  <DropdownMenuItem
-                    onClick={() => onTriggerEmail(caseData.id)}
-                    disabled={
-                      isLoadingEmail || !caseData.is_ready_for_discharge
-                    }
-                  >
-                    <Mail className="mr-2 h-4 w-4" />
-                    Send Email
-                  </DropdownMenuItem>
-                )}
                 <DropdownMenuItem asChild>
                   <Link href={`/dashboard/discharges/${caseData.id}`}>
                     <Eye className="mr-2 h-4 w-4" />

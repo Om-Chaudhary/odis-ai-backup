@@ -10,12 +10,13 @@
  * Supports both sequential and parallel execution modes.
  */
 
-import { escape } from "html-escaper";
+import React from "react";
 import { CasesService } from "./cases-service";
 import { ExecutionPlan } from "./execution-plan";
 import { generateDischargeSummaryWithRetry } from "~/lib/ai/generate-discharge";
 import { scheduleEmailExecution } from "~/lib/qstash/client";
-import { htmlToPlainText, isValidEmail } from "~/lib/resend/client";
+import { isValidEmail } from "~/lib/resend/client";
+import { DischargeEmailTemplate, prepareEmailContent } from "~/lib/email";
 import type { OrchestrationRequest } from "~/lib/validators/orchestration";
 import { getClinicByUserId } from "~/lib/clinics/utils";
 import type {
@@ -56,123 +57,38 @@ const STEP_ORDER: readonly StepName[] = [
    ======================================== */
 
 /**
- * Generate email content from discharge summary
- * All user inputs are escaped to prevent XSS attacks
+ * Generate email content from discharge summary using React template
+ *
+ * Uses data from Supabase:
+ * - discharge_summaries.content
+ * - patients: name, species, breed, owner_name
+ * - users: clinic_name, clinic_phone, clinic_email
  */
-function generateEmailContent(
+async function generateEmailContent(
   dischargeSummary: string,
   patientName: string,
   ownerName: string,
   species?: string | null,
   breed?: string | null,
-): { subject: string; html: string; text: string } {
-  // Escape all user inputs to prevent XSS
-  const safePatientName = escape(patientName);
-  const safeOwnerName = escape(ownerName);
-  const safeDischargeSummary = escape(dischargeSummary);
-  const safeBreed = breed ? escape(breed) : "";
-  const safeSpecies = species ? escape(species) : "";
-  const safeDate = new Date().toLocaleDateString();
+  clinicName?: string | null,
+  clinicPhone?: string | null,
+  clinicEmail?: string | null,
+): Promise<{ subject: string; html: string; text: string }> {
+  const subject = `Discharge Instructions for ${patientName}`;
 
-  const subject = `Discharge Instructions for ${safePatientName}`;
-
-  const html = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${subject}</title>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #f5f5f5;
-    }
-    .container {
-      background-color: #ffffff;
-      border-radius: 8px;
-      padding: 30px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .header {
-      text-align: center;
-      padding-bottom: 20px;
-      border-bottom: 2px solid #4F46E5;
-      margin-bottom: 30px;
-    }
-    .header h1 {
-      color: #4F46E5;
-      margin: 0;
-      font-size: 24px;
-    }
-    .patient-info {
-      background-color: #F3F4F6;
-      padding: 15px;
-      border-radius: 6px;
-      margin-bottom: 25px;
-    }
-    .patient-info p {
-      margin: 5px 0;
-      font-size: 14px;
-    }
-    .content {
-      white-space: pre-wrap;
-      font-size: 15px;
-    }
-    .footer {
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid #E5E7EB;
-      text-align: center;
-      font-size: 12px;
-      color: #6B7280;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>🏥 Discharge Instructions</h1>
-    </div>
-
-    <p>Dear ${safeOwnerName},</p>
-
-    <div class="patient-info">
-      <p><strong>Patient:</strong> ${safePatientName}</p>
-      ${safeBreed ? `<p><strong>Breed:</strong> ${safeBreed}</p>` : ""}
-      ${safeSpecies ? `<p><strong>Species:</strong> ${safeSpecies}</p>` : ""}
-      <p><strong>Date:</strong> ${safeDate}</p>
-    </div>
-
-    <p>Thank you for trusting us with ${safePatientName}'s care. Please review the following discharge instructions carefully:</p>
-
-    <div class="content">
-${safeDischargeSummary}
-    </div>
-
-    <div style="margin-top: 30px; padding: 15px; background-color: #FEF3C7; border-left: 4px solid #F59E0B; border-radius: 4px;">
-      <p style="margin: 0; font-weight: bold; color: #92400E;">⚠️ Important Reminder</p>
-      <p style="margin: 5px 0 0 0; font-size: 14px; color: #92400E;">
-        If you notice any concerning symptoms or have questions about ${safePatientName}'s recovery,
-        please don't hesitate to contact us immediately.
-      </p>
-    </div>
-
-    <div class="footer">
-      <p>This email was sent by OdisAI on behalf of your veterinary clinic.</p>
-      <p>Please do not reply to this email. Contact your veterinarian directly for questions.</p>
-    </div>
-  </div>
-</body>
-</html>
-`;
-
-  const text = htmlToPlainText(html);
+  // Render React email template to HTML
+  const { html, text } = await prepareEmailContent(
+    React.createElement(DischargeEmailTemplate, {
+      patientName,
+      ownerName,
+      dischargeSummaryContent: dischargeSummary,
+      breed,
+      species,
+      clinicName,
+      clinicPhone,
+      clinicEmail,
+    }),
+  );
 
   return { subject, html, text };
 }
@@ -737,16 +653,26 @@ export class DischargeOrchestrator {
     const species = patient?.species;
     const breed = patient?.breed;
 
+    // Get user data for clinic information
+    const { data: userData } = await this.supabase
+      .from("users")
+      .select("clinic_name, clinic_phone, clinic_email")
+      .eq("id", this.user.id)
+      .single();
+
     // Get discharge summary (deduplicated logic)
     const dischargeSummary = await this.getDischargeSummary(caseId);
 
-    // Generate email content
-    const emailContent = generateEmailContent(
+    // Generate email content with clinic info
+    const emailContent = await generateEmailContent(
       dischargeSummary,
       patientName,
       ownerName,
       species,
       breed,
+      userData?.clinic_name,
+      userData?.clinic_phone,
+      userData?.clinic_email,
     );
 
     return {
@@ -806,6 +732,26 @@ export class DischargeOrchestrator {
     const patient = caseInfo ? this.normalizePatient(caseInfo.patient) : null;
     const recipientName = patient?.owner_name ?? undefined;
 
+    // Fetch user settings for schedule delay (same as calls)
+    const { data: userSettings, error: userError } = await this.supabase
+      .from("users")
+      .select("default_schedule_delay_minutes")
+      .eq("id", this.user.id)
+      .single();
+
+    if (userError) {
+      console.warn(
+        "[ORCHESTRATOR] Failed to fetch user settings for email scheduling:",
+        userError,
+      );
+      // Continue with defaults
+    }
+
+    // Default delay in minutes (same as calls: 5 minutes)
+    const DEFAULT_SCHEDULE_DELAY_MINUTES = 5;
+    // Minimum buffer in seconds to account for processing time
+    const MINIMUM_BUFFER_SECONDS = 10;
+
     // Determine scheduled time using server time
     // Always use server time to avoid timezone and clock drift issues
     const serverNow = new Date();
@@ -820,8 +766,25 @@ export class DischargeOrchestrator {
       }
       scheduledFor = options.scheduledFor;
     } else {
-      // Default: use server time (send immediately)
-      scheduledFor = serverNow;
+      // Apply same delay logic as calls:
+      // Use user's default_schedule_delay_minutes if set, otherwise use system default
+      const delayMinutes =
+        userSettings?.default_schedule_delay_minutes ??
+        DEFAULT_SCHEDULE_DELAY_MINUTES;
+
+      // Calculate delay in milliseconds, with minimum buffer
+      const delayMs = Math.max(
+        delayMinutes * 60 * 1000,
+        MINIMUM_BUFFER_SECONDS * 1000,
+      );
+      scheduledFor = new Date(serverNow.getTime() + delayMs);
+
+      console.log("[ORCHESTRATOR] Email scheduled with delay", {
+        delayMinutes,
+        actualDelaySeconds: delayMs / 1000,
+        scheduledFor: scheduledFor.toISOString(),
+        userOverride: userSettings?.default_schedule_delay_minutes ?? null,
+      });
     }
 
     // Insert scheduled email
