@@ -3,11 +3,13 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
-import { Settings, Plus, RefreshCw, TestTube } from "lucide-react";
+import { Settings, Plus, RefreshCw, TestTube, Send } from "lucide-react";
 import { Badge } from "~/components/ui/badge";
 import { DischargeListItem } from "./discharge-list-item";
 import { EmptyState } from "./empty-state";
 import { UnifiedFilterBar } from "./unified-filter-bar";
+import { BatchDischargeDialog } from "./batch-discharge-dialog";
+import { BatchProgressMonitor } from "./batch-progress-monitor";
 import { api } from "~/trpc/client";
 import type {
   DashboardCase,
@@ -20,7 +22,7 @@ import {
   hasValidContact,
 } from "~/lib/utils/dashboard-helpers";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, addDays, setHours, setMinutes, setSeconds } from "date-fns";
 import type { DischargeReadinessFilter } from "~/types/dashboard";
 import type { DateRangePreset } from "~/lib/utils/date-ranges";
 import { getDateRangeFromPreset } from "~/lib/utils/date-ranges";
@@ -75,6 +77,11 @@ export function DischargeManagementClient() {
   const [readinessFilter, setReadinessFilter] =
     useState<DischargeReadinessFilter>("all");
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+  // Batch discharge state
+  const [showBatchDialog, setShowBatchDialog] = useState(false);
+  const [activeBatchId, setActiveBatchId] = useState<string | null>(null);
+  const [isBatchProcessing, setIsBatchProcessing] = useState(false);
 
   // Date range preset state (uses URL state for persistence)
   // Note: setDateRange is managed by UnifiedFilterBar component
@@ -135,6 +142,14 @@ export function DischargeManagementClient() {
   const { data: settingsData, refetch: refetchSettings } =
     api.cases.getDischargeSettings.useQuery();
 
+  // Query for eligible cases for batch
+  const { data: eligibleCases } = api.cases.getEligibleCasesForBatch.useQuery(
+    undefined,
+    {
+      enabled: showBatchDialog,
+    },
+  );
+
   // Auto-navigate to most recent day with cases on initial load
   useEffect(() => {
     if (
@@ -181,6 +196,52 @@ export function DischargeManagementClient() {
       isProcessingRef.current = false;
     },
   });
+
+  // Batch mutations
+  const createBatchMutation = api.cases.createDischargeBatch.useMutation({
+    onSuccess: async (result) => {
+      setActiveBatchId(result.batchId);
+      setShowBatchDialog(false);
+      setIsBatchProcessing(true);
+
+      // Call the API to process the batch
+      try {
+        const response = await fetch("/api/discharge/batch", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            batchId: result.batchId,
+            emailScheduleTime: emailScheduleTime.toISOString(),
+            callScheduleTime: callScheduleTime.toISOString(),
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to process batch");
+        }
+
+        const data = await response.json();
+        toast.success(
+          `Batch processing complete: ${data.successCount} successful, ${data.failedCount} failed`,
+        );
+      } catch (error) {
+        toast.error("Failed to process batch");
+      } finally {
+        setIsBatchProcessing(false);
+        void refetchCases();
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to create batch");
+      setIsBatchProcessing(false);
+    },
+  });
+
+  // Store schedule times
+  let emailScheduleTime: Date;
+  let callScheduleTime: Date;
 
   // Transform backend data to UI shape
   const cases: DashboardCase[] = useMemo(() => {
@@ -321,6 +382,45 @@ export function DischargeManagementClient() {
     toast.success("Dashboard refreshed");
   };
 
+  const handleBatchDischarge = (emailTimeString: string) => {
+    // Parse hour and minute from the time string
+    const [hours, minutes] = emailTimeString.split(":").map(Number);
+
+    // Email: Next day at specified time
+    emailScheduleTime = addDays(new Date(), 1);
+    emailScheduleTime = setHours(emailScheduleTime, hours || 9);
+    emailScheduleTime = setMinutes(emailScheduleTime, minutes || 0);
+    emailScheduleTime = setSeconds(emailScheduleTime, 0);
+
+    // Call: 2 days from now at 2 PM
+    callScheduleTime = addDays(new Date(), 2);
+    callScheduleTime = setHours(callScheduleTime, 14);
+    callScheduleTime = setMinutes(callScheduleTime, 0);
+    callScheduleTime = setSeconds(callScheduleTime, 0);
+
+    // Create batch with eligible case IDs
+    if (eligibleCases && eligibleCases.length > 0) {
+      const caseIds = eligibleCases.map((c) => c.id);
+      createBatchMutation.mutate({
+        caseIds,
+        emailScheduleTime: emailScheduleTime.toISOString(),
+        callScheduleTime: callScheduleTime.toISOString(),
+      });
+    }
+  };
+
+  const handleBatchComplete = () => {
+    setActiveBatchId(null);
+    setIsBatchProcessing(false);
+    void refetchCases();
+  };
+
+  const handleBatchCancel = () => {
+    setActiveBatchId(null);
+    setIsBatchProcessing(false);
+    toast.warning("Batch processing cancelled");
+  };
+
   // Memoized date change handler to prevent unnecessary re-renders
   const handleDateChange = useCallback((date: Date) => {
     setCurrentDate(date);
@@ -435,6 +535,16 @@ export function DischargeManagementClient() {
           <Button
             variant="outline"
             size="sm"
+            onClick={() => setShowBatchDialog(true)}
+            disabled={isLoading || isBatchProcessing}
+            className="transition-smooth"
+          >
+            <Send className="mr-2 h-4 w-4" />
+            Send All Discharge
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => router.push("/dashboard/settings")}
             className="transition-smooth"
           >
@@ -521,6 +631,34 @@ export function DischargeManagementClient() {
             );
           })}
         </div>
+      )}
+
+      {/* Batch Discharge Dialog */}
+      <BatchDischargeDialog
+        open={showBatchDialog}
+        onOpenChange={setShowBatchDialog}
+        eligibleCases={
+          eligibleCases?.map((c) => ({
+            id: c.id,
+            patientName: c.patientName,
+            ownerName: c.ownerName,
+            ownerEmail: c.ownerEmail,
+            ownerPhone: c.ownerPhone,
+            hasEmail: !!c.ownerEmail,
+            hasPhone: !!c.ownerPhone,
+          })) || []
+        }
+        onConfirm={handleBatchDischarge}
+        isProcessing={isBatchProcessing}
+      />
+
+      {/* Batch Progress Monitor */}
+      {activeBatchId && (
+        <BatchProgressMonitor
+          batchId={activeBatchId}
+          onComplete={handleBatchComplete}
+          onCancel={handleBatchCancel}
+        />
       )}
     </div>
   );

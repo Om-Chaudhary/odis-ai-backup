@@ -8,6 +8,7 @@ import type { AppRouter } from "~/server/api/root";
 export const api = createTRPCReact<AppRouter>({});
 
 export type RouterOutputs = inferRouterOutputs<AppRouter>;
+export type AppRouterOutputs = inferRouterOutputs<AppRouter>;
 
 function getBaseUrl() {
   if (typeof window !== "undefined") return ""; // browser should use relative path

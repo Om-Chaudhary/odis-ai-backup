@@ -29,6 +29,7 @@
  *     clinicEmail: user.clinic_email,
  *   })
  * );
+ * // Note: ownerName is intentionally excluded
  *
  * // Send email via Resend
  * await sendDischargeEmail({

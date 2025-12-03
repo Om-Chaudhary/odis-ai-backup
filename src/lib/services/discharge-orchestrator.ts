@@ -61,7 +61,7 @@ const STEP_ORDER: readonly StepName[] = [
  *
  * Uses data from Supabase:
  * - discharge_summaries.content
- * - patients: name, species, breed, owner_name
+ * - patients: name, species, breed (owner_name intentionally excluded)
  * - users: clinic_name, clinic_phone, clinic_email
  */
 async function generateEmailContent(

@@ -40,7 +40,6 @@ dischargeSummaryContent: string (plain text)
 
 // From patients table
 patientName: string
-ownerName: string
 breed?: string | null
 species?: string | null
 
@@ -49,6 +48,8 @@ clinicName?: string | null
 clinicPhone?: string | null
 clinicEmail?: string | null
 ```
+
+**Note**: Owner name is intentionally excluded from the email template for privacy/simplicity.
 
 ### 2. Created Email Rendering Utilities
 
@@ -186,6 +187,8 @@ const { html, text } = await prepareEmailContent(
     clinicEmail: user.clinic_email,
   }),
 );
+
+// Note: ownerName is not included in the template
 
 // Send via Resend
 await sendDischargeEmail({
