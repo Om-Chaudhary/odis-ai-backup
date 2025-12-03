@@ -48,4 +48,4 @@ yarn-error.log*
 *.tsbuildinfo
 
 # idea files
-.idea
+.idea.playwright-mcp/
