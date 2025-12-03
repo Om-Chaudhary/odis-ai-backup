@@ -71,19 +71,33 @@ export const casesRouter = createTRPCRouter({
       }
       // else: no date filter = search all time (startDate and endDate remain null)
 
-      // Get total count - optionally filter cases created within the date range
-      let countQuery = ctx.supabase
-        .from("cases")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", ctx.user.id);
+      // Get total count - filter by scheduled_at (with created_at fallback when scheduled_at is null)
+      // We need to count cases where:
+      // 1. scheduled_at is in range, OR
+      // 2. scheduled_at is null AND created_at is in range
+      let count: number | null = null;
 
       if (hasDateFilter && startDate && endDate) {
-        countQuery = countQuery
-          .gte("created_at", startDate.toISOString())
-          .lte("created_at", endDate.toISOString());
-      }
+        const startIso = startDate.toISOString();
+        const endIso = endDate.toISOString();
 
-      const { count } = await countQuery;
+        // Use .or() to implement COALESCE(scheduled_at, created_at) logic
+        const { count: filteredCount } = await ctx.supabase
+          .from("cases")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", ctx.user.id)
+          .or(
+            `and(scheduled_at.gte.${startIso},scheduled_at.lte.${endIso}),and(scheduled_at.is.null,created_at.gte.${startIso},created_at.lte.${endIso})`,
+          );
+        count = filteredCount;
+      } else {
+        // No date filter - count all cases
+        const { count: totalCount } = await ctx.supabase
+          .from("cases")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", ctx.user.id);
+        count = totalCount;
+      }
 
       // Calculate pagination range
       const from = (input.page - 1) * input.pageSize;
@@ -148,15 +162,20 @@ export const casesRouter = createTRPCRouter({
         )
         .eq("user_id", ctx.user.id);
 
-      // Apply date filter only if date parameters were provided
+      // Apply date filter by scheduled_at (with created_at fallback when scheduled_at is null)
+      // Cases are shown on the day they are scheduled for, or created_at if not scheduled
       if (hasDateFilter && startDate && endDate) {
-        dataQuery = dataQuery
-          .gte("created_at", startDate.toISOString())
-          .lte("created_at", endDate.toISOString());
+        const startIso = startDate.toISOString();
+        const endIso = endDate.toISOString();
+
+        // Use .or() to implement COALESCE(scheduled_at, created_at) logic
+        dataQuery = dataQuery.or(
+          `and(scheduled_at.gte.${startIso},scheduled_at.lte.${endIso}),and(scheduled_at.is.null,created_at.gte.${startIso},created_at.lte.${endIso})`,
+        );
       }
 
       const { data, error } = await dataQuery
-        .order("created_at", { ascending: false })
+        .order("scheduled_at", { ascending: false, nullsFirst: false })
         .range(from, to);
 
       if (error) {
@@ -203,7 +222,7 @@ export const casesRouter = createTRPCRouter({
         });
       }
 
-      // Sort cases by readiness: ready cases first, then by created_at
+      // Sort cases by readiness: ready cases first, then by scheduled_at (with created_at fallback)
       const sortedCases = filteredCases.sort((a, b) => {
         const aReadiness = checkCaseDischargeReadiness(
           a as unknown as BackendCase,
@@ -224,10 +243,10 @@ export const casesRouter = createTRPCRouter({
         if (aReadiness.isReady && !bReadiness.isReady) return -1;
         if (!aReadiness.isReady && bReadiness.isReady) return 1;
 
-        // Secondary sort: by created_at (newest first)
-        return (
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
+        // Secondary sort: by scheduled_at (with created_at fallback), newest first
+        const aDate = a.scheduled_at ?? a.created_at;
+        const bDate = b.scheduled_at ?? b.created_at;
+        return new Date(bDate).getTime() - new Date(aDate).getTime();
       });
 
       return {
@@ -253,15 +272,17 @@ export const casesRouter = createTRPCRouter({
   /**
    * Get the most recent date that has at least one case for the current user
    * Used for auto-navigation on initial page load
+   * Uses scheduled_at with fallback to created_at when scheduled_at is null
    */
   getMostRecentCaseDate: protectedProcedure.query(async ({ ctx }) => {
-    // Query to find the most recent date with cases
+    // Query to find the most recent case by scheduled_at (with created_at fallback)
+    // We need both fields to determine the effective date
     const { data, error } = await ctx.supabase
       .from("cases")
-      .select("created_at")
+      .select("scheduled_at, created_at")
       .eq("user_id", ctx.user.id)
-      .order("created_at", { ascending: false })
-      .limit(1);
+      .order("scheduled_at", { ascending: false, nullsFirst: false })
+      .limit(10); // Get a few cases to find the most recent by effective date
 
     if (error) {
       throw new TRPCError({
@@ -275,14 +296,23 @@ export const casesRouter = createTRPCRouter({
       return null;
     }
 
-    // Extract date part (YYYY-MM-DD) from the most recent case
-    const mostRecentCase = data[0];
-    if (!mostRecentCase?.created_at) {
+    // Find the case with the most recent effective date (scheduled_at ?? created_at)
+    let mostRecentDate: Date | null = null;
+    for (const caseData of data) {
+      const effectiveDate = caseData.scheduled_at ?? caseData.created_at;
+      if (effectiveDate) {
+        const date = new Date(effectiveDate);
+        if (!mostRecentDate || date > mostRecentDate) {
+          mostRecentDate = date;
+        }
+      }
+    }
+
+    if (!mostRecentDate) {
       return null;
     }
 
-    const date = new Date(mostRecentCase.created_at);
-    return date.toISOString().split("T")[0] ?? null;
+    return mostRecentDate.toISOString().split("T")[0] ?? null;
   }),
 
   /**
