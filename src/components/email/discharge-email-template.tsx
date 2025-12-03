@@ -15,7 +15,6 @@ import React from "react";
 export interface DischargeEmailProps {
   // Required fields from Supabase
   patientName: string;
-  ownerName: string;
   dischargeSummaryContent: string; // Plain text from discharge_summaries.content
 
   // Optional fields from Supabase patients table

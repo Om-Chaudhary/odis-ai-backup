@@ -584,7 +584,6 @@ Move HTML template to separate file or use template engine:
 // src/lib/templates/discharge-email.ts
 export function renderDischargeEmailTemplate(params: {
   patientName: string;
-  ownerName: string;
   dischargeSummary: string;
   breed?: string;
   species?: string;

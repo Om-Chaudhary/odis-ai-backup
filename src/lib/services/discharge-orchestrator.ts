@@ -67,7 +67,6 @@ const STEP_ORDER: readonly StepName[] = [
 async function generateEmailContent(
   dischargeSummary: string,
   patientName: string,
-  ownerName: string,
   species?: string | null,
   breed?: string | null,
   clinicName?: string | null,
@@ -80,7 +79,6 @@ async function generateEmailContent(
   const { html, text } = await prepareEmailContent(
     React.createElement(DischargeEmailTemplate, {
       patientName,
-      ownerName,
       dischargeSummaryContent: dischargeSummary,
       breed,
       species,
@@ -667,7 +665,6 @@ export class DischargeOrchestrator {
     const emailContent = await generateEmailContent(
       dischargeSummary,
       patientName,
-      ownerName,
       species,
       breed,
       userData?.clinic_name,

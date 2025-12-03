@@ -21,7 +21,6 @@ import type { ReactElement } from "react";
  * const html = await renderEmailToHtml(
  *   <DischargeEmailTemplate
  *     patientName="Max"
- *     ownerName="John Smith"
  *     dischargeSummary={{
  *       diagnosis: "Ear infection",
  *       treatmentPlan: ["Apply ear drops twice daily"],

@@ -79,7 +79,6 @@ const html = `<!DOCTYPE html>...${escape(patientName)}...`;
 const { html, text } = await prepareEmailContent(
   React.createElement(DischargeEmailTemplate, {
     patientName,
-    ownerName,
     dischargeSummaryContent: dischargeSummary,
     // ... clinic info from Supabase
   }),
@@ -179,7 +178,6 @@ const user = await getUser(userId);
 const { html, text } = await prepareEmailContent(
   React.createElement(DischargeEmailTemplate, {
     patientName: patient.name,
-    ownerName: patient.owner_name,
     dischargeSummaryContent: discharge.content,
     breed: patient.breed,
     species: patient.species,

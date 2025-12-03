@@ -21,7 +21,6 @@
  * const { html, text } = await prepareEmailContent(
  *   React.createElement(DischargeEmailTemplate, {
  *     patientName: patient.name,
- *     ownerName: patient.owner_name,
  *     dischargeSummaryContent: dischargeSummary.content,
  *     breed: patient.breed,
  *     species: patient.species,
