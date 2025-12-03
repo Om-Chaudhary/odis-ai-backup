@@ -4,18 +4,31 @@ import { createClient, createServiceClient } from "~/lib/supabase/server";
 
 type CreateContextOptions = {
   headers: Headers;
+  req?: Request;
 };
 
 export const createTRPCContext = async (opts: CreateContextOptions) => {
   try {
     const supabase = await createClient();
+
+    // Attempt to get the user and their session
     const {
       data: { user },
+      error: authError,
     } = await supabase.auth.getUser();
+
+    // Log auth errors for debugging (but don't throw - let protectedProcedure handle it)
+    if (authError) {
+      console.error("[tRPC Context] Auth error:", {
+        code: authError.code,
+        message: authError.message,
+        status: authError.status,
+      });
+    }
 
     return {
       headers: opts.headers,
-      user,
+      user: user ?? null, // Ensure null instead of undefined
       supabase,
     };
   } catch (error) {

@@ -126,6 +126,7 @@ export function transformBackendCaseToDashboardCase(
 
 /**
  * Transform array of backend cases to dashboard cases
+ * Filters out cases without patients (data integrity issue)
  *
  * @param backendCases - Array of backend case data
  * @param userEmail - Optional user email for user-specific readiness rules
@@ -134,7 +135,18 @@ export function transformBackendCasesToDashboardCases(
   backendCases: (BackendCase | PartialBackendCase)[],
   userEmail?: string | null,
 ): DashboardCase[] {
-  return backendCases.map((caseData) =>
-    transformBackendCaseToDashboardCase(caseData, userEmail),
-  );
+  return backendCases
+    .filter((caseData) => {
+      // Filter out cases without patients (data integrity issue)
+      const hasPatient = caseData.patients && caseData.patients.length > 0;
+      if (!hasPatient) {
+        console.warn(
+          `[Case Transform] Skipping case ${caseData.id} - no patient associated`,
+        );
+      }
+      return hasPatient;
+    })
+    .map((caseData) =>
+      transformBackendCaseToDashboardCase(caseData, userEmail),
+    );
 }

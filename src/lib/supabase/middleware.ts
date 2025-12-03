@@ -14,7 +14,24 @@ export async function updateSession(request: NextRequest) {
     {
       cookies: {
         getAll() {
-          return request.cookies.getAll();
+          const cookies = request.cookies.getAll();
+          // Debug: Log Supabase auth cookies in development
+          if (process.env.NODE_ENV === "development") {
+            const authCookies = cookies.filter((c) => c.name.startsWith("sb-"));
+            if (
+              authCookies.length === 0 &&
+              request.nextUrl.pathname.startsWith("/api/trpc")
+            ) {
+              console.log(
+                "[Middleware] No Supabase cookies found for tRPC request:",
+                {
+                  path: request.nextUrl.pathname,
+                  allCookieCount: cookies.length,
+                },
+              );
+            }
+          }
+          return cookies;
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) =>
@@ -35,27 +52,54 @@ export async function updateSession(request: NextRequest) {
   // supabase.auth.getUser(). A simple mistake could make it very hard to debug
   // issues with users being randomly logged out.
 
+  // Refreshing the auth session here automatically handles refresh token expiry
+  // This is critical for maintaining user sessions across server restarts
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
+
+  // Log auth errors for debugging (but only in development)
+  if (authError && process.env.NODE_ENV === "development") {
+    console.error("[Middleware] Auth error:", {
+      code: authError.code,
+      message: authError.message,
+      path: request.nextUrl.pathname,
+    });
+  }
 
   // Check if dashboard route has auth_token parameter (Chrome extension auth)
   const hasAuthToken = request.nextUrl.searchParams.has(AUTH_PARAMS.AUTH_TOKEN);
 
+  // List of paths that don't require authentication
+  const publicPaths = [
+    "/login",
+    "/signup",
+    "/auth",
+    "/studio",
+    "/blog",
+    "/support",
+    "/privacy-policy",
+    "/terms-of-service",
+    "/cookie-policy",
+    "/",
+  ];
+
+  const isPublicPath = publicPaths.some((path) =>
+    request.nextUrl.pathname.startsWith(path),
+  );
+  const isApiWebhook = request.nextUrl.pathname.startsWith("/api/webhooks");
+  const isDashboardWithAuthToken =
+    request.nextUrl.pathname === "/dashboard" && hasAuthToken;
+
+  // Don't redirect for public paths, API webhooks, or dashboard with auth token
+  // Note: We DO want to process API routes through middleware for session refresh
   if (
     !user &&
-    !request.nextUrl.pathname.startsWith("/login") &&
-    !request.nextUrl.pathname.startsWith("/signup") &&
-    !request.nextUrl.pathname.startsWith("/auth") &&
-    !request.nextUrl.pathname.startsWith("/studio") &&
-    !request.nextUrl.pathname.startsWith("/blog") &&
-    !request.nextUrl.pathname.startsWith("/support") &&
-    !request.nextUrl.pathname.startsWith("/api") &&
-    !request.nextUrl.pathname.startsWith("/privacy-policy") &&
-    !request.nextUrl.pathname.startsWith("/terms-of-service") &&
-    !request.nextUrl.pathname.startsWith("/cookie-policy") &&
-    request.nextUrl.pathname !== "/" &&
-    !(request.nextUrl.pathname === "/dashboard" && hasAuthToken)
+    !isPublicPath &&
+    !isApiWebhook &&
+    !isDashboardWithAuthToken &&
+    !request.nextUrl.pathname.startsWith("/api")
   ) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone();
