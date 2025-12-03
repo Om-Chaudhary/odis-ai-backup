@@ -58,15 +58,15 @@ function getCaseWorkflowStatus(caseData: DashboardCase): WorkflowStatus {
 
   if (hasActiveCall || hasActiveEmail) return "in_progress";
 
-  // Check for completion
+  // Check for completion - only consider discharge communications, not case status
+  // A "completed" case can still need discharge communications sent
   const hasCompletedCall = caseData.scheduled_discharge_calls.some(
     (c) => c.status === "completed",
   );
   const hasSentEmail = caseData.scheduled_discharge_emails.some(
     (e) => e.status === "sent",
   );
-  if (caseData.status === "completed" || hasCompletedCall || hasSentEmail)
-    return "completed";
+  if (hasCompletedCall || hasSentEmail) return "completed";
 
   // Check for failures
   const hasFailedCall = caseData.scheduled_discharge_calls.some(
