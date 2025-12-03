@@ -547,7 +547,9 @@ export const casesRouter = createTRPCRouter({
       // Step 2: Build orchestration steps
       // Note: User settings (clinic_name, clinic_phone) are retrieved by the orchestrator
       // if needed, so we don't need to fetch them here
+      // Always extract entities fresh before generating summary to ensure up-to-date data
       const orchestrationSteps: Record<string, unknown> = {
+        extractEntities: true, // Always run fresh entity extraction
         generateSummary: true,
         prepareEmail: false,
         scheduleEmail: false,

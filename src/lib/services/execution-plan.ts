@@ -52,6 +52,7 @@ export class ExecutionPlan {
   private buildPlan(): void {
     const stepOrder: StepName[] = [
       "ingest",
+      "extractEntities",
       "generateSummary",
       "prepareEmail",
       "scheduleEmail",
@@ -61,10 +62,11 @@ export class ExecutionPlan {
     // Define dependencies for each step
     const dependencies: Record<StepName, StepName[]> = {
       ingest: [],
-      generateSummary: ["ingest"],
+      extractEntities: ["ingest"],
+      generateSummary: ["ingest", "extractEntities"],
       prepareEmail: ["generateSummary"],
       scheduleEmail: ["prepareEmail"],
-      scheduleCall: ["ingest"], // Can run parallel with email steps
+      scheduleCall: ["ingest", "extractEntities"], // Can run parallel with email steps, but needs entities
     };
 
     // Process each step
@@ -147,6 +149,7 @@ export class ExecutionPlan {
     // Find all steps that are ready to execute
     const stepOrder: StepName[] = [
       "ingest",
+      "extractEntities",
       "generateSummary",
       "prepareEmail",
       "scheduleEmail",

@@ -18,6 +18,7 @@ import type { NormalizedEntities } from "~/lib/validators/scribe";
  */
 export type StepName =
   | "ingest"
+  | "extractEntities"
   | "generateSummary"
   | "prepareEmail"
   | "scheduleEmail"
@@ -62,6 +63,15 @@ export interface IngestResult {
     id: string;
     scheduledFor: string;
   } | null;
+}
+
+/**
+ * Result data for entity extraction step
+ */
+export interface ExtractEntitiesResult {
+  caseId: string;
+  entities: NormalizedEntities;
+  source: "transcription" | "existing";
 }
 
 /**
@@ -112,6 +122,7 @@ export interface OrchestrationResult {
     skippedSteps: StepName[];
     failedSteps: StepName[];
     ingestion?: IngestResult;
+    extractedEntities?: ExtractEntitiesResult;
     summary?: SummaryResult;
     email?: EmailResult;
     emailSchedule?: EmailScheduleResult;

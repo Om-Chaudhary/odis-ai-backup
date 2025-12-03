@@ -14,17 +14,20 @@ import React from "react";
 import { CasesService } from "./cases-service";
 import { ExecutionPlan } from "./execution-plan";
 import { generateStructuredDischargeSummaryWithRetry } from "~/lib/ai/generate-structured-discharge";
+import { extractEntitiesWithRetry } from "~/lib/ai/normalize-scribe";
 import { scheduleEmailExecution } from "~/lib/qstash/client";
 import { isValidEmail } from "~/lib/resend/client";
 import { DischargeEmailTemplate, prepareEmailContent } from "~/lib/email";
 import type { OrchestrationRequest } from "~/lib/validators/orchestration";
 import { getClinicByUserId } from "~/lib/clinics/utils";
 import type { StructuredDischargeSummary } from "~/lib/validators/discharge-summary";
+import type { NormalizedEntities } from "~/lib/validators/scribe";
 import type {
   CallResult,
   EmailResult,
   EmailScheduleResult,
   ExecutionContext,
+  ExtractEntitiesResult,
   IngestResult,
   OrchestrationResult,
   StepName,
@@ -47,6 +50,7 @@ type PatientRow = Database["public"]["Tables"]["patients"]["Row"];
  */
 const STEP_ORDER: readonly StepName[] = [
   "ingest",
+  "extractEntities",
   "generateSummary",
   "prepareEmail",
   "scheduleEmail",
@@ -361,6 +365,8 @@ export class DischargeOrchestrator {
       switch (step) {
         case "ingest":
           return await this.executeIngestion(stepStart);
+        case "extractEntities":
+          return await this.executeEntityExtraction(stepStart);
         case "generateSummary":
           return await this.executeSummaryGeneration(stepStart);
         case "prepareEmail":
@@ -451,6 +457,121 @@ export class DischargeOrchestrator {
   }
 
   /**
+   * Execute entity extraction step
+   * Extracts structured entities from transcription before summary generation
+   */
+  private async executeEntityExtraction(
+    startTime: number,
+  ): Promise<StepResult> {
+    const stepConfig = this.plan.getStepConfig("extractEntities");
+    if (!stepConfig?.enabled) {
+      return { step: "extractEntities", status: "skipped", duration: 0 };
+    }
+
+    // Get caseId from ingest result or existing case
+    const caseId = this.getCaseId();
+    if (!caseId) {
+      throw new Error("Case ID required for entity extraction");
+    }
+
+    console.log("[ORCHESTRATOR] Starting entity extraction", { caseId });
+
+    // Fetch case with transcription
+    const { data: caseData, error: caseError } = await this.supabase
+      .from("cases")
+      .select(
+        `
+        id,
+        entity_extraction,
+        transcriptions (id, transcript, created_at)
+      `,
+      )
+      .eq("id", caseId)
+      .single();
+
+    if (caseError || !caseData) {
+      throw new Error(
+        `Failed to fetch case: ${caseError?.message ?? "Case not found"}`,
+      );
+    }
+
+    // Get the most recent transcription
+    const transcriptions = caseData.transcriptions as Array<{
+      id: string;
+      transcript: string | null;
+      created_at: string;
+    }> | null;
+
+    const latestTranscription = transcriptions?.sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    )?.[0];
+
+    if (!latestTranscription?.transcript) {
+      console.warn(
+        "[ORCHESTRATOR] No transcription found for entity extraction",
+        {
+          caseId,
+          hasTranscriptions: !!transcriptions?.length,
+        },
+      );
+      throw new Error(
+        "No transcription available for entity extraction. Please ensure the case has transcription data.",
+      );
+    }
+
+    console.log("[ORCHESTRATOR] Extracting entities from transcription", {
+      caseId,
+      transcriptionId: latestTranscription.id,
+      transcriptionLength: latestTranscription.transcript.length,
+    });
+
+    // Run entity extraction
+    const entities = await extractEntitiesWithRetry(
+      latestTranscription.transcript,
+      "transcription",
+    );
+
+    console.log("[ORCHESTRATOR] Entity extraction completed", {
+      caseId,
+      hasPatient: !!entities.patient,
+      hasClinical: !!entities.clinical,
+      confidence: entities.confidence?.overall,
+    });
+
+    // Save extracted entities back to the case
+    const { error: updateError } = await this.supabase
+      .from("cases")
+      .update({
+        entity_extraction: entities as unknown as Record<string, unknown>,
+      })
+      .eq("id", caseId);
+
+    if (updateError) {
+      console.error("[ORCHESTRATOR] Failed to save extracted entities", {
+        caseId,
+        error: updateError,
+      });
+      throw new Error(
+        `Failed to save extracted entities: ${updateError.message}`,
+      );
+    }
+
+    console.log("[ORCHESTRATOR] Saved extracted entities to case", { caseId });
+
+    return {
+      step: "extractEntities",
+      status: "completed",
+      duration: Date.now() - startTime,
+      data: {
+        caseId,
+        entities,
+        source: "transcription",
+      } as ExtractEntitiesResult,
+    };
+  }
+
+  /**
    * Execute summary generation step
    */
   private async executeSummaryGeneration(
@@ -478,6 +599,26 @@ export class DischargeOrchestrator {
 
     // Get patient data
     const patient = this.normalizePatient(caseInfo.patient);
+
+    // Try to get freshly extracted entities from the extractEntities step
+    const extractEntitiesResult = this.results.get("extractEntities");
+    let freshEntities: NormalizedEntities | null = null;
+    if (
+      extractEntitiesResult?.status === "completed" &&
+      extractEntitiesResult.data &&
+      typeof extractEntitiesResult.data === "object"
+    ) {
+      const data = extractEntitiesResult.data as ExtractEntitiesResult;
+      freshEntities = data.entities;
+      console.log(
+        "[ORCHESTRATOR] Using freshly extracted entities for summary",
+        {
+          caseId,
+          source: data.source,
+          confidence: freshEntities?.confidence?.overall,
+        },
+      );
+    }
 
     // Extract SOAP content from the case data (ODIS-8: Ensure fresh consultation data)
     let soapContent: string | null = null;
@@ -551,9 +692,12 @@ export class DischargeOrchestrator {
     } else {
       console.warn("[ORCHESTRATOR] No SOAP notes found for case", {
         caseId,
-        fallbackToEntities: !!caseInfo.entities,
+        fallbackToEntities: !!(freshEntities ?? caseInfo.entities),
       });
     }
+
+    // Use freshly extracted entities (preferred) or fall back to case entities
+    const entitiesToUse = freshEntities ?? caseInfo.entities ?? null;
 
     // Log summary generation context for monitoring
     console.log("[ORCHESTRATOR] Generating structured discharge summary", {
@@ -561,14 +705,15 @@ export class DischargeOrchestrator {
       hasSoapContent: !!soapContent,
       soapContentSource,
       soapContentLength: soapContent?.length ?? 0,
-      hasEntities: !!caseInfo.entities,
+      hasEntities: !!entitiesToUse,
+      entitiesSource: freshEntities ? "extractEntities_step" : "case_database",
     });
 
     // Generate structured summary with SOAP content if available
     const { structured: structuredContent, plainText: summaryContent } =
       await generateStructuredDischargeSummaryWithRetry({
         soapContent, // Now includes fresh SOAP notes from database
-        entityExtraction: caseInfo.entities ?? null,
+        entityExtraction: entitiesToUse,
         patientData: {
           name: patient?.name ?? undefined,
           species: patient?.species ?? undefined,
@@ -1140,6 +1285,8 @@ export class DischargeOrchestrator {
         skippedSteps,
         failedSteps,
         ingestion: this.getTypedResult<IngestResult>("ingest"),
+        extractedEntities:
+          this.getTypedResult<ExtractEntitiesResult>("extractEntities"),
         summary: this.getTypedResult<SummaryResult>("generateSummary"),
         email: this.getTypedResult<EmailResult>("prepareEmail"),
         emailSchedule:

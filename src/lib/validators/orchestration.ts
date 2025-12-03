@@ -70,6 +70,17 @@ const IngestStepSchema = z.union([
 ]);
 
 /**
+ * Schema for extract entities step configuration
+ * Extracts structured entities from transcription before summary generation
+ */
+const ExtractEntitiesStepSchema = z.union([
+  z.boolean(),
+  z.object({
+    forceRefresh: z.boolean().optional(), // Always extract even if entities exist
+  }),
+]);
+
+/**
  * Schema for generate summary step configuration
  */
 const GenerateSummaryStepSchema = z.union([
@@ -124,6 +135,7 @@ export const OrchestrationRequestSchema = z.object({
   input: z.union([RawDataInputSchema, ExistingCaseInputSchema]),
   steps: z.object({
     ingest: IngestStepSchema.optional(),
+    extractEntities: ExtractEntitiesStepSchema.optional(),
     generateSummary: GenerateSummaryStepSchema.optional(),
     prepareEmail: PrepareEmailStepSchema.optional(),
     scheduleEmail: ScheduleEmailStepSchema.optional(),
@@ -146,6 +158,9 @@ export type OrchestrationRequest = z.infer<typeof OrchestrationRequestSchema>;
 export type RawDataInput = z.infer<typeof RawDataInputSchema>;
 export type ExistingCaseInput = z.infer<typeof ExistingCaseInputSchema>;
 export type IngestStepConfig = z.infer<typeof IngestStepSchema>;
+export type ExtractEntitiesStepConfig = z.infer<
+  typeof ExtractEntitiesStepSchema
+>;
 export type GenerateSummaryStepConfig = z.infer<
   typeof GenerateSummaryStepSchema
 >;
