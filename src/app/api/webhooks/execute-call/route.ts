@@ -7,7 +7,10 @@ import { mapVapiStatus } from "~/lib/vapi/client";
 import { CasesService } from "~/lib/services/cases-service";
 import { buildDynamicVariables } from "~/lib/vapi/knowledge-base";
 import { extractVapiVariablesFromEntities } from "~/lib/vapi/extract-variables";
-import { normalizeVariablesToSnakeCase } from "~/lib/vapi/utils";
+import {
+  normalizeVariablesToSnakeCase,
+  extractFirstName,
+} from "~/lib/vapi/utils";
 
 /**
  * Execute Call Webhook
@@ -128,11 +131,12 @@ async function handler(req: NextRequest) {
                 (dynamicVariables?.clinic_name as string) ?? "Your Clinic",
               agentName: (dynamicVariables?.agent_name as string) ?? "Sarah",
               // Fallback to stored pet_name if case entities have empty/unknown patient name
+              // Use extractFirstName to get only the first word (many vet systems store "FirstName LastName")
               petName:
                 caseInfo.entities.patient.name &&
                 caseInfo.entities.patient.name !== "unknown" &&
                 caseInfo.entities.patient.name.trim() !== ""
-                  ? caseInfo.entities.patient.name
+                  ? extractFirstName(caseInfo.entities.patient.name)
                   : ((dynamicVariables?.pet_name as string | undefined) ??
                     "unknown"),
               // Fallback to stored owner_name if case entities have empty/unknown owner name

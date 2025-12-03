@@ -9,6 +9,7 @@ import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
 import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
 import { getClinicByUserId } from "~/lib/clinics/utils";
+import { extractFirstName } from "~/lib/vapi/utils";
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)
@@ -190,9 +191,11 @@ export async function POST(request: NextRequest) {
     const finalScheduledTime = scheduledFor;
 
     // Prepare call variables from input data (snake_case for VAPI)
+    // Use extractFirstName to get only the first word of the pet name
+    // (many vet systems store "FirstName LastName" but we only want first name for calls)
     const callVariables = {
       // Core identification
-      pet_name: validated.petName,
+      pet_name: extractFirstName(validated.petName),
       owner_name: validated.ownerName,
       appointment_date: validated.appointmentDate,
 

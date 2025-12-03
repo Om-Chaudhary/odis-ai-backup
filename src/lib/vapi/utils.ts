@@ -5,6 +5,29 @@
  */
 
 /**
+ * Extracts the first word from a pet name
+ *
+ * Many veterinary systems store pet names as "FirstName LastName" (e.g., "Max Smith").
+ * For VAPI calls, we only want to use the first name to sound more natural.
+ *
+ * @param name - The full pet name (may include first and last name)
+ * @returns The first word only
+ *
+ * @example
+ * extractFirstName('Max Smith') // 'Max'
+ * extractFirstName('Buddy') // 'Buddy'
+ * extractFirstName('Sir Barksalot III') // 'Sir'
+ * extractFirstName('') // ''
+ * extractFirstName(null) // ''
+ */
+export function extractFirstName(name: string | null | undefined): string {
+  if (!name) return "";
+  const trimmed = name.trim();
+  const firstWord = trimmed.split(/\s+/)[0];
+  return firstWord ?? trimmed;
+}
+
+/**
  * Converts a camelCase string to snake_case
  *
  * @param str - The camelCase string to convert

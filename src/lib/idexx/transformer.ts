@@ -1,5 +1,6 @@
 import type { IdexxPageData } from "./types";
 import type { ScheduleCallInput } from "../retell/validators";
+import { extractFirstName } from "../vapi/utils";
 
 /**
  * Transform IDEXX Neo consultation data to call request format
@@ -33,7 +34,9 @@ export function transformIdexxToCallRequest(
 
   return {
     phoneNumber: formatPhoneNumber(pageData.client.phone),
-    petName: pageData.patient.name,
+    // Use extractFirstName to get only the first word of the pet name
+    // (many vet systems store "FirstName LastName" but we only want first name for calls)
+    petName: extractFirstName(pageData.patient.name),
     ownerName: pageData.client.name,
     appointmentDate,
 

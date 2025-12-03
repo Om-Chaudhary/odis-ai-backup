@@ -6,6 +6,7 @@
  */
 
 import type { NormalizedEntities } from "~/lib/validators/scribe";
+import { extractFirstName } from "./utils";
 
 /**
  * Extract VAPI dynamic variables from AI-extracted entities
@@ -30,7 +31,12 @@ export function extractVapiVariablesFromEntities(
     const patient = entities.patient;
 
     // Patient demographics
-    if (patient.name) variables.patient_name = patient.name;
+    // patient_name stores the full name for reference/logging
+    // pet_name_first stores only the first word (for natural speech in VAPI calls)
+    if (patient.name) {
+      variables.patient_name = patient.name;
+      variables.pet_name_first = extractFirstName(patient.name);
+    }
     if (patient.species) variables.patient_species = patient.species;
     if (patient.breed) variables.patient_breed = patient.breed;
     if (patient.age) variables.patient_age = patient.age;

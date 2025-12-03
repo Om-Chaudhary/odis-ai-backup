@@ -3,7 +3,10 @@ import { extractEntitiesWithRetry } from "~/lib/ai/normalize-scribe";
 import { scheduleCallExecution } from "~/lib/qstash/client";
 import { buildDynamicVariables } from "~/lib/vapi/knowledge-base";
 import { extractVapiVariablesFromEntities } from "~/lib/vapi/extract-variables";
-import { normalizeVariablesToSnakeCase } from "~/lib/vapi/utils";
+import {
+  normalizeVariablesToSnakeCase,
+  extractFirstName,
+} from "~/lib/vapi/utils";
 import { env } from "~/env";
 
 // Type imports
@@ -527,11 +530,13 @@ export const CasesService = {
     const extractedVars = extractVapiVariablesFromEntities(entities);
 
     // 3. Build Dynamic Variables with knowledge base integration
+    // Use extractFirstName to get only the first word of the pet name
+    // (many vet systems store "FirstName LastName" but we only want first name for calls)
     const variablesResult = buildDynamicVariables({
       baseVariables: {
         clinicName: options.clinicName ?? "Your Clinic",
         agentName: options.agentName ?? "Sarah",
-        petName: entities.patient.name,
+        petName: extractFirstName(entities.patient.name),
         ownerName: entities.patient.owner.name,
         appointmentDate: "today",
         callType: "discharge",
