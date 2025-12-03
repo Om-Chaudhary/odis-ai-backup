@@ -6,9 +6,10 @@ import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
 import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
-import { generateDischargeSummaryWithRetry } from "~/lib/ai/generate-discharge";
+import { generateStructuredDischargeSummaryWithRetry } from "~/lib/ai/generate-structured-discharge";
 import { normalizePhoneNumber } from "~/lib/utils/phone";
 import { CasesService } from "~/lib/services/cases-service";
+import type { StructuredDischargeSummary } from "~/lib/validators/discharge-summary";
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)
@@ -168,10 +169,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate discharge summary using AI
+    // Generate structured discharge summary using AI
     let summaryContent: string;
+    let structuredContent: StructuredDischargeSummary | null = null;
     try {
-      summaryContent = await generateDischargeSummaryWithRetry({
+      const result = await generateStructuredDischargeSummaryWithRetry({
         soapContent: soapNote?.content ?? null,
         entityExtraction: entityExtraction ?? null,
         patientData: {
@@ -180,8 +182,9 @@ export async function POST(request: NextRequest) {
           breed: patient?.breed ?? undefined,
           owner_name: patient?.owner_name ?? undefined,
         },
-        template: undefined,
       });
+      summaryContent = result.plainText;
+      structuredContent = result.structured;
     } catch (aiError) {
       console.error("[GENERATE_SUMMARY] AI generation error", {
         error: aiError instanceof Error ? aiError.message : String(aiError),
@@ -201,13 +204,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Save discharge summary to database
+    // Save discharge summary to database (both plaintext and structured)
     const { data: dischargeSummary, error: dbError } = await supabase
       .from("discharge_summaries")
       .insert({
         case_id: validated.caseId,
         user_id: user.id,
         content: summaryContent,
+        structured_content: structuredContent,
         soap_note_id: soapNote?.id ?? null,
         template_id: validated.templateId ?? null,
       })
@@ -283,6 +287,7 @@ export async function POST(request: NextRequest) {
           summaryId: discharge_summary_id,
           vapiCallId,
           content: summaryContent,
+          structuredContent: structuredContent,
           caseId: validated.caseId,
           soapNoteId: soapNote?.id ?? null,
           vapiScheduledFor,

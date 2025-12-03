@@ -58,13 +58,15 @@ export function BatchDischargeDialog({
   const [selectedTime, setSelectedTime] = useState("09:00");
 
   // Calculate schedule dates
+  // Email: Next day (Day 1)
+  // Call: 2 days after the email (Day 3) = 3 days from now
   const now = new Date();
   const emailDate = addDays(now, 1);
-  const callDate = addDays(now, 2);
+  const callDate = addDays(now, 3);
 
   // Count cases with email/phone
-  const casesWithEmail = eligibleCases.filter(c => c.hasEmail).length;
-  const casesWithPhone = eligibleCases.filter(c => c.hasPhone).length;
+  const casesWithEmail = eligibleCases.filter((c) => c.hasEmail).length;
+  const casesWithPhone = eligibleCases.filter((c) => c.hasPhone).length;
 
   const handleConfirm = () => {
     onConfirm(selectedTime);
@@ -94,26 +96,30 @@ export function BatchDischargeDialog({
         <div className="space-y-4 py-4">
           {/* Summary Stats */}
           <div className="grid grid-cols-3 gap-4">
-            <div className="rounded-lg border bg-background p-4">
+            <div className="bg-background rounded-lg border p-4">
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Total Cases</span>
+                <Users className="text-muted-foreground h-4 w-4" />
+                <span className="text-muted-foreground text-sm">
+                  Total Cases
+                </span>
               </div>
-              <p className="mt-1 text-2xl font-semibold">{eligibleCases.length}</p>
+              <p className="mt-1 text-2xl font-semibold">
+                {eligibleCases.length}
+              </p>
             </div>
 
-            <div className="rounded-lg border bg-background p-4">
+            <div className="bg-background rounded-lg border p-4">
               <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Emails</span>
+                <Mail className="text-muted-foreground h-4 w-4" />
+                <span className="text-muted-foreground text-sm">Emails</span>
               </div>
               <p className="mt-1 text-2xl font-semibold">{casesWithEmail}</p>
             </div>
 
-            <div className="rounded-lg border bg-background p-4">
+            <div className="bg-background rounded-lg border p-4">
               <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Calls</span>
+                <Phone className="text-muted-foreground h-4 w-4" />
+                <span className="text-muted-foreground text-sm">Calls</span>
               </div>
               <p className="mt-1 text-2xl font-semibold">{casesWithPhone}</p>
             </div>
@@ -133,7 +139,7 @@ export function BatchDischargeDialog({
               </Label>
               <div className="flex items-center gap-3">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="text-muted-foreground flex items-center gap-2 text-sm">
                     <Calendar className="h-3 w-3" />
                     {format(emailDate, "EEEE, MMMM d, yyyy")}
                   </div>
@@ -146,7 +152,7 @@ export function BatchDischargeDialog({
                     </div>
                   </SelectTrigger>
                   <SelectContent>
-                    {timeOptions.map(option => (
+                    {timeOptions.map((option) => (
                       <SelectItem key={option.value} value={option.value}>
                         {option.label}
                       </SelectItem>
@@ -154,7 +160,7 @@ export function BatchDischargeDialog({
                   </SelectContent>
                 </Select>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Discharge emails will be sent tomorrow at the selected time
               </p>
             </div>
@@ -170,8 +176,8 @@ export function BatchDischargeDialog({
                 <span>{format(callDate, "EEEE, MMMM d, yyyy")}</span>
                 <Badge variant="secondary">2:00 PM</Badge>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Follow-up calls will be placed 2 days after the appointment
+              <p className="text-muted-foreground text-sm">
+                Follow-up calls will be placed 2 days after the email is sent
               </p>
             </div>
           </div>
@@ -187,14 +193,16 @@ export function BatchDischargeDialog({
 
             <div className="max-h-48 overflow-y-auto rounded-lg border">
               <div className="divide-y">
-                {eligibleCases.slice(0, 10).map(caseData => (
+                {eligibleCases.slice(0, 10).map((caseData) => (
                   <div
                     key={caseData.id}
                     className="flex items-center justify-between px-3 py-2 text-sm"
                   >
                     <div>
-                      <span className="font-medium">{caseData.patientName}</span>
-                      <span className="mx-2 text-muted-foreground">•</span>
+                      <span className="font-medium">
+                        {caseData.patientName}
+                      </span>
+                      <span className="text-muted-foreground mx-2">•</span>
                       <span className="text-muted-foreground">
                         {caseData.ownerName ?? "No owner name"}
                       </span>
@@ -214,7 +222,7 @@ export function BatchDischargeDialog({
                   </div>
                 ))}
                 {eligibleCases.length > 10 && (
-                  <div className="px-3 py-2 text-center text-sm text-muted-foreground">
+                  <div className="text-muted-foreground px-3 py-2 text-center text-sm">
                     ...and {eligibleCases.length - 10} more cases
                   </div>
                 )}
@@ -232,14 +240,14 @@ export function BatchDischargeDialog({
                 <ul className="mt-1 list-inside list-disc text-sm">
                   {casesWithEmail < eligibleCases.length && (
                     <li>
-                      {eligibleCases.length - casesWithEmail} cases without email
-                      addresses
+                      {eligibleCases.length - casesWithEmail} cases without
+                      email addresses
                     </li>
                   )}
                   {casesWithPhone < eligibleCases.length && (
                     <li>
-                      {eligibleCases.length - casesWithPhone} cases without phone
-                      numbers
+                      {eligibleCases.length - casesWithPhone} cases without
+                      phone numbers
                     </li>
                   )}
                 </ul>
@@ -251,9 +259,10 @@ export function BatchDischargeDialog({
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              This will schedule {casesWithEmail} discharge emails and {casesWithPhone}{" "}
-              follow-up calls. The process will continue even if some cases fail, and
-              you&apos;ll receive a detailed report when complete.
+              This will schedule {casesWithEmail} discharge emails and{" "}
+              {casesWithPhone} follow-up calls. The process will continue even
+              if some cases fail, and you&apos;ll receive a detailed report when
+              complete.
             </AlertDescription>
           </Alert>
         </div>

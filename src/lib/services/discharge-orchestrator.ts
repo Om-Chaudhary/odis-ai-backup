@@ -13,12 +13,13 @@
 import React from "react";
 import { CasesService } from "./cases-service";
 import { ExecutionPlan } from "./execution-plan";
-import { generateDischargeSummaryWithRetry } from "~/lib/ai/generate-discharge";
+import { generateStructuredDischargeSummaryWithRetry } from "~/lib/ai/generate-structured-discharge";
 import { scheduleEmailExecution } from "~/lib/qstash/client";
 import { isValidEmail } from "~/lib/resend/client";
 import { DischargeEmailTemplate, prepareEmailContent } from "~/lib/email";
 import type { OrchestrationRequest } from "~/lib/validators/orchestration";
 import { getClinicByUserId } from "~/lib/clinics/utils";
+import type { StructuredDischargeSummary } from "~/lib/validators/discharge-summary";
 import type {
   CallResult,
   EmailResult,
@@ -60,7 +61,7 @@ const STEP_ORDER: readonly StepName[] = [
  * Generate email content from discharge summary using React template
  *
  * Uses data from Supabase:
- * - discharge_summaries.content
+ * - discharge_summaries.content (plaintext) or structured_content (JSON)
  * - patients: name, species, breed (owner_name intentionally excluded)
  * - users: clinic_name, clinic_phone, clinic_email
  */
@@ -72,14 +73,16 @@ async function generateEmailContent(
   clinicName?: string | null,
   clinicPhone?: string | null,
   clinicEmail?: string | null,
+  structuredContent?: StructuredDischargeSummary | null,
 ): Promise<{ subject: string; html: string; text: string }> {
   const subject = `Discharge Instructions for ${patientName}`;
 
-  // Render React email template to HTML
+  // Render React email template to HTML (prefer structured content)
   const { html, text } = await prepareEmailContent(
     React.createElement(DischargeEmailTemplate, {
       patientName,
       dischargeSummaryContent: dischargeSummary,
+      structuredContent: structuredContent ?? undefined,
       breed,
       species,
       clinicName,
@@ -553,7 +556,7 @@ export class DischargeOrchestrator {
     }
 
     // Log summary generation context for monitoring
-    console.log("[ORCHESTRATOR] Generating discharge summary", {
+    console.log("[ORCHESTRATOR] Generating structured discharge summary", {
       caseId,
       hasSoapContent: !!soapContent,
       soapContentSource,
@@ -561,31 +564,30 @@ export class DischargeOrchestrator {
       hasEntities: !!caseInfo.entities,
     });
 
-    // Generate summary with SOAP content if available
-    const summaryContent = await generateDischargeSummaryWithRetry({
-      soapContent, // Now includes fresh SOAP notes from database
-      entityExtraction: caseInfo.entities ?? null,
-      patientData: {
-        name: patient?.name ?? undefined,
-        species: patient?.species ?? undefined,
-        breed: patient?.breed ?? undefined,
-        owner_name: patient?.owner_name ?? undefined,
-      },
-      template:
-        typeof stepConfig.options === "object" &&
-        stepConfig.options !== null &&
-        "templateId" in stepConfig.options
-          ? (stepConfig.options as { templateId?: string }).templateId
-          : undefined,
-    });
+    // Generate structured summary with SOAP content if available
+    const { structured: structuredContent, plainText: summaryContent } =
+      await generateStructuredDischargeSummaryWithRetry({
+        soapContent, // Now includes fresh SOAP notes from database
+        entityExtraction: caseInfo.entities ?? null,
+        patientData: {
+          name: patient?.name ?? undefined,
+          species: patient?.species ?? undefined,
+          breed: patient?.breed ?? undefined,
+          owner_name: patient?.owner_name ?? undefined,
+        },
+      });
 
-    // Save to database
+    // Save to database (both plaintext and structured)
     const { data: summary, error } = await this.supabase
       .from("discharge_summaries")
       .insert({
         case_id: caseId,
         user_id: this.user.id,
         content: summaryContent,
+        structured_content: structuredContent as unknown as Record<
+          string,
+          unknown
+        >,
       })
       .select("id")
       .single();
@@ -601,6 +603,7 @@ export class DischargeOrchestrator {
       data: {
         summaryId: summary.id,
         content: summaryContent,
+        structuredContent: structuredContent,
       },
     };
   }

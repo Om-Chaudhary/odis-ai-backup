@@ -27,8 +27,11 @@ import { cn } from "~/lib/utils";
 import { api } from "~/trpc/client";
 import type { AppRouterOutputs } from "~/trpc/client";
 
-type BatchStatus = NonNullable<AppRouterOutputs["cases"]["getBatchStatus"]>;
-type BatchItem = BatchStatus["discharge_batch_items"][0];
+type BatchStatusRaw = NonNullable<AppRouterOutputs["cases"]["getBatchStatus"]>;
+type BatchItem = BatchStatusRaw["discharge_batch_items"][number];
+type BatchStatus = Omit<BatchStatusRaw, "discharge_batch_items"> & {
+  discharge_batch_items: BatchItem[];
+};
 
 interface BatchProgressMonitorProps {
   batchId: string;
@@ -84,21 +87,20 @@ export function BatchProgressMonitor({
     if (!batchStatus) return;
 
     // Create CSV report
-    const items = Array.isArray(batchStatus.discharge_batch_items)
+    const items: BatchItem[] = Array.isArray(batchStatus.discharge_batch_items)
       ? batchStatus.discharge_batch_items
       : [];
-    const csvContent = [
+    const rows: string[][] = [
       ["Patient Name", "Status", "Email Scheduled", "Call Scheduled", "Error"],
-      ...items.map((item: BatchItem) => [
+      ...items.map((item) => [
         item.patientName,
         item.status,
         item.email_scheduled ? "Yes" : "No",
         item.call_scheduled ? "Yes" : "No",
         item.error_message ?? "",
       ]),
-    ]
-      .map((row: string[]) => row.join(","))
-      .join("\n");
+    ];
+    const csvContent = rows.map((row) => row.join(",")).join("\n");
 
     // Download CSV
     const blob = new Blob([csvContent], { type: "text/csv" });
@@ -128,7 +130,7 @@ export function BatchProgressMonitor({
   // Minimized view
   if (isMinimized) {
     return (
-      <div className="fixed bottom-4 right-4 z-50 w-80 rounded-lg border bg-background p-4 shadow-lg">
+      <div className="bg-background fixed right-4 bottom-4 z-50 w-80 rounded-lg border p-4 shadow-lg">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {!isComplete ? (
@@ -174,8 +176,16 @@ export function BatchProgressMonitor({
 
   // Full dialog view
   return (
-    <Dialog open={true} onOpenChange={() => { /* Dialog is always open */ }}>
-      <DialogContent className="max-w-3xl" onInteractOutside={(e) => e.preventDefault()}>
+    <Dialog
+      open={true}
+      onOpenChange={() => {
+        /* Dialog is always open */
+      }}
+    >
+      <DialogContent
+        className="max-w-3xl"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle>Batch Discharge Progress</DialogTitle>
@@ -200,8 +210,8 @@ export function BatchProgressMonitor({
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span>
-                {batchStatus?.processed_cases ?? 0} of {batchStatus?.total_cases ?? 0}{" "}
-                cases processed
+                {batchStatus?.processed_cases ?? 0} of{" "}
+                {batchStatus?.total_cases ?? 0} cases processed
               </span>
               <span className="font-medium">{Math.round(progress)}%</span>
             </div>
@@ -244,13 +254,17 @@ export function BatchProgressMonitor({
             <h3 className="font-medium">Processing Log</h3>
             <ScrollArea className="h-64 rounded-lg border">
               <div className="p-2">
-                {batchStatus?.discharge_batch_items && Array.isArray(batchStatus.discharge_batch_items)
-                  ? batchStatus.discharge_batch_items.map((item: BatchItem, index: number) => (
-                      <LogEntry key={item.id ?? index} item={item} />
-                    ))
+                {batchStatus?.discharge_batch_items &&
+                Array.isArray(batchStatus.discharge_batch_items)
+                  ? batchStatus.discharge_batch_items.map(
+                      (item, index: number) => (
+                        <LogEntry key={item.id ?? index} item={item} />
+                      ),
+                    )
                   : null}
-                {(!batchStatus?.discharge_batch_items || batchStatus.discharge_batch_items.length === 0) && (
-                  <div className="py-8 text-center text-muted-foreground">
+                {(!batchStatus?.discharge_batch_items ||
+                  batchStatus.discharge_batch_items.length === 0) && (
+                  <div className="text-muted-foreground py-8 text-center">
                     No items processed yet
                   </div>
                 )}
@@ -261,11 +275,13 @@ export function BatchProgressMonitor({
           {/* Status Badge */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Batch Status:</span>
+              <span className="text-muted-foreground text-sm">
+                Batch Status:
+              </span>
               <StatusBadge status={batchStatus?.status ?? "pending"} />
             </div>
             {batchStatus?.completed_at && (
-              <span className="text-sm text-muted-foreground">
+              <span className="text-muted-foreground text-sm">
                 Completed at{" "}
                 {new Date(batchStatus.completed_at).toLocaleTimeString()}
               </span>
@@ -354,7 +370,7 @@ function LogEntry({ item }: { item: BatchItem }) {
           </p>
         )}
         {item.processed_at && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {new Date(item.processed_at).toLocaleTimeString()}
           </p>
         )}
@@ -383,7 +399,7 @@ function StatCard({
   };
 
   return (
-    <div className="rounded-lg border bg-background p-3">
+    <div className="bg-background rounded-lg border p-3">
       <div className={cn("flex items-center gap-2", variantClasses[variant])}>
         {icon}
         <span className="text-xs">{label}</span>
@@ -422,7 +438,11 @@ function StatusBadge({ status }: { status: string }) {
   };
 
   return (
-    <Badge variant={getVariant() as "default" | "secondary" | "destructive" | "outline"}>
+    <Badge
+      variant={
+        getVariant() as "default" | "secondary" | "destructive" | "outline"
+      }
+    >
       {getLabel()}
     </Badge>
   );

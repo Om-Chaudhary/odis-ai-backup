@@ -57,7 +57,8 @@ export class DischargeBatchProcessor {
     // Query cases with discharge summaries and contact info
     const { data: cases, error } = await this.supabase
       .from("cases")
-      .select(`
+      .select(
+        `
         id,
         patients!inner (
           id,
@@ -77,7 +78,8 @@ export class DischargeBatchProcessor {
           id,
           status
         )
-      `)
+      `,
+      )
       .eq("user_id", userId)
       .eq("status", "completed")
       .order("created_at", { ascending: false });
@@ -112,15 +114,20 @@ export class DischargeBatchProcessor {
       if (!hasEmail && !hasPhone) continue;
 
       // Check if already scheduled
-      const hasScheduledEmail = Array.isArray(caseData.scheduled_discharge_emails)
-        ? caseData.scheduled_discharge_emails.some((e: { status: string }) =>
-            e.status === "queued" || e.status === "sent"
+      const hasScheduledEmail = Array.isArray(
+        caseData.scheduled_discharge_emails,
+      )
+        ? caseData.scheduled_discharge_emails.some(
+            (e: { status: string }) =>
+              e.status === "queued" || e.status === "sent",
           )
         : false;
 
       const hasScheduledCall = Array.isArray(caseData.scheduled_discharge_calls)
         ? caseData.scheduled_discharge_calls.some((c: { status: string }) =>
-            ["queued", "ringing", "in_progress", "completed"].includes(c.status)
+            ["queued", "ringing", "in_progress", "completed"].includes(
+              c.status,
+            ),
           )
         : false;
 
@@ -153,7 +160,11 @@ export class DischargeBatchProcessor {
     this.cancelled = false;
     this.chunkSize = options.chunkSize ?? 10;
 
-    const errors: Array<{ caseId: string; patientName: string; error: string }> = [];
+    const errors: Array<{
+      caseId: string;
+      patientName: string;
+      error: string;
+    }> = [];
     let processedCount = 0;
     let successCount = 0;
     let failedCount = 0;
@@ -170,7 +181,7 @@ export class DischargeBatchProcessor {
 
       const chunk = cases.slice(i, i + this.chunkSize);
       const chunkResults = await Promise.allSettled(
-        chunk.map(caseData => this.processSingleCase(caseData, options))
+        chunk.map((caseData) => this.processSingleCase(caseData, options)),
       );
 
       // Process chunk results
@@ -192,9 +203,11 @@ export class DischargeBatchProcessor {
           );
         } else {
           failedCount++;
-          const errorMessage = result.status === "rejected"
-            ? (result.reason as Error)?.message ?? String(result.reason)
-            : (result.status === "fulfilled" ? result.value?.error : null) ?? "Unknown error";
+          const errorMessage =
+            result.status === "rejected"
+              ? ((result.reason as Error)?.message ?? String(result.reason))
+              : ((result.status === "fulfilled" ? result.value?.error : null) ??
+                "Unknown error");
 
           errors.push({
             caseId: caseData.id,
@@ -246,7 +259,12 @@ export class DischargeBatchProcessor {
   private async processSingleCase(
     caseData: EligibleCase,
     options: BatchProcessingOptions,
-  ): Promise<{ success: boolean; error?: string; emailId?: string; callId?: string }> {
+  ): Promise<{
+    success: boolean;
+    error?: string;
+    emailId?: string;
+    callId?: string;
+  }> {
     try {
       const orchestrator = new DischargeOrchestrator(this.supabase, this.user);
 
@@ -298,9 +316,9 @@ export class DischargeBatchProcessor {
           callId: result.data.call?.callId,
         };
       } else {
-        const errorMessage = result.metadata.errors
-          ?.map(e => e.error)
-          .join("; ") ?? "Orchestration failed";
+        const errorMessage =
+          result.metadata.errors?.map((e) => e.error).join("; ") ??
+          "Orchestration failed";
 
         return {
           success: false,
@@ -308,7 +326,10 @@ export class DischargeBatchProcessor {
         };
       }
     } catch (error) {
-      console.error(`[BatchProcessor] Error processing case ${caseData.id}:`, error);
+      console.error(
+        `[BatchProcessor] Error processing case ${caseData.id}:`,
+        error,
+      );
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
@@ -437,7 +458,7 @@ export class DischargeBatchProcessor {
     }
 
     // Create batch items
-    const batchItems = cases.map(caseData => ({
+    const batchItems = cases.map((caseData) => ({
       batch_id: batch.id,
       case_id: caseData.id,
       patient_id: caseData.patient_id,
@@ -459,6 +480,10 @@ export class DischargeBatchProcessor {
 
   /**
    * Calculate schedule times based on user preferences
+   *
+   * Schedule:
+   * - Email: Next day (Day 1) at specified time
+   * - Call: 2 days after the email (Day 3) at 2 PM
    */
   static calculateScheduleTimes(
     emailTimeString: string, // Format: "HH:mm" (e.g., "09:00", "14:30")
@@ -468,14 +493,14 @@ export class DischargeBatchProcessor {
     // Parse hour and minute from the time string
     const [hours, minutes] = emailTimeString.split(":").map(Number);
 
-    // Email: Next day at specified time
+    // Email: Next day at specified time (Day 1)
     let emailScheduleTime = addDays(now, 1);
     emailScheduleTime = setHours(emailScheduleTime, hours ?? 9);
     emailScheduleTime = setMinutes(emailScheduleTime, minutes ?? 0);
     emailScheduleTime = setSeconds(emailScheduleTime, 0);
 
-    // Call: 2 days from now at 2 PM (default)
-    let callScheduleTime = addDays(now, 2);
+    // Call: 2 days after the email (Day 3) = 3 days from now at 2 PM
+    let callScheduleTime = addDays(now, 3);
     callScheduleTime = setHours(callScheduleTime, 14);
     callScheduleTime = setMinutes(callScheduleTime, 0);
     callScheduleTime = setSeconds(callScheduleTime, 0);

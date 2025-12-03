@@ -543,7 +543,7 @@ export const casesRouter = createTRPCRouter({
       // If not provided, the orchestrator/service will use user's default override or system defaults
 
       // Handle email discharge
-      if (input.dischargeType === "email" ?? input.dischargeType === "both") {
+      if (input.dischargeType === "email" || input.dischargeType === "both") {
         if (input.patientData.ownerEmail) {
           orchestrationSteps.prepareEmail = true;
           orchestrationSteps.scheduleEmail = {
@@ -557,7 +557,7 @@ export const casesRouter = createTRPCRouter({
       }
 
       // Handle call discharge
-      if (input.dischargeType === "call" ?? input.dischargeType === "both") {
+      if (input.dischargeType === "call" || input.dischargeType === "both") {
         if (input.patientData.ownerPhone) {
           orchestrationSteps.scheduleCall = {
             phoneNumber: input.patientData.ownerPhone,
@@ -614,16 +614,16 @@ export const casesRouter = createTRPCRouter({
 
           // Check if the intended actions actually succeeded despite the error
           const intendedCall =
-            input.dischargeType === "call" ?? input.dischargeType === "both";
+            input.dischargeType === "call" || input.dischargeType === "both";
           const intendedEmail =
-            input.dischargeType === "email" ?? input.dischargeType === "both";
+            input.dischargeType === "email" || input.dischargeType === "both";
 
-          const callSucceeded = result.data?.call?.callId;
-          const emailSucceeded = result.data?.emailSchedule?.emailId;
+          const callSucceeded = Boolean(result.data?.call?.callId);
+          const emailSucceeded = Boolean(result.data?.emailSchedule?.emailId);
 
           // If the intended actions succeeded, treat as partial success
           const criticalActionSucceeded =
-            (intendedCall && callSucceeded) ??
+            (intendedCall && callSucceeded) ||
             (intendedEmail && emailSucceeded);
 
           if (criticalActionSucceeded) {
@@ -1314,12 +1314,12 @@ export const casesRouter = createTRPCRouter({
   /**
    * Get eligible cases for batch discharge processing
    */
-  getEligibleCasesForBatch: protectedProcedure
-    .query(async ({ ctx }) => {
-      // Query cases with discharge summaries and contact info
-      const { data: cases, error } = await ctx.supabase
-        .from("cases")
-        .select(`
+  getEligibleCasesForBatch: protectedProcedure.query(async ({ ctx }) => {
+    // Query cases with discharge summaries and contact info
+    const { data: cases, error } = await ctx.supabase
+      .from("cases")
+      .select(
+        `
           id,
           patients!inner (
             id,
@@ -1339,73 +1339,79 @@ export const casesRouter = createTRPCRouter({
             id,
             status
           )
-        `)
-        .eq("user_id", ctx.user.id)
-        .eq("status", "completed");
+        `,
+      )
+      .eq("user_id", ctx.user.id)
+      .eq("status", "completed");
 
-      if (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch eligible cases",
-          cause: error,
+    if (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to fetch eligible cases",
+        cause: error,
+      });
+    }
+
+    // Filter for eligible cases
+    const eligibleCases = [];
+
+    for (const caseData of cases ?? []) {
+      // Extract patient data
+      const patient = Array.isArray(caseData.patients)
+        ? caseData.patients[0]
+        : caseData.patients;
+
+      if (!patient) continue;
+
+      // Check if has discharge summary
+      const hasDischargeSummary = Array.isArray(caseData.discharge_summaries)
+        ? caseData.discharge_summaries.length > 0
+        : !!caseData.discharge_summaries;
+
+      if (!hasDischargeSummary) continue;
+
+      // Check if has valid contact info
+      const hasEmail = !!patient.owner_email;
+      const hasPhone = !!patient.owner_phone;
+
+      if (!hasEmail && !hasPhone) continue;
+
+      // Check if already scheduled
+      const hasScheduledEmail = Array.isArray(
+        caseData.scheduled_discharge_emails,
+      )
+        ? caseData.scheduled_discharge_emails.some(
+            (e: { status: string }) =>
+              e.status === "queued" || e.status === "sent",
+          )
+        : false;
+
+      const hasScheduledCall = Array.isArray(caseData.scheduled_discharge_calls)
+        ? caseData.scheduled_discharge_calls.some((c: { status: string }) =>
+            ["queued", "ringing", "in_progress", "completed"].includes(
+              c.status,
+            ),
+          )
+        : false;
+
+      // Only include if not already scheduled
+      if (!hasScheduledEmail && !hasScheduledCall) {
+        eligibleCases.push({
+          id: caseData.id,
+          patientId: patient.id,
+          patientName: patient.name ?? "Unknown Patient",
+          ownerName: patient.owner_name,
+          ownerEmail: patient.owner_email,
+          ownerPhone: patient.owner_phone,
+          hasDischargeSummary: true,
+          hasEmail,
+          hasPhone,
         });
       }
+    }
 
-      // Filter for eligible cases
-      const eligibleCases = [];
-
-      for (const caseData of cases ?? []) {
-        // Extract patient data
-        const patient = Array.isArray(caseData.patients)
-          ? caseData.patients[0]
-          : caseData.patients;
-
-        if (!patient) continue;
-
-        // Check if has discharge summary
-        const hasDischargeSummary = Array.isArray(caseData.discharge_summaries)
-          ? caseData.discharge_summaries.length > 0
-          : !!caseData.discharge_summaries;
-
-        if (!hasDischargeSummary) continue;
-
-        // Check if has valid contact info
-        const hasEmail = !!patient.owner_email;
-        const hasPhone = !!patient.owner_phone;
-
-        if (!hasEmail && !hasPhone) continue;
-
-        // Check if already scheduled
-        const hasScheduledEmail = Array.isArray(caseData.scheduled_discharge_emails)
-          ? caseData.scheduled_discharge_emails.some((e: { status: string }) =>
-              e.status === "queued" || e.status === "sent"
-            )
-          : false;
-
-        const hasScheduledCall = Array.isArray(caseData.scheduled_discharge_calls)
-          ? caseData.scheduled_discharge_calls.some((c: { status: string }) =>
-              ["queued", "ringing", "in_progress", "completed"].includes(c.status)
-            )
-          : false;
-
-        // Only include if not already scheduled
-        if (!hasScheduledEmail && !hasScheduledCall) {
-          eligibleCases.push({
-            id: caseData.id,
-            patientId: patient.id,
-            patientName: patient.name ?? "Unknown Patient",
-            ownerName: patient.owner_name,
-            ownerEmail: patient.owner_email,
-            ownerPhone: patient.owner_phone,
-            hasDischargeSummary: true,
-            hasEmail,
-            hasPhone,
-          });
-        }
-      }
-
-      return eligibleCases;
-    }),
+    return eligibleCases;
+  }),
 
   /**
    * Create a new discharge batch
@@ -1441,7 +1447,7 @@ export const casesRouter = createTRPCRouter({
       }
 
       // Create batch items for each case
-      const batchItems = input.caseIds.map(caseId => ({
+      const batchItems = input.caseIds.map((caseId) => ({
         batch_id: batch.id,
         case_id: caseId,
         status: "pending",
@@ -1453,7 +1459,10 @@ export const casesRouter = createTRPCRouter({
 
       if (itemsError) {
         // Rollback batch creation
-        await ctx.supabase.from("discharge_batches").delete().eq("id", batch.id);
+        await ctx.supabase
+          .from("discharge_batches")
+          .delete()
+          .eq("id", batch.id);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to create batch items",
@@ -1473,7 +1482,8 @@ export const casesRouter = createTRPCRouter({
       // Get batch details
       const { data: batch, error: batchError } = await ctx.supabase
         .from("discharge_batches")
-        .select(`
+        .select(
+          `
           *,
           discharge_batch_items (
             id,
@@ -1484,7 +1494,8 @@ export const casesRouter = createTRPCRouter({
             error_message,
             processed_at
           )
-        `)
+        `,
+        )
         .eq("id", input.batchId)
         .eq("user_id", ctx.user.id)
         .single();
@@ -1497,21 +1508,25 @@ export const casesRouter = createTRPCRouter({
       }
 
       // Get case details for items
-      const batchItems = batch.discharge_batch_items as Array<{ case_id: string }>;
+      const batchItems = batch.discharge_batch_items as Array<{
+        case_id: string;
+      }>;
       const caseIds = batchItems.map((item) => item.case_id);
       const { data: cases } = await ctx.supabase
         .from("cases")
-        .select(`
+        .select(
+          `
           id,
           patients (
             name
           )
-        `)
+        `,
+        )
         .in("id", caseIds);
 
       // Map patient names to items
       const itemsWithDetails = batchItems.map((item) => {
-        const caseData = cases?.find(c => c.id === item.case_id);
+        const caseData = cases?.find((c) => c.id === item.case_id);
         const patient = Array.isArray(caseData?.patients)
           ? caseData.patients[0]
           : caseData?.patients;

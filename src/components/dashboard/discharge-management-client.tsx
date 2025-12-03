@@ -3,7 +3,14 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
-import { Settings, Plus, RefreshCw, TestTube, Send } from "lucide-react";
+import {
+  Settings,
+  Plus,
+  RefreshCw,
+  TestTube,
+  Send,
+  Loader2,
+} from "lucide-react";
 import { Badge } from "~/components/ui/badge";
 import { DischargeListItem } from "./discharge-list-item";
 import { EmptyState } from "./empty-state";
@@ -24,9 +31,6 @@ import {
 import { toast } from "sonner";
 import { format, addDays, setHours, setMinutes, setSeconds } from "date-fns";
 import type { DischargeReadinessFilter } from "~/types/dashboard";
-import type { DateRangePreset } from "~/lib/utils/date-ranges";
-import { getDateRangeFromPreset } from "~/lib/utils/date-ranges";
-import { useQueryState } from "nuqs";
 
 const PAGE_SIZE = 10;
 
@@ -44,13 +48,13 @@ interface LoadingState {
  *
  * Features:
  * - Day-by-day date navigation with keyboard shortcuts
- * - Date range preset filtering (All Time, Last Day, 3D, 30D)
  * - Status filtering (All, Ready, Pending, Completed, Failed)
  * - Search by patient or owner name
  * - Discharge call/email triggering
  * - Inline patient information editing
  * - Test mode support for safe testing
  * - Real-time status updates
+ * - Load More functionality for pagination
  *
  * The component handles all discharge-related operations including:
  * - Triggering discharge calls via VAPI
@@ -78,54 +82,35 @@ export function DischargeManagementClient() {
     useState<DischargeReadinessFilter>("all");
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
+  // Accumulated cases for "Load More" functionality
+  const [accumulatedCases, setAccumulatedCases] = useState<DashboardCase[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
   // Batch discharge state
   const [showBatchDialog, setShowBatchDialog] = useState(false);
   const [activeBatchId, setActiveBatchId] = useState<string | null>(null);
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
 
-  // Date range preset state (uses URL state for persistence)
-  // Note: setDateRange is managed by UnifiedFilterBar component
-  const [dateRange] = useQueryState("dateRange", {
-    defaultValue: "all",
-    parse: (value) => (value as DateRangePreset) ?? "all",
-    serialize: (value) => value,
-  });
-
   // Ref to prevent double-clicks
   const isProcessingRef = useRef(false);
 
-  // Calculate date parameters based on dateRange
-  // IMPORTANT: When search term is active, override date filters to search all time
+  // Calculate date parameters - use single date (day navigation)
+  // When search term is active, override date filters to search all time
   const dateParams = useMemo(() => {
     // If searching, ignore date filters and search all time
     if (searchTerm.trim()) {
       return {}; // No date filters = search all time
     }
-
-    if (dateRange === "3d" || dateRange === "30d") {
-      // Range mode: use startDate and endDate
-      const { startDate, endDate } = getDateRangeFromPreset(dateRange);
-      return {
-        startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
-        endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
-      };
-    } else if (dateRange === "1d") {
-      // "Last Day" mode: use date range for yesterday to today
-      const { startDate, endDate } = getDateRangeFromPreset(dateRange);
-      return {
-        startDate: startDate ? format(startDate, "yyyy-MM-dd") : undefined,
-        endDate: endDate ? format(endDate, "yyyy-MM-dd") : undefined,
-      };
-    }
-    // "all" mode: use single date parameter (day navigation)
+    // Use single date parameter (day navigation)
     return { date: format(currentDate, "yyyy-MM-dd") };
-  }, [dateRange, currentDate, searchTerm]);
+  }, [currentDate, searchTerm]);
 
   // tRPC Queries
   const {
     data: casesData,
     isLoading,
     refetch: refetchCases,
+    isFetching,
   } = api.cases.listMyCasesToday.useQuery({
     page: currentPage,
     pageSize: PAGE_SIZE,
@@ -168,6 +153,60 @@ export function DischargeManagementClient() {
     }
   }, [isInitialLoad, mostRecentDate, casesData]);
 
+  // Transform backend data to UI shape
+  const newCases: DashboardCase[] = useMemo(() => {
+    return casesData?.cases
+      ? transformBackendCasesToDashboardCases(
+          casesData.cases,
+          casesData.userEmail,
+          casesData.testModeSettings?.enabled ?? false,
+          casesData.testModeSettings?.testContactEmail,
+          casesData.testModeSettings?.testContactPhone,
+        )
+      : [];
+  }, [casesData?.cases, casesData?.userEmail, casesData?.testModeSettings]);
+
+  // Accumulate cases when new data arrives
+  useEffect(() => {
+    if (newCases.length > 0) {
+      if (currentPage === 1) {
+        // First page - replace accumulated cases
+        setAccumulatedCases(newCases);
+      } else {
+        // Subsequent pages - append new cases (avoiding duplicates)
+        setAccumulatedCases((prev) => {
+          const existingIds = new Set(prev.map((c) => c.id));
+          const uniqueNewCases = newCases.filter((c) => !existingIds.has(c.id));
+          return [...prev, ...uniqueNewCases];
+        });
+      }
+      setIsLoadingMore(false);
+    } else if (currentPage === 1) {
+      // No cases on first page - clear accumulated
+      setAccumulatedCases([]);
+    }
+  }, [newCases, currentPage]);
+
+  // Pagination info
+  const pagination = casesData?.pagination;
+  const hasNextPage = pagination
+    ? pagination.page < pagination.totalPages
+    : false;
+  const totalCases = pagination?.total ?? 0;
+
+  const settings: DischargeSettings = settingsData ?? {
+    clinicName: "",
+    clinicPhone: "",
+    clinicEmail: "",
+    emergencyPhone: "",
+    vetName: "",
+    testModeEnabled: false,
+    testContactName: "",
+    testContactEmail: "",
+    testContactPhone: "",
+    voicemailDetectionEnabled: false,
+  };
+
   // tRPC Mutations
   const updatePatientMutation = api.cases.updatePatientInfo.useMutation({
     onSuccess: () => {
@@ -196,6 +235,10 @@ export function DischargeManagementClient() {
       isProcessingRef.current = false;
     },
   });
+
+  // Store schedule times
+  let emailScheduleTime: Date;
+  let callScheduleTime: Date;
 
   // Batch mutations
   const createBatchMutation = api.cases.createDischargeBatch.useMutation({
@@ -239,36 +282,6 @@ export function DischargeManagementClient() {
     },
   });
 
-  // Store schedule times
-  let emailScheduleTime: Date;
-  let callScheduleTime: Date;
-
-  // Transform backend data to UI shape
-  const cases: DashboardCase[] = useMemo(() => {
-    return casesData?.cases
-      ? transformBackendCasesToDashboardCases(
-          casesData.cases,
-          casesData.userEmail,
-          casesData.testModeSettings?.enabled ?? false,
-          casesData.testModeSettings?.testContactEmail,
-          casesData.testModeSettings?.testContactPhone,
-        )
-      : [];
-  }, [casesData?.cases, casesData?.userEmail, casesData?.testModeSettings]);
-
-  const settings: DischargeSettings = settingsData ?? {
-    clinicName: "",
-    clinicPhone: "",
-    clinicEmail: "",
-    emergencyPhone: "",
-    vetName: "",
-    testModeEnabled: false,
-    testContactName: "",
-    testContactEmail: "",
-    testContactPhone: "",
-    voicemailDetectionEnabled: false,
-  };
-
   // Handlers
   const handleTriggerCall = async (caseId: string, patientId: string) => {
     // Prevent double-clicks and concurrent mutations
@@ -281,7 +294,7 @@ export function DischargeManagementClient() {
       return;
     }
 
-    const caseData = cases.find((c) => c.id === caseId);
+    const caseData = accumulatedCases.find((c) => c.id === caseId);
     if (!caseData) return;
 
     // Keep the actual owner name, but override phone/email for test mode
@@ -328,7 +341,7 @@ export function DischargeManagementClient() {
       return;
     }
 
-    const caseData = cases.find((c) => c.id === caseId);
+    const caseData = accumulatedCases.find((c) => c.id === caseId);
     if (!caseData) return;
 
     // Keep the actual owner name, but override phone/email for test mode
@@ -377,26 +390,40 @@ export function DischargeManagementClient() {
   };
 
   const handleRefresh = () => {
+    setCurrentPage(1);
+    setAccumulatedCases([]);
     void refetchCases();
     void refetchSettings();
     toast.success("Dashboard refreshed");
+  };
+
+  const handleLoadMore = () => {
+    if (hasNextPage && !isFetching) {
+      setIsLoadingMore(true);
+      setCurrentPage((prev) => prev + 1);
+    }
   };
 
   const handleBatchDischarge = (emailTimeString: string) => {
     // Parse hour and minute from the time string
     const [hours, minutes] = emailTimeString.split(":").map(Number);
 
-    // Email: Next day at specified time
+    // Email: Next day at specified time (Day 1)
     emailScheduleTime = addDays(new Date(), 1);
     emailScheduleTime = setHours(emailScheduleTime, hours ?? 9);
     emailScheduleTime = setMinutes(emailScheduleTime, minutes ?? 0);
     emailScheduleTime = setSeconds(emailScheduleTime, 0);
 
-    // Call: 2 days from now at 2 PM
-    callScheduleTime = addDays(new Date(), 2);
+    // Call: 2 days after the email (Day 3) = 3 days from now at 2 PM
+    callScheduleTime = addDays(new Date(), 3);
     callScheduleTime = setHours(callScheduleTime, 14);
     callScheduleTime = setMinutes(callScheduleTime, 0);
     callScheduleTime = setSeconds(callScheduleTime, 0);
+
+    console.log("[BatchDischarge] Schedule times calculated", {
+      emailScheduleTime: emailScheduleTime.toISOString(),
+      callScheduleTime: callScheduleTime.toISOString(),
+    });
 
     // Create batch with eligible case IDs
     if (eligibleCases && eligibleCases.length > 0) {
@@ -425,13 +452,20 @@ export function DischargeManagementClient() {
   const handleDateChange = useCallback((date: Date) => {
     setCurrentDate(date);
     setCurrentPage(1); // Reset to first page when changing date
+    setAccumulatedCases([]); // Clear accumulated cases when date changes
+  }, []);
+
+  // Reset pagination when filters change
+  const handleFilterReset = useCallback(() => {
+    setCurrentPage(1);
+    setAccumulatedCases([]);
   }, []);
 
   // Filtering (client-side for search and status, server-side for pagination and readiness)
   // Note: Readiness filtering happens on the backend based on user-specific requirements.
   // Cases returned from the backend already meet readiness requirements when readinessFilter is applied.
   const filteredCases = useMemo(() => {
-    return cases.filter((c) => {
+    return accumulatedCases.filter((c) => {
       // Search filter
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
@@ -491,10 +525,7 @@ export function DischargeManagementClient() {
 
       return true;
     });
-  }, [cases, searchTerm, statusFilter]);
-
-  // Pagination from backend
-  const paginatedCases = filteredCases; // Already paginated by backend
+  }, [accumulatedCases, searchTerm, statusFilter]);
 
   return (
     <div className="space-y-6 p-6 pb-16">
@@ -558,31 +589,31 @@ export function DischargeManagementClient() {
         </div>
       </div>
 
-      {/* Unified Filter Bar - Search, date controls, date presets, and status filters */}
+      {/* Unified Filter Bar - Search, date controls, and status filters */}
       <UnifiedFilterBar
         currentDate={currentDate}
         onDateChange={handleDateChange}
-        totalItems={casesData?.pagination.total ?? 0}
+        totalItems={totalCases}
         isLoading={isLoading}
         statusFilter={statusFilter}
         onStatusFilterChange={(filter) => {
           setStatusFilter(filter);
-          setCurrentPage(1); // Reset to first page when changing filter
+          handleFilterReset();
         }}
         readinessFilter={readinessFilter}
         onReadinessFilterChange={(filter) => {
           setReadinessFilter(filter);
-          setCurrentPage(1); // Reset to first page when changing filter
+          handleFilterReset();
         }}
         searchTerm={searchTerm}
         onSearchChange={(term) => {
           setSearchTerm(term);
-          setCurrentPage(1); // Reset to first page on search
+          handleFilterReset();
         }}
       />
 
       {/* Content */}
-      {isLoading ? (
+      {isLoading && currentPage === 1 ? (
         <div className="space-y-2">
           {[1, 2, 3].map((i) => (
             <div
@@ -597,7 +628,7 @@ export function DischargeManagementClient() {
         </div>
       ) : (
         <div className="space-y-2">
-          {paginatedCases.map((c, index) => {
+          {filteredCases.map((c, index) => {
             // Only show loading for the specific case being processed
             const isThisCaseLoading = loadingCase?.caseId === c.id;
             const isLoadingCall =
@@ -630,6 +661,36 @@ export function DischargeManagementClient() {
               </div>
             );
           })}
+
+          {/* Load More Button */}
+          {hasNextPage && (
+            <div className="flex justify-center pt-4">
+              <Button
+                variant="outline"
+                onClick={handleLoadMore}
+                disabled={isLoadingMore || isFetching}
+                className="min-w-[200px]"
+              >
+                {isLoadingMore || isFetching ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    Load More ({accumulatedCases.length} of {totalCases})
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+
+          {/* Show count when all loaded */}
+          {!hasNextPage && accumulatedCases.length > 0 && (
+            <div className="text-muted-foreground pt-4 text-center text-sm">
+              Showing all {accumulatedCases.length} cases
+            </div>
+          )}
         </div>
       )}
 

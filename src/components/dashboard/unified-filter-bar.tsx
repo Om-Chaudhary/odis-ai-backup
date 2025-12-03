@@ -12,9 +12,6 @@ import { Label } from "~/components/ui/label";
 import { Input } from "~/components/ui/input";
 import { Search, Info } from "lucide-react";
 import type { DischargeReadinessFilter } from "~/types/dashboard";
-import type { DateRangePreset } from "~/lib/utils/date-ranges";
-import { useQueryState } from "nuqs";
-import { useEffect, useRef } from "react";
 import { Badge } from "~/components/ui/badge";
 
 interface UnifiedFilterBarProps {
@@ -48,14 +45,14 @@ interface UnifiedFilterBarProps {
 /**
  * UnifiedFilterBar - Combined filter interface for discharge management
  *
- * Combines date navigation, date range presets, and status filters into a
- * clean, standardized interface using Select dropdowns for compact, intuitive filtering.
+ * Combines date navigation and status filters into a clean, standardized interface
+ * using Select dropdowns for compact, intuitive filtering.
  *
  * Features:
  * - Day-by-day date navigation with keyboard shortcuts
- * - Date range preset dropdown (All Time, Last Day, 3D, 30D)
  * - Status filter dropdown (All, Ready, Pending, Completed, Failed)
  * - Readiness filter dropdown (All Cases, Ready for Discharge, Not Ready)
+ * - Search by patient or owner name
  *
  * @example
  * ```tsx
@@ -83,34 +80,6 @@ export function UnifiedFilterBar({
   searchTerm,
   onSearchChange,
 }: UnifiedFilterBarProps) {
-  // Date range preset state (uses URL state for persistence)
-  const [dateRange, setDateRange] = useQueryState("dateRange", {
-    defaultValue: "all",
-    parse: (value) => (value as DateRangePreset) || "all",
-    serialize: (value) => value,
-  });
-
-  // Track previous dateRange to detect when it changes
-  const prevDateRangeRef = useRef(dateRange);
-
-  // Reset to today ONLY when switching FROM range mode (3d/30d) TO day mode (all/1d)
-  // This allows day-by-day navigation to work without being reset
-  useEffect(() => {
-    const previousRange = prevDateRangeRef.current;
-    prevDateRangeRef.current = dateRange;
-
-    // Only reset when switching FROM range mode TO day mode
-    const wasInRangeMode = previousRange === "3d" || previousRange === "30d";
-    const nowInDayMode = dateRange === "all" || dateRange === "1d";
-
-    if (wasInRangeMode && nowInDayMode) {
-      onDateChange(new Date());
-    }
-  }, [dateRange, onDateChange]);
-
-  // Show day navigation only when date range is "all" or "1d"
-  const showDayNavigation = dateRange === "all" || dateRange === "1d";
-
   // Check if search is active
   const isSearchActive = searchTerm.trim().length > 0;
 
@@ -140,55 +109,18 @@ export function UnifiedFilterBar({
         )}
       </div>
 
-      {/* Conditional Day Navigation - Only show for "all" or "1d" (and not when searching) */}
-      {showDayNavigation && !isSearchActive ? (
+      {/* Day Navigation - Show when not searching */}
+      {!isSearchActive && (
         <DayPaginationControls
           currentDate={currentDate}
           onDateChange={onDateChange}
           totalItems={totalItems}
           isLoading={isLoading}
         />
-      ) : !isSearchActive ? (
-        <div className="text-muted-foreground text-sm">
-          Showing cases from{" "}
-          {dateRange === "3d"
-            ? "last 3 days"
-            : dateRange === "30d"
-              ? "last 30 days"
-              : "selected range"}
-        </div>
-      ) : null}
+      )}
 
-      {/* Filter Row: Date Range, Status, and Readiness Selects */}
+      {/* Filter Row: Status and Readiness Selects */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-4">
-        {/* Date Range Filter */}
-        <div className="flex min-w-0 flex-col gap-2 sm:max-w-[180px] sm:min-w-[140px]">
-          <Label
-            htmlFor="date-range-filter"
-            className="text-xs font-medium text-slate-700"
-          >
-            Date Range
-          </Label>
-          <Select
-            value={dateRange}
-            onValueChange={(value) => setDateRange(value as DateRangePreset)}
-          >
-            <SelectTrigger
-              id="date-range-filter"
-              className="w-full sm:w-[140px]"
-              size="sm"
-            >
-              <SelectValue placeholder="Select range" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Time</SelectItem>
-              <SelectItem value="1d">Last Day</SelectItem>
-              <SelectItem value="3d">3D</SelectItem>
-              <SelectItem value="30d">30D</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
         {/* Status Filter */}
         <div className="flex min-w-0 flex-col gap-2 sm:max-w-[180px] sm:min-w-[140px]">
           <Label

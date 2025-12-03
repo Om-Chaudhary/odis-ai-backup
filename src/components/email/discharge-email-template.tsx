@@ -1,44 +1,517 @@
 import React from "react";
+import type { StructuredDischargeSummary } from "~/lib/validators/discharge-summary";
 
 /**
  * Discharge Email Template Component
  *
- * A React-based email template for discharge summaries using only data
- * available from Supabase: discharge_summaries, patients, users tables.
+ * A beautiful, structured email template for discharge summaries.
+ * Supports both structured JSON content (preferred) and plaintext fallback.
  *
- * Data available from Supabase:
- * - discharge_summaries.content (plain text)
- * - patients: name, species, breed, owner_name, owner_email
- * - users: clinic_name, clinic_phone, clinic_email
+ * Design principles:
+ * - Clean, scannable sections with color coding
+ * - Pet-owner friendly language
+ * - Mobile-responsive
+ * - Prominent warning signs
  */
 
 export interface DischargeEmailProps {
-  // Required fields from Supabase
+  // Patient info
   patientName: string;
-  dischargeSummaryContent: string; // Plain text from discharge_summaries.content
 
-  // Optional fields from Supabase patients table
+  // Content - prefer structured, fall back to plaintext
+  structuredContent?: StructuredDischargeSummary | null;
+  dischargeSummaryContent?: string; // Plaintext fallback
+
+  // Optional patient details
   date?: string;
   breed?: string | null;
   species?: string | null;
 
-  // Optional fields from Supabase users table
+  // Clinic info
   clinicName?: string | null;
   clinicPhone?: string | null;
   clinicEmail?: string | null;
 
-  // Customization (not stored in DB)
+  // Customization
   primaryColor?: string;
+}
+
+// Color palette for sections
+const colors = {
+  primary: "#2563EB", // Blue
+  success: "#059669", // Green
+  warning: "#D97706", // Amber
+  danger: "#DC2626", // Red
+  muted: "#6B7280", // Gray
+  background: "#F9FAFB",
+  cardBg: "#FFFFFF",
+  border: "#E5E7EB",
+};
+
+/**
+ * Section header component for consistent styling
+ */
+function SectionHeader({
+  icon,
+  title,
+  color,
+}: {
+  icon: string;
+  title: string;
+  color: string;
+}) {
+  return (
+    <tr>
+      <td
+        style={{
+          padding: "12px 16px",
+          backgroundColor: color,
+          borderRadius: "6px 6px 0 0",
+        }}
+      >
+        <p
+          style={{
+            margin: 0,
+            fontSize: "14px",
+            fontWeight: "600",
+            color: "#FFFFFF",
+          }}
+        >
+          {icon} {title}
+        </p>
+      </td>
+    </tr>
+  );
+}
+
+/**
+ * Render structured content with beautiful formatting
+ */
+function StructuredContent({
+  content,
+  patientName: _patientName,
+}: {
+  content: StructuredDischargeSummary;
+  patientName: string;
+}) {
+  return (
+    <>
+      {/* Visit Summary */}
+      {content.visitSummary && (
+        <table
+          role="presentation"
+          style={{
+            width: "100%",
+            marginBottom: "20px",
+            borderCollapse: "collapse",
+          }}
+        >
+          <tbody>
+            <SectionHeader
+              icon="📋"
+              title="Visit Summary"
+              color={colors.primary}
+            />
+            <tr>
+              <td
+                style={{
+                  padding: "16px",
+                  backgroundColor: "#EFF6FF",
+                  borderRadius: "0 0 6px 6px",
+                  border: `1px solid ${colors.border}`,
+                  borderTop: "none",
+                }}
+              >
+                <p style={{ margin: 0, fontSize: "15px", color: "#1E40AF" }}>
+                  {content.visitSummary}
+                </p>
+                {content.diagnosis && (
+                  <p
+                    style={{
+                      margin: "10px 0 0 0",
+                      fontSize: "14px",
+                      color: "#3B82F6",
+                    }}
+                  >
+                    <strong>Diagnosis:</strong> {content.diagnosis}
+                  </p>
+                )}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      )}
+
+      {/* Treatments Today */}
+      {content.treatmentsToday && content.treatmentsToday.length > 0 && (
+        <table
+          role="presentation"
+          style={{
+            width: "100%",
+            marginBottom: "20px",
+            borderCollapse: "collapse",
+          }}
+        >
+          <tbody>
+            <SectionHeader
+              icon="✅"
+              title="What We Did Today"
+              color={colors.success}
+            />
+            <tr>
+              <td
+                style={{
+                  padding: "16px",
+                  backgroundColor: "#ECFDF5",
+                  borderRadius: "0 0 6px 6px",
+                  border: `1px solid ${colors.border}`,
+                  borderTop: "none",
+                }}
+              >
+                {content.treatmentsToday.map((treatment, index) => (
+                  <p
+                    key={index}
+                    style={{
+                      margin: index === 0 ? 0 : "8px 0 0 0",
+                      fontSize: "14px",
+                      color: "#065F46",
+                    }}
+                  >
+                    • {treatment}
+                  </p>
+                ))}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      )}
+
+      {/* Medications - Important section */}
+      {content.medications && content.medications.length > 0 && (
+        <table
+          role="presentation"
+          style={{
+            width: "100%",
+            marginBottom: "20px",
+            borderCollapse: "collapse",
+          }}
+        >
+          <tbody>
+            <SectionHeader
+              icon="💊"
+              title="Medications"
+              color={colors.primary}
+            />
+            <tr>
+              <td
+                style={{
+                  padding: "16px",
+                  backgroundColor: "#FFFFFF",
+                  borderRadius: "0 0 6px 6px",
+                  border: `1px solid ${colors.border}`,
+                  borderTop: "none",
+                }}
+              >
+                {content.medications.map((med, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      padding: "12px",
+                      backgroundColor: index % 2 === 0 ? "#F9FAFB" : "#FFFFFF",
+                      borderRadius: "4px",
+                      marginBottom:
+                        index < content.medications!.length - 1 ? "8px" : 0,
+                    }}
+                  >
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: "15px",
+                        fontWeight: "600",
+                        color: "#1F2937",
+                      }}
+                    >
+                      {med.name}
+                    </p>
+                    <p
+                      style={{
+                        margin: "4px 0 0 0",
+                        fontSize: "14px",
+                        color: "#4B5563",
+                      }}
+                    >
+                      {[
+                        med.dosage,
+                        med.frequency,
+                        med.duration && `for ${med.duration}`,
+                      ]
+                        .filter(Boolean)
+                        .join(" • ")}
+                    </p>
+                    {med.instructions && (
+                      <p
+                        style={{
+                          margin: "4px 0 0 0",
+                          fontSize: "13px",
+                          color: "#6B7280",
+                          fontStyle: "italic",
+                        }}
+                      >
+                        📝 {med.instructions}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      )}
+
+      {/* Home Care Instructions */}
+      {content.homeCare &&
+        (Boolean(content.homeCare.activity) ||
+          Boolean(content.homeCare.diet) ||
+          Boolean(content.homeCare.woundCare) ||
+          (content.homeCare.monitoring &&
+            content.homeCare.monitoring.length > 0)) && (
+          <table
+            role="presentation"
+            style={{
+              width: "100%",
+              marginBottom: "20px",
+              borderCollapse: "collapse",
+            }}
+          >
+            <tbody>
+              <SectionHeader
+                icon="🏠"
+                title="Home Care"
+                color={colors.success}
+              />
+              <tr>
+                <td
+                  style={{
+                    padding: "16px",
+                    backgroundColor: "#ECFDF5",
+                    borderRadius: "0 0 6px 6px",
+                    border: `1px solid ${colors.border}`,
+                    borderTop: "none",
+                  }}
+                >
+                  {content.homeCare.activity && (
+                    <p
+                      style={{
+                        margin: "0 0 8px 0",
+                        fontSize: "14px",
+                        color: "#065F46",
+                      }}
+                    >
+                      <strong>🏃 Activity:</strong> {content.homeCare.activity}
+                    </p>
+                  )}
+                  {content.homeCare.diet && (
+                    <p
+                      style={{
+                        margin: "0 0 8px 0",
+                        fontSize: "14px",
+                        color: "#065F46",
+                      }}
+                    >
+                      <strong>🍽️ Diet:</strong> {content.homeCare.diet}
+                    </p>
+                  )}
+                  {content.homeCare.woundCare && (
+                    <p
+                      style={{
+                        margin: "0 0 8px 0",
+                        fontSize: "14px",
+                        color: "#065F46",
+                      }}
+                    >
+                      <strong>🩹 Wound Care:</strong>{" "}
+                      {content.homeCare.woundCare}
+                    </p>
+                  )}
+                  {content.homeCare.monitoring &&
+                    content.homeCare.monitoring.length > 0 && (
+                      <div style={{ marginTop: "8px" }}>
+                        <p
+                          style={{
+                            margin: "0 0 4px 0",
+                            fontSize: "14px",
+                            fontWeight: "600",
+                            color: "#065F46",
+                          }}
+                        >
+                          👀 Watch for:
+                        </p>
+                        {content.homeCare.monitoring.map((item, index) => (
+                          <p
+                            key={index}
+                            style={{
+                              margin: "4px 0 0 12px",
+                              fontSize: "14px",
+                              color: "#065F46",
+                            }}
+                          >
+                            • {item}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        )}
+
+      {/* Follow-up */}
+      {content.followUp && content.followUp.required && (
+        <table
+          role="presentation"
+          style={{
+            width: "100%",
+            marginBottom: "20px",
+            borderCollapse: "collapse",
+          }}
+        >
+          <tbody>
+            <SectionHeader
+              icon="📅"
+              title="Follow-Up Appointment"
+              color={colors.primary}
+            />
+            <tr>
+              <td
+                style={{
+                  padding: "16px",
+                  backgroundColor: "#EFF6FF",
+                  borderRadius: "0 0 6px 6px",
+                  border: `1px solid ${colors.border}`,
+                  borderTop: "none",
+                }}
+              >
+                <p style={{ margin: 0, fontSize: "15px", color: "#1E40AF" }}>
+                  {content.followUp.date
+                    ? `Please schedule a follow-up ${content.followUp.date}`
+                    : "Please schedule a follow-up appointment"}
+                  {content.followUp.reason && ` for ${content.followUp.reason}`}
+                </p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      )}
+
+      {/* Warning Signs - CRITICAL SECTION */}
+      {content.warningSigns && content.warningSigns.length > 0 && (
+        <table
+          role="presentation"
+          style={{
+            width: "100%",
+            marginBottom: "20px",
+            borderCollapse: "collapse",
+          }}
+        >
+          <tbody>
+            <SectionHeader
+              icon="⚠️"
+              title="Call Us Immediately If You Notice"
+              color={colors.danger}
+            />
+            <tr>
+              <td
+                style={{
+                  padding: "16px",
+                  backgroundColor: "#FEF2F2",
+                  borderRadius: "0 0 6px 6px",
+                  border: `2px solid ${colors.danger}`,
+                  borderTop: "none",
+                }}
+              >
+                {content.warningSigns.map((sign, index) => (
+                  <p
+                    key={index}
+                    style={{
+                      margin: index === 0 ? 0 : "8px 0 0 0",
+                      fontSize: "14px",
+                      fontWeight: "500",
+                      color: "#991B1B",
+                    }}
+                  >
+                    🚨 {sign}
+                  </p>
+                ))}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      )}
+
+      {/* Additional Notes */}
+      {content.notes && (
+        <table
+          role="presentation"
+          style={{
+            width: "100%",
+            marginBottom: "20px",
+            borderCollapse: "collapse",
+          }}
+        >
+          <tbody>
+            <tr>
+              <td
+                style={{
+                  padding: "16px",
+                  backgroundColor: "#F9FAFB",
+                  borderRadius: "6px",
+                  border: `1px solid ${colors.border}`,
+                }}
+              >
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: "14px",
+                    color: "#4B5563",
+                  }}
+                >
+                  📝 <strong>Note:</strong> {content.notes}
+                </p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      )}
+    </>
+  );
+}
+
+/**
+ * Render plaintext content (fallback)
+ */
+function PlaintextContent({ content }: { content: string }) {
+  return (
+    <div
+      style={{
+        whiteSpace: "pre-wrap",
+        fontSize: "15px",
+        lineHeight: "1.6",
+        color: "#333",
+        marginBottom: "25px",
+      }}
+    >
+      {content}
+    </div>
+  );
 }
 
 /**
  * Main discharge email template component
- *
- * Simple, clean email template that displays discharge instructions
- * using only data that exists in Supabase.
  */
 export function DischargeEmailTemplate({
   patientName,
+  structuredContent,
   dischargeSummaryContent,
   date = new Date().toLocaleDateString("en-US", {
     month: "long",
@@ -50,8 +523,11 @@ export function DischargeEmailTemplate({
   clinicName,
   clinicPhone,
   clinicEmail,
-  primaryColor = "#4F46E5",
+  primaryColor = colors.primary,
 }: DischargeEmailProps) {
+  const hasStructuredContent =
+    structuredContent !== null && structuredContent !== undefined;
+
   return (
     <html lang="en">
       <body
@@ -60,7 +536,7 @@ export function DischargeEmailTemplate({
           padding: 0,
           fontFamily:
             '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-          backgroundColor: "#f5f5f5",
+          backgroundColor: "#F3F4F6",
           lineHeight: "1.6",
         }}
       >
@@ -68,7 +544,7 @@ export function DischargeEmailTemplate({
           role="presentation"
           style={{
             width: "100%",
-            backgroundColor: "#f5f5f5",
+            backgroundColor: "#F3F4F6",
             padding: "40px 20px",
           }}
         >
@@ -80,10 +556,10 @@ export function DischargeEmailTemplate({
                   style={{
                     maxWidth: "600px",
                     width: "100%",
-                    backgroundColor: "#ffffff",
-                    borderRadius: "8px",
+                    backgroundColor: "#FFFFFF",
+                    borderRadius: "12px",
                     overflow: "hidden",
-                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
                   }}
                 >
                   <tbody>
@@ -92,26 +568,26 @@ export function DischargeEmailTemplate({
                       <td
                         style={{
                           textAlign: "center",
-                          padding: "30px 30px 20px 30px",
-                          borderBottom: `2px solid ${primaryColor}`,
+                          padding: "32px 32px 24px 32px",
+                          background: `linear-gradient(135deg, ${primaryColor} 0%, #1D4ED8 100%)`,
                         }}
                       >
                         <h1
                           style={{
-                            color: primaryColor,
+                            color: "#FFFFFF",
                             margin: 0,
-                            fontSize: "24px",
-                            fontWeight: "600",
+                            fontSize: "28px",
+                            fontWeight: "700",
                           }}
                         >
-                          🏥 Discharge Instructions
+                          🐾 Discharge Instructions
                         </h1>
                         {clinicName && (
                           <p
                             style={{
-                              margin: "10px 0 0 0",
+                              margin: "12px 0 0 0",
                               fontSize: "16px",
-                              color: "#666",
+                              color: "rgba(255, 255, 255, 0.9)",
                             }}
                           >
                             {clinicName}
@@ -120,182 +596,174 @@ export function DischargeEmailTemplate({
                       </td>
                     </tr>
 
-                    {/* Content */}
+                    {/* Patient Info Card */}
                     <tr>
-                      <td style={{ padding: "30px" }}>
-                        {/* Patient Info */}
+                      <td style={{ padding: "24px 24px 0 24px" }}>
                         <table
                           role="presentation"
                           style={{
                             width: "100%",
-                            backgroundColor: "#F3F4F6",
-                            borderRadius: "6px",
-                            padding: "15px",
-                            marginBottom: "25px",
+                            backgroundColor: "#F9FAFB",
+                            borderRadius: "8px",
+                            border: `1px solid ${colors.border}`,
                           }}
                         >
                           <tbody>
                             <tr>
-                              <td>
-                                <p
-                                  style={{
-                                    margin: "5px 0",
-                                    fontSize: "14px",
-                                    color: "#333",
-                                  }}
-                                >
-                                  <strong>Patient:</strong> {patientName}
-                                </p>
-                                {breed && (
-                                  <p
-                                    style={{
-                                      margin: "5px 0",
-                                      fontSize: "14px",
-                                      color: "#333",
-                                    }}
-                                  >
-                                    <strong>Breed:</strong> {breed}
-                                  </p>
-                                )}
-                                {species && (
-                                  <p
-                                    style={{
-                                      margin: "5px 0",
-                                      fontSize: "14px",
-                                      color: "#333",
-                                    }}
-                                  >
-                                    <strong>Species:</strong> {species}
-                                  </p>
-                                )}
-                                <p
-                                  style={{
-                                    margin: "5px 0",
-                                    fontSize: "14px",
-                                    color: "#333",
-                                  }}
-                                >
-                                  <strong>Date:</strong> {date}
-                                </p>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-
-                        {/* Introduction */}
-                        <p
-                          style={{
-                            margin: "0 0 20px 0",
-                            fontSize: "15px",
-                            color: "#333",
-                          }}
-                        >
-                          Thank you for trusting us with {patientName}&apos;s
-                          care. Please review the following discharge
-                          instructions carefully:
-                        </p>
-
-                        {/* Discharge Summary Content */}
-                        <div
-                          style={{
-                            whiteSpace: "pre-wrap",
-                            fontSize: "15px",
-                            lineHeight: "1.6",
-                            color: "#333",
-                            marginBottom: "25px",
-                          }}
-                        >
-                          {dischargeSummaryContent}
-                        </div>
-
-                        {/* Warning Banner */}
-                        <table
-                          role="presentation"
-                          style={{
-                            width: "100%",
-                            backgroundColor: "#FEF3C7",
-                            borderRadius: "4px",
-                            padding: "15px",
-                            borderLeft: "4px solid #F59E0B",
-                            marginTop: "30px",
-                          }}
-                        >
-                          <tbody>
-                            <tr>
-                              <td>
+                              <td style={{ padding: "16px" }}>
                                 <p
                                   style={{
                                     margin: "0 0 8px 0",
-                                    fontWeight: "bold",
-                                    color: "#92400E",
-                                    fontSize: "14px",
+                                    fontSize: "20px",
+                                    fontWeight: "700",
+                                    color: "#111827",
                                   }}
                                 >
-                                  ⚠️ Important Reminder
+                                  🐕 {patientName}
                                 </p>
                                 <p
                                   style={{
                                     margin: 0,
                                     fontSize: "14px",
-                                    lineHeight: "1.6",
-                                    color: "#92400E",
+                                    color: "#6B7280",
                                   }}
                                 >
-                                  If you notice any concerning symptoms or have
-                                  questions about {patientName}&apos;s recovery,
-                                  please don&apos;t hesitate to contact us
-                                  immediately.
+                                  {[species, breed].filter(Boolean).join(" • ")}
+                                  {(Boolean(species) || Boolean(breed)) &&
+                                    " • "}
+                                  {date}
                                 </p>
                               </td>
                             </tr>
                           </tbody>
                         </table>
+                      </td>
+                    </tr>
 
-                        {/* Contact Info (if available) */}
+                    {/* Main Content */}
+                    <tr>
+                      <td style={{ padding: "24px" }}>
+                        {/* Introduction */}
+                        <p
+                          style={{
+                            margin: "0 0 24px 0",
+                            fontSize: "15px",
+                            color: "#4B5563",
+                            textAlign: "center",
+                          }}
+                        >
+                          Thank you for trusting us with {patientName}&apos;s
+                          care! Here&apos;s everything you need to know:
+                        </p>
+
+                        {/* Content - Structured or Plaintext */}
+                        {hasStructuredContent ? (
+                          <StructuredContent
+                            content={structuredContent}
+                            patientName={patientName}
+                          />
+                        ) : dischargeSummaryContent ? (
+                          <PlaintextContent content={dischargeSummaryContent} />
+                        ) : (
+                          <p
+                            style={{ color: colors.muted, fontStyle: "italic" }}
+                          >
+                            No discharge instructions available.
+                          </p>
+                        )}
+
+                        {/* Generic Warning (only for plaintext) */}
+                        {!hasStructuredContent && (
+                          <table
+                            role="presentation"
+                            style={{
+                              width: "100%",
+                              backgroundColor: "#FEF3C7",
+                              borderRadius: "6px",
+                              borderLeft: `4px solid ${colors.warning}`,
+                              marginTop: "24px",
+                            }}
+                          >
+                            <tbody>
+                              <tr>
+                                <td style={{ padding: "16px" }}>
+                                  <p
+                                    style={{
+                                      margin: "0 0 8px 0",
+                                      fontWeight: "600",
+                                      color: "#92400E",
+                                      fontSize: "14px",
+                                    }}
+                                  >
+                                    ⚠️ Important Reminder
+                                  </p>
+                                  <p
+                                    style={{
+                                      margin: 0,
+                                      fontSize: "14px",
+                                      color: "#92400E",
+                                    }}
+                                  >
+                                    If you notice any concerning symptoms or
+                                    have questions about {patientName}&apos;s
+                                    recovery, please contact us immediately.
+                                  </p>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        )}
+
+                        {/* Contact Info */}
                         {(clinicPhone ?? clinicEmail) && (
                           <table
                             role="presentation"
                             style={{
                               width: "100%",
-                              backgroundColor: "#F9FAFB",
-                              borderRadius: "6px",
-                              padding: "15px",
-                              marginTop: "20px",
+                              backgroundColor: "#EFF6FF",
+                              borderRadius: "8px",
+                              marginTop: "24px",
                             }}
                           >
                             <tbody>
                               <tr>
-                                <td>
+                                <td
+                                  style={{
+                                    padding: "16px",
+                                    textAlign: "center",
+                                  }}
+                                >
                                   <p
                                     style={{
-                                      margin: "0 0 10px 0",
-                                      fontSize: "14px",
+                                      margin: "0 0 12px 0",
+                                      fontSize: "15px",
                                       fontWeight: "600",
-                                      color: "#333",
+                                      color: "#1E40AF",
                                     }}
                                   >
-                                    Contact Information:
+                                    📞 Questions? Contact Us!
                                   </p>
                                   {clinicPhone && (
                                     <p
                                       style={{
-                                        margin: "5px 0",
-                                        fontSize: "14px",
-                                        color: "#555",
+                                        margin: "4px 0",
+                                        fontSize: "16px",
+                                        color: "#1E40AF",
+                                        fontWeight: "500",
                                       }}
                                     >
-                                      <strong>Phone:</strong> {clinicPhone}
+                                      {clinicPhone}
                                     </p>
                                   )}
                                   {clinicEmail && (
                                     <p
                                       style={{
-                                        margin: "5px 0",
+                                        margin: "4px 0",
                                         fontSize: "14px",
-                                        color: "#555",
+                                        color: "#3B82F6",
                                       }}
                                     >
-                                      <strong>Email:</strong> {clinicEmail}
+                                      {clinicEmail}
                                     </p>
                                   )}
                                 </td>
@@ -310,33 +778,31 @@ export function DischargeEmailTemplate({
                     <tr>
                       <td
                         style={{
-                          backgroundColor: "#f9fafb",
-                          padding: "20px 30px",
+                          backgroundColor: "#F9FAFB",
+                          padding: "20px 24px",
                           textAlign: "center",
-                          borderTop: "1px solid #e5e7eb",
+                          borderTop: `1px solid ${colors.border}`,
                         }}
                       >
                         <p
                           style={{
-                            margin: "0 0 5px 0",
+                            margin: "0 0 4px 0",
                             fontSize: "12px",
-                            color: "#6b7280",
-                            lineHeight: "1.5",
+                            color: "#9CA3AF",
                           }}
                         >
-                          This email was sent by OdisAI on behalf of your
-                          veterinary clinic.
+                          Sent with ❤️ by OdisAI on behalf of your veterinary
+                          clinic
                         </p>
                         <p
                           style={{
                             margin: 0,
                             fontSize: "12px",
-                            color: "#6b7280",
-                            lineHeight: "1.5",
+                            color: "#9CA3AF",
                           }}
                         >
-                          Please do not reply to this email. Contact your
-                          veterinarian directly for questions.
+                          Please contact your veterinarian directly for
+                          questions.
                         </p>
                       </td>
                     </tr>

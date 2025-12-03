@@ -107,6 +107,7 @@ export interface BackendCase {
   discharge_summaries?: Array<{
     id: string;
     content: string;
+    structured_content?: Record<string, unknown> | null;
     created_at: string;
   }>;
   soap_notes?: Array<{

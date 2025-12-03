@@ -550,6 +550,144 @@ export type Database = {
           },
         ];
       };
+      discharge_batch_items: {
+        Row: {
+          batch_id: string;
+          call_id: string | null;
+          call_scheduled: boolean | null;
+          case_id: string | null;
+          created_at: string | null;
+          email_id: string | null;
+          email_scheduled: boolean | null;
+          error_message: string | null;
+          id: string;
+          patient_id: string | null;
+          processed_at: string | null;
+          status: string;
+        };
+        Insert: {
+          batch_id: string;
+          call_id?: string | null;
+          call_scheduled?: boolean | null;
+          case_id?: string | null;
+          created_at?: string | null;
+          email_id?: string | null;
+          email_scheduled?: boolean | null;
+          error_message?: string | null;
+          id?: string;
+          patient_id?: string | null;
+          processed_at?: string | null;
+          status?: string;
+        };
+        Update: {
+          batch_id?: string;
+          call_id?: string | null;
+          call_scheduled?: boolean | null;
+          case_id?: string | null;
+          created_at?: string | null;
+          email_id?: string | null;
+          email_scheduled?: boolean | null;
+          error_message?: string | null;
+          id?: string;
+          patient_id?: string | null;
+          processed_at?: string | null;
+          status?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "discharge_batch_items_batch_id_fkey";
+            columns: ["batch_id"];
+            isOneToOne: false;
+            referencedRelation: "discharge_batches";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "discharge_batch_items_call_id_fkey";
+            columns: ["call_id"];
+            isOneToOne: false;
+            referencedRelation: "scheduled_discharge_calls";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "discharge_batch_items_case_id_fkey";
+            columns: ["case_id"];
+            isOneToOne: false;
+            referencedRelation: "cases";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "discharge_batch_items_email_id_fkey";
+            columns: ["email_id"];
+            isOneToOne: false;
+            referencedRelation: "scheduled_discharge_emails";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "discharge_batch_items_patient_id_fkey";
+            columns: ["patient_id"];
+            isOneToOne: false;
+            referencedRelation: "patients";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      discharge_batches: {
+        Row: {
+          call_schedule_time: string;
+          cancelled_at: string | null;
+          completed_at: string | null;
+          created_at: string | null;
+          email_schedule_time: string;
+          error_summary: Json | null;
+          failed_cases: number;
+          id: string;
+          metadata: Json | null;
+          processed_cases: number;
+          started_at: string | null;
+          status: string;
+          successful_cases: number;
+          total_cases: number;
+          updated_at: string | null;
+          user_id: string | null;
+        };
+        Insert: {
+          call_schedule_time: string;
+          cancelled_at?: string | null;
+          completed_at?: string | null;
+          created_at?: string | null;
+          email_schedule_time: string;
+          error_summary?: Json | null;
+          failed_cases?: number;
+          id?: string;
+          metadata?: Json | null;
+          processed_cases?: number;
+          started_at?: string | null;
+          status?: string;
+          successful_cases?: number;
+          total_cases?: number;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Update: {
+          call_schedule_time?: string;
+          cancelled_at?: string | null;
+          completed_at?: string | null;
+          created_at?: string | null;
+          email_schedule_time?: string;
+          error_summary?: Json | null;
+          failed_cases?: number;
+          id?: string;
+          metadata?: Json | null;
+          processed_cases?: number;
+          started_at?: string | null;
+          status?: string;
+          successful_cases?: number;
+          total_cases?: number;
+          updated_at?: string | null;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
       discharge_summaries: {
         Row: {
           case_id: string;
@@ -558,6 +696,7 @@ export type Database = {
           generation_id: string | null;
           id: string;
           soap_note_id: string | null;
+          structured_content: Json | null;
           template_id: string | null;
           updated_at: string;
           user_id: string;
@@ -569,6 +708,7 @@ export type Database = {
           generation_id?: string | null;
           id?: string;
           soap_note_id?: string | null;
+          structured_content?: Json | null;
           template_id?: string | null;
           updated_at?: string;
           user_id: string;
@@ -580,6 +720,7 @@ export type Database = {
           generation_id?: string | null;
           id?: string;
           soap_note_id?: string | null;
+          structured_content?: Json | null;
           template_id?: string | null;
           updated_at?: string;
           user_id?: string;
@@ -834,10 +975,13 @@ export type Database = {
           id: string;
           is_active: boolean;
           last_used_at: string | null;
+          last_validated_at: string | null;
           password_encrypted: string;
+          sync_enabled: boolean;
           updated_at: string;
           user_id: string;
           username_encrypted: string;
+          validation_status: string;
         };
         Insert: {
           clinic_id?: string | null;
@@ -846,10 +990,13 @@ export type Database = {
           id?: string;
           is_active?: boolean;
           last_used_at?: string | null;
+          last_validated_at?: string | null;
           password_encrypted: string;
+          sync_enabled?: boolean;
           updated_at?: string;
           user_id: string;
           username_encrypted: string;
+          validation_status?: string;
         };
         Update: {
           clinic_id?: string | null;
@@ -858,10 +1005,13 @@ export type Database = {
           id?: string;
           is_active?: boolean;
           last_used_at?: string | null;
+          last_validated_at?: string | null;
           password_encrypted?: string;
+          sync_enabled?: boolean;
           updated_at?: string;
           user_id?: string;
           username_encrypted?: string;
+          validation_status?: string;
         };
         Relationships: [
           {
@@ -938,11 +1088,16 @@ export type Database = {
           appointments_synced: number | null;
           clinic_id: string;
           completed_at: string | null;
+          consultations_failed: number;
           consultations_synced: number | null;
           created_at: string;
+          credential_id: string | null;
+          discharge_calls_scheduled: number;
+          error_details: Json | null;
           error_message: string | null;
           id: string;
           metadata: Json | null;
+          next_scheduled_sync: string | null;
           session_type: string;
           started_at: string | null;
           status: string;
@@ -953,11 +1108,16 @@ export type Database = {
           appointments_synced?: number | null;
           clinic_id: string;
           completed_at?: string | null;
+          consultations_failed?: number;
           consultations_synced?: number | null;
           created_at?: string;
+          credential_id?: string | null;
+          discharge_calls_scheduled?: number;
+          error_details?: Json | null;
           error_message?: string | null;
           id?: string;
           metadata?: Json | null;
+          next_scheduled_sync?: string | null;
           session_type: string;
           started_at?: string | null;
           status?: string;
@@ -968,11 +1128,16 @@ export type Database = {
           appointments_synced?: number | null;
           clinic_id?: string;
           completed_at?: string | null;
+          consultations_failed?: number;
           consultations_synced?: number | null;
           created_at?: string;
+          credential_id?: string | null;
+          discharge_calls_scheduled?: number;
+          error_details?: Json | null;
           error_message?: string | null;
           id?: string;
           metadata?: Json | null;
+          next_scheduled_sync?: string | null;
           session_type?: string;
           started_at?: string | null;
           status?: string;
@@ -985,6 +1150,13 @@ export type Database = {
             columns: ["clinic_id"];
             isOneToOne: false;
             referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "idexx_sync_sessions_credential_id_fkey";
+            columns: ["credential_id"];
+            isOneToOne: false;
+            referencedRelation: "idexx_credentials";
             referencedColumns: ["id"];
           },
         ];
