@@ -602,10 +602,10 @@ export function DischargeManagementClient() {
             const isThisCaseLoading = loadingCase?.caseId === c.id;
             const isLoadingCall =
               isThisCaseLoading &&
-              (loadingCase?.type === "call" ?? loadingCase?.type === "both");
+              (loadingCase?.type === "call" || loadingCase?.type === "both");
             const isLoadingEmail =
               isThisCaseLoading &&
-              (loadingCase?.type === "email" ?? loadingCase?.type === "both");
+              (loadingCase?.type === "email" || loadingCase?.type === "both");
 
             return (
               <div
