@@ -271,7 +271,7 @@ export const casesRouter = createTRPCRouter({
       });
     }
 
-    if (!data ?? data.length === 0) {
+    if (!data || data.length === 0) {
       return null;
     }
 
