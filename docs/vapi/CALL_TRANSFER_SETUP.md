@@ -2,86 +2,84 @@
 
 ## Overview
 
-The VAPI system prompt (`VAPI_SYSTEM_PROMPT.txt`) is designed to identify situations where pet owners need to speak directly with the clinic or emergency services. To enable seamless call transfers, you need to configure the `transferCall` function in your VAPI assistant.
+The VAPI system is configured to support **warm transfers** - allowing the AI assistant to connect pet owners directly to the clinic front desk when urgent concerns arise. This uses VAPI's `warm-transfer-experimental` mode with a dedicated transfer assistant that briefs the front desk before connecting the parties.
 
-## Current Behavior (Without Transfer)
+## Current Behavior (Automatic)
 
-Currently, the assistant can:
+The system **automatically configures warm transfers** when:
 
-- Identify urgent/emergency situations
-- Provide phone numbers for the clinic and emergency services
-- Strongly encourage owners to call immediately
-- End the call so the owner can make the necessary call
+- The user has a `clinic_phone` set in their profile (E.164 format: `+15551234567`)
+- A scheduled discharge call is executed
 
-## Enhanced Behavior (With Transfer Configured)
+No manual VAPI dashboard configuration is required.
 
-Once configured, the assistant will be able to:
+## How Warm Transfers Work
 
-- Identify urgent/emergency situations
-- **Offer to transfer the owner directly** to the clinic or emergency line
-- Execute seamless transfers without requiring the owner to hang up and dial
+1. **Pet owner reports urgent symptoms** during the follow-up call
+2. **AI offers to connect them** to the clinic directly
+3. **Owner accepts** → AI says "I'll connect you to our clinic right now. Please hold."
+4. **Transfer assistant calls the clinic** and briefly informs the front desk:
+   - "Hi, I have [Owner Name] on the line regarding [Pet Name]. They have a concern about [condition]. Are you available?"
+5. **Front desk accepts** → Parties are connected, AI exits
+6. **If transfer fails** → Owner is returned to the AI with the clinic phone number
 
----
+## Configuration
 
-## Configuration Steps
+### Required: Clinic Phone Number
 
-### Step 1: Access VAPI Dashboard
+Users must have their clinic phone number set in E.164 format:
 
-1. Go to [VAPI Dashboard](https://dashboard.vapi.ai)
-2. Navigate to **Assistants**
-3. Select your assistant (configured via `VAPI_ASSISTANT_ID`)
+- **Database field**: `users.clinic_phone`
+- **Format**: `+15551234567` (with country code)
+- **Set via**: User settings page or admin panel
 
-### Step 2: Add Transfer Function
+### Automatic Tool Configuration
 
-1. In the assistant settings, find the **Functions** or **Tools** section
-2. Add a new function with the following configuration:
+The `transferToClinic` tool is automatically added to calls when `clinic_phone` is available.
 
-```json
+**Tool Configuration** (see `src/lib/vapi/warm-transfer.ts`):
+
+```typescript
 {
-  "type": "function",
-  "function": {
-    "name": "transferCall",
-    "description": "Transfer the call to the veterinary clinic or emergency services when the pet owner needs immediate assistance",
-    "parameters": {
-      "type": "object",
-      "properties": {
-        "destination": {
-          "type": "string",
-          "enum": ["clinic", "emergency"],
-          "description": "Where to transfer the call: 'clinic' for regular clinic line, 'emergency' for 24/7 emergency services"
-        },
-        "reason": {
-          "type": "string",
-          "description": "Brief reason for the transfer (e.g., 'urgent symptoms', 'emergency situation')"
+  type: "transferCall",
+  function: {
+    name: "transferToClinic",
+    description: "Transfer the call to the clinic front desk when the pet owner requests to speak with staff or has urgent concerns"
+  },
+  destinations: [{
+    type: "number",
+    number: "+15551234567", // From users.clinic_phone
+    transferPlan: {
+      mode: "warm-transfer-experimental",
+      transferAssistant: {
+        firstMessage: "Hi, I have [Owner] on the line regarding [Pet]. They have a concern about [condition]. Are you available?",
+        maxDurationSeconds: 60,
+        silenceTimeoutSeconds: 20,
+        model: {
+          provider: "openai",
+          model: "gpt-4o-mini",
+          messages: [{ role: "system", content: "..." }]
         }
-      },
-      "required": ["destination"]
+      }
     }
-  }
+  }],
+  messages: [
+    { type: "request-start", content: "I'll connect you to our clinic right now. Please hold." },
+    { type: "request-failed", content: "I'm sorry, I wasn't able to connect you..." }
+  ]
 }
 ```
 
-### Step 3: Configure Transfer Destinations
+### System Prompt Integration
 
-Configure the function to use dynamic variables for phone numbers:
+The system prompts have been updated to use the transfer tool:
 
-- **Clinic Destination**: `{{clinic_phone}}`
-- **Emergency Destination**: `{{emergency_phone}}`
-
-These variables are automatically populated from:
-
-- User settings in the database (`users.clinic_phone`, `users.emergency_phone`)
-- Call-specific overrides in `scheduled_discharge_calls.dynamic_variables`
-
-### Step 4: Update System Prompt (Already Done)
-
-The system prompt has been updated to handle transfer scenarios:
-
-**Phase 6: Transfer Protocol** (lines 196-225 in VAPI_SYSTEM_PROMPT.txt)
+**Phase 6/9: Transfer Protocol**
 
 - Identifies emergency vs. urgent situations
-- Offers transfer option to the owner
-- Provides fallback phone numbers if transfer is not configured
+- Offers to connect the owner directly to the clinic
+- Uses `transferToClinic` tool when owner accepts
+- Provides fallback phone number if transfer fails
 
 ---
 

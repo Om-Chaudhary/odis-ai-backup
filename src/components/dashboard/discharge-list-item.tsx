@@ -263,32 +263,8 @@ export function DischargeListItem({
   };
 
   // Render primary action buttons (Call and Email side by side)
+  // Always show Call and Email buttons regardless of workflow status
   const renderPrimaryActions = () => {
-    if (workflowStatus === "in_progress") {
-      return (
-        <Button disabled className="gap-2" variant="secondary" size="sm">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          In Progress
-        </Button>
-      );
-    }
-
-    if (workflowStatus === "completed") {
-      return (
-        <Link href={`/dashboard/discharges/${caseData.id}`}>
-          <Button
-            variant="outline"
-            size="sm"
-            className="transition-smooth gap-2 hover:bg-slate-50"
-          >
-            <Eye className="h-4 w-4" />
-            View
-          </Button>
-        </Link>
-      );
-    }
-
-    // For failed and ready states, show both Call and Email buttons
     const canCall = hasValidContact(effectivePhone);
     const canEmail = hasValidContact(effectiveEmail);
     const isReady = caseData.is_ready_for_discharge;
@@ -310,79 +286,20 @@ export function DischargeListItem({
           ? `Test email to ${testContactEmail}`
           : "Send discharge email";
 
-    if (workflowStatus === "failed") {
-      // Check which type failed
-      const hasFailedCall = caseData.scheduled_discharge_calls.some(
-        (c) => c.status === "failed",
-      );
-      const hasFailedEmail = caseData.scheduled_discharge_emails.some(
-        (e) => e.status === "failed",
-      );
+    // Show in-progress indicator alongside buttons if a discharge is in progress
+    const showInProgressIndicator = workflowStatus === "in_progress";
 
-      return (
-        <div className="flex items-center gap-1.5">
-          {hasFailedCall && (
-            <Button
-              onClick={() => onTriggerCall(caseData.id)}
-              disabled={isLoadingCall || !canCall || !isReady}
-              variant="destructive"
-              size="sm"
-              className="transition-smooth gap-1.5"
-              title={callTooltip}
-            >
-              {isLoadingCall ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Phone className="h-4 w-4" />
-              )}
-              Retry Call
-            </Button>
-          )}
-          {hasFailedEmail && (
-            <Button
-              onClick={() => onTriggerEmail(caseData.id)}
-              disabled={isLoadingEmail || !canEmail || !isReady}
-              variant="destructive"
-              size="sm"
-              className="transition-smooth gap-1.5"
-              title={emailTooltip}
-            >
-              {isLoadingEmail ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Mail className="h-4 w-4" />
-              )}
-              Retry Email
-            </Button>
-          )}
-          {!hasFailedCall && !hasFailedEmail && (
-            // Fallback if status is failed but no specific failed items
-            <Button
-              onClick={() => onTriggerCall(caseData.id)}
-              disabled={isLoadingCall || !canCall || !isReady}
-              variant="destructive"
-              size="sm"
-              className="transition-smooth gap-1.5"
-              title={callTooltip}
-            >
-              {isLoadingCall ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Phone className="h-4 w-4" />
-              )}
-              Retry
-            </Button>
-          )}
-        </div>
-      );
-    }
-
-    // Default: Ready - show both Call and Email buttons
     return (
       <div className="flex items-center gap-1.5">
+        {showInProgressIndicator && (
+          <div className="flex items-center gap-1 text-xs text-blue-600">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            <span>In Progress</span>
+          </div>
+        )}
         <Button
           onClick={() => onTriggerCall(caseData.id)}
-          disabled={isLoadingCall || !isReady || !canCall}
+          disabled={isLoadingCall || !canCall}
           size="sm"
           className="transition-smooth gap-1.5 hover:shadow-md"
           title={callTooltip}
@@ -396,7 +313,7 @@ export function DischargeListItem({
         </Button>
         <Button
           onClick={() => onTriggerEmail(caseData.id)}
-          disabled={isLoadingEmail || !isReady || !canEmail}
+          disabled={isLoadingEmail || !canEmail}
           size="sm"
           variant="outline"
           className="transition-smooth gap-1.5 hover:bg-slate-50 hover:shadow-md"
