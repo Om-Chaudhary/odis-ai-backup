@@ -245,7 +245,7 @@ export function BatchProgressMonitor({
             <ScrollArea className="h-64 rounded-lg border">
               <div className="p-2">
                 {batchStatus?.discharge_batch_items && Array.isArray(batchStatus.discharge_batch_items)
-                  ? batchStatus.discharge_batch_items.map((item, index) => (
+                  ? batchStatus.discharge_batch_items.map((item: BatchItem, index: number) => (
                       <LogEntry key={item.id ?? index} item={item} />
                     ))
                   : null}
