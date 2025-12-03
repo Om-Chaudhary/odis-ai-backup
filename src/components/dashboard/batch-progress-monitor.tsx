@@ -27,7 +27,7 @@ import { cn } from "~/lib/utils";
 import { api } from "~/trpc/client";
 import type { AppRouterOutputs } from "~/trpc/client";
 
-type BatchStatus = AppRouterOutputs["cases"]["getBatchStatus"];
+type BatchStatus = NonNullable<AppRouterOutputs["cases"]["getBatchStatus"]>;
 type BatchItem = BatchStatus["discharge_batch_items"][0];
 
 interface BatchProgressMonitorProps {
@@ -84,17 +84,20 @@ export function BatchProgressMonitor({
     if (!batchStatus) return;
 
     // Create CSV report
+    const items = Array.isArray(batchStatus.discharge_batch_items)
+      ? batchStatus.discharge_batch_items
+      : [];
     const csvContent = [
       ["Patient Name", "Status", "Email Scheduled", "Call Scheduled", "Error"],
-      ...batchStatus.discharge_batch_items.map((item: BatchItem) => [
+      ...items.map((item: BatchItem) => [
         item.patientName,
         item.status,
         item.email_scheduled ? "Yes" : "No",
         item.call_scheduled ? "Yes" : "No",
-        item.error_message || "",
+        item.error_message ?? "",
       ]),
     ]
-      .map(row => row.join(","))
+      .map((row: string[]) => row.join(","))
       .join("\n");
 
     // Download CSV
@@ -138,8 +141,8 @@ export function BatchProgressMonitor({
               <AlertCircle className="h-4 w-4 text-orange-500" />
             )}
             <span className="text-sm font-medium">
-              Batch Processing: {batchStatus?.processed_cases || 0} of{" "}
-              {batchStatus?.total_cases || 0}
+              Batch Processing: {batchStatus?.processed_cases ?? 0} of{" "}
+              {batchStatus?.total_cases ?? 0}
             </span>
           </div>
           <Button
@@ -171,7 +174,7 @@ export function BatchProgressMonitor({
 
   // Full dialog view
   return (
-    <Dialog open={true} onOpenChange={() => {}}>
+    <Dialog open={true} onOpenChange={() => { /* Dialog is always open */ }}>
       <DialogContent className="max-w-3xl" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <div className="flex items-center justify-between">
@@ -197,7 +200,7 @@ export function BatchProgressMonitor({
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span>
-                {batchStatus?.processed_cases || 0} of {batchStatus?.total_cases || 0}{" "}
+                {batchStatus?.processed_cases ?? 0} of {batchStatus?.total_cases ?? 0}{" "}
                 cases processed
               </span>
               <span className="font-medium">{Math.round(progress)}%</span>
@@ -209,27 +212,27 @@ export function BatchProgressMonitor({
           <div className="grid grid-cols-4 gap-3">
             <StatCard
               label="Total"
-              value={batchStatus?.total_cases || 0}
+              value={batchStatus?.total_cases ?? 0}
               icon={<Clock className="h-4 w-4" />}
               variant="default"
             />
             <StatCard
               label="Successful"
-              value={batchStatus?.successful_cases || 0}
+              value={batchStatus?.successful_cases ?? 0}
               icon={<CheckCircle className="h-4 w-4" />}
               variant="success"
             />
             <StatCard
               label="Failed"
-              value={batchStatus?.failed_cases || 0}
+              value={batchStatus?.failed_cases ?? 0}
               icon={<XCircle className="h-4 w-4" />}
               variant="error"
             />
             <StatCard
               label="Pending"
               value={
-                (batchStatus?.total_cases || 0) -
-                (batchStatus?.processed_cases || 0)
+                (batchStatus?.total_cases ?? 0) -
+                (batchStatus?.processed_cases ?? 0)
               }
               icon={<Loader2 className="h-4 w-4" />}
               variant="pending"
@@ -241,10 +244,12 @@ export function BatchProgressMonitor({
             <h3 className="font-medium">Processing Log</h3>
             <ScrollArea className="h-64 rounded-lg border">
               <div className="p-2">
-                {batchStatus?.discharge_batch_items.map((item: BatchItem, index: number) => (
-                  <LogEntry key={item.id || index} item={item} />
-                ))}
-                {!batchStatus?.discharge_batch_items.length && (
+                {batchStatus?.discharge_batch_items && Array.isArray(batchStatus.discharge_batch_items)
+                  ? batchStatus.discharge_batch_items.map((item, index) => (
+                      <LogEntry key={item.id ?? index} item={item} />
+                    ))
+                  : null}
+                {(!batchStatus?.discharge_batch_items || batchStatus.discharge_batch_items.length === 0) && (
                   <div className="py-8 text-center text-muted-foreground">
                     No items processed yet
                   </div>
@@ -257,7 +262,7 @@ export function BatchProgressMonitor({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Batch Status:</span>
-              <StatusBadge status={batchStatus?.status || "pending"} />
+              <StatusBadge status={batchStatus?.status ?? "pending"} />
             </div>
             {batchStatus?.completed_at && (
               <span className="text-sm text-muted-foreground">

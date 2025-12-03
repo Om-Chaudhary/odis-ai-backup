@@ -91,11 +91,16 @@
       "mcp__github__search_repositories",
       "mcp__Notion__notion-update-page",
       "mcp__Notion__notion-move-pages",
-      "mcp__Notion__notion-create-pages"
+      "mcp__Notion__notion-create-pages",
+      "Bash(vercel --prod:*)"
     ],
     "deny": [],
     "ask": []
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["shadcn", "vapi-mcp", "playwright"]
+  "enabledMcpjsonServers": [
+    "shadcn",
+    "vapi-mcp",
+    "playwright"
+  ]
 }

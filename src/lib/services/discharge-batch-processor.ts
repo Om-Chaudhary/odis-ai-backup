@@ -113,13 +113,13 @@ export class DischargeBatchProcessor {
 
       // Check if already scheduled
       const hasScheduledEmail = Array.isArray(caseData.scheduled_discharge_emails)
-        ? caseData.scheduled_discharge_emails.some((e: any) =>
+        ? caseData.scheduled_discharge_emails.some((e: { status: string }) =>
             e.status === "queued" || e.status === "sent"
           )
         : false;
 
       const hasScheduledCall = Array.isArray(caseData.scheduled_discharge_calls)
-        ? caseData.scheduled_discharge_calls.some((c: any) =>
+        ? caseData.scheduled_discharge_calls.some((c: { status: string }) =>
             ["queued", "ringing", "in_progress", "completed"].includes(c.status)
           )
         : false;
@@ -129,7 +129,7 @@ export class DischargeBatchProcessor {
         eligibleCases.push({
           id: caseData.id,
           patient_id: patient.id,
-          patient_name: patient.name || "Unknown Patient",
+          patient_name: patient.name ?? "Unknown Patient",
           owner_name: patient.owner_name,
           owner_email: patient.owner_email,
           owner_phone: patient.owner_phone,
@@ -151,7 +151,7 @@ export class DischargeBatchProcessor {
     options: BatchProcessingOptions,
   ): Promise<BatchProcessingResult> {
     this.cancelled = false;
-    this.chunkSize = options.chunkSize || 10;
+    this.chunkSize = options.chunkSize ?? 10;
 
     const errors: Array<{ caseId: string; patientName: string; error: string }> = [];
     let processedCount = 0;
@@ -187,14 +187,14 @@ export class DischargeBatchProcessor {
             options.batchId,
             caseData.id,
             "success",
-            result.value.emailId || null,
-            result.value.callId || null,
+            result.value.emailId ?? null,
+            result.value.callId ?? null,
           );
         } else {
           failedCount++;
           const errorMessage = result.status === "rejected"
-            ? (result.reason as Error)?.message || String(result.reason)
-            : (result.status === "fulfilled" ? result.value?.error : null) || "Unknown error";
+            ? (result.reason as Error)?.message ?? String(result.reason)
+            : (result.status === "fulfilled" ? result.value?.error : null) ?? "Unknown error";
 
           errors.push({
             caseId: caseData.id,
@@ -251,7 +251,7 @@ export class DischargeBatchProcessor {
       const orchestrator = new DischargeOrchestrator(this.supabase, this.user);
 
       // Build orchestration request
-      const orchestrationSteps: Record<string, any> = {
+      const orchestrationSteps: Record<string, unknown> = {
         generateSummary: false, // Already has summary
         prepareEmail: false,
         scheduleEmail: false,
@@ -263,7 +263,7 @@ export class DischargeBatchProcessor {
         orchestrationSteps.prepareEmail = true;
         orchestrationSteps.scheduleEmail = {
           recipientEmail: caseData.owner_email,
-          recipientName: caseData.owner_name || "Pet Owner",
+          recipientName: caseData.owner_name ?? "Pet Owner",
           scheduledFor: options.emailScheduleTime,
         };
       }
@@ -300,7 +300,7 @@ export class DischargeBatchProcessor {
       } else {
         const errorMessage = result.metadata.errors
           ?.map(e => e.error)
-          .join("; ") || "Orchestration failed";
+          .join("; ") ?? "Orchestration failed";
 
         return {
           success: false,
@@ -331,7 +331,7 @@ export class DischargeBatchProcessor {
     status: string,
     errors?: Array<{ caseId: string; patientName: string; error: string }>,
   ): Promise<void> {
-    const updateData: Record<string, any> = {
+    const updateData: Record<string, unknown> = {
       status,
       updated_at: new Date().toISOString(),
     };
@@ -470,8 +470,8 @@ export class DischargeBatchProcessor {
 
     // Email: Next day at specified time
     let emailScheduleTime = addDays(now, 1);
-    emailScheduleTime = setHours(emailScheduleTime, hours || 9);
-    emailScheduleTime = setMinutes(emailScheduleTime, minutes || 0);
+    emailScheduleTime = setHours(emailScheduleTime, hours ?? 9);
+    emailScheduleTime = setMinutes(emailScheduleTime, minutes ?? 0);
     emailScheduleTime = setSeconds(emailScheduleTime, 0);
 
     // Call: 2 days from now at 2 PM (default)

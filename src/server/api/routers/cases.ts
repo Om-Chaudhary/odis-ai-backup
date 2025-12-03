@@ -271,7 +271,7 @@ export const casesRouter = createTRPCRouter({
       });
     }
 
-    if (!data || data.length === 0) {
+    if (!data ?? data.length === 0) {
       return null;
     }
 
@@ -298,7 +298,7 @@ export const casesRouter = createTRPCRouter({
         .eq("id", input.id)
         .single();
 
-      if (caseCheckError || !caseCheck) {
+      if (caseCheckError ?? !caseCheck) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Case not found",
@@ -425,7 +425,7 @@ export const casesRouter = createTRPCRouter({
         updateData.owner_name = input.ownerName;
       }
       if (input.ownerEmail !== undefined) {
-        updateData.owner_email = input.ownerEmail || null; // Empty string becomes null
+        updateData.owner_email = input.ownerEmail ?? null; // Empty string becomes null
       }
       if (input.ownerPhone !== undefined) {
         updateData.owner_phone = input.ownerPhone;
@@ -492,7 +492,7 @@ export const casesRouter = createTRPCRouter({
       }
       if (input.patientData.ownerEmail !== undefined) {
         // Allow clearing the email by converting empty string to null
-        updateData.owner_email = input.patientData.ownerEmail || null;
+        updateData.owner_email = input.patientData.ownerEmail ?? null;
       }
       if (input.patientData.ownerPhone) {
         updateData.owner_phone = input.patientData.ownerPhone;
@@ -543,7 +543,7 @@ export const casesRouter = createTRPCRouter({
       // If not provided, the orchestrator/service will use user's default override or system defaults
 
       // Handle email discharge
-      if (input.dischargeType === "email" || input.dischargeType === "both") {
+      if (input.dischargeType === "email" ?? input.dischargeType === "both") {
         if (input.patientData.ownerEmail) {
           orchestrationSteps.prepareEmail = true;
           orchestrationSteps.scheduleEmail = {
@@ -557,7 +557,7 @@ export const casesRouter = createTRPCRouter({
       }
 
       // Handle call discharge
-      if (input.dischargeType === "call" || input.dischargeType === "both") {
+      if (input.dischargeType === "call" ?? input.dischargeType === "both") {
         if (input.patientData.ownerPhone) {
           orchestrationSteps.scheduleCall = {
             phoneNumber: input.patientData.ownerPhone,
@@ -614,9 +614,9 @@ export const casesRouter = createTRPCRouter({
 
           // Check if the intended actions actually succeeded despite the error
           const intendedCall =
-            input.dischargeType === "call" || input.dischargeType === "both";
+            input.dischargeType === "call" ?? input.dischargeType === "both";
           const intendedEmail =
-            input.dischargeType === "email" || input.dischargeType === "both";
+            input.dischargeType === "email" ?? input.dischargeType === "both";
 
           const callSucceeded = result.data?.call?.callId;
           const emailSucceeded = result.data?.emailSchedule?.emailId;
@@ -893,7 +893,7 @@ export const casesRouter = createTRPCRouter({
               c.patient as unknown as { owner_name?: string }
             )?.owner_name?.toLowerCase() ?? "";
           return (
-            patientName.includes(searchLower) || ownerName.includes(searchLower)
+            patientName.includes(searchLower) ?? ownerName.includes(searchLower)
           );
         });
       }
@@ -977,7 +977,7 @@ export const casesRouter = createTRPCRouter({
         .eq("id", input.id)
         .single();
 
-      if (fetchError || !caseData) {
+      if (fetchError ?? !caseData) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Case not found",
@@ -1065,7 +1065,7 @@ export const casesRouter = createTRPCRouter({
             .eq("id", entry.userId)
             .single();
 
-          if (userError || !user) {
+          if (userError ?? !user) {
             results.failed.push({
               patientName: entry.patientName,
               error: "User not found",
@@ -1083,7 +1083,7 @@ export const casesRouter = createTRPCRouter({
             .select()
             .single();
 
-          if (patientError || !patient) {
+          if (patientError ?? !patient) {
             results.failed.push({
               patientName: entry.patientName,
               error: `Failed to create patient: ${
@@ -1105,7 +1105,7 @@ export const casesRouter = createTRPCRouter({
             .select()
             .single();
 
-          if (caseError || !caseData) {
+          if (caseError ?? !caseData) {
             // Clean up patient if case creation fails
             await ctx.serviceClient
               .from("patients")
@@ -1354,7 +1354,7 @@ export const casesRouter = createTRPCRouter({
       // Filter for eligible cases
       const eligibleCases = [];
 
-      for (const caseData of cases || []) {
+      for (const caseData of cases ?? []) {
         // Extract patient data
         const patient = Array.isArray(caseData.patients)
           ? caseData.patients[0]
@@ -1377,13 +1377,13 @@ export const casesRouter = createTRPCRouter({
 
         // Check if already scheduled
         const hasScheduledEmail = Array.isArray(caseData.scheduled_discharge_emails)
-          ? caseData.scheduled_discharge_emails.some((e: any) =>
+          ? caseData.scheduled_discharge_emails.some((e: { status: string }) =>
               e.status === "queued" || e.status === "sent"
             )
           : false;
 
         const hasScheduledCall = Array.isArray(caseData.scheduled_discharge_calls)
-          ? caseData.scheduled_discharge_calls.some((c: any) =>
+          ? caseData.scheduled_discharge_calls.some((c: { status: string }) =>
               ["queued", "ringing", "in_progress", "completed"].includes(c.status)
             )
           : false;
@@ -1393,7 +1393,7 @@ export const casesRouter = createTRPCRouter({
           eligibleCases.push({
             id: caseData.id,
             patientId: patient.id,
-            patientName: patient.name || "Unknown Patient",
+            patientName: patient.name ?? "Unknown Patient",
             ownerName: patient.owner_name,
             ownerEmail: patient.owner_email,
             ownerPhone: patient.owner_phone,
@@ -1432,7 +1432,7 @@ export const casesRouter = createTRPCRouter({
         .select("id")
         .single();
 
-      if (batchError || !batch) {
+      if (batchError ?? !batch) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to create batch",
@@ -1489,7 +1489,7 @@ export const casesRouter = createTRPCRouter({
         .eq("user_id", ctx.user.id)
         .single();
 
-      if (batchError || !batch) {
+      if (batchError ?? !batch) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Batch not found",
@@ -1497,7 +1497,8 @@ export const casesRouter = createTRPCRouter({
       }
 
       // Get case details for items
-      const caseIds = batch.discharge_batch_items.map((item: any) => item.case_id);
+      const batchItems = batch.discharge_batch_items as Array<{ case_id: string }>;
+      const caseIds = batchItems.map((item) => item.case_id);
       const { data: cases } = await ctx.supabase
         .from("cases")
         .select(`
@@ -1509,7 +1510,7 @@ export const casesRouter = createTRPCRouter({
         .in("id", caseIds);
 
       // Map patient names to items
-      const itemsWithDetails = batch.discharge_batch_items.map((item: any) => {
+      const itemsWithDetails = batchItems.map((item) => {
         const caseData = cases?.find(c => c.id === item.case_id);
         const patient = Array.isArray(caseData?.patients)
           ? caseData.patients[0]
@@ -1517,7 +1518,7 @@ export const casesRouter = createTRPCRouter({
 
         return {
           ...item,
-          patientName: patient?.name || "Unknown Patient",
+          patientName: patient?.name ?? "Unknown Patient",
         };
       });
 
@@ -1579,6 +1580,6 @@ export const casesRouter = createTRPCRouter({
         });
       }
 
-      return batches || [];
+      return batches ?? [];
     }),
 });

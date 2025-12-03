@@ -196,7 +196,7 @@ export function BatchDischargeDialog({
                       <span className="font-medium">{caseData.patientName}</span>
                       <span className="mx-2 text-muted-foreground">•</span>
                       <span className="text-muted-foreground">
-                        {caseData.ownerName || "No owner name"}
+                        {caseData.ownerName ?? "No owner name"}
                       </span>
                     </div>
                     <div className="flex gap-1">
@@ -253,7 +253,7 @@ export function BatchDischargeDialog({
             <AlertDescription>
               This will schedule {casesWithEmail} discharge emails and {casesWithPhone}{" "}
               follow-up calls. The process will continue even if some cases fail, and
-              you'll receive a detailed report when complete.
+              you&apos;ll receive a detailed report when complete.
             </AlertDescription>
           </Alert>
         </div>

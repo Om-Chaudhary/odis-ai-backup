@@ -87,7 +87,7 @@ export function DischargeManagementClient() {
   // Note: setDateRange is managed by UnifiedFilterBar component
   const [dateRange] = useQueryState("dateRange", {
     defaultValue: "all",
-    parse: (value) => (value as DateRangePreset) || "all",
+    parse: (value) => (value as DateRangePreset) ?? "all",
     serialize: (value) => value,
   });
 
@@ -175,7 +175,7 @@ export function DischargeManagementClient() {
       void refetchCases();
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to update patient information");
+      toast.error(error.message ?? "Failed to update patient information");
     },
   });
 
@@ -188,7 +188,7 @@ export function DischargeManagementClient() {
       void refetchCases();
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to trigger discharge");
+      toast.error(error.message ?? "Failed to trigger discharge");
     },
     onSettled: () => {
       // Clear loading state when mutation completes (success or error)
@@ -226,7 +226,7 @@ export function DischargeManagementClient() {
         toast.success(
           `Batch processing complete: ${data.successCount} successful, ${data.failedCount} failed`,
         );
-      } catch (error) {
+      } catch {
         toast.error("Failed to process batch");
       } finally {
         setIsBatchProcessing(false);
@@ -234,7 +234,7 @@ export function DischargeManagementClient() {
       }
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to create batch");
+      toast.error(error.message ?? "Failed to create batch");
       setIsBatchProcessing(false);
     },
   });
@@ -272,7 +272,7 @@ export function DischargeManagementClient() {
   // Handlers
   const handleTriggerCall = async (caseId: string, patientId: string) => {
     // Prevent double-clicks and concurrent mutations
-    if (isProcessingRef.current || loadingCase !== null) {
+    if (isProcessingRef.current ?? loadingCase !== null) {
       console.log("[Dashboard] Ignoring duplicate call trigger", {
         caseId,
         isProcessing: isProcessingRef.current,
@@ -319,7 +319,7 @@ export function DischargeManagementClient() {
 
   const handleTriggerEmail = async (caseId: string, patientId: string) => {
     // Prevent double-clicks and concurrent mutations
-    if (isProcessingRef.current || loadingCase !== null) {
+    if (isProcessingRef.current ?? loadingCase !== null) {
       console.log("[Dashboard] Ignoring duplicate email trigger", {
         caseId,
         isProcessing: isProcessingRef.current,
@@ -388,8 +388,8 @@ export function DischargeManagementClient() {
 
     // Email: Next day at specified time
     emailScheduleTime = addDays(new Date(), 1);
-    emailScheduleTime = setHours(emailScheduleTime, hours || 9);
-    emailScheduleTime = setMinutes(emailScheduleTime, minutes || 0);
+    emailScheduleTime = setHours(emailScheduleTime, hours ?? 9);
+    emailScheduleTime = setMinutes(emailScheduleTime, minutes ?? 0);
     emailScheduleTime = setSeconds(emailScheduleTime, 0);
 
     // Call: 2 days from now at 2 PM
@@ -455,7 +455,7 @@ export function DischargeManagementClient() {
         // Discharge readiness requirements (SOAP notes, discharge summary, transcription, etc.)
         // are checked on the backend via the readinessFilter parameter.
         // To show only cases ready for discharge, select both "Ready" status and "Ready for Discharge" readiness filter.
-        return (hasValidPhone || hasValidEmail) && hasNoDischarge;
+        return (hasValidPhone ?? hasValidEmail) && hasNoDischarge;
       }
 
       if (statusFilter === "pending") {
@@ -476,7 +476,7 @@ export function DischargeManagementClient() {
         const hasSentEmail = c.scheduled_discharge_emails.some(
           (email) => email.status === "sent",
         );
-        return c.status === "completed" || hasCompletedCall || hasSentEmail;
+        return c.status === "completed" ?? hasCompletedCall ?? hasSentEmail;
       }
 
       if (statusFilter === "failed") {
@@ -486,7 +486,7 @@ export function DischargeManagementClient() {
         const hasFailedEmail = c.scheduled_discharge_emails.some(
           (email) => email.status === "failed",
         );
-        return hasFailedCall || hasFailedEmail;
+        return hasFailedCall ?? hasFailedEmail;
       }
 
       return true;
@@ -536,7 +536,7 @@ export function DischargeManagementClient() {
             variant="outline"
             size="sm"
             onClick={() => setShowBatchDialog(true)}
-            disabled={isLoading || isBatchProcessing}
+            disabled={isLoading ?? isBatchProcessing}
             className="transition-smooth"
           >
             <Send className="mr-2 h-4 w-4" />
@@ -602,10 +602,10 @@ export function DischargeManagementClient() {
             const isThisCaseLoading = loadingCase?.caseId === c.id;
             const isLoadingCall =
               isThisCaseLoading &&
-              (loadingCase?.type === "call" || loadingCase?.type === "both");
+              (loadingCase?.type === "call" ?? loadingCase?.type === "both");
             const isLoadingEmail =
               isThisCaseLoading &&
-              (loadingCase?.type === "email" || loadingCase?.type === "both");
+              (loadingCase?.type === "email" ?? loadingCase?.type === "both");
 
             return (
               <div
@@ -646,7 +646,7 @@ export function DischargeManagementClient() {
             ownerPhone: c.ownerPhone,
             hasEmail: !!c.ownerEmail,
             hasPhone: !!c.ownerPhone,
-          })) || []
+          })) ?? []
         }
         onConfirm={handleBatchDischarge}
         isProcessing={isBatchProcessing}

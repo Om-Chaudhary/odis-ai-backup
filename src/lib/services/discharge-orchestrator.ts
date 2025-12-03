@@ -647,7 +647,7 @@ export class DischargeOrchestrator {
     const patient = this.normalizePatient(caseInfo.patient);
 
     const patientName = patient?.name ?? "your pet";
-    const ownerName = patient?.owner_name ?? "Pet Owner";
+    // const ownerName = patient?.owner_name ?? "Pet Owner"; // Reserved for future use
     const species = patient?.species;
     const breed = patient?.breed;
 

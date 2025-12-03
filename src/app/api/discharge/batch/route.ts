@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       .eq("user_id", user.id)
       .single();
 
-    if (batchError || !batch) {
+    if (batchError ?? !batch) {
       return NextResponse.json(
         { error: "Batch not found" },
         { status: 404 },
@@ -68,7 +68,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Get eligible cases from batch items
-    const caseIds = batch.discharge_batch_items.map((item: any) => item.case_id);
+    const batchItems = batch.discharge_batch_items as Array<{ case_id: string }>;
+    const caseIds = batchItems.map((item) => item.case_id);
 
     // Fetch case details
     const { data: cases, error: casesError } = await supabase
@@ -85,7 +86,7 @@ export async function POST(request: NextRequest) {
       `)
       .in("id", caseIds);
 
-    if (casesError || !cases) {
+    if (casesError ?? !cases) {
       return NextResponse.json(
         { error: "Failed to fetch case details" },
         { status: 500 },
@@ -100,11 +101,11 @@ export async function POST(request: NextRequest) {
 
       return {
         id: caseData.id,
-        patient_id: patient?.id || "",
-        patient_name: patient?.name || "Unknown Patient",
-        owner_name: patient?.owner_name || null,
-        owner_email: patient?.owner_email || null,
-        owner_phone: patient?.owner_phone || null,
+        patient_id: patient?.id ?? "",
+        patient_name: patient?.name ?? "Unknown Patient",
+        owner_name: patient?.owner_name ?? null,
+        owner_email: patient?.owner_email ?? null,
+        owner_phone: patient?.owner_phone ?? null,
         has_discharge_summary: true,
         has_scheduled_email: false,
         has_scheduled_call: false,
@@ -198,7 +199,7 @@ export async function GET(request: NextRequest) {
       .eq("user_id", user.id)
       .single();
 
-    if (error || !batch) {
+    if (error ?? !batch) {
       return NextResponse.json(
         { error: "Batch not found" },
         { status: 404 },
