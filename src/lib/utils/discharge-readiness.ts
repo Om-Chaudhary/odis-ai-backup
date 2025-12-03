@@ -119,7 +119,10 @@ export function checkCaseDischargeReadiness(
   // === CONDITION 1: Content Available ===
   let hasContent = false;
 
-  if (caseData.source === "idexx_neo") {
+  if (
+    caseData.source === "idexx_neo" ||
+    caseData.source === "idexx_extension"
+  ) {
     // IDEXX Neo cases: check metadata.idexx.notes
     const idexxNotes = caseData.metadata?.idexx?.notes;
     hasContent = Boolean(idexxNotes && idexxNotes.trim().length > 0);
