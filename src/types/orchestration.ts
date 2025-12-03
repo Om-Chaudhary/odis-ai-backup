@@ -71,7 +71,7 @@ export interface IngestResult {
 export interface ExtractEntitiesResult {
   caseId: string;
   entities: NormalizedEntities;
-  source: "transcription" | "existing";
+  source: "transcription" | "idexx_consultation_notes" | "existing";
 }
 
 /**

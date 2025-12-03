@@ -458,7 +458,8 @@ export class DischargeOrchestrator {
 
   /**
    * Execute entity extraction step
-   * Extracts structured entities from transcription before summary generation
+   * Extracts structured entities from transcription or IDEXX consultation notes
+   * before summary generation
    */
   private async executeEntityExtraction(
     startTime: number,
@@ -476,12 +477,14 @@ export class DischargeOrchestrator {
 
     console.log("[ORCHESTRATOR] Starting entity extraction", { caseId });
 
-    // Fetch case with transcription
+    // Fetch case with transcription and metadata (for IDEXX cases)
     const { data: caseData, error: caseError } = await this.supabase
       .from("cases")
       .select(
         `
         id,
+        source,
+        metadata,
         entity_extraction,
         transcriptions (id, transcript, created_at)
       `,
@@ -495,7 +498,12 @@ export class DischargeOrchestrator {
       );
     }
 
-    // Get the most recent transcription
+    // Determine the text source for entity extraction
+    let textToExtract: string | null = null;
+    let extractionSource: "transcription" | "idexx_consultation_notes" =
+      "transcription";
+
+    // Priority 1: Try transcription first
     const transcriptions = caseData.transcriptions as Array<{
       id: string;
       transcript: string | null;
@@ -507,33 +515,83 @@ export class DischargeOrchestrator {
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     )?.[0];
 
-    if (!latestTranscription?.transcript) {
+    if (latestTranscription?.transcript) {
+      textToExtract = latestTranscription.transcript;
+      extractionSource = "transcription";
+      console.log("[ORCHESTRATOR] Using transcription for entity extraction", {
+        caseId,
+        transcriptionId: latestTranscription.id,
+        textLength: textToExtract.length,
+      });
+    }
+    // Priority 2: For IDEXX Neo cases, use consultation_notes from metadata
+    else if (
+      caseData.source === "idexx_neo" ||
+      caseData.source === "idexx_extension"
+    ) {
+      const metadata = caseData.metadata as {
+        idexx?: {
+          consultation_notes?: string;
+          notes?: string;
+        };
+      } | null;
+
+      const consultationNotes = metadata?.idexx?.consultation_notes;
+      if (consultationNotes) {
+        // Strip HTML tags for cleaner text extraction
+        textToExtract = consultationNotes
+          .replace(/<[^>]*>/g, " ")
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">")
+          .replace(/&amp;/g, "&")
+          .replace(/&nbsp;/g, " ")
+          .replace(/\s+/g, " ")
+          .trim();
+        extractionSource = "idexx_consultation_notes";
+        console.log(
+          "[ORCHESTRATOR] Using IDEXX consultation notes for entity extraction",
+          {
+            caseId,
+            source: caseData.source,
+            textLength: textToExtract.length,
+          },
+        );
+      }
+    }
+
+    // No text available for extraction
+    if (!textToExtract || textToExtract.length < 50) {
       console.warn(
-        "[ORCHESTRATOR] No transcription found for entity extraction",
+        "[ORCHESTRATOR] No suitable text found for entity extraction",
         {
           caseId,
+          source: caseData.source,
           hasTranscriptions: !!transcriptions?.length,
+          hasIdexxNotes: !!(caseData.metadata as Record<string, unknown>)
+            ?.idexx,
+          textLength: textToExtract?.length ?? 0,
         },
       );
       throw new Error(
-        "No transcription available for entity extraction. Please ensure the case has transcription data.",
+        "No suitable text available for entity extraction. Please ensure the case has transcription data or IDEXX consultation notes.",
       );
     }
 
-    console.log("[ORCHESTRATOR] Extracting entities from transcription", {
+    console.log("[ORCHESTRATOR] Extracting entities", {
       caseId,
-      transcriptionId: latestTranscription.id,
-      transcriptionLength: latestTranscription.transcript.length,
+      source: extractionSource,
+      textLength: textToExtract.length,
     });
 
     // Run entity extraction
     const entities = await extractEntitiesWithRetry(
-      latestTranscription.transcript,
-      "transcription",
+      textToExtract,
+      extractionSource,
     );
 
     console.log("[ORCHESTRATOR] Entity extraction completed", {
       caseId,
+      source: extractionSource,
       hasPatient: !!entities.patient,
       hasClinical: !!entities.clinical,
       confidence: entities.confidence?.overall,
@@ -566,7 +624,7 @@ export class DischargeOrchestrator {
       data: {
         caseId,
         entities,
-        source: "transcription",
+        source: extractionSource,
       } as ExtractEntitiesResult,
     };
   }
