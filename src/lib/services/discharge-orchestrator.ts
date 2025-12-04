@@ -1057,10 +1057,12 @@ export class DischargeOrchestrator {
     const patient = caseInfo ? this.normalizePatient(caseInfo.patient) : null;
     const recipientName = patient?.owner_name ?? undefined;
 
-    // Fetch user settings for schedule delay (same as calls)
+    // Fetch user settings for test mode and schedule delay
     const { data: userSettings, error: userError } = await this.supabase
       .from("users")
-      .select("default_schedule_delay_minutes")
+      .select(
+        "default_schedule_delay_minutes, test_mode_enabled, test_contact_email, test_contact_name",
+      )
       .eq("id", this.user.id)
       .single();
 
@@ -1070,6 +1072,31 @@ export class DischargeOrchestrator {
         userError,
       );
       // Continue with defaults
+    }
+
+    // Check if test mode is enabled
+    const testModeEnabled = userSettings?.test_mode_enabled ?? false;
+    let finalRecipientEmail = recipientEmail;
+    let finalRecipientName = recipientName;
+
+    if (testModeEnabled) {
+      if (!userSettings?.test_contact_email) {
+        throw new Error(
+          "Test mode is enabled but test contact email is not configured in user settings",
+        );
+      }
+
+      console.log(
+        "[ORCHESTRATOR] Test mode enabled - redirecting email to test contact",
+        {
+          originalEmail: recipientEmail,
+          testContactEmail: userSettings.test_contact_email,
+          testContactName: userSettings.test_contact_name,
+        },
+      );
+
+      finalRecipientEmail = userSettings.test_contact_email;
+      finalRecipientName = userSettings.test_contact_name ?? recipientName;
     }
 
     // Default delay in minutes (same as calls: 5 minutes)
@@ -1112,20 +1139,26 @@ export class DischargeOrchestrator {
       });
     }
 
-    // Insert scheduled email
+    // Insert scheduled email (using test contact if test mode enabled)
     const { data: scheduledEmail, error: dbError } = await this.supabase
       .from("scheduled_discharge_emails")
       .insert({
         user_id: this.user.id,
         case_id: caseId ?? null,
-        recipient_email: recipientEmail,
-        recipient_name: recipientName ?? null,
+        recipient_email: finalRecipientEmail,
+        recipient_name: finalRecipientName ?? null,
         subject: emailContent.subject,
         html_content: emailContent.html,
         text_content: emailContent.text,
         scheduled_for: scheduledFor.toISOString(),
         status: "queued",
-        metadata: {},
+        metadata: testModeEnabled
+          ? {
+              test_mode: true,
+              original_recipient_email: recipientEmail,
+              original_recipient_name: recipientName,
+            }
+          : {},
       })
       .select()
       .single();

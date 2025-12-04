@@ -8,7 +8,7 @@ import { TRPCError } from "@trpc/server";
 import { checkCaseDischargeReadiness } from "~/lib/utils/discharge-readiness";
 import type { BackendCase } from "~/types/dashboard";
 import { getClinicByUserId } from "~/lib/clinics/utils";
-import { normalizeToE164, normalizeEmail } from "~/lib/utils/phone";
+import { normalizeEmail, normalizeToE164 } from "~/lib/utils/phone";
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -748,7 +748,7 @@ export const casesRouter = createTRPCRouter({
     const { data, error } = await ctx.supabase
       .from("users")
       .select(
-        "clinic_name, clinic_phone, clinic_email, emergency_phone, first_name, last_name, test_mode_enabled, test_contact_name, test_contact_email, test_contact_phone, voicemail_detection_enabled, voicemail_hangup_on_detection, default_schedule_delay_minutes",
+        "clinic_name, clinic_phone, clinic_email, emergency_phone, first_name, last_name, test_mode_enabled, test_contact_name, test_contact_email, test_contact_phone, voicemail_detection_enabled, voicemail_hangup_on_detection, default_schedule_delay_minutes, preferred_email_start_time, preferred_email_end_time, preferred_call_start_time, preferred_call_end_time, email_delay_days, call_delay_days, max_call_retries, batch_include_idexx_notes, batch_include_manual_transcriptions",
       )
       .eq("id", ctx.user.id)
       .single();
@@ -773,6 +773,13 @@ export const casesRouter = createTRPCRouter({
         ? `${data.first_name} ${data.last_name}`
         : "";
 
+    // Convert TIME columns to HH:mm format for frontend
+    const formatTime = (time: string | null): string | null => {
+      if (!time) return null;
+      // TIME columns come as "HH:MM:SS", extract "HH:MM"
+      return time.substring(0, 5);
+    };
+
     return {
       clinicName,
       clinicPhone,
@@ -791,6 +798,22 @@ export const casesRouter = createTRPCRouter({
       logoUrl: clinic?.logo_url ?? null,
       emailHeaderText: clinic?.email_header_text ?? null,
       emailFooterText: clinic?.email_footer_text ?? null,
+      // Outbound discharge scheduling settings
+      preferredEmailStartTime:
+        formatTime(data?.preferred_email_start_time) ?? "09:00",
+      preferredEmailEndTime:
+        formatTime(data?.preferred_email_end_time) ?? "12:00",
+      preferredCallStartTime:
+        formatTime(data?.preferred_call_start_time) ?? "14:00",
+      preferredCallEndTime:
+        formatTime(data?.preferred_call_end_time) ?? "17:00",
+      emailDelayDays: data?.email_delay_days ?? 1,
+      callDelayDays: data?.call_delay_days ?? 2,
+      maxCallRetries: data?.max_call_retries ?? 3,
+      // Batch discharge preferences
+      batchIncludeIdexxNotes: data?.batch_include_idexx_notes ?? true,
+      batchIncludeManualTranscriptions:
+        data?.batch_include_manual_transcriptions ?? true,
     };
   }),
 
@@ -824,6 +847,33 @@ export const casesRouter = createTRPCRouter({
         logoUrl: z.string().url().nullable().optional(),
         emailHeaderText: z.string().nullable().optional(),
         emailFooterText: z.string().nullable().optional(),
+        // Outbound discharge scheduling settings
+        preferredEmailStartTime: z
+          .string()
+          .regex(/^\d{2}:\d{2}$/)
+          .nullable()
+          .optional(),
+        preferredEmailEndTime: z
+          .string()
+          .regex(/^\d{2}:\d{2}$/)
+          .nullable()
+          .optional(),
+        preferredCallStartTime: z
+          .string()
+          .regex(/^\d{2}:\d{2}$/)
+          .nullable()
+          .optional(),
+        preferredCallEndTime: z
+          .string()
+          .regex(/^\d{2}:\d{2}$/)
+          .nullable()
+          .optional(),
+        emailDelayDays: z.number().int().min(0).max(30).nullable().optional(),
+        callDelayDays: z.number().int().min(0).max(30).nullable().optional(),
+        maxCallRetries: z.number().int().min(0).max(10).nullable().optional(),
+        // Batch discharge preferences
+        batchIncludeIdexxNotes: z.boolean().optional(),
+        batchIncludeManualTranscriptions: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -866,6 +916,45 @@ export const casesRouter = createTRPCRouter({
       if (input.defaultScheduleDelayMinutes !== undefined) {
         userUpdateData.default_schedule_delay_minutes =
           input.defaultScheduleDelayMinutes;
+      }
+      // Outbound discharge scheduling settings
+      if (input.preferredEmailStartTime !== undefined) {
+        userUpdateData.preferred_email_start_time =
+          input.preferredEmailStartTime
+            ? `${input.preferredEmailStartTime}:00`
+            : null;
+      }
+      if (input.preferredEmailEndTime !== undefined) {
+        userUpdateData.preferred_email_end_time = input.preferredEmailEndTime
+          ? `${input.preferredEmailEndTime}:00`
+          : null;
+      }
+      if (input.preferredCallStartTime !== undefined) {
+        userUpdateData.preferred_call_start_time = input.preferredCallStartTime
+          ? `${input.preferredCallStartTime}:00`
+          : null;
+      }
+      if (input.preferredCallEndTime !== undefined) {
+        userUpdateData.preferred_call_end_time = input.preferredCallEndTime
+          ? `${input.preferredCallEndTime}:00`
+          : null;
+      }
+      if (input.emailDelayDays !== undefined) {
+        userUpdateData.email_delay_days = input.emailDelayDays;
+      }
+      if (input.callDelayDays !== undefined) {
+        userUpdateData.call_delay_days = input.callDelayDays;
+      }
+      if (input.maxCallRetries !== undefined) {
+        userUpdateData.max_call_retries = input.maxCallRetries;
+      }
+      // Batch discharge preferences
+      if (input.batchIncludeIdexxNotes !== undefined) {
+        userUpdateData.batch_include_idexx_notes = input.batchIncludeIdexxNotes;
+      }
+      if (input.batchIncludeManualTranscriptions !== undefined) {
+        userUpdateData.batch_include_manual_transcriptions =
+          input.batchIncludeManualTranscriptions;
       }
 
       // Update users table if there are user fields to update
@@ -1436,14 +1525,33 @@ export const casesRouter = createTRPCRouter({
 
   /**
    * Get eligible cases for batch discharge processing
+   * Includes:
+   * - Cases with discharge summaries
+   * - IDEXX Neo cases with consultation_notes in metadata
+   * - Manual cases with transcriptions or SOAP notes
    */
   getEligibleCasesForBatch: protectedProcedure.query(async ({ ctx }) => {
-    // Query cases with discharge summaries and contact info
+    // Get user's batch preferences
+    const { data: userSettings } = await ctx.supabase
+      .from("users")
+      .select("batch_include_idexx_notes, batch_include_manual_transcriptions")
+      .eq("id", ctx.user.id)
+      .single();
+
+    const includeIdexxNotes = userSettings?.batch_include_idexx_notes ?? true;
+    const includeManualTranscriptions =
+      userSettings?.batch_include_manual_transcriptions ?? true;
+
+    // Query all cases with related data (not requiring discharge_summaries)
     const { data: cases, error } = await ctx.supabase
       .from("cases")
       .select(
         `
           id,
+          source,
+          metadata,
+          created_at,
+          scheduled_at,
           patients!inner (
             id,
             name,
@@ -1451,8 +1559,19 @@ export const casesRouter = createTRPCRouter({
             owner_email,
             owner_phone
           ),
-          discharge_summaries!inner (
+          discharge_summaries (
             id
+          ),
+          transcriptions (
+            id,
+            transcript
+          ),
+          soap_notes (
+            id,
+            subjective,
+            objective,
+            assessment,
+            plan
           ),
           scheduled_discharge_emails (
             id,
@@ -1465,7 +1584,7 @@ export const casesRouter = createTRPCRouter({
         `,
       )
       .eq("user_id", ctx.user.id)
-      .eq("status", "completed");
+      .order("created_at", { ascending: false });
 
     if (error) {
       throw new TRPCError({
@@ -1485,13 +1604,6 @@ export const casesRouter = createTRPCRouter({
         : caseData.patients;
 
       if (!patient) continue;
-
-      // Check if has discharge summary
-      const hasDischargeSummary = Array.isArray(caseData.discharge_summaries)
-        ? caseData.discharge_summaries.length > 0
-        : !!caseData.discharge_summaries;
-
-      if (!hasDischargeSummary) continue;
 
       // Check if has valid contact info
       const hasEmail = !!patient.owner_email;
@@ -1517,20 +1629,85 @@ export const casesRouter = createTRPCRouter({
           )
         : false;
 
-      // Only include if not already scheduled
-      if (!hasScheduledEmail && !hasScheduledCall) {
-        eligibleCases.push({
-          id: caseData.id,
-          patientId: patient.id,
-          patientName: patient.name ?? "Unknown Patient",
-          ownerName: patient.owner_name,
-          ownerEmail: patient.owner_email,
-          ownerPhone: patient.owner_phone,
-          hasDischargeSummary: true,
-          hasEmail,
-          hasPhone,
-        });
+      // Skip if already scheduled
+      if (hasScheduledEmail || hasScheduledCall) continue;
+
+      // Check for discharge content eligibility
+      const hasDischargeSummary = Array.isArray(caseData.discharge_summaries)
+        ? caseData.discharge_summaries.length > 0
+        : !!caseData.discharge_summaries;
+
+      // Check for IDEXX Neo consultation notes
+      const metadata = caseData.metadata as {
+        idexx?: { consultation_notes?: string; notes?: string };
+      } | null;
+      const isIdexxSource =
+        caseData.source === "idexx_neo" ||
+        caseData.source === "idexx_extension";
+      const hasIdexxNotes =
+        isIdexxSource &&
+        (Boolean(metadata?.idexx?.consultation_notes) ||
+          Boolean(metadata?.idexx?.notes));
+
+      // Check for transcriptions
+      const transcriptions = caseData.transcriptions as Array<{
+        id: string;
+        transcript: string | null;
+      }> | null;
+      const hasTranscription = Array.isArray(transcriptions)
+        ? transcriptions.some((t) => t.transcript && t.transcript.length > 50)
+        : false;
+
+      // Check for SOAP notes
+      const soapNotes = caseData.soap_notes as Array<{
+        id: string;
+        subjective?: string | null;
+        objective?: string | null;
+        assessment?: string | null;
+        plan?: string | null;
+      }> | null;
+      const hasSoapNotes = Array.isArray(soapNotes)
+        ? soapNotes.some(
+            (s) =>
+              Boolean(s.subjective) ||
+              Boolean(s.objective) ||
+              Boolean(s.assessment) ||
+              Boolean(s.plan),
+          )
+        : false;
+
+      // Determine eligibility based on settings and content
+      let isEligible = hasDischargeSummary; // Always include if has discharge summary
+
+      // Include IDEXX cases with notes if enabled
+      if (includeIdexxNotes && hasIdexxNotes) {
+        isEligible = true;
       }
+
+      // Include manual cases with transcriptions/SOAP if enabled
+      if (includeManualTranscriptions && (hasTranscription || hasSoapNotes)) {
+        isEligible = true;
+      }
+
+      if (!isEligible) continue;
+
+      eligibleCases.push({
+        id: caseData.id,
+        patientId: patient.id,
+        patientName: patient.name ?? "Unknown Patient",
+        ownerName: patient.owner_name,
+        ownerEmail: patient.owner_email,
+        ownerPhone: patient.owner_phone,
+        source: caseData.source,
+        hasEmail,
+        hasPhone,
+        hasDischargeSummary,
+        hasIdexxNotes,
+        hasTranscription,
+        hasSoapNotes,
+        createdAt: caseData.created_at,
+        scheduledAt: caseData.scheduled_at,
+      });
     }
 
     return eligibleCases;
