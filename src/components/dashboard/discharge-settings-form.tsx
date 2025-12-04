@@ -7,13 +7,21 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Switch } from "~/components/ui/switch";
 import { Separator } from "~/components/ui/separator";
-import { Loader2, Info } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import { Loader2, Info, Clock, Mail, Phone, Calendar } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "~/components/ui/tooltip";
+import { Alert, AlertDescription } from "~/components/ui/alert";
 import type { DischargeSettings } from "~/types/dashboard";
 
 interface DischargeSettingsFormProps {
@@ -21,8 +29,30 @@ interface DischargeSettingsFormProps {
   onSave: (settings: DischargeSettings) => void;
   onCancel?: () => void;
   isLoading?: boolean;
-  view?: "all" | "clinic" | "branding" | "system";
+  view?: "all" | "clinic" | "branding" | "system" | "outbound" | "inbound";
 }
+
+// Generate time options from 6 AM to 9 PM in 30-minute intervals
+function generateTimeOptions() {
+  const options = [];
+  for (let hour = 6; hour <= 21; hour++) {
+    for (const minute of [0, 30]) {
+      const time = `${hour.toString().padStart(2, "0")}:${minute.toString().padStart(2, "0")}`;
+      const label = new Date(`2000-01-01T${time}:00`).toLocaleTimeString(
+        "en-US",
+        {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        },
+      );
+      options.push({ value: time, label });
+    }
+  }
+  return options;
+}
+
+const timeOptions = generateTimeOptions();
 
 export function DischargeSettingsForm({
   settings,
@@ -56,16 +86,14 @@ export function DischargeSettingsForm({
   const showClinic = view === "all" || view === "clinic";
   const showBranding = view === "all" || view === "branding";
   const showSystem = view === "all" || view === "system";
+  const showOutbound = view === "all" || view === "outbound";
+  const showInbound = view === "all" || view === "inbound";
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       {showClinic && (
         <>
           <div className="space-y-4">
-            <h4 className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
-              Clinic Information
-            </h4>
-
             <div className="grid gap-5">
               <div className="grid gap-2">
                 <Label htmlFor="clinicName">Clinic Name</Label>
@@ -155,13 +183,436 @@ export function DischargeSettingsForm({
 
       {showClinic && showBranding && <Separator />}
 
+      {showOutbound && (
+        <>
+          <div className="space-y-6">
+            {/* Email Scheduling Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-blue-500" />
+                <h4 className="text-sm font-medium">Email Scheduling</h4>
+              </div>
+
+              <div className="grid gap-4 rounded-lg border p-4">
+                <div className="grid gap-2">
+                  <div className="flex items-center gap-2">
+                    <Label>Preferred Email Window</Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="text-sm">
+                            Discharge emails will be scheduled within this time
+                            window. For batch operations, emails will be sent
+                            during this period.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                      <Label className="text-muted-foreground mb-1 block text-xs">
+                        Start Time
+                      </Label>
+                      <Select
+                        value={watch("preferredEmailStartTime") ?? "09:00"}
+                        onValueChange={(value) =>
+                          setValue("preferredEmailStartTime", value, {
+                            shouldDirty: true,
+                          })
+                        }
+                      >
+                        <SelectTrigger>
+                          <Clock className="mr-2 h-4 w-4" />
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {timeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <span className="text-muted-foreground mt-5">to</span>
+                    <div className="flex-1">
+                      <Label className="text-muted-foreground mb-1 block text-xs">
+                        End Time
+                      </Label>
+                      <Select
+                        value={watch("preferredEmailEndTime") ?? "12:00"}
+                        onValueChange={(value) =>
+                          setValue("preferredEmailEndTime", value, {
+                            shouldDirty: true,
+                          })
+                        }
+                      >
+                        <SelectTrigger>
+                          <Clock className="mr-2 h-4 w-4" />
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {timeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="emailDelayDays">
+                      Days After Appointment
+                    </Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="text-sm">
+                            Number of days to wait after an appointment before
+                            sending the discharge email. Default is 1 day (next
+                            day).
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="emailDelayDays"
+                      type="number"
+                      min="0"
+                      max="30"
+                      className="w-24"
+                      value={watch("emailDelayDays") ?? 1}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setValue(
+                          "emailDelayDays",
+                          value === "" ? 1 : Number.parseInt(value, 10),
+                          { shouldDirty: true },
+                        );
+                      }}
+                    />
+                    <span className="text-muted-foreground text-sm">
+                      day{(watch("emailDelayDays") ?? 1) !== 1 ? "s" : ""} after
+                      appointment
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Call Scheduling Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-green-500" />
+                <h4 className="text-sm font-medium">Call Scheduling</h4>
+              </div>
+
+              <div className="grid gap-4 rounded-lg border p-4">
+                <div className="grid gap-2">
+                  <div className="flex items-center gap-2">
+                    <Label>Preferred Call Window</Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="text-sm">
+                            Follow-up calls will be scheduled within this time
+                            window. Calls are typically made in the afternoon
+                            when pet owners are more available.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                      <Label className="text-muted-foreground mb-1 block text-xs">
+                        Start Time
+                      </Label>
+                      <Select
+                        value={watch("preferredCallStartTime") ?? "14:00"}
+                        onValueChange={(value) =>
+                          setValue("preferredCallStartTime", value, {
+                            shouldDirty: true,
+                          })
+                        }
+                      >
+                        <SelectTrigger>
+                          <Clock className="mr-2 h-4 w-4" />
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {timeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <span className="text-muted-foreground mt-5">to</span>
+                    <div className="flex-1">
+                      <Label className="text-muted-foreground mb-1 block text-xs">
+                        End Time
+                      </Label>
+                      <Select
+                        value={watch("preferredCallEndTime") ?? "17:00"}
+                        onValueChange={(value) =>
+                          setValue("preferredCallEndTime", value, {
+                            shouldDirty: true,
+                          })
+                        }
+                      >
+                        <SelectTrigger>
+                          <Clock className="mr-2 h-4 w-4" />
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {timeOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="callDelayDays">Days After Email</Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="text-sm">
+                            Number of days to wait after sending the discharge
+                            email before making a follow-up call. Default is 2
+                            days.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="callDelayDays"
+                      type="number"
+                      min="0"
+                      max="30"
+                      className="w-24"
+                      value={watch("callDelayDays") ?? 2}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setValue(
+                          "callDelayDays",
+                          value === "" ? 2 : Number.parseInt(value, 10),
+                          { shouldDirty: true },
+                        );
+                      }}
+                    />
+                    <span className="text-muted-foreground text-sm">
+                      day{(watch("callDelayDays") ?? 2) !== 1 ? "s" : ""} after
+                      email
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="maxCallRetries">Max Retry Attempts</Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="text-sm">
+                            Maximum number of times to retry a failed call
+                            (busy, no answer, etc.). Default is 3 attempts.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="maxCallRetries"
+                      type="number"
+                      min="0"
+                      max="10"
+                      className="w-24"
+                      value={watch("maxCallRetries") ?? 3}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setValue(
+                          "maxCallRetries",
+                          value === "" ? 3 : Number.parseInt(value, 10),
+                          { shouldDirty: true },
+                        );
+                      }}
+                    />
+                    <span className="text-muted-foreground text-sm">
+                      attempts
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Batch Discharge Preferences */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-purple-500" />
+                <h4 className="text-sm font-medium">
+                  Batch Discharge Preferences
+                </h4>
+              </div>
+
+              <div className="grid gap-3 rounded-lg border p-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="batch-idexx" className="text-sm">
+                      Include IDEXX Neo Cases
+                    </Label>
+                    <p className="text-muted-foreground text-xs">
+                      Auto-include IDEXX Neo cases with consultation notes in
+                      batch discharge
+                    </p>
+                  </div>
+                  <Switch
+                    id="batch-idexx"
+                    checked={watch("batchIncludeIdexxNotes") ?? true}
+                    onCheckedChange={(checked) =>
+                      setValue("batchIncludeIdexxNotes", checked, {
+                        shouldDirty: true,
+                      })
+                    }
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="batch-manual" className="text-sm">
+                      Include Manual Cases
+                    </Label>
+                    <p className="text-muted-foreground text-xs">
+                      Auto-include manual cases with transcriptions or SOAP
+                      notes
+                    </p>
+                  </div>
+                  <Switch
+                    id="batch-manual"
+                    checked={watch("batchIncludeManualTranscriptions") ?? true}
+                    onCheckedChange={(checked) =>
+                      setValue("batchIncludeManualTranscriptions", checked, {
+                        shouldDirty: true,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Schedule Preview */}
+            <Alert>
+              <Calendar className="h-4 w-4" />
+              <AlertDescription className="text-sm">
+                <strong>Default Schedule Preview:</strong> Based on your
+                settings, batch discharges will:
+                <ul className="mt-2 list-inside list-disc space-y-1">
+                  <li>
+                    Send emails{" "}
+                    <strong>
+                      {watch("emailDelayDays") ?? 1} day
+                      {(watch("emailDelayDays") ?? 1) !== 1 ? "s" : ""}
+                    </strong>{" "}
+                    after appointment between{" "}
+                    <strong>
+                      {watch("preferredEmailStartTime") ?? "9:00 AM"}
+                    </strong>{" "}
+                    and{" "}
+                    <strong>
+                      {watch("preferredEmailEndTime") ?? "12:00 PM"}
+                    </strong>
+                  </li>
+                  <li>
+                    Make follow-up calls{" "}
+                    <strong>
+                      {watch("callDelayDays") ?? 2} day
+                      {(watch("callDelayDays") ?? 2) !== 1 ? "s" : ""}
+                    </strong>{" "}
+                    after email between{" "}
+                    <strong>
+                      {watch("preferredCallStartTime") ?? "2:00 PM"}
+                    </strong>{" "}
+                    and{" "}
+                    <strong>
+                      {watch("preferredCallEndTime") ?? "5:00 PM"}
+                    </strong>
+                  </li>
+                </ul>
+              </AlertDescription>
+            </Alert>
+          </div>
+        </>
+      )}
+
+      {showInbound && (
+        <>
+          <div className="space-y-6">
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Coming Soon:</strong> Inbound call settings will allow
+                you to configure how incoming calls are routed, business hours,
+                and auto-response behaviors.
+              </AlertDescription>
+            </Alert>
+
+            <div className="grid gap-4 rounded-lg border border-dashed p-6 text-center">
+              <div className="bg-muted mx-auto flex h-12 w-12 items-center justify-center rounded-full">
+                <Phone className="text-muted-foreground h-6 w-6" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-medium">Inbound Call Management</h3>
+                <p className="text-muted-foreground mx-auto max-w-md text-sm">
+                  Configure business hours, call routing rules, and automated
+                  responses for incoming calls to your clinic.
+                </p>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
       {showBranding && (
         <>
           <div className="space-y-4">
-            <h4 className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
-              Email Branding
-            </h4>
-
             <div className="grid gap-5">
               <div className="grid gap-2">
                 <div className="flex items-center gap-2">
@@ -269,10 +720,6 @@ export function DischargeSettingsForm({
       {showSystem && (
         <>
           <div className="space-y-4">
-            <h4 className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
-              System Configuration
-            </h4>
-
             {/* Default Schedule Delay Override */}
             <div className="grid gap-2 rounded-lg border border-slate-100 p-3 shadow-sm">
               <div className="flex items-center gap-2">

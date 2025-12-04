@@ -2,13 +2,25 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, Palette, Settings as SettingsIcon } from "lucide-react";
+import {
+  Building2,
+  Palette,
+  Settings as SettingsIcon,
+  Send,
+  PhoneIncoming,
+} from "lucide-react";
 import { DischargeSettingsForm } from "./discharge-settings-form";
 import { api } from "~/trpc/client";
 import type { DischargeSettings } from "~/types/dashboard";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
-import { Card, CardContent } from "~/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "~/components/ui/card";
 
 export function SettingsPageClient() {
   const router = useRouter();
@@ -44,6 +56,17 @@ export function SettingsPageClient() {
     logoUrl: null,
     emailHeaderText: null,
     emailFooterText: null,
+    // Outbound discharge scheduling defaults
+    preferredEmailStartTime: "09:00",
+    preferredEmailEndTime: "12:00",
+    preferredCallStartTime: "14:00",
+    preferredCallEndTime: "17:00",
+    emailDelayDays: 1,
+    callDelayDays: 2,
+    maxCallRetries: 3,
+    // Batch discharge preferences
+    batchIncludeIdexxNotes: true,
+    batchIncludeManualTranscriptions: true,
   };
 
   const handleSave = (newSettings: DischargeSettings) => {
@@ -65,6 +88,18 @@ export function SettingsPageClient() {
       logoUrl: newSettings.logoUrl ?? null,
       emailHeaderText: newSettings.emailHeaderText ?? null,
       emailFooterText: newSettings.emailFooterText ?? null,
+      // Outbound discharge scheduling settings
+      preferredEmailStartTime: newSettings.preferredEmailStartTime ?? null,
+      preferredEmailEndTime: newSettings.preferredEmailEndTime ?? null,
+      preferredCallStartTime: newSettings.preferredCallStartTime ?? null,
+      preferredCallEndTime: newSettings.preferredCallEndTime ?? null,
+      emailDelayDays: newSettings.emailDelayDays ?? null,
+      callDelayDays: newSettings.callDelayDays ?? null,
+      maxCallRetries: newSettings.maxCallRetries ?? null,
+      // Batch discharge preferences
+      batchIncludeIdexxNotes: newSettings.batchIncludeIdexxNotes,
+      batchIncludeManualTranscriptions:
+        newSettings.batchIncludeManualTranscriptions,
     });
   };
 
@@ -96,25 +131,40 @@ export function SettingsPageClient() {
             onValueChange={setActiveTab}
             className="w-full space-y-8"
           >
-            <TabsList className="grid w-full max-w-2xl grid-cols-3 lg:w-1/2">
+            <TabsList className="grid w-full max-w-4xl grid-cols-5">
               <TabsTrigger value="clinic" className="gap-2">
                 <Building2 className="h-4 w-4" />
-                <span>Clinic Info</span>
+                <span className="hidden sm:inline">Clinic Info</span>
+              </TabsTrigger>
+              <TabsTrigger value="outbound" className="gap-2">
+                <Send className="h-4 w-4" />
+                <span className="hidden sm:inline">Outbound</span>
               </TabsTrigger>
               <TabsTrigger value="branding" className="gap-2">
                 <Palette className="h-4 w-4" />
-                <span>Email Branding</span>
+                <span className="hidden sm:inline">Branding</span>
+              </TabsTrigger>
+              <TabsTrigger value="inbound" className="gap-2">
+                <PhoneIncoming className="h-4 w-4" />
+                <span className="hidden sm:inline">Inbound</span>
               </TabsTrigger>
               <TabsTrigger value="system" className="gap-2">
                 <SettingsIcon className="h-4 w-4" />
-                <span>System</span>
+                <span className="hidden sm:inline">System</span>
               </TabsTrigger>
             </TabsList>
 
             <div className="max-w-4xl">
               <TabsContent value="clinic" className="mt-0 space-y-4">
                 <Card>
-                  <CardContent className="pt-6">
+                  <CardHeader>
+                    <CardTitle>Clinic Information</CardTitle>
+                    <CardDescription>
+                      Configure your clinic details that appear in discharge
+                      communications
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
                     <DischargeSettingsForm
                       settings={settings}
                       onSave={handleSave}
@@ -126,9 +176,36 @@ export function SettingsPageClient() {
                 </Card>
               </TabsContent>
 
+              <TabsContent value="outbound" className="mt-0 space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Outbound Discharge Settings</CardTitle>
+                    <CardDescription>
+                      Configure scheduling preferences for discharge emails and
+                      follow-up calls
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <DischargeSettingsForm
+                      settings={settings}
+                      onSave={handleSave}
+                      onCancel={handleCancel}
+                      isLoading={updateSettingsMutation.isPending}
+                      view="outbound"
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
               <TabsContent value="branding" className="mt-0 space-y-4">
                 <Card>
-                  <CardContent className="pt-6">
+                  <CardHeader>
+                    <CardTitle>Email Branding</CardTitle>
+                    <CardDescription>
+                      Customize the appearance of your discharge emails
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
                     <DischargeSettingsForm
                       settings={settings}
                       onSave={handleSave}
@@ -140,9 +217,35 @@ export function SettingsPageClient() {
                 </Card>
               </TabsContent>
 
+              <TabsContent value="inbound" className="mt-0 space-y-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Inbound Call Settings</CardTitle>
+                    <CardDescription>
+                      Configure how incoming calls are handled (coming soon)
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <DischargeSettingsForm
+                      settings={settings}
+                      onSave={handleSave}
+                      onCancel={handleCancel}
+                      isLoading={updateSettingsMutation.isPending}
+                      view="inbound"
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
               <TabsContent value="system" className="mt-0 space-y-4">
                 <Card>
-                  <CardContent className="pt-6">
+                  <CardHeader>
+                    <CardTitle>System Configuration</CardTitle>
+                    <CardDescription>
+                      Advanced settings for testing and system behavior
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
                     <DischargeSettingsForm
                       settings={settings}
                       onSave={handleSave}
