@@ -314,6 +314,7 @@ export type Database = {
       cases: {
         Row: {
           created_at: string | null;
+          entity_extraction: Json | null;
           external_id: string | null;
           id: string;
           metadata: Json | null;
@@ -327,6 +328,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string | null;
+          entity_extraction?: Json | null;
           external_id?: string | null;
           id?: string;
           metadata?: Json | null;
@@ -340,6 +342,7 @@ export type Database = {
         };
         Update: {
           created_at?: string | null;
+          entity_extraction?: Json | null;
           external_id?: string | null;
           id?: string;
           metadata?: Json | null;
@@ -463,9 +466,12 @@ export type Database = {
           created_at: string;
           email: string | null;
           id: string;
+          inbound_assistant_id: string | null;
           is_active: boolean;
           name: string;
+          outbound_assistant_id: string | null;
           phone: string | null;
+          phone_number_id: string | null;
           pims_type: string;
           updated_at: string;
         };
@@ -474,9 +480,12 @@ export type Database = {
           created_at?: string;
           email?: string | null;
           id?: string;
+          inbound_assistant_id?: string | null;
           is_active?: boolean;
           name: string;
+          outbound_assistant_id?: string | null;
           phone?: string | null;
+          phone_number_id?: string | null;
           pims_type?: string;
           updated_at?: string;
         };
@@ -485,9 +494,12 @@ export type Database = {
           created_at?: string;
           email?: string | null;
           id?: string;
+          inbound_assistant_id?: string | null;
           is_active?: boolean;
           name?: string;
+          outbound_assistant_id?: string | null;
           phone?: string | null;
+          phone_number_id?: string | null;
           pims_type?: string;
           updated_at?: string;
         };

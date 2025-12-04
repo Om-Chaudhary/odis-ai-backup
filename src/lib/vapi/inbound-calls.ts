@@ -9,12 +9,15 @@ import { createServiceClient } from "~/lib/supabase/server";
 import type { VapiCallResponse } from "./client";
 import { loggers } from "~/lib/logger";
 import { getClinicByName } from "~/lib/clinics/utils";
+import { getClinicByInboundAssistantId } from "~/lib/clinics/vapi-config";
 
 const logger = loggers.vapi.child("inbound-calls");
 
 /**
  * Get clinic name by assistant ID
- * Looks up the clinic_assistants table to find which clinic uses this assistant
+ * Looks up:
+ * 1. clinics.inbound_assistant_id (primary - new clinic-scoped config)
+ * 2. clinic_assistants table (legacy - for backward compatibility)
  */
 export async function getClinicByAssistantId(
   assistantId: string,
@@ -26,7 +29,37 @@ export async function getClinicByAssistantId(
 
   const supabase = await createServiceClient();
 
-  // First, try to find in clinic_assistants table
+  // First, try to find in clinics table via inbound_assistant_id (new pattern)
+  const clinic = await getClinicByInboundAssistantId(assistantId, supabase);
+
+  if (clinic) {
+    logger.debug("Found clinic by inbound_assistant_id in clinics table", {
+      assistantId,
+      clinicName: clinic.name,
+    });
+
+    // Find a user from this clinic to get user_id
+    const { data: user, error: userError } = await supabase
+      .from("users")
+      .select("id, clinic_name")
+      .ilike("clinic_name", clinic.name)
+      .limit(1)
+      .maybeSingle();
+
+    if (userError) {
+      logger.warn("Error finding user for clinic", {
+        clinicName: clinic.name,
+        error: userError.message,
+      });
+    }
+
+    return {
+      clinicName: clinic.name,
+      userId: user?.id ?? null,
+    };
+  }
+
+  // Fallback: try to find in clinic_assistants table (legacy pattern)
   const { data: clinicAssistant, error: clinicError } = await supabase
     .from("clinic_assistants")
     .select("clinic_name")
@@ -35,18 +68,29 @@ export async function getClinicByAssistantId(
     .maybeSingle();
 
   if (clinicError) {
-    logger.error("Error looking up clinic by assistant ID", {
-      assistantId,
-      error: clinicError.message,
-    });
+    logger.error(
+      "Error looking up clinic by assistant ID in clinic_assistants",
+      {
+        assistantId,
+        error: clinicError.message,
+      },
+    );
     return { clinicName: null, userId: null };
   }
 
   if (clinicAssistant?.clinic_name) {
-    // Use clinic lookup utility to get clinic record
-    const clinic = await getClinicByName(clinicAssistant.clinic_name, supabase);
+    logger.debug("Found clinic by assistant_id in clinic_assistants table", {
+      assistantId,
+      clinicName: clinicAssistant.clinic_name,
+    });
 
-    if (clinic) {
+    // Use clinic lookup utility to get clinic record
+    const legacyClinic = await getClinicByName(
+      clinicAssistant.clinic_name,
+      supabase,
+    );
+
+    if (legacyClinic) {
       // Find a user from this clinic to get user_id
       const { data: user, error: userError } = await supabase
         .from("users")
@@ -63,7 +107,7 @@ export async function getClinicByAssistantId(
       }
 
       return {
-        clinicName: clinic.name, // Use clinic.name for consistency
+        clinicName: legacyClinic.name, // Use clinic.name for consistency
         userId: user?.id ?? null,
       };
     } else {
@@ -78,10 +122,10 @@ export async function getClinicByAssistantId(
     }
   }
 
-  // Fallback: try to find user directly by assistant_id if stored on users table
-  // (This would require adding assistant_id column to users table)
-  // For now, return null if not found in clinic_assistants
-  logger.debug("Assistant ID not found in clinic_assistants", { assistantId });
+  // Not found in either location
+  logger.debug("Assistant ID not found in clinics or clinic_assistants", {
+    assistantId,
+  });
   return {
     clinicName: null,
     userId: null,
