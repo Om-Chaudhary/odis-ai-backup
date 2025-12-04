@@ -32,8 +32,11 @@ export interface DischargeEmailProps {
   clinicPhone?: string | null;
   clinicEmail?: string | null;
 
-  // Customization
+  // Branding customization
   primaryColor?: string;
+  logoUrl?: string | null;
+  headerText?: string | null;
+  footerText?: string | null;
 }
 
 // Color palette for sections
@@ -507,6 +510,30 @@ function PlaintextContent({ content }: { content: string }) {
 }
 
 /**
+ * Compute a darker shade of a hex color for gradient
+ */
+function darkenColor(hex: string, percent: number): string {
+  // Remove # if present
+  const color = hex.replace("#", "");
+
+  // Parse hex to RGB
+  const r = parseInt(color.substring(0, 2), 16);
+  const g = parseInt(color.substring(2, 4), 16);
+  const b = parseInt(color.substring(4, 6), 16);
+
+  // Darken each component
+  const darkenComponent = (c: number) =>
+    Math.max(0, Math.floor(c * (1 - percent / 100)));
+
+  const newR = darkenComponent(r);
+  const newG = darkenComponent(g);
+  const newB = darkenComponent(b);
+
+  // Convert back to hex
+  return `#${newR.toString(16).padStart(2, "0")}${newG.toString(16).padStart(2, "0")}${newB.toString(16).padStart(2, "0")}`;
+}
+
+/**
  * Main discharge email template component
  */
 export function DischargeEmailTemplate({
@@ -524,9 +551,15 @@ export function DischargeEmailTemplate({
   clinicPhone,
   clinicEmail,
   primaryColor = colors.primary,
+  logoUrl,
+  headerText,
+  footerText,
 }: DischargeEmailProps) {
   const hasStructuredContent =
     structuredContent !== null && structuredContent !== undefined;
+
+  // Compute gradient colors based on primary color
+  const gradientEnd = darkenColor(primaryColor, 20);
 
   return (
     <html lang="en">
@@ -569,9 +602,22 @@ export function DischargeEmailTemplate({
                         style={{
                           textAlign: "center",
                           padding: "32px 32px 24px 32px",
-                          background: `linear-gradient(135deg, ${primaryColor} 0%, #1D4ED8 100%)`,
+                          background: `linear-gradient(135deg, ${primaryColor} 0%, ${gradientEnd} 100%)`,
                         }}
                       >
+                        {/* Logo - using img tag since this is for email templates, not Next.js pages */}
+                        {logoUrl && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={logoUrl}
+                            alt={clinicName ?? "Clinic Logo"}
+                            style={{
+                              maxHeight: "60px",
+                              maxWidth: "200px",
+                              marginBottom: "16px",
+                            }}
+                          />
+                        )}
                         <h1
                           style={{
                             color: "#FFFFFF",
@@ -643,7 +689,7 @@ export function DischargeEmailTemplate({
                     {/* Main Content */}
                     <tr>
                       <td style={{ padding: "24px" }}>
-                        {/* Introduction */}
+                        {/* Introduction - use custom header text if provided */}
                         <p
                           style={{
                             margin: "0 0 24px 0",
@@ -652,8 +698,8 @@ export function DischargeEmailTemplate({
                             textAlign: "center",
                           }}
                         >
-                          Thank you for trusting us with {patientName}&apos;s
-                          care! Here&apos;s everything you need to know:
+                          {headerText ??
+                            `Thank you for trusting us with ${patientName}'s care! Here's everything you need to know:`}
                         </p>
 
                         {/* Content - Structured or Plaintext */}
@@ -784,26 +830,41 @@ export function DischargeEmailTemplate({
                           borderTop: `1px solid ${colors.border}`,
                         }}
                       >
-                        <p
-                          style={{
-                            margin: "0 0 4px 0",
-                            fontSize: "12px",
-                            color: "#9CA3AF",
-                          }}
-                        >
-                          Sent with ❤️ by OdisAI on behalf of your veterinary
-                          clinic
-                        </p>
-                        <p
-                          style={{
-                            margin: 0,
-                            fontSize: "12px",
-                            color: "#9CA3AF",
-                          }}
-                        >
-                          Please contact your veterinarian directly for
-                          questions.
-                        </p>
+                        {/* Custom footer text if provided */}
+                        {footerText ? (
+                          <p
+                            style={{
+                              margin: 0,
+                              fontSize: "12px",
+                              color: "#9CA3AF",
+                            }}
+                          >
+                            {footerText}
+                          </p>
+                        ) : (
+                          <>
+                            <p
+                              style={{
+                                margin: "0 0 4px 0",
+                                fontSize: "12px",
+                                color: "#9CA3AF",
+                              }}
+                            >
+                              Sent with ❤️ by OdisAI on behalf of your
+                              veterinary clinic
+                            </p>
+                            <p
+                              style={{
+                                margin: 0,
+                                fontSize: "12px",
+                                color: "#9CA3AF",
+                              }}
+                            >
+                              Please contact your veterinarian directly for
+                              questions.
+                            </p>
+                          </>
+                        )}
                       </td>
                     </tr>
                   </tbody>

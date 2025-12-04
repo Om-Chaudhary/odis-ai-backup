@@ -786,6 +786,11 @@ export const casesRouter = createTRPCRouter({
       voicemailDetectionEnabled: data?.voicemail_detection_enabled ?? false,
       voicemailHangupOnDetection: data?.voicemail_hangup_on_detection ?? false,
       defaultScheduleDelayMinutes: data?.default_schedule_delay_minutes ?? null,
+      // Email branding settings from clinic table
+      primaryColor: clinic?.primary_color ?? "#2563EB",
+      logoUrl: clinic?.logo_url ?? null,
+      emailHeaderText: clinic?.email_header_text ?? null,
+      emailFooterText: clinic?.email_footer_text ?? null,
     };
   }),
 
@@ -811,60 +816,118 @@ export const casesRouter = createTRPCRouter({
           .min(0)
           .nullable()
           .optional(),
+        // Email branding settings
+        primaryColor: z
+          .string()
+          .regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color format")
+          .optional(),
+        logoUrl: z.string().url().nullable().optional(),
+        emailHeaderText: z.string().nullable().optional(),
+        emailFooterText: z.string().nullable().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Build update object only with defined fields
-      const updateData: Record<string, string | boolean | number | null> = {};
+      // Build update object only with defined fields for users table
+      const userUpdateData: Record<string, string | boolean | number | null> =
+        {};
 
       if (input.clinicName !== undefined) {
-        updateData.clinic_name = input.clinicName;
+        userUpdateData.clinic_name = input.clinicName;
       }
       if (input.clinicPhone !== undefined) {
-        updateData.clinic_phone = input.clinicPhone;
+        userUpdateData.clinic_phone = input.clinicPhone;
       }
       if (input.clinicEmail !== undefined) {
-        updateData.clinic_email = input.clinicEmail;
+        userUpdateData.clinic_email = input.clinicEmail;
       }
       if (input.emergencyPhone !== undefined) {
-        updateData.emergency_phone = input.emergencyPhone;
+        userUpdateData.emergency_phone = input.emergencyPhone;
       }
       if (input.testModeEnabled !== undefined) {
-        updateData.test_mode_enabled = input.testModeEnabled;
+        userUpdateData.test_mode_enabled = input.testModeEnabled;
       }
       if (input.testContactName !== undefined) {
-        updateData.test_contact_name = input.testContactName;
+        userUpdateData.test_contact_name = input.testContactName;
       }
       if (input.testContactEmail !== undefined) {
-        updateData.test_contact_email = input.testContactEmail;
+        userUpdateData.test_contact_email = input.testContactEmail;
       }
       if (input.testContactPhone !== undefined) {
-        updateData.test_contact_phone = input.testContactPhone;
+        userUpdateData.test_contact_phone = input.testContactPhone;
       }
       if (input.voicemailDetectionEnabled !== undefined) {
-        updateData.voicemail_detection_enabled =
+        userUpdateData.voicemail_detection_enabled =
           input.voicemailDetectionEnabled;
       }
       if (input.voicemailHangupOnDetection !== undefined) {
-        updateData.voicemail_hangup_on_detection =
+        userUpdateData.voicemail_hangup_on_detection =
           input.voicemailHangupOnDetection;
       }
       if (input.defaultScheduleDelayMinutes !== undefined) {
-        updateData.default_schedule_delay_minutes =
+        userUpdateData.default_schedule_delay_minutes =
           input.defaultScheduleDelayMinutes;
       }
 
-      const { error } = await ctx.supabase
-        .from("users")
-        .update(updateData)
-        .eq("id", ctx.user.id);
+      // Update users table if there are user fields to update
+      if (Object.keys(userUpdateData).length > 0) {
+        const { error } = await ctx.supabase
+          .from("users")
+          .update(userUpdateData)
+          .eq("id", ctx.user.id);
 
-      if (error) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to update discharge settings",
-          cause: error,
-        });
+        if (error) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to update discharge settings",
+            cause: error,
+          });
+        }
+      }
+
+      // Build update object for clinic branding fields
+      const clinicUpdateData: Record<string, string | null> = {};
+
+      if (input.primaryColor !== undefined) {
+        clinicUpdateData.primary_color = input.primaryColor;
+      }
+      if (input.logoUrl !== undefined) {
+        clinicUpdateData.logo_url = input.logoUrl;
+      }
+      if (input.emailHeaderText !== undefined) {
+        clinicUpdateData.email_header_text = input.emailHeaderText;
+      }
+      if (input.emailFooterText !== undefined) {
+        clinicUpdateData.email_footer_text = input.emailFooterText;
+      }
+
+      // Update clinic table if there are branding fields to update
+      if (Object.keys(clinicUpdateData).length > 0) {
+        // Get user's clinic
+        const clinic = await getClinicByUserId(ctx.user.id, ctx.supabase);
+
+        if (clinic?.id) {
+          const { error: clinicError } = await ctx.supabase
+            .from("clinics")
+            .update(clinicUpdateData)
+            .eq("id", clinic.id);
+
+          if (clinicError) {
+            console.error(
+              "[updateDischargeSettings] Failed to update clinic branding",
+              {
+                clinicId: clinic.id,
+                error: clinicError,
+              },
+            );
+            // Don't throw error - branding update is optional
+            // The user settings were already saved successfully
+          }
+        } else {
+          console.warn(
+            "[updateDischargeSettings] No clinic found for user, skipping branding update",
+            { userId: ctx.user.id },
+          );
+        }
       }
 
       return { success: true };

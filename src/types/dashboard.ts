@@ -216,6 +216,11 @@ export interface DischargeSettings {
   testContactPhone?: string;
   voicemailDetectionEnabled?: boolean;
   defaultScheduleDelayMinutes?: number | null; // Override default scheduling delay (null = use defaults)
+  // Email branding settings
+  primaryColor?: string; // Hex color for email branding (e.g., "#2563EB")
+  logoUrl?: string | null; // URL to clinic logo for email header
+  emailHeaderText?: string | null; // Custom header text for emails
+  emailFooterText?: string | null; // Custom footer text for emails
 }
 
 export interface PatientUpdateInput {
