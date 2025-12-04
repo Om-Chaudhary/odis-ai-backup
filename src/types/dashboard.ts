@@ -218,6 +218,43 @@ export interface DischargeSettings {
   testContactPhone?: string;
   voicemailDetectionEnabled?: boolean;
   defaultScheduleDelayMinutes?: number | null; // Override default scheduling delay (null = use defaults)
+  // Email branding settings
+  primaryColor?: string; // Hex color for email branding (e.g., "#2563EB")
+  logoUrl?: string | null; // URL to clinic logo for email header
+  emailHeaderText?: string | null; // Custom header text for emails
+  emailFooterText?: string | null; // Custom footer text for emails
+  // Outbound discharge scheduling settings
+  preferredEmailStartTime?: string | null; // HH:mm format (e.g., "09:00")
+  preferredEmailEndTime?: string | null; // HH:mm format (e.g., "12:00")
+  preferredCallStartTime?: string | null; // HH:mm format (e.g., "14:00")
+  preferredCallEndTime?: string | null; // HH:mm format (e.g., "17:00")
+  emailDelayDays?: number | null; // Days after appointment to send email (default: 1)
+  callDelayDays?: number | null; // Days after email to make call (default: 2)
+  maxCallRetries?: number | null; // Max retry attempts for failed calls (default: 3)
+  // Batch discharge preferences
+  batchIncludeIdexxNotes?: boolean; // Include IDEXX Neo cases with consultation notes
+  batchIncludeManualTranscriptions?: boolean; // Include manual cases with transcriptions/SOAP
+}
+
+/**
+ * Eligible case for batch discharge processing
+ */
+export interface BatchEligibleCase {
+  id: string;
+  patientId: string;
+  patientName: string;
+  ownerName: string | null;
+  ownerEmail: string | null;
+  ownerPhone: string | null;
+  source: string | null;
+  hasEmail: boolean;
+  hasPhone: boolean;
+  hasDischargeSummary: boolean;
+  hasIdexxNotes: boolean;
+  hasTranscription: boolean;
+  hasSoapNotes: boolean;
+  createdAt: string;
+  scheduledAt: string | null;
 }
 
 export interface PatientUpdateInput {
