@@ -9,7 +9,7 @@ import {
   normalizeVariablesToSnakeCase,
 } from "~/lib/vapi/utils";
 import { normalizeToE164 } from "~/lib/utils/phone";
-import { env } from "~/env";
+import { getClinicVapiConfigByUserId } from "~/lib/clinics/vapi-config";
 
 // Type imports
 import type { Database } from "~/database.types";
@@ -717,8 +717,22 @@ export const CasesService = {
     };
 
     // 3. Insert Scheduled Call
-    const assistantId = options.assistantId ?? env.VAPI_ASSISTANT_ID;
-    const phoneNumberId = options.phoneNumberId ?? env.VAPI_PHONE_NUMBER_ID;
+    // Get clinic-specific VAPI configuration (falls back to env vars if not configured)
+    const clinicVapiConfig = await getClinicVapiConfigByUserId(
+      userId,
+      supabase,
+    );
+    const assistantId =
+      options.assistantId ?? clinicVapiConfig.outboundAssistantId;
+    const phoneNumberId =
+      options.phoneNumberId ?? clinicVapiConfig.phoneNumberId;
+
+    console.log("[CasesService] Using VAPI config", {
+      source: clinicVapiConfig.source,
+      clinicName: clinicVapiConfig.clinicName,
+      hasAssistantId: !!assistantId,
+      hasPhoneNumberId: !!phoneNumberId,
+    });
 
     // Get customer phone (with test mode support)
     let customerPhone = entities.patient.owner.phone ?? "";

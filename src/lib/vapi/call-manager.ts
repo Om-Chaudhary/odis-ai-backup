@@ -11,6 +11,7 @@ import {
 } from "./knowledge-base";
 import { createServiceClient } from "~/lib/supabase/server";
 import { getClinicByUserId } from "~/lib/clinics/utils";
+import { getClinicVapiConfigByUserId } from "~/lib/clinics/vapi-config";
 import { normalizeToE164 } from "~/lib/utils/phone";
 
 /**
@@ -151,22 +152,37 @@ export async function createVapiCall(
       };
     }
 
-    // Step 2: Get VAPI configuration
-    const assistantId = input.assistantId ?? process.env.VAPI_ASSISTANT_ID;
-    const phoneNumberId =
-      input.phoneNumberId ?? process.env.VAPI_PHONE_NUMBER_ID;
+    // Step 2: Get VAPI configuration (clinic-specific or env fallback)
+    const clinicVapiConfig = await getClinicVapiConfigByUserId(
+      userId,
+      supabase,
+    );
+    const assistantId =
+      input.assistantId ?? clinicVapiConfig.outboundAssistantId;
+    const phoneNumberId = input.phoneNumberId ?? clinicVapiConfig.phoneNumberId;
+
+    console.log("[VAPI_CALL_MANAGER] Using VAPI config", {
+      source: clinicVapiConfig.source,
+      clinicName: clinicVapiConfig.clinicName,
+      hasAssistantId: !!assistantId,
+      hasPhoneNumberId: !!phoneNumberId,
+    });
 
     if (!assistantId) {
       return {
         success: false,
-        errors: ["VAPI_ASSISTANT_ID not configured"],
+        errors: [
+          "VAPI assistant ID not configured for clinic or in environment",
+        ],
       };
     }
 
     if (!phoneNumberId) {
       return {
         success: false,
-        errors: ["VAPI_PHONE_NUMBER_ID not configured"],
+        errors: [
+          "VAPI phone number ID not configured for clinic or in environment",
+        ],
       };
     }
 
