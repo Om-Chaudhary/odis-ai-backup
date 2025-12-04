@@ -21,6 +21,7 @@ interface DischargeSettingsFormProps {
   onSave: (settings: DischargeSettings) => void;
   onCancel?: () => void;
   isLoading?: boolean;
+  view?: "all" | "clinic" | "branding" | "system";
 }
 
 export function DischargeSettingsForm({
@@ -28,6 +29,7 @@ export function DischargeSettingsForm({
   onSave,
   onCancel,
   isLoading = false,
+  view = "all",
 }: DischargeSettingsFormProps) {
   const {
     register,
@@ -51,207 +53,234 @@ export function DischargeSettingsForm({
     onSave(data);
   };
 
+  const showClinic = view === "all" || view === "clinic";
+  const showBranding = view === "all" || view === "branding";
+  const showSystem = view === "all" || view === "system";
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="space-y-4">
-        <h4 className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
-          Clinic Information
-        </h4>
+      {showClinic && (
+        <>
+          <div className="space-y-4">
+            <h4 className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
+              Clinic Information
+            </h4>
 
-        <div className="grid gap-5">
-          <div className="grid gap-2">
-            <Label htmlFor="clinicName">Clinic Name</Label>
-            <Input
-              id="clinicName"
-              placeholder="e.g. Happy Paws Veterinary"
-              {...register("clinicName", { required: true })}
-            />
-            {errors.clinicName && (
-              <p className="text-destructive text-xs">
-                Clinic name is required
-              </p>
-            )}
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="clinicPhone">Phone Number</Label>
-            <Input
-              id="clinicPhone"
-              placeholder="e.g. +1 (555) 123-4567"
-              {...register("clinicPhone", { required: true })}
-            />
-            {errors.clinicPhone && (
-              <p className="text-destructive text-xs">
-                Phone number is required
-              </p>
-            )}
-            <p className="text-muted-foreground text-xs">
-              This number will be displayed to pet owners for follow-up
-              questions.
-            </p>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="clinicEmail">Email Address</Label>
-            <Input
-              id="clinicEmail"
-              type="email"
-              placeholder="e.g. info@happypaws.com"
-              {...register("clinicEmail", { required: true })}
-            />
-            {errors.clinicEmail && (
-              <p className="text-destructive text-xs">
-                Email address is required
-              </p>
-            )}
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="emergencyPhone">Emergency Phone Number</Label>
-            <Input
-              id="emergencyPhone"
-              placeholder="e.g. +1 (555) 999-8888"
-              {...register("emergencyPhone")}
-            />
-            <p className="text-muted-foreground text-xs">
-              Optional emergency contact number for after-hours.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <Separator />
-
-      <div className="space-y-4">
-        <h4 className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
-          Veterinarian Details
-        </h4>
-
-        <div className="grid gap-2">
-          <Label htmlFor="vetName">Default Veterinarian Name</Label>
-          <Input
-            id="vetName"
-            placeholder="e.g. Dr. Sarah Smith"
-            value={settings.vetName}
-            disabled
-            readOnly
-          />
-          <p className="text-muted-foreground text-xs">
-            This name is computed from your profile (first name + last name) and
-            will be used as the sender for discharge emails.
-          </p>
-        </div>
-      </div>
-
-      <Separator />
-
-      <div className="space-y-4">
-        <h4 className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
-          System Configuration
-        </h4>
-
-        {/* Default Schedule Delay Override */}
-        <div className="grid gap-2 rounded-lg border border-slate-100 p-3 shadow-sm">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="defaultScheduleDelayMinutes" className="text-base">
-              Default Schedule Delay (Minutes)
-            </Label>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="text-muted-foreground h-4 w-4 cursor-help" />
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
-                  <p className="text-sm">
-                    Override the default scheduling delay for calls and emails.
-                    Leave empty to use system defaults (2 minutes for calls,
-                    immediate for emails). This applies to all new schedules.
+            <div className="grid gap-5">
+              <div className="grid gap-2">
+                <Label htmlFor="clinicName">Clinic Name</Label>
+                <Input
+                  id="clinicName"
+                  placeholder="e.g. Happy Paws Veterinary"
+                  {...register("clinicName", { required: true })}
+                />
+                {errors.clinicName && (
+                  <p className="text-destructive text-xs">
+                    Clinic name is required
                   </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <Input
-            id="defaultScheduleDelayMinutes"
-            type="number"
-            min="0"
-            placeholder="e.g. 5 (leave empty for defaults)"
-            {...register("defaultScheduleDelayMinutes", {
-              valueAsNumber: true,
-              validate: (value) => {
-                if (
-                  value === undefined ||
-                  value === null ||
-                  Number.isNaN(value)
-                ) {
-                  return true; // Allow empty/null/NaN
-                }
-                return value >= 0 || "Delay must be 0 or greater";
-              },
-            })}
-            onChange={(e) => {
-              const value = e.target.value;
-              setValue(
-                "defaultScheduleDelayMinutes",
-                value === "" ? null : Number.parseInt(value, 10),
-                { shouldDirty: true },
-              );
-            }}
-          />
-          <p className="text-muted-foreground text-xs">
-            {watch("defaultScheduleDelayMinutes") !== null &&
-            watch("defaultScheduleDelayMinutes") !== undefined &&
-            typeof watch("defaultScheduleDelayMinutes") === "number"
-              ? `Calls and emails will be scheduled ${watch("defaultScheduleDelayMinutes")} minutes from now`
-              : "Using system defaults (2 min for calls, immediate for emails)"}
-          </p>
-        </div>
+                )}
+              </div>
 
-        {/* Voicemail Detection Toggle */}
-        <div className="flex items-center justify-between rounded-lg border border-slate-100 p-3 shadow-sm">
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-2">
-              <Label htmlFor="voicemail-detection" className="text-base">
-                Voicemail Detection
-              </Label>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="text-muted-foreground h-4 w-4 cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">
-                    <p className="text-sm">
-                      When enabled, calls will automatically detect voicemail
-                      systems and leave a personalized message.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <div className="grid gap-2">
+                <Label htmlFor="clinicPhone">Phone Number</Label>
+                <Input
+                  id="clinicPhone"
+                  placeholder="e.g. +1 (555) 123-4567"
+                  {...register("clinicPhone", { required: true })}
+                />
+                {errors.clinicPhone && (
+                  <p className="text-destructive text-xs">
+                    Phone number is required
+                  </p>
+                )}
+                <p className="text-muted-foreground text-xs">
+                  This number will be displayed to pet owners for follow-up
+                  questions.
+                </p>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="clinicEmail">Email Address</Label>
+                <Input
+                  id="clinicEmail"
+                  type="email"
+                  placeholder="e.g. info@happypaws.com"
+                  {...register("clinicEmail", { required: true })}
+                />
+                {errors.clinicEmail && (
+                  <p className="text-destructive text-xs">
+                    Email address is required
+                  </p>
+                )}
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="emergencyPhone">Emergency Phone Number</Label>
+                <Input
+                  id="emergencyPhone"
+                  placeholder="e.g. +1 (555) 999-8888"
+                  {...register("emergencyPhone")}
+                />
+                <p className="text-muted-foreground text-xs">
+                  Optional emergency contact number for after-hours.
+                </p>
+              </div>
             </div>
-            <p className="text-muted-foreground text-sm">
-              Leave message if call is not answered
-            </p>
           </div>
-          <Switch
-            id="voicemail-detection"
-            checked={watch("voicemailDetectionEnabled")}
-            onCheckedChange={(checked) =>
-              setValue("voicemailDetectionEnabled", checked, {
-                shouldDirty: true,
-              })
-            }
-          />
-        </div>
 
-        {/* Test Mode Toggle */}
-        <div
-          className={`flex flex-col gap-4 rounded-lg border p-4 shadow-sm transition-colors ${isTestMode ? "border-amber-200 bg-amber-50/50" : "border-slate-100"}`}
-        >
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
+          {view === "all" && <Separator />}
+
+          <div className="space-y-4">
+            <h4 className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
+              Veterinarian Details
+            </h4>
+
+            <div className="grid gap-2">
+              <Label htmlFor="vetName">Default Veterinarian Name</Label>
+              <Input
+                id="vetName"
+                placeholder="e.g. Dr. Sarah Smith"
+                value={settings.vetName}
+                disabled
+                readOnly
+              />
+              <p className="text-muted-foreground text-xs">
+                This name is computed from your profile (first name + last name)
+                and will be used as the sender for discharge emails.
+              </p>
+            </div>
+          </div>
+        </>
+      )}
+
+      {showClinic && showBranding && <Separator />}
+
+      {showBranding && (
+        <>
+          <div className="space-y-4">
+            <h4 className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
+              Email Branding
+            </h4>
+
+            <div className="grid gap-5">
+              <div className="grid gap-2">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="primaryColor">Primary Brand Color</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p className="text-sm">
+                          This color is used for the email header background,
+                          buttons, and accent elements in discharge emails.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Input
+                    id="primaryColor"
+                    type="color"
+                    className="h-10 w-16 cursor-pointer p-1"
+                    {...register("primaryColor")}
+                  />
+                  <Input
+                    type="text"
+                    placeholder="#2563EB"
+                    className="flex-1 font-mono"
+                    value={watch("primaryColor") ?? "#2563EB"}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (/^#[0-9A-Fa-f]{0,6}$/.test(value) || value === "") {
+                        setValue("primaryColor", value || "#2563EB", {
+                          shouldDirty: true,
+                        });
+                      }
+                    }}
+                  />
+                </div>
+                <p className="text-muted-foreground text-xs">
+                  Used for headers, buttons, and accents in discharge emails.
+                </p>
+              </div>
+
+              <div className="grid gap-2">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="logoUrl">Logo URL</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p className="text-sm">
+                          URL to your clinic logo image. The logo will appear in
+                          the header of discharge emails. Recommended size:
+                          200x60 pixels.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <Input
+                  id="logoUrl"
+                  type="url"
+                  placeholder="https://example.com/logo.png"
+                  {...register("logoUrl")}
+                />
+                <p className="text-muted-foreground text-xs">
+                  Optional: Display your clinic logo in email headers.
+                </p>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="emailHeaderText">Custom Header Text</Label>
+                <Input
+                  id="emailHeaderText"
+                  placeholder="Thank you for trusting us with your pet's care!"
+                  {...register("emailHeaderText")}
+                />
+                <p className="text-muted-foreground text-xs">
+                  Optional: Custom welcome message for discharge emails.
+                </p>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="emailFooterText">Custom Footer Text</Label>
+                <Input
+                  id="emailFooterText"
+                  placeholder="Questions? Call us at (555) 123-4567"
+                  {...register("emailFooterText")}
+                />
+                <p className="text-muted-foreground text-xs">
+                  Optional: Custom footer message for discharge emails.
+                </p>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {showBranding && showSystem && <Separator />}
+
+      {showSystem && (
+        <>
+          <div className="space-y-4">
+            <h4 className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
+              System Configuration
+            </h4>
+
+            {/* Default Schedule Delay Override */}
+            <div className="grid gap-2 rounded-lg border border-slate-100 p-3 shadow-sm">
               <div className="flex items-center gap-2">
-                <Label htmlFor="test-mode" className="text-base">
-                  Test Mode
+                <Label
+                  htmlFor="defaultScheduleDelayMinutes"
+                  className="text-base"
+                >
+                  Default Schedule Delay (Minutes)
                 </Label>
                 <TooltipProvider>
                   <Tooltip>
@@ -260,79 +289,179 @@ export function DischargeSettingsForm({
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
                       <p className="text-sm">
-                        When enabled, all calls and emails will be sent to the
-                        test contact details configured below, instead of the
-                        actual pet owner.
+                        Override the default scheduling delay for calls and
+                        emails. Leave empty to use system defaults (2 minutes
+                        for calls, immediate for emails). This applies to all
+                        new schedules.
                       </p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
-              <p className="text-muted-foreground text-sm">
-                Redirect all communications to a test contact
+              <Input
+                id="defaultScheduleDelayMinutes"
+                type="number"
+                min="0"
+                placeholder="e.g. 5 (leave empty for defaults)"
+                {...register("defaultScheduleDelayMinutes", {
+                  valueAsNumber: true,
+                  validate: (value) => {
+                    if (
+                      value === undefined ||
+                      value === null ||
+                      Number.isNaN(value)
+                    ) {
+                      return true; // Allow empty/null/NaN
+                    }
+                    return value >= 0 || "Delay must be 0 or greater";
+                  },
+                })}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setValue(
+                    "defaultScheduleDelayMinutes",
+                    value === "" ? null : Number.parseInt(value, 10),
+                    { shouldDirty: true },
+                  );
+                }}
+              />
+              <p className="text-muted-foreground text-xs">
+                {watch("defaultScheduleDelayMinutes") !== null &&
+                watch("defaultScheduleDelayMinutes") !== undefined &&
+                typeof watch("defaultScheduleDelayMinutes") === "number"
+                  ? `Calls and emails will be scheduled ${watch("defaultScheduleDelayMinutes")} minutes from now`
+                  : "Using system defaults (2 min for calls, immediate for emails)"}
               </p>
             </div>
-            <Switch
-              id="test-mode"
-              checked={isTestMode}
-              onCheckedChange={(checked) =>
-                setValue("testModeEnabled", checked, { shouldDirty: true })
-              }
-            />
-          </div>
 
-          {isTestMode && (
-            <div className="animate-in fade-in slide-in-from-top-2 grid gap-3 pt-2">
-              <div className="grid gap-2">
-                <Label htmlFor="testContactName">Test Contact Name</Label>
-                <Input
-                  id="testContactName"
-                  placeholder="e.g. Test User"
-                  {...register("testContactName", { required: isTestMode })}
-                />
-                {errors.testContactName && (
-                  <p className="text-destructive text-xs">
-                    Test contact name is required in test mode
-                  </p>
-                )}
+            {/* Voicemail Detection Toggle */}
+            <div className="flex items-center justify-between rounded-lg border border-slate-100 p-3 shadow-sm">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="voicemail-detection" className="text-base">
+                    Voicemail Detection
+                  </Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p className="text-sm">
+                          When enabled, calls will automatically detect
+                          voicemail systems and leave a personalized message.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <p className="text-muted-foreground text-sm">
+                  Leave message if call is not answered
+                </p>
               </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="testContactEmail">Test Email</Label>
-                <Input
-                  id="testContactEmail"
-                  type="email"
-                  placeholder="test@example.com"
-                  {...register("testContactEmail", {
-                    required: isTestMode,
-                  })}
-                />
-                {errors.testContactEmail && (
-                  <p className="text-destructive text-xs">
-                    Test email is required in test mode
-                  </p>
-                )}
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="testContactPhone">Test Phone</Label>
-                <Input
-                  id="testContactPhone"
-                  placeholder="+1 (555) 000-0000"
-                  {...register("testContactPhone", {
-                    required: isTestMode,
-                  })}
-                />
-                {errors.testContactPhone && (
-                  <p className="text-destructive text-xs">
-                    Test phone is required in test mode
-                  </p>
-                )}
-              </div>
+              <Switch
+                id="voicemail-detection"
+                checked={watch("voicemailDetectionEnabled")}
+                onCheckedChange={(checked) =>
+                  setValue("voicemailDetectionEnabled", checked, {
+                    shouldDirty: true,
+                  })
+                }
+              />
             </div>
-          )}
-        </div>
-      </div>
+
+            {/* Test Mode Toggle */}
+            <div
+              className={`flex flex-col gap-4 rounded-lg border p-4 shadow-sm transition-colors ${isTestMode ? "border-amber-200 bg-amber-50/50" : "border-slate-100"}`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="test-mode" className="text-base">
+                      Test Mode
+                    </Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="text-sm">
+                            When enabled, all calls and emails will be sent to
+                            the test contact details configured below, instead
+                            of the actual pet owner.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <p className="text-muted-foreground text-sm">
+                    Redirect all communications to a test contact
+                  </p>
+                </div>
+                <Switch
+                  id="test-mode"
+                  checked={isTestMode}
+                  onCheckedChange={(checked) =>
+                    setValue("testModeEnabled", checked, { shouldDirty: true })
+                  }
+                />
+              </div>
+
+              {isTestMode && (
+                <div className="animate-in fade-in slide-in-from-top-2 grid gap-3 pt-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="testContactName">Test Contact Name</Label>
+                    <Input
+                      id="testContactName"
+                      placeholder="e.g. Test User"
+                      {...register("testContactName", { required: isTestMode })}
+                    />
+                    {errors.testContactName && (
+                      <p className="text-destructive text-xs">
+                        Test contact name is required in test mode
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="testContactEmail">Test Email</Label>
+                    <Input
+                      id="testContactEmail"
+                      type="email"
+                      placeholder="test@example.com"
+                      {...register("testContactEmail", {
+                        required: isTestMode,
+                      })}
+                    />
+                    {errors.testContactEmail && (
+                      <p className="text-destructive text-xs">
+                        Test email is required in test mode
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="testContactPhone">Test Phone</Label>
+                    <Input
+                      id="testContactPhone"
+                      placeholder="+1 (555) 000-0000"
+                      {...register("testContactPhone", {
+                        required: isTestMode,
+                      })}
+                    />
+                    {errors.testContactPhone && (
+                      <p className="text-destructive text-xs">
+                        Test phone is required in test mode
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="flex justify-end gap-3 pt-6">
         {onCancel && (

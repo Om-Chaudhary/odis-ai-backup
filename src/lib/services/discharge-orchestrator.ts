@@ -38,8 +38,20 @@ import type { SupabaseClientType } from "~/types/supabase";
 import type { User } from "@supabase/supabase-js";
 import type { IngestPayload } from "~/types/services";
 import type { Database } from "~/database.types";
+import {
+  type ClinicBranding,
+  createClinicBranding,
+} from "~/types/clinic-branding";
 
 type PatientRow = Database["public"]["Tables"]["patients"]["Row"];
+
+/**
+ * Discharge summary with both plaintext and structured content
+ */
+interface DischargeSummaryWithStructured {
+  content: string;
+  structuredContent: StructuredDischargeSummary | null;
+}
 
 /* ========================================
    Constants
@@ -67,16 +79,14 @@ const STEP_ORDER: readonly StepName[] = [
  * Uses data from Supabase:
  * - discharge_summaries.content (plaintext) or structured_content (JSON)
  * - patients: name, species, breed (owner_name intentionally excluded)
- * - users: clinic_name, clinic_phone, clinic_email
+ * - clinics/users: clinic_name, clinic_phone, clinic_email, branding
  */
 async function generateEmailContent(
   dischargeSummary: string,
   patientName: string,
-  species?: string | null,
-  breed?: string | null,
-  clinicName?: string | null,
-  clinicPhone?: string | null,
-  clinicEmail?: string | null,
+  species: string | null | undefined,
+  breed: string | null | undefined,
+  branding: ClinicBranding,
   structuredContent?: StructuredDischargeSummary | null,
 ): Promise<{ subject: string; html: string; text: string }> {
   const subject = `Discharge Instructions for ${patientName}`;
@@ -89,9 +99,13 @@ async function generateEmailContent(
       structuredContent: structuredContent ?? undefined,
       breed,
       species,
-      clinicName,
-      clinicPhone,
-      clinicEmail,
+      clinicName: branding.clinicName,
+      clinicPhone: branding.clinicPhone,
+      clinicEmail: branding.clinicEmail,
+      primaryColor: branding.primaryColor,
+      logoUrl: branding.logoUrl,
+      headerText: branding.emailHeaderText,
+      footerText: branding.emailFooterText,
     }),
   );
 
@@ -523,8 +537,7 @@ export class DischargeOrchestrator {
         transcriptionId: latestTranscription.id,
         textLength: textToExtract.length,
       });
-    }
-    // Priority 2: For IDEXX Neo cases, use consultation_notes from metadata
+    } // Priority 2: For IDEXX Neo cases, use consultation_notes from metadata
     else if (
       caseData.source === "idexx_neo" ||
       caseData.source === "idexx_extension"
@@ -939,25 +952,52 @@ export class DischargeOrchestrator {
     const species = patient?.species;
     const breed = patient?.breed;
 
-    // Get user data for clinic information
+    // Get user data for clinic information (fallback)
     const { data: userData } = await this.supabase
       .from("users")
       .select("clinic_name, clinic_phone, clinic_email")
       .eq("id", this.user.id)
       .single();
 
-    // Get discharge summary (deduplicated logic)
-    const dischargeSummary = await this.getDischargeSummary(caseId);
+    // Get clinic branding from clinic table (preferred) with fallback to user table
+    const clinic = await getClinicByUserId(this.user.id, this.supabase);
 
-    // Generate email content with clinic info
+    // Build branding configuration
+    const branding = createClinicBranding({
+      clinicName: clinic?.name ?? userData?.clinic_name ?? undefined,
+      clinicPhone: clinic?.phone ?? userData?.clinic_phone ?? undefined,
+      clinicEmail: clinic?.email ?? userData?.clinic_email ?? undefined,
+      primaryColor: clinic?.primary_color ?? undefined,
+      logoUrl: clinic?.logo_url ?? undefined,
+      emailHeaderText: clinic?.email_header_text ?? undefined,
+      emailFooterText: clinic?.email_footer_text ?? undefined,
+    });
+
+    console.log("[ORCHESTRATOR] Email branding configured", {
+      caseId,
+      clinicName: branding.clinicName,
+      hasPrimaryColor: !!branding.primaryColor,
+      hasLogo: !!branding.logoUrl,
+    });
+
+    // Get discharge summary with structured content
+    const dischargeSummaryData =
+      await this.getDischargeSummaryWithStructured(caseId);
+
+    console.log("[ORCHESTRATOR] Generating email with structured content", {
+      caseId,
+      hasStructuredContent: !!dischargeSummaryData.structuredContent,
+      plaintextLength: dischargeSummaryData.content.length,
+    });
+
+    // Generate email content with clinic branding and structured content
     const emailContent = await generateEmailContent(
-      dischargeSummary,
+      dischargeSummaryData.content,
       patientName,
       species,
       breed,
-      userData?.clinic_name,
-      userData?.clinic_phone,
-      userData?.clinic_email,
+      branding,
+      dischargeSummaryData.structuredContent,
     );
 
     return {
@@ -1340,6 +1380,64 @@ export class DischargeOrchestrator {
     }
 
     return summaries.content;
+  }
+
+  /**
+   * Get discharge summary with both plaintext and structured content
+   * Tries to get from step results first, then falls back to database
+   */
+  private async getDischargeSummaryWithStructured(
+    caseId: string,
+  ): Promise<DischargeSummaryWithStructured> {
+    // Try to get from results first (from generateSummary step)
+    const summaryResult = this.results.get("generateSummary");
+    if (summaryResult?.data && typeof summaryResult.data === "object") {
+      const data = summaryResult.data as {
+        content?: string;
+        structuredContent?: StructuredDischargeSummary;
+      };
+      if (data.content) {
+        return {
+          content: data.content,
+          structuredContent: data.structuredContent ?? null,
+        };
+      }
+    }
+
+    // Fallback to database - fetch both content and structured_content
+    const { data: summary, error } = await this.supabase
+      .from("discharge_summaries")
+      .select("content, structured_content")
+      .eq("case_id", caseId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error || !summary?.content) {
+      throw new Error(
+        `Discharge summary not found: ${error?.message ?? "Unknown error"}`,
+      );
+    }
+
+    // Parse structured_content from JSON if it exists
+    let structuredContent: StructuredDischargeSummary | null = null;
+    if (summary.structured_content) {
+      try {
+        // The structured_content is stored as JSONB, so it should already be parsed
+        structuredContent =
+          summary.structured_content as unknown as StructuredDischargeSummary;
+      } catch (e) {
+        console.warn(
+          "[ORCHESTRATOR] Failed to parse structured_content, falling back to plaintext",
+          { caseId, error: e },
+        );
+      }
+    }
+
+    return {
+      content: summary.content,
+      structuredContent,
+    };
   }
 
   /**
