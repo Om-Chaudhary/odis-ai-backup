@@ -126,8 +126,11 @@ export interface DynamicVariables {
    */
   conditionCategory?: ConditionCategory;
 
-  /** Prescribed medications with dosing instructions */
+  /** Prescribed medications with dosing instructions (take-home meds only) */
   medications?: string;
+
+  /** Vaccinations administered during the visit (separate from medications) */
+  vaccinations?: string;
 
   /** Scheduled follow-up appointment date (spelled out) */
   recheckDate?: string;

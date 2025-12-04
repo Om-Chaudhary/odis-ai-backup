@@ -100,7 +100,7 @@ export function extractVapiVariablesFromEntities(
         clinical.differentialDiagnoses.join(", ");
     }
 
-    // Medications - format for natural speech
+    // Medications - format for natural speech (prescribed take-home meds ONLY)
     if (clinical.medications && clinical.medications.length > 0) {
       const medicationsList = clinical.medications
         .map((med) => {
@@ -125,6 +125,24 @@ export function extractVapiVariablesFromEntities(
       if (firstMed?.frequency) {
         variables.medication_frequency = firstMed.frequency;
       }
+    }
+
+    // Vaccinations - vaccines administered during the visit (separate from medications)
+    if (clinical.vaccinations && clinical.vaccinations.length > 0) {
+      // Simple list of vaccine names
+      variables.vaccinations = clinical.vaccinations
+        .map((v) => v.name)
+        .join(", ");
+
+      // Detailed list including manufacturer if available
+      const vaccinationsList = clinical.vaccinations
+        .map((vax) => {
+          let vaxStr = vax.name;
+          if (vax.manufacturer) vaxStr += ` (${vax.manufacturer})`;
+          return vaxStr;
+        })
+        .join("; ");
+      variables.vaccinations_detailed = vaccinationsList;
     }
 
     // Treatments and procedures

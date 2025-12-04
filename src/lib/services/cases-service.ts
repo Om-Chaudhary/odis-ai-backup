@@ -670,6 +670,9 @@ export const CasesService = {
         medications: entities.clinical.medications
           ?.map((m) => `${m.name} ${m.dosage ?? ""} ${m.frequency ?? ""}`)
           .join(", "),
+        vaccinations: entities.clinical.vaccinations
+          ?.map((v) => v.name)
+          .join(", "),
         nextSteps: entities.clinical.followUpInstructions,
 
         // Include species/breed/age if available from entities

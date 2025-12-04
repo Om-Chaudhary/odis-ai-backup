@@ -171,6 +171,9 @@ async function handler(req: NextRequest) {
                     `${m.name} ${m.dosage ?? ""} ${m.frequency ?? ""}`,
                 )
                 .join(", "),
+              vaccinations: caseInfo.entities.clinical.vaccinations
+                ?.map((v: { name: string }) => v.name)
+                .join(", "),
               nextSteps: caseInfo.entities.clinical.followUpInstructions,
 
               // Include species/breed/age if available from entities

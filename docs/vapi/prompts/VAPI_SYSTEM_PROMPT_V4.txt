@@ -104,10 +104,14 @@ CLINICAL ASSESSMENT QUESTIONS:
 - `{{treatments}}` - Treatments administered
 - `{{physical_exam_findings}}` - Exam findings
 
-### Medications (Structured)
+### Medications (Structured) - Prescribed take-home meds only
 - `{{medication_names}}` - Simple list (e.g., "Carprofen, Cephalexin")
 - `{{medications_detailed}}` - Full details with dosage/frequency
 - `{{medication_frequency}}` - Schedule for first medication
+
+### Vaccinations (Administered during visit - separate from medications)
+- `{{vaccinations}}` - Simple list of vaccines given (e.g., "DHPP, Rabies, Bordetella")
+- `{{vaccinations_detailed}}` - Full details including manufacturer if available
 
 ### Vital Signs
 - `{{vital_temperature}}` - Temperature
