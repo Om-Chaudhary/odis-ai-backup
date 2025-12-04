@@ -646,8 +646,8 @@ export function DischargeManagementClient() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setShowBatchDialog(true)}
-            disabled={isLoading ?? isBatchProcessing}
+            onClick={() => router.push("/dashboard/cases/batch-discharge")}
+            disabled={isLoading}
             className="transition-smooth"
           >
             <Send className="mr-2 h-4 w-4" />
