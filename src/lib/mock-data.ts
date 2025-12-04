@@ -43,6 +43,7 @@ export const MOCK_CASES: DashboardCase[] = [
         status: "queued",
         scheduled_for: new Date(Date.now() + 1000 * 60 * 30).toISOString(), // in 30 mins
         ended_at: null,
+        ended_reason: null,
         vapi_call_id: "vapi-123",
         transcript: null,
         recording_url: null,
@@ -90,6 +91,7 @@ export const MOCK_CASES: DashboardCase[] = [
         status: "completed",
         scheduled_for: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
         ended_at: new Date(Date.now() - 1000 * 60 * 60 * 2.9).toISOString(),
+        ended_reason: "assistant-ended-call",
         vapi_call_id: "vapi-456",
         transcript: "Call transcript here...",
         recording_url: "https://example.com/recording.mp3",
@@ -154,6 +156,7 @@ export const MOCK_CASES: DashboardCase[] = [
         status: "failed",
         scheduled_for: new Date(Date.now() - 1000 * 60 * 60 * 22).toISOString(),
         ended_at: new Date(Date.now() - 1000 * 60 * 60 * 21.9).toISOString(),
+        ended_reason: "dial-failed",
         vapi_call_id: "vapi-789",
         transcript: null,
         recording_url: null,
