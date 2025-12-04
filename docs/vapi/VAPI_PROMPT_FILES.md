@@ -2,96 +2,72 @@
 
 ## Current Active File
 
-**📄 `VAPI_SYSTEM_PROMPT.txt`** - **USE THIS FILE**
+**📄 `prompts/VAPI_SYSTEM_PROMPT_V4.txt`** - **USE THIS FILE**
 
-This is the consolidated, authoritative VAPI system prompt that includes:
+This is the consolidated, authoritative VAPI system prompt (Version 4.0) that includes:
+
+- ✅ Visit Type Classification (clinical, surgical, wellness, grooming)
+- ✅ Question Gating Rules (skip irrelevant questions)
 - ✅ All conversation flows (discharge & follow-up)
-- ✅ 40+ AI-extracted dynamic variables
-- ✅ Conditional blocks to prevent literal variable names
+- ✅ 50+ AI-extracted dynamic variables
+- ✅ Conditional blocks for adaptive conversations
 - ✅ Complete documentation and examples
-- ✅ Version history
 - ✅ Safety rules and edge cases
+- ✅ Euthanasia/death handling
 
 **This is the single source of truth for the VAPI assistant prompt.**
 
 ---
 
-## Legacy Files (For Reference Only)
+## Version 4.0 Key Improvements
 
-### `VAPI_PRODUCTION_PROMPT.txt`
-- **Status:** Legacy (superseded by VAPI_SYSTEM_PROMPT.txt)
-- **Content:** Original production prompt with conditionals added
-- **Recommend:** Archive or delete after verification
-
-### `VAPI_ENHANCED_PROMPT.txt`
-- **Status:** Legacy (superseded by VAPI_SYSTEM_PROMPT.txt)
-- **Content:** Enhanced prompt with knowledge base references
-- **Recommend:** Archive or delete after verification
-
-### `docs/VAPI_ASSISTANT_PROMPT.md`
-- **Status:** Legacy documentation
-- **Content:** Older markdown version of prompt
-- **Recommend:** Archive or delete after verification
+1. **Visit Type Classification**: Automatically classifies visits as clinical, surgical, wellness, or grooming
+2. **Question Gating**: Skips irrelevant questions (e.g., no medication questions for grooming visits)
+3. **Improved Closing**: Brief, warm closings that don't repeat phone numbers
+4. **Better Phase Flow**: More adaptive flow based on owner responses
+5. **Enhanced Safety Rules**: Never ask for information we should already have
 
 ---
 
 ## Documentation Files (Keep)
 
 ### `VAPI_AI_EXTRACTION_VARIABLES.md`
+
 - **Status:** Active documentation
-- **Purpose:** Complete reference of all 40+ AI-extracted variables
+- **Purpose:** Complete reference of all 50+ AI-extracted variables
 - **Usage:** Technical reference for developers
 
 ### `VAPI_AI_EXTRACTION_INTEGRATION_SUMMARY.md`
+
 - **Status:** Active documentation
 - **Purpose:** Integration guide and implementation summary
 - **Usage:** Developer onboarding and troubleshooting
 
 ### `VAPI_KNOWLEDGE_BASE_USAGE.md`
+
 - **Status:** Active documentation
 - **Purpose:** Knowledge base system documentation
 - **Usage:** Understanding condition-specific responses
 
 ### `VAPI_FINAL_SETUP.md`
+
 - **Status:** Active documentation
 - **Purpose:** Setup and configuration guide
 - **Usage:** Initial VAPI setup instructions
 
 ---
 
-## Recommended Actions
-
-1. **Update VAPI Dashboard**
-   - Replace assistant prompt with `VAPI_SYSTEM_PROMPT.txt` content
-   - Test with sample calls to verify variable substitution
-
-2. **Archive Legacy Files**
-   ```bash
-   mkdir -p archive/vapi-prompts
-   mv VAPI_PRODUCTION_PROMPT.txt archive/vapi-prompts/
-   mv VAPI_ENHANCED_PROMPT.txt archive/vapi-prompts/
-   mv docs/VAPI_ASSISTANT_PROMPT.md archive/vapi-prompts/
-   ```
-
-3. **Update References**
-   - Update CLAUDE.md to reference `VAPI_SYSTEM_PROMPT.txt`
-   - Update any deployment scripts or documentation
-
----
-
-## File Structure Overview
+## File Structure
 
 ```
-odis-ai-web/
-├── VAPI_SYSTEM_PROMPT.txt                          ⭐ USE THIS
-├── VAPI_AI_EXTRACTION_VARIABLES.md                 📚 Reference
-├── VAPI_AI_EXTRACTION_INTEGRATION_SUMMARY.md       📚 Guide
-├── VAPI_KNOWLEDGE_BASE_USAGE.md                    📚 KB Docs
-├── VAPI_FINAL_SETUP.md                             📚 Setup
-├── VAPI_PRODUCTION_PROMPT.txt                      ⚠️ Legacy
-├── VAPI_ENHANCED_PROMPT.txt                        ⚠️ Legacy
-└── docs/
-    └── VAPI_ASSISTANT_PROMPT.md                    ⚠️ Legacy
+docs/vapi/
+├── prompts/
+│   └── VAPI_SYSTEM_PROMPT_V4.txt      ⭐ USE THIS (Version 4.0)
+├── VAPI_PROMPT_FILES.md                📚 This file
+├── VAPI_AI_EXTRACTION_VARIABLES.md     📚 Variables reference
+├── VAPI_AI_EXTRACTION_INTEGRATION_SUMMARY.md  📚 Integration guide
+├── VAPI_KNOWLEDGE_BASE_USAGE.md        📚 KB documentation
+└── VAPI_FINAL_SETUP.md                 📚 Setup guide
 ```
 
 ---
@@ -100,7 +76,7 @@ odis-ai-web/
 
 **To update the VAPI assistant prompt:**
 
-1. Copy content from `VAPI_SYSTEM_PROMPT.txt`
+1. Copy content from `prompts/VAPI_SYSTEM_PROMPT_V4.txt`
 2. Go to VAPI Dashboard → Assistants → [Your Assistant]
 3. Paste into "System Prompt" field
 4. Save and test
@@ -108,14 +84,14 @@ odis-ai-web/
 **To understand available variables:**
 
 1. Read `VAPI_AI_EXTRACTION_VARIABLES.md`
-2. See examples in `VAPI_SYSTEM_PROMPT.txt`
+2. See examples in `prompts/VAPI_SYSTEM_PROMPT_V4.txt`
 3. Check integration in `src/lib/vapi/extract-variables.ts`
 
 ---
 
 ## Version Control
 
-**Current Version:** 2.0
-**Last Updated:** 2025-01-16
+**Current Version:** 4.0
+**Last Updated:** 2025-12-04
 
-All changes to the system prompt should be made in `VAPI_SYSTEM_PROMPT.txt` with version notes at the bottom of the file.
+All changes to the system prompt should be made in `prompts/VAPI_SYSTEM_PROMPT_V4.txt` with version notes at the bottom of the file.

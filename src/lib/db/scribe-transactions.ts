@@ -27,6 +27,7 @@ type CaseUpdate = Tables["cases"]["Update"];
 /**
  * Map extracted case types to database case types
  * Database only supports: checkup, emergency, surgery, follow_up
+ * Note: euthanasia maps to follow_up for DB, but discharge blocking happens at entity level
  */
 function mapCaseTypeToDb(
   caseType: string,
@@ -35,6 +36,7 @@ function mapCaseTypeToDb(
     case "checkup":
     case "vaccination":
     case "consultation":
+    case "exam":
       return "checkup";
     case "emergency":
       return "emergency";
@@ -43,6 +45,7 @@ function mapCaseTypeToDb(
       return "surgery";
     case "follow_up":
     case "diagnostic":
+    case "euthanasia": // DB doesn't have euthanasia type, but we check entities.caseType for discharge blocking
     case "other":
     default:
       return "follow_up";

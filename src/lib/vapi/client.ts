@@ -42,17 +42,76 @@ export interface CreatePhoneCallParams {
   /** Dynamic variables to pass to the assistant */
   assistantOverrides?: {
     variableValues?: Record<string, unknown>;
-    /** Tools to enable/override for this call (e.g., voicemail tool) */
-    tools?: Array<{
-      type: "voicemail";
-      function: {
-        name: string;
-        description: string;
-      };
-      messages?: Array<{
-        type: string;
-        content: string;
-      }>;
+    /** Tools to enable/override for this call (e.g., voicemail, transferCall) */
+    tools?: Array<VoicemailTool | TransferCallTool>;
+  };
+}
+
+/**
+ * Voicemail tool configuration
+ */
+export interface VoicemailTool {
+  type: "voicemail";
+  function: {
+    name: string;
+    description: string;
+  };
+  messages?: Array<{
+    type: string;
+    content: string;
+  }>;
+}
+
+/**
+ * Transfer call tool configuration for warm transfers
+ * See: https://docs.vapi.ai/calls/assistant-based-warm-transfer
+ */
+export interface TransferCallTool {
+  type: "transferCall";
+  function: {
+    name: string;
+    description?: string;
+  };
+  destinations: Array<TransferDestination>;
+  messages?: Array<{
+    type: "request-start" | "request-complete" | "request-failed";
+    content: string;
+    endCallAfterSpokenEnabled?: boolean;
+  }>;
+}
+
+/**
+ * Transfer destination with warm transfer plan
+ */
+export interface TransferDestination {
+  type: "number";
+  number: string;
+  description?: string;
+  transferPlan: {
+    mode: "warm-transfer-experimental";
+    transferAssistant: TransferAssistant;
+  };
+}
+
+/**
+ * Transfer assistant configuration for warm handoff
+ */
+export interface TransferAssistant {
+  /** Initial message spoken when operator answers */
+  firstMessage: string;
+  /** Controls when the transfer assistant delivers the first message */
+  firstMessageMode?: "assistant-speaks-first" | "assistant-waits-for-user";
+  /** Maximum duration in seconds for the operator call */
+  maxDurationSeconds?: number;
+  /** Seconds to wait during silence before cancelling */
+  silenceTimeoutSeconds?: number;
+  /** Model configuration */
+  model: {
+    provider: "openai" | "anthropic" | "google";
+    model: string;
+    messages: Array<{
+      role: "system" | "user" | "assistant";
+      content: string;
     }>;
   };
 }

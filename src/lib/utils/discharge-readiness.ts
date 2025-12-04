@@ -1,5 +1,6 @@
 import type { BackendCase } from "~/types/dashboard";
 import { hasValidContact } from "./dashboard-helpers";
+import type { NormalizedEntities } from "~/lib/validators/scribe";
 
 /**
  * Discharge requirements for a specific user
@@ -103,6 +104,17 @@ export function checkCaseDischargeReadiness(
   testContactPhone?: string | null,
 ): DischargeReadinessResult {
   const missingRequirements: string[] = [];
+
+  // === CONDITION 0: Check for euthanasia case - never send discharge ===
+  const entities = caseData.metadata?.entities as
+    | NormalizedEntities
+    | undefined;
+  if (entities?.caseType === "euthanasia") {
+    return {
+      isReady: false,
+      missingRequirements: ["Case is euthanasia - discharge not applicable"],
+    };
+  }
 
   // === CONDITION 1: Content Available ===
   let hasContent = false;

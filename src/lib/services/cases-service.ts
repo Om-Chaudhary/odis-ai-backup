@@ -8,6 +8,7 @@ import {
   extractFirstName,
   normalizeVariablesToSnakeCase,
 } from "~/lib/vapi/utils";
+import { normalizeToE164 } from "~/lib/utils/phone";
 import { env } from "~/env";
 
 // Type imports
@@ -337,7 +338,9 @@ export const CasesService = {
     }
 
     const metadata = (caseData.metadata as CaseMetadata | undefined) ?? {};
-    const entities = metadata.entities;
+    const entities =
+      (caseData.entity_extraction as NormalizedEntities | undefined) ??
+      metadata.entities;
 
     const patient = Array.isArray(caseData.patient)
       ? (caseData.patient[0] ?? null)
@@ -750,6 +753,13 @@ export const CasesService = {
     } else if (!customerPhone) {
       throw new Error("Patient phone number is required to schedule call");
     }
+
+    // Normalize phone number to E.164 format (+1XXXXXXXXXX for US numbers)
+    const normalizedPhone = normalizeToE164(customerPhone);
+    if (!normalizedPhone) {
+      throw new Error(`Invalid phone number format: ${customerPhone}`);
+    }
+    customerPhone = normalizedPhone;
 
     // Determine scheduled time using server time
     // Always use server time to avoid timezone and clock drift issues
@@ -1171,15 +1181,18 @@ function mapCaseTypeToDb(
   type: string,
 ): Database["public"]["Enums"]["CaseType"] {
   // DB: "checkup" | "emergency" | "surgery" | "follow_up"
+  // Note: euthanasia maps to follow_up for DB, but discharge blocking happens at entity level
   const map: Record<string, Database["public"]["Enums"]["CaseType"]> = {
     checkup: "checkup",
     vaccination: "checkup",
     consultation: "checkup",
+    exam: "checkup",
     emergency: "emergency",
     surgery: "surgery",
     dental: "surgery",
     follow_up: "follow_up",
     diagnostic: "follow_up",
+    euthanasia: "follow_up", // DB doesn't have euthanasia type, but we check entities.caseType for discharge blocking
     other: "follow_up",
     unknown: "checkup",
   };

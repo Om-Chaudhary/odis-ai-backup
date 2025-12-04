@@ -11,6 +11,7 @@ import {
 } from "./knowledge-base";
 import { createServiceClient } from "~/lib/supabase/server";
 import { getClinicByUserId } from "~/lib/clinics/utils";
+import { normalizeToE164 } from "~/lib/utils/phone";
 
 /**
  * Input parameters for creating a VAPI call
@@ -169,6 +170,15 @@ export async function createVapiCall(
       };
     }
 
+    // Normalize phone number to E.164 format (+1XXXXXXXXXX for US numbers)
+    const normalizedPhone = normalizeToE164(input.ownerPhone);
+    if (!normalizedPhone) {
+      return {
+        success: false,
+        errors: [`Invalid phone number format: ${input.ownerPhone}`],
+      };
+    }
+
     // Step 3: Store call record in Supabase
     // Note: supabase client already created in Step 0
 
@@ -178,7 +188,7 @@ export async function createVapiCall(
         user_id: userId,
         assistant_id: assistantId,
         phone_number_id: phoneNumberId,
-        customer_phone: input.ownerPhone,
+        customer_phone: normalizedPhone,
         scheduled_for: input.scheduledFor ?? null,
         status: input.scheduledFor ? "queued" : "pending",
         dynamic_variables: variablesBuildResult.variables,

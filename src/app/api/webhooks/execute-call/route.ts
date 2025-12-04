@@ -2,8 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { verifySignatureAppRouter } from "@upstash/qstash/dist/nextjs";
 import { createServiceClient } from "~/lib/supabase/server";
-import { createPhoneCall } from "~/lib/vapi/client";
-import { mapVapiStatus } from "~/lib/vapi/client";
+import { createPhoneCall, mapVapiStatus } from "~/lib/vapi/client";
 import { CasesService } from "~/lib/services/cases-service";
 import { buildDynamicVariables } from "~/lib/vapi/knowledge-base";
 import { extractVapiVariablesFromEntities } from "~/lib/vapi/extract-variables";
@@ -167,7 +166,10 @@ async function handler(req: NextRequest) {
               // The separate fields like "medications" are used by VAPI for structured questions.
 
               medications: caseInfo.entities.clinical.medications
-                ?.map((m) => `${m.name} ${m.dosage ?? ""} ${m.frequency ?? ""}`)
+                ?.map(
+                  (m: { name: string; dosage?: string; frequency?: string }) =>
+                    `${m.name} ${m.dosage ?? ""} ${m.frequency ?? ""}`,
+                )
                 .join(", "),
               nextSteps: caseInfo.entities.clinical.followUpInstructions,
 
@@ -277,77 +279,41 @@ async function handler(req: NextRequest) {
       );
     }
 
-    // Fetch user's voicemail settings from database
+    // Fetch user's settings from database for metadata storage
+    // NOTE: voicemail and transfer tools must be configured in VAPI dashboard
+    // They CANNOT be set dynamically via assistantOverrides API
     const { data: userData } = await supabase
       .from("users")
-      .select("voicemail_detection_enabled, voicemail_hangup_on_detection")
+      .select(
+        "voicemail_detection_enabled, voicemail_hangup_on_detection, clinic_phone, clinic_name",
+      )
       .eq("id", call.user_id)
       .single();
 
     const voicemailEnabled = userData?.voicemail_detection_enabled ?? false;
     const voicemailHangup = userData?.voicemail_hangup_on_detection ?? false;
 
-    console.log("[EXECUTE_CALL] Voicemail detection settings", {
+    console.log("[EXECUTE_CALL] User settings (for metadata only)", {
       callId,
       userId: call.user_id,
       voicemailEnabled,
       voicemailHangup,
-      behavior: voicemailHangup
-        ? "hang up on voicemail"
-        : voicemailEnabled
-          ? "leave voicemail message"
-          : "disabled",
+      note: "Tools must be configured in VAPI dashboard - cannot be set via API",
     });
-
-    // Prepare voicemail tool configuration
-    // - If voicemail detection enabled AND hangup is true: leave message empty to trigger hangup
-    // - If voicemail detection enabled AND hangup is false: provide message content
-    // - If voicemail detection disabled: don't include tool
-    const voicemailTool = voicemailEnabled
-      ? [
-          {
-            type: "voicemail" as const,
-            function: {
-              name: "leave_voicemail",
-              description: voicemailHangup
-                ? "Hang up when voicemail is detected"
-                : "Leave a voicemail message when voicemail is detected",
-            },
-            // Setting message to empty string makes VAPI hang up instead of leaving a message
-            messages: voicemailHangup
-              ? [
-                  {
-                    type: "request-start",
-                    content: "", // Empty message = hang up on voicemail
-                  },
-                ]
-              : [
-                  {
-                    type: "request-start",
-                    content: `Hi {{owner_name}}, this is {{agent_name}} from {{clinic_name}}. I'm checking in on {{pet_name}} after the appointment on {{appointment_date}}. Everything looked great from our end. If you have any questions or concerns about {{pet_name}}, please give us a call at {{clinic_phone}}. For emergencies, you can reach {{emergency_phone}} anytime. Take care!`,
-                  },
-                ],
-          },
-        ]
-      : undefined;
 
     // Prepare VAPI call parameters
     // Use normalized snake_case variables that match the system prompt placeholders
+    // NOTE: Tools (voicemail, transferCall) CANNOT be set via assistantOverrides
+    // They must be configured at the assistant level in the VAPI dashboard
+    // See: https://docs.vapi.ai - tools property is not allowed in assistantOverrides
     const vapiParams = {
       phoneNumber: call.customer_phone,
       assistantId,
       phoneNumberId,
       assistantOverrides:
-        Object.keys(normalizedVariables).length > 0 || voicemailTool
+        Object.keys(normalizedVariables).length > 0
           ? {
-              variableValues:
-                Object.keys(normalizedVariables).length > 0
-                  ? normalizedVariables
-                  : undefined,
-              // VOICEMAIL CONFIGURATION (controlled by feature flag)
-              // ====================================================
-              // Toggle voicemail detection in src/flags.ts or via Vercel Edge Config
-              tools: voicemailTool,
+              variableValues: normalizedVariables,
             }
           : undefined,
     };
@@ -360,6 +326,8 @@ async function handler(req: NextRequest) {
       hasAssistantOverrides: !!vapiParams.assistantOverrides,
       variableCount: Object.keys(normalizedVariables).length,
       variableKeys: Object.keys(normalizedVariables),
+      // NOTE: Tools (voicemail, transferCall) must be configured in VAPI dashboard, not here
+      toolsNote: "Configure tools in VAPI dashboard - cannot be set via API",
       criticalVariables: {
         pet_name: normalizedVariables.pet_name,
         owner_name: normalizedVariables.owner_name,

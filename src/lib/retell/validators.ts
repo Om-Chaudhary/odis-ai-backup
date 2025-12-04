@@ -1,21 +1,28 @@
 import { z } from "zod";
+import { normalizeToE164 } from "~/lib/utils/phone";
 
 /**
  * Phone number validation schema
  * Accepts international format with optional + prefix
  * E.164 format: +[country code][number]
+ * US numbers are normalized to +1XXXXXXXXXX format
  */
 export const phoneNumberSchema = z
   .string()
   .min(1, "Phone number is required")
-  .regex(
-    /^\+?[1-9]\d{1,14}$/,
-    "Invalid phone number format. Use international format (e.g., +12137774445)",
-  )
   .transform((val) => {
-    // Ensure phone number starts with +
-    return val.startsWith("+") ? val : `+${val}`;
-  });
+    // Normalize to E.164 format (+1XXXXXXXXXX for US numbers)
+    const normalized = normalizeToE164(val);
+    if (!normalized) {
+      // Return original to trigger regex validation error
+      return val;
+    }
+    return normalized;
+  })
+  .refine(
+    (val) => /^\+[1-9]\d{1,14}$/.test(val),
+    "Invalid phone number format. Use international format (e.g., +12137774445)",
+  );
 
 /**
  * Schema for sending a new call

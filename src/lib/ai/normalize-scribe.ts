@@ -33,17 +33,59 @@ CRITICAL: You are NOT generating SOAP notes or clinical documents. You are ONLY 
 Extract these entities:
 1. **Patient Information**: name, species, breed, age/DOB, sex, weight, owner details
 2. **Clinical Facts**: symptoms, vital signs, exam findings, diagnoses, test results
-3. **Medications & Treatments**: what was prescribed/administered (exact names, dosages, frequencies)
-4. **Procedures**: what was performed
-5. **Follow-up**: instructions given, recheck dates
-6. **Case Classification**: type of visit (checkup, emergency, surgery, etc.)
+3. **Medications**: ONLY prescribed take-home medications
+4. **Vaccinations**: Vaccines administered during visit (separate from medications)
+5. **Procedures**: what was performed
+6. **Follow-up**: instructions given, recheck dates
+7. **Case Classification**: type of visit (checkup, emergency, surgery, euthanasia, etc.)
 
-Guidelines:
+=== CRITICAL DISTINCTIONS ===
+
+MEDICATIONS vs VACCINATIONS vs TREATMENTS:
+- "medications": ONLY prescribed take-home medications the owner gives at home
+  Examples: Carprofen, Cephalexin, Metronidazole, Gabapentin, Apoquel, Cerenia
+- "vaccinations": Vaccines administered during the visit - put these here, NOT in medications
+  Examples: DHPP, Rabies, Bordetella, FVRCP, Leptospirosis, Lyme, Canine Influenza
+- "treatments": In-clinic treatments and grooming products
+  Examples: Fluids administered, injections given, shampoo, ear cleaner, nail trim
+
+DIAGNOSES - WHAT IS AND IS NOT A DIAGNOSIS:
+These are NOT diagnoses (patient status assessments) - do NOT include in diagnoses array:
+- BARH = "Bright, Alert, Responsive, Hydrated" - this is patient STATUS, not a diagnosis
+- BAR = "Bright, Alert, Responsive" - this is patient STATUS
+- QAR = "Quiet, Alert, Responsive" - this is patient STATUS
+- "No abnormalities detected" - this is an exam finding, not a diagnosis
+- "Healthy" or "Normal exam" - these are assessments, not diagnoses
+
+If no actual medical diagnosis exists, leave the diagnoses array EMPTY [].
+Only include actual medical conditions/diseases as diagnoses.
+
+EXPAND ALL ABBREVIATIONS in diagnoses to full terms:
+- UTI → "Urinary Tract Infection"
+- URI → "Upper Respiratory Infection"  
+- GI → "Gastrointestinal" (e.g., "GI upset" → "Gastrointestinal upset")
+- OA → "Osteoarthritis"
+- IVDD → "Intervertebral Disc Disease"
+- CHF → "Congestive Heart Failure"
+- CKD → "Chronic Kidney Disease"
+- DM → "Diabetes Mellitus"
+- HBC → "Hit by Car"
+- FLUTD → "Feline Lower Urinary Tract Disease"
+- IBD → "Inflammatory Bowel Disease"
+- DJD → "Degenerative Joint Disease"
+- ACL/CCL → "Cranial Cruciate Ligament" injury/rupture
+
+EUTHANASIA DETECTION:
+If the text mentions euthanasia, humane euthanasia, put to sleep, end of life, peaceful passing, 
+or similar end-of-life procedures:
+- Set caseType to "euthanasia"
+- This will prevent discharge communications from being sent
+
+=== GENERAL GUIDELINES ===
 - EXTRACT ONLY what is explicitly stated - do not infer or generate new content
 - If a field is missing, leave it empty - do not fill with assumptions
 - Preserve exact medication names, dosages, and instructions as written
 - Extract vital signs exactly as recorded
-- List diagnoses as mentioned (do not add differentials unless stated)
 - Indicate confidence level for extracted data
 - Flag warnings if critical information is missing or ambiguous
 
@@ -72,20 +114,27 @@ Output Format (JSON only, NO markdown code blocks):
       "respiratoryRate": "string (optional)",
       "weight": "string (optional)"
     },
-    "physicalExamFindings": ["array of findings"],
-    "diagnoses": ["array of diagnoses"],
+    "physicalExamFindings": ["array of findings - include BARH/BAR/QAR here if present"],
+    "diagnoses": ["array of ACTUAL medical diagnoses only - NOT status assessments, expand abbreviations"],
     "differentialDiagnoses": ["array if mentioned"],
     "medications": [
       {
-        "name": "string",
+        "name": "string (prescribed take-home meds ONLY)",
         "dosage": "string (optional)",
         "frequency": "string (optional)",
         "duration": "string (optional)",
         "route": "string (optional, e.g., 'PO', 'IV')"
       }
     ],
-    "treatments": ["array of treatments"],
-    "procedures": ["array of procedures"],
+    "vaccinations": [
+      {
+        "name": "string (e.g., 'DHPP', 'Rabies', 'Bordetella')",
+        "manufacturer": "string (optional)",
+        "lotNumber": "string (optional)"
+      }
+    ],
+    "treatments": ["array of in-clinic treatments, grooming products"],
+    "procedures": ["array of procedures performed"],
     "followUpInstructions": "string (optional)",
     "followUpDate": "string (optional)",
     "recheckRequired": boolean,
@@ -94,7 +143,7 @@ Output Format (JSON only, NO markdown code blocks):
     "clinicalNotes": "string (optional, any additional notes)",
     "prognosis": "string (optional)"
   },
-  "caseType": "checkup" | "emergency" | "surgery" | "follow_up" | "dental" | "vaccination" | "diagnostic" | "consultation" | "other" | "unknown",
+  "caseType": "checkup" | "emergency" | "surgery" | "follow_up" | "dental" | "vaccination" | "diagnostic" | "consultation" | "exam" | "euthanasia" | "other" | "unknown",
   "confidence": {
     "overall": number (0-1, how confident you are in the extraction),
     "patient": number (0-1),
@@ -339,6 +388,14 @@ export function createMockEntities(): NormalizedEntities {
           dosage: "75mg",
           frequency: "BID",
           duration: "7 days",
+        },
+      ],
+      vaccinations: [
+        {
+          name: "DHPP",
+        },
+        {
+          name: "Rabies",
         },
       ],
       followUpInstructions: "Rest and restricted activity",

@@ -595,7 +595,89 @@ export class DischargeOrchestrator {
       hasPatient: !!entities.patient,
       hasClinical: !!entities.clinical,
       confidence: entities.confidence?.overall,
+      extractedPatientName: entities.patient?.name,
     });
+
+    // Enrich extracted entities with patient data from database
+    // This ensures we use actual patient data (name, species, etc.) when AI extraction returns "unknown"
+    const { data: patientData } = await this.supabase
+      .from("cases")
+      .select(
+        `
+        patients (
+          id,
+          name,
+          species,
+          breed,
+          sex,
+          weight_kg,
+          owner_name,
+          owner_phone,
+          owner_email
+        )
+      `,
+      )
+      .eq("id", caseId)
+      .single();
+
+    if (patientData?.patients) {
+      const patient = Array.isArray(patientData.patients)
+        ? patientData.patients[0]
+        : patientData.patients;
+
+      if (patient) {
+        CasesService.enrichEntitiesWithPatient(entities, patient as PatientRow);
+        console.log("[ORCHESTRATOR] Enriched entities with database patient", {
+          caseId,
+          dbPatientName: patient.name,
+          finalPatientName: entities.patient?.name,
+        });
+      }
+    }
+
+    // Also check IDEXX metadata for patient info if not in database
+    if (
+      entities.patient?.name === "unknown" ||
+      !entities.patient?.name?.trim()
+    ) {
+      const idexxMetadata = caseData.metadata as {
+        idexx?: {
+          pet_name?: string;
+          species?: string;
+          client_first_name?: string;
+          client_last_name?: string;
+          owner_name?: string;
+        };
+      } | null;
+
+      if (idexxMetadata?.idexx) {
+        const idexx = idexxMetadata.idexx;
+
+        // Enrich patient name from IDEXX metadata
+        if (idexx.pet_name?.trim()) {
+          entities.patient.name = idexx.pet_name;
+          console.log(
+            "[ORCHESTRATOR] Enriched patient name from IDEXX metadata",
+            {
+              caseId,
+              petName: idexx.pet_name,
+            },
+          );
+        }
+
+        // Enrich owner name if missing
+        if (
+          (!entities.patient.owner.name ||
+            entities.patient.owner.name === "unknown") &&
+          (idexx.owner_name ||
+            (idexx.client_first_name && idexx.client_last_name))
+        ) {
+          entities.patient.owner.name =
+            idexx.owner_name ??
+            `${idexx.client_first_name} ${idexx.client_last_name}`.trim();
+        }
+      }
+    }
 
     // Save extracted entities back to the case
     const { error: updateError } = await this.supabase

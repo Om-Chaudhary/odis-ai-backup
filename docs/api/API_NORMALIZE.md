@@ -114,7 +114,7 @@ Extract structured clinical entities from veterinary text.
         "clinicalNotes": string?,
         "prognosis": string?
       },
-      "caseType": "checkup" | "emergency" | "surgery" | "follow_up" | "dental" | "vaccination" | "diagnostic" | "consultation" | "other",
+      "caseType": "checkup" | "emergency" | "surgery" | "follow_up" | "dental" | "vaccination" | "diagnostic" | "consultation" | "exam" | "other" | "unknown",
       "confidence": {
         "overall": number,    // 0-1
         "patient": number,    // 0-1

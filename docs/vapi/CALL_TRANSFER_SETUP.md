@@ -91,82 +91,112 @@ The system prompts have been updated to use the transfer tool:
 
 **Assistant**: "What you're describing needs immediate attention. The emergency number is five five five nine nine nine eight eight eight eight, and they're available twenty-four seven. Can you get Max there right away?"
 
-**With Transfer Configured**:
-**Assistant**: "What you're describing needs immediate attention. Would you like me to connect you directly to our emergency line right now, or would you prefer to call them yourself?"
+> Note: Emergency situations are routed to the emergency line verbally (no warm transfer) because speed is critical.
 
-**Owner**: "Yes, please connect me!"
-
-**Assistant**: _Executes `transferCall({ destination: "emergency", reason: "difficulty breathing" })`_
-
-### Scenario 2: Urgent Situation
+### Scenario 2: Urgent Situation (Warm Transfer)
 
 **Owner**: "Bella has been vomiting all morning and won't eat."
 
-**Assistant**: "I'm concerned about what you're telling me. I think Bella should be seen by a veterinarian today. Can you call the clinic at five five five one two three four five six seven as soon as we hang up?"
-
-**With Transfer Configured**:
-**Assistant**: "I'm concerned about what you're telling me. I think Bella should be seen by a veterinarian today. Would you like me to connect you directly to the clinic, or would you prefer to call them yourself at five five five one two three four five six seven?"
+**Assistant**: "I'm concerned about what you're telling me. I think Bella should be seen by a veterinarian today. Would you like me to connect you directly to the clinic right now, or would you prefer to call them yourself?"
 
 **Owner**: "Can you connect me? That would be easier."
 
-**Assistant**: _Executes `transferCall({ destination: "clinic", reason: "persistent vomiting" })`_
+**Assistant**: "I'll connect you to our clinic right now. Please hold for just a moment."
+→ _Uses `transferToClinic` tool_
+
+**Transfer Assistant** (to front desk): "Hi, I have Sarah on the line regarding Bella. They have a concern about persistent vomiting. Are you available?"
+
+**Front Desk**: "Yes, put them through."
+
+**Transfer Assistant**: _Calls `transferSuccessful`_ → Owner connected to front desk
 
 ---
 
 ## Testing Call Transfers
 
-### Test in VAPI Dashboard
+### Test with Real Calls
 
-1. Use VAPI's testing interface to simulate calls
-2. Trigger urgent scenarios (e.g., "My pet is having trouble breathing")
-3. Verify the assistant offers to transfer
-4. Confirm the transfer executes correctly
+1. Ensure user has `clinic_phone` set in E.164 format
+2. Schedule a test call to yourself
+3. During the call, report urgent symptoms (e.g., "My pet has been vomiting all day")
+4. Accept the transfer offer ("Yes, please connect me")
+5. Verify:
+   - You hear "I'll connect you to our clinic right now"
+   - Hold music/ringing plays
+   - Clinic phone rings
+   - Transfer assistant briefs the front desk
+   - Parties are connected
 
-### Test with Real Calls (Test Mode)
+### Checking Logs
 
-1. Enable test mode in your user settings
-2. Configure your test contact phone number
-3. Schedule a test call
-4. During the call, report urgent symptoms
-5. Accept the transfer offer
-6. Verify you're connected to the correct number
+Look for these log entries in your deployment:
+
+```
+[EXECUTE_CALL] Warm transfer tool configured { clinicPhone: "+1...", destinationType: "warm-transfer-experimental" }
+[EXECUTE_CALL] Calling VAPI API with parameters { toolsConfigured: ["voicemail", "transferCall"], ... }
+```
 
 ---
 
 ## Fallback Behavior
 
-If the `transferCall` function is **not configured** or **fails**:
+If the transfer **fails** or **clinic phone is not configured**:
 
-1. The assistant will provide phone numbers verbally
-2. Strongly encourage the owner to call immediately
-3. End the call so the owner can make the necessary call
+1. Owner is returned to the AI assistant
+2. AI provides the clinic phone number verbally
+3. Encourages owner to call immediately
 
-This ensures pet owners can always reach help, even if transfers are not configured.
+**Example fallback**:
+"I'm sorry, I wasn't able to connect you directly. Please call the clinic at five five five one two three four five six seven as soon as possible and let them know about Bella's symptoms."
 
 ---
 
 ## Variables Used for Transfers
 
-The following variables are passed to the assistant and used for transfer destinations:
-
-| Variable          | Source                     | Example        |
-| ----------------- | -------------------------- | -------------- |
-| `clinic_phone`    | User settings or case data | `+15551234567` |
-| `emergency_phone` | User settings or case data | `+15559998888` |
-
-These are automatically formatted for speech (with spaces between digits) in the system prompt but used in E.164 format for actual transfers.
+| Variable          | Source                  | Format               | Usage                    |
+| ----------------- | ----------------------- | -------------------- | ------------------------ |
+| `clinic_phone`    | `users.clinic_phone`    | E.164 (+15551234567) | Transfer destination     |
+| `clinic_phone`    | dynamic_variables       | Spelled out          | Verbal fallback          |
+| `emergency_phone` | `users.emergency_phone` | E.164                | Emergency verbal routing |
 
 ---
 
-## Code Changes Required
+## Code Implementation
 
-**None.** The code is already configured to work with call transfers:
+The warm transfer is implemented in:
 
-- Variables (`clinic_phone`, `emergency_phone`) are passed to VAPI
-- System prompt handles conversation flow for identifying transfer scenarios
-- All logic is in place to support transfers
+- **`src/lib/vapi/warm-transfer.ts`** - Transfer tool builder
+- **`src/lib/vapi/client.ts`** - TypeScript types for transfer tools
+- **`src/app/api/webhooks/execute-call/route.ts`** - Tool configuration at call time
 
-The only step required is configuring the `transferCall` function in the VAPI dashboard.
+### Key Files
+
+```
+src/lib/vapi/
+├── warm-transfer.ts    # buildWarmTransferTool() function
+├── client.ts           # TransferCallTool, TransferDestination types
+└── simple-types.ts     # Dynamic variables types
+```
+
+### Adding the Tool
+
+The transfer tool is automatically added in `execute-call/route.ts`:
+
+```typescript
+if (userClinicPhone) {
+  const warmTransferTool = buildWarmTransferTool(userClinicPhone, {
+    petName: normalizedVariables.pet_name,
+    ownerName: normalizedVariables.owner_name,
+    primaryDiagnosis: normalizedVariables.primary_diagnosis,
+    condition: normalizedVariables.condition,
+    callType: normalizedVariables.call_type,
+    clinicName: normalizedVariables.clinic_name,
+  });
+  if (warmTransferTool) {
+    tools.push(warmTransferTool);
+  }
+}
+```
 
 ---
 
@@ -176,60 +206,89 @@ The only step required is configuring the `transferCall` function in the VAPI da
 
 **Possible Causes:**
 
-1. `transferCall` function not configured in VAPI assistant
-2. Function not properly linked to phone number variables
-3. System prompt not updated (should be v3.0+)
+1. `clinic_phone` not set in user profile
+2. `clinic_phone` not in E.164 format
+3. System prompt not updated
 
 **Solution:**
 
-- Verify function is configured in VAPI dashboard
-- Check function has access to `{{clinic_phone}}` and `{{emergency_phone}}` variables
-- Confirm assistant is using the latest system prompt
+- Check `users.clinic_phone` in database has value like `+15551234567`
+- Verify logs show "Warm transfer tool configured"
+- Confirm assistant is using latest system prompt
 
 ### Transfer Fails Mid-Call
 
 **Possible Causes:**
 
-1. Invalid phone number format (must be E.164)
-2. Phone number variables not populated
-3. VAPI transfer service issue
+1. Invalid phone number format
+2. Clinic doesn't answer within 60 seconds
+3. Voicemail detected at clinic
 
 **Solution:**
 
-- Verify phone numbers in database are in E.164 format (e.g., `+15551234567`)
-- Check `scheduled_discharge_calls.dynamic_variables` contains `clinic_phone` and `emergency_phone`
-- Review VAPI logs for transfer errors
+- Verify `clinic_phone` is in E.164 format (`+15551234567`)
+- Check VAPI call logs for `transferCancel` events
+- Review transfer assistant behavior in logs
 
-### Assistant Doesn't Identify Transfer Scenarios
+### Transfer Assistant Doesn't Brief Front Desk Correctly
 
 **Possible Causes:**
 
-1. System prompt not properly loaded
-2. Assistant not following transfer protocol (Phase 6)
+1. Missing patient context in dynamic variables
+2. Transfer assistant prompt issue
 
 **Solution:**
 
-- Verify assistant is using VAPI_SYSTEM_PROMPT.txt v3.0+
-- Review Phase 5 (Warning Signs Check) and Phase 6 (Transfer Protocol) in the prompt
-- Test with explicit phrases like "my pet can't breathe" or "my pet is bleeding badly"
+- Check that `pet_name`, `owner_name`, `condition`/`primary_diagnosis` are in call variables
+- Review `buildWarmTransferTool()` in `src/lib/vapi/warm-transfer.ts`
+
+### Front Desk Hears Nothing
+
+**Possible Causes:**
+
+1. `firstMessageMode` set incorrectly
+2. Transfer assistant waiting for front desk to speak first
+
+**Solution:**
+
+- Verify `firstMessageMode: "assistant-speaks-first"` in transfer config
+- The transfer assistant should speak immediately when front desk answers
+
+---
+
+## Limitations
+
+- **Twilio only**: Warm transfers require Twilio phone numbers in VAPI
+- **Experimental mode**: Uses `warm-transfer-experimental` which may have VAPI updates
+- **60 second timeout**: Transfer assistant has 60 seconds to complete handoff
+- **No emergency transfers**: Emergency situations use verbal routing (faster)
 
 ---
 
 ## Additional Resources
 
-- [VAPI Documentation](https://docs.vapi.ai/)
+- [VAPI Warm Transfer Docs](https://docs.vapi.ai/calls/assistant-based-warm-transfer)
 - [VAPI Dashboard](https://dashboard.vapi.ai)
-- [System Prompt v3.0](./prompts/VAPI_SYSTEM_PROMPT.txt)
-- [Call Flow Documentation](./VAPI_FINAL_SETUP.md)
+- [System Prompt](./prompts/VAPI_SYSTEM_PROMPT.txt)
+- [System Prompt V4](./prompts/VAPI_SYSTEM_PROMPT_V4.txt)
 
 ---
 
 ## Summary
 
-Call transfer is a powerful feature that:
+Warm transfer is **automatically configured** when users have a clinic phone number:
 
-- Improves user experience (no need to hang up and dial)
-- Reduces friction in urgent situations
-- Ensures faster connection to veterinary care
+| Requirement      | Value                                |
+| ---------------- | ------------------------------------ |
+| User field       | `users.clinic_phone` in E.164 format |
+| Code changes     | None (automatic)                     |
+| Dashboard config | None (automatic)                     |
+| Transfer mode    | `warm-transfer-experimental`         |
+| Max duration     | 60 seconds                           |
 
-The implementation is **dashboard-only** (no code changes needed) and takes approximately 10 minutes to configure.
+**Benefits:**
+
+- Seamless handoff (owner stays on the line)
+- Front desk gets patient context before connection
+- Fallback to verbal phone number if transfer fails
+- No manual VAPI configuration required

@@ -65,6 +65,59 @@ export function normalizePhoneNumber(
 }
 
 /**
+ * Normalizes a phone number to E.164 format, specifically ensuring
+ * US numbers are always in +1XXXXXXXXXX format.
+ *
+ * This is the canonical function to use before saving phone numbers to the database.
+ *
+ * @param phone - Phone number in any format
+ * @returns Normalized phone number in E.164 format (+1XXXXXXXXXX for US) or null if invalid
+ *
+ * @example
+ * normalizeToE164("(213) 777-4445") // Returns "+12137774445"
+ * normalizeToE164("12137774445") // Returns "+12137774445"
+ * normalizeToE164("+1 213-777-4445") // Returns "+12137774445"
+ * normalizeToE164("2137774445") // Returns "+12137774445"
+ */
+export function normalizeToE164(
+  phone: string | null | undefined,
+): string | null {
+  if (!phone) return null;
+
+  const trimmed = phone.trim();
+  if (!trimmed) return null;
+
+  // Remove all non-digit characters
+  const digits = trimmed.replace(/\D/g, "");
+  if (digits.length === 0) return null;
+
+  // Handle US numbers specifically
+  // 10 digits without country code
+  if (digits.length === 10) {
+    return `+1${digits}`;
+  }
+
+  // 11 digits starting with 1 (US country code included)
+  if (digits.length === 11 && digits.startsWith("1")) {
+    return `+${digits}`;
+  }
+
+  // For other formats, check if original had + and preserve structure
+  if (trimmed.startsWith("+")) {
+    // Already has +, just clean and return
+    return `+${digits}`;
+  }
+
+  // If we have digits but no clear format, assume it needs a +
+  // Validate it's a reasonable E.164 length (1-15 digits after +)
+  if (digits.length >= 1 && digits.length <= 15) {
+    return `+${digits}`;
+  }
+
+  return null;
+}
+
+/**
  * Normalizes an email address to lowercase and trims whitespace
  *
  * @param email - Email address in any format

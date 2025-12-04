@@ -92,6 +92,7 @@ export const ClinicalDetailsSchema = z.object({
   differentialDiagnoses: z.array(z.string()).optional(),
 
   // Medications & treatments
+  // NOTE: medications = prescribed take-home meds ONLY (not vaccines or grooming products)
   medications: z
     .array(
       z.object({
@@ -100,6 +101,16 @@ export const ClinicalDetailsSchema = z.object({
         frequency: z.string().optional(),
         duration: z.string().optional(),
         route: z.string().optional(),
+      }),
+    )
+    .optional(),
+  // Vaccinations administered during visit (separate from medications)
+  vaccinations: z
+    .array(
+      z.object({
+        name: z.string(), // e.g., "DHPP", "Rabies", "Bordetella", "FVRCP"
+        manufacturer: z.string().optional(),
+        lotNumber: z.string().optional(),
       }),
     )
     .optional(),
@@ -132,6 +143,8 @@ export const CaseTypeSchema = z.enum([
   "vaccination",
   "diagnostic",
   "consultation",
+  "exam",
+  "euthanasia", // Blocks discharge communications
   "other",
   "unknown",
 ]);
