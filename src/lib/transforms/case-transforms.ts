@@ -13,6 +13,7 @@ export type PartialBackendCase = Omit<
     status: BackendCase["scheduled_discharge_calls"][number]["status"];
     scheduled_for: string | null;
     ended_at: string | null;
+    ended_reason: string | null;
     vapi_call_id: string | null;
     transcript: string | null;
     recording_url: string | null;
@@ -104,11 +105,12 @@ export function transformBackendCaseToDashboardCase(
         status: call.status ?? "queued",
         scheduled_for: call.scheduled_for,
         ended_at: call.ended_at,
+        ended_reason: call.ended_reason ?? null,
         vapi_call_id: call.vapi_call_id,
         transcript: call.transcript ?? null,
         recording_url: call.recording_url ?? null,
         duration_seconds: call.duration_seconds ?? null,
-        created_at: call.created_at, // Use created_at from backend if available, otherwise it might be missing in types currently but we added it to query
+        created_at: call.created_at,
       }))
       .sort((a, b) => {
         // Sort by created_at descending (newest first)

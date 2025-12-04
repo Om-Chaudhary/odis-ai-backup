@@ -14,6 +14,29 @@ import { Search, Info } from "lucide-react";
 import type { DischargeReadinessFilter } from "~/types/dashboard";
 import { Badge } from "~/components/ui/badge";
 
+/**
+ * VAPI call end reason filter options
+ */
+export type CallEndReasonFilter =
+  | "all"
+  | "successful"
+  | "voicemail"
+  | "no_answer"
+  | "busy"
+  | "failed";
+
+/**
+ * Human-readable labels for call end reason filters
+ */
+const CALL_END_REASON_LABELS: Record<CallEndReasonFilter, string> = {
+  all: "All Outcomes",
+  successful: "Successful",
+  voicemail: "Voicemail",
+  no_answer: "No Answer",
+  busy: "Line Busy",
+  failed: "Failed",
+};
+
 interface UnifiedFilterBarProps {
   /** Current selected date for day navigation */
   currentDate: Date;
@@ -35,6 +58,11 @@ interface UnifiedFilterBarProps {
   readinessFilter: DischargeReadinessFilter;
   /** Callback when readiness filter changes */
   onReadinessFilterChange: (filter: DischargeReadinessFilter) => void;
+
+  /** Current call end reason filter value */
+  callEndReasonFilter?: CallEndReasonFilter;
+  /** Callback when call end reason filter changes */
+  onCallEndReasonFilterChange?: (filter: CallEndReasonFilter) => void;
 
   /** Search term */
   searchTerm: string;
@@ -77,6 +105,8 @@ export function UnifiedFilterBar({
   onStatusFilterChange,
   readinessFilter,
   onReadinessFilterChange,
+  callEndReasonFilter = "all",
+  onCallEndReasonFilterChange,
   searchTerm,
   onSearchChange,
 }: UnifiedFilterBarProps) {
@@ -184,6 +214,41 @@ export function UnifiedFilterBar({
             </SelectContent>
           </Select>
         </div>
+
+        {/* Call Outcome Filter */}
+        {onCallEndReasonFilterChange && (
+          <div className="flex min-w-0 flex-col gap-2 sm:max-w-[180px] sm:min-w-[140px]">
+            <Label
+              htmlFor="call-outcome-filter"
+              className="text-xs font-medium text-slate-700"
+            >
+              Call Outcome
+            </Label>
+            <Select
+              value={callEndReasonFilter}
+              onValueChange={(value) =>
+                onCallEndReasonFilterChange(value as CallEndReasonFilter)
+              }
+            >
+              <SelectTrigger
+                id="call-outcome-filter"
+                className="w-full sm:w-[150px]"
+                size="sm"
+              >
+                <SelectValue placeholder="Select outcome" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.entries(CALL_END_REASON_LABELS).map(
+                  ([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ),
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
     </div>
   );

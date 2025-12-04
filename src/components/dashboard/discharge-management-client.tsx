@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "~/components/ui/button";
 import {
@@ -10,13 +10,20 @@ import {
   TestTube,
   Send,
   Loader2,
+  Phone,
+  ClipboardList,
 } from "lucide-react";
 import { Badge } from "~/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { DischargeListItem } from "./discharge-list-item";
 import { EmptyState } from "./empty-state";
-import { UnifiedFilterBar } from "./unified-filter-bar";
+import {
+  UnifiedFilterBar,
+  type CallEndReasonFilter,
+} from "./unified-filter-bar";
 import { BatchDischargeDialog } from "./batch-discharge-dialog";
 import { BatchProgressMonitor } from "./batch-progress-monitor";
+import { VapiCallHistory } from "./vapi-call-history";
 import { api } from "~/trpc/client";
 import type {
   DashboardCase,
@@ -74,12 +81,17 @@ export function DischargeManagementClient() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentPage, setCurrentPage] = useState(1);
-  const [loadingCase, setLoadingCase] = useState<LoadingState | null>(null);
+  const [loadingCases, setLoadingCases] = useState<Map<string, LoadingState>>(
+    new Map(),
+  );
   const [statusFilter, setStatusFilter] = useState<
     "all" | "ready" | "pending" | "completed" | "failed"
   >("all");
   const [readinessFilter, setReadinessFilter] =
     useState<DischargeReadinessFilter>("all");
+  const [callEndReasonFilter, setCallEndReasonFilter] =
+    useState<CallEndReasonFilter>("all");
+  const [activeTab, setActiveTab] = useState<"cases" | "calls">("cases");
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   // Accumulated cases for "Load More" functionality
@@ -90,9 +102,6 @@ export function DischargeManagementClient() {
   const [showBatchDialog, setShowBatchDialog] = useState(false);
   const [activeBatchId, setActiveBatchId] = useState<string | null>(null);
   const [isBatchProcessing, setIsBatchProcessing] = useState(false);
-
-  // Ref to prevent double-clicks
-  const isProcessingRef = useRef(false);
 
   // Calculate date parameters - use single date (day navigation)
   // When search term is active, override date filters to search all time
@@ -229,11 +238,6 @@ export function DischargeManagementClient() {
     onError: (error) => {
       toast.error(error.message ?? "Failed to trigger discharge");
     },
-    onSettled: () => {
-      // Clear loading state when mutation completes (success or error)
-      setLoadingCase(null);
-      isProcessingRef.current = false;
-    },
   });
 
   // Store schedule times
@@ -284,12 +288,11 @@ export function DischargeManagementClient() {
 
   // Handlers
   const handleTriggerCall = async (caseId: string, patientId: string) => {
-    // Prevent double-clicks and concurrent mutations
-    if (isProcessingRef.current ?? loadingCase !== null) {
+    // Prevent duplicate triggers for the same case
+    if (loadingCases.has(caseId)) {
       console.log("[Dashboard] Ignoring duplicate call trigger", {
         caseId,
-        isProcessing: isProcessingRef.current,
-        loadingCase,
+        loadingState: loadingCases.get(caseId),
       });
       return;
     }
@@ -314,29 +317,41 @@ export function DischargeManagementClient() {
     }
 
     // Set loading state BEFORE mutation to prevent race conditions
-    isProcessingRef.current = true;
-    setLoadingCase({ caseId, type: "call" });
+    setLoadingCases((prev) =>
+      new Map(prev).set(caseId, { caseId, type: "call" }),
+    );
 
     toast.info("Initiating discharge call...");
-    triggerDischargeMutation.mutate({
-      caseId,
-      patientId,
-      patientData: {
-        ownerName,
-        ownerEmail,
-        ownerPhone: phone,
+    triggerDischargeMutation.mutate(
+      {
+        caseId,
+        patientId,
+        patientData: {
+          ownerName,
+          ownerEmail,
+          ownerPhone: phone,
+        },
+        dischargeType: "call",
       },
-      dischargeType: "call",
-    });
+      {
+        onSettled: () => {
+          // Clear loading state for this specific case when mutation completes
+          setLoadingCases((prev) => {
+            const next = new Map(prev);
+            next.delete(caseId);
+            return next;
+          });
+        },
+      },
+    );
   };
 
   const handleTriggerEmail = async (caseId: string, patientId: string) => {
-    // Prevent double-clicks and concurrent mutations
-    if (isProcessingRef.current ?? loadingCase !== null) {
+    // Prevent duplicate triggers for the same case
+    if (loadingCases.has(caseId)) {
       console.log("[Dashboard] Ignoring duplicate email trigger", {
         caseId,
-        isProcessing: isProcessingRef.current,
-        loadingCase,
+        loadingState: loadingCases.get(caseId),
       });
       return;
     }
@@ -361,20 +376,33 @@ export function DischargeManagementClient() {
     }
 
     // Set loading state BEFORE mutation to prevent race conditions
-    isProcessingRef.current = true;
-    setLoadingCase({ caseId, type: "email" });
+    setLoadingCases((prev) =>
+      new Map(prev).set(caseId, { caseId, type: "email" }),
+    );
 
     toast.info("Sending discharge email...");
-    triggerDischargeMutation.mutate({
-      caseId,
-      patientId,
-      patientData: {
-        ownerName,
-        ownerEmail: email,
-        ownerPhone,
+    triggerDischargeMutation.mutate(
+      {
+        caseId,
+        patientId,
+        patientData: {
+          ownerName,
+          ownerEmail: email,
+          ownerPhone,
+        },
+        dischargeType: "email",
       },
-      dischargeType: "email",
-    });
+      {
+        onSettled: () => {
+          // Clear loading state for this specific case when mutation completes
+          setLoadingCases((prev) => {
+            const next = new Map(prev);
+            next.delete(caseId);
+            return next;
+          });
+        },
+      },
+    );
   };
 
   const handleUpdatePatient = (patientId: string, data: PatientUpdateInput) => {
@@ -461,6 +489,44 @@ export function DischargeManagementClient() {
     setAccumulatedCases([]);
   }, []);
 
+  // Helper function to check if a call matches the end reason filter
+  const matchesCallEndReasonFilter = useCallback(
+    (endedReason: string | null | undefined): boolean => {
+      if (callEndReasonFilter === "all") return true;
+      if (!endedReason) return false;
+
+      const reason = endedReason.toLowerCase();
+
+      switch (callEndReasonFilter) {
+        case "successful":
+          return [
+            "assistant-ended-call",
+            "customer-ended-call",
+            "assistant-forwarded-call",
+          ].includes(reason);
+        case "voicemail":
+          return reason === "voicemail";
+        case "no_answer":
+          return [
+            "customer-did-not-answer",
+            "dial-no-answer",
+            "silence-timed-out",
+          ].includes(reason);
+        case "busy":
+          return ["customer-busy", "dial-busy"].includes(reason);
+        case "failed":
+          return [
+            "dial-failed",
+            "assistant-error",
+            "exceeded-max-duration",
+          ].some((r) => reason.includes(r));
+        default:
+          return true;
+      }
+    },
+    [callEndReasonFilter],
+  );
+
   // Filtering (client-side for search and status, server-side for pagination and readiness)
   // Note: Readiness filtering happens on the backend based on user-specific requirements.
   // Cases returned from the backend already meet readiness requirements when readinessFilter is applied.
@@ -473,6 +539,14 @@ export function DischargeManagementClient() {
           c.patient.name.toLowerCase().includes(searchLower) ||
           c.patient.owner_name.toLowerCase().includes(searchLower);
         if (!matchesSearch) return false;
+      }
+
+      // Call end reason filter - check if any call matches the filter
+      if (callEndReasonFilter !== "all") {
+        const hasMatchingCall = c.scheduled_discharge_calls.some((call) =>
+          matchesCallEndReasonFilter(call.ended_reason),
+        );
+        if (!hasMatchingCall) return false;
       }
 
       // Status filter
@@ -525,7 +599,13 @@ export function DischargeManagementClient() {
 
       return true;
     });
-  }, [accumulatedCases, searchTerm, statusFilter]);
+  }, [
+    accumulatedCases,
+    searchTerm,
+    statusFilter,
+    callEndReasonFilter,
+    matchesCallEndReasonFilter,
+  ]);
 
   return (
     <div className="space-y-6 p-6 pb-16">
@@ -589,110 +669,148 @@ export function DischargeManagementClient() {
         </div>
       </div>
 
-      {/* Unified Filter Bar - Search, date controls, and status filters */}
-      <UnifiedFilterBar
-        currentDate={currentDate}
-        onDateChange={handleDateChange}
-        totalItems={totalCases}
-        isLoading={isLoading}
-        statusFilter={statusFilter}
-        onStatusFilterChange={(filter) => {
-          setStatusFilter(filter);
-          handleFilterReset();
-        }}
-        readinessFilter={readinessFilter}
-        onReadinessFilterChange={(filter) => {
-          setReadinessFilter(filter);
-          handleFilterReset();
-        }}
-        searchTerm={searchTerm}
-        onSearchChange={(term) => {
-          setSearchTerm(term);
-          handleFilterReset();
-        }}
-      />
+      {/* Tabs for Cases and Call History */}
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as "cases" | "calls")}
+        className="space-y-4"
+      >
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="cases" className="gap-2">
+            <ClipboardList className="h-4 w-4" />
+            Cases
+          </TabsTrigger>
+          <TabsTrigger value="calls" className="gap-2">
+            <Phone className="h-4 w-4" />
+            Call History
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Content */}
-      {isLoading && currentPage === 1 ? (
-        <div className="space-y-2">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="bg-muted/10 h-24 animate-pulse rounded-lg border"
-            />
-          ))}
-        </div>
-      ) : filteredCases.length === 0 ? (
-        <div className="animate-card-in-delay-2">
-          <EmptyState />
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {filteredCases.map((c, index) => {
-            // Only show loading for the specific case being processed
-            const isThisCaseLoading = loadingCase?.caseId === c.id;
-            const isLoadingCall =
-              isThisCaseLoading &&
-              (loadingCase?.type === "call" || loadingCase?.type === "both");
-            const isLoadingEmail =
-              isThisCaseLoading &&
-              (loadingCase?.type === "email" || loadingCase?.type === "both");
+        {/* Cases Tab */}
+        <TabsContent value="cases" className="space-y-4">
+          {/* Unified Filter Bar - Search, date controls, and status filters */}
+          <UnifiedFilterBar
+            currentDate={currentDate}
+            onDateChange={handleDateChange}
+            totalItems={totalCases}
+            isLoading={isLoading}
+            statusFilter={statusFilter}
+            onStatusFilterChange={(filter) => {
+              setStatusFilter(filter);
+              handleFilterReset();
+            }}
+            readinessFilter={readinessFilter}
+            onReadinessFilterChange={(filter) => {
+              setReadinessFilter(filter);
+              handleFilterReset();
+            }}
+            callEndReasonFilter={callEndReasonFilter}
+            onCallEndReasonFilterChange={(filter) => {
+              setCallEndReasonFilter(filter);
+              handleFilterReset();
+            }}
+            searchTerm={searchTerm}
+            onSearchChange={(term) => {
+              setSearchTerm(term);
+              handleFilterReset();
+            }}
+          />
 
-            return (
-              <div
-                key={c.id}
-                className="animate-card-in"
-                style={{ animationDelay: `${0.1 + index * 0.02}s` }}
-              >
-                <DischargeListItem
-                  caseData={c}
-                  settings={settings}
-                  onTriggerCall={(id) => handleTriggerCall(id, c.patient.id)}
-                  onTriggerEmail={(id) => handleTriggerEmail(id, c.patient.id)}
-                  onUpdatePatient={handleUpdatePatient}
-                  testModeEnabled={settings.testModeEnabled}
-                  testContactName={settings.testContactName}
-                  testContactEmail={settings.testContactEmail}
-                  testContactPhone={settings.testContactPhone}
-                  isLoadingCall={isLoadingCall}
-                  isLoadingEmail={isLoadingEmail}
-                  isLoadingUpdate={updatePatientMutation.isPending}
+          {/* Content */}
+          {isLoading && currentPage === 1 ? (
+            <div className="space-y-2">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="bg-muted/10 h-24 animate-pulse rounded-lg border"
                 />
-              </div>
-            );
-          })}
+              ))}
+            </div>
+          ) : filteredCases.length === 0 ? (
+            <div className="animate-card-in-delay-2">
+              <EmptyState />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredCases.map((c, index) => {
+                // Check loading state for this specific case from the map
+                const caseLoadingState = loadingCases.get(c.id);
+                const isThisCaseLoading = caseLoadingState !== undefined;
+                const isLoadingCall =
+                  isThisCaseLoading &&
+                  (caseLoadingState?.type === "call" ||
+                    caseLoadingState?.type === "both");
+                const isLoadingEmail =
+                  isThisCaseLoading &&
+                  (caseLoadingState?.type === "email" ||
+                    caseLoadingState?.type === "both");
 
-          {/* Load More Button */}
-          {hasNextPage && (
-            <div className="flex justify-center pt-4">
-              <Button
-                variant="outline"
-                onClick={handleLoadMore}
-                disabled={isLoadingMore || isFetching}
-                className="min-w-[200px]"
-              >
-                {isLoadingMore || isFetching ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  <>
-                    Load More ({accumulatedCases.length} of {totalCases})
-                  </>
-                )}
-              </Button>
+                return (
+                  <div
+                    key={c.id}
+                    className="animate-card-in"
+                    style={{ animationDelay: `${0.1 + index * 0.02}s` }}
+                  >
+                    <DischargeListItem
+                      caseData={c}
+                      settings={settings}
+                      onTriggerCall={(id) =>
+                        handleTriggerCall(id, c.patient.id)
+                      }
+                      onTriggerEmail={(id) =>
+                        handleTriggerEmail(id, c.patient.id)
+                      }
+                      onUpdatePatient={handleUpdatePatient}
+                      testModeEnabled={settings.testModeEnabled}
+                      testContactName={settings.testContactName}
+                      testContactEmail={settings.testContactEmail}
+                      testContactPhone={settings.testContactPhone}
+                      isLoadingCall={isLoadingCall}
+                      isLoadingEmail={isLoadingEmail}
+                      isLoadingUpdate={updatePatientMutation.isPending}
+                    />
+                  </div>
+                );
+              })}
+
+              {/* Load More Button */}
+              {hasNextPage && (
+                <div className="flex justify-center pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={handleLoadMore}
+                    disabled={isLoadingMore || isFetching}
+                    className="min-w-[200px]"
+                  >
+                    {isLoadingMore || isFetching ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        Load More ({accumulatedCases.length} of {totalCases})
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+
+              {/* Show count when all loaded */}
+              {!hasNextPage && accumulatedCases.length > 0 && (
+                <div className="text-muted-foreground pt-4 text-center text-sm">
+                  Showing all {accumulatedCases.length} cases
+                </div>
+              )}
             </div>
           )}
+        </TabsContent>
 
-          {/* Show count when all loaded */}
-          {!hasNextPage && accumulatedCases.length > 0 && (
-            <div className="text-muted-foreground pt-4 text-center text-sm">
-              Showing all {accumulatedCases.length} cases
-            </div>
-          )}
-        </div>
-      )}
+        {/* Call History Tab */}
+        <TabsContent value="calls">
+          <VapiCallHistory />
+        </TabsContent>
+      </Tabs>
 
       {/* Batch Discharge Dialog */}
       <BatchDischargeDialog

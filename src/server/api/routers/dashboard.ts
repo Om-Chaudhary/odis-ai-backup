@@ -1701,4 +1701,193 @@ export const dashboardRouter = createTRPCRouter({
         },
       };
     }),
+
+  /**
+   * Get VAPI call history with filtering and pagination
+   * Shows all calls with patient info, status, end reason, duration, etc.
+   */
+  getCallHistory: protectedProcedure
+    .input(
+      z.object({
+        page: z.number().min(1).default(1),
+        pageSize: z.number().min(5).max(50).default(20),
+        endReasonFilter: z
+          .enum([
+            "all",
+            "successful",
+            "voicemail",
+            "no_answer",
+            "busy",
+            "failed",
+          ])
+          .optional()
+          .default("all"),
+        statusFilter: z
+          .enum(["all", "completed", "queued", "in_progress", "failed"])
+          .optional()
+          .default("all"),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.user.id;
+
+      // Build query
+      let query = ctx.supabase
+        .from("scheduled_discharge_calls")
+        .select(
+          `
+          id,
+          status,
+          scheduled_for,
+          started_at,
+          ended_at,
+          ended_reason,
+          duration_seconds,
+          recording_url,
+          transcript,
+          cost,
+          customer_phone,
+          vapi_call_id,
+          case_id,
+          created_at,
+          dynamic_variables
+        `,
+          { count: "exact" },
+        )
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      // Apply status filter
+      if (input.statusFilter !== "all") {
+        query = query.eq("status", input.statusFilter);
+      }
+
+      const { data: calls, error } = await query;
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch call history",
+          cause: error,
+        });
+      }
+
+      // Apply end reason filter (client-side for flexibility)
+      let filteredCalls = calls ?? [];
+      if (input.endReasonFilter !== "all") {
+        filteredCalls = filteredCalls.filter((call) => {
+          const endedReason = call.ended_reason;
+          if (!endedReason || typeof endedReason !== "string") return false;
+          const reason = endedReason.toLowerCase();
+
+          switch (input.endReasonFilter) {
+            case "successful":
+              return [
+                "assistant-ended-call",
+                "customer-ended-call",
+                "assistant-forwarded-call",
+              ].includes(reason);
+            case "voicemail":
+              return reason === "voicemail";
+            case "no_answer":
+              return [
+                "customer-did-not-answer",
+                "dial-no-answer",
+                "silence-timed-out",
+              ].includes(reason);
+            case "busy":
+              return ["customer-busy", "dial-busy"].includes(reason);
+            case "failed":
+              return [
+                "dial-failed",
+                "assistant-error",
+                "exceeded-max-duration",
+              ].some((r) => reason.includes(r));
+            default:
+              return true;
+          }
+        });
+      }
+
+      // Fetch case info for each call to get patient names
+      const caseIds = [
+        ...new Set(filteredCalls.map((c) => c.case_id).filter(Boolean)),
+      ];
+      const casesMap = new Map<
+        string,
+        { patientName: string; ownerName: string }
+      >();
+
+      if (caseIds.length > 0) {
+        const { data: cases } = await ctx.supabase
+          .from("cases")
+          .select(
+            `
+            id,
+            patients (
+              name,
+              owner_name
+            )
+          `,
+          )
+          .in("id", caseIds);
+
+        if (cases) {
+          for (const c of cases) {
+            const patient = Array.isArray(c.patients)
+              ? c.patients[0]
+              : c.patients;
+            if (patient) {
+              casesMap.set(c.id, {
+                patientName: patient.name ?? "Unknown Patient",
+                ownerName: patient.owner_name ?? "Unknown Owner",
+              });
+            }
+          }
+        }
+      }
+
+      // Apply pagination
+      const totalFiltered = filteredCalls.length;
+      const from = (input.page - 1) * input.pageSize;
+      const to = from + input.pageSize;
+      const paginatedCalls = filteredCalls.slice(from, to);
+
+      // Transform calls with patient info
+      const transformedCalls = paginatedCalls.map((call) => {
+        const caseInfo = call.case_id ? casesMap.get(call.case_id) : null;
+        const dynamicVars = call.dynamic_variables as DynamicVariables | null;
+
+        return {
+          id: call.id,
+          vapiCallId: call.vapi_call_id,
+          caseId: call.case_id,
+          status: call.status as CallStatus,
+          scheduledFor: call.scheduled_for,
+          startedAt: call.started_at,
+          endedAt: call.ended_at,
+          endedReason: call.ended_reason,
+          durationSeconds: call.duration_seconds,
+          recordingUrl: call.recording_url,
+          hasTranscript: !!call.transcript,
+          cost: call.cost,
+          customerPhone: call.customer_phone,
+          createdAt: call.created_at,
+          patientName:
+            caseInfo?.patientName ?? dynamicVars?.pet_name ?? "Unknown",
+          ownerName:
+            caseInfo?.ownerName ?? dynamicVars?.owner_name ?? "Unknown",
+        };
+      });
+
+      return {
+        calls: transformedCalls,
+        pagination: {
+          page: input.page,
+          pageSize: input.pageSize,
+          total: totalFiltered,
+          totalPages: Math.ceil(totalFiltered / input.pageSize),
+        },
+      };
+    }),
 });

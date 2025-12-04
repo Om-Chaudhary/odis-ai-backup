@@ -126,6 +126,7 @@ export interface BackendCase {
     status: CallStatus;
     scheduled_for: string | null;
     ended_at: string | null;
+    ended_reason: string | null;
     vapi_call_id: string | null;
     transcript: string | null;
     transcript_messages: TranscriptMessage[] | null;
@@ -184,6 +185,7 @@ export interface DashboardCase {
     status: CallStatus;
     scheduled_for: string | null;
     ended_at: string | null;
+    ended_reason: string | null;
     vapi_call_id: string | null;
     transcript: string | null;
     recording_url: string | null;
@@ -262,6 +264,7 @@ export interface DetailedCase extends BackendCase {
     status: CallStatus;
     scheduled_for: string | null;
     ended_at: string | null;
+    ended_reason: string | null;
     vapi_call_id: string | null;
     created_at: string;
     transcript: string | null;

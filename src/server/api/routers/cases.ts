@@ -8,6 +8,7 @@ import { TRPCError } from "@trpc/server";
 import { checkCaseDischargeReadiness } from "~/lib/utils/discharge-readiness";
 import type { BackendCase } from "~/types/dashboard";
 import { getClinicByUserId } from "~/lib/clinics/utils";
+import { normalizeToE164, normalizeEmail } from "~/lib/utils/phone";
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -145,6 +146,7 @@ export const casesRouter = createTRPCRouter({
             status,
             scheduled_for,
             ended_at,
+            ended_reason,
             vapi_call_id,
             transcript,
             recording_url,
@@ -222,8 +224,20 @@ export const casesRouter = createTRPCRouter({
         });
       }
 
-      // Sort cases by readiness: ready cases first, then by scheduled_at (with created_at fallback)
+      // Sort cases: no discharge attempts first, then by readiness, then by date
       const sortedCases = filteredCases.sort((a, b) => {
+        // Check if cases have any discharge attempts
+        const aHasDischarge =
+          (a.scheduled_discharge_calls?.length ?? 0) > 0 ||
+          (a.scheduled_discharge_emails?.length ?? 0) > 0;
+        const bHasDischarge =
+          (b.scheduled_discharge_calls?.length ?? 0) > 0 ||
+          (b.scheduled_discharge_emails?.length ?? 0) > 0;
+
+        // Primary sort: cases without discharge attempts first
+        if (!aHasDischarge && bHasDischarge) return -1;
+        if (aHasDischarge && !bHasDischarge) return 1;
+
         const aReadiness = checkCaseDischargeReadiness(
           a as unknown as BackendCase,
           userEmail,
@@ -239,11 +253,11 @@ export const casesRouter = createTRPCRouter({
           testContactPhone,
         );
 
-        // Primary sort: ready cases first
+        // Secondary sort: ready cases first
         if (aReadiness.isReady && !bReadiness.isReady) return -1;
         if (!aReadiness.isReady && bReadiness.isReady) return 1;
 
-        // Secondary sort: by scheduled_at (with created_at fallback), newest first
+        // Tertiary sort: by scheduled_at (with created_at fallback), newest first
         const aDate = a.scheduled_at ?? a.created_at;
         const bDate = b.scheduled_at ?? b.created_at;
         return new Date(bDate).getTime() - new Date(aDate).getTime();
@@ -506,6 +520,18 @@ export const casesRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const warnings: string[] = [];
 
+      // Normalize phone and email to proper formats before any processing
+      // Phone: E.164 format (+1XXXXXXXXXX for US numbers)
+      // Email: lowercase, trimmed
+      const normalizedPhone = input.patientData.ownerPhone
+        ? normalizeToE164(input.patientData.ownerPhone)
+        : undefined;
+      const normalizedEmail =
+        input.patientData.ownerEmail !== undefined &&
+        input.patientData.ownerEmail !== ""
+          ? normalizeEmail(input.patientData.ownerEmail)
+          : input.patientData.ownerEmail; // preserve empty string for clearing
+
       // Step 1: Update patient record with any provided data
       const updateData: Record<string, string | null> = {};
       if (input.patientData.name) {
@@ -522,10 +548,12 @@ export const casesRouter = createTRPCRouter({
       }
       if (input.patientData.ownerEmail !== undefined) {
         // Allow clearing the email by converting empty string to null
-        updateData.owner_email = input.patientData.ownerEmail ?? null;
+        // Use normalized email for proper format
+        updateData.owner_email = normalizedEmail ?? null;
       }
-      if (input.patientData.ownerPhone) {
-        updateData.owner_phone = input.patientData.ownerPhone;
+      if (normalizedPhone) {
+        // Use normalized phone in E.164 format
+        updateData.owner_phone = normalizedPhone;
       }
 
       if (Object.keys(updateData).length > 0) {
@@ -576,10 +604,10 @@ export const casesRouter = createTRPCRouter({
 
       // Handle email discharge
       if (input.dischargeType === "email" || input.dischargeType === "both") {
-        if (input.patientData.ownerEmail) {
+        if (normalizedEmail) {
           orchestrationSteps.prepareEmail = true;
           orchestrationSteps.scheduleEmail = {
-            recipientEmail: input.patientData.ownerEmail,
+            recipientEmail: normalizedEmail,
             recipientName: input.patientData.ownerName ?? "Pet Owner",
             scheduledFor,
           };
@@ -590,9 +618,9 @@ export const casesRouter = createTRPCRouter({
 
       // Handle call discharge
       if (input.dischargeType === "call" || input.dischargeType === "both") {
-        if (input.patientData.ownerPhone) {
+        if (normalizedPhone) {
           orchestrationSteps.scheduleCall = {
-            phoneNumber: input.patientData.ownerPhone,
+            phoneNumber: normalizedPhone,
             scheduledFor,
           };
         } else {

@@ -7,9 +7,99 @@ import {
   Clock,
   AlertCircle,
   Loader2,
+  PhoneOff,
+  Voicemail,
+  PhoneForwarded,
+  PhoneMissed,
 } from "lucide-react";
 import { formatDistanceToNow, format, isToday, isTomorrow } from "date-fns";
 import type { CallStatus, EmailStatus } from "~/types/dashboard";
+
+/**
+ * VAPI end reason to human-readable text mapping
+ */
+const VAPI_END_REASON_LABELS: Record<string, string> = {
+  // Success outcomes
+  "assistant-ended-call": "Completed",
+  "customer-ended-call": "Customer hung up",
+  "assistant-forwarded-call": "Transferred",
+
+  // No contact outcomes
+  "customer-did-not-answer": "No answer",
+  "dial-no-answer": "No answer",
+  voicemail: "Voicemail",
+  "customer-busy": "Line busy",
+  "dial-busy": "Line busy",
+  "silence-timed-out": "No response",
+
+  // Failure outcomes
+  "dial-failed": "Dial failed",
+  "assistant-error": "System error",
+  "exceeded-max-duration": "Timeout",
+};
+
+/**
+ * Get human-readable label for VAPI end reason
+ */
+function getEndReasonLabel(endedReason: string | null | undefined): string {
+  if (!endedReason) return "";
+  const label = VAPI_END_REASON_LABELS[endedReason.toLowerCase()];
+  if (label) return label;
+  // Fallback: capitalize and replace hyphens
+  return endedReason
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/**
+ * Determine if the end reason indicates a successful call outcome
+ */
+function isSuccessfulOutcome(endedReason: string | null | undefined): boolean {
+  if (!endedReason) return false;
+  const successReasons = [
+    "assistant-ended-call",
+    "customer-ended-call",
+    "assistant-forwarded-call",
+  ];
+  return successReasons.includes(endedReason.toLowerCase());
+}
+
+/**
+ * Determine if the end reason indicates no contact was made
+ */
+function isNoContactOutcome(endedReason: string | null | undefined): boolean {
+  if (!endedReason) return false;
+  const noContactReasons = [
+    "customer-did-not-answer",
+    "dial-no-answer",
+    "voicemail",
+    "customer-busy",
+    "dial-busy",
+    "silence-timed-out",
+  ];
+  return noContactReasons.includes(endedReason.toLowerCase());
+}
+
+/**
+ * Get the appropriate icon for a call end reason
+ */
+function getEndReasonIcon(endedReason: string | null | undefined) {
+  if (!endedReason) return CheckCircle2;
+  const reason = endedReason.toLowerCase();
+
+  if (reason === "voicemail") return Voicemail;
+  if (reason === "assistant-forwarded-call") return PhoneForwarded;
+  if (
+    reason === "customer-did-not-answer" ||
+    reason === "dial-no-answer" ||
+    reason === "silence-timed-out"
+  )
+    return PhoneMissed;
+  if (reason === "customer-busy" || reason === "dial-busy") return PhoneOff;
+
+  if (isSuccessfulOutcome(endedReason)) return CheckCircle2;
+  return AlertCircle;
+}
 
 interface DischargeStatusIndicatorProps {
   type: "call" | "email";
@@ -17,6 +107,7 @@ interface DischargeStatusIndicatorProps {
     status?: CallStatus;
     scheduled_for?: string | null;
     ended_at?: string | null;
+    ended_reason?: string | null;
     created_at?: string;
   }>;
   emails?: Array<{
@@ -111,19 +202,71 @@ export function DischargeStatusIndicator({
   // Handle completed/sent status
   if (status === "completed" || status === "sent") {
     const timeDisplay = formatCompletionTime(completionTime);
+
+    // For calls, show the end reason if available
+    if (type === "call") {
+      const callData = latest as { ended_reason?: string | null };
+      const endedReason = callData.ended_reason;
+      const endReasonLabel = getEndReasonLabel(endedReason);
+      const isSuccess = isSuccessfulOutcome(endedReason);
+      const isNoContact = isNoContactOutcome(endedReason);
+      const EndReasonIcon = getEndReasonIcon(endedReason);
+
+      // Determine colors based on outcome type
+      const iconColor = isSuccess
+        ? "text-emerald-600"
+        : isNoContact
+          ? "text-amber-500"
+          : "text-slate-500";
+      const textColor = isSuccess
+        ? "text-slate-700"
+        : isNoContact
+          ? "text-amber-700"
+          : "text-slate-600";
+      const badgeColor = isNoContact
+        ? "bg-amber-50 text-amber-700 border-amber-200"
+        : "";
+
+      return (
+        <div
+          className="flex items-center gap-1.5 text-xs"
+          title={
+            completionTime
+              ? `${endReasonLabel || "Completed"} ${format(new Date(completionTime), "MMM d, yyyy 'at' h:mm a")}`
+              : undefined
+          }
+        >
+          <EndReasonIcon className={`h-3.5 w-3.5 shrink-0 ${iconColor}`} />
+          <span className={textColor}>
+            {endReasonLabel || "Call completed"}
+            {timeDisplay && (
+              <span className="ml-1 text-slate-500">({timeDisplay})</span>
+            )}
+          </span>
+          {isNoContact && (
+            <span
+              className={`ml-1 rounded border px-1.5 py-0.5 text-[10px] font-medium ${badgeColor}`}
+            >
+              Retry
+            </span>
+          )}
+        </div>
+      );
+    }
+
+    // For emails, keep the original display
     return (
       <div
         className="flex items-center gap-1.5 text-xs"
         title={
           completionTime
-            ? `${type === "call" ? "Completed" : "Sent"} ${format(new Date(completionTime), "MMM d, yyyy 'at' h:mm a")}`
+            ? `Sent ${format(new Date(completionTime), "MMM d, yyyy 'at' h:mm a")}`
             : undefined
         }
       >
         <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
         <span className="text-slate-700">
-          {type === "call" ? "Call" : "Email"}{" "}
-          {status === "sent" ? "sent" : "completed"}
+          Email sent
           {timeDisplay && (
             <span className="ml-1 text-slate-500">({timeDisplay})</span>
           )}
@@ -169,12 +312,28 @@ export function DischargeStatusIndicator({
 
   // Handle failed status
   if (status === "failed" || status === "cancelled") {
+    // For calls, show the end reason if available
+    if (type === "call") {
+      const callData = latest as { ended_reason?: string | null };
+      const endedReason = callData.ended_reason;
+      const endReasonLabel = getEndReasonLabel(endedReason);
+
+      return (
+        <div className="flex items-center gap-1.5 text-xs">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0 text-red-600" />
+          <span className="text-red-700">
+            {endReasonLabel ||
+              (status === "cancelled" ? "Cancelled" : "Failed")}
+          </span>
+        </div>
+      );
+    }
+
     return (
       <div className="flex items-center gap-1.5 text-xs">
         <AlertCircle className="h-3.5 w-3.5 shrink-0 text-red-600" />
         <span className="text-red-700">
-          {type === "call" ? "Call" : "Email"}{" "}
-          {status === "cancelled" ? "cancelled" : "failed"}
+          Email {status === "cancelled" ? "cancelled" : "failed"}
         </span>
       </div>
     );
