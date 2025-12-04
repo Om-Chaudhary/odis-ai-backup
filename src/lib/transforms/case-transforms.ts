@@ -64,6 +64,9 @@ export function transformBackendCaseToDashboardCase(
   const has_clinical_notes =
     hasSoapNotes || hasTranscriptions || hasDischargeSummaries;
 
+  // Extract IDEXX notes from metadata if available
+  const idexxNotes = backendCase.metadata?.idexx?.notes ?? null;
+
   // Compute discharge readiness (content + contact validation)
   const readiness = checkCaseDischargeReadiness(
     backendCase as BackendCase,
@@ -99,6 +102,7 @@ export function transformBackendCaseToDashboardCase(
     has_clinical_notes,
     is_ready_for_discharge: readiness.isReady,
     missing_requirements: readiness.missingRequirements,
+    idexxNotes,
     scheduled_discharge_calls: backendCase.scheduled_discharge_calls
       .map((call) => ({
         id: call.id,

@@ -180,6 +180,8 @@ export interface DashboardCase {
   is_ready_for_discharge: boolean;
   /** List of requirements missing for discharge readiness */
   missing_requirements: string[];
+  /** IDEXX clinical notes if case is from IDEXX */
+  idexxNotes?: string | null;
   scheduled_discharge_calls: Array<{
     id: string;
     status: CallStatus;

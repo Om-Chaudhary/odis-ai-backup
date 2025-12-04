@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   AlertCircle,
   MoreHorizontal,
+  Stethoscope,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type {
@@ -517,6 +518,16 @@ export function DischargeListItem({
             isValid={hasValidContact(effectiveEmail)}
             testMode={false}
           />
+          {/* IDEXX Notes Indicator */}
+          {caseData.idexxNotes && (
+            <div
+              className="flex items-center gap-1.5 rounded bg-indigo-50 px-2 py-0.5 text-xs text-indigo-700"
+              title={caseData.idexxNotes}
+            >
+              <Stethoscope className="h-3.5 w-3.5" />
+              <span className="font-medium">IDEXX Notes</span>
+            </div>
+          )}
           {/* Discharge Readiness Indicator */}
           <div
             className={cn(
