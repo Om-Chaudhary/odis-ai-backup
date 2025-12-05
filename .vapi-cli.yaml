@@ -1,0 +1,29 @@
+# Vapi CLI Configuration
+# Generated for odis-ai-web Next.js project
+
+# Project settings
+project:
+  name: odis-ai-web
+  framework: next.js
+  language: typescript
+
+# Webhook configuration for local development
+webhook:
+  # Local endpoint to forward webhooks to
+  endpoint: /api/webhooks/vapi
+  # Port your dev server runs on
+  port: 3000
+
+# Server URL settings (for vapi listen command)
+server:
+  # Forward webhooks to this URL
+  forward_to: http://localhost:3000/api/webhooks/vapi
+  # Listen port for the webhook forwarder
+  listen_port: 4242
+
+# Logging settings
+logging:
+  # Log level: debug, info, warn, error
+  level: info
+  # Show request/response bodies
+  verbose: false
