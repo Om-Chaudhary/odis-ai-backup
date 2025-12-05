@@ -166,7 +166,7 @@ export default async function DischargeEmailPreviewPage() {
     patientName: "Nala",
     caseType: "other",
     appointmentSummary:
-      "Nala came in today for a follow-up visit and some routine testing. We checked on her progress and performed some blood work. Everything went smoothly and she's doing great!",
+      "Nala came in for a follow-up visit and some routine testing. We checked on her progress and performed some blood work. Everything went smoothly and she's doing great!",
     treatmentsToday: ["Blood Work"],
     notes: "Blood work has been sent to lab for analysis",
     // No medications, no home care, no follow-up, no warning signs
@@ -178,7 +178,7 @@ export default async function DischargeEmailPreviewPage() {
     patientName: "Charlie",
     caseType: "wellness",
     appointmentSummary:
-      "Charlie came in today for a routine wellness checkup. We performed a thorough examination and trimmed his nails. He was very cooperative and everything looks perfect!",
+      "Charlie came in for a routine wellness checkup. We performed a thorough examination and trimmed his nails. He was very cooperative and everything looks perfect!",
     treatmentsToday: ["Physical exam", "Nail trim"],
     // No medications, no home care, no follow-up, no warning signs
     warningSigns: [],

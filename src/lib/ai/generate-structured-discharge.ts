@@ -51,10 +51,10 @@ Generate a DESCRIPTIVE 3-4 sentence summary for the email header. This appears a
 - Use general terms like "wellness visit", "dental care", "skin care", "routine vaccinations"
 
 Good examples:
-- "Max came in today for a wellness checkup and routine care. We performed a thorough examination and updated his vaccinations. He was such a good boy throughout the visit and is ready to go home feeling great!"
-- "We saw Luna for a dental procedure today. We cleaned her teeth and took care of some oral health issues. She recovered beautifully from anesthesia and did great! She's ready to go home with some aftercare instructions."
-- "Buddy visited us for some skin care today. We examined his skin condition and provided treatment to help him feel more comfortable. He was very cooperative during the appointment and is ready to go home."
-- "Charlie came in for his routine vaccinations and wellness exam today. We updated all his shots and did a complete health check. He was such a good patient and everything looks wonderful!"
+- "Max came in for a wellness checkup and routine care. We performed a thorough examination and updated his vaccinations. He was such a good boy throughout the visit and is ready to go home feeling great!"
+- "We saw Luna for a dental procedure. We cleaned her teeth and took care of some oral health issues. She recovered beautifully from anesthesia and did great! She's ready to go home with some aftercare instructions."
+- "Buddy visited us for some skin care. We examined his skin condition and provided treatment to help him feel more comfortable. He was very cooperative during the appointment and is ready to go home."
+- "Charlie came in for his routine vaccinations and wellness exam. We updated all his shots and did a complete health check. He was such a good patient and everything looks wonderful!"
 
 Bad examples (too specific - DO NOT do this):
 - "Max came in for treatment of his ear infection and received antibiotics" (too specific about diagnosis)

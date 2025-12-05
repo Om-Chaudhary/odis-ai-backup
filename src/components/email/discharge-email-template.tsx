@@ -282,9 +282,36 @@ export function DischargeEmailTemplate({
   // Get owner's first name for greeting
   const ownerFirstName = ownerName?.split(" ")[0];
 
+  // Function to replace "today" with actual date or generic wording
+  const processAppointmentSummary = (
+    summary: string | undefined,
+  ): string | undefined => {
+    if (!summary) return undefined;
+
+    // If we have a specific date, use it
+    if (date) {
+      try {
+        // Format the date nicely (e.g., "December 5th")
+        const formattedDate = new Date(date).toLocaleDateString("en-US", {
+          month: "long",
+          day: "numeric",
+        });
+        return summary.replace(/\btoday\b/gi, `on ${formattedDate}`);
+      } catch {
+        // If date parsing fails, fall through to generic replacements
+      }
+    }
+
+    // Otherwise, use more generic wording
+    return summary
+      .replace(/came in today for/gi, "came in for")
+      .replace(/visited us today for/gi, "visited us for")
+      .replace(/\btoday\b/gi, "during the visit");
+  };
+
   // Use appointment summary if available, otherwise fall back to generic greeting
   const appointmentSummary = hasStructuredContent
-    ? structuredContent.appointmentSummary
+    ? processAppointmentSummary(structuredContent.appointmentSummary)
     : undefined;
 
   const greeting = ownerFirstName ? `Hi ${ownerFirstName},` : "Hello,";

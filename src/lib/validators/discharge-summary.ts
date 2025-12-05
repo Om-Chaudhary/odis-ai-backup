@@ -145,7 +145,7 @@ export const StructuredDischargeSummarySchema = z.object({
     .string()
     .optional()
     .describe(
-      "3-4 sentence descriptive summary of the visit. Include what was done during the visit, treatments/procedures performed, and pet's cooperation. Example: 'Max came in today for a wellness checkup and routine care. We performed a thorough examination and updated his vaccinations. He was such a good boy throughout the visit and is ready to go home feeling great!'",
+      "3-4 sentence descriptive summary of the visit. Include what was done during the visit, treatments/procedures performed, and pet's cooperation. Example: 'Max came in for a wellness checkup and routine care. We performed a thorough examination and updated his vaccinations. He was such a good boy throughout the visit and is ready to go home feeling great!'",
     ),
 
   // Visit summary (optional - may be skipped in email display)
