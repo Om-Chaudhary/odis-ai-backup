@@ -36,11 +36,11 @@ Classify the visit into one of these categories based on the clinical notes:
 - "dental" - Dental cleaning, extractions, oral procedures
 - "vaccination" - Primarily a vaccination visit
 - "dermatology" - Skin conditions, allergies, ear infections
-- "wellness" - Routine checkup, annual exam
+- "wellness" - Routine checkup, annual exam, health evaluation, diagnostic testing that went well
 - "emergency" - Emergency or urgent care visit
 - "gastrointestinal" - Vomiting, diarrhea, GI issues
 - "orthopedic" - Limping, joint issues, fractures
-- "other" - Anything that doesn't fit above
+- "other" - Follow-up visits, routine testing, anything that doesn't fit above categories
 
 APPOINTMENT SUMMARY - REQUIRED:
 Generate a DESCRIPTIVE 3-4 sentence summary for the email header. This appears at the top of the discharge email and should:
@@ -80,8 +80,9 @@ HOME CARE - ONLY IF EXPLICIT:
 WARNING SIGNS - EXTRACT ONLY, DO NOT INVENT:
 - ONLY include warning signs if they are EXPLICITLY stated in the clinical notes
 - DO NOT generate generic warning signs - the email system has curated fallbacks
+- For routine visits (wellness, vaccination, health evaluation, diagnostic testing), almost always use empty array []
 - If no warning signs mentioned in notes, set to empty array []
-- This is critical for safety - we use a curated library as fallback
+- This is critical for safety - we use a curated library as fallback for serious cases only
 
 FOLLOW-UP - ONLY IF EXPLICIT:
 - Only set "required": true if follow-up is explicitly mentioned in the clinical notes

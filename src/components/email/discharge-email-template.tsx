@@ -213,22 +213,23 @@ export function DischargeEmailTemplate({
   }
 
   // Get warning signs (extracted or curated fallback)
-  // Only show warning signs for serious cases that actually need them
+  // ONLY show warning signs for truly serious/high-risk cases
   const shouldShowWarningSigns =
     hasStructuredContent &&
     structuredContent.caseType &&
-    !["wellness", "vaccination"].includes(structuredContent.caseType) &&
-    // Also check if this is a routine follow-up with no issues
-    !(
-      structuredContent.caseType === "other" &&
-      structuredContent.appointmentSummary?.toLowerCase().includes("routine") &&
-      (structuredContent.appointmentSummary
-        ?.toLowerCase()
-        .includes("went smoothly") ||
-        structuredContent.appointmentSummary
+    // ONLY show for surgery, emergency, and specific serious conditions
+    (structuredContent.caseType === "surgery" ||
+      structuredContent.caseType === "emergency" ||
+      (structuredContent.caseType === "dental" &&
+        (structuredContent.appointmentSummary
           ?.toLowerCase()
-          .includes("everything went well"))
-    );
+          .includes("extraction") ??
+          false)) ||
+      (structuredContent.caseType === "orthopedic" &&
+        (structuredContent.appointmentSummary
+          ?.toLowerCase()
+          .includes("fracture") ??
+          false)));
 
   const warningSigns = shouldShowWarningSigns
     ? getWarningSignsHybrid(
