@@ -273,15 +273,11 @@ export function DischargeEmailTemplate({
       })
     : [];
 
-  // Check if follow-up is explicitly mentioned
+  // Check if follow-up has specific date or reason (not just required=true)
   const hasExplicitFollowUp =
     hasStructuredContent &&
-    (structuredContent.followUp?.required ??
-      (structuredContent.notes &&
-        (structuredContent.notes.toLowerCase().includes("follow") ||
-          structuredContent.notes.toLowerCase().includes("recheck") ||
-          structuredContent.notes.toLowerCase().includes("return") ||
-          structuredContent.notes.toLowerCase().includes("schedule"))));
+    structuredContent.followUp &&
+    (structuredContent.followUp.date ?? structuredContent.followUp.reason);
 
   // Get owner's first name for greeting
   const ownerFirstName = ownerName?.split(" ")[0];

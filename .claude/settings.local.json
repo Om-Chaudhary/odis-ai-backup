@@ -94,7 +94,8 @@
       "mcp__Notion__notion-create-pages",
       "Bash(vercel --prod:*)",
       "Bash(pnpm dev:*)",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(pnpm vercel:*)"
     ],
     "deny": [],
     "ask": []
