@@ -1890,4 +1890,140 @@ export const dashboardRouter = createTRPCRouter({
         },
       };
     }),
+
+  /**
+   * Get email history with filtering and pagination
+   * Shows all scheduled discharge emails with patient info, status, recipient, etc.
+   */
+  getEmailHistory: protectedProcedure
+    .input(
+      z.object({
+        page: z.number().min(1).default(1),
+        pageSize: z.number().min(5).max(50).default(20),
+        statusFilter: z
+          .enum(["all", "queued", "sent", "failed", "cancelled"])
+          .optional()
+          .default("all"),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.user.id;
+
+      // Build query
+      let query = ctx.supabase
+        .from("scheduled_discharge_emails")
+        .select(
+          `
+          id,
+          status,
+          scheduled_for,
+          sent_at,
+          recipient_email,
+          recipient_name,
+          subject,
+          case_id,
+          created_at,
+          resend_email_id,
+          metadata
+        `,
+          { count: "exact" },
+        )
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+      // Apply status filter
+      if (input.statusFilter !== "all") {
+        query = query.eq("status", input.statusFilter);
+      }
+
+      const { data: emails, error } = await query;
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch email history",
+          cause: error,
+        });
+      }
+
+      // Fetch case info for each email to get patient names
+      const caseIds = [
+        ...new Set((emails ?? []).map((e) => e.case_id).filter(Boolean)),
+      ];
+      const casesMap = new Map<
+        string,
+        { patientName: string; ownerName: string }
+      >();
+
+      if (caseIds.length > 0) {
+        const { data: cases } = await ctx.supabase
+          .from("cases")
+          .select(
+            `
+            id,
+            patients (
+              name,
+              owner_name
+            )
+          `,
+          )
+          .in("id", caseIds);
+
+        if (cases) {
+          for (const c of cases) {
+            const patient = Array.isArray(c.patients)
+              ? c.patients[0]
+              : c.patients;
+            if (patient) {
+              casesMap.set(c.id, {
+                patientName: patient.name ?? "Unknown Patient",
+                ownerName: patient.owner_name ?? "Unknown Owner",
+              });
+            }
+          }
+        }
+      }
+
+      // Apply pagination
+      const filteredEmails = emails ?? [];
+      const totalFiltered = filteredEmails.length;
+      const from = (input.page - 1) * input.pageSize;
+      const to = from + input.pageSize;
+      const paginatedEmails = filteredEmails.slice(from, to);
+
+      // Transform emails with patient info
+      const transformedEmails = paginatedEmails.map((email) => {
+        const caseInfo = email.case_id ? casesMap.get(email.case_id) : null;
+
+        return {
+          id: email.id,
+          caseId: email.case_id,
+          status: email.status as
+            | "queued"
+            | "sent"
+            | "failed"
+            | "cancelled"
+            | null,
+          scheduledFor: email.scheduled_for,
+          sentAt: email.sent_at,
+          recipientEmail: email.recipient_email,
+          recipientName: email.recipient_name,
+          subject: email.subject,
+          createdAt: email.created_at,
+          resendEmailId: email.resend_email_id,
+          patientName: caseInfo?.patientName ?? "Unknown",
+          ownerName: caseInfo?.ownerName ?? "Unknown",
+        };
+      });
+
+      return {
+        emails: transformedEmails,
+        pagination: {
+          page: input.page,
+          pageSize: input.pageSize,
+          total: totalFiltered,
+          totalPages: Math.ceil(totalFiltered / input.pageSize),
+        },
+      };
+    }),
 });

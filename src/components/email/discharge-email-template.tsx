@@ -199,11 +199,7 @@ export function DischargeEmailTemplate({
   ownerName,
   structuredContent,
   dischargeSummaryContent,
-  date = new Date().toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  }),
+  date = "Recent Visit",
   clinicName,
   clinicPhone,
   clinicEmail: _clinicEmail,
@@ -282,27 +278,13 @@ export function DischargeEmailTemplate({
   // Get owner's first name for greeting
   const ownerFirstName = ownerName?.split(" ")[0];
 
-  // Function to replace "today" with actual date or generic wording
+  // Function to replace "today" with generic wording
   const processAppointmentSummary = (
     summary: string | undefined,
   ): string | undefined => {
     if (!summary) return undefined;
 
-    // If we have a specific date, use it
-    if (date) {
-      try {
-        // Format the date nicely (e.g., "December 5th")
-        const formattedDate = new Date(date).toLocaleDateString("en-US", {
-          month: "long",
-          day: "numeric",
-        });
-        return summary.replace(/\btoday\b/gi, `on ${formattedDate}`);
-      } catch {
-        // If date parsing fails, fall through to generic replacements
-      }
-    }
-
-    // Otherwise, use more generic wording
+    // Use generic wording instead of specific dates
     return summary
       .replace(/came in today for/gi, "came in for")
       .replace(/visited us today for/gi, "visited us for")

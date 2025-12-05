@@ -748,7 +748,7 @@ export const casesRouter = createTRPCRouter({
     const { data, error } = await ctx.supabase
       .from("users")
       .select(
-        "clinic_name, clinic_phone, clinic_email, emergency_phone, first_name, last_name, test_mode_enabled, test_contact_name, test_contact_email, test_contact_phone, voicemail_detection_enabled, voicemail_hangup_on_detection, default_schedule_delay_minutes, preferred_email_start_time, preferred_email_end_time, preferred_call_start_time, preferred_call_end_time, email_delay_days, call_delay_days, max_call_retries, batch_include_idexx_notes, batch_include_manual_transcriptions",
+        "clinic_name, clinic_phone, clinic_email, emergency_phone, first_name, last_name, test_mode_enabled, test_contact_name, test_contact_email, test_contact_phone, voicemail_detection_enabled, voicemail_hangup_on_detection, voicemail_message, default_schedule_delay_minutes, preferred_email_start_time, preferred_email_end_time, preferred_call_start_time, preferred_call_end_time, email_delay_days, call_delay_days, max_call_retries, batch_include_idexx_notes, batch_include_manual_transcriptions",
       )
       .eq("id", ctx.user.id)
       .single();
@@ -792,6 +792,7 @@ export const casesRouter = createTRPCRouter({
       testContactPhone: data?.test_contact_phone ?? "",
       voicemailDetectionEnabled: data?.voicemail_detection_enabled ?? false,
       voicemailHangupOnDetection: data?.voicemail_hangup_on_detection ?? false,
+      voicemailMessage: data?.voicemail_message ?? null,
       defaultScheduleDelayMinutes: data?.default_schedule_delay_minutes ?? null,
       // Email branding settings from clinic table
       primaryColor: clinic?.primary_color ?? "#2563EB",
@@ -839,6 +840,7 @@ export const casesRouter = createTRPCRouter({
         testContactPhone: z.string().optional(),
         voicemailDetectionEnabled: z.boolean().optional(),
         voicemailHangupOnDetection: z.boolean().optional(),
+        voicemailMessage: z.string().nullable().optional(),
         defaultScheduleDelayMinutes: z
           .number()
           .int()
@@ -850,7 +852,9 @@ export const casesRouter = createTRPCRouter({
           .string()
           .regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color format")
           .optional(),
-        logoUrl: z.string().url().nullable().optional(),
+        logoUrl: z
+          .union([z.string().url(), z.literal(""), z.null()])
+          .optional(),
         emailHeaderText: z.string().nullable().optional(),
         emailFooterText: z.string().nullable().optional(),
         // Outbound discharge scheduling settings
@@ -925,6 +929,9 @@ export const casesRouter = createTRPCRouter({
         userUpdateData.voicemail_hangup_on_detection =
           input.voicemailHangupOnDetection;
       }
+      if (input.voicemailMessage !== undefined) {
+        userUpdateData.voicemail_message = input.voicemailMessage;
+      }
       if (input.defaultScheduleDelayMinutes !== undefined) {
         userUpdateData.default_schedule_delay_minutes =
           input.defaultScheduleDelayMinutes;
@@ -992,7 +999,8 @@ export const casesRouter = createTRPCRouter({
         clinicUpdateData.primary_color = input.primaryColor;
       }
       if (input.logoUrl !== undefined) {
-        clinicUpdateData.logo_url = input.logoUrl;
+        // Convert empty string to null for database consistency
+        clinicUpdateData.logo_url = input.logoUrl === "" ? null : input.logoUrl;
       }
       if (input.emailHeaderText !== undefined) {
         clinicUpdateData.email_header_text = input.emailHeaderText;

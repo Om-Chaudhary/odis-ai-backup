@@ -129,6 +129,8 @@ export async function POST(request: NextRequest) {
       .select(
         `
         id,
+        created_at,
+        scheduled_at,
         metadata,
         patients (
           id,
@@ -205,6 +207,9 @@ export async function POST(request: NextRequest) {
     const ownerName = patient?.owner_name ?? "Pet Owner";
     const species = patient?.species ?? "pet";
     const breed = patient?.breed;
+
+    // Use generic text instead of specific date
+    const formattedDate = "Recent Visit";
 
     // Generate email subject
     const subject = `Discharge Instructions for ${patientName}`;
@@ -289,7 +294,7 @@ export async function POST(request: NextRequest) {
       <p><strong>Patient:</strong> ${patientName}</p>
       ${breed ? `<p><strong>Breed:</strong> ${breed}</p>` : ""}
       ${species ? `<p><strong>Species:</strong> ${species}</p>` : ""}
-      <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+      <p><strong>Date:</strong> ${formattedDate}</p>
     </div>
 
     <p>Thank you for trusting us with ${patientName}'s care. Please review the following discharge instructions carefully:</p>

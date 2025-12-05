@@ -53,7 +53,7 @@ export async function scheduleCallExecution(
     url: webhookUrl,
     body: { callId },
     delay, // seconds until execution
-    retries: 3, // Retry up to 3 times if webhook fails
+    retries: 0, // No retries - VAPI failures should not trigger duplicate calls
     headers: {
       "Content-Type": "application/json",
     },
@@ -104,7 +104,7 @@ export async function scheduleEmailExecution(
     url: webhookUrl,
     body: { emailId },
     delay, // seconds until execution
-    retries: 3, // Retry up to 3 times if webhook fails
+    retries: 0, // No retries - email failures should not trigger duplicate sends
     headers: {
       "Content-Type": "application/json",
     },

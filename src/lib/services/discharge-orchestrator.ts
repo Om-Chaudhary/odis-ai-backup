@@ -88,8 +88,12 @@ async function generateEmailContent(
   breed: string | null | undefined,
   branding: ClinicBranding,
   structuredContent?: StructuredDischargeSummary | null,
+  visitDate?: string | Date | null,
 ): Promise<{ subject: string; html: string; text: string }> {
   const subject = `Discharge Instructions for ${patientName}`;
+
+  // Use generic text instead of specific date
+  const formattedDate = "Recent Visit";
 
   // Render React email template to HTML (prefer structured content)
   const { html, text } = await prepareEmailContent(
@@ -106,6 +110,7 @@ async function generateEmailContent(
       logoUrl: branding.logoUrl,
       headerText: branding.emailHeaderText,
       footerText: branding.emailFooterText,
+      date: formattedDate,
     }),
   );
 
@@ -952,6 +957,10 @@ export class DischargeOrchestrator {
     const species = patient?.species;
     const breed = patient?.breed;
 
+    // Get visit date: prefer scheduled_at, fallback to created_at
+    const visitDate =
+      caseInfo.case.scheduled_at ?? caseInfo.case.created_at ?? null;
+
     // Get user data for clinic information (fallback)
     const { data: userData } = await this.supabase
       .from("users")
@@ -988,6 +997,7 @@ export class DischargeOrchestrator {
       caseId,
       hasStructuredContent: !!dischargeSummaryData.structuredContent,
       plaintextLength: dischargeSummaryData.content.length,
+      visitDate,
     });
 
     // Generate email content with clinic branding and structured content
@@ -998,6 +1008,7 @@ export class DischargeOrchestrator {
       breed,
       branding,
       dischargeSummaryData.structuredContent,
+      visitDate,
     );
 
     return {

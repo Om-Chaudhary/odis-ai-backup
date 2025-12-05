@@ -1,8 +1,10 @@
 import { type NormalizedEntities } from "~/lib/validators/scribe";
 import { extractEntitiesWithRetry } from "~/lib/ai/normalize-scribe";
 import { generateStructuredDischargeSummaryWithRetry } from "~/lib/ai/generate-structured-discharge";
+import { generateCallIntelligenceFromEntities } from "~/lib/ai/generate-assessment-questions";
 import { scheduleCallExecution } from "~/lib/qstash/client";
 import { buildDynamicVariables } from "~/lib/vapi/knowledge-base";
+import type { AIGeneratedCallIntelligence } from "~/lib/vapi/types";
 import { extractVapiVariablesFromEntities } from "~/lib/vapi/extract-variables";
 import {
   extractFirstName,
@@ -784,6 +786,46 @@ export const CasesService = {
     // 2. Extract AI-extracted variables (species, breed, age, diagnoses, etc.)
     const extractedVars = extractVapiVariablesFromEntities(entities);
 
+    // 2a. Generate AI call intelligence (hyper-specific questions for this case)
+    // This replaces generic knowledge base questions with case-specific ones
+    let aiIntelligence: AIGeneratedCallIntelligence | null = null;
+    try {
+      console.log("[CasesService] Generating AI call intelligence", {
+        caseId,
+        petName: entities.patient.name,
+        diagnosis: entities.clinical.diagnoses?.[0],
+      });
+
+      const intelligence = await generateCallIntelligenceFromEntities(entities);
+      aiIntelligence = {
+        caseContextSummary: intelligence.caseContextSummary,
+        assessmentQuestions: intelligence.assessmentQuestions,
+        warningSignsToMonitor: intelligence.warningSignsToMonitor,
+        normalExpectations: intelligence.normalExpectations,
+        emergencyCriteria: intelligence.emergencyCriteria,
+        shouldAskClinicalQuestions: intelligence.shouldAskClinicalQuestions,
+        callApproach: intelligence.callApproach,
+        confidence: intelligence.confidence,
+      };
+
+      console.log("[CasesService] AI call intelligence generated", {
+        caseId,
+        questionCount: intelligence.assessmentQuestions?.length ?? 0,
+        callApproach: intelligence.callApproach,
+        shouldAskQuestions: intelligence.shouldAskClinicalQuestions,
+        confidence: intelligence.confidence,
+      });
+    } catch (aiError) {
+      // Non-blocking: fall back to static knowledge base
+      console.warn(
+        "[CasesService] Failed to generate AI call intelligence, using static KB",
+        {
+          caseId,
+          error: aiError instanceof Error ? aiError.message : String(aiError),
+        },
+      );
+    }
+
     // 3. Build Dynamic Variables with knowledge base integration
     // Use extractFirstName to get only the first word of the pet name
     // (many vet systems store "FirstName LastName" but we only want first name for calls)
@@ -837,6 +879,8 @@ export const CasesService = {
       },
       strict: false,
       useDefaults: true,
+      // Pass AI-generated intelligence (preferred over static KB)
+      aiGeneratedIntelligence: aiIntelligence ?? undefined,
     });
 
     // 4. Merge extracted variables with buildDynamicVariables result

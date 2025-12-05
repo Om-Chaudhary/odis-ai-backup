@@ -911,40 +911,167 @@ export function DischargeSettingsForm({
               </p>
             </div>
 
-            {/* Voicemail Detection Toggle */}
-            <div className="flex items-center justify-between rounded-lg border border-slate-100 p-3 shadow-sm">
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="voicemail-detection" className="text-base">
-                    Voicemail Detection
-                  </Label>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="text-muted-foreground h-4 w-4 cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-xs">
-                        <p className="text-sm">
-                          When enabled, calls will automatically detect
-                          voicemail systems and leave a personalized message.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+            {/* Voicemail Detection Settings */}
+            <div
+              className={`flex flex-col gap-4 rounded-lg border p-4 shadow-sm transition-colors ${watch("voicemailDetectionEnabled") ? "border-blue-200 bg-blue-50/50" : "border-slate-100"}`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="voicemail-detection" className="text-base">
+                      Voicemail Detection
+                    </Label>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs">
+                          <p className="text-sm">
+                            When enabled, VAPI will automatically detect when a
+                            call reaches voicemail.
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <p className="text-muted-foreground text-sm">
+                    Detect when calls reach voicemail
+                  </p>
                 </div>
-                <p className="text-muted-foreground text-sm">
-                  Leave message if call is not answered
-                </p>
+                <Switch
+                  id="voicemail-detection"
+                  checked={watch("voicemailDetectionEnabled")}
+                  onCheckedChange={(checked) => {
+                    setValue("voicemailDetectionEnabled", checked, {
+                      shouldDirty: true,
+                    });
+                    // If disabling detection, also disable hangup
+                    if (!checked) {
+                      setValue("voicemailHangupOnDetection", false, {
+                        shouldDirty: true,
+                      });
+                    }
+                  }}
+                />
               </div>
-              <Switch
-                id="voicemail-detection"
-                checked={watch("voicemailDetectionEnabled")}
-                onCheckedChange={(checked) =>
-                  setValue("voicemailDetectionEnabled", checked, {
-                    shouldDirty: true,
-                  })
-                }
-              />
+
+              {watch("voicemailDetectionEnabled") && (
+                <div className="animate-in fade-in slide-in-from-top-2 space-y-4 border-t border-blue-100 pt-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="voicemail-hangup" className="text-base">
+                          Hang Up on Voicemail
+                        </Label>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <p className="text-sm">
+                                When enabled, the call will hang up immediately
+                                when voicemail is detected and retry later. When
+                                disabled, a personalized message will be left on
+                                the voicemail.
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <p className="text-muted-foreground text-sm">
+                        {watch("voicemailHangupOnDetection")
+                          ? "Hang up and retry later to reach a live person"
+                          : "Leave a personalized voicemail message"}
+                      </p>
+                    </div>
+                    <Switch
+                      id="voicemail-hangup"
+                      checked={watch("voicemailHangupOnDetection")}
+                      onCheckedChange={(checked) =>
+                        setValue("voicemailHangupOnDetection", checked, {
+                          shouldDirty: true,
+                        })
+                      }
+                    />
+                  </div>
+
+                  {/* Voicemail Message - only show when not hanging up */}
+                  {!watch("voicemailHangupOnDetection") && (
+                    <div className="animate-in fade-in slide-in-from-top-2 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor="voicemail-message" className="text-sm">
+                          Voicemail Message
+                        </Label>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs">
+                              <p className="text-sm">
+                                Customize the message left on voicemail. You can
+                                use template variables like{" "}
+                                <code className="rounded bg-slate-100 px-1">
+                                  {"{{owner_name}}"}
+                                </code>
+                                ,{" "}
+                                <code className="rounded bg-slate-100 px-1">
+                                  {"{{pet_name}}"}
+                                </code>
+                                ,{" "}
+                                <code className="rounded bg-slate-100 px-1">
+                                  {"{{clinic_name}}"}
+                                </code>
+                                ,{" "}
+                                <code className="rounded bg-slate-100 px-1">
+                                  {"{{clinic_phone}}"}
+                                </code>
+                                , and{" "}
+                                <code className="rounded bg-slate-100 px-1">
+                                  {"{{agent_name}}"}
+                                </code>
+                                .
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                      <textarea
+                        id="voicemail-message"
+                        className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[100px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                        placeholder="Hi {{owner_name}}, this is {{agent_name}} from {{clinic_name}}. I'm calling to check in on {{pet_name}} after the recent visit..."
+                        value={watch("voicemailMessage") ?? ""}
+                        onChange={(e) =>
+                          setValue("voicemailMessage", e.target.value || null, {
+                            shouldDirty: true,
+                          })
+                        }
+                      />
+                      <p className="text-muted-foreground text-xs">
+                        Leave blank to use the default message. Available
+                        variables:{" "}
+                        <code className="rounded bg-slate-100 px-1 text-xs">
+                          {"{{owner_name}}"}
+                        </code>{" "}
+                        <code className="rounded bg-slate-100 px-1 text-xs">
+                          {"{{pet_name}}"}
+                        </code>{" "}
+                        <code className="rounded bg-slate-100 px-1 text-xs">
+                          {"{{clinic_name}}"}
+                        </code>{" "}
+                        <code className="rounded bg-slate-100 px-1 text-xs">
+                          {"{{clinic_phone}}"}
+                        </code>{" "}
+                        <code className="rounded bg-slate-100 px-1 text-xs">
+                          {"{{agent_name}}"}
+                        </code>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Test Mode Toggle */}

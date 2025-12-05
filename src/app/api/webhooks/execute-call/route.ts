@@ -282,21 +282,67 @@ async function handler(req: NextRequest) {
       );
     }
 
-    console.log("[EXECUTE_CALL] Voicemail detection enabled", {
+    // Fetch user's voicemail detection settings
+    const { data: userSettings } = await supabase
+      .from("users")
+      .select(
+        "voicemail_detection_enabled, voicemail_hangup_on_detection, voicemail_message",
+      )
+      .eq("id", call.user_id)
+      .single();
+
+    const voicemailDetectionEnabled =
+      userSettings?.voicemail_detection_enabled ?? false;
+    const voicemailHangupOnDetection =
+      userSettings?.voicemail_hangup_on_detection ?? false;
+    const customVoicemailMessage = userSettings?.voicemail_message ?? null;
+
+    console.log("[EXECUTE_CALL] Voicemail detection settings", {
       callId,
-      userId: call.user_id,
-      strategy: "detect voicemail -> hangup immediately (no message)",
+      voicemailDetectionEnabled,
+      voicemailHangupOnDetection,
+      hasCustomMessage: !!customVoicemailMessage,
     });
+
+    // Default voicemail message template (used if no custom message is set)
+    const defaultVoicemailMessage = `Hi {{owner_name}}, this is {{agent_name}} from {{clinic_name}}. I'm calling to check in on {{pet_name}} after the recent visit. Everything looked great from our end. If you have any questions or concerns about {{pet_name}}, please give us a call at {{clinic_phone}}. Take care!`;
+
+    // Build voicemail detection config based on user settings
+    // Using VAPI's voicemailDetection plan approach (not tool-based)
+    // See: https://docs.vapi.ai/calls/voicemail-detection
+    const buildVoicemailConfig = () => {
+      if (!voicemailDetectionEnabled) {
+        return { voicemailDetection: "off" as const };
+      }
+
+      // Voicemail detection enabled - configure the detection plan
+      const config: {
+        voicemailDetection: {
+          provider: "vapi";
+          enabled: boolean;
+        };
+        voicemailMessage?: string;
+      } = {
+        voicemailDetection: {
+          provider: "vapi",
+          enabled: true,
+        },
+      };
+
+      if (voicemailHangupOnDetection) {
+        // Hang up immediately without leaving a message
+        config.voicemailMessage = "";
+      } else {
+        // Leave a voicemail message - use custom message if set, otherwise default
+        config.voicemailMessage =
+          customVoicemailMessage ?? defaultVoicemailMessage;
+      }
+
+      return config;
+    };
 
     // Prepare VAPI call parameters
     // Use normalized snake_case variables that match the system prompt placeholders
-    // NOTE: Tools (voicemail, transferCall) CANNOT be set via assistantOverrides
-    // They must be configured at the assistant level in the VAPI dashboard
-    //
-    // Voicemail Detection Strategy:
-    // - Always enable voicemail detection using Vapi's AI detection (fastest)
-    // - Do NOT set voicemailMessage - this causes immediate hangup when voicemail detected
-    // - This prevents the assistant from leaving messages on voicemail systems
     const vapiParams = {
       phoneNumber: call.customer_phone,
       assistantId,
@@ -306,15 +352,8 @@ async function handler(req: NextRequest) {
         ...(Object.keys(normalizedVariables).length > 0 && {
           variableValues: normalizedVariables,
         }),
-        // Enable voicemail detection with Vapi provider (AI-powered, fastest)
-        // When voicemail is detected, call will hang up immediately (no voicemailMessage set)
-        // Note: The presence of voicemailDetection object enables detection - no 'enabled' property needed
-        voicemailDetection: {
-          provider: "vapi" as const,
-          type: "audio" as const,
-        },
-        // Explicitly do NOT set voicemailMessage - this ensures immediate hangup
-        // If voicemailMessage is undefined, VAPI hangs up without leaving a message
+        // Voicemail detection configuration based on user settings
+        ...buildVoicemailConfig(),
       },
     };
 
@@ -324,11 +363,6 @@ async function handler(req: NextRequest) {
       assistantId,
       phoneNumberId,
       hasAssistantOverrides: !!vapiParams.assistantOverrides,
-      voicemailDetection: {
-        provider: "vapi",
-        type: "audio",
-        behavior: "hangup on detect (no voicemailMessage set)",
-      },
       variableCount: Object.keys(normalizedVariables).length,
       variableKeys: Object.keys(normalizedVariables),
       criticalVariables: {
@@ -350,7 +384,43 @@ async function handler(req: NextRequest) {
     });
 
     // Execute call via VAPI
-    const response = await createPhoneCall(vapiParams);
+    let response;
+    try {
+      response = await createPhoneCall(vapiParams);
+    } catch (vapiError) {
+      // VAPI call failed - mark as failed and return 200 to prevent QStash retry
+      // We don't want to retry VAPI failures as they would likely fail again
+      // (invalid phone, API issues, etc.)
+      const errorMessage =
+        vapiError instanceof Error ? vapiError.message : String(vapiError);
+
+      console.error("[EXECUTE_CALL] VAPI API failed", {
+        callId,
+        error: errorMessage,
+      });
+
+      // Update database with failure status
+      await supabase
+        .from("scheduled_discharge_calls")
+        .update({
+          status: "failed",
+          metadata: {
+            ...metadata,
+            executed_at: new Date().toISOString(),
+            error: errorMessage,
+            failed_at: new Date().toISOString(),
+          },
+        })
+        .eq("id", callId);
+
+      // Return 200 to prevent QStash from retrying - we've handled this failure
+      return NextResponse.json({
+        success: false,
+        message: "VAPI call failed",
+        error: errorMessage,
+        callId,
+      });
+    }
 
     console.log("[EXECUTE_CALL] VAPI API success", {
       callId,
@@ -368,9 +438,8 @@ async function handler(req: NextRequest) {
         metadata: {
           ...metadata,
           executed_at: new Date().toISOString(),
-          // Voicemail detection is always enabled with hangup behavior
-          voicemail_detection_enabled: true,
-          voicemail_hangup_on_detection: true,
+          voicemail_detection_enabled: voicemailDetectionEnabled,
+          voicemail_hangup_on_detection: voicemailHangupOnDetection,
         },
       })
       .eq("id", callId);
@@ -382,7 +451,10 @@ async function handler(req: NextRequest) {
       status: response.status,
     });
   } catch (error) {
-    console.error("[EXECUTE_CALL] Error", {
+    // This catch block handles unexpected infrastructure errors
+    // (DB connection issues, etc.) - these could potentially be retried
+    // but since we set retries: 0 in QStash, they won't be
+    console.error("[EXECUTE_CALL] Unexpected error", {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
     });

@@ -89,6 +89,8 @@ async function handler(req: NextRequest) {
     });
 
     if (resendError || !resendData) {
+      const errorMessage = resendError?.message ?? "Unknown error";
+
       console.error("[EXECUTE_EMAIL] Resend error", {
         emailId,
         error: resendError,
@@ -101,19 +103,20 @@ async function handler(req: NextRequest) {
           status: "failed",
           metadata: {
             ...(email.metadata as Record<string, unknown>),
-            error: resendError?.message ?? "Unknown error",
+            error: errorMessage,
             failed_at: new Date().toISOString(),
           },
         })
         .eq("id", emailId);
 
-      return NextResponse.json(
-        {
-          error: "Failed to send email",
-          details: resendError?.message,
-        },
-        { status: 500 },
-      );
+      // Return 200 to prevent QStash from retrying - we've handled this failure
+      // Email failures (invalid address, API issues) would likely fail again on retry
+      return NextResponse.json({
+        success: false,
+        message: "Failed to send email",
+        error: errorMessage,
+        emailId,
+      });
     }
 
     console.log("[EXECUTE_EMAIL] Email sent successfully", {

@@ -217,6 +217,8 @@ export interface DischargeSettings {
   testContactEmail?: string;
   testContactPhone?: string;
   voicemailDetectionEnabled?: boolean;
+  voicemailHangupOnDetection?: boolean; // When true, hang up on voicemail; when false, leave message
+  voicemailMessage?: string | null; // Custom voicemail message (used when hangup is false)
   defaultScheduleDelayMinutes?: number | null; // Override default scheduling delay (null = use defaults)
   // Email branding settings
   primaryColor?: string; // Hex color for email branding (e.g., "#2563EB")

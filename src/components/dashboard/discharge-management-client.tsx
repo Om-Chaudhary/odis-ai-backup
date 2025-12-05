@@ -12,6 +12,7 @@ import {
   Loader2,
   Phone,
   ClipboardList,
+  Mail,
 } from "lucide-react";
 import { Badge } from "~/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
@@ -24,6 +25,7 @@ import {
 import { BatchDischargeDialog } from "./batch-discharge-dialog";
 import { BatchProgressMonitor } from "./batch-progress-monitor";
 import { VapiCallHistory } from "./vapi-call-history";
+import { EmailHistory } from "./email-history";
 import { api } from "~/trpc/client";
 import type {
   DashboardCase,
@@ -91,7 +93,9 @@ export function DischargeManagementClient() {
     useState<DischargeReadinessFilter>("all");
   const [callEndReasonFilter, setCallEndReasonFilter] =
     useState<CallEndReasonFilter>("all");
-  const [activeTab, setActiveTab] = useState<"cases" | "calls">("cases");
+  const [activeTab, setActiveTab] = useState<"cases" | "calls" | "emails">(
+    "cases",
+  );
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   // Accumulated cases for "Load More" functionality
@@ -616,9 +620,11 @@ export function DischargeManagementClient() {
           {/* Tabs for Cases and Call History */}
           <Tabs
             value={activeTab}
-            onValueChange={(v) => setActiveTab(v as "cases" | "calls")}
+            onValueChange={(v) =>
+              setActiveTab(v as "cases" | "calls" | "emails")
+            }
           >
-            <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsList className="grid w-full max-w-lg grid-cols-3">
               <TabsTrigger value="cases" className="gap-2">
                 <ClipboardList className="h-4 w-4" />
                 Cases
@@ -626,6 +632,10 @@ export function DischargeManagementClient() {
               <TabsTrigger value="calls" className="gap-2">
                 <Phone className="h-4 w-4" />
                 Call History
+              </TabsTrigger>
+              <TabsTrigger value="emails" className="gap-2">
+                <Mail className="h-4 w-4" />
+                Email History
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -647,7 +657,7 @@ export function DischargeManagementClient() {
       {/* Content based on active tab */}
       <Tabs
         value={activeTab}
-        onValueChange={(v) => setActiveTab(v as "cases" | "calls")}
+        onValueChange={(v) => setActiveTab(v as "cases" | "calls" | "emails")}
         className="space-y-4"
       >
         {/* Cases Tab */}
@@ -831,6 +841,11 @@ export function DischargeManagementClient() {
         {/* Call History Tab */}
         <TabsContent value="calls">
           <VapiCallHistory />
+        </TabsContent>
+
+        {/* Email History Tab */}
+        <TabsContent value="emails">
+          <EmailHistory />
         </TabsContent>
       </Tabs>
 

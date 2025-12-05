@@ -251,6 +251,38 @@ export interface ConditionKnowledgeBase {
 }
 
 /**
+ * AI-generated call intelligence (replaces static KB content when available)
+ */
+export interface AIGeneratedCallIntelligence {
+  /** Brief case context summary */
+  caseContextSummary?: string;
+
+  /** Hyper-specific assessment questions for this case */
+  assessmentQuestions?: AssessmentQuestion[];
+
+  /** Case-specific warning signs */
+  warningSignsToMonitor?: string[];
+
+  /** Normal expectations for this specific recovery */
+  normalExpectations?: string[];
+
+  /** Emergency criteria specific to this case */
+  emergencyCriteria?: string[];
+
+  /** Whether clinical questions should be asked at all */
+  shouldAskClinicalQuestions?: boolean;
+
+  /** Recommended call approach */
+  callApproach?:
+    | "brief-checkin"
+    | "standard-assessment"
+    | "detailed-monitoring";
+
+  /** AI confidence in generated content */
+  confidence?: number;
+}
+
+/**
  * Options for building dynamic variable sets
  */
 export interface BuildVariablesOptions {
@@ -281,6 +313,12 @@ export interface BuildVariablesOptions {
    * Allows providing custom questions/criteria instead of using built-in knowledge base
    */
   customKnowledgeBase?: Partial<ConditionKnowledgeBase>;
+
+  /**
+   * AI-generated call intelligence (preferred over static KB)
+   * When provided, uses AI-generated content instead of static knowledge base
+   */
+  aiGeneratedIntelligence?: AIGeneratedCallIntelligence;
 }
 
 /**

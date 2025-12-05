@@ -133,6 +133,7 @@ export function buildDynamicVariables(
     strict = false,
     useDefaults = true,
     customKnowledgeBase,
+    aiGeneratedIntelligence,
   } = options;
 
   const warnings: string[] = [];
@@ -180,8 +181,57 @@ export function buildDynamicVariables(
       conditionCategory: category,
     } as DynamicVariables;
 
-    // Step 4: If useDefaults is true and knowledge base exists, merge knowledge base data
-    if (useDefaults && knowledgeBase) {
+    // Step 4: Apply AI-generated intelligence (PREFERRED) or fall back to static KB
+    const hasAIIntelligence =
+      aiGeneratedIntelligence?.assessmentQuestions &&
+      aiGeneratedIntelligence.assessmentQuestions.length > 0;
+
+    if (hasAIIntelligence && aiGeneratedIntelligence) {
+      // Use AI-generated content (preferred)
+      console.log("[BUILD_VARIABLES] Using AI-generated call intelligence", {
+        questionCount: aiGeneratedIntelligence.assessmentQuestions?.length,
+        callApproach: aiGeneratedIntelligence.callApproach,
+        confidence: aiGeneratedIntelligence.confidence,
+      });
+
+      // AI-generated assessment questions (hyper-specific to this case)
+      if (aiGeneratedIntelligence.assessmentQuestions?.length) {
+        completeVariables.assessmentQuestions =
+          aiGeneratedIntelligence.assessmentQuestions;
+      }
+
+      // AI-generated warning signs (case-specific)
+      if (aiGeneratedIntelligence.warningSignsToMonitor?.length) {
+        completeVariables.warningSignsToMonitor =
+          aiGeneratedIntelligence.warningSignsToMonitor;
+      }
+
+      // AI-generated normal expectations
+      if (aiGeneratedIntelligence.normalExpectations?.length) {
+        completeVariables.normalPostTreatmentExpectations =
+          aiGeneratedIntelligence.normalExpectations;
+      }
+
+      // AI-generated emergency criteria (case-specific)
+      if (aiGeneratedIntelligence.emergencyCriteria?.length) {
+        completeVariables.emergencyCriteria =
+          aiGeneratedIntelligence.emergencyCriteria;
+      }
+
+      // For urgent criteria, fall back to static KB (AI doesn't generate these)
+      if (
+        !completeVariables.urgentCriteria &&
+        knowledgeBase.urgentCriteria.length > 0
+      ) {
+        completeVariables.urgentCriteria = knowledgeBase.urgentCriteria;
+      }
+    } else if (useDefaults && knowledgeBase) {
+      // Fall back to static knowledge base
+      console.log(
+        "[BUILD_VARIABLES] Using static knowledge base (no AI intelligence provided)",
+        { category },
+      );
+
       // Only add knowledge base fields if they're not already provided
       if (
         !completeVariables.assessmentQuestions &&
