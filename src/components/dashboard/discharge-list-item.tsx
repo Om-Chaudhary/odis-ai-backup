@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { Card, CardContent } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -13,14 +12,8 @@ import {
   Edit2,
   Save,
   Loader2,
-  Eye,
-  CheckCircle2,
-  AlertCircle,
   AlertTriangle,
-  MoreHorizontal,
-  Stethoscope,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import type {
   DashboardCase,
   PatientUpdateInput,
@@ -33,13 +26,6 @@ import {
   getEffectiveContact,
 } from "~/lib/utils/dashboard-helpers";
 import { ContactIndicator } from "./contact-indicator";
-import { DischargeStatusIndicator } from "./discharge-status-indicator";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
 import { Badge } from "~/components/ui/badge";
 
 /**
@@ -118,22 +104,106 @@ function getStatusBorderColor(status: WorkflowStatus) {
 }
 
 /**
- * Returns the display text for a workflow status
- *
- * @param status - The workflow status
- * @returns Human-readable status text
+ * Individual action status type for calls and emails
  */
-function getStatusText(status: WorkflowStatus): string {
+type ActionStatus = "scheduled" | "queued" | "in_progress" | "sent" | "failed";
+
+/**
+ * Get the current status of discharge calls for this case
+ */
+function getCallStatus(caseData: DashboardCase): ActionStatus {
+  if (caseData.scheduled_discharge_calls.length === 0) return "scheduled";
+
+  const latestCall = caseData.scheduled_discharge_calls[0]; // Assuming most recent first
+  const status = latestCall?.status;
+
+  if (status === "completed") return "sent";
+  if (status === "failed") return "failed";
+  if (status === "in_progress" || status === "ringing") return "in_progress";
+  if (status === "queued") return "queued";
+
+  return "scheduled";
+}
+
+/**
+ * Get the current status of discharge emails for this case
+ */
+function getEmailStatus(caseData: DashboardCase): ActionStatus {
+  if (caseData.scheduled_discharge_emails.length === 0) return "scheduled";
+
+  const latestEmail = caseData.scheduled_discharge_emails[0]; // Assuming most recent first
+  const status = latestEmail?.status;
+
+  if (status === "sent") return "sent";
+  if (status === "failed") return "failed";
+  if (status === "queued") return "queued";
+
+  return "scheduled";
+}
+
+/**
+ * Get display text for action status
+ */
+function getActionStatusText(status: ActionStatus): string {
   switch (status) {
-    case "completed":
-      return "Completed";
+    case "scheduled":
+      return "Scheduled";
+    case "queued":
+      return "Queued";
     case "in_progress":
       return "In Progress";
+    case "sent":
+      return "Sent";
     case "failed":
       return "Failed";
-    case "ready":
-    default:
-      return "Ready";
+  }
+}
+
+/**
+ * Get color classes for action status
+ */
+function getActionStatusColors(status: ActionStatus) {
+  switch (status) {
+    case "scheduled":
+      return {
+        bg: "bg-slate-50 hover:bg-slate-100",
+        border: "border-slate-200",
+        text: "text-slate-700",
+        statusBg: "bg-slate-100",
+        statusText: "text-slate-600",
+      };
+    case "queued":
+      return {
+        bg: "bg-amber-50 hover:bg-amber-100",
+        border: "border-amber-200",
+        text: "text-amber-700",
+        statusBg: "bg-amber-100",
+        statusText: "text-amber-600",
+      };
+    case "in_progress":
+      return {
+        bg: "bg-blue-50 hover:bg-blue-100",
+        border: "border-blue-200",
+        text: "text-blue-700",
+        statusBg: "bg-blue-100",
+        statusText: "text-blue-600",
+      };
+    case "sent":
+      return {
+        bg: "bg-emerald-50 hover:bg-emerald-100",
+        border: "border-emerald-200",
+        text: "text-emerald-700",
+        statusBg: "bg-emerald-100",
+        statusText: "text-emerald-600",
+      };
+    case "failed":
+      return {
+        bg: "bg-red-50 hover:bg-red-100",
+        border: "border-red-200",
+        text: "text-red-700",
+        statusBg: "bg-red-100",
+        statusText: "text-red-600",
+      };
   }
 }
 
@@ -223,9 +293,6 @@ export function DischargeListItem({
     testModeEnabled,
   );
 
-  const SpeciesIcon =
-    caseData.patient.species?.toLowerCase() === "feline" ? Cat : Dog;
-
   // --- Handlers ---
 
   const handleStartEdit = () => {
@@ -264,12 +331,17 @@ export function DischargeListItem({
     setIsEditing(false);
   };
 
-  // Render primary action buttons (Call and Email side by side)
-  // Always show Call and Email buttons regardless of workflow status
-  const renderPrimaryActions = () => {
+  // Render combined status/action buttons (stacked vertically)
+  const renderActionStatusButtons = () => {
     const canCall = hasValidContact(effectivePhone);
     const canEmail = hasValidContact(effectiveEmail);
     const isReady = caseData.is_ready_for_discharge;
+
+    const callStatus = getCallStatus(caseData);
+    const emailStatus = getEmailStatus(caseData);
+
+    const callColors = getActionStatusColors(callStatus);
+    const emailColors = getActionStatusColors(emailStatus);
 
     // Determine tooltip messages
     const callTooltip = !isReady
@@ -288,46 +360,97 @@ export function DischargeListItem({
           ? `Test email to ${testContactEmail}`
           : "Send discharge email";
 
-    // Show in-progress indicator alongside buttons if a discharge is in progress
-    const showInProgressIndicator = workflowStatus === "in_progress";
-
     return (
-      <div className="flex items-center gap-1.5">
-        {showInProgressIndicator && (
-          <div className="flex items-center gap-1 text-xs text-blue-600">
-            <Loader2 className="h-3 w-3 animate-spin" />
-            <span>In Progress</span>
-          </div>
-        )}
-        <Button
-          onClick={() => onTriggerCall(caseData.id)}
-          disabled={isLoadingCall || !canCall}
-          size="sm"
-          className="transition-smooth gap-1.5 hover:shadow-md"
+      <div className="flex flex-col gap-1.5">
+        {/* Call Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onTriggerCall(caseData.id);
+          }}
+          disabled={isLoadingCall || !canCall || !isReady}
+          className={cn(
+            "flex min-w-32 items-center overflow-hidden rounded-lg border transition-all duration-200",
+            callColors.border,
+            callColors.bg,
+            isLoadingCall || !canCall || !isReady
+              ? "cursor-not-allowed opacity-50"
+              : "cursor-pointer hover:shadow-sm",
+          )}
           title={callTooltip}
         >
-          {isLoadingCall ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Phone className="h-4 w-4" />
+          {/* Status section */}
+          <div
+            className={cn(
+              "border-r px-3 py-2 text-xs font-medium",
+              callColors.statusBg,
+              callColors.statusText,
+              callColors.border,
+            )}
+          >
+            {getActionStatusText(callStatus)}
+          </div>
+
+          {/* Action section */}
+          <div
+            className={cn(
+              "flex flex-1 items-center gap-1.5 px-3 py-2",
+              callColors.text,
+            )}
+          >
+            {isLoadingCall ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Phone className="h-4 w-4" />
+            )}
+            <span className="text-sm font-medium">Call</span>
+          </div>
+        </button>
+
+        {/* Email Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onTriggerEmail(caseData.id);
+          }}
+          disabled={isLoadingEmail || !canEmail || !isReady}
+          className={cn(
+            "flex min-w-32 items-center overflow-hidden rounded-lg border transition-all duration-200",
+            emailColors.border,
+            emailColors.bg,
+            isLoadingEmail || !canEmail || !isReady
+              ? "cursor-not-allowed opacity-50"
+              : "cursor-pointer hover:shadow-sm",
           )}
-          Call
-        </Button>
-        <Button
-          onClick={() => onTriggerEmail(caseData.id)}
-          disabled={isLoadingEmail || !canEmail}
-          size="sm"
-          variant="outline"
-          className="transition-smooth gap-1.5 hover:bg-slate-50 hover:shadow-md"
           title={emailTooltip}
         >
-          {isLoadingEmail ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Mail className="h-4 w-4" />
-          )}
-          Email
-        </Button>
+          {/* Status section */}
+          <div
+            className={cn(
+              "border-r px-3 py-2 text-xs font-medium",
+              emailColors.statusBg,
+              emailColors.statusText,
+              emailColors.border,
+            )}
+          >
+            {getActionStatusText(emailStatus)}
+          </div>
+
+          {/* Action section */}
+          <div
+            className={cn(
+              "flex flex-1 items-center gap-1.5 px-3 py-2",
+              emailColors.text,
+            )}
+          >
+            {isLoadingEmail ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Mail className="h-4 w-4" />
+            )}
+            <span className="text-sm font-medium">Email</span>
+          </div>
+        </button>
       </div>
     );
   };
@@ -441,42 +564,21 @@ export function DischargeListItem({
             )}
           </div>
 
-          {/* Action Buttons and Status */}
+          {/* Combined Status/Action Buttons */}
           <div className="flex shrink-0 flex-col items-end gap-3">
-            {/* Call and Email Buttons */}
-            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-              {renderPrimaryActions()}
+            <div onClick={(e) => e.stopPropagation()}>
+              {renderActionStatusButtons()}
             </div>
 
-            {/* Status Badges */}
-            <div className="flex flex-col items-end gap-2">
-              {/* Workflow Status Badge - Larger */}
+            {/* Test Mode Badge */}
+            {testModeEnabled && (
               <Badge
                 variant="outline"
-                className={cn(
-                  "border-2 px-3 py-1.5 text-sm font-semibold",
-                  workflowStatus === "completed"
-                    ? "border-emerald-300 bg-emerald-100 text-emerald-800"
-                    : workflowStatus === "failed"
-                      ? "border-red-300 bg-red-100 text-red-800"
-                      : workflowStatus === "in_progress"
-                        ? "border-blue-300 bg-blue-100 text-blue-800"
-                        : "border-amber-300 bg-amber-100 text-amber-800",
-                )}
+                className="border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-600"
               >
-                {getStatusText(workflowStatus)}
+                Test
               </Badge>
-
-              {/* Test Mode Badge */}
-              {testModeEnabled && (
-                <Badge
-                  variant="outline"
-                  className="border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-600"
-                >
-                  Test
-                </Badge>
-              )}
-            </div>
+            )}
           </div>
         </div>
 
@@ -507,20 +609,6 @@ export function DischargeListItem({
               </span>
             </div>
           )}
-        </div>
-
-        {/* Outcome Status - Only show when complete/failed */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
-          <DischargeStatusIndicator
-            type="call"
-            calls={caseData.scheduled_discharge_calls}
-            testMode={testModeEnabled}
-          />
-          <DischargeStatusIndicator
-            type="email"
-            emails={caseData.scheduled_discharge_emails}
-            testMode={testModeEnabled}
-          />
         </div>
       </CardContent>
     </Card>
