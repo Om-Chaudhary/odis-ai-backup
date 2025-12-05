@@ -92,15 +92,13 @@
       "mcp__Notion__notion-update-page",
       "mcp__Notion__notion-move-pages",
       "mcp__Notion__notion-create-pages",
-      "Bash(vercel --prod:*)"
+      "Bash(vercel --prod:*)",
+      "Bash(pnpm dev:*)",
+      "Bash(npx next:*)"
     ],
     "deny": [],
     "ask": []
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "shadcn",
-    "vapi-mcp",
-    "playwright"
-  ]
+  "enabledMcpjsonServers": ["shadcn", "vapi-mcp", "playwright"]
 }

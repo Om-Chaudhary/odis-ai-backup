@@ -123,13 +123,13 @@ export const StructuredDischargeSummarySchema = z.object({
     "Type of visit for appropriate warning signs",
   ),
 
-  // Appointment summary - short, general summary for email display
-  // Does NOT disclose specific treatments, just general visit category
+  // Appointment summary - descriptive summary for email display
+  // Describes what was done in general terms, includes procedures/treatments but not specific diagnoses
   appointmentSummary: z
     .string()
     .optional()
     .describe(
-      "1-2 sentence general summary of the visit. Focus on visit type/category, not specific treatments. Example: 'Max came in today for a wellness checkup and routine care.' or 'We saw Luna for a dental procedure.'",
+      "3-4 sentence descriptive summary of the visit. Include what was done during the visit, treatments/procedures performed, and pet's cooperation. Example: 'Max came in today for a wellness checkup and routine care. We performed a thorough examination and updated his vaccinations. He was such a good boy throughout the visit and is ready to go home feeling great!'",
     ),
 
   // Visit summary (optional - may be skipped in email display)

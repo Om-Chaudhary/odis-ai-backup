@@ -43,22 +43,22 @@ Classify the visit into one of these categories based on the clinical notes:
 - "other" - Anything that doesn't fit above
 
 APPOINTMENT SUMMARY - REQUIRED:
-Generate a SHORT, GENERAL 1-2 sentence summary for the email header. This appears at the top of the discharge email and should:
+Generate a DESCRIPTIVE 3-4 sentence summary for the email header. This appears at the top of the discharge email and should:
 - Be warm and friendly in tone
-- Describe the GENERAL TYPE of visit (not specific procedures or diagnoses)
-- NOT disclose specific medical conditions, treatments, or diagnoses
+- Describe what was done during the visit in general terms
+- Include any treatments, procedures, or medications given (but not specific diagnoses)
+- Mention the pet's behavior/cooperation during the visit
 - Use general terms like "wellness visit", "dental care", "skin care", "routine vaccinations"
 
 Good examples:
-- "Max came in today for a wellness checkup and routine care. Everything went smoothly!"
-- "We saw Luna for a dental procedure today. She did great!"
-- "Buddy visited us for some skin care today and is ready to go home."
-- "Charlie came in for his routine vaccinations today. He was such a good boy!"
+- "Max came in today for a wellness checkup and routine care. We performed a thorough examination and updated his vaccinations. He was such a good boy throughout the visit and is ready to go home feeling great!"
+- "We saw Luna for a dental procedure today. We cleaned her teeth and took care of some oral health issues. She recovered beautifully from anesthesia and did great! She's ready to go home with some aftercare instructions."
+- "Buddy visited us for some skin care today. We examined his skin condition and provided treatment to help him feel more comfortable. He was very cooperative during the appointment and is ready to go home."
+- "Charlie came in for his routine vaccinations and wellness exam today. We updated all his shots and did a complete health check. He was such a good patient and everything looks wonderful!"
 
 Bad examples (too specific - DO NOT do this):
-- "Max came in for treatment of his ear infection and received antibiotics" (too specific)
-- "Luna had 3 teeth extracted due to periodontal disease" (discloses diagnosis)
-- "Buddy was treated for sarcoptic mange" (discloses specific condition)
+- "Max came in for treatment of his ear infection and received antibiotics" (too specific about diagnosis)
+- "Luna had 3 teeth extracted due to periodontal disease" (discloses specific diagnosis)
 
 MEDICATION RULES - EXTREMELY IMPORTANT:
 - ONLY include medications the owner needs to GIVE AT HOME on an ongoing basis
@@ -84,9 +84,10 @@ WARNING SIGNS - EXTRACT ONLY, DO NOT INVENT:
 - This is critical for safety - we use a curated library as fallback
 
 FOLLOW-UP - ONLY IF EXPLICIT:
-- Only set "required": true if follow-up is explicitly mentioned
+- Only set "required": true if follow-up is explicitly mentioned in the clinical notes
 - Only include date/reason if stated in notes
-- If no follow-up mentioned, set "required": false
+- If no follow-up mentioned, DO NOT include the followUp object at all (omit it entirely)
+- Do NOT add generic follow-up recommendations unless specifically stated
 
 OUTPUT FORMAT:
 Return ONLY valid JSON matching this exact structure:
@@ -118,8 +119,13 @@ Return ONLY valid JSON matching this exact structure:
     "reason": "Only if stated"
   },
   "warningSigns": [],
-  "notes": "Any other important info from notes"
+  "notes": "Only important client-relevant info (e.g., 'Blood work sent to lab', 'Continue medication as prescribed'). DO NOT include clinic-internal notes like 'Owner declined treatment', 'Recheck instructions provided', 'Client educated', etc."
 }
+
+NOTES SECTION - CLIENT-RELEVANT ONLY:
+- Only include information that is relevant and actionable for the pet owner
+- Good examples: "Blood work has been sent to lab for analysis", "Continue medication as prescribed", "Follow medication instructions carefully"
+- Bad examples (DO NOT include): "Owner declined partial treatment", "Recheck instructions provided", "Client educated on procedure", "Follow-up scheduled in system"
 
 STYLE GUIDE:
 - Use simple language, no medical jargon

@@ -194,7 +194,7 @@ export function DischargeEmailTemplate({
   }),
   clinicName,
   clinicPhone,
-  clinicEmail,
+  clinicEmail: _clinicEmail,
   primaryColor = colors.primary,
   logoUrl,
 }: DischargeEmailProps) {
@@ -213,7 +213,24 @@ export function DischargeEmailTemplate({
   }
 
   // Get warning signs (extracted or curated fallback)
-  const warningSigns = hasStructuredContent
+  // Only show warning signs for serious cases that actually need them
+  const shouldShowWarningSigns =
+    hasStructuredContent &&
+    structuredContent.caseType &&
+    !["wellness", "vaccination"].includes(structuredContent.caseType) &&
+    // Also check if this is a routine follow-up with no issues
+    !(
+      structuredContent.caseType === "other" &&
+      structuredContent.appointmentSummary?.toLowerCase().includes("routine") &&
+      (structuredContent.appointmentSummary
+        ?.toLowerCase()
+        .includes("went smoothly") ||
+        structuredContent.appointmentSummary
+          ?.toLowerCase()
+          .includes("everything went well"))
+    );
+
+  const warningSigns = shouldShowWarningSigns
     ? getWarningSignsHybrid(
         structuredContent.warningSigns,
         structuredContent.caseType,
@@ -601,92 +618,125 @@ export function DischargeEmailTemplate({
                   )}
 
                   {/* -------- FOLLOW-UP -------- */}
-                  {structuredContent.followUp?.required && (
-                    <Section style={sectionStyle}>
-                      <Text style={sectionTitleStyle}>What&apos;s Next</Text>
-                      <Section style={followUpBoxStyle}>
-                        <Row>
-                          <Column
-                            style={{ width: "32px", verticalAlign: "top" }}
-                          >
-                            <Text style={{ margin: 0, fontSize: "20px" }}>
-                              📅
-                            </Text>
-                          </Column>
-                          <Column style={{ paddingLeft: "12px" }}>
-                            <Text
-                              style={{
-                                margin: "0 0 2px",
-                                fontSize: "14px",
-                                fontWeight: "600",
-                                color: colors.text.primary,
-                              }}
+                  {structuredContent.followUp &&
+                    structuredContent.followUp.required && (
+                      <Section style={sectionStyle}>
+                        <Text style={sectionTitleStyle}>What&apos;s Next</Text>
+                        <Section style={followUpBoxStyle}>
+                          <Row>
+                            <Column
+                              style={{ width: "32px", verticalAlign: "top" }}
                             >
-                              Follow-up Appointment
-                            </Text>
-                            <Text
-                              style={{
-                                margin: 0,
-                                fontSize: "14px",
-                                color: colors.text.secondary,
-                              }}
-                            >
-                              {structuredContent.followUp.date
-                                ? `We'd like to see ${patientName} again ${structuredContent.followUp.date}`
-                                : `Please call us to schedule a follow-up`}
-                              {structuredContent.followUp.reason &&
-                                ` for ${structuredContent.followUp.reason}`}
-                              .
-                            </Text>
-                          </Column>
-                        </Row>
+                              <Text style={{ margin: 0, fontSize: "20px" }}>
+                                📅
+                              </Text>
+                            </Column>
+                            <Column style={{ paddingLeft: "12px" }}>
+                              <Text
+                                style={{
+                                  margin: "0 0 2px",
+                                  fontSize: "14px",
+                                  fontWeight: "600",
+                                  color: colors.text.primary,
+                                }}
+                              >
+                                Follow-up Appointment
+                              </Text>
+                              <Text
+                                style={{
+                                  margin: 0,
+                                  fontSize: "14px",
+                                  color: colors.text.secondary,
+                                }}
+                              >
+                                {structuredContent.followUp.date
+                                  ? `We'd like to see ${patientName} again ${structuredContent.followUp.date}`
+                                  : `Please call us to schedule a follow-up`}
+                                {structuredContent.followUp.reason &&
+                                  ` for ${structuredContent.followUp.reason}`}
+                                .
+                              </Text>
+                            </Column>
+                          </Row>
+                        </Section>
                       </Section>
-                    </Section>
-                  )}
+                    )}
 
                   {/* -------- NOTES -------- */}
-                  {structuredContent.notes && (
-                    <Section style={sectionStyle}>
-                      <Section
+                  {structuredContent.notes &&
+                    // Filter out clinic-only information
+                    !structuredContent.notes
+                      .toLowerCase()
+                      .includes("owner declined") &&
+                    !structuredContent.notes
+                      .toLowerCase()
+                      .includes("recheck instructions provided") &&
+                    !structuredContent.notes
+                      .toLowerCase()
+                      .includes("follow-up scheduled") &&
+                    !structuredContent.notes
+                      .toLowerCase()
+                      .includes("client educated") && (
+                      <Section style={sectionStyle}>
+                        <Section
+                          style={{
+                            backgroundColor: colors.background.warning,
+                            borderLeft: `4px solid ${colors.warning}`,
+                            borderRadius: "0 8px 8px 0",
+                            padding: "16px 20px",
+                          }}
+                        >
+                          <Text
+                            style={{
+                              margin: 0,
+                              fontSize: "14px",
+                              color: "#92400E",
+                              lineHeight: "1.6",
+                            }}
+                          >
+                            <strong>Important:</strong>{" "}
+                            {structuredContent.notes}
+                          </Text>
+                        </Section>
+                      </Section>
+                    )}
+
+                  {/* -------- QUESTIONS BOX (always appears) -------- */}
+                  <Section style={sectionStyle}>
+                    <Section style={homeCareBoxStyle}>
+                      <Text
                         style={{
-                          backgroundColor: colors.background.warning,
-                          borderLeft: `4px solid ${colors.warning}`,
-                          borderRadius: "0 8px 8px 0",
-                          padding: "16px 20px",
+                          margin: "0 0 8px",
+                          fontSize: "14px",
+                          color: colors.text.secondary,
+                          textAlign: "center" as const,
+                          lineHeight: "1.5",
                         }}
                       >
-                        <Text
+                        Questions about {patientName}&apos;s care? We&apos;re
+                        here to help — just give us a call.
+                      </Text>
+                      <Text
+                        style={{
+                          margin: 0,
+                          fontSize: "14px",
+                          fontWeight: "600",
+                          color: primaryColor,
+                          textAlign: "center" as const,
+                        }}
+                      >
+                        <Link
+                          href={`tel:${clinicPhone?.replace(/\D/g, "") ?? ""}`}
                           style={{
-                            margin: 0,
-                            fontSize: "14px",
-                            color: "#92400E",
-                            lineHeight: "1.6",
+                            color: primaryColor,
+                            textDecoration: "none",
                           }}
                         >
-                          <strong>Important:</strong> {structuredContent.notes}
-                        </Text>
-                      </Section>
+                          {clinicPhone ?? "(408) 258-2735"}
+                        </Link>
+                      </Text>
                     </Section>
-                  )}
-
-                  {/* -------- MINIMAL FALLBACK (no home care) -------- */}
-                  {!hasHomeCare && takeHomeMeds.length === 0 && (
-                    <Section style={sectionStyle}>
-                      <Section style={homeCareBoxStyle}>
-                        <Text
-                          style={{
-                            margin: 0,
-                            fontSize: "14px",
-                            color: colors.text.secondary,
-                            textAlign: "center" as const,
-                          }}
-                        >
-                          Questions about {patientName}&apos;s care? We&apos;re
-                          here to help — just give us a call.
-                        </Text>
-                      </Section>
-                    </Section>
-                  )}
+                  </Section>
                 </>
               ) : dischargeSummaryContent ? (
                 /* Plaintext fallback */
@@ -727,66 +777,36 @@ export function DischargeEmailTemplate({
                   fontSize: "13px",
                   fontWeight: "600",
                   color: colors.text.primary,
+                  textAlign: "center" as const,
                 }}
               >
-                Questions? We&apos;re here to help.
+                Sent with care from {clinicName ?? "your veterinary clinic"}
               </Text>
               <Text
                 style={{
                   margin: 0,
                   fontSize: "13px",
                   color: colors.text.secondary,
+                  textAlign: "center" as const,
+                  lineHeight: "1.4",
                 }}
               >
-                {clinicPhone && (
-                  <Link
-                    href={`tel:${clinicPhone.replace(/\D/g, "")}`}
-                    style={{ color: primaryColor, textDecoration: "none" }}
-                  >
-                    {clinicPhone}
-                  </Link>
-                )}
-                {clinicPhone && clinicEmail && <span> · </span>}
-                {clinicEmail && (
-                  <Link
-                    href={`mailto:${clinicEmail}`}
-                    style={{
-                      color: colors.text.secondary,
-                      textDecoration: "none",
-                    }}
-                  >
-                    {clinicEmail}
-                  </Link>
-                )}
+                2810 Alum Rock Ave, San Jose, CA 95127
               </Text>
             </Section>
 
             {/* ============ BOTTOM FOOTER ============ */}
             <Section style={bottomFooterStyle}>
-              <Row>
-                <Column>
-                  <Text
-                    style={{
-                      margin: 0,
-                      fontSize: "11px",
-                      color: colors.text.muted,
-                    }}
-                  >
-                    Sent with care from {clinicName ?? "your veterinary clinic"}
-                  </Text>
-                </Column>
-                <Column align="right">
-                  <Text
-                    style={{
-                      margin: 0,
-                      fontSize: "11px",
-                      color: colors.text.muted,
-                    }}
-                  >
-                    Powered by <strong>OdisAI</strong>
-                  </Text>
-                </Column>
-              </Row>
+              <Text
+                style={{
+                  margin: 0,
+                  fontSize: "11px",
+                  color: colors.text.muted,
+                  textAlign: "center" as const,
+                }}
+              >
+                Powered by <strong>OdisAI</strong>
+              </Text>
             </Section>
           </Section>
         </Container>

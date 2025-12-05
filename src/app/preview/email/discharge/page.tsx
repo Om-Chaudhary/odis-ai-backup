@@ -64,10 +64,12 @@ export default async function DischargeEmailPreviewPage() {
     ],
   };
 
-  // Wellness visit - Uses curated fallback warnings (empty warningSigns)
+  // Wellness visit - Now shows NO warning signs (demonstrating the fix)
   const wellnessVisit: StructuredDischargeSummary = {
     patientName: "Max",
     caseType: "vaccination",
+    appointmentSummary:
+      "Max came in today for his annual wellness exam and routine vaccinations. We performed a comprehensive physical examination and updated all his shots. He was such a good boy throughout the visit and everything looks wonderful!",
     diagnosis: "Healthy adult dog",
     treatmentsToday: ["Comprehensive physical exam", "Heartworm test"],
     vaccinationsGiven: ["DHPP", "Rabies", "Bordetella"],
@@ -83,12 +85,8 @@ export default async function DischargeEmailPreviewPage() {
     homeCare: {
       activity: "Mild soreness at injection site is normal for 24-48 hours.",
     },
-    followUp: {
-      required: true,
-      date: "in 1 year",
-      reason: "annual wellness exam",
-    },
-    // No extracted warning signs - will use curated "vaccination" fallback
+    // NO follow-up section will appear (not explicitly required)
+    // No warning signs - will NOT show "What to Watch For" section
     warningSigns: [],
   };
 
@@ -141,16 +139,26 @@ export default async function DischargeEmailPreviewPage() {
       "E-collar must be worn at all times to prevent licking the incision.",
   };
 
-  // Minimal data example - No home care, no follow-up, curated warnings
+  // Routine follow-up - Demonstrating no warning signs for good follow-ups
+  const routineFollowUp: StructuredDischargeSummary = {
+    patientName: "Nala",
+    caseType: "other",
+    appointmentSummary:
+      "Nala came in today for a follow-up visit and some routine testing. We checked on her progress and performed some blood work. Everything went smoothly and she's doing great!",
+    treatmentsToday: ["Blood Work"],
+    notes: "Blood work has been sent to lab for analysis",
+    // No medications, no home care, no follow-up, no warning signs
+    warningSigns: [],
+  };
+
+  // Minimal wellness visit - Clean example
   const minimalVisit: StructuredDischargeSummary = {
     patientName: "Charlie",
     caseType: "wellness",
-    diagnosis: "Healthy senior cat",
+    appointmentSummary:
+      "Charlie came in today for a routine wellness checkup. We performed a thorough examination and trimmed his nails. He was very cooperative and everything looks perfect!",
     treatmentsToday: ["Physical exam", "Nail trim"],
-    // No medications
-    // No home care instructions
-    // No follow-up
-    // No warning signs - will use curated "wellness" fallback
+    // No medications, no home care, no follow-up, no warning signs
     warningSigns: [],
   };
 
@@ -274,16 +282,51 @@ export default async function DischargeEmailPreviewPage() {
           />
         </div>
 
+        {/* Routine Follow-up - No warning signs */}
+        <div className="mb-8 rounded-lg bg-white p-6 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">
+                Routine Follow-up
+              </h2>
+              <p className="text-sm text-gray-500">
+                Follow-up visit that went well - no warning signs needed
+              </p>
+            </div>
+            <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-800">
+              caseType: other (routine)
+            </span>
+          </div>
+          <EmailPreviewFrame
+            html={await renderEmailToHtml(
+              <DischargeEmailTemplate
+                patientName={routineFollowUp.patientName}
+                ownerName="Maria Santos"
+                structuredContent={routineFollowUp}
+                date="December 5, 2025"
+                breed="Mixed Breed"
+                species="Dog"
+                clinicName="Alum Rock Animal Hospital"
+                clinicPhone="(408) 258-2735"
+                clinicEmail="care@alumrockanimalhospital.com"
+                logoUrl="https://cdcssl.ibsrv.net/ibimg/smb/280x74_80/webmgr/0p/b/d/60a41fa22fb01_logo.png.webp?f694b7f6a4b54a9f3056e003f175f743"
+                primaryColor="#0F766E"
+                headerStyle="light"
+              />,
+            )}
+          />
+        </div>
+
         {/* Minimal Visit - Testing empty sections */}
         <div className="mb-8 rounded-lg bg-white p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between">
             <div>
               <h2 className="text-lg font-semibold text-gray-900">
-                Minimal Visit
+                Minimal Wellness Visit
               </h2>
               <p className="text-sm text-gray-500">
-                No medications, no home care, no follow-up - tests fallback
-                behavior
+                Simple wellness visit - no medications, no warnings, no
+                follow-up
               </p>
             </div>
             <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-800">
@@ -311,27 +354,32 @@ export default async function DischargeEmailPreviewPage() {
 
         {/* Info Footer */}
         <div className="rounded-lg bg-blue-50 p-4 text-sm text-blue-900">
-          <p className="font-semibold">Design Updates:</p>
+          <p className="font-semibold">Recent Updates (December 2025):</p>
           <ul className="mt-2 list-inside list-disc space-y-1">
             <li>
-              <strong>Checkbox-style warnings:</strong> Warning signs now
-              display with checkbox styling for better readability
+              <strong>Smart warning signs:</strong> &quot;What to Watch
+              For&quot; section only appears for serious cases (surgery,
+              emergency) - hidden for wellness, vaccination, and routine
+              follow-ups
             </li>
             <li>
-              <strong>Hybrid warnings:</strong> Uses extracted warnings if
-              present, falls back to curated library by caseType
+              <strong>Expanded appointment summary:</strong> 3-4 sentence
+              descriptions instead of 1-2, including what was done and pet
+              behavior
             </li>
             <li>
-              <strong>No summary paragraph:</strong> Header shows pet name +
-              tags only, removed AI-generated summary
+              <strong>Follow-up only when needed:</strong> &quot;What&apos;s
+              Next&quot; section only shows when explicitly mentioned in
+              clinical notes
             </li>
             <li>
-              <strong>Simplified footer:</strong> Compact contact info with
-              &quot;Powered by OdisAI&quot; branding
+              <strong>Client-relevant notes:</strong> &quot;Important&quot;
+              section filtered to exclude clinic-internal notes like &quot;Owner
+              declined treatment&quot;
             </li>
             <li>
-              <strong>Minimal fallback:</strong> When no home care instructions,
-              shows simple &quot;We&apos;re here to help&quot; message
+              <strong>Case-appropriate content:</strong> Email content now
+              adapts based on visit type and severity
             </li>
           </ul>
         </div>
