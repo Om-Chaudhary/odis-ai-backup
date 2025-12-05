@@ -1,7 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { Home, Settings, PhoneCall, Command, LogOut } from "lucide-react";
+import {
+  Home,
+  Settings,
+  Command,
+  LogOut,
+  Phone,
+  PhoneOutgoing,
+  PhoneIncoming,
+  ChevronRight,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -13,8 +22,16 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarSeparator,
 } from "~/components/ui/sidebar";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "~/components/ui/collapsible";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import Link from "next/link";
@@ -29,13 +46,21 @@ const mainNavItems = [
     url: "/dashboard",
     icon: Home,
   },
+  // Calls section is handled separately as a collapsible menu
+];
+
+// Calls submenu items
+const callsNavItems = [
   {
-    title: "Discharges",
+    title: "Discharge Calls",
     url: "/dashboard/cases",
-    icon: PhoneCall,
+    icon: PhoneOutgoing,
   },
-  // Removed: Patients, Schedule - pages not implemented yet
-  // These can be re-added when pages are created
+  {
+    title: "Inbound Calls",
+    url: "/dashboard/calls/inbound",
+    icon: PhoneIncoming,
+  },
 ];
 
 const systemItems = [
@@ -65,6 +90,11 @@ export function AppSidebar({ user, profile, ...props }: AppSidebarProps) {
   const lastName = profile?.last_name ?? "";
   const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   const fullName = `${firstName} ${lastName}`.trim() ?? user.email ?? "User";
+
+  // Check if any calls route is active for auto-expanding
+  const isCallsActive = callsNavItems.some(
+    (item) => pathname === item.url || pathname.startsWith(item.url + "/"),
+  );
 
   return (
     <Sidebar variant="inset" {...props}>
@@ -104,6 +134,43 @@ export function AppSidebar({ user, profile, ...props }: AppSidebarProps) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+
+              {/* Calls Collapsible Menu */}
+              <Collapsible
+                asChild
+                defaultOpen={isCallsActive}
+                className="group/collapsible"
+              >
+                <SidebarMenuItem>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip="Calls" isActive={isCallsActive}>
+                      <Phone />
+                      <span>Calls</span>
+                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {callsNavItems.map((item) => (
+                        <SidebarMenuSubItem key={item.title}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={
+                              pathname === item.url ||
+                              pathname.startsWith(item.url + "/")
+                            }
+                          >
+                            <Link href={item.url}>
+                              <item.icon className="size-4" />
+                              <span>{item.title}</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

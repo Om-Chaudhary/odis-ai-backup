@@ -1,17 +1,16 @@
 import type { ReactElement } from "react";
+import { render } from "@react-email/components";
 
 /**
  * Render a React email component to HTML string
  *
- * This uses React's renderToStaticMarkup to convert React components
- * into HTML strings suitable for email clients. This is preferred over
- * template literals as it provides:
+ * Uses @react-email/render for optimal email client compatibility.
+ * This provides:
  * - Type safety
  * - Component reusability
  * - Better maintainability
  * - IDE support and autocomplete
- *
- * Note: This dynamically imports react-dom/server to avoid Next.js build issues
+ * - Proper DOCTYPE and email-safe HTML
  *
  * @param component - React element to render
  * @returns HTML string with proper DOCTYPE
@@ -32,14 +31,8 @@ import type { ReactElement } from "react";
 export async function renderEmailToHtml(
   component: ReactElement,
 ): Promise<string> {
-  // Dynamically import react-dom/server to avoid Next.js client bundle issues
-  const { renderToStaticMarkup } = await import("react-dom/server");
-
-  // Render React component to static HTML
-  const html = renderToStaticMarkup(component);
-
-  // Email clients expect a proper DOCTYPE
-  return `<!DOCTYPE html>\n${html}`;
+  // Use React Email's render function for optimal compatibility
+  return await render(component);
 }
 
 /**

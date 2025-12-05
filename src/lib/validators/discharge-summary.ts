@@ -15,23 +15,39 @@ import { z } from "zod";
    ======================================== */
 
 export const MedicationSchema = z.object({
-  name: z.string().describe("Medication name in simple terms"),
+  // REQUIRED: Medication name (e.g., "Apoquel", "Cephalexin", "Medicated Shampoo")
+  name: z.string().min(1).describe("Medication name - REQUIRED"),
+
+  // OPTIONAL: Amount per dose - only include if explicitly stated
+  // Examples: "16mg", "500mg", "1 tablet", "5ml"
   dosage: z
     .string()
     .optional()
-    .describe("How much to give (e.g., '1 tablet', '5ml')"),
+    .describe("Amount per dose (e.g., '16mg', '1 tablet') - only if stated"),
+
+  // OPTIONAL: How often to give - only include if explicitly stated
+  // Examples: "once daily", "twice daily", "every 3 days", "every 8 hours"
   frequency: z
     .string()
     .optional()
-    .describe("How often (e.g., 'twice daily', 'every 8 hours')"),
+    .describe("How often (e.g., 'once daily', 'twice daily') - only if stated"),
+
+  // OPTIONAL: How long to give - only include if explicitly stated
+  // Examples: "14 days", "10 days", "3 weeks", "until finished"
   duration: z
     .string()
     .optional()
-    .describe("How long (e.g., '7 days', 'until finished')"),
+    .describe("How long (e.g., '14 days', '3 weeks') - only if stated"),
+
+  // OPTIONAL: Short action phrase for special instructions - only if there's a specific instruction
+  // Examples: "Give with food", "Complete full course", "Leave on 10 min"
+  // DO NOT include generic instructions or clinic-administered notes
   instructions: z
     .string()
     .optional()
-    .describe("Special instructions (e.g., 'give with food')"),
+    .describe(
+      "Short instruction phrase (e.g., 'Give with food') - only if stated",
+    ),
 });
 
 export type Medication = z.infer<typeof MedicationSchema>;
@@ -77,6 +93,24 @@ export const FollowUpSchema = z.object({
 export type FollowUp = z.infer<typeof FollowUpSchema>;
 
 /* ========================================
+   Case Type Schema
+   ======================================== */
+
+export const DischargeCaseTypeSchema = z.enum([
+  "surgery",
+  "dental",
+  "vaccination",
+  "dermatology",
+  "wellness",
+  "emergency",
+  "gastrointestinal",
+  "orthopedic",
+  "other",
+]);
+
+export type DischargeCaseType = z.infer<typeof DischargeCaseTypeSchema>;
+
+/* ========================================
    Main Structured Discharge Summary Schema
    ======================================== */
 
@@ -84,9 +118,15 @@ export const StructuredDischargeSummarySchema = z.object({
   // Patient identification (brief)
   patientName: z.string().describe("Pet's name"),
 
-  // Visit summary (1-2 sentences max)
+  // Case type for curated warning fallback (optional - AI will classify)
+  caseType: DischargeCaseTypeSchema.optional().describe(
+    "Type of visit for appropriate warning signs",
+  ),
+
+  // Visit summary (optional - may be skipped in email display)
   visitSummary: z
     .string()
+    .optional()
     .describe("Brief summary of why pet was seen and what was done"),
 
   // Diagnosis (simple terms)
@@ -96,26 +136,33 @@ export const StructuredDischargeSummarySchema = z.object({
   treatmentsToday: z
     .array(z.string())
     .optional()
-    .describe("What was done during the visit"),
+    .describe("What was done during the visit - procedures, exams, etc."),
 
-  // Medications to give at home
+  // Vaccinations administered (separate from take-home medications)
+  vaccinationsGiven: z
+    .array(z.string())
+    .optional()
+    .describe("Vaccinations given during the visit (e.g., 'Rabies', 'DHPP')"),
+
+  // Medications to give at home (NOT clinic-administered)
   medications: z
     .array(MedicationSchema)
     .optional()
-    .describe("Medications to give at home"),
+    .describe("Take-home medications only - not vaccines or clinic treatments"),
 
   // Home care instructions
-  homeCare:
-    HomeCareInstructionsSchema.optional().describe("What to do at home"),
+  homeCare: HomeCareInstructionsSchema.optional().describe(
+    "What to do at home - only if explicitly stated in notes",
+  ),
 
   // Follow-up information
   followUp: FollowUpSchema.optional().describe("Next steps and follow-up"),
 
-  // Warning signs - CRITICAL section
+  // Warning signs - extracted from notes if present
   warningSigns: z
     .array(z.string())
     .optional()
-    .describe("When to call the vet immediately"),
+    .describe("Warning signs explicitly mentioned in notes - do not invent"),
 
   // Additional notes (optional, keep brief)
   notes: z.string().optional().describe("Any other important information"),
@@ -158,7 +205,7 @@ export function structuredToPlainText(
   );
   sections.push("");
 
-  // Visit Summary
+  // Visit Summary (optional)
   if (summary.visitSummary) {
     sections.push("VISIT SUMMARY");
     sections.push(summary.visitSummary);
@@ -177,6 +224,15 @@ export function structuredToPlainText(
     sections.push("WHAT WE DID TODAY");
     summary.treatmentsToday.forEach((treatment) => {
       sections.push(`• ${treatment}`);
+    });
+    sections.push("");
+  }
+
+  // Vaccinations Given
+  if (summary.vaccinationsGiven && summary.vaccinationsGiven.length > 0) {
+    sections.push("VACCINATIONS");
+    summary.vaccinationsGiven.forEach((vaccine) => {
+      sections.push(`• ${vaccine}`);
     });
     sections.push("");
   }
@@ -224,8 +280,9 @@ export function structuredToPlainText(
     if (summary.followUp.required) {
       let followUpLine = "• Please schedule a follow-up";
       if (summary.followUp.date) followUpLine += ` ${summary.followUp.date}`;
-      if (summary.followUp.reason)
+      if (summary.followUp.reason) {
         followUpLine += ` for ${summary.followUp.reason}`;
+      }
       sections.push(followUpLine);
     } else {
       sections.push("• No follow-up needed unless concerns arise");
@@ -263,9 +320,11 @@ export function createEmptyStructuredSummary(
 ): StructuredDischargeSummary {
   return {
     patientName,
-    visitSummary: "",
+    caseType: undefined,
+    visitSummary: undefined,
     diagnosis: undefined,
     treatmentsToday: [],
+    vaccinationsGiven: [],
     medications: [],
     homeCare: undefined,
     followUp: { required: false },

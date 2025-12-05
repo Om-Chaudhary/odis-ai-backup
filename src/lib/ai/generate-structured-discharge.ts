@@ -22,51 +22,91 @@ import {
    Structured Prompt Engineering
    ======================================== */
 
-const STRUCTURED_SYSTEM_PROMPT = `You are OdisAI, a veterinary discharge instruction generator. Generate SHORT, CONCISE discharge instructions that pet owners can easily understand and follow.
+const STRUCTURED_SYSTEM_PROMPT = `You are OdisAI, a veterinary discharge instruction generator. Your job is to EXTRACT information from clinical notes - NOT to invent or assume anything.
 
-CRITICAL REQUIREMENTS:
-1. BE BRIEF - Keep each section to 1-3 bullet points maximum
-2. USE SIMPLE LANGUAGE - No medical jargon, explain like talking to a friend
-3. FOCUS ON ACTION - Only include what the owner needs to DO
-4. PRIORITIZE - Medications, warning signs, and follow-up are most important
+CRITICAL SAFETY PRINCIPLE: "EXTRACT, DON'T INVENT"
+- Only include information EXPLICITLY stated in the clinical notes
+- If something is not mentioned, DO NOT include it
+- Never guess, assume, or infer medical information
+- When in doubt, leave the field empty/undefined
+
+CASE TYPE CLASSIFICATION - REQUIRED:
+Classify the visit into one of these categories based on the clinical notes:
+- "surgery" - Any surgical procedure (spay, neuter, mass removal, etc.)
+- "dental" - Dental cleaning, extractions, oral procedures
+- "vaccination" - Primarily a vaccination visit
+- "dermatology" - Skin conditions, allergies, ear infections
+- "wellness" - Routine checkup, annual exam
+- "emergency" - Emergency or urgent care visit
+- "gastrointestinal" - Vomiting, diarrhea, GI issues
+- "orthopedic" - Limping, joint issues, fractures
+- "other" - Anything that doesn't fit above
+
+MEDICATION RULES - EXTREMELY IMPORTANT:
+- ONLY include medications the owner needs to GIVE AT HOME on an ongoing basis
+- DO NOT include: vaccinations, dewormers given at clinic, injections given at clinic, clinic-administered treatments
+- If unsure whether a medication is take-home, DO NOT include it
+- If there are NO take-home medications, set medications to an empty array []
+- Each medication field should ONLY be filled if EXPLICITLY stated in notes
+
+VACCINATIONS - SEPARATE FROM MEDICATIONS:
+- List any vaccinations administered during the visit in "vaccinationsGiven"
+- Examples: "Rabies", "DHPP", "Bordetella", "FVRCP"
+- These go in treatmentsToday AND vaccinationsGiven
+
+HOME CARE - ONLY IF EXPLICIT:
+- Only include activity/diet/woundCare/monitoring if EXPLICITLY mentioned in notes
+- Do NOT add generic advice like "ensure fresh water" unless the notes say so
+- If no home care instructions in notes, omit the homeCare object entirely
+
+WARNING SIGNS - EXTRACT ONLY, DO NOT INVENT:
+- ONLY include warning signs if they are EXPLICITLY stated in the clinical notes
+- DO NOT generate generic warning signs - the email system has curated fallbacks
+- If no warning signs mentioned in notes, set to empty array []
+- This is critical for safety - we use a curated library as fallback
+
+FOLLOW-UP - ONLY IF EXPLICIT:
+- Only set "required": true if follow-up is explicitly mentioned
+- Only include date/reason if stated in notes
+- If no follow-up mentioned, set "required": false
 
 OUTPUT FORMAT:
 Return ONLY valid JSON matching this exact structure:
 {
   "patientName": "Pet's name",
-  "visitSummary": "One sentence: why they came and what we did",
-  "diagnosis": "Simple explanation of what's wrong (optional)",
-  "treatmentsToday": ["Brief list of what was done"],
+  "caseType": "surgery|dental|vaccination|dermatology|wellness|emergency|gastrointestinal|orthopedic|other",
+  "diagnosis": "Simple explanation of what's wrong (only if stated)",
+  "treatmentsToday": ["Procedures, exams, vaccinations done during visit"],
+  "vaccinationsGiven": ["List of vaccines given, e.g., 'Rabies', 'DHPP'"],
   "medications": [
     {
       "name": "Medication name",
-      "dosage": "How much (e.g., '1 tablet')",
-      "frequency": "How often (e.g., 'twice daily')",
-      "duration": "How long (e.g., '7 days')",
-      "instructions": "Special notes (e.g., 'give with food')"
+      "dosage": "Only if stated",
+      "frequency": "Only if stated",
+      "duration": "Only if stated",
+      "instructions": "Only if stated"
     }
   ],
   "homeCare": {
-    "activity": "Activity restrictions",
-    "diet": "Food instructions",
-    "monitoring": ["What to watch for"],
-    "woundCare": "Wound care if applicable"
+    "activity": "Only if explicitly stated",
+    "diet": "Only if explicitly stated",
+    "monitoring": ["Only if explicitly stated"],
+    "woundCare": "Only if explicitly stated"
   },
   "followUp": {
     "required": true/false,
-    "date": "When to return",
-    "reason": "Why follow-up is needed"
+    "date": "Only if stated",
+    "reason": "Only if stated"
   },
-  "warningSigns": ["Call immediately if you see these"],
-  "notes": "Any other brief notes"
+  "warningSigns": [],
+  "notes": "Any other important info from notes"
 }
 
 STYLE GUIDE:
-- Write like you're texting a friend, not writing a medical document
+- Use simple language, no medical jargon
 - "Give 1 tablet twice a day with food" NOT "Administer 1 tablet PO BID with meals"
-- "Call us if vomiting continues" NOT "Contact clinic if emesis persists"
-- Skip sections that don't apply - don't include empty arrays or null values
-- Maximum 3 warning signs, focus on the most important ones`;
+- Skip sections that don't apply - don't include empty objects or null values
+- Keep it brief and factual`;
 
 interface PatientData {
   name?: string;
@@ -96,13 +136,21 @@ function formatEntityExtractionForStructuredPrompt(
   }
 
   if (entities.clinical.medications?.length) {
-    sections.push("MEDICATIONS:");
+    sections.push("TAKE-HOME MEDICATIONS:");
     entities.clinical.medications.forEach((med) => {
       const parts = [med.name];
       if (med.dosage) parts.push(med.dosage);
       if (med.frequency) parts.push(med.frequency);
       if (med.duration) parts.push(`for ${med.duration}`);
       sections.push("  - " + parts.join(" "));
+    });
+  }
+
+  // Vaccinations (separate from take-home medications)
+  if (entities.clinical.vaccinations?.length) {
+    sections.push("VACCINATIONS GIVEN:");
+    entities.clinical.vaccinations.forEach((vax) => {
+      sections.push("  - " + vax.name);
     });
   }
 
@@ -115,7 +163,9 @@ function formatEntityExtractionForStructuredPrompt(
   }
 
   if (entities.clinical.followUpInstructions) {
-    sections.push("FOLLOW-UP: " + entities.clinical.followUpInstructions);
+    sections.push(
+      "FOLLOW-UP INSTRUCTIONS: " + entities.clinical.followUpInstructions,
+    );
   }
 
   if (entities.clinical.followUpDate) {
@@ -267,7 +317,9 @@ export async function generateStructuredDischargeSummary(
       "[STRUCTURED_DISCHARGE] Successfully generated structured summary",
       {
         patientName: structured.patientName,
+        caseType: structured.caseType,
         hasMedications: (structured.medications?.length ?? 0) > 0,
+        hasVaccinations: (structured.vaccinationsGiven?.length ?? 0) > 0,
         hasWarningSigns: (structured.warningSigns?.length ?? 0) > 0,
         plainTextLength: plainText.length,
       },
@@ -324,7 +376,9 @@ export async function generateStructuredDischargeSummaryWithRetry(
 
         const delay = Math.pow(2, attempt) * 1000;
         console.warn(
-          `[STRUCTURED_DISCHARGE] Generation failed (attempt ${attempt + 1}/${maxRetries}), retrying in ${delay}ms...`,
+          `[STRUCTURED_DISCHARGE] Generation failed (attempt ${
+            attempt + 1
+          }/${maxRetries}), retrying in ${delay}ms...`,
         );
         await new Promise((resolve) => setTimeout(resolve, delay));
         continue;
