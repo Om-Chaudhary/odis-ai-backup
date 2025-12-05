@@ -16,6 +16,7 @@ import {
   Eye,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   MoreHorizontal,
   Stethoscope,
 } from "lucide-react";
@@ -334,69 +335,31 @@ export function DischargeListItem({
   return (
     <Card
       className={cn(
-        "group transition-smooth relative overflow-hidden rounded-lg border border-l-4 border-slate-200 bg-white shadow-sm hover:border-slate-300 hover:shadow-md",
+        "group transition-smooth relative cursor-pointer overflow-hidden rounded-lg border border-l-4 border-slate-200 bg-white shadow-sm hover:border-slate-300 hover:shadow-md",
         getStatusBorderColor(workflowStatus),
         // Muted styling for non-ready cases
         !caseData.is_ready_for_discharge &&
           "border-slate-100 bg-slate-50/50 opacity-75",
       )}
+      onClick={() => {
+        window.location.href = `/dashboard/discharges/${caseData.id}`;
+      }}
     >
       <CardContent className="p-4">
-        {/* Header Row: Patient Icon, Name, Owner, Status Badge, Primary Action */}
-        <div className="mb-3 flex items-start gap-3">
-          {/* Patient Icon */}
-          <div
-            className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors",
-              workflowStatus === "completed"
-                ? "bg-emerald-100 text-emerald-600"
-                : workflowStatus === "failed"
-                  ? "bg-red-100 text-red-600"
-                  : workflowStatus === "in_progress"
-                    ? "bg-blue-100 text-blue-600"
-                    : "bg-slate-100 text-slate-500",
-            )}
-          >
-            <SpeciesIcon className="h-5 w-5" />
-          </div>
-
+        {/* Header Row: Patient & Owner Info, Action Buttons */}
+        <div className="mb-4 flex items-start justify-between">
           {/* Patient & Owner Info */}
           <div className="min-w-0 flex-1">
-            <div className="mb-1 flex items-center gap-2">
+            <div className="mb-2">
               <h3
                 className={cn(
-                  "truncate text-base font-semibold text-slate-900",
+                  "text-lg font-bold text-slate-900",
                   isPlaceholder(caseData.patient.name) &&
                     "text-amber-600 italic",
                 )}
               >
                 {caseData.patient.name}
               </h3>
-              {/* Status Badge */}
-              <Badge
-                variant="outline"
-                className={cn(
-                  "h-5 shrink-0 border px-2 text-[10px] font-medium",
-                  workflowStatus === "completed"
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                    : workflowStatus === "failed"
-                      ? "border-red-200 bg-red-50 text-red-700"
-                      : workflowStatus === "in_progress"
-                        ? "border-blue-200 bg-blue-50 text-blue-700"
-                        : "border-amber-200 bg-amber-50 text-amber-700",
-                )}
-              >
-                {getStatusText(workflowStatus)}
-              </Badge>
-              {/* Test Mode Badge */}
-              {testModeEnabled && (
-                <Badge
-                  variant="outline"
-                  className="h-5 shrink-0 border-slate-200 bg-slate-50 px-1.5 text-[10px] font-medium text-slate-600"
-                >
-                  Test
-                </Badge>
-              )}
             </div>
 
             {/* Owner Name - Editable */}
@@ -478,33 +441,46 @@ export function DischargeListItem({
             )}
           </div>
 
-          {/* Primary Actions & Overflow Menu */}
-          <div className="flex shrink-0 items-center gap-2">
-            {renderPrimaryActions()}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="transition-smooth h-8 w-8 text-slate-400 hover:text-slate-600"
+          {/* Action Buttons and Status */}
+          <div className="flex shrink-0 flex-col items-end gap-3">
+            {/* Call and Email Buttons */}
+            <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+              {renderPrimaryActions()}
+            </div>
+
+            {/* Status Badges */}
+            <div className="flex flex-col items-end gap-2">
+              {/* Workflow Status Badge - Larger */}
+              <Badge
+                variant="outline"
+                className={cn(
+                  "border-2 px-3 py-1.5 text-sm font-semibold",
+                  workflowStatus === "completed"
+                    ? "border-emerald-300 bg-emerald-100 text-emerald-800"
+                    : workflowStatus === "failed"
+                      ? "border-red-300 bg-red-100 text-red-800"
+                      : workflowStatus === "in_progress"
+                        ? "border-blue-300 bg-blue-100 text-blue-800"
+                        : "border-amber-300 bg-amber-100 text-amber-800",
+                )}
+              >
+                {getStatusText(workflowStatus)}
+              </Badge>
+
+              {/* Test Mode Badge */}
+              {testModeEnabled && (
+                <Badge
+                  variant="outline"
+                  className="border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-600"
                 >
-                  <MoreHorizontal className="h-4 w-4" />
-                  <span className="sr-only">More actions</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <Link href={`/dashboard/discharges/${caseData.id}`}>
-                    <Eye className="mr-2 h-4 w-4" />
-                    View Details
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  Test
+                </Badge>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Contact Row: Phone, Email, Clinical Notes */}
+        {/* Contact Row: Phone, Email with Not Ready warning */}
         <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-b border-slate-100 pb-2">
           <ContactIndicator
             type="phone"
@@ -518,64 +494,33 @@ export function DischargeListItem({
             isValid={hasValidContact(effectiveEmail)}
             testMode={false}
           />
-          {/* IDEXX Notes Indicator */}
-          {caseData.idexxNotes && (
+
+          {/* Not Ready Warning - Only show when NOT ready */}
+          {!caseData.is_ready_for_discharge && (
             <div
-              className="flex items-center gap-1.5 rounded bg-indigo-50 px-2 py-0.5 text-xs text-indigo-700"
-              title={caseData.idexxNotes}
+              className="flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2 py-1"
+              title={`Missing: ${caseData.missing_requirements.join(", ")}`}
             >
-              <Stethoscope className="h-3.5 w-3.5" />
-              <span className="font-medium">IDEXX Notes</span>
+              <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+              <span className="text-xs font-medium text-amber-700">
+                Not Ready
+              </span>
             </div>
           )}
-          {/* Discharge Readiness Indicator */}
-          <div
-            className={cn(
-              "flex items-center gap-1.5 rounded px-2 py-0.5 text-xs",
-              caseData.is_ready_for_discharge
-                ? "bg-emerald-50 text-emerald-700"
-                : "bg-amber-50 text-amber-700",
-            )}
-            title={
-              caseData.is_ready_for_discharge
-                ? "Ready for discharge"
-                : `Missing: ${caseData.missing_requirements.join(", ")}`
-            }
-          >
-            {caseData.is_ready_for_discharge ? (
-              <>
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                <span className="font-medium">Ready</span>
-              </>
-            ) : (
-              <>
-                <AlertCircle className="h-3.5 w-3.5" />
-                <span className="font-medium">Not Ready</span>
-              </>
-            )}
-          </div>
         </div>
 
-        {/* Status Row: Discharge Status & Timestamp */}
-        <div className="flex items-center justify-between">
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
-            <DischargeStatusIndicator
-              type="call"
-              calls={caseData.scheduled_discharge_calls}
-              testMode={testModeEnabled}
-            />
-            <DischargeStatusIndicator
-              type="email"
-              emails={caseData.scheduled_discharge_emails}
-              testMode={testModeEnabled}
-            />
-          </div>
-          <div className="text-xs text-slate-500">
-            Created{" "}
-            {formatDistanceToNow(new Date(caseData.created_at), {
-              addSuffix: true,
-            })}
-          </div>
+        {/* Outcome Status - Only show when complete/failed */}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+          <DischargeStatusIndicator
+            type="call"
+            calls={caseData.scheduled_discharge_calls}
+            testMode={testModeEnabled}
+          />
+          <DischargeStatusIndicator
+            type="email"
+            emails={caseData.scheduled_discharge_emails}
+            testMode={testModeEnabled}
+          />
         </div>
       </CardContent>
     </Card>

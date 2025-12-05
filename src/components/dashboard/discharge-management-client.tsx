@@ -18,9 +18,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { DischargeListItem } from "./discharge-list-item";
 import { EmptyState } from "./empty-state";
 import {
-  UnifiedFilterBar,
+  ConsolidatedFilterBar,
   type CallEndReasonFilter,
-} from "./unified-filter-bar";
+} from "./consolidated-filter-bar";
 import { BatchDischargeDialog } from "./batch-discharge-dialog";
 import { BatchProgressMonitor } from "./batch-progress-monitor";
 import { VapiCallHistory } from "./vapi-call-history";
@@ -609,40 +609,28 @@ export function DischargeManagementClient() {
 
   return (
     <div className="space-y-6 p-6 pb-16">
-      {/* Header */}
-      <div className="animate-card-in flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight">
-              Discharge Management
-            </h1>
-            {settings.testModeEnabled && (
-              <Badge
-                variant="outline"
-                className="animate-pulse-glow gap-1 border-amber-500/50 bg-amber-50 text-amber-700"
-              >
-                <TestTube className="h-3 w-3" />
-                Test Mode Active
-              </Badge>
-            )}
-          </div>
-          <p className="text-muted-foreground">
-            Manage automated follow-ups and discharge summaries.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isLoading}
-            className="transition-smooth"
+      {/* Header - Top Right Navigation Only */}
+      <div className="animate-card-in flex items-center justify-end">
+        {/* Top Right Navigation */}
+        <div className="flex flex-col items-end gap-2">
+          {/* Tabs for Cases and Call History */}
+          <Tabs
+            value={activeTab}
+            onValueChange={(v) => setActiveTab(v as "cases" | "calls")}
           >
-            <RefreshCw
-              className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
-            />
-            Refresh
-          </Button>
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="cases" className="gap-2">
+                <ClipboardList className="h-4 w-4" />
+                Cases
+              </TabsTrigger>
+              <TabsTrigger value="calls" className="gap-2">
+                <Phone className="h-4 w-4" />
+                Call History
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {/* Send All Discharge Button */}
           <Button
             variant="outline"
             size="sm"
@@ -653,68 +641,102 @@ export function DischargeManagementClient() {
             <Send className="mr-2 h-4 w-4" />
             Send All Discharge
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => router.push("/dashboard/settings")}
-            className="transition-smooth"
-          >
-            <Settings className="mr-2 h-4 w-4" />
-            Settings
-          </Button>
-          <Button size="sm">
-            <Plus className="mr-2 h-4 w-4" />
-            New Case
-          </Button>
         </div>
       </div>
 
-      {/* Tabs for Cases and Call History */}
+      {/* Content based on active tab */}
       <Tabs
         value={activeTab}
         onValueChange={(v) => setActiveTab(v as "cases" | "calls")}
         className="space-y-4"
       >
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="cases" className="gap-2">
-            <ClipboardList className="h-4 w-4" />
-            Cases
-          </TabsTrigger>
-          <TabsTrigger value="calls" className="gap-2">
-            <Phone className="h-4 w-4" />
-            Call History
-          </TabsTrigger>
-        </TabsList>
-
         {/* Cases Tab */}
         <TabsContent value="cases" className="space-y-4">
-          {/* Unified Filter Bar - Search, date controls, and status filters */}
-          <UnifiedFilterBar
-            currentDate={currentDate}
-            onDateChange={handleDateChange}
-            totalItems={totalCases}
-            isLoading={isLoading}
-            statusFilter={statusFilter}
-            onStatusFilterChange={(filter) => {
-              setStatusFilter(filter);
-              handleFilterReset();
-            }}
-            readinessFilter={readinessFilter}
-            onReadinessFilterChange={(filter) => {
-              setReadinessFilter(filter);
-              handleFilterReset();
-            }}
-            callEndReasonFilter={callEndReasonFilter}
-            onCallEndReasonFilterChange={(filter) => {
-              setCallEndReasonFilter(filter);
-              handleFilterReset();
-            }}
-            searchTerm={searchTerm}
-            onSearchChange={(term) => {
-              setSearchTerm(term);
-              handleFilterReset();
-            }}
-          />
+          {/* Test Mode Badge - Centered */}
+          {settings.testModeEnabled && (
+            <div className="mb-4 flex justify-center">
+              <Badge
+                variant="outline"
+                className="animate-pulse-glow gap-1 border-amber-500/50 bg-amber-50 text-amber-700"
+              >
+                <TestTube className="h-3 w-3" />
+                Test Mode Active
+              </Badge>
+            </div>
+          )}
+
+          {/* Search Bar with Refresh Button */}
+          <div className="mb-6 flex items-center justify-center gap-4">
+            <div className="relative max-w-md flex-1">
+              <input
+                type="search"
+                placeholder="Search patients or owners..."
+                className="w-full rounded-lg border border-slate-200 py-2 pr-4 pl-10 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  handleFilterReset();
+                }}
+              />
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <svg
+                  className="h-4 w-4 text-slate-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+              disabled={isLoading}
+              className="transition-smooth shrink-0"
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+              />
+            </Button>
+          </div>
+
+          {/* Date Navigation - Under Search Bar */}
+          <div className="mb-6 flex items-center justify-between">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleDateChange(addDays(currentDate, -1))}
+              className="transition-smooth"
+            >
+              ←
+            </Button>
+
+            <div className="text-center">
+              <h2 className="text-lg font-medium text-slate-900">
+                {format(currentDate, "EEEE, MMMM d, yyyy")}
+              </h2>
+              <p className="mt-1 text-sm text-slate-600">
+                {totalCases} case{totalCases !== 1 ? "s" : ""}
+              </p>
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleDateChange(addDays(currentDate, 1))}
+              className="transition-smooth"
+            >
+              →
+            </Button>
+          </div>
 
           {/* Content */}
           {isLoading && currentPage === 1 ? (
