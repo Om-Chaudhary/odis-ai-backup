@@ -316,6 +316,7 @@ export type Database = {
           created_at: string | null;
           entity_extraction: Json | null;
           external_id: string | null;
+          extreme_case_check: Json | null;
           id: string;
           metadata: Json | null;
           scheduled_at: string | null;
@@ -330,6 +331,7 @@ export type Database = {
           created_at?: string | null;
           entity_extraction?: Json | null;
           external_id?: string | null;
+          extreme_case_check?: Json | null;
           id?: string;
           metadata?: Json | null;
           scheduled_at?: string | null;
@@ -344,6 +346,7 @@ export type Database = {
           created_at?: string | null;
           entity_extraction?: Json | null;
           external_id?: string | null;
+          extreme_case_check?: Json | null;
           id?: string;
           metadata?: Json | null;
           scheduled_at?: string | null;
@@ -2211,6 +2214,7 @@ export type Database = {
           updated_at: string;
           voicemail_detection_enabled: boolean | null;
           voicemail_hangup_on_detection: boolean;
+          voicemail_message: string | null;
         };
         Insert: {
           avatar_url?: string | null;
@@ -2246,6 +2250,7 @@ export type Database = {
           updated_at?: string;
           voicemail_detection_enabled?: boolean | null;
           voicemail_hangup_on_detection?: boolean;
+          voicemail_message?: string | null;
         };
         Update: {
           avatar_url?: string | null;
@@ -2281,6 +2286,7 @@ export type Database = {
           updated_at?: string;
           voicemail_detection_enabled?: boolean | null;
           voicemail_hangup_on_detection?: boolean;
+          voicemail_message?: string | null;
         };
         Relationships: [
           {

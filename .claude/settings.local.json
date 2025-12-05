@@ -95,7 +95,8 @@
       "Bash(vercel --prod:*)",
       "Bash(pnpm dev:*)",
       "Bash(npx next:*)",
-      "Bash(pnpm vercel:*)"
+      "Bash(pnpm vercel:*)",
+      "Bash(npx shadcn:*)"
     ],
     "deny": [],
     "ask": []

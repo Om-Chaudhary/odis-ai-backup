@@ -5,15 +5,16 @@ import { Card, CardContent } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import {
-  Phone,
-  Mail,
-  Dog,
-  Cat,
-  Edit2,
-  Save,
-  Loader2,
-  AlertTriangle,
-} from "lucide-react";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
+import { Phone, Mail, Edit2, Save, Loader2, AlertTriangle } from "lucide-react";
 import type {
   DashboardCase,
   PatientUpdateInput,
@@ -278,6 +279,8 @@ export function DischargeListItem({
     owner_email: caseData.patient.owner_email,
     owner_phone: caseData.patient.owner_phone,
   });
+  const [showCallConfirmation, setShowCallConfirmation] = useState(false);
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
 
   const workflowStatus = getCaseWorkflowStatus(caseData);
 
@@ -331,6 +334,38 @@ export function DischargeListItem({
     setIsEditing(false);
   };
 
+  const handleCallClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const callStatus = getCallStatus(caseData);
+
+    if (callStatus !== "scheduled") {
+      setShowCallConfirmation(true);
+    } else {
+      onTriggerCall(caseData.id);
+    }
+  };
+
+  const handleEmailClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const emailStatus = getEmailStatus(caseData);
+
+    if (emailStatus !== "scheduled") {
+      setShowEmailConfirmation(true);
+    } else {
+      onTriggerEmail(caseData.id);
+    }
+  };
+
+  const confirmCall = () => {
+    setShowCallConfirmation(false);
+    onTriggerCall(caseData.id);
+  };
+
+  const confirmEmail = () => {
+    setShowEmailConfirmation(false);
+    onTriggerEmail(caseData.id);
+  };
+
   // Render combined status/action buttons (stacked vertically)
   const renderActionStatusButtons = () => {
     const canCall = hasValidContact(effectivePhone);
@@ -364,10 +399,7 @@ export function DischargeListItem({
       <div className="flex flex-col gap-1.5">
         {/* Call Button */}
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onTriggerCall(caseData.id);
-          }}
+          onClick={handleCallClick}
           disabled={isLoadingCall || !canCall || !isReady}
           className={cn(
             "flex min-w-32 items-center overflow-hidden rounded-lg border transition-all duration-200",
@@ -409,10 +441,7 @@ export function DischargeListItem({
 
         {/* Email Button */}
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onTriggerEmail(caseData.id);
-          }}
+          onClick={handleEmailClick}
           disabled={isLoadingEmail || !canEmail || !isReady}
           className={cn(
             "flex min-w-32 items-center overflow-hidden rounded-lg border transition-all duration-200",
@@ -456,161 +485,209 @@ export function DischargeListItem({
   };
 
   return (
-    <Card
-      className={cn(
-        "group transition-smooth relative cursor-pointer overflow-hidden rounded-lg border border-l-4 border-slate-200 bg-white shadow-sm hover:border-slate-300 hover:shadow-md",
-        getStatusBorderColor(workflowStatus),
-        // Muted styling for non-ready cases
-        !caseData.is_ready_for_discharge &&
-          "border-slate-100 bg-slate-50/50 opacity-75",
-      )}
-      onClick={() => {
-        window.location.href = `/dashboard/discharges/${caseData.id}`;
-      }}
-    >
-      <CardContent className="p-4">
-        {/* Header Row: Patient & Owner Info, Action Buttons */}
-        <div className="mb-4 flex items-start justify-between">
-          {/* Patient & Owner Info */}
-          <div className="min-w-0 flex-1">
-            <div className="mb-2">
-              <h3
-                className={cn(
-                  "text-lg font-bold text-slate-900",
-                  isPlaceholder(caseData.patient.name) &&
-                    "text-amber-600 italic",
-                )}
-              >
-                {caseData.patient.name}
-              </h3>
-            </div>
-
-            {/* Owner Name - Editable */}
-            {!isEditing ? (
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm text-slate-600">
-                  {caseData.patient.owner_name}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="transition-smooth h-5 w-5 rounded-full text-slate-400 hover:text-[#31aba3]"
-                  onClick={handleStartEdit}
-                  disabled={isLoadingUpdate}
+    <>
+      <Card
+        className={cn(
+          "group transition-smooth relative cursor-pointer overflow-hidden rounded-lg border border-l-4 border-slate-200 bg-white shadow-sm hover:border-slate-300 hover:shadow-md",
+          getStatusBorderColor(workflowStatus),
+          // Muted styling for non-ready cases
+          !caseData.is_ready_for_discharge &&
+            "border-slate-100 bg-slate-50/50 opacity-75",
+        )}
+        onClick={() => {
+          window.location.href = `/dashboard/discharges/${caseData.id}`;
+        }}
+      >
+        <CardContent className="p-4">
+          {/* Header Row: Patient & Owner Info, Action Buttons */}
+          <div className="mb-4 flex items-start justify-between">
+            {/* Patient & Owner Info */}
+            <div className="min-w-0 flex-1">
+              <div className="mb-2">
+                <h3
+                  className={cn(
+                    "text-lg font-bold text-slate-900",
+                    isPlaceholder(caseData.patient.name) &&
+                      "text-amber-600 italic",
+                  )}
                 >
-                  <Edit2 className="h-3 w-3" />
-                  <span className="sr-only">Edit owner info</span>
-                </Button>
+                  {caseData.patient.name}
+                </h3>
               </div>
-            ) : (
-              <div className="mt-1 space-y-1.5">
-                <Input
-                  className="h-7 w-full bg-white text-xs"
-                  value={editForm.owner_name}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, owner_name: e.target.value })
-                  }
-                  placeholder="Owner Name"
-                />
-                <div className="flex gap-1.5">
-                  <Input
-                    className="h-7 flex-1 bg-white text-xs"
-                    value={editForm.owner_phone}
-                    onChange={(e) =>
-                      setEditForm({
-                        ...editForm,
-                        owner_phone: e.target.value,
-                      })
-                    }
-                    placeholder="Phone"
-                  />
-                  <Input
-                    className="h-7 flex-1 bg-white text-xs"
-                    value={editForm.owner_email}
-                    onChange={(e) =>
-                      setEditForm({
-                        ...editForm,
-                        owner_email: e.target.value,
-                      })
-                    }
-                    placeholder="Email"
-                  />
-                </div>
-                <div className="flex justify-end gap-2">
+
+              {/* Owner Name - Editable */}
+              {!isEditing ? (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm text-slate-600">
+                    {caseData.patient.owner_name}
+                  </span>
                   <Button
                     variant="ghost"
-                    size="sm"
-                    className="transition-smooth h-6 px-2 text-xs hover:text-red-600"
-                    onClick={handleCancel}
+                    size="icon"
+                    className="transition-smooth h-5 w-5 rounded-full text-slate-400 hover:text-[#31aba3]"
+                    onClick={handleStartEdit}
                     disabled={isLoadingUpdate}
                   >
-                    Cancel
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="transition-smooth h-6 bg-[#31aba3] px-2 text-xs hover:bg-[#2a9a92]"
-                    onClick={handleSave}
-                    disabled={isLoadingUpdate}
-                  >
-                    {isLoadingUpdate ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <Save className="mr-1 h-3 w-3" />
-                    )}
-                    Save
+                    <Edit2 className="h-3 w-3" />
+                    <span className="sr-only">Edit owner info</span>
                   </Button>
                 </div>
+              ) : (
+                <div className="mt-1 space-y-1.5">
+                  <Input
+                    className="h-7 w-full bg-white text-xs"
+                    value={editForm.owner_name}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, owner_name: e.target.value })
+                    }
+                    placeholder="Owner Name"
+                  />
+                  <div className="flex gap-1.5">
+                    <Input
+                      className="h-7 flex-1 bg-white text-xs"
+                      value={editForm.owner_phone}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          owner_phone: e.target.value,
+                        })
+                      }
+                      placeholder="Phone"
+                    />
+                    <Input
+                      className="h-7 flex-1 bg-white text-xs"
+                      value={editForm.owner_email}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          owner_email: e.target.value,
+                        })
+                      }
+                      placeholder="Email"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="transition-smooth h-6 px-2 text-xs hover:text-red-600"
+                      onClick={handleCancel}
+                      disabled={isLoadingUpdate}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="transition-smooth h-6 bg-[#31aba3] px-2 text-xs hover:bg-[#2a9a92]"
+                      onClick={handleSave}
+                      disabled={isLoadingUpdate}
+                    >
+                      {isLoadingUpdate ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Save className="mr-1 h-3 w-3" />
+                      )}
+                      Save
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Combined Status/Action Buttons */}
+            <div className="flex shrink-0 flex-col items-end gap-3">
+              <div onClick={(e) => e.stopPropagation()}>
+                {renderActionStatusButtons()}
+              </div>
+
+              {/* Test Mode Badge */}
+              {testModeEnabled && (
+                <Badge
+                  variant="outline"
+                  className="border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-600"
+                >
+                  Test
+                </Badge>
+              )}
+            </div>
+          </div>
+
+          {/* Contact Row: Phone, Email with Not Ready warning */}
+          <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-b border-slate-100 pb-2">
+            <ContactIndicator
+              type="phone"
+              value={effectivePhone ?? undefined}
+              isValid={hasValidContact(effectivePhone)}
+              testMode={false}
+            />
+            <ContactIndicator
+              type="email"
+              value={effectiveEmail ?? undefined}
+              isValid={hasValidContact(effectiveEmail)}
+              testMode={false}
+            />
+
+            {/* Not Ready Warning - Only show when NOT ready */}
+            {!caseData.is_ready_for_discharge && (
+              <div
+                className="flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2 py-1"
+                title={`Missing: ${caseData.missing_requirements.join(", ")}`}
+              >
+                <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+                <span className="text-xs font-medium text-amber-700">
+                  Not Ready
+                </span>
               </div>
             )}
           </div>
+        </CardContent>
+      </Card>
 
-          {/* Combined Status/Action Buttons */}
-          <div className="flex shrink-0 flex-col items-end gap-3">
-            <div onClick={(e) => e.stopPropagation()}>
-              {renderActionStatusButtons()}
-            </div>
+      {/* Call Confirmation Dialog */}
+      <AlertDialog
+        open={showCallConfirmation}
+        onOpenChange={setShowCallConfirmation}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Call</AlertDialogTitle>
+            <AlertDialogDescription>
+              This case already has a call that is{" "}
+              {getCallStatus(caseData).toLowerCase()}. Are you sure you want to
+              send again?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmCall}>
+              Yes, Send Again
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-            {/* Test Mode Badge */}
-            {testModeEnabled && (
-              <Badge
-                variant="outline"
-                className="border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-600"
-              >
-                Test
-              </Badge>
-            )}
-          </div>
-        </div>
-
-        {/* Contact Row: Phone, Email with Not Ready warning */}
-        <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-b border-slate-100 pb-2">
-          <ContactIndicator
-            type="phone"
-            value={effectivePhone ?? undefined}
-            isValid={hasValidContact(effectivePhone)}
-            testMode={false}
-          />
-          <ContactIndicator
-            type="email"
-            value={effectiveEmail ?? undefined}
-            isValid={hasValidContact(effectiveEmail)}
-            testMode={false}
-          />
-
-          {/* Not Ready Warning - Only show when NOT ready */}
-          {!caseData.is_ready_for_discharge && (
-            <div
-              className="flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2 py-1"
-              title={`Missing: ${caseData.missing_requirements.join(", ")}`}
-            >
-              <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
-              <span className="text-xs font-medium text-amber-700">
-                Not Ready
-              </span>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+      {/* Email Confirmation Dialog */}
+      <AlertDialog
+        open={showEmailConfirmation}
+        onOpenChange={setShowEmailConfirmation}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Email</AlertDialogTitle>
+            <AlertDialogDescription>
+              This case already has an email that is{" "}
+              {getEmailStatus(caseData).toLowerCase()}. Are you sure you want to
+              send again?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmEmail}>
+              Yes, Send Again
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
