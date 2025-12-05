@@ -234,6 +234,12 @@ export interface DischargeSettings {
   // Batch discharge preferences
   batchIncludeIdexxNotes?: boolean; // Include IDEXX Neo cases with consultation notes
   batchIncludeManualTranscriptions?: boolean; // Include manual cases with transcriptions/SOAP
+  // VAPI Configuration - inbound calls
+  inboundPhoneNumberId?: string | null; // VAPI phone number ID for receiving inbound calls
+  inboundAssistantId?: string | null; // VAPI assistant ID for handling inbound calls
+  // VAPI Configuration - outbound calls (optional overrides)
+  outboundPhoneNumberId?: string | null; // VAPI phone number ID for outbound caller ID
+  outboundAssistantId?: string | null; // VAPI assistant ID for outbound discharge calls
 }
 
 /**

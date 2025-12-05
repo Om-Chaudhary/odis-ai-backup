@@ -30,6 +30,7 @@ export const env = createEnv({
     VAPI_ASSISTANT_ID: z.string().optional(),
     VAPI_PHONE_NUMBER_ID: z.string().optional(),
     VAPI_WEBHOOK_SECRET: z.string().optional(),
+    VAPI_DEFAULT_INBOUND_ASSISTANT_ID: z.string().optional(),
     // Email Configuration
     RESEND_API_KEY: z.string().min(1),
     // IDEXX Credential Encryption
@@ -74,6 +75,8 @@ export const env = createEnv({
     VAPI_ASSISTANT_ID: process.env.VAPI_ASSISTANT_ID,
     VAPI_PHONE_NUMBER_ID: process.env.VAPI_PHONE_NUMBER_ID,
     VAPI_WEBHOOK_SECRET: process.env.VAPI_WEBHOOK_SECRET,
+    VAPI_DEFAULT_INBOUND_ASSISTANT_ID:
+      process.env.VAPI_DEFAULT_INBOUND_ASSISTANT_ID,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     IDEXX_ENCRYPTION_KEY: process.env.IDEXX_ENCRYPTION_KEY,
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,

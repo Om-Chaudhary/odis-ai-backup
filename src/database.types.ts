@@ -469,6 +469,7 @@ export type Database = {
           email_header_text: string | null;
           id: string;
           inbound_assistant_id: string | null;
+          inbound_phone_number_id: string | null;
           is_active: boolean;
           logo_url: string | null;
           name: string;
@@ -487,6 +488,7 @@ export type Database = {
           email_header_text?: string | null;
           id?: string;
           inbound_assistant_id?: string | null;
+          inbound_phone_number_id?: string | null;
           is_active?: boolean;
           logo_url?: string | null;
           name: string;
@@ -505,6 +507,7 @@ export type Database = {
           email_header_text?: string | null;
           id?: string;
           inbound_assistant_id?: string | null;
+          inbound_phone_number_id?: string | null;
           is_active?: boolean;
           logo_url?: string | null;
           name?: string;
@@ -2176,6 +2179,9 @@ export type Database = {
       users: {
         Row: {
           avatar_url: string | null;
+          batch_include_idexx_notes: boolean | null;
+          batch_include_manual_transcriptions: boolean | null;
+          call_delay_days: number | null;
           clinic_email: string | null;
           clinic_name: string | null;
           clinic_phone: string | null;
@@ -2183,14 +2189,20 @@ export type Database = {
           default_discharge_template_id: string | null;
           default_schedule_delay_minutes: number | null;
           email: string | null;
+          email_delay_days: number | null;
           emergency_phone: string | null;
           first_name: string | null;
           id: string;
           last_name: string | null;
           license_number: string | null;
+          max_call_retries: number | null;
           onboarding_completed: boolean | null;
           pims_credentials: Json | null;
           pims_systems: Json | null;
+          preferred_call_end_time: string | null;
+          preferred_call_start_time: string | null;
+          preferred_email_end_time: string | null;
+          preferred_email_start_time: string | null;
           role: Database["public"]["Enums"]["user_role"] | null;
           test_contact_email: string | null;
           test_contact_name: string | null;
@@ -2202,6 +2214,9 @@ export type Database = {
         };
         Insert: {
           avatar_url?: string | null;
+          batch_include_idexx_notes?: boolean | null;
+          batch_include_manual_transcriptions?: boolean | null;
+          call_delay_days?: number | null;
           clinic_email?: string | null;
           clinic_name?: string | null;
           clinic_phone?: string | null;
@@ -2209,14 +2224,20 @@ export type Database = {
           default_discharge_template_id?: string | null;
           default_schedule_delay_minutes?: number | null;
           email?: string | null;
+          email_delay_days?: number | null;
           emergency_phone?: string | null;
           first_name?: string | null;
           id?: string;
           last_name?: string | null;
           license_number?: string | null;
+          max_call_retries?: number | null;
           onboarding_completed?: boolean | null;
           pims_credentials?: Json | null;
           pims_systems?: Json | null;
+          preferred_call_end_time?: string | null;
+          preferred_call_start_time?: string | null;
+          preferred_email_end_time?: string | null;
+          preferred_email_start_time?: string | null;
           role?: Database["public"]["Enums"]["user_role"] | null;
           test_contact_email?: string | null;
           test_contact_name?: string | null;
@@ -2228,6 +2249,9 @@ export type Database = {
         };
         Update: {
           avatar_url?: string | null;
+          batch_include_idexx_notes?: boolean | null;
+          batch_include_manual_transcriptions?: boolean | null;
+          call_delay_days?: number | null;
           clinic_email?: string | null;
           clinic_name?: string | null;
           clinic_phone?: string | null;
@@ -2235,14 +2259,20 @@ export type Database = {
           default_discharge_template_id?: string | null;
           default_schedule_delay_minutes?: number | null;
           email?: string | null;
+          email_delay_days?: number | null;
           emergency_phone?: string | null;
           first_name?: string | null;
           id?: string;
           last_name?: string | null;
           license_number?: string | null;
+          max_call_retries?: number | null;
           onboarding_completed?: boolean | null;
           pims_credentials?: Json | null;
           pims_systems?: Json | null;
+          preferred_call_end_time?: string | null;
+          preferred_call_start_time?: string | null;
+          preferred_email_end_time?: string | null;
+          preferred_email_start_time?: string | null;
           role?: Database["public"]["Enums"]["user_role"] | null;
           test_contact_email?: string | null;
           test_contact_name?: string | null;

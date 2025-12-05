@@ -9,6 +9,7 @@ import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
 import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
 import { getClinicByUserId } from "~/lib/clinics/utils";
+import { getClinicVapiConfigByUserId } from "~/lib/clinics/vapi-config";
 import { extractFirstName } from "~/lib/vapi/utils";
 
 /**
@@ -238,13 +239,24 @@ export async function POST(request: NextRequest) {
       testModeActive: body.metadata?.test_mode_enabled === true,
     });
 
-    // Store scheduled call in database
+    // Get clinic-specific VAPI configuration (assistant ID and phone number ID)
+    // Falls back to environment variables if clinic has no specific config
+    const vapiConfig = await getClinicVapiConfigByUserId(user.id, supabase);
+
+    console.log("[SCHEDULE_CALL] Using VAPI config", {
+      clinicName: vapiConfig.clinicName,
+      source: vapiConfig.source,
+      hasOutboundAssistant: !!vapiConfig.outboundAssistantId,
+      hasPhoneNumber: !!vapiConfig.phoneNumberId,
+    });
+
+    // Store scheduled call in database with clinic-specific VAPI configuration
     const { data: scheduledCall, error: dbError } = await supabase
       .from("scheduled_discharge_calls")
       .insert({
         user_id: user.id,
-        assistant_id: process.env.VAPI_ASSISTANT_ID ?? "",
-        phone_number_id: process.env.VAPI_PHONE_NUMBER_ID ?? "",
+        assistant_id: vapiConfig.outboundAssistantId ?? "",
+        phone_number_id: vapiConfig.phoneNumberId ?? "",
         customer_phone: validated.phoneNumber,
         scheduled_for: finalScheduledTime,
         status: "queued",
@@ -254,6 +266,8 @@ export async function POST(request: NextRequest) {
           timezone,
           retry_count: 0,
           max_retries: 3,
+          vapi_config_source: vapiConfig.source,
+          clinic_name: vapiConfig.clinicName,
           ...(body.metadata ?? {}),
         },
       })

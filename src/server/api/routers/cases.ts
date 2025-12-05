@@ -814,6 +814,12 @@ export const casesRouter = createTRPCRouter({
       batchIncludeIdexxNotes: data?.batch_include_idexx_notes ?? true,
       batchIncludeManualTranscriptions:
         data?.batch_include_manual_transcriptions ?? true,
+      // VAPI configuration - inbound calls
+      inboundPhoneNumberId: clinic?.inbound_phone_number_id ?? null,
+      inboundAssistantId: clinic?.inbound_assistant_id ?? null,
+      // VAPI configuration - outbound calls
+      outboundPhoneNumberId: clinic?.phone_number_id ?? null,
+      outboundAssistantId: clinic?.outbound_assistant_id ?? null,
     };
   }),
 
@@ -874,6 +880,12 @@ export const casesRouter = createTRPCRouter({
         // Batch discharge preferences
         batchIncludeIdexxNotes: z.boolean().optional(),
         batchIncludeManualTranscriptions: z.boolean().optional(),
+        // VAPI configuration - inbound calls
+        inboundPhoneNumberId: z.string().nullable().optional(),
+        inboundAssistantId: z.string().nullable().optional(),
+        // VAPI configuration - outbound calls
+        outboundPhoneNumberId: z.string().nullable().optional(),
+        outboundAssistantId: z.string().nullable().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -973,7 +985,7 @@ export const casesRouter = createTRPCRouter({
         }
       }
 
-      // Build update object for clinic branding fields
+      // Build update object for clinic branding and VAPI configuration fields
       const clinicUpdateData: Record<string, string | null> = {};
 
       if (input.primaryColor !== undefined) {
@@ -987,6 +999,20 @@ export const casesRouter = createTRPCRouter({
       }
       if (input.emailFooterText !== undefined) {
         clinicUpdateData.email_footer_text = input.emailFooterText;
+      }
+      // VAPI configuration - inbound calls
+      if (input.inboundPhoneNumberId !== undefined) {
+        clinicUpdateData.inbound_phone_number_id = input.inboundPhoneNumberId;
+      }
+      if (input.inboundAssistantId !== undefined) {
+        clinicUpdateData.inbound_assistant_id = input.inboundAssistantId;
+      }
+      // VAPI configuration - outbound calls
+      if (input.outboundPhoneNumberId !== undefined) {
+        clinicUpdateData.phone_number_id = input.outboundPhoneNumberId;
+      }
+      if (input.outboundAssistantId !== undefined) {
+        clinicUpdateData.outbound_assistant_id = input.outboundAssistantId;
       }
 
       // Update clinic table if there are branding fields to update
