@@ -12,17 +12,18 @@
  *
  * ## What CAN be set via assistantOverrides:
  * - `variableValues` - Dynamic template variables (e.g., pet_name, owner_name)
+ * - `voicemailDetection` - Voicemail detection settings (can be set to "off" to disable)
  * - `customerJoinTimeoutSeconds` - Timeout settings
  * - `recordingEnabled` - Recording toggle
  * - `toolIds` - Reference pre-configured tools by ID (NOT tool definitions)
  *
  * ## What CANNOT be set via assistantOverrides (must be in Dashboard):
  * - `tools` array - Tool definitions must be configured in dashboard
- * - `voicemailDetection` - Voicemail detection settings
  * - `model.messages` - System prompt
  * - `voice` - Voice configuration
  *
  * @see https://docs.vapi.ai/assistants/concepts/transient-vs-permanent-configurations
+ * @see https://docs.vapi.ai/calls/voicemail-detection
  */
 
 import { VapiClient } from "@vapi-ai/server-sdk";
@@ -62,23 +63,80 @@ export interface CreatePhoneCallParams {
   /**
    * Dynamic overrides to customize the assistant for this specific call.
    *
-   * NOTE: According to VAPI docs, only certain properties can be overridden:
+   * Supported overrides:
    * - `variableValues` - Template variables for system prompt placeholders
+   * - `voicemailDetection` - Configure voicemail detection behavior
+   * - `voicemailMessage` - Message to say on voicemail (if undefined, hangs up immediately)
    * - `toolIds` - Array of pre-configured tool IDs to enable (NOT tool definitions)
    * - `customerJoinTimeoutSeconds` - Timeout for customer to join
    * - `recordingEnabled` - Whether to record the call
    *
-   * Tools, voicemailDetection, model, and voice CANNOT be set here -
+   * Note: Tools array (tool definitions), model, and voice CANNOT be set here -
    * they must be configured in the VAPI Dashboard at the assistant level.
    *
    * @see https://docs.vapi.ai/assistants/concepts/transient-vs-permanent-configurations
+   * @see https://docs.vapi.ai/calls/voicemail-detection
    */
   assistantOverrides?: {
     /** Template variables for {{variable}} placeholders in system prompt */
     variableValues?: Record<string, unknown>;
+    /**
+     * Voicemail detection configuration.
+     *
+     * Options:
+     * - "off" - Completely disable voicemail detection
+     * - VapiVoicemailDetectionPlan - Use Vapi's AI detection (recommended)
+     * - TwilioVoicemailDetectionPlan - Use Twilio's carrier-level detection
+     * - GoogleVoicemailDetectionPlan - Use Google's AI detection
+     * - OpenAiVoicemailDetectionPlan - Use OpenAI's detection
+     *
+     * @see https://docs.vapi.ai/calls/voicemail-detection
+     */
+    voicemailDetection?: "off" | VoicemailDetectionPlan;
+    /**
+     * Message to say when voicemail is detected.
+     * If unspecified/undefined, the call will hang up immediately without leaving a message.
+     */
+    voicemailMessage?: string;
     /** Pre-configured tool IDs to enable for this call */
     toolIds?: string[];
   };
+}
+
+/**
+ * Voicemail detection plan configuration.
+ * Used to configure which provider handles voicemail detection and how.
+ */
+export interface VoicemailDetectionPlan {
+  /**
+   * The voicemail detection provider to use.
+   * - "vapi" - Vapi's AI-powered detection (recommended, fastest)
+   * - "twilio" - Twilio's carrier-level AMD
+   * - "google" - Google's AI detection
+   * - "openai" - OpenAI's detection
+   */
+  provider: "vapi" | "twilio" | "google" | "openai";
+  /**
+   * Detection type (for vapi/google/openai providers).
+   * - "audio" - Uses native audio models (default, recommended for vapi/google)
+   * - "transcript" - Uses ASR/transcript-based detection (recommended for openai)
+   */
+  type?: "audio" | "transcript";
+  /**
+   * Whether detection is enabled. Defaults to true.
+   */
+  enabled?: boolean;
+  /**
+   * Twilio-specific: Maximum seconds to wait for detection.
+   * Lower values = faster but potentially less accurate.
+   * Default: 30, Recommended: 5-15 for faster detection.
+   */
+  machineDetectionTimeout?: number;
+  /**
+   * Twilio-specific: Detection types to treat as voicemail.
+   * Default: ["machine_end_beep", "machine_end_silence"]
+   */
+  voicemailDetectionTypes?: string[];
 }
 
 /**
@@ -199,13 +257,18 @@ export async function createPhoneCall(
 ): Promise<VapiCallResponse> {
   const vapi = getVapiClient();
 
+  // Build call payload with proper typing
+  // The assistantOverrides can include voicemailDetection which the SDK accepts
+  // but TypeScript may not fully recognize all valid override options
   const callPayload = {
     phoneNumberId: params.phoneNumberId,
     customer: {
       number: params.phoneNumber,
     },
     assistantId: params.assistantId,
-    assistantOverrides: params.assistantOverrides,
+    // Cast to allow voicemailDetection and voicemailMessage in overrides
+    // These are valid VAPI API properties as per docs.vapi.ai/calls/voicemail-detection
+    assistantOverrides: params.assistantOverrides as Record<string, unknown>,
   };
 
   // Log variable format verification

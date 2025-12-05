@@ -282,43 +282,40 @@ async function handler(req: NextRequest) {
       );
     }
 
-    // Fetch user's settings from database for metadata storage
-    // NOTE: voicemail and transfer tools must be configured in VAPI dashboard
-    // They CANNOT be set dynamically via assistantOverrides API
-    const { data: userData } = await supabase
-      .from("users")
-      .select(
-        "voicemail_detection_enabled, voicemail_hangup_on_detection, clinic_phone, clinic_name",
-      )
-      .eq("id", call.user_id)
-      .single();
-
-    const voicemailEnabled = userData?.voicemail_detection_enabled ?? false;
-    const voicemailHangup = userData?.voicemail_hangup_on_detection ?? false;
-
-    console.log("[EXECUTE_CALL] User settings (for metadata only)", {
+    console.log("[EXECUTE_CALL] Voicemail detection enabled", {
       callId,
       userId: call.user_id,
-      voicemailEnabled,
-      voicemailHangup,
-      note: "Tools must be configured in VAPI dashboard - cannot be set via API",
+      strategy: "detect voicemail -> hangup immediately (no message)",
     });
 
     // Prepare VAPI call parameters
     // Use normalized snake_case variables that match the system prompt placeholders
     // NOTE: Tools (voicemail, transferCall) CANNOT be set via assistantOverrides
     // They must be configured at the assistant level in the VAPI dashboard
-    // See: https://docs.vapi.ai - tools property is not allowed in assistantOverrides
+    //
+    // Voicemail Detection Strategy:
+    // - Always enable voicemail detection using Vapi's AI detection (fastest)
+    // - Do NOT set voicemailMessage - this causes immediate hangup when voicemail detected
+    // - This prevents the assistant from leaving messages on voicemail systems
     const vapiParams = {
       phoneNumber: call.customer_phone,
       assistantId,
       phoneNumberId,
-      assistantOverrides:
-        Object.keys(normalizedVariables).length > 0
-          ? {
-              variableValues: normalizedVariables,
-            }
-          : undefined,
+      assistantOverrides: {
+        // Always include variable values if we have them
+        ...(Object.keys(normalizedVariables).length > 0 && {
+          variableValues: normalizedVariables,
+        }),
+        // Enable voicemail detection with Vapi provider (AI-powered, fastest)
+        // When voicemail is detected, call will hang up immediately (no voicemailMessage set)
+        voicemailDetection: {
+          provider: "vapi" as const,
+          type: "audio" as const,
+          enabled: true,
+        },
+        // Explicitly do NOT set voicemailMessage - this ensures immediate hangup
+        // If voicemailMessage is undefined, VAPI hangs up without leaving a message
+      },
     };
 
     console.log("[EXECUTE_CALL] Calling VAPI API with parameters", {
@@ -327,10 +324,13 @@ async function handler(req: NextRequest) {
       assistantId,
       phoneNumberId,
       hasAssistantOverrides: !!vapiParams.assistantOverrides,
+      voicemailDetection: {
+        provider: "vapi",
+        type: "audio",
+        behavior: "hangup on detect (no voicemailMessage set)",
+      },
       variableCount: Object.keys(normalizedVariables).length,
       variableKeys: Object.keys(normalizedVariables),
-      // NOTE: Tools (voicemail, transferCall) must be configured in VAPI dashboard, not here
-      toolsNote: "Configure tools in VAPI dashboard - cannot be set via API",
       criticalVariables: {
         pet_name: normalizedVariables.pet_name,
         owner_name: normalizedVariables.owner_name,
@@ -368,9 +368,9 @@ async function handler(req: NextRequest) {
         metadata: {
           ...metadata,
           executed_at: new Date().toISOString(),
-          // Store voicemail settings for webhook handler reference
-          voicemail_detection_enabled: voicemailEnabled,
-          voicemail_hangup_on_detection: voicemailHangup,
+          // Voicemail detection is always enabled with hangup behavior
+          voicemail_detection_enabled: true,
+          voicemail_hangup_on_detection: true,
         },
       })
       .eq("id", callId);
