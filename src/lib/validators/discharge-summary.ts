@@ -123,6 +123,15 @@ export const StructuredDischargeSummarySchema = z.object({
     "Type of visit for appropriate warning signs",
   ),
 
+  // Appointment summary - short, general summary for email display
+  // Does NOT disclose specific treatments, just general visit category
+  appointmentSummary: z
+    .string()
+    .optional()
+    .describe(
+      "1-2 sentence general summary of the visit. Focus on visit type/category, not specific treatments. Example: 'Max came in today for a wellness checkup and routine care.' or 'We saw Luna for a dental procedure.'",
+    ),
+
   // Visit summary (optional - may be skipped in email display)
   visitSummary: z
     .string()
@@ -205,7 +214,14 @@ export function structuredToPlainText(
   );
   sections.push("");
 
-  // Visit Summary (optional)
+  // Appointment Summary (general, non-specific)
+  if (summary.appointmentSummary) {
+    sections.push("ABOUT TODAY'S VISIT");
+    sections.push(summary.appointmentSummary);
+    sections.push("");
+  }
+
+  // Visit Summary (optional - more detailed)
   if (summary.visitSummary) {
     sections.push("VISIT SUMMARY");
     sections.push(summary.visitSummary);
@@ -321,6 +337,7 @@ export function createEmptyStructuredSummary(
   return {
     patientName,
     caseType: undefined,
+    appointmentSummary: undefined,
     visitSummary: undefined,
     diagnosis: undefined,
     treatmentsToday: [],

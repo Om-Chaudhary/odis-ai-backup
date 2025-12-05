@@ -245,9 +245,16 @@ export function DischargeEmailTemplate({
 
   // Get owner's first name for greeting
   const ownerFirstName = ownerName?.split(" ")[0];
-  const greeting = ownerFirstName
-    ? `Hi ${ownerFirstName}, here's everything you need to know about ${patientName}'s visit.`
-    : `Here's everything you need to know about ${patientName}'s visit.`;
+
+  // Use appointment summary if available, otherwise fall back to generic greeting
+  const appointmentSummary = hasStructuredContent
+    ? structuredContent.appointmentSummary
+    : undefined;
+
+  const greeting = ownerFirstName ? `Hi ${ownerFirstName},` : "Hello,";
+
+  // Fallback intro text if no appointment summary
+  const fallbackIntro = `Here's everything you need to know about ${patientName}'s visit.`;
 
   return (
     <Html>
@@ -311,13 +318,25 @@ export function DischargeEmailTemplate({
               {/* Greeting text */}
               <Text
                 style={{
-                  margin: "0 0 16px",
+                  margin: "0 0 4px",
                   fontSize: "15px",
                   color: "rgba(19, 78, 74, 0.75)",
                   lineHeight: "1.5",
                 }}
               >
                 {greeting}
+              </Text>
+
+              {/* Appointment Summary or Fallback Intro */}
+              <Text
+                style={{
+                  margin: "0 0 16px",
+                  fontSize: "15px",
+                  color: "rgba(19, 78, 74, 0.85)",
+                  lineHeight: "1.6",
+                }}
+              >
+                {appointmentSummary ?? fallbackIntro}
               </Text>
 
               {/* Visit highlight tags */}

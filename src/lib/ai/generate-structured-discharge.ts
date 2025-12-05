@@ -42,6 +42,24 @@ Classify the visit into one of these categories based on the clinical notes:
 - "orthopedic" - Limping, joint issues, fractures
 - "other" - Anything that doesn't fit above
 
+APPOINTMENT SUMMARY - REQUIRED:
+Generate a SHORT, GENERAL 1-2 sentence summary for the email header. This appears at the top of the discharge email and should:
+- Be warm and friendly in tone
+- Describe the GENERAL TYPE of visit (not specific procedures or diagnoses)
+- NOT disclose specific medical conditions, treatments, or diagnoses
+- Use general terms like "wellness visit", "dental care", "skin care", "routine vaccinations"
+
+Good examples:
+- "Max came in today for a wellness checkup and routine care. Everything went smoothly!"
+- "We saw Luna for a dental procedure today. She did great!"
+- "Buddy visited us for some skin care today and is ready to go home."
+- "Charlie came in for his routine vaccinations today. He was such a good boy!"
+
+Bad examples (too specific - DO NOT do this):
+- "Max came in for treatment of his ear infection and received antibiotics" (too specific)
+- "Luna had 3 teeth extracted due to periodontal disease" (discloses diagnosis)
+- "Buddy was treated for sarcoptic mange" (discloses specific condition)
+
 MEDICATION RULES - EXTREMELY IMPORTANT:
 - ONLY include medications the owner needs to GIVE AT HOME on an ongoing basis
 - DO NOT include: vaccinations, dewormers given at clinic, injections given at clinic, clinic-administered treatments
@@ -75,6 +93,7 @@ Return ONLY valid JSON matching this exact structure:
 {
   "patientName": "Pet's name",
   "caseType": "surgery|dental|vaccination|dermatology|wellness|emergency|gastrointestinal|orthopedic|other",
+  "appointmentSummary": "1-2 sentence GENERAL summary (no specific conditions/treatments disclosed)",
   "diagnosis": "Simple explanation of what's wrong (only if stated)",
   "treatmentsToday": ["Procedures, exams, vaccinations done during visit"],
   "vaccinationsGiven": ["List of vaccines given, e.g., 'Rabies', 'DHPP'"],
