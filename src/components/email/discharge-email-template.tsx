@@ -273,6 +273,16 @@ export function DischargeEmailTemplate({
       })
     : [];
 
+  // Check if follow-up is explicitly mentioned
+  const hasExplicitFollowUp =
+    hasStructuredContent &&
+    (structuredContent.followUp?.required ??
+      (structuredContent.notes &&
+        (structuredContent.notes.toLowerCase().includes("follow") ||
+          structuredContent.notes.toLowerCase().includes("recheck") ||
+          structuredContent.notes.toLowerCase().includes("return") ||
+          structuredContent.notes.toLowerCase().includes("schedule"))));
+
   // Get owner's first name for greeting
   const ownerFirstName = ownerName?.split(" ")[0];
 
@@ -430,10 +440,9 @@ export function DischargeEmailTemplate({
                               </Text>
 
                               {/* Dosage and Details - Formatted like "24mg - 4 tablets total" */}
-                              {/* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing */}
-                              {(med.dosage ||
-                                med.frequency ||
-                                med.duration ||
+                              {(med.dosage ??
+                                med.frequency ??
+                                med.duration ??
                                 med.totalQuantity) && (
                                 <Text
                                   style={{
@@ -457,7 +466,7 @@ export function DischargeEmailTemplate({
                               {(med.frequency || med.duration) && (
                                 <Text
                                   style={{
-                                    margin: "0 0 12px 0",
+                                    margin: "0 0 8px 0",
                                     fontSize: "15px",
                                     fontWeight: "500",
                                     color: "#6B7280",
@@ -469,11 +478,25 @@ export function DischargeEmailTemplate({
                                 </Text>
                               )}
 
+                              {/* Medication Purpose */}
+                              {med.purpose && (
+                                <Text
+                                  style={{
+                                    margin: "0 0 12px 0",
+                                    fontSize: "14px",
+                                    fontStyle: "italic",
+                                    color: "#059669",
+                                  }}
+                                >
+                                  {med.purpose}
+                                </Text>
+                              )}
+
                               {/* Instructions Badge */}
                               {med.instructions && (
                                 <Text style={{ margin: 0 }}>
                                   <span style={medicationBadgeStyle}>
-                                    {med.instructions}
+                                    💡 {med.instructions}
                                   </span>
                                 </Text>
                               )}
@@ -663,49 +686,48 @@ export function DischargeEmailTemplate({
                   )}
 
                   {/* -------- FOLLOW-UP -------- */}
-                  {structuredContent.followUp &&
-                    structuredContent.followUp.required && (
-                      <Section style={sectionStyle}>
-                        <Text style={sectionTitleStyle}>What&apos;s Next</Text>
-                        <Section style={followUpBoxStyle}>
-                          <Row>
-                            <Column
-                              style={{ width: "32px", verticalAlign: "top" }}
+                  {hasExplicitFollowUp && (
+                    <Section style={sectionStyle}>
+                      <Text style={sectionTitleStyle}>What&apos;s Next</Text>
+                      <Section style={followUpBoxStyle}>
+                        <Row>
+                          <Column
+                            style={{ width: "32px", verticalAlign: "top" }}
+                          >
+                            <Text style={{ margin: 0, fontSize: "20px" }}>
+                              📅
+                            </Text>
+                          </Column>
+                          <Column style={{ paddingLeft: "12px" }}>
+                            <Text
+                              style={{
+                                margin: "0 0 2px",
+                                fontSize: "14px",
+                                fontWeight: "600",
+                                color: colors.text.primary,
+                              }}
                             >
-                              <Text style={{ margin: 0, fontSize: "20px" }}>
-                                📅
-                              </Text>
-                            </Column>
-                            <Column style={{ paddingLeft: "12px" }}>
-                              <Text
-                                style={{
-                                  margin: "0 0 2px",
-                                  fontSize: "14px",
-                                  fontWeight: "600",
-                                  color: colors.text.primary,
-                                }}
-                              >
-                                Follow-up Appointment
-                              </Text>
-                              <Text
-                                style={{
-                                  margin: 0,
-                                  fontSize: "14px",
-                                  color: colors.text.secondary,
-                                }}
-                              >
-                                {structuredContent.followUp.date
-                                  ? `We'd like to see ${patientName} again ${structuredContent.followUp.date}`
-                                  : `Please call us to schedule a follow-up`}
-                                {structuredContent.followUp.reason &&
-                                  ` for ${structuredContent.followUp.reason}`}
-                                .
-                              </Text>
-                            </Column>
-                          </Row>
-                        </Section>
+                              Follow-up Appointment
+                            </Text>
+                            <Text
+                              style={{
+                                margin: 0,
+                                fontSize: "14px",
+                                color: colors.text.secondary,
+                              }}
+                            >
+                              {structuredContent.followUp?.date
+                                ? `We'd like to see ${patientName} again ${structuredContent.followUp.date}`
+                                : `Please call us to schedule a follow-up`}
+                              {structuredContent.followUp?.reason &&
+                                ` for ${structuredContent.followUp.reason}`}
+                              .
+                            </Text>
+                          </Column>
+                        </Row>
                       </Section>
-                    )}
+                    </Section>
+                  )}
 
                   {/* -------- NOTES -------- */}
                   {structuredContent.notes &&

@@ -308,10 +308,10 @@ async function handler(req: NextRequest) {
         }),
         // Enable voicemail detection with Vapi provider (AI-powered, fastest)
         // When voicemail is detected, call will hang up immediately (no voicemailMessage set)
+        // Note: The presence of voicemailDetection object enables detection - no 'enabled' property needed
         voicemailDetection: {
           provider: "vapi" as const,
           type: "audio" as const,
-          enabled: true,
         },
         // Explicitly do NOT set voicemailMessage - this ensures immediate hangup
         // If voicemailMessage is undefined, VAPI hangs up without leaving a message

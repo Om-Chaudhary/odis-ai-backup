@@ -146,38 +146,100 @@ export const CasesService = {
     caseId: string;
     entities: NormalizedEntities;
   }> {
-    // 1. Try to find existing case for this patient
-    // Discharges can be sent anytime after a case is created, so we look for
-    // cases within a reasonable window (90 days) that are ongoing or completed
-    const ninetyDaysAgo = new Date();
-    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-    ninetyDaysAgo.setHours(0, 0, 0, 0);
-
-    // Search for cases with matching patient name and owner
-    // Filter by status (ongoing or completed) and recent date
-    const { data: existingCases, error: caseSearchError } = await supabase
-      .from("cases")
-      .select("id, status, created_at, patients!inner(name, owner_name)")
-      .eq("patients.name", entities.patient.name)
-      .eq("patients.owner_name", entities.patient.owner.name)
-      .in("status", ["ongoing", "completed"])
-      .gte("created_at", ninetyDaysAgo.toISOString())
-      .order("created_at", { ascending: false })
-      .limit(1);
-
-    if (caseSearchError) {
-      console.error(
-        "[CasesService] Error searching for cases:",
-        caseSearchError,
-      );
-    }
-
     let caseId: string | null = null;
 
-    if (existingCases && existingCases.length > 0) {
-      const match = existingCases[0];
-      if (match) {
-        caseId = match.id;
+    // 1. FIRST: Check by external_id (IDEXX appointment ID) - exact match, highest priority
+    // This prevents duplicate cases from being created for the same IDEXX appointment
+    const idexxAppointmentId =
+      (context.rawIdexxData?.appointmentId as string | undefined) ??
+      (context.rawIdexxData?.id as string | undefined);
+
+    if (idexxAppointmentId && context.source === "idexx_extension") {
+      const externalId = `idexx-appt-${idexxAppointmentId}`;
+      const { data: existingByExtId, error: extIdError } = await supabase
+        .from("cases")
+        .select("id")
+        .eq("external_id", externalId)
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (extIdError) {
+        console.error("[CasesService] Error checking external_id:", extIdError);
+      }
+
+      if (existingByExtId) {
+        console.log("[CasesService] Found existing case by external_id", {
+          externalId,
+          caseId: existingByExtId.id,
+        });
+        caseId = existingByExtId.id;
+      }
+    }
+
+    // 2. FALLBACK: Try to find existing case by patient name and owner (case-insensitive)
+    // Only if we didn't find by external_id
+    if (!caseId) {
+      // Discharges can be sent anytime after a case is created, so we look for
+      // cases within a reasonable window (90 days) that are ongoing or completed
+      const ninetyDaysAgo = new Date();
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+      ninetyDaysAgo.setHours(0, 0, 0, 0);
+
+      // First find matching patients (case-insensitive)
+      const { data: matchingPatients, error: patientSearchError } =
+        await supabase
+          .from("patients")
+          .select("case_id")
+          .eq("user_id", userId)
+          .ilike("name", entities.patient.name)
+          .ilike("owner_name", entities.patient.owner.name ?? "")
+          .not("case_id", "is", null);
+
+      if (patientSearchError) {
+        console.error(
+          "[CasesService] Error searching for patients:",
+          patientSearchError,
+        );
+      }
+
+      // If we found matching patients, get their cases
+      if (matchingPatients && matchingPatients.length > 0) {
+        const caseIds = matchingPatients
+          .map((p) => p.case_id)
+          .filter((id): id is string => id !== null);
+
+        if (caseIds.length > 0) {
+          const { data: existingCases, error: caseSearchError } = await supabase
+            .from("cases")
+            .select("id, status, created_at")
+            .in("id", caseIds)
+            .in("status", ["ongoing", "completed"])
+            .gte("created_at", ninetyDaysAgo.toISOString())
+            .order("created_at", { ascending: false })
+            .limit(1);
+
+          if (caseSearchError) {
+            console.error(
+              "[CasesService] Error searching for cases:",
+              caseSearchError,
+            );
+          }
+
+          if (existingCases && existingCases.length > 0) {
+            const match = existingCases[0];
+            if (match) {
+              console.log(
+                "[CasesService] Found existing case by patient/owner name",
+                {
+                  patientName: entities.patient.name,
+                  ownerName: entities.patient.owner.name,
+                  caseId: match.id,
+                },
+              );
+              caseId = match.id;
+            }
+          }
+        }
       }
     }
 
@@ -220,11 +282,21 @@ export const CasesService = {
       }
     } else {
       // Create New Case
+      // Generate external_id for IDEXX cases to enable future deduplication
+      const idexxAppointmentId =
+        (context.rawIdexxData?.appointmentId as string | undefined) ??
+        (context.rawIdexxData?.id as string | undefined);
+      const externalId =
+        context.source === "idexx_extension" && idexxAppointmentId
+          ? `idexx-appt-${idexxAppointmentId}`
+          : null;
+
       const caseInsert: CaseInsert = {
         user_id: userId,
         status: "ongoing",
         type: mapCaseTypeToDb(entities.caseType),
         source: context.source,
+        external_id: externalId,
         metadata: {
           entities: entities,
           idexx: context.rawIdexxData ?? null,
@@ -244,32 +316,93 @@ export const CasesService = {
       }
       caseId = newCase.id;
 
-      // Create Patient Record
-      const patientInsert: PatientInsert = {
-        user_id: userId,
-        case_id: caseId,
-        name: entities.patient.name,
-        species: entities.patient.species ?? null,
-        breed: entities.patient.breed ?? null,
-        sex: entities.patient.sex ?? null,
-        weight_kg: parseWeight(entities.patient.weight),
-        owner_name: entities.patient.owner.name ?? null,
-        owner_phone: entities.patient.owner.phone ?? null,
-        owner_email: entities.patient.owner.email ?? null,
-      };
+      console.log("[CasesService] Created new case", {
+        caseId,
+        externalId,
+        source: context.source,
+      });
 
-      const { data: newPatient, error: patientError } = await supabase
-        .from("patients")
-        .insert(patientInsert)
-        .select()
-        .single();
+      // Patient Deduplication: Find existing patient or create new one
+      // First, try to find an existing patient with matching name and owner (case-insensitive)
+      const { data: existingPatient, error: patientSearchError } =
+        await supabase
+          .from("patients")
+          .select("id, name, owner_name")
+          .eq("user_id", userId)
+          .ilike("name", entities.patient.name)
+          .ilike("owner_name", entities.patient.owner.name ?? "")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-      if (patientError) {
-        console.error("[CasesService] Error creating patient:", patientError);
-        // Don't throw - case was created successfully, patient is optional
-      } else if (newPatient) {
-        // Successfully created patient
-        // patientId is stored for potential future use
+      if (patientSearchError) {
+        console.error(
+          "[CasesService] Error searching for existing patient:",
+          patientSearchError,
+        );
+      }
+
+      if (existingPatient) {
+        // Reuse existing patient - update their case_id to link to this new case
+        // Also update any new information we have
+        const { error: updatePatientError } = await supabase
+          .from("patients")
+          .update({
+            case_id: caseId,
+            // Update with any new/better data from entities
+            species: entities.patient.species ?? undefined,
+            breed: entities.patient.breed ?? undefined,
+            sex: entities.patient.sex ?? undefined,
+            weight_kg: parseWeight(entities.patient.weight) ?? undefined,
+            owner_phone: entities.patient.owner.phone ?? undefined,
+            owner_email: entities.patient.owner.email ?? undefined,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existingPatient.id);
+
+        if (updatePatientError) {
+          console.error(
+            "[CasesService] Error updating existing patient:",
+            updatePatientError,
+          );
+        } else {
+          console.log("[CasesService] Reused existing patient", {
+            patientId: existingPatient.id,
+            patientName: existingPatient.name,
+            caseId,
+          });
+        }
+      } else {
+        // Create new patient record
+        const patientInsert: PatientInsert = {
+          user_id: userId,
+          case_id: caseId,
+          name: entities.patient.name,
+          species: entities.patient.species ?? null,
+          breed: entities.patient.breed ?? null,
+          sex: entities.patient.sex ?? null,
+          weight_kg: parseWeight(entities.patient.weight),
+          owner_name: entities.patient.owner.name ?? null,
+          owner_phone: entities.patient.owner.phone ?? null,
+          owner_email: entities.patient.owner.email ?? null,
+        };
+
+        const { data: newPatient, error: patientError } = await supabase
+          .from("patients")
+          .insert(patientInsert)
+          .select()
+          .single();
+
+        if (patientError) {
+          console.error("[CasesService] Error creating patient:", patientError);
+          // Don't throw - case was created successfully, patient is optional
+        } else if (newPatient) {
+          console.log("[CasesService] Created new patient", {
+            patientId: newPatient.id,
+            patientName: newPatient.name,
+            caseId,
+          });
+        }
       }
     }
 

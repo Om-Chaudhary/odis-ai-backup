@@ -46,6 +46,15 @@ export const MedicationSchema = z.object({
     .optional()
     .describe("Total amount provided (e.g., '14 tablets total', '1 bottle')"),
 
+  // OPTIONAL: Brief description of what the medication does/is for
+  // Examples: "for pain relief", "antibiotic for infection", "to reduce itching"
+  purpose: z
+    .string()
+    .optional()
+    .describe(
+      "Brief description of medication purpose (e.g., 'for pain relief', 'antibiotic')",
+    ),
+
   // OPTIONAL: Short action phrase for special instructions - only if there's a specific instruction
   // Examples: "Give with food", "Complete full course", "Leave on 10 min"
   // DO NOT include generic instructions or clinic-administered notes

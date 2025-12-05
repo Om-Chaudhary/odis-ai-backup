@@ -33,14 +33,16 @@ export default async function DischargeEmailPreviewPage() {
         duration: "14 days",
         instructions: "Give with food",
         totalQuantity: "14 tablets total",
+        purpose: "for itching and allergic reactions",
       },
       {
         name: "Chlorhexidine Shampoo",
         dosage: "Apply liberally",
         frequency: "twice weekly",
         duration: "2 weeks",
-        instructions: "Leave on 10 min",
+        instructions: "Leave on skin for 10 minutes before rinsing",
         totalQuantity: "1 bottle",
+        purpose: "medicated shampoo for skin infection",
       },
       {
         name: "Cerenia",
@@ -49,6 +51,7 @@ export default async function DischargeEmailPreviewPage() {
         duration: "4 days",
         instructions: "Give 1 hour before travel",
         totalQuantity: "4 tablets total",
+        purpose: "anti-nausea medication for motion sickness",
       },
     ],
     homeCare: {
@@ -90,6 +93,8 @@ export default async function DischargeEmailPreviewPage() {
         frequency: "once monthly",
         duration: "year-round",
         instructions: "Give with food",
+        totalQuantity: "12-month supply",
+        purpose: "heartworm prevention",
       },
     ],
     homeCare: {
@@ -98,6 +103,9 @@ export default async function DischargeEmailPreviewPage() {
     // NO follow-up section will appear (not explicitly required)
     // No warning signs - will NOT show "What to Watch For" section
     warningSigns: [],
+    followUp: {
+      required: false, // This should NOT show follow-up section
+    },
   };
 
   // Surgery visit - Full home care with wound care
@@ -113,6 +121,8 @@ export default async function DischargeEmailPreviewPage() {
         frequency: "twice daily",
         duration: "5 days",
         instructions: "Give with food",
+        totalQuantity: "10 tablets total",
+        purpose: "anti-inflammatory for pain relief",
       },
       {
         name: "Gabapentin",
@@ -120,6 +130,8 @@ export default async function DischargeEmailPreviewPage() {
         frequency: "twice daily",
         duration: "3 days",
         instructions: "May cause drowsiness",
+        totalQuantity: "6 capsules total",
+        purpose: "for additional pain management",
       },
     ],
     homeCare: {
