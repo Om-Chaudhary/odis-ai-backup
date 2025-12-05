@@ -125,18 +125,30 @@ const tagStyle: React.CSSProperties = {
 };
 
 const medicationRowStyle: React.CSSProperties = {
-  padding: "16px 0",
-  borderBottom: `1px solid ${colors.border}`,
+  padding: "20px",
+  marginBottom: "16px",
+  backgroundColor: colors.background.accent,
+  borderRadius: "12px",
+  border: `2px solid #0F766E20`,
 };
 
 const medicationBadgeStyle: React.CSSProperties = {
   display: "inline-block",
-  padding: "6px 12px",
-  backgroundColor: colors.background.info,
-  color: "#1D4ED8",
-  fontSize: "12px",
-  fontWeight: "500",
-  borderRadius: "6px",
+  padding: "8px 16px",
+  backgroundColor: "#0F766E",
+  color: "white",
+  fontSize: "13px",
+  fontWeight: "600",
+  borderRadius: "8px",
+  marginTop: "8px",
+};
+
+const medicationHeaderStyle: React.CSSProperties = {
+  backgroundColor: "#0F766E",
+  color: "white",
+  borderRadius: "8px 8px 0 0",
+  padding: "16px 20px",
+  margin: "0 0 24px 0",
 };
 
 const warningBoxStyle: React.CSSProperties = {
@@ -376,66 +388,98 @@ export function DischargeEmailTemplate({
                   {/* -------- MEDICATIONS -------- */}
                   {takeHomeMeds.length > 0 && (
                     <Section style={sectionStyle}>
-                      <Text style={sectionTitleStyle}>
-                        {patientName}&apos;s Medications
-                      </Text>
-                      <Text
-                        style={{
-                          margin: "0 0 16px",
-                          fontSize: "14px",
-                          color: colors.text.secondary,
-                        }}
-                      >
-                        Please give these medications as directed:
-                      </Text>
-                      {takeHomeMeds.map((med, index) => (
-                        <Row
-                          key={index}
+                      {/* Medication Header */}
+                      <Section style={medicationHeaderStyle}>
+                        <Text
                           style={{
-                            ...medicationRowStyle,
-                            borderBottom:
-                              index === takeHomeMeds.length - 1
-                                ? "none"
-                                : medicationRowStyle.borderBottom,
+                            margin: "0 0 6px 0",
+                            fontSize: "18px",
+                            fontWeight: "700",
+                            color: "white",
                           }}
                         >
-                          <Column>
-                            <Text
-                              style={{
-                                margin: "0 0 4px",
-                                fontSize: "16px",
-                                fontWeight: "600",
-                                color: colors.text.primary,
-                              }}
-                            >
-                              {med.name}
-                            </Text>
-                            {/* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing */}
-                            {(med.dosage || med.frequency || med.duration) && (
+                          💊 {patientName}&apos;s Medications
+                        </Text>
+                        <Text
+                          style={{
+                            margin: 0,
+                            fontSize: "14px",
+                            color: "rgba(255, 255, 255, 0.9)",
+                          }}
+                        >
+                          Please give these medications as directed:
+                        </Text>
+                      </Section>
+
+                      {/* Medication List */}
+                      {takeHomeMeds.map((med, index) => (
+                        <Section key={index} style={medicationRowStyle}>
+                          <Row>
+                            <Column>
+                              {/* Medication Name - Large and prominent */}
                               <Text
                                 style={{
-                                  margin: 0,
-                                  fontSize: "14px",
-                                  color: colors.text.secondary,
+                                  margin: "0 0 8px 0",
+                                  fontSize: "20px",
+                                  fontWeight: "700",
+                                  color: "#0F766E",
+                                  letterSpacing: "0.5px",
                                 }}
                               >
-                                {[med.dosage, med.frequency, med.duration]
-                                  .filter(Boolean)
-                                  .join(" · ")}
+                                {med.name}
                               </Text>
-                            )}
-                          </Column>
-                          {med.instructions && (
-                            <Column
-                              align="right"
-                              style={{ verticalAlign: "middle" }}
-                            >
-                              <span style={medicationBadgeStyle}>
-                                {med.instructions}
-                              </span>
+
+                              {/* Dosage and Details - Formatted like "24mg - 4 tablets total" */}
+                              {/* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing */}
+                              {(med.dosage ||
+                                med.frequency ||
+                                med.duration ||
+                                med.totalQuantity) && (
+                                <Text
+                                  style={{
+                                    margin: "0 0 8px 0",
+                                    fontSize: "17px",
+                                    fontWeight: "600",
+                                    color: "#374151",
+                                  }}
+                                >
+                                  {/* Primary dosage info like "24mg - 4 tablets total" */}
+                                  {med.dosage && med.totalQuantity
+                                    ? `${med.dosage} - ${med.totalQuantity}`
+                                    : [med.dosage, med.totalQuantity]
+                                        .filter(Boolean)
+                                        .join(" - ")}
+                                </Text>
+                              )}
+
+                              {/* Frequency and Duration */}
+                              {/* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing */}
+                              {(med.frequency || med.duration) && (
+                                <Text
+                                  style={{
+                                    margin: "0 0 12px 0",
+                                    fontSize: "15px",
+                                    fontWeight: "500",
+                                    color: "#6B7280",
+                                  }}
+                                >
+                                  {[med.frequency, med.duration]
+                                    .filter(Boolean)
+                                    .join(" for ")}
+                                </Text>
+                              )}
+
+                              {/* Instructions Badge */}
+                              {med.instructions && (
+                                <Text style={{ margin: 0 }}>
+                                  <span style={medicationBadgeStyle}>
+                                    {med.instructions}
+                                  </span>
+                                </Text>
+                              )}
                             </Column>
-                          )}
-                        </Row>
+                          </Row>
+                        </Section>
                       ))}
                     </Section>
                   )}

@@ -32,6 +32,7 @@ export default async function DischargeEmailPreviewPage() {
         frequency: "once daily",
         duration: "14 days",
         instructions: "Give with food",
+        totalQuantity: "14 tablets total",
       },
       {
         name: "Chlorhexidine Shampoo",
@@ -39,6 +40,15 @@ export default async function DischargeEmailPreviewPage() {
         frequency: "twice weekly",
         duration: "2 weeks",
         instructions: "Leave on 10 min",
+        totalQuantity: "1 bottle",
+      },
+      {
+        name: "Cerenia",
+        dosage: "24mg tablet",
+        frequency: "once daily",
+        duration: "4 days",
+        instructions: "Give 1 hour before travel",
+        totalQuantity: "4 tablets total",
       },
     ],
     homeCare: {

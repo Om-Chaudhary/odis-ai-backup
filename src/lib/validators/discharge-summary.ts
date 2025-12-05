@@ -39,6 +39,13 @@ export const MedicationSchema = z.object({
     .optional()
     .describe("How long (e.g., '14 days', '3 weeks') - only if stated"),
 
+  // OPTIONAL: Total quantity provided - helps clients know how much they received
+  // Examples: "14 tablets total", "4 tablets total", "1 bottle", "30 capsules"
+  totalQuantity: z
+    .string()
+    .optional()
+    .describe("Total amount provided (e.g., '14 tablets total', '1 bottle')"),
+
   // OPTIONAL: Short action phrase for special instructions - only if there's a specific instruction
   // Examples: "Give with food", "Complete full course", "Leave on 10 min"
   // DO NOT include generic instructions or clinic-administered notes
