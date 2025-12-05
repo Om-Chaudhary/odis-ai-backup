@@ -10,6 +10,13 @@ import type { VapiCallResponse } from "./client";
 import { loggers } from "~/lib/logger";
 import { getClinicByName } from "~/lib/clinics/utils";
 import { getClinicByInboundAssistantId } from "~/lib/clinics/vapi-config";
+import {
+  calculateDuration,
+  calculateTotalCost,
+  extractSentiment,
+  mapVapiStatus,
+  shouldMarkInboundCallAsFailed as shouldMarkInboundFailed,
+} from "./webhooks/utils";
 
 const logger = loggers.vapi.child("inbound-calls");
 
@@ -166,28 +173,11 @@ export function formatInboundCallData(
     throw new Error("Invalid call data provided");
   }
 
-  // Calculate duration
-  let durationSeconds: number | null = null;
-  if (call.startedAt && call.endedAt) {
-    try {
-      const startTime = new Date(call.startedAt).getTime();
-      const endTime = new Date(call.endedAt).getTime();
-      if (!isNaN(startTime) && !isNaN(endTime) && endTime >= startTime) {
-        durationSeconds = Math.floor((endTime - startTime) / 1000);
-      }
-    } catch (error) {
-      logger.warn("Error calculating call duration", {
-        callId: call.id,
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
+  // Calculate duration using shared utility
+  const durationSeconds = calculateDuration(call.startedAt, call.endedAt);
 
-  // Calculate total cost
-  const cost =
-    call.costs && call.costs.length > 0
-      ? call.costs.reduce((total, c) => total + c.amount, 0)
-      : null;
+  // Calculate total cost using shared utility
+  const cost = calculateTotalCost(call.costs);
 
   // Extract analysis data
   const analysis = call.analysis ?? {};
@@ -200,21 +190,11 @@ export function formatInboundCallData(
     }
   ).artifact;
 
-  // Simple sentiment extraction
-  let userSentiment: "positive" | "neutral" | "negative" | null = null;
-  if (analysis.successEvaluation) {
-    const evalLower = analysis.successEvaluation.toLowerCase();
-    if (evalLower.includes("success") || evalLower.includes("positive")) {
-      userSentiment = "positive";
-    } else if (evalLower.includes("fail") || evalLower.includes("negative")) {
-      userSentiment = "negative";
-    } else {
-      userSentiment = "neutral";
-    }
-  }
+  // Extract sentiment using shared utility
+  const userSentiment = extractSentiment(analysis);
 
-  // Map VAPI status to our internal status
-  const status = mapVapiStatusToInternal(call.status);
+  // Map VAPI status to our internal status using shared utility
+  const status = mapVapiStatus(call.status);
 
   return {
     vapi_call_id: call.id,
@@ -250,61 +230,7 @@ export function formatInboundCallData(
 }
 
 /**
- * Map VAPI status to internal database status
- */
-function mapVapiStatusToInternal(
-  vapiStatus: string | undefined,
-): "queued" | "ringing" | "in_progress" | "completed" | "failed" | "cancelled" {
-  if (!vapiStatus) return "queued";
-
-  const statusMap: Record<
-    string,
-    "queued" | "ringing" | "in_progress" | "completed" | "failed" | "cancelled"
-  > = {
-    queued: "queued",
-    ringing: "ringing",
-    "in-progress": "in_progress",
-    forwarding: "in_progress",
-    ended: "completed",
-  };
-
-  const mappedStatus = statusMap[vapiStatus.toLowerCase()];
-
-  if (!mappedStatus) {
-    logger.warn("Unknown VAPI status, defaulting to queued", {
-      vapiStatus,
-    });
-    return "queued";
-  }
-
-  return mappedStatus;
-}
-
-/**
  * Determine if a call should be marked as failed based on ended reason
+ * Re-exports from webhooks/utils for backward compatibility
  */
-export function shouldMarkInboundCallAsFailed(endedReason?: string): boolean {
-  if (!endedReason) return false;
-
-  const failedReasons = [
-    "dial-busy",
-    "dial-failed",
-    "dial-no-answer",
-    "assistant-error",
-    "exceeded-max-duration",
-    "assistant-not-found",
-    "assistant-not-invalid",
-    "assistant-not-provided",
-    "assistant-request-failed",
-    "assistant-request-returned-error",
-    "assistant-request-returned-unspeakable-error",
-    "assistant-request-returned-invalid-json",
-    "assistant-request-returned-no-content",
-    "twilio-failed-to-connect-call",
-    "vonage-rejected",
-  ];
-
-  return failedReasons.some((reason) =>
-    endedReason.toLowerCase().includes(reason.toLowerCase()),
-  );
-}
+export const shouldMarkInboundCallAsFailed = shouldMarkInboundFailed;

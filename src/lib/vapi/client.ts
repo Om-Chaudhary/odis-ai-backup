@@ -3,6 +3,26 @@
  *
  * Server-side wrapper for VAPI SDK to make phone calls.
  * Provides type-safe interface for creating and managing VAPI calls.
+ *
+ * ## VAPI Integration Architecture
+ *
+ * This project uses a **Permanent Assistant** approach where:
+ * - The assistant is configured in VAPI Dashboard (model, voice, system prompt, tools)
+ * - Per-call customization is done via `assistantOverrides.variableValues`
+ *
+ * ## What CAN be set via assistantOverrides:
+ * - `variableValues` - Dynamic template variables (e.g., pet_name, owner_name)
+ * - `customerJoinTimeoutSeconds` - Timeout settings
+ * - `recordingEnabled` - Recording toggle
+ * - `toolIds` - Reference pre-configured tools by ID (NOT tool definitions)
+ *
+ * ## What CANNOT be set via assistantOverrides (must be in Dashboard):
+ * - `tools` array - Tool definitions must be configured in dashboard
+ * - `voicemailDetection` - Voicemail detection settings
+ * - `model.messages` - System prompt
+ * - `voice` - Voice configuration
+ *
+ * @see https://docs.vapi.ai/assistants/concepts/transient-vs-permanent-configurations
  */
 
 import { VapiClient } from "@vapi-ai/server-sdk";
@@ -39,11 +59,25 @@ export interface CreatePhoneCallParams {
   /** VAPI phone number ID for the caller ID */
   phoneNumberId: string;
 
-  /** Dynamic variables to pass to the assistant */
+  /**
+   * Dynamic overrides to customize the assistant for this specific call.
+   *
+   * NOTE: According to VAPI docs, only certain properties can be overridden:
+   * - `variableValues` - Template variables for system prompt placeholders
+   * - `toolIds` - Array of pre-configured tool IDs to enable (NOT tool definitions)
+   * - `customerJoinTimeoutSeconds` - Timeout for customer to join
+   * - `recordingEnabled` - Whether to record the call
+   *
+   * Tools, voicemailDetection, model, and voice CANNOT be set here -
+   * they must be configured in the VAPI Dashboard at the assistant level.
+   *
+   * @see https://docs.vapi.ai/assistants/concepts/transient-vs-permanent-configurations
+   */
   assistantOverrides?: {
+    /** Template variables for {{variable}} placeholders in system prompt */
     variableValues?: Record<string, unknown>;
-    /** Tools to enable/override for this call (e.g., voicemail, transferCall) */
-    tools?: Array<VoicemailTool | TransferCallTool>;
+    /** Pre-configured tool IDs to enable for this call */
+    toolIds?: string[];
   };
 }
 
@@ -280,85 +314,12 @@ export async function listCalls(options?: {
   }
 }
 
-/**
- * Maps VAPI status to our internal database status
- *
- * @param vapiStatus - VAPI call status
- * @returns Our database status
- */
-export function mapVapiStatus(
-  vapiStatus: string | undefined,
-): "queued" | "ringing" | "in_progress" | "completed" | "failed" | "cancelled" {
-  if (!vapiStatus) return "queued";
-
-  const statusMap: Record<
-    string,
-    "queued" | "ringing" | "in_progress" | "completed" | "failed" | "cancelled"
-  > = {
-    queued: "queued",
-    ringing: "ringing",
-    "in-progress": "in_progress",
-    forwarding: "in_progress",
-    ended: "completed",
-  };
-
-  const mappedStatus = statusMap[vapiStatus.toLowerCase()];
-
-  if (!mappedStatus) {
-    console.warn(
-      `[VAPI_CLIENT] Unknown VAPI status: ${vapiStatus}, defaulting to queued`,
-    );
-    return "queued";
-  }
-
-  return mappedStatus;
-}
-
-/**
- * Determines if a call should be marked as failed based on ended reason
- *
- * @param endedReason - VAPI ended reason
- * @param metadata - Call metadata including voicemail settings
- * @returns True if call should be marked as failed
- */
-export function shouldMarkAsFailed(
-  endedReason?: string,
-  metadata?: Record<string, unknown>,
-): boolean {
-  if (!endedReason) return false;
-
-  // Voicemail handling:
-  // - If voicemail detection enabled AND hangup is false: DON'T mark as failed (message was left)
-  // - If voicemail detection enabled AND hangup is true: MARK as failed (hung up without message)
-  if (
-    endedReason.toLowerCase().includes("voicemail") &&
-    metadata?.voicemail_detection_enabled === true
-  ) {
-    const hangupOnVoicemail = metadata?.voicemail_hangup_on_detection === true;
-    return hangupOnVoicemail; // Failed only if we hung up without leaving message
-  }
-
-  const failedReasons = [
-    "dial-busy",
-    "dial-failed",
-    "dial-no-answer",
-    "assistant-error",
-    "exceeded-max-duration",
-    "voicemail",
-    "assistant-not-found",
-    "assistant-not-invalid",
-    "assistant-not-provided",
-    "assistant-request-failed",
-    "assistant-request-returned-error",
-    "assistant-request-returned-unspeakable-error",
-    "assistant-request-returned-invalid-json",
-    "assistant-request-returned-no-content",
-  ];
-
-  return failedReasons.some((reason) =>
-    endedReason.toLowerCase().includes(reason.toLowerCase()),
-  );
-}
+// Re-export status mapping utilities from webhooks/utils for backward compatibility
+export {
+  type CallStatus,
+  mapVapiStatus,
+  shouldMarkAsFailed,
+} from "./webhooks/utils";
 
 /**
  * Calculates total cost from VAPI costs array

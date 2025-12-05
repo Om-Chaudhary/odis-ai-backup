@@ -1,9 +1,44 @@
 /**
  * Clinic VAPI Configuration Utilities
  *
- * Helper functions for fetching clinic-specific VAPI assistant IDs
- * and phone number configurations. Falls back to environment variables
+ * Helper functions for fetching clinic-specific VAPI phone numbers
+ * and optional assistant overrides. Falls back to environment variables
  * when clinic-specific configuration is not available.
+ *
+ * ## VAPI Architecture: Shared Assistant + Per-Clinic Phone Numbers
+ *
+ * **RECOMMENDED PATTERN**: Use a SINGLE shared VAPI assistant for all clinics,
+ * with per-clinic customization via:
+ *
+ * 1. **Phone Number ID** (`clinics.phone_number_id`) - Different SIP trunk per clinic
+ * 2. **Dynamic Variables** (`assistantOverrides.variableValues`) - Per-call customization
+ *    - clinic_name, clinic_phone, emergency_phone
+ *    - agent_name, pet_name, owner_name
+ *    - discharge_summary_content, etc.
+ *
+ * ## When to Use Per-Clinic Assistants (Optional)
+ *
+ * Only create separate assistants if clinics need DIFFERENT:
+ * - Voicemail detection behavior (hangup vs leave message)
+ * - Tool configurations (custom functions)
+ * - Voice/model settings
+ * - System prompt logic (not just variable values)
+ *
+ * For most cases, leave `clinics.outbound_assistant_id` NULL and use the
+ * shared `VAPI_ASSISTANT_ID` from environment variables.
+ *
+ * ## Configuration Priority
+ *
+ * 1. `clinics.phone_number_id` → Per-clinic SIP trunk (REQUIRED for multi-clinic)
+ * 2. `clinics.outbound_assistant_id` → Optional, falls back to `VAPI_ASSISTANT_ID`
+ * 3. `VAPI_ASSISTANT_ID` env var → Shared assistant for all clinics (RECOMMENDED)
+ *
+ * ## Current Shared Assistant
+ *
+ * Assistant ID: 0309c629-a3f2-43aa-b479-e2e783e564a7
+ * Set this in your .env.local as VAPI_ASSISTANT_ID
+ *
+ * @see https://docs.vapi.ai/assistants/concepts/transient-vs-permanent-configurations
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -15,6 +50,23 @@ import { getClinicByName, getClinicByUserId } from "./utils";
 type SupabaseClientType = SupabaseClient<Database>;
 
 const logger = loggers.vapi.child("clinic-config");
+
+/**
+ * Shared VAPI Assistant ID for all clinics
+ *
+ * This is the default assistant used for outbound discharge follow-up calls.
+ * All clinics share this assistant, with per-call customization via variables.
+ *
+ * Configure in VAPI Dashboard:
+ * - System prompt with {{variable}} placeholders
+ * - Voice configuration
+ * - Model selection (GPT-4, etc.)
+ * - Tools (voicemail, transfer, etc.)
+ * - Voicemail detection settings
+ *
+ * Set in .env.local: VAPI_ASSISTANT_ID=0309c629-a3f2-43aa-b479-e2e783e564a7
+ */
+export const SHARED_VAPI_ASSISTANT_ID = "0309c629-a3f2-43aa-b479-e2e783e564a7";
 
 /**
  * VAPI configuration for a clinic
@@ -54,9 +106,13 @@ export async function getClinicVapiConfig(
   clinicName: string,
   supabase: SupabaseClientType,
 ): Promise<ClinicVapiConfig> {
+  // Use env var first, then fall back to hardcoded shared assistant ID
+  const sharedAssistantId =
+    env.VAPI_ASSISTANT_ID ?? SHARED_VAPI_ASSISTANT_ID ?? null;
+
   const envFallback: ClinicVapiConfig = {
-    outboundAssistantId: env.VAPI_ASSISTANT_ID ?? null,
-    inboundAssistantId: env.VAPI_ASSISTANT_ID ?? null,
+    outboundAssistantId: sharedAssistantId,
+    inboundAssistantId: sharedAssistantId,
     phoneNumberId: env.VAPI_PHONE_NUMBER_ID ?? null,
     clinicName: null,
     source: "env_fallback",
@@ -98,10 +154,10 @@ export async function getClinicVapiConfig(
   });
 
   return {
-    outboundAssistantId:
-      clinic.outbound_assistant_id ?? env.VAPI_ASSISTANT_ID ?? null,
-    inboundAssistantId:
-      clinic.inbound_assistant_id ?? env.VAPI_ASSISTANT_ID ?? null,
+    // Prefer clinic-specific assistant, fall back to shared assistant
+    outboundAssistantId: clinic.outbound_assistant_id ?? sharedAssistantId,
+    inboundAssistantId: clinic.inbound_assistant_id ?? sharedAssistantId,
+    // Phone number ID is per-clinic (different SIP trunks)
     phoneNumberId: clinic.phone_number_id ?? env.VAPI_PHONE_NUMBER_ID ?? null,
     clinicName: clinic.name,
     source: "clinic",
@@ -128,9 +184,13 @@ export async function getClinicVapiConfigByUserId(
   userId: string,
   supabase: SupabaseClientType,
 ): Promise<ClinicVapiConfig> {
+  // Use env var first, then fall back to hardcoded shared assistant ID
+  const sharedAssistantId =
+    env.VAPI_ASSISTANT_ID ?? SHARED_VAPI_ASSISTANT_ID ?? null;
+
   const envFallback: ClinicVapiConfig = {
-    outboundAssistantId: env.VAPI_ASSISTANT_ID ?? null,
-    inboundAssistantId: env.VAPI_ASSISTANT_ID ?? null,
+    outboundAssistantId: sharedAssistantId,
+    inboundAssistantId: sharedAssistantId,
     phoneNumberId: env.VAPI_PHONE_NUMBER_ID ?? null,
     clinicName: null,
     source: "env_fallback",
@@ -171,13 +231,14 @@ export async function getClinicVapiConfigByUserId(
     hasOutbound: !!clinic.outbound_assistant_id,
     hasInbound: !!clinic.inbound_assistant_id,
     hasPhoneNumber: !!clinic.phone_number_id,
+    usingSharedAssistant: !clinic.outbound_assistant_id,
   });
 
   return {
-    outboundAssistantId:
-      clinic.outbound_assistant_id ?? env.VAPI_ASSISTANT_ID ?? null,
-    inboundAssistantId:
-      clinic.inbound_assistant_id ?? env.VAPI_ASSISTANT_ID ?? null,
+    // Prefer clinic-specific assistant, fall back to shared assistant
+    outboundAssistantId: clinic.outbound_assistant_id ?? sharedAssistantId,
+    inboundAssistantId: clinic.inbound_assistant_id ?? sharedAssistantId,
+    // Phone number ID is per-clinic (different SIP trunks)
     phoneNumberId: clinic.phone_number_id ?? env.VAPI_PHONE_NUMBER_ID ?? null,
     clinicName: clinic.name,
     source: "clinic",
