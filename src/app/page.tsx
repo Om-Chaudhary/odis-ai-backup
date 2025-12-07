@@ -6,14 +6,14 @@ import Navigation from "~/components/Navigation";
 import Hero from "~/components/hero/HeroTwoColumn";
 import TrustLogos from "~/components/TrustLogos";
 import Testimonials from "~/components/Testimonials";
-import { Pricing } from "~/components/blocks/pricing";
+// import { Pricing } from "~/components/blocks/pricing";
 import FAQ from "~/components/FAQ";
 import CTA from "~/components/CTA";
 import Footer from "~/components/Footer";
 import { useScrollTracking } from "~/hooks/useScrollTracking";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
 import { useDeviceDetection } from "~/hooks/useDeviceDetection";
-import { CircleDollarSign, Handshake, Layers, Megaphone } from "lucide-react";
+import { Handshake, Layers, Megaphone } from "lucide-react";
 
 export default function Home() {
   const posthog = usePostHog();
@@ -73,6 +73,7 @@ export default function Home() {
       <section className="mt-8 sm:mt-12 md:mt-16" aria-label="FAQ">
         <FAQ />
       </section>
+      {/* Pricing section temporarily removed
       <section
         id="pricing"
         className="mt-8 sm:mt-12 md:mt-16"
@@ -149,6 +150,7 @@ export default function Home() {
           description="Choose the plan that works for your veterinary practice. All plans include access to our AI-powered SOAP note generation and practice management tools."
         />
       </section>
+      */}
       <section className="mt-8 sm:mt-12 md:mt-16" aria-label="Call to action">
         <div className="mb-3 text-center">
           <div className="mx-auto inline-flex items-center justify-center rounded-full bg-[#31aba3]/10 px-4 py-2">
