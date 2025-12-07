@@ -7,6 +7,7 @@ import { ArrowRight } from "lucide-react";
 import { LightRays } from "~/components/ui/light-rays";
 import { useDeviceDetection } from "~/hooks/useDeviceDetection";
 import { ProcessAnimation } from "./ProcessAnimation";
+import { DemoPhoneCard } from "./DemoPhoneCard";
 import WaitlistModal from "../WaitlistModal";
 
 export default function HeroTwoColumn() {
@@ -94,6 +95,11 @@ export default function HeroTwoColumn() {
               <p className="text-sm text-slate-500">
                 Trusted by forward-thinking veterinary practices.
               </p>
+
+              {/* Demo Phone Card */}
+              <div className="w-full pt-4 sm:max-w-sm">
+                <DemoPhoneCard />
+              </div>
             </div>
 
             {/* Right Column: Animation */}
