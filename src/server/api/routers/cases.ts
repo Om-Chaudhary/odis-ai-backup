@@ -47,6 +47,7 @@ export const casesRouter = createTRPCRouter({
           .enum(["all", "ready_for_discharge", "not_ready"])
           .optional()
           .default("all"),
+        fetchAll: z.boolean().optional().default(false), // Fetch all cases (no pagination)
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -176,9 +177,23 @@ export const casesRouter = createTRPCRouter({
         );
       }
 
-      const { data, error } = await dataQuery
-        .order("scheduled_at", { ascending: false, nullsFirst: false })
-        .range(from, to);
+      // Execute query - skip pagination if fetchAll is true
+      let data;
+      let error;
+      if (input.fetchAll) {
+        const result = await dataQuery.order("scheduled_at", {
+          ascending: false,
+          nullsFirst: false,
+        });
+        data = result.data;
+        error = result.error;
+      } else {
+        const result = await dataQuery
+          .order("scheduled_at", { ascending: false, nullsFirst: false })
+          .range(from, to);
+        data = result.data;
+        error = result.error;
+      }
 
       if (error) {
         throw new TRPCError({
@@ -263,13 +278,16 @@ export const casesRouter = createTRPCRouter({
         return new Date(bDate).getTime() - new Date(aDate).getTime();
       });
 
+      // When fetchAll is true, use the actual data length for pagination info
+      const totalCases = input.fetchAll ? sortedCases.length : (count ?? 0);
+
       return {
         cases: sortedCases,
         pagination: {
-          page: input.page,
-          pageSize: input.pageSize,
-          total: count ?? 0,
-          totalPages: Math.ceil((count ?? 0) / input.pageSize),
+          page: input.fetchAll ? 1 : input.page,
+          pageSize: input.fetchAll ? totalCases : input.pageSize,
+          total: totalCases,
+          totalPages: input.fetchAll ? 1 : Math.ceil(totalCases / input.pageSize),
         },
         date: startDate
           ? startDate.toISOString().split("T")[0]
