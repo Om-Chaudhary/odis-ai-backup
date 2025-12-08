@@ -1772,6 +1772,8 @@ export const casesRouter = createTRPCRouter({
 
   /**
    * Create a new discharge batch
+   * Note: The discharge_batches table requires email_schedule_time and call_schedule_time as non-null.
+   * We store emailsEnabled/callsEnabled in the metadata JSON column.
    */
   createDischargeBatch: protectedProcedure
     .input(
@@ -1784,6 +1786,15 @@ export const casesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Default schedule times if not provided (required by DB schema)
+      const now = new Date();
+      const defaultEmailTime = new Date(
+        now.getTime() + 24 * 60 * 60 * 1000,
+      ).toISOString(); // +1 day
+      const defaultCallTime = new Date(
+        now.getTime() + 3 * 24 * 60 * 60 * 1000,
+      ).toISOString(); // +3 days
+
       // Create batch record
       const { data: batch, error: batchError } = await ctx.supabase
         .from("discharge_batches")
@@ -1791,14 +1802,20 @@ export const casesRouter = createTRPCRouter({
           user_id: ctx.user.id,
           status: "pending",
           total_cases: input.caseIds.length,
-          email_schedule_time: input.emailsEnabled
-            ? input.emailScheduleTime
-            : null,
-          call_schedule_time: input.callsEnabled
-            ? input.callScheduleTime
-            : null,
-          emails_enabled: input.emailsEnabled,
-          calls_enabled: input.callsEnabled,
+          // Use provided times or defaults (required by schema)
+          email_schedule_time:
+            input.emailsEnabled && input.emailScheduleTime
+              ? input.emailScheduleTime
+              : defaultEmailTime,
+          call_schedule_time:
+            input.callsEnabled && input.callScheduleTime
+              ? input.callScheduleTime
+              : defaultCallTime,
+          // Store enabled flags in metadata JSON (columns don't exist in schema)
+          metadata: {
+            emailsEnabled: input.emailsEnabled,
+            callsEnabled: input.callsEnabled,
+          },
         })
         .select("id")
         .single();
