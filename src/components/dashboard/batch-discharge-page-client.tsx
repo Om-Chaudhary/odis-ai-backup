@@ -26,6 +26,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { Switch } from "~/components/ui/switch";
+import { Label } from "~/components/ui/label";
 import {
   ArrowLeft,
   ArrowRight,
@@ -65,7 +67,7 @@ import { BatchProgressMonitor } from "./batch-progress-monitor";
 import type { BatchEligibleCase } from "~/types/dashboard";
 import { cn } from "~/lib/utils";
 
-type DateFilter = "all" | "today" | "yesterday" | "this-week" | "older";
+type DateFilter = "today" | "yesterday" | "day-2" | "day-3" | "day-4";
 
 // Generate time options
 function generateTimeOptions() {
@@ -97,11 +99,12 @@ export function BatchDischargePageClient() {
   const [callScheduleTime, setCallScheduleTime] = useState<Date | null>(null);
   const [activeBatchId, setActiveBatchId] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [sourceFilter, setSourceFilter] = useState<"all" | "idexx" | "manual">(
-    "all",
-  );
   const [dateFilter, setDateFilter] = useState<DateFilter>("today");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Communication type toggles
+  const [emailsEnabled, setEmailsEnabled] = useState(true);
+  const [callsEnabled, setCallsEnabled] = useState(true);
 
   // Queries
   const {
@@ -130,58 +133,45 @@ export function BatchDischargePageClient() {
       hasSoapNotes: c.hasSoapNotes,
       createdAt: c.createdAt,
       scheduledAt: c.scheduledAt,
+      emailSent: c.emailSent ?? false,
+      callSent: c.callSent ?? false,
     }));
   }, [eligibleCasesData]);
 
-  // Filter cases by source, date, and search
+  // Filter cases by source, date, communication type, and search
   const filteredCases = useMemo(() => {
     let cases = eligibleCases;
 
-    // Filter by date
-    if (dateFilter !== "all") {
-      const now = new Date();
-      const today = startOfDay(now);
-      const yesterday = startOfDay(subDays(now, 1));
-      const weekStart = startOfWeek(now, { weekStartsOn: 1 }); // Monday
+    // Filter by date - use scheduledAt with fallback to createdAt (same as main dashboard)
+    const now = new Date();
+    const filterDates: Record<DateFilter, { start: Date; end: Date }> = {
+      today: { start: startOfDay(now), end: endOfDay(now) },
+      yesterday: {
+        start: startOfDay(subDays(now, 1)),
+        end: endOfDay(subDays(now, 1)),
+      },
+      "day-2": {
+        start: startOfDay(subDays(now, 2)),
+        end: endOfDay(subDays(now, 2)),
+      },
+      "day-3": {
+        start: startOfDay(subDays(now, 3)),
+        end: endOfDay(subDays(now, 3)),
+      },
+      "day-4": {
+        start: startOfDay(subDays(now, 4)),
+        end: endOfDay(subDays(now, 4)),
+      },
+    };
 
-      cases = cases.filter((c) => {
-        if (!c.createdAt) return dateFilter === "older";
-        const caseDate = parseISO(c.createdAt);
-
-        switch (dateFilter) {
-          case "today":
-            return isWithinInterval(caseDate, {
-              start: today,
-              end: endOfDay(now),
-            });
-          case "yesterday":
-            return isWithinInterval(caseDate, {
-              start: yesterday,
-              end: endOfDay(yesterday),
-            });
-          case "this-week":
-            return isWithinInterval(caseDate, {
-              start: weekStart,
-              end: endOfDay(now),
-            });
-          case "older":
-            return caseDate < weekStart;
-          default:
-            return true;
-        }
-      });
-    }
-
-    // Filter by source
-    if (sourceFilter === "idexx") {
-      cases = cases.filter(
-        (c) => c.source === "idexx_neo" || c.source === "idexx_extension",
-      );
-    } else if (sourceFilter === "manual") {
-      cases = cases.filter(
-        (c) => c.source !== "idexx_neo" && c.source !== "idexx_extension",
-      );
-    }
+    const dateRange = filterDates[dateFilter];
+    cases = cases.filter((c) => {
+      // Use scheduledAt if available, otherwise fall back to createdAt
+      const dateStr = c.scheduledAt ?? c.createdAt;
+      if (!dateStr) return false;
+      const caseDate = parseISO(dateStr);
+      return isWithinInterval(caseDate, dateRange);
+    });
 
     // Filter by search query
     if (searchQuery.trim()) {
@@ -194,53 +184,57 @@ export function BatchDischargePageClient() {
     }
 
     return cases;
-  }, [eligibleCases, sourceFilter, dateFilter, searchQuery]);
+  }, [eligibleCases, dateFilter, searchQuery]);
 
-  // Count cases by date for the filter badges
-  const dateCounts = useMemo(() => {
+  // Count cases by date for the filter badges (using scheduledAt with fallback to createdAt)
+  const dateCounts: Record<DateFilter, number> = useMemo(() => {
     const now = new Date();
-    const today = startOfDay(now);
-    const yesterday = startOfDay(subDays(now, 1));
-    const weekStart = startOfWeek(now, { weekStartsOn: 1 });
+    const days = [0, 1, 2, 3, 4].map((offset) => ({
+      start: startOfDay(subDays(now, offset)),
+      end: endOfDay(subDays(now, offset)),
+    }));
 
-    let todayCount = 0;
-    let yesterdayCount = 0;
-    let thisWeekCount = 0;
-    let olderCount = 0;
+    const counts = [0, 0, 0, 0, 0];
 
     eligibleCases.forEach((c) => {
-      if (!c.createdAt) {
-        olderCount++;
-        return;
-      }
-      const caseDate = parseISO(c.createdAt);
+      // Use scheduledAt if available, otherwise fall back to createdAt
+      const dateStr = c.scheduledAt ?? c.createdAt;
+      if (!dateStr) return;
+      const caseDate = parseISO(dateStr);
 
-      if (isWithinInterval(caseDate, { start: today, end: endOfDay(now) })) {
-        todayCount++;
-      } else if (
-        isWithinInterval(caseDate, {
-          start: yesterday,
-          end: endOfDay(yesterday),
-        })
-      ) {
-        yesterdayCount++;
-      } else if (
-        isWithinInterval(caseDate, { start: weekStart, end: endOfDay(now) })
-      ) {
-        thisWeekCount++;
-      } else {
-        olderCount++;
+      for (let i = 0; i < days.length; i++) {
+        const day = days[i];
+        if (!day) continue;
+        if (isWithinInterval(caseDate, day)) {
+          const currentCount = counts[i];
+          if (currentCount !== undefined) {
+            counts[i] = currentCount + 1;
+          }
+          break;
+        }
       }
     });
 
     return {
-      all: eligibleCases.length,
-      today: todayCount,
-      yesterday: yesterdayCount,
-      "this-week": thisWeekCount,
-      older: olderCount,
+      today: counts[0] ?? 0,
+      yesterday: counts[1] ?? 0,
+      "day-2": counts[2] ?? 0,
+      "day-3": counts[3] ?? 0,
+      "day-4": counts[4] ?? 0,
     };
   }, [eligibleCases]);
+
+  // Generate day labels for the filter buttons
+  const dayLabels: Record<DateFilter, string> = useMemo(() => {
+    const now = new Date();
+    return {
+      today: "Today",
+      yesterday: "Yesterday",
+      "day-2": format(subDays(now, 2), "EEE MMM d"),
+      "day-3": format(subDays(now, 3), "EEE MMM d"),
+      "day-4": format(subDays(now, 4), "EEE MMM d"),
+    };
+  }, []);
 
   // Get selected cases data
   const selectedCasesData = useMemo(() => {
@@ -349,16 +343,34 @@ export function BatchDischargePageClient() {
       return;
     }
 
-    if (!emailScheduleTime || !callScheduleTime) {
-      toast.error("Please configure schedule times");
+    if (!emailsEnabled && !callsEnabled) {
+      toast.error("Please enable at least one communication type");
+      return;
+    }
+
+    if (emailsEnabled && !emailScheduleTime) {
+      toast.error("Please configure email schedule time");
+      return;
+    }
+
+    if (callsEnabled && !callScheduleTime) {
+      toast.error("Please configure call schedule time");
       return;
     }
 
     const caseIds = Array.from(selectedCases);
     createBatchMutation.mutate({
       caseIds,
-      emailScheduleTime: emailScheduleTime.toISOString(),
-      callScheduleTime: callScheduleTime.toISOString(),
+      emailScheduleTime:
+        emailsEnabled && emailScheduleTime
+          ? emailScheduleTime.toISOString()
+          : null,
+      callScheduleTime:
+        callsEnabled && callScheduleTime
+          ? callScheduleTime.toISOString()
+          : null,
+      emailsEnabled,
+      callsEnabled,
     });
   };
 
@@ -455,7 +467,11 @@ export function BatchDischargePageClient() {
 
   // Can proceed to next step
   const canProceedToSchedule = selectedCases.size > 0;
-  const canProceedToReview = emailScheduleTime && callScheduleTime;
+  // At least one communication type must be enabled with valid schedule
+  const canProceedToReview =
+    (emailsEnabled || callsEnabled) &&
+    (!emailsEnabled || emailScheduleTime) &&
+    (!callsEnabled || callScheduleTime);
 
   return (
     <div className="flex h-full flex-col bg-gradient-to-b from-slate-50/50 to-white">
@@ -592,75 +608,7 @@ export function BatchDischargePageClient() {
 
             {/* Step 1: Select Cases */}
             <TabsContent value="select" className="space-y-6">
-              {/* Stats Row */}
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                <Card className="border-0 bg-slate-50/50 shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-lg bg-slate-100 p-2">
-                        <Users className="h-5 w-5 text-slate-600" />
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold">
-                          {filteredCases.length}
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          Eligible
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="border-0 bg-emerald-50/50 shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-lg bg-emerald-100 p-2">
-                        <CheckCircle className="h-5 w-5 text-emerald-600" />
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold">
-                          {selectedCases.size}
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          Selected
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="border-0 bg-blue-50/50 shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-lg bg-blue-100 p-2">
-                        <Mail className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold">
-                          {selectedCasesWithEmail}
-                        </p>
-                        <p className="text-muted-foreground text-xs">Emails</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="border-0 bg-green-50/50 shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-lg bg-green-100 p-2">
-                        <Phone className="h-5 w-5 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold">
-                          {selectedCasesWithPhone}
-                        </p>
-                        <p className="text-muted-foreground text-xs">Calls</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Filters */}
+              {/* Filters and Selection */}
               <Card>
                 <CardHeader className="space-y-4 pb-4">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -683,145 +631,40 @@ export function BatchDischargePageClient() {
 
                   {/* Filter Row */}
                   <div className="flex flex-wrap items-center gap-3">
-                    {/* Date Filters */}
+                    {/* Date Filters - Individual Days */}
                     <div className="flex items-center gap-1.5">
                       <Calendar className="text-muted-foreground h-4 w-4" />
-                      <div className="flex items-center gap-1 rounded-lg border bg-slate-50/50 p-1">
-                        <Button
-                          variant={
-                            dateFilter === "today" ? "secondary" : "ghost"
-                          }
-                          size="sm"
-                          onClick={() => setDateFilter("today")}
-                          className="h-7 gap-1.5 px-2.5"
-                        >
-                          Today
-                          {dateCounts.today > 0 && (
-                            <Badge
-                              variant={
-                                dateFilter === "today" ? "default" : "secondary"
-                              }
-                              className="h-5 min-w-5 px-1.5"
-                            >
-                              {dateCounts.today}
-                            </Badge>
-                          )}
-                        </Button>
-                        <Button
-                          variant={
-                            dateFilter === "yesterday" ? "secondary" : "ghost"
-                          }
-                          size="sm"
-                          onClick={() => setDateFilter("yesterday")}
-                          className="h-7 gap-1.5 px-2.5"
-                        >
-                          Yesterday
-                          {dateCounts.yesterday > 0 && (
-                            <Badge
-                              variant={
-                                dateFilter === "yesterday"
-                                  ? "default"
-                                  : "secondary"
-                              }
-                              className="h-5 min-w-5 px-1.5"
-                            >
-                              {dateCounts.yesterday}
-                            </Badge>
-                          )}
-                        </Button>
-                        <Button
-                          variant={
-                            dateFilter === "this-week" ? "secondary" : "ghost"
-                          }
-                          size="sm"
-                          onClick={() => setDateFilter("this-week")}
-                          className="h-7 gap-1.5 px-2.5"
-                        >
-                          This Week
-                          {dateCounts["this-week"] > 0 && (
-                            <Badge
-                              variant={
-                                dateFilter === "this-week"
-                                  ? "default"
-                                  : "secondary"
-                              }
-                              className="h-5 min-w-5 px-1.5"
-                            >
-                              {dateCounts["this-week"]}
-                            </Badge>
-                          )}
-                        </Button>
-                        <Button
-                          variant={
-                            dateFilter === "older" ? "secondary" : "ghost"
-                          }
-                          size="sm"
-                          onClick={() => setDateFilter("older")}
-                          className="h-7 gap-1.5 px-2.5"
-                        >
-                          Older
-                          {dateCounts.older > 0 && (
-                            <Badge
-                              variant={
-                                dateFilter === "older" ? "default" : "secondary"
-                              }
-                              className="h-5 min-w-5 px-1.5"
-                            >
-                              {dateCounts.older}
-                            </Badge>
-                          )}
-                        </Button>
-                        <Button
-                          variant={dateFilter === "all" ? "secondary" : "ghost"}
-                          size="sm"
-                          onClick={() => setDateFilter("all")}
-                          className="h-7 gap-1.5 px-2.5"
-                        >
-                          All
-                          <Badge
-                            variant={
-                              dateFilter === "all" ? "default" : "secondary"
-                            }
-                            className="h-5 min-w-5 px-1.5"
+                      <div className="flex flex-wrap items-center gap-1 rounded-lg border bg-slate-50/50 p-1">
+                        {(
+                          [
+                            "today",
+                            "yesterday",
+                            "day-2",
+                            "day-3",
+                            "day-4",
+                          ] as DateFilter[]
+                        ).map((day) => (
+                          <Button
+                            key={day}
+                            variant={dateFilter === day ? "secondary" : "ghost"}
+                            size="sm"
+                            onClick={() => setDateFilter(day)}
+                            className="h-7 gap-1.5 px-2.5"
                           >
-                            {dateCounts.all}
-                          </Badge>
-                        </Button>
+                            {dayLabels[day]}
+                            {dateCounts[day] > 0 && (
+                              <Badge
+                                variant={
+                                  dateFilter === day ? "default" : "secondary"
+                                }
+                                className="h-5 min-w-5 px-1.5"
+                              >
+                                {dateCounts[day]}
+                              </Badge>
+                            )}
+                          </Button>
+                        ))}
                       </div>
-                    </div>
-
-                    <Separator orientation="vertical" className="h-6" />
-
-                    {/* Source Filters */}
-                    <div className="flex items-center gap-1 rounded-lg border bg-slate-50/50 p-1">
-                      <Button
-                        variant={sourceFilter === "all" ? "secondary" : "ghost"}
-                        size="sm"
-                        onClick={() => setSourceFilter("all")}
-                        className="h-7 px-3"
-                      >
-                        All Sources
-                      </Button>
-                      <Button
-                        variant={
-                          sourceFilter === "idexx" ? "secondary" : "ghost"
-                        }
-                        size="sm"
-                        onClick={() => setSourceFilter("idexx")}
-                        className="h-7 px-3"
-                      >
-                        IDEXX
-                      </Button>
-                      <Button
-                        variant={
-                          sourceFilter === "manual" ? "secondary" : "ghost"
-                        }
-                        size="sm"
-                        onClick={() => setSourceFilter("manual")}
-                        className="h-7 px-3"
-                      >
-                        Manual
-                      </Button>
                     </div>
                   </div>
                 </CardHeader>
@@ -843,7 +686,7 @@ export function BatchDischargePageClient() {
                   ) : (
                     <>
                       {/* Select All Header */}
-                      <div className="flex items-center justify-between border-y bg-slate-50/50 px-4 py-2">
+                      <div className="flex items-center justify-between border-y bg-gradient-to-r from-slate-50/50 to-transparent px-4 py-3">
                         <label className="flex cursor-pointer items-center gap-3">
                           <Checkbox
                             checked={
@@ -858,10 +701,24 @@ export function BatchDischargePageClient() {
                               : "Select all"}
                           </span>
                         </label>
-                        <span className="text-muted-foreground text-sm">
-                          {filteredCases.length} case
-                          {filteredCases.length !== 1 ? "s" : ""}
-                        </span>
+                        <div className="flex items-center gap-4">
+                          <span className="text-muted-foreground text-sm font-medium">
+                            {filteredCases.length} case
+                            {filteredCases.length !== 1 ? "s" : ""}
+                          </span>
+                          {selectedCasesWithEmail > 0 && (
+                            <span className="flex items-center gap-1 text-xs font-medium text-blue-600">
+                              <Mail className="h-3 w-3" />
+                              {selectedCasesWithEmail} Email
+                            </span>
+                          )}
+                          {selectedCasesWithPhone > 0 && (
+                            <span className="flex items-center gap-1 text-xs font-medium text-green-600">
+                              <Phone className="h-3 w-3" />
+                              {selectedCasesWithPhone} Call
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       {/* Case List */}
@@ -882,6 +739,35 @@ export function BatchDischargePageClient() {
                                   handleSelectCase(caseData.id)
                                 }
                               />
+                              {/* Date Column */}
+                              <div className="w-20 shrink-0 text-center">
+                                <div className="text-xs font-medium text-slate-700">
+                                  {caseData.scheduledAt
+                                    ? format(
+                                        parseISO(caseData.scheduledAt),
+                                        "MMM d",
+                                      )
+                                    : caseData.createdAt
+                                      ? format(
+                                          parseISO(caseData.createdAt),
+                                          "MMM d",
+                                        )
+                                      : "N/A"}
+                                </div>
+                                <div className="text-muted-foreground text-xs">
+                                  {caseData.scheduledAt
+                                    ? format(
+                                        parseISO(caseData.scheduledAt),
+                                        "EEE",
+                                      )
+                                    : caseData.createdAt
+                                      ? format(
+                                          parseISO(caseData.createdAt),
+                                          "EEE",
+                                        )
+                                      : ""}
+                                </div>
+                              </div>
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
                                   <span className="truncate font-medium">
@@ -921,15 +807,48 @@ export function BatchDischargePageClient() {
                                   </Badge>
                                 )}
                               </div>
-                              <div className="flex items-center gap-1">
+                              {/* Email/Call Status */}
+                              <div className="flex items-center gap-1.5">
                                 {caseData.hasEmail && (
-                                  <div className="rounded-full bg-blue-100 p-1.5">
-                                    <Mail className="h-3 w-3 text-blue-600" />
+                                  <div
+                                    className={cn(
+                                      "rounded-full p-1.5",
+                                      caseData.emailSent
+                                        ? "bg-blue-500"
+                                        : "bg-blue-100",
+                                    )}
+                                    title={
+                                      caseData.emailSent
+                                        ? "Email sent"
+                                        : "Email pending"
+                                    }
+                                  >
+                                    {caseData.emailSent ? (
+                                      <CheckCircle className="h-3 w-3 text-white" />
+                                    ) : (
+                                      <Mail className="h-3 w-3 text-blue-600" />
+                                    )}
                                   </div>
                                 )}
                                 {caseData.hasPhone && (
-                                  <div className="rounded-full bg-green-100 p-1.5">
-                                    <Phone className="h-3 w-3 text-green-600" />
+                                  <div
+                                    className={cn(
+                                      "rounded-full p-1.5",
+                                      caseData.callSent
+                                        ? "bg-green-500"
+                                        : "bg-green-100",
+                                    )}
+                                    title={
+                                      caseData.callSent
+                                        ? "Call made"
+                                        : "Call pending"
+                                    }
+                                  >
+                                    {caseData.callSent ? (
+                                      <CheckCircle className="h-3 w-3 text-white" />
+                                    ) : (
+                                      <Phone className="h-3 w-3 text-green-600" />
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -940,11 +859,29 @@ export function BatchDischargePageClient() {
                     </>
                   )}
                 </CardContent>
-                <CardFooter className="justify-between border-t bg-slate-50/30 p-4">
-                  <p className="text-muted-foreground text-sm">
-                    {selectedCases.size} case
-                    {selectedCases.size !== 1 ? "s" : ""} selected
-                  </p>
+                <CardFooter className="justify-between border-t bg-gradient-to-r from-slate-50/30 to-transparent p-4">
+                  <div className="flex items-center gap-4">
+                    <p className="text-muted-foreground text-sm font-medium">
+                      {selectedCases.size} case
+                      {selectedCases.size !== 1 ? "s" : ""} selected
+                    </p>
+                    {selectedCases.size > 0 && (
+                      <div className="flex gap-3 text-xs">
+                        {selectedCasesWithEmail > 0 && (
+                          <span className="flex items-center gap-1 text-blue-600">
+                            <Mail className="h-3 w-3" />
+                            {selectedCasesWithEmail} Email
+                          </span>
+                        )}
+                        {selectedCasesWithPhone > 0 && (
+                          <span className="flex items-center gap-1 text-green-600">
+                            <Phone className="h-3 w-3" />
+                            {selectedCasesWithPhone} Call
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <Button
                     onClick={() => setCurrentStep("schedule")}
                     disabled={!canProceedToSchedule}
@@ -961,139 +898,229 @@ export function BatchDischargePageClient() {
             <TabsContent value="schedule" className="space-y-6">
               <div className="grid gap-6 lg:grid-cols-2">
                 {/* Email Schedule */}
-                <Card>
+                <Card className={cn(!emailsEnabled && "opacity-60")}>
                   <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-lg bg-blue-100 p-2.5">
-                        <Mail className="h-5 w-5 text-blue-600" />
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={cn(
+                            "rounded-lg p-2.5",
+                            emailsEnabled ? "bg-blue-100" : "bg-slate-100",
+                          )}
+                        >
+                          <Mail
+                            className={cn(
+                              "h-5 w-5",
+                              emailsEnabled
+                                ? "text-blue-600"
+                                : "text-slate-400",
+                            )}
+                          />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">
+                            Email Schedule
+                          </CardTitle>
+                          <CardDescription>
+                            When to send discharge emails
+                          </CardDescription>
+                        </div>
                       </div>
-                      <div>
-                        <CardTitle className="text-lg">
-                          Email Schedule
-                        </CardTitle>
-                        <CardDescription>
-                          When to send discharge emails
-                        </CardDescription>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          id="emails-enabled"
+                          checked={emailsEnabled}
+                          onCheckedChange={setEmailsEnabled}
+                        />
+                        <Label
+                          htmlFor="emails-enabled"
+                          className="text-sm font-medium"
+                        >
+                          {emailsEnabled ? "Enabled" : "Disabled"}
+                        </Label>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Date</label>
-                      <div className="relative">
-                        <Calendar className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                        <Input
-                          type="date"
-                          className="pl-10"
-                          value={emailDateValue}
-                          min={minDate}
-                          onChange={(e) => updateEmailDate(e.target.value)}
-                        />
+                    {emailsEnabled ? (
+                      <>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Date</label>
+                          <div className="relative">
+                            <Calendar className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                            <Input
+                              type="date"
+                              className="pl-10"
+                              value={emailDateValue}
+                              min={minDate}
+                              onChange={(e) => updateEmailDate(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Time</label>
+                          <Select
+                            value={emailTimeValue}
+                            onValueChange={updateEmailTime}
+                          >
+                            <SelectTrigger>
+                              <Clock className="mr-2 h-4 w-4" />
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {timeOptions.map((option) => (
+                                <SelectItem
+                                  key={option.value}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {emailScheduleTime && (
+                          <Alert className="border-blue-100 bg-blue-50/50">
+                            <Mail className="h-4 w-4 text-blue-600" />
+                            <AlertDescription className="text-blue-700">
+                              <strong>{selectedCasesWithEmail}</strong> emails
+                              scheduled for{" "}
+                              <strong>
+                                {format(
+                                  emailScheduleTime,
+                                  "EEEE, MMM d 'at' h:mm a",
+                                )}
+                              </strong>
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-muted-foreground py-4 text-center text-sm">
+                        Emails will not be sent for this batch
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Time</label>
-                      <Select
-                        value={emailTimeValue}
-                        onValueChange={updateEmailTime}
-                      >
-                        <SelectTrigger>
-                          <Clock className="mr-2 h-4 w-4" />
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {timeOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    {emailScheduleTime && (
-                      <Alert className="border-blue-100 bg-blue-50/50">
-                        <Mail className="h-4 w-4 text-blue-600" />
-                        <AlertDescription className="text-blue-700">
-                          <strong>{selectedCasesWithEmail}</strong> emails
-                          scheduled for{" "}
-                          <strong>
-                            {format(
-                              emailScheduleTime,
-                              "EEEE, MMM d 'at' h:mm a",
-                            )}
-                          </strong>
-                        </AlertDescription>
-                      </Alert>
                     )}
                   </CardContent>
                 </Card>
 
                 {/* Call Schedule */}
-                <Card>
+                <Card className={cn(!callsEnabled && "opacity-60")}>
                   <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <div className="rounded-lg bg-green-100 p-2.5">
-                        <Phone className="h-5 w-5 text-green-600" />
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={cn(
+                            "rounded-lg p-2.5",
+                            callsEnabled ? "bg-green-100" : "bg-slate-100",
+                          )}
+                        >
+                          <Phone
+                            className={cn(
+                              "h-5 w-5",
+                              callsEnabled
+                                ? "text-green-600"
+                                : "text-slate-400",
+                            )}
+                          />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg">
+                            Call Schedule
+                          </CardTitle>
+                          <CardDescription>
+                            When to make follow-up calls
+                          </CardDescription>
+                        </div>
                       </div>
-                      <div>
-                        <CardTitle className="text-lg">Call Schedule</CardTitle>
-                        <CardDescription>
-                          When to make follow-up calls
-                        </CardDescription>
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          id="calls-enabled"
+                          checked={callsEnabled}
+                          onCheckedChange={setCallsEnabled}
+                        />
+                        <Label
+                          htmlFor="calls-enabled"
+                          className="text-sm font-medium"
+                        >
+                          {callsEnabled ? "Enabled" : "Disabled"}
+                        </Label>
                       </div>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Date</label>
-                      <div className="relative">
-                        <Calendar className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-                        <Input
-                          type="date"
-                          className="pl-10"
-                          value={callDateValue}
-                          min={minDate}
-                          onChange={(e) => updateCallDate(e.target.value)}
-                        />
+                    {callsEnabled ? (
+                      <>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Date</label>
+                          <div className="relative">
+                            <Calendar className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                            <Input
+                              type="date"
+                              className="pl-10"
+                              value={callDateValue}
+                              min={minDate}
+                              onChange={(e) => updateCallDate(e.target.value)}
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium">Time</label>
+                          <Select
+                            value={callTimeValue}
+                            onValueChange={updateCallTime}
+                          >
+                            <SelectTrigger>
+                              <Clock className="mr-2 h-4 w-4" />
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {timeOptions.map((option) => (
+                                <SelectItem
+                                  key={option.value}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {callScheduleTime && (
+                          <Alert className="border-green-100 bg-green-50/50">
+                            <Phone className="h-4 w-4 text-green-600" />
+                            <AlertDescription className="text-green-700">
+                              <strong>{selectedCasesWithPhone}</strong> calls
+                              scheduled for{" "}
+                              <strong>
+                                {format(
+                                  callScheduleTime,
+                                  "EEEE, MMM d 'at' h:mm a",
+                                )}
+                              </strong>
+                            </AlertDescription>
+                          </Alert>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-muted-foreground py-4 text-center text-sm">
+                        Calls will not be made for this batch
                       </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Time</label>
-                      <Select
-                        value={callTimeValue}
-                        onValueChange={updateCallTime}
-                      >
-                        <SelectTrigger>
-                          <Clock className="mr-2 h-4 w-4" />
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {timeOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    {callScheduleTime && (
-                      <Alert className="border-green-100 bg-green-50/50">
-                        <Phone className="h-4 w-4 text-green-600" />
-                        <AlertDescription className="text-green-700">
-                          <strong>{selectedCasesWithPhone}</strong> calls
-                          scheduled for{" "}
-                          <strong>
-                            {format(
-                              callScheduleTime,
-                              "EEEE, MMM d 'at' h:mm a",
-                            )}
-                          </strong>
-                        </AlertDescription>
-                      </Alert>
                     )}
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Warning if neither enabled */}
+              {!emailsEnabled && !callsEnabled && (
+                <Alert className="border-amber-200 bg-amber-50">
+                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                  <AlertDescription className="text-amber-800">
+                    <strong>Warning:</strong> You have disabled both emails and
+                    calls. Please enable at least one communication type to
+                    proceed.
+                  </AlertDescription>
+                </Alert>
+              )}
 
               {/* Reset & Navigation */}
               <div className="flex items-center justify-between">
@@ -1185,32 +1212,68 @@ export function BatchDischargePageClient() {
                         </div>
                       </div>
                     </div>
-                    <div className="rounded-xl border bg-gradient-to-br from-blue-50 to-white p-4">
+                    <div
+                      className={cn(
+                        "rounded-xl border bg-gradient-to-br from-blue-50 to-white p-4",
+                        !emailsEnabled && "opacity-50",
+                      )}
+                    >
                       <div className="flex items-center gap-3">
-                        <div className="rounded-lg bg-blue-100 p-2">
-                          <Mail className="h-5 w-5 text-blue-600" />
+                        <div
+                          className={cn(
+                            "rounded-lg p-2",
+                            emailsEnabled ? "bg-blue-100" : "bg-slate-100",
+                          )}
+                        >
+                          <Mail
+                            className={cn(
+                              "h-5 w-5",
+                              emailsEnabled
+                                ? "text-blue-600"
+                                : "text-slate-400",
+                            )}
+                          />
                         </div>
                         <div>
                           <p className="text-3xl font-bold">
-                            {selectedCasesWithEmail}
+                            {emailsEnabled ? selectedCasesWithEmail : 0}
                           </p>
                           <p className="text-muted-foreground text-sm">
-                            Emails to Send
+                            {emailsEnabled
+                              ? "Emails to Send"
+                              : "Emails Disabled"}
                           </p>
                         </div>
                       </div>
                     </div>
-                    <div className="rounded-xl border bg-gradient-to-br from-green-50 to-white p-4">
+                    <div
+                      className={cn(
+                        "rounded-xl border bg-gradient-to-br from-green-50 to-white p-4",
+                        !callsEnabled && "opacity-50",
+                      )}
+                    >
                       <div className="flex items-center gap-3">
-                        <div className="rounded-lg bg-green-100 p-2">
-                          <Phone className="h-5 w-5 text-green-600" />
+                        <div
+                          className={cn(
+                            "rounded-lg p-2",
+                            callsEnabled ? "bg-green-100" : "bg-slate-100",
+                          )}
+                        >
+                          <Phone
+                            className={cn(
+                              "h-5 w-5",
+                              callsEnabled
+                                ? "text-green-600"
+                                : "text-slate-400",
+                            )}
+                          />
                         </div>
                         <div>
                           <p className="text-3xl font-bold">
-                            {selectedCasesWithPhone}
+                            {callsEnabled ? selectedCasesWithPhone : 0}
                           </p>
                           <p className="text-muted-foreground text-sm">
-                            Calls to Make
+                            {callsEnabled ? "Calls to Make" : "Calls Disabled"}
                           </p>
                         </div>
                       </div>
@@ -1223,40 +1286,96 @@ export function BatchDischargePageClient() {
                   <div className="space-y-4">
                     <h4 className="font-medium">Schedule Summary</h4>
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="flex items-start gap-3 rounded-lg border p-4">
-                        <div className="rounded-full bg-blue-100 p-2">
-                          <Mail className="h-4 w-4 text-blue-600" />
+                      <div
+                        className={cn(
+                          "flex items-start gap-3 rounded-lg border p-4",
+                          !emailsEnabled && "opacity-50",
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "rounded-full p-2",
+                            emailsEnabled ? "bg-blue-100" : "bg-slate-100",
+                          )}
+                        >
+                          <Mail
+                            className={cn(
+                              "h-4 w-4",
+                              emailsEnabled
+                                ? "text-blue-600"
+                                : "text-slate-400",
+                            )}
+                          />
                         </div>
                         <div>
                           <p className="font-medium">Emails</p>
-                          <p className="text-muted-foreground text-sm">
-                            {emailScheduleTime
-                              ? format(emailScheduleTime, "EEEE, MMMM d, yyyy")
-                              : "Not scheduled"}
-                          </p>
-                          <p className="text-muted-foreground text-sm">
-                            {emailScheduleTime
-                              ? format(emailScheduleTime, "h:mm a")
-                              : ""}
-                          </p>
+                          {emailsEnabled ? (
+                            <>
+                              <p className="text-muted-foreground text-sm">
+                                {emailScheduleTime
+                                  ? format(
+                                      emailScheduleTime,
+                                      "EEEE, MMMM d, yyyy",
+                                    )
+                                  : "Not scheduled"}
+                              </p>
+                              <p className="text-muted-foreground text-sm">
+                                {emailScheduleTime
+                                  ? format(emailScheduleTime, "h:mm a")
+                                  : ""}
+                              </p>
+                            </>
+                          ) : (
+                            <p className="text-muted-foreground text-sm">
+                              Disabled
+                            </p>
+                          )}
                         </div>
                       </div>
-                      <div className="flex items-start gap-3 rounded-lg border p-4">
-                        <div className="rounded-full bg-green-100 p-2">
-                          <Phone className="h-4 w-4 text-green-600" />
+                      <div
+                        className={cn(
+                          "flex items-start gap-3 rounded-lg border p-4",
+                          !callsEnabled && "opacity-50",
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "rounded-full p-2",
+                            callsEnabled ? "bg-green-100" : "bg-slate-100",
+                          )}
+                        >
+                          <Phone
+                            className={cn(
+                              "h-4 w-4",
+                              callsEnabled
+                                ? "text-green-600"
+                                : "text-slate-400",
+                            )}
+                          />
                         </div>
                         <div>
                           <p className="font-medium">Follow-up Calls</p>
-                          <p className="text-muted-foreground text-sm">
-                            {callScheduleTime
-                              ? format(callScheduleTime, "EEEE, MMMM d, yyyy")
-                              : "Not scheduled"}
-                          </p>
-                          <p className="text-muted-foreground text-sm">
-                            {callScheduleTime
-                              ? format(callScheduleTime, "h:mm a")
-                              : ""}
-                          </p>
+                          {callsEnabled ? (
+                            <>
+                              <p className="text-muted-foreground text-sm">
+                                {callScheduleTime
+                                  ? format(
+                                      callScheduleTime,
+                                      "EEEE, MMMM d, yyyy",
+                                    )
+                                  : "Not scheduled"}
+                              </p>
+                              <p className="text-muted-foreground text-sm">
+                                {callScheduleTime
+                                  ? format(callScheduleTime, "h:mm a")
+                                  : ""}
+                              </p>
+                            </>
+                          ) : (
+                            <p className="text-muted-foreground text-sm">
+                              Disabled
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
