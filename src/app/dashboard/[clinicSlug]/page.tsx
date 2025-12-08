@@ -1,13 +1,13 @@
 import { getUser } from "~/server/actions/auth";
 import { redirect } from "next/navigation";
 import { createClient } from "~/lib/supabase/server";
-import { getClinicByUserId } from "~/lib/clinics/utils";
 import DashboardProfileHeader from "~/components/dashboard/DashboardProfileHeader";
 import { DashboardContentWithTabs } from "~/components/dashboard/dashboard-content-with-tabs";
 import { ExtensionAuthHandler } from "~/components/dashboard/extension-auth-handler";
 import { AUTH_PARAMS } from "~/lib/constants/auth";
 
-interface DashboardPageProps {
+interface ClinicDashboardPageProps {
+  params: Promise<{ clinicSlug: string }>;
   searchParams: Promise<{
     auth_token?: string;
     refresh_token?: string;
@@ -15,19 +15,15 @@ interface DashboardPageProps {
   }>;
 }
 
-/**
- * Dashboard root page
- *
- * Redirects authenticated users to their clinic-scoped dashboard.
- * If user has no clinic, shows the default dashboard.
- *
- * Handles Chrome extension authentication via URL parameters.
- */
-export default async function DashboardPage({
+export default async function ClinicDashboardPage({
+  params,
   searchParams,
-}: DashboardPageProps) {
-  const params = await searchParams;
-  const hasAuthToken = Boolean(params[AUTH_PARAMS.AUTH_TOKEN]);
+}: ClinicDashboardPageProps) {
+  const [{ clinicSlug }, queryParams] = await Promise.all([
+    params,
+    searchParams,
+  ]);
+  const hasAuthToken = Boolean(queryParams[AUTH_PARAMS.AUTH_TOKEN]);
 
   const user = await getUser();
 
@@ -55,17 +51,6 @@ export default async function DashboardPage({
   }
 
   const supabase = await createClient();
-
-  // Get user's clinic to redirect to clinic-scoped dashboard
-  const clinic = await getClinicByUserId(user.id, supabase);
-
-  // If user has a clinic, redirect to clinic-scoped dashboard
-  if (clinic?.slug) {
-    redirect(`/dashboard/${clinic.slug}`);
-  }
-
-  // Fallback: If no clinic, show default dashboard
-  // This allows users without a clinic to still access the dashboard
   const { data: profile } = await supabase
     .from("users")
     .select("first_name, last_name, role, clinic_name, avatar_url")

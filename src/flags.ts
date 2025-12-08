@@ -14,7 +14,7 @@ import { flag } from "flags/next";
  * The value is fetched from the database in the execute-call route.
  *
  * To toggle this flag:
- * - Use the toggle in /dashboard/cases
+ * - Use the toggle in /dashboard/discharges
  * - Or update the users table directly
  *
  * When enabled:

@@ -3,15 +3,10 @@ import { getUser } from "~/server/actions/auth";
 import { createClient } from "~/lib/supabase/server";
 import { getClinicByUserId } from "~/lib/clinics/utils";
 
-interface Props {
-  params: Promise<{ id: string }>;
-}
-
 /**
- * Legacy discharge detail page - redirects to clinic-scoped route
+ * Legacy batch discharges page - redirects to clinic-scoped route
  */
-export default async function DischargeDetailRedirectPage({ params }: Props) {
-  const { id } = await params;
+export default async function BatchDischargesRedirectPage() {
   const user = await getUser();
 
   if (!user) {
@@ -22,7 +17,7 @@ export default async function DischargeDetailRedirectPage({ params }: Props) {
   const clinic = await getClinicByUserId(user.id, supabase);
 
   if (clinic?.slug) {
-    redirect(`/dashboard/${clinic.slug}/discharges/${id}`);
+    redirect(`/dashboard/${clinic.slug}/discharges/batch`);
   }
 
   // Fallback to main dashboard if no clinic

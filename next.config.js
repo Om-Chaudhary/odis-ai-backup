@@ -10,6 +10,26 @@ const config = {
   turbopack: {
     root: "/Users/s0381806/Development/odis-ai-web",
   },
+  // Redirects for renamed routes (cases -> discharges)
+  async redirects() {
+    return [
+      {
+        source: "/dashboard/cases",
+        destination: "/dashboard/discharges",
+        permanent: true,
+      },
+      {
+        source: "/dashboard/cases/batch-discharge",
+        destination: "/dashboard/discharges/batch",
+        permanent: true,
+      },
+      {
+        source: "/dashboard/cases/:id",
+        destination: "/dashboard/discharges/:id",
+        permanent: true,
+      },
+    ];
+  },
   async rewrites() {
     return [
       {

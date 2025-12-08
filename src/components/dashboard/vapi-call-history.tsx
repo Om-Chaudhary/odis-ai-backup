@@ -207,7 +207,7 @@ export function VapiCallHistory() {
 
   const handleRowClick = (caseId: string | null) => {
     if (caseId) {
-      router.push(`/dashboard/cases/${caseId}`);
+      router.push(`/dashboard/discharges/${caseId}`);
     }
   };
 
@@ -347,7 +347,7 @@ export function VapiCallHistory() {
                                 e.stopPropagation();
                                 if (call.caseId) {
                                   router.push(
-                                    `/dashboard/cases/${call.caseId}`,
+                                    `/dashboard/discharges/${call.caseId}`,
                                   );
                                 }
                               }}
@@ -377,7 +377,9 @@ export function VapiCallHistory() {
                               title="View case"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                router.push(`/dashboard/cases/${call.caseId}`);
+                                router.push(
+                                  `/dashboard/discharges/${call.caseId}`,
+                                );
                               }}
                             >
                               <ExternalLink className="h-4 w-4" />

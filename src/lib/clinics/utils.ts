@@ -14,6 +14,52 @@ type SupabaseClientType = SupabaseClient<Database>;
 
 const logger = loggers.database.child("clinics");
 
+/**
+ * Ensure a clinic slug is unique by checking existing clinics and appending
+ * a numeric suffix when needed. Uses a bounded number of attempts and falls
+ * back to a timestamped suffix if collisions persist.
+ */
+async function ensureUniqueClinicSlug(
+  baseSlug: string,
+  supabase: SupabaseClientType,
+): Promise<string> {
+  const maxAttempts = 5;
+  let candidate = baseSlug;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const { data: existing, error } = await supabase
+      .from("clinics")
+      .select("id")
+      .eq("slug", candidate)
+      .maybeSingle();
+
+    if (error && error.code !== SUPABASE_ERROR_CODES.NOT_FOUND) {
+      logger.error("Error checking clinic slug availability", {
+        baseSlug,
+        candidateSlug: candidate,
+        error: error.message,
+        errorCode: error.code,
+      });
+      break;
+    }
+
+    if (!existing) {
+      return candidate;
+    }
+
+    // Append incrementing suffix when a collision is found (e.g., slug-2, slug-3)
+    candidate = `${baseSlug}-${attempt + 2}`;
+  }
+
+  // Fallback: use a timestamp-based suffix to avoid unbounded loops
+  const fallbackSlug = `${baseSlug}-${Date.now().toString().slice(-6)}`;
+  logger.warn("Using fallback clinic slug after repeated collisions", {
+    baseSlug,
+    candidateSlug: fallbackSlug,
+  });
+  return fallbackSlug;
+}
+
 /* ========================================
    Clinic Lookup
    ======================================== */
@@ -224,6 +270,155 @@ export async function getClinicById(
   }
 
   return clinic;
+}
+
+/**
+ * Get clinic by slug
+ *
+ * Retrieves a clinic record by its URL-friendly slug.
+ * Used for clinic-scoped URL routing (e.g., /dashboard/[clinicSlug]/discharges).
+ *
+ * @param slug - Clinic slug (URL-friendly identifier)
+ * @param supabase - Supabase client
+ * @returns Clinic record or null if:
+ *   - Slug is invalid or empty
+ *   - Clinic not found
+ *   - Clinic is inactive
+ *   - Database error occurs (logged)
+ *
+ * @example
+ * ```ts
+ * const clinic = await getClinicBySlug("alum-rock-animal-hospital", supabase);
+ * if (clinic) {
+ *   console.log(`Clinic: ${clinic.name}`);
+ * }
+ * ```
+ */
+export async function getClinicBySlug(
+  slug: string,
+  supabase: SupabaseClientType,
+): Promise<Database["public"]["Tables"]["clinics"]["Row"] | null> {
+  if (!slug || typeof slug !== "string" || slug.trim().length === 0) {
+    logger.error("Invalid clinic slug provided", {
+      slug,
+    });
+    return null;
+  }
+
+  const { data: clinic, error } = await supabase
+    .from("clinics")
+    .select("*")
+    .eq("slug", slug.toLowerCase().trim())
+    .eq("is_active", true)
+    .maybeSingle();
+
+  // Handle errors (excluding "not found" which is expected)
+  if (error && error.code !== SUPABASE_ERROR_CODES.NOT_FOUND) {
+    logger.error("Error finding clinic by slug", {
+      slug,
+      error: error.message,
+      errorCode: error.code,
+    });
+    return null;
+  }
+
+  if (!clinic) {
+    logger.debug("Clinic not found by slug", {
+      slug,
+    });
+    return null;
+  }
+
+  return clinic;
+}
+
+/**
+ * Get all user IDs belonging to a clinic
+ *
+ * Retrieves all users who have the same clinic_name as the given clinic.
+ * Used for clinic-scoped data access where multiple users share the same clinic.
+ *
+ * @param clinicName - Clinic name to search for (case-insensitive match)
+ * @param supabase - Supabase client
+ * @returns Array of user IDs or empty array if:
+ *   - Clinic name is invalid or empty
+ *   - No users found with this clinic
+ *   - Database error occurs (logged)
+ *
+ * @example
+ * ```ts
+ * const userIds = await getUserIdsByClinicName("Alum Rock Animal Hospital", supabase);
+ * // Can be used to filter cases: .in("user_id", userIds)
+ * ```
+ */
+export async function getUserIdsByClinicName(
+  clinicName: string,
+  supabase: SupabaseClientType,
+): Promise<string[]> {
+  if (!clinicName?.trim()) {
+    logger.error("Invalid clinic name provided for user lookup", {
+      clinicName,
+    });
+    return [];
+  }
+
+  const { data: users, error } = await supabase
+    .from("users")
+    .select("id")
+    .ilike("clinic_name", clinicName.trim());
+
+  if (error) {
+    logger.error("Error finding users by clinic name", {
+      clinicName,
+      error: error.message,
+      errorCode: error.code,
+    });
+    return [];
+  }
+
+  return users?.map((u) => u.id) ?? [];
+}
+
+/**
+ * Get all user IDs belonging to the same clinic as a given user
+ *
+ * Convenience wrapper that first gets the user's clinic, then finds all users in that clinic.
+ *
+ * @param userId - User ID to find clinic peers for
+ * @param supabase - Supabase client
+ * @returns Array of user IDs (including the given user) or just [userId] if no clinic found
+ *
+ * @example
+ * ```ts
+ * const clinicUserIds = await getClinicUserIds(ctx.user.id, supabase);
+ * // Filter cases by clinic: .in("user_id", clinicUserIds)
+ * ```
+ */
+export async function getClinicUserIds(
+  userId: string,
+  supabase: SupabaseClientType,
+): Promise<string[]> {
+  // Get user's clinic
+  const { data: user, error: userError } = await supabase
+    .from("users")
+    .select("clinic_name")
+    .eq("id", userId)
+    .single();
+
+  if (userError || !user?.clinic_name) {
+    // If no clinic found, return just the user's own ID
+    return [userId];
+  }
+
+  // Get all users in the same clinic
+  const userIds = await getUserIdsByClinicName(user.clinic_name, supabase);
+
+  // Ensure the original user is included (in case of any edge case)
+  if (!userIds.includes(userId)) {
+    userIds.push(userId);
+  }
+
+  return userIds;
 }
 
 /**
@@ -508,8 +703,16 @@ export async function getOrCreateClinic(
   // Clinic not found - create new one
   // Handle race condition: if two requests try to create simultaneously,
   // the second will fail due to unique constraint, so we retry the lookup
+  // Generate slug from clinic name (lowercase, replace non-alphanumeric with hyphens)
+  const baseSlug = trimmedName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, ""); // Trim leading/trailing hyphens
+  const slug = await ensureUniqueClinicSlug(baseSlug, supabase);
+
   const insertData: Database["public"]["Tables"]["clinics"]["Insert"] = {
     name: trimmedName,
+    slug,
     email: clinicData?.email ?? null,
     phone: clinicData?.phone ?? null,
     address: clinicData?.address ?? null,
