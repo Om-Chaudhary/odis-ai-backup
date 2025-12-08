@@ -1755,7 +1755,7 @@ export const dashboardRouter = createTRPCRouter({
           { count: "exact" },
         )
         .eq("user_id", userId)
-        .order("created_at", { ascending: false });
+        .order("scheduled_for", { ascending: false, nullsFirst: false });
 
       // Apply status filter
       if (input.statusFilter !== "all") {
@@ -1929,7 +1929,7 @@ export const dashboardRouter = createTRPCRouter({
           { count: "exact" },
         )
         .eq("user_id", userId)
-        .order("created_at", { ascending: false });
+        .order("scheduled_for", { ascending: false, nullsFirst: false });
 
       // Apply status filter
       if (input.statusFilter !== "all") {

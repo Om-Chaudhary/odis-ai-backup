@@ -263,6 +263,10 @@ export interface BatchEligibleCase {
   hasSoapNotes: boolean;
   createdAt: string;
   scheduledAt: string | null;
+  /** Whether email has already been sent/scheduled for this case */
+  emailSent: boolean;
+  /** Whether call has already been made/scheduled for this case */
+  callSent: boolean;
 }
 
 export interface PatientUpdateInput {

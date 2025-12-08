@@ -287,7 +287,9 @@ export const casesRouter = createTRPCRouter({
           page: input.fetchAll ? 1 : input.page,
           pageSize: input.fetchAll ? totalCases : input.pageSize,
           total: totalCases,
-          totalPages: input.fetchAll ? 1 : Math.ceil(totalCases / input.pageSize),
+          totalPages: input.fetchAll
+            ? 1
+            : Math.ceil(totalCases / input.pageSize),
         },
         date: startDate
           ? startDate.toISOString().split("T")[0]
@@ -1636,7 +1638,7 @@ export const casesRouter = createTRPCRouter({
         `,
       )
       .eq("user_id", ctx.user.id)
-      .order("created_at", { ascending: false });
+      .order("scheduled_at", { ascending: false, nullsFirst: false });
 
     if (error) {
       throw new TRPCError({
@@ -1681,8 +1683,8 @@ export const casesRouter = createTRPCRouter({
           )
         : false;
 
-      // Skip if already scheduled
-      if (hasScheduledEmail || hasScheduledCall) continue;
+      // Don't skip - we want to show all cases and let UI filter by status
+      // Old behavior: if (hasScheduledEmail || hasScheduledCall) continue;
 
       // Check for discharge content eligibility
       const hasDischargeSummary = Array.isArray(caseData.discharge_summaries)
@@ -1759,6 +1761,9 @@ export const casesRouter = createTRPCRouter({
         hasSoapNotes,
         createdAt: caseData.created_at,
         scheduledAt: caseData.scheduled_at,
+        // Email/Call status
+        emailSent: hasScheduledEmail,
+        callSent: hasScheduledCall,
       });
     }
 
@@ -1772,8 +1777,10 @@ export const casesRouter = createTRPCRouter({
     .input(
       z.object({
         caseIds: z.array(z.string().uuid()),
-        emailScheduleTime: z.string().datetime(),
-        callScheduleTime: z.string().datetime(),
+        emailScheduleTime: z.string().datetime().nullable(),
+        callScheduleTime: z.string().datetime().nullable(),
+        emailsEnabled: z.boolean().default(true),
+        callsEnabled: z.boolean().default(true),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -1784,8 +1791,14 @@ export const casesRouter = createTRPCRouter({
           user_id: ctx.user.id,
           status: "pending",
           total_cases: input.caseIds.length,
-          email_schedule_time: input.emailScheduleTime,
-          call_schedule_time: input.callScheduleTime,
+          email_schedule_time: input.emailsEnabled
+            ? input.emailScheduleTime
+            : null,
+          call_schedule_time: input.callsEnabled
+            ? input.callScheduleTime
+            : null,
+          emails_enabled: input.emailsEnabled,
+          calls_enabled: input.callsEnabled,
         })
         .select("id")
         .single();
