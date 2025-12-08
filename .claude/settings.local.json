@@ -96,7 +96,8 @@
       "Bash(pnpm dev:*)",
       "Bash(npx next:*)",
       "Bash(pnpm vercel:*)",
-      "Bash(npx shadcn:*)"
+      "Bash(npx shadcn:*)",
+      "mcp__vapi-mcp__list_calls"
     ],
     "deny": [],
     "ask": []
