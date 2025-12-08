@@ -1,0 +1,389 @@
+"use client";
+
+import { useState } from "react";
+import { Button } from "@odis/ui/button";
+import { Input } from "@odis/ui/input";
+import { Label } from "@odis/ui/label";
+import { Textarea } from "@odis/ui/textarea";
+import { Switch } from "@odis/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@odis/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@odis/ui/card";
+import { Loader2 } from "lucide-react";
+import { api } from "~/trpc/client";
+
+interface SoapTemplateFormProps {
+  initialData?: {
+    id?: string;
+    template_id: string;
+    template_name: string;
+    display_name: string;
+    person_name: string;
+    icon_name: string;
+    is_default: boolean;
+    user_id?: string | null;
+    subjective_template?: string | null;
+    subjective_prompt?: string | null;
+    objective_template?: string | null;
+    objective_prompt?: string | null;
+    assessment_template?: string | null;
+    assessment_prompt?: string | null;
+    plan_template?: string | null;
+    plan_prompt?: string | null;
+    client_instructions_template?: string | null;
+    client_instructions_prompt?: string | null;
+    system_prompt_addition?: string | null;
+  };
+  onSubmit: (data: Record<string, unknown>) => Promise<void>;
+  isSubmitting: boolean;
+}
+
+export function SoapTemplateForm({
+  initialData,
+  onSubmit,
+  isSubmitting,
+}: SoapTemplateFormProps) {
+  const [formData, setFormData] = useState(
+    initialData ?? {
+      template_id: "",
+      template_name: "",
+      display_name: "",
+      person_name: "",
+      icon_name: "",
+      is_default: false,
+      user_id: null,
+      subjective_template: "",
+      subjective_prompt: "",
+      objective_template: "",
+      objective_prompt: "",
+      assessment_template: "",
+      assessment_prompt: "",
+      plan_template: "",
+      plan_prompt: "",
+      client_instructions_template: "",
+      client_instructions_prompt: "",
+      system_prompt_addition: "",
+    },
+  );
+
+  const { data: users, isLoading: usersLoading } =
+    api.templates.listUsers.useQuery();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await onSubmit(formData);
+  };
+
+  const updateField = (field: string, value: unknown) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Basic Information */}
+      <Card className="border-border rounded-xl shadow-md">
+        <CardHeader className="bg-primary/5 pb-3">
+          <CardTitle className="text-foreground text-lg">
+            Basic Information
+          </CardTitle>
+          <CardDescription className="text-sm">
+            Template identification and display settings
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4 pt-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label
+                htmlFor="template_id"
+                className="text-foreground text-sm font-semibold"
+              >
+                Template ID <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="template_id"
+                value={formData.template_id}
+                onChange={(e) => updateField("template_id", e.target.value)}
+                required
+                className="focus:ring-primary/20 shadow-sm transition-all focus:ring-2"
+                placeholder="e.g., soap_general"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label
+                htmlFor="template_name"
+                className="text-foreground text-sm font-semibold"
+              >
+                Template Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="template_name"
+                value={formData.template_name}
+                onChange={(e) => updateField("template_name", e.target.value)}
+                required
+                className="focus:ring-primary/20 shadow-sm transition-all focus:ring-2"
+                placeholder="e.g., General SOAP"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label
+                htmlFor="display_name"
+                className="text-foreground text-sm font-semibold"
+              >
+                Display Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="display_name"
+                value={formData.display_name}
+                onChange={(e) => updateField("display_name", e.target.value)}
+                required
+                className="focus:ring-primary/20 shadow-sm transition-all focus:ring-2"
+                placeholder="e.g., General Practice SOAP Note"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label
+                htmlFor="person_name"
+                className="text-foreground text-sm font-semibold"
+              >
+                Person Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="person_name"
+                value={formData.person_name}
+                onChange={(e) => updateField("person_name", e.target.value)}
+                required
+                className="focus:ring-primary/20 shadow-sm transition-all focus:ring-2"
+                placeholder="e.g., Patient"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label
+                htmlFor="icon_name"
+                className="text-foreground text-sm font-semibold"
+              >
+                Icon Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="icon_name"
+                value={formData.icon_name}
+                onChange={(e) => updateField("icon_name", e.target.value)}
+                required
+                className="focus:ring-primary/20 shadow-sm transition-all focus:ring-2"
+                placeholder="e.g., Stethoscope"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label
+                htmlFor="user_id"
+                className="text-foreground text-sm font-semibold"
+              >
+                Assign to User
+              </Label>
+              <Select
+                value={formData.user_id ?? "unassigned"}
+                onValueChange={(value) =>
+                  updateField("user_id", value === "unassigned" ? null : value)
+                }
+                disabled={usersLoading}
+              >
+                <SelectTrigger className="shadow-sm">
+                  <SelectValue placeholder="Select user" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                  {users?.map((user) => {
+                    const displayName =
+                      user.first_name && user.last_name
+                        ? `${user.first_name} ${user.last_name} (${user.email})`
+                        : user.email;
+
+                    return (
+                      <SelectItem key={user.id} value={user.id}>
+                        {displayName}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="border-border bg-muted/30 flex items-center space-x-3 rounded-lg border p-4">
+            <Switch
+              id="is_default"
+              checked={formData.is_default}
+              onCheckedChange={(checked) => updateField("is_default", checked)}
+            />
+            <div className="space-y-0.5">
+              <Label
+                htmlFor="is_default"
+                className="text-foreground cursor-pointer text-sm font-semibold"
+              >
+                Set as default template
+              </Label>
+              <p className="text-muted-foreground text-xs">
+                Default templates are available to all users
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* SOAP Sections */}
+      {[
+        {
+          key: "subjective",
+          label: "Subjective",
+          icon: "💭",
+          description: "Patient's reported symptoms and concerns",
+        },
+        {
+          key: "objective",
+          label: "Objective",
+          icon: "📊",
+          description: "Observable and measurable findings",
+        },
+        {
+          key: "assessment",
+          label: "Assessment",
+          icon: "🔍",
+          description: "Clinical interpretation and diagnosis",
+        },
+        {
+          key: "plan",
+          label: "Plan",
+          icon: "📋",
+          description: "Treatment plan and next steps",
+        },
+        {
+          key: "client_instructions",
+          label: "Client Instructions",
+          icon: "📝",
+          description: "Patient guidance and directions",
+        },
+      ].map((section) => (
+        <Card key={section.key} className="border-border rounded-xl shadow-md">
+          <CardHeader className="bg-muted/30 pb-3">
+            <CardTitle className="text-foreground flex items-center gap-2 text-lg">
+              <span className="text-xl">{section.icon}</span>
+              {section.label}
+            </CardTitle>
+            <CardDescription className="text-sm">
+              {section.description}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label
+                htmlFor={`${section.key}_template`}
+                className="text-foreground text-sm font-semibold"
+              >
+                {section.label} Template
+              </Label>
+              <Textarea
+                id={`${section.key}_template`}
+                value={
+                  (formData[
+                    `${section.key}_template` as keyof typeof formData
+                  ] as string) ?? ""
+                }
+                onChange={(e) =>
+                  updateField(`${section.key}_template`, e.target.value)
+                }
+                className="focus:ring-primary/20 max-h-32 min-h-[160px] resize-none overflow-y-auto font-mono text-sm shadow-sm transition-all focus:ring-2"
+                placeholder="Enter template content..."
+              />
+              <p className="text-muted-foreground text-xs">
+                The base template structure for this section
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label
+                htmlFor={`${section.key}_prompt`}
+                className="text-foreground text-sm font-semibold"
+              >
+                {section.label} AI Prompt
+              </Label>
+              <Textarea
+                id={`${section.key}_prompt`}
+                value={
+                  (formData[
+                    `${section.key}_prompt` as keyof typeof formData
+                  ] as string) ?? ""
+                }
+                onChange={(e) =>
+                  updateField(`${section.key}_prompt`, e.target.value)
+                }
+                className="focus:ring-primary/20 max-h-24 min-h-[120px] resize-none overflow-y-auto shadow-sm transition-all focus:ring-2"
+                placeholder="Enter AI generation prompt..."
+              />
+              <p className="text-muted-foreground text-xs">
+                Instructions for AI to generate content for this section
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+
+      {/* System Prompt */}
+      <Card className="border-border rounded-xl shadow-md">
+        <CardHeader className="bg-muted/30 pb-3">
+          <CardTitle className="text-foreground flex items-center gap-2 text-lg">
+            <span className="text-xl">⚙️</span>
+            System Prompt Addition
+          </CardTitle>
+          <CardDescription className="text-sm">
+            Additional instructions for the AI system
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2 pt-4">
+          <Label
+            htmlFor="system_prompt_addition"
+            className="text-foreground text-sm font-semibold"
+          >
+            System Instructions
+          </Label>
+          <Textarea
+            id="system_prompt_addition"
+            value={formData.system_prompt_addition ?? ""}
+            onChange={(e) =>
+              updateField("system_prompt_addition", e.target.value)
+            }
+            className="focus:ring-primary/20 max-h-40 min-h-[200px] resize-none overflow-y-auto shadow-sm transition-all focus:ring-2"
+            placeholder="Enter additional system instructions..."
+          />
+          <p className="text-muted-foreground text-xs">
+            Global instructions that apply to all sections of this template
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Submit Button */}
+      <div className="border-border bg-card/95 sticky bottom-0 z-20 flex items-center justify-between gap-4 rounded-lg border p-4 shadow-lg backdrop-blur-sm">
+        <p className="text-muted-foreground text-sm">
+          {initialData?.id ? "Update" : "Create"} your template to make it
+          available for use
+        </p>
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          size="lg"
+          className="gap-2 shadow-md transition-all hover:shadow-lg"
+        >
+          {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+          {initialData?.id ? "Update Template" : "Create Template"}
+        </Button>
+      </div>
+    </form>
+  );
+}
