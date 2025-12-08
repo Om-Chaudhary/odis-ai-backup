@@ -2,14 +2,12 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryState } from "nuqs";
 import { Button } from "~/components/ui/button";
 import {
-  Settings,
-  Plus,
   RefreshCw,
   TestTube,
   Send,
-  Loader2,
   Phone,
   ClipboardList,
   Mail,
@@ -18,10 +16,7 @@ import { Badge } from "~/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 import { DischargeListItem } from "./discharge-list-item";
 import { EmptyState } from "./empty-state";
-import {
-  ConsolidatedFilterBar,
-  type CallEndReasonFilter,
-} from "./consolidated-filter-bar";
+import { type CallEndReasonFilter } from "./consolidated-filter-bar";
 import { BatchDischargeDialog } from "./batch-discharge-dialog";
 import { BatchProgressMonitor } from "./batch-progress-monitor";
 import { VapiCallHistory } from "./vapi-call-history";
@@ -38,10 +33,16 @@ import {
   hasValidContact,
 } from "~/lib/utils/dashboard-helpers";
 import { toast } from "sonner";
-import { format, addDays, setHours, setMinutes, setSeconds } from "date-fns";
+import {
+  format,
+  addDays,
+  setHours,
+  setMinutes,
+  setSeconds,
+  parseISO,
+  startOfDay,
+} from "date-fns";
 import type { DischargeReadinessFilter } from "~/types/dashboard";
-
-const PAGE_SIZE = 10;
 
 /** Tracks which case is currently being processed and what type of discharge */
 interface LoadingState {
@@ -56,14 +57,14 @@ interface LoadingState {
  * CasesDashboardClient to provide a unified discharge management experience.
  *
  * Features:
- * - Day-by-day date navigation with keyboard shortcuts
+ * - Day-by-day date navigation with URL persistence (refresh returns to same day)
  * - Status filtering (All, Ready, Pending, Completed, Failed)
  * - Search by patient or owner name
  * - Discharge call/email triggering
  * - Inline patient information editing
  * - Test mode support for safe testing
  * - Real-time status updates
- * - Load More functionality for pagination
+ * - All cases for selected day displayed at once (no pagination)
  *
  * The component handles all discharge-related operations including:
  * - Triggering discharge calls via VAPI
@@ -79,10 +80,25 @@ interface LoadingState {
 export function DischargeManagementClient() {
   const router = useRouter();
 
+  // Date state - persisted in URL query parameter for refresh persistence
+  const [dateStr, setDateStr] = useQueryState("date", {
+    defaultValue: format(startOfDay(new Date()), "yyyy-MM-dd"),
+  });
+
+  // Parse date from query string
+  const currentDate = useMemo(() => {
+    if (dateStr) {
+      try {
+        return parseISO(dateStr);
+      } catch {
+        return startOfDay(new Date());
+      }
+    }
+    return startOfDay(new Date());
+  }, [dateStr]);
+
   // State
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [currentPage, setCurrentPage] = useState(1);
   const [loadingCases, setLoadingCases] = useState<Map<string, LoadingState>>(
     new Map(),
   );
@@ -98,10 +114,6 @@ export function DischargeManagementClient() {
   );
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  // Accumulated cases for "Load More" functionality
-  const [accumulatedCases, setAccumulatedCases] = useState<DashboardCase[]>([]);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-
   // Batch discharge state
   const [showBatchDialog, setShowBatchDialog] = useState(false);
   const [activeBatchId, setActiveBatchId] = useState<string | null>(null);
@@ -112,21 +124,19 @@ export function DischargeManagementClient() {
   const dateParams = useMemo(() => {
     // If searching, ignore date filters and search all time
     if (searchTerm.trim()) {
-      return {}; // No date filters = search all time
+      return { fetchAll: true }; // No date filters = search all time, but still fetch all
     }
-    // Use single date parameter (day navigation)
-    return { date: format(currentDate, "yyyy-MM-dd") };
+    // Use single date parameter (day navigation) and fetch all cases for that day
+    return { date: format(currentDate, "yyyy-MM-dd"), fetchAll: true };
   }, [currentDate, searchTerm]);
 
-  // tRPC Queries
+  // tRPC Queries - fetch all cases for the selected day (no pagination)
   const {
     data: casesData,
     isLoading,
     refetch: refetchCases,
     isFetching,
   } = api.cases.listMyCasesToday.useQuery({
-    page: currentPage,
-    pageSize: PAGE_SIZE,
     ...dateParams,
     readinessFilter,
   });
@@ -157,17 +167,16 @@ export function DischargeManagementClient() {
       casesData.cases.length === 0
     ) {
       // Today has no cases, navigate to most recent date with cases
-      const mostRecentDateObj = new Date(mostRecentDate);
-      setCurrentDate(mostRecentDateObj);
+      void setDateStr(mostRecentDate);
       setIsInitialLoad(false);
     } else if (isInitialLoad && casesData) {
       // Initial load complete (either has cases today or no cases at all)
       setIsInitialLoad(false);
     }
-  }, [isInitialLoad, mostRecentDate, casesData]);
+  }, [isInitialLoad, mostRecentDate, casesData, setDateStr]);
 
-  // Transform backend data to UI shape
-  const newCases: DashboardCase[] = useMemo(() => {
+  // Transform backend data to UI shape - all cases are now fetched at once
+  const cases: DashboardCase[] = useMemo(() => {
     return casesData?.cases
       ? transformBackendCasesToDashboardCases(
           casesData.cases,
@@ -179,33 +188,8 @@ export function DischargeManagementClient() {
       : [];
   }, [casesData?.cases, casesData?.userEmail, casesData?.testModeSettings]);
 
-  // Accumulate cases when new data arrives
-  useEffect(() => {
-    if (newCases.length > 0) {
-      if (currentPage === 1) {
-        // First page - replace accumulated cases
-        setAccumulatedCases(newCases);
-      } else {
-        // Subsequent pages - append new cases (avoiding duplicates)
-        setAccumulatedCases((prev) => {
-          const existingIds = new Set(prev.map((c) => c.id));
-          const uniqueNewCases = newCases.filter((c) => !existingIds.has(c.id));
-          return [...prev, ...uniqueNewCases];
-        });
-      }
-      setIsLoadingMore(false);
-    } else if (currentPage === 1) {
-      // No cases on first page - clear accumulated
-      setAccumulatedCases([]);
-    }
-  }, [newCases, currentPage]);
-
-  // Pagination info
-  const pagination = casesData?.pagination;
-  const hasNextPage = pagination
-    ? pagination.page < pagination.totalPages
-    : false;
-  const totalCases = pagination?.total ?? 0;
+  // Total cases count
+  const totalCases = casesData?.pagination?.total ?? 0;
 
   const settings: DischargeSettings = settingsData ?? {
     clinicName: "",
@@ -301,7 +285,7 @@ export function DischargeManagementClient() {
       return;
     }
 
-    const caseData = accumulatedCases.find((c) => c.id === caseId);
+    const caseData = cases.find((c) => c.id === caseId);
     if (!caseData) return;
 
     // Keep the actual owner name, but override phone/email for test mode
@@ -360,7 +344,7 @@ export function DischargeManagementClient() {
       return;
     }
 
-    const caseData = accumulatedCases.find((c) => c.id === caseId);
+    const caseData = cases.find((c) => c.id === caseId);
     if (!caseData) return;
 
     // Keep the actual owner name, but override phone/email for test mode
@@ -422,18 +406,9 @@ export function DischargeManagementClient() {
   };
 
   const handleRefresh = () => {
-    setCurrentPage(1);
-    setAccumulatedCases([]);
     void refetchCases();
     void refetchSettings();
     toast.success("Dashboard refreshed");
-  };
-
-  const handleLoadMore = () => {
-    if (hasNextPage && !isFetching) {
-      setIsLoadingMore(true);
-      setCurrentPage((prev) => prev + 1);
-    }
   };
 
   const handleBatchDischarge = (emailTimeString: string) => {
@@ -481,17 +456,12 @@ export function DischargeManagementClient() {
   };
 
   // Memoized date change handler to prevent unnecessary re-renders
-  const handleDateChange = useCallback((date: Date) => {
-    setCurrentDate(date);
-    setCurrentPage(1); // Reset to first page when changing date
-    setAccumulatedCases([]); // Clear accumulated cases when date changes
-  }, []);
-
-  // Reset pagination when filters change
-  const handleFilterReset = useCallback(() => {
-    setCurrentPage(1);
-    setAccumulatedCases([]);
-  }, []);
+  const handleDateChange = useCallback(
+    (date: Date) => {
+      void setDateStr(format(startOfDay(date), "yyyy-MM-dd"));
+    },
+    [setDateStr],
+  );
 
   // Helper function to check if a call matches the end reason filter
   const matchesCallEndReasonFilter = useCallback(
@@ -531,11 +501,11 @@ export function DischargeManagementClient() {
     [callEndReasonFilter],
   );
 
-  // Filtering (client-side for search and status, server-side for pagination and readiness)
+  // Filtering (client-side for search and status, server-side for readiness)
   // Note: Readiness filtering happens on the backend based on user-specific requirements.
   // Cases returned from the backend already meet readiness requirements when readinessFilter is applied.
   const filteredCases = useMemo(() => {
-    return accumulatedCases.filter((c) => {
+    return cases.filter((c) => {
       // Search filter
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
@@ -603,13 +573,7 @@ export function DischargeManagementClient() {
 
       return true;
     });
-  }, [
-    accumulatedCases,
-    searchTerm,
-    statusFilter,
-    callEndReasonFilter,
-    matchesCallEndReasonFilter,
-  ]);
+  }, [cases, searchTerm, statusFilter, callEndReasonFilter, matchesCallEndReasonFilter]);
 
   return (
     <div className="space-y-6 p-6 pb-16">
@@ -683,10 +647,7 @@ export function DischargeManagementClient() {
                 placeholder="Search patients or owners..."
                 className="w-full rounded-lg border border-slate-200 py-2 pr-4 pl-10 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
                 value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  handleFilterReset();
-                }}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                 <svg
@@ -749,7 +710,7 @@ export function DischargeManagementClient() {
           </div>
 
           {/* Content */}
-          {isLoading && currentPage === 1 ? (
+          {isLoading ? (
             <div className="space-y-2">
               {[1, 2, 3].map((i) => (
                 <div
@@ -805,33 +766,11 @@ export function DischargeManagementClient() {
                 );
               })}
 
-              {/* Load More Button */}
-              {hasNextPage && (
-                <div className="flex justify-center pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={handleLoadMore}
-                    disabled={isLoadingMore || isFetching}
-                    className="min-w-[200px]"
-                  >
-                    {isLoadingMore || isFetching ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Loading...
-                      </>
-                    ) : (
-                      <>
-                        Load More ({accumulatedCases.length} of {totalCases})
-                      </>
-                    )}
-                  </Button>
-                </div>
-              )}
-
-              {/* Show count when all loaded */}
-              {!hasNextPage && accumulatedCases.length > 0 && (
+              {/* Show total count */}
+              {filteredCases.length > 0 && (
                 <div className="text-muted-foreground pt-4 text-center text-sm">
-                  Showing all {accumulatedCases.length} cases
+                  Showing {filteredCases.length} case
+                  {filteredCases.length !== 1 ? "s" : ""}
                 </div>
               )}
             </div>
