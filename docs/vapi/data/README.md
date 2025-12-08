@@ -6,14 +6,16 @@ Professional spreadsheet exports for VAPI scheduled discharge calls analysis.
 
 ### 1. vapi_calls_comprehensive_spreadsheet.csv
 
-**Purpose**: Complete data export with all fields for detailed analysis and reporting
-**Size**: ~55KB (58 records)
+**Location**: `../spreadsheet-generation/vapi_calls_comprehensive_spreadsheet.csv`  
+**Purpose**: Complete data export with all fields for detailed analysis and reporting  
+**Size**: ~55KB (58 records)  
 **Format**: Excel/Google Sheets compatible CSV
 
 ### 2. vapi_calls_pivot_ready.csv
 
-**Purpose**: Optimized for pivot tables and statistical analysis
-**Size**: ~12KB (58 records)
+**Location**: `../spreadsheet-generation/vapi_calls_pivot_ready.csv`  
+**Purpose**: Optimized for pivot tables and statistical analysis  
+**Size**: ~12KB (58 records)  
 **Format**: Numeric codes and simplified structure
 
 ## Data Period
@@ -306,10 +308,10 @@ Count of items in knowledge_base_used array (split by semicolon)
 import pandas as pd
 
 # Comprehensive spreadsheet
-df_full = pd.read_csv('vapi_calls_comprehensive_spreadsheet.csv', skiprows=3)
+df_full = pd.read_csv('../spreadsheet-generation/vapi_calls_comprehensive_spreadsheet.csv', skiprows=3)
 
 # Pivot-ready spreadsheet
-df_pivot = pd.read_csv('vapi_calls_pivot_ready.csv')
+df_pivot = pd.read_csv('../spreadsheet-generation/vapi_calls_pivot_ready.csv')
 df_pivot['call_date'] = pd.to_datetime(df_pivot['call_date'])
 ```
 
@@ -317,10 +319,10 @@ df_pivot['call_date'] = pd.to_datetime(df_pivot['call_date'])
 
 ```r
 # Comprehensive spreadsheet
-df_full <- read.csv('vapi_calls_comprehensive_spreadsheet.csv', skip=3)
+df_full <- read.csv('../spreadsheet-generation/vapi_calls_comprehensive_spreadsheet.csv', skip=3)
 
 # Pivot-ready spreadsheet
-df_pivot <- read.csv('vapi_calls_pivot_ready.csv')
+df_pivot <- read.csv('../spreadsheet-generation/vapi_calls_pivot_ready.csv')
 df_pivot$call_date <- as.Date(df_pivot$call_date)
 ```
 

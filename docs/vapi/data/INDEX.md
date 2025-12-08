@@ -8,11 +8,11 @@
 
 ### CSV Exports
 
-| File                                         | Size | Records      | Purpose                                           |
-| -------------------------------------------- | ---- | ------------ | ------------------------------------------------- |
-| **vapi_calls_comprehensive_spreadsheet.csv** | 55KB | 58 + summary | Complete data for detailed analysis and reporting |
-| **vapi_calls_pivot_ready.csv**               | 12KB | 58           | Optimized for pivot tables and BI tools           |
-| vapi_calls_filtered.csv                      | 39KB | 155          | (Previous export - different date range)          |
+| File                                         | Size | Records      | Purpose                                                                              |
+| -------------------------------------------- | ---- | ------------ | ------------------------------------------------------------------------------------ |
+| **vapi_calls_comprehensive_spreadsheet.csv** | 55KB | 58 + summary | Complete data for detailed analysis and reporting (see `../spreadsheet-generation/`) |
+| **vapi_calls_pivot_ready.csv**               | 12KB | 58           | Optimized for pivot tables and BI tools (see `../spreadsheet-generation/`)           |
+| vapi_calls_filtered.csv                      | 39KB | 155          | (Previous export - different date range)                                             |
 
 ### Documentation Files
 
@@ -40,12 +40,12 @@
 - **Create pivot tables** → Use vapi_calls_pivot_ready.csv + README.md pivot examples
 - **Review business insights** → Read VAPI_CALLS_SPREADSHEET_SUMMARY.md
 - **Look up field codes quickly** → Check QUICK_REFERENCE.md
-- **See all call details** → Open vapi_calls_comprehensive_spreadsheet.csv
+- **See all call details** → Open `../spreadsheet-generation/vapi_calls_comprehensive_spreadsheet.csv`
 
 ## File Relationships
 
 ```
-Main Exports:
+Main Exports (in `../spreadsheet-generation/`):
 ├── vapi_calls_comprehensive_spreadsheet.csv
 │   ├── 30 columns with full text fields
 │   ├── Summaries and transcript previews
@@ -224,7 +224,7 @@ node scripts/generate_vapi_spreadsheet.cjs
 1. **INDEX.md** (this file) - Orientation
 2. **QUICK_REFERENCE.md** - Quick overview
 3. **README.md** - Import and usage
-4. **vapi_calls_comprehensive_spreadsheet.csv** - Explore data
+4. **../spreadsheet-generation/vapi_calls_comprehensive_spreadsheet.csv** - Explore data
 5. **VAPI_CALLS_SPREADSHEET_SUMMARY.md** - Business insights
 6. **DATA_DICTIONARY.md** - Deep reference (as needed)
 

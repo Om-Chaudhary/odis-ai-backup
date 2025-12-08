@@ -2,10 +2,10 @@
 
 ## Files at a Glance
 
-| File                                         | Size | Use For                                 |
-| -------------------------------------------- | ---- | --------------------------------------- |
-| **vapi_calls_comprehensive_spreadsheet.csv** | 55KB | Reports, presentations, detailed review |
-| **vapi_calls_pivot_ready.csv**               | 12KB | Pivot tables, charts, BI tools          |
+| File                                         | Size | Use For                                 | Location                     |
+| -------------------------------------------- | ---- | --------------------------------------- | ---------------------------- |
+| **vapi_calls_comprehensive_spreadsheet.csv** | 55KB | Reports, presentations, detailed review | `../spreadsheet-generation/` |
+| **vapi_calls_pivot_ready.csv**               | 12KB | Pivot tables, charts, BI tools          | `../spreadsheet-generation/` |
 | **README.md**                                | 11KB | Import instructions, column reference   |
 | **DATA_DICTIONARY.md**                       | 12KB | Complete field definitions              |
 
@@ -116,7 +116,7 @@ Column G (day_type_code) = 1
 import pandas as pd
 
 # Load data
-df = pd.read_csv('vapi_calls_pivot_ready.csv')
+df = pd.read_csv('../spreadsheet-generation/vapi_calls_pivot_ready.csv')
 
 # Successful calls only
 successful = df[df['success_flag'] == 1]
@@ -312,13 +312,16 @@ condition_category array
 ## File Locations
 
 ```
-/docs/vapi/data/
-  ├── vapi_calls_comprehensive_spreadsheet.csv  (Main export)
-  ├── vapi_calls_pivot_ready.csv                (Pivot optimized)
-  ├── README.md                                  (Full documentation)
-  ├── DATA_DICTIONARY.md                         (Field reference)
-  ├── QUICK_REFERENCE.md                         (This file)
-  └── VAPI_CALLS_SPREADSHEET_SUMMARY.md         (Analysis summary)
+/docs/vapi/
+  ├── data/
+  │   ├── README.md                                  (Full documentation)
+  │   ├── DATA_DICTIONARY.md                         (Field reference)
+  │   ├── QUICK_REFERENCE.md                         (This file)
+  │   └── VAPI_CALLS_SPREADSHEET_SUMMARY.md         (Analysis summary)
+  │
+  └── spreadsheet-generation/
+      ├── vapi_calls_comprehensive_spreadsheet.csv  (Main export)
+      └── vapi_calls_pivot_ready.csv                (Pivot optimized)
 ```
 
 ## Generator Script
