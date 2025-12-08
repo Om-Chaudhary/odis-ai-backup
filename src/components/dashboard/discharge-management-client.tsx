@@ -102,12 +102,15 @@ export function DischargeManagementClient() {
   const [loadingCases, setLoadingCases] = useState<Map<string, LoadingState>>(
     new Map(),
   );
-  const [statusFilter, setStatusFilter] = useState<
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [statusFilter, _setStatusFilter] = useState<
     "all" | "ready" | "pending" | "completed" | "failed"
   >("all");
-  const [readinessFilter, setReadinessFilter] =
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [readinessFilter, _setReadinessFilter] =
     useState<DischargeReadinessFilter>("all");
-  const [callEndReasonFilter, setCallEndReasonFilter] =
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [callEndReasonFilter, _setCallEndReasonFilter] =
     useState<CallEndReasonFilter>("all");
   const [activeTab, setActiveTab] = useState<"cases" | "calls" | "emails">(
     "cases",
@@ -135,7 +138,6 @@ export function DischargeManagementClient() {
     data: casesData,
     isLoading,
     refetch: refetchCases,
-    isFetching,
   } = api.cases.listMyCasesToday.useQuery({
     ...dateParams,
     readinessFilter,

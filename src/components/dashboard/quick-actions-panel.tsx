@@ -21,7 +21,7 @@ export function QuickActionsPanel() {
       return path;
     }
 
-    const [pathname, search = ""] = path.split("?");
+    const [pathname = path, search = ""] = path.split("?");
     // Strip legacy /dashboard prefix before rebuilding clinic-scoped path
     const scopedPath = pathname.replace(/^\/dashboard/, "") || "/";
     const base = buildClinicUrl(clinicSlug, scopedPath);

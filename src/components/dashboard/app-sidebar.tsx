@@ -10,7 +10,6 @@ import {
   FileText,
   PhoneIncoming,
   ChevronRight,
-  Building2,
 } from "lucide-react";
 import {
   Sidebar,

@@ -88,7 +88,7 @@ async function generateEmailContent(
   breed: string | null | undefined,
   branding: ClinicBranding,
   structuredContent?: StructuredDischargeSummary | null,
-  visitDate?: string | Date | null,
+  _visitDate?: string | Date | null,
 ): Promise<{ subject: string; html: string; text: string }> {
   const subject = `Discharge Instructions for ${patientName}`;
 

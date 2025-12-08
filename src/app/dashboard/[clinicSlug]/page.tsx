@@ -19,10 +19,7 @@ export default async function ClinicDashboardPage({
   params,
   searchParams,
 }: ClinicDashboardPageProps) {
-  const [{ clinicSlug }, queryParams] = await Promise.all([
-    params,
-    searchParams,
-  ]);
+  const [, queryParams] = await Promise.all([params, searchParams]);
   const hasAuthToken = Boolean(queryParams[AUTH_PARAMS.AUTH_TOKEN]);
 
   const user = await getUser();

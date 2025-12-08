@@ -5,7 +5,6 @@ import { Card, CardContent } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Phone, Mail, Edit2, Save, Loader2, AlertTriangle } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 
 /**
  * VAPI end reason to human-readable text mapping
