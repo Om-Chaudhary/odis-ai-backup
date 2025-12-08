@@ -23,6 +23,7 @@
     "format:write": "prettier --write \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
     "update-types": "node scripts/update-types.js",
     "graph": "nx graph",
+    "docs:nx": "node scripts/generate-nx-docs.js",
     "prepare": "husky"
   },
   "dependencies": {

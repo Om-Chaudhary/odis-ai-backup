@@ -1,0 +1,194 @@
+[
+  {
+    "name": "ai",
+    "type": "feature",
+    "scope": "ai",
+    "platform": "node",
+    "sourceRoot": "libs/ai/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "api",
+    "type": "util",
+    "scope": "api",
+    "platform": "node",
+    "sourceRoot": "libs/api/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "api-client",
+    "type": "lib",
+    "scope": "api-client",
+    "platform": "browser",
+    "sourceRoot": "libs/api-client/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "clinics",
+    "type": "data-access",
+    "scope": "clinics",
+    "platform": "node",
+    "sourceRoot": "libs/clinics/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "constants",
+    "type": "util",
+    "scope": "constants",
+    "platform": "neutral",
+    "sourceRoot": "libs/constants/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "crypto",
+    "type": "util",
+    "scope": "crypto",
+    "platform": "node",
+    "sourceRoot": "libs/crypto/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "db",
+    "type": "lib",
+    "scope": "db",
+    "platform": "node",
+    "sourceRoot": "libs/db/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "email",
+    "type": "lib",
+    "scope": "email",
+    "platform": "node",
+    "sourceRoot": "libs/email/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "idexx",
+    "type": "lib",
+    "scope": "idexx",
+    "platform": "neutral",
+    "sourceRoot": "libs/idexx/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "logger",
+    "type": "util",
+    "scope": "logger",
+    "platform": "neutral",
+    "sourceRoot": "libs/logger/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "odis-ai-web",
+    "type": "unknown",
+    "scope": "shared",
+    "platform": "neutral",
+    "sourceRoot": ".",
+    "targets": [
+      "build",
+      "build:all",
+      "check",
+      "dev",
+      "docs:nx",
+      "format:check",
+      "format:write",
+      "graph",
+      "lint",
+      "lint:all",
+      "lint:fix",
+      "prepare",
+      "preview",
+      "start",
+      "test",
+      "test:all",
+      "test:coverage",
+      "test:ui",
+      "typecheck",
+      "typecheck:all",
+      "update-types"
+    ]
+  },
+  {
+    "name": "qstash",
+    "type": "data-access",
+    "scope": "qstash",
+    "platform": "node",
+    "sourceRoot": "libs/qstash/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "resend",
+    "type": "data-access",
+    "scope": "resend",
+    "platform": "node",
+    "sourceRoot": "libs/resend/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "services",
+    "type": "lib",
+    "scope": "services",
+    "platform": "node",
+    "sourceRoot": "libs/services/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "types",
+    "type": "lib",
+    "scope": "types",
+    "platform": "neutral",
+    "sourceRoot": "libs/types/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "ui",
+    "type": "lib",
+    "scope": "ui",
+    "platform": "browser",
+    "sourceRoot": "libs/ui/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "utils",
+    "type": "lib",
+    "scope": "utils",
+    "platform": "neutral",
+    "sourceRoot": "libs/utils/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "validators",
+    "type": "lib",
+    "scope": "validators",
+    "platform": "neutral",
+    "sourceRoot": "libs/validators/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "vapi",
+    "type": "lib",
+    "scope": "vapi",
+    "platform": "node",
+    "sourceRoot": "libs/vapi/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "web",
+    "type": "app",
+    "scope": "web",
+    "platform": "browser",
+    "sourceRoot": "apps/web/src",
+    "targets": [
+      "build",
+      "build-deps",
+      "dev",
+      "lint",
+      "serve-static",
+      "start",
+      "test",
+      "typecheck",
+      "watch-deps"
+    ]
+  }
+]
