@@ -100,7 +100,14 @@ if (!projectRef) {
 console.log(`📦 Generating types for project: ${projectRef}`);
 
 try {
-  const outputPath = path.join(process.cwd(), "src", "database.types.ts");
+  // Generate to libs/types for the Nx monorepo structure
+  const outputPath = path.join(
+    process.cwd(),
+    "libs",
+    "types",
+    "src",
+    "database.types.ts",
+  );
   const command = `npx supabase gen types --lang=typescript --project-id "${projectRef}" > "${outputPath}"`;
 
   execSync(command, {
