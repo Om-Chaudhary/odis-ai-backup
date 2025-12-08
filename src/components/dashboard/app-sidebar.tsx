@@ -6,10 +6,11 @@ import {
   Settings,
   Command,
   LogOut,
-  Phone,
-  PhoneOutgoing,
+  MessageSquare,
+  FileText,
   PhoneIncoming,
   ChevronRight,
+  Building2,
 } from "lucide-react";
 import {
   Sidebar,
@@ -39,39 +40,23 @@ import { usePathname } from "next/navigation";
 import { signOut } from "~/server/actions/auth";
 import type { User } from "@supabase/supabase-js";
 
-// Menu items
-const mainNavItems = [
-  {
-    title: "Dashboard",
-    url: "/dashboard",
-    icon: Home,
-  },
-  // Calls section is handled separately as a collapsible menu
-];
-
-// Calls submenu items
-const callsNavItems = [
-  {
-    title: "Discharge Calls",
-    url: "/dashboard/cases",
-    icon: PhoneOutgoing,
-  },
-  {
-    title: "Inbound Calls",
-    url: "/dashboard/calls/inbound",
-    icon: PhoneIncoming,
-  },
-];
-
-const systemItems = [
-  {
-    title: "Settings",
-    url: "/dashboard/settings",
-    icon: Settings,
-  },
-  // Removed: Help & Support - page not implemented yet
-  // This can be re-added when page is created
-];
+/**
+ * Build a clinic-scoped URL
+ */
+function buildUrl(clinicSlug: string | null, path: string): string {
+  if (!clinicSlug) {
+    // Fallback to legacy routes if no clinic slug
+    return path;
+  }
+  // Map legacy paths to clinic-scoped paths
+  const pathMap: Record<string, string> = {
+    "/dashboard": `/dashboard/${clinicSlug}`,
+    "/dashboard/discharges": `/dashboard/${clinicSlug}/discharges`,
+    "/dashboard/calls/inbound": `/dashboard/${clinicSlug}/inbound-calls`,
+    "/dashboard/settings": `/dashboard/${clinicSlug}/settings`,
+  };
+  return pathMap[path] ?? path;
+}
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   user: User;
@@ -82,19 +67,78 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
     clinic_name: string | null;
     avatar_url: string | null;
   } | null;
+  clinicSlug: string | null;
 }
 
-export function AppSidebar({ user, profile, ...props }: AppSidebarProps) {
+export function AppSidebar({
+  user,
+  profile,
+  clinicSlug,
+  ...props
+}: AppSidebarProps) {
   const pathname = usePathname();
   const firstName = profile?.first_name ?? "User";
   const lastName = profile?.last_name ?? "";
   const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   const fullName = `${firstName} ${lastName}`.trim() ?? user.email ?? "User";
+  const clinicName = profile?.clinic_name ?? "My Clinic";
 
-  // Check if any calls route is active for auto-expanding
-  const isCallsActive = callsNavItems.some(
-    (item) => pathname === item.url || pathname.startsWith(item.url + "/"),
-  );
+  // Build clinic-scoped URLs
+  const dashboardUrl = buildUrl(clinicSlug, "/dashboard");
+  const dischargesUrl = buildUrl(clinicSlug, "/dashboard/discharges");
+  const inboundCallsUrl = buildUrl(clinicSlug, "/dashboard/calls/inbound");
+  const settingsUrl = buildUrl(clinicSlug, "/dashboard/settings");
+
+  // Menu items with dynamic URLs
+  const mainNavItems = [
+    {
+      title: "Dashboard",
+      url: dashboardUrl,
+      icon: Home,
+    },
+  ];
+
+  // Communications submenu items
+  const communicationsNavItems = [
+    {
+      title: "Discharges",
+      url: dischargesUrl,
+      icon: FileText,
+    },
+    {
+      title: "Inbound Calls",
+      url: inboundCallsUrl,
+      icon: PhoneIncoming,
+    },
+  ];
+
+  const systemItems = [
+    {
+      title: "Settings",
+      url: settingsUrl,
+      icon: Settings,
+    },
+  ];
+
+  // Check if any communications route is active for auto-expanding
+  // Supports both legacy paths and clinic-scoped paths
+  const isCommunicationsActive =
+    communicationsNavItems.some(
+      (item) => pathname === item.url || pathname.startsWith(item.url + "/"),
+    ) ||
+    pathname.includes("/discharges") ||
+    pathname.includes("/inbound-calls");
+
+  // Check if current path matches a nav item (supports nested paths)
+  const isPathActive = (url: string) => {
+    if (pathname === url) return true;
+    // For dashboard root, only match exact
+    if (url.endsWith(`/${clinicSlug}`) && pathname === url) return true;
+    // For other items, match if path starts with url
+    if (!url.endsWith(`/${clinicSlug}`) && pathname.startsWith(url + "/"))
+      return true;
+    return false;
+  };
 
   return (
     <Sidebar variant="inset" {...props}>
@@ -102,13 +146,15 @@ export function AppSidebar({ user, profile, ...props }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard">
+              <Link href={dashboardUrl}>
                 <div className="text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg bg-[#31aba3]">
                   <Command className="size-4 text-white" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Odis AI</span>
-                  <span className="truncate text-xs">Practice Management</span>
+                  <span className="text-muted-foreground truncate text-xs">
+                    {clinicName}
+                  </span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -124,7 +170,7 @@ export function AppSidebar({ user, profile, ...props }: AppSidebarProps) {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.url}
+                    isActive={isPathActive(item.url)}
                     tooltip={item.title}
                   >
                     <Link href={item.url}>
@@ -135,29 +181,35 @@ export function AppSidebar({ user, profile, ...props }: AppSidebarProps) {
                 </SidebarMenuItem>
               ))}
 
-              {/* Calls Collapsible Menu */}
+              {/* Communications Collapsible Menu */}
               <Collapsible
                 asChild
-                defaultOpen={isCallsActive}
+                defaultOpen={isCommunicationsActive}
                 className="group/collapsible"
               >
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
-                    <SidebarMenuButton tooltip="Calls" isActive={isCallsActive}>
-                      <Phone />
-                      <span>Calls</span>
+                    <SidebarMenuButton
+                      tooltip="Communications"
+                      isActive={isCommunicationsActive}
+                    >
+                      <MessageSquare />
+                      <span>Communications</span>
                       <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
                   <CollapsibleContent>
                     <SidebarMenuSub>
-                      {callsNavItems.map((item) => (
+                      {communicationsNavItems.map((item) => (
                         <SidebarMenuSubItem key={item.title}>
                           <SidebarMenuSubButton
                             asChild
                             isActive={
-                              pathname === item.url ||
-                              pathname.startsWith(item.url + "/")
+                              isPathActive(item.url) ||
+                              (item.title === "Discharges" &&
+                                pathname.includes("/discharges")) ||
+                              (item.title === "Inbound Calls" &&
+                                pathname.includes("/inbound-calls"))
                             }
                           >
                             <Link href={item.url}>
@@ -183,7 +235,9 @@ export function AppSidebar({ user, profile, ...props }: AppSidebarProps) {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
-                    isActive={pathname === item.url}
+                    isActive={
+                      isPathActive(item.url) || pathname.includes("/settings")
+                    }
                     tooltip={item.title}
                   >
                     <Link href={item.url}>

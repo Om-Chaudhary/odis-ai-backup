@@ -573,7 +573,13 @@ export function DischargeManagementClient() {
 
       return true;
     });
-  }, [cases, searchTerm, statusFilter, callEndReasonFilter, matchesCallEndReasonFilter]);
+  }, [
+    cases,
+    searchTerm,
+    statusFilter,
+    callEndReasonFilter,
+    matchesCallEndReasonFilter,
+  ]);
 
   return (
     <div className="space-y-6 p-6 pb-16">
@@ -608,7 +614,7 @@ export function DischargeManagementClient() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => router.push("/dashboard/cases/batch-discharge")}
+            onClick={() => router.push("/dashboard/discharges/batch")}
             disabled={isLoading}
             className="transition-smooth"
           >

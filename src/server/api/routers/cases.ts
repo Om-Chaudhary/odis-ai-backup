@@ -7,7 +7,7 @@ import {
 import { TRPCError } from "@trpc/server";
 import { checkCaseDischargeReadiness } from "~/lib/utils/discharge-readiness";
 import type { BackendCase } from "~/types/dashboard";
-import { getClinicByUserId } from "~/lib/clinics/utils";
+import { getClinicByUserId, getClinicUserIds } from "~/lib/clinics/utils";
 import { normalizeEmail, normalizeToE164 } from "~/lib/utils/phone";
 
 // ============================================================================
@@ -51,6 +51,9 @@ export const casesRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      // Get all user IDs in the same clinic for shared data access
+      const clinicUserIds = await getClinicUserIds(ctx.user.id, ctx.supabase);
+
       // Determine date range: use startDate/endDate if provided, otherwise use single date
       // If no date parameters provided at all, search all time (used when search is active)
       let startDate: Date | null = null;
@@ -84,20 +87,21 @@ export const casesRouter = createTRPCRouter({
         const endIso = endDate.toISOString();
 
         // Use .or() to implement COALESCE(scheduled_at, created_at) logic
+        // Filter by clinic users for shared dashboard access
         const { count: filteredCount } = await ctx.supabase
           .from("cases")
           .select("id", { count: "exact", head: true })
-          .eq("user_id", ctx.user.id)
+          .in("user_id", clinicUserIds)
           .or(
             `and(scheduled_at.gte.${startIso},scheduled_at.lte.${endIso}),and(scheduled_at.is.null,created_at.gte.${startIso},created_at.lte.${endIso})`,
           );
         count = filteredCount;
       } else {
-        // No date filter - count all cases
+        // No date filter - count all cases (for clinic)
         const { count: totalCount } = await ctx.supabase
           .from("cases")
           .select("id", { count: "exact", head: true })
-          .eq("user_id", ctx.user.id);
+          .in("user_id", clinicUserIds);
         count = totalCount;
       }
 
@@ -163,7 +167,7 @@ export const casesRouter = createTRPCRouter({
           )
         `,
         )
-        .eq("user_id", ctx.user.id);
+        .in("user_id", clinicUserIds);
 
       // Apply date filter by scheduled_at (with created_at fallback when scheduled_at is null)
       // Cases are shown on the day they are scheduled for, or created_at if not scheduled
@@ -304,17 +308,20 @@ export const casesRouter = createTRPCRouter({
     }),
 
   /**
-   * Get the most recent date that has at least one case for the current user
+   * Get the most recent date that has at least one case for the clinic
    * Used for auto-navigation on initial page load
    * Uses scheduled_at with fallback to created_at when scheduled_at is null
    */
   getMostRecentCaseDate: protectedProcedure.query(async ({ ctx }) => {
+    // Get all user IDs in the same clinic for shared data access
+    const clinicUserIds = await getClinicUserIds(ctx.user.id, ctx.supabase);
+
     // Query to find the most recent case by scheduled_at (with created_at fallback)
     // We need both fields to determine the effective date
     const { data, error } = await ctx.supabase
       .from("cases")
       .select("scheduled_at, created_at")
-      .eq("user_id", ctx.user.id)
+      .in("user_id", clinicUserIds)
       .order("scheduled_at", { ascending: false, nullsFirst: false })
       .limit(10); // Get a few cases to find the most recent by effective date
 
@@ -465,6 +472,7 @@ export const casesRouter = createTRPCRouter({
 
   /**
    * Update patient information (any field)
+   * Clinic-scoped: allows updating patients belonging to any user in the same clinic
    */
   updatePatientInfo: protectedProcedure
     .input(
@@ -479,6 +487,9 @@ export const casesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Get all user IDs in the same clinic for shared data access
+      const clinicUserIds = await getClinicUserIds(ctx.user.id, ctx.supabase);
+
       // Build update object only with defined fields
       const updateData: Record<string, string | null> = {};
 
@@ -500,11 +511,12 @@ export const casesRouter = createTRPCRouter({
         return { success: true };
       }
 
+      // Allow updating patients belonging to any user in the clinic
       const { error } = await ctx.supabase
         .from("patients")
         .update(updateData)
         .eq("id", input.patientId)
-        .eq("user_id", ctx.user.id); // Security: only update own patients
+        .in("user_id", clinicUserIds);
 
       if (error) {
         throw new TRPCError({
@@ -519,6 +531,7 @@ export const casesRouter = createTRPCRouter({
 
   /**
    * Trigger discharge email/call with flexible requirements
+   * Clinic-scoped: allows triggering discharges for patients in the same clinic
    */
   triggerDischarge: protectedProcedure
     .input(
@@ -538,6 +551,9 @@ export const casesRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Get all user IDs in the same clinic for shared data access
+      const clinicUserIds = await getClinicUserIds(ctx.user.id, ctx.supabase);
+
       const warnings: string[] = [];
 
       // Normalize phone and email to proper formats before any processing
@@ -552,7 +568,7 @@ export const casesRouter = createTRPCRouter({
           ? normalizeEmail(input.patientData.ownerEmail)
           : input.patientData.ownerEmail; // preserve empty string for clearing
 
-      // Step 1: Update patient record with any provided data
+      // Step 1: Update patient record with any provided data (clinic-scoped)
       const updateData: Record<string, string | null> = {};
       if (input.patientData.name) {
         updateData.name = input.patientData.name;
@@ -577,11 +593,12 @@ export const casesRouter = createTRPCRouter({
       }
 
       if (Object.keys(updateData).length > 0) {
+        // Allow updating patients belonging to any user in the clinic
         const { error } = await ctx.supabase
           .from("patients")
           .update(updateData)
           .eq("id", input.patientId)
-          .eq("user_id", ctx.user.id);
+          .in("user_id", clinicUserIds);
 
         if (error) {
           throw new TRPCError({
@@ -1579,12 +1596,16 @@ export const casesRouter = createTRPCRouter({
 
   /**
    * Get eligible cases for batch discharge processing
+   * Clinic-scoped: shows cases for all users in the same clinic
    * Includes:
    * - Cases with discharge summaries
    * - IDEXX Neo cases with consultation_notes in metadata
    * - Manual cases with transcriptions or SOAP notes
    */
   getEligibleCasesForBatch: protectedProcedure.query(async ({ ctx }) => {
+    // Get all user IDs in the same clinic for shared data access
+    const clinicUserIds = await getClinicUserIds(ctx.user.id, ctx.supabase);
+
     // Get user's batch preferences
     const { data: userSettings } = await ctx.supabase
       .from("users")
@@ -1596,7 +1617,7 @@ export const casesRouter = createTRPCRouter({
     const includeManualTranscriptions =
       userSettings?.batch_include_manual_transcriptions ?? true;
 
-    // Query all cases with related data (not requiring discharge_summaries)
+    // Query all cases with related data for the clinic (not requiring discharge_summaries)
     const { data: cases, error } = await ctx.supabase
       .from("cases")
       .select(
@@ -1637,7 +1658,7 @@ export const casesRouter = createTRPCRouter({
           )
         `,
       )
-      .eq("user_id", ctx.user.id)
+      .in("user_id", clinicUserIds)
       .order("scheduled_at", { ascending: false, nullsFirst: false });
 
     if (error) {

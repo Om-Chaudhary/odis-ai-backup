@@ -1,28 +1,26 @@
-import { DischargeManagementClient } from "~/components/dashboard/discharge-management-client";
-import type { Metadata } from "next";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Discharge Management | Odis AI",
-  description: "Manage patient discharge summaries and follow-up calls.",
-};
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 /**
- * Discharge Management Page
- *
- * Displays a list of cases with patient information and discharge status.
- * Includes status filtering, date range presets, and discharge trigger functionality.
- *
- * Placeholders for missing data:
- * - Patient name: "Unknown Patient"
- * - Species: "Unknown Species"
- * - Breed: "Unknown Breed"
- * - Owner name: "Unknown Owner"
- * - Owner email: "No email address"
- * - Owner phone: "No phone number"
- * - Discharge summary: undefined (not shown if missing)
- * - Scheduled call: undefined (shown as "Not scheduled")
- * - Scheduled email: undefined (shown as "Not scheduled")
+ * Redirect from old route /dashboard/cases to new route /dashboard/discharges
+ * This maintains backward compatibility for any bookmarked or shared links
  */
-export default function DischargeManagementPage() {
-  return <DischargeManagementClient />;
+export default function CasesPageRedirect() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/dashboard/discharges");
+  }, [router]);
+
+  return (
+    <div className="flex h-[50vh] items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
+        <p className="text-muted-foreground text-sm">Redirecting...</p>
+      </div>
+    </div>
+  );
 }

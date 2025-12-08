@@ -1,23 +1,25 @@
-import { InboundCallsClient } from "~/components/dashboard/inbound-calls-client";
-import { InboundCallsErrorBoundary } from "~/components/dashboard/inbound-calls-error-boundary";
+import { redirect } from "next/navigation";
+import { getUser } from "~/server/actions/auth";
+import { createClient } from "~/lib/supabase/server";
+import { getClinicByUserId } from "~/lib/clinics/utils";
 
-export const metadata = {
-  title: "Inbound Calls | Dashboard",
-  description: "View and manage inbound VAPI calls",
-};
+/**
+ * Legacy inbound calls page - redirects to clinic-scoped route
+ */
+export default async function InboundCallsRedirectPage() {
+  const user = await getUser();
 
-export default function InboundCallsPage() {
-  return (
-    <div className="container mx-auto py-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Inbound Calls</h1>
-        <p className="text-muted-foreground mt-2">
-          View and manage incoming calls handled by your VAPI assistants
-        </p>
-      </div>
-      <InboundCallsErrorBoundary>
-        <InboundCallsClient />
-      </InboundCallsErrorBoundary>
-    </div>
-  );
+  if (!user) {
+    redirect("/login");
+  }
+
+  const supabase = await createClient();
+  const clinic = await getClinicByUserId(user.id, supabase);
+
+  if (clinic?.slug) {
+    redirect(`/dashboard/${clinic.slug}/inbound-calls`);
+  }
+
+  // Fallback to main dashboard if no clinic
+  redirect("/dashboard");
 }

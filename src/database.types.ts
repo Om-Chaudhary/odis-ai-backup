@@ -481,6 +481,7 @@ export type Database = {
           phone_number_id: string | null;
           pims_type: string;
           primary_color: string | null;
+          slug: string;
           updated_at: string;
         };
         Insert: {
@@ -500,6 +501,7 @@ export type Database = {
           phone_number_id?: string | null;
           pims_type?: string;
           primary_color?: string | null;
+          slug: string;
           updated_at?: string;
         };
         Update: {
@@ -519,6 +521,7 @@ export type Database = {
           phone_number_id?: string | null;
           pims_type?: string;
           primary_color?: string | null;
+          slug?: string;
           updated_at?: string;
         };
         Relationships: [];
@@ -1489,39 +1492,66 @@ export type Database = {
       schedule_syncs: {
         Row: {
           appointment_count: number | null;
-          clinic_id: string;
+          clinic_id: string | null;
+          completed_at: string | null;
           created_at: string;
+          error_details: Json | null;
           error_message: string | null;
+          failed_count: number | null;
           id: string;
           metadata: Json | null;
+          skipped_count: number | null;
+          started_at: string | null;
           status: string;
           sync_date: string;
+          sync_type: string | null;
           synced_at: string;
+          synced_count: number | null;
+          total_items: number | null;
           updated_at: string;
+          user_id: string | null;
         };
         Insert: {
           appointment_count?: number | null;
-          clinic_id: string;
+          clinic_id?: string | null;
+          completed_at?: string | null;
           created_at?: string;
+          error_details?: Json | null;
           error_message?: string | null;
+          failed_count?: number | null;
           id?: string;
           metadata?: Json | null;
+          skipped_count?: number | null;
+          started_at?: string | null;
           status?: string;
           sync_date: string;
+          sync_type?: string | null;
           synced_at?: string;
+          synced_count?: number | null;
+          total_items?: number | null;
           updated_at?: string;
+          user_id?: string | null;
         };
         Update: {
           appointment_count?: number | null;
-          clinic_id?: string;
+          clinic_id?: string | null;
+          completed_at?: string | null;
           created_at?: string;
+          error_details?: Json | null;
           error_message?: string | null;
+          failed_count?: number | null;
           id?: string;
           metadata?: Json | null;
+          skipped_count?: number | null;
+          started_at?: string | null;
           status?: string;
           sync_date?: string;
+          sync_type?: string | null;
           synced_at?: string;
+          synced_count?: number | null;
+          total_items?: number | null;
           updated_at?: string;
+          user_id?: string | null;
         };
         Relationships: [
           {

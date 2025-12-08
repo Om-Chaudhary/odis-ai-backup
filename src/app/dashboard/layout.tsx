@@ -12,6 +12,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { AUTH_PARAMS } from "~/lib/constants/auth";
+import { getClinicByUserId } from "~/lib/clinics/utils";
 
 export const metadata: Metadata = {
   title: "Dashboard | Odis AI",
@@ -65,13 +66,16 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  // Get full user profile from database for the sidebar
+  // Get full user profile and clinic from database for the sidebar
   const supabase = await createClient();
-  const { data: profile } = await supabase
-    .from("users")
-    .select("first_name, last_name, role, clinic_name, avatar_url")
-    .eq("id", user.id)
-    .single();
+  const [{ data: profile }, clinic] = await Promise.all([
+    supabase
+      .from("users")
+      .select("first_name, last_name, role, clinic_name, avatar_url")
+      .eq("id", user.id)
+      .single(),
+    getClinicByUserId(user.id, supabase),
+  ]);
 
   return (
     <SidebarProvider>
@@ -118,7 +122,12 @@ export default async function DashboardLayout({
           }}
           className="pointer-events-none fixed inset-0 z-0 opacity-10"
         />
-        <AppSidebar user={user} profile={profile} className="z-20" />
+        <AppSidebar
+          user={user}
+          profile={profile}
+          clinicSlug={clinic?.slug ?? null}
+          className="z-20"
+        />
         <SidebarInset className="relative z-10 bg-transparent">
           <header className="transition-smooth flex h-16 shrink-0 items-center gap-2 ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
             <div className="animate-fade-in-down flex items-center gap-2 px-4">
