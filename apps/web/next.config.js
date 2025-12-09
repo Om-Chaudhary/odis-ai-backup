@@ -58,12 +58,6 @@ const config = {
         port: "",
         pathname: "/**",
       },
-      {
-        protocol: "https",
-        hostname: "cdn.sanity.io",
-        port: "",
-        pathname: "/**",
-      },
     ],
   },
 
@@ -119,11 +113,6 @@ const config = {
   // VAPI migration has some type safety improvements pending
   eslint: {
     ignoreDuringBuilds: true,
-  },
-
-  // Compiler options for styled-components (required by Sanity)
-  compiler: {
-    styledComponents: true,
   },
 
   // Experimental features for better performance

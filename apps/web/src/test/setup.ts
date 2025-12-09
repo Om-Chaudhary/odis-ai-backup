@@ -52,8 +52,6 @@ process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "test-anon-key";
 process.env.SUPABASE_SERVICE_ROLE_KEY = "test-service-role-key";
 process.env.NEXT_PUBLIC_POSTHOG_KEY = "test-posthog-key";
 process.env.NEXT_PUBLIC_SITE_URL = "http://localhost:3000";
-process.env.NEXT_PUBLIC_SANITY_PROJECT_ID = "test-sanity-project";
-process.env.NEXT_PUBLIC_SANITY_DATASET = "test";
 process.env.RESEND_API_KEY = "test-resend-key";
 
 // Suppress console errors in tests unless needed
