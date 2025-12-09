@@ -756,6 +756,163 @@ body {
   }
 }
 
+/* Hero-specific animations */
+@keyframes draw-underline {
+  from {
+    stroke-dasharray: 400;
+    stroke-dashoffset: 400;
+  }
+  to {
+    stroke-dasharray: 400;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes draw-underline-glow {
+  from {
+    stroke-dasharray: 400;
+    stroke-dashoffset: 400;
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.3;
+  }
+  to {
+    stroke-dasharray: 400;
+    stroke-dashoffset: 0;
+    opacity: 0.3;
+  }
+}
+
+@keyframes float-gentle {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 0.25;
+  }
+  33% {
+    transform: translate(15px, -10px) scale(1.05) rotate(1deg);
+    opacity: 0.35;
+  }
+  66% {
+    transform: translate(-10px, 20px) scale(0.95) rotate(-1deg);
+    opacity: 0.3;
+  }
+}
+
+@keyframes gradient-patient-care {
+  0% {
+    background-position: 0% 50%;
+    filter: brightness(1);
+  }
+  25% {
+    background-position: 25% 50%;
+    filter: brightness(1.05);
+  }
+  50% {
+    background-position: 50% 50%;
+    filter: brightness(1.1);
+  }
+  75% {
+    background-position: 75% 50%;
+    filter: brightness(1.05);
+  }
+  100% {
+    background-position: 100% 50%;
+    filter: brightness(1);
+  }
+}
+
+@keyframes gradient-patient-care-hover {
+  0% {
+    background-position: 0% 50%;
+    filter: brightness(1.1);
+  }
+  50% {
+    background-position: 100% 50%;
+    filter: brightness(1.15);
+  }
+  100% {
+    background-position: 0% 50%;
+    filter: brightness(1.1);
+  }
+}
+
+.animate-draw-underline {
+  animation: draw-underline 1.2s ease-out 0.5s forwards;
+}
+
+.animate-draw-underline-glow {
+  animation: draw-underline-glow 1.5s ease-out 0.7s forwards;
+}
+
+.animate-float-gentle {
+  animation: float-gentle 16s ease-in-out infinite;
+}
+
+.animate-gradient-patient-care {
+  animation: gradient-patient-care 6s ease-in-out infinite;
+  background-size: 200% 200%;
+}
+
+.animate-gradient-patient-care-hover {
+  animation: gradient-patient-care-hover 3s ease-in-out infinite;
+  background-size: 200% 200%;
+}
+
+.hero-light-bg {
+  background: linear-gradient(to bottom, #ecfdf5, #f0fdfa, #f0fdfa) !important;
+}
+
+/* Print styles for compliance documents */
+@media print {
+  .compliance-document {
+    max-width: 100%;
+  }
+
+  .compliance-document button {
+    text-decoration: underline;
+    color: #000;
+  }
+
+  .compliance-document a {
+    color: #000;
+    text-decoration: underline;
+  }
+
+  .compliance-document h1 {
+    font-size: 24pt;
+    page-break-after: avoid;
+  }
+
+  .compliance-document h2 {
+    font-size: 18pt;
+    page-break-after: avoid;
+    margin-top: 20pt;
+  }
+
+  .compliance-document h3 {
+    font-size: 14pt;
+    page-break-after: avoid;
+    margin-top: 16pt;
+  }
+
+  .compliance-document p,
+  .compliance-document li {
+    page-break-inside: avoid;
+    orphans: 3;
+    widows: 3;
+  }
+
+  .compliance-document section {
+    page-break-inside: avoid;
+  }
+
+  .compliance-document .no-print {
+    display: none !important;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

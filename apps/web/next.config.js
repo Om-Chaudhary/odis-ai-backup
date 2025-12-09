@@ -121,6 +121,11 @@ const config = {
     ignoreDuringBuilds: true,
   },
 
+  // Compiler options for styled-components (required by Sanity)
+  compiler: {
+    styledComponents: true,
+  },
+
   // Experimental features for better performance
   experimental: {
     optimizePackageImports: ["lucide-react", "@radix-ui/react-icons"],

@@ -25,7 +25,28 @@
       "@odis/idexx/*": ["../../libs/idexx/src/*"],
       "@odis/api-client": ["../../libs/api-client/src/index.ts"],
       "@odis/api-client/*": ["../../libs/api-client/src/*"],
-      "@odis/email": ["../../libs/email/src/index.ts"]
+      "@odis/email": ["../../libs/email/src/index.ts"],
+      "@odis/email/*": ["../../libs/email/src/*"],
+      "@odis/ai": ["../../libs/ai/src/index.ts"],
+      "@odis/ai/*": ["../../libs/ai/src/*"],
+      "@odis/logger": ["../../libs/logger/src/index.ts"],
+      "@odis/logger/*": ["../../libs/logger/src/*"],
+      "@odis/api": ["../../libs/api/src/index.ts"],
+      "@odis/api/*": ["../../libs/api/src/*"],
+      "@odis/clinics": ["../../libs/clinics/src/index.ts"],
+      "@odis/clinics/*": ["../../libs/clinics/src/*"],
+      "@odis/qstash": ["../../libs/qstash/src/index.ts"],
+      "@odis/qstash/*": ["../../libs/qstash/src/*"],
+      "@odis/crypto": ["../../libs/crypto/src/index.ts"],
+      "@odis/crypto/*": ["../../libs/crypto/src/*"],
+      "@odis/resend": ["../../libs/resend/src/index.ts"],
+      "@odis/resend/*": ["../../libs/resend/src/*"],
+      "@odis/retell": ["../../libs/retell/src/index.ts"],
+      "@odis/retell/*": ["../../libs/retell/src/*"],
+      "@odis/constants": ["../../libs/constants/src/index.ts"],
+      "@odis/constants/*": ["../../libs/constants/src/*"],
+      "@odis/env": ["../../libs/env/src/index.ts"],
+      "@odis/env/*": ["../../libs/env/src/*"]
     }
   },
   "include": [
@@ -43,6 +64,7 @@
     "**/*.test.ts",
     "**/*.test.tsx",
     "src/test/**/*",
-    "vitest.config.ts"
+    "vitest.config.ts",
+    "../../libs/testing/src/**/*"
   ]
 }
