@@ -7,13 +7,13 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { loggers } from "~/lib/logger";
+import { loggers } from "@odis/logger";
 import type { VapiWebhookCall } from "../types";
-import type { VapiCallResponse } from "~/lib/vapi/client";
+import type { VapiCallResponse } from "../../client";
 import {
   formatInboundCallData,
   mapInboundCallToUser,
-} from "~/lib/vapi/inbound-calls";
+} from "../../inbound-calls";
 
 const logger = loggers.webhook.child("inbound-helpers");
 

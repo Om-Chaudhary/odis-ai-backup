@@ -1,0 +1,18 @@
+{
+  "name": "crypto",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/crypto/src",
+  "projectType": "library",
+  "tags": ["type:lib", "scope:crypto", "platform:node"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p libs/crypto/tsconfig.json",
+        "cwd": "{workspaceRoot}"
+      },
+      "cache": true,
+      "inputs": ["default", "^default"]
+    }
+  }
+}

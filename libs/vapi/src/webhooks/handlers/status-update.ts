@@ -8,7 +8,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { loggers } from "~/lib/logger";
+import { loggers } from "@odis/logger";
 import type { StatusUpdateMessage, WebhookHandlerContext } from "../types";
 import { getCallTableName, mapVapiStatus } from "../utils";
 import { createInboundCallRecord } from "./inbound-call-helpers";

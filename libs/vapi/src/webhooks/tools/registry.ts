@@ -7,7 +7,7 @@
  */
 
 import type { ToolHandler } from "../types";
-import { loggers } from "~/lib/logger";
+import { loggers } from "@odis/logger";
 
 const logger = loggers.webhook.child("tool-registry");
 

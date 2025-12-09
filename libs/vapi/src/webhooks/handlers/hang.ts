@@ -7,7 +7,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { loggers } from "~/lib/logger";
+import { loggers } from "@odis/logger";
 import type { HangMessage, WebhookHandlerContext } from "../types";
 import { getCallTableName } from "../utils";
 import { createInboundCallRecord } from "./inbound-call-helpers";

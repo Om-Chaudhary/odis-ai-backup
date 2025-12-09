@@ -1,8 +1,8 @@
 import { type NormalizedEntities } from "@odis/validators/scribe";
-import { extractEntitiesWithRetry } from "~/lib/ai/normalize-scribe";
-import { generateStructuredDischargeSummaryWithRetry } from "~/lib/ai/generate-structured-discharge";
-import { generateCallIntelligenceFromEntities } from "~/lib/ai/generate-assessment-questions";
-import { scheduleCallExecution } from "~/lib/qstash/client";
+import { extractEntitiesWithRetry } from "@odis/ai/normalize-scribe";
+import { generateStructuredDischargeSummaryWithRetry } from "@odis/ai/generate-structured-discharge";
+import { generateCallIntelligenceFromEntities } from "@odis/ai/generate-assessment-questions";
+import { scheduleCallExecution } from "@odis/qstash/client";
 import { buildDynamicVariables } from "@odis/vapi/knowledge-base";
 import type { AIGeneratedCallIntelligence } from "@odis/vapi/types";
 import { extractVapiVariablesFromEntities } from "@odis/vapi/extract-variables";
@@ -11,7 +11,7 @@ import {
   normalizeVariablesToSnakeCase,
 } from "@odis/vapi/utils";
 import { normalizeToE164 } from "@odis/utils/phone";
-import { getClinicVapiConfigByUserId } from "~/lib/clinics/vapi-config";
+import { getClinicVapiConfigByUserId } from "@odis/clinics/vapi-config";
 
 // Type imports
 import type { Database, Json } from "@odis/types";

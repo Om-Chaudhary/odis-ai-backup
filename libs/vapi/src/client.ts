@@ -27,7 +27,7 @@
  */
 
 import { VapiClient } from "@vapi-ai/server-sdk";
-import { env } from "~/env";
+import { env } from "@odis/env";
 
 /**
  * Get VAPI client instance

@@ -10,8 +10,8 @@ import {
   type ConditionCategory,
 } from "./knowledge-base";
 import { createServiceClient } from "@odis/db";
-import { getClinicByUserId } from "~/lib/clinics/utils";
-import { getClinicVapiConfigByUserId } from "~/lib/clinics/vapi-config";
+import { getClinicByUserId } from "@odis/clinics/utils";
+import { getClinicVapiConfigByUserId } from "@odis/clinics/vapi-config";
 import { normalizeToE164 } from "@odis/utils/phone";
 import type { Database } from "@odis/types";
 

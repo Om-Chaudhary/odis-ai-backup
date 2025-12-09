@@ -7,9 +7,9 @@
 
 import { createServiceClient } from "@odis/db";
 import type { VapiCallResponse } from "./client";
-import { loggers } from "~/lib/logger";
-import { getClinicByName } from "~/lib/clinics/utils";
-import { getClinicByInboundAssistantId } from "~/lib/clinics/vapi-config";
+import { loggers } from "@odis/logger";
+import { getClinicByName } from "@odis/clinics/utils";
+import { getClinicByInboundAssistantId } from "@odis/clinics/vapi-config";
 import {
   calculateDuration,
   calculateTotalCost,

@@ -1,0 +1,18 @@
+{
+  "name": "constants",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/constants/src",
+  "projectType": "library",
+  "tags": ["type:lib", "scope:constants", "platform:neutral"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p libs/constants/tsconfig.json",
+        "cwd": "{workspaceRoot}"
+      },
+      "cache": true,
+      "inputs": ["default", "^default"]
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "retell",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/retell/src",
+  "projectType": "library",
+  "tags": ["type:lib", "scope:retell", "platform:node"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p libs/retell/tsconfig.json",
+        "cwd": "{workspaceRoot}"
+      },
+      "cache": true,
+      "inputs": ["default", "^default"]
+    }
+  }
+}

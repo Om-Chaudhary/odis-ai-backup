@@ -7,7 +7,7 @@
  * @module vapi/webhooks/handlers/speech-update
  */
 
-import { loggers } from "~/lib/logger";
+import { loggers } from "@odis/logger";
 import type { SpeechUpdateMessage, WebhookHandlerContext } from "../types";
 
 const logger = loggers.webhook.child("speech-update");

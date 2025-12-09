@@ -7,7 +7,7 @@
  * @module vapi/webhooks/handlers/function-call
  */
 
-import { loggers } from "~/lib/logger";
+import { loggers } from "@odis/logger";
 import type { FunctionCallMessage } from "../types";
 import { executeTool } from "../tools";
 

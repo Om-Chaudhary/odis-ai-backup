@@ -6,7 +6,7 @@
  * @module vapi/webhooks/handlers/conversation-update
  */
 
-import { loggers } from "~/lib/logger";
+import { loggers } from "@odis/logger";
 import type {
   ConversationUpdateMessage,
   WebhookHandlerContext,

@@ -13,12 +13,6 @@
       },
       "cache": true,
       "inputs": ["default", "^default"]
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "options": {
-        "lintFilePatterns": ["libs/testing/**/*.ts"]
-      }
     }
   }
 }

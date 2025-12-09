@@ -1,5 +1,5 @@
 import type { IdexxPageData } from "./types";
-import type { ScheduleCallInput } from "~/lib/retell/validators";
+import type { ScheduleCallInput } from "@odis/retell/validators";
 import { extractFirstName } from "@odis/vapi/utils";
 
 /**

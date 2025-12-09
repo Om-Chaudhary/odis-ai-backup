@@ -19,3 +19,6 @@ export * from "./date-ranges";
 // Dashboard helpers
 export * from "./dashboard-helpers";
 export * from "./discharge-readiness";
+
+// Error classes
+export * from "./errors";

@@ -8,8 +8,8 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { loggers } from "~/lib/logger";
-import { createServiceClient } from "~/lib/supabase/server";
+import { loggers } from "@odis/logger";
+import { createServiceClient } from "@odis/db/server";
 
 // Import and register built-in tools on module load
 import { registerBuiltInTools } from "./tools";

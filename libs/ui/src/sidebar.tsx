@@ -88,15 +88,18 @@ function SidebarProvider({
   const open = openProp ?? _open;
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
-      const openState = typeof value === "function" ? value(open) : value;
+      const computeNext = (prev: boolean) =>
+        typeof value === "function" ? value(prev) : value;
+
+      const nextState = computeNext(open);
+
       if (setOpenProp) {
-        setOpenProp(openState);
+        setOpenProp(nextState);
       } else {
-        _setOpen(openState);
+        _setOpen(computeNext);
       }
 
-      // This sets the cookie to keep the sidebar state.
-      document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
+      document.cookie = `${SIDEBAR_COOKIE_NAME}=${nextState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
     },
     [setOpenProp, open],
   );
@@ -231,6 +234,12 @@ function Sidebar({
       {/* This is what handles the sidebar gap on desktop */}
       <div
         data-slot="sidebar-gap"
+        style={{
+          width:
+            state === "collapsed" && collapsible === "offcanvas"
+              ? 0
+              : "var(--sidebar-width)",
+        }}
         className={cn(
           "relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear",
           "group-data-[collapsible=offcanvas]:w-0",
@@ -242,6 +251,12 @@ function Sidebar({
       />
       <div
         data-slot="sidebar-container"
+        style={{
+          width:
+            state === "collapsed" && collapsible === "offcanvas"
+              ? 0
+              : "var(--sidebar-width)",
+        }}
         className={cn(
           "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
           side === "left"

@@ -13,13 +13,13 @@
 import React from "react";
 import { CasesService } from "./cases-service";
 import { ExecutionPlan } from "./execution-plan";
-import { generateStructuredDischargeSummaryWithRetry } from "~/lib/ai/generate-structured-discharge";
-import { extractEntitiesWithRetry } from "~/lib/ai/normalize-scribe";
-import { scheduleEmailExecution } from "~/lib/qstash/client";
-import { isValidEmail } from "~/lib/resend/client";
+import { generateStructuredDischargeSummaryWithRetry } from "@odis/ai/generate-structured-discharge";
+import { extractEntitiesWithRetry } from "@odis/ai/normalize-scribe";
+import { scheduleEmailExecution } from "@odis/qstash/client";
+import { isValidEmail } from "@odis/resend/client";
 import { DischargeEmailTemplate, prepareEmailContent } from "@odis/email";
 import type { OrchestrationRequest } from "@odis/validators/orchestration";
-import { getClinicByUserId } from "~/lib/clinics/utils";
+import { getClinicByUserId } from "@odis/clinics/utils";
 import type { StructuredDischargeSummary } from "@odis/validators/discharge-summary";
 import type { NormalizedEntities } from "@odis/validators/scribe";
 import type {

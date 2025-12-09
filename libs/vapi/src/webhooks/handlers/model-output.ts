@@ -6,7 +6,7 @@
  * @module vapi/webhooks/handlers/model-output
  */
 
-import { loggers } from "~/lib/logger";
+import { loggers } from "@odis/logger";
 import type { ModelOutputMessage, WebhookHandlerContext } from "../types";
 
 const logger = loggers.webhook.child("model-output");
