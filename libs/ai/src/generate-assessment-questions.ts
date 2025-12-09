@@ -11,12 +11,12 @@ import {
   extractTextFromResponse,
 } from "./llamaindex/utils";
 import type { ChatMessage } from "llamaindex";
-import type { NormalizedEntities } from "@odis/validators/scribe";
+import type { NormalizedEntities } from "@odis-ai/validators/scribe";
 import {
   type GeneratedCallIntelligence,
   type GenerateCallIntelligenceInput,
   GeneratedCallIntelligenceSchema,
-} from "@odis/validators/assessment-questions";
+} from "@odis-ai/validators/assessment-questions";
 
 /* ========================================
    System Prompt for Call Intelligence

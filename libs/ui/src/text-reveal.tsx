@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 
 interface TextRevealProps {
   children: React.ReactNode;

@@ -1,6 +1,6 @@
 import { Anthropic } from "@llamaindex/anthropic";
 import { Settings } from "llamaindex";
-import { env } from "@odis/env";
+import { env } from "@odis-ai/env";
 
 /**
  * Initialize LlamaIndex with default LLM configuration

@@ -1,5 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr";
-import { env } from "@odis/env";
+import { env } from "@odis-ai/env";
 
 export function createClient() {
   return createBrowserClient(

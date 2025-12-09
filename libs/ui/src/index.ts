@@ -1,5 +1,5 @@
 /**
- * @odis/ui
+ * @odis-ai/ui
  *
  * Shared UI components (shadcn/ui primitives).
  * No Next.js-specific APIs to allow Electron/extension/mobile reuse.

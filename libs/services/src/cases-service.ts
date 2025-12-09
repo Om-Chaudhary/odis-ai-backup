@@ -1,28 +1,28 @@
-import { type NormalizedEntities } from "@odis/validators/scribe";
-import { extractEntitiesWithRetry } from "@odis/ai/normalize-scribe";
-import { generateStructuredDischargeSummaryWithRetry } from "@odis/ai/generate-structured-discharge";
-import { generateCallIntelligenceFromEntities } from "@odis/ai/generate-assessment-questions";
-import { scheduleCallExecution } from "@odis/qstash/client";
-import { buildDynamicVariables } from "@odis/vapi/knowledge-base";
-import type { AIGeneratedCallIntelligence } from "@odis/vapi/types";
-import { extractVapiVariablesFromEntities } from "@odis/vapi/extract-variables";
+import { type NormalizedEntities } from "@odis-ai/validators/scribe";
+import { extractEntitiesWithRetry } from "@odis-ai/ai/normalize-scribe";
+import { generateStructuredDischargeSummaryWithRetry } from "@odis-ai/ai/generate-structured-discharge";
+import { generateCallIntelligenceFromEntities } from "@odis-ai/ai/generate-assessment-questions";
+import { scheduleCallExecution } from "@odis-ai/qstash/client";
+import { buildDynamicVariables } from "@odis-ai/vapi/knowledge-base";
+import type { AIGeneratedCallIntelligence } from "@odis-ai/vapi/types";
+import { extractVapiVariablesFromEntities } from "@odis-ai/vapi/extract-variables";
 import {
   extractFirstName,
   normalizeVariablesToSnakeCase,
-} from "@odis/vapi/utils";
-import { normalizeToE164 } from "@odis/utils/phone";
-import { getClinicVapiConfigByUserId } from "@odis/clinics/vapi-config";
+} from "@odis-ai/vapi/utils";
+import { normalizeToE164 } from "@odis-ai/utils/phone";
+import { getClinicVapiConfigByUserId } from "@odis-ai/clinics/vapi-config";
 
 // Type imports
-import type { Database, Json } from "@odis/types";
-import type { SupabaseClientType } from "@odis/types/supabase";
+import type { Database, Json } from "@odis-ai/types";
+import type { SupabaseClientType } from "@odis-ai/types/supabase";
 import type {
   CaseScheduleOptions,
   IngestPayload,
   ScheduledCallMetadata,
   ScheduledDischargeCall,
-} from "@odis/types/services";
-import type { CaseMetadata, CaseMetadataJson } from "@odis/types/case";
+} from "@odis-ai/types/services";
+import type { CaseMetadata, CaseMetadataJson } from "@odis-ai/types/case";
 
 // Re-export types for convenience
 export type { CaseScheduleOptions, IngestPayload, ScheduledDischargeCall };
@@ -158,7 +158,7 @@ export const CasesService = {
     // This prevents duplicate cases from being created for the same IDEXX appointment
     const idexxAppointmentId =
       (context.rawIdexxData?.appointmentId as string | undefined) ??
-        (context.rawIdexxData?.id as string | undefined);
+      (context.rawIdexxData?.id as string | undefined);
 
     if (idexxAppointmentId && context.source === "idexx_extension") {
       const externalId = `idexx-appt-${idexxAppointmentId}`;
@@ -291,7 +291,7 @@ export const CasesService = {
       // Generate external_id for IDEXX cases to enable future deduplication
       const idexxAppointmentId =
         (context.rawIdexxData?.appointmentId as string | undefined) ??
-          (context.rawIdexxData?.id as string | undefined);
+        (context.rawIdexxData?.id as string | undefined);
       const externalId =
         context.source === "idexx_extension" && idexxAppointmentId
           ? `idexx-appt-${idexxAppointmentId}`
@@ -449,18 +449,16 @@ export const CasesService = {
   async getCaseWithEntities(
     supabase: SupabaseClientType,
     caseId: string,
-  ): Promise<
-    {
-      case: CaseRow;
-      entities: NormalizedEntities | undefined;
-      patient: PatientRow | PatientRow[] | null;
-      soapNotes: Database["public"]["Tables"]["soap_notes"]["Row"][] | null;
-      dischargeSummaries:
-        | Database["public"]["Tables"]["discharge_summaries"]["Row"][]
-        | null;
-      metadata: CaseMetadata;
-    } | null
-  > {
+  ): Promise<{
+    case: CaseRow;
+    entities: NormalizedEntities | undefined;
+    patient: PatientRow | PatientRow[] | null;
+    soapNotes: Database["public"]["Tables"]["soap_notes"]["Row"][] | null;
+    dischargeSummaries:
+      | Database["public"]["Tables"]["discharge_summaries"]["Row"][]
+      | null;
+    metadata: CaseMetadata;
+  } | null> {
     const { data: caseData, error } = await supabase
       .from("cases")
       .select(
@@ -481,7 +479,7 @@ export const CasesService = {
     const metadata = (caseData.metadata as CaseMetadata | undefined) ?? {};
     const entities =
       (caseData.entity_extraction as NormalizedEntities | undefined) ??
-        metadata.entities;
+      metadata.entities;
 
     const patient = Array.isArray(caseData.patient)
       ? (caseData.patient[0] ?? null)
@@ -490,14 +488,14 @@ export const CasesService = {
     const soapNotes = Array.isArray(caseData.soap_notes)
       ? caseData.soap_notes
       : caseData.soap_notes
-      ? [caseData.soap_notes]
-      : null;
+        ? [caseData.soap_notes]
+        : null;
 
     const dischargeSummaries = Array.isArray(caseData.discharge_summaries)
       ? caseData.discharge_summaries
       : caseData.discharge_summaries
-      ? [caseData.discharge_summaries]
-      : null;
+        ? [caseData.discharge_summaries]
+        : null;
 
     return {
       case: caseData,
@@ -541,7 +539,8 @@ export const CasesService = {
       }
 
       // Check if we have enough data to generate a summary
-      const hasMinimumData = entities.patient.name &&
+      const hasMinimumData =
+        entities.patient.name &&
         (Boolean(entities.clinical.diagnoses?.length) ||
           Boolean(entities.clinical.chiefComplaint) ||
           Boolean(entities.clinical.visitReason));
@@ -844,8 +843,8 @@ export const CasesService = {
         callType: "discharge",
         clinicPhone: options.clinicPhone ?? "",
         emergencyPhone: options.emergencyPhone ?? options.clinicPhone ?? "",
-        dischargeSummary: options.summaryContent ??
-          generateSummaryFromEntities(entities),
+        dischargeSummary:
+          options.summaryContent ?? generateSummaryFromEntities(entities),
 
         medications: entities.clinical.medications
           ?.map((m) => `${m.name} ${m.dosage ?? ""} ${m.frequency ?? ""}`)
@@ -858,27 +857,28 @@ export const CasesService = {
         // Include species/breed/age if available from entities
         // Note: petSpecies is limited to "dog" | "cat" | "other" for buildDynamicVariables
         // but extractedVars will include full patient_species (dog, cat, bird, rabbit, etc.)
-        petSpecies: entities.patient.species === "dog" ||
-            entities.patient.species === "cat"
-          ? entities.patient.species
-          : entities.patient.species
-          ? "other"
-          : undefined,
+        petSpecies:
+          entities.patient.species === "dog" ||
+          entities.patient.species === "cat"
+            ? entities.patient.species
+            : entities.patient.species
+              ? "other"
+              : undefined,
         petAge: entities.patient.age
           ? (() => {
-            const num = parseFloat(
-              entities.patient.age.replace(/[^0-9.]/g, ""),
-            );
-            return isNaN(num) ? undefined : num;
-          })()
+              const num = parseFloat(
+                entities.patient.age.replace(/[^0-9.]/g, ""),
+              );
+              return isNaN(num) ? undefined : num;
+            })()
           : undefined,
         petWeight: entities.patient.weight
           ? (() => {
-            const num = parseFloat(
-              entities.patient.weight.replace(/[^0-9.]/g, ""),
-            );
-            return isNaN(num) ? undefined : num;
-          })()
+              const num = parseFloat(
+                entities.patient.weight.replace(/[^0-9.]/g, ""),
+              );
+              return isNaN(num) ? undefined : num;
+            })()
           : undefined,
       },
       strict: false,
@@ -903,10 +903,10 @@ export const CasesService = {
       userId,
       supabase,
     );
-    const assistantId = options.assistantId ??
-      clinicVapiConfig.outboundAssistantId;
-    const phoneNumberId = options.phoneNumberId ??
-      clinicVapiConfig.phoneNumberId;
+    const assistantId =
+      options.assistantId ?? clinicVapiConfig.outboundAssistantId;
+    const phoneNumberId =
+      options.phoneNumberId ?? clinicVapiConfig.phoneNumberId;
 
     console.log("[CasesService] Using VAPI config", {
       source: clinicVapiConfig.source,
@@ -928,8 +928,8 @@ export const CasesService = {
       .single();
 
     const testModeEnabled = userSettings?.test_mode_enabled ?? false;
-    const defaultScheduleDelayMinutes = userSettings
-      ?.default_schedule_delay_minutes;
+    const defaultScheduleDelayMinutes =
+      userSettings?.default_schedule_delay_minutes;
 
     if (testModeEnabled) {
       if (!userSettings?.test_contact_phone) {
@@ -1018,7 +1018,8 @@ export const CasesService = {
       // Update existing call - preserve status if call is already in progress/completed
       // Only update to "queued" if status is null or if explicitly resetting
       const currentStatus = existingCall.status;
-      const shouldPreserveStatus = currentStatus &&
+      const shouldPreserveStatus =
+        currentStatus &&
         (currentStatus === "in_progress" ||
           currentStatus === "ringing" ||
           currentStatus === "completed");
@@ -1031,12 +1032,12 @@ export const CasesService = {
         scheduled_for: scheduledAt.toISOString(),
         status: shouldPreserveStatus
           ? (currentStatus as
-            | "queued"
-            | "in_progress"
-            | "ringing"
-            | "completed"
-            | "failed"
-            | "canceled")
+              | "queued"
+              | "in_progress"
+              | "ringing"
+              | "completed"
+              | "failed"
+              | "canceled")
           : ("queued" as const),
         dynamic_variables: mergedVariables as Json,
         metadata: {
@@ -1232,15 +1233,15 @@ export const CasesService = {
 
     // Enrich patient demographics from database
     if (patientData.species) {
-      entities.patient.species = patientData
-        .species as NormalizedEntities["patient"]["species"];
+      entities.patient.species =
+        patientData.species as NormalizedEntities["patient"]["species"];
     }
     if (patientData.breed) {
       entities.patient.breed = patientData.breed;
     }
     if (patientData.sex) {
-      entities.patient.sex = patientData
-        .sex as NormalizedEntities["patient"]["sex"];
+      entities.patient.sex =
+        patientData.sex as NormalizedEntities["patient"]["sex"];
     }
     if (patientData.weight_kg) {
       entities.patient.weight = `${patientData.weight_kg} kg`;
@@ -1312,9 +1313,10 @@ export const CasesService = {
             : (extracted.patient.species ?? existing.patient.species),
         breed: existing.patient.breed ?? extracted.patient.breed,
         age: existing.patient.age ?? extracted.patient.age,
-        sex: existing.patient.sex && existing.patient.sex !== "unknown"
-          ? existing.patient.sex
-          : (extracted.patient.sex ?? existing.patient.sex),
+        sex:
+          existing.patient.sex && existing.patient.sex !== "unknown"
+            ? existing.patient.sex
+            : (extracted.patient.sex ?? existing.patient.sex),
         weight: existing.patient.weight ?? extracted.patient.weight,
         owner: {
           ...existing.patient.owner,
@@ -1326,23 +1328,27 @@ export const CasesService = {
       clinical: {
         ...existing.clinical,
         // Merge clinical data, preferring extracted for missing fields
-        chiefComplaint: existing.clinical.chiefComplaint ??
-          extracted.clinical.chiefComplaint,
-        visitReason: existing.clinical.visitReason ??
-          extracted.clinical.visitReason,
+        chiefComplaint:
+          existing.clinical.chiefComplaint ?? extracted.clinical.chiefComplaint,
+        visitReason:
+          existing.clinical.visitReason ?? extracted.clinical.visitReason,
         presentingSymptoms:
           (existing.clinical.presentingSymptoms?.length ?? 0 > 0)
             ? existing.clinical.presentingSymptoms
             : extracted.clinical.presentingSymptoms,
-        diagnoses: (existing.clinical.diagnoses?.length ?? 0 > 0)
-          ? existing.clinical.diagnoses
-          : extracted.clinical.diagnoses,
-        medications: (existing.clinical.medications?.length ?? 0 > 0)
-          ? existing.clinical.medications
-          : extracted.clinical.medications,
-        followUpInstructions: existing.clinical.followUpInstructions ??
+        diagnoses:
+          (existing.clinical.diagnoses?.length ?? 0 > 0)
+            ? existing.clinical.diagnoses
+            : extracted.clinical.diagnoses,
+        medications:
+          (existing.clinical.medications?.length ?? 0 > 0)
+            ? existing.clinical.medications
+            : extracted.clinical.medications,
+        followUpInstructions:
+          existing.clinical.followUpInstructions ??
           extracted.clinical.followUpInstructions,
-        recheckRequired: existing.clinical.recheckRequired ??
+        recheckRequired:
+          existing.clinical.recheckRequired ??
           extracted.clinical.recheckRequired,
       },
       // Keep existing caseType and confidence, but update extractedAt
@@ -1405,29 +1411,26 @@ function mapIdexxToEntities(data: Record<string, unknown>): NormalizedEntities {
     "unknown",
   ] as const;
   type ValidSpecies = (typeof validSpecies)[number];
-  const rawSpecies = typeof data.species === "string"
-    ? data.species.toLowerCase()
-    : "unknown";
+  const rawSpecies =
+    typeof data.species === "string" ? data.species.toLowerCase() : "unknown";
   const species: ValidSpecies = validSpecies.includes(
-      rawSpecies as ValidSpecies,
-    )
+    rawSpecies as ValidSpecies,
+  )
     ? (rawSpecies as ValidSpecies)
     : "unknown";
 
-  const clientFirstName = typeof data.client_first_name === "string"
-    ? data.client_first_name
-    : "";
-  const clientLastName = typeof data.client_last_name === "string"
-    ? data.client_last_name
-    : "";
-  const ownerName = typeof data.owner_name === "string"
-    ? data.owner_name
-    : "Unknown";
-  const phone = typeof data.phone_number === "string"
-    ? data.phone_number
-    : typeof data.mobile_number === "string"
-    ? data.mobile_number
-    : undefined;
+  const clientFirstName =
+    typeof data.client_first_name === "string" ? data.client_first_name : "";
+  const clientLastName =
+    typeof data.client_last_name === "string" ? data.client_last_name : "";
+  const ownerName =
+    typeof data.owner_name === "string" ? data.owner_name : "Unknown";
+  const phone =
+    typeof data.phone_number === "string"
+      ? data.phone_number
+      : typeof data.mobile_number === "string"
+        ? data.mobile_number
+        : undefined;
   const email = typeof data.email === "string" ? data.email : undefined;
 
   return {
@@ -1435,9 +1438,10 @@ function mapIdexxToEntities(data: Record<string, unknown>): NormalizedEntities {
       name: petName,
       species: species,
       owner: {
-        name: clientFirstName && clientLastName
-          ? `${clientFirstName} ${clientLastName}`
-          : ownerName,
+        name:
+          clientFirstName && clientLastName
+            ? `${clientFirstName} ${clientLastName}`
+            : ownerName,
         phone: phone,
         email: email,
       },

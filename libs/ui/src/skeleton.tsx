@@ -1,4 +1,4 @@
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 
 function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (

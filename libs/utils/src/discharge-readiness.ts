@@ -1,6 +1,6 @@
-import type { BackendCase } from "@odis/types/dashboard";
+import type { BackendCase } from "@odis-ai/types/dashboard";
 import { hasValidContact } from "./dashboard-helpers";
-import type { NormalizedEntities } from "@odis/validators/scribe";
+import type { NormalizedEntities } from "@odis-ai/validators/scribe";
 
 /**
  * Discharge requirements for a specific user
@@ -131,7 +131,8 @@ export function checkCaseDischargeReadiness(
     }
   } else {
     // Manual/other cases: check clinical notes (SOAP, discharge summary, or transcription)
-    const hasSoapNotes = (caseData.soap_notes?.length ?? 0) > 0 &&
+    const hasSoapNotes =
+      (caseData.soap_notes?.length ?? 0) > 0 &&
       caseData.soap_notes?.some(
         (note) =>
           Boolean(note.subjective) ||
@@ -146,14 +147,16 @@ export function checkCaseDischargeReadiness(
         (summary) => summary.content && summary.content.trim().length > 0,
       );
 
-    const hasTranscription = (caseData.transcriptions?.length ?? 0) > 0 &&
+    const hasTranscription =
+      (caseData.transcriptions?.length ?? 0) > 0 &&
       caseData.transcriptions?.some(
         (transcription) =>
           transcription.transcript &&
           transcription.transcript.trim().length > 0,
       );
 
-    hasContent = Boolean(hasSoapNotes) ||
+    hasContent =
+      Boolean(hasSoapNotes) ||
       Boolean(hasDischargeSummary) ||
       Boolean(hasTranscription);
 
@@ -171,7 +174,8 @@ export function checkCaseDischargeReadiness(
   const hasContact = hasValidPhone || hasValidEmail;
 
   // In test mode, check if test contact info is available
-  const hasTestContact = testModeEnabled &&
+  const hasTestContact =
+    testModeEnabled &&
     (hasValidContact(testContactEmail ?? null) ||
       hasValidContact(testContactPhone ?? null));
 

@@ -19,7 +19,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { BaseRepository } from "./base";
 import type { User } from "./types";
-import { NotFoundError } from "@odis/utils/errors";
+import { NotFoundError } from "@odis-ai/utils/errors";
 
 export class UserRepository extends BaseRepository<User> {
   constructor(supabase: SupabaseClient) {

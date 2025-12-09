@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 
 interface LightRaysProps {
   className?: string;

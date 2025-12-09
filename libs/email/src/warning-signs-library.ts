@@ -5,7 +5,7 @@
  * Used as fallback when no explicit warning signs are extracted from notes.
  */
 
-import type { DischargeCaseType } from "@odis/validators/discharge-summary";
+import type { DischargeCaseType } from "@odis-ai/validators/discharge-summary";
 
 export const warningSignsByCase: Record<DischargeCaseType, string[]> = {
   surgery: [

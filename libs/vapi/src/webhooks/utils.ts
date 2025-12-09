@@ -7,7 +7,7 @@
  * @module vapi/webhooks/utils
  */
 
-import { loggers } from "@odis/logger";
+import { loggers } from "@odis-ai/logger";
 import type {
   VapiAnalysis,
   VapiArtifact,

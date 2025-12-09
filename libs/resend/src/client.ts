@@ -9,7 +9,7 @@ export { isValidEmail, htmlToPlainText } from "./utils";
  */
 async function getResendClient() {
   const { Resend } = await import("resend");
-  const { env } = await import("@odis/env");
+  const { env } = await import("@odis-ai/env");
   return new Resend(env.RESEND_API_KEY);
 }
 

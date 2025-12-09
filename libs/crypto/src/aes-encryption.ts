@@ -17,7 +17,7 @@ import {
   pbkdf2Sync,
   randomBytes,
 } from "crypto";
-import { env } from "@odis/env";
+import { env } from "@odis-ai/env";
 
 const ALGORITHM = "aes-256-gcm";
 const KEY_LENGTH = 32; // 256 bits

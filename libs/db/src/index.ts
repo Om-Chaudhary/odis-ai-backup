@@ -1,5 +1,5 @@
 /**
- * @odis/db
+ * @odis-ai/db
  *
  * Supabase database clients and repository layer.
  * Exports both RLS-respecting client and service (admin) client.

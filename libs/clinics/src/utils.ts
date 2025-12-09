@@ -7,7 +7,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "~/database.types";
-import { loggers } from "@odis/logger";
+import { loggers } from "@odis-ai/logger";
 import { SUPABASE_ERROR_CODES } from "./constants";
 
 type SupabaseClientType = SupabaseClient<Database>;

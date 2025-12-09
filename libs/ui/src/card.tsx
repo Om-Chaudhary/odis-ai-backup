@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 
 const Card = React.forwardRef<
   HTMLDivElement,

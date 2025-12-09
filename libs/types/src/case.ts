@@ -5,8 +5,8 @@
  */
 
 import type { Database } from "./database.types";
-import type { NormalizedEntities } from "@odis/validators";
-export type { NormalizedEntities } from "@odis/validators";
+import type { NormalizedEntities } from "@odis-ai/validators";
+export type { NormalizedEntities } from "@odis-ai/validators";
 
 /* ========================================
    Case Metadata Types

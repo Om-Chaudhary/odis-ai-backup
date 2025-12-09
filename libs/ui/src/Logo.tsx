@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 
 interface LogoProps {
   className?: string;

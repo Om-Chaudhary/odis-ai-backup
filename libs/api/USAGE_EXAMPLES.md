@@ -18,7 +18,7 @@ Clean, reusable authentication for Next.js API routes with **automatic detection
 
 ```typescript
 // src/app/api/profile/route.ts
-import { withAuth, successResponse } from "@odis/api/auth";
+import { withAuth, successResponse } from "@odis-ai/api/auth";
 
 export const GET = withAuth(async (request, { user, supabase }) => {
   // user and supabase are guaranteed to exist
@@ -44,7 +44,7 @@ The same route works for **both** web app and browser extension:
 
 ```typescript
 // src/app/api/data/route.ts
-import { withAuth, successResponse, errorResponse } from "@odis/api/auth";
+import { withAuth, successResponse, errorResponse } from "@odis-ai/api/auth";
 
 export const POST = withAuth(async (request, { user, supabase }) => {
   const body = await request.json();
@@ -95,7 +95,7 @@ Restrict endpoints to specific user roles:
 
 ```typescript
 // src/app/api/admin/users/route.ts
-import { withAuth, successResponse, errorResponse } from "@odis/api/auth";
+import { withAuth, successResponse, errorResponse } from "@odis-ai/api/auth";
 
 // Only admins can list users
 export const GET = withAuth(
@@ -155,7 +155,11 @@ For complex cases where you need custom logic:
 ```typescript
 // src/app/api/complex/route.ts
 import { NextRequest } from "next/server";
-import { authenticateUser, errorResponse, successResponse } from "@odis/api/auth";
+import {
+  authenticateUser,
+  errorResponse,
+  successResponse,
+} from "@odis-ai/api/auth";
 
 export async function POST(request: NextRequest) {
   // Manually authenticate
@@ -216,7 +220,10 @@ export async function POST(request: NextRequest) {
           },
         },
       );
-      const { data: { user }, error } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
       if (error || !user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
@@ -259,7 +266,7 @@ export async function POST(request: NextRequest) {
 
 ```typescript
 // ✅ 16 lines - 72% reduction!
-import { withAuth, successResponse, errorResponse } from "@odis/api/auth";
+import { withAuth, successResponse, errorResponse } from "@odis-ai/api/auth";
 
 export const POST = withAuth(
   async (request, { user, supabase }) => {
@@ -294,7 +301,7 @@ export const POST = withAuth(
 Standardized error and success responses:
 
 ```typescript
-import { errorResponse, successResponse } from "@odis/api/auth";
+import { errorResponse, successResponse } from "@odis-ai/api/auth";
 
 // Error with validation details
 return errorResponse("Validation failed", 400, {
@@ -352,7 +359,7 @@ export async function GET(request: NextRequest) {
 
 ```typescript
 // src/app/api/posts/route.ts
-import { withAuth, successResponse, errorResponse } from "@odis/api/auth";
+import { withAuth, successResponse, errorResponse } from "@odis-ai/api/auth";
 
 // Anyone can read
 export async function GET() {
@@ -381,7 +388,7 @@ Mock the authentication utilities:
 
 ```typescript
 import { vi } from "vitest";
-import * as auth from "@odis/api/auth";
+import * as auth from "@odis-ai/api/auth";
 
 // Mock authenticateUser
 vi.spyOn(auth, "authenticateUser").mockResolvedValue({

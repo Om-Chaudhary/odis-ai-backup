@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 
 interface ParticleBackgroundProps {
   className?: string;

@@ -24,8 +24,8 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { DatabaseError } from "@odis/utils/errors";
-import { createLogger } from "@odis/logger";
+import { DatabaseError } from "@odis-ai/utils/errors";
+import { createLogger } from "@odis-ai/logger";
 
 const logger = createLogger("repository");
 

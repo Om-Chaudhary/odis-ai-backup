@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 
 interface NumberTickerProps {
   value: number;

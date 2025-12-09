@@ -8,7 +8,7 @@
  */
 
 import { registerTool } from "./registry";
-import { loggers } from "@odis/logger";
+import { loggers } from "@odis-ai/logger";
 
 const logger = loggers.webhook.child("built-in-tools");
 

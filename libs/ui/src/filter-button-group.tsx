@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "./button";
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 
 interface FilterButtonGroupProps<T extends string> {
   options: Array<{ value: T; label: string }>;

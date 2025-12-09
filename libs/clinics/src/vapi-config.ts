@@ -43,8 +43,8 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "~/database.types";
-import { env } from "@odis/env";
-import { loggers } from "@odis/logger";
+import { env } from "@odis-ai/env";
+import { loggers } from "@odis-ai/logger";
 import { getClinicByName, getClinicByUserId } from "./utils";
 
 type SupabaseClientType = SupabaseClient<Database>;

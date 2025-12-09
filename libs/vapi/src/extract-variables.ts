@@ -6,7 +6,7 @@
  * knowledge base system for condition-specific assessment questions and criteria.
  */
 
-import type { NormalizedEntities } from "@odis/validators/scribe";
+import type { NormalizedEntities } from "@odis-ai/validators/scribe";
 import { extractFirstName } from "./utils";
 import {
   buildDynamicVariables,
@@ -158,7 +158,8 @@ export function buildVapiVariablesFromEntities(
 
   // Step 2: Determine condition from diagnoses, chief complaint, or treatments
   // Priority: primary diagnosis > chief complaint > first treatment > procedures
-  const condition = extracted.primary_diagnosis ??
+  const condition =
+    extracted.primary_diagnosis ??
     extracted.chief_complaint ??
     entities.clinical.chiefComplaint ??
     entities.clinical.treatments?.[0] ??
@@ -300,9 +301,8 @@ export function extractVapiVariablesFromEntities(
       clinical.physicalExamFindings &&
       clinical.physicalExamFindings.length > 0
     ) {
-      variables.physical_exam_findings = clinical.physicalExamFindings.join(
-        ", ",
-      );
+      variables.physical_exam_findings =
+        clinical.physicalExamFindings.join(", ");
     }
 
     // Diagnoses
@@ -315,24 +315,21 @@ export function extractVapiVariablesFromEntities(
       clinical.differentialDiagnoses &&
       clinical.differentialDiagnoses.length > 0
     ) {
-      variables.differential_diagnoses = clinical.differentialDiagnoses.join(
-        ", ",
-      );
+      variables.differential_diagnoses =
+        clinical.differentialDiagnoses.join(", ");
     }
 
     // Medications - format for natural speech (prescribed take-home meds ONLY)
     if (clinical.medications && clinical.medications.length > 0) {
       const medicationsList = clinical.medications
         .map(
-          (
-            med: {
-              name: string;
-              dosage?: string;
-              frequency?: string;
-              route?: string;
-              duration?: string;
-            },
-          ) => {
+          (med: {
+            name: string;
+            dosage?: string;
+            frequency?: string;
+            route?: string;
+            duration?: string;
+          }) => {
             let medStr = med.name;
             if (med.dosage) medStr += ` ${med.dosage}`;
             if (med.frequency) medStr += ` ${med.frequency}`;

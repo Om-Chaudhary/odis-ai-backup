@@ -1,5 +1,5 @@
 /**
- * @odis/validators
+ * @odis-ai/validators
  *
  * Shared Zod validation schemas for the ODIS platform.
  * Used by both tRPC routers and REST API endpoints.

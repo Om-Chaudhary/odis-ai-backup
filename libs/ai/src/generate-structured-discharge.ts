@@ -11,12 +11,12 @@ import {
   extractTextFromResponse,
 } from "./llamaindex/utils";
 import type { ChatMessage } from "llamaindex";
-import type { NormalizedEntities } from "@odis/validators/scribe";
+import type { NormalizedEntities } from "@odis-ai/validators/scribe";
 import {
   type StructuredDischargeSummary,
   StructuredDischargeSummarySchema,
   structuredToPlainText,
-} from "@odis/validators/discharge-summary";
+} from "@odis-ai/validators/discharge-summary";
 
 /* ========================================
    Structured Prompt Engineering

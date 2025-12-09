@@ -8,7 +8,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { loggers } from "@odis/logger";
+import { loggers } from "@odis-ai/logger";
 import type {
   EndOfCallReportMessage,
   VapiWebhookCall,
@@ -36,7 +36,7 @@ import {
   formatInboundCallData,
   mapInboundCallToUser,
 } from "../../inbound-calls";
-import { scheduleCallExecution } from "@odis/qstash/client";
+import { scheduleCallExecution } from "@odis-ai/qstash/client";
 
 const logger = loggers.webhook.child("end-of-call-report");
 

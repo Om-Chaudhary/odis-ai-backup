@@ -18,7 +18,7 @@ This system provides type-safe utilities for:
 
 ```typescript
 // src/app/api/profile/route.ts
-import { withAuth, successResponse } from "@odis/api/auth";
+import { withAuth, successResponse } from "@odis-ai/api/auth";
 
 export const GET = withAuth(async (request, { user, supabase }) => {
   // Works for both web app (cookies) and extension (Bearer token)
@@ -38,7 +38,7 @@ export const GET = withAuth(async (request, { user, supabase }) => {
 
 ```typescript
 // src/app/api/admin/users/route.ts
-import { withAuth, successResponse } from "@odis/api/auth";
+import { withAuth, successResponse } from "@odis-ai/api/auth";
 
 export const GET = withAuth(
   async (request, { supabase }) => {
@@ -188,7 +188,7 @@ When you specify `requireRole: 'user'`, both **user** and **admin** can access i
 ### Step 1: Import Utilities
 
 ```typescript
-import { withAuth, successResponse, errorResponse } from "@odis/api/auth";
+import { withAuth, successResponse, errorResponse } from "@odis-ai/api/auth";
 ```
 
 ### Step 2: Replace Manual Auth
@@ -273,18 +273,18 @@ See [`USAGE_EXAMPLES.md`](./USAGE_EXAMPLES.md) for:
 
 ## Benefits
 
-| Aspect                   | Before                       | After                        |
-| ------------------------ | ---------------------------- | ---------------------------- |
-| **Code Lines**           | ~40 lines per route          | ~10 lines per route          |
-| **Auth Detection**       | Manual if/else checks        | Automatic                    |
-| **Duplication**          | Auth code in every route     | Single source of truth       |
-| **Type Safety**          | Manual null checks           | Guaranteed non-null user     |
-| **Error Consistency**    | Varies per route             | Standardized format          |
-| **Testing**              | Mock Supabase in every test  | Mock one utility             |
-| **Bearer Token Support** | Implement per route          | Automatic                    |
-| **Role Checks**          | Manual database queries      | Single option                |
-| **Maintenance**          | Update in multiple places    | Update once                  |
-| **Developer Experience** | Copy-paste boilerplate       | Import and use               |
+| Aspect                   | Before                      | After                    |
+| ------------------------ | --------------------------- | ------------------------ |
+| **Code Lines**           | ~40 lines per route         | ~10 lines per route      |
+| **Auth Detection**       | Manual if/else checks       | Automatic                |
+| **Duplication**          | Auth code in every route    | Single source of truth   |
+| **Type Safety**          | Manual null checks          | Guaranteed non-null user |
+| **Error Consistency**    | Varies per route            | Standardized format      |
+| **Testing**              | Mock Supabase in every test | Mock one utility         |
+| **Bearer Token Support** | Implement per route         | Automatic                |
+| **Role Checks**          | Manual database queries     | Single option            |
+| **Maintenance**          | Update in multiple places   | Update once              |
+| **Developer Experience** | Copy-paste boilerplate      | Import and use           |
 
 ## Security Considerations
 
@@ -307,7 +307,11 @@ See [`USAGE_EXAMPLES.md`](./USAGE_EXAMPLES.md) for:
 All utilities are fully typed:
 
 ```typescript
-import type { AuthResult, ApiErrorResponse, AuthOptions } from "@odis/api/auth";
+import type {
+  AuthResult,
+  ApiErrorResponse,
+  AuthOptions,
+} from "@odis-ai/api/auth";
 
 // AuthResult gives you:
 const { user, supabase } = authResult;
@@ -320,7 +324,7 @@ Mock the utilities in your tests:
 
 ```typescript
 import { vi } from "vitest";
-import * as auth from "@odis/api/auth";
+import * as auth from "@odis-ai/api/auth";
 
 vi.spyOn(auth, "authenticateUser").mockResolvedValue({
   success: true,

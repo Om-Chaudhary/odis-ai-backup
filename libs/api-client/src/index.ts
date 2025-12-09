@@ -1,5 +1,5 @@
 /**
- * @odis/api-client
+ * @odis-ai/api-client
  *
  * REST API client for non-Next.js applications (Electron, Chrome extension, React Native).
  * Wraps the Next.js REST API routes for type-safe consumption.
@@ -16,7 +16,7 @@ export interface ApiClientConfig {
  * Create an API client instance
  * @param config - Configuration object with baseUrl and token provider
  */
-export function createApiClient(config: ApiClientConfig) {
+export function createApiClient(_config: ApiClientConfig) {
   // Placeholder implementation
   return {
     cases: {

@@ -5,8 +5,8 @@
  * and parallelization opportunities. Tracks step dependencies and state.
  */
 
-import type { OrchestrationRequest } from "@odis/validators/orchestration";
-import type { StepName } from "@odis/types/orchestration";
+import type { OrchestrationRequest } from "@odis-ai/validators/orchestration";
+import type { StepName } from "@odis-ai/types/orchestration";
 
 /* ========================================
    Types
@@ -131,7 +131,7 @@ export class ExecutionPlan {
 
       // Check if this step depends on any other step in the list
       const hasDependency = config.dependencies.some((dep) =>
-        steps.includes(dep)
+        steps.includes(dep),
       );
       if (hasDependency) return false;
     }

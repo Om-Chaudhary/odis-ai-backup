@@ -1,6 +1,6 @@
 import type { IdexxPageData } from "./types";
-import type { ScheduleCallInput } from "@odis/retell/validators";
-import { extractFirstName } from "@odis/vapi/utils";
+import type { ScheduleCallInput } from "@odis-ai/retell/validators";
+import { extractFirstName } from "@odis-ai/vapi/utils";
 
 /**
  * Transform IDEXX Neo consultation data to call request format

@@ -14,8 +14,8 @@ import { Row } from "@react-email/row";
 import { Column } from "@react-email/column";
 // Use custom Html wrapper to avoid the Next.js detection error
 import { HtmlWrapper as Html } from "./html-wrapper";
-import type { StructuredDischargeSummary } from "@odis/validators/discharge-summary";
-import { getWarningSignsHybrid } from "@odis/email/warning-signs-library";
+import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
+import { getWarningSignsHybrid } from "@odis-ai/email/warning-signs-library";
 
 /**
  * Discharge Email Template - Using React Email Components

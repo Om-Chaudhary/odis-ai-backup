@@ -7,7 +7,7 @@
 
 // Note: DischargeOrchestrator is dynamically imported to avoid bundling
 // @react-email/components during Next.js static page generation.
-import type { SupabaseClientType } from "@odis/types/supabase";
+import type { SupabaseClientType } from "@odis-ai/types/supabase";
 import type { User } from "@supabase/supabase-js";
 import { addDays, setHours, setMinutes, setSeconds } from "date-fns";
 

@@ -1,5 +1,5 @@
 "use client";
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 import { motion, useTransform, type MotionValue } from "framer-motion";
 import { Clock, DollarSign, Users, CheckCircle, Plus } from "lucide-react";
 import React from "react";

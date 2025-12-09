@@ -8,7 +8,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { loggers } from "@odis/logger";
+import { loggers } from "@odis-ai/logger";
 import type {
   AssistantRequestMessage,
   AssistantRequestResponse,

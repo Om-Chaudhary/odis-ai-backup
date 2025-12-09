@@ -1,7 +1,7 @@
 import type { ComponentProps, HTMLAttributes } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {

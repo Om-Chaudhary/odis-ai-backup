@@ -6,7 +6,7 @@
  * @module vapi/webhooks/tools/executor
  */
 
-import { loggers } from "@odis/logger";
+import { loggers } from "@odis-ai/logger";
 import { getRegisteredToolNames, getTool, hasTool } from "./registry";
 
 const logger = loggers.webhook.child("tool-executor");

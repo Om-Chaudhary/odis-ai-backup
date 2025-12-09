@@ -1,5 +1,5 @@
 /**
- * @odis/testing - Shared testing utilities for ODIS AI monorepo
+ * @odis-ai/testing - Shared testing utilities for ODIS AI monorepo
  *
  * This library provides:
  * - Test utilities for API routes, components, and services
@@ -10,7 +10,7 @@
  *
  * @example
  * // In a test file
- * import { createMockSupabaseClient, createMockUser } from '@odis/testing';
+ * import { createMockSupabaseClient, createMockUser } from '@odis-ai/testing';
  *
  * describe('MyService', () => {
  *   const supabase = createMockSupabaseClient();
@@ -46,5 +46,9 @@ export type { MockRequestOptions, RouteContext } from "./utils/api";
 export type { MockQueryBuilder, MockSupabaseAuth } from "./mocks/supabase";
 export type { MockVapiCall, VapiWebhookType } from "./mocks/vapi";
 export type { MockPatient, MockCase, MockMedication } from "./fixtures/cases";
-export type { MockCallRecord, MockScheduledCall, MockInboundCall } from "./fixtures/calls";
+export type {
+  MockCallRecord,
+  MockScheduledCall,
+  MockInboundCall,
+} from "./fixtures/calls";
 export type { MockClinicUser, MockClinic } from "./fixtures/users";

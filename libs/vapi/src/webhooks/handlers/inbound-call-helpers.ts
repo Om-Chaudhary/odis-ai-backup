@@ -7,7 +7,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { loggers } from "@odis/logger";
+import { loggers } from "@odis-ai/logger";
 import type { VapiWebhookCall } from "../types";
 import type { VapiCallResponse } from "../../client";
 import {

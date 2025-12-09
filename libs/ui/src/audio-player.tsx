@@ -13,7 +13,7 @@ import {
   Rewind,
   FastForward,
 } from "lucide-react";
-import { formatDuration } from "@odis/utils";
+import { formatDuration } from "@odis-ai/utils";
 
 interface AudioPlayerProps {
   url: string;

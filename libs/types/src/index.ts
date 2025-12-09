@@ -1,5 +1,5 @@
 /**
- * @odis/types
+ * @odis-ai/types
  *
  * Shared TypeScript types for the ODIS platform.
  * Includes Supabase database types, domain types, and service types.

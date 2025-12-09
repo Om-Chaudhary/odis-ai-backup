@@ -2,7 +2,7 @@
 
 import * as React from "react";
 
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (

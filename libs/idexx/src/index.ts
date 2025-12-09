@@ -1,5 +1,5 @@
 /**
- * @odis/idexx
+ * @odis-ai/idexx
  *
  * IDEXX integration library.
  * Includes data transformation, validation, and credential management.

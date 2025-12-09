@@ -5,11 +5,11 @@
  * and transforming VAPI webhook data to database format.
  */
 
-import { createServiceClient } from "@odis/db";
+import { createServiceClient } from "@odis-ai/db";
 import type { VapiCallResponse } from "./client";
-import { loggers } from "@odis/logger";
-import { getClinicByName } from "@odis/clinics/utils";
-import { getClinicByInboundAssistantId } from "@odis/clinics/vapi-config";
+import { loggers } from "@odis-ai/logger";
+import { getClinicByName } from "@odis-ai/clinics/utils";
+import { getClinicByInboundAssistantId } from "@odis-ai/clinics/vapi-config";
 import {
   calculateDuration,
   calculateTotalCost,

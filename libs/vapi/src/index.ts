@@ -1,5 +1,5 @@
 /**
- * @odis/vapi
+ * @odis-ai/vapi
  *
  * VAPI AI integration library.
  * Includes clients, knowledge base, prompts, and webhook handlers.

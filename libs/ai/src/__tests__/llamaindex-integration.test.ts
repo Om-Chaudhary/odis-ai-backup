@@ -15,7 +15,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { extractEntities } from "../normalize-scribe";
 import { generateDischargeSummary } from "../generate-discharge";
-import type { NormalizedEntities } from "@odis/validators/scribe";
+import type { NormalizedEntities } from "@odis-ai/validators/scribe";
 
 // Mock LlamaIndex
 vi.mock("../llamaindex/config", () => ({

@@ -10,8 +10,8 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { createClient } from "@odis/db/server";
-import { env } from "@odis/env";
+import { createClient } from "@odis-ai/db/server";
+import { env } from "@odis-ai/env";
 import type { User } from "@supabase/supabase-js";
 import { getCorsHeaders } from "./cors";
 

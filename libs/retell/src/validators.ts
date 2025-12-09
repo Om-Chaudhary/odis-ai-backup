@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { normalizeToE164 } from "@odis/utils/phone";
+import { normalizeToE164 } from "@odis-ai/utils/phone";
 
 /**
  * Phone number validation schema

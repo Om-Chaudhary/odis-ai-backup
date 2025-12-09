@@ -13,16 +13,16 @@
 import React from "react";
 import { CasesService } from "./cases-service";
 import { ExecutionPlan } from "./execution-plan";
-import { generateStructuredDischargeSummaryWithRetry } from "@odis/ai/generate-structured-discharge";
-import { extractEntitiesWithRetry } from "@odis/ai/normalize-scribe";
-import { scheduleEmailExecution } from "@odis/qstash/client";
-import { isValidEmail } from "@odis/resend/utils";
+import { generateStructuredDischargeSummaryWithRetry } from "@odis-ai/ai/generate-structured-discharge";
+import { extractEntitiesWithRetry } from "@odis-ai/ai/normalize-scribe";
+import { scheduleEmailExecution } from "@odis-ai/qstash/client";
+import { isValidEmail } from "@odis-ai/resend/utils";
 // Dynamic import to avoid Next.js bundling React Email during static generation
-// import { DischargeEmailTemplate, prepareEmailContent } from "@odis/email";
-import type { OrchestrationRequest } from "@odis/validators/orchestration";
-import { getClinicByUserId } from "@odis/clinics/utils";
-import type { StructuredDischargeSummary } from "@odis/validators/discharge-summary";
-import type { NormalizedEntities } from "@odis/validators/scribe";
+// import { DischargeEmailTemplate, prepareEmailContent } from "@odis-ai/email";
+import type { OrchestrationRequest } from "@odis-ai/validators/orchestration";
+import { getClinicByUserId } from "@odis-ai/clinics/utils";
+import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
+import type { NormalizedEntities } from "@odis-ai/validators/scribe";
 import type {
   CallResult,
   EmailResult,
@@ -34,15 +34,15 @@ import type {
   StepName,
   StepResult,
   SummaryResult,
-} from "@odis/types/orchestration";
-import type { SupabaseClientType } from "@odis/types/supabase";
+} from "@odis-ai/types/orchestration";
+import type { SupabaseClientType } from "@odis-ai/types/supabase";
 import type { User } from "@supabase/supabase-js";
-import type { IngestPayload } from "@odis/types/services";
-import type { Database, Json } from "@odis/types";
+import type { IngestPayload } from "@odis-ai/types/services";
+import type { Database, Json } from "@odis-ai/types";
 import {
   type ClinicBranding,
   createClinicBranding,
-} from "@odis/types/clinic-branding";
+} from "@odis-ai/types/clinic-branding";
 
 type PatientRow = Database["public"]["Tables"]["patients"]["Row"];
 
@@ -98,8 +98,8 @@ async function generateEmailContent(
 
   // Dynamic import to avoid Next.js bundling React Email during static generation
   const { DischargeEmailTemplate } =
-    await import("@odis/email/discharge-email-template");
-  const { prepareEmailContent } = await import("@odis/email");
+    await import("@odis-ai/email/discharge-email-template");
+  const { prepareEmailContent } = await import("@odis-ai/email");
 
   // Render React email template to HTML (prefer structured content)
   const { html, text } = await prepareEmailContent(

@@ -1,5 +1,5 @@
 /**
- * @odis/utils
+ * @odis-ai/utils
  *
  * Pure utility functions for the ODIS platform.
  * No external dependencies beyond standard libraries.

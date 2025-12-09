@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
-import { env } from "@odis/env";
-import { AUTH_PARAMS } from "@odis/constants/auth";
+import { env } from "@odis-ai/env";
+import { AUTH_PARAMS } from "@odis-ai/constants/auth";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({

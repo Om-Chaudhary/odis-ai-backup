@@ -9,11 +9,11 @@ import {
   buildDynamicVariables,
   type ConditionCategory,
 } from "./knowledge-base";
-import { createServiceClient } from "@odis/db";
-import { getClinicByUserId } from "@odis/clinics/utils";
-import { getClinicVapiConfigByUserId } from "@odis/clinics/vapi-config";
-import { normalizeToE164 } from "@odis/utils/phone";
-import type { Database } from "@odis/types";
+import { createServiceClient } from "@odis-ai/db";
+import { getClinicByUserId } from "@odis-ai/clinics/utils";
+import { getClinicVapiConfigByUserId } from "@odis-ai/clinics/vapi-config";
+import { normalizeToE164 } from "@odis-ai/utils/phone";
+import type { Database } from "@odis-ai/types";
 
 type ScheduledCallRow =
   Database["public"]["Tables"]["scheduled_discharge_calls"]["Row"];
@@ -161,8 +161,8 @@ export async function createVapiCall(
       userId,
       supabase,
     );
-    const assistantId = input.assistantId ??
-      clinicVapiConfig.outboundAssistantId;
+    const assistantId =
+      input.assistantId ?? clinicVapiConfig.outboundAssistantId;
     const phoneNumberId = input.phoneNumberId ?? clinicVapiConfig.phoneNumberId;
 
     console.log("[VAPI_CALL_MANAGER] Using VAPI config", {

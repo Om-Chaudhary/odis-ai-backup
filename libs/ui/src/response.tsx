@@ -3,7 +3,7 @@
 import { memo, type ComponentProps } from "react";
 import { Streamdown } from "streamdown";
 
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 
 type ResponseProps = ComponentProps<typeof Streamdown>;
 

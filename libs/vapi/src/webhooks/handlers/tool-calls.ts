@@ -7,7 +7,7 @@
  * @module vapi/webhooks/handlers/tool-calls
  */
 
-import { loggers } from "@odis/logger";
+import { loggers } from "@odis-ai/logger";
 import type {
   ToolCallsMessage,
   ToolCallsResponse,

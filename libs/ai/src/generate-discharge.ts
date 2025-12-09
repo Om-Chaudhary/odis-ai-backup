@@ -12,7 +12,7 @@ import {
   extractTextFromResponse,
 } from "./llamaindex/utils";
 import type { ChatMessage } from "llamaindex";
-import type { NormalizedEntities } from "@odis/validators/scribe";
+import type { NormalizedEntities } from "@odis-ai/validators/scribe";
 
 /* ========================================
    Prompt Engineering
