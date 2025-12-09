@@ -8,8 +8,13 @@ import { env } from "~/env";
 import { handleCorsPreflightRequest, withCorsHeaders } from "@odis/api/cors";
 import { generateStructuredDischargeSummaryWithRetry } from "@odis/ai/generate-structured-discharge";
 import { normalizePhoneNumber } from "@odis/utils/phone";
-import { CasesService } from "@odis/services/cases-service";
 import type { StructuredDischargeSummary } from "@odis/validators/discharge-summary";
+
+// Dynamic import to avoid bundling @react-email/components during static generation
+async function getCasesService() {
+  const { CasesService } = await import("@odis/services/cases-service");
+  return CasesService;
+}
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)
@@ -99,6 +104,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Fetch case data via Service
+    const CasesService = await getCasesService();
     const caseInfo = await CasesService.getCaseWithEntities(
       supabase,
       validated.caseId,

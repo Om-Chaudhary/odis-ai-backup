@@ -4,8 +4,13 @@ import { createClient } from "@odis/db/server";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
 import { getUser } from "~/server/actions/auth";
-import { CasesService } from "@odis/services/cases-service";
 import type { IngestPayload } from "~/types/services";
+
+// Dynamic import to avoid bundling @react-email/components during static generation
+async function getCasesService() {
+  const { CasesService } = await import("@odis/services/cases-service");
+  return CasesService;
+}
 import { z } from "zod";
 import { handleCorsPreflightRequest, withCorsHeaders } from "@odis/api/cors";
 
@@ -137,6 +142,7 @@ export async function POST(request: NextRequest) {
     const payload = validation.data as IngestPayload;
 
     // 3. Execute Service
+    const CasesService = await getCasesService();
     const result = await CasesService.ingest(supabase, user.id, payload);
 
     // 4. Response

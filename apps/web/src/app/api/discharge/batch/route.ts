@@ -1,9 +1,19 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@odis/db/server";
-import { DischargeBatchProcessor } from "@odis/services/discharge-batch-processor";
 import { z } from "zod";
 import { getUser } from "~/server/actions/auth";
+
+// Force Node.js runtime and dynamic rendering to avoid static bundling issues
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+// Dynamic import to avoid bundling @react-email/components during static generation
+async function getDischargeBatchProcessor() {
+  const { DischargeBatchProcessor } =
+    await import("@odis/services/discharge-batch-processor");
+  return DischargeBatchProcessor;
+}
 
 /**
  * Process Discharge Batch API Route
@@ -41,22 +51,21 @@ export async function POST(request: NextRequest) {
     // Get batch details
     const { data: batch, error: batchError } = await supabase
       .from("discharge_batches")
-      .select(`
+      .select(
+        `
         *,
         discharge_batch_items (
           case_id,
           patient_id
         )
-      `)
+      `,
+      )
       .eq("id", validated.batchId)
       .eq("user_id", user.id)
       .single();
 
     if (batchError ?? !batch) {
-      return NextResponse.json(
-        { error: "Batch not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Batch not found" }, { status: 404 });
     }
 
     // Check if batch is already being processed
@@ -68,13 +77,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Get eligible cases from batch items
-    const batchItems = batch.discharge_batch_items as Array<{ case_id: string }>;
+    const batchItems = batch.discharge_batch_items as Array<{
+      case_id: string;
+    }>;
     const caseIds = batchItems.map((item) => item.case_id);
 
     // Fetch case details
     const { data: cases, error: casesError } = await supabase
       .from("cases")
-      .select(`
+      .select(
+        `
         id,
         patients (
           id,
@@ -83,7 +95,8 @@ export async function POST(request: NextRequest) {
           owner_email,
           owner_phone
         )
-      `)
+      `,
+      )
       .in("id", caseIds);
 
     if (casesError ?? !cases) {
@@ -94,7 +107,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Transform to eligible cases format
-    const eligibleCases = cases.map(caseData => {
+    const eligibleCases = cases.map((caseData) => {
       const patient = Array.isArray(caseData.patients)
         ? caseData.patients[0]
         : caseData.patients;
@@ -112,7 +125,8 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    // Initialize processor
+    // Initialize processor (dynamically imported)
+    const DischargeBatchProcessor = await getDischargeBatchProcessor();
     const processor = new DischargeBatchProcessor(supabase, user);
 
     // Process the batch
@@ -183,7 +197,8 @@ export async function GET(request: NextRequest) {
     // Get batch status
     const { data: batch, error } = await supabase
       .from("discharge_batches")
-      .select(`
+      .select(
+        `
         *,
         discharge_batch_items (
           id,
@@ -194,16 +209,14 @@ export async function GET(request: NextRequest) {
           error_message,
           processed_at
         )
-      `)
+      `,
+      )
       .eq("id", batchId)
       .eq("user_id", user.id)
       .single();
 
     if (error ?? !batch) {
-      return NextResponse.json(
-        { error: "Batch not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Batch not found" }, { status: 404 });
     }
 
     return NextResponse.json(batch);

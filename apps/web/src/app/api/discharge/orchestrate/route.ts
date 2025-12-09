@@ -54,8 +54,18 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { authenticateUser } from "@odis/api/auth";
 import { handleCorsPreflightRequest, withCorsHeaders } from "@odis/api/cors";
-import { DischargeOrchestrator } from "@odis/services/discharge-orchestrator";
 import { OrchestrationRequestSchema } from "@odis/validators/orchestration";
+
+// Force Node.js runtime and dynamic rendering to avoid static bundling issues
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+// Dynamic import to avoid bundling @react-email/components during static generation
+async function getDischargeOrchestrator() {
+  const { DischargeOrchestrator } =
+    await import("@odis/services/discharge-orchestrator");
+  return DischargeOrchestrator;
+}
 
 /**
  * POST /api/discharge/orchestrate
@@ -114,7 +124,8 @@ export async function POST(request: NextRequest) {
         "rawData" in orchestrationRequest.input ? "rawData" : "existingCase",
     });
 
-    // Create orchestrator and execute workflow
+    // Create orchestrator and execute workflow (dynamically imported)
+    const DischargeOrchestrator = await getDischargeOrchestrator();
     const orchestrator = new DischargeOrchestrator(supabase, user);
     const result = await orchestrator.orchestrate(orchestrationRequest);
 

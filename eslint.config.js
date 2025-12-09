@@ -1,7 +1,5 @@
 import { FlatCompat } from "@eslint/eslintrc";
 import tseslint from "typescript-eslint";
-// @ts-ignore -- no types for this plugin
-import drizzle from "eslint-plugin-drizzle";
 import nxPlugin from "@nx/eslint-plugin";
 
 const compat = new FlatCompat({
@@ -43,7 +41,6 @@ export default tseslint.config(
   {
     files: ["**/*.ts", "**/*.tsx"],
     plugins: {
-      drizzle,
       "@nx": nxPlugin,
     },
     extends: [
@@ -72,14 +69,6 @@ export default tseslint.config(
       "@typescript-eslint/no-unsafe-member-access": "off",
       "@typescript-eslint/no-unsafe-argument": "off",
       "@typescript-eslint/no-unsafe-return": "off",
-      "drizzle/enforce-delete-with-where": [
-        "error",
-        { drizzleObjectName: ["db", "ctx.db"] },
-      ],
-      "drizzle/enforce-update-with-where": [
-        "error",
-        { drizzleObjectName: ["db", "ctx.db"] },
-      ],
       "@nx/enforce-module-boundaries": [
         "error",
         {

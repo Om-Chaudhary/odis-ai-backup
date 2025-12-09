@@ -3,8 +3,13 @@ import { NextResponse } from "next/server";
 import { verifySignatureAppRouter } from "@upstash/qstash/dist/nextjs";
 import { createServiceClient } from "@odis/db/server";
 import { createPhoneCall, mapVapiStatus } from "@odis/vapi/client";
-import { CasesService } from "@odis/services/cases-service";
 import { buildDynamicVariables } from "@odis/vapi/knowledge-base";
+
+// Dynamic import to avoid bundling @react-email/components during static generation
+async function getCasesService() {
+  const { CasesService } = await import("@odis/services/cases-service");
+  return CasesService;
+}
 import { extractVapiVariablesFromEntities } from "@odis/vapi/extract-variables";
 import {
   normalizeVariablesToSnakeCase,
@@ -102,6 +107,7 @@ async function handler(req: NextRequest) {
     // --- ENRICHMENT: Fetch latest case data if linked ---
     if (call.case_id) {
       try {
+        const CasesService = await getCasesService();
         const caseInfo = await CasesService.getCaseWithEntities(
           supabase,
           call.case_id,

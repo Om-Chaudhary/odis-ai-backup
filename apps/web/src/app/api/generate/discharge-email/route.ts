@@ -5,7 +5,7 @@ import { generateEmailSchema } from "@odis/validators/discharge";
 import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
-import { htmlToPlainText } from "@odis/resend/client";
+import { htmlToPlainText } from "@odis/resend/utils";
 import { handleCorsPreflightRequest, withCorsHeaders } from "@odis/api/cors";
 
 /**

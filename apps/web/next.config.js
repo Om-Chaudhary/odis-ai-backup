@@ -120,6 +120,65 @@ const config = {
     optimizePackageImports: ["lucide-react", "@radix-ui/react-icons"],
   },
 
+  // Transpile internal packages to ensure proper handling
+  transpilePackages: ["@odis/email", "@odis/services", "@odis/resend"],
+
+  // Exclude react-email packages from server bundle during SSG
+  // This prevents the Html context error during static page generation
+  serverExternalPackages: [
+    "@react-email/body",
+    "@react-email/column",
+    "@react-email/container",
+    "@react-email/head",
+    "@react-email/heading",
+    "@react-email/hr",
+    "@react-email/html",
+    "@react-email/img",
+    "@react-email/link",
+    "@react-email/preview",
+    "@react-email/render",
+    "@react-email/row",
+    "@react-email/section",
+    "@react-email/text",
+  ],
+
+  // Webpack configuration to handle react-email packages
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      const reactEmailPackages = [
+        "@react-email/body",
+        "@react-email/column",
+        "@react-email/container",
+        "@react-email/head",
+        "@react-email/heading",
+        "@react-email/hr",
+        "@react-email/html",
+        "@react-email/img",
+        "@react-email/link",
+        "@react-email/preview",
+        "@react-email/render",
+        "@react-email/row",
+        "@react-email/section",
+        "@react-email/text",
+      ];
+
+      // More aggressive externalization using function-based approach
+      config.externals = [
+        ...(Array.isArray(config.externals) ? config.externals : []),
+        (
+          /** @type {{ request?: string }} */ { request },
+          /** @type {(err: null, result?: string) => void} */ callback,
+        ) => {
+          if (reactEmailPackages.some((pkg) => request?.startsWith(pkg))) {
+            return callback(null, `commonjs ${request}`);
+          }
+          callback(null);
+        },
+      ];
+    }
+    return config;
+  },
+
   // Nx configuration
   nx: {
     svgr: false,

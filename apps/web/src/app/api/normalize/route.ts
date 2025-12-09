@@ -25,7 +25,12 @@ import {
   NormalizeRequestSchema,
   type NormalizeResponse,
 } from "@odis/validators/scribe";
-import { CasesService } from "@odis/services/cases-service";
+
+// Dynamic import to avoid bundling @react-email/components during static generation
+async function getCasesService() {
+  const { CasesService } = await import("@odis/services/cases-service");
+  return CasesService;
+}
 
 /* ========================================
    Main API Handler
@@ -76,6 +81,7 @@ export const POST = withAuth<NormalizeResponse>(
       );
 
       // Step 3: Call CasesService
+      const CasesService = await getCasesService();
       const result = await CasesService.ingest(supabase, user.id, {
         mode: "text",
         source: "mobile_app", // Assumption: This endpoint is primarily mobile/web
@@ -191,6 +197,7 @@ export const GET = withAuth<{
     }
 
     // Fetch case with entities
+    const CasesService = await getCasesService();
     const result = await CasesService.getCaseWithEntities(supabase, caseId);
 
     if (!result) {
