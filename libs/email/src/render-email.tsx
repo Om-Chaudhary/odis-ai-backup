@@ -1,9 +1,11 @@
 import type { ReactElement } from "react";
-import { render } from "@react-email/components";
 
 export async function renderEmailToHtml(
   component: ReactElement,
 ): Promise<string> {
+  // Use @react-email/render directly to avoid the Html component check
+  // that throws "Html should not be imported outside of pages/_document"
+  const { render } = await import("@react-email/render");
   return await render(component);
 }
 

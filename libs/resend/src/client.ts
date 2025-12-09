@@ -1,11 +1,17 @@
-import { Resend } from "resend";
-import { env } from "@odis/env";
+// Re-export utilities for backward compatibility
+// These can be safely imported without pulling in @react-email
+export { isValidEmail, htmlToPlainText } from "./utils";
 
 /**
- * Resend client instance for sending emails
- * Initialized with API key from environment variables
+ * Lazily get the Resend client instance
+ * This avoids importing the resend library (which includes @react-email)
+ * at module initialization time, preventing issues with Next.js static generation.
  */
-export const resend = new Resend(env.RESEND_API_KEY);
+async function getResendClient() {
+  const { Resend } = await import("resend");
+  const { env } = await import("@odis/env");
+  return new Resend(env.RESEND_API_KEY);
+}
 
 /**
  * Send a discharge email to a pet owner
@@ -38,6 +44,7 @@ export async function sendDischargeEmail({
   text?: string;
 }) {
   try {
+    const resend = await getResendClient();
     const response = await resend.emails.send({
       from: "OdisAI <noreply@odisai.net>",
       to: Array.isArray(to) ? to : [to],
@@ -54,47 +61,4 @@ export async function sendDischargeEmail({
       error: error instanceof Error ? error : new Error("Unknown error"),
     };
   }
-}
-
-/**
- * Validate email address format
- *
- * @param email - Email address to validate
- * @returns true if valid, false otherwise
- */
-export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
-
-/**
- * Generate plain text version from HTML content
- * Strips HTML tags and converts common elements to plain text equivalents
- *
- * @param html - HTML content
- * @returns Plain text version
- */
-export function htmlToPlainText(html: string): string {
-  return (
-    html
-      // Convert line breaks
-      .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/<\/p>/gi, "\n\n")
-      .replace(/<\/div>/gi, "\n")
-      .replace(/<\/li>/gi, "\n")
-      // Convert headings
-      .replace(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/gi, "\n$1\n")
-      // Remove remaining tags
-      .replace(/<[^>]+>/g, "")
-      // Decode HTML entities
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&quot;/g, '"')
-      .replace(/&#39;/g, "'")
-      // Clean up whitespace
-      .replace(/\n\s*\n\s*\n/g, "\n\n")
-      .trim()
-  );
 }

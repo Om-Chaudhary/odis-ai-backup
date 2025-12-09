@@ -6,6 +6,9 @@
  */
 
 export * from "./cases-service";
-export * from "./discharge-batch-processor";
-export * from "./discharge-orchestrator";
+// Note: discharge-batch-processor and discharge-orchestrator are not exported
+// from index to avoid bundling @react-email/components during Next.js static
+// page generation. Import directly when needed:
+// - "@odis/services/discharge-batch-processor"
+// - "@odis/services/discharge-orchestrator"
 export * from "./execution-plan";

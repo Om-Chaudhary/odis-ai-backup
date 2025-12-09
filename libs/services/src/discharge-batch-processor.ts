@@ -5,10 +5,20 @@
  * Processes cases in chunks for performance and supports cancellation.
  */
 
-import { DischargeOrchestrator } from "./discharge-orchestrator";
+// Note: DischargeOrchestrator is dynamically imported to avoid bundling
+// @react-email/components during Next.js static page generation.
 import type { SupabaseClientType } from "@odis/types/supabase";
 import type { User } from "@supabase/supabase-js";
 import { addDays, setHours, setMinutes, setSeconds } from "date-fns";
+
+/**
+ * Dynamically import the DischargeOrchestrator to avoid bundling
+ * @react-email/components during Next.js static page generation.
+ */
+async function getDischargeOrchestrator() {
+  const { DischargeOrchestrator } = await import("./discharge-orchestrator");
+  return DischargeOrchestrator;
+}
 
 export interface BatchProcessingOptions {
   batchId: string;
@@ -266,6 +276,8 @@ export class DischargeBatchProcessor {
     callId?: string;
   }> {
     try {
+      // Dynamic import to avoid bundling @react-email/components during static generation
+      const DischargeOrchestrator = await getDischargeOrchestrator();
       const orchestrator = new DischargeOrchestrator(this.supabase, this.user);
 
       // Build orchestration request

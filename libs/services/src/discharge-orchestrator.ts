@@ -16,8 +16,9 @@ import { ExecutionPlan } from "./execution-plan";
 import { generateStructuredDischargeSummaryWithRetry } from "@odis/ai/generate-structured-discharge";
 import { extractEntitiesWithRetry } from "@odis/ai/normalize-scribe";
 import { scheduleEmailExecution } from "@odis/qstash/client";
-import { isValidEmail } from "@odis/resend/client";
-import { DischargeEmailTemplate, prepareEmailContent } from "@odis/email";
+import { isValidEmail } from "@odis/resend/utils";
+// Dynamic import to avoid Next.js bundling React Email during static generation
+// import { DischargeEmailTemplate, prepareEmailContent } from "@odis/email";
 import type { OrchestrationRequest } from "@odis/validators/orchestration";
 import { getClinicByUserId } from "@odis/clinics/utils";
 import type { StructuredDischargeSummary } from "@odis/validators/discharge-summary";
@@ -94,6 +95,11 @@ async function generateEmailContent(
 
   // Use generic text instead of specific date
   const formattedDate = "Recent Visit";
+
+  // Dynamic import to avoid Next.js bundling React Email during static generation
+  const { DischargeEmailTemplate } =
+    await import("@odis/email/discharge-email-template");
+  const { prepareEmailContent } = await import("@odis/email");
 
   // Render React email template to HTML (prefer structured content)
   const { html, text } = await prepareEmailContent(
@@ -215,7 +221,7 @@ export class DischargeOrchestrator {
         if (stepConfig?.enabled) {
           // Step is enabled but dependencies not met - mark as skipped
           const hasFailedDependency = stepConfig.dependencies.some((dep) =>
-            this.plan.getFailedSteps().includes(dep)
+            this.plan.getFailedSteps().includes(dep),
           );
           if (hasFailedDependency) {
             this.results.set(step, {
@@ -433,30 +439,33 @@ export class DischargeOrchestrator {
     }
 
     // Build ingest payload
-    const payload: IngestPayload = input.rawData.mode === "text"
-      ? {
-        mode: "text",
-        source: input.rawData.source,
-        text: input.rawData.text ?? "",
-        options: typeof stepConfig.options === "object" &&
-            stepConfig.options !== null
-          ? (stepConfig.options as {
-            autoSchedule?: boolean;
-            inputType?: string;
-          })
-          : undefined,
-      }
-      : {
-        mode: "structured",
-        source: input.rawData.source,
-        data: input.rawData.data ?? {},
-        options: typeof stepConfig.options === "object" &&
-            stepConfig.options !== null
-          ? (stepConfig.options as {
-            autoSchedule?: boolean;
-          })
-          : undefined,
-      };
+    const payload: IngestPayload =
+      input.rawData.mode === "text"
+        ? {
+            mode: "text",
+            source: input.rawData.source,
+            text: input.rawData.text ?? "",
+            options:
+              typeof stepConfig.options === "object" &&
+              stepConfig.options !== null
+                ? (stepConfig.options as {
+                    autoSchedule?: boolean;
+                    inputType?: string;
+                  })
+                : undefined,
+          }
+        : {
+            mode: "structured",
+            source: input.rawData.source,
+            data: input.rawData.data ?? {},
+            options:
+              typeof stepConfig.options === "object" &&
+              stepConfig.options !== null
+                ? (stepConfig.options as {
+                    autoSchedule?: boolean;
+                  })
+                : undefined,
+          };
 
     const result = await CasesService.ingest(
       this.supabase,
@@ -520,13 +529,11 @@ export class DischargeOrchestrator {
       "transcription";
 
     // Priority 1: Try transcription first
-    const transcriptions = caseData.transcriptions as
-      | Array<{
-        id: string;
-        transcript: string | null;
-        created_at: string;
-      }>
-      | null;
+    const transcriptions = caseData.transcriptions as Array<{
+      id: string;
+      transcript: string | null;
+      created_at: string;
+    }> | null;
 
     const latestTranscription = transcriptions?.sort(
       (a, b) =>
@@ -689,7 +696,8 @@ export class DischargeOrchestrator {
           (idexx.owner_name ||
             (idexx.client_first_name && idexx.client_last_name))
         ) {
-          entities.patient.owner.name = idexx.owner_name ??
+          entities.patient.owner.name =
+            idexx.owner_name ??
             `${idexx.client_first_name} ${idexx.client_last_name}`.trim();
         }
       }
@@ -953,8 +961,8 @@ export class DischargeOrchestrator {
     const breed = patient?.breed;
 
     // Get visit date: prefer scheduled_at, fallback to created_at
-    const visitDate = caseInfo.case.scheduled_at ?? caseInfo.case.created_at ??
-      null;
+    const visitDate =
+      caseInfo.case.scheduled_at ?? caseInfo.case.created_at ?? null;
 
     // Get user data for clinic information (fallback)
     const { data: userData } = await this.supabase
@@ -985,9 +993,8 @@ export class DischargeOrchestrator {
     });
 
     // Get discharge summary with structured content
-    const dischargeSummaryData = await this.getDischargeSummaryWithStructured(
-      caseId,
-    );
+    const dischargeSummaryData =
+      await this.getDischargeSummaryWithStructured(caseId);
 
     console.log("[ORCHESTRATOR] Generating email with structured content", {
       caseId,
@@ -1040,9 +1047,9 @@ export class DischargeOrchestrator {
     const options =
       typeof stepConfig.options === "object" && stepConfig.options !== null
         ? (stepConfig.options as {
-          recipientEmail?: string;
-          scheduledFor?: Date;
-        })
+            recipientEmail?: string;
+            scheduledFor?: Date;
+          })
         : {};
     const recipientEmail = options.recipientEmail;
     if (!recipientEmail) {
@@ -1127,7 +1134,8 @@ export class DischargeOrchestrator {
     } else {
       // Apply same delay logic as calls:
       // Use user's default_schedule_delay_minutes if set, otherwise use system default
-      const delayMinutes = userSettings?.default_schedule_delay_minutes ??
+      const delayMinutes =
+        userSettings?.default_schedule_delay_minutes ??
         DEFAULT_SCHEDULE_DELAY_MINUTES;
 
       // Calculate delay in milliseconds, with minimum buffer
@@ -1160,10 +1168,10 @@ export class DischargeOrchestrator {
         status: "queued",
         metadata: testModeEnabled
           ? {
-            test_mode: true,
-            original_recipient_email: recipientEmail,
-            original_recipient_name: recipientName,
-          }
+              test_mode: true,
+              original_recipient_email: recipientEmail,
+              original_recipient_name: recipientName,
+            }
           : ({} as Json),
       })
       .select()
@@ -1197,9 +1205,10 @@ export class DischargeOrchestrator {
             emailId: scheduledEmail.id,
             userId: this.user.id,
             error: deleteError,
-            qstashError: qstashError instanceof Error
-              ? qstashError.message
-              : String(qstashError),
+            qstashError:
+              qstashError instanceof Error
+                ? qstashError.message
+                : String(qstashError),
           });
           // TODO: Send alert to monitoring system
         }
@@ -1207,9 +1216,10 @@ export class DischargeOrchestrator {
         console.error("[ORCHESTRATOR] Critical: Rollback operation failed", {
           emailId: scheduledEmail.id,
           userId: this.user.id,
-          error: rollbackError instanceof Error
-            ? rollbackError.message
-            : String(rollbackError),
+          error:
+            rollbackError instanceof Error
+              ? rollbackError.message
+              : String(rollbackError),
         });
         // TODO: Send critical alert to operations team
       }
@@ -1271,9 +1281,9 @@ export class DischargeOrchestrator {
     const options =
       typeof stepConfig.options === "object" && stepConfig.options !== null
         ? (stepConfig.options as {
-          scheduledFor?: Date;
-          phoneNumber?: string;
-        })
+            scheduledFor?: Date;
+            phoneNumber?: string;
+          })
         : {};
 
     // Get summary content if available
@@ -1302,8 +1312,8 @@ export class DischargeOrchestrator {
 
     // Get clinic data from clinic table (preferred) with fallback to user table
     const clinic = await getClinicByUserId(this.user.id, this.supabase);
-    const clinicName = clinic?.name ?? userSettings?.clinic_name ??
-      "Your Clinic";
+    const clinicName =
+      clinic?.name ?? userSettings?.clinic_name ?? "Your Clinic";
     const clinicPhone = clinic?.phone ?? userSettings?.clinic_phone ?? "";
     // Note: clinicEmail is available but not currently used in scheduleDischargeCall
     // Keeping for potential future use
@@ -1461,8 +1471,8 @@ export class DischargeOrchestrator {
     if (summary.structured_content) {
       try {
         // The structured_content is stored as JSONB, so it should already be parsed
-        structuredContent = summary
-          .structured_content as unknown as StructuredDischargeSummary;
+        structuredContent =
+          summary.structured_content as unknown as StructuredDischargeSummary;
       } catch (e) {
         console.warn(
           "[ORCHESTRATOR] Failed to parse structured_content, falling back to plaintext",
@@ -1537,9 +1547,10 @@ export class DischargeOrchestrator {
 
     for (const [step, result] of this.results.entries()) {
       // Ensure timing is at least 1ms for completed steps (for test compatibility)
-      const timing = result.status === "completed" && result.duration === 0
-        ? 1
-        : result.duration;
+      const timing =
+        result.status === "completed" && result.duration === 0
+          ? 1
+          : result.duration;
       stepTimings[step] = timing;
       if (result.status === "completed") {
         completedSteps.push(step);
@@ -1559,14 +1570,12 @@ export class DischargeOrchestrator {
         skippedSteps,
         failedSteps,
         ingestion: this.getTypedResult<IngestResult>("ingest"),
-        extractedEntities: this.getTypedResult<ExtractEntitiesResult>(
-          "extractEntities",
-        ),
+        extractedEntities:
+          this.getTypedResult<ExtractEntitiesResult>("extractEntities"),
         summary: this.getTypedResult<SummaryResult>("generateSummary"),
         email: this.getTypedResult<EmailResult>("prepareEmail"),
-        emailSchedule: this.getTypedResult<EmailScheduleResult>(
-          "scheduleEmail",
-        ),
+        emailSchedule:
+          this.getTypedResult<EmailScheduleResult>("scheduleEmail"),
         call: this.getTypedResult<CallResult>("scheduleCall"),
       },
       metadata: {

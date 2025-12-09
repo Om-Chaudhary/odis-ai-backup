@@ -60,3 +60,11 @@ export * from "./number-ticker";
 export * from "./conversation";
 export * from "./message";
 export * from "./response";
+
+// Dashboard components (migrated from apps/web)
+export * from "./stats-card";
+export * from "./empty-state";
+export * from "./pagination-controls";
+export * from "./filter-button-group";
+export * from "./audio-player";
+export * from "./day-pagination";

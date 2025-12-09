@@ -7,7 +7,6 @@
  * - Namespacing for different modules
  * - JSON output for log aggregation services
  */
-
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
 export type LogContext = Record<string, unknown>;
