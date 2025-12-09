@@ -835,7 +835,8 @@ export const CasesService = {
         agentName: options.agentName ?? "Sarah",
         petName: extractFirstName(entities.patient.name),
         ownerName: entities.patient.owner.name,
-        appointmentDate: "today",
+        // Keep date phrasing generic to avoid incorrect relative day mentions
+        appointmentDate: "recent visit",
         callType: "discharge",
         clinicPhone: options.clinicPhone ?? "",
         emergencyPhone: options.emergencyPhone ?? options.clinicPhone ?? "",

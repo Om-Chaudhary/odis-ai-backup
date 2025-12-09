@@ -10,6 +10,7 @@ import {
   normalizeVariablesToSnakeCase,
   extractFirstName,
 } from "~/lib/vapi/utils";
+import { isWithinBusinessHours } from "~/lib/utils/business-hours";
 
 /**
  * Execute Call Webhook
@@ -247,6 +248,20 @@ async function handler(req: NextRequest) {
     // CRITICAL: Normalize all variables to snake_case format for VAPI
     // VAPI system prompt expects snake_case variables ({{pet_name}}, {{owner_name}}, etc.)
     const normalizedVariables = normalizeVariablesToSnakeCase(dynamicVariables);
+
+    // Determine if clinic is open at execution time (for transfer availability)
+    // Get timezone from metadata or default to America/Los_Angeles
+    const callTimezone =
+      (metadata?.timezone as string) ?? "America/Los_Angeles";
+    const isClinicOpen = isWithinBusinessHours(new Date(), callTimezone);
+    normalizedVariables.clinic_is_open = isClinicOpen ? "true" : "false";
+
+    console.log("[EXECUTE_CALL] Clinic open status", {
+      callId,
+      timezone: callTimezone,
+      isClinicOpen,
+      clinic_is_open: normalizedVariables.clinic_is_open,
+    });
 
     console.log("[EXECUTE_CALL] Normalized variables (ready for VAPI)", {
       callId,
