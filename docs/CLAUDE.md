@@ -35,7 +35,6 @@ pnpm update-types     # Generate TypeScript types from Supabase schema
 - **Database**: Supabase (PostgreSQL)
 - **Auth**: Supabase Auth
 - **API**: tRPC + Next.js Server Actions
-- **CMS**: Sanity.io
 - **Styling**: Tailwind CSS 4
 - **UI Components**: shadcn/ui (Radix UI primitives)
 - **Analytics**: PostHog
@@ -51,7 +50,6 @@ src/
 │   ├── api/               # API routes (webhooks, tRPC)
 │   ├── dashboard/         # User dashboard
 │   │   └── calls/         # VAPI call management
-│   └── blog/              # Sanity CMS blog
 ├── components/            # React components
 │   ├── ui/               # shadcn/ui components
 │   ├── admin/            # Admin-specific components

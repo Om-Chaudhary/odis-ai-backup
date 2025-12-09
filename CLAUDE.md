@@ -36,7 +36,6 @@ pnpm docs:nx             # regenerate docs/reference/NX_PROJECTS.md
 - Styling: Tailwind CSS 4 + shadcn/ui (Radix)
 - Data: Supabase (PostgreSQL)
 - API: tRPC + Server Actions
-- CMS: Sanity
 - Analytics: PostHog
 - AI/Voice: VAPI
 
