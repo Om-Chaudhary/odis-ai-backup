@@ -97,11 +97,20 @@
       "Bash(npx next:*)",
       "Bash(pnpm vercel:*)",
       "Bash(npx shadcn:*)",
-      "mcp__vapi-mcp__list_calls"
+      "mcp__vapi-mcp__list_calls",
+      "Bash(pnpm test:all:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm test:libs:*)"
     ],
     "deny": [],
     "ask": []
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["shadcn", "vapi-mcp", "playwright"]
+  "enabledMcpjsonServers": [
+    "vapi-mcp",
+    "github",
+    "shadcn",
+    "playwright",
+    "supabase"
+  ]
 }
