@@ -21,6 +21,16 @@ import {
   Database,
   FileCode,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "~/components/ui/alert-dialog";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import type {
@@ -224,6 +234,8 @@ export function CaseCard({
     owner_email: caseData.patient.owner_email,
     owner_phone: caseData.patient.owner_phone,
   });
+  const [showCallConfirmation, setShowCallConfirmation] = useState(false);
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
 
   const workflowStatus = getCaseWorkflowStatus(caseData);
   const [showCallConfirmation, setShowCallConfirmation] = useState(false);
