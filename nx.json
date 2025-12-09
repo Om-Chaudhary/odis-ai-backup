@@ -4,7 +4,7 @@
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "sharedGlobals": [
       "{workspaceRoot}/tsconfig.base.json",
-      "{workspaceRoot}/.eslintrc.json"
+      "{workspaceRoot}/eslint.config.js"
     ],
     "production": [
       "default",
@@ -41,6 +41,12 @@
         "buildTargetName": "vite:build",
         "serveTargetName": "vite:serve",
         "previewTargetName": "vite:preview"
+      }
+    },
+    {
+      "plugin": "@nx/esbuild",
+      "options": {
+        "buildTargetName": "esbuild:build"
       }
     }
   ],

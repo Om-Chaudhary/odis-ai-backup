@@ -77,6 +77,32 @@ export default tseslint.config(
           allow: ["^~/.*"],
           depConstraints: [
             // ============================================
+            // Type-based constraints
+            // ============================================
+            {
+              sourceTag: "type:app",
+              onlyDependOnLibsWithTags: ["type:app", "type:lib"],
+            },
+            {
+              sourceTag: "type:lib",
+              onlyDependOnLibsWithTags: ["type:lib"],
+            },
+            // ============================================
+            // Platform-based constraints
+            // ============================================
+            {
+              sourceTag: "platform:browser",
+              onlyDependOnLibsWithTags: [
+                "platform:browser",
+                "platform:neutral",
+              ],
+            },
+            {
+              sourceTag: "platform:neutral",
+              onlyDependOnLibsWithTags: ["platform:neutral"],
+            },
+            // platform:node can depend on any platform (no constraint needed)
+            // ============================================
             // Application layer
             // ============================================
             {
@@ -84,6 +110,9 @@ export default tseslint.config(
               onlyDependOnLibsWithTags: [
                 "scope:web",
                 "scope:ui",
+                "scope:hooks",
+                "scope:auth",
+                "scope:styles",
                 "scope:utils",
                 "scope:types",
                 "scope:validators",
@@ -103,6 +132,40 @@ export default tseslint.config(
                 "scope:qstash",
                 "scope:resend",
                 "scope:retell",
+              ],
+            },
+            // ============================================
+            // New Platform Apps (Chrome Extension, Electron)
+            // ============================================
+            {
+              sourceTag: "scope:chrome-extension",
+              onlyDependOnLibsWithTags: [
+                "scope:ui",
+                "scope:hooks",
+                "scope:auth",
+                "scope:styles",
+                "scope:utils",
+                "scope:types",
+                "scope:validators",
+                "scope:api-client",
+                "scope:constants",
+                "scope:env",
+              ],
+            },
+            {
+              sourceTag: "scope:electron",
+              onlyDependOnLibsWithTags: [
+                "scope:ui",
+                "scope:hooks",
+                "scope:auth",
+                "scope:styles",
+                "scope:utils",
+                "scope:types",
+                "scope:validators",
+                "scope:api-client",
+                "scope:db",
+                "scope:constants",
+                "scope:env",
               ],
             },
             // ============================================
@@ -233,6 +296,22 @@ export default tseslint.config(
                 "scope:utils",
                 "scope:types",
               ],
+            },
+            {
+              sourceTag: "scope:hooks",
+              onlyDependOnLibsWithTags: ["scope:hooks", "scope:utils"],
+            },
+            {
+              sourceTag: "scope:auth",
+              onlyDependOnLibsWithTags: [
+                "scope:auth",
+                "scope:env",
+                "scope:types",
+              ],
+            },
+            {
+              sourceTag: "scope:styles",
+              onlyDependOnLibsWithTags: ["scope:styles"],
             },
             {
               sourceTag: "scope:api-client",
