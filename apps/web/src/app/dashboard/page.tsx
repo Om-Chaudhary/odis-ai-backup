@@ -1,11 +1,11 @@
 import { getUser } from "~/server/actions/auth";
 import { redirect } from "next/navigation";
-import { createClient } from "~/lib/supabase/server";
-import { getClinicByUserId } from "~/lib/clinics/utils";
+import { createClient } from "@odis/db/server";
+import { getClinicByUserId } from "@odis/clinics/utils";
 import DashboardProfileHeader from "~/components/dashboard/DashboardProfileHeader";
 import { DashboardContentWithTabs } from "~/components/dashboard/dashboard-content-with-tabs";
 import { ExtensionAuthHandler } from "~/components/dashboard/extension-auth-handler";
-import { AUTH_PARAMS } from "~/lib/constants/auth";
+import { AUTH_PARAMS } from "@odis/constants/auth";
 
 interface DashboardPageProps {
   searchParams: Promise<{

@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "~/lib/supabase/server";
+import { createClient } from "@odis/db/server";
 import { getUser } from "./auth";
 import {
   sendCallSchema,
@@ -9,8 +9,8 @@ import {
   type SendCallInput,
   type ScheduleCallInput,
   type ImportCallsInput,
-} from "~/lib/retell/validators";
-import { createPhoneCall } from "~/lib/retell/client";
+} from "@odis/retell/validators";
+import { createPhoneCall } from "@odis/retell/client";
 
 /**
  * Check if user is admin

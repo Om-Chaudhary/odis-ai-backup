@@ -15,8 +15,8 @@ import {
 } from "./day-pagination-controls";
 import { getDateFromPreset } from "./cases-date-range-selector";
 import type { QuickFilterId } from "./quick-filters";
-import type { DateRangePreset } from "~/lib/utils/date-ranges";
-import { getDateRangeFromPreset } from "~/lib/utils/date-ranges";
+import type { DateRangePreset } from "@odis/utils/date-ranges";
+import { getDateRangeFromPreset } from "@odis/utils/date-ranges";
 import type { CaseStatus } from "~/types/dashboard";
 import { format, parseISO, startOfDay } from "date-fns";
 

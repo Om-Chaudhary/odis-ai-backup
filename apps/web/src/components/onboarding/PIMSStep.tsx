@@ -5,7 +5,7 @@ import { Button } from "@odis/ui/button";
 import { Label } from "@odis/ui/label";
 import { Checkbox } from "@odis/ui/checkbox";
 import { Input } from "@odis/ui/input";
-import { createClient } from "~/lib/supabase/client";
+import { createClient } from "@odis/db/client";
 import Image from "next/image";
 
 interface PIMSStepProps {

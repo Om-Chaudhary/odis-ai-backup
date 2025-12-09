@@ -4,7 +4,7 @@ import { DischargeStatusBadge } from "./discharge-status-badge";
 import { EmptyState } from "./empty-state";
 import { Button } from "@odis/ui/button";
 import type { DashboardCase } from "~/types/dashboard";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis/utils";
 
 interface DischargeActivityListProps {
   caseData: DashboardCase;

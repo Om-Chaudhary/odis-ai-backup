@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { CaseListItem } from "~/types/dashboard";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis/utils";
 import { QuickActionsMenu } from "~/components/dashboard/quick-actions-menu";
 import { Badge } from "@odis/ui/badge";
 

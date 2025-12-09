@@ -3,7 +3,7 @@
 import { Label } from "@odis/ui/label";
 import { Switch } from "@odis/ui/switch";
 // import { useMediaQuery } from "~/hooks/use-media-query";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis/utils";
 import { motion } from "framer-motion";
 import { Check, Star, Mail } from "lucide-react";
 import Link from "next/link";

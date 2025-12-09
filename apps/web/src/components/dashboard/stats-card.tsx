@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@odis/ui/card";
 import { TrendingUp, TrendingDown, Minus, type LucideIcon } from "lucide-react";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis/utils";
 
 interface StatsCardProps {
   title: string;

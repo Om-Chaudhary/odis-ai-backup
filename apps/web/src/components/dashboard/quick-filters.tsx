@@ -14,7 +14,7 @@ import {
   Clock,
   type LucideIcon,
 } from "lucide-react";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis/utils";
 
 export type QuickFilterId =
   | "missingDischarge"

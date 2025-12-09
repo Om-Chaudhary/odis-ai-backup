@@ -7,9 +7,9 @@ import {
   PopoverTrigger,
 } from "@odis/ui/popover";
 import { Calendar, ChevronDown } from "lucide-react";
-import { cn } from "~/lib/utils";
-import type { DateRangePreset } from "~/lib/utils/date-ranges";
-import { getDateRangeFromPreset } from "~/lib/utils/date-ranges";
+import { cn } from "@odis/utils";
+import type { DateRangePreset } from "@odis/utils/date-ranges";
+import { getDateRangeFromPreset } from "@odis/utils/date-ranges";
 
 /**
  * Available date range preset options for the selector

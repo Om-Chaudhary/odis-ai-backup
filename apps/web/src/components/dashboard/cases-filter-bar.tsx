@@ -29,10 +29,10 @@ import {
   Tag,
   CircleDot,
 } from "lucide-react";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis/utils";
 import type { QuickFilterId } from "./quick-filters";
 import { CasesDateRangeSelector } from "./cases-date-range-selector";
-import type { DateRangePreset } from "~/lib/utils/date-ranges";
+import type { DateRangePreset } from "@odis/utils/date-ranges";
 
 const STATUS_OPTIONS: Array<{
   value: string;

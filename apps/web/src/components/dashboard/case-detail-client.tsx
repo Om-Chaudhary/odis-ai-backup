@@ -26,12 +26,12 @@ import { SOAPNoteDisplay } from "./soap-note-display";
 import { CallAudioPlayer } from "./call-audio-player";
 import { SyncedTranscript } from "./synced-transcript";
 import type { DischargeSettings, TranscriptMessage } from "~/types/dashboard";
-import { cn, formatDuration } from "~/lib/utils";
+import { cn, formatDuration } from "@odis/utils";
 import {
   isPlaceholder,
   getEffectiveContact,
-} from "~/lib/utils/dashboard-helpers";
-import { checkCaseDischargeReadiness } from "~/lib/utils/discharge-readiness";
+} from "@odis/utils/dashboard-helpers";
+import { checkCaseDischargeReadiness } from "@odis/utils/discharge-readiness";
 import { Badge } from "@odis/ui/badge";
 import {
   Accordion,

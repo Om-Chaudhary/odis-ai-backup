@@ -1,15 +1,15 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { createClient } from "~/lib/supabase/server";
+import { createClient } from "@odis/db/server";
 import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
-import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
+import { handleCorsPreflightRequest, withCorsHeaders } from "@odis/api/cors";
 import {
   type AppointmentInput,
   ScheduleSyncRequestSchema,
 } from "~/lib/schedule/validators";
-import { getClinicByUserId, getOrCreateProvider } from "~/lib/clinics/utils";
+import { getClinicByUserId, getOrCreateProvider } from "@odis/clinics/utils";
 import type { Database, Json } from "~/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 

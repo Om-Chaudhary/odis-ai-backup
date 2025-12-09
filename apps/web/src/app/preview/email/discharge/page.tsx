@@ -1,6 +1,6 @@
 import { DischargeEmailTemplate } from "~/components/email/discharge-email-template";
-import { renderEmailToHtml } from "~/lib/email/render-email";
-import type { StructuredDischargeSummary } from "~/lib/validators/discharge-summary";
+import { renderEmailToHtml } from "@odis/email/render-email";
+import type { StructuredDischargeSummary } from "@odis/validators/discharge-summary";
 import { EmailPreviewFrame } from "./email-preview-frame";
 
 /**

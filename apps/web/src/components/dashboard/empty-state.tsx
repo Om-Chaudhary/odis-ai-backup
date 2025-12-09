@@ -2,7 +2,7 @@
 
 import { type ReactNode } from "react";
 import { type LucideIcon, FileText } from "lucide-react";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis/utils";
 
 interface EmptyStateProps {
   title?: string;

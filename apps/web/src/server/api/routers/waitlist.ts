@@ -4,7 +4,7 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
-import { createServiceClient } from "~/lib/supabase/server";
+import { createServiceClient } from "@odis/db/server";
 import PostHogClient from "~/lib/posthog";
 import type { Database } from "~/database.types";
 

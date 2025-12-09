@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRef, useEffect } from "react";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis/utils";
 import { ScrollArea } from "@odis/ui/scroll-area";
 import type { TranscriptMessage } from "~/types/dashboard";
 import { Avatar, AvatarFallback } from "@odis/ui/avatar";

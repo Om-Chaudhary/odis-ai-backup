@@ -69,7 +69,7 @@ import {
 } from "date-fns";
 import { BatchProgressMonitor } from "./batch-progress-monitor";
 import type { BatchEligibleCase } from "~/types/dashboard";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis/utils";
 
 type DateFilter = "today" | "yesterday" | "day-2" | "day-3" | "day-4";
 

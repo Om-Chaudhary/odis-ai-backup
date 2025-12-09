@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@odis/ui/button";
 import { Input } from "@odis/ui/input";
 import { Label } from "@odis/ui/label";
-import { createClient } from "~/lib/supabase/client";
+import { createClient } from "@odis/db/client";
 
 interface AccountStepProps {
   onComplete: (userId: string) => void;

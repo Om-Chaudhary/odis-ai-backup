@@ -32,7 +32,7 @@ import { Separator } from "@odis/ui/separator";
 import { ScrollArea } from "@odis/ui/scroll-area";
 import { DischargeStatusBadge } from "~/components/dashboard/discharge-status-badge";
 import type { CallDetails } from "~/types/dashboard";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis/utils";
 
 interface CallDetailViewProps {
   initialCall: CallDetails;

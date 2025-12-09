@@ -42,8 +42,8 @@ vi.mock("~/lib/qstash/client", () => ({
   scheduleCallExecution: vi.fn(),
 }));
 
-import { CasesService } from "~/lib/services/cases-service";
-import { generateDischargeSummaryWithRetry } from "~/lib/ai/generate-discharge";
+import { CasesService } from "@odis/services/cases-service";
+import { generateDischargeSummaryWithRetry } from "@odis/ai/generate-discharge";
 
 describe("Backward Compatibility - Existing Endpoints", () => {
   beforeEach(() => {

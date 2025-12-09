@@ -23,9 +23,9 @@ import { DateFilterButtonGroup } from "./date-filter-button-group";
 import {
   getDateRangeFromPreset,
   type DateRangePreset,
-} from "~/lib/utils/date-ranges";
+} from "@odis/utils/date-ranges";
 import { CasesNeedingAttentionCard } from "./cases-needing-attention-card";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis/utils";
 
 function StatCard({
   title,

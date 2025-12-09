@@ -13,7 +13,7 @@ import { Button } from "@odis/ui/button";
 import { Spinner } from "@odis/ui/spinner";
 import { fetchPatients } from "~/server/actions/patients";
 import type { CallPatient } from "~/types/patient";
-import { formatPhoneNumber } from "~/lib/utils/phone-formatting";
+import { formatPhoneNumber } from "@odis/utils/phone-formatting";
 import { Plus } from "lucide-react";
 
 interface PatientSelectProps {

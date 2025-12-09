@@ -10,11 +10,11 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createClient } from "~/lib/supabase/server";
+import { createClient } from "@odis/db/server";
 import { getUser } from "~/server/actions/auth";
-import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
-import { IdexxCredentialManager } from "~/lib/idexx/credential-manager";
-import { validateIdexxCredentials } from "~/lib/idexx/validation";
+import { handleCorsPreflightRequest, withCorsHeaders } from "@odis/api/cors";
+import { IdexxCredentialManager } from "@odis/idexx/credential-manager";
+import { validateIdexxCredentials } from "@odis/idexx/validation";
 
 const validateCredentialsSchema = z.object({
   username: z.string().optional(),

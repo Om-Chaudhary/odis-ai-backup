@@ -1,12 +1,12 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { createClient } from "~/lib/supabase/server";
-import { generateEmailSchema } from "~/lib/validators/discharge";
+import { createClient } from "@odis/db/server";
+import { generateEmailSchema } from "@odis/validators/discharge";
 import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
-import { htmlToPlainText } from "~/lib/resend/client";
-import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
+import { htmlToPlainText } from "@odis/resend/client";
+import { handleCorsPreflightRequest, withCorsHeaders } from "@odis/api/cors";
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)

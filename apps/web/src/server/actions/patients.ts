@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "~/lib/supabase/server";
+import { createClient } from "@odis/db/server";
 import { getUser } from "./auth";
 import {
   createPatientSchema,
@@ -11,7 +11,7 @@ import {
   type UpdatePatientInput,
   type GetPatientInput,
   type DeletePatientInput,
-} from "~/lib/retell/validators";
+} from "@odis/retell/validators";
 import type { CallPatient } from "~/types/patient";
 
 /**

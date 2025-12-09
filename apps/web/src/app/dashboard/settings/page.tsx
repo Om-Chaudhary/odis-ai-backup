@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getUser } from "~/server/actions/auth";
-import { createClient } from "~/lib/supabase/server";
-import { getClinicByUserId } from "~/lib/clinics/utils";
+import { createClient } from "@odis/db/server";
+import { getClinicByUserId } from "@odis/clinics/utils";
 
 /**
  * Legacy settings page - redirects to clinic-scoped route

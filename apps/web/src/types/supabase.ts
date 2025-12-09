@@ -1,6 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import type { Database } from "~/database.types";
-import { type createClient } from "~/lib/supabase/server";
+import { type createClient } from "@odis/db/server";
 
 // Auth types
 export type AuthUser = User;

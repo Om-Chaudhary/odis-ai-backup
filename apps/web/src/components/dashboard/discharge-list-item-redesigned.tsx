@@ -46,12 +46,12 @@ import type {
   PatientUpdateInput,
   DischargeSettings,
 } from "~/types/dashboard";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis/utils";
 import {
   isPlaceholder,
   hasValidContact,
   getEffectiveContact,
-} from "~/lib/utils/dashboard-helpers";
+} from "@odis/utils/dashboard-helpers";
 import { Badge } from "@odis/ui/badge";
 
 /**

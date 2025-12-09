@@ -52,10 +52,10 @@
 
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { authenticateUser } from "~/lib/api/auth";
-import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
-import { DischargeOrchestrator } from "~/lib/services/discharge-orchestrator";
-import { OrchestrationRequestSchema } from "~/lib/validators/orchestration";
+import { authenticateUser } from "@odis/api/auth";
+import { handleCorsPreflightRequest, withCorsHeaders } from "@odis/api/cors";
+import { DischargeOrchestrator } from "@odis/services/discharge-orchestrator";
+import { OrchestrationRequestSchema } from "@odis/validators/orchestration";
 
 /**
  * POST /api/discharge/orchestrate

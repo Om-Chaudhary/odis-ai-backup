@@ -1,15 +1,15 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { createClient } from "~/lib/supabase/server";
-import { generateSummarySchema } from "~/lib/validators/discharge";
+import { createClient } from "@odis/db/server";
+import { generateSummarySchema } from "@odis/validators/discharge";
 import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
-import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
-import { generateStructuredDischargeSummaryWithRetry } from "~/lib/ai/generate-structured-discharge";
-import { normalizePhoneNumber } from "~/lib/utils/phone";
-import { CasesService } from "~/lib/services/cases-service";
-import type { StructuredDischargeSummary } from "~/lib/validators/discharge-summary";
+import { handleCorsPreflightRequest, withCorsHeaders } from "@odis/api/cors";
+import { generateStructuredDischargeSummaryWithRetry } from "@odis/ai/generate-structured-discharge";
+import { normalizePhoneNumber } from "@odis/utils/phone";
+import { CasesService } from "@odis/services/cases-service";
+import type { StructuredDischargeSummary } from "@odis/validators/discharge-summary";
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)

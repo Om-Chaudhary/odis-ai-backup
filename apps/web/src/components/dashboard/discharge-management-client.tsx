@@ -31,7 +31,7 @@ import { transformBackendCasesToDashboardCases } from "~/lib/transforms/case-tra
 import {
   normalizePlaceholder,
   hasValidContact,
-} from "~/lib/utils/dashboard-helpers";
+} from "@odis/utils/dashboard-helpers";
 import { toast } from "sonner";
 import {
   format,

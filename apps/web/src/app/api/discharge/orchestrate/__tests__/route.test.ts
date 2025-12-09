@@ -39,8 +39,8 @@ vi.mock("~/lib/api/cors", () => ({
   handleCorsPreflightRequest: vi.fn(() => new Response(null, { status: 204 })),
 }));
 
-import { authenticateUser } from "~/lib/api/auth";
-import { DischargeOrchestrator } from "~/lib/services/discharge-orchestrator";
+import { authenticateUser } from "@odis/api/auth";
+import { DischargeOrchestrator } from "@odis/services/discharge-orchestrator";
 import { createMockUser as createMockUserUtil } from "~/test/api-utils";
 import * as route from "../route";
 

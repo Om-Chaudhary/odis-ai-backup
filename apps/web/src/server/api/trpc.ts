@@ -1,6 +1,6 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import { ZodError } from "zod";
-import { createClient, createServiceClient } from "~/lib/supabase/server";
+import { createClient, createServiceClient } from "@odis/db/server";
 
 type CreateContextOptions = {
   headers: Headers;

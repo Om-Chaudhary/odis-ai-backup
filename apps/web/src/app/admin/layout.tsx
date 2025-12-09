@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getUser, signOut } from "~/server/actions/auth";
-import { createClient } from "~/lib/supabase/server";
+import { createClient } from "@odis/db/server";
 import Link from "next/link";
 import { Button } from "@odis/ui/button";
 import {

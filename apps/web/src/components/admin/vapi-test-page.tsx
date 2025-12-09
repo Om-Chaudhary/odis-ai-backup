@@ -24,8 +24,8 @@ import {
 } from "@odis/ui/select";
 import { Phone, PhoneOff, Loader2, Code } from "lucide-react";
 import { toast } from "sonner";
-import type { DynamicVariables } from "~/lib/vapi/types";
-import { createTestScenario } from "~/lib/vapi/knowledge-base";
+import type { DynamicVariables } from "@odis/vapi/types";
+import { createTestScenario } from "@odis/vapi/knowledge-base";
 
 type TestScenario =
   | "discharge-wellness"

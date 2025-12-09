@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
-import { createClient } from "~/lib/supabase/server";
-import { getClinicBySlug, getClinicByUserId } from "~/lib/clinics/utils";
+import { createClient } from "@odis/db/server";
+import { getClinicBySlug, getClinicByUserId } from "@odis/clinics/utils";
 import { ClinicProvider } from "~/lib/clinic-context";
 
 interface ClinicLayoutProps {

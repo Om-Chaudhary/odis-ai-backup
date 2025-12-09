@@ -19,13 +19,13 @@
  */
 
 import type { NextRequest } from "next/server";
-import { errorResponse, successResponse, withAuth } from "~/lib/api/auth";
-import { handleCorsPreflightRequest } from "~/lib/api/cors";
+import { errorResponse, successResponse, withAuth } from "@odis/api/auth";
+import { handleCorsPreflightRequest } from "@odis/api/cors";
 import {
   NormalizeRequestSchema,
   type NormalizeResponse,
-} from "~/lib/validators/scribe";
-import { CasesService } from "~/lib/services/cases-service";
+} from "@odis/validators/scribe";
+import { CasesService } from "@odis/services/cases-service";
 
 /* ========================================
    Main API Handler

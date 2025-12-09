@@ -1,15 +1,15 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { verifySignatureAppRouter } from "@upstash/qstash/dist/nextjs";
-import { createServiceClient } from "~/lib/supabase/server";
-import { createPhoneCall, mapVapiStatus } from "~/lib/vapi/client";
-import { CasesService } from "~/lib/services/cases-service";
-import { buildDynamicVariables } from "~/lib/vapi/knowledge-base";
-import { extractVapiVariablesFromEntities } from "~/lib/vapi/extract-variables";
+import { createServiceClient } from "@odis/db/server";
+import { createPhoneCall, mapVapiStatus } from "@odis/vapi/client";
+import { CasesService } from "@odis/services/cases-service";
+import { buildDynamicVariables } from "@odis/vapi/knowledge-base";
+import { extractVapiVariablesFromEntities } from "@odis/vapi/extract-variables";
 import {
   normalizeVariablesToSnakeCase,
   extractFirstName,
-} from "~/lib/vapi/utils";
+} from "@odis/vapi/utils";
 
 /**
  * Execute Call Webhook

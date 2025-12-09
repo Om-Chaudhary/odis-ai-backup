@@ -23,8 +23,8 @@
 
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { loggers } from "~/lib/logger";
-import { handleVapiWebhook, parseWebhookPayload } from "~/lib/vapi/webhooks";
+import { loggers } from "@odis/logger";
+import { handleVapiWebhook, parseWebhookPayload } from "@odis/vapi/webhooks";
 
 const logger = loggers.webhook.child("vapi-route");
 

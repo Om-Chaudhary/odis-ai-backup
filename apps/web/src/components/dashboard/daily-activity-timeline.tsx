@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@odis/ui/card";
 import { Activity } from "lucide-react";
 import type { DailyActivityAggregate } from "~/types/dashboard";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis/utils";
 import {
   FileText,
   PhoneCall,

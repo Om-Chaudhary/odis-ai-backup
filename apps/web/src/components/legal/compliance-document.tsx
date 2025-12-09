@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { ArrowUp } from "lucide-react";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis/utils";
 import { Button } from "@odis/ui/button";
 
 export interface ComplianceSection {
@@ -187,55 +187,6 @@ export function ComplianceDocument({
         <ArrowUp className="size-5" />
       </Button>
 
-      {/* Print styles */}
-      <style jsx global>{`
-        @media print {
-          body {
-            font-size: 12pt;
-            line-height: 1.5;
-            color: #000;
-          }
-
-          .compliance-document {
-            max-width: 100%;
-          }
-
-          button {
-            text-decoration: underline;
-            color: #000;
-          }
-
-          a {
-            color: #000;
-            text-decoration: underline;
-          }
-
-          h1 {
-            font-size: 24pt;
-            page-break-after: avoid;
-          }
-
-          h2 {
-            font-size: 18pt;
-            page-break-after: avoid;
-            margin-top: 20pt;
-          }
-
-          h3 {
-            font-size: 14pt;
-            page-break-after: avoid;
-            margin-top: 12pt;
-          }
-
-          section {
-            page-break-inside: avoid;
-          }
-
-          .print\\:hidden {
-            display: none !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }

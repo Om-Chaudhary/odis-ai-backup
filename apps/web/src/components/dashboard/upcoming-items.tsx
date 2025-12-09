@@ -5,7 +5,7 @@ import { Badge } from "@odis/ui/badge";
 import { Clock, PhoneCall, Mail } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import type { UpcomingItem } from "~/types/dashboard";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis/utils";
 
 interface UpcomingItemsProps {
   items: UpcomingItem[];

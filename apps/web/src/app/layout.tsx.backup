@@ -8,7 +8,6 @@ import ClientPostHogProvider from "~/components/ClientPostHogProvider";
 import { TRPCReactProvider } from "~/trpc/Provider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { env } from "~/env.js";
-import StyledComponentsRegistry from "~/lib/styled-components-registry";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -164,24 +163,22 @@ export default function RootLayout({
   return (
     <html lang="en" className="light">
       <head>
-        {/* JSON-LD structured data - must be in initial HTML for SEO crawlers */}
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="canonical" href={siteUrl} />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
-          }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
       <body
         className={`font-sans ${outfit.variable} ${inter.variable} ${lora.variable} ${geistMono.variable}`}
       >
-        <StyledComponentsRegistry>
-          <ClientPostHogProvider>
-            <TRPCReactProvider>
-              <NuqsAdapter>{children}</NuqsAdapter>
-            </TRPCReactProvider>
-          </ClientPostHogProvider>
-        </StyledComponentsRegistry>
+        <ClientPostHogProvider>
+          <TRPCReactProvider>
+            <NuqsAdapter>{children}</NuqsAdapter>
+          </TRPCReactProvider>
+        </ClientPostHogProvider>
       </body>
     </html>
   );

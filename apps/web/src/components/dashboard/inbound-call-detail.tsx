@@ -13,7 +13,7 @@ import {
   XCircle,
   Play,
 } from "lucide-react";
-import { formatDuration } from "~/lib/utils";
+import { formatDuration } from "@odis/utils";
 import { CallAudioPlayer } from "./call-audio-player";
 import type { Database } from "~/database.types";
 

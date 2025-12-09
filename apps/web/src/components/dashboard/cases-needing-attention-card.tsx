@@ -15,7 +15,7 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { api } from "~/trpc/client";
 import { EmptyState } from "./empty-state";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis/utils";
 
 interface CasesNeedingAttentionCardProps {
   casesNeedingDischarge: {

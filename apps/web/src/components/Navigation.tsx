@@ -7,7 +7,7 @@ import { Logo } from "@odis/ui/Logo";
 import WaitlistModal from "./WaitlistModal";
 import { useDeviceDetection } from "~/hooks/useDeviceDetection";
 import Link from "next/link";
-import { createClient } from "~/lib/supabase/client";
+import { createClient } from "@odis/db/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@odis/ui/avatar";
 import {
   DropdownMenu,

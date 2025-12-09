@@ -13,8 +13,8 @@ import {
   Row,
   Column,
 } from "@react-email/components";
-import type { StructuredDischargeSummary } from "~/lib/validators/discharge-summary";
-import { getWarningSignsHybrid } from "~/lib/email/warning-signs-library";
+import type { StructuredDischargeSummary } from "@odis/validators/discharge-summary";
+import { getWarningSignsHybrid } from "@odis/email/warning-signs-library";
 
 /**
  * Discharge Email Template - Using React Email Components
@@ -643,7 +643,7 @@ export function DischargeEmailTemplate({
                         >
                           Contact us right away if you notice any of these:
                         </Text>
-                        {warningSigns.map((sign, index) => (
+                        {warningSigns.map((sign: string, index: number) => (
                           <Row key={index} style={{ marginBottom: "10px" }}>
                             <Column
                               style={{ width: "28px", verticalAlign: "top" }}

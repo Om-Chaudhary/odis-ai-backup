@@ -29,7 +29,7 @@ import type {
   DischargeSettings,
 } from "~/types/dashboard";
 import type { PartialBackendCase } from "~/lib/transforms/case-transforms";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,7 +40,7 @@ import {
   isPlaceholder,
   hasValidContact,
   getEffectiveContact,
-} from "~/lib/utils/dashboard-helpers";
+} from "@odis/utils/dashboard-helpers";
 import { ContactIndicator } from "~/components/dashboard/contact-indicator";
 import { DischargeStatusIndicator } from "~/components/dashboard/discharge-status-indicator";
 import { Badge } from "@odis/ui/badge";

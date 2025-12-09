@@ -11,8 +11,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@odis/ui/card";
 import { Badge } from "@odis/ui/badge";
 import type { DashboardCase, DischargeSettings } from "~/types/dashboard";
-import { buildDynamicVariables } from "~/lib/vapi/knowledge-base";
-import { normalizeVariablesToSnakeCase } from "~/lib/vapi/utils";
+import { buildDynamicVariables } from "@odis/vapi/knowledge-base";
+import { normalizeVariablesToSnakeCase } from "@odis/vapi/utils";
 
 interface DischargeDebugModalProps {
   open: boolean;

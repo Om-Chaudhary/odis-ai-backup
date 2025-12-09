@@ -7,7 +7,7 @@
 
 import type { User } from "@supabase/supabase-js";
 import type { SupabaseClientType } from "~/types/supabase";
-import type { NormalizedEntities } from "~/lib/validators/scribe";
+import type { NormalizedEntities } from "@odis/validators/scribe";
 
 /* ========================================
    Step Names

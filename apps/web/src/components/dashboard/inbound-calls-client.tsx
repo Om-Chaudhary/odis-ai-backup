@@ -47,8 +47,8 @@ import {
 import { toast } from "sonner";
 import { InboundCallDetail } from "./inbound-call-detail";
 import { PaginationControls } from "./pagination-controls";
-import { cn, formatDuration } from "~/lib/utils";
-import { formatPhoneNumber } from "~/lib/utils/phone";
+import { cn, formatDuration } from "@odis/utils";
+import { formatPhoneNumber } from "@odis/utils/phone";
 import { useDebounce } from "~/hooks/use-debounce";
 import type { Database } from "~/database.types";
 

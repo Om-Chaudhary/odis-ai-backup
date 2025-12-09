@@ -1,13 +1,13 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { createClient } from "~/lib/supabase/server";
+import { createClient } from "@odis/db/server";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
 import { getUser } from "~/server/actions/auth";
-import { CasesService } from "~/lib/services/cases-service";
+import { CasesService } from "@odis/services/cases-service";
 import type { IngestPayload } from "~/types/services";
 import { z } from "zod";
-import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
+import { handleCorsPreflightRequest, withCorsHeaders } from "@odis/api/cors";
 
 // --- Schemas ---
 const IngestPayloadSchema = z.discriminatedUnion("mode", [

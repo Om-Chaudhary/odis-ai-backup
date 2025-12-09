@@ -1,16 +1,16 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { createClient } from "~/lib/supabase/server";
-import { scheduleCallSchema } from "~/lib/retell/validators";
-import { isFutureTime } from "~/lib/utils/business-hours";
-import { scheduleCallExecution } from "~/lib/qstash/client";
+import { createClient } from "@odis/db/server";
+import { scheduleCallSchema } from "@odis/retell/validators";
+import { isFutureTime } from "@odis/utils/business-hours";
+import { scheduleCallExecution } from "@odis/qstash/client";
 import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
-import { handleCorsPreflightRequest, withCorsHeaders } from "~/lib/api/cors";
-import { getClinicByUserId } from "~/lib/clinics/utils";
-import { getClinicVapiConfigByUserId } from "~/lib/clinics/vapi-config";
-import { extractFirstName } from "~/lib/vapi/utils";
+import { handleCorsPreflightRequest, withCorsHeaders } from "@odis/api/cors";
+import { getClinicByUserId } from "@odis/clinics/utils";
+import { getClinicVapiConfigByUserId } from "@odis/clinics/vapi-config";
+import { extractFirstName } from "@odis/vapi/utils";
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)

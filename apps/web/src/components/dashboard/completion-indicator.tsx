@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis/utils";
 
 interface CompletionIndicatorProps {
   type: "soap" | "discharge" | "call" | "email";
