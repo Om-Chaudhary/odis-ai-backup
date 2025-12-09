@@ -121,7 +121,10 @@ const config = {
   },
 
   // Transpile internal packages to ensure proper handling
-  transpilePackages: ["@odis/email", "@odis/services", "@odis/resend"],
+  // Note: @odis-ai/email, @odis-ai/services, and @odis-ai/resend are NOT included
+  // here because they use @react-email packages that conflict with static page
+  // generation. These services are only used via dynamic imports in API routes.
+  transpilePackages: [],
 
   // Exclude react-email packages from server bundle during SSG
   // This prevents the Html context error during static page generation
@@ -140,6 +143,9 @@ const config = {
     "@react-email/row",
     "@react-email/section",
     "@react-email/text",
+    "@react-email/components",
+    "react-email",
+    "resend",
   ],
 
   // Webpack configuration to handle react-email packages
@@ -160,19 +166,34 @@ const config = {
         "@react-email/row",
         "@react-email/section",
         "@react-email/text",
+        "@react-email/components",
+        "react-email",
       ];
 
-      // More aggressive externalization using function-based approach
+      // Mark packages as external using the externals function approach
+      const existingExternals = config.externals || [];
       config.externals = [
-        ...(Array.isArray(config.externals) ? config.externals : []),
+        ...(Array.isArray(existingExternals)
+          ? existingExternals
+          : [existingExternals]),
         (
-          /** @type {{ request?: string }} */ { request },
-          /** @type {(err: null, result?: string) => void} */ callback,
+          /** @type {{ request?: string; context?: string }} */ {
+            request,
+            context,
+          },
+          /** @type {(err: Error | null, result?: string | undefined) => void} */ callback,
         ) => {
-          if (reactEmailPackages.some((pkg) => request?.startsWith(pkg))) {
+          // Check if this is a react-email package import
+          if (
+            request &&
+            reactEmailPackages.some(
+              (pkg) => request === pkg || request.startsWith(`${pkg}/`),
+            )
+          ) {
+            // Return as commonjs external
             return callback(null, `commonjs ${request}`);
           }
-          callback(null);
+          callback(null, undefined);
         },
       ];
     }
