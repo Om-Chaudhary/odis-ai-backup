@@ -76,9 +76,6 @@ src/
 │   └── utils.ts          # Utility functions
 ├── hooks/                # Custom React hooks
 │   └── use-call-polling.ts  # Polling hook with adaptive intervals
-└── sanity/               # Sanity CMS configuration
-    ├── lib/              # Sanity client
-    └── schemaTypes/      # Content schemas
 ```
 
 ## Key Architectural Patterns
@@ -332,11 +329,6 @@ NEXT_PUBLIC_SUPABASE_URL=        # Project URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY=   # Anon/public key
 SUPABASE_SERVICE_ROLE_KEY=       # Service role key (admin)
 
-# Sanity CMS
-NEXT_PUBLIC_SANITY_PROJECT_ID=   # Sanity project ID
-NEXT_PUBLIC_SANITY_DATASET=      # Usually "production"
-NEXT_PUBLIC_SANITY_API_VERSION=  # API version (e.g., "2025-10-13")
-
 # PostHog Analytics
 NEXT_PUBLIC_POSTHOG_KEY=         # PostHog project key
 NEXT_PUBLIC_POSTHOG_HOST=        # Usually "https://us.i.posthog.com"
@@ -435,16 +427,6 @@ export async function POST(request: NextRequest) {
   // ... handle webhook
 }
 ```
-
-## Sanity CMS Integration
-
-Blog content is managed through Sanity Studio:
-
-- **Studio URL**: `/studio`
-- **Content Types**: Defined in `src/sanity/schemaTypes/`
-- **Client**: `src/sanity/lib/client.ts`
-
-Sanity content is fetched server-side and cached by Next.js.
 
 ## Testing Strategy
 
