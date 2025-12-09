@@ -14,9 +14,9 @@ import { Plus, Loader2, ClipboardList } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { DataTable } from "@odis/ui/data-table";
-import { getColumns } from "~/components/admin/soap-templates-columns";
-import { SoapTemplatesFilters } from "~/components/admin/SoapTemplatesFilters";
-import { ShareDialog } from "~/components/admin/ShareDialog";
+import { getColumns } from "~/components/admin/tables/soap-templates-columns";
+import { SoapTemplatesFilters } from "~/components/admin/soap-templates-filters";
+import { ShareDialog } from "~/components/admin/dialogs/share-dialog";
 
 export default function SoapTemplatesPage() {
   // Filter state

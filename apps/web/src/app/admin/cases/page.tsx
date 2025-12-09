@@ -33,8 +33,8 @@ import {
   SelectValue,
 } from "@odis/ui/select";
 import type { RouterOutputs } from "~/trpc/client";
-import { ShareDialog } from "~/components/admin/ShareDialog";
-import { CaseMultiAddDialog } from "~/components/admin/CaseMultiAddDialog";
+import { ShareDialog } from "~/components/admin/dialogs/share-dialog";
+import { CaseMultiAddDialog } from "~/components/admin/dialogs/case-multi-add-dialog";
 
 type Case = RouterOutputs["cases"]["listCases"][number];
 

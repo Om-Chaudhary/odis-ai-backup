@@ -1,4 +1,4 @@
-import { SettingsPageClient } from "~/components/dashboard/settings-page-client";
+import { SettingsPageClient } from "~/components/dashboard/settings/settings-page-client";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

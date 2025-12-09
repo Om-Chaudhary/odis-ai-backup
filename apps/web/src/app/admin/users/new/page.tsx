@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/client";
-import { UserForm } from "~/components/admin/UserForm";
+import { UserForm } from "~/components/admin/forms/user-form";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Button } from "@odis/ui/button";

@@ -16,7 +16,7 @@ import { toast } from "sonner";
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@odis/ui/data-table";
 import { Badge } from "@odis/ui/badge";
-import { ShareDialog } from "~/components/admin/ShareDialog";
+import { ShareDialog } from "~/components/admin/dialogs/share-dialog";
 import type { RouterOutputs } from "~/trpc/client";
 
 type DischargeTemplate =

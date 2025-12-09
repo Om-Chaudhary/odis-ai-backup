@@ -2,13 +2,13 @@
 
 import { useEffect } from "react";
 import { usePostHog } from "posthog-js/react";
-import Navigation from "~/components/Navigation";
-import Hero from "~/components/HeroFloating";
-import TrustLogos from "~/components/TrustLogos";
-import Testimonials from "~/components/Testimonials";
-import FAQ from "~/components/FAQ";
-import CTA from "~/components/CTA";
-import Footer from "~/components/Footer";
+import Navigation from "~/components/layout/navigation";
+import Hero from "~/components/marketing/hero/hero-floating";
+import TrustLogos from "~/components/marketing/trust-logos";
+import Testimonials from "~/components/marketing/testimonials";
+import FAQ from "~/components/marketing/faq";
+import CTA from "~/components/marketing/cta";
+import Footer from "~/components/layout/footer";
 import { useScrollTracking } from "~/hooks/useScrollTracking";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
 import { useDeviceDetection } from "~/hooks/useDeviceDetection";

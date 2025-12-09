@@ -1,5 +1,5 @@
 import Link from "next/link";
-import OnboardingContainer from "~/components/onboarding/OnboardingContainer";
+import OnboardingContainer from "~/components/onboarding/onboarding-container";
 
 export default function SignupPage() {
   return (

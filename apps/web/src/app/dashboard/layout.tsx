@@ -3,9 +3,9 @@ import {
   SidebarInset,
   SidebarTrigger,
 } from "@odis/ui/sidebar";
-import { AppSidebar } from "~/components/dashboard/app-sidebar";
+import { AppSidebar } from "~/components/dashboard/shell/app-sidebar";
 import { Separator } from "@odis/ui/separator";
-import { DashboardBreadcrumb } from "~/components/dashboard/dashboard-breadcrumb";
+import { DashboardBreadcrumb } from "~/components/dashboard/shell/dashboard-breadcrumb";
 import { getUser } from "~/server/actions/auth";
 import { createClient } from "@odis/db/server";
 import { redirect } from "next/navigation";

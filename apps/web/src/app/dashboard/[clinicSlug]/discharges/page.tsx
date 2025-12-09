@@ -1,4 +1,4 @@
-import { DischargeManagementClient } from "~/components/dashboard/discharge-management-client";
+import { DischargeManagementClient } from "~/components/dashboard/discharges/discharge-management-client";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

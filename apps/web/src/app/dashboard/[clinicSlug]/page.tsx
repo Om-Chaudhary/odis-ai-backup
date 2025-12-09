@@ -1,9 +1,9 @@
 import { getUser } from "~/server/actions/auth";
 import { redirect } from "next/navigation";
 import { createClient } from "@odis/db/server";
-import DashboardProfileHeader from "~/components/dashboard/DashboardProfileHeader";
-import { DashboardContentWithTabs } from "~/components/dashboard/dashboard-content-with-tabs";
-import { ExtensionAuthHandler } from "~/components/dashboard/extension-auth-handler";
+import DashboardProfileHeader from "~/components/dashboard/profile/dashboard-profile-header";
+import { DashboardContentWithTabs } from "~/components/dashboard/shell/dashboard-content-with-tabs";
+import { ExtensionAuthHandler } from "~/components/dashboard/shell/extension-auth-handler";
 import { AUTH_PARAMS } from "@odis/constants/auth";
 
 interface ClinicDashboardPageProps {

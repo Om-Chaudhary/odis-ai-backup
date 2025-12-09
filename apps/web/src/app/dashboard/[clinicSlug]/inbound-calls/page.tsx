@@ -1,5 +1,5 @@
-import { InboundCallsClient } from "~/components/dashboard/inbound-calls-client";
-import { InboundCallsErrorBoundary } from "~/components/dashboard/inbound-calls-error-boundary";
+import { InboundCallsClient } from "~/components/dashboard/calls/inbound-calls-client";
+import { InboundCallsErrorBoundary } from "~/components/dashboard/calls/inbound-calls-error-boundary";
 
 export const metadata = {
   title: "Inbound Calls | Dashboard",

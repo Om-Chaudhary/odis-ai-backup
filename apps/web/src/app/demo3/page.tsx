@@ -7,12 +7,12 @@ import { usePostHog } from "posthog-js/react";
 import { useDeviceDetection } from "~/hooks/useDeviceDetection";
 import { EnhancedButton } from "@odis/ui/enhanced-button";
 import { ArrowRight, Clock, FileText, Zap, CheckCircle2 } from "lucide-react";
-import Navigation from "~/components/Navigation";
-import Footer from "~/components/Footer";
-import WaitlistModal from "~/components/WaitlistModal";
+import Navigation from "~/components/layout/navigation";
+import Footer from "~/components/layout/footer";
+import WaitlistModal from "~/components/marketing/waitlist-modal";
 import { Logos3 } from "@odis/ui/logos3";
-import FAQ from "~/components/FAQ";
-import Testimonials from "~/components/Testimonials";
+import FAQ from "~/components/marketing/faq";
+import Testimonials from "~/components/marketing/testimonials";
 import { useState } from "react";
 
 export default function Demo3LandingPage() {

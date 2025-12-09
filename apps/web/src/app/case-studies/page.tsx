@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { usePostHog } from "posthog-js/react";
-import Navigation from "~/components/Navigation";
-import Footer from "~/components/Footer";
+import Navigation from "~/components/layout/navigation";
+import Footer from "~/components/layout/footer";
 import { useDeviceDetection } from "~/hooks/useDeviceDetection";
 import { BookOpen, TrendingUp, Users, Award } from "lucide-react";
 import {

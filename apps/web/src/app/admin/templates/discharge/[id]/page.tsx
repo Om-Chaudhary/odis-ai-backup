@@ -2,7 +2,7 @@
 
 import { useRouter, useParams } from "next/navigation";
 import { api } from "~/trpc/client";
-import { DischargeTemplateForm } from "~/components/admin/DischargeTemplateForm";
+import { DischargeTemplateForm } from "~/components/admin/forms/discharge-template-form";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Button } from "@odis/ui/button";

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { env } from "~/env.js";
-import Footer from "~/components/Footer";
+import Footer from "~/components/layout/footer";
 
 export const metadata: Metadata = {
   title: "Blog",

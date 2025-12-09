@@ -80,7 +80,7 @@ export async function getUser() {
     .single();
 
   // If user doesn't exist in our users table, create them
-  if (userError && userError.code === "PGRST116") {
+  if (userError?.code === "PGRST116") {
     const { error: insertError } = await supabase.from("users").insert({
       id: user.id,
       email: user.email!,

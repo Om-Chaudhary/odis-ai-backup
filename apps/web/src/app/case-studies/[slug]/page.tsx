@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
-import Navigation from "~/components/Navigation";
-import Footer from "~/components/Footer";
+import Navigation from "~/components/layout/navigation";
+import Footer from "~/components/layout/footer";
 import {
   Breadcrumb,
   BreadcrumbItem,

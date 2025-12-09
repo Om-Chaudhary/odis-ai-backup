@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/client";
-import { SoapTemplateForm } from "~/components/admin/SoapTemplateForm";
+import { SoapTemplateForm } from "~/components/admin/forms/soap-template-form";
 import { toast } from "sonner";
 import Link from "next/link";
 import { Button } from "@odis/ui/button";

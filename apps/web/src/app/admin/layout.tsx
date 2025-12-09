@@ -15,7 +15,7 @@ import {
   FlaskConical,
 } from "lucide-react";
 import { Toaster } from "sonner";
-import { DarkModeWrapper } from "~/components/DarkModeWrapper";
+import { DarkModeWrapper } from "~/components/providers/dark-mode-wrapper";
 
 export default async function AdminLayout({
   children,

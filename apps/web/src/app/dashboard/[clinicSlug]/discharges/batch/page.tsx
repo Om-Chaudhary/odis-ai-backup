@@ -1,4 +1,4 @@
-import { BatchDischargePageClient } from "~/components/dashboard/batch-discharge-page-client";
+import { BatchDischargePageClient } from "~/components/dashboard/discharges/batch-discharge-page-client";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

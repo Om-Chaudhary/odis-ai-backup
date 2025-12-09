@@ -4,7 +4,7 @@ import { Inter } from "next/font/google";
 import { Lora } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import "~/styles/globals.css";
-import ClientPostHogProvider from "~/components/ClientPostHogProvider";
+import ClientPostHogProvider from "~/components/providers/client-posthog-provider";
 import { TRPCReactProvider } from "~/trpc/Provider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { env } from "~/env.js";
