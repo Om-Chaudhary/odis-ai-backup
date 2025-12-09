@@ -1,7 +1,7 @@
 [
   {
     "name": "ai",
-    "type": "feature",
+    "type": "lib",
     "scope": "ai",
     "platform": "node",
     "sourceRoot": "libs/ai/src",
@@ -9,11 +9,11 @@
   },
   {
     "name": "api",
-    "type": "util",
+    "type": "lib",
     "scope": "api",
     "platform": "node",
     "sourceRoot": "libs/api/src",
-    "targets": ["lint", "typecheck"]
+    "targets": ["build-deps", "lint", "test", "typecheck", "watch-deps"]
   },
   {
     "name": "api-client",
@@ -24,8 +24,16 @@
     "targets": ["lint", "typecheck"]
   },
   {
+    "name": "auth",
+    "type": "lib",
+    "scope": "auth",
+    "platform": "browser",
+    "sourceRoot": "libs/auth/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
     "name": "clinics",
-    "type": "data-access",
+    "type": "lib",
     "scope": "clinics",
     "platform": "node",
     "sourceRoot": "libs/clinics/src",
@@ -33,7 +41,7 @@
   },
   {
     "name": "constants",
-    "type": "util",
+    "type": "lib",
     "scope": "constants",
     "platform": "neutral",
     "sourceRoot": "libs/constants/src",
@@ -41,7 +49,7 @@
   },
   {
     "name": "crypto",
-    "type": "util",
+    "type": "lib",
     "scope": "crypto",
     "platform": "node",
     "sourceRoot": "libs/crypto/src",
@@ -53,7 +61,7 @@
     "scope": "db",
     "platform": "node",
     "sourceRoot": "libs/db/src",
-    "targets": ["lint", "typecheck"]
+    "targets": ["build-deps", "lint", "test", "typecheck", "watch-deps"]
   },
   {
     "name": "email",
@@ -64,23 +72,39 @@
     "targets": ["lint", "typecheck"]
   },
   {
-    "name": "idexx",
+    "name": "env",
     "type": "lib",
-    "scope": "idexx",
+    "scope": "env",
     "platform": "neutral",
-    "sourceRoot": "libs/idexx/src",
+    "sourceRoot": "libs/env/src",
     "targets": ["lint", "typecheck"]
   },
   {
+    "name": "hooks",
+    "type": "lib",
+    "scope": "hooks",
+    "platform": "browser",
+    "sourceRoot": "libs/hooks/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "idexx",
+    "type": "lib",
+    "scope": "idexx",
+    "platform": "node",
+    "sourceRoot": "libs/idexx/src",
+    "targets": ["build-deps", "lint", "test", "typecheck", "watch-deps"]
+  },
+  {
     "name": "logger",
-    "type": "util",
+    "type": "lib",
     "scope": "logger",
-    "platform": "neutral",
+    "platform": "node",
     "sourceRoot": "libs/logger/src",
     "targets": ["lint", "typecheck"]
   },
   {
-    "name": "odis-ai-web",
+    "name": "odis-ai",
     "type": "unknown",
     "scope": "shared",
     "platform": "neutral",
@@ -101,9 +125,13 @@
       "preview",
       "start",
       "test",
+      "test:affected",
       "test:all",
       "test:coverage",
+      "test:coverage:all",
+      "test:libs",
       "test:ui",
+      "test:watch",
       "typecheck",
       "typecheck:all",
       "update-types"
@@ -111,7 +139,7 @@
   },
   {
     "name": "qstash",
-    "type": "data-access",
+    "type": "lib",
     "scope": "qstash",
     "platform": "node",
     "sourceRoot": "libs/qstash/src",
@@ -119,10 +147,18 @@
   },
   {
     "name": "resend",
-    "type": "data-access",
+    "type": "lib",
     "scope": "resend",
     "platform": "node",
     "sourceRoot": "libs/resend/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "retell",
+    "type": "lib",
+    "scope": "retell",
+    "platform": "node",
+    "sourceRoot": "libs/retell/src",
     "targets": ["lint", "typecheck"]
   },
   {
@@ -131,7 +167,23 @@
     "scope": "services",
     "platform": "node",
     "sourceRoot": "libs/services/src",
-    "targets": ["lint", "typecheck"]
+    "targets": ["build-deps", "lint", "test", "typecheck", "watch-deps"]
+  },
+  {
+    "name": "styles",
+    "type": "lib",
+    "scope": "styles",
+    "platform": "neutral",
+    "sourceRoot": "libs/styles/src",
+    "targets": ["lint"]
+  },
+  {
+    "name": "testing",
+    "type": "lib",
+    "scope": "testing",
+    "platform": "node",
+    "sourceRoot": "libs/testing/src",
+    "targets": ["typecheck"]
   },
   {
     "name": "types",
@@ -163,7 +215,7 @@
     "scope": "validators",
     "platform": "neutral",
     "sourceRoot": "libs/validators/src",
-    "targets": ["lint", "typecheck"]
+    "targets": ["build-deps", "lint", "test", "typecheck", "watch-deps"]
   },
   {
     "name": "vapi",
@@ -171,13 +223,13 @@
     "scope": "vapi",
     "platform": "node",
     "sourceRoot": "libs/vapi/src",
-    "targets": ["lint", "typecheck"]
+    "targets": ["build-deps", "lint", "test", "typecheck", "watch-deps"]
   },
   {
     "name": "web",
     "type": "app",
     "scope": "web",
-    "platform": "browser",
+    "platform": "node",
     "sourceRoot": "apps/web/src",
     "targets": [
       "build",

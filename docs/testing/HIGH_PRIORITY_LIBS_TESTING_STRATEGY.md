@@ -28,14 +28,14 @@ This document outlines a comprehensive testing strategy for the six highest-prio
 
 ## Priority Matrix
 
-| Library | Business Impact | Technical Risk | Current Coverage | Target Coverage | Priority |
-|---------|----------------|----------------|------------------|-----------------|----------|
-| `@odis/vapi` | CRITICAL | High | 0% | 85% | P0 |
-| `@odis/services` | CRITICAL | High | 0% | 80% | P0 |
-| `@odis/validators` | HIGH | Medium | 0% | 90% | P1 |
-| `@odis/db` | HIGH | Medium | 0% | 75% | P1 |
-| `@odis/idexx` | HIGH | Medium | 0% | 80% | P1 |
-| `@odis/api` | MEDIUM | Low | 0% | 75% | P2 |
+| Library               | Business Impact | Technical Risk | Current Coverage | Target Coverage | Priority |
+| --------------------- | --------------- | -------------- | ---------------- | --------------- | -------- |
+| `@odis-ai/vapi`       | CRITICAL        | High           | 0%               | 85%             | P0       |
+| `@odis-ai/services`   | CRITICAL        | High           | 0%               | 80%             | P0       |
+| `@odis-ai/validators` | HIGH            | Medium         | 0%               | 90%             | P1       |
+| `@odis-ai/db`         | HIGH            | Medium         | 0%               | 75%             | P1       |
+| `@odis-ai/idexx`      | HIGH            | Medium         | 0%               | 80%             | P1       |
+| `@odis-ai/api`        | MEDIUM          | Low            | 0%               | 75%             | P2       |
 
 ### Risk Assessment Rationale
 
@@ -47,7 +47,7 @@ This document outlines a comprehensive testing strategy for the six highest-prio
 
 ---
 
-## Library 1: `@odis/vapi` (CRITICAL - P0)
+## Library 1: `@odis-ai/vapi` (CRITICAL - P0)
 
 ### Overview
 
@@ -58,6 +58,7 @@ The VAPI library handles all voice call integrations including outbound/inbound 
 #### 1. VAPI Client (`libs/vapi/src/client.ts`)
 
 **Functions to Test**:
+
 - `getVapiClient()` - Client initialization
 - `createPhoneCall()` - Outbound call creation
 - `getCall()` - Call retrieval
@@ -69,50 +70,44 @@ The VAPI library handles all voice call integrations including outbound/inbound 
 ```typescript
 // libs/vapi/src/__tests__/client.test.ts
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import {
-  getVapiClient,
-  createPhoneCall,
-  calculateTotalCost
-} from '../client';
-import { createMockVapiClient } from '@odis/testing';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { getVapiClient, createPhoneCall, calculateTotalCost } from "../client";
+import { createMockVapiClient } from "@odis-ai/testing";
 
-describe('VAPI Client', () => {
-  describe('getVapiClient', () => {
-    it('should create client with private API key', () => {
+describe("VAPI Client", () => {
+  describe("getVapiClient", () => {
+    it("should create client with private API key", () => {
       const client = getVapiClient();
       expect(client).toBeDefined();
     });
 
-    it('should throw if VAPI_PRIVATE_KEY not configured', () => {
+    it("should throw if VAPI_PRIVATE_KEY not configured", () => {
       const originalKey = process.env.VAPI_PRIVATE_KEY;
       delete process.env.VAPI_PRIVATE_KEY;
 
-      expect(() => getVapiClient()).toThrow(
-        'VAPI_PRIVATE_KEY not configured'
-      );
+      expect(() => getVapiClient()).toThrow("VAPI_PRIVATE_KEY not configured");
 
       process.env.VAPI_PRIVATE_KEY = originalKey;
     });
   });
 
-  describe('createPhoneCall', () => {
+  describe("createPhoneCall", () => {
     beforeEach(() => {
       vi.clearAllMocks();
     });
 
-    it('should create outbound call with correct payload', async () => {
+    it("should create outbound call with correct payload", async () => {
       const mockClient = createMockVapiClient();
-      vi.spyOn({ getVapiClient }, 'getVapiClient').mockReturnValue(mockClient);
+      vi.spyOn({ getVapiClient }, "getVapiClient").mockReturnValue(mockClient);
 
       const params = {
-        phoneNumber: '+15551234567',
-        assistantId: 'asst_123',
-        phoneNumberId: 'phone_456',
+        phoneNumber: "+15551234567",
+        assistantId: "asst_123",
+        phoneNumberId: "phone_456",
         assistantOverrides: {
           variableValues: {
-            pet_name: 'Max',
-            owner_name: 'John Smith',
+            pet_name: "Max",
+            owner_name: "John Smith",
           },
         },
       };
@@ -120,28 +115,28 @@ describe('VAPI Client', () => {
       await createPhoneCall(params);
 
       expect(mockClient.calls.create).toHaveBeenCalledWith({
-        phoneNumberId: 'phone_456',
-        customer: { number: '+15551234567' },
-        assistantId: 'asst_123',
+        phoneNumberId: "phone_456",
+        customer: { number: "+15551234567" },
+        assistantId: "asst_123",
         assistantOverrides: expect.objectContaining({
           variableValues: {
-            pet_name: 'Max',
-            owner_name: 'John Smith',
+            pet_name: "Max",
+            owner_name: "John Smith",
           },
         }),
       });
     });
 
-    it('should handle voicemail detection override', async () => {
+    it("should handle voicemail detection override", async () => {
       const mockClient = createMockVapiClient();
-      vi.spyOn({ getVapiClient }, 'getVapiClient').mockReturnValue(mockClient);
+      vi.spyOn({ getVapiClient }, "getVapiClient").mockReturnValue(mockClient);
 
       const params = {
-        phoneNumber: '+15551234567',
-        assistantId: 'asst_123',
-        phoneNumberId: 'phone_456',
+        phoneNumber: "+15551234567",
+        assistantId: "asst_123",
+        phoneNumberId: "phone_456",
         assistantOverrides: {
-          voicemailDetection: 'off' as const,
+          voicemailDetection: "off" as const,
         },
       };
 
@@ -150,51 +145,55 @@ describe('VAPI Client', () => {
       expect(mockClient.calls.create).toHaveBeenCalledWith(
         expect.objectContaining({
           assistantOverrides: expect.objectContaining({
-            voicemailDetection: 'off',
+            voicemailDetection: "off",
           }),
-        })
+        }),
       );
     });
 
-    it('should throw and log on API error', async () => {
+    it("should throw and log on API error", async () => {
       const mockClient = createMockVapiClient();
-      const error = new Error('VAPI API error');
+      const error = new Error("VAPI API error");
       mockClient.calls.create.mockRejectedValue(error);
 
-      vi.spyOn({ getVapiClient }, 'getVapiClient').mockReturnValue(mockClient);
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      vi.spyOn({ getVapiClient }, "getVapiClient").mockReturnValue(mockClient);
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
-      await expect(createPhoneCall({
-        phoneNumber: '+15551234567',
-        assistantId: 'asst_123',
-        phoneNumberId: 'phone_456',
-      })).rejects.toThrow('VAPI API error');
+      await expect(
+        createPhoneCall({
+          phoneNumber: "+15551234567",
+          assistantId: "asst_123",
+          phoneNumberId: "phone_456",
+        }),
+      ).rejects.toThrow("VAPI API error");
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[VAPI_CLIENT] Failed to create phone call'),
-        expect.any(Object)
+        expect.stringContaining("[VAPI_CLIENT] Failed to create phone call"),
+        expect.any(Object),
       );
 
       consoleSpy.mockRestore();
     });
   });
 
-  describe('calculateTotalCost', () => {
-    it('should sum all cost amounts', () => {
+  describe("calculateTotalCost", () => {
+    it("should sum all cost amounts", () => {
       const costs = [
-        { amount: 0.05, description: 'per-minute' },
-        { amount: 0.02, description: 'AI cost' },
-        { amount: 0.01, description: 'transcription' },
+        { amount: 0.05, description: "per-minute" },
+        { amount: 0.02, description: "AI cost" },
+        { amount: 0.01, description: "transcription" },
       ];
 
       expect(calculateTotalCost(costs)).toBe(0.08);
     });
 
-    it('should return 0 for empty costs array', () => {
+    it("should return 0 for empty costs array", () => {
       expect(calculateTotalCost([])).toBe(0);
     });
 
-    it('should return 0 for undefined costs', () => {
+    it("should return 0 for undefined costs", () => {
       expect(calculateTotalCost(undefined)).toBe(0);
     });
   });
@@ -204,6 +203,7 @@ describe('VAPI Client', () => {
 #### 2. Webhook Handlers (`libs/vapi/src/webhooks/handlers/`)
 
 **Critical Handlers to Test**:
+
 - `handleStatusUpdate` - Call status transitions
 - `handleEndOfCallReport` - Final call data processing
 - `handleHang` - Unexpected call termination
@@ -215,35 +215,38 @@ describe('VAPI Client', () => {
 ```typescript
 // libs/vapi/src/webhooks/handlers/__tests__/status-update.test.ts
 
-import { describe, it, expect, vi } from 'vitest';
-import { handleStatusUpdate } from '../status-update';
-import { createMockSupabaseClient, createMockVapiWebhook } from '@odis/testing';
+import { describe, it, expect, vi } from "vitest";
+import { handleStatusUpdate } from "../status-update";
+import {
+  createMockSupabaseClient,
+  createMockVapiWebhook,
+} from "@odis-ai/testing";
 
-describe('handleStatusUpdate', () => {
-  it('should update call status from queued to ringing', async () => {
+describe("handleStatusUpdate", () => {
+  it("should update call status from queued to ringing", async () => {
     const { client: supabase, from } = createMockSupabaseClient();
-    const webhook = createMockVapiWebhook('status-update', {
-      status: 'ringing',
-      call: { id: 'call-123' },
+    const webhook = createMockVapiWebhook("status-update", {
+      status: "ringing",
+      call: { id: "call-123" },
     });
 
     await handleStatusUpdate(webhook.message, { isInbound: false }, supabase);
 
-    expect(from).toHaveBeenCalledWith('vapi_calls');
+    expect(from).toHaveBeenCalledWith("vapi_calls");
     expect(from().update).toHaveBeenCalledWith({
-      status: 'ringing',
+      status: "ringing",
       updated_at: expect.any(String),
     });
-    expect(from().update().eq).toHaveBeenCalledWith('vapi_call_id', 'call-123');
+    expect(from().update().eq).toHaveBeenCalledWith("vapi_call_id", "call-123");
   });
 
-  it('should set started_at timestamp on first in-progress status', async () => {
+  it("should set started_at timestamp on first in-progress status", async () => {
     const { client: supabase, from } = createMockSupabaseClient();
-    const webhook = createMockVapiWebhook('status-update', {
-      status: 'in-progress',
+    const webhook = createMockVapiWebhook("status-update", {
+      status: "in-progress",
       call: {
-        id: 'call-123',
-        startedAt: '2025-12-08T10:00:00.000Z',
+        id: "call-123",
+        startedAt: "2025-12-08T10:00:00.000Z",
       },
     });
 
@@ -251,32 +254,32 @@ describe('handleStatusUpdate', () => {
 
     expect(from().update).toHaveBeenCalledWith(
       expect.objectContaining({
-        status: 'in_progress',
-        started_at: '2025-12-08T10:00:00.000Z',
-      })
+        status: "in_progress",
+        started_at: "2025-12-08T10:00:00.000Z",
+      }),
     );
   });
 
-  it('should handle status update for non-existent call gracefully', async () => {
+  it("should handle status update for non-existent call gracefully", async () => {
     const { client: supabase, from } = createMockSupabaseClient({
       queryBuilder: {
-        error: new Error('Call not found'),
+        error: new Error("Call not found"),
         data: null,
       },
     });
 
-    const webhook = createMockVapiWebhook('status-update', {
-      status: 'ringing',
-      call: { id: 'non-existent-call' },
+    const webhook = createMockVapiWebhook("status-update", {
+      status: "ringing",
+      call: { id: "non-existent-call" },
     });
 
-    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     await handleStatusUpdate(webhook.message, { isInbound: false }, supabase);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Call not found'),
-      expect.any(Object)
+      expect.stringContaining("Call not found"),
+      expect.any(Object),
     );
 
     consoleSpy.mockRestore();
@@ -291,40 +294,40 @@ describe('handleStatusUpdate', () => {
 ```typescript
 // libs/vapi/src/webhooks/__tests__/index.test.ts
 
-describe('Webhook Dispatcher', () => {
-  describe('parseWebhookPayload', () => {
-    it('should parse valid JSON payload', () => {
+describe("Webhook Dispatcher", () => {
+  describe("parseWebhookPayload", () => {
+    it("should parse valid JSON payload", () => {
       const payload = JSON.stringify({
-        message: { type: 'status-update', call: { id: 'call-123' } },
+        message: { type: "status-update", call: { id: "call-123" } },
       });
 
       const result = parseWebhookPayload(payload);
 
       expect(result).toBeDefined();
-      expect(result?.message.type).toBe('status-update');
+      expect(result?.message.type).toBe("status-update");
     });
 
-    it('should return null for empty payload', () => {
-      expect(parseWebhookPayload('')).toBeNull();
+    it("should return null for empty payload", () => {
+      expect(parseWebhookPayload("")).toBeNull();
     });
 
-    it('should return null for invalid JSON', () => {
-      expect(parseWebhookPayload('not-json')).toBeNull();
+    it("should return null for invalid JSON", () => {
+      expect(parseWebhookPayload("not-json")).toBeNull();
     });
 
-    it('should return null for missing message field', () => {
-      const payload = JSON.stringify({ data: 'test' });
+    it("should return null for missing message field", () => {
+      const payload = JSON.stringify({ data: "test" });
       expect(parseWebhookPayload(payload)).toBeNull();
     });
   });
 
-  describe('handleVapiWebhook', () => {
-    it('should route to status-update handler', async () => {
+  describe("handleVapiWebhook", () => {
+    it("should route to status-update handler", async () => {
       const payload = {
         message: {
-          type: 'status-update' as const,
-          status: 'ringing',
-          call: { id: 'call-123' },
+          type: "status-update" as const,
+          status: "ringing",
+          call: { id: "call-123" },
         },
       };
 
@@ -332,19 +335,19 @@ describe('Webhook Dispatcher', () => {
 
       expect(result).toEqual({
         success: true,
-        message: 'Status update processed',
+        message: "Status update processed",
       });
     });
 
-    it('should handle tool-calls synchronously', async () => {
+    it("should handle tool-calls synchronously", async () => {
       const payload = {
         message: {
-          type: 'tool-calls' as const,
+          type: "tool-calls" as const,
           toolCalls: [
             {
-              id: 'tc-1',
-              type: 'function',
-              function: { name: 'test-tool', arguments: '{}' },
+              id: "tc-1",
+              type: "function",
+              function: { name: "test-tool", arguments: "{}" },
             },
           ],
         },
@@ -352,42 +355,42 @@ describe('Webhook Dispatcher', () => {
 
       const result = await handleVapiWebhook(payload);
 
-      expect(result).toHaveProperty('results');
+      expect(result).toHaveProperty("results");
     });
 
-    it('should log warning for unknown message type', async () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    it("should log warning for unknown message type", async () => {
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
       const payload = {
-        message: { type: 'unknown-type' as never },
+        message: { type: "unknown-type" as never },
       };
 
       await handleVapiWebhook(payload);
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Unhandled message type'),
-        expect.any(Object)
+        expect.stringContaining("Unhandled message type"),
+        expect.any(Object),
       );
 
       consoleSpy.mockRestore();
     });
   });
 
-  describe('requiresSynchronousResponse', () => {
-    it('should return true for tool-calls', () => {
-      expect(requiresSynchronousResponse('tool-calls')).toBe(true);
+  describe("requiresSynchronousResponse", () => {
+    it("should return true for tool-calls", () => {
+      expect(requiresSynchronousResponse("tool-calls")).toBe(true);
     });
 
-    it('should return true for assistant-request', () => {
-      expect(requiresSynchronousResponse('assistant-request')).toBe(true);
+    it("should return true for assistant-request", () => {
+      expect(requiresSynchronousResponse("assistant-request")).toBe(true);
     });
 
-    it('should return false for status-update', () => {
-      expect(requiresSynchronousResponse('status-update')).toBe(false);
+    it("should return false for status-update", () => {
+      expect(requiresSynchronousResponse("status-update")).toBe(false);
     });
 
-    it('should return false for end-of-call-report', () => {
-      expect(requiresSynchronousResponse('end-of-call-report')).toBe(false);
+    it("should return false for end-of-call-report", () => {
+      expect(requiresSynchronousResponse("end-of-call-report")).toBe(false);
     });
   });
 });
@@ -403,26 +406,26 @@ describe('Webhook Dispatcher', () => {
 
 ```typescript
 // Example mock setup for VAPI tests
-import { vi } from 'vitest';
+import { vi } from "vitest";
 
 // Mock VAPI SDK
-vi.mock('@vapi-ai/server-sdk', () => ({
+vi.mock("@vapi-ai/server-sdk", () => ({
   VapiClient: vi.fn(() => ({
     calls: {
-      create: vi.fn().mockResolvedValue({ id: 'call-123', status: 'queued' }),
-      get: vi.fn().mockResolvedValue({ id: 'call-123', status: 'ended' }),
+      create: vi.fn().mockResolvedValue({ id: "call-123", status: "queued" }),
+      get: vi.fn().mockResolvedValue({ id: "call-123", status: "ended" }),
       list: vi.fn().mockResolvedValue([]),
     },
   })),
 }));
 
 // Mock Supabase
-vi.mock('@odis/db/server', () => ({
+vi.mock("@odis-ai/db/server", () => ({
   createServiceClient: vi.fn(() => createMockSupabaseClient().client),
 }));
 
 // Mock logger
-vi.mock('@odis/logger', () => ({
+vi.mock("@odis-ai/logger", () => ({
   loggers: {
     webhook: {
       child: vi.fn(() => ({
@@ -444,7 +447,7 @@ vi.mock('@odis/logger', () => ({
 
 ---
 
-## Library 2: `@odis/services` (CRITICAL - P0)
+## Library 2: `@odis-ai/services` (CRITICAL - P0)
 
 ### Overview
 
@@ -455,6 +458,7 @@ Business service orchestrators that coordinate multi-step workflows like dischar
 #### 1. Discharge Orchestrator (`libs/services/src/discharge-orchestrator.ts`)
 
 **Key Methods**:
+
 - `orchestrate()` - Main entry point
 - `executeSequential()` - Sequential step execution
 - `executeParallel()` - Parallel step execution
@@ -465,51 +469,54 @@ Business service orchestrators that coordinate multi-step workflows like dischar
 ```typescript
 // libs/services/src/__tests__/discharge-orchestrator.test.ts
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DischargeOrchestrator } from '../discharge-orchestrator';
-import { createMockSupabaseClient, createMockUser } from '@odis/testing';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { DischargeOrchestrator } from "../discharge-orchestrator";
+import { createMockSupabaseClient, createMockUser } from "@odis-ai/testing";
 
-describe('DischargeOrchestrator', () => {
+describe("DischargeOrchestrator", () => {
   let orchestrator: DischargeOrchestrator;
   let mockSupabase: ReturnType<typeof createMockSupabaseClient>;
   let mockUser: ReturnType<typeof createMockUser>;
 
   beforeEach(() => {
     mockSupabase = createMockSupabaseClient();
-    mockUser = createMockUser({ id: 'user-123', email: 'test@example.com' });
+    mockUser = createMockUser({ id: "user-123", email: "test@example.com" });
     orchestrator = new DischargeOrchestrator(
       mockSupabase.client as never,
-      mockUser
+      mockUser,
     );
   });
 
-  describe('orchestrate - Sequential Mode', () => {
-    it('should execute steps in order when parallel=false', async () => {
+  describe("orchestrate - Sequential Mode", () => {
+    it("should execute steps in order when parallel=false", async () => {
       const executionOrder: string[] = [];
 
-      vi.spyOn(orchestrator as never, 'executeIngestion')
-        .mockImplementation(async () => {
-          executionOrder.push('ingest');
-          return { step: 'ingest', status: 'completed', duration: 100 };
-        });
+      vi.spyOn(orchestrator as never, "executeIngestion").mockImplementation(
+        async () => {
+          executionOrder.push("ingest");
+          return { step: "ingest", status: "completed", duration: 100 };
+        },
+      );
 
-      vi.spyOn(orchestrator as never, 'executeSummaryGeneration')
-        .mockImplementation(async () => {
-          executionOrder.push('summary');
-          return { step: 'generateSummary', status: 'completed', duration: 200 };
-        });
+      vi.spyOn(
+        orchestrator as never,
+        "executeSummaryGeneration",
+      ).mockImplementation(async () => {
+        executionOrder.push("summary");
+        return { step: "generateSummary", status: "completed", duration: 200 };
+      });
 
       const request = {
         input: {
           rawData: {
-            mode: 'text' as const,
-            source: 'test',
-            text: 'Test data',
+            mode: "text" as const,
+            source: "test",
+            text: "Test data",
           },
         },
         steps: {
           ingest: { enabled: true },
-          generateSummary: { enabled: true, dependencies: ['ingest'] },
+          generateSummary: { enabled: true, dependencies: ["ingest"] },
         },
         options: { parallel: false },
       };
@@ -517,29 +524,28 @@ describe('DischargeOrchestrator', () => {
       const result = await orchestrator.orchestrate(request);
 
       expect(result.success).toBe(true);
-      expect(executionOrder).toEqual(['ingest', 'summary']);
+      expect(executionOrder).toEqual(["ingest", "summary"]);
     });
 
-    it('should skip dependent steps when dependency fails', async () => {
-      vi.spyOn(orchestrator as never, 'executeIngestion')
-        .mockResolvedValue({
-          step: 'ingest',
-          status: 'failed',
-          duration: 100,
-          error: 'Ingestion failed',
-        });
+    it("should skip dependent steps when dependency fails", async () => {
+      vi.spyOn(orchestrator as never, "executeIngestion").mockResolvedValue({
+        step: "ingest",
+        status: "failed",
+        duration: 100,
+        error: "Ingestion failed",
+      });
 
       const request = {
         input: {
           rawData: {
-            mode: 'text' as const,
-            source: 'test',
-            text: 'Test data',
+            mode: "text" as const,
+            source: "test",
+            text: "Test data",
           },
         },
         steps: {
           ingest: { enabled: true },
-          generateSummary: { enabled: true, dependencies: ['ingest'] },
+          generateSummary: { enabled: true, dependencies: ["ingest"] },
         },
         options: { parallel: false, stopOnError: false },
       };
@@ -547,36 +553,44 @@ describe('DischargeOrchestrator', () => {
       const result = await orchestrator.orchestrate(request);
 
       expect(result.success).toBe(false);
-      expect(result.data.failedSteps).toContain('ingest');
-      expect(result.data.skippedSteps).toContain('generateSummary');
+      expect(result.data.failedSteps).toContain("ingest");
+      expect(result.data.skippedSteps).toContain("generateSummary");
     });
 
-    it('should stop execution when stopOnError=true', async () => {
+    it("should stop execution when stopOnError=true", async () => {
       const executionOrder: string[] = [];
 
-      vi.spyOn(orchestrator as never, 'executeIngestion')
-        .mockImplementation(async () => {
-          executionOrder.push('ingest');
-          return { step: 'ingest', status: 'failed', duration: 100, error: 'Error' };
-        });
+      vi.spyOn(orchestrator as never, "executeIngestion").mockImplementation(
+        async () => {
+          executionOrder.push("ingest");
+          return {
+            step: "ingest",
+            status: "failed",
+            duration: 100,
+            error: "Error",
+          };
+        },
+      );
 
-      vi.spyOn(orchestrator as never, 'executeSummaryGeneration')
-        .mockImplementation(async () => {
-          executionOrder.push('summary');
-          return { step: 'generateSummary', status: 'completed', duration: 200 };
-        });
+      vi.spyOn(
+        orchestrator as never,
+        "executeSummaryGeneration",
+      ).mockImplementation(async () => {
+        executionOrder.push("summary");
+        return { step: "generateSummary", status: "completed", duration: 200 };
+      });
 
       const request = {
         input: {
           rawData: {
-            mode: 'text' as const,
-            source: 'test',
-            text: 'Test data',
+            mode: "text" as const,
+            source: "test",
+            text: "Test data",
           },
         },
         steps: {
           ingest: { enabled: true },
-          generateSummary: { enabled: true, dependencies: ['ingest'] },
+          generateSummary: { enabled: true, dependencies: ["ingest"] },
         },
         options: { parallel: false, stopOnError: true },
       };
@@ -584,37 +598,40 @@ describe('DischargeOrchestrator', () => {
       await orchestrator.orchestrate(request);
 
       // Summary should not execute because stopOnError=true
-      expect(executionOrder).toEqual(['ingest']);
+      expect(executionOrder).toEqual(["ingest"]);
     });
   });
 
-  describe('orchestrate - Parallel Mode', () => {
-    it('should execute independent steps in parallel', async () => {
+  describe("orchestrate - Parallel Mode", () => {
+    it("should execute independent steps in parallel", async () => {
       const startTimes = new Map<string, number>();
       const endTimes = new Map<string, number>();
 
-      vi.spyOn(orchestrator as never, 'executeIngestion')
-        .mockImplementation(async () => {
-          startTimes.set('ingest', Date.now());
-          await new Promise(resolve => setTimeout(resolve, 50));
-          endTimes.set('ingest', Date.now());
-          return { step: 'ingest', status: 'completed', duration: 50 };
-        });
+      vi.spyOn(orchestrator as never, "executeIngestion").mockImplementation(
+        async () => {
+          startTimes.set("ingest", Date.now());
+          await new Promise((resolve) => setTimeout(resolve, 50));
+          endTimes.set("ingest", Date.now());
+          return { step: "ingest", status: "completed", duration: 50 };
+        },
+      );
 
-      vi.spyOn(orchestrator as never, 'executeEntityExtraction')
-        .mockImplementation(async () => {
-          startTimes.set('extract', Date.now());
-          await new Promise(resolve => setTimeout(resolve, 50));
-          endTimes.set('extract', Date.now());
-          return { step: 'extractEntities', status: 'completed', duration: 50 };
-        });
+      vi.spyOn(
+        orchestrator as never,
+        "executeEntityExtraction",
+      ).mockImplementation(async () => {
+        startTimes.set("extract", Date.now());
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        endTimes.set("extract", Date.now());
+        return { step: "extractEntities", status: "completed", duration: 50 };
+      });
 
       const request = {
         input: {
           rawData: {
-            mode: 'text' as const,
-            source: 'test',
-            text: 'Test data',
+            mode: "text" as const,
+            source: "test",
+            text: "Test data",
           },
         },
         steps: {
@@ -629,33 +646,32 @@ describe('DischargeOrchestrator', () => {
       expect(result.success).toBe(true);
 
       // Verify parallel execution (both started before either finished)
-      const ingestStart = startTimes.get('ingest')!;
-      const extractStart = startTimes.get('extract')!;
-      const ingestEnd = endTimes.get('ingest')!;
+      const ingestStart = startTimes.get("ingest")!;
+      const extractStart = startTimes.get("extract")!;
+      const ingestEnd = endTimes.get("ingest")!;
 
       expect(extractStart).toBeLessThan(ingestEnd);
     });
 
-    it('should handle batch failures in parallel mode', async () => {
-      vi.spyOn(orchestrator as never, 'executeIngestion')
-        .mockResolvedValue({
-          step: 'ingest',
-          status: 'failed',
-          duration: 100,
-          error: 'Ingestion failed',
-        });
+    it("should handle batch failures in parallel mode", async () => {
+      vi.spyOn(orchestrator as never, "executeIngestion").mockResolvedValue({
+        step: "ingest",
+        status: "failed",
+        duration: 100,
+        error: "Ingestion failed",
+      });
 
       const request = {
         input: {
           rawData: {
-            mode: 'text' as const,
-            source: 'test',
-            text: 'Test data',
+            mode: "text" as const,
+            source: "test",
+            text: "Test data",
           },
         },
         steps: {
           ingest: { enabled: true },
-          generateSummary: { enabled: true, dependencies: ['ingest'] },
+          generateSummary: { enabled: true, dependencies: ["ingest"] },
         },
         options: { parallel: true, stopOnError: true },
       };
@@ -663,18 +679,18 @@ describe('DischargeOrchestrator', () => {
       const result = await orchestrator.orchestrate(request);
 
       expect(result.success).toBe(false);
-      expect(result.data.failedSteps).toContain('ingest');
-      expect(result.data.skippedSteps).toContain('generateSummary');
+      expect(result.data.failedSteps).toContain("ingest");
+      expect(result.data.skippedSteps).toContain("generateSummary");
     });
   });
 
-  describe('Step Handlers', () => {
-    describe('executeIngestion', () => {
-      it('should handle existing case input', async () => {
+  describe("Step Handlers", () => {
+    describe("executeIngestion", () => {
+      it("should handle existing case input", async () => {
         const request = {
           input: {
             existingCase: {
-              caseId: 'case-123',
+              caseId: "case-123",
             },
           },
           steps: {
@@ -685,16 +701,16 @@ describe('DischargeOrchestrator', () => {
         const result = await orchestrator.orchestrate(request);
 
         // Should mark ingest as completed (not skipped) for existing case
-        expect(result.data.completedSteps).toContain('ingest');
+        expect(result.data.completedSteps).toContain("ingest");
       });
 
-      it('should skip when not enabled and no existing case', async () => {
+      it("should skip when not enabled and no existing case", async () => {
         const request = {
           input: {
             rawData: {
-              mode: 'text' as const,
-              source: 'test',
-              text: 'Test data',
+              mode: "text" as const,
+              source: "test",
+              text: "Test data",
             },
           },
           steps: {
@@ -704,42 +720,44 @@ describe('DischargeOrchestrator', () => {
 
         const result = await orchestrator.orchestrate(request);
 
-        expect(result.data.skippedSteps).toContain('ingest');
+        expect(result.data.skippedSteps).toContain("ingest");
       });
     });
 
-    describe('executeSummaryGeneration', () => {
-      it('should use freshly extracted entities when available', async () => {
+    describe("executeSummaryGeneration", () => {
+      it("should use freshly extracted entities when available", async () => {
         // Mock entity extraction result
         const extractResult = {
-          step: 'extractEntities',
-          status: 'completed',
+          step: "extractEntities",
+          status: "completed",
           duration: 100,
           data: {
-            caseId: 'case-123',
+            caseId: "case-123",
             entities: {
-              patient: { name: 'Max', species: 'dog' },
-              clinical: { diagnosis: 'ear infection' },
+              patient: { name: "Max", species: "dog" },
+              clinical: { diagnosis: "ear infection" },
             },
-            source: 'transcription',
+            source: "transcription",
           },
         };
 
         // Set up orchestrator with extract result
-        orchestrator['results'].set('extractEntities', extractResult);
+        orchestrator["results"].set("extractEntities", extractResult);
 
         // Mock summary generation
-        const generateSpy = vi.spyOn(
-          await import('@odis/ai/generate-structured-discharge'),
-          'generateStructuredDischargeSummaryWithRetry'
-        ).mockResolvedValue({
-          structured: { diagnosis: 'ear infection' },
-          plainText: 'Summary text',
-        });
+        const generateSpy = vi
+          .spyOn(
+            await import("@odis-ai/ai/generate-structured-discharge"),
+            "generateStructuredDischargeSummaryWithRetry",
+          )
+          .mockResolvedValue({
+            structured: { diagnosis: "ear infection" },
+            plainText: "Summary text",
+          });
 
         const request = {
           input: {
-            existingCase: { caseId: 'case-123' },
+            existingCase: { caseId: "case-123" },
           },
           steps: {
             generateSummary: { enabled: true },
@@ -751,19 +769,19 @@ describe('DischargeOrchestrator', () => {
         expect(generateSpy).toHaveBeenCalledWith(
           expect.objectContaining({
             entityExtraction: expect.objectContaining({
-              patient: { name: 'Max', species: 'dog' },
+              patient: { name: "Max", species: "dog" },
             }),
-          })
+          }),
         );
       });
 
-      it('should throw if case not found', async () => {
+      it("should throw if case not found", async () => {
         mockSupabase.from.mockReturnValue({
           select: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
               single: vi.fn().mockResolvedValue({
                 data: null,
-                error: new Error('Case not found'),
+                error: new Error("Case not found"),
               }),
             }),
           }),
@@ -771,7 +789,7 @@ describe('DischargeOrchestrator', () => {
 
         const request = {
           input: {
-            existingCase: { caseId: 'non-existent' },
+            existingCase: { caseId: "non-existent" },
           },
           steps: {
             generateSummary: { enabled: true },
@@ -783,25 +801,25 @@ describe('DischargeOrchestrator', () => {
         expect(result.success).toBe(false);
         expect(result.metadata.errors).toContainEqual(
           expect.objectContaining({
-            error: expect.stringContaining('Case not found'),
-          })
+            error: expect.stringContaining("Case not found"),
+          }),
         );
       });
     });
 
-    describe('executeEmailScheduling', () => {
-      it('should validate recipient email format', async () => {
+    describe("executeEmailScheduling", () => {
+      it("should validate recipient email format", async () => {
         const request = {
           input: {
-            existingCase: { caseId: 'case-123' },
+            existingCase: { caseId: "case-123" },
           },
           steps: {
             prepareEmail: { enabled: true },
             scheduleEmail: {
               enabled: true,
-              dependencies: ['prepareEmail'],
+              dependencies: ["prepareEmail"],
               options: {
-                recipientEmail: 'invalid-email',
+                recipientEmail: "invalid-email",
               },
             },
           },
@@ -812,20 +830,20 @@ describe('DischargeOrchestrator', () => {
         expect(result.success).toBe(false);
         expect(result.metadata.errors).toContainEqual(
           expect.objectContaining({
-            error: expect.stringContaining('Invalid email address'),
-          })
+            error: expect.stringContaining("Invalid email address"),
+          }),
         );
       });
 
-      it('should use test contact when test mode enabled', async () => {
+      it("should use test contact when test mode enabled", async () => {
         mockSupabase.from.mockReturnValue({
           select: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
               single: vi.fn().mockResolvedValue({
                 data: {
                   test_mode_enabled: true,
-                  test_contact_email: 'test@clinic.com',
-                  test_contact_name: 'Test User',
+                  test_contact_email: "test@clinic.com",
+                  test_contact_name: "Test User",
                 },
                 error: null,
               }),
@@ -834,7 +852,7 @@ describe('DischargeOrchestrator', () => {
           insert: vi.fn().mockReturnValue({
             select: vi.fn().mockReturnValue({
               single: vi.fn().mockResolvedValue({
-                data: { id: 'email-123' },
+                data: { id: "email-123" },
                 error: null,
               }),
             }),
@@ -844,11 +862,11 @@ describe('DischargeOrchestrator', () => {
         const request = {
           input: {
             existingCase: {
-              caseId: 'case-123',
+              caseId: "case-123",
               emailContent: {
-                subject: 'Test',
-                html: '<p>Test</p>',
-                text: 'Test',
+                subject: "Test",
+                html: "<p>Test</p>",
+                text: "Test",
               },
             },
           },
@@ -856,7 +874,7 @@ describe('DischargeOrchestrator', () => {
             scheduleEmail: {
               enabled: true,
               options: {
-                recipientEmail: 'owner@example.com',
+                recipientEmail: "owner@example.com",
               },
             },
           },
@@ -865,30 +883,32 @@ describe('DischargeOrchestrator', () => {
         const result = await orchestrator.orchestrate(request);
 
         expect(result.success).toBe(true);
-        expect(mockSupabase.from).toHaveBeenCalledWith('scheduled_discharge_emails');
+        expect(mockSupabase.from).toHaveBeenCalledWith(
+          "scheduled_discharge_emails",
+        );
         expect(mockSupabase.from().insert).toHaveBeenCalledWith(
           expect.objectContaining({
-            recipient_email: 'test@clinic.com',
+            recipient_email: "test@clinic.com",
             metadata: expect.objectContaining({
               test_mode: true,
-              original_recipient_email: 'owner@example.com',
+              original_recipient_email: "owner@example.com",
             }),
-          })
+          }),
         );
       });
 
-      it('should rollback database insert if QStash fails', async () => {
+      it("should rollback database insert if QStash fails", async () => {
         // Mock QStash failure
         vi.spyOn(
-          await import('@odis/qstash/client'),
-          'scheduleEmailExecution'
-        ).mockRejectedValue(new Error('QStash error'));
+          await import("@odis-ai/qstash/client"),
+          "scheduleEmailExecution",
+        ).mockRejectedValue(new Error("QStash error"));
 
         mockSupabase.from.mockReturnValue({
           insert: vi.fn().mockReturnValue({
             select: vi.fn().mockReturnValue({
               single: vi.fn().mockResolvedValue({
-                data: { id: 'email-123' },
+                data: { id: "email-123" },
                 error: null,
               }),
             }),
@@ -901,11 +921,11 @@ describe('DischargeOrchestrator', () => {
         const request = {
           input: {
             existingCase: {
-              caseId: 'case-123',
+              caseId: "case-123",
               emailContent: {
-                subject: 'Test',
-                html: '<p>Test</p>',
-                text: 'Test',
+                subject: "Test",
+                html: "<p>Test</p>",
+                text: "Test",
               },
             },
           },
@@ -913,7 +933,7 @@ describe('DischargeOrchestrator', () => {
             scheduleEmail: {
               enabled: true,
               options: {
-                recipientEmail: 'owner@example.com',
+                recipientEmail: "owner@example.com",
               },
             },
           },
@@ -924,21 +944,21 @@ describe('DischargeOrchestrator', () => {
         expect(result.success).toBe(false);
         expect(mockSupabase.from().delete).toHaveBeenCalled();
         expect(mockSupabase.from().delete().eq).toHaveBeenCalledWith(
-          'id',
-          'email-123'
+          "id",
+          "email-123",
         );
       });
     });
   });
 
-  describe('buildResult', () => {
-    it('should calculate correct timing metrics', async () => {
+  describe("buildResult", () => {
+    it("should calculate correct timing metrics", async () => {
       const request = {
         input: {
           rawData: {
-            mode: 'text' as const,
-            source: 'test',
-            text: 'Test data',
+            mode: "text" as const,
+            source: "test",
+            text: "Test data",
           },
         },
         steps: {
@@ -947,7 +967,7 @@ describe('DischargeOrchestrator', () => {
       };
 
       const startTime = Date.now();
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       const result = await orchestrator.orchestrate(request);
 
       expect(result.metadata.totalProcessingTime).toBeGreaterThanOrEqual(100);
@@ -955,21 +975,20 @@ describe('DischargeOrchestrator', () => {
       expect(result.metadata.stepTimings.ingest).toBeGreaterThan(0);
     });
 
-    it('should aggregate errors from failed steps', async () => {
-      vi.spyOn(orchestrator as never, 'executeIngestion')
-        .mockResolvedValue({
-          step: 'ingest',
-          status: 'failed',
-          duration: 100,
-          error: 'Database error',
-        });
+    it("should aggregate errors from failed steps", async () => {
+      vi.spyOn(orchestrator as never, "executeIngestion").mockResolvedValue({
+        step: "ingest",
+        status: "failed",
+        duration: 100,
+        error: "Database error",
+      });
 
       const request = {
         input: {
           rawData: {
-            mode: 'text' as const,
-            source: 'test',
-            text: 'Test data',
+            mode: "text" as const,
+            source: "test",
+            text: "Test data",
           },
         },
         steps: {
@@ -981,8 +1000,8 @@ describe('DischargeOrchestrator', () => {
 
       expect(result.success).toBe(false);
       expect(result.metadata.errors).toContainEqual({
-        step: 'ingest',
-        error: 'Database error',
+        step: "ingest",
+        error: "Database error",
       });
     });
   });
@@ -992,6 +1011,7 @@ describe('DischargeOrchestrator', () => {
 #### 2. Cases Service (`libs/services/src/cases-service.ts`)
 
 **Key Methods**:
+
 - `ingest()` - Data ingestion
 - `scheduleDischargeCall()` - Call scheduling
 - `getCaseWithEntities()` - Case retrieval with relations
@@ -1002,73 +1022,72 @@ describe('DischargeOrchestrator', () => {
 ```typescript
 // libs/services/src/__tests__/cases-service.test.ts
 
-describe('CasesService', () => {
-  describe('ingest', () => {
-    it('should create case with text mode', async () => {
+describe("CasesService", () => {
+  describe("ingest", () => {
+    it("should create case with text mode", async () => {
       const { client: supabase } = createMockSupabaseClient();
 
       const payload = {
-        mode: 'text' as const,
-        source: 'test',
-        text: 'Patient visit notes',
+        mode: "text" as const,
+        source: "test",
+        text: "Patient visit notes",
       };
 
-      await CasesService.ingest(supabase, 'user-123', payload);
+      await CasesService.ingest(supabase, "user-123", payload);
 
-      expect(supabase.from).toHaveBeenCalledWith('cases');
+      expect(supabase.from).toHaveBeenCalledWith("cases");
       expect(supabase.from().insert).toHaveBeenCalledWith(
         expect.objectContaining({
-          user_id: 'user-123',
-          source: 'test',
-          type: 'scribe',
-        })
+          user_id: "user-123",
+          source: "test",
+          type: "scribe",
+        }),
       );
     });
 
-    it('should create case with structured mode', async () => {
+    it("should create case with structured mode", async () => {
       const { client: supabase } = createMockSupabaseClient();
 
       const payload = {
-        mode: 'structured' as const,
-        source: 'idexx',
+        mode: "structured" as const,
+        source: "idexx",
         data: {
-          patient: { name: 'Max', species: 'dog' },
-          visit: { date: '2025-12-08' },
+          patient: { name: "Max", species: "dog" },
+          visit: { date: "2025-12-08" },
         },
       };
 
-      await CasesService.ingest(supabase, 'user-123', payload);
+      await CasesService.ingest(supabase, "user-123", payload);
 
       expect(supabase.from().insert).toHaveBeenCalledWith(
         expect.objectContaining({
           metadata: expect.objectContaining({
             idexx: expect.any(Object),
           }),
-        })
+        }),
       );
     });
   });
 
-  describe('scheduleDischargeCall', () => {
-    it('should schedule call with default delay', async () => {
+  describe("scheduleDischargeCall", () => {
+    it("should schedule call with default delay", async () => {
       const { client: supabase } = createMockSupabaseClient();
 
       // Mock QStash
-      const qstashSpy = vi.spyOn(
-        await import('@odis/qstash/client'),
-        'scheduleCallExecution'
-      ).mockResolvedValue('qstash-msg-123');
+      const qstashSpy = vi
+        .spyOn(await import("@odis-ai/qstash/client"), "scheduleCallExecution")
+        .mockResolvedValue("qstash-msg-123");
 
       await CasesService.scheduleDischargeCall(
         supabase,
-        'user-123',
-        'case-123',
+        "user-123",
+        "case-123",
         {
-          clinicName: 'Test Clinic',
-          clinicPhone: '+15551234567',
-          emergencyPhone: '+15559876543',
-          agentName: 'Sarah',
-        }
+          clinicName: "Test Clinic",
+          clinicPhone: "+15551234567",
+          emergencyPhone: "+15559876543",
+          agentName: "Sarah",
+        },
       );
 
       expect(qstashSpy).toHaveBeenCalled();
@@ -1080,7 +1099,7 @@ describe('CasesService', () => {
       expect(delayMs).toBeLessThan(6 * 60 * 1000); // < 6 min
     });
 
-    it('should use custom schedule delay from user settings', async () => {
+    it("should use custom schedule delay from user settings", async () => {
       const { client: supabase } = createMockSupabaseClient();
 
       // Mock user settings
@@ -1095,21 +1114,20 @@ describe('CasesService', () => {
         }),
       });
 
-      const qstashSpy = vi.spyOn(
-        await import('@odis/qstash/client'),
-        'scheduleCallExecution'
-      ).mockResolvedValue('qstash-msg-123');
+      const qstashSpy = vi
+        .spyOn(await import("@odis-ai/qstash/client"), "scheduleCallExecution")
+        .mockResolvedValue("qstash-msg-123");
 
       await CasesService.scheduleDischargeCall(
         supabase,
-        'user-123',
-        'case-123',
+        "user-123",
+        "case-123",
         {
-          clinicName: 'Test Clinic',
-          clinicPhone: '+15551234567',
-          emergencyPhone: '+15559876543',
-          agentName: 'Sarah',
-        }
+          clinicName: "Test Clinic",
+          clinicPhone: "+15551234567",
+          emergencyPhone: "+15559876543",
+          agentName: "Sarah",
+        },
       );
 
       const scheduledFor = qstashSpy.mock.calls[0][1];
@@ -1120,66 +1138,61 @@ describe('CasesService', () => {
       expect(delayMs).toBeLessThan(11 * 60 * 1000);
     });
 
-    it('should rollback vapi_calls insert if QStash fails', async () => {
+    it("should rollback vapi_calls insert if QStash fails", async () => {
       const { client: supabase } = createMockSupabaseClient();
 
       vi.spyOn(
-        await import('@odis/qstash/client'),
-        'scheduleCallExecution'
-      ).mockRejectedValue(new Error('QStash error'));
+        await import("@odis-ai/qstash/client"),
+        "scheduleCallExecution",
+      ).mockRejectedValue(new Error("QStash error"));
 
       await expect(
-        CasesService.scheduleDischargeCall(
-          supabase,
-          'user-123',
-          'case-123',
-          {
-            clinicName: 'Test Clinic',
-            clinicPhone: '+15551234567',
-            emergencyPhone: '+15559876543',
-            agentName: 'Sarah',
-          }
-        )
-      ).rejects.toThrow('QStash error');
+        CasesService.scheduleDischargeCall(supabase, "user-123", "case-123", {
+          clinicName: "Test Clinic",
+          clinicPhone: "+15551234567",
+          emergencyPhone: "+15559876543",
+          agentName: "Sarah",
+        }),
+      ).rejects.toThrow("QStash error");
 
       expect(supabase.from().delete).toHaveBeenCalled();
     });
   });
 
-  describe('enrichEntitiesWithPatient', () => {
-    it('should enrich patient name from database', () => {
+  describe("enrichEntitiesWithPatient", () => {
+    it("should enrich patient name from database", () => {
       const entities = {
-        patient: { name: 'unknown', species: 'dog' },
+        patient: { name: "unknown", species: "dog" },
         clinical: {},
       };
 
       const patientData = {
-        id: 'pat-123',
-        name: 'Max',
-        species: 'dog',
-        breed: 'Golden Retriever',
+        id: "pat-123",
+        name: "Max",
+        species: "dog",
+        breed: "Golden Retriever",
       };
 
       CasesService.enrichEntitiesWithPatient(entities, patientData);
 
-      expect(entities.patient.name).toBe('Max');
+      expect(entities.patient.name).toBe("Max");
     });
 
-    it('should not overwrite valid extracted name', () => {
+    it("should not overwrite valid extracted name", () => {
       const entities = {
-        patient: { name: 'Buddy', species: 'dog' },
+        patient: { name: "Buddy", species: "dog" },
         clinical: {},
       };
 
       const patientData = {
-        id: 'pat-123',
-        name: 'Max',
-        species: 'dog',
+        id: "pat-123",
+        name: "Max",
+        species: "dog",
       };
 
       CasesService.enrichEntitiesWithPatient(entities, patientData);
 
-      expect(entities.patient.name).toBe('Buddy');
+      expect(entities.patient.name).toBe("Buddy");
     });
   });
 });
@@ -1200,7 +1213,7 @@ describe('CasesService', () => {
 
 ---
 
-## Library 3: `@odis/validators` (HIGH - P1)
+## Library 3: `@odis-ai/validators` (HIGH - P1)
 
 ### Overview
 
@@ -1213,22 +1226,22 @@ Zod validation schemas used across the entire application. High coverage is crit
 ```typescript
 // libs/validators/src/__tests__/orchestration.test.ts
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 import {
   OrchestrationRequestSchema,
   StepConfigSchema,
   ExistingCaseInputSchema,
-} from '../orchestration';
+} from "../orchestration";
 
-describe('Orchestration Validators', () => {
-  describe('OrchestrationRequestSchema', () => {
-    it('should validate request with raw data input', () => {
+describe("Orchestration Validators", () => {
+  describe("OrchestrationRequestSchema", () => {
+    it("should validate request with raw data input", () => {
       const request = {
         input: {
           rawData: {
-            mode: 'text',
-            source: 'test',
-            text: 'Test data',
+            mode: "text",
+            source: "test",
+            text: "Test data",
           },
         },
         steps: {
@@ -1241,11 +1254,11 @@ describe('Orchestration Validators', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should validate request with existing case input', () => {
+    it("should validate request with existing case input", () => {
       const request = {
         input: {
           existingCase: {
-            caseId: 'case-123',
+            caseId: "case-123",
           },
         },
         steps: {
@@ -1258,11 +1271,11 @@ describe('Orchestration Validators', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject request with both input types', () => {
+    it("should reject request with both input types", () => {
       const request = {
         input: {
-          rawData: { mode: 'text', source: 'test', text: 'Test' },
-          existingCase: { caseId: 'case-123' },
+          rawData: { mode: "text", source: "test", text: "Test" },
+          existingCase: { caseId: "case-123" },
         },
         steps: {},
       };
@@ -1272,10 +1285,10 @@ describe('Orchestration Validators', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should validate parallel and stopOnError options', () => {
+    it("should validate parallel and stopOnError options", () => {
       const request = {
         input: {
-          rawData: { mode: 'text', source: 'test', text: 'Test' },
+          rawData: { mode: "text", source: "test", text: "Test" },
         },
         steps: {
           ingest: { enabled: true },
@@ -1296,8 +1309,8 @@ describe('Orchestration Validators', () => {
     });
   });
 
-  describe('StepConfigSchema', () => {
-    it('should validate enabled step without dependencies', () => {
+  describe("StepConfigSchema", () => {
+    it("should validate enabled step without dependencies", () => {
       const config = {
         enabled: true,
       };
@@ -1307,10 +1320,10 @@ describe('Orchestration Validators', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should validate step with dependencies', () => {
+    it("should validate step with dependencies", () => {
       const config = {
         enabled: true,
-        dependencies: ['ingest', 'extractEntities'],
+        dependencies: ["ingest", "extractEntities"],
       };
 
       const result = StepConfigSchema.safeParse(config);
@@ -1318,11 +1331,11 @@ describe('Orchestration Validators', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should validate step with options', () => {
+    it("should validate step with options", () => {
       const config = {
         enabled: true,
         options: {
-          recipientEmail: 'test@example.com',
+          recipientEmail: "test@example.com",
           scheduledFor: new Date(),
         },
       };
@@ -1332,7 +1345,7 @@ describe('Orchestration Validators', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should default enabled to false when omitted', () => {
+    it("should default enabled to false when omitted", () => {
       const config = {};
 
       const result = StepConfigSchema.safeParse(config);
@@ -1344,10 +1357,10 @@ describe('Orchestration Validators', () => {
     });
   });
 
-  describe('ExistingCaseInputSchema', () => {
-    it('should validate with only caseId', () => {
+  describe("ExistingCaseInputSchema", () => {
+    it("should validate with only caseId", () => {
       const input = {
-        caseId: 'case-123',
+        caseId: "case-123",
       };
 
       const result = ExistingCaseInputSchema.safeParse(input);
@@ -1355,13 +1368,13 @@ describe('Orchestration Validators', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should validate with email content', () => {
+    it("should validate with email content", () => {
       const input = {
-        caseId: 'case-123',
+        caseId: "case-123",
         emailContent: {
-          subject: 'Test Subject',
-          html: '<p>Test HTML</p>',
-          text: 'Test text',
+          subject: "Test Subject",
+          html: "<p>Test HTML</p>",
+          text: "Test text",
         },
       };
 
@@ -1370,11 +1383,11 @@ describe('Orchestration Validators', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject email content with missing fields', () => {
+    it("should reject email content with missing fields", () => {
       const input = {
-        caseId: 'case-123',
+        caseId: "case-123",
         emailContent: {
-          subject: 'Test',
+          subject: "Test",
           // Missing html and text
         },
       };
@@ -1392,22 +1405,22 @@ describe('Orchestration Validators', () => {
 ```typescript
 // libs/validators/src/__tests__/discharge.test.ts
 
-describe('Discharge Validators', () => {
-  describe('DischargeSummarySchema', () => {
-    it('should validate complete discharge summary', () => {
+describe("Discharge Validators", () => {
+  describe("DischargeSummarySchema", () => {
+    it("should validate complete discharge summary", () => {
       const summary = {
-        diagnosis: 'Ear infection',
-        treatment: 'Antibiotic ear drops',
+        diagnosis: "Ear infection",
+        treatment: "Antibiotic ear drops",
         medications: [
           {
-            name: 'Otomax',
-            dosage: '5 drops',
-            frequency: 'Twice daily',
-            duration: '7 days',
+            name: "Otomax",
+            dosage: "5 drops",
+            frequency: "Twice daily",
+            duration: "7 days",
           },
         ],
-        followUp: 'Return in 7 days for recheck',
-        warningSignscope: ['Head shaking', 'Increased discharge'],
+        followUp: "Return in 7 days for recheck",
+        warningSignscope: ["Head shaking", "Increased discharge"],
       };
 
       const result = DischargeSummarySchema.safeParse(summary);
@@ -1415,10 +1428,10 @@ describe('Discharge Validators', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should allow optional fields to be omitted', () => {
+    it("should allow optional fields to be omitted", () => {
       const summary = {
-        diagnosis: 'Routine checkup',
-        treatment: 'None required',
+        diagnosis: "Routine checkup",
+        treatment: "None required",
       };
 
       const result = DischargeSummarySchema.safeParse(summary);
@@ -1426,10 +1439,10 @@ describe('Discharge Validators', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject empty medication arrays', () => {
+    it("should reject empty medication arrays", () => {
       const summary = {
-        diagnosis: 'Test',
-        treatment: 'Test',
+        diagnosis: "Test",
+        treatment: "Test",
         medications: [],
       };
 
@@ -1439,32 +1452,29 @@ describe('Discharge Validators', () => {
     });
   });
 
-  describe('StructuredDischargeSummarySchema', () => {
-    it('should validate structured content with all sections', () => {
+  describe("StructuredDischargeSummarySchema", () => {
+    it("should validate structured content with all sections", () => {
       const structured = {
-        diagnosis: 'Ear infection (otitis externa)',
-        treatmentPerformed: 'Ear cleaning and medication',
+        diagnosis: "Ear infection (otitis externa)",
+        treatmentPerformed: "Ear cleaning and medication",
         medications: [
           {
-            name: 'Otomax',
-            dosage: '5 drops each ear',
-            frequency: 'Twice daily',
-            duration: '7 days',
-            instructions: 'Apply after cleaning ear',
+            name: "Otomax",
+            dosage: "5 drops each ear",
+            frequency: "Twice daily",
+            duration: "7 days",
+            instructions: "Apply after cleaning ear",
           },
         ],
-        homeCarescope: [
-          'Keep ears dry',
-          'Avoid swimming',
-        ],
+        homeCarescope: ["Keep ears dry", "Avoid swimming"],
         followUp: {
-          when: '7 days',
-          reason: 'Recheck ear condition',
+          when: "7 days",
+          reason: "Recheck ear condition",
         },
         warningSignscope: [
-          'Increased discharge',
-          'Head shaking',
-          'Loss of balance',
+          "Increased discharge",
+          "Head shaking",
+          "Loss of balance",
         ],
       };
 
@@ -1473,10 +1483,10 @@ describe('Discharge Validators', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should validate minimal structured content', () => {
+    it("should validate minimal structured content", () => {
       const structured = {
-        diagnosis: 'Routine checkup',
-        treatmentPerformed: 'Physical examination',
+        diagnosis: "Routine checkup",
+        treatmentPerformed: "Physical examination",
       };
 
       const result = StructuredDischargeSummarySchema.safeParse(structured);
@@ -1492,26 +1502,26 @@ describe('Discharge Validators', () => {
 ```typescript
 // libs/validators/src/__tests__/scribe.test.ts
 
-describe('Scribe Validators', () => {
-  describe('NormalizedEntitiesSchema', () => {
-    it('should validate complete entity extraction', () => {
+describe("Scribe Validators", () => {
+  describe("NormalizedEntitiesSchema", () => {
+    it("should validate complete entity extraction", () => {
       const entities = {
         patient: {
-          name: 'Max',
-          species: 'dog',
-          breed: 'Golden Retriever',
-          age: '5 years',
-          weight: '30kg',
+          name: "Max",
+          species: "dog",
+          breed: "Golden Retriever",
+          age: "5 years",
+          weight: "30kg",
           owner: {
-            name: 'John Smith',
-            phone: '+15551234567',
+            name: "John Smith",
+            phone: "+15551234567",
           },
         },
         clinical: {
-          chiefComplaint: 'Ear infection',
-          diagnosis: 'Otitis externa',
-          treatment: 'Antibiotic ear drops',
-          medications: ['Otomax'],
+          chiefComplaint: "Ear infection",
+          diagnosis: "Otitis externa",
+          treatment: "Antibiotic ear drops",
+          medications: ["Otomax"],
         },
         confidence: {
           overall: 0.95,
@@ -1525,13 +1535,13 @@ describe('Scribe Validators', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should allow unknown values for missing data', () => {
+    it("should allow unknown values for missing data", () => {
       const entities = {
         patient: {
-          name: 'unknown',
-          species: 'unknown',
+          name: "unknown",
+          species: "unknown",
           owner: {
-            name: 'unknown',
+            name: "unknown",
           },
         },
         clinical: {},
@@ -1542,12 +1552,12 @@ describe('Scribe Validators', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should validate confidence scores in range', () => {
+    it("should validate confidence scores in range", () => {
       const entities = {
         patient: {
-          name: 'Max',
-          species: 'dog',
-          owner: { name: 'John' },
+          name: "Max",
+          species: "dog",
+          owner: { name: "John" },
         },
         clinical: {},
         confidence: {
@@ -1570,13 +1580,13 @@ describe('Scribe Validators', () => {
 ```typescript
 // libs/validators/src/__tests__/assessment-questions.test.ts
 
-describe('Assessment Questions Validators', () => {
-  describe('AssessmentQuestionSchema', () => {
-    it('should validate yes/no question', () => {
+describe("Assessment Questions Validators", () => {
+  describe("AssessmentQuestionSchema", () => {
+    it("should validate yes/no question", () => {
       const question = {
-        id: 'q1',
-        question: 'Is your pet eating normally?',
-        type: 'yes-no',
+        id: "q1",
+        question: "Is your pet eating normally?",
+        type: "yes-no",
         required: true,
       };
 
@@ -1585,11 +1595,11 @@ describe('Assessment Questions Validators', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should validate scale question', () => {
+    it("should validate scale question", () => {
       const question = {
-        id: 'q2',
-        question: 'Rate pain level',
-        type: 'scale',
+        id: "q2",
+        question: "Rate pain level",
+        type: "scale",
         required: true,
         scaleMin: 0,
         scaleMax: 10,
@@ -1600,13 +1610,13 @@ describe('Assessment Questions Validators', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should validate multiple-choice question', () => {
+    it("should validate multiple-choice question", () => {
       const question = {
-        id: 'q3',
-        question: 'Which symptoms is your pet experiencing?',
-        type: 'multiple-choice',
+        id: "q3",
+        question: "Which symptoms is your pet experiencing?",
+        type: "multiple-choice",
         required: false,
-        options: ['Vomiting', 'Diarrhea', 'Loss of appetite'],
+        options: ["Vomiting", "Diarrhea", "Loss of appetite"],
       };
 
       const result = AssessmentQuestionSchema.safeParse(question);
@@ -1614,11 +1624,11 @@ describe('Assessment Questions Validators', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject scale question without min/max', () => {
+    it("should reject scale question without min/max", () => {
       const question = {
-        id: 'q4',
-        question: 'Rate severity',
-        type: 'scale',
+        id: "q4",
+        question: "Rate severity",
+        type: "scale",
         required: true,
         // Missing scaleMin and scaleMax
       };
@@ -1629,19 +1639,19 @@ describe('Assessment Questions Validators', () => {
     });
   });
 
-  describe('AssessmentQuestionsArraySchema', () => {
-    it('should validate array of questions', () => {
+  describe("AssessmentQuestionsArraySchema", () => {
+    it("should validate array of questions", () => {
       const questions = [
         {
-          id: 'q1',
-          question: 'Is your pet eating?',
-          type: 'yes-no',
+          id: "q1",
+          question: "Is your pet eating?",
+          type: "yes-no",
           required: true,
         },
         {
-          id: 'q2',
-          question: 'Rate energy level',
-          type: 'scale',
+          id: "q2",
+          question: "Rate energy level",
+          type: "scale",
           required: true,
           scaleMin: 1,
           scaleMax: 5,
@@ -1653,16 +1663,16 @@ describe('Assessment Questions Validators', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject empty array', () => {
+    it("should reject empty array", () => {
       const result = AssessmentQuestionsArraySchema.safeParse([]);
 
       expect(result.success).toBe(false);
     });
 
-    it('should reject duplicate question IDs', () => {
+    it("should reject duplicate question IDs", () => {
       const questions = [
-        { id: 'q1', question: 'Test 1', type: 'yes-no', required: true },
-        { id: 'q1', question: 'Test 2', type: 'yes-no', required: true },
+        { id: "q1", question: "Test 1", type: "yes-no", required: true },
+        { id: "q1", question: "Test 2", type: "yes-no", required: true },
       ];
 
       const result = AssessmentQuestionsArraySchema.safeParse(questions);
@@ -1688,7 +1698,7 @@ describe('Assessment Questions Validators', () => {
 
 ---
 
-## Library 4: `@odis/db` (HIGH - P1)
+## Library 4: `@odis-ai/db` (HIGH - P1)
 
 ### Overview
 
@@ -1701,17 +1711,17 @@ Database client wrappers and repository pattern for Supabase operations. Critica
 ```typescript
 // libs/db/src/repositories/__tests__/base.test.ts
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { BaseRepository } from '../base';
-import { createMockSupabaseClient } from '@odis/testing';
+import { describe, it, expect, beforeEach } from "vitest";
+import { BaseRepository } from "../base";
+import { createMockSupabaseClient } from "@odis-ai/testing";
 
 class TestRepository extends BaseRepository {
   constructor(supabase: any) {
-    super(supabase, 'test_table');
+    super(supabase, "test_table");
   }
 }
 
-describe('BaseRepository', () => {
+describe("BaseRepository", () => {
   let repo: TestRepository;
   let mockSupabase: ReturnType<typeof createMockSupabaseClient>;
 
@@ -1720,62 +1730,74 @@ describe('BaseRepository', () => {
     repo = new TestRepository(mockSupabase.client);
   });
 
-  describe('findById', () => {
-    it('should query by primary key', async () => {
-      await repo.findById('test-id');
+  describe("findById", () => {
+    it("should query by primary key", async () => {
+      await repo.findById("test-id");
 
-      expect(mockSupabase.from).toHaveBeenCalledWith('test_table');
-      expect(mockSupabase.from().select).toHaveBeenCalledWith('*');
-      expect(mockSupabase.from().select().eq).toHaveBeenCalledWith('id', 'test-id');
+      expect(mockSupabase.from).toHaveBeenCalledWith("test_table");
+      expect(mockSupabase.from().select).toHaveBeenCalledWith("*");
+      expect(mockSupabase.from().select().eq).toHaveBeenCalledWith(
+        "id",
+        "test-id",
+      );
       expect(mockSupabase.from().select().eq().single).toHaveBeenCalled();
     });
 
-    it('should return null when not found', async () => {
+    it("should return null when not found", async () => {
       const queryBuilder = createMockQueryBuilder({
         data: null,
-        error: new Error('Not found'),
+        error: new Error("Not found"),
       });
       mockSupabase.from.mockReturnValue(queryBuilder);
 
-      const result = await repo.findById('non-existent');
+      const result = await repo.findById("non-existent");
 
       expect(result).toBeNull();
     });
 
-    it('should return record when found', async () => {
-      const testRecord = { id: 'test-id', name: 'Test' };
+    it("should return record when found", async () => {
+      const testRecord = { id: "test-id", name: "Test" };
       const queryBuilder = createMockQueryBuilder({
         data: testRecord,
         error: null,
       });
       mockSupabase.from.mockReturnValue(queryBuilder);
 
-      const result = await repo.findById('test-id');
+      const result = await repo.findById("test-id");
 
       expect(result).toEqual(testRecord);
     });
   });
 
-  describe('findMany', () => {
-    it('should apply filters correctly', async () => {
+  describe("findMany", () => {
+    it("should apply filters correctly", async () => {
       await repo.findMany({
-        where: { status: 'active', type: 'premium' },
+        where: { status: "active", type: "premium" },
         limit: 10,
-        orderBy: 'created_at',
+        orderBy: "created_at",
         ascending: false,
       });
 
-      expect(mockSupabase.from).toHaveBeenCalledWith('test_table');
+      expect(mockSupabase.from).toHaveBeenCalledWith("test_table");
       expect(mockSupabase.from().select).toHaveBeenCalled();
-      expect(mockSupabase.from().select().eq).toHaveBeenCalledWith('status', 'active');
-      expect(mockSupabase.from().select().eq).toHaveBeenCalledWith('type', 'premium');
+      expect(mockSupabase.from().select().eq).toHaveBeenCalledWith(
+        "status",
+        "active",
+      );
+      expect(mockSupabase.from().select().eq).toHaveBeenCalledWith(
+        "type",
+        "premium",
+      );
       expect(mockSupabase.from().select().limit).toHaveBeenCalledWith(10);
-      expect(mockSupabase.from().select().order).toHaveBeenCalledWith('created_at', {
-        ascending: false,
-      });
+      expect(mockSupabase.from().select().order).toHaveBeenCalledWith(
+        "created_at",
+        {
+          ascending: false,
+        },
+      );
     });
 
-    it('should return empty array when no results', async () => {
+    it("should return empty array when no results", async () => {
       const queryBuilder = createMockQueryBuilder({
         data: [],
         error: null,
@@ -1788,84 +1810,94 @@ describe('BaseRepository', () => {
     });
   });
 
-  describe('create', () => {
-    it('should insert new record', async () => {
-      const newRecord = { name: 'New Record', type: 'test' };
+  describe("create", () => {
+    it("should insert new record", async () => {
+      const newRecord = { name: "New Record", type: "test" };
 
       await repo.create(newRecord);
 
-      expect(mockSupabase.from).toHaveBeenCalledWith('test_table');
+      expect(mockSupabase.from).toHaveBeenCalledWith("test_table");
       expect(mockSupabase.from().insert).toHaveBeenCalledWith(newRecord);
       expect(mockSupabase.from().insert().select).toHaveBeenCalled();
       expect(mockSupabase.from().insert().select().single).toHaveBeenCalled();
     });
 
-    it('should throw on insert error', async () => {
+    it("should throw on insert error", async () => {
       const queryBuilder = createMockQueryBuilder({
         data: null,
-        error: new Error('Insert failed'),
+        error: new Error("Insert failed"),
       });
       mockSupabase.from.mockReturnValue(queryBuilder);
 
-      await expect(repo.create({ name: 'Test' })).rejects.toThrow('Insert failed');
+      await expect(repo.create({ name: "Test" })).rejects.toThrow(
+        "Insert failed",
+      );
     });
   });
 
-  describe('update', () => {
-    it('should update record by id', async () => {
-      const updates = { name: 'Updated Name' };
+  describe("update", () => {
+    it("should update record by id", async () => {
+      const updates = { name: "Updated Name" };
 
-      await repo.update('test-id', updates);
+      await repo.update("test-id", updates);
 
-      expect(mockSupabase.from).toHaveBeenCalledWith('test_table');
+      expect(mockSupabase.from).toHaveBeenCalledWith("test_table");
       expect(mockSupabase.from().update).toHaveBeenCalledWith(updates);
-      expect(mockSupabase.from().update().eq).toHaveBeenCalledWith('id', 'test-id');
+      expect(mockSupabase.from().update().eq).toHaveBeenCalledWith(
+        "id",
+        "test-id",
+      );
       expect(mockSupabase.from().update().eq().select).toHaveBeenCalled();
-      expect(mockSupabase.from().update().eq().select().single).toHaveBeenCalled();
+      expect(
+        mockSupabase.from().update().eq().select().single,
+      ).toHaveBeenCalled();
     });
 
-    it('should return null when record not found', async () => {
+    it("should return null when record not found", async () => {
       const queryBuilder = createMockQueryBuilder({
         data: null,
-        error: new Error('Not found'),
+        error: new Error("Not found"),
       });
       mockSupabase.from.mockReturnValue(queryBuilder);
 
-      const result = await repo.update('non-existent', { name: 'Test' });
+      const result = await repo.update("non-existent", { name: "Test" });
 
       expect(result).toBeNull();
     });
   });
 
-  describe('delete', () => {
-    it('should delete record by id', async () => {
-      await repo.delete('test-id');
+  describe("delete", () => {
+    it("should delete record by id", async () => {
+      await repo.delete("test-id");
 
-      expect(mockSupabase.from).toHaveBeenCalledWith('test_table');
+      expect(mockSupabase.from).toHaveBeenCalledWith("test_table");
       expect(mockSupabase.from().delete).toHaveBeenCalled();
-      expect(mockSupabase.from().delete().eq).toHaveBeenCalledWith('id', 'test-id');
+      expect(mockSupabase.from().delete().eq).toHaveBeenCalledWith(
+        "id",
+        "test-id",
+      );
     });
 
-    it('should return true on successful delete', async () => {
+    it("should return true on successful delete", async () => {
       const queryBuilder = createMockQueryBuilder({
         data: null,
         error: null,
       });
       mockSupabase.from.mockReturnValue(queryBuilder);
 
-      const result = await repo.delete('test-id');
+      const result = await repo.delete("test-id");
 
       expect(result).toBe(true);
     });
 
-    it('should return false on delete error', async () => {
+    it("should return false on delete error", async () => {
       const queryBuilder = createMockQueryBuilder({
         data: null,
-        error: new Error('Delete failed'),
+        error: new Error("Delete failed"),
       });
       mockSupabase.from.mockReturnValue(queryBuilder);
 
-      const result = await repo.delete('test-id');
+      const result = await repo.delete("test-id");
 
       expect(result).toBe(false);
     });
@@ -1878,7 +1910,7 @@ describe('BaseRepository', () => {
 ```typescript
 // libs/db/src/repositories/__tests__/call-repository.test.ts
 
-describe('CallRepository', () => {
+describe("CallRepository", () => {
   let repo: CallRepository;
   let mockSupabase: ReturnType<typeof createMockSupabaseClient>;
 
@@ -1887,54 +1919,61 @@ describe('CallRepository', () => {
     repo = new CallRepository(mockSupabase.client);
   });
 
-  describe('findByVapiCallId', () => {
-    it('should query by vapi_call_id', async () => {
-      await repo.findByVapiCallId('vapi-call-123');
+  describe("findByVapiCallId", () => {
+    it("should query by vapi_call_id", async () => {
+      await repo.findByVapiCallId("vapi-call-123");
 
-      expect(mockSupabase.from).toHaveBeenCalledWith('vapi_calls');
+      expect(mockSupabase.from).toHaveBeenCalledWith("vapi_calls");
       expect(mockSupabase.from().select).toHaveBeenCalled();
       expect(mockSupabase.from().select().eq).toHaveBeenCalledWith(
-        'vapi_call_id',
-        'vapi-call-123'
+        "vapi_call_id",
+        "vapi-call-123",
       );
     });
   });
 
-  describe('findActiveCalls', () => {
-    it('should query for in-progress calls', async () => {
-      await repo.findActiveCalls('user-123');
+  describe("findActiveCalls", () => {
+    it("should query for in-progress calls", async () => {
+      await repo.findActiveCalls("user-123");
 
-      expect(mockSupabase.from).toHaveBeenCalledWith('vapi_calls');
+      expect(mockSupabase.from).toHaveBeenCalledWith("vapi_calls");
       expect(mockSupabase.from().select).toHaveBeenCalled();
-      expect(mockSupabase.from().select().eq).toHaveBeenCalledWith('user_id', 'user-123');
-      expect(mockSupabase.from().select().in).toHaveBeenCalledWith('status', [
-        'queued',
-        'ringing',
-        'in_progress',
+      expect(mockSupabase.from().select().eq).toHaveBeenCalledWith(
+        "user_id",
+        "user-123",
+      );
+      expect(mockSupabase.from().select().in).toHaveBeenCalledWith("status", [
+        "queued",
+        "ringing",
+        "in_progress",
       ]);
     });
   });
 
-  describe('updateCallStatus', () => {
-    it('should update status and timestamp', async () => {
-      await repo.updateCallStatus('call-123', 'completed', new Date('2025-12-08'));
+  describe("updateCallStatus", () => {
+    it("should update status and timestamp", async () => {
+      await repo.updateCallStatus(
+        "call-123",
+        "completed",
+        new Date("2025-12-08"),
+      );
 
       expect(mockSupabase.from().update).toHaveBeenCalledWith(
         expect.objectContaining({
-          status: 'completed',
+          status: "completed",
           ended_at: expect.any(String),
           updated_at: expect.any(String),
-        })
+        }),
       );
     });
 
-    it('should not set ended_at for non-terminal statuses', async () => {
-      await repo.updateCallStatus('call-123', 'ringing');
+    it("should not set ended_at for non-terminal statuses", async () => {
+      await repo.updateCallStatus("call-123", "ringing");
 
       expect(mockSupabase.from().update).toHaveBeenCalledWith(
         expect.not.objectContaining({
           ended_at: expect.anything(),
-        })
+        }),
       );
     });
   });
@@ -1946,9 +1985,9 @@ describe('CallRepository', () => {
 ```typescript
 // libs/db/src/__tests__/server.test.ts
 
-describe('Supabase Server Client', () => {
-  describe('createClient', () => {
-    it('should create client with cookies', async () => {
+describe("Supabase Server Client", () => {
+  describe("createClient", () => {
+    it("should create client with cookies", async () => {
       const client = await createClient();
 
       expect(client).toBeDefined();
@@ -1956,26 +1995,28 @@ describe('Supabase Server Client', () => {
       expect(client.from).toBeDefined();
     });
 
-    it('should respect RLS policies', async () => {
+    it("should respect RLS policies", async () => {
       const client = await createClient();
 
       // Standard client should use auth context
-      const { data: { user } } = await client.auth.getUser();
+      const {
+        data: { user },
+      } = await client.auth.getUser();
 
       // Query should be filtered by RLS
-      const { data } = await client.from('cases').select('*');
+      const { data } = await client.from("cases").select("*");
 
       // Can only see user's own cases (assuming RLS is configured)
       if (data && user) {
-        data.forEach(caseRecord => {
+        data.forEach((caseRecord) => {
           expect(caseRecord.user_id).toBe(user.id);
         });
       }
     });
   });
 
-  describe('createServiceClient', () => {
-    it('should create client with service role key', async () => {
+  describe("createServiceClient", () => {
+    it("should create client with service role key", async () => {
       const client = await createServiceClient();
 
       expect(client).toBeDefined();
@@ -1983,14 +2024,11 @@ describe('Supabase Server Client', () => {
       expect(client.from).toBeDefined();
     });
 
-    it('should bypass RLS policies', async () => {
+    it("should bypass RLS policies", async () => {
       const client = await createServiceClient();
 
       // Service client can access all data regardless of auth
-      const { data, error } = await client
-        .from('cases')
-        .select('*')
-        .limit(1);
+      const { data, error } = await client.from("cases").select("*").limit(1);
 
       expect(error).toBeNull();
       // Should return data even without authenticated user
@@ -2015,7 +2053,7 @@ describe('Supabase Server Client', () => {
 
 ---
 
-## Library 5: `@odis/idexx` (HIGH - P1)
+## Library 5: `@odis-ai/idexx` (HIGH - P1)
 
 ### Overview
 
@@ -2028,74 +2066,72 @@ IDEXX data transformation and validation. Critical for converting IDEXX Neo data
 ```typescript
 // libs/idexx/src/__tests__/transformer.test.ts
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 import {
   transformIdexxToCallRequest,
   formatDateForVoice,
   formatPhoneForVoice,
   formatPhoneNumber,
   extractConsultationId,
-} from '../transformer';
+} from "../transformer";
 
-describe('IDEXX Transformer', () => {
-  describe('transformIdexxToCallRequest', () => {
-    it('should transform complete IDEXX data', () => {
+describe("IDEXX Transformer", () => {
+  describe("transformIdexxToCallRequest", () => {
+    it("should transform complete IDEXX data", () => {
       const idexxData = {
         patient: {
-          name: 'Max',
-          species: 'Dog',
-          breed: 'Golden Retriever',
+          name: "Max",
+          species: "Dog",
+          breed: "Golden Retriever",
         },
         client: {
-          firstName: 'John',
-          lastName: 'Smith',
-          phone: '555-123-4567',
+          firstName: "John",
+          lastName: "Smith",
+          phone: "555-123-4567",
         },
         consultation: {
-          id: 'consult-123',
-          date: '2025-12-08',
-          reason: 'Annual checkup',
-          notes: 'Patient is healthy. Vaccinations up to date.',
+          id: "consult-123",
+          date: "2025-12-08",
+          reason: "Annual checkup",
+          notes: "Patient is healthy. Vaccinations up to date.",
         },
         clinic: {
-          name: 'Happy Paws Veterinary',
-          phone: '555-987-6543',
+          name: "Happy Paws Veterinary",
+          phone: "555-987-6543",
         },
-        providers: [
-          { name: 'Dr. Sarah Johnson' },
-        ],
+        providers: [{ name: "Dr. Sarah Johnson" }],
       };
 
       const result = transformIdexxToCallRequest(idexxData);
 
       expect(result).toEqual({
-        petName: 'Max',
-        species: 'Dog',
-        breed: 'Golden Retriever',
-        ownerName: 'John Smith',
-        ownerPhone: '+15551234567',
-        clinicName: 'Happy Paws Veterinary',
-        clinicPhone: '+15559876543',
-        agentName: 'Sarah',
-        appointmentDate: 'December 8th, 2 0 2 5',
-        callType: 'discharge',
-        subType: 'wellness',
-        dischargeSummaryContent: 'Patient is healthy. Vaccinations up to date.',
+        petName: "Max",
+        species: "Dog",
+        breed: "Golden Retriever",
+        ownerName: "John Smith",
+        ownerPhone: "+15551234567",
+        clinicName: "Happy Paws Veterinary",
+        clinicPhone: "+15559876543",
+        agentName: "Sarah",
+        appointmentDate: "December 8th, 2 0 2 5",
+        callType: "discharge",
+        subType: "wellness",
+        dischargeSummaryContent: "Patient is healthy. Vaccinations up to date.",
       });
     });
 
-    it('should handle missing optional fields', () => {
+    it("should handle missing optional fields", () => {
       const idexxData = {
         patient: {
-          name: 'Max',
+          name: "Max",
         },
         client: {
-          firstName: 'John',
-          lastName: 'Smith',
-          phone: '5551234567',
+          firstName: "John",
+          lastName: "Smith",
+          phone: "5551234567",
         },
         clinic: {
-          name: 'Test Clinic',
+          name: "Test Clinic",
         },
         providers: [],
       };
@@ -2104,148 +2140,147 @@ describe('IDEXX Transformer', () => {
 
       expect(result.breed).toBeUndefined();
       expect(result.species).toBeUndefined();
-      expect(result.agentName).toBe('Sarah'); // Default
+      expect(result.agentName).toBe("Sarah"); // Default
       expect(result.clinicPhone).toBeUndefined();
     });
 
-    it('should select first provider from array', () => {
+    it("should select first provider from array", () => {
       const idexxData = {
-        patient: { name: 'Max' },
-        client: { firstName: 'John', lastName: 'Smith', phone: '5551234567' },
-        clinic: { name: 'Test Clinic' },
-        providers: [
-          { name: 'Dr. Sarah Johnson' },
-          { name: 'Dr. Mike Davis' },
-        ],
+        patient: { name: "Max" },
+        client: { firstName: "John", lastName: "Smith", phone: "5551234567" },
+        clinic: { name: "Test Clinic" },
+        providers: [{ name: "Dr. Sarah Johnson" }, { name: "Dr. Mike Davis" }],
       };
 
       const result = transformIdexxToCallRequest(idexxData);
 
-      expect(result.agentName).toBe('Sarah');
+      expect(result.agentName).toBe("Sarah");
     });
 
-    it('should generate default notes from consultation data', () => {
+    it("should generate default notes from consultation data", () => {
       const idexxData = {
-        patient: { name: 'Max' },
-        client: { firstName: 'John', lastName: 'Smith', phone: '5551234567' },
-        clinic: { name: 'Test Clinic' },
+        patient: { name: "Max" },
+        client: { firstName: "John", lastName: "Smith", phone: "5551234567" },
+        clinic: { name: "Test Clinic" },
         providers: [],
         consultation: {
-          id: 'consult-123',
-          reason: 'Ear infection follow-up',
+          id: "consult-123",
+          reason: "Ear infection follow-up",
           // No notes provided
         },
       };
 
       const result = transformIdexxToCallRequest(idexxData);
 
-      expect(result.dischargeSummaryContent).toContain('consult-123');
-      expect(result.dischargeSummaryContent).toContain('Ear infection follow-up');
+      expect(result.dischargeSummaryContent).toContain("consult-123");
+      expect(result.dischargeSummaryContent).toContain(
+        "Ear infection follow-up",
+      );
     });
   });
 
-  describe('formatDateForVoice', () => {
-    it('should format January 1st correctly', () => {
-      const result = formatDateForVoice('2025-01-01');
+  describe("formatDateForVoice", () => {
+    it("should format January 1st correctly", () => {
+      const result = formatDateForVoice("2025-01-01");
 
-      expect(result).toBe('January 1st, 2 0 2 5');
+      expect(result).toBe("January 1st, 2 0 2 5");
     });
 
-    it('should format December 31st correctly', () => {
-      const result = formatDateForVoice('2025-12-31');
+    it("should format December 31st correctly", () => {
+      const result = formatDateForVoice("2025-12-31");
 
-      expect(result).toBe('December 31st, 2 0 2 5');
+      expect(result).toBe("December 31st, 2 0 2 5");
     });
 
-    it('should handle ordinals correctly', () => {
-      expect(formatDateForVoice('2025-03-01')).toContain('1st');
-      expect(formatDateForVoice('2025-03-02')).toContain('2nd');
-      expect(formatDateForVoice('2025-03-03')).toContain('3rd');
-      expect(formatDateForVoice('2025-03-04')).toContain('4th');
-      expect(formatDateForVoice('2025-03-11')).toContain('11th');
-      expect(formatDateForVoice('2025-03-21')).toContain('21st');
-      expect(formatDateForVoice('2025-03-22')).toContain('22nd');
-      expect(formatDateForVoice('2025-03-23')).toContain('23rd');
+    it("should handle ordinals correctly", () => {
+      expect(formatDateForVoice("2025-03-01")).toContain("1st");
+      expect(formatDateForVoice("2025-03-02")).toContain("2nd");
+      expect(formatDateForVoice("2025-03-03")).toContain("3rd");
+      expect(formatDateForVoice("2025-03-04")).toContain("4th");
+      expect(formatDateForVoice("2025-03-11")).toContain("11th");
+      expect(formatDateForVoice("2025-03-21")).toContain("21st");
+      expect(formatDateForVoice("2025-03-22")).toContain("22nd");
+      expect(formatDateForVoice("2025-03-23")).toContain("23rd");
     });
 
-    it('should spell out year with spaces', () => {
-      const result = formatDateForVoice('2025-06-15');
+    it("should spell out year with spaces", () => {
+      const result = formatDateForVoice("2025-06-15");
 
-      expect(result).toContain('2 0 2 5');
-    });
-  });
-
-  describe('formatPhoneForVoice', () => {
-    it('should format 10-digit US number', () => {
-      const result = formatPhoneForVoice('5551234567');
-
-      expect(result).toBe('five five five, one two three four five six seven');
-    });
-
-    it('should remove formatting characters', () => {
-      const result = formatPhoneForVoice('(555) 123-4567');
-
-      expect(result).toBe('five five five, one two three four five six seven');
-    });
-
-    it('should handle 11-digit number with country code', () => {
-      const result = formatPhoneForVoice('15551234567');
-
-      expect(result).toBe('five five five, one two three four five six seven');
-    });
-
-    it('should use last 10 digits for long numbers', () => {
-      const result = formatPhoneForVoice('0015551234567');
-
-      expect(result).toBe('five five five, one two three four five six seven');
-    });
-
-    it('should insert comma after area code', () => {
-      const result = formatPhoneForVoice('5551234567');
-
-      expect(result).toContain('five five five,');
+      expect(result).toContain("2 0 2 5");
     });
   });
 
-  describe('formatPhoneNumber', () => {
-    it('should add +1 to 10-digit numbers', () => {
-      const result = formatPhoneNumber('5551234567');
+  describe("formatPhoneForVoice", () => {
+    it("should format 10-digit US number", () => {
+      const result = formatPhoneForVoice("5551234567");
 
-      expect(result).toBe('+15551234567');
+      expect(result).toBe("five five five, one two three four five six seven");
     });
 
-    it('should preserve +1 for 11-digit numbers', () => {
-      const result = formatPhoneNumber('15551234567');
+    it("should remove formatting characters", () => {
+      const result = formatPhoneForVoice("(555) 123-4567");
 
-      expect(result).toBe('+15551234567');
+      expect(result).toBe("five five five, one two three four five six seven");
     });
 
-    it('should add + to numbers with country code', () => {
-      const result = formatPhoneNumber('445551234567');
+    it("should handle 11-digit number with country code", () => {
+      const result = formatPhoneForVoice("15551234567");
 
-      expect(result).toBe('+445551234567');
+      expect(result).toBe("five five five, one two three four five six seven");
     });
 
-    it('should remove formatting characters', () => {
-      const result = formatPhoneNumber('(555) 123-4567');
+    it("should use last 10 digits for long numbers", () => {
+      const result = formatPhoneForVoice("0015551234567");
 
-      expect(result).toBe('+15551234567');
+      expect(result).toBe("five five five, one two three four five six seven");
+    });
+
+    it("should insert comma after area code", () => {
+      const result = formatPhoneForVoice("5551234567");
+
+      expect(result).toContain("five five five,");
     });
   });
 
-  describe('extractConsultationId', () => {
-    it('should extract ID from IDEXX Neo URL', () => {
-      const url = 'https://neo.idexx.com/consultations/123456/summary';
+  describe("formatPhoneNumber", () => {
+    it("should add +1 to 10-digit numbers", () => {
+      const result = formatPhoneNumber("5551234567");
+
+      expect(result).toBe("+15551234567");
+    });
+
+    it("should preserve +1 for 11-digit numbers", () => {
+      const result = formatPhoneNumber("15551234567");
+
+      expect(result).toBe("+15551234567");
+    });
+
+    it("should add + to numbers with country code", () => {
+      const result = formatPhoneNumber("445551234567");
+
+      expect(result).toBe("+445551234567");
+    });
+
+    it("should remove formatting characters", () => {
+      const result = formatPhoneNumber("(555) 123-4567");
+
+      expect(result).toBe("+15551234567");
+    });
+  });
+
+  describe("extractConsultationId", () => {
+    it("should extract ID from IDEXX Neo URL", () => {
+      const url = "https://neo.idexx.com/consultations/123456/summary";
 
       const result = extractConsultationId(url);
 
-      expect(result).toBe('123456');
+      expect(result).toBe("123456");
     });
 
-    it('should return null for invalid URLs', () => {
-      expect(extractConsultationId('not-a-url')).toBeNull();
-      expect(extractConsultationId('')).toBeNull();
-      expect(extractConsultationId('https://example.com/page')).toBeNull();
+    it("should return null for invalid URLs", () => {
+      expect(extractConsultationId("not-a-url")).toBeNull();
+      expect(extractConsultationId("")).toBeNull();
+      expect(extractConsultationId("https://example.com/page")).toBeNull();
     });
   });
 });
@@ -2256,18 +2291,18 @@ describe('IDEXX Transformer', () => {
 ```typescript
 // libs/idexx/src/__tests__/validation.test.ts
 
-describe('IDEXX Validation', () => {
-  describe('validateIdexxData', () => {
-    it('should validate complete data', () => {
+describe("IDEXX Validation", () => {
+  describe("validateIdexxData", () => {
+    it("should validate complete data", () => {
       const data = {
-        patient: { name: 'Max' },
+        patient: { name: "Max" },
         client: {
-          firstName: 'John',
-          lastName: 'Smith',
-          phone: '5551234567',
+          firstName: "John",
+          lastName: "Smith",
+          phone: "5551234567",
         },
-        clinic: { name: 'Test Clinic' },
-        providers: [{ name: 'Dr. Smith' }],
+        clinic: { name: "Test Clinic" },
+        providers: [{ name: "Dr. Smith" }],
       };
 
       const result = validateIdexxData(data);
@@ -2276,95 +2311,93 @@ describe('IDEXX Validation', () => {
       expect(result.errors).toEqual([]);
     });
 
-    it('should reject missing patient name', () => {
+    it("should reject missing patient name", () => {
       const data = {
-        patient: { name: '' },
+        patient: { name: "" },
         client: {
-          firstName: 'John',
-          lastName: 'Smith',
-          phone: '5551234567',
+          firstName: "John",
+          lastName: "Smith",
+          phone: "5551234567",
         },
-        clinic: { name: 'Test Clinic' },
-        providers: [{ name: 'Dr. Smith' }],
+        clinic: { name: "Test Clinic" },
+        providers: [{ name: "Dr. Smith" }],
       };
 
       const result = validateIdexxData(data);
 
       expect(result.valid).toBe(false);
       expect(result.errors).toContainEqual(
-        expect.stringContaining('patient name')
+        expect.stringContaining("patient name"),
       );
     });
 
-    it('should reject missing client name', () => {
+    it("should reject missing client name", () => {
       const data = {
-        patient: { name: 'Max' },
+        patient: { name: "Max" },
         client: {
-          firstName: '',
-          lastName: '',
-          phone: '5551234567',
+          firstName: "",
+          lastName: "",
+          phone: "5551234567",
         },
-        clinic: { name: 'Test Clinic' },
-        providers: [{ name: 'Dr. Smith' }],
+        clinic: { name: "Test Clinic" },
+        providers: [{ name: "Dr. Smith" }],
       };
 
       const result = validateIdexxData(data);
 
       expect(result.valid).toBe(false);
       expect(result.errors).toContainEqual(
-        expect.stringContaining('client name')
+        expect.stringContaining("client name"),
       );
     });
 
-    it('should reject missing client phone', () => {
+    it("should reject missing client phone", () => {
       const data = {
-        patient: { name: 'Max' },
+        patient: { name: "Max" },
         client: {
-          firstName: 'John',
-          lastName: 'Smith',
-          phone: '',
+          firstName: "John",
+          lastName: "Smith",
+          phone: "",
         },
-        clinic: { name: 'Test Clinic' },
-        providers: [{ name: 'Dr. Smith' }],
+        clinic: { name: "Test Clinic" },
+        providers: [{ name: "Dr. Smith" }],
       };
 
       const result = validateIdexxData(data);
 
       expect(result.valid).toBe(false);
       expect(result.errors).toContainEqual(
-        expect.stringContaining('client phone')
+        expect.stringContaining("client phone"),
       );
     });
 
-    it('should reject empty providers array', () => {
+    it("should reject empty providers array", () => {
       const data = {
-        patient: { name: 'Max' },
+        patient: { name: "Max" },
         client: {
-          firstName: 'John',
-          lastName: 'Smith',
-          phone: '5551234567',
+          firstName: "John",
+          lastName: "Smith",
+          phone: "5551234567",
         },
-        clinic: { name: 'Test Clinic' },
+        clinic: { name: "Test Clinic" },
         providers: [],
       };
 
       const result = validateIdexxData(data);
 
       expect(result.valid).toBe(false);
-      expect(result.errors).toContainEqual(
-        expect.stringContaining('provider')
-      );
+      expect(result.errors).toContainEqual(expect.stringContaining("provider"));
     });
 
-    it('should return all validation errors', () => {
+    it("should return all validation errors", () => {
       const data = {
-        patient: { name: '' },
+        patient: { name: "" },
         client: {
-          firstName: '',
-          lastName: '',
-          phone: '',
+          firstName: "",
+          lastName: "",
+          phone: "",
         },
-        clinic: { name: '' },
+        clinic: { name: "" },
         providers: [],
       };
 
@@ -2392,7 +2425,7 @@ describe('IDEXX Validation', () => {
 
 ---
 
-## Library 6: `@odis/api` (MEDIUM - P2)
+## Library 6: `@odis-ai/api` (MEDIUM - P2)
 
 ### Overview
 
@@ -2405,25 +2438,25 @@ API helper utilities for authentication, CORS, and error handling in Next.js API
 ```typescript
 // libs/api/src/__tests__/auth.test.ts
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { authenticateUser, withAuth } from '../auth';
-import { createMockRequest } from '@odis/testing';
-import { createMockSupabaseClient, createMockUser } from '@odis/testing';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { authenticateUser, withAuth } from "../auth";
+import { createMockRequest } from "@odis-ai/testing";
+import { createMockSupabaseClient, createMockUser } from "@odis-ai/testing";
 
-describe('API Authentication', () => {
-  describe('authenticateUser', () => {
-    it('should authenticate with Bearer token', async () => {
+describe("API Authentication", () => {
+  describe("authenticateUser", () => {
+    it("should authenticate with Bearer token", async () => {
       const mockUser = createMockUser();
       const request = createMockRequest({
         headers: {
-          authorization: 'Bearer test-token-123',
+          authorization: "Bearer test-token-123",
         },
       });
 
       // Mock Supabase client creation
       vi.spyOn(
-        await import('@supabase/ssr'),
-        'createServerClient'
+        await import("@supabase/ssr"),
+        "createServerClient",
       ).mockReturnValue({
         auth: {
           getUser: vi.fn().mockResolvedValue({
@@ -2441,18 +2474,18 @@ describe('API Authentication', () => {
       }
     });
 
-    it('should authenticate with cookies', async () => {
+    it("should authenticate with cookies", async () => {
       const mockUser = createMockUser();
       const request = createMockRequest({
         cookies: {
-          'sb-access-token': 'test-token',
+          "sb-access-token": "test-token",
         },
       });
 
       // Mock getUser server action
       vi.spyOn(
-        await import('~/server/actions/auth'),
-        'getUser'
+        await import("~/server/actions/auth"),
+        "getUser",
       ).mockResolvedValue(mockUser);
 
       const result = await authenticateUser(request);
@@ -2463,7 +2496,7 @@ describe('API Authentication', () => {
       }
     });
 
-    it('should return 401 for missing auth', async () => {
+    it("should return 401 for missing auth", async () => {
       const request = createMockRequest({});
 
       const result = await authenticateUser(request);
@@ -2474,21 +2507,21 @@ describe('API Authentication', () => {
       }
     });
 
-    it('should return 401 for invalid token', async () => {
+    it("should return 401 for invalid token", async () => {
       const request = createMockRequest({
         headers: {
-          authorization: 'Bearer invalid-token',
+          authorization: "Bearer invalid-token",
         },
       });
 
       vi.spyOn(
-        await import('@supabase/ssr'),
-        'createServerClient'
+        await import("@supabase/ssr"),
+        "createServerClient",
       ).mockReturnValue({
         auth: {
           getUser: vi.fn().mockResolvedValue({
             data: { user: null },
-            error: new Error('Invalid token'),
+            error: new Error("Invalid token"),
           }),
         },
       } as never);
@@ -2499,16 +2532,16 @@ describe('API Authentication', () => {
     });
   });
 
-  describe('withAuth HOF', () => {
-    it('should call handler with authenticated user', async () => {
+  describe("withAuth HOF", () => {
+    it("should call handler with authenticated user", async () => {
       const mockUser = createMockUser();
       const request = createMockRequest({
-        headers: { authorization: 'Bearer test-token' },
+        headers: { authorization: "Bearer test-token" },
       });
 
       vi.spyOn(
-        await import('@supabase/ssr'),
-        'createServerClient'
+        await import("@supabase/ssr"),
+        "createServerClient",
       ).mockReturnValue({
         auth: {
           getUser: vi.fn().mockResolvedValue({
@@ -2518,9 +2551,9 @@ describe('API Authentication', () => {
         },
       } as never);
 
-      const handler = vi.fn().mockResolvedValue(
-        NextResponse.json({ success: true })
-      );
+      const handler = vi
+        .fn()
+        .mockResolvedValue(NextResponse.json({ success: true }));
 
       const wrappedHandler = withAuth(handler);
       await wrappedHandler(request, { params: Promise.resolve({}) });
@@ -2528,31 +2561,33 @@ describe('API Authentication', () => {
       expect(handler).toHaveBeenCalledWith(
         request,
         expect.objectContaining({ user: mockUser }),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
 
-    it('should return 401 without calling handler', async () => {
+    it("should return 401 without calling handler", async () => {
       const request = createMockRequest({});
       const handler = vi.fn();
 
       const wrappedHandler = withAuth(handler);
-      const response = await wrappedHandler(request, { params: Promise.resolve({}) });
+      const response = await wrappedHandler(request, {
+        params: Promise.resolve({}),
+      });
 
       expect(handler).not.toHaveBeenCalled();
       expect(response.status).toBe(401);
     });
 
-    it('should check role requirement', async () => {
-      const mockUser = createMockUser({ role: 'user' });
+    it("should check role requirement", async () => {
+      const mockUser = createMockUser({ role: "user" });
       const request = createMockRequest({
-        headers: { authorization: 'Bearer test-token' },
+        headers: { authorization: "Bearer test-token" },
       });
 
       // Mock authentication
       vi.spyOn(
-        await import('@supabase/ssr'),
-        'createServerClient'
+        await import("@supabase/ssr"),
+        "createServerClient",
       ).mockReturnValue({
         auth: {
           getUser: vi.fn().mockResolvedValue({
@@ -2564,7 +2599,7 @@ describe('API Authentication', () => {
           select: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
               single: vi.fn().mockResolvedValue({
-                data: { role: 'user' },
+                data: { role: "user" },
                 error: null,
               }),
             }),
@@ -2574,22 +2609,26 @@ describe('API Authentication', () => {
 
       const handler = vi.fn();
 
-      const wrappedHandler = withAuth(handler, { requireRole: 'admin' });
-      const response = await wrappedHandler(request, { params: Promise.resolve({}) });
+      const wrappedHandler = withAuth(handler, { requireRole: "admin" });
+      const response = await wrappedHandler(request, {
+        params: Promise.resolve({}),
+      });
 
       expect(handler).not.toHaveBeenCalled();
       expect(response.status).toBe(403);
     });
 
-    it('should handle errors gracefully', async () => {
+    it("should handle errors gracefully", async () => {
       const request = createMockRequest({
-        headers: { authorization: 'Bearer test-token' },
+        headers: { authorization: "Bearer test-token" },
       });
 
-      const handler = vi.fn().mockRejectedValue(new Error('Handler error'));
+      const handler = vi.fn().mockRejectedValue(new Error("Handler error"));
 
       const wrappedHandler = withAuth(handler);
-      const response = await wrappedHandler(request, { params: Promise.resolve({}) });
+      const response = await wrappedHandler(request, {
+        params: Promise.resolve({}),
+      });
 
       expect(response.status).toBe(500);
     });
@@ -2602,59 +2641,59 @@ describe('API Authentication', () => {
 ```typescript
 // libs/api/src/__tests__/errors.test.ts
 
-describe('API Error Handling', () => {
-  describe('errorResponse', () => {
-    it('should create error response with status code', () => {
-      const response = errorResponse('Not found', 404);
+describe("API Error Handling", () => {
+  describe("errorResponse", () => {
+    it("should create error response with status code", () => {
+      const response = errorResponse("Not found", 404);
 
       expect(response.status).toBe(404);
     });
 
-    it('should include error message in body', async () => {
-      const response = errorResponse('Validation failed', 400);
+    it("should include error message in body", async () => {
+      const response = errorResponse("Validation failed", 400);
       const body = await response.json();
 
-      expect(body.error).toBe('Validation failed');
+      expect(body.error).toBe("Validation failed");
     });
 
-    it('should include additional details', async () => {
-      const response = errorResponse('Bad request', 400, {
-        message: 'Invalid phone number',
-        field: 'phoneNumber',
+    it("should include additional details", async () => {
+      const response = errorResponse("Bad request", 400, {
+        message: "Invalid phone number",
+        field: "phoneNumber",
       });
       const body = await response.json();
 
-      expect(body.message).toBe('Invalid phone number');
-      expect(body.field).toBe('phoneNumber');
+      expect(body.message).toBe("Invalid phone number");
+      expect(body.field).toBe("phoneNumber");
     });
 
-    it('should add CORS headers when request provided', () => {
+    it("should add CORS headers when request provided", () => {
       const request = createMockRequest({
-        headers: { origin: 'https://example.com' },
+        headers: { origin: "https://example.com" },
       });
 
-      const response = errorResponse('Error', 500, {}, request);
+      const response = errorResponse("Error", 500, {}, request);
       const headers = response.headers;
 
-      expect(headers.get('Access-Control-Allow-Origin')).toBeDefined();
+      expect(headers.get("Access-Control-Allow-Origin")).toBeDefined();
     });
   });
 
-  describe('successResponse', () => {
-    it('should create success response with default 200', () => {
-      const response = successResponse({ data: 'test' });
+  describe("successResponse", () => {
+    it("should create success response with default 200", () => {
+      const response = successResponse({ data: "test" });
 
       expect(response.status).toBe(200);
     });
 
-    it('should support custom status codes', () => {
+    it("should support custom status codes", () => {
       const response = successResponse({ created: true }, 201);
 
       expect(response.status).toBe(201);
     });
 
-    it('should include data in body', async () => {
-      const data = { id: '123', name: 'Test' };
+    it("should include data in body", async () => {
+      const data = { id: "123", name: "Test" };
       const response = successResponse(data);
       const body = await response.json();
 
@@ -2686,15 +2725,17 @@ describe('API Error Handling', () => {
 **Purpose**: Test individual functions in isolation
 **Tools**: Vitest, no mocks needed
 **Examples**:
+
 - `formatDateForVoice()`
 - `calculateTotalCost()`
 - `formatPhoneNumber()`
 - Zod schema validation
 
 **Pattern**:
+
 ```typescript
-describe('Pure Function', () => {
-  it('should transform input to expected output', () => {
+describe("Pure Function", () => {
+  it("should transform input to expected output", () => {
     const result = pureFunction(input);
     expect(result).toBe(expectedOutput);
   });
@@ -2706,20 +2747,22 @@ describe('Pure Function', () => {
 **Purpose**: Test multi-step workflows and orchestration
 **Tools**: Vitest + Mocked Supabase/VAPI
 **Examples**:
+
 - `DischargeOrchestrator.orchestrate()`
 - `CasesService.ingest()`
 - Webhook handlers with database updates
 
 **Pattern**:
+
 ```typescript
-describe('Service Integration', () => {
+describe("Service Integration", () => {
   let mockSupabase: ReturnType<typeof createMockSupabaseClient>;
 
   beforeEach(() => {
     mockSupabase = createMockSupabaseClient();
   });
 
-  it('should coordinate multiple operations', async () => {
+  it("should coordinate multiple operations", async () => {
     const service = new Service(mockSupabase.client);
     const result = await service.complexOperation(input);
 
@@ -2734,16 +2777,18 @@ describe('Service Integration', () => {
 **Purpose**: Test HTTP request/response handling
 **Tools**: Vitest + Mock NextRequest
 **Examples**:
+
 - VAPI webhook handlers
 - API authentication middleware
 - CORS handling
 
 **Pattern**:
+
 ```typescript
-describe('API Handler', () => {
-  it('should process webhook payload', async () => {
+describe("API Handler", () => {
+  it("should process webhook payload", async () => {
     const request = createMockRequest({
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(payload),
     });
 
@@ -2761,21 +2806,23 @@ describe('API Handler', () => {
 **Purpose**: Test Zod schema parsing and error messages
 **Tools**: Vitest
 **Examples**:
-- All `@odis/validators` schemas
+
+- All `@odis-ai/validators` schemas
 - Input validation edge cases
 
 **Pattern**:
+
 ```typescript
-describe('Schema Validation', () => {
-  it('should accept valid input', () => {
+describe("Schema Validation", () => {
+  it("should accept valid input", () => {
     const result = schema.safeParse(validInput);
     expect(result.success).toBe(true);
   });
 
-  it('should reject invalid input', () => {
+  it("should reject invalid input", () => {
     const result = schema.safeParse(invalidInput);
     expect(result.success).toBe(false);
-    expect(result.error.issues[0].message).toContain('expected message');
+    expect(result.error.issues[0].message).toContain("expected message");
   });
 });
 ```
@@ -2786,35 +2833,36 @@ describe('Schema Validation', () => {
 
 ### Supabase Mocking
 
-**Strategy**: Use `@odis/testing` mock utilities
+**Strategy**: Use `@odis-ai/testing` mock utilities
 
 ```typescript
-import { createMockSupabaseClient } from '@odis/testing';
+import { createMockSupabaseClient } from "@odis-ai/testing";
 
 // Basic mock
 const { client, auth, from } = createMockSupabaseClient();
 
 // With user
-const mockUser = createMockUser({ email: 'test@example.com' });
+const mockUser = createMockUser({ email: "test@example.com" });
 const { client } = createMockSupabaseClient({ user: mockUser });
 
 // With custom query response
 const queryBuilder = createMockQueryBuilder({
-  data: [{ id: '1', name: 'Test' }],
+  data: [{ id: "1", name: "Test" }],
   error: null,
 });
 const { client } = createMockSupabaseClient({ queryBuilder });
 
 // Verify interactions
-expect(from).toHaveBeenCalledWith('table_name');
+expect(from).toHaveBeenCalledWith("table_name");
 expect(from().select).toHaveBeenCalled();
 ```
 
 **RLS Testing**:
+
 ```typescript
 // Test that service client bypasses RLS
 const serviceClient = await createServiceClient();
-const { data } = await serviceClient.from('cases').select('*');
+const { data } = await serviceClient.from("cases").select("*");
 
 // Should return all cases, not just user's cases
 expect(data.length).toBeGreaterThan(userCasesCount);
@@ -2825,30 +2873,31 @@ expect(data.length).toBeGreaterThan(userCasesCount);
 **Strategy**: Mock `@vapi-ai/server-sdk`
 
 ```typescript
-import { vi } from 'vitest';
-import { createMockVapiClient } from '@odis/testing';
+import { vi } from "vitest";
+import { createMockVapiClient } from "@odis-ai/testing";
 
-vi.mock('@vapi-ai/server-sdk', () => ({
+vi.mock("@vapi-ai/server-sdk", () => ({
   VapiClient: vi.fn(() => createMockVapiClient()),
 }));
 
 // Or mock specific methods
-vi.mock('../client', () => ({
+vi.mock("../client", () => ({
   createPhoneCall: vi.fn().mockResolvedValue({
-    id: 'call-123',
-    status: 'queued',
+    id: "call-123",
+    status: "queued",
   }),
 }));
 ```
 
 **Webhook Payload Mocking**:
-```typescript
-import { createMockVapiWebhook } from '@odis/testing';
 
-const webhook = createMockVapiWebhook('status-update', {
-  status: 'in-progress',
+```typescript
+import { createMockVapiWebhook } from "@odis-ai/testing";
+
+const webhook = createMockVapiWebhook("status-update", {
+  status: "in-progress",
   call: {
-    id: 'call-123',
+    id: "call-123",
     startedAt: new Date().toISOString(),
   },
 });
@@ -2859,16 +2908,13 @@ const webhook = createMockVapiWebhook('status-update', {
 **Strategy**: Mock scheduling functions
 
 ```typescript
-vi.mock('@odis/qstash/client', () => ({
-  scheduleCallExecution: vi.fn().mockResolvedValue('qstash-msg-123'),
-  scheduleEmailExecution: vi.fn().mockResolvedValue('qstash-msg-456'),
+vi.mock("@odis-ai/qstash/client", () => ({
+  scheduleCallExecution: vi.fn().mockResolvedValue("qstash-msg-123"),
+  scheduleEmailExecution: vi.fn().mockResolvedValue("qstash-msg-456"),
 }));
 
 // Verify scheduling
-expect(scheduleCallExecution).toHaveBeenCalledWith(
-  'call-id',
-  expect.any(Date)
-);
+expect(scheduleCallExecution).toHaveBeenCalledWith("call-id", expect.any(Date));
 ```
 
 ### AI Generation Mocking
@@ -2876,17 +2922,17 @@ expect(scheduleCallExecution).toHaveBeenCalledWith(
 **Strategy**: Mock AI functions to avoid API calls
 
 ```typescript
-vi.mock('@odis/ai/generate-structured-discharge', () => ({
+vi.mock("@odis-ai/ai/generate-structured-discharge", () => ({
   generateStructuredDischargeSummaryWithRetry: vi.fn().mockResolvedValue({
-    structured: { diagnosis: 'Test diagnosis' },
-    plainText: 'Test summary',
+    structured: { diagnosis: "Test diagnosis" },
+    plainText: "Test summary",
   }),
 }));
 
-vi.mock('@odis/ai/normalize-scribe', () => ({
+vi.mock("@odis-ai/ai/normalize-scribe", () => ({
   extractEntitiesWithRetry: vi.fn().mockResolvedValue({
-    patient: { name: 'Max', species: 'dog' },
-    clinical: { diagnosis: 'ear infection' },
+    patient: { name: "Max", species: "dog" },
+    clinical: { diagnosis: "ear infection" },
   }),
 }));
 ```
@@ -2896,16 +2942,16 @@ vi.mock('@odis/ai/normalize-scribe', () => ({
 **Strategy**: Use MSW (Mock Service Worker) for HTTP interception (optional)
 
 ```typescript
-import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { setupServer } from "msw/node";
+import { http, HttpResponse } from "msw";
 
 const server = setupServer(
-  http.post('https://api.vapi.ai/calls', () => {
+  http.post("https://api.vapi.ai/calls", () => {
     return HttpResponse.json({
-      id: 'call-123',
-      status: 'queued',
+      id: "call-123",
+      status: "queued",
     });
-  })
+  }),
 );
 
 beforeAll(() => server.listen());
@@ -2927,13 +2973,13 @@ on:
   push:
     branches: [main, develop]
     paths:
-      - 'libs/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
+      - "libs/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
   pull_request:
     branches: [main, develop]
     paths:
-      - 'libs/**'
+      - "libs/**"
 
 jobs:
   test:
@@ -2953,7 +2999,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install
@@ -2963,12 +3009,12 @@ jobs:
 
       - name: Run specific library tests
         run: |
-          pnpm nx test @odis/vapi
-          pnpm nx test @odis/services
-          pnpm nx test @odis/validators
-          pnpm nx test @odis/db
-          pnpm nx test @odis/idexx
-          pnpm nx test @odis/api
+          pnpm nx test @odis-ai/vapi
+          pnpm nx test @odis-ai/services
+          pnpm nx test @odis-ai/validators
+          pnpm nx test @odis-ai/db
+          pnpm nx test @odis-ai/idexx
+          pnpm nx test @odis-ai/api
 
       - name: Generate coverage report
         run: pnpm nx run-many -t test --coverage --projects="tag:type:lib"
@@ -3008,11 +3054,7 @@ pnpm nx affected -t test --base=HEAD~1
   "targetDefaults": {
     "test": {
       "cache": true,
-      "inputs": [
-        "default",
-        "^production",
-        "{workspaceRoot}/vitest.config.ts"
-      ],
+      "inputs": ["default", "^production", "{workspaceRoot}/vitest.config.ts"],
       "outputs": ["{projectRoot}/coverage"]
     }
   },
@@ -3036,12 +3078,13 @@ pnpm nx affected -t test --base=HEAD~1
 **Goal**: 60% coverage on P0 libraries
 **Estimated Effort**: ~76 hours (~2 weeks)
 
-| Library | Priority | Effort | Coverage Target |
-|---------|----------|--------|-----------------|
-| `@odis/vapi` | P0 | 36 hours | 60% |
-| `@odis/services` | P0 | 40 hours | 60% |
+| Library             | Priority | Effort   | Coverage Target |
+| ------------------- | -------- | -------- | --------------- |
+| `@odis-ai/vapi`     | P0       | 36 hours | 60%             |
+| `@odis-ai/services` | P0       | 40 hours | 60%             |
 
 **Deliverables**:
+
 - [ ] VAPI client tests (all methods)
 - [ ] VAPI webhook handler tests (status-update, end-of-call-report, hang)
 - [ ] VAPI webhook dispatcher tests
@@ -3050,6 +3093,7 @@ pnpm nx affected -t test --base=HEAD~1
 - [ ] CI/CD workflow configured
 
 **Success Criteria**:
+
 - All critical path tests passing
 - Webhook event handling verified
 - Orchestrator error handling tested
@@ -3062,13 +3106,14 @@ pnpm nx affected -t test --base=HEAD~1
 **Goal**: 70% coverage on P1 libraries
 **Estimated Effort**: ~53 hours (~2 weeks)
 
-| Library | Priority | Effort | Coverage Target |
-|---------|----------|--------|-----------------|
-| `@odis/validators` | P1 | 15 hours | 90% |
-| `@odis/db` | P1 | 22 hours | 70% |
-| `@odis/idexx` | P1 | 16 hours | 80% |
+| Library               | Priority | Effort   | Coverage Target |
+| --------------------- | -------- | -------- | --------------- |
+| `@odis-ai/validators` | P1       | 15 hours | 90%             |
+| `@odis-ai/db`         | P1       | 22 hours | 70%             |
+| `@odis-ai/idexx`      | P1       | 16 hours | 80%             |
 
 **Deliverables**:
+
 - [ ] All Zod schema tests
 - [ ] Repository pattern tests
 - [ ] Supabase client tests (RLS vs service)
@@ -3077,6 +3122,7 @@ pnpm nx affected -t test --base=HEAD~1
 - [ ] Edge case coverage (voice formatting, phone numbers)
 
 **Success Criteria**:
+
 - Schema validation prevents bad data
 - Repository CRUD operations verified
 - IDEXX transformations accurate
@@ -3089,13 +3135,14 @@ pnpm nx affected -t test --base=HEAD~1
 **Goal**: 80% total coverage, all libs tested
 **Estimated Effort**: ~40 hours (~1.5 weeks)
 
-| Library | Priority | Effort | Coverage Target |
-|---------|----------|--------|-----------------|
-| `@odis/api` | P2 | 12 hours | 75% |
-| Integration tests | All | 16 hours | N/A |
-| Refinement & docs | All | 12 hours | N/A |
+| Library           | Priority | Effort   | Coverage Target |
+| ----------------- | -------- | -------- | --------------- |
+| `@odis-ai/api`    | P2       | 12 hours | 75%             |
+| Integration tests | All      | 16 hours | N/A             |
+| Refinement & docs | All      | 12 hours | N/A             |
 
 **Deliverables**:
+
 - [ ] API auth tests (Bearer + cookie)
 - [ ] API error handling tests
 - [ ] Cross-library integration tests
@@ -3103,6 +3150,7 @@ pnpm nx affected -t test --base=HEAD~1
 - [ ] Coverage reports published
 
 **Success Criteria**:
+
 - Auth middleware tested
 - Integration workflows validated
 - Documentation complete
@@ -3120,31 +3168,29 @@ Configure in `vitest.config.ts`:
 export default defineConfig({
   test: {
     coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html', 'lcov'],
+      provider: "v8",
+      reporter: ["text", "json", "html", "lcov"],
       lines: 80,
       functions: 80,
       branches: 80,
       statements: 80,
       exclude: [
-        '**/*.test.ts',
-        '**/__tests__/**',
-        '**/node_modules/**',
-        '**/dist/**',
-        '**/*.config.ts',
+        "**/*.test.ts",
+        "**/__tests__/**",
+        "**/node_modules/**",
+        "**/dist/**",
+        "**/*.config.ts",
       ],
-      include: [
-        'libs/**/*.ts',
-      ],
+      include: ["libs/**/*.ts"],
       // Per-library thresholds
       thresholdscope: {
-        'libs/vapi/**/*.ts': {
+        "libs/vapi/**/*.ts": {
           lines: 85,
           functions: 85,
           branches: 80,
           statements: 85,
         },
-        'libs/validators/**/*.ts': {
+        "libs/validators/**/*.ts": {
           lines: 90,
           functions: 90,
           branches: 90,
@@ -3201,6 +3247,7 @@ libs/
 ```
 
 **Guidelines**:
+
 - Colocate tests with source files in `__tests__/` directories
 - Name test files with `.test.ts` suffix
 - Group tests by feature/module using `describe()` blocks
@@ -3211,45 +3258,47 @@ libs/
 **Arrange-Act-Assert**:
 
 ```typescript
-it('should schedule call with custom delay', async () => {
+it("should schedule call with custom delay", async () => {
   // Arrange
   const mockSupabase = createMockSupabaseClient();
   const service = new CasesService(mockSupabase.client);
-  const scheduledAt = new Date('2025-12-08T15:00:00Z');
+  const scheduledAt = new Date("2025-12-08T15:00:00Z");
 
   // Act
   const result = await service.scheduleDischargeCall(
     mockSupabase.client,
-    'user-123',
-    'case-123',
-    { scheduledAt, clinicName: 'Test Clinic' }
+    "user-123",
+    "case-123",
+    { scheduledAt, clinicName: "Test Clinic" },
   );
 
   // Assert
   expect(result.scheduled_for).toBe(scheduledAt.toISOString());
-  expect(mockSupabase.from).toHaveBeenCalledWith('vapi_calls');
+  expect(mockSupabase.from).toHaveBeenCalledWith("vapi_calls");
 });
 ```
 
 ### Avoid Test Interdependence
 
 **Bad**:
+
 ```typescript
 let sharedState: any;
 
-it('test 1', () => {
+it("test 1", () => {
   sharedState = doSomething();
 });
 
-it('test 2', () => {
+it("test 2", () => {
   // Depends on test 1 running first
   expect(sharedState).toBeDefined();
 });
 ```
 
 **Good**:
+
 ```typescript
-describe('Feature', () => {
+describe("Feature", () => {
   let service: Service;
 
   beforeEach(() => {
@@ -3257,12 +3306,12 @@ describe('Feature', () => {
     service = new Service(createMockSupabaseClient().client);
   });
 
-  it('test 1', () => {
+  it("test 1", () => {
     const result = service.doSomething();
     expect(result).toBeDefined();
   });
 
-  it('test 2', () => {
+  it("test 2", () => {
     const result = service.doSomething();
     expect(result).toBeDefined();
   });
@@ -3274,22 +3323,24 @@ describe('Feature', () => {
 **Principle**: Mock external dependencies, not internal modules
 
 **Good**:
+
 ```typescript
 // Mock external API
-vi.mock('@vapi-ai/server-sdk');
+vi.mock("@vapi-ai/server-sdk");
 
 // Mock external service
-vi.mock('@odis/qstash/client');
+vi.mock("@odis-ai/qstash/client");
 
 // Test internal logic without mocks
-import { calculateRetryDelay } from './internal-utils';
+import { calculateRetryDelay } from "./internal-utils";
 expect(calculateRetryDelay(0)).toBe(300); // 5 min
 ```
 
 **Bad**:
+
 ```typescript
 // Don't mock internal utilities
-vi.mock('./internal-utils', () => ({
+vi.mock("./internal-utils", () => ({
   calculateRetryDelay: vi.fn().mockReturnValue(300),
 }));
 
@@ -3302,14 +3353,14 @@ vi.mock('./internal-utils', () => ({
 
 ```typescript
 // ✅ Good
-it('should return null when user not found', () => {});
-it('should schedule retry for dial-busy with 5 min backoff', () => {});
-it('should validate email content with all required fields', () => {});
+it("should return null when user not found", () => {});
+it("should schedule retry for dial-busy with 5 min backoff", () => {});
+it("should validate email content with all required fields", () => {});
 
 // ❌ Bad
-it('test user', () => {});
-it('retry logic', () => {});
-it('email validation', () => {});
+it("test user", () => {});
+it("retry logic", () => {});
+it("email validation", () => {});
 ```
 
 ### Parameterized Tests
@@ -3317,13 +3368,13 @@ it('email validation', () => {});
 Use `it.each()` for testing multiple scenarios:
 
 ```typescript
-describe('formatDateForVoice', () => {
+describe("formatDateForVoice", () => {
   it.each([
-    ['2025-01-01', 'January 1st, 2 0 2 5'],
-    ['2025-03-02', 'March 2nd, 2 0 2 5'],
-    ['2025-06-03', 'June 3rd, 2 0 2 5'],
-    ['2025-12-21', 'December 21st, 2 0 2 5'],
-  ])('should format %s as %s', (input, expected) => {
+    ["2025-01-01", "January 1st, 2 0 2 5"],
+    ["2025-03-02", "March 2nd, 2 0 2 5"],
+    ["2025-06-03", "June 3rd, 2 0 2 5"],
+    ["2025-12-21", "December 21st, 2 0 2 5"],
+  ])("should format %s as %s", (input, expected) => {
     expect(formatDateForVoice(input)).toBe(expected);
   });
 });
@@ -3339,15 +3390,15 @@ describe('formatDateForVoice', () => {
 
 ```typescript
 // ❌ Bad - test passes even if function throws
-it('should create user', () => {
-  createUser({ email: 'test@example.com' });
+it("should create user", () => {
+  createUser({ email: "test@example.com" });
   expect(true).toBe(true); // Always passes
 });
 
 // ✅ Good - properly awaits async operation
-it('should create user', async () => {
-  const user = await createUser({ email: 'test@example.com' });
-  expect(user.email).toBe('test@example.com');
+it("should create user", async () => {
+  const user = await createUser({ email: "test@example.com" });
+  expect(user.email).toBe("test@example.com");
 });
 ```
 
@@ -3375,11 +3426,11 @@ afterEach(() => {
 // ❌ Bad - shared client pollutes tests
 const supabase = createMockSupabaseClient();
 
-it('test 1', () => {
-  supabase.from('table').select();
+it("test 1", () => {
+  supabase.from("table").select();
 });
 
-it('test 2', () => {
+it("test 2", () => {
   // from() was already called in test 1
   expect(supabase.from).toHaveBeenCalledTimes(1); // Fails!
 });
@@ -3398,17 +3449,17 @@ beforeEach(() => {
 
 ```typescript
 // ❌ Bad - flaky due to timing
-it('should set timestamp', () => {
+it("should set timestamp", () => {
   const result = createRecord();
   expect(result.created_at).toBe(new Date().toISOString());
 });
 
 // ✅ Good - use date mocking
-vi.setSystemTime(new Date('2025-12-08T10:00:00Z'));
+vi.setSystemTime(new Date("2025-12-08T10:00:00Z"));
 
-it('should set timestamp', () => {
+it("should set timestamp", () => {
   const result = createRecord();
-  expect(result.created_at).toBe('2025-12-08T10:00:00.000Z');
+  expect(result.created_at).toBe("2025-12-08T10:00:00.000Z");
 });
 
 vi.useRealTimers(); // Restore after test
@@ -3421,33 +3472,39 @@ vi.useRealTimers(); // Restore after test
 ### Immediate Actions (Week 1)
 
 1. ✅ Review this strategy document
-2. ✅ Set up `@odis/testing` library (already exists)
+2. ✅ Set up `@odis-ai/testing` library (already exists)
 3. ✅ Configure Vitest for all library projects
 4. ✅ Create GitHub Actions workflow
-5. ✅ Start with `@odis/vapi` client tests
+5. ✅ Start with `@odis-ai/vapi` client tests
 
 ### Week-by-Week Breakdown
 
 **Week 1**:
+
 - VAPI client tests (8 hours)
 - VAPI webhook handler tests (16 hours)
 
 **Week 2**:
+
 - VAPI webhook dispatcher tests (12 hours)
 - Discharge orchestrator tests (20 hours)
 
 **Week 3**:
+
 - Cases service tests (12 hours)
 - Validators tests (15 hours)
 
 **Week 4**:
+
 - Database repository tests (22 hours)
 
 **Week 5**:
+
 - IDEXX tests (16 hours)
 - API tests (12 hours)
 
 **Week 6**:
+
 - Integration tests (16 hours)
 - Documentation & refinement (12 hours)
 
@@ -3462,7 +3519,7 @@ vi.useRealTimers(); // Restore after test
 
 ## Conclusion
 
-This testing strategy provides a comprehensive, phased approach to achieving 80% test coverage across the six highest-priority shared libraries in the ODIS AI Nx monorepo. By prioritizing CRITICAL libraries first (`@odis/vapi`, `@odis/services`), we ensure that the most business-critical code is tested thoroughly before moving to HIGH priority libraries.
+This testing strategy provides a comprehensive, phased approach to achieving 80% test coverage across the six highest-priority shared libraries in the ODIS AI Nx monorepo. By prioritizing CRITICAL libraries first (`@odis-ai/vapi`, `@odis-ai/services`), we ensure that the most business-critical code is tested thoroughly before moving to HIGH priority libraries.
 
 The strategy emphasizes:
 

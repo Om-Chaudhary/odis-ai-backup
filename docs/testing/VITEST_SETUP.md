@@ -41,7 +41,7 @@ odis-ai-web/
 │           ├── utils.tsx     # React testing utilities
 │           └── api-utils.ts  # API route testing
 └── libs/
-    ├── testing/              # @odis/testing - Shared test utilities
+    ├── testing/              # @odis-ai/testing - Shared test utilities
     │   └── src/
     │       ├── index.ts      # Main exports
     │       ├── utils/        # API, React, assertions
@@ -108,14 +108,14 @@ export default defineConfig({
 });
 ```
 
-## Shared Testing Library (`@odis/testing`)
+## Shared Testing Library (`@odis-ai/testing`)
 
 ### Installation
 
 The testing library is available via the workspace path alias:
 
 ```typescript
-import { createMockSupabaseClient, createMockUser } from "@odis/testing";
+import { createMockSupabaseClient, createMockUser } from "@odis-ai/testing";
 ```
 
 ### Available Utilities
@@ -131,7 +131,7 @@ import {
   createMockContext,
   expectErrorResponse,
   expectSuccessResponse,
-} from "@odis/testing";
+} from "@odis-ai/testing";
 
 // Create a mock request
 const request = createMockRequest({
@@ -161,7 +161,7 @@ import {
   createMockSupabaseClient,
   createMockQueryBuilder,
   createMockSupabaseAuth,
-} from "@odis/testing";
+} from "@odis-ai/testing";
 
 // Full client mock
 const { client, auth, from, rpc } = createMockSupabaseClient({
@@ -187,7 +187,7 @@ import {
   createMockVapiWebhook,
   createMockVapiClient,
   createMockVariableValues,
-} from "@odis/testing";
+} from "@odis-ai/testing";
 
 // Mock VAPI call
 const call = createMockVapiCall({
@@ -225,7 +225,7 @@ import {
   createMockScheduledCall,
   createMockInboundCall,
   createMockCallList,
-} from "@odis/testing";
+} from "@odis-ai/testing";
 
 // Create authenticated context for tests
 const ctx = createAuthenticatedContext({
@@ -244,7 +244,7 @@ import {
   expectNotCalled,
   expectAsyncError,
   waitForCondition,
-} from "@odis/testing";
+} from "@odis-ai/testing";
 
 expectCalledWith(mockFn, "arg1", "arg2");
 expectCalledTimes(mockFn, 3);
@@ -258,7 +258,7 @@ For Node.js tests:
 
 ```typescript
 // libs/my-lib/src/test-setup.ts
-import { nodeSetup } from "@odis/testing/setup/node";
+import { nodeSetup } from "@odis-ai/testing/setup/node";
 nodeSetup();
 ```
 
@@ -266,14 +266,14 @@ For React tests:
 
 ```typescript
 // apps/web/src/test/setup.ts
-import { reactSetup } from "@odis/testing/setup/react";
+import { reactSetup } from "@odis-ai/testing/setup/react";
 reactSetup();
 ```
 
 ### Custom Matchers
 
 ```typescript
-import "@odis/testing/matchers";
+import "@odis-ai/testing/matchers";
 
 // Use custom matchers
 expect("2024-01-15T10:30:00Z").toBeISODate();
@@ -318,7 +318,7 @@ export default defineConfig({
 // libs/new-lib/src/__tests__/my-function.test.ts
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { myFunction } from "../my-function";
-import { createMockSupabaseClient } from "@odis/testing";
+import { createMockSupabaseClient } from "@odis-ai/testing";
 
 describe("myFunction", () => {
   const { client } = createMockSupabaseClient();
@@ -441,10 +441,10 @@ tsconfigPaths({
 
 ### React Query Errors
 
-Use the custom `render` function from `@odis/testing/utils/react`:
+Use the custom `render` function from `@odis-ai/testing/utils/react`:
 
 ```typescript
-import { renderWithProviders } from "@odis/testing/utils/react";
+import { renderWithProviders } from "@odis-ai/testing/utils/react";
 
 const { getByText } = renderWithProviders(<MyComponent />);
 ```
@@ -454,7 +454,7 @@ const { getByText } = renderWithProviders(<MyComponent />);
 Use the setup helpers to configure test environment:
 
 ```typescript
-import { setupTestEnv } from "@odis/testing/setup/node";
+import { setupTestEnv } from "@odis-ai/testing/setup/node";
 
 setupTestEnv({
   NEXT_PUBLIC_SITE_URL: "http://localhost:3000",
