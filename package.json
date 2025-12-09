@@ -14,8 +14,12 @@
     "lint:fix": "nx lint web --fix",
     "test": "nx test web",
     "test:all": "nx run-many -t test",
+    "test:libs": "nx run-many -t test --projects=tag:type:lib",
     "test:ui": "nx test web --ui",
     "test:coverage": "nx test web --coverage",
+    "test:coverage:all": "nx run-many -t test --coverage",
+    "test:affected": "nx affected -t test",
+    "test:watch": "nx test web --watch",
     "typecheck": "nx typecheck web",
     "typecheck:all": "nx run-many -t typecheck",
     "check": "nx run-many -t lint,typecheck",
@@ -148,6 +152,7 @@
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.27.0",
     "vite": "^7.0.0",
+    "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^4.0.13"
   },
   "ct3aMetadata": {
