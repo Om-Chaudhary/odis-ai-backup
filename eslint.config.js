@@ -21,6 +21,8 @@ export default tseslint.config(
       "**/*.test.ts",
       "**/*.test.tsx",
       "vitest.config.ts",
+      "vitest.shared.ts",
+      "vitest.workspace.ts",
     ],
   },
   ...compat.extends("next/core-web-vitals"),
