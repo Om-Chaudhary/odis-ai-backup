@@ -23,6 +23,7 @@ export default tseslint.config(
       "vitest.config.ts",
       "vitest.shared.ts",
       "vitest.workspace.ts",
+      "libs/testing/**",
     ],
   },
   ...compat.extends("next/core-web-vitals"),
