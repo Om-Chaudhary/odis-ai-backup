@@ -6,16 +6,16 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@odis/ui/card";
-import { Button } from "@odis/ui/button";
-import { Badge } from "@odis/ui/badge";
+} from "@odis-ai/ui/card";
+import { Button } from "@odis-ai/ui/button";
+import { Badge } from "@odis-ai/ui/badge";
 import { AlertTriangle, Phone } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { api } from "~/trpc/client";
-import { EmptyState } from "@odis/ui";
-import { cn } from "@odis/utils";
+import { EmptyState } from "@odis-ai/ui";
+import { cn } from "@odis-ai/utils";
 
 interface CasesNeedingAttentionCardProps {
   casesNeedingDischarge: {

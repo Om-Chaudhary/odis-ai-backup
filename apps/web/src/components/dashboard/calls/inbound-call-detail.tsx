@@ -1,8 +1,8 @@
 "use client";
 
 import { format } from "date-fns";
-import { Badge } from "@odis/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis/ui/card";
+import { Badge } from "@odis-ai/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
 import {
   Phone,
   MessageSquare,
@@ -13,8 +13,8 @@ import {
   XCircle,
   Play,
 } from "lucide-react";
-import { formatDuration } from "@odis/utils";
-import { AudioPlayer as CallAudioPlayer } from "@odis/ui";
+import { formatDuration } from "@odis-ai/utils";
+import { AudioPlayer as CallAudioPlayer } from "@odis-ai/ui";
 import type { Database } from "~/database.types";
 
 // Use database types instead of manual interface

@@ -3,26 +3,26 @@
 import { useParams } from "next/navigation";
 import { api } from "~/trpc/client";
 import { useState } from "react";
-import { Button } from "@odis/ui/button";
+import { Button } from "@odis-ai/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@odis/ui/card";
+} from "@odis-ai/ui/card";
 import { ArrowLeft, Loader2, Users as UsersIcon, Save } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { Input } from "@odis/ui/input";
-import { Label } from "@odis/ui/label";
+import { Input } from "@odis-ai/ui/input";
+import { Label } from "@odis-ai/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis/ui/select";
+} from "@odis-ai/ui/select";
 
 export default function UserDetailPage() {
   const params = useParams();

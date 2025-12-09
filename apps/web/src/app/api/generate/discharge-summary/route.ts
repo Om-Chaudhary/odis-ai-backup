@@ -1,18 +1,18 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { createClient } from "@odis/db/server";
-import { generateSummarySchema } from "@odis/validators/discharge";
+import { createClient } from "@odis-ai/db/server";
+import { generateSummarySchema } from "@odis-ai/validators/discharge";
 import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
-import { handleCorsPreflightRequest, withCorsHeaders } from "@odis/api/cors";
-import { generateStructuredDischargeSummaryWithRetry } from "@odis/ai/generate-structured-discharge";
-import { normalizePhoneNumber } from "@odis/utils/phone";
-import type { StructuredDischargeSummary } from "@odis/validators/discharge-summary";
+import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/api/cors";
+import { generateStructuredDischargeSummaryWithRetry } from "@odis-ai/ai/generate-structured-discharge";
+import { normalizePhoneNumber } from "@odis-ai/utils/phone";
+import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
 
 // Dynamic import to avoid bundling @react-email/components during static generation
 async function getCasesService() {
-  const { CasesService } = await import("@odis/services/cases-service");
+  const { CasesService } = await import("@odis-ai/services/cases-service");
   return CasesService;
 }
 

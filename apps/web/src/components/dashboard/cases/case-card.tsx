@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@odis/ui/button";
-import { Card, CardContent, CardFooter } from "@odis/ui/card";
-import { Input } from "@odis/ui/input";
+import { Button } from "@odis-ai/ui/button";
+import { Card, CardContent, CardFooter } from "@odis-ai/ui/card";
+import { Input } from "@odis-ai/ui/input";
 import {
   Phone,
   Mail,
@@ -29,21 +29,21 @@ import type {
   DischargeSettings,
 } from "~/types/dashboard";
 import type { PartialBackendCase } from "~/lib/transforms/case-transforms";
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@odis/ui/dropdown-menu";
+} from "@odis-ai/ui/dropdown-menu";
 import {
   isPlaceholder,
   hasValidContact,
   getEffectiveContact,
-} from "@odis/utils/dashboard-helpers";
+} from "@odis-ai/utils/dashboard-helpers";
 import { ContactIndicator } from "../shared/contact-indicator";
 import { DischargeStatusIndicator } from "../discharges/discharge-status-indicator";
-import { Badge } from "@odis/ui/badge";
+import { Badge } from "@odis-ai/ui/badge";
 
 type WorkflowStatus = "completed" | "in_progress" | "failed" | "ready";
 

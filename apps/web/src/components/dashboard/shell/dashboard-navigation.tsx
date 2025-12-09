@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryState, parseAsStringLiteral } from "nuqs";
-import { Tabs, TabsList, TabsTrigger } from "@odis/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@odis-ai/ui/tabs";
 import { BarChart3, FolderOpen } from "lucide-react";
 
 const TAB_VALUES = ["overview", "cases"] as const;

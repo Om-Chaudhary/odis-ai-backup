@@ -2,12 +2,12 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@odis/db/client";
+import { createClient } from "@odis-ai/db/client";
 import {
   AUTH_PARAMS,
   AUTH_ERRORS,
   MIN_TOKEN_LENGTH,
-} from "@odis/constants/auth";
+} from "@odis-ai/constants/auth";
 
 interface ExtensionAuthHandlerProps {
   children: React.ReactNode;

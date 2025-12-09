@@ -3,14 +3,14 @@
 import { useParams } from "next/navigation";
 import { api } from "~/trpc/client";
 import { useState } from "react";
-import { Button } from "@odis/ui/button";
+import { Button } from "@odis-ai/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@odis/ui/card";
+} from "@odis-ai/ui/card";
 import {
   ArrowLeft,
   Loader2,
@@ -27,8 +27,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis/ui/select";
-import { Label } from "@odis/ui/label";
+} from "@odis-ai/ui/select";
+import { Label } from "@odis-ai/ui/label";
 
 export default function CaseDetailPage() {
   const params = useParams();

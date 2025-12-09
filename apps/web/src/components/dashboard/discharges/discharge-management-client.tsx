@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
-import { Button } from "@odis/ui/button";
+import { Button } from "@odis-ai/ui/button";
 import {
   RefreshCw,
   TestTube,
@@ -12,9 +12,9 @@ import {
   ClipboardList,
   Mail,
 } from "lucide-react";
-import { Badge } from "@odis/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis/ui/tabs";
-import { EmptyState } from "@odis/ui";
+import { Badge } from "@odis-ai/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/ui/tabs";
+import { EmptyState } from "@odis-ai/ui";
 import { DischargeListItem } from "./discharge-list-item";
 import { type CallEndReasonFilter } from "../filters/consolidated-filter-bar";
 import { BatchDischargeDialog } from "./batch-discharge-dialog";
@@ -31,7 +31,7 @@ import { transformBackendCasesToDashboardCases } from "~/lib/transforms/case-tra
 import {
   normalizePlaceholder,
   hasValidContact,
-} from "@odis/utils/dashboard-helpers";
+} from "@odis-ai/utils/dashboard-helpers";
 import { toast } from "sonner";
 import {
   format,

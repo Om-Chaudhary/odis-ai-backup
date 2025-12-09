@@ -1,20 +1,20 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { verifySignatureAppRouter } from "@upstash/qstash/dist/nextjs";
-import { createServiceClient } from "@odis/db/server";
-import { createPhoneCall, mapVapiStatus } from "@odis/vapi/client";
-import { buildDynamicVariables } from "@odis/vapi/knowledge-base";
+import { createServiceClient } from "@odis-ai/db/server";
+import { createPhoneCall, mapVapiStatus } from "@odis-ai/vapi/client";
+import { buildDynamicVariables } from "@odis-ai/vapi/knowledge-base";
 
 // Dynamic import to avoid bundling @react-email/components during static generation
 async function getCasesService() {
-  const { CasesService } = await import("@odis/services/cases-service");
+  const { CasesService } = await import("@odis-ai/services/cases-service");
   return CasesService;
 }
-import { extractVapiVariablesFromEntities } from "@odis/vapi/extract-variables";
+import { extractVapiVariablesFromEntities } from "@odis-ai/vapi/extract-variables";
 import {
   normalizeVariablesToSnakeCase,
   extractFirstName,
-} from "@odis/vapi/utils";
+} from "@odis-ai/vapi/utils";
 
 /**
  * Execute Call Webhook

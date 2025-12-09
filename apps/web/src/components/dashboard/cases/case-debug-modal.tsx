@@ -7,10 +7,10 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@odis/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis/ui/card";
-import { Badge } from "@odis/ui/badge";
-import { Separator } from "@odis/ui/separator";
+} from "@odis-ai/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
+import { Badge } from "@odis-ai/ui/badge";
+import { Separator } from "@odis-ai/ui/separator";
 import type { BackendCase } from "~/types/dashboard";
 import { format } from "date-fns";
 

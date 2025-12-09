@@ -1,14 +1,14 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { createClient } from "@odis/db/server";
-import { sendEmailSchema } from "@odis/validators/discharge";
-import { isFutureTime } from "@odis/utils/business-hours";
-import { scheduleEmailExecution } from "@odis/qstash/client";
+import { createClient } from "@odis-ai/db/server";
+import { sendEmailSchema } from "@odis-ai/validators/discharge";
+import { isFutureTime } from "@odis-ai/utils/business-hours";
+import { scheduleEmailExecution } from "@odis-ai/qstash/client";
 import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
-import { normalizeEmail } from "@odis/utils/phone";
-import { handleCorsPreflightRequest, withCorsHeaders } from "@odis/api/cors";
+import { normalizeEmail } from "@odis-ai/utils/phone";
+import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/api/cors";
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)

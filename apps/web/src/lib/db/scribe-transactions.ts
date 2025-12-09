@@ -9,12 +9,12 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "~/database.types";
-import type { NormalizedEntities } from "@odis/validators/scribe";
+import type { NormalizedEntities } from "@odis-ai/validators/scribe";
 import {
   parseWeightToKg,
   parseAgeToDOB,
   sanitizePhoneNumber,
-} from "@odis/validators/scribe";
+} from "@odis-ai/validators/scribe";
 
 /* ========================================
    Type Definitions

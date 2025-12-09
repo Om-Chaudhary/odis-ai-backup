@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis/ui/card";
-import { Button } from "@odis/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
+import { Button } from "@odis-ai/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@odis/ui/collapsible";
+} from "@odis-ai/ui/collapsible";
 import { Activity, ChevronDown, ChevronUp } from "lucide-react";
 import { ActivityItemComponent } from "./activity-item";
 import type { ActivityItem } from "~/types/dashboard";

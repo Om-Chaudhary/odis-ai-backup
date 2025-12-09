@@ -1,21 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@odis/ui/button";
-import { Input } from "@odis/ui/input";
+import { Button } from "@odis-ai/ui/button";
+import { Input } from "@odis-ai/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis/ui/select";
-import { Label } from "@odis/ui/label";
+} from "@odis-ai/ui/select";
+import { Label } from "@odis-ai/ui/label";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@odis/ui/collapsible";
+} from "@odis-ai/ui/collapsible";
 import {
   Search,
   RefreshCw,

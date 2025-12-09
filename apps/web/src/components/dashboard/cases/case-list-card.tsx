@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Card, CardContent, CardFooter } from "@odis/ui/card";
-import { Button } from "@odis/ui/button";
+import { Card, CardContent, CardFooter } from "@odis-ai/ui/card";
+import { Button } from "@odis-ai/ui/button";
 import {
   Dog,
   Cat,
@@ -17,9 +17,9 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { CaseListItem } from "~/types/dashboard";
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 import { QuickActionsMenu } from "../shared/quick-actions-menu";
-import { Badge } from "@odis/ui/badge";
+import { Badge } from "@odis-ai/ui/badge";
 
 interface CaseListCardProps {
   caseData: CaseListItem;

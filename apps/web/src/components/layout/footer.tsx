@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Mail, MapPin, Linkedin } from "lucide-react";
-import { Logo } from "@odis/ui/Logo";
+import { Logo } from "@odis-ai/ui/Logo";
 
 export default function Footer() {
   return (

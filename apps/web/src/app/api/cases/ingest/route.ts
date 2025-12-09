@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { createClient } from "@odis/db/server";
+import { createClient } from "@odis-ai/db/server";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
 import { getUser } from "~/server/actions/auth";
@@ -8,11 +8,11 @@ import type { IngestPayload } from "~/types/services";
 
 // Dynamic import to avoid bundling @react-email/components during static generation
 async function getCasesService() {
-  const { CasesService } = await import("@odis/services/cases-service");
+  const { CasesService } = await import("@odis-ai/services/cases-service");
   return CasesService;
 }
 import { z } from "zod";
-import { handleCorsPreflightRequest, withCorsHeaders } from "@odis/api/cors";
+import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/api/cors";
 
 // --- Schemas ---
 const IngestPayloadSchema = z.discriminatedUnion("mode", [

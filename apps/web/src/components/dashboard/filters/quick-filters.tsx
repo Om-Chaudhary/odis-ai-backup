@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback } from "react";
-import { Button } from "@odis/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@odis/ui/tooltip";
+import { Button } from "@odis-ai/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@odis-ai/ui/tooltip";
 import {
   AlertCircle,
   FileText,
@@ -10,7 +10,7 @@ import {
   Clock,
   type LucideIcon,
 } from "lucide-react";
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 
 export type QuickFilterId =
   | "missingDischarge"

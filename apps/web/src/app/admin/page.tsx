@@ -6,8 +6,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@odis/ui/card";
-import { Button } from "@odis/ui/button";
+} from "@odis-ai/ui/card";
+import { Button } from "@odis-ai/ui/button";
 import Link from "next/link";
 import {
   ClipboardList,
@@ -25,7 +25,7 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@odis/ui/chart";
+} from "@odis-ai/ui/chart";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 const TIME_RANGES = [

@@ -1,4 +1,4 @@
-import { createServiceClient } from "@odis/db/server";
+import { createServiceClient } from "@odis-ai/db/server";
 import { notFound } from "next/navigation";
 import { CallDetailView } from "~/components/calls/call-detail-view";
 import type { CallDetails } from "~/types/dashboard";

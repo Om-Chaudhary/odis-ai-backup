@@ -2,20 +2,20 @@
 
 import { useState } from "react";
 import { api } from "~/trpc/client";
-import { Button } from "@odis/ui/button";
+import { Button } from "@odis-ai/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@odis/ui/card";
+} from "@odis-ai/ui/card";
 import { Plus, Loader2, FileText, Pencil, Trash2, Share2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import type { ColumnDef } from "@tanstack/react-table";
-import { DataTable } from "@odis/ui/data-table";
-import { Badge } from "@odis/ui/badge";
+import { DataTable } from "@odis-ai/ui/data-table";
+import { Badge } from "@odis-ai/ui/badge";
 import { ShareDialog } from "~/components/admin/dialogs/share-dialog";
 import type { RouterOutputs } from "~/trpc/client";
 

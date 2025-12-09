@@ -2,17 +2,17 @@ import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
-} from "@odis/ui/sidebar";
+} from "@odis-ai/ui/sidebar";
 import { AppSidebar } from "~/components/dashboard/shell/app-sidebar";
-import { Separator } from "@odis/ui/separator";
+import { Separator } from "@odis-ai/ui/separator";
 import { DashboardBreadcrumb } from "~/components/dashboard/shell/dashboard-breadcrumb";
 import { getUser } from "~/server/actions/auth";
-import { createClient } from "@odis/db/server";
+import { createClient } from "@odis-ai/db/server";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import type { Metadata } from "next";
-import { AUTH_PARAMS } from "@odis/constants/auth";
-import { getClinicByUserId } from "@odis/clinics/utils";
+import { AUTH_PARAMS } from "@odis-ai/constants/auth";
+import { getClinicByUserId } from "@odis-ai/clinics/utils";
 
 export const metadata: Metadata = {
   title: "Dashboard | Odis AI",

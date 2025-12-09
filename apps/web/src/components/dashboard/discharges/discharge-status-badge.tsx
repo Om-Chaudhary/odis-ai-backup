@@ -1,5 +1,5 @@
-import { Badge } from "@odis/ui/badge";
-import { cn } from "@odis/utils";
+import { Badge } from "@odis-ai/ui/badge";
+import { cn } from "@odis-ai/utils";
 import type { CallStatus, EmailStatus } from "~/types/dashboard";
 import { Loader2, CheckCircle2, XCircle, Clock, Phone } from "lucide-react";
 

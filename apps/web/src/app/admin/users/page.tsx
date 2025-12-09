@@ -1,20 +1,20 @@
 "use client";
 
 import { api } from "~/trpc/client";
-import { Button } from "@odis/ui/button";
+import { Button } from "@odis-ai/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@odis/ui/card";
+} from "@odis-ai/ui/card";
 import { Loader2, Users as UsersIcon, Eye, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import type { ColumnDef } from "@tanstack/react-table";
-import { DataTable } from "@odis/ui/data-table";
-import { Badge } from "@odis/ui/badge";
+import { DataTable } from "@odis-ai/ui/data-table";
+import { Badge } from "@odis-ai/ui/badge";
 import type { RouterOutputs } from "~/trpc/client";
 
 type User = RouterOutputs["users"]["listUsers"][number];

@@ -1,7 +1,7 @@
 "use client";
 
 import { useQueryState } from "nuqs";
-import { Button } from "@odis/ui/button";
+import { Button } from "@odis-ai/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,7 +10,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@odis/ui/dropdown-menu";
+} from "@odis-ai/ui/dropdown-menu";
 import { Calendar, Check } from "lucide-react";
 import { subDays, format, endOfToday } from "date-fns";
 

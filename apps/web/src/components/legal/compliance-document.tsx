@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { ArrowUp } from "lucide-react";
-import { cn } from "@odis/utils";
-import { Button } from "@odis/ui/button";
+import { cn } from "@odis-ai/utils";
+import { Button } from "@odis-ai/ui/button";
 
 export interface ComplianceSection {
   id: string;
@@ -186,7 +186,6 @@ export function ComplianceDocument({
       >
         <ArrowUp className="size-5" />
       </Button>
-
     </div>
   );
 }

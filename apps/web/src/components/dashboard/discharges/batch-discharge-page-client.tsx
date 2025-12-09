@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@odis/ui/button";
+import { Button } from "@odis-ai/ui/button";
 import {
   Card,
   CardContent,
@@ -10,24 +10,24 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@odis/ui/card";
-import { Badge } from "@odis/ui/badge";
-import { Checkbox } from "@odis/ui/checkbox";
-import { Alert, AlertDescription } from "@odis/ui/alert";
-import { ScrollArea } from "@odis/ui/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis/ui/tabs";
-import { Progress } from "@odis/ui/progress";
-import { Separator } from "@odis/ui/separator";
-import { Input } from "@odis/ui/input";
+} from "@odis-ai/ui/card";
+import { Badge } from "@odis-ai/ui/badge";
+import { Checkbox } from "@odis-ai/ui/checkbox";
+import { Alert, AlertDescription } from "@odis-ai/ui/alert";
+import { ScrollArea } from "@odis-ai/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/ui/tabs";
+import { Progress } from "@odis-ai/ui/progress";
+import { Separator } from "@odis-ai/ui/separator";
+import { Input } from "@odis-ai/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis/ui/select";
-import { Switch } from "@odis/ui/switch";
-import { Label } from "@odis/ui/label";
+} from "@odis-ai/ui/select";
+import { Switch } from "@odis-ai/ui/switch";
+import { Label } from "@odis-ai/ui/label";
 import {
   ArrowLeft,
   ArrowRight,
@@ -69,7 +69,7 @@ import {
 } from "date-fns";
 import { BatchProgressMonitor } from "./batch-progress-monitor";
 import type { BatchEligibleCase } from "~/types/dashboard";
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 
 type DateFilter = "today" | "yesterday" | "day-2" | "day-3" | "day-4";
 

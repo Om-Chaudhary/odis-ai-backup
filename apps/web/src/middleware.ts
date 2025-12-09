@@ -1,4 +1,4 @@
-import { updateSession } from "@odis/db/middleware";
+import { updateSession } from "@odis-ai/db/middleware";
 import type { NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {

@@ -7,8 +7,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@odis/ui/dropdown-menu";
-import { Button } from "@odis/ui/button";
+} from "@odis-ai/ui/dropdown-menu";
+import { Button } from "@odis-ai/ui/button";
 import { Settings2 } from "lucide-react";
 
 export type DashboardSection =

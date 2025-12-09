@@ -1,20 +1,20 @@
 "use client";
 
 import { Shield, Key } from "lucide-react";
-import { Button } from "@odis/ui/button";
+import { Button } from "@odis-ai/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@odis/ui/card";
-import { Input } from "@odis/ui/input";
-import { Label } from "@odis/ui/label";
-import { Separator } from "@odis/ui/separator";
-import { Switch } from "@odis/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis/ui/tabs";
-import { Badge } from "@odis/ui/badge";
+} from "@odis-ai/ui/card";
+import { Input } from "@odis-ai/ui/input";
+import { Label } from "@odis-ai/ui/label";
+import { Separator } from "@odis-ai/ui/separator";
+import { Switch } from "@odis-ai/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/ui/tabs";
+import { Badge } from "@odis-ai/ui/badge";
 import type { User } from "@supabase/supabase-js";
 
 interface DashboardProfileContentProps {

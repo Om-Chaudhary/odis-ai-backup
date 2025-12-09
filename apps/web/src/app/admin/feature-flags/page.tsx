@@ -6,8 +6,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@odis/ui/card";
-import { Badge } from "@odis/ui/badge";
+} from "@odis-ai/ui/card";
+import { Badge } from "@odis-ai/ui/badge";
 
 export const metadata: Metadata = {
   title: "Feature Flags | Admin",

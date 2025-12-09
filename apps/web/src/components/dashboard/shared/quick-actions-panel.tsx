@@ -1,7 +1,7 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@odis/ui/card";
-import { Button } from "@odis/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
+import { Button } from "@odis-ai/ui/button";
 import {
   Plus,
   FileText,

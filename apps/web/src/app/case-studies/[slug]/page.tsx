@@ -9,9 +9,9 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@odis/ui/breadcrumb";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@odis/ui/avatar";
+} from "@odis-ai/ui/breadcrumb";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@odis-ai/ui/avatar";
 import { format } from "date-fns";
 import Link from "next/link";
 import Image from "next/image";

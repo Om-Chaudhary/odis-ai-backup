@@ -1,6 +1,6 @@
-import { Button } from "@odis/ui/button";
-import { Badge } from "@odis/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@odis/ui/avatar";
+import { Button } from "@odis-ai/ui/button";
+import { Badge } from "@odis-ai/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@odis-ai/ui/avatar";
 import { Mail } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 

@@ -2,24 +2,24 @@
 
 import { useState } from "react";
 import { api } from "~/trpc/client";
-import { Button } from "@odis/ui/button";
+import { Button } from "@odis-ai/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@odis/ui/card";
-import { Textarea } from "@odis/ui/textarea";
-import { Label } from "@odis/ui/label";
-import { Input } from "@odis/ui/input";
+} from "@odis-ai/ui/card";
+import { Textarea } from "@odis-ai/ui/textarea";
+import { Label } from "@odis-ai/ui/label";
+import { Input } from "@odis-ai/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis/ui/select";
+} from "@odis-ai/ui/select";
 import { toast } from "sonner";
 import { Loader2, Copy, FlaskConical } from "lucide-react";
 

@@ -2,10 +2,10 @@
 
 import { useState, useRef } from "react";
 import { usePostHog } from "posthog-js/react";
-import { Spinner } from "@odis/ui/spinner";
-import { FloatingElements } from "@odis/ui/floating-elements";
-import { TextReveal } from "@odis/ui/text-reveal";
-import { ParticleBackground } from "@odis/ui/particle-background";
+import { Spinner } from "@odis-ai/ui/spinner";
+import { FloatingElements } from "@odis-ai/ui/floating-elements";
+import { TextReveal } from "@odis-ai/ui/text-reveal";
+import { ParticleBackground } from "@odis-ai/ui/particle-background";
 import WaitlistModal from "./waitlist-modal";
 import { useDeviceDetection } from "~/hooks/useDeviceDetection";
 

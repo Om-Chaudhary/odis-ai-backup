@@ -1,9 +1,9 @@
 "use client";
 
-import { Button } from "@odis/ui/button";
-import { cn } from "@odis/utils";
+import { Button } from "@odis-ai/ui/button";
+import { cn } from "@odis-ai/utils";
 import { useQueryState } from "nuqs";
-import type { DateRangePreset } from "@odis/utils/date-ranges";
+import type { DateRangePreset } from "@odis-ai/utils/date-ranges";
 
 interface DateFilterButtonGroupProps {
   value?: DateRangePreset;

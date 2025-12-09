@@ -6,8 +6,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis/ui/select";
-import { Button } from "@odis/ui/button";
+} from "@odis-ai/ui/select";
+import { Button } from "@odis-ai/ui/button";
 import { X } from "lucide-react";
 
 interface User {

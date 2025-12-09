@@ -1,8 +1,8 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { verifySignatureAppRouter } from "@upstash/qstash/dist/nextjs";
-import { createServiceClient } from "@odis/db/server";
-import { sendDischargeEmail } from "@odis/resend/client";
+import { createServiceClient } from "@odis-ai/db/server";
+import { sendDischargeEmail } from "@odis-ai/resend/client";
 
 /**
  * Execute Discharge Email Webhook

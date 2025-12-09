@@ -4,7 +4,7 @@
  * Types used across service layer for case ingestion, scheduling, and management.
  */
 
-import type { NormalizedEntities } from "@odis/validators/scribe";
+import type { NormalizedEntities } from "@odis-ai/validators/scribe";
 
 /* ========================================
    Case Ingestion Types

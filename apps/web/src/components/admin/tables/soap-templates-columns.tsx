@@ -1,8 +1,8 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { Button } from "@odis/ui/button";
-import { Badge } from "@odis/ui/badge";
+import { Button } from "@odis-ai/ui/button";
+import { Badge } from "@odis-ai/ui/badge";
 import { Pencil, Trash2, Loader2, ArrowUpDown, Share2 } from "lucide-react";
 import Link from "next/link";
 import type { Database } from "~/database.types";

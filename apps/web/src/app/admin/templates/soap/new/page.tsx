@@ -5,7 +5,7 @@ import { api } from "~/trpc/client";
 import { SoapTemplateForm } from "~/components/admin/forms/soap-template-form";
 import { toast } from "sonner";
 import Link from "next/link";
-import { Button } from "@odis/ui/button";
+import { Button } from "@odis-ai/ui/button";
 import { ArrowLeft } from "lucide-react";
 
 export default function NewSoapTemplatePage() {

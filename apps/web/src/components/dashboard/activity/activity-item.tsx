@@ -1,6 +1,6 @@
 import { FileText, PhoneCall, Clock, FileCheck } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 import type { ActivityItem } from "~/types/dashboard";
 
 const iconMap = {

@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@odis/ui/button";
+import { Button } from "@odis-ai/ui/button";
 import {
   ArrowLeft,
   Loader2,
@@ -21,24 +21,24 @@ import {
 import { format } from "date-fns";
 import { api } from "~/trpc/client";
 import { toast } from "sonner";
-import { AudioPlayer as CallAudioPlayer } from "@odis/ui";
+import { AudioPlayer as CallAudioPlayer } from "@odis-ai/ui";
 import { DischargeStatusBadge } from "../discharges/discharge-status-badge";
 import { SOAPNoteDisplay } from "../shared/soap-note-display";
 import { SyncedTranscript } from "../calls/synced-transcript";
 import type { DischargeSettings, TranscriptMessage } from "~/types/dashboard";
-import { cn, formatDuration } from "@odis/utils";
+import { cn, formatDuration } from "@odis-ai/utils";
 import {
   isPlaceholder,
   getEffectiveContact,
-} from "@odis/utils/dashboard-helpers";
-import { checkCaseDischargeReadiness } from "@odis/utils/discharge-readiness";
-import { Badge } from "@odis/ui/badge";
+} from "@odis-ai/utils/dashboard-helpers";
+import { checkCaseDischargeReadiness } from "@odis-ai/utils/discharge-readiness";
+import { Badge } from "@odis-ai/ui/badge";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@odis/ui/accordion";
+} from "@odis-ai/ui/accordion";
 
 interface CaseDetailClientProps {
   caseId: string;

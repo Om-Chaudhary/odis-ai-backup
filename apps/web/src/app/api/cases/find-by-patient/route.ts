@@ -1,10 +1,10 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { createClient } from "@odis/db/server";
+import { createClient } from "@odis-ai/db/server";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
 import { getUser } from "~/server/actions/auth";
-import { handleCorsPreflightRequest, withCorsHeaders } from "@odis/api/cors";
+import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/api/cors";
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)

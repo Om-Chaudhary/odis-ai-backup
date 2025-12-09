@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { TestTube, X, Settings2 } from "lucide-react";
-import { Button } from "@odis/ui/button";
+import { Button } from "@odis-ai/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,9 +10,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@odis/ui/dialog";
-import { Input } from "@odis/ui/input";
-import { Label } from "@odis/ui/label";
+} from "@odis-ai/ui/dialog";
+import { Input } from "@odis-ai/ui/input";
+import { Label } from "@odis-ai/ui/label";
 import type { DischargeSettings } from "~/types/dashboard";
 
 interface TestModeBannerProps {

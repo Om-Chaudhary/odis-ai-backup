@@ -10,11 +10,11 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createClient } from "@odis/db/server";
+import { createClient } from "@odis-ai/db/server";
 import { getUser } from "~/server/actions/auth";
-import { handleCorsPreflightRequest, withCorsHeaders } from "@odis/api/cors";
-import { IdexxCredentialManager } from "@odis/idexx/credential-manager";
-import { validateIdexxCredentials } from "@odis/idexx/validation";
+import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/api/cors";
+import { IdexxCredentialManager } from "@odis-ai/idexx/credential-manager";
+import { validateIdexxCredentials } from "@odis-ai/idexx/validation";
 
 const validateCredentialsSchema = z.object({
   username: z.string().optional(),
@@ -42,7 +42,10 @@ async function logAuditEvent(
       resource_type: "credential",
       status,
       details,
-      ip_address: request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? null,
+      ip_address:
+        request.headers.get("x-forwarded-for") ??
+        request.headers.get("x-real-ip") ??
+        null,
       user_agent: request.headers.get("user-agent") ?? null,
     });
   } catch (error) {
@@ -127,7 +130,10 @@ export async function POST(request: NextRequest) {
         return withCorsHeaders(
           request,
           NextResponse.json(
-            { error: "No stored credentials found. Please configure credentials first." },
+            {
+              error:
+                "No stored credentials found. Please configure credentials first.",
+            },
             { status: 404 },
           ),
         );

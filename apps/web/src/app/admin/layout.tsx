@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { getUser, signOut } from "~/server/actions/auth";
-import { createClient } from "@odis/db/server";
+import { createClient } from "@odis-ai/db/server";
 import Link from "next/link";
-import { Button } from "@odis/ui/button";
+import { Button } from "@odis-ai/ui/button";
 import {
   LayoutDashboard,
   ClipboardList,

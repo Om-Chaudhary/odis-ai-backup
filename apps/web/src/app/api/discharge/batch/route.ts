@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { createClient } from "@odis/db/server";
+import { createClient } from "@odis-ai/db/server";
 import { z } from "zod";
 import { getUser } from "~/server/actions/auth";
 
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 // Dynamic import to avoid bundling @react-email/components during static generation
 async function getDischargeBatchProcessor() {
   const { DischargeBatchProcessor } =
-    await import("@odis/services/discharge-batch-processor");
+    await import("@odis-ai/services/discharge-batch-processor");
   return DischargeBatchProcessor;
 }
 

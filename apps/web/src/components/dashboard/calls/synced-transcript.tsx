@@ -2,10 +2,10 @@
 
 import * as React from "react";
 import { useRef, useEffect } from "react";
-import { cn } from "@odis/utils";
-import { ScrollArea } from "@odis/ui/scroll-area";
+import { cn } from "@odis-ai/utils";
+import { ScrollArea } from "@odis-ai/ui/scroll-area";
 import type { TranscriptMessage } from "~/types/dashboard";
-import { Avatar, AvatarFallback } from "@odis/ui/avatar";
+import { Avatar, AvatarFallback } from "@odis-ai/ui/avatar";
 import { Bot, User } from "lucide-react";
 
 interface SyncedTranscriptProps {

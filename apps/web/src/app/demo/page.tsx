@@ -2,10 +2,10 @@
 
 import { useEffect, useRef } from "react";
 import { useScroll, useTransform } from "framer-motion";
-import { GoogleGeminiEffect } from "@odis/ui/google-gemini-effect";
+import { GoogleGeminiEffect } from "@odis-ai/ui/google-gemini-effect";
 import { usePostHog } from "posthog-js/react";
 import { useDeviceDetection } from "~/hooks/useDeviceDetection";
-import { EnhancedButton } from "@odis/ui/enhanced-button";
+import { EnhancedButton } from "@odis-ai/ui/enhanced-button";
 import { ArrowRight, Clock, FileText, Zap, CheckCircle2 } from "lucide-react";
 import Navigation from "~/components/layout/navigation";
 import Footer from "~/components/layout/footer";

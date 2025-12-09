@@ -1,22 +1,22 @@
 "use client";
 
 import { useMemo } from "react";
-import { Button } from "@odis/ui/button";
-import { Input } from "@odis/ui/input";
-import { Label } from "@odis/ui/label";
-import { Checkbox } from "@odis/ui/checkbox";
+import { Button } from "@odis-ai/ui/button";
+import { Input } from "@odis-ai/ui/input";
+import { Label } from "@odis-ai/ui/label";
+import { Checkbox } from "@odis-ai/ui/checkbox";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis/ui/select";
+} from "@odis-ai/ui/select";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@odis/ui/collapsible";
+} from "@odis-ai/ui/collapsible";
 import {
   Search,
   Filter,
@@ -29,10 +29,10 @@ import {
   Tag,
   CircleDot,
 } from "lucide-react";
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 import type { QuickFilterId } from "../filters/quick-filters";
 import { CasesDateRangeSelector } from "./cases-date-range-selector";
-import type { DateRangePreset } from "@odis/utils/date-ranges";
+import type { DateRangePreset } from "@odis-ai/utils/date-ranges";
 
 const STATUS_OPTIONS: Array<{
   value: string;

@@ -3,8 +3,8 @@
 import { useState, useRef } from "react";
 import { usePostHog } from "posthog-js/react";
 import { ChevronDownIcon, HelpCircleIcon } from "lucide-react";
-import { FloatingElements } from "@odis/ui/floating-elements";
-import { ParticleBackground } from "@odis/ui/particle-background";
+import { FloatingElements } from "@odis-ai/ui/floating-elements";
+import { ParticleBackground } from "@odis-ai/ui/particle-background";
 import { useDeviceDetection } from "~/hooks/useDeviceDetection";
 
 const faqData = [

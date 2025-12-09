@@ -5,10 +5,10 @@ import {
   protectedProcedure,
 } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { checkCaseDischargeReadiness } from "@odis/utils/discharge-readiness";
+import { checkCaseDischargeReadiness } from "@odis-ai/utils/discharge-readiness";
 import type { BackendCase } from "~/types/dashboard";
-import { getClinicByUserId, getClinicUserIds } from "@odis/clinics/utils";
-import { normalizeEmail, normalizeToE164 } from "@odis/utils/phone";
+import { getClinicByUserId, getClinicUserIds } from "@odis-ai/clinics/utils";
+import { normalizeEmail, normalizeToE164 } from "@odis-ai/utils/phone";
 
 // ============================================================================
 // VALIDATION SCHEMAS

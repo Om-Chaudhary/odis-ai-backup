@@ -3,17 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis/ui/card";
-import { Button } from "@odis/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
+import { Button } from "@odis-ai/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis/ui/select";
-import { Label } from "@odis/ui/label";
-import { Badge } from "@odis/ui/badge";
+} from "@odis-ai/ui/select";
+import { Label } from "@odis-ai/ui/label";
+import { Badge } from "@odis-ai/ui/badge";
 import {
   Table,
   TableBody,
@@ -21,7 +21,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@odis/ui/table";
+} from "@odis-ai/ui/table";
 import {
   Phone,
   ExternalLink,

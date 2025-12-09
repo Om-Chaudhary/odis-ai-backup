@@ -1,24 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@odis/ui/button";
-import { Input } from "@odis/ui/input";
-import { Label } from "@odis/ui/label";
-import { Switch } from "@odis/ui/switch";
+import { Button } from "@odis-ai/ui/button";
+import { Input } from "@odis-ai/ui/input";
+import { Label } from "@odis-ai/ui/label";
+import { Switch } from "@odis-ai/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis/ui/select";
+} from "@odis-ai/ui/select";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@odis/ui/card";
+} from "@odis-ai/ui/card";
 import { Loader2, User, Lock, Briefcase } from "lucide-react";
 
 interface UserFormProps {

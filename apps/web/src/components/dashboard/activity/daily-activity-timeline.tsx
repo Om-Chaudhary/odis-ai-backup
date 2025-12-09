@@ -1,9 +1,9 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@odis/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
 import { Activity } from "lucide-react";
 import type { DailyActivityAggregate } from "~/types/dashboard";
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 import {
   FileText,
   PhoneCall,

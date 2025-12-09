@@ -2,30 +2,30 @@
 
 import { useState, useEffect, useRef } from "react";
 import Vapi from "@vapi-ai/web";
-import { Button } from "@odis/ui/button";
-import { Input } from "@odis/ui/input";
-import { Label } from "@odis/ui/label";
-import { Textarea } from "@odis/ui/textarea";
+import { Button } from "@odis-ai/ui/button";
+import { Input } from "@odis-ai/ui/input";
+import { Label } from "@odis-ai/ui/label";
+import { Textarea } from "@odis-ai/ui/textarea";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@odis/ui/card";
-import { Badge } from "@odis/ui/badge";
-import { Separator } from "@odis/ui/separator";
+} from "@odis-ai/ui/card";
+import { Badge } from "@odis-ai/ui/badge";
+import { Separator } from "@odis-ai/ui/separator";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis/ui/select";
+} from "@odis-ai/ui/select";
 import { Phone, PhoneOff, Loader2, Code } from "lucide-react";
 import { toast } from "sonner";
-import type { DynamicVariables } from "@odis/vapi/types";
-import { createTestScenario } from "@odis/vapi/knowledge-base";
+import type { DynamicVariables } from "@odis-ai/vapi/types";
+import { createTestScenario } from "@odis-ai/vapi/knowledge-base";
 
 type TestScenario =
   | "discharge-wellness"

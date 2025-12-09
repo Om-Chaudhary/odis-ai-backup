@@ -26,14 +26,14 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarSeparator,
-} from "@odis/ui/sidebar";
+} from "@odis-ai/ui/sidebar";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@odis/ui/collapsible";
-import { Avatar, AvatarFallback, AvatarImage } from "@odis/ui/avatar";
-import { Button } from "@odis/ui/button";
+} from "@odis-ai/ui/collapsible";
+import { Avatar, AvatarFallback, AvatarImage } from "@odis-ai/ui/avatar";
+import { Button } from "@odis-ai/ui/button";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "~/server/actions/auth";

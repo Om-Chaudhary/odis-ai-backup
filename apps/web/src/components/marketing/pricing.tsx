@@ -1,9 +1,9 @@
 "use client";
 
-import { Label } from "@odis/ui/label";
-import { Switch } from "@odis/ui/switch";
+import { Label } from "@odis-ai/ui/label";
+import { Switch } from "@odis-ai/ui/switch";
 // import { useMediaQuery } from "~/hooks/use-media-query";
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 import { motion } from "framer-motion";
 import { Check, Star, Mail } from "lucide-react";
 import Link from "next/link";

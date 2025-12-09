@@ -8,16 +8,16 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@odis/ui/dialog";
-import { Button } from "@odis/ui/button";
-import { Label } from "@odis/ui/label";
+} from "@odis-ai/ui/dialog";
+import { Button } from "@odis-ai/ui/button";
+import { Label } from "@odis-ai/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis/ui/select";
+} from "@odis-ai/ui/select";
 import {
   AlertCircle,
   Calendar,
@@ -27,9 +27,9 @@ import {
   Send,
   Users,
 } from "lucide-react";
-import { Alert, AlertDescription } from "@odis/ui/alert";
-import { Separator } from "@odis/ui/separator";
-import { Badge } from "@odis/ui/badge";
+import { Alert, AlertDescription } from "@odis-ai/ui/alert";
+import { Separator } from "@odis-ai/ui/separator";
+import { Badge } from "@odis-ai/ui/badge";
 import { addDays, format } from "date-fns";
 
 interface BatchDischargeDialogProps {

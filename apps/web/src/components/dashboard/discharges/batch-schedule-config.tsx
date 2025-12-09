@@ -1,16 +1,16 @@
 "use client";
 
-import { Label } from "@odis/ui/label";
-import { Button } from "@odis/ui/button";
-import { Input } from "@odis/ui/input";
+import { Label } from "@odis-ai/ui/label";
+import { Button } from "@odis-ai/ui/button";
+import { Input } from "@odis-ai/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis/ui/select";
-import { Separator } from "@odis/ui/separator";
+} from "@odis-ai/ui/select";
+import { Separator } from "@odis-ai/ui/separator";
 import {
   Mail,
   Phone,

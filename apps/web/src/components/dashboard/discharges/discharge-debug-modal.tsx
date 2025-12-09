@@ -7,12 +7,12 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@odis/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis/ui/card";
-import { Badge } from "@odis/ui/badge";
+} from "@odis-ai/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
+import { Badge } from "@odis-ai/ui/badge";
 import type { DashboardCase, DischargeSettings } from "~/types/dashboard";
-import { buildDynamicVariables } from "@odis/vapi/knowledge-base";
-import { normalizeVariablesToSnakeCase } from "@odis/vapi/utils";
+import { buildDynamicVariables } from "@odis-ai/vapi/knowledge-base";
+import { normalizeVariablesToSnakeCase } from "@odis-ai/vapi/utils";
 
 interface DischargeDebugModalProps {
   open: boolean;

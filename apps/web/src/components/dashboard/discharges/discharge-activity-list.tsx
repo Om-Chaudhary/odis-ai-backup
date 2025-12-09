@@ -1,10 +1,10 @@
 import { format, formatDistanceToNow } from "date-fns";
 import { Phone, Mail, FileText, PlayCircle, Clock } from "lucide-react";
-import { EmptyState } from "@odis/ui";
-import { Button } from "@odis/ui/button";
+import { EmptyState } from "@odis-ai/ui";
+import { Button } from "@odis-ai/ui/button";
 import { DischargeStatusBadge } from "./discharge-status-badge";
 import type { DashboardCase } from "~/types/dashboard";
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 
 interface DischargeActivityListProps {
   caseData: DashboardCase;

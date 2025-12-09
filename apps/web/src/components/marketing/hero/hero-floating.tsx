@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { usePostHog } from "posthog-js/react";
-import { EnhancedButton } from "@odis/ui/enhanced-button";
+import { EnhancedButton } from "@odis-ai/ui/enhanced-button";
 import WaitlistModal from "../waitlist-modal";
 import { ArrowRight } from "lucide-react";
-import { LightRays } from "@odis/ui/light-rays";
+import { LightRays } from "@odis-ai/ui/light-rays";
 import { useDeviceDetection } from "~/hooks/useDeviceDetection";
 
 export default function HeroFloating() {

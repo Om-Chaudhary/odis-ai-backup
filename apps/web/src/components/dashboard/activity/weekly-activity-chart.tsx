@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis/ui/card";
-import { EmptyState } from "@odis/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
+import { EmptyState } from "@odis-ai/ui";
 import { BarChart3 } from "lucide-react";
 import {
   BarChart,

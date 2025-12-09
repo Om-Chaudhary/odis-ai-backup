@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@odis/ui/button";
+import { Button } from "@odis-ai/ui/button";
 import type { DashboardSection } from "./dashboard-customization";
 
 export type DashboardPreset = {

@@ -7,8 +7,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@odis/ui/card";
-import { Button } from "@odis/ui/button";
+} from "@odis-ai/ui/card";
+import { Button } from "@odis-ai/ui/button";
 import { AlertCircle, RefreshCw } from "lucide-react";
 
 interface Props {

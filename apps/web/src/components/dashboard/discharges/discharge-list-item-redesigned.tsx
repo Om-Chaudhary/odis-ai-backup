@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent } from "@odis/ui/card";
-import { Button } from "@odis/ui/button";
-import { Input } from "@odis/ui/input";
+import { Card, CardContent } from "@odis-ai/ui/card";
+import { Button } from "@odis-ai/ui/button";
+import { Input } from "@odis-ai/ui/input";
 import { Phone, Mail, Edit2, Save, Loader2, AlertTriangle } from "lucide-react";
 
 /**
@@ -46,13 +46,13 @@ import type {
   PatientUpdateInput,
   DischargeSettings,
 } from "~/types/dashboard";
-import { cn } from "@odis/utils";
+import { cn } from "@odis-ai/utils";
 import {
   isPlaceholder,
   hasValidContact,
   getEffectiveContact,
-} from "@odis/utils/dashboard-helpers";
-import { Badge } from "@odis/ui/badge";
+} from "@odis-ai/utils/dashboard-helpers";
+import { Badge } from "@odis-ai/ui/badge";
 
 /**
  * Workflow status for a discharge case

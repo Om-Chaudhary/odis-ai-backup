@@ -2,15 +2,15 @@
 
 import { useEffect, useRef } from "react";
 import { useScroll, useTransform } from "framer-motion";
-import { GoogleGeminiEffectDemo3 } from "@odis/ui/google-gemini-effect-demo3";
+import { GoogleGeminiEffectDemo3 } from "@odis-ai/ui/google-gemini-effect-demo3";
 import { usePostHog } from "posthog-js/react";
 import { useDeviceDetection } from "~/hooks/useDeviceDetection";
-import { EnhancedButton } from "@odis/ui/enhanced-button";
+import { EnhancedButton } from "@odis-ai/ui/enhanced-button";
 import { ArrowRight, Clock, FileText, Zap, CheckCircle2 } from "lucide-react";
 import Navigation from "~/components/layout/navigation";
 import Footer from "~/components/layout/footer";
 import WaitlistModal from "~/components/marketing/waitlist-modal";
-import { Logos3 } from "@odis/ui/logos3";
+import { Logos3 } from "@odis-ai/ui/logos3";
 import FAQ from "~/components/marketing/faq";
 import Testimonials from "~/components/marketing/testimonials";
 import { useState } from "react";

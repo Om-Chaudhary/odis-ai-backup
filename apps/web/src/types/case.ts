@@ -4,7 +4,7 @@
  * Types related to case metadata and case-related data structures.
  */
 
-import type { NormalizedEntities } from "@odis/validators/scribe";
+import type { NormalizedEntities } from "@odis-ai/validators/scribe";
 import type { Database } from "~/database.types";
 
 /* ========================================

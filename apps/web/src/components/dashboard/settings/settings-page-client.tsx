@@ -13,14 +13,14 @@ import { DischargeSettingsForm } from "../discharges/discharge-settings-form";
 import { api } from "~/trpc/client";
 import type { DischargeSettings } from "~/types/dashboard";
 import { toast } from "sonner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/ui/tabs";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@odis/ui/card";
+} from "@odis-ai/ui/card";
 
 export function SettingsPageClient() {
   const router = useRouter();

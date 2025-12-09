@@ -1,8 +1,8 @@
 import { signIn } from "~/server/actions/auth";
 import Link from "next/link";
-import { Button } from "@odis/ui/button";
-import { Input } from "@odis/ui/input";
-import { Label } from "@odis/ui/label";
+import { Button } from "@odis-ai/ui/button";
+import { Input } from "@odis-ai/ui/input";
+import { Label } from "@odis-ai/ui/label";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

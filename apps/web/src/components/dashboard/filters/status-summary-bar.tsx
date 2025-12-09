@@ -1,8 +1,8 @@
 "use client";
 
-import { Card, CardContent } from "@odis/ui/card";
-import { NumberTicker } from "@odis/ui/number-ticker";
-import { FilterButtonGroup } from "@odis/ui";
+import { Card, CardContent } from "@odis-ai/ui/card";
+import { NumberTicker } from "@odis-ai/ui/number-ticker";
+import { FilterButtonGroup } from "@odis-ai/ui";
 
 interface StatusSummaryBarProps {
   totalCases: number;

@@ -7,13 +7,13 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis/ui/select";
-import { Label } from "@odis/ui/label";
-import { Button } from "@odis/ui/button";
-import { Spinner } from "@odis/ui/spinner";
+} from "@odis-ai/ui/select";
+import { Label } from "@odis-ai/ui/label";
+import { Button } from "@odis-ai/ui/button";
+import { Spinner } from "@odis-ai/ui/spinner";
 import { fetchPatients } from "~/server/actions/patients";
 import type { CallPatient } from "~/types/patient";
-import { formatPhoneNumber } from "@odis/utils/phone-formatting";
+import { formatPhoneNumber } from "@odis-ai/utils/phone-formatting";
 import { Plus } from "lucide-react";
 
 interface PatientSelectProps {

@@ -8,10 +8,10 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@odis/ui/dialog";
-import { Button } from "@odis/ui/button";
-import { Checkbox } from "@odis/ui/checkbox";
-import { Label } from "@odis/ui/label";
+} from "@odis-ai/ui/dialog";
+import { Button } from "@odis-ai/ui/button";
+import { Checkbox } from "@odis-ai/ui/checkbox";
+import { Label } from "@odis-ai/ui/label";
 import { Loader2, Share2 } from "lucide-react";
 import { toast } from "sonner";
 

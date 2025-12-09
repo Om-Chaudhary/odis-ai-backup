@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@odis/db/server";
+import { createClient } from "@odis-ai/db/server";
 import { getUser } from "./auth";
 import {
   sendCallSchema,
@@ -9,8 +9,8 @@ import {
   type SendCallInput,
   type ScheduleCallInput,
   type ImportCallsInput,
-} from "@odis/retell/validators";
-import { createPhoneCall } from "@odis/retell/client";
+} from "@odis-ai/retell/validators";
+import { createPhoneCall } from "@odis-ai/retell/client";
 
 /**
  * Check if user is admin

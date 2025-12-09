@@ -1,11 +1,11 @@
 import { getUser } from "~/server/actions/auth";
 import { redirect } from "next/navigation";
-import { createClient } from "@odis/db/server";
-import { getClinicByUserId } from "@odis/clinics/utils";
+import { createClient } from "@odis-ai/db/server";
+import { getClinicByUserId } from "@odis-ai/clinics/utils";
 import DashboardProfileHeader from "~/components/dashboard/profile/dashboard-profile-header";
 import { DashboardContentWithTabs } from "~/components/dashboard/shell/dashboard-content-with-tabs";
 import { ExtensionAuthHandler } from "~/components/dashboard/shell/extension-auth-handler";
-import { AUTH_PARAMS } from "@odis/constants/auth";
+import { AUTH_PARAMS } from "@odis-ai/constants/auth";
 
 interface DashboardPageProps {
   searchParams: Promise<{

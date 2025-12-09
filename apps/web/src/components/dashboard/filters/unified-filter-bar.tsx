@@ -1,18 +1,18 @@
 "use client";
 
-import { DayPaginationControls } from "@odis/ui";
+import { DayPaginationControls } from "@odis-ai/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis/ui/select";
-import { Label } from "@odis/ui/label";
-import { Input } from "@odis/ui/input";
+} from "@odis-ai/ui/select";
+import { Label } from "@odis-ai/ui/label";
+import { Input } from "@odis-ai/ui/input";
 import { Search, Info } from "lucide-react";
 import type { DischargeReadinessFilter } from "~/types/dashboard";
-import { Badge } from "@odis/ui/badge";
+import { Badge } from "@odis-ai/ui/badge";
 
 /**
  * VAPI call end reason filter options

@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@odis/db/server";
+import { createClient } from "@odis-ai/db/server";
 import { getUser } from "./auth";
 import {
   createPatientSchema,
@@ -11,7 +11,7 @@ import {
   type UpdatePatientInput,
   type GetPatientInput,
   type DeletePatientInput,
-} from "@odis/retell/validators";
+} from "@odis-ai/retell/validators";
 import type { CallPatient } from "~/types/patient";
 
 /**

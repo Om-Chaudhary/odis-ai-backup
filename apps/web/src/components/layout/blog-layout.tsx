@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowRight } from "lucide-react";
-import { Card } from "@odis/ui/card";
+import { Card } from "@odis-ai/ui/card";
 import Link from "next/link";
 import Image from "next/image";
 import { format } from "date-fns";

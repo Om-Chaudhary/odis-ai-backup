@@ -2,26 +2,26 @@
 
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Button } from "@odis/ui/button";
-import { Input } from "@odis/ui/input";
-import { Label } from "@odis/ui/label";
-import { Switch } from "@odis/ui/switch";
-import { Separator } from "@odis/ui/separator";
+import { Button } from "@odis-ai/ui/button";
+import { Input } from "@odis-ai/ui/input";
+import { Label } from "@odis-ai/ui/label";
+import { Switch } from "@odis-ai/ui/switch";
+import { Separator } from "@odis-ai/ui/separator";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis/ui/select";
+} from "@odis-ai/ui/select";
 import { Loader2, Info, Clock, Mail, Phone, Calendar } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@odis/ui/tooltip";
-import { Alert, AlertDescription } from "@odis/ui/alert";
+} from "@odis-ai/ui/tooltip";
+import { Alert, AlertDescription } from "@odis-ai/ui/alert";
 import type { DischargeSettings } from "~/types/dashboard";
 
 interface DischargeSettingsFormProps {

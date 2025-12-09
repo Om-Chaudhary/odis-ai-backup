@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
-import { createClient } from "@odis/db/server";
-import { getClinicBySlug, getClinicByUserId } from "@odis/clinics/utils";
+import { createClient } from "@odis-ai/db/server";
+import { getClinicBySlug, getClinicByUserId } from "@odis-ai/clinics/utils";
 import { ClinicProvider } from "~/lib/clinic-context";
 
 interface ClinicLayoutProps {

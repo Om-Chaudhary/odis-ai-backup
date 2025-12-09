@@ -6,7 +6,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@odis/ui/dialog";
+} from "@odis-ai/ui/dialog";
 import { DischargeSettingsForm } from "./discharge-settings-form";
 import type { DischargeSettings } from "~/types/dashboard";
 
