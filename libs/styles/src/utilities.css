@@ -1,0 +1,334 @@
+/**
+ * @odis-ai/styles - Utility Classes
+ *
+ * Shared utility classes for the ODIS design system.
+ * Platform-agnostic utilities for web, Chrome extension, and Electron apps.
+ */
+
+/* ============================================
+   Background Patterns
+   ============================================ */
+
+.animated-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, #f7fafc, #edf2f7, #e2e8f0, #cbd5e0);
+  background-size: 400% 400%;
+  animation: gradientAnimation 15s ease infinite;
+  opacity: 0.6;
+}
+
+.grain-texture {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(255, 255, 255, 0.15) 1px,
+    transparent 0
+  );
+  background-size: 20px 20px;
+  opacity: 0.1;
+}
+
+.dotted-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: radial-gradient(
+    circle at 2px 2px,
+    rgba(255, 255, 255, 0.3) 1px,
+    transparent 0
+  );
+  background-size: 24px 24px;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.bg-gradient-radial {
+  background-image: radial-gradient(circle, var(--tw-gradient-stops));
+}
+
+.hero-light-bg {
+  background: linear-gradient(to bottom, #ecfdf5, #f0fdfa, #f0fdfa) !important;
+}
+
+/* ============================================
+   Core Animation Utilities
+   ============================================ */
+
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.8s ease-out forwards;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ============================================
+   Dashboard Animation Utilities
+   ============================================ */
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-up-slow {
+  animation: fadeInUpSlow 1.2s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-up-slow-delay {
+  animation: fadeIn 0.4s ease-out 0.8s forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-down {
+  animation: fadeInDown 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.4s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.4s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.4s ease-out;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+.animate-skeleton-pulse {
+  animation: skeletonPulse 2s ease-in-out infinite;
+}
+
+/* ============================================
+   Card Animation Utilities
+   ============================================ */
+
+.animate-tab-content {
+  animation: fadeInUpSlow 1.2s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-card-in {
+  animation: fadeInUpSlow 0.8s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-card-content-in {
+  animation: fadeIn 0.4s ease-out 0.8s forwards;
+  opacity: 0;
+}
+
+.animate-card-in-delay-1 {
+  animation: fadeInUpSlow 0.8s ease-out 0.1s forwards;
+  opacity: 0;
+}
+
+.animate-card-in-delay-2 {
+  animation: fadeInUpSlow 0.8s ease-out 0.2s forwards;
+  opacity: 0;
+}
+
+.animate-card-in-delay-3 {
+  animation: fadeInUpSlow 0.8s ease-out 0.3s forwards;
+  opacity: 0;
+}
+
+/* ============================================
+   Background Animation Utilities
+   ============================================ */
+
+.animate-gradient-move {
+  animation: gradient-move 25s ease-in-out infinite;
+}
+
+.animate-gradient-move-reverse {
+  animation: gradient-move-reverse 28s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float-slow 18s ease-in-out infinite;
+}
+
+.animate-float-slow-reverse {
+  animation: float-slow-reverse 20s ease-in-out infinite;
+}
+
+/* ============================================
+   Blog Animation Utilities
+   ============================================ */
+
+.blog-gradient-move {
+  animation: blog-gradient-move 15s ease-in-out infinite;
+}
+
+.blog-gradient-move-reverse {
+  animation: blog-gradient-move-reverse 18s ease-in-out infinite;
+}
+
+.blog-float-slow {
+  animation: blog-float-slow 12s ease-in-out infinite;
+}
+
+.blog-float-slow-reverse {
+  animation: blog-float-slow-reverse 14s ease-in-out infinite;
+}
+
+.animate-gradient-subtle {
+  animation: blog-gradient-subtle 8s ease-in-out infinite;
+  background-size: 200% 200%;
+}
+
+.animate-pulse-slow {
+  animation: blog-pulse-slow 8s ease-in-out infinite;
+}
+
+/* ============================================
+   Hero Animation Utilities
+   ============================================ */
+
+.animate-draw-underline {
+  animation: draw-underline 1.2s ease-out 0.5s forwards;
+}
+
+.animate-draw-underline-glow {
+  animation: draw-underline-glow 1.5s ease-out 0.7s forwards;
+}
+
+.animate-float-gentle {
+  animation: float-gentle 16s ease-in-out infinite;
+}
+
+.animate-gradient-patient-care {
+  animation: gradient-patient-care 6s ease-in-out infinite;
+  background-size: 200% 200%;
+}
+
+.animate-gradient-patient-care-hover {
+  animation: gradient-patient-care-hover 3s ease-in-out infinite;
+  background-size: 200% 200%;
+}
+
+/* ============================================
+   Delay Utilities
+   ============================================ */
+
+.delay-200 {
+  animation-delay: 0.2s;
+}
+
+.delay-500 {
+  animation-delay: 0.5s;
+}
+
+.delay-1000 {
+  animation-delay: 1s;
+}
+
+.stagger-1 {
+  animation-delay: 0.05s;
+}
+
+.stagger-2 {
+  animation-delay: 0.1s;
+}
+
+.stagger-3 {
+  animation-delay: 0.15s;
+}
+
+.stagger-4 {
+  animation-delay: 0.2s;
+}
+
+.stagger-5 {
+  animation-delay: 0.25s;
+}
+
+.stagger-6 {
+  animation-delay: 0.3s;
+}
+
+/* ============================================
+   Transition Utilities
+   ============================================ */
+
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-smooth-lg {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   Print Styles
+   ============================================ */
+
+@media print {
+  .compliance-document {
+    max-width: 100%;
+  }
+
+  .compliance-document button {
+    text-decoration: underline;
+    color: #000;
+  }
+
+  .compliance-document a {
+    color: #000;
+    text-decoration: underline;
+  }
+
+  .compliance-document h1 {
+    font-size: 24pt;
+    page-break-after: avoid;
+  }
+
+  .compliance-document h2 {
+    font-size: 18pt;
+    page-break-after: avoid;
+    margin-top: 20pt;
+  }
+
+  .compliance-document h3 {
+    font-size: 14pt;
+    page-break-after: avoid;
+    margin-top: 16pt;
+  }
+
+  .compliance-document p,
+  .compliance-document li {
+    page-break-inside: avoid;
+    orphans: 3;
+    widows: 3;
+  }
+
+  .compliance-document section {
+    page-break-inside: avoid;
+  }
+
+  .compliance-document .no-print {
+    display: none !important;
+  }
+}

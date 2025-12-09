@@ -1,0 +1,18 @@
+/**
+ * @odis-ai/styles
+ *
+ * Shared design system styles for the ODIS platform.
+ * Platform-agnostic: usable in web, Chrome extension, and Electron apps.
+ *
+ * Usage:
+ *   @import "@odis-ai/styles";
+ *
+ * Or import individual modules:
+ *   @import "@odis-ai/styles/tokens.css";
+ *   @import "@odis-ai/styles/animations.css";
+ *   @import "@odis-ai/styles/utilities.css";
+ */
+
+@import "./tokens.css";
+@import "./animations.css";
+@import "./utilities.css";

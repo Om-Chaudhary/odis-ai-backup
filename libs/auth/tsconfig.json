@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "types": ["node", "chrome"]
+  },
+  "files": [],
+  "include": ["src/**/*.ts"],
+  "references": []
+}
