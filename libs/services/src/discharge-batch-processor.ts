@@ -191,7 +191,41 @@ export class DischargeBatchProcessor {
 
       const chunk = cases.slice(i, i + this.chunkSize);
       const chunkResults = await Promise.allSettled(
-        chunk.map((caseData) => this.processSingleCase(caseData, options)),
+        chunk.map((caseData, chunkIndex) => {
+          const globalIndex = i + chunkIndex;
+
+          // Calculate staggered times
+          // Emails: 20 seconds per case
+          // Calls: 2 minutes per case
+          const emailStagger = globalIndex * 20 * 1000; // 20 seconds in ms
+          const callStagger = globalIndex * 2 * 60 * 1000; // 2 minutes in ms
+
+          const staggeredEmailTime = new Date(
+            options.emailScheduleTime.getTime() + emailStagger,
+          );
+          const staggeredCallTime = new Date(
+            options.callScheduleTime.getTime() + callStagger,
+          );
+
+          console.log(
+            `[BatchProcessor] Staggering case ${globalIndex + 1}/${cases.length}`,
+            {
+              caseId: caseData.id,
+              patientName: caseData.patient_name,
+              emailStagger: `+${globalIndex * 20}s`,
+              callStagger: `+${globalIndex * 2}min`,
+              staggeredEmailTime: staggeredEmailTime.toISOString(),
+              staggeredCallTime: staggeredCallTime.toISOString(),
+            },
+          );
+
+          return this.processSingleCase(
+            caseData,
+            options,
+            staggeredEmailTime,
+            staggeredCallTime,
+          );
+        }),
       );
 
       // Process chunk results
@@ -269,6 +303,8 @@ export class DischargeBatchProcessor {
   private async processSingleCase(
     caseData: EligibleCase,
     options: BatchProcessingOptions,
+    staggeredEmailTime: Date,
+    staggeredCallTime: Date,
   ): Promise<{
     success: boolean;
     error?: string;
@@ -294,7 +330,7 @@ export class DischargeBatchProcessor {
         orchestrationSteps.scheduleEmail = {
           recipientEmail: caseData.owner_email,
           recipientName: caseData.owner_name ?? "Pet Owner",
-          scheduledFor: options.emailScheduleTime,
+          scheduledFor: staggeredEmailTime,
         };
       }
 
@@ -302,7 +338,7 @@ export class DischargeBatchProcessor {
       if (caseData.owner_phone) {
         orchestrationSteps.scheduleCall = {
           phoneNumber: caseData.owner_phone,
-          scheduledFor: options.callScheduleTime,
+          scheduledFor: staggeredCallTime,
         };
       }
 

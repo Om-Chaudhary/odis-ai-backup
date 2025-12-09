@@ -279,17 +279,39 @@ export function DischargeEmailTemplate({
   // Get owner's first name for greeting
   const ownerFirstName = ownerName?.split(" ")[0];
 
-  // Function to replace "today" with generic wording
+  // Function to replace relative date references with generic wording
   const processAppointmentSummary = (
     summary: string | undefined,
   ): string | undefined => {
     if (!summary) return undefined;
 
-    // Use generic wording instead of specific dates
-    return summary
-      .replace(/came in today for/gi, "came in for")
-      .replace(/visited us today for/gi, "visited us for")
-      .replace(/\btoday\b/gi, "during the visit");
+    // Normalize relative day references to avoid incorrect "yesterday/today" phrasing
+    const replacements: Array<[RegExp, string]> = [
+      [/came in today for/gi, "came in for"],
+      [/visited us today for/gi, "visited us for"],
+      [/came in yesterday for/gi, "came in for"],
+      [/visited us yesterday for/gi, "visited us for"],
+      [/\btoday\b/gi, "during the visit"],
+      [/\byesterday\b/gi, "during the visit"],
+      [/\blast night\b/gi, "during the visit"],
+      [/\bthis (morning|afternoon|evening)\b/gi, "during the visit"],
+      [/\bearlier this week\b/gi, "during the recent visit"],
+    ];
+
+    const cleaned = replacements.reduce(
+      (current, [pattern, replacement]) =>
+        current.replace(pattern, replacement),
+      summary,
+    );
+
+    // Avoid specific weekday references that may be inaccurate by the time the email is sent
+    const withoutWeekdays = cleaned.replace(
+      /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/gi,
+      "during the visit",
+    );
+
+    // Collapse any double spaces from replacements
+    return withoutWeekdays.replace(/\s{2,}/g, " ").trim();
   };
 
   // Use appointment summary if available, otherwise fall back to generic greeting

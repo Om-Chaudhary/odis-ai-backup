@@ -37,6 +37,16 @@ import {
   DropdownMenuTrigger,
 } from "@odis-ai/ui/dropdown-menu";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@odis-ai/ui/alert-dialog";
+import {
   isPlaceholder,
   hasValidContact,
   getEffectiveContact,
@@ -136,6 +146,47 @@ function formatType(
     .join(" ");
 }
 
+/**
+ * Get the current status of discharge calls for this case
+ */
+function getCallStatus(caseData: DashboardCase): string {
+  if (
+    !caseData.scheduled_discharge_calls ||
+    caseData.scheduled_discharge_calls.length === 0
+  )
+    return "scheduled";
+
+  const latestCall = caseData.scheduled_discharge_calls[0];
+  const status = latestCall?.status;
+
+  if (status === "completed") return "completed";
+  if (status === "failed") return "failed";
+  if (status === "in_progress" || status === "ringing") return "in progress";
+  if (status === "queued") return "queued";
+
+  return "scheduled";
+}
+
+/**
+ * Get the current status of discharge emails for this case
+ */
+function getEmailStatus(caseData: DashboardCase): string {
+  if (
+    !caseData.scheduled_discharge_emails ||
+    caseData.scheduled_discharge_emails.length === 0
+  )
+    return "scheduled";
+
+  const latestEmail = caseData.scheduled_discharge_emails[0];
+  const status = latestEmail?.status;
+
+  if (status === "sent") return "sent";
+  if (status === "failed") return "failed";
+  if (status === "queued") return "queued";
+
+  return "scheduled";
+}
+
 interface CaseCardProps {
   caseData: DashboardCase;
   backendCaseData?: PartialBackendCase;
@@ -175,6 +226,8 @@ export function CaseCard({
   });
 
   const workflowStatus = getCaseWorkflowStatus(caseData);
+  const [showCallConfirmation, setShowCallConfirmation] = useState(false);
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
 
   // Get effective contact values
   const effectivePhone = getEffectiveContact(
@@ -229,6 +282,36 @@ export function CaseCard({
     setIsEditing(false);
   };
 
+  const handleCallClick = () => {
+    const callStatus = getCallStatus(caseData);
+
+    if (callStatus !== "scheduled") {
+      setShowCallConfirmation(true);
+    } else {
+      onTriggerCall(caseData.id);
+    }
+  };
+
+  const handleEmailClick = () => {
+    const emailStatus = getEmailStatus(caseData);
+
+    if (emailStatus !== "scheduled") {
+      setShowEmailConfirmation(true);
+    } else {
+      onTriggerEmail(caseData.id);
+    }
+  };
+
+  const confirmCall = () => {
+    setShowCallConfirmation(false);
+    onTriggerCall(caseData.id);
+  };
+
+  const confirmEmail = () => {
+    setShowEmailConfirmation(false);
+    onTriggerEmail(caseData.id);
+  };
+
   // --- Latest Activity Logic ---
   const allActivities = [
     ...(caseData.scheduled_discharge_calls?.map((c) => ({
@@ -280,7 +363,7 @@ export function CaseCard({
     if (workflowStatus === "failed") {
       return (
         <Button
-          onClick={() => onTriggerCall(caseData.id)}
+          onClick={handleCallClick}
           disabled={isLoadingCall || !hasValidContact(effectivePhone)}
           variant="destructive"
           className="transition-smooth w-full gap-2"
@@ -298,7 +381,7 @@ export function CaseCard({
     // Default: Ready
     return (
       <Button
-        onClick={() => onTriggerCall(caseData.id)}
+        onClick={handleCallClick}
         disabled={isLoadingCall || !hasValidContact(effectivePhone)}
         className="transition-smooth w-full gap-2 hover:shadow-md"
       >
@@ -586,6 +669,30 @@ export function CaseCard({
             </div>
           </div>
         )}
+
+        {/* Already Sent Warning - Show info about previous communications */}
+        {(getCallStatus(caseData) !== "scheduled" ||
+          getEmailStatus(caseData) !== "scheduled") && (
+          <div className="mb-3 rounded-lg border border-blue-200 bg-blue-50/50 p-2.5 text-sm text-blue-700">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="flex-1 space-y-1">
+                {getCallStatus(caseData) !== "scheduled" && (
+                  <div>
+                    Discharge call already{" "}
+                    <strong>{getCallStatus(caseData)}</strong>
+                  </div>
+                )}
+                {getEmailStatus(caseData) !== "scheduled" && (
+                  <div>
+                    Discharge email already{" "}
+                    <strong>{getEmailStatus(caseData)}</strong>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
 
       <CardFooter className="border-t border-slate-100 bg-slate-50/50 p-3 pl-5">
@@ -599,7 +706,7 @@ export function CaseCard({
                 variant="ghost"
                 size="icon"
                 className="transition-smooth shrink-0 text-slate-400 hover:bg-[#31aba3]/5 hover:text-[#31aba3]"
-                onClick={() => onTriggerEmail(caseData.id)}
+                onClick={handleEmailClick}
                 disabled={isLoadingEmail || !hasValidContact(effectiveEmail)}
                 title="Send Discharge Email"
               >
@@ -626,6 +733,54 @@ export function CaseCard({
           </Button>
         </div>
       </CardFooter>
+
+      {/* Call Confirmation Dialog */}
+      <AlertDialog
+        open={showCallConfirmation}
+        onOpenChange={setShowCallConfirmation}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Discharge Call</AlertDialogTitle>
+            <AlertDialogDescription>
+              This case already has a call that is{" "}
+              <strong>{getCallStatus(caseData)}</strong>. Sending another call
+              may result in duplicate communications to the pet owner. Are you
+              sure you want to send a new call?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmCall}>
+              Yes, Send Call
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Email Confirmation Dialog */}
+      <AlertDialog
+        open={showEmailConfirmation}
+        onOpenChange={setShowEmailConfirmation}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Discharge Email</AlertDialogTitle>
+            <AlertDialogDescription>
+              This case already has an email that is{" "}
+              <strong>{getEmailStatus(caseData)}</strong>. Sending another email
+              may result in duplicate communications to the pet owner. Are you
+              sure you want to send a new email?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmEmail}>
+              Yes, Send Email
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
