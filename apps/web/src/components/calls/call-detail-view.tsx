@@ -30,7 +30,7 @@ import {
 import { Button } from "@odis/ui/button";
 import { Separator } from "@odis/ui/separator";
 import { ScrollArea } from "@odis/ui/scroll-area";
-import { DischargeStatusBadge } from "~/components/dashboard/discharge-status-badge";
+import { DischargeStatusBadge } from "~/components/dashboard/discharges/discharge-status-badge";
 import type { CallDetails } from "~/types/dashboard";
 import { cn } from "@odis/utils";
 
