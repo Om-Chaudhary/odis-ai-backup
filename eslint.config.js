@@ -35,7 +35,6 @@ export default tseslint.config(
       // Auto-generated files
       "src/database.types.ts",
       "libs/types/src/database.types.ts",
-      "apps/web/src/database.types.ts",
       // Markdown documentation
       "**/*.md",
     ],

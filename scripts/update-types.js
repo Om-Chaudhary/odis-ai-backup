@@ -1,7 +1,16 @@
 #!/usr/bin/env node
 /**
  * Script to update database types from Supabase
- * Extracts project ref from NEXT_PUBLIC_SUPABASE_URL or uses PROJECT_REF env var
+ *
+ * Generates TypeScript types from Supabase database schema to:
+ *   libs/types/src/database.types.ts
+ *
+ * Usage:
+ *   pnpm update-types
+ *
+ * Requirements:
+ *   - NEXT_PUBLIC_SUPABASE_URL or PROJECT_REF environment variable
+ *   - Supabase CLI will be installed via npx if not present
  */
 
 import { execSync } from "child_process";

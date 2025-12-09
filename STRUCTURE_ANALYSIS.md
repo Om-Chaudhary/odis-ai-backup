@@ -28,7 +28,6 @@
 │   ├── lib/                       # Utility libraries
 │   ├── hooks/                     # Custom React hooks
 │   ├── types/                     # TypeScript types
-│   ├── sanity/                    # Sanity CMS config
 │   ├── trpc/                      # tRPC client setup
 │   ├── test/                      # Test utilities
 │   ├── styles/                    # Global styles
@@ -53,7 +52,6 @@
 ├── postcss.config.js              # PostCSS configuration
 ├── components.json                # UI component config
 ├── vitest.config.ts               # Test configuration
-├── sanity.config.ts               # Sanity CMS config
 └── vercel.json                    # Vercel configuration
 ```
 
@@ -108,10 +106,6 @@
 - **`/admin/feature-flags`** → `src/app/admin/feature-flags/page.tsx` - Feature toggle management
 - **`/admin/soap-playground`** → `src/app/admin/soap-playground/page.tsx` - SOAP note generation testing
 - **`/admin/vapi-test`** → `src/app/admin/vapi-test/page.tsx` - VAPI call testing
-
-### CMS Routes
-
-- **`/studio`** → `src/app/studio/[[...tool]]/page.tsx` - Sanity Studio (CMS editor)
 
 ### Special Routes
 
@@ -585,37 +579,7 @@ src/data/
 
 ---
 
-## 9. Sanity CMS Integration
-
-### File Structure
-
-```
-src/sanity/
-├── env.ts                 # Sanity environment config
-├── lib/
-│   ├── client.ts          # Sanity client
-│   ├── image.ts           # Image URL builder
-│   └── live.ts            # Live content
-├── schemaTypes/
-│   ├── index.ts
-│   ├── authorType.ts      # Author schema
-│   ├── blockContentType.ts # Block content
-│   ├── categoryType.ts    # Category schema
-│   └── postType.ts        # Blog post schema
-└── structure.ts           # Studio structure
-```
-
-### Features
-
-- Blog post management
-- Author management
-- Categories
-- Rich text content blocks
-- Image management
-
----
-
-## 10. tRPC Client Setup
+## 9. tRPC Client Setup
 
 ```typescript
 // src/trpc/Provider.tsx - React Query provider setup
@@ -651,7 +615,7 @@ src/test/
 
 ---
 
-## 12. Environment Variables
+## 10. Environment Variables
 
 ### Required Variables
 
@@ -660,11 +624,6 @@ src/test/
 NEXT_PUBLIC_SUPABASE_URL=        # Project URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY=   # Anon key
 SUPABASE_SERVICE_ROLE_KEY=       # Service role
-
-# Sanity CMS
-NEXT_PUBLIC_SANITY_PROJECT_ID=   # Project ID
-NEXT_PUBLIC_SANITY_DATASET=production
-NEXT_PUBLIC_SANITY_API_VERSION=  # API version
 
 # Analytics
 NEXT_PUBLIC_POSTHOG_KEY=         # PostHog key
@@ -728,15 +687,9 @@ NODE_ENV=                        # development/production
 - Shadcn/UI component configuration
 - Aliases and paths
 
-### sanity.cli.ts & sanity.config.ts
-
-- Sanity project configuration
-- Schema types
-- Dataset configuration
-
 ---
 
-## 14. Database & Migrations
+## 11. Database & Migrations
 
 ### Supabase Migrations
 
@@ -771,13 +724,12 @@ migrations/
 
 ---
 
-## 15. Styling & Design
+## 12. Styling & Design
 
 ### Styling Stack
 
 - **CSS Framework**: Tailwind CSS 4
 - **Component Library**: Shadcn/UI (Radix primitives)
-- **CSS-in-JS**: Styled Components
 - **Icons**: Lucide React
 - **Animations**: Framer Motion, Canvas Confetti
 - **Charts**: Recharts
@@ -797,7 +749,7 @@ src/styles/globals.css
 
 ---
 
-## 16. Middleware & Authentication
+## 13. Middleware & Authentication
 
 ### Middleware Flow
 
@@ -981,12 +933,6 @@ docs/
 - `retell-sdk@4.56.0` - Retell AI
 - `resend@6.4.2` - Email service
 
-### CMS
-
-- `sanity@4` - Headless CMS
-- `next-sanity@11` - Sanity integration
-- `@sanity/vision@4` - Query builder
-
 ### Analytics
 
 - `posthog-js@1.275.1` - Frontend analytics
@@ -1087,7 +1033,6 @@ docs/
 
 ### Phase 5: Integration & Testing
 
-- [ ] Configure Sanity CMS
 - [ ] Set up PostHog analytics
 - [ ] Configure VAPI & QStash
 - [ ] Copy test utilities

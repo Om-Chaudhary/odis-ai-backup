@@ -8,7 +8,6 @@ import ClientPostHogProvider from "~/components/ClientPostHogProvider";
 import { TRPCReactProvider } from "~/trpc/Provider";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { env } from "~/env.js";
-import StyledComponentsRegistry from "~/lib/styled-components-registry";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -175,13 +174,11 @@ export default function RootLayout({
       <body
         className={`font-sans ${outfit.variable} ${inter.variable} ${lora.variable} ${geistMono.variable}`}
       >
-        <StyledComponentsRegistry>
-          <ClientPostHogProvider>
-            <TRPCReactProvider>
-              <NuqsAdapter>{children}</NuqsAdapter>
-            </TRPCReactProvider>
-          </ClientPostHogProvider>
-        </StyledComponentsRegistry>
+        <ClientPostHogProvider>
+          <TRPCReactProvider>
+            <NuqsAdapter>{children}</NuqsAdapter>
+          </TRPCReactProvider>
+        </ClientPostHogProvider>
       </body>
     </html>
   );
