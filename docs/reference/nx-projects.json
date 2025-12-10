@@ -183,26 +183,9 @@
     "targets": ["lint", "typecheck"]
   },
   {
-    "name": "services",
-    "type": "lib",
-    "scope": "services",
-    "platform": "node",
-    "sourceRoot": "libs/services/src",
-    "targets": [
-      "build-deps",
-      "lint",
-      "test",
-      "test-ci",
-      "test-ci--src/__tests__/discharge-batch-stagger.test.ts",
-      "typecheck",
-      "vitest:test",
-      "watch-deps"
-    ]
-  },
-  {
     "name": "services-cases",
     "type": "lib",
-    "scope": "domain",
+    "scope": "services",
     "platform": "node",
     "sourceRoot": "libs/services-cases/src",
     "targets": [
@@ -218,7 +201,7 @@
   {
     "name": "services-discharge",
     "type": "lib",
-    "scope": "domain",
+    "scope": "services",
     "platform": "node",
     "sourceRoot": "libs/services-discharge/src",
     "targets": [
@@ -236,7 +219,7 @@
   {
     "name": "services-shared",
     "type": "lib",
-    "scope": "shared",
+    "scope": "services",
     "platform": "node",
     "sourceRoot": "libs/services-shared/src",
     "targets": [

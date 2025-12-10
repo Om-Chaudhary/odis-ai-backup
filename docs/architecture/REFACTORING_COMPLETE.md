@@ -188,17 +188,17 @@ export interface IEmailClient {
 
 **Before**: `libs/services` (4,037 lines, monolithic)
 
-**After**: 3 focused libraries
+**After**: 3 focused libraries (old `libs/services` deleted)
 
 ```
-libs/services-cases/           (scope:domain)
+libs/services-cases/           (scope:services)
 ├── src/
 │   ├── cases-service.ts
 │   ├── interfaces.ts
 │   └── index.ts
 └── project.json
 
-libs/services-discharge/       (scope:domain)
+libs/services-discharge/       (scope:services)
 ├── src/
 │   ├── discharge-orchestrator.ts
 │   ├── discharge-batch-processor.ts
@@ -207,7 +207,7 @@ libs/services-discharge/       (scope:domain)
 │   └── index.ts
 └── project.json
 
-libs/services-shared/          (scope:shared)
+libs/services-shared/          (scope:services)
 ├── src/
 │   ├── execution-plan.ts
 │   └── index.ts
@@ -220,6 +220,9 @@ libs/services-shared/          (scope:shared)
 - Testable service layer without real infrastructure
 - Clear separation between domain services and shared logic
 - 12+ comprehensive tests for discharge batch processing
+- ✅ **Old monolithic `libs/services` deleted** (Dec 10, 2025)
+- ✅ **All imports updated to new library paths** (Dec 10, 2025)
+- ✅ **ESLint boundary violations resolved** (scope tags aligned)
 
 ---
 
@@ -601,6 +604,59 @@ This refactoring was guided by:
 
 ---
 
+## Phase 4: Post-Migration Cleanup ✅
+
+**Date**: December 10, 2025 (Same Day)  
+**Status**: Complete
+
+### Final Migration Cleanup
+
+After the initial migration was marked complete, a final cleanup pass was performed to fully remove the old monolithic service library and update all remaining references:
+
+#### Changes Made
+
+1. **Scope Tag Alignment** (3 files)
+   - Updated `services-cases` from `scope:domain` → `scope:services`
+   - Updated `services-discharge` from `scope:domain` → `scope:services`
+   - Updated `services-shared` from `scope:shared` → `scope:services`
+   - Aligns with ESLint module boundary rules
+
+2. **Import Path Updates** (6 files)
+   - `apps/web/src/app/api/cases/ingest/route.ts`
+   - `apps/web/src/app/api/webhooks/execute-call/route.ts`
+   - `apps/web/src/app/api/generate/discharge-summary/route.ts`
+   - `apps/web/src/app/api/normalize/route.ts`
+   - `apps/web/src/app/api/discharge/orchestrate/route.ts`
+   - `apps/web/src/app/api/discharge/batch/route.ts`
+   - Changed from `@odis-ai/services/*` → direct imports from split libraries
+
+3. **TypeScript Path Mapping Cleanup** (2 files)
+   - Removed old `@odis-ai/services` paths from `tsconfig.base.json`
+   - Removed old `@odis-ai/services/*` paths from `apps/web/tsconfig.json`
+   - Removed `~/lib/services/*` legacy path mapping
+
+4. **Directory Deletion**
+   - ✅ Deleted `libs/services/` - Old 4,037 line monolithic library
+   - ✅ Deleted `apps/web/src/lib/services/` - Empty legacy directory
+
+#### Verification Results
+
+- ✅ All 27 projects typecheck successfully
+- ✅ 0 ESLint module boundary errors (was 6+)
+- ✅ Services-discharge tests: 4/4 passing
+- ✅ Nx dependency graph clean
+- ✅ Documentation regenerated
+
+#### Benefits Realized
+
+- Eliminated 4,037 lines of duplicate code
+- Resolved 6+ ESLint boundary violations
+- Cleaned up 6+ stale TypeScript path mappings
+- Fully completed the service layer migration
+- Production-ready with no backward compatibility shims
+
+---
+
 ## Conclusion
 
 The Nx monorepo refactoring is **complete and production-ready**. The codebase is now:
@@ -609,15 +665,18 @@ The Nx monorepo refactoring is **complete and production-ready**. The codebase i
 - ✅ **Testable** - DI interfaces, comprehensive validator tests
 - ✅ **Maintainable** - Single source of truth, clear patterns
 - ✅ **Scalable** - Ready for multi-app expansion
-- ✅ **Type-safe** - All 28 projects typecheck successfully
+- ✅ **Type-safe** - All 27 projects typecheck successfully
+- ✅ **Clean** - No legacy code, all migrations complete
 
 **All objectives achieved. Ready for continued development.** 🚀
 
 ---
 
 **Refactoring Complete**: December 10, 2025  
-**Total Commits**: 7  
+**Cleanup Complete**: December 10, 2025 (Same Day)  
+**Total Commits**: 8 (including cleanup)  
 **Lines Refactored**: 10,000+  
+**Lines Removed**: 4,037 (cleanup)  
 **New Tests**: 236+  
-**Projects**: 28  
+**Projects**: 27 (after cleanup)  
 **Status**: ✅ **PRODUCTION READY**
