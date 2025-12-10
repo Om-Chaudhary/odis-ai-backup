@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/services-cases/src",
   "projectType": "library",
-  "tags": ["type:lib", "scope:domain", "platform:node"],
+  "tags": ["type:lib", "scope:services", "platform:node"],
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",

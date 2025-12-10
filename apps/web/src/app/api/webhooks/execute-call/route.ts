@@ -7,7 +7,7 @@ import { buildDynamicVariables } from "@odis-ai/vapi/knowledge-base";
 
 // Dynamic import to avoid bundling @react-email/components during static generation
 async function getCasesService() {
-  const { CasesService } = await import("@odis-ai/services/cases-service");
+  const { CasesService } = await import("@odis-ai/services-cases");
   return CasesService;
 }
 import { extractVapiVariablesFromEntities } from "@odis-ai/vapi/extract-variables";

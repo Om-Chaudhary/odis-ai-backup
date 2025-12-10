@@ -12,7 +12,7 @@ import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-s
 
 // Dynamic import to avoid bundling @react-email/components during static generation
 async function getCasesService() {
-  const { CasesService } = await import("@odis-ai/services/cases-service");
+  const { CasesService } = await import("@odis-ai/services-cases");
   return CasesService;
 }
 
