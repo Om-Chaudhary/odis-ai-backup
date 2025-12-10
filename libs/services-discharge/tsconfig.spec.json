@@ -1,6 +1,7 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "module": "ESNext",
     "outDir": "../../dist/out-tsc",
     "types": [
       "vitest/globals",
@@ -8,7 +9,8 @@
       "vite/client",
       "node",
       "vitest"
-    ]
+    ],
+    "strict": true
   },
   "include": [
     "vite.config.ts",
