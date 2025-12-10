@@ -8,7 +8,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "~/database.types";
+import type { Database } from "@odis-ai/types";
 import type { NormalizedEntities } from "@odis-ai/validators/scribe";
 import {
   parseWeightToKg,

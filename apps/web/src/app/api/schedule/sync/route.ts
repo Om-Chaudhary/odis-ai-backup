@@ -8,7 +8,7 @@ import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/api/cors";
 import {
   type AppointmentInput,
   ScheduleSyncRequestSchema,
-} from "~/lib/schedule/validators";
+} from "@odis-ai/validators/schedule";
 import { getClinicByUserId, getOrCreateProvider } from "@odis-ai/clinics/utils";
 import type { Database, Json } from "~/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";

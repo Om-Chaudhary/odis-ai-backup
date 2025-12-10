@@ -94,16 +94,22 @@ export const AppointmentInputSchema = z.object({
     .default("scheduled")
     .refine(
       (status) =>
-        ["scheduled", "confirmed", "cancelled", "completed", "no_show"]
-          .includes(
-            status,
-          ),
+        [
+          "scheduled",
+          "confirmed",
+          "cancelled",
+          "completed",
+          "no_show",
+        ].includes(status),
       {
         message:
           "Status must be one of: scheduled, confirmed, cancelled, completed, no_show",
       },
     ),
-  notes: z.string().max(5000, "Notes cannot exceed 5000 characters").optional()
+  notes: z
+    .string()
+    .max(5000, "Notes cannot exceed 5000 characters")
+    .optional()
     .nullable(),
 
   // Provider information (for lookup/creation)

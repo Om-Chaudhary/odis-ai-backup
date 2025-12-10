@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, type ReactNode } from "react";
-import type { Database } from "~/database.types";
+import type { Database } from "@odis-ai/types";
 
 type Clinic = Database["public"]["Tables"]["clinics"]["Row"];
 

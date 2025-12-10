@@ -17,3 +17,6 @@ export * from "./discharge-summary";
 
 // Orchestration schemas
 export * from "./orchestration";
+
+// Schedule sync schemas
+export * from "./lib/schedule";

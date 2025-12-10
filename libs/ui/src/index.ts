@@ -68,3 +68,6 @@ export * from "./pagination-controls";
 export * from "./filter-button-group";
 export * from "./audio-player";
 export * from "./day-pagination";
+
+// Context providers
+export * from "./lib/clinic-context";

@@ -1,5 +1,5 @@
-import type { BackendCase, DashboardCase } from "~/types/dashboard";
-import { checkCaseDischargeReadiness } from "@odis-ai/utils/discharge-readiness";
+import type { BackendCase, DashboardCase } from "@odis-ai/types";
+import { checkCaseDischargeReadiness } from "../discharge-readiness";
 
 /**
  * Partial BackendCase type for list queries that don't return all fields
