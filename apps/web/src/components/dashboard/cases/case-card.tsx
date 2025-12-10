@@ -21,16 +21,6 @@ import {
   Database,
   FileCode,
 } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "~/components/ui/alert-dialog";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import type {
@@ -38,7 +28,7 @@ import type {
   PatientUpdateInput,
   DischargeSettings,
 } from "~/types/dashboard";
-import type { PartialBackendCase } from "~/lib/transforms/case-transforms";
+import type { PartialBackendCase } from "@odis-ai/utils/case-transforms";
 import { cn } from "@odis-ai/utils";
 import {
   DropdownMenu,
@@ -238,8 +228,6 @@ export function CaseCard({
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
 
   const workflowStatus = getCaseWorkflowStatus(caseData);
-  const [showCallConfirmation, setShowCallConfirmation] = useState(false);
-  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
 
   // Get effective contact values
   const effectivePhone = getEffectiveContact(

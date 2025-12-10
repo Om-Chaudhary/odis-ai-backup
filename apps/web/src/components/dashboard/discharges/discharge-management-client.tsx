@@ -27,7 +27,7 @@ import type {
   DischargeSettings,
   PatientUpdateInput,
 } from "~/types/dashboard";
-import { transformBackendCasesToDashboardCases } from "~/lib/transforms/case-transforms";
+import { transformBackendCasesToDashboardCases } from "@odis-ai/utils/case-transforms";
 import {
   normalizePlaceholder,
   hasValidContact,

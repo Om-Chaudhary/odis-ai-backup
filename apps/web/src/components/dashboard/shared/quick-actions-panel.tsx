@@ -10,7 +10,7 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
-import { buildClinicUrl, useOptionalClinic } from "~/lib/clinic-context";
+import { buildClinicUrl, useOptionalClinic } from "@odis-ai/ui/clinic-context";
 
 export function QuickActionsPanel() {
   const clinicContext = useOptionalClinic();
