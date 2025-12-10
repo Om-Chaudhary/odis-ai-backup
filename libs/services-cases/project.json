@@ -5,15 +5,14 @@
   "projectType": "library",
   "tags": ["type:lib", "scope:services", "platform:node"],
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+    "typecheck": {
+      "executor": "nx:run-commands",
       "options": {
-        "outputPath": "dist/libs/services-cases",
-        "main": "libs/services-cases/src/index.ts",
-        "tsConfig": "libs/services-cases/tsconfig.lib.json",
-        "assets": ["libs/services-cases/*.md"]
-      }
+        "command": "tsc --noEmit -p tsconfig.lib.json",
+        "cwd": "libs/services-cases"
+      },
+      "cache": true,
+      "inputs": ["default", "^default"]
     }
   }
 }

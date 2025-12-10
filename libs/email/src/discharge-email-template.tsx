@@ -1,37 +1,13 @@
-// Import components individually to avoid the @react-email/components barrel export
-// which pulls in the Html component that throws errors during Next.js static generation
-import { Body } from "@react-email/body";
-import { Container } from "@react-email/container";
-import { Head } from "@react-email/head";
-import { Heading } from "@react-email/heading";
-import { Hr } from "@react-email/hr";
-import { Img } from "@react-email/img";
-import { Link } from "@react-email/link";
-import { Preview } from "@react-email/preview";
-import { Section } from "@react-email/section";
-import { Text } from "@react-email/text";
-import { Row } from "@react-email/row";
-import { Column } from "@react-email/column";
-// Use custom Html wrapper to avoid the Next.js detection error
-import { HtmlWrapper as Html } from "./html-wrapper";
+/**
+ * Discharge Email Template - Plain HTML Generator
+ *
+ * Generates clean, professional veterinary discharge emails without React Email components.
+ * This avoids the "Html should not be imported outside of pages/_document" error
+ * during Next.js static generation.
+ */
+
 import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
 import { getWarningSignsHybrid } from "@odis-ai/email/warning-signs-library";
-
-/**
- * Discharge Email Template - Using React Email Components
- *
- * A clean, professional veterinary discharge email template.
- * Uses @react-email/components for optimal email client compatibility.
- *
- * Section Order (natural client flow):
- * 1. Header - Pet name, clinic branding, visit date & highlights
- * 2. Medications - Most actionable: what do I need to give my pet?
- * 3. Caring for [Pet] at Home - Home care instructions
- * 4. What to Watch For - Warning signs
- * 5. What's Next - Follow-up appointment
- * 6. Notes - Additional information
- * 7. Footer - Contact info
- */
 
 export interface DischargeEmailProps {
   patientName: string;
@@ -53,7 +29,7 @@ export interface DischargeEmailProps {
 
 // Color palette
 const colors = {
-  primary: "#0F766E", // Teal for Alum Rock
+  primary: "#0F766E",
   danger: "#DC2626",
   warning: "#D97706",
   text: {
@@ -74,143 +50,32 @@ const colors = {
   border: "#E5E7EB",
 };
 
-// Styles
-const main: React.CSSProperties = {
-  backgroundColor: colors.background.page,
-  fontFamily:
-    '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-};
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
-const container: React.CSSProperties = {
-  margin: "0 auto",
-  padding: "24px 16px",
-  maxWidth: "600px",
-};
+export function DischargeEmailTemplate(props: DischargeEmailProps): string {
+  const {
+    patientName,
+    ownerName,
+    structuredContent,
+    dischargeSummaryContent,
+    date = "Recent Visit",
+    clinicName,
+    clinicPhone,
+    primaryColor = colors.primary,
+    logoUrl,
+  } = props;
 
-const card: React.CSSProperties = {
-  backgroundColor: colors.background.card,
-  borderRadius: "16px",
-  overflow: "hidden",
-  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-};
-
-const headerStyle: React.CSSProperties = {
-  padding: "28px 32px 24px",
-  background: `linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%)`,
-};
-
-const sectionStyle: React.CSSProperties = {
-  padding: "0 32px",
-  marginBottom: "24px",
-};
-
-const sectionTitleStyle: React.CSSProperties = {
-  fontSize: "12px",
-  fontWeight: "600",
-  color: colors.text.secondary,
-  textTransform: "uppercase" as const,
-  letterSpacing: "0.5px",
-  margin: "0 0 12px 0",
-};
-
-const tagStyle: React.CSSProperties = {
-  display: "inline-block",
-  padding: "6px 14px",
-  backgroundColor: "rgba(19, 78, 74, 0.12)",
-  borderRadius: "20px",
-  fontSize: "13px",
-  fontWeight: "500",
-  color: "#134E4A",
-  marginRight: "8px",
-  marginBottom: "8px",
-};
-
-const medicationRowStyle: React.CSSProperties = {
-  padding: "20px",
-  marginBottom: "16px",
-  backgroundColor: colors.background.accent,
-  borderRadius: "12px",
-  border: `2px solid #0F766E20`,
-};
-
-const medicationBadgeStyle: React.CSSProperties = {
-  display: "inline-block",
-  padding: "8px 16px",
-  backgroundColor: "#0F766E",
-  color: "white",
-  fontSize: "13px",
-  fontWeight: "600",
-  borderRadius: "8px",
-  marginTop: "8px",
-};
-
-const medicationHeaderStyle: React.CSSProperties = {
-  backgroundColor: "#0F766E",
-  color: "white",
-  borderRadius: "8px 8px 0 0",
-  padding: "16px 20px",
-  margin: "0 0 24px 0",
-};
-
-const warningBoxStyle: React.CSSProperties = {
-  backgroundColor: colors.background.danger,
-  borderLeft: `4px solid ${colors.danger}`,
-  borderRadius: "0 8px 8px 0",
-  padding: "20px",
-};
-
-const checkboxStyle: React.CSSProperties = {
-  width: "16px",
-  height: "16px",
-  border: `2px solid ${colors.danger}`,
-  borderRadius: "3px",
-  marginRight: "12px",
-  display: "inline-block",
-  verticalAlign: "top",
-  marginTop: "2px",
-};
-
-const homeCareBoxStyle: React.CSSProperties = {
-  backgroundColor: colors.background.muted,
-  border: `1px solid ${colors.border}`,
-  borderRadius: "8px",
-  padding: "20px",
-};
-
-const followUpBoxStyle: React.CSSProperties = {
-  backgroundColor: colors.background.info,
-  borderRadius: "8px",
-  padding: "16px 20px",
-};
-
-const footerStyle: React.CSSProperties = {
-  padding: "20px 32px",
-  backgroundColor: colors.background.muted,
-  borderTop: `1px solid ${colors.border}`,
-};
-
-const bottomFooterStyle: React.CSSProperties = {
-  padding: "12px 32px",
-  backgroundColor: colors.background.page,
-  borderTop: `1px solid ${colors.border}`,
-};
-
-export function DischargeEmailTemplate({
-  patientName,
-  ownerName,
-  structuredContent,
-  dischargeSummaryContent,
-  date = "Recent Visit",
-  clinicName,
-  clinicPhone,
-  clinicEmail: _clinicEmail,
-  primaryColor = colors.primary,
-  logoUrl,
-}: DischargeEmailProps) {
   const hasStructuredContent =
     structuredContent !== null && structuredContent !== undefined;
 
-  // Build visit tags from diagnosis + treatments
+  // Build visit tags
   const visitTags: string[] = [];
   if (hasStructuredContent) {
     if (structuredContent.diagnosis) {
@@ -221,12 +86,10 @@ export function DischargeEmailTemplate({
     }
   }
 
-  // Get warning signs (extracted or curated fallback)
-  // ONLY show warning signs for truly serious/high-risk cases
+  // Warning signs logic
   const shouldShowWarningSigns =
     hasStructuredContent &&
     structuredContent.caseType &&
-    // ONLY show for surgery, emergency, and specific serious conditions
     (structuredContent.caseType === "surgery" ||
       structuredContent.caseType === "emergency" ||
       (structuredContent.caseType === "dental" &&
@@ -247,7 +110,7 @@ export function DischargeEmailTemplate({
       )
     : [];
 
-  // Check for home care content
+  // Home care
   const hasHomeCare =
     hasStructuredContent &&
     structuredContent.homeCare &&
@@ -270,22 +133,22 @@ export function DischargeEmailTemplate({
       })
     : [];
 
-  // Check if follow-up has specific date or reason (not just required=true)
+  // Follow-up
   const hasExplicitFollowUp =
     hasStructuredContent &&
     structuredContent.followUp &&
     (structuredContent.followUp.date ?? structuredContent.followUp.reason);
 
-  // Get owner's first name for greeting
+  // Greeting
   const ownerFirstName = ownerName?.split(" ")[0];
+  const greeting = ownerFirstName ? `Hi ${ownerFirstName},` : "Hello,";
 
-  // Function to replace relative date references with generic wording
+  // Process appointment summary
   const processAppointmentSummary = (
     summary: string | undefined,
   ): string | undefined => {
     if (!summary) return undefined;
 
-    // Normalize relative day references to avoid incorrect "yesterday/today" phrasing
     const replacements: Array<[RegExp, string]> = [
       [/came in today for/gi, "came in for"],
       [/visited us today for/gi, "visited us for"],
@@ -304,608 +167,460 @@ export function DischargeEmailTemplate({
       summary,
     );
 
-    // Avoid specific weekday references that may be inaccurate by the time the email is sent
     const withoutWeekdays = cleaned.replace(
       /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/gi,
       "during the visit",
     );
 
-    // Collapse any double spaces from replacements
     return withoutWeekdays.replace(/\s{2,}/g, " ").trim();
   };
 
-  // Use appointment summary if available, otherwise fall back to generic greeting
   const appointmentSummary = hasStructuredContent
     ? processAppointmentSummary(structuredContent.appointmentSummary)
     : undefined;
 
-  const greeting = ownerFirstName ? `Hi ${ownerFirstName},` : "Hello,";
-
-  // Fallback intro text if no appointment summary
   const fallbackIntro = `Here's everything you need to know about ${patientName}'s visit.`;
+  const previewText = `${patientName}'s visit summary from ${clinicName ?? "your vet"}`;
 
-  return (
-    <Html>
-      <Head />
-      <Preview>
-        {patientName}&apos;s visit summary from {clinicName ?? "your vet"}
-      </Preview>
-      <Body style={main}>
-        <Container style={container}>
-          <Section style={card}>
-            {/* ============ HEADER ============ */}
-            <Section style={headerStyle}>
-              {/* Clinic branding row */}
-              <Row>
-                <Column>
-                  {logoUrl ? (
-                    <Img
-                      src={logoUrl}
-                      alt={clinicName ?? "Clinic Logo"}
-                      height="44"
-                      style={{ display: "block" }}
-                    />
-                  ) : (
-                    <Text
-                      style={{
-                        margin: 0,
-                        fontSize: "16px",
-                        fontWeight: "600",
-                        color: "#134E4A",
-                      }}
-                    >
-                      {clinicName ?? "Your Veterinary Clinic"}
-                    </Text>
-                  )}
-                </Column>
-                <Column align="right">
-                  <Text
-                    style={{
-                      margin: 0,
-                      fontSize: "13px",
-                      color: "rgba(19, 78, 74, 0.6)",
-                    }}
-                  >
-                    {date}
-                  </Text>
-                </Column>
-              </Row>
+  return `
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="x-apple-disable-message-reformatting">
+  <title>${escapeHtml(previewText)}</title>
+  <!--[if mso]>
+  <style>
+    table { border-collapse: collapse; }
+    .outlook-group-fix { width: 100% !important; }
+  </style>
+  <![endif]-->
+</head>
+<body style="margin: 0; padding: 0; background-color: ${colors.background.page}; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  
+  <!-- Preview Text -->
+  <div style="display: none; max-height: 0; overflow: hidden;">
+    ${escapeHtml(previewText)}
+  </div>
 
-              {/* Pet name title */}
-              <Heading
-                style={{
-                  margin: "20px 0 8px",
-                  fontSize: "26px",
-                  fontWeight: "700",
-                  color: "#134E4A",
-                }}
-              >
-                {patientName}&apos;s Visit Summary
-              </Heading>
+  <!-- Main Container -->
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin: 0; padding: 24px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="max-width: 600px; background-color: ${colors.background.card}; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+          
+          <!-- Header -->
+          <tr>
+            <td style="padding: 28px 32px 24px; background: linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%);">
+              <!-- Clinic branding -->
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                  <td style="width: 50%;">
+                    ${
+                      logoUrl
+                        ? `<img src="${escapeHtml(logoUrl)}" alt="${escapeHtml(clinicName ?? "Clinic Logo")}" height="44" style="display: block; height: 44px;">`
+                        : `<p style="margin: 0; font-size: 16px; font-weight: 600; color: #134E4A;">${escapeHtml(clinicName ?? "Your Veterinary Clinic")}</p>`
+                    }
+                  </td>
+                  <td align="right" style="width: 50%;">
+                    <p style="margin: 0; font-size: 13px; color: rgba(19, 78, 74, 0.6);">${escapeHtml(date)}</p>
+                  </td>
+                </tr>
+              </table>
 
-              {/* Greeting text */}
-              <Text
-                style={{
-                  margin: "0 0 4px",
-                  fontSize: "15px",
-                  color: "rgba(19, 78, 74, 0.75)",
-                  lineHeight: "1.5",
-                }}
-              >
-                {greeting}
-              </Text>
+              <!-- Pet name title -->
+              <h1 style="margin: 20px 0 8px; font-size: 26px; font-weight: 700; color: #134E4A;">
+                ${escapeHtml(patientName)}'s Visit Summary
+              </h1>
 
-              {/* Appointment Summary or Fallback Intro */}
-              <Text
-                style={{
-                  margin: "0 0 16px",
-                  fontSize: "15px",
-                  color: "rgba(19, 78, 74, 0.85)",
-                  lineHeight: "1.6",
-                }}
-              >
-                {appointmentSummary ?? fallbackIntro}
-              </Text>
+              <!-- Greeting -->
+              <p style="margin: 0 0 4px; font-size: 15px; color: rgba(19, 78, 74, 0.75); line-height: 1.5;">
+                ${escapeHtml(greeting)}
+              </p>
 
-              {/* Visit highlight tags */}
-              {visitTags.length > 0 && (
-                <Section>
-                  {visitTags.slice(0, 4).map((tag, index) => (
-                    <span key={index} style={tagStyle}>
-                      {tag}
-                    </span>
-                  ))}
-                </Section>
-              )}
-            </Section>
+              <!-- Appointment Summary -->
+              <p style="margin: 0 0 16px; font-size: 15px; color: rgba(19, 78, 74, 0.85); line-height: 1.6;">
+                ${escapeHtml(appointmentSummary ?? fallbackIntro)}
+              </p>
 
-            {/* ============ MAIN CONTENT ============ */}
-            <Section style={{ padding: "28px 0" }}>
-              {hasStructuredContent ? (
-                <>
-                  {/* -------- MEDICATIONS -------- */}
-                  {takeHomeMeds.length > 0 && (
-                    <Section style={sectionStyle}>
-                      {/* Medication Header */}
-                      <Section style={medicationHeaderStyle}>
-                        <Text
-                          style={{
-                            margin: "0 0 6px 0",
-                            fontSize: "18px",
-                            fontWeight: "700",
-                            color: "white",
-                          }}
-                        >
-                          💊 {patientName}&apos;s Medications
-                        </Text>
-                        <Text
-                          style={{
-                            margin: 0,
-                            fontSize: "14px",
-                            color: "rgba(255, 255, 255, 0.9)",
-                          }}
-                        >
-                          Please give these medications as directed:
-                        </Text>
-                      </Section>
+              <!-- Visit Tags -->
+              ${
+                visitTags.length > 0
+                  ? `
+              <div style="margin-top: 12px;">
+                ${visitTags
+                  .slice(0, 4)
+                  .map(
+                    (tag) => `
+                  <span style="display: inline-block; padding: 6px 14px; background-color: rgba(19, 78, 74, 0.12); border-radius: 20px; font-size: 13px; font-weight: 500; color: #134E4A; margin-right: 8px; margin-bottom: 8px;">
+                    ${escapeHtml(tag)}
+                  </span>
+                `,
+                  )
+                  .join("")}
+              </div>
+              `
+                  : ""
+              }
+            </td>
+          </tr>
 
-                      {/* Medication List */}
-                      {takeHomeMeds.map((med, index) => (
-                        <Section key={index} style={medicationRowStyle}>
-                          <Row>
-                            <Column>
-                              {/* Medication Name - Large and prominent */}
-                              <Text
-                                style={{
-                                  margin: "0 0 8px 0",
-                                  fontSize: "20px",
-                                  fontWeight: "700",
-                                  color: "#0F766E",
-                                  letterSpacing: "0.5px",
-                                }}
-                              >
-                                {med.name}
-                              </Text>
+          <!-- Main Content -->
+          <tr>
+            <td style="padding: 28px 0;">
+              ${
+                hasStructuredContent
+                  ? `
+                ${
+                  takeHomeMeds.length > 0
+                    ? `
+                  <!-- Medications Section -->
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="padding: 0 32px; margin-bottom: 24px;">
+                    <tr>
+                      <td>
+                        <!-- Medication Header -->
+                        <div style="background-color: ${primaryColor}; color: white; border-radius: 8px 8px 0 0; padding: 16px 20px; margin: 0 0 24px 0;">
+                          <p style="margin: 0 0 6px 0; font-size: 18px; font-weight: 700;">
+                            💊 ${escapeHtml(patientName)}'s Medications
+                          </p>
+                          <p style="margin: 0; font-size: 14px; color: rgba(255, 255, 255, 0.9);">
+                            Please give these medications as directed:
+                          </p>
+                        </div>
 
-                              {/* Dosage and Details - Formatted like "24mg - 4 tablets total" */}
-                              {(med.dosage ??
-                                med.frequency ??
-                                med.duration ??
-                                med.totalQuantity) && (
-                                <Text
-                                  style={{
-                                    margin: "0 0 8px 0",
-                                    fontSize: "17px",
-                                    fontWeight: "600",
-                                    color: "#374151",
-                                  }}
-                                >
-                                  {/* Primary dosage info like "24mg - 4 tablets total" */}
-                                  {med.dosage && med.totalQuantity
-                                    ? `${med.dosage} - ${med.totalQuantity}`
-                                    : [med.dosage, med.totalQuantity]
-                                        .filter(Boolean)
-                                        .join(" - ")}
-                                </Text>
-                              )}
+                        <!-- Medication List -->
+                        ${takeHomeMeds
+                          .map(
+                            (med) => `
+                          <div style="padding: 20px; margin-bottom: 16px; background-color: ${colors.background.accent}; border-radius: 12px; border: 2px solid rgba(15, 118, 110, 0.12);">
+                            <p style="margin: 0 0 8px 0; font-size: 20px; font-weight: 700; color: ${primaryColor}; letter-spacing: 0.5px;">
+                              ${escapeHtml(med.name)}
+                            </p>
+                            ${
+                              med.dosage || med.totalQuantity
+                                ? `
+                              <p style="margin: 0 0 8px 0; font-size: 17px; font-weight: 600; color: #374151;">
+                                ${escapeHtml([med.dosage, med.totalQuantity].filter(Boolean).join(" - "))}
+                              </p>
+                            `
+                                : ""
+                            }
+                            ${
+                              med.frequency || med.duration
+                                ? `
+                              <p style="margin: 0 0 8px 0; font-size: 15px; font-weight: 500; color: #6B7280;">
+                                ${escapeHtml([med.frequency, med.duration].filter(Boolean).join(" for "))}
+                              </p>
+                            `
+                                : ""
+                            }
+                            ${
+                              med.purpose
+                                ? `
+                              <p style="margin: 0 0 12px 0; font-size: 14px; font-style: italic; color: #059669;">
+                                ${escapeHtml(med.purpose)}
+                              </p>
+                            `
+                                : ""
+                            }
+                            ${
+                              med.instructions
+                                ? `
+                              <span style="display: inline-block; padding: 8px 16px; background-color: ${primaryColor}; color: white; font-size: 13px; font-weight: 600; border-radius: 8px; margin-top: 8px;">
+                                💡 ${escapeHtml(med.instructions)}
+                              </span>
+                            `
+                                : ""
+                            }
+                          </div>
+                        `,
+                          )
+                          .join("")}
+                      </td>
+                    </tr>
+                  </table>
+                `
+                    : ""
+                }
 
-                              {/* Frequency and Duration */}
-                              {/* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing */}
-                              {(med.frequency || med.duration) && (
-                                <Text
-                                  style={{
-                                    margin: "0 0 8px 0",
-                                    fontSize: "15px",
-                                    fontWeight: "500",
-                                    color: "#6B7280",
-                                  }}
-                                >
-                                  {[med.frequency, med.duration]
-                                    .filter(Boolean)
-                                    .join(" for ")}
-                                </Text>
-                              )}
+                ${
+                  hasHomeCare
+                    ? `
+                  <!-- Home Care Section -->
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="padding: 0 32px; margin-bottom: 24px;">
+                    <tr>
+                      <td>
+                        <p style="margin: 0 0 12px 0; font-size: 12px; font-weight: 600; color: ${colors.text.secondary}; text-transform: uppercase; letter-spacing: 0.5px;">
+                          Caring for ${escapeHtml(patientName)} at Home
+                        </p>
+                        <div style="background-color: ${colors.background.muted}; border: 1px solid ${colors.border}; border-radius: 8px; padding: 20px;">
+                          ${
+                            structuredContent.homeCare!.activity
+                              ? `
+                            <div style="margin-bottom: 16px;">
+                              <p style="margin: 0 0 4px; font-size: 14px; font-weight: 600; color: ${colors.text.primary};">Activity</p>
+                              <p style="margin: 0; font-size: 14px; color: ${colors.text.secondary}; line-height: 1.5;">
+                                ${escapeHtml(structuredContent.homeCare!.activity)}
+                              </p>
+                            </div>
+                          `
+                              : ""
+                          }
+                          ${
+                            structuredContent.homeCare!.diet
+                              ? `
+                            <div style="margin-bottom: 16px;">
+                              <p style="margin: 0 0 4px; font-size: 14px; font-weight: 600; color: ${colors.text.primary};">Diet</p>
+                              <p style="margin: 0; font-size: 14px; color: ${colors.text.secondary}; line-height: 1.5;">
+                                ${escapeHtml(structuredContent.homeCare!.diet)}
+                              </p>
+                            </div>
+                          `
+                              : ""
+                          }
+                          ${
+                            structuredContent.homeCare!.woundCare
+                              ? `
+                            <div style="margin-bottom: 16px;">
+                              <p style="margin: 0 0 4px; font-size: 14px; font-weight: 600; color: ${colors.text.primary};">Wound Care</p>
+                              <p style="margin: 0; font-size: 14px; color: ${colors.text.secondary}; line-height: 1.5;">
+                                ${escapeHtml(structuredContent.homeCare!.woundCare)}
+                              </p>
+                            </div>
+                          `
+                              : ""
+                          }
+                          ${
+                            structuredContent.homeCare!.monitoring &&
+                            structuredContent.homeCare!.monitoring.length > 0
+                              ? `
+                            <div>
+                              <p style="margin: 0 0 8px; font-size: 14px; font-weight: 600; color: ${colors.text.primary};">Things to Monitor</p>
+                              ${structuredContent
+                                .homeCare!.monitoring.map(
+                                  (item) => `
+                                <p style="margin: 0 0 4px; font-size: 14px; color: ${colors.text.secondary}; line-height: 1.5;">
+                                  • ${escapeHtml(item)}
+                                </p>
+                              `,
+                                )
+                                .join("")}
+                            </div>
+                          `
+                              : ""
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  </table>
+                `
+                    : ""
+                }
 
-                              {/* Medication Purpose */}
-                              {med.purpose && (
-                                <Text
-                                  style={{
-                                    margin: "0 0 12px 0",
-                                    fontSize: "14px",
-                                    fontStyle: "italic",
-                                    color: "#059669",
-                                  }}
-                                >
-                                  {med.purpose}
-                                </Text>
-                              )}
+                ${
+                  warningSigns.length > 0
+                    ? `
+                  <!-- Warning Signs Section -->
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="padding: 0 32px; margin-bottom: 24px;">
+                    <tr>
+                      <td>
+                        <p style="margin: 0 0 12px 0; font-size: 12px; font-weight: 600; color: ${colors.text.secondary}; text-transform: uppercase; letter-spacing: 0.5px;">
+                          What to Watch For
+                        </p>
+                        <div style="background-color: ${colors.background.danger}; border-left: 4px solid ${colors.danger}; border-radius: 0 8px 8px 0; padding: 20px;">
+                          <p style="margin: 0 0 16px; font-size: 14px; font-weight: 600; color: ${colors.danger};">
+                            Contact us right away if you notice any of these:
+                          </p>
+                          ${warningSigns
+                            .map(
+                              (sign: string) => `
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom: 10px;">
+                              <tr>
+                                <td style="width: 28px; vertical-align: top;">
+                                  <div style="width: 16px; height: 16px; border: 2px solid ${colors.danger}; border-radius: 3px; margin-top: 2px;"></div>
+                                </td>
+                                <td>
+                                  <p style="margin: 0; font-size: 14px; font-weight: 500; color: ${colors.danger}; line-height: 1.5;">
+                                    ${escapeHtml(sign)}
+                                  </p>
+                                </td>
+                              </tr>
+                            </table>
+                          `,
+                            )
+                            .join("")}
+                          ${
+                            clinicPhone
+                              ? `
+                            <p style="margin: 16px 0 0; font-size: 13px; color: ${colors.danger};">
+                              Call us immediately at: <a href="tel:${clinicPhone.replace(/\D/g, "")}" style="color: ${colors.danger}; font-weight: 600; text-decoration: none;">${escapeHtml(clinicPhone)}</a>
+                            </p>
+                          `
+                              : ""
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  </table>
+                `
+                    : ""
+                }
 
-                              {/* Instructions Badge */}
-                              {med.instructions && (
-                                <Text style={{ margin: 0 }}>
-                                  <span style={medicationBadgeStyle}>
-                                    💡 {med.instructions}
-                                  </span>
-                                </Text>
-                              )}
-                            </Column>
-                          </Row>
-                        </Section>
-                      ))}
-                    </Section>
-                  )}
+                ${
+                  hasExplicitFollowUp
+                    ? `
+                  <!-- Follow-up Section -->
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="padding: 0 32px; margin-bottom: 24px;">
+                    <tr>
+                      <td>
+                        <p style="margin: 0 0 12px 0; font-size: 12px; font-weight: 600; color: ${colors.text.secondary}; text-transform: uppercase; letter-spacing: 0.5px;">
+                          What's Next
+                        </p>
+                        <div style="background-color: ${colors.background.info}; border-radius: 8px; padding: 16px 20px;">
+                          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                              <td style="width: 32px; vertical-align: top;">
+                                <p style="margin: 0; font-size: 20px;">📅</p>
+                              </td>
+                              <td style="padding-left: 12px;">
+                                <p style="margin: 0 0 2px; font-size: 14px; font-weight: 600; color: ${colors.text.primary};">
+                                  Follow-up Appointment
+                                </p>
+                                <p style="margin: 0; font-size: 14px; color: ${colors.text.secondary};">
+                                  ${
+                                    structuredContent.followUp?.date
+                                      ? `We'd like to see ${escapeHtml(patientName)} again ${escapeHtml(structuredContent.followUp.date)}`
+                                      : "Please call us to schedule a follow-up"
+                                  }${
+                                    structuredContent.followUp?.reason
+                                      ? ` for ${escapeHtml(structuredContent.followUp.reason)}`
+                                      : ""
+                                  }.
+                                </p>
+                              </td>
+                            </tr>
+                          </table>
+                        </div>
+                      </td>
+                    </tr>
+                  </table>
+                `
+                    : ""
+                }
 
-                  {/* -------- HOME CARE -------- */}
-                  {hasHomeCare && (
-                    <Section style={sectionStyle}>
-                      <Text style={sectionTitleStyle}>
-                        Caring for {patientName} at Home
-                      </Text>
-                      <Section style={homeCareBoxStyle}>
-                        {structuredContent.homeCare!.activity && (
-                          <Section style={{ marginBottom: "16px" }}>
-                            <Text
-                              style={{
-                                margin: "0 0 4px",
-                                fontSize: "14px",
-                                fontWeight: "600",
-                                color: colors.text.primary,
-                              }}
-                            >
-                              Activity
-                            </Text>
-                            <Text
-                              style={{
-                                margin: 0,
-                                fontSize: "14px",
-                                color: colors.text.secondary,
-                                lineHeight: "1.5",
-                              }}
-                            >
-                              {structuredContent.homeCare!.activity}
-                            </Text>
-                          </Section>
-                        )}
+                ${
+                  structuredContent.notes &&
+                  !structuredContent.notes
+                    .toLowerCase()
+                    .includes("owner declined") &&
+                  !structuredContent.notes
+                    .toLowerCase()
+                    .includes("recheck instructions provided") &&
+                  !structuredContent.notes
+                    .toLowerCase()
+                    .includes("follow-up scheduled") &&
+                  !structuredContent.notes
+                    .toLowerCase()
+                    .includes("client educated")
+                    ? `
+                  <!-- Notes Section -->
+                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="padding: 0 32px; margin-bottom: 24px;">
+                    <tr>
+                      <td>
+                        <div style="background-color: ${colors.background.warning}; border-left: 4px solid ${colors.warning}; border-radius: 0 8px 8px 0; padding: 16px 20px;">
+                          <p style="margin: 0; font-size: 14px; color: #92400E; line-height: 1.6;">
+                            <strong>Important:</strong> ${escapeHtml(structuredContent.notes)}
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  </table>
+                `
+                    : ""
+                }
 
-                        {structuredContent.homeCare!.diet && (
-                          <Section style={{ marginBottom: "16px" }}>
-                            <Text
-                              style={{
-                                margin: "0 0 4px",
-                                fontSize: "14px",
-                                fontWeight: "600",
-                                color: colors.text.primary,
-                              }}
-                            >
-                              Diet
-                            </Text>
-                            <Text
-                              style={{
-                                margin: 0,
-                                fontSize: "14px",
-                                color: colors.text.secondary,
-                                lineHeight: "1.5",
-                              }}
-                            >
-                              {structuredContent.homeCare!.diet}
-                            </Text>
-                          </Section>
-                        )}
+                <!-- Questions Box -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="padding: 0 32px; margin-bottom: 24px;">
+                  <tr>
+                    <td>
+                      <div style="background-color: ${colors.background.muted}; border: 1px solid ${colors.border}; border-radius: 8px; padding: 20px; text-align: center;">
+                        <p style="margin: 0 0 8px; font-size: 14px; color: ${colors.text.secondary}; line-height: 1.5;">
+                          Questions about ${escapeHtml(patientName)}'s care? We're here to help — just give us a call.
+                        </p>
+                        <p style="margin: 0; font-size: 14px; font-weight: 600; color: ${primaryColor};">
+                          <a href="tel:${clinicPhone?.replace(/\D/g, "") ?? ""}" style="color: ${primaryColor}; text-decoration: none;">
+                            ${escapeHtml(clinicPhone ?? "(408) 258-2735")}
+                          </a>
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+              `
+                  : dischargeSummaryContent
+                    ? `
+                <!-- Plaintext fallback -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="padding: 0 32px;">
+                  <tr>
+                    <td>
+                      <p style="white-space: pre-wrap; font-size: 15px; line-height: 1.7; color: ${colors.text.primary};">
+                        ${escapeHtml(dischargeSummaryContent)}
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              `
+                    : `
+                <!-- No content -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="padding: 0 32px;">
+                  <tr>
+                    <td style="text-align: center;">
+                      <p style="color: ${colors.text.muted}; font-style: italic;">
+                        No discharge instructions available.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              `
+              }
+            </td>
+          </tr>
 
-                        {structuredContent.homeCare!.woundCare && (
-                          <Section style={{ marginBottom: "16px" }}>
-                            <Text
-                              style={{
-                                margin: "0 0 4px",
-                                fontSize: "14px",
-                                fontWeight: "600",
-                                color: colors.text.primary,
-                              }}
-                            >
-                              Wound Care
-                            </Text>
-                            <Text
-                              style={{
-                                margin: 0,
-                                fontSize: "14px",
-                                color: colors.text.secondary,
-                                lineHeight: "1.5",
-                              }}
-                            >
-                              {structuredContent.homeCare!.woundCare}
-                            </Text>
-                          </Section>
-                        )}
+          <!-- Footer Divider -->
+          <tr>
+            <td>
+              <hr style="border: none; border-top: 1px solid ${colors.border}; margin: 0;">
+            </td>
+          </tr>
 
-                        {structuredContent.homeCare!.monitoring &&
-                          structuredContent.homeCare!.monitoring.length > 0 && (
-                            <Section>
-                              <Text
-                                style={{
-                                  margin: "0 0 8px",
-                                  fontSize: "14px",
-                                  fontWeight: "600",
-                                  color: colors.text.primary,
-                                }}
-                              >
-                                Things to Monitor
-                              </Text>
-                              {structuredContent.homeCare!.monitoring.map(
-                                (item, index) => (
-                                  <Text
-                                    key={index}
-                                    style={{
-                                      margin: "0 0 4px",
-                                      fontSize: "14px",
-                                      color: colors.text.secondary,
-                                      lineHeight: "1.5",
-                                    }}
-                                  >
-                                    • {item}
-                                  </Text>
-                                ),
-                              )}
-                            </Section>
-                          )}
-                      </Section>
-                    </Section>
-                  )}
-
-                  {/* -------- WARNING SIGNS -------- */}
-                  {warningSigns.length > 0 && (
-                    <Section style={sectionStyle}>
-                      <Text style={sectionTitleStyle}>What to Watch For</Text>
-                      <Section style={warningBoxStyle}>
-                        <Text
-                          style={{
-                            margin: "0 0 16px",
-                            fontSize: "14px",
-                            fontWeight: "600",
-                            color: colors.danger,
-                          }}
-                        >
-                          Contact us right away if you notice any of these:
-                        </Text>
-                        {warningSigns.map((sign: string, index: number) => (
-                          <Row key={index} style={{ marginBottom: "10px" }}>
-                            <Column
-                              style={{ width: "28px", verticalAlign: "top" }}
-                            >
-                              <div style={checkboxStyle} />
-                            </Column>
-                            <Column>
-                              <Text
-                                style={{
-                                  margin: 0,
-                                  fontSize: "14px",
-                                  fontWeight: "500",
-                                  color: colors.danger,
-                                  lineHeight: "1.5",
-                                }}
-                              >
-                                {sign}
-                              </Text>
-                            </Column>
-                          </Row>
-                        ))}
-                        {clinicPhone && (
-                          <Text
-                            style={{
-                              margin: "16px 0 0",
-                              fontSize: "13px",
-                              color: colors.danger,
-                            }}
-                          >
-                            Call us immediately at:{" "}
-                            <Link
-                              href={`tel:${clinicPhone.replace(/\D/g, "")}`}
-                              style={{
-                                color: colors.danger,
-                                fontWeight: "600",
-                                textDecoration: "none",
-                              }}
-                            >
-                              {clinicPhone}
-                            </Link>
-                          </Text>
-                        )}
-                      </Section>
-                    </Section>
-                  )}
-
-                  {/* -------- FOLLOW-UP -------- */}
-                  {hasExplicitFollowUp && (
-                    <Section style={sectionStyle}>
-                      <Text style={sectionTitleStyle}>What&apos;s Next</Text>
-                      <Section style={followUpBoxStyle}>
-                        <Row>
-                          <Column
-                            style={{ width: "32px", verticalAlign: "top" }}
-                          >
-                            <Text style={{ margin: 0, fontSize: "20px" }}>
-                              📅
-                            </Text>
-                          </Column>
-                          <Column style={{ paddingLeft: "12px" }}>
-                            <Text
-                              style={{
-                                margin: "0 0 2px",
-                                fontSize: "14px",
-                                fontWeight: "600",
-                                color: colors.text.primary,
-                              }}
-                            >
-                              Follow-up Appointment
-                            </Text>
-                            <Text
-                              style={{
-                                margin: 0,
-                                fontSize: "14px",
-                                color: colors.text.secondary,
-                              }}
-                            >
-                              {structuredContent.followUp?.date
-                                ? `We'd like to see ${patientName} again ${structuredContent.followUp.date}`
-                                : `Please call us to schedule a follow-up`}
-                              {structuredContent.followUp?.reason &&
-                                ` for ${structuredContent.followUp.reason}`}
-                              .
-                            </Text>
-                          </Column>
-                        </Row>
-                      </Section>
-                    </Section>
-                  )}
-
-                  {/* -------- NOTES -------- */}
-                  {structuredContent.notes &&
-                    // Filter out clinic-only information
-                    !structuredContent.notes
-                      .toLowerCase()
-                      .includes("owner declined") &&
-                    !structuredContent.notes
-                      .toLowerCase()
-                      .includes("recheck instructions provided") &&
-                    !structuredContent.notes
-                      .toLowerCase()
-                      .includes("follow-up scheduled") &&
-                    !structuredContent.notes
-                      .toLowerCase()
-                      .includes("client educated") && (
-                      <Section style={sectionStyle}>
-                        <Section
-                          style={{
-                            backgroundColor: colors.background.warning,
-                            borderLeft: `4px solid ${colors.warning}`,
-                            borderRadius: "0 8px 8px 0",
-                            padding: "16px 20px",
-                          }}
-                        >
-                          <Text
-                            style={{
-                              margin: 0,
-                              fontSize: "14px",
-                              color: "#92400E",
-                              lineHeight: "1.6",
-                            }}
-                          >
-                            <strong>Important:</strong>{" "}
-                            {structuredContent.notes}
-                          </Text>
-                        </Section>
-                      </Section>
-                    )}
-
-                  {/* -------- QUESTIONS BOX (always appears) -------- */}
-                  <Section style={sectionStyle}>
-                    <Section style={homeCareBoxStyle}>
-                      <Text
-                        style={{
-                          margin: "0 0 8px",
-                          fontSize: "14px",
-                          color: colors.text.secondary,
-                          textAlign: "center" as const,
-                          lineHeight: "1.5",
-                        }}
-                      >
-                        Questions about {patientName}&apos;s care? We&apos;re
-                        here to help — just give us a call.
-                      </Text>
-                      <Text
-                        style={{
-                          margin: 0,
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          color: primaryColor,
-                          textAlign: "center" as const,
-                        }}
-                      >
-                        <Link
-                          href={`tel:${clinicPhone?.replace(/\D/g, "") ?? ""}`}
-                          style={{
-                            color: primaryColor,
-                            textDecoration: "none",
-                          }}
-                        >
-                          {clinicPhone ?? "(408) 258-2735"}
-                        </Link>
-                      </Text>
-                    </Section>
-                  </Section>
-                </>
-              ) : dischargeSummaryContent ? (
-                /* Plaintext fallback */
-                <Section style={sectionStyle}>
-                  <Text
-                    style={{
-                      whiteSpace: "pre-wrap",
-                      fontSize: "15px",
-                      lineHeight: "1.7",
-                      color: colors.text.primary,
-                    }}
-                  >
-                    {dischargeSummaryContent}
-                  </Text>
-                </Section>
-              ) : (
-                <Section style={sectionStyle}>
-                  <Text
-                    style={{
-                      color: colors.text.muted,
-                      fontStyle: "italic",
-                      textAlign: "center" as const,
-                    }}
-                  >
-                    No discharge instructions available.
-                  </Text>
-                </Section>
-              )}
-            </Section>
-
-            <Hr style={{ borderColor: colors.border, margin: 0 }} />
-
-            {/* ============ FOOTER ============ */}
-            <Section style={footerStyle}>
-              <Text
-                style={{
-                  margin: "0 0 4px",
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  color: colors.text.primary,
-                  textAlign: "center" as const,
-                }}
-              >
-                Sent with care from {clinicName ?? "your veterinary clinic"}
-              </Text>
-              <Text
-                style={{
-                  margin: 0,
-                  fontSize: "13px",
-                  color: colors.text.secondary,
-                  textAlign: "center" as const,
-                  lineHeight: "1.4",
-                }}
-              >
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 20px 32px; background-color: ${colors.background.muted}; text-align: center;">
+              <p style="margin: 0 0 4px; font-size: 13px; font-weight: 600; color: ${colors.text.primary};">
+                Sent with care from ${escapeHtml(clinicName ?? "your veterinary clinic")}
+              </p>
+              <p style="margin: 0; font-size: 13px; color: ${colors.text.secondary}; line-height: 1.4;">
                 2810 Alum Rock Ave, San Jose, CA 95127
-              </Text>
-            </Section>
+              </p>
+            </td>
+          </tr>
 
-            {/* ============ BOTTOM FOOTER ============ */}
-            <Section style={bottomFooterStyle}>
-              <Text
-                style={{
-                  margin: 0,
-                  fontSize: "11px",
-                  color: colors.text.muted,
-                  textAlign: "center" as const,
-                }}
-              >
+          <!-- Bottom Footer -->
+          <tr>
+            <td style="padding: 12px 32px; background-color: ${colors.background.page}; text-align: center;">
+              <p style="margin: 0; font-size: 11px; color: ${colors.text.muted};">
                 Powered by <strong>OdisAI</strong>
-              </Text>
-            </Section>
-          </Section>
-        </Container>
-      </Body>
-    </Html>
-  );
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
+`.trim();
 }

@@ -8,11 +8,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import type { CallStatus } from "@odis-ai/types";
-import {
-  type SupabasePatientsResponse,
-  type CaseWithPatients,
-  type DynamicVariables,
-} from "./types";
+import { type CaseWithPatients, type DynamicVariables } from "./types";
 
 export const listingsRouter = createTRPCRouter({
   /**

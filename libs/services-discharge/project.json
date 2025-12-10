@@ -5,15 +5,14 @@
   "projectType": "library",
   "tags": ["type:lib", "scope:services", "platform:node"],
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+    "typecheck": {
+      "executor": "nx:run-commands",
       "options": {
-        "outputPath": "dist/libs/services-discharge",
-        "main": "libs/services-discharge/src/index.ts",
-        "tsConfig": "libs/services-discharge/tsconfig.lib.json",
-        "assets": ["libs/services-discharge/*.md"]
-      }
+        "command": "tsc --noEmit -p tsconfig.lib.json",
+        "cwd": "libs/services-discharge"
+      },
+      "cache": true,
+      "inputs": ["default", "^default"]
     }
   }
 }

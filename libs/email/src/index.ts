@@ -1,5 +1,5 @@
 export * from "./render-email";
 export * from "./warning-signs-library";
-// Note: discharge-email-template is not exported from index to avoid
-// bundling @react-email/components during Next.js static page generation.
+// Note: discharge-email-template is not exported from index to allow
+// dynamic imports when needed for better code splitting.
 // Import directly from "@odis-ai/email/discharge-email-template" when needed.

@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+**/node_modules
 /.pnp
 .pnp.js
 HOME/
@@ -61,3 +62,4 @@ vitest.config.*.timestamp*
 # Next.js
 .next
 out
+dist/libs/services-*

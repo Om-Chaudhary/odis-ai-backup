@@ -10,15 +10,14 @@
  * Supports both sequential and parallel execution modes.
  */
 
-import React from "react";
 import { CasesService } from "@odis-ai/services-cases";
 import { ExecutionPlan } from "@odis-ai/services-shared";
 import { generateStructuredDischargeSummaryWithRetry } from "@odis-ai/ai/generate-structured-discharge";
 import { extractEntitiesWithRetry } from "@odis-ai/ai/normalize-scribe";
 import { scheduleEmailExecution } from "@odis-ai/qstash/client";
 import { isValidEmail } from "@odis-ai/resend/utils";
-// Dynamic import to avoid Next.js bundling React Email during static generation
-// import { DischargeEmailTemplate, prepareEmailContent } from "@odis-ai/email";
+// Dynamic import to avoid Next.js bundling issues during static generation
+// import { DischargeEmailTemplate, htmlToPlainText } from "@odis-ai/email";
 import type { OrchestrationRequest } from "@odis-ai/validators/orchestration";
 import { getClinicByUserId } from "@odis-ai/clinics/utils";
 import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
@@ -75,7 +74,7 @@ const STEP_ORDER: readonly StepName[] = [
    ======================================== */
 
 /**
- * Generate email content from discharge summary using React template
+ * Generate email content from discharge summary using HTML template
  *
  * Uses data from Supabase:
  * - discharge_summaries.content (plaintext) or structured_content (JSON)
@@ -96,29 +95,30 @@ async function generateEmailContent(
   // Use generic text instead of specific date
   const formattedDate = "Recent Visit";
 
-  // Dynamic import to avoid Next.js bundling React Email during static generation
+  // Dynamic import to avoid Next.js bundling issues during static generation
   const { DischargeEmailTemplate } =
     await import("@odis-ai/email/discharge-email-template");
-  const { prepareEmailContent } = await import("@odis-ai/email");
+  const { htmlToPlainText } = await import("@odis-ai/email");
 
-  // Render React email template to HTML (prefer structured content)
-  const { html, text } = await prepareEmailContent(
-    React.createElement(DischargeEmailTemplate, {
-      patientName,
-      dischargeSummaryContent: dischargeSummary,
-      structuredContent: structuredContent ?? undefined,
-      breed,
-      species,
-      clinicName: branding.clinicName,
-      clinicPhone: branding.clinicPhone,
-      clinicEmail: branding.clinicEmail,
-      primaryColor: branding.primaryColor,
-      logoUrl: branding.logoUrl,
-      headerText: branding.emailHeaderText,
-      footerText: branding.emailFooterText,
-      date: formattedDate,
-    }),
-  );
+  // Generate HTML email (now returns plain HTML string, no React components)
+  const html = DischargeEmailTemplate({
+    patientName,
+    dischargeSummaryContent: dischargeSummary,
+    structuredContent: structuredContent ?? undefined,
+    breed,
+    species,
+    clinicName: branding.clinicName,
+    clinicPhone: branding.clinicPhone,
+    clinicEmail: branding.clinicEmail,
+    primaryColor: branding.primaryColor,
+    logoUrl: branding.logoUrl,
+    headerText: branding.emailHeaderText,
+    footerText: branding.emailFooterText,
+    date: formattedDate,
+  });
+
+  // Generate plain text version from HTML
+  const text = htmlToPlainText(html);
 
   return { subject, html, text };
 }

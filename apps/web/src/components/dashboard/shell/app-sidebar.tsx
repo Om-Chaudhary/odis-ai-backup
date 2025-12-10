@@ -250,11 +250,11 @@ export function AppSidebar({
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="py-3">
         <SidebarMenu>
           <SidebarMenuItem>
-            <div className="flex items-center gap-3 p-2">
-              <Avatar className="h-8 w-8 rounded-lg">
+            <div className="flex items-center gap-3 px-2 py-1">
+              <Avatar className="h-8 w-8 shrink-0 rounded-lg">
                 {profile?.avatar_url && (
                   <AvatarImage src={profile.avatar_url} alt={fullName} />
                 )}

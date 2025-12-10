@@ -1,13 +1,9 @@
-import type { ReactElement } from "react";
-
-export async function renderEmailToHtml(
-  component: ReactElement,
-): Promise<string> {
-  // Use @react-email/render directly to avoid the Html component check
-  // that throws "Html should not be imported outside of pages/_document"
-  const { render } = await import("@react-email/render");
-  return await render(component);
-}
+/**
+ * Email utility functions
+ *
+ * Simple utilities for processing HTML emails.
+ * No longer uses @react-email since templates are now plain HTML generators.
+ */
 
 export function htmlToPlainText(html: string): string {
   return html
@@ -19,14 +15,7 @@ export function htmlToPlainText(html: string): string {
 }
 
 export function inlineCss(html: string): string {
+  // For future enhancement: could use a library like juice to inline CSS
+  // For now, our templates already have inline styles
   return html;
-}
-
-export async function prepareEmailContent(component: ReactElement): Promise<{
-  html: string;
-  text: string;
-}> {
-  const html = await renderEmailToHtml(component);
-  const text = htmlToPlainText(html);
-  return { html, text };
 }

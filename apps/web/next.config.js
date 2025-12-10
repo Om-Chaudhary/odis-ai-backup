@@ -121,84 +121,15 @@ const config = {
   },
 
   // Transpile internal packages to ensure proper handling
-  // Note: @odis-ai/email, @odis-ai/services, and @odis-ai/resend are NOT included
-  // here because they use @react-email packages that conflict with static page
-  // generation. These services are only used via dynamic imports in API routes.
+  // Note: Explicitly exclude @odis-ai/email, @odis-ai/services-*, and @odis-ai/resend
+  // because they use @react-email packages that conflict with static page generation.
+  // These services are only used via dynamic imports in API routes and marked as
+  // serverExternalPackages below.
+  // Even though empty, we need this to prevent Nx from auto-adding internal packages.
   transpilePackages: [],
 
-  // Exclude react-email packages from server bundle during SSG
-  // This prevents the Html context error during static page generation
-  serverExternalPackages: [
-    "@react-email/body",
-    "@react-email/column",
-    "@react-email/container",
-    "@react-email/head",
-    "@react-email/heading",
-    "@react-email/hr",
-    "@react-email/html",
-    "@react-email/img",
-    "@react-email/link",
-    "@react-email/preview",
-    "@react-email/render",
-    "@react-email/row",
-    "@react-email/section",
-    "@react-email/text",
-    "@react-email/components",
-    "react-email",
-    "resend",
-  ],
-
-  // Webpack configuration to handle react-email packages
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      const reactEmailPackages = [
-        "@react-email/body",
-        "@react-email/column",
-        "@react-email/container",
-        "@react-email/head",
-        "@react-email/heading",
-        "@react-email/hr",
-        "@react-email/html",
-        "@react-email/img",
-        "@react-email/link",
-        "@react-email/preview",
-        "@react-email/render",
-        "@react-email/row",
-        "@react-email/section",
-        "@react-email/text",
-        "@react-email/components",
-        "react-email",
-      ];
-
-      // Mark packages as external using the externals function approach
-      const existingExternals = config.externals || [];
-      config.externals = [
-        ...(Array.isArray(existingExternals)
-          ? existingExternals
-          : [existingExternals]),
-        (
-          /** @type {{ request?: string; context?: string }} */ {
-            request,
-            context,
-          },
-          /** @type {(err: Error | null, result?: string | undefined) => void} */ callback,
-        ) => {
-          // Check if this is a react-email package import
-          if (
-            request &&
-            reactEmailPackages.some(
-              (pkg) => request === pkg || request.startsWith(`${pkg}/`),
-            )
-          ) {
-            // Return as commonjs external
-            return callback(null, `commonjs ${request}`);
-          }
-          callback(null, undefined);
-        },
-      ];
-    }
-    return config;
-  },
+  // Server-side packages that should not be bundled
+  serverExternalPackages: ["resend"],
 
   // Nx configuration
   nx: {

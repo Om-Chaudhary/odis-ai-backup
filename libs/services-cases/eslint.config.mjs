@@ -1,9 +1,13 @@
 import baseConfig from "../../eslint.config.js";
+import nxPlugin from "@nx/eslint-plugin";
 
 export default [
   ...baseConfig,
   {
     files: ["**/*.json"],
+    plugins: {
+      "@nx": nxPlugin,
+    },
     rules: {
       "@nx/dependency-checks": [
         "error",
