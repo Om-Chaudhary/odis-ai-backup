@@ -14,6 +14,20 @@
       "@odis-ai/validators/*": ["../../libs/validators/src/*"],
       "@odis-ai/services": ["../../libs/services/src/index.ts"],
       "@odis-ai/services/*": ["../../libs/services/src/*"],
+      "@odis-ai/services-cases": ["../../libs/services-cases/src/index.ts"],
+      "@odis-ai/services-cases/*": ["../../libs/services-cases/src/*"],
+      "@odis-ai/services-discharge": [
+        "../../libs/services-discharge/src/index.ts"
+      ],
+      "@odis-ai/services-discharge/*": ["../../libs/services-discharge/src/*"],
+      "@odis-ai/services-discharge/discharge-orchestrator": [
+        "../../libs/services-discharge/src/lib/discharge-orchestrator.ts"
+      ],
+      "@odis-ai/services-discharge/discharge-batch-processor": [
+        "../../libs/services-discharge/src/lib/discharge-batch-processor.ts"
+      ],
+      "@odis-ai/services-shared": ["../../libs/services-shared/src/index.ts"],
+      "@odis-ai/services-shared/*": ["../../libs/services-shared/src/*"],
       "@odis-ai/utils": ["../../libs/utils/src/index.ts"],
       "@odis-ai/utils/*": ["../../libs/utils/src/*"],
       "@odis-ai/db": ["../../libs/db/src/index.ts"],

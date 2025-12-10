@@ -20,5 +20,8 @@ export * from "./repositories/call-repository";
 export * from "./repositories/email-repository";
 export * from "./repositories/user-repository";
 
+// Repository Interfaces
+export * from "./interfaces";
+
 // Entity helpers
 export * from "./lib/entities";

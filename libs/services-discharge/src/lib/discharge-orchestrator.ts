@@ -220,8 +220,8 @@ export class DischargeOrchestrator {
         const stepConfig = this.plan.getStepConfig(step);
         if (stepConfig?.enabled) {
           // Step is enabled but dependencies not met - mark as skipped
-          const hasFailedDependency = stepConfig.dependencies.some((dep) =>
-            this.plan.getFailedSteps().includes(dep),
+          const hasFailedDependency = stepConfig.dependencies.some(
+            (dep: StepName) => this.plan.getFailedSteps().includes(dep),
           );
           if (hasFailedDependency) {
             this.results.set(step, {
@@ -315,44 +315,46 @@ export class DischargeOrchestrator {
       const batch = this.plan.getNextBatch();
       if (batch.length === 0) break;
 
-      const promises = batch.map((step) => this.executeStep(step));
+      const promises = batch.map((step: StepName) => this.executeStep(step));
       const batchResults = await Promise.allSettled(promises);
 
-      batchResults.forEach((result, index) => {
-        const step = batch[index]!;
-        if (result.status === "fulfilled") {
-          const stepResult = result.value;
-          this.results.set(step, stepResult);
-          if (stepResult.status === "completed") {
-            this.plan.markCompleted(step);
-          } else if (stepResult.status === "failed") {
+      batchResults.forEach(
+        (result: PromiseSettledResult<StepResult>, index: number) => {
+          const step = batch[index]!;
+          if (result.status === "fulfilled") {
+            const stepResult = result.value;
+            this.results.set(step, stepResult);
+            if (stepResult.status === "completed") {
+              this.plan.markCompleted(step);
+            } else if (stepResult.status === "failed") {
+              this.plan.markFailed(step);
+              // Mark dependent steps as skipped
+              this.markDependentStepsAsSkipped(step);
+            }
+          } else {
+            this.results.set(step, {
+              step,
+              status: "failed",
+              duration: 0,
+              error: result.reason?.message ?? String(result.reason),
+            });
             this.plan.markFailed(step);
             // Mark dependent steps as skipped
             this.markDependentStepsAsSkipped(step);
           }
-        } else {
-          this.results.set(step, {
-            step,
-            status: "failed",
-            duration: 0,
-            error: result.reason?.message ?? String(result.reason),
-          });
-          this.plan.markFailed(step);
-          // Mark dependent steps as skipped
-          this.markDependentStepsAsSkipped(step);
-        }
-      });
+        },
+      );
 
       // Stop if stopOnError is enabled and any step failed
       if (this.request.options?.stopOnError) {
         const hasFailures = batchResults.some(
-          (result) =>
+          (result: PromiseSettledResult<StepResult>) =>
             result.status === "rejected" ||
             (result.status === "fulfilled" && result.value.status === "failed"),
         );
         if (hasFailures) {
           // Mark remaining steps in batch as cancelled
-          batch.forEach((step) => {
+          batch.forEach((step: StepName) => {
             if (!this.results.has(step)) {
               this.results.set(step, {
                 step,
@@ -817,7 +819,7 @@ export class DischargeOrchestrator {
             {
               caseId,
               soapNoteId: latestSoapNote.id,
-              contentLength: soapContent.length,
+              contentLength: latestSoapNote.client_instructions.length,
               isStale,
             },
           );

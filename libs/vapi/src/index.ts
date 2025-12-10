@@ -11,6 +11,9 @@ export * from "./types";
 export * from "./simple-types";
 export * from "./validators";
 
+// Interfaces for dependency injection
+export * from "./call-client.interface";
+
 // Call management
 export * from "./call-manager";
 export * from "./warm-transfer";
