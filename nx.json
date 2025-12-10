@@ -48,6 +48,13 @@
       "options": {
         "buildTargetName": "esbuild:build"
       }
+    },
+    {
+      "plugin": "@nx/vitest",
+      "options": {
+        "testTargetName": "vitest:test",
+        "ciTargetName": "test-ci"
+      }
     }
   ],
   "targetDefaults": {
@@ -71,6 +78,11 @@
     "typecheck": {
       "cache": true,
       "inputs": ["default", "^default"]
+    },
+    "@nx/js:tsc": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["production", "^production"]
     }
   },
   "defaultBase": "main"

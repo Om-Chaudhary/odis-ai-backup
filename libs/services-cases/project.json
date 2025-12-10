@@ -1,0 +1,19 @@
+{
+  "name": "services-cases",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/services-cases/src",
+  "projectType": "library",
+  "tags": ["type:lib", "scope:domain", "platform:node"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/services-cases",
+        "main": "libs/services-cases/src/index.ts",
+        "tsConfig": "libs/services-cases/tsconfig.lib.json",
+        "assets": ["libs/services-cases/*.md"]
+      }
+    }
+  }
+}
