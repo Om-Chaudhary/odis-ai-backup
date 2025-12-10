@@ -65,9 +65,11 @@ Implemented warning system to prevent duplicate discharge communications (emails
 
 ### 1. `case-card.tsx`
 
+**File**: `apps/web/src/components/dashboard/cases/case-card.tsx`
+
 **Changes**:
 
-- Added `AlertDialog` imports
+- Added `AlertDialog` imports from `@odis-ai/ui/alert-dialog`
 - Added state for `showCallConfirmation` and `showEmailConfirmation`
 - Added `getCallStatus()` and `getEmailStatus()` helper functions
 - Added `handleCallClick()` and `handleEmailClick()` handlers with status checking
@@ -78,7 +80,7 @@ Implemented warning system to prevent duplicate discharge communications (emails
 
 ### 2. `discharge-list-item.tsx`
 
-**Status**: Already had confirmation dialogs implemented (lines 646-690)
+**Status**: Already had confirmation dialogs implemented
 
 **Existing Features**:
 
@@ -238,7 +240,7 @@ Could add user settings for:
 - [Discharge Management](/docs/dashboard/02-TABS/discharges-tab.md)
 - [Case Card Component](/docs/dashboard/03-COMPONENTS/case-card.md)
 - [VAPI Integration](/docs/vapi/README.md)
-- [Discharge Orchestrator](/docs/implementation/features/discharge-orchestrator.md)
+- [Discharge Orchestrator](/docs/implementation/features/dual-mode-api/tasks/TASK_6_DISCHARGE_ORCHESTRATOR.md)
 
 ## Summary
 

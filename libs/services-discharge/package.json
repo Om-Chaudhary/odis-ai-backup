@@ -1,0 +1,25 @@
+{
+  "name": "@odis-ai/services-discharge",
+  "version": "0.0.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "types": "./src/index.d.ts"
+    },
+    "./discharge-orchestrator": {
+      "import": "./src/lib/discharge-orchestrator.js",
+      "types": "./src/lib/discharge-orchestrator.d.ts"
+    },
+    "./discharge-batch-processor": {
+      "import": "./src/lib/discharge-batch-processor.js",
+      "types": "./src/lib/discharge-batch-processor.d.ts"
+    }
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  }
+}

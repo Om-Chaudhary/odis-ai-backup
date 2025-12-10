@@ -1,32 +1,25 @@
 # Reference Documentation
 
-This directory contains frequently referenced documentation that spans multiple domains or serves as general project knowledge.
+Cross-domain guides and generated inventories that are used across the Nx workspace.
 
-## 📚 Contents
+## Contents
 
-### Migration Guides
-- **`MIGRATION_V2.md`** - Migration guide for version 2.0
+- `MIGRATION_V2.md` – Migration guide for version 2.0
+- `NX_PROJECTS.md` – Generated Nx project inventory (apps/libs, tags, targets)
+- `nx-projects.json` – Generated machine-readable project inventory
 
-## 🔍 Quick Links
+## Quick links to other domains
 
-For domain-specific documentation, see the appropriate domain folder:
+- API → `../api/`
+- Architecture → `../architecture/`
+- VAPI → `../vapi/`
+- Testing → `../testing/`
+- Integrations → `../integrations/`
+- Compliance → `../compliance/`
+- Deployment → `../deployment/`
 
-- **API** → [`../api/`](../api/) - API reference and guides
-- **Architecture** → [`../architecture/`](../architecture/) - System design and architecture
-- **VAPI** → [`../vapi/`](../vapi/) - Voice call integration
-- **Testing** → [`../testing/`](../testing/) - Testing guides and strategies
-- **Integrations** → [`../integrations/`](../integrations/) - Third-party integrations
-- **Compliance** → [`../compliance/`](../compliance/) - Compliance documentation
-- **Deployment** → [`../deployment/`](../deployment/) - Deployment guides
-- **Daily Notes** → [`../daily/`](../daily/) - Date-based notes
+## Contribution notes
 
-## 📝 When to Add Here
-
-Add documentation to this folder when it:
-- Spans multiple domains
-- Is referenced frequently across the project
-- Doesn't fit into a specific domain folder
-- Is a general project guide
-
-**Note:** Most documentation should go in domain-specific folders. This folder is for cross-cutting concerns only.
-
+- Use this folder for cross-cutting references or generated outputs.
+- Regenerate Nx inventories with `pnpm docs:nx`; do not edit generated files manually.
+- Domain-specific docs belong in their respective folders (see `../README.md`).

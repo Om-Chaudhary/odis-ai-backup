@@ -12,7 +12,7 @@ December 9, 2025
 
 ### 1. Updated `DischargeBatchProcessor.processSingleCase()` Method
 
-**File**: `src/lib/services/discharge-batch-processor.ts`
+**File**: `libs/services/src/discharge-batch-processor.ts`
 
 Modified the method signature to accept staggered schedule times as parameters:
 
@@ -29,7 +29,7 @@ The method now uses the provided staggered times instead of the base schedule ti
 
 ### 2. Added Stagger Calculation Logic
 
-**File**: `src/lib/services/discharge-batch-processor.ts`
+**File**: `libs/services/src/discharge-batch-processor.ts`
 
 Updated the `processBatch()` method to calculate staggered times for each case based on its index:
 
@@ -105,7 +105,7 @@ For a batch of 5 cases starting at:
 
 ## Testing
 
-Created comprehensive unit tests in `src/lib/services/__tests__/discharge-batch-stagger.test.ts` to verify:
+Created comprehensive unit tests in `libs/services/src/__tests__/discharge-batch-stagger.test.ts` to verify:
 
 1. ✅ Email stagger calculation (20 seconds per case)
 2. ✅ Call stagger calculation (2 minutes per case)

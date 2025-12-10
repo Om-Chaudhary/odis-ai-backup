@@ -1,0 +1,18 @@
+{
+  "name": "clinics",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/clinics/src",
+  "projectType": "library",
+  "tags": ["type:lib", "scope:clinics", "platform:node"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p libs/clinics/tsconfig.json",
+        "cwd": "{workspaceRoot}"
+      },
+      "cache": true,
+      "inputs": ["default", "^default"]
+    }
+  }
+}

@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+**/node_modules
 /.pnp
 .pnp.js
 HOME/
@@ -49,3 +50,16 @@ yarn-error.log*
 
 # idea files
 .idea.playwright-mcp/
+
+
+
+.nx/cache
+.nx/workspace-data
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
+vitest.config.*.timestamp*
+
+# Next.js
+.next
+out
+dist/libs/services-*

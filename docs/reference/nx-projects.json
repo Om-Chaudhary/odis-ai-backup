@@ -1,0 +1,333 @@
+[
+  {
+    "name": "ai",
+    "type": "lib",
+    "scope": "ai",
+    "platform": "node",
+    "sourceRoot": "libs/ai/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "api",
+    "type": "lib",
+    "scope": "api",
+    "platform": "node",
+    "sourceRoot": "libs/api/src",
+    "targets": [
+      "build-deps",
+      "lint",
+      "test",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
+  },
+  {
+    "name": "api-client",
+    "type": "lib",
+    "scope": "api-client",
+    "platform": "browser",
+    "sourceRoot": "libs/api-client/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "auth",
+    "type": "lib",
+    "scope": "auth",
+    "platform": "browser",
+    "sourceRoot": "libs/auth/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "clinics",
+    "type": "lib",
+    "scope": "clinics",
+    "platform": "node",
+    "sourceRoot": "libs/clinics/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "constants",
+    "type": "lib",
+    "scope": "constants",
+    "platform": "neutral",
+    "sourceRoot": "libs/constants/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "crypto",
+    "type": "lib",
+    "scope": "crypto",
+    "platform": "node",
+    "sourceRoot": "libs/crypto/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "db",
+    "type": "lib",
+    "scope": "db",
+    "platform": "node",
+    "sourceRoot": "libs/db/src",
+    "targets": [
+      "build-deps",
+      "lint",
+      "test",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
+  },
+  {
+    "name": "email",
+    "type": "lib",
+    "scope": "email",
+    "platform": "node",
+    "sourceRoot": "libs/email/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "env",
+    "type": "lib",
+    "scope": "env",
+    "platform": "neutral",
+    "sourceRoot": "libs/env/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "hooks",
+    "type": "lib",
+    "scope": "hooks",
+    "platform": "browser",
+    "sourceRoot": "libs/hooks/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "idexx",
+    "type": "lib",
+    "scope": "idexx",
+    "platform": "node",
+    "sourceRoot": "libs/idexx/src",
+    "targets": [
+      "build-deps",
+      "lint",
+      "test",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
+  },
+  {
+    "name": "logger",
+    "type": "lib",
+    "scope": "logger",
+    "platform": "node",
+    "sourceRoot": "libs/logger/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "odis-ai",
+    "type": "unknown",
+    "scope": "shared",
+    "platform": "neutral",
+    "sourceRoot": ".",
+    "targets": [
+      "build",
+      "build:all",
+      "check",
+      "dev",
+      "docs:nx",
+      "format:check",
+      "format:write",
+      "graph",
+      "lint",
+      "lint:all",
+      "lint:fix",
+      "prepare",
+      "preview",
+      "start",
+      "test",
+      "test:affected",
+      "test:all",
+      "test:coverage",
+      "test:coverage:all",
+      "test:libs",
+      "test:ui",
+      "test:watch",
+      "typecheck",
+      "typecheck:all",
+      "update-types"
+    ]
+  },
+  {
+    "name": "qstash",
+    "type": "lib",
+    "scope": "qstash",
+    "platform": "node",
+    "sourceRoot": "libs/qstash/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "resend",
+    "type": "lib",
+    "scope": "resend",
+    "platform": "node",
+    "sourceRoot": "libs/resend/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "retell",
+    "type": "lib",
+    "scope": "retell",
+    "platform": "node",
+    "sourceRoot": "libs/retell/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "services-cases",
+    "type": "lib",
+    "scope": "services",
+    "platform": "node",
+    "sourceRoot": "libs/services-cases/src",
+    "targets": [
+      "build",
+      "build-deps",
+      "lint",
+      "test",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
+  },
+  {
+    "name": "services-discharge",
+    "type": "lib",
+    "scope": "services",
+    "platform": "node",
+    "sourceRoot": "libs/services-discharge/src",
+    "targets": [
+      "build",
+      "build-deps",
+      "lint",
+      "test",
+      "test-ci",
+      "test-ci--src/__tests__/discharge-batch-stagger.test.ts",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
+  },
+  {
+    "name": "services-shared",
+    "type": "lib",
+    "scope": "services",
+    "platform": "node",
+    "sourceRoot": "libs/services-shared/src",
+    "targets": [
+      "build",
+      "build-deps",
+      "lint",
+      "test",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
+  },
+  {
+    "name": "styles",
+    "type": "lib",
+    "scope": "styles",
+    "platform": "neutral",
+    "sourceRoot": "libs/styles/src",
+    "targets": ["lint"]
+  },
+  {
+    "name": "testing",
+    "type": "lib",
+    "scope": "testing",
+    "platform": "node",
+    "sourceRoot": "libs/testing/src",
+    "targets": ["typecheck"]
+  },
+  {
+    "name": "types",
+    "type": "lib",
+    "scope": "types",
+    "platform": "neutral",
+    "sourceRoot": "libs/types/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "ui",
+    "type": "lib",
+    "scope": "ui",
+    "platform": "browser",
+    "sourceRoot": "libs/ui/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "utils",
+    "type": "lib",
+    "scope": "utils",
+    "platform": "neutral",
+    "sourceRoot": "libs/utils/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "validators",
+    "type": "lib",
+    "scope": "validators",
+    "platform": "neutral",
+    "sourceRoot": "libs/validators/src",
+    "targets": [
+      "build-deps",
+      "lint",
+      "test",
+      "test-ci",
+      "test-ci--src/__tests__/assessment-questions.test.ts",
+      "test-ci--src/__tests__/discharge-summary.test.ts",
+      "test-ci--src/__tests__/discharge.test.ts",
+      "test-ci--src/__tests__/orchestration.test.ts",
+      "test-ci--src/__tests__/schedule.test.ts",
+      "test-ci--src/__tests__/scribe.test.ts",
+      "test:coverage",
+      "test:watch",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
+  },
+  {
+    "name": "vapi",
+    "type": "lib",
+    "scope": "vapi",
+    "platform": "node",
+    "sourceRoot": "libs/vapi/src",
+    "targets": [
+      "build-deps",
+      "lint",
+      "test",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
+  },
+  {
+    "name": "web",
+    "type": "app",
+    "scope": "web",
+    "platform": "node",
+    "sourceRoot": "apps/web/src",
+    "targets": [
+      "build",
+      "build-deps",
+      "dev",
+      "lint",
+      "serve-static",
+      "start",
+      "test",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
+  }
+]

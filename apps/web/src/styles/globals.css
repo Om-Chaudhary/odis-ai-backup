@@ -1,0 +1,17 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* Import shared design system */
+@import "../../../../libs/styles/src/tokens.css";
+@import "../../../../libs/styles/src/animations.css";
+@import "../../../../libs/styles/src/utilities.css";
+
+/* Tailwind base layer - applies shared tokens */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

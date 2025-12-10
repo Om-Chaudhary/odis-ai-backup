@@ -1,0 +1,90 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "plugins": [{ "name": "next" }],
+    "incremental": true,
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./src/*"],
+      "~/database.types": ["../../libs/types/src/database.types.ts"],
+      "@odis-ai/types": ["../../libs/types/src/index.ts"],
+      "@odis-ai/types/*": ["../../libs/types/src/*"],
+      "@odis-ai/validators": ["../../libs/validators/src/index.ts"],
+      "@odis-ai/validators/*": ["../../libs/validators/src/*"],
+      "@odis-ai/services-cases": ["../../libs/services-cases/src/index.ts"],
+      "@odis-ai/services-cases/*": ["../../libs/services-cases/src/*"],
+      "@odis-ai/services-discharge": [
+        "../../libs/services-discharge/src/index.ts"
+      ],
+      "@odis-ai/services-discharge/*": ["../../libs/services-discharge/src/*"],
+      "@odis-ai/services-discharge/discharge-orchestrator": [
+        "../../libs/services-discharge/src/lib/discharge-orchestrator.ts"
+      ],
+      "@odis-ai/services-discharge/discharge-batch-processor": [
+        "../../libs/services-discharge/src/lib/discharge-batch-processor.ts"
+      ],
+      "@odis-ai/services-shared": ["../../libs/services-shared/src/index.ts"],
+      "@odis-ai/services-shared/*": ["../../libs/services-shared/src/*"],
+      "@odis-ai/utils": ["../../libs/utils/src/index.ts"],
+      "@odis-ai/utils/*": ["../../libs/utils/src/*"],
+      "@odis-ai/db": ["../../libs/db/src/index.ts"],
+      "@odis-ai/db/*": ["../../libs/db/src/*"],
+      "@odis-ai/ui": ["../../libs/ui/src/index.ts"],
+      "@odis-ai/ui/*": ["../../libs/ui/src/*"],
+      "@odis-ai/vapi": ["../../libs/vapi/src/index.ts"],
+      "@odis-ai/vapi/*": ["../../libs/vapi/src/*"],
+      "@odis-ai/idexx": ["../../libs/idexx/src/index.ts"],
+      "@odis-ai/idexx/*": ["../../libs/idexx/src/*"],
+      "@odis-ai/api-client": ["../../libs/api-client/src/index.ts"],
+      "@odis-ai/api-client/*": ["../../libs/api-client/src/*"],
+      "@odis-ai/email": ["../../libs/email/src/index.ts"],
+      "@odis-ai/email/*": ["../../libs/email/src/*"],
+      "@odis-ai/ai": ["../../libs/ai/src/index.ts"],
+      "@odis-ai/ai/*": ["../../libs/ai/src/*"],
+      "@odis-ai/logger": ["../../libs/logger/src/index.ts"],
+      "@odis-ai/logger/*": ["../../libs/logger/src/*"],
+      "@odis-ai/api": ["../../libs/api/src/index.ts"],
+      "@odis-ai/api/*": ["../../libs/api/src/*"],
+      "@odis-ai/clinics": ["../../libs/clinics/src/index.ts"],
+      "@odis-ai/clinics/*": ["../../libs/clinics/src/*"],
+      "@odis-ai/qstash": ["../../libs/qstash/src/index.ts"],
+      "@odis-ai/qstash/*": ["../../libs/qstash/src/*"],
+      "@odis-ai/crypto": ["../../libs/crypto/src/index.ts"],
+      "@odis-ai/crypto/*": ["../../libs/crypto/src/*"],
+      "@odis-ai/resend": ["../../libs/resend/src/index.ts"],
+      "@odis-ai/resend/*": ["../../libs/resend/src/*"],
+      "@odis-ai/retell": ["../../libs/retell/src/index.ts"],
+      "@odis-ai/retell/*": ["../../libs/retell/src/*"],
+      "@odis-ai/constants": ["../../libs/constants/src/index.ts"],
+      "@odis-ai/constants/*": ["../../libs/constants/src/*"],
+      "@odis-ai/env": ["../../libs/env/src/index.ts"],
+      "@odis-ai/env/*": ["../../libs/env/src/*"],
+      "@odis-ai/hooks": ["../../libs/hooks/src/index.ts"],
+      "@odis-ai/hooks/*": ["../../libs/hooks/src/*"],
+      "@odis-ai/auth": ["../../libs/auth/src/index.ts"],
+      "@odis-ai/auth/*": ["../../libs/auth/src/*"],
+      "@odis-ai/styles": ["../../libs/styles/src/index.css"],
+      "@odis-ai/styles/*": ["../../libs/styles/src/*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.cjs",
+    "**/*.js",
+    ".next/types/**/*.ts",
+    "../../libs/**/*.ts",
+    "../../libs/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/__tests__/**",
+    "src/test/**/*",
+    "vitest.config.ts",
+    "../../libs/testing/src/**/*"
+  ]
+}

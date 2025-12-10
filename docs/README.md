@@ -1,349 +1,55 @@
-# Documentation Structure
-
-This directory contains all project documentation organized by purpose and frequency of use.
-
-## 📁 Directory Structure
-
-```
-docs/
-├── daily/              # Date-based daily notes and session logs
-├── reference/         # Frequently referenced documentation
-├── api/               # API documentation and guides
-├── architecture/      # System architecture and design docs
-├── compliance/        # Compliance and legal documentation
-├── cursor-commands/   # Cursor commands and rules
-├── deployment/        # Deployment guides and setup
-├── implementation/    # Implementation project guides
-├── integrations/      # Third-party integration guides
-├── testing/           # Testing guides and strategies
-├── vapi/              # VAPI voice call integration docs
-└── README.md          # This file
-```
-
----
-
-## 📅 Daily Notes (`daily/`)
-
-**Purpose:** Date-based notes, session logs, and temporary documentation.
-
-**Structure:** Organized by date (YYYY-MM-DD format)
-
-**Examples:**
-
-- `daily/2025-11-02/` - Notes from November 2, 2025
-- `daily/2025-11-24/` - Today's notes
-
-**When to use:**
-
-- Daily standup notes
-- Session-specific documentation
-- Temporary notes that may be archived later
-- Date-specific implementation notes
-
-**Naming convention:** `YYYY-MM-DD/` or `YYYY-MM-DD-description/`
-
----
-
-## 📚 Reference Documentation (`reference/`)
-
-**Purpose:** Frequently referenced guides and documentation that don't fit into specific domains.
-
-**Contents:**
-
-- Migration guides
-- Implementation summaries
-- Quick start guides
-- General project documentation
-
-**Examples:**
-
-- `MIGRATION_V2.md` - Migration guide for v2
-- `IMPLEMENTATION_SUMMARY.md` - High-level implementation overview
-- `TESTING_STRATEGY.md` - Testing approach
-
-**When to use:**
-
-- Documentation you reference regularly
-- Guides that span multiple domains
-- General project knowledge
-
----
-
-## 🔌 API Documentation (`api/`)
-
-**Purpose:** Complete API reference and integration guides.
-
-**Key Files:**
-
-- `API_REFERENCE.md` - Complete API reference (start here)
-- `README.md` - API authentication and overview
-- `USAGE_EXAMPLES.md` - Code examples
-- `chrome-extension-api-reference.md` - Extension-specific API docs
-
-**Subdirectories:**
-
-- `endpoints/` - Individual endpoint documentation (auto-generated)
-
-**When to use:**
-
-- Integrating with the API
-- Understanding authentication
-- Finding endpoint details
-- Extension development
-
----
-
-## 🏗️ Architecture (`architecture/`)
-
-**Purpose:** System design, architecture decisions, and technical deep-dives.
-
-**Contents:**
-
-- System architecture diagrams
-- Design decisions
-- Migration guides
-- Normalization architecture
-
-**When to use:**
-
-- Understanding system design
-- Planning major changes
-- Onboarding new developers
-
----
-
-## ✅ Compliance (`compliance/`)
-
-**Purpose:** Legal, compliance, and regulatory documentation.
-
-**Contents:**
-
-- Compliance page guides
-- Legal requirements
-- Privacy documentation
-
-**When to use:**
-
-- Building compliance features
-- Understanding legal requirements
-- Privacy policy updates
-
----
-
-## 🚀 Deployment (`deployment/`)
-
-**Purpose:** Deployment guides and infrastructure setup.
-
-**Contents:**
-
-- Vercel setup guides
-- Environment configuration
-- CI/CD documentation
-
-**When to use:**
-
-- Setting up new environments
-- Deploying to production
-- Configuring infrastructure
-
----
-
-## 🔗 Integrations (`integrations/`)
-
-**Purpose:** Third-party integration guides and documentation.
-
-**Contents:**
-
-- Chrome extension integration
-- Retell AI scheduling
-- IDEXX integration
-- Other third-party services
-
-**When to use:**
-
-- Integrating with external services
-- Understanding integration architecture
-- Troubleshooting integrations
-
----
-
-## ⌨️ Cursor Commands (`cursor-commands/`)
-
-**Purpose:** Cursor-specific commands, rules, and workflow documentation.
-
-**Contents:**
-
-- Browser testing workflows (Playwright MCP)
-- Component development commands
-- API testing commands
-- Debugging workflows
-- Command templates
-
-**When to use:**
-
-- Visual testing in browser
-- Component development workflows
-- API endpoint testing
-- Debugging issues
-- Creating new commands
-
-**Key Files:**
-
-- `README.md` - Commands overview
-- `browser-testing/tool-comparison.md` - Browser tool analysis
-- `browser-testing/visual-test-commands.md` - Visual testing reference
-
-**See also:** `.cursorrules` in project root for quick reference rules.
-
----
-
-## 🧪 Testing (`testing/`)
-
-**Purpose:** Testing guides, strategies, and best practices.
-
-**Contents:**
-
-- Testing strategy
-- Testing guides
-- Priority matrices
-- Quick start guides
-
-**When to use:**
-
-- Writing tests
-- Understanding test coverage
-- Planning test strategy
-
----
-
-## 📞 VAPI (`vapi/`)
-
-**Purpose:** VAPI voice call integration documentation.
-
-**Contents:**
-
-- Integration guides
-- Variable documentation
-- Webhook guides
-- Knowledge base docs
-- Prompts (`prompts/` subdirectory)
-
-**When to use:**
-
-- Setting up VAPI calls
-- Understanding dynamic variables
-- Configuring webhooks
-- Updating prompts
-
----
-
-## 🛠️ Implementation (`implementation/`)
-
-**Purpose:** Implementation guides organized by features (ongoing work) and sessions (date-based notes).
-
-**Structure:**
-
-- `features/` - Important/ongoing feature documentation
-- `sessions/` - Date-based implementation session notes
-
-**Contents:**
-
-- Feature-specific implementation plans
-- Task breakdowns for parallel execution
-- Step-by-step implementation guides
-- Daily implementation progress notes
-
-**Active Features:**
-
-- `features/dual-mode-api/` - Dual-Mode API Architecture with LlamaIndex
-
-**When to use:**
-
-- Planning major feature implementations
-- Breaking down complex tasks
-- Coordinating parallel development
-- Tracking daily implementation progress
-- Understanding implementation approach
-
-**See:** [`implementation/README.md`](./implementation/README.md) for feature list and details.
-
----
-
-## 📝 Quick Reference
-
-### Where to find...
-
-| What you need           | Where to look               |
-| ----------------------- | --------------------------- |
-| API endpoints           | `api/API_REFERENCE.md`      |
-| Cursor commands         | `cursor-commands/README.md` |
-| Daily notes             | `daily/YYYY-MM-DD/`         |
-| Migration guides        | `reference/MIGRATION_*.md`  |
-| Architecture decisions  | `architecture/`             |
-| Testing guides          | `testing/`                  |
-| VAPI setup              | `vapi/VAPI_FINAL_SETUP.md`  |
-| Deployment              | `deployment/`               |
-| Compliance              | `compliance/`               |
-| Implementation projects | `implementation/`           |
-
-### Adding new documentation
-
-1. **Daily notes:** Create `daily/YYYY-MM-DD/` directory
-2. **API docs:** Add to `api/` or `api/endpoints/`
-3. **Cursor commands:** Add to `cursor-commands/` following existing structure
-4. **Reference docs:** Add to `reference/`
-5. **Implementation projects:** Create `implementation/[project-name]/` directory
-6. **Domain-specific:** Add to appropriate domain folder (`vapi/`, `testing/`, etc.)
-
-### Documentation standards
-
-- **Markdown format:** All docs use `.md` extension
-- **Naming:** Use UPPER_SNAKE_CASE for files, descriptive names
-- **Structure:** Include table of contents for long docs
-- **Links:** Use relative paths for cross-references
-- **Dates:** Use ISO format (YYYY-MM-DD) for date-based docs
-
----
-
-## 🔍 Finding Documentation
-
-### By Topic
-
-- **Authentication:** `api/README.md`
-- **Cursor Commands:** `cursor-commands/README.md`
-- **Database:** `architecture/NORMALIZATION_ARCHITECTURE.md`
-- **Voice Calls:** `vapi/`
-- **Chrome Extension:** `integrations/EXTENSION_DISCHARGE_INTEGRATION.md`
-- **Testing:** `testing/TESTING_GUIDE.md`
-- **Implementation Projects:** `implementation/`
-
-### By Date
-
-- Check `daily/` for date-based notes
-- Most recent changes are in the newest `daily/` folder
-
-### By Type
-
-- **Guides:** Look in domain folders (`api/`, `vapi/`, etc.)
-- **Reference:** Check `reference/`
-- **Daily:** Check `daily/`
-
----
-
-## 📋 Maintenance
-
-### Regular Tasks
-
-- **Weekly:** Archive old daily notes (move to `daily/archive/`)
-- **Monthly:** Review and update reference docs
-- **Quarterly:** Audit documentation structure
-
-### Cleanup
-
-- Remove outdated docs from `daily/` after 90 days
-- Update links when moving files
-- Keep `reference/` focused on frequently used docs
-
----
-
-**Last Updated:** November 24, 2025
+# Documentation Index (Nx Monorepo)
+
+Authoritative index for all documentation in the Nx workspace. This repo is a multi-package monorepo; place docs by domain and keep navigation updated when adding apps or libraries.
+
+## How to use this index
+
+- Start with the section that matches your task (product, architecture, API, ops).
+- For new docs, pick the correct folder below and add an entry to that folder’s README.
+- Do not hand-edit generated files; see the Autogenerated Assets section.
+
+## Directory map
+
+- `api/` – API auth, tRPC/server-action patterns, webhook guides.
+- `architecture/` – System design, Nx module maps, migrations, cross-cutting patterns.
+- `audits/` – Codebase audit reports, improvement recommendations, refactoring roadmaps.
+- `compliance/` – Compliance/legal requirements.
+- `cursor-commands/` – Cursor/Playwright workflows and command templates.
+- `dashboard/` – Dashboard UX, patterns, components, and testing notes.
+- `deployment/` – Environments, CI/CD, and runtime configuration.
+- `development/` – Developer workflows and local setup.
+- `implementation/` – Feature or project-specific guides.
+- `integrations/` – Third-party integrations (e.g., IDEXX, Retell, VAPI partners).
+- `reference/` – Cross-domain references and generated inventories.
+- `testing/` – Testing strategy and checklists.
+- `vapi/` – Voice/call knowledge base, prompts, and VAPI-specific setup.
+
+## Nx-aware placement rules
+
+- Apps live under `apps/*`; document app behavior in the closest domain folder (usually `dashboard/` or `architecture/` for runtime flows).
+- Libraries live under `libs/*`; add library docs to `architecture/` (design), `reference/` (inventories), or `integrations/` (external systems).
+- Use Nx tags (`type:*`, `scope:*`, `platform:*`) in new `project.json` files and reflect the scope in doc titles for consistency.
+- Update the relevant section README when adding or moving docs.
+
+## Autogenerated assets
+
+- `reference/NX_PROJECTS.md` – Nx project inventory (apps/libs, tags, targets).
+- `reference/nx-projects.json` – Machine-readable inventory for tooling.
+- Regenerate with `pnpm docs:nx`. Do not hand-edit the generated files.
+
+## Priority entry points
+
+- Product overview and workspace orientation → root `README.md`.
+- Cursor rules and quick workflows → `../.cursorrules`.
+- AI assistant guidance (Claude/Cursor) → `../CLAUDE.md`.
+- Core library responsibilities → `architecture/CORE_LIBS.md`.
+- Nx best practices → `architecture/NX_BEST_PRACTICES.md`.
+- API reference → `api/API_REFERENCE.md`.
+- Testing strategy → `testing/TESTING_STRATEGY.md`.
+- **Codebase audit reports** → `audits/README.md`.
+
+## Writing guidelines
+
+- Keep documents concise and scoped; prefer linking to code and generated inventories.
+- Use UPPER_SNAKE_CASE for guides and kebab-case for feature docs.
+- Place release and migration notes in `reference/` or `architecture/` depending on scope.
