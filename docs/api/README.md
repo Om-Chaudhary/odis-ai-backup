@@ -332,23 +332,49 @@ vi.spyOn(auth, "authenticateUser").mockResolvedValue({
 });
 ```
 
-## API Endpoints
+## tRPC Router Architecture (Nx Monorepo)
 
-### Discharge Orchestration
+The API is organized using tRPC routers in a modular directory structure:
 
-The discharge orchestration endpoint provides a unified API for executing multi-step discharge workflows:
+### Router Organization
 
-- **Endpoint:** `POST /api/discharge/orchestrate`
-- **Guide:** [`ORCHESTRATION_API_GUIDE.md`](./ORCHESTRATION_API_GUIDE.md) - Complete API guide with data verification scenarios
-- **Quick Reference:** See [dual-mode-api documentation](../implementation/features/dual-mode-api/API_QUICK_REFERENCE.md)
+**Dashboard Router** (`apps/web/src/server/api/routers/dashboard/`)
 
-**Features:**
+- Refactored from 2,029 line monolith into 6 focused files:
+  - `activity.ts` - Activity timeline procedures (489 lines)
+  - `listings.ts` - Listing procedures (660 lines)
+  - `performance.ts` - Performance statistics
+  - `scheduled.ts` - Scheduled items
+  - `stats.ts` - Dashboard statistics
+  - `types.ts` - Shared type definitions
+  - `index.ts` - Main router export
 
-- ✅ Dual input modes (raw data or existing case)
-- ✅ Step-by-step workflow execution
-- ✅ Parallel execution support
-- ✅ Comprehensive data verification
-- ✅ IDEXX extension integration ready
+**Cases Router** (`apps/web/src/server/api/routers/cases/`)
+
+- Refactored from 2,003 line monolith into 6 focused files:
+  - `admin.ts` - Admin operations
+  - `batch-operations.ts` - Bulk operations
+  - `patient-management.ts` - Patient CRUD
+  - `user-cases.ts` - User-specific cases
+  - `schemas.ts` - Zod validation schemas (25 lines)
+  - `index.ts` - Main router export
+
+**Other Routers:**
+
+- `inbound-calls.ts` - Inbound call handling (416 lines)
+- `playground.ts` - Testing/development endpoints
+- `sharing.ts` - Case sharing functionality
+- `templates.ts` - Template management
+- `users.ts` - User management
+- `waitlist.ts` - Waitlist management
+
+### Benefits of Modular Structure
+
+- ✅ **Maintainable**: No file > 700 lines (was 2,000+)
+- ✅ **Clear Separation**: Each file has single responsibility
+- ✅ **Type Safety**: Shared types in dedicated files
+- ✅ **Testable**: Easier to test individual router modules
+- ✅ **Scalable**: Easy to add new procedures without file bloat
 
 ## Questions?
 

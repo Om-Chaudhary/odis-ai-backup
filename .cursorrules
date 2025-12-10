@@ -12,22 +12,71 @@ Project-specific rules for the Nx monorepo.
 - Framework: Next.js 15 (App Router), React Server Components by default
 - Language: TypeScript (strict)
 - Styling: Tailwind CSS 4 + shadcn/ui (Radix)
-- Data: Supabase (PostgreSQL) with service client for admin paths
-- Nx layout: `apps/web` + libraries in `libs/*` (api, db, vapi, idexx, logger, utils, types, services, validators, clinics, constants, crypto, qstash, resend, email, ui)
+- Data: Supabase (PostgreSQL) with repository pattern + DI interfaces
+- Nx layout: `apps/web` + 28 libraries in `libs/*`
+  - **Services** (split): `services-cases`, `services-discharge`, `services-shared`
+  - **Data**: `db` (with interfaces/ and repositories/), `types`, `validators`
+  - **Integrations**: `vapi`, `idexx`, `qstash`, `resend`, `retell`
+  - **Infrastructure**: `api`, `auth`, `logger`, `utils`, `constants`, `crypto`
+  - **UI**: `ui`, `styles`, `hooks`, `email`
+  - **Dev**: `testing`, `env`, `ai`
 - Tags: use `type:*`, `scope:*`, `platform:*` in `project.json` for new projects
+- See generated inventory: `docs/reference/NX_PROJECTS.md`
 
 ## Key Patterns
+
+### tRPC Router Structure
+- Routers split into modular directories (dashboard/, cases/)
+- Each router: 6 focused files (was 2,000+ line monoliths)
+- Schemas separated in dedicated files
+- Import from `apps/web/src/server/api/routers/[router]/`
+
 ### Server Actions vs API Routes
 - Prefer Server Actions for internal flows
 - Use API Routes only for webhooks/external integrations
+- Server Actions in `apps/web/src/server/actions/`
+
+### Repository Pattern & Dependency Injection
+- Use repository interfaces from `@odis-ai/db/interfaces`
+  - `ICasesRepository`, `IUserRepository`, `ICallRepository`, `IEmailRepository`
+- Concrete implementations in `@odis-ai/db/repositories`
+- External API interfaces: `IScheduler`, `ICallClient`, `IEmailClient`
+- Enables testable services with DI
+
+### Service Layer
+- Services split into focused libraries:
+  - `@odis-ai/services-cases` - Case management
+  - `@odis-ai/services-discharge` - Discharge workflows + batch processing
+  - `@odis-ai/services-shared` - Shared execution logic
+- Services accept repository interfaces for testability
 
 ### Supabase Clients
-- Standard client: `createClient()` (RLS, cookies)
+- Standard client: `createServerClient()` / `createBrowserClient()` (RLS, cookies)
 - Service client: `createServiceClient()` (bypasses RLS, admin only)
+- Repository layer abstracts DB access
 
 ### React Hooks
 - Use ref pattern for polling/interval stability
 - Minimize `"use client"`; default to Server Components
+
+### Import Patterns
+```typescript
+// Types (consolidated to libs)
+import type { DashboardCase } from '@odis-ai/types';
+
+// Validators (236+ tests, 95%+ coverage)
+import { dischargeSchema } from '@odis-ai/validators';
+
+// Utilities (moved from web app)
+import { transformBackendCase } from '@odis-ai/utils';
+
+// Repository interfaces
+import type { ICasesRepository } from '@odis-ai/db/interfaces';
+
+// Services
+import { CasesService } from '@odis-ai/services-cases';
+import { DischargeOrchestrator } from '@odis-ai/services-discharge';
+```
 
 ## Nx & Documentation
 - Keep docs inside `docs/` following `docs/README.md`

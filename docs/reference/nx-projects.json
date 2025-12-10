@@ -13,7 +13,14 @@
     "scope": "api",
     "platform": "node",
     "sourceRoot": "libs/api/src",
-    "targets": ["build-deps", "lint", "test", "typecheck", "watch-deps"]
+    "targets": [
+      "build-deps",
+      "lint",
+      "test",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
   },
   {
     "name": "api-client",
@@ -61,7 +68,14 @@
     "scope": "db",
     "platform": "node",
     "sourceRoot": "libs/db/src",
-    "targets": ["build-deps", "lint", "test", "typecheck", "watch-deps"]
+    "targets": [
+      "build-deps",
+      "lint",
+      "test",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
   },
   {
     "name": "email",
@@ -93,7 +107,14 @@
     "scope": "idexx",
     "platform": "node",
     "sourceRoot": "libs/idexx/src",
-    "targets": ["build-deps", "lint", "test", "typecheck", "watch-deps"]
+    "targets": [
+      "build-deps",
+      "lint",
+      "test",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
   },
   {
     "name": "logger",
@@ -167,7 +188,66 @@
     "scope": "services",
     "platform": "node",
     "sourceRoot": "libs/services/src",
-    "targets": ["build-deps", "lint", "test", "typecheck", "watch-deps"]
+    "targets": [
+      "build-deps",
+      "lint",
+      "test",
+      "test-ci",
+      "test-ci--src/__tests__/discharge-batch-stagger.test.ts",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
+  },
+  {
+    "name": "services-cases",
+    "type": "lib",
+    "scope": "domain",
+    "platform": "node",
+    "sourceRoot": "libs/services-cases/src",
+    "targets": [
+      "build",
+      "build-deps",
+      "lint",
+      "test",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
+  },
+  {
+    "name": "services-discharge",
+    "type": "lib",
+    "scope": "domain",
+    "platform": "node",
+    "sourceRoot": "libs/services-discharge/src",
+    "targets": [
+      "build",
+      "build-deps",
+      "lint",
+      "test",
+      "test-ci",
+      "test-ci--src/__tests__/discharge-batch-stagger.test.ts",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
+  },
+  {
+    "name": "services-shared",
+    "type": "lib",
+    "scope": "shared",
+    "platform": "node",
+    "sourceRoot": "libs/services-shared/src",
+    "targets": [
+      "build",
+      "build-deps",
+      "lint",
+      "test",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
   },
   {
     "name": "styles",
@@ -215,7 +295,23 @@
     "scope": "validators",
     "platform": "neutral",
     "sourceRoot": "libs/validators/src",
-    "targets": ["build-deps", "lint", "test", "typecheck", "watch-deps"]
+    "targets": [
+      "build-deps",
+      "lint",
+      "test",
+      "test-ci",
+      "test-ci--src/__tests__/assessment-questions.test.ts",
+      "test-ci--src/__tests__/discharge-summary.test.ts",
+      "test-ci--src/__tests__/discharge.test.ts",
+      "test-ci--src/__tests__/orchestration.test.ts",
+      "test-ci--src/__tests__/schedule.test.ts",
+      "test-ci--src/__tests__/scribe.test.ts",
+      "test:coverage",
+      "test:watch",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
   },
   {
     "name": "vapi",
@@ -223,7 +319,14 @@
     "scope": "vapi",
     "platform": "node",
     "sourceRoot": "libs/vapi/src",
-    "targets": ["build-deps", "lint", "test", "typecheck", "watch-deps"]
+    "targets": [
+      "build-deps",
+      "lint",
+      "test",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
   },
   {
     "name": "web",
@@ -240,6 +343,7 @@
       "start",
       "test",
       "typecheck",
+      "vitest:test",
       "watch-deps"
     ]
   }

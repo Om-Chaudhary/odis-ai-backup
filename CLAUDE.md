@@ -43,41 +43,101 @@ pnpm docs:nx             # regenerate docs/reference/NX_PROJECTS.md
 
 ```text
 apps/
-  web/                   # Next.js app
+  web/                       # Next.js app (dashboard, API routes, server actions)
+
 libs/
-  api/                   # API helpers (auth, cors, responses)
-  api-client/            # API client utilities
-  constants/             # Shared constants
-  clinics/               # Clinic configuration helpers
-  crypto/                # AES helpers
-  db/                    # Supabase clients + repositories
-  email/                 # Email rendering
-  idexx/                 # IDEXX transformations & validation
-  logger/                # Structured logging
-  qstash/                # QStash scheduling helpers
-  resend/                # Resend client
-  services/              # Domain orchestrators
-  types/                 # Shared types
-  ui/                    # Shared UI primitives
-  utils/                 # Shared utilities
-  validators/            # Zod schemas
-  vapi/                  # VAPI integration (knowledge base, webhooks, tools)
+  # API & Client
+  api/                       # API helpers (auth, cors, responses, errors)
+  api-client/                # REST API client utilities
+  auth/                      # Authentication utilities
+
+  # Data & Persistence
+  db/                        # Supabase clients + repository interfaces + implementations
+    ├── interfaces/          # ICasesRepository, IUserRepository, ICallRepository, IEmailRepository
+    ├── repositories/        # Concrete implementations
+    └── lib/entities/        # scribe-transactions
+
+  # Domain Services (split for testability & DI)
+  services-cases/            # Case management service layer
+  services-discharge/        # Discharge workflow orchestration + batch processing
+  services-shared/           # Shared execution plan logic
+
+  # External Integrations
+  idexx/                     # IDEXX Neo transformations & validation
+  vapi/                      # VAPI voice calls (client, call-manager, webhooks, tools, knowledge-base)
+    ├── call-client.interface.ts  # ICallClient for testing
+    ├── knowledge-base/      # Medical specialty knowledge bases
+    ├── webhooks/            # Webhook handlers + tools
+    └── prompts/             # VAPI system prompts
+
+  qstash/                    # QStash scheduling + IScheduler interface
+  resend/                    # Resend email client + IEmailClient interface
+  retell/                    # Legacy Retell integration (deprecated)
+
+  # Shared Infrastructure
+  types/                     # Shared TypeScript types (dashboard, case, services, patient, orchestration)
+  validators/                # Zod validation schemas (236+ tests, 95%+ coverage)
+  utils/                     # Shared utilities (case-transforms, business-hours, phone, date helpers)
+  constants/                 # Shared constants & configuration
+  logger/                    # Structured logging with namespaces
+
+  # UI & Styling
+  ui/                        # Shared React components (shadcn/ui)
+  styles/                    # Global styles & Tailwind config
+  hooks/                     # Shared React hooks
+
+  # Dev & Testing
+  testing/                   # Test utilities, mocks, fixtures, setup
+  env/                       # Environment variable validation
+
+  # Supporting Libraries
+  clinics/                   # Clinic configuration helpers
+  crypto/                    # AES encryption helpers
+  email/                     # Email template rendering (React Email)
+  ai/                        # AI/LLM utilities
 ```
 
-Tags to use in new projects: `type:*`, `scope:*`, `platform:*`.
+**Tags**: Use `type:*`, `scope:*`, `platform:*` in new projects.
+
+**New Projects (since migration)**:
+
+- `services-cases`, `services-discharge`, `services-shared` (scope: domain/shared)
+- Repository interfaces in `libs/db/interfaces/`
+- External API interfaces (IScheduler, ICallClient, IEmailClient)
 
 ## Key Architectural Patterns
 
 ### Dual API Surface
 
-- tRPC: `apps/web/src/server/api/*` for type-safe RPC, auth via protected procedures.
-- Server Actions: `apps/web/src/server/actions/*` for form-like flows and Supabase reads/writes.
-- API Routes: reserved for webhooks/external integrations.
+- **tRPC**: `apps/web/src/server/api/routers/*` for type-safe RPC, auth via protected procedures.
+  - Routers split into modular directories:
+    - `dashboard/` - 6 files (was 2,029 lines monolith)
+    - `cases/` - 6 files (was 2,003 lines monolith)
+- **Server Actions**: `apps/web/src/server/actions/*` for form-like flows and Supabase reads/writes.
+- **API Routes**: Reserved for webhooks/external integrations (`apps/web/src/app/api/*`).
 
-### Supabase Client Pattern
+### Supabase Client Pattern & Repositories
 
-- Standard client (RLS): from `libs/db` via `createServerClient` / `createBrowserClient`.
-- Service client (bypasses RLS): `createServiceClient` for admin/webhook paths only.
+- **Standard client (RLS)**: from `libs/db` via `createServerClient` / `createBrowserClient`.
+- **Service client (bypasses RLS)**: `createServiceClient` for admin/webhook paths only.
+- **Repository Pattern**: Use repository interfaces for testability:
+  - `ICasesRepository`, `IUserRepository`, `ICallRepository`, `IEmailRepository` from `@odis-ai/db/interfaces`
+  - Concrete implementations in `@odis-ai/db/repositories`
+  - Enables dependency injection and mocking in tests
+
+### Service Layer Pattern
+
+Services split into focused libraries with dependency injection:
+
+```typescript
+// Import from focused service libraries
+import { CasesService } from "@odis-ai/services-cases";
+import { DischargeOrchestrator } from "@odis-ai/services-discharge";
+import { ExecutionPlan } from "@odis-ai/services-shared";
+
+// Services accept repository interfaces for testing
+const service = new CasesService(casesRepo, userRepo, callRepo);
+```
 
 ### React Hook Pattern for Polling
 
@@ -94,12 +154,46 @@ const hasActive = useCallback(() => dataRef.current.some((x) => x.active), []);
 
 ### VAPI Integration
 
-- Core library: `libs/vapi` (client, validators, knowledge base, call manager, webhooks, tools).
-- IDEXX transform: `libs/idexx` (credential manager, transformer, validation).
-- Scheduling: `libs/qstash` for delayed execution.
-- API routes/webhooks: `apps/web/src/app/api/webhooks/vapi`, `apps/web/src/app/api/calls/*`.
-- UI surface: dashboard call management in `apps/web/src/app/dashboard/calls` and related components.
-- Dynamic variables: pass via `assistantOverrides.variableValues`; see `libs/vapi/extract-variables.ts`.
+- **Core library**: `libs/vapi` (client, validators, knowledge base, call manager, webhooks, tools).
+  - `ICallClient` interface for testing
+  - Knowledge bases by medical specialty
+  - Webhook handlers + tool registry
+- **IDEXX transform**: `libs/idexx` (credential manager, transformer, validation).
+- **Scheduling**: `libs/qstash` with `IScheduler` interface for delayed execution.
+- **API routes/webhooks**: `apps/web/src/app/api/webhooks/vapi`, `apps/web/src/app/api/calls/*`.
+- **UI surface**: dashboard call management in `apps/web/src/app/dashboard/calls` and related components.
+- **Dynamic variables**: pass via `assistantOverrides.variableValues`; see `libs/vapi/extract-variables.ts`.
+
+### Import Patterns
+
+**Shared Libraries:**
+
+```typescript
+// Types (consolidated from web app)
+import type { DashboardCase, DashboardStats } from "@odis-ai/types";
+import type { CaseData, PatientInfo } from "@odis-ai/types";
+
+// Validators (236+ tests, 95%+ coverage)
+import { dischargeSchema, scheduleSchema } from "@odis-ai/validators";
+
+// Utilities (moved from web app)
+import { transformBackendCaseToDashboardCase } from "@odis-ai/utils";
+import { isWithinBusinessHours } from "@odis-ai/utils";
+
+// Database interfaces & repositories
+import type { ICasesRepository } from "@odis-ai/db/interfaces";
+import { CasesRepository } from "@odis-ai/db/repositories";
+
+// Services (split into focused libs)
+import { CasesService } from "@odis-ai/services-cases";
+import { DischargeOrchestrator } from "@odis-ai/services-discharge";
+import { ExecutionPlan } from "@odis-ai/services-shared";
+
+// External integrations
+import { createPhoneCall } from "@odis-ai/vapi";
+import { scheduleMessage } from "@odis-ai/qstash";
+import { sendEmail } from "@odis-ai/resend";
+```
 
 ### Authentication & Authorization
 
