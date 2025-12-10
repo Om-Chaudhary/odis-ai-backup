@@ -1,0 +1,636 @@
+/**
+ * Cases Router - Patient Management Procedures
+ *
+ * Patient updates and discharge triggers.
+ */
+
+import { z } from "zod";
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { TRPCError } from "@trpc/server";
+import { getClinicByUserId, getClinicUserIds } from "@odis-ai/clinics/utils";
+import { normalizeEmail, normalizeToE164 } from "@odis-ai/utils/phone";
+
+export const patientManagementRouter = createTRPCRouter({
+  /**
+   * Update patient information (any field)
+   * Clinic-scoped: allows updating patients belonging to any user in the same clinic
+   */
+  updatePatientInfo: protectedProcedure
+    .input(
+      z.object({
+        patientId: z.string().uuid(),
+        name: z.string().optional(),
+        species: z.string().optional(),
+        breed: z.string().optional(),
+        ownerName: z.string().optional(),
+        ownerEmail: z.string().email().optional().or(z.literal("")),
+        ownerPhone: z.string().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Get all user IDs in the same clinic for shared data access
+      const clinicUserIds = await getClinicUserIds(ctx.user.id, ctx.supabase);
+
+      // Build update object only with defined fields
+      const updateData: Record<string, string | null> = {};
+
+      if (input.name !== undefined) updateData.name = input.name;
+      if (input.species !== undefined) updateData.species = input.species;
+      if (input.breed !== undefined) updateData.breed = input.breed;
+      if (input.ownerName !== undefined) {
+        updateData.owner_name = input.ownerName;
+      }
+      if (input.ownerEmail !== undefined) {
+        updateData.owner_email = input.ownerEmail ?? null; // Empty string becomes null
+      }
+      if (input.ownerPhone !== undefined) {
+        updateData.owner_phone = input.ownerPhone;
+      }
+
+      // Early return if no updates
+      if (Object.keys(updateData).length === 0) {
+        return { success: true };
+      }
+
+      // Allow updating patients belonging to any user in the clinic
+      const { error } = await ctx.supabase
+        .from("patients")
+        .update(updateData)
+        .eq("id", input.patientId)
+        .in("user_id", clinicUserIds);
+
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update patient information",
+          cause: error,
+        });
+      }
+
+      return { success: true };
+    }),
+
+  /**
+   * Trigger discharge email/call with flexible requirements
+   * Clinic-scoped: allows triggering discharges for patients in the same clinic
+   */
+  triggerDischarge: protectedProcedure
+    .input(
+      z.object({
+        caseId: z.string().uuid(),
+        patientId: z.string().uuid(),
+        patientData: z.object({
+          name: z.string().optional(),
+          species: z.string().optional(),
+          breed: z.string().optional(),
+          ownerName: z.string().optional(),
+          ownerEmail: z.string().email().optional().or(z.literal("")),
+          ownerPhone: z.string().optional(),
+        }),
+        dischargeType: z.enum(["email", "call", "both"]),
+        scheduledAt: z.string().datetime().optional(), // ISO 8601 datetime string
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Get all user IDs in the same clinic for shared data access
+      const clinicUserIds = await getClinicUserIds(ctx.user.id, ctx.supabase);
+
+      const warnings: string[] = [];
+
+      // Normalize phone and email to proper formats before any processing
+      // Phone: E.164 format (+1XXXXXXXXXX for US numbers)
+      // Email: lowercase, trimmed
+      const normalizedPhone = input.patientData.ownerPhone
+        ? normalizeToE164(input.patientData.ownerPhone)
+        : undefined;
+      const normalizedEmail =
+        input.patientData.ownerEmail !== undefined &&
+        input.patientData.ownerEmail !== ""
+          ? normalizeEmail(input.patientData.ownerEmail)
+          : input.patientData.ownerEmail; // preserve empty string for clearing
+
+      // Step 1: Update patient record with any provided data (clinic-scoped)
+      const updateData: Record<string, string | null> = {};
+      if (input.patientData.name) {
+        updateData.name = input.patientData.name;
+      }
+      if (input.patientData.species) {
+        updateData.species = input.patientData.species;
+      }
+      if (input.patientData.breed) {
+        updateData.breed = input.patientData.breed;
+      }
+      if (input.patientData.ownerName) {
+        updateData.owner_name = input.patientData.ownerName;
+      }
+      if (input.patientData.ownerEmail !== undefined) {
+        // Allow clearing the email by converting empty string to null
+        // Use normalized email for proper format
+        updateData.owner_email = normalizedEmail ?? null;
+      }
+      if (normalizedPhone) {
+        // Use normalized phone in E.164 format
+        updateData.owner_phone = normalizedPhone;
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        // Allow updating patients belonging to any user in the clinic
+        const { error } = await ctx.supabase
+          .from("patients")
+          .update(updateData)
+          .eq("id", input.patientId)
+          .in("user_id", clinicUserIds);
+
+        if (error) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to update patient information",
+            cause: error,
+          });
+        }
+      }
+
+      // Step 2: Build orchestration steps
+      // Note: User settings (clinic_name, clinic_phone) are retrieved by the orchestrator
+      // if needed, so we don't need to fetch them here
+      // Always extract entities fresh before generating summary to ensure up-to-date data
+      const orchestrationSteps: Record<string, unknown> = {
+        extractEntities: true, // Always run fresh entity extraction
+        generateSummary: true,
+        prepareEmail: false,
+        scheduleEmail: false,
+        scheduleCall: false,
+      };
+
+      // Parse scheduledAt if provided, otherwise use user's default override or system defaults
+      // Always use server time to avoid timezone and clock drift issues
+      const serverNow = new Date();
+      let scheduledFor: Date | undefined;
+
+      if (input.scheduledAt) {
+        const clientScheduledTime = new Date(input.scheduledAt);
+        // Validate that the scheduled time is in the future (using server time)
+        if (clientScheduledTime <= serverNow) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Scheduled time must be in the future",
+          });
+        }
+        scheduledFor = clientScheduledTime;
+      }
+      // If not provided, the orchestrator/service will use user's default override or system defaults
+
+      // Handle email discharge
+      if (input.dischargeType === "email" || input.dischargeType === "both") {
+        if (normalizedEmail) {
+          orchestrationSteps.prepareEmail = true;
+          orchestrationSteps.scheduleEmail = {
+            recipientEmail: normalizedEmail,
+            recipientName: input.patientData.ownerName ?? "Pet Owner",
+            scheduledFor,
+          };
+        } else {
+          warnings.push("Email skipped - no email address provided");
+        }
+      }
+
+      // Handle call discharge
+      if (input.dischargeType === "call" || input.dischargeType === "both") {
+        if (normalizedPhone) {
+          orchestrationSteps.scheduleCall = {
+            phoneNumber: normalizedPhone,
+            scheduledFor,
+          };
+        } else {
+          warnings.push("Call skipped - no phone number provided");
+        }
+      }
+
+      // Step 4: Call discharge orchestrator via internal API
+      try {
+        const session = await ctx.supabase.auth.getSession();
+        const token = session.data.session?.access_token;
+
+        // Use absolute URL for server-side fetch (required for Next.js server components)
+        // In development, use localhost; in production, use the configured site URL or default to production
+        const baseUrl =
+          process.env.NEXT_PUBLIC_SITE_URL ??
+          (process.env.NODE_ENV === "development"
+            ? "http://localhost:3000"
+            : "https://odisai.net");
+
+        console.log("[triggerDischarge] Calling orchestrator", {
+          baseUrl,
+          caseId: input.caseId,
+          hasToken: !!token,
+        });
+
+        const response = await fetch(`${baseUrl}/api/discharge/orchestrate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            input: {
+              existingCase: { caseId: input.caseId },
+            },
+            steps: orchestrationSteps,
+          }),
+        });
+
+        console.log("[triggerDischarge] Response status:", response.status);
+
+        const result = await response.json().catch(() => ({}));
+
+        // Handle partial success: if the orchestrator returns 500 but critical steps succeeded
+        if (!response.ok) {
+          console.error(
+            "[triggerDischarge] Error response:",
+            JSON.stringify(result, null, 2),
+          );
+
+          // Check if the intended actions actually succeeded despite the error
+          const intendedCall =
+            input.dischargeType === "call" || input.dischargeType === "both";
+          const intendedEmail =
+            input.dischargeType === "email" || input.dischargeType === "both";
+
+          const callSucceeded = Boolean(result.data?.call?.callId);
+          const emailSucceeded = Boolean(result.data?.emailSchedule?.emailId);
+
+          // If the intended actions succeeded, treat as partial success
+          const criticalActionSucceeded =
+            (intendedCall && callSucceeded) ||
+            (intendedEmail && emailSucceeded);
+
+          if (criticalActionSucceeded) {
+            console.log(
+              "[triggerDischarge] Partial success - critical actions completed despite orchestrator error",
+              {
+                callSucceeded: !!callSucceeded,
+                emailSucceeded: !!emailSucceeded,
+                failedSteps: result.data?.failedSteps,
+              },
+            );
+
+            // Add failed steps as warnings
+            if (
+              result.data?.failedSteps &&
+              result.data.failedSteps.length > 0
+            ) {
+              warnings.push(
+                `Some optional steps failed: ${(
+                  result.data.failedSteps as string[]
+                ).join(", ")}`,
+              );
+            }
+
+            return {
+              success: true,
+              warnings,
+              data: result.data,
+              partialSuccess: true, // Flag to indicate not all steps succeeded
+            };
+          }
+
+          // Critical actions failed - throw error
+          throw new Error(
+            result.error ??
+              `HTTP ${response.status}: Failed to trigger discharge`,
+          );
+        }
+
+        return {
+          success: true,
+          warnings,
+          data: result.data,
+        };
+      } catch (error) {
+        console.error("[triggerDischarge] Exception:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to trigger discharge",
+        });
+      }
+    }),
+
+  /**
+   * Get user's VAPI discharge settings
+   * Enriches with clinic table data when available, falls back to user table for backward compatibility
+   */
+  getDischargeSettings: protectedProcedure.query(async ({ ctx }) => {
+    const { data, error } = await ctx.supabase
+      .from("users")
+      .select(
+        "clinic_name, clinic_phone, clinic_email, emergency_phone, first_name, last_name, test_mode_enabled, test_contact_name, test_contact_email, test_contact_phone, voicemail_detection_enabled, voicemail_hangup_on_detection, voicemail_message, default_schedule_delay_minutes, preferred_email_start_time, preferred_email_end_time, preferred_call_start_time, preferred_call_end_time, email_delay_days, call_delay_days, max_call_retries, batch_include_idexx_notes, batch_include_manual_transcriptions",
+      )
+      .eq("id", ctx.user.id)
+      .single();
+
+    if (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to fetch discharge settings",
+        cause: error,
+      });
+    }
+
+    // Get clinic data from clinic table (preferred) with fallback to user table
+    const clinic = await getClinicByUserId(ctx.user.id, ctx.supabase);
+    const clinicName = clinic?.name ?? data?.clinic_name ?? "";
+    const clinicPhone = clinic?.phone ?? data?.clinic_phone ?? "";
+    const clinicEmail = clinic?.email ?? data?.clinic_email ?? "";
+
+    // Build vet name from first and last name
+    const vetName =
+      data?.first_name && data?.last_name
+        ? `${data.first_name} ${data.last_name}`
+        : "";
+
+    // Convert TIME columns to HH:mm format for frontend
+    const formatTime = (time: string | null): string | null => {
+      if (!time) return null;
+      // TIME columns come as "HH:MM:SS", extract "HH:MM"
+      return time.substring(0, 5);
+    };
+
+    return {
+      clinicName,
+      clinicPhone,
+      clinicEmail,
+      emergencyPhone: data?.emergency_phone ?? clinicPhone ?? "",
+      vetName,
+      testModeEnabled: data?.test_mode_enabled ?? false,
+      testContactName: data?.test_contact_name ?? "",
+      testContactEmail: data?.test_contact_email ?? "",
+      testContactPhone: data?.test_contact_phone ?? "",
+      voicemailDetectionEnabled: data?.voicemail_detection_enabled ?? false,
+      voicemailHangupOnDetection: data?.voicemail_hangup_on_detection ?? false,
+      voicemailMessage: data?.voicemail_message ?? null,
+      defaultScheduleDelayMinutes: data?.default_schedule_delay_minutes ?? null,
+      // Email branding settings from clinic table
+      primaryColor: clinic?.primary_color ?? "#2563EB",
+      logoUrl: clinic?.logo_url ?? null,
+      emailHeaderText: clinic?.email_header_text ?? null,
+      emailFooterText: clinic?.email_footer_text ?? null,
+      // Outbound discharge scheduling settings
+      preferredEmailStartTime:
+        formatTime(data?.preferred_email_start_time) ?? "09:00",
+      preferredEmailEndTime:
+        formatTime(data?.preferred_email_end_time) ?? "12:00",
+      preferredCallStartTime:
+        formatTime(data?.preferred_call_start_time) ?? "14:00",
+      preferredCallEndTime:
+        formatTime(data?.preferred_call_end_time) ?? "17:00",
+      emailDelayDays: data?.email_delay_days ?? 1,
+      callDelayDays: data?.call_delay_days ?? 2,
+      maxCallRetries: data?.max_call_retries ?? 3,
+      // Batch discharge preferences
+      batchIncludeIdexxNotes: data?.batch_include_idexx_notes ?? true,
+      batchIncludeManualTranscriptions:
+        data?.batch_include_manual_transcriptions ?? true,
+      // VAPI configuration - inbound calls
+      inboundPhoneNumberId: clinic?.inbound_phone_number_id ?? null,
+      inboundAssistantId: clinic?.inbound_assistant_id ?? null,
+      // VAPI configuration - outbound calls
+      outboundPhoneNumberId: clinic?.phone_number_id ?? null,
+      outboundAssistantId: clinic?.outbound_assistant_id ?? null,
+    };
+  }),
+
+  /**
+   * Update user's VAPI discharge settings
+   */
+  updateDischargeSettings: protectedProcedure
+    .input(
+      z.object({
+        clinicName: z.string().optional(),
+        clinicPhone: z.string().optional(),
+        emergencyPhone: z.string().optional(),
+        clinicEmail: z.string().email().optional(),
+        testModeEnabled: z.boolean().optional(),
+        testContactName: z.string().optional(),
+        testContactEmail: z.string().optional(),
+        testContactPhone: z.string().optional(),
+        voicemailDetectionEnabled: z.boolean().optional(),
+        voicemailHangupOnDetection: z.boolean().optional(),
+        voicemailMessage: z.string().nullable().optional(),
+        defaultScheduleDelayMinutes: z
+          .number()
+          .int()
+          .min(0)
+          .nullable()
+          .optional(),
+        // Email branding settings
+        primaryColor: z
+          .string()
+          .regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color format")
+          .optional(),
+        logoUrl: z
+          .union([z.string().url(), z.literal(""), z.null()])
+          .optional(),
+        emailHeaderText: z.string().nullable().optional(),
+        emailFooterText: z.string().nullable().optional(),
+        // Outbound discharge scheduling settings
+        preferredEmailStartTime: z
+          .string()
+          .regex(/^\d{2}:\d{2}$/)
+          .nullable()
+          .optional(),
+        preferredEmailEndTime: z
+          .string()
+          .regex(/^\d{2}:\d{2}$/)
+          .nullable()
+          .optional(),
+        preferredCallStartTime: z
+          .string()
+          .regex(/^\d{2}:\d{2}$/)
+          .nullable()
+          .optional(),
+        preferredCallEndTime: z
+          .string()
+          .regex(/^\d{2}:\d{2}$/)
+          .nullable()
+          .optional(),
+        emailDelayDays: z.number().int().min(0).max(30).nullable().optional(),
+        callDelayDays: z.number().int().min(0).max(30).nullable().optional(),
+        maxCallRetries: z.number().int().min(0).max(10).nullable().optional(),
+        // Batch discharge preferences
+        batchIncludeIdexxNotes: z.boolean().optional(),
+        batchIncludeManualTranscriptions: z.boolean().optional(),
+        // VAPI configuration - inbound calls
+        inboundPhoneNumberId: z.string().nullable().optional(),
+        inboundAssistantId: z.string().nullable().optional(),
+        // VAPI configuration - outbound calls
+        outboundPhoneNumberId: z.string().nullable().optional(),
+        outboundAssistantId: z.string().nullable().optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Build update object only with defined fields for users table
+      const userUpdateData: Record<string, string | boolean | number | null> =
+        {};
+
+      if (input.clinicName !== undefined) {
+        userUpdateData.clinic_name = input.clinicName;
+      }
+      if (input.clinicPhone !== undefined) {
+        userUpdateData.clinic_phone = input.clinicPhone;
+      }
+      if (input.clinicEmail !== undefined) {
+        userUpdateData.clinic_email = input.clinicEmail;
+      }
+      if (input.emergencyPhone !== undefined) {
+        userUpdateData.emergency_phone = input.emergencyPhone;
+      }
+      if (input.testModeEnabled !== undefined) {
+        userUpdateData.test_mode_enabled = input.testModeEnabled;
+      }
+      if (input.testContactName !== undefined) {
+        userUpdateData.test_contact_name = input.testContactName;
+      }
+      if (input.testContactEmail !== undefined) {
+        userUpdateData.test_contact_email = input.testContactEmail;
+      }
+      if (input.testContactPhone !== undefined) {
+        userUpdateData.test_contact_phone = input.testContactPhone;
+      }
+      if (input.voicemailDetectionEnabled !== undefined) {
+        userUpdateData.voicemail_detection_enabled =
+          input.voicemailDetectionEnabled;
+      }
+      if (input.voicemailHangupOnDetection !== undefined) {
+        userUpdateData.voicemail_hangup_on_detection =
+          input.voicemailHangupOnDetection;
+      }
+      if (input.voicemailMessage !== undefined) {
+        userUpdateData.voicemail_message = input.voicemailMessage;
+      }
+      if (input.defaultScheduleDelayMinutes !== undefined) {
+        userUpdateData.default_schedule_delay_minutes =
+          input.defaultScheduleDelayMinutes;
+      }
+      // Outbound discharge scheduling settings
+      if (input.preferredEmailStartTime !== undefined) {
+        userUpdateData.preferred_email_start_time =
+          input.preferredEmailStartTime
+            ? `${input.preferredEmailStartTime}:00`
+            : null;
+      }
+      if (input.preferredEmailEndTime !== undefined) {
+        userUpdateData.preferred_email_end_time = input.preferredEmailEndTime
+          ? `${input.preferredEmailEndTime}:00`
+          : null;
+      }
+      if (input.preferredCallStartTime !== undefined) {
+        userUpdateData.preferred_call_start_time = input.preferredCallStartTime
+          ? `${input.preferredCallStartTime}:00`
+          : null;
+      }
+      if (input.preferredCallEndTime !== undefined) {
+        userUpdateData.preferred_call_end_time = input.preferredCallEndTime
+          ? `${input.preferredCallEndTime}:00`
+          : null;
+      }
+      if (input.emailDelayDays !== undefined) {
+        userUpdateData.email_delay_days = input.emailDelayDays;
+      }
+      if (input.callDelayDays !== undefined) {
+        userUpdateData.call_delay_days = input.callDelayDays;
+      }
+      if (input.maxCallRetries !== undefined) {
+        userUpdateData.max_call_retries = input.maxCallRetries;
+      }
+      // Batch discharge preferences
+      if (input.batchIncludeIdexxNotes !== undefined) {
+        userUpdateData.batch_include_idexx_notes = input.batchIncludeIdexxNotes;
+      }
+      if (input.batchIncludeManualTranscriptions !== undefined) {
+        userUpdateData.batch_include_manual_transcriptions =
+          input.batchIncludeManualTranscriptions;
+      }
+
+      // Update users table if there are user fields to update
+      if (Object.keys(userUpdateData).length > 0) {
+        const { error } = await ctx.supabase
+          .from("users")
+          .update(userUpdateData)
+          .eq("id", ctx.user.id);
+
+        if (error) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to update discharge settings",
+            cause: error,
+          });
+        }
+      }
+
+      // Build update object for clinic branding and VAPI configuration fields
+      const clinicUpdateData: Record<string, string | null> = {};
+
+      if (input.primaryColor !== undefined) {
+        clinicUpdateData.primary_color = input.primaryColor;
+      }
+      if (input.logoUrl !== undefined) {
+        // Convert empty string to null for database consistency
+        clinicUpdateData.logo_url = input.logoUrl === "" ? null : input.logoUrl;
+      }
+      if (input.emailHeaderText !== undefined) {
+        clinicUpdateData.email_header_text = input.emailHeaderText;
+      }
+      if (input.emailFooterText !== undefined) {
+        clinicUpdateData.email_footer_text = input.emailFooterText;
+      }
+      // VAPI configuration - inbound calls
+      if (input.inboundPhoneNumberId !== undefined) {
+        clinicUpdateData.inbound_phone_number_id = input.inboundPhoneNumberId;
+      }
+      if (input.inboundAssistantId !== undefined) {
+        clinicUpdateData.inbound_assistant_id = input.inboundAssistantId;
+      }
+      // VAPI configuration - outbound calls
+      if (input.outboundPhoneNumberId !== undefined) {
+        clinicUpdateData.phone_number_id = input.outboundPhoneNumberId;
+      }
+      if (input.outboundAssistantId !== undefined) {
+        clinicUpdateData.outbound_assistant_id = input.outboundAssistantId;
+      }
+
+      // Update clinic table if there are branding fields to update
+      if (Object.keys(clinicUpdateData).length > 0) {
+        // Get user's clinic
+        const clinic = await getClinicByUserId(ctx.user.id, ctx.supabase);
+
+        if (clinic?.id) {
+          const { error: clinicError } = await ctx.supabase
+            .from("clinics")
+            .update(clinicUpdateData)
+            .eq("id", clinic.id);
+
+          if (clinicError) {
+            console.error(
+              "[updateDischargeSettings] Failed to update clinic branding",
+              {
+                clinicId: clinic.id,
+                error: clinicError,
+              },
+            );
+            // Don't throw error - branding update is optional
+            // The user settings were already saved successfully
+          }
+        } else {
+          console.warn(
+            "[updateDischargeSettings] No clinic found for user, skipping branding update",
+            { userId: ctx.user.id },
+          );
+        }
+      }
+
+      return { success: true };
+    }),
+});
