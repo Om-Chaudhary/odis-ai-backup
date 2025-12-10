@@ -12,6 +12,7 @@ Authoritative index for all documentation in the Nx workspace. This repo is a mu
 
 - `api/` – API auth, tRPC/server-action patterns, webhook guides.
 - `architecture/` – System design, Nx module maps, migrations, cross-cutting patterns.
+- `audits/` – Codebase audit reports, improvement recommendations, refactoring roadmaps.
 - `compliance/` – Compliance/legal requirements.
 - `cursor-commands/` – Cursor/Playwright workflows and command templates.
 - `dashboard/` – Dashboard UX, patterns, components, and testing notes.
@@ -42,8 +43,10 @@ Authoritative index for all documentation in the Nx workspace. This repo is a mu
 - Cursor rules and quick workflows → `../.cursorrules`.
 - AI assistant guidance (Claude/Cursor) → `../CLAUDE.md`.
 - Core library responsibilities → `architecture/CORE_LIBS.md`.
+- Nx best practices → `architecture/NX_BEST_PRACTICES.md`.
 - API reference → `api/API_REFERENCE.md`.
 - Testing strategy → `testing/TESTING_STRATEGY.md`.
+- **Codebase audit reports** → `audits/README.md`.
 
 ## Writing guidelines
 
