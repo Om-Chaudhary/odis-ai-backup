@@ -1,7 +1,7 @@
 import { createServiceClient } from "@odis-ai/db/server";
 import { notFound } from "next/navigation";
 import { CallDetailView } from "~/components/calls/call-detail-view";
-import type { CallDetails } from "~/types/dashboard";
+import type { CallDetails } from "@odis-ai/types";
 
 interface PageProps {
   params: Promise<{ id: string }>;

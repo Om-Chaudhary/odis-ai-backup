@@ -19,7 +19,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { format, addDays, setHours, setMinutes, setSeconds } from "date-fns";
-import type { DischargeSettings } from "~/types/dashboard";
+import type { DischargeSettings } from "@odis-ai/types";
 
 interface BatchScheduleConfigProps {
   emailScheduleTime: Date | null;

@@ -13,7 +13,7 @@ import {
   PhoneMissed,
 } from "lucide-react";
 import { formatDistanceToNow, format, isToday, isTomorrow } from "date-fns";
-import type { CallStatus, EmailStatus } from "~/types/dashboard";
+import type { CallStatus, EmailStatus } from "@odis-ai/types";
 
 /**
  * VAPI end reason to human-readable text mapping

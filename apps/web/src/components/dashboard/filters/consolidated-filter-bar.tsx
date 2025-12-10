@@ -23,7 +23,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import type { DischargeReadinessFilter } from "~/types/dashboard";
+import type { DischargeReadinessFilter } from "@odis-ai/types";
 
 /**
  * VAPI call end reason filter options

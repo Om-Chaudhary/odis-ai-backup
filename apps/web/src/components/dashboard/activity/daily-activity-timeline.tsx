@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
 import { Activity } from "lucide-react";
-import type { DailyActivityAggregate } from "~/types/dashboard";
+import type { DailyActivityAggregate } from "@odis-ai/types";
 import { cn } from "@odis-ai/utils";
 import {
   FileText,

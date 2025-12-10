@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { Phone, Mail, Clock } from "lucide-react";
 import { EmptyState } from "@odis-ai/ui";
 import { DischargeStatusBadge } from "./discharge-status-badge";
-import type { DischargeTimeline as DischargeTimelineType } from "~/types/dashboard";
+import type { DischargeTimeline as DischargeTimelineType } from "@odis-ai/types";
 
 interface DischargeTimelineProps {
   items: DischargeTimelineType[];

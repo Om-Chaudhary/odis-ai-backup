@@ -1,4 +1,4 @@
-import type { DashboardCase, DischargeSettings } from "~/types/dashboard";
+import type { DashboardCase, DischargeSettings } from "@odis-ai/types";
 
 export const MOCK_DISCHARGE_SETTINGS: DischargeSettings = {
   clinicName: "Happy Paws Veterinary Clinic",

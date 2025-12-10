@@ -1,6 +1,6 @@
 import { Badge } from "@odis-ai/ui/badge";
 import { cn } from "@odis-ai/utils";
-import type { CallStatus, EmailStatus } from "~/types/dashboard";
+import type { CallStatus, EmailStatus } from "@odis-ai/types";
 import { Loader2, CheckCircle2, XCircle, Clock, Phone } from "lucide-react";
 
 interface DischargeStatusBadgeProps {

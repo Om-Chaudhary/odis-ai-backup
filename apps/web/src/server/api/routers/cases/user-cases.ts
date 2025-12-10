@@ -8,7 +8,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { checkCaseDischargeReadiness } from "@odis-ai/utils/discharge-readiness";
-import type { BackendCase } from "~/types/dashboard";
+import type { BackendCase } from "@odis-ai/types";
 import { getClinicUserIds } from "@odis-ai/clinics/utils";
 
 export const userCasesRouter = createTRPCRouter({

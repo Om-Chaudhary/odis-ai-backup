@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { DischargeSettingsForm } from "../discharges/discharge-settings-form";
 import { api } from "~/trpc/client";
-import type { DischargeSettings } from "~/types/dashboard";
+import type { DischargeSettings } from "@odis-ai/types";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/ui/tabs";
 import {

@@ -2,7 +2,7 @@
 
 import { FileText, PhoneCall, Clock, CheckCircle } from "lucide-react";
 import { StatsCard } from "@odis-ai/ui";
-import type { DashboardStats } from "~/types/dashboard";
+import type { DashboardStats } from "@odis-ai/types";
 
 interface DashboardStatsProps {
   stats: DashboardStats;

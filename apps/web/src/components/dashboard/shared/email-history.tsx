@@ -34,7 +34,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
-import type { EmailStatus } from "~/types/dashboard";
+import type { EmailStatus } from "@odis-ai/types";
 
 function getStatusBadge(status: EmailStatus) {
   if (status === "sent") {

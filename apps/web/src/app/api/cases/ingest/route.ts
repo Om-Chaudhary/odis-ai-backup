@@ -4,7 +4,7 @@ import { createClient } from "@odis-ai/db/server";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
 import { getUser } from "~/server/actions/auth";
-import type { IngestPayload } from "~/types/services";
+import type { IngestPayload } from "@odis-ai/types";
 
 // Dynamic import to avoid bundling @react-email/components during static generation
 async function getCasesService() {

@@ -10,7 +10,7 @@ import {
 } from "@odis-ai/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
 import { Badge } from "@odis-ai/ui/badge";
-import type { DashboardCase, DischargeSettings } from "~/types/dashboard";
+import type { DashboardCase, DischargeSettings } from "@odis-ai/types";
 import { buildDynamicVariables } from "@odis-ai/vapi/knowledge-base";
 import { normalizeVariablesToSnakeCase } from "@odis-ai/vapi/utils";
 

@@ -13,7 +13,7 @@ import {
 } from "@odis-ai/ui/dialog";
 import { Input } from "@odis-ai/ui/input";
 import { Label } from "@odis-ai/ui/label";
-import type { DischargeSettings } from "~/types/dashboard";
+import type { DischargeSettings } from "@odis-ai/types";
 
 interface TestModeBannerProps {
   settings: DischargeSettings;

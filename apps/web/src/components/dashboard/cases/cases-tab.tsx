@@ -17,7 +17,7 @@ import { getDateFromPreset } from "./cases-date-range-selector";
 import type { QuickFilterId } from "../filters/quick-filters";
 import type { DateRangePreset } from "@odis-ai/utils/date-ranges";
 import { getDateRangeFromPreset } from "@odis-ai/utils/date-ranges";
-import type { CaseStatus } from "~/types/dashboard";
+import type { CaseStatus } from "@odis-ai/types";
 import { format, parseISO, startOfDay } from "date-fns";
 
 type ViewMode = "grid" | "list";

@@ -16,7 +16,7 @@ import {
   FileCode,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import type { CaseListItem } from "~/types/dashboard";
+import type { CaseListItem } from "@odis-ai/types";
 import { cn } from "@odis-ai/utils";
 import { QuickActionsMenu } from "../shared/quick-actions-menu";
 import { Badge } from "@odis-ai/ui/badge";

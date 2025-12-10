@@ -22,7 +22,7 @@ import {
   TooltipTrigger,
 } from "@odis-ai/ui/tooltip";
 import { Alert, AlertDescription } from "@odis-ai/ui/alert";
-import type { DischargeSettings } from "~/types/dashboard";
+import type { DischargeSettings } from "@odis-ai/types";
 
 interface DischargeSettingsFormProps {
   settings: DischargeSettings;

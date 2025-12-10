@@ -27,7 +27,7 @@ import type {
   DashboardCase,
   PatientUpdateInput,
   DischargeSettings,
-} from "~/types/dashboard";
+} from "@odis-ai/types";
 import type { PartialBackendCase } from "@odis-ai/utils/case-transforms";
 import { cn } from "@odis-ai/utils";
 import {

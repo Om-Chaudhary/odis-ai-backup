@@ -10,7 +10,7 @@ import {
 } from "@odis-ai/ui/collapsible";
 import { Activity, ChevronDown, ChevronUp } from "lucide-react";
 import { ActivityItemComponent } from "./activity-item";
-import type { ActivityItem } from "~/types/dashboard";
+import type { ActivityItem } from "@odis-ai/types";
 
 interface ActivityTimelineProps {
   activities: ActivityItem[];

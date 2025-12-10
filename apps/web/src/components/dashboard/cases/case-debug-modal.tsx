@@ -11,7 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
 import { Badge } from "@odis-ai/ui/badge";
 import { Separator } from "@odis-ai/ui/separator";
-import type { BackendCase } from "~/types/dashboard";
+import type { BackendCase } from "@odis-ai/types";
 import { format } from "date-fns";
 
 // Helper for concise date formatting

@@ -26,7 +26,7 @@ import type {
   DashboardCase,
   DischargeSettings,
   PatientUpdateInput,
-} from "~/types/dashboard";
+} from "@odis-ai/types";
 import { transformBackendCasesToDashboardCases } from "@odis-ai/utils/case-transforms";
 import {
   normalizePlaceholder,
@@ -42,7 +42,7 @@ import {
   parseISO,
   startOfDay,
 } from "date-fns";
-import type { DischargeReadinessFilter } from "~/types/dashboard";
+import type { DischargeReadinessFilter } from "@odis-ai/types";
 
 /** Tracks which case is currently being processed and what type of discharge */
 interface LoadingState {

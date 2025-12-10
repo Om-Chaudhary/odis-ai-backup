@@ -3,7 +3,7 @@ import { Phone, Mail, FileText, PlayCircle, Clock } from "lucide-react";
 import { EmptyState } from "@odis-ai/ui";
 import { Button } from "@odis-ai/ui/button";
 import { DischargeStatusBadge } from "./discharge-status-badge";
-import type { DashboardCase } from "~/types/dashboard";
+import type { DashboardCase } from "@odis-ai/types";
 import { cn } from "@odis-ai/utils";
 
 interface DischargeActivityListProps {

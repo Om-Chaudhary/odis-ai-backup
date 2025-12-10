@@ -19,7 +19,7 @@ import type {
   DashboardCase,
   PatientUpdateInput,
   DischargeSettings,
-} from "~/types/dashboard";
+} from "@odis-ai/types";
 import { cn } from "@odis-ai/utils";
 import {
   isPlaceholder,

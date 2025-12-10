@@ -7,7 +7,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import type { CallStatus } from "~/types/dashboard";
+import type { CallStatus } from "@odis-ai/types";
 import {
   type SupabasePatientsResponse,
   type CaseWithPatients,

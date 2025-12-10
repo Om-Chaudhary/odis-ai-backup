@@ -15,7 +15,7 @@ import {
   Legend,
 } from "recharts";
 import { format, parseISO } from "date-fns";
-import type { WeeklyActivityData } from "~/types/dashboard";
+import type { WeeklyActivityData } from "@odis-ai/types";
 
 interface WeeklyActivityChartProps {
   data: WeeklyActivityData[];

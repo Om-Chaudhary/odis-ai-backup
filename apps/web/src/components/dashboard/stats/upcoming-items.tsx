@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
 import { Badge } from "@odis-ai/ui/badge";
 import { Clock, PhoneCall, Mail } from "lucide-react";
 import { format, parseISO } from "date-fns";
-import type { UpcomingItem } from "~/types/dashboard";
+import type { UpcomingItem } from "@odis-ai/types";
 import { cn } from "@odis-ai/utils";
 
 interface UpcomingItemsProps {

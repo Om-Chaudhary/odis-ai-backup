@@ -12,7 +12,7 @@ import {
   type GetPatientInput,
   type DeletePatientInput,
 } from "@odis-ai/retell/validators";
-import type { CallPatient } from "~/types/patient";
+import type { CallPatient } from "@odis-ai/types";
 
 /**
  * Check if user is admin

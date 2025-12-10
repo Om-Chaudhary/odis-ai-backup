@@ -37,7 +37,7 @@ import {
   Clock,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
-import type { CallStatus } from "~/types/dashboard";
+import type { CallStatus } from "@odis-ai/types";
 
 /**
  * Human-readable labels for call end reasons

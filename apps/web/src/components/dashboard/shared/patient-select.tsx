@@ -12,7 +12,7 @@ import { Label } from "@odis-ai/ui/label";
 import { Button } from "@odis-ai/ui/button";
 import { Spinner } from "@odis-ai/ui/spinner";
 import { fetchPatients } from "~/server/actions/patients";
-import type { CallPatient } from "~/types/patient";
+import type { CallPatient } from "@odis-ai/types";
 import { formatPhoneNumber } from "@odis-ai/utils/phone-formatting";
 import { Plus } from "lucide-react";
 

@@ -11,7 +11,7 @@ import {
 import { Label } from "@odis-ai/ui/label";
 import { Input } from "@odis-ai/ui/input";
 import { Search, Info } from "lucide-react";
-import type { DischargeReadinessFilter } from "~/types/dashboard";
+import type { DischargeReadinessFilter } from "@odis-ai/types";
 import { Badge } from "@odis-ai/ui/badge";
 
 /**

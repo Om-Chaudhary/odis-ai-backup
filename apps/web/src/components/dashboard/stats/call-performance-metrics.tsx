@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
 import { EmptyState } from "@odis-ai/ui";
 import { TrendingUp, Clock, DollarSign, Smile, Meh, Frown } from "lucide-react";
-import type { CallPerformanceMetrics } from "~/types/dashboard";
+import type { CallPerformanceMetrics } from "@odis-ai/types";
 
 interface CallPerformanceMetricsProps {
   metrics: CallPerformanceMetrics;

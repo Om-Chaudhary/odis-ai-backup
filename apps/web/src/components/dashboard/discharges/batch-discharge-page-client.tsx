@@ -68,7 +68,7 @@ import {
   parseISO,
 } from "date-fns";
 import { BatchProgressMonitor } from "./batch-progress-monitor";
-import type { BatchEligibleCase } from "~/types/dashboard";
+import type { BatchEligibleCase } from "@odis-ai/types";
 import { cn } from "@odis-ai/utils";
 
 type DateFilter = "today" | "yesterday" | "day-2" | "day-3" | "day-4";

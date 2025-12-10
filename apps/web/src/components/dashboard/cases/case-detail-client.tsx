@@ -25,7 +25,7 @@ import { AudioPlayer as CallAudioPlayer } from "@odis-ai/ui";
 import { DischargeStatusBadge } from "../discharges/discharge-status-badge";
 import { SOAPNoteDisplay } from "../shared/soap-note-display";
 import { SyncedTranscript } from "../calls/synced-transcript";
-import type { DischargeSettings, TranscriptMessage } from "~/types/dashboard";
+import type { DischargeSettings, TranscriptMessage } from "@odis-ai/types";
 import { cn, formatDuration } from "@odis-ai/utils";
 import {
   isPlaceholder,
