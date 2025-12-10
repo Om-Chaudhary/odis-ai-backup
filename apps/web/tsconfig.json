@@ -12,8 +12,6 @@
       "@odis-ai/types/*": ["../../libs/types/src/*"],
       "@odis-ai/validators": ["../../libs/validators/src/index.ts"],
       "@odis-ai/validators/*": ["../../libs/validators/src/*"],
-      "@odis-ai/services": ["../../libs/services/src/index.ts"],
-      "@odis-ai/services/*": ["../../libs/services/src/*"],
       "@odis-ai/services-cases": ["../../libs/services-cases/src/index.ts"],
       "@odis-ai/services-cases/*": ["../../libs/services-cases/src/*"],
       "@odis-ai/services-discharge": [
