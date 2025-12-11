@@ -161,6 +161,13 @@ export async function executeEmailImmediately(
 ): Promise<boolean> {
   try {
     const webhookUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/execute-discharge-email`;
+    const immediateExecutionSecret = process.env.IMMEDIATE_EXECUTION_SECRET;
+
+    if (!immediateExecutionSecret) {
+      throw new Error(
+        "IMMEDIATE_EXECUTION_SECRET is not configured - cannot execute immediately",
+      );
+    }
 
     console.log("[QSTASH_CLIENT] Executing email immediately (test mode)", {
       emailId,
@@ -168,10 +175,12 @@ export async function executeEmailImmediately(
     });
 
     // Call the webhook directly without going through QStash
+    // Include secret header to bypass QStash signature verification
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "X-Immediate-Execution-Secret": immediateExecutionSecret,
       },
       body: JSON.stringify({ emailId }),
     });
@@ -212,6 +221,13 @@ export async function executeEmailImmediately(
 export async function executeCallImmediately(callId: string): Promise<boolean> {
   try {
     const webhookUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/execute-call`;
+    const immediateExecutionSecret = process.env.IMMEDIATE_EXECUTION_SECRET;
+
+    if (!immediateExecutionSecret) {
+      throw new Error(
+        "IMMEDIATE_EXECUTION_SECRET is not configured - cannot execute immediately",
+      );
+    }
 
     console.log("[QSTASH_CLIENT] Executing call immediately (test mode)", {
       callId,
@@ -219,10 +235,12 @@ export async function executeCallImmediately(callId: string): Promise<boolean> {
     });
 
     // Call the webhook directly without going through QStash
+    // Include secret header to bypass QStash signature verification
     const response = await fetch(webhookUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "X-Immediate-Execution-Secret": immediateExecutionSecret,
       },
       body: JSON.stringify({ callId }),
     });

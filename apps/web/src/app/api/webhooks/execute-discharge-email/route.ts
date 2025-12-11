@@ -156,8 +156,29 @@ async function handler(req: NextRequest) {
   }
 }
 
-// Wrap handler with QStash signature verification
-export const POST = verifySignatureAppRouter(handler);
+/**
+ * POST handler with conditional signature verification
+ * Allows immediate execution bypass with secret header for test mode
+ */
+export async function POST(req: NextRequest) {
+  // Check for immediate execution bypass header (test mode)
+  const immediateExecutionSecret = req.headers.get(
+    "x-immediate-execution-secret",
+  );
+  const expectedSecret = process.env.IMMEDIATE_EXECUTION_SECRET;
+
+  // If immediate execution secret matches, skip QStash signature verification
+  if (expectedSecret && immediateExecutionSecret === expectedSecret) {
+    console.log(
+      "[EXECUTE_EMAIL] Immediate execution mode - bypassing QStash verification",
+    );
+    return handler(req);
+  }
+
+  // Otherwise, verify QStash signature
+  const verifiedHandler = verifySignatureAppRouter(handler);
+  return verifiedHandler(req);
+}
 
 /**
  * Health check endpoint
