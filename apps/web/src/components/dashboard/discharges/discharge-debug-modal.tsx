@@ -73,7 +73,6 @@ function buildVapiVariables(
     phoneNumber,
     testModeEnabled: settings.testModeEnabled,
     validation: variablesResult.validation,
-    knowledgeBase: variablesResult.knowledgeBase,
   };
 }
 
@@ -398,40 +397,6 @@ export function DischargeDebugModal({
               </div>
             </CardContent>
           </Card>
-
-          {/* Knowledge Base Info */}
-          {debugData.knowledgeBase && (
-            <Card>
-              <CardHeader className="p-2 pb-1">
-                <CardTitle className="text-xs font-semibold">
-                  Knowledge Base Info
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-2 pt-0">
-                <div className="space-y-1 text-xs">
-                  <div className="flex items-center gap-1.5">
-                    <Badge
-                      variant="secondary"
-                      className="h-4 px-1.5 py-0 text-[10px]"
-                    >
-                      Category: {debugData.knowledgeBase.conditionCategory}
-                    </Badge>
-                    <Badge
-                      variant="secondary"
-                      className="h-4 px-1.5 py-0 text-[10px]"
-                    >
-                      {debugData.knowledgeBase.displayName}
-                    </Badge>
-                  </div>
-                  {debugData.knowledgeBase.description && (
-                    <p className="text-muted-foreground text-[10px]">
-                      {debugData.knowledgeBase.description}
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           {/* All Variables (Raw JSON) */}
           <Card>
