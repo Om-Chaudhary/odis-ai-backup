@@ -76,6 +76,7 @@ export const adminDischargeCallsRouter = createTRPCRouter({
           user_sentiment,
           vapi_call_id,
           case_id,
+          metadata,
           cases!scheduled_discharge_calls_case_id_fkey (
             id,
             patients (
@@ -147,6 +148,10 @@ export const adminDischargeCallsRouter = createTRPCRouter({
             : undefined;
         const patient = patients?.[0];
 
+        // Check if this is a test call
+        const metadata = call.metadata as { test_call?: boolean } | null;
+        const isTestCall = metadata?.test_call === true;
+
         return {
           id: call.id,
           status: call.status,
@@ -164,6 +169,7 @@ export const adminDischargeCallsRouter = createTRPCRouter({
           userSentiment: call.user_sentiment,
           vapiCallId: call.vapi_call_id,
           caseId: call.case_id,
+          isTestCall,
           patientName: patient?.name ?? "Unknown",
           ownerName: patient?.owner_name ?? "Unknown",
           ownerPhone: patient?.owner_phone ?? null,
@@ -184,13 +190,14 @@ export const adminDischargeCallsRouter = createTRPCRouter({
 
   /**
    * Get triage statistics for progress tracking
+   * Excludes test calls from counts
    */
   getTriageStats: adminProcedure.query(async ({ ctx }) => {
     const { serviceClient } = ctx;
 
     const { data: calls, error } = await serviceClient
       .from("scheduled_discharge_calls")
-      .select("review_category, status, ended_reason");
+      .select("review_category, status, ended_reason, metadata");
 
     if (error) {
       throw new TRPCError({
@@ -199,7 +206,12 @@ export const adminDischargeCallsRouter = createTRPCRouter({
       });
     }
 
-    const allCalls = calls ?? [];
+    // Filter out test calls from stats
+    const allCalls = (calls ?? []).filter((call) => {
+      const metadata = call.metadata as { test_call?: boolean } | null;
+      return metadata?.test_call !== true;
+    });
+
     const total = allCalls.length;
 
     // Count by review category

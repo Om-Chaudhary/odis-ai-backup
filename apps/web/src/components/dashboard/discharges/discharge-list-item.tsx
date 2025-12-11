@@ -338,7 +338,8 @@ export function DischargeListItem({
     e.stopPropagation();
     const callStatus = getCallStatus(caseData);
 
-    if (callStatus !== "scheduled") {
+    // In test mode, skip confirmation and allow re-calling
+    if (callStatus !== "scheduled" && !testModeEnabled) {
       setShowCallConfirmation(true);
     } else {
       onTriggerCall(caseData.id);
@@ -349,7 +350,8 @@ export function DischargeListItem({
     e.stopPropagation();
     const emailStatus = getEmailStatus(caseData);
 
-    if (emailStatus !== "scheduled") {
+    // In test mode, skip confirmation and allow re-emailing
+    if (emailStatus !== "scheduled" && !testModeEnabled) {
       setShowEmailConfirmation(true);
     } else {
       onTriggerEmail(caseData.id);

@@ -59,6 +59,7 @@ interface CallData {
   summary: string | null;
   customerPhone: string | null;
   caseId: string | null;
+  isTestCall?: boolean;
 }
 
 interface CallKanbanProps {
@@ -149,8 +150,12 @@ function SortableCallCard({
     <div
       ref={setNodeRef}
       style={style}
-      className={`group mb-2 rounded-lg border border-slate-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md ${
-        isDragging ? "shadow-lg ring-2 ring-teal-500" : ""
+      className={`group mb-2 rounded-lg border p-3 shadow-sm transition-shadow hover:shadow-md ${
+        isDragging
+          ? "shadow-lg ring-2 ring-teal-500"
+          : call.isTestCall
+            ? "border-emerald-300 bg-emerald-50/30"
+            : "border-slate-200 bg-white"
       }`}
     >
       <div className="flex items-start gap-2">
@@ -163,9 +168,19 @@ function SortableCallCard({
         </button>
         <div className="min-w-0 flex-1 cursor-pointer" onClick={onClick}>
           <div className="flex items-center justify-between">
-            <span className="truncate font-semibold text-slate-900">
-              {call.patientName}
-            </span>
+            <div className="flex min-w-0 items-center gap-1.5">
+              <span className="truncate font-semibold text-slate-900">
+                {call.patientName}
+              </span>
+              {call.isTestCall && (
+                <Badge
+                  variant="outline"
+                  className="shrink-0 border-emerald-300 bg-emerald-100 px-1 py-0 text-[10px] text-emerald-700"
+                >
+                  Test
+                </Badge>
+              )}
+            </div>
             {call.recordingUrl && (
               <Button
                 size="sm"

@@ -54,6 +54,10 @@ export interface CallDetails {
   customer_phone: string | null;
   case_id: string | null;
   ended_reason?: string | null;
+  metadata?: {
+    test_call?: boolean;
+    [key: string]: unknown;
+  } | null;
   patient?: {
     id: string;
     name: string;
@@ -137,6 +141,10 @@ export interface BackendCase {
     user_sentiment: string | null;
     recording_url: string | null;
     stereo_recording_url: string | null;
+    metadata?: {
+      test_call?: boolean;
+      [key: string]: unknown;
+    } | null;
     duration_seconds: number | null;
     cost: number | null;
     created_at: string;

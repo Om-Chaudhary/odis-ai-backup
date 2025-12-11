@@ -66,7 +66,10 @@ type WorkflowStatus = "completed" | "in_progress" | "failed" | "ready";
 /**
  * Determines the current workflow status of a case based on its discharge state
  */
-function getCaseWorkflowStatus(caseData: DashboardCase): WorkflowStatus {
+function getCaseWorkflowStatus(
+  caseData: DashboardCase,
+  testModeEnabled: boolean,
+): WorkflowStatus {
   // Check for in-progress calls/emails
   const hasActiveCall = caseData.scheduled_discharge_calls.some((c) =>
     ["queued", "ringing", "in_progress"].includes(c.status ?? ""),
@@ -77,7 +80,22 @@ function getCaseWorkflowStatus(caseData: DashboardCase): WorkflowStatus {
 
   if (hasActiveCall || hasActiveEmail) return "in_progress";
 
-  // Check for completion - only consider discharge communications
+  // In test mode, don't show completed status - allow re-calling/re-emailing
+  if (testModeEnabled) {
+    // Check for failures
+    const hasFailedCall = caseData.scheduled_discharge_calls.some(
+      (c) => c.status === "failed",
+    );
+    const hasFailedEmail = caseData.scheduled_discharge_emails.some(
+      (e) => e.status === "failed",
+    );
+
+    if (hasFailedCall || hasFailedEmail) return "failed";
+
+    return "ready";
+  }
+
+  // Check for completion - only consider discharge communications (production mode only)
   const hasCompletedCall = caseData.scheduled_discharge_calls.some(
     (c) => c.status === "completed",
   );
@@ -174,7 +192,7 @@ export function DischargeListItemRedesigned({
     owner_phone: caseData.patient.owner_phone,
   });
 
-  const workflowStatus = getCaseWorkflowStatus(caseData);
+  const workflowStatus = getCaseWorkflowStatus(caseData, testModeEnabled);
 
   // Get latest call end reason for display
   const latestCompletedCall = caseData.scheduled_discharge_calls
@@ -258,6 +276,10 @@ export function DischargeListItemRedesigned({
     const canEmail = hasValidContact(effectiveEmail);
     const isReady = caseData.is_ready_for_discharge;
 
+    // In test mode, allow calling/emailing even if status is completed
+    const allowAction =
+      testModeEnabled || !["completed", "in_progress"].includes(workflowStatus);
+
     return (
       <div className="flex flex-col gap-3">
         {/* Call and Email Buttons */}
@@ -267,7 +289,12 @@ export function DischargeListItemRedesigned({
               e.stopPropagation();
               onTriggerCall(caseData.id);
             }}
-            disabled={isLoadingCall || !canCall || !isReady}
+            disabled={
+              isLoadingCall ||
+              !canCall ||
+              !isReady ||
+              (workflowStatus === "in_progress" && !allowAction)
+            }
             size="sm"
             className="flex-1 gap-1.5 bg-teal-600 transition-colors hover:bg-teal-700"
           >
@@ -283,7 +310,12 @@ export function DischargeListItemRedesigned({
               e.stopPropagation();
               onTriggerEmail(caseData.id);
             }}
-            disabled={isLoadingEmail || !canEmail || !isReady}
+            disabled={
+              isLoadingEmail ||
+              !canEmail ||
+              !isReady ||
+              (workflowStatus === "in_progress" && !allowAction)
+            }
             size="sm"
             variant="outline"
             className="flex-1 gap-1.5 border-teal-200 text-teal-700 transition-colors hover:bg-teal-50"

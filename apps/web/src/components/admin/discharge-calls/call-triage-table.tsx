@@ -43,6 +43,7 @@ interface CallData {
   userSentiment: string | null;
   vapiCallId: string | null;
   caseId: string | null;
+  isTestCall?: boolean;
   patientName: string;
   ownerName: string;
   ownerPhone: string | null;
@@ -251,7 +252,11 @@ export function CallTriageTable({
                   data-call-id={call.id}
                   tabIndex={0}
                   className={`cursor-pointer border-b border-slate-100 transition-colors hover:bg-slate-50 focus:bg-teal-50 focus:outline-none ${
-                    isSelected ? "bg-teal-50/50" : ""
+                    isSelected
+                      ? "bg-teal-50/50"
+                      : call.isTestCall
+                        ? "bg-emerald-50/30"
+                        : ""
                   }`}
                   onClick={() => toggleExpanded(call.id)}
                 >
@@ -271,9 +276,19 @@ export function CallTriageTable({
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
-                      <span className="font-medium text-slate-900">
-                        {call.patientName}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-slate-900">
+                          {call.patientName}
+                        </span>
+                        {call.isTestCall && (
+                          <Badge
+                            variant="outline"
+                            className="border-emerald-300 bg-emerald-100 text-emerald-700"
+                          >
+                            Test
+                          </Badge>
+                        )}
+                      </div>
                       <span className="text-sm text-slate-500">
                         {call.ownerName}
                       </span>
