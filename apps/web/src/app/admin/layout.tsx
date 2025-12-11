@@ -11,6 +11,7 @@ import {
   Briefcase,
   Users,
   Phone,
+  PhoneOutgoing,
   Flag,
   FlaskConical,
 } from "lucide-react";
@@ -76,6 +77,18 @@ export default async function AdminLayout({
                 icon={<FileText size={20} />}
               >
                 Discharge Templates
+              </NavLink>
+
+              <div className="px-3 pt-4 pb-2">
+                <p className="text-xs font-semibold tracking-wider text-slate-600 uppercase">
+                  Triage
+                </p>
+              </div>
+              <NavLink
+                href="/admin/discharge-calls"
+                icon={<PhoneOutgoing size={20} />}
+              >
+                Discharge Calls
               </NavLink>
 
               <div className="px-3 pt-4 pb-2">
