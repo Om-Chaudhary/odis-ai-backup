@@ -2,7 +2,10 @@ import { type NormalizedEntities } from "@odis-ai/validators/scribe";
 import { extractEntitiesWithRetry } from "@odis-ai/ai/normalize-scribe";
 import { generateStructuredDischargeSummaryWithRetry } from "@odis-ai/ai/generate-structured-discharge";
 import { generateCallIntelligenceFromEntities } from "@odis-ai/ai/generate-assessment-questions";
-import { scheduleCallExecution } from "@odis-ai/qstash/client";
+import {
+  scheduleCallExecution,
+  executeCallImmediately,
+} from "@odis-ai/qstash/client";
 import { buildDynamicVariables } from "@odis-ai/vapi/knowledge-base";
 import type { AIGeneratedCallIntelligence } from "@odis-ai/vapi/types";
 import { extractVapiVariablesFromEntities } from "@odis-ai/vapi/extract-variables";
@@ -1100,30 +1103,52 @@ export const CasesService = {
         existingCall.scheduled_for !== scheduledAt.toISOString();
 
       if (!hasExistingQStashId || scheduledTimeChanged) {
-        // Reschedule QStash for the updated time
-        const qstashMessageId = await scheduleCallExecution(
-          scheduledCall.id,
-          scheduledAt,
-        );
-
-        const updatedMetadata: ScheduledCallMetadata = {
-          ...existingMetadata,
-          qstash_message_id: qstashMessageId,
-        };
-
-        const { error: updateError } = await supabase
-          .from("scheduled_discharge_calls")
-          .update({
-            metadata: updatedMetadata as Json,
-          })
-          .eq("id", scheduledCall.id);
-
-        if (updateError) {
-          console.error(
-            "[CasesService] Error updating QStash message ID:",
-            updateError,
+        if (testModeEnabled) {
+          // Test mode: execute call immediately without QStash delay
+          console.log(
+            "[CasesService] Test mode enabled - executing call immediately",
+            {
+              callId: scheduledCall.id,
+              testPhone: customerPhone,
+            },
           );
-          // Don't throw - call was updated successfully
+
+          const executeSuccess = await executeCallImmediately(scheduledCall.id);
+          if (!executeSuccess) {
+            console.error(
+              "[CasesService] Immediate call execution failed - call may not execute",
+              {
+                callId: scheduledCall.id,
+              },
+            );
+            // Don't throw - call record was created successfully
+          }
+        } else {
+          // Normal mode: reschedule QStash for the updated time
+          const qstashMessageId = await scheduleCallExecution(
+            scheduledCall.id,
+            scheduledAt,
+          );
+
+          const updatedMetadata: ScheduledCallMetadata = {
+            ...existingMetadata,
+            qstash_message_id: qstashMessageId,
+          };
+
+          const { error: updateError } = await supabase
+            .from("scheduled_discharge_calls")
+            .update({
+              metadata: updatedMetadata as Json,
+            })
+            .eq("id", scheduledCall.id);
+
+          if (updateError) {
+            console.error(
+              "[CasesService] Error updating QStash message ID:",
+              updateError,
+            );
+            // Don't throw - call was updated successfully
+          }
         }
       }
     } else {
@@ -1158,31 +1183,54 @@ export const CasesService = {
 
       scheduledCall = newCall as ScheduledDischargeCall;
 
-      // 4. Trigger QStash for new call
-      const qstashMessageId = await scheduleCallExecution(
-        scheduledCall.id,
-        scheduledAt,
-      );
-
-      // Update with QStash ID
-      const updatedMetadata: ScheduledCallMetadata = {
-        ...(scheduledCall.metadata ?? {}),
-        qstash_message_id: qstashMessageId,
-      };
-
-      const { error: updateError } = await supabase
-        .from("scheduled_discharge_calls")
-        .update({
-          metadata: updatedMetadata as Json,
-        })
-        .eq("id", scheduledCall.id);
-
-      if (updateError) {
-        console.error(
-          "[CasesService] Error updating QStash message ID:",
-          updateError,
+      // 4. Execute immediately in test mode, otherwise trigger QStash for new call
+      if (testModeEnabled) {
+        // Test mode: execute call immediately without QStash delay
+        console.log(
+          "[CasesService] Test mode enabled - executing call immediately",
+          {
+            callId: scheduledCall.id,
+            testPhone: customerPhone,
+          },
         );
-        // Don't throw - call was scheduled successfully
+
+        const executeSuccess = await executeCallImmediately(scheduledCall.id);
+        if (!executeSuccess) {
+          console.error(
+            "[CasesService] Immediate call execution failed - call may not execute",
+            {
+              callId: scheduledCall.id,
+            },
+          );
+          // Don't throw - call record was created successfully
+        }
+      } else {
+        // Normal mode: trigger QStash
+        const qstashMessageId = await scheduleCallExecution(
+          scheduledCall.id,
+          scheduledAt,
+        );
+
+        // Update with QStash ID
+        const updatedMetadata: ScheduledCallMetadata = {
+          ...(scheduledCall.metadata ?? {}),
+          qstash_message_id: qstashMessageId,
+        };
+
+        const { error: updateError } = await supabase
+          .from("scheduled_discharge_calls")
+          .update({
+            metadata: updatedMetadata as Json,
+          })
+          .eq("id", scheduledCall.id);
+
+        if (updateError) {
+          console.error(
+            "[CasesService] Error updating QStash message ID:",
+            updateError,
+          );
+          // Don't throw - call was scheduled successfully
+        }
       }
     }
 

@@ -148,3 +148,107 @@ export async function cancelScheduledExecution(
     return false;
   }
 }
+
+/**
+ * Execute an email immediately (bypassing QStash)
+ * This is used in test mode to send emails without delay
+ *
+ * @param emailId - Database ID of the scheduled email
+ * @returns true if execution was triggered successfully
+ */
+export async function executeEmailImmediately(
+  emailId: string,
+): Promise<boolean> {
+  try {
+    const webhookUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/execute-discharge-email`;
+
+    console.log("[QSTASH_CLIENT] Executing email immediately (test mode)", {
+      emailId,
+      webhookUrl,
+    });
+
+    // Call the webhook directly without going through QStash
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ emailId }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("[QSTASH_CLIENT] Immediate email execution failed", {
+        emailId,
+        status: response.status,
+        error: errorText,
+      });
+      return false;
+    }
+
+    const result = await response.json();
+    console.log("[QSTASH_CLIENT] Email executed immediately", {
+      emailId,
+      result,
+    });
+
+    return true;
+  } catch (error) {
+    console.error("[QSTASH_CLIENT] Failed to execute email immediately", {
+      emailId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return false;
+  }
+}
+
+/**
+ * Execute a call immediately (bypassing QStash)
+ * This is used in test mode to make calls without delay
+ *
+ * @param callId - Database ID of the scheduled call
+ * @returns true if execution was triggered successfully
+ */
+export async function executeCallImmediately(callId: string): Promise<boolean> {
+  try {
+    const webhookUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/api/webhooks/execute-call`;
+
+    console.log("[QSTASH_CLIENT] Executing call immediately (test mode)", {
+      callId,
+      webhookUrl,
+    });
+
+    // Call the webhook directly without going through QStash
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ callId }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("[QSTASH_CLIENT] Immediate call execution failed", {
+        callId,
+        status: response.status,
+        error: errorText,
+      });
+      return false;
+    }
+
+    const result = await response.json();
+    console.log("[QSTASH_CLIENT] Call executed immediately", {
+      callId,
+      result,
+    });
+
+    return true;
+  } catch (error) {
+    console.error("[QSTASH_CLIENT] Failed to execute call immediately", {
+      callId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return false;
+  }
+}

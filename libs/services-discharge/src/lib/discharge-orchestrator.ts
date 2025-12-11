@@ -14,7 +14,10 @@ import { CasesService } from "@odis-ai/services-cases";
 import { ExecutionPlan } from "@odis-ai/services-shared";
 import { generateStructuredDischargeSummaryWithRetry } from "@odis-ai/ai/generate-structured-discharge";
 import { extractEntitiesWithRetry } from "@odis-ai/ai/normalize-scribe";
-import { scheduleEmailExecution } from "@odis-ai/qstash/client";
+import {
+  scheduleEmailExecution,
+  executeEmailImmediately,
+} from "@odis-ai/qstash/client";
 import { isValidEmail } from "@odis-ai/resend/utils";
 // Dynamic import to avoid Next.js bundling issues during static generation
 // import { DischargeEmailTemplate, htmlToPlainText } from "@odis-ai/email";
@@ -1233,71 +1236,134 @@ export class DischargeOrchestrator {
       );
     }
 
-    // Schedule via QStash
-    let qstashMessageId: string;
-    try {
-      qstashMessageId = await scheduleEmailExecution(
-        scheduledEmail.id,
-        scheduledFor,
+    // Execute immediately in test mode, otherwise schedule via QStash
+    let qstashMessageId: string | undefined;
+    if (testModeEnabled) {
+      // Test mode: execute email immediately without QStash delay
+      console.log(
+        "[ORCHESTRATOR] Test mode enabled - executing email immediately",
+        {
+          emailId: scheduledEmail.id,
+          testContactEmail: finalRecipientEmail,
+        },
       );
-    } catch (qstashError) {
-      // Rollback database insert with proper error handling
-      try {
-        const { error: deleteError } = await this.supabase
-          .from("scheduled_discharge_emails")
-          .delete()
-          .eq("id", scheduledEmail.id);
 
-        if (deleteError) {
-          console.error("[ORCHESTRATOR] Failed to rollback scheduled email:", {
+      try {
+        const executeSuccess = await executeEmailImmediately(scheduledEmail.id);
+        if (!executeSuccess) {
+          throw new Error("Immediate email execution failed");
+        }
+        // Note: Email status will be updated by the webhook handler
+      } catch (executeError) {
+        // Rollback database insert with proper error handling
+        try {
+          const { error: deleteError } = await this.supabase
+            .from("scheduled_discharge_emails")
+            .delete()
+            .eq("id", scheduledEmail.id);
+
+          if (deleteError) {
+            console.error(
+              "[ORCHESTRATOR] Failed to rollback scheduled email:",
+              {
+                emailId: scheduledEmail.id,
+                userId: this.user.id,
+                error: deleteError,
+                executeError:
+                  executeError instanceof Error
+                    ? executeError.message
+                    : String(executeError),
+              },
+            );
+          }
+        } catch (rollbackError) {
+          console.error("[ORCHESTRATOR] Critical: Rollback operation failed", {
             emailId: scheduledEmail.id,
             userId: this.user.id,
-            error: deleteError,
-            qstashError:
-              qstashError instanceof Error
-                ? qstashError.message
-                : String(qstashError),
+            error:
+              rollbackError instanceof Error
+                ? rollbackError.message
+                : String(rollbackError),
           });
-          // TODO: Send alert to monitoring system
         }
-      } catch (rollbackError) {
-        console.error("[ORCHESTRATOR] Critical: Rollback operation failed", {
-          emailId: scheduledEmail.id,
-          userId: this.user.id,
-          error:
-            rollbackError instanceof Error
-              ? rollbackError.message
-              : String(rollbackError),
-        });
-        // TODO: Send critical alert to operations team
+
+        throw new Error(
+          `Failed to execute email immediately: ${
+            executeError instanceof Error
+              ? executeError.message
+              : String(executeError)
+          }`,
+        );
+      }
+    } else {
+      // Normal mode: schedule via QStash
+      try {
+        qstashMessageId = await scheduleEmailExecution(
+          scheduledEmail.id,
+          scheduledFor,
+        );
+      } catch (qstashError) {
+        // Rollback database insert with proper error handling
+        try {
+          const { error: deleteError } = await this.supabase
+            .from("scheduled_discharge_emails")
+            .delete()
+            .eq("id", scheduledEmail.id);
+
+          if (deleteError) {
+            console.error(
+              "[ORCHESTRATOR] Failed to rollback scheduled email:",
+              {
+                emailId: scheduledEmail.id,
+                userId: this.user.id,
+                error: deleteError,
+                qstashError:
+                  qstashError instanceof Error
+                    ? qstashError.message
+                    : String(qstashError),
+              },
+            );
+            // TODO: Send alert to monitoring system
+          }
+        } catch (rollbackError) {
+          console.error("[ORCHESTRATOR] Critical: Rollback operation failed", {
+            emailId: scheduledEmail.id,
+            userId: this.user.id,
+            error:
+              rollbackError instanceof Error
+                ? rollbackError.message
+                : String(rollbackError),
+          });
+          // TODO: Send critical alert to operations team
+        }
+
+        throw new Error(
+          `Failed to schedule email delivery: ${
+            qstashError instanceof Error
+              ? qstashError.message
+              : String(qstashError)
+          }`,
+        );
       }
 
-      throw new Error(
-        `Failed to schedule email delivery: ${
-          qstashError instanceof Error
-            ? qstashError.message
-            : String(qstashError)
-        }`,
-      );
-    }
+      // Update with QStash message ID - handle failure gracefully
+      const { error: updateError } = await this.supabase
+        .from("scheduled_discharge_emails")
+        .update({
+          qstash_message_id: qstashMessageId,
+        })
+        .eq("id", scheduledEmail.id);
 
-    // Update with QStash message ID - handle failure gracefully
-    const { error: updateError } = await this.supabase
-      .from("scheduled_discharge_emails")
-      .update({
-        qstash_message_id: qstashMessageId,
-      })
-      .eq("id", scheduledEmail.id);
-
-    if (updateError) {
-      // Log but don't fail - email is scheduled, just missing tracking
-      console.error("[ORCHESTRATOR] Failed to update QStash message ID:", {
-        emailId: scheduledEmail.id,
-        qstashMessageId,
-        error: updateError,
-        userId: this.user.id,
-      });
-      // TODO: Queue a background job to retry this update
+      if (updateError) {
+        // Log but don't fail - email is scheduled, just missing tracking
+        console.error("[ORCHESTRATOR] Failed to update QStash message ID:", {
+          emailId: scheduledEmail.id,
+          qstashMessageId,
+          error: updateError,
+          userId: this.user.id,
+        });
+        // TODO: Queue a background job to retry this update
+      }
     }
 
     return {
@@ -1308,6 +1374,7 @@ export class DischargeOrchestrator {
         emailId: scheduledEmail.id,
         scheduledFor: scheduledEmail.scheduled_for,
         qstashMessageId,
+        immediateExecution: testModeEnabled,
       },
     };
   }
