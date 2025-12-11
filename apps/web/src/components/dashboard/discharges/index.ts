@@ -2,6 +2,7 @@ export * from "./batch-discharge-dialog";
 export * from "./batch-discharge-page-client";
 export * from "./batch-progress-monitor";
 export * from "./batch-schedule-config";
+export * from "./call-queue-indicator";
 export * from "./discharge-activity-list";
 export * from "./discharge-debug-modal";
 export * from "./discharge-list-item";

@@ -96,6 +96,12 @@
       "~/types/*": ["libs/types/src/*"],
       "@odis-ai/services-cases": ["libs/services-cases/src/index.ts"],
       "@odis-ai/services-discharge": ["libs/services-discharge/src/index.ts"],
+      "@odis-ai/services-discharge/call-executor": [
+        "libs/services-discharge/src/lib/call-executor.ts"
+      ],
+      "@odis-ai/services-discharge/email-executor": [
+        "libs/services-discharge/src/lib/email-executor.ts"
+      ],
       "@odis-ai/services-discharge/discharge-orchestrator": [
         "libs/services-discharge/src/lib/discharge-orchestrator.ts"
       ],

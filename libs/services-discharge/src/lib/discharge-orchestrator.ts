@@ -14,10 +14,7 @@ import { CasesService } from "@odis-ai/services-cases";
 import { ExecutionPlan } from "@odis-ai/services-shared";
 import { generateStructuredDischargeSummaryWithRetry } from "@odis-ai/ai/generate-structured-discharge";
 import { extractEntitiesWithRetry } from "@odis-ai/ai/normalize-scribe";
-import {
-  scheduleEmailExecution,
-  executeEmailImmediately,
-} from "@odis-ai/qstash/client";
+import { scheduleEmailExecution } from "@odis-ai/qstash/client";
 import { isValidEmail } from "@odis-ai/resend/utils";
 // Dynamic import to avoid Next.js bundling issues during static generation
 // import { DischargeEmailTemplate, htmlToPlainText } from "@odis-ai/email";
@@ -1249,11 +1246,16 @@ export class DischargeOrchestrator {
       );
 
       try {
-        const executeSuccess = await executeEmailImmediately(scheduledEmail.id);
-        if (!executeSuccess) {
-          throw new Error("Immediate email execution failed");
+        // Direct import since we're in the same library
+        const { executeScheduledEmail } = await import("./email-executor");
+        const result = await executeScheduledEmail(
+          scheduledEmail.id,
+          this.supabase,
+        );
+        if (!result.success) {
+          throw new Error(result.error ?? "Immediate email execution failed");
         }
-        // Note: Email status will be updated by the webhook handler
+        // Note: Email status is updated by the executor
       } catch (executeError) {
         // Rollback database insert with proper error handling
         try {

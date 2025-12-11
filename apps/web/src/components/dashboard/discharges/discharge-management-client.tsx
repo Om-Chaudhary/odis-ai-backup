@@ -19,6 +19,7 @@ import { DischargeListItem } from "./discharge-list-item";
 import { type CallEndReasonFilter } from "../filters/consolidated-filter-bar";
 import { BatchDischargeDialog } from "./batch-discharge-dialog";
 import { BatchProgressMonitor } from "./batch-progress-monitor";
+import { CallQueueIndicator } from "./call-queue-indicator";
 import { VapiCallHistory } from "../calls/vapi-call-history";
 import { EmailHistory } from "../shared/email-history";
 import { api } from "~/trpc/client";
@@ -818,6 +819,9 @@ export function DischargeManagementClient() {
           onCancel={handleBatchCancel}
         />
       )}
+
+      {/* Call Queue Indicator - shows when sending individual calls/emails */}
+      <CallQueueIndicator loadingCases={loadingCases} cases={cases} />
     </div>
   );
 }

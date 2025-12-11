@@ -10,6 +10,14 @@
       "import": "./src/index.js",
       "types": "./src/index.d.ts"
     },
+    "./call-executor": {
+      "import": "./src/lib/call-executor.js",
+      "types": "./src/lib/call-executor.d.ts"
+    },
+    "./email-executor": {
+      "import": "./src/lib/email-executor.js",
+      "types": "./src/lib/email-executor.d.ts"
+    },
     "./discharge-orchestrator": {
       "import": "./src/lib/discharge-orchestrator.js",
       "types": "./src/lib/discharge-orchestrator.d.ts"

@@ -2,7 +2,13 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { verifySignatureAppRouter } from "@upstash/qstash/dist/nextjs";
 import { createServiceClient } from "@odis-ai/db/server";
-import { sendDischargeEmail } from "@odis-ai/resend/client";
+
+// Dynamic import to avoid bundling issues during static generation
+async function getEmailExecutor() {
+  const { executeScheduledEmail } =
+    await import("@odis-ai/services-discharge/email-executor");
+  return executeScheduledEmail;
+}
 
 /**
  * Execute Discharge Email Webhook
@@ -10,9 +16,9 @@ import { sendDischargeEmail } from "@odis-ai/resend/client";
  * POST /api/webhooks/execute-discharge-email
  *
  * This webhook is triggered by QStash at the scheduled time.
- * It sends the discharge email via Resend.
+ * It delegates to the email executor service for actual execution.
  *
- * Security: QStash signature verification is critical
+ * Security: QStash signature verification ensures only QStash can trigger this
  */
 
 interface ExecuteEmailPayload {
@@ -38,113 +44,18 @@ async function handler(req: NextRequest) {
       );
     }
 
-    console.log("[EXECUTE_EMAIL] Processing email", { emailId });
-
-    // Get Supabase service client (bypass RLS)
+    // Get Supabase service client and executor
     const supabase = await createServiceClient();
+    const executeScheduledEmail = await getEmailExecutor();
 
-    // Fetch scheduled email from database
-    const { data: email, error } = await supabase
-      .from("scheduled_discharge_emails")
-      .select("*")
-      .eq("id", emailId)
-      .single();
+    // Execute the email using the modular executor
+    const result = await executeScheduledEmail(emailId, supabase);
 
-    if (error || !email) {
-      console.error("[EXECUTE_EMAIL] Email not found", {
-        emailId,
-        error,
-      });
-      return NextResponse.json(
-        { error: "Scheduled email not found" },
-        { status: 404 },
-      );
-    }
-
-    // Check if email is still in queued status (prevent double execution)
-    if (email.status !== "queued") {
-      console.warn("[EXECUTE_EMAIL] Email already processed", {
-        emailId,
-        status: email.status,
-      });
-      return NextResponse.json({
-        success: true,
-        message: "Email already processed",
-        status: email.status,
-      });
-    }
-
-    console.log("[EXECUTE_EMAIL] Sending email via Resend", {
-      emailId,
-      recipientEmail: email.recipient_email,
-      subject: email.subject,
-    });
-
-    // Send email via Resend
-    const { data: resendData, error: resendError } = await sendDischargeEmail({
-      to: email.recipient_email,
-      subject: email.subject,
-      html: email.html_content,
-      text: email.text_content ?? undefined,
-    });
-
-    if (resendError || !resendData) {
-      const errorMessage = resendError?.message ?? "Unknown error";
-
-      console.error("[EXECUTE_EMAIL] Resend error", {
-        emailId,
-        error: resendError,
-      });
-
-      // Update database with failure status
-      await supabase
-        .from("scheduled_discharge_emails")
-        .update({
-          status: "failed",
-          metadata: {
-            ...(email.metadata as Record<string, unknown>),
-            error: errorMessage,
-            failed_at: new Date().toISOString(),
-          },
-        })
-        .eq("id", emailId);
-
-      // Return 200 to prevent QStash from retrying - we've handled this failure
-      // Email failures (invalid address, API issues) would likely fail again on retry
-      return NextResponse.json({
-        success: false,
-        message: "Failed to send email",
-        error: errorMessage,
-        emailId,
-      });
-    }
-
-    console.log("[EXECUTE_EMAIL] Email sent successfully", {
-      emailId,
-      resendEmailId: resendData.id,
-    });
-
-    // Update database with success status
-    await supabase
-      .from("scheduled_discharge_emails")
-      .update({
-        status: "sent",
-        sent_at: new Date(),
-        resend_email_id: resendData.id ?? null,
-        metadata: {
-          ...(email.metadata as Record<string, unknown>),
-          sent_at: new Date().toISOString(),
-        },
-      })
-      .eq("id", emailId);
-
-    return NextResponse.json({
-      success: true,
-      message: "Email sent successfully",
-      resendEmailId: resendData.id,
-    });
+    // Return 200 even on failure to prevent QStash retries
+    // (email failures would likely fail again on retry)
+    return NextResponse.json(result);
   } catch (error) {
-    console.error("[EXECUTE_EMAIL] Error", {
+    console.error("[EXECUTE_EMAIL] Unexpected error", {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
     });
@@ -156,29 +67,8 @@ async function handler(req: NextRequest) {
   }
 }
 
-/**
- * POST handler with conditional signature verification
- * Allows immediate execution bypass with secret header for test mode
- */
-export async function POST(req: NextRequest) {
-  // Check for immediate execution bypass header (test mode)
-  const immediateExecutionSecret = req.headers.get(
-    "x-immediate-execution-secret",
-  );
-  const expectedSecret = process.env.IMMEDIATE_EXECUTION_SECRET;
-
-  // If immediate execution secret matches, skip QStash signature verification
-  if (expectedSecret && immediateExecutionSecret === expectedSecret) {
-    console.log(
-      "[EXECUTE_EMAIL] Immediate execution mode - bypassing QStash verification",
-    );
-    return handler(req);
-  }
-
-  // Otherwise, verify QStash signature
-  const verifiedHandler = verifySignatureAppRouter(handler);
-  return verifiedHandler(req);
-}
+// Wrap handler with QStash signature verification
+export const POST = verifySignatureAppRouter(handler);
 
 /**
  * Health check endpoint

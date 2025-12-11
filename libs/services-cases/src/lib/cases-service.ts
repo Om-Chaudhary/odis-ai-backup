@@ -2,10 +2,7 @@ import { type NormalizedEntities } from "@odis-ai/validators/scribe";
 import { extractEntitiesWithRetry } from "@odis-ai/ai/normalize-scribe";
 import { generateStructuredDischargeSummaryWithRetry } from "@odis-ai/ai/generate-structured-discharge";
 import { generateCallIntelligenceFromEntities } from "@odis-ai/ai/generate-assessment-questions";
-import {
-  scheduleCallExecution,
-  executeCallImmediately,
-} from "@odis-ai/qstash/client";
+import { scheduleCallExecution } from "@odis-ai/qstash/client";
 import { buildDynamicVariables } from "@odis-ai/vapi/knowledge-base";
 import type { AIGeneratedCallIntelligence } from "@odis-ai/vapi/types";
 import { extractVapiVariablesFromEntities } from "@odis-ai/vapi/extract-variables";
@@ -1113,12 +1110,16 @@ export const CasesService = {
             },
           );
 
-          const executeSuccess = await executeCallImmediately(scheduledCall.id);
-          if (!executeSuccess) {
+          // Dynamic import to avoid circular dependencies
+          const { executeScheduledCall } =
+            await import("@odis-ai/services-discharge/call-executor");
+          const result = await executeScheduledCall(scheduledCall.id, supabase);
+          if (!result.success) {
             console.error(
               "[CasesService] Immediate call execution failed - call may not execute",
               {
                 callId: scheduledCall.id,
+                error: result.error,
               },
             );
             // Don't throw - call record was created successfully
@@ -1194,12 +1195,16 @@ export const CasesService = {
           },
         );
 
-        const executeSuccess = await executeCallImmediately(scheduledCall.id);
-        if (!executeSuccess) {
+        // Dynamic import to avoid circular dependencies
+        const { executeScheduledCall } =
+          await import("@odis-ai/services-discharge/call-executor");
+        const result = await executeScheduledCall(scheduledCall.id, supabase);
+        if (!result.success) {
           console.error(
             "[CasesService] Immediate call execution failed - call may not execute",
             {
               callId: scheduledCall.id,
+              error: result.error,
             },
           );
           // Don't throw - call record was created successfully
