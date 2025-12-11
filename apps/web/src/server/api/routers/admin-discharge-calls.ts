@@ -131,17 +131,21 @@ export const adminDischargeCallsRouter = createTRPCRouter({
 
       // Transform the nested data for easier frontend consumption
       const transformedCalls = (calls ?? []).map((call) => {
-        const caseData = call.cases as {
-          id: string;
-          patients: Array<{
-            id: string;
-            name: string;
-            owner_name: string;
-            owner_phone: string;
-            owner_email: string | null;
-          }>;
-        } | null;
-        const patient = caseData?.patients?.[0];
+        // Safely handle the nested case/patient data from Supabase
+        const caseData = call.cases;
+        const patients =
+          caseData && typeof caseData === "object" && "patients" in caseData
+            ? (caseData.patients as
+                | Array<{
+                    id: string;
+                    name: string;
+                    owner_name: string;
+                    owner_phone: string;
+                    owner_email: string | null;
+                  }>
+                | undefined)
+            : undefined;
+        const patient = patients?.[0];
 
         return {
           id: call.id,

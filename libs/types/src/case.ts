@@ -6,7 +6,10 @@
 
 import type { Database } from "./database.types";
 import type { NormalizedEntities } from "@odis-ai/validators";
+import type { IdexxMetadata } from "./idexx";
+
 export type { NormalizedEntities } from "@odis-ai/validators";
+export type { IdexxMetadata } from "./idexx";
 
 /* ========================================
    Case Metadata Types
@@ -17,7 +20,8 @@ export type { NormalizedEntities } from "@odis-ai/validators";
  */
 export interface CaseMetadata {
   entities?: NormalizedEntities;
-  idexx?: Record<string, unknown> | null;
+  /** IDEXX-specific metadata with structured billing data */
+  idexx?: IdexxMetadata | null;
   last_updated_by?: string;
   [key: string]: unknown;
 }

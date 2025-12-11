@@ -23,6 +23,10 @@ import type {
   ScheduledDischargeCall,
 } from "@odis-ai/types/services";
 import type { CaseMetadata, CaseMetadataJson } from "@odis-ai/types/case";
+import {
+  buildIdexxConsultationData,
+  parseBillingString,
+} from "@odis-ai/types/idexx";
 
 // Re-export types for convenience
 export type { CaseScheduleOptions, IngestPayload, ScheduledDischargeCall };
@@ -266,7 +270,14 @@ export const CasesService = {
       const currentEntities = currentMetadata.entities;
 
       const mergedEntities = this.mergeEntities(currentEntities, entities);
-      const newIdexx = context.rawIdexxData ?? currentMetadata.idexx ?? null;
+
+      // Build structured IDEXX metadata with raw data and parsed consultation
+      const newIdexx = context.rawIdexxData
+        ? {
+            raw: context.rawIdexxData,
+            consultation: buildIdexxConsultationData(context.rawIdexxData),
+          }
+        : (currentMetadata.idexx ?? null);
 
       const updateData: CaseUpdate = {
         metadata: {
@@ -297,6 +308,14 @@ export const CasesService = {
           ? `idexx-appt-${idexxAppointmentId}`
           : null;
 
+      // Build structured IDEXX metadata with raw data and parsed consultation
+      const idexxMetadata = context.rawIdexxData
+        ? {
+            raw: context.rawIdexxData,
+            consultation: buildIdexxConsultationData(context.rawIdexxData),
+          }
+        : null;
+
       const caseInsert: CaseInsert = {
         user_id: userId,
         status: "ongoing",
@@ -305,7 +324,7 @@ export const CasesService = {
         external_id: externalId,
         metadata: {
           entities: entities,
-          idexx: context.rawIdexxData ?? null,
+          idexx: idexxMetadata,
         } as CaseMetadata as CaseMetadataJson,
       };
 
@@ -1434,6 +1453,35 @@ function mapIdexxToEntities(data: Record<string, unknown>): NormalizedEntities {
         : undefined;
   const email = typeof data.email === "string" ? data.email : undefined;
 
+  // Parse billing data for AI context
+  const acceptedItems = parseBillingString(
+    data.products_services as string | undefined,
+    false,
+  );
+  const declinedItems = parseBillingString(
+    data.declined_products_services as string | undefined,
+    true,
+  );
+
+  // Extract product names for clinical entities
+  const productsServicesProvided =
+    acceptedItems.length > 0
+      ? acceptedItems.map((item) =>
+          item.quantity > 1
+            ? `${item.productService} (Qty: ${item.quantity})`
+            : item.productService,
+        )
+      : undefined;
+
+  const productsServicesDeclined =
+    declinedItems.length > 0
+      ? declinedItems.map((item) =>
+          item.quantity > 1
+            ? `${item.productService} (Qty: ${item.quantity})`
+            : item.productService,
+        )
+      : undefined;
+
   return {
     patient: {
       name: petName,
@@ -1450,6 +1498,9 @@ function mapIdexxToEntities(data: Record<string, unknown>): NormalizedEntities {
     clinical: {
       medications: [],
       diagnoses: [],
+      // Include billing data for AI context (discharge summaries, calls)
+      productsServicesProvided,
+      productsServicesDeclined,
     },
     caseType: "checkup",
     confidence: { overall: 0.5, patient: 0.5, clinical: 0.5 },

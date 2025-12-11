@@ -49,7 +49,7 @@ export function ReviewCategorySelector({
   disabled,
   compact,
 }: ReviewCategorySelectorProps) {
-  const current = categories.find((c) => c.value === value) ?? categories[0];
+  const current = categories.find((c) => c.value === value) ?? categories[0]!;
   const CurrentIcon = current.icon;
 
   return (

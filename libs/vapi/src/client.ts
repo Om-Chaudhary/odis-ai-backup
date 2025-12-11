@@ -329,6 +329,138 @@ export async function createPhoneCall(
 }
 
 /**
+ * Parameters for creating an outbound phone call using a Squad
+ */
+export interface CreateSquadPhoneCallParams {
+  /** Customer's phone number in E.164 format (+1234567890) */
+  phoneNumber: string;
+
+  /** VAPI squad ID to use for the call */
+  squadId: string;
+
+  /** VAPI phone number ID for the caller ID */
+  phoneNumberId: string;
+
+  /**
+   * Dynamic overrides to customize the squad members for this specific call.
+   * Variables are passed to all squad members' system prompts via membersOverrides.
+   *
+   * Note: For squads, we use `squadOverrides.membersOverrides.variableValues`
+   * to apply variables to ALL squad members. This is different from single
+   * assistant calls which use `assistantOverrides.variableValues`.
+   *
+   * @see https://docs.vapi.ai/squads
+   */
+  assistantOverrides?: {
+    /** Template variables for {{variable}} placeholders in system prompts */
+    variableValues?: Record<string, unknown>;
+  };
+}
+
+/**
+ * Creates an outbound phone call using a VAPI Squad
+ *
+ * Squads allow multi-assistant flows with handoffs between specialists.
+ * Use this for complex call flows like the follow-up squad with greeter/assessor/closer.
+ *
+ * IMPORTANT: For squads, variables must be passed via `squadOverrides.membersOverrides`
+ * to apply to ALL squad members. Using top-level `assistantOverrides` does NOT work
+ * for squad calls - that only works for single assistant calls.
+ *
+ * @param params - Squad call parameters
+ * @returns VAPI call response
+ * @see https://docs.vapi.ai/squads
+ */
+export async function createSquadPhoneCall(
+  params: CreateSquadPhoneCallParams,
+): Promise<VapiCallResponse> {
+  const vapi = getVapiClient();
+
+  // Extract variable values
+  const variableValues = params.assistantOverrides?.variableValues;
+
+  // Build call payload for squad
+  // CRITICAL: For squads, use squadOverrides.membersOverrides to apply variables to ALL members
+  // Top-level assistantOverrides does NOT work for squad calls!
+  const callPayload: Record<string, unknown> = {
+    phoneNumberId: params.phoneNumberId,
+    customer: {
+      number: params.phoneNumber,
+    },
+    squadId: params.squadId,
+  };
+
+  // Only add squadOverrides if we have variable values
+  if (variableValues && Object.keys(variableValues).length > 0) {
+    callPayload.squadOverrides = {
+      membersOverrides: {
+        variableValues: variableValues,
+      },
+    };
+  }
+
+  // Log variable format verification
+  const variableKeys = variableValues ? Object.keys(variableValues) : [];
+  const sampleVariables = variableValues
+    ? {
+        pet_name: variableValues.pet_name,
+        owner_name: variableValues.owner_name,
+        clinic_name: variableValues.clinic_name,
+        agent_name: variableValues.agent_name,
+      }
+    : {};
+
+  console.log("[VAPI_CLIENT] Creating squad phone call with payload", {
+    phoneNumber: params.phoneNumber,
+    squadId: params.squadId,
+    phoneNumberId: params.phoneNumberId,
+    hasSquadOverrides: !!callPayload.squadOverrides,
+    variableCount: variableKeys.length,
+    variableFormat: "snake_case (expected by VAPI)",
+    sampleVariableKeys: variableKeys.slice(0, 10),
+    sampleVariables,
+    // Log full variable values for debugging (truncate long values)
+    variableValues: variableValues
+      ? Object.fromEntries(
+          Object.entries(variableValues).map(([key, value]) => [
+            key,
+            typeof value === "string" && value.length > 100
+              ? `${value.substring(0, 100)}...`
+              : value,
+          ]),
+        )
+      : undefined,
+    // Log the actual payload structure being sent
+    payloadStructure: {
+      squadId: params.squadId,
+      squadOverrides: callPayload.squadOverrides ? "present" : "not present",
+    },
+  });
+
+  try {
+    const call = await vapi.calls.create(callPayload);
+
+    const callResponse = call as VapiCallResponse;
+
+    console.log("[VAPI_CLIENT] Squad phone call created successfully", {
+      vapiCallId: callResponse.id,
+      status: callResponse.status,
+      type: callResponse.type,
+      squadId: params.squadId,
+    });
+
+    return callResponse;
+  } catch (error) {
+    console.error("[VAPI_CLIENT] Failed to create squad phone call:", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      payload: callPayload,
+    });
+    throw error;
+  }
+}
+
+/**
  * Gets a call by ID
  *
  * @param callId - VAPI call ID

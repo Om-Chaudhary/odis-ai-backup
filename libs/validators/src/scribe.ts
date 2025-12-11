@@ -129,6 +129,12 @@ export const ClinicalDetailsSchema = z.object({
   // Additional notes
   clinicalNotes: z.string().optional(),
   prognosis: z.string().optional(),
+
+  // Billing information (from IDEXX consultations)
+  // Products/services accepted by the client
+  productsServicesProvided: z.array(z.string()).optional(),
+  // Products/services declined by the client
+  productsServicesDeclined: z.array(z.string()).optional(),
 });
 
 /**

@@ -13,6 +13,7 @@ export * from "./case";
 export * from "./case-study";
 export * from "./clinic-branding";
 export * from "./dashboard";
+export * from "./idexx";
 export * from "./patient";
 export * from "./services";
 export * from "./supabase";
