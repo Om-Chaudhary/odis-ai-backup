@@ -70,8 +70,10 @@ export interface IngestResult {
  */
 export interface ExtractEntitiesResult {
   caseId: string;
-  entities: NormalizedEntities;
+  entities: NormalizedEntities | null;
   source: "transcription" | "idexx_consultation_notes" | "existing";
+  skipped?: boolean;
+  reason?: string;
 }
 
 /**

@@ -585,10 +585,44 @@ export class DischargeOrchestrator {
       }
     }
 
-    // No text available for extraction
+    // Check if this is an extreme case (euthanasia) - block these from proceeding
+    const metadata = caseData.metadata as {
+      idexx?: {
+        appointment_reason?: string;
+        notes?: string;
+        appointment_type?: string;
+      };
+      entities?: {
+        caseType?: string;
+      };
+    } | null;
+
+    const isEuthanasia =
+      metadata?.entities?.caseType === "euthanasia" ||
+      (textToExtract?.toLowerCase().includes("euthanasia") ?? false) ||
+      (textToExtract?.toLowerCase().includes("euthanize") ?? false) ||
+      (metadata?.idexx?.appointment_type
+        ?.toLowerCase()
+        .includes("euthanasia") ??
+        false);
+
+    if (isEuthanasia) {
+      console.warn(
+        "[ORCHESTRATOR] Euthanasia case detected - blocking discharge",
+        {
+          caseId,
+          source: caseData.source,
+        },
+      );
+      throw new Error(
+        "Euthanasia case detected. Discharge workflow is not applicable for euthanasia cases.",
+      );
+    }
+
+    // If minimal or no text available, skip entity extraction gracefully
     if (!textToExtract || textToExtract.length < 50) {
       console.warn(
-        "[ORCHESTRATOR] No suitable text found for entity extraction",
+        "[ORCHESTRATOR] Minimal text available - skipping entity extraction",
         {
           caseId,
           source: caseData.source,
@@ -598,9 +632,21 @@ export class DischargeOrchestrator {
           textLength: textToExtract?.length ?? 0,
         },
       );
-      throw new Error(
-        "No suitable text available for entity extraction. Please ensure the case has transcription data or IDEXX consultation notes.",
-      );
+
+      // Return a completed status with minimal/empty entities
+      // This allows downstream steps to proceed with database patient data
+      return {
+        step: "extractEntities",
+        status: "completed",
+        duration: Date.now() - startTime,
+        data: {
+          caseId,
+          entities: null, // Downstream steps will use database patient data instead
+          source: extractionSource,
+          skipped: true,
+          reason: "Minimal text - using database patient data",
+        } as ExtractEntitiesResult,
+      };
     }
 
     console.log("[ORCHESTRATOR] Extracting entities", {
