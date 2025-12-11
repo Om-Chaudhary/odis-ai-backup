@@ -48,6 +48,10 @@ export interface SquadTestVariables {
   emergency_criteria?: string;
   urgent_criteria?: string;
   assessment_questions?: string;
+
+  // Billing data (source of truth for what actually happened)
+  services_performed?: string; // Semicolon-separated list of services that were actually done
+  services_declined?: string; // For debugging only - not used in prompts (silent approach)
 }
 
 /**
@@ -168,4 +172,10 @@ export const DEFAULT_SQUAD_TEST_VARIABLES: SquadTestVariables = {
       priority: 2,
     },
   ]),
+
+  // Billing data - source of truth for what actually happened
+  // Only items in services_performed should be discussed
+  services_performed:
+    "Office Visit; Metronidazole 250mg #14; Cerenia 60mg #3; Fecal Test",
+  services_declined: "", // Empty = nothing was declined
 };

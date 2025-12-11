@@ -886,6 +886,69 @@ export function VapiTestPage() {
                     </div>
                   </AccordionContent>
                 </AccordionItem>
+
+                {/* Billing Verification Section */}
+                <AccordionItem value="billing">
+                  <AccordionTrigger className="text-sm font-semibold text-slate-900">
+                    Billing Verification (Source of Truth)
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-2">
+                    <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
+                      <p className="text-xs text-amber-800">
+                        <strong>Important:</strong> Services Performed is the
+                        source of truth for what actually happened. The AI will
+                        only discuss medications/treatments that appear here.
+                        Items in Services Declined will NOT be mentioned.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-medium text-slate-700">
+                        Services Performed (Billing Accepted)
+                      </Label>
+                      <Textarea
+                        value={variables.services_performed ?? ""}
+                        onChange={(e) =>
+                          handleVariableChange(
+                            "services_performed",
+                            e.target.value,
+                          )
+                        }
+                        placeholder="Office Visit; Metronidazole 250mg #14; Cerenia 60mg #3; Fecal Test"
+                        disabled={isLoading}
+                        rows={3}
+                        className="text-sm"
+                      />
+                      <p className="text-xs text-slate-500">
+                        Semicolon-separated list of services that were actually
+                        performed and billed
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-medium text-slate-700">
+                        Services Declined (Not Performed)
+                      </Label>
+                      <Textarea
+                        value={variables.services_declined ?? ""}
+                        onChange={(e) =>
+                          handleVariableChange(
+                            "services_declined",
+                            e.target.value,
+                          )
+                        }
+                        placeholder="X-rays; Blood Panel; Prescription Diet"
+                        disabled={isLoading}
+                        rows={2}
+                        className="text-sm"
+                      />
+                      <p className="text-xs text-slate-500">
+                        For debugging only - these items will NOT be mentioned
+                        during the call (silent approach)
+                      </p>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
               </Accordion>
             </CardContent>
           </Card>
@@ -1027,12 +1090,10 @@ export function VapiTestPage() {
                       {
                         squadId: "d4305e87-1c5a-4d45-8953-2525e2d88244",
                         phoneNumber: phoneNumber || "(not set)",
-                        // IMPORTANT: For squads, variables go via squadOverrides.membersOverrides
-                        // NOT assistantOverrides (which only works for single assistant calls)
-                        squadOverrides: {
-                          membersOverrides: {
-                            variableValues: variables,
-                          },
+                        // For permanent squads, variables go via top-level assistantOverrides
+                        // This applies the variables to ALL squad members
+                        assistantOverrides: {
+                          variableValues: variables,
                         },
                       },
                       null,
@@ -1041,9 +1102,9 @@ export function VapiTestPage() {
                   </pre>
                 </div>
                 <p className="mt-2 text-xs text-slate-500">
-                  Squad calls use{" "}
+                  Permanent squad calls use{" "}
                   <code className="rounded bg-slate-800 px-1">
-                    squadOverrides.membersOverrides
+                    assistantOverrides
                   </code>{" "}
                   to pass variables to ALL squad members
                 </p>

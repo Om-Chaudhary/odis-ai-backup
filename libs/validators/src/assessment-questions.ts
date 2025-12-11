@@ -168,6 +168,18 @@ export const GenerateCallIntelligenceInputSchema = z.object({
 
   /** Condition category (for fallback) */
   conditionCategory: z.string().optional(),
+
+  /**
+   * Services/products actually performed (from billing - accepted)
+   * This is the SOURCE OF TRUTH for what was actually done
+   */
+  servicesPerformed: z.array(z.string()).optional(),
+
+  /**
+   * Services/products declined by owner (from billing - declined)
+   * DO NOT generate questions about these items
+   */
+  servicesDeclined: z.array(z.string()).optional(),
 });
 
 export type GenerateCallIntelligenceInput = z.infer<

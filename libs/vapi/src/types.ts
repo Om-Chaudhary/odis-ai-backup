@@ -187,6 +187,23 @@ export interface DynamicVariables {
    * Used to contextualize expected recovery timeline
    */
   daysSinceTreatment?: number;
+
+  // ============================================
+  // Billing Verification (Source of Truth)
+  // ============================================
+
+  /**
+   * Services/products actually performed (from billing - accepted)
+   * This is the SOURCE OF TRUTH for what was actually done
+   * Only discuss items that appear in this list
+   */
+  servicesPerformed?: string[];
+
+  /**
+   * Services/products declined by owner (from billing - declined)
+   * DO NOT discuss these items - owner declined them
+   */
+  servicesDeclined?: string[];
 }
 
 /**
@@ -207,51 +224,7 @@ export interface ValidationResult {
 }
 
 /**
- * Complete knowledge base definition for a condition category
- */
-export interface ConditionKnowledgeBase {
-  /** Unique identifier for this condition category */
-  conditionCategory: ConditionCategory;
-
-  /** Human-readable display name */
-  displayName: string;
-
-  /** Description of what conditions fall under this category */
-  description: string;
-
-  /** Array of keywords used to auto-detect condition category from condition string */
-  keywords: string[];
-
-  /** Condition-specific assessment questions */
-  assessmentQuestions: AssessmentQuestion[];
-
-  /** Normal post-treatment expectations for this condition type */
-  normalPostTreatmentExpectations: string[];
-
-  /** Warning signs to monitor for this condition */
-  warningSignsToMonitor: string[];
-
-  /** Emergency criteria requiring immediate ER visit */
-  emergencyCriteria: string[];
-
-  /** Urgent criteria requiring same-day vet visit */
-  urgentCriteria: string[];
-
-  /**
-   * Average expected recovery timeline in days
-   * Used to contextualize owner expectations
-   */
-  typicalRecoveryDays?: number;
-
-  /**
-   * Common medications used for this condition
-   * Used for validation and auto-completion
-   */
-  commonMedications?: string[];
-}
-
-/**
- * AI-generated call intelligence (replaces static KB content when available)
+ * AI-generated call intelligence for VAPI calls
  */
 export interface AIGeneratedCallIntelligence {
   /** Brief case context summary */
@@ -290,7 +263,7 @@ export interface BuildVariablesOptions {
   baseVariables: Partial<DynamicVariables>;
 
   /**
-   * Condition category to use for knowledge base lookup
+   * Condition category for the case
    * If not provided, will attempt to infer from condition string
    */
   conditionCategory?: ConditionCategory;
@@ -303,20 +276,13 @@ export interface BuildVariablesOptions {
   strict?: boolean;
 
   /**
-   * Whether to auto-populate missing optional fields with defaults
-   * Default: true
+   * @deprecated No longer used - static KB has been removed
    */
   useDefaults?: boolean;
 
   /**
-   * Custom knowledge base override
-   * Allows providing custom questions/criteria instead of using built-in knowledge base
-   */
-  customKnowledgeBase?: Partial<ConditionKnowledgeBase>;
-
-  /**
-   * AI-generated call intelligence (preferred over static KB)
-   * When provided, uses AI-generated content instead of static knowledge base
+   * AI-generated call intelligence
+   * When provided, uses AI-generated content for assessment questions, warnings, etc.
    */
   aiGeneratedIntelligence?: AIGeneratedCallIntelligence;
 }
@@ -327,9 +293,6 @@ export interface BuildVariablesOptions {
 export interface BuildVariablesResult {
   /** Successfully built and validated variables */
   variables: DynamicVariables;
-
-  /** Knowledge base used for this condition (always available - defaults to general if category unknown) */
-  knowledgeBase: ConditionKnowledgeBase;
 
   /** Validation result */
   validation: ValidationResult;

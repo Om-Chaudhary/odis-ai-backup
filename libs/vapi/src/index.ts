@@ -2,7 +2,7 @@
  * @odis-ai/vapi
  *
  * VAPI AI integration library.
- * Includes clients, knowledge base, prompts, and webhook handlers.
+ * Includes clients, prompts, and webhook handlers.
  */
 
 // Core client and types
@@ -22,5 +22,5 @@ export * from "./warm-transfer";
 export * from "./extract-variables";
 export * from "./utils";
 
-// Knowledge base
+// Variable building utilities
 export * from "./knowledge-base";

@@ -31,6 +31,18 @@ CRITICAL PRINCIPLE: "SPECIFIC TO THIS CASE"
 - If medication was prescribed, ask about medication compliance/tolerance
 - If a procedure was done, ask about the procedure site
 
+BILLING VERIFICATION - SOURCE OF TRUTH:
+When "SERVICES ACTUALLY PERFORMED" and "SERVICES DECLINED BY OWNER" sections are provided:
+- SERVICES PERFORMED = What was ACTUALLY done (billing accepted) - ONLY ask about these
+- SERVICES DECLINED = What was recommended but NOT done - NEVER ask about these
+
+CRITICAL BILLING RULES:
+- ONLY generate questions about items that appear in SERVICES ACTUALLY PERFORMED
+- NEVER ask about items in SERVICES DECLINED BY OWNER
+- If a medication appears in clinical notes but NOT in services performed, the owner declined it - DO NOT ask about it
+- If services performed is empty but medications are listed in notes, ask about medications (legacy behavior)
+- Cross-reference: medications/procedures from notes vs services performed - only discuss overlap
+
 QUESTION GENERATION RULES:
 1. Generate 1-2 questions MAX - quality over quantity
 2. Each question must be directly tied to something in the case notes
@@ -170,6 +182,19 @@ function formatInputForPrompt(input: GenerateCallIntelligenceInput): string {
     sections.push(`\nFOLLOW-UP INSTRUCTIONS: ${input.followUpInstructions}`);
   }
 
+  // Billing data - SOURCE OF TRUTH for what actually happened
+  if (input.servicesPerformed?.length) {
+    sections.push(
+      `\nSERVICES ACTUALLY PERFORMED (BILLING ACCEPTED - only ask about these):`,
+    );
+    input.servicesPerformed.forEach((s) => sections.push(`  ✓ ${s}`));
+  }
+
+  if (input.servicesDeclined?.length) {
+    sections.push(`\nSERVICES DECLINED BY OWNER (DO NOT ASK ABOUT THESE):`);
+    input.servicesDeclined.forEach((s) => sections.push(`  ✗ ${s}`));
+  }
+
   if (input.soapContent) {
     sections.push(`\nRAW CLINICAL NOTES:\n${input.soapContent}`);
   }
@@ -192,6 +217,8 @@ export async function generateCallIntelligence(
       diagnosis: input.diagnosis,
       hasMedications: (input.medications?.length ?? 0) > 0,
       hasProcedures: (input.procedures?.length ?? 0) > 0,
+      hasServicesPerformed: (input.servicesPerformed?.length ?? 0) > 0,
+      hasServicesDeclined: (input.servicesDeclined?.length ?? 0) > 0,
     });
 
     const messages: ChatMessage[] = [
@@ -348,6 +375,9 @@ export async function generateCallIntelligenceFromEntities(
     presentingSymptoms: entities.clinical.presentingSymptoms,
     followUpInstructions: entities.clinical.followUpInstructions,
     soapContent,
+    // Billing data - source of truth for what actually happened
+    servicesPerformed: entities.clinical.productsServicesProvided,
+    servicesDeclined: entities.clinical.productsServicesDeclined,
   };
 
   return generateCallIntelligenceWithRetry(input);

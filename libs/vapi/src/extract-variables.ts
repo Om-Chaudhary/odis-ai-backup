@@ -2,8 +2,7 @@
  * VAPI Dynamic Variables from AI Extraction
  *
  * Transforms normalized entity extraction data into VAPI dynamic variables
- * for personalized and contextually-aware phone calls. Integrates with the
- * knowledge base system for condition-specific assessment questions and criteria.
+ * for personalized and contextually-aware phone calls.
  */
 
 import type { NormalizedEntities } from "@odis-ai/validators/scribe";
@@ -201,11 +200,17 @@ export function buildVapiVariablesFromEntities(
 
       // Pet metadata for context
       petSpecies,
+
+      // Billing data - SOURCE OF TRUTH for what actually happened
+      // Only discuss items in servicesPerformed, ignore servicesDeclined
+      servicesPerformed: entities.clinical.productsServicesProvided,
+      servicesDeclined: entities.clinical.productsServicesDeclined,
     },
     // Use explicit category if provided, otherwise let it be inferred from condition
     conditionCategory: config.conditionCategory,
     strict: false,
-    useDefaults: true,
+    // Disable static knowledge base defaults - only use AI-generated intelligence
+    useDefaults: false,
   });
 }
 
@@ -406,6 +411,18 @@ export function extractVapiVariablesFromEntities(
     if (clinical.prognosis) {
       variables.prognosis = clinical.prognosis;
     }
+
+    // Billing data - SOURCE OF TRUTH for what actually happened
+    // This takes precedence over notes when determining what to discuss
+    if (
+      clinical.productsServicesProvided &&
+      clinical.productsServicesProvided.length > 0
+    ) {
+      variables.services_performed =
+        clinical.productsServicesProvided.join("; ");
+    }
+    // Note: We intentionally don't expose services_declined to the prompt
+    // The AI should simply not mention declined services (silent approach)
   }
 
   // Case Type

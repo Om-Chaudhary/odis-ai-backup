@@ -902,7 +902,8 @@ export const CasesService = {
           : undefined,
       },
       strict: false,
-      useDefaults: true,
+      // Disable static knowledge base defaults - only use AI-generated intelligence
+      useDefaults: false,
       // Pass AI-generated intelligence (preferred over static KB)
       aiGeneratedIntelligence: aiIntelligence ?? undefined,
     });

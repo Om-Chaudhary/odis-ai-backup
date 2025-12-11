@@ -162,6 +162,10 @@ export async function convertToSquadVariables(
     emergency_criteria: stringify(dynamicVars.emergency_criteria),
     urgent_criteria: stringify(dynamicVars.urgent_criteria),
     assessment_questions: stringify(dynamicVars.assessment_questions),
+
+    // Billing data - source of truth for what actually happened
+    services_performed: (dynamicVars.services_performed as string) || undefined,
+    services_declined: (dynamicVars.services_declined as string) || undefined,
   };
 }
 

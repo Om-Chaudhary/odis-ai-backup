@@ -209,7 +209,8 @@ async function handler(req: NextRequest) {
                 : undefined,
             },
             strict: false,
-            useDefaults: true,
+            // Disable static knowledge base defaults - only use AI-generated intelligence
+            useDefaults: false,
           });
 
           console.log(

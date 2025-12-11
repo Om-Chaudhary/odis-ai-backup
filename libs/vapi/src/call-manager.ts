@@ -144,7 +144,8 @@ export async function createVapiCall(
         daysSinceTreatment: input.daysSinceTreatment,
       },
       strict: false,
-      useDefaults: true,
+      // Disable static knowledge base defaults - only use AI-generated intelligence
+      useDefaults: false,
     });
 
     // Check validation errors
@@ -213,8 +214,8 @@ export async function createVapiCall(
         status: input.scheduledFor ? "queued" : "pending",
         dynamic_variables: variablesBuildResult.variables,
         condition_category:
-          variablesBuildResult.knowledgeBase.conditionCategory,
-        knowledge_base_used: variablesBuildResult.knowledgeBase.displayName,
+          variablesBuildResult.variables.conditionCategory ?? "general",
+        knowledge_base_used: null, // Static KB removed
       })
       .select("id")
       .single();

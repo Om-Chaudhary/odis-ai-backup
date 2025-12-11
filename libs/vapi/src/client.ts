@@ -343,11 +343,11 @@ export interface CreateSquadPhoneCallParams {
 
   /**
    * Dynamic overrides to customize the squad members for this specific call.
-   * Variables are passed to all squad members' system prompts via membersOverrides.
+   * Variables are passed to all squad members' system prompts.
    *
-   * Note: For squads, we use `squadOverrides.membersOverrides.variableValues`
-   * to apply variables to ALL squad members. This is different from single
-   * assistant calls which use `assistantOverrides.variableValues`.
+   * Note: When using a permanent squadId, variables are passed via top-level
+   * `assistantOverrides.variableValues` which applies to ALL squad members.
+   * This is the same structure as single assistant calls.
    *
    * @see https://docs.vapi.ai/squads
    */
@@ -363,9 +363,8 @@ export interface CreateSquadPhoneCallParams {
  * Squads allow multi-assistant flows with handoffs between specialists.
  * Use this for complex call flows like the follow-up squad with greeter/assessor/closer.
  *
- * IMPORTANT: For squads, variables must be passed via `squadOverrides.membersOverrides`
- * to apply to ALL squad members. Using top-level `assistantOverrides` does NOT work
- * for squad calls - that only works for single assistant calls.
+ * IMPORTANT: For permanent squads (using squadId), variables are passed via top-level
+ * `assistantOverrides.variableValues` which applies to ALL squad members automatically.
  *
  * @param params - Squad call parameters
  * @returns VAPI call response
@@ -380,8 +379,8 @@ export async function createSquadPhoneCall(
   const variableValues = params.assistantOverrides?.variableValues;
 
   // Build call payload for squad
-  // CRITICAL: For squads, use squadOverrides.membersOverrides to apply variables to ALL members
-  // Top-level assistantOverrides does NOT work for squad calls!
+  // CRITICAL: For squads with squadId, use assistantOverrides to apply variables to ALL members
+  // The assistantOverrides at the top level applies to all squad members
   const callPayload: Record<string, unknown> = {
     phoneNumberId: params.phoneNumberId,
     customer: {
@@ -390,12 +389,11 @@ export async function createSquadPhoneCall(
     squadId: params.squadId,
   };
 
-  // Only add squadOverrides if we have variable values
+  // Add assistantOverrides if we have variable values
+  // This applies the variables to all members of the squad
   if (variableValues && Object.keys(variableValues).length > 0) {
-    callPayload.squadOverrides = {
-      membersOverrides: {
-        variableValues: variableValues,
-      },
+    callPayload.assistantOverrides = {
+      variableValues: variableValues,
     };
   }
 
@@ -414,7 +412,7 @@ export async function createSquadPhoneCall(
     phoneNumber: params.phoneNumber,
     squadId: params.squadId,
     phoneNumberId: params.phoneNumberId,
-    hasSquadOverrides: !!callPayload.squadOverrides,
+    hasAssistantOverrides: !!callPayload.assistantOverrides,
     variableCount: variableKeys.length,
     variableFormat: "snake_case (expected by VAPI)",
     sampleVariableKeys: variableKeys.slice(0, 10),
@@ -433,7 +431,9 @@ export async function createSquadPhoneCall(
     // Log the actual payload structure being sent
     payloadStructure: {
       squadId: params.squadId,
-      squadOverrides: callPayload.squadOverrides ? "present" : "not present",
+      assistantOverrides: callPayload.assistantOverrides
+        ? "present"
+        : "not present",
     },
   });
 
