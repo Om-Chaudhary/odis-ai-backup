@@ -49,9 +49,13 @@ export interface SquadTestVariables {
   urgent_criteria?: string;
   assessment_questions?: string;
 
+  // AI-generated call intelligence flags
+  should_ask_clinical_questions?: string; // "true" or "false" - whether to ask clinical questions
+  call_approach?: string; // "brief-checkin" | "standard-assessment" | "detailed-monitoring"
+
   // Billing data (source of truth for what actually happened)
   services_performed?: string; // Semicolon-separated list of services that were actually done
-  services_declined?: string; // For debugging only - not used in prompts (silent approach)
+  services_declined?: string; // Semicolon-separated list of services owner declined
 }
 
 /**
@@ -172,6 +176,10 @@ export const DEFAULT_SQUAD_TEST_VARIABLES: SquadTestVariables = {
       priority: 2,
     },
   ]),
+
+  // AI-generated call intelligence flags
+  should_ask_clinical_questions: "true", // This is a clinical case with diagnosis
+  call_approach: "standard-assessment", // Standard clinical follow-up
 
   // Billing data - source of truth for what actually happened
   // Only items in services_performed should be discussed

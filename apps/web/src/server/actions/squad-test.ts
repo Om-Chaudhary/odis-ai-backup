@@ -163,6 +163,18 @@ export async function convertToSquadVariables(
     urgent_criteria: stringify(dynamicVars.urgent_criteria),
     assessment_questions: stringify(dynamicVars.assessment_questions),
 
+    // AI-generated call intelligence flags
+    should_ask_clinical_questions:
+      dynamicVars.should_ask_clinical_questions !== undefined
+        ? stringify(dynamicVars.should_ask_clinical_questions)
+        : dynamicVars.shouldAskClinicalQuestions !== undefined
+          ? stringify(dynamicVars.shouldAskClinicalQuestions)
+          : "true", // Default to true for safety
+    call_approach:
+      (dynamicVars.call_approach as string) ||
+      (dynamicVars.callApproach as string) ||
+      "standard-assessment",
+
     // Billing data - source of truth for what actually happened
     services_performed: (dynamicVars.services_performed as string) || undefined,
     services_declined: (dynamicVars.services_declined as string) || undefined,

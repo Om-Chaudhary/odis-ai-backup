@@ -170,6 +170,24 @@ export interface DynamicVariables {
   urgentCriteria?: string[];
 
   // ============================================
+  // AI Call Intelligence Flags
+  // ============================================
+
+  /**
+   * Whether clinical questions should be asked at all
+   * False for grooming, simple wellness, etc.
+   */
+  shouldAskClinicalQuestions?: boolean;
+
+  /**
+   * Recommended call approach based on case complexity
+   */
+  callApproach?:
+    | "brief-checkin"
+    | "standard-assessment"
+    | "detailed-monitoring";
+
+  // ============================================
   // Additional Metadata (Optional)
   // ============================================
 
@@ -241,6 +259,9 @@ export interface AIGeneratedCallIntelligence {
 
   /** Emergency criteria specific to this case */
   emergencyCriteria?: string[];
+
+  /** Urgent criteria specific to this case (less severe than emergency) */
+  urgentCriteria?: string[];
 
   /** Whether clinical questions should be asked at all */
   shouldAskClinicalQuestions?: boolean;

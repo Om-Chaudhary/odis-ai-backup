@@ -421,8 +421,15 @@ export function extractVapiVariablesFromEntities(
       variables.services_performed =
         clinical.productsServicesProvided.join("; ");
     }
-    // Note: We intentionally don't expose services_declined to the prompt
-    // The AI should simply not mention declined services (silent approach)
+
+    // Services declined by owner - exposed so agent knows what NOT to mention
+    if (
+      clinical.productsServicesDeclined &&
+      clinical.productsServicesDeclined.length > 0
+    ) {
+      variables.services_declined =
+        clinical.productsServicesDeclined.join("; ");
+    }
   }
 
   // Case Type

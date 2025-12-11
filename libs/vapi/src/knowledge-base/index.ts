@@ -10,7 +10,6 @@ import type {
   DynamicVariables,
   BuildVariablesOptions,
   BuildVariablesResult,
-  ValidationResult,
 } from "../types";
 
 import {
@@ -80,6 +79,8 @@ export function buildDynamicVariables(
       console.log("[BUILD_VARIABLES] Using AI-generated call intelligence", {
         questionCount: aiGeneratedIntelligence.assessmentQuestions?.length,
         callApproach: aiGeneratedIntelligence.callApproach,
+        shouldAskClinicalQuestions:
+          aiGeneratedIntelligence.shouldAskClinicalQuestions,
         confidence: aiGeneratedIntelligence.confidence,
       });
 
@@ -101,6 +102,21 @@ export function buildDynamicVariables(
       if (aiGeneratedIntelligence.emergencyCriteria?.length) {
         completeVariables.emergencyCriteria =
           aiGeneratedIntelligence.emergencyCriteria;
+      }
+
+      if (aiGeneratedIntelligence.urgentCriteria?.length) {
+        completeVariables.urgentCriteria =
+          aiGeneratedIntelligence.urgentCriteria;
+      }
+
+      // Add call intelligence flags
+      if (aiGeneratedIntelligence.shouldAskClinicalQuestions !== undefined) {
+        completeVariables.shouldAskClinicalQuestions =
+          aiGeneratedIntelligence.shouldAskClinicalQuestions;
+      }
+
+      if (aiGeneratedIntelligence.callApproach) {
+        completeVariables.callApproach = aiGeneratedIntelligence.callApproach;
       }
     }
 
