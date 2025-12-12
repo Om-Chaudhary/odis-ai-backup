@@ -46,32 +46,5 @@ function OutboundDischargeContent() {
   // TODO: Implement outbound discharge data fetching
   const outboundCalls = [];
 
-  return (
-    <div className="space-y-4">
-      {outboundCalls.length === 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>No Outbound Calls</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <EmptyState />
-            <p className="text-muted-foreground mt-4 text-center text-sm">
-              There are currently no outbound discharge calls to display.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-2">
-          {/* TODO: Map through outbound calls and display them */}
-          <Card>
-            <CardContent className="p-6">
-              <p className="text-muted-foreground">
-                Outbound call items will appear here
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-    </div>
-  );
+  return <div className="space-y-4"></div>;
 }

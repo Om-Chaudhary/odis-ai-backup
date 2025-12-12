@@ -4,7 +4,6 @@ import * as React from "react";
 import {
   Home,
   Settings,
-  Command,
   LogOut,
   PhoneIncoming,
   PhoneOutgoing,
@@ -25,6 +24,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@odis-ai/ui/avatar";
 import { Button } from "@odis-ai/ui/button";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { signOut } from "~/server/actions/auth";
 import type { User } from "@supabase/supabase-js";
@@ -124,8 +124,14 @@ export function AppSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href={dashboardUrl}>
-                <div className="text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg bg-[#31aba3]">
-                  <Command className="size-4 text-white" />
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg">
+                  <Image
+                    src="/icon-128.png"
+                    alt="Odis AI Logo"
+                    width={32}
+                    height={32}
+                    className="h-8 w-8 rounded-lg"
+                  />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Odis AI</span>
