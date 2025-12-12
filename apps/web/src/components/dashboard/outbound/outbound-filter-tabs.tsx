@@ -1,8 +1,24 @@
 "use client";
 
-import { Search, List, UserX, AlertTriangle } from "lucide-react";
+import {
+  Search,
+  List,
+  UserX,
+  AlertTriangle,
+  PhoneOff,
+  Clock,
+  Wifi,
+  Voicemail,
+  Mail,
+  CircleAlert,
+} from "lucide-react";
 import { cn } from "@odis-ai/utils";
-import type { StatusFilter, ViewMode, DischargeSummaryStats } from "./types";
+import type {
+  StatusFilter,
+  ViewMode,
+  DischargeSummaryStats,
+  FailureCategory,
+} from "./types";
 import { OutboundDateNav } from "./outbound-date-nav";
 
 interface OutboundFilterTabsProps {
@@ -41,23 +57,60 @@ export function OutboundFilterTabs({
   viewMode,
   onViewModeChange,
 }: OutboundFilterTabsProps) {
-  const statusTabs: Array<{
+  // Main status tabs (non-failure)
+  const mainStatusTabs: Array<{
     value: StatusFilter;
     label: string;
     count: number;
-    activeColor?: string;
-    countColor?: string;
   }> = [
     { value: "all", label: "All", count: counts.total },
     { value: "ready_to_send", label: "Ready", count: counts.readyToSend },
     { value: "scheduled", label: "Scheduled", count: counts.scheduled },
     { value: "sent", label: "Sent", count: counts.sent },
+  ];
+
+  // Failure category tabs with icons
+  const failureTabs: Array<{
+    value: FailureCategory;
+    label: string;
+    count: number;
+    icon: React.ReactNode;
+  }> = [
     {
-      value: "failed",
-      label: "Failed",
+      value: "all_failed",
+      label: "All Failed",
       count: counts.failed,
-      activeColor: "bg-red-50/80 text-red-700 border-red-200/60",
-      countColor: "bg-red-100 text-red-600",
+      icon: <CircleAlert className="h-3 w-3" />,
+    },
+    {
+      value: "silence_timeout",
+      label: "Silence Timeout",
+      count: counts.failureCategories?.silenceTimeout ?? 0,
+      icon: <Clock className="h-3 w-3" />,
+    },
+    {
+      value: "no_answer",
+      label: "No Answer",
+      count: counts.failureCategories?.noAnswer ?? 0,
+      icon: <PhoneOff className="h-3 w-3" />,
+    },
+    {
+      value: "connection_error",
+      label: "Connection Error",
+      count: counts.failureCategories?.connectionError ?? 0,
+      icon: <Wifi className="h-3 w-3" />,
+    },
+    {
+      value: "voicemail",
+      label: "Voicemail",
+      count: counts.failureCategories?.voicemail ?? 0,
+      icon: <Voicemail className="h-3 w-3" />,
+    },
+    {
+      value: "email_failed",
+      label: "Email Failed",
+      count: counts.failureCategories?.emailFailed ?? 0,
+      icon: <Mail className="h-3 w-3" />,
     },
   ];
 
@@ -142,9 +195,9 @@ export function OutboundFilterTabs({
       {/* Center: Status filters - Only show when in "all" view mode */}
       {viewMode === "all" && (
         <div className="flex items-center gap-1">
-          {statusTabs.map((tab) => {
+          {/* Main status tabs */}
+          {mainStatusTabs.map((tab) => {
             const isActive = activeStatus === tab.value;
-            const isFailed = tab.value === "failed";
 
             return (
               <button
@@ -155,9 +208,7 @@ export function OutboundFilterTabs({
                   "text-xs font-medium",
                   "border transition-all duration-200",
                   isActive
-                    ? isFailed
-                      ? tab.activeColor
-                      : "border-teal-200/60 bg-white/90 text-teal-700 shadow-sm"
+                    ? "border-teal-200/60 bg-white/90 text-teal-700 shadow-sm"
                     : "border-transparent bg-white/40 text-slate-600 hover:bg-white/60 hover:text-slate-800",
                 )}
               >
@@ -166,9 +217,45 @@ export function OutboundFilterTabs({
                   className={cn(
                     "inline-flex h-4 min-w-4 items-center justify-center rounded px-1 text-[10px] font-semibold tabular-nums",
                     isActive
-                      ? isFailed
-                        ? tab.countColor
-                        : "bg-teal-100 text-teal-700"
+                      ? "bg-teal-100 text-teal-700"
+                      : "bg-slate-100 text-slate-500",
+                  )}
+                >
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
+
+          {/* Separator */}
+          <div className="mx-1 h-4 w-px bg-slate-200" />
+
+          {/* Failure category tabs */}
+          {failureTabs.map((tab) => {
+            const isActive = activeStatus === tab.value;
+            // Only show tabs with count > 0, except "All Failed"
+            if (tab.count === 0 && tab.value !== "all_failed") return null;
+
+            return (
+              <button
+                key={tab.value}
+                onClick={() => onStatusChange(tab.value)}
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-md px-2 py-1",
+                  "text-xs font-medium",
+                  "border transition-all duration-200",
+                  isActive
+                    ? "border-red-200/60 bg-red-50/80 text-red-700 shadow-sm"
+                    : "border-transparent bg-white/40 text-slate-600 hover:bg-red-50/50 hover:text-red-700",
+                )}
+              >
+                {tab.icon}
+                <span className="hidden lg:inline">{tab.label}</span>
+                <span
+                  className={cn(
+                    "inline-flex h-4 min-w-4 items-center justify-center rounded px-1 text-[10px] font-semibold tabular-nums",
+                    isActive
+                      ? "bg-red-100 text-red-600"
                       : "bg-slate-100 text-slate-500",
                   )}
                 >

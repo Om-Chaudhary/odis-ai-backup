@@ -15,6 +15,7 @@ import type {
   DeliveryToggles,
   SoapNote,
   DischargeSummaryStats,
+  FailureCategory,
 } from "./types";
 import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
 import { PageContainer, PageToolbar, PageContent, PageFooter } from "../layout";
@@ -81,10 +82,31 @@ interface TransformedCase {
   isUrgentCase?: boolean;
 }
 
-// Map old status to new StatusFilter for API
+// Failure category values for URL parsing
+const FAILURE_CATEGORIES: FailureCategory[] = [
+  "all_failed",
+  "silence_timeout",
+  "no_answer",
+  "connection_error",
+  "voicemail",
+  "email_failed",
+  "other",
+];
+
+// Check if a status filter is a failure category
+function isFailureCategory(filter: StatusFilter): filter is FailureCategory {
+  return FAILURE_CATEGORIES.includes(filter as FailureCategory);
+}
+
+// Map status filter to API status (for non-failure filters)
 function mapStatusFilterToApiStatus(
   filter: StatusFilter,
 ): DischargeCaseStatus | undefined {
+  // Failure categories are handled separately via failureCategory param
+  if (isFailureCategory(filter)) {
+    return "failed"; // All failure categories filter on failed status
+  }
+
   switch (filter) {
     case "all":
       return undefined;
@@ -94,11 +116,19 @@ function mapStatusFilterToApiStatus(
       return "scheduled";
     case "sent":
       return "completed";
-    case "failed":
-      return "failed";
     default:
       return undefined;
   }
+}
+
+// Map status filter to failure category for API
+function mapStatusFilterToFailureCategory(
+  filter: StatusFilter,
+): FailureCategory | undefined {
+  if (isFailureCategory(filter)) {
+    return filter;
+  }
+  return undefined;
 }
 
 /**
@@ -127,10 +157,23 @@ export function OutboundDischargesClient() {
 
   const [statusFilter, setStatusFilter] = useQueryState("status", {
     defaultValue: "all" as StatusFilter,
-    parse: (v) =>
-      (["all", "ready_to_send", "scheduled", "sent", "failed"].includes(v)
-        ? v
-        : "all") as StatusFilter,
+    parse: (v) => {
+      const validStatuses = [
+        "all",
+        "ready_to_send",
+        "scheduled",
+        "sent",
+        // Failure categories
+        "all_failed",
+        "silence_timeout",
+        "no_answer",
+        "connection_error",
+        "voicemail",
+        "email_failed",
+        "other",
+      ];
+      return (validStatuses.includes(v) ? v : "all") as StatusFilter;
+    },
   });
 
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
@@ -188,6 +231,7 @@ export function OutboundDischargesClient() {
       page: page,
       pageSize: pageSize,
       status: mapStatusFilterToApiStatus(statusFilter),
+      failureCategory: mapStatusFilterToFailureCategory(statusFilter),
       search: searchTerm || undefined,
       startDate,
       endDate,
@@ -313,12 +357,21 @@ export function OutboundDischargesClient() {
       failed: 0,
       total: 0,
       needsAttention: 0,
+      failureCategories: {
+        silenceTimeout: 0,
+        noAnswer: 0,
+        connectionError: 0,
+        voicemail: 0,
+        emailFailed: 0,
+        other: 0,
+      },
     };
     return {
       readyToSend: raw.pendingReview + raw.ready + raw.inProgress,
       scheduled: raw.scheduled,
       sent: raw.completed,
       failed: raw.failed,
+      failureCategories: raw.failureCategories,
       total: raw.total,
       needsReview: needsReviewCases.length,
       needsAttention:

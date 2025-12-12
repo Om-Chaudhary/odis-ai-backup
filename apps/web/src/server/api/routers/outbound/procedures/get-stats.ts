@@ -28,6 +28,7 @@ interface CaseRow {
     id: string;
     status: string;
     scheduled_for: string | null;
+    ended_reason: string | null;
     metadata: ScheduledCallMetadata | null;
     structured_data: ScheduledCallStructuredData | null;
   }>;
@@ -36,6 +37,63 @@ interface CaseRow {
     status: string;
     scheduled_for: string | null;
   }>;
+}
+
+/**
+ * Categorize a failure based on ended_reason and statuses
+ */
+function categorizeFailure(
+  callEndedReason: string | null,
+  callStatus: string | null,
+  emailStatus: string | null,
+):
+  | "silence_timeout"
+  | "no_answer"
+  | "connection_error"
+  | "voicemail"
+  | "email_failed"
+  | "other"
+  | null {
+  // If neither call nor email failed, not a failure
+  if (callStatus !== "failed" && emailStatus !== "failed") {
+    return null;
+  }
+
+  // Email failure (when call didn't fail)
+  if (emailStatus === "failed" && callStatus !== "failed") {
+    return "email_failed";
+  }
+
+  // Call failure - categorize by ended_reason
+  if (callStatus === "failed" && callEndedReason) {
+    const reason = callEndedReason.toLowerCase();
+
+    if (
+      reason.includes("silence-timed-out") ||
+      reason.includes("silence_timed_out")
+    ) {
+      return "silence_timeout";
+    }
+    if (
+      reason.includes("no-answer") ||
+      reason.includes("did-not-answer") ||
+      reason.includes("no_answer")
+    ) {
+      return "no_answer";
+    }
+    if (reason.includes("voicemail")) {
+      return "voicemail";
+    }
+    if (
+      reason.includes("error") ||
+      reason.includes("failed-to-connect") ||
+      reason.includes("sip")
+    ) {
+      return "connection_error";
+    }
+  }
+
+  return "other";
 }
 
 export const getStatsRouter = createTRPCRouter({
@@ -64,7 +122,7 @@ export const getStatsRouter = createTRPCRouter({
           id,
           status,
           discharge_summaries (id),
-          scheduled_discharge_calls (id, status, scheduled_for, metadata, structured_data),
+          scheduled_discharge_calls (id, status, scheduled_for, ended_reason, metadata, structured_data),
           scheduled_discharge_emails (id, status, scheduled_for)
         `,
         )
@@ -73,24 +131,32 @@ export const getStatsRouter = createTRPCRouter({
       // Apply date filters with proper timezone-aware boundaries
       // Use scheduled_at (appointment time) instead of created_at (sync time)
       // This matches how the extension groups cases by appointment date
+      // Falls back to created_at when scheduled_at is null (COALESCE pattern)
       if (input.startDate && input.endDate) {
-        // Both dates provided - use timezone-aware range
+        // Both dates provided - use timezone-aware range with fallback
         const startRange = getLocalDayRange(input.startDate, DEFAULT_TIMEZONE);
         const endRange = getLocalDayRange(input.endDate, DEFAULT_TIMEZONE);
-        query = query
-          .gte("scheduled_at", startRange.startISO)
-          .lte("scheduled_at", endRange.endISO);
+        // Use .or() to implement COALESCE(scheduled_at, created_at) logic:
+        // 1. Cases where scheduled_at is in range, OR
+        // 2. Cases where scheduled_at is null AND created_at is in range
+        query = query.or(
+          `and(scheduled_at.gte.${startRange.startISO},scheduled_at.lte.${endRange.endISO}),and(scheduled_at.is.null,created_at.gte.${startRange.startISO},created_at.lte.${endRange.endISO})`,
+        );
       } else if (input.startDate) {
-        // Only start date - get timezone-aware start of day
+        // Only start date - get timezone-aware start of day with fallback
         const { startISO } = getLocalDayRange(
           input.startDate,
           DEFAULT_TIMEZONE,
         );
-        query = query.gte("scheduled_at", startISO);
+        query = query.or(
+          `scheduled_at.gte.${startISO},and(scheduled_at.is.null,created_at.gte.${startISO})`,
+        );
       } else if (input.endDate) {
-        // Only end date - get timezone-aware end of day
+        // Only end date - get timezone-aware end of day with fallback
         const { endISO } = getLocalDayRange(input.endDate, DEFAULT_TIMEZONE);
-        query = query.lte("scheduled_at", endISO);
+        query = query.or(
+          `scheduled_at.lte.${endISO},and(scheduled_at.is.null,created_at.lte.${endISO})`,
+        );
       }
 
       const { data: cases, error } = await query;
@@ -113,6 +179,16 @@ export const getStatsRouter = createTRPCRouter({
       let failed = 0;
       let needsAttention = 0;
 
+      // Failure category counts
+      const failureCategories = {
+        silenceTimeout: 0,
+        noAnswer: 0,
+        connectionError: 0,
+        voicemail: 0,
+        emailFailed: 0,
+        other: 0,
+      };
+
       for (const c of (cases as CaseRow[]) ?? []) {
         const hasDischargeSummary = (c.discharge_summaries?.length ?? 0) > 0;
         const callData = c.scheduled_discharge_calls?.[0];
@@ -132,12 +208,42 @@ export const getStatsRouter = createTRPCRouter({
 
         const callStatus = callData?.status ?? null;
         const emailStatus = emailData?.status ?? null;
+        const callEndedReason = callData?.ended_reason ?? null;
         const callScheduledFor = callData?.scheduled_for ?? null;
         const emailScheduledFor = emailData?.scheduled_for ?? null;
 
-        // Failed
+        // Failed - categorize by reason
         if (callStatus === "failed" || emailStatus === "failed") {
           failed++;
+
+          // Categorize the failure
+          const category = categorizeFailure(
+            callEndedReason,
+            callStatus,
+            emailStatus,
+          );
+          if (category) {
+            switch (category) {
+              case "silence_timeout":
+                failureCategories.silenceTimeout++;
+                break;
+              case "no_answer":
+                failureCategories.noAnswer++;
+                break;
+              case "connection_error":
+                failureCategories.connectionError++;
+                break;
+              case "voicemail":
+                failureCategories.voicemail++;
+                break;
+              case "email_failed":
+                failureCategories.emailFailed++;
+                break;
+              case "other":
+                failureCategories.other++;
+                break;
+            }
+          }
           continue;
         }
 
@@ -195,6 +301,7 @@ export const getStatsRouter = createTRPCRouter({
         inProgress,
         completed,
         failed,
+        failureCategories,
         needsAttention,
         total:
           pendingReview + scheduled + ready + inProgress + completed + failed,

@@ -45,6 +45,16 @@ export const reviewCategoryEnum = z.enum([
   "needs_followup",
 ]);
 
+export const failureCategoryEnum = z.enum([
+  "all_failed",
+  "silence_timeout",
+  "no_answer",
+  "connection_error",
+  "voicemail",
+  "email_failed",
+  "other",
+]);
+
 // =============================================================================
 // Input Schemas
 // =============================================================================
@@ -53,6 +63,7 @@ export const listDischargeCasesInput = z.object({
   page: z.number().min(1).default(1),
   pageSize: z.number().min(5).max(100).default(20),
   status: dischargeCaseStatusEnum.optional(),
+  failureCategory: failureCategoryEnum.optional(),
   search: z.string().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
@@ -106,6 +117,7 @@ export type CallStatus = z.infer<typeof callStatusEnum>;
 export type EmailStatus = z.infer<typeof emailStatusEnum>;
 export type DischargeCaseStatus = z.infer<typeof dischargeCaseStatusEnum>;
 export type ReviewCategory = z.infer<typeof reviewCategoryEnum>;
+export type FailureCategory = z.infer<typeof failureCategoryEnum>;
 export type ListDischargeCasesInput = z.infer<typeof listDischargeCasesInput>;
 export type GetDischargeCaseStatsInput = z.infer<
   typeof getDischargeCaseStatsInput

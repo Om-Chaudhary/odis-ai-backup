@@ -9,7 +9,11 @@ import { TRPCError } from "@trpc/server";
 import { getClinicUserIds } from "@odis-ai/clinics/utils";
 import { getLocalDayRange, DEFAULT_TIMEZONE } from "@odis-ai/utils/timezone";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { listDischargeCasesInput, type DischargeCaseStatus } from "../schemas";
+import {
+  listDischargeCasesInput,
+  type DischargeCaseStatus,
+  type FailureCategory,
+} from "../schemas";
 
 interface PatientData {
   id: string;
@@ -187,6 +191,56 @@ function deriveDeliveryStatus(
   }
 }
 
+/**
+ * Categorize a failure based on ended_reason and statuses
+ */
+function categorizeFailure(
+  callEndedReason: string | null,
+  callStatus: string | null,
+  emailStatus: string | null,
+): Exclude<FailureCategory, "all_failed"> | null {
+  // If neither call nor email failed, not a failure
+  if (callStatus !== "failed" && emailStatus !== "failed") {
+    return null;
+  }
+
+  // Email failure (when call didn't fail)
+  if (emailStatus === "failed" && callStatus !== "failed") {
+    return "email_failed";
+  }
+
+  // Call failure - categorize by ended_reason
+  if (callStatus === "failed" && callEndedReason) {
+    const reason = callEndedReason.toLowerCase();
+
+    if (
+      reason.includes("silence-timed-out") ||
+      reason.includes("silence_timed_out")
+    ) {
+      return "silence_timeout";
+    }
+    if (
+      reason.includes("no-answer") ||
+      reason.includes("did-not-answer") ||
+      reason.includes("no_answer")
+    ) {
+      return "no_answer";
+    }
+    if (reason.includes("voicemail")) {
+      return "voicemail";
+    }
+    if (
+      reason.includes("error") ||
+      reason.includes("failed-to-connect") ||
+      reason.includes("sip")
+    ) {
+      return "connection_error";
+    }
+  }
+
+  return "other";
+}
+
 export const listCasesRouter = createTRPCRouter({
   listDischargeCases: protectedProcedure
     .input(listDischargeCasesInput)
@@ -281,24 +335,32 @@ export const listCasesRouter = createTRPCRouter({
       // Apply date filters with proper timezone-aware boundaries
       // Use scheduled_at (appointment time) instead of created_at (sync time)
       // This matches how the extension groups cases by appointment date
+      // Falls back to created_at when scheduled_at is null (COALESCE pattern)
       if (input.startDate && input.endDate) {
-        // Both dates provided - use timezone-aware range
+        // Both dates provided - use timezone-aware range with fallback
         const startRange = getLocalDayRange(input.startDate, DEFAULT_TIMEZONE);
         const endRange = getLocalDayRange(input.endDate, DEFAULT_TIMEZONE);
-        query = query
-          .gte("scheduled_at", startRange.startISO)
-          .lte("scheduled_at", endRange.endISO);
+        // Use .or() to implement COALESCE(scheduled_at, created_at) logic:
+        // 1. Cases where scheduled_at is in range, OR
+        // 2. Cases where scheduled_at is null AND created_at is in range
+        query = query.or(
+          `and(scheduled_at.gte.${startRange.startISO},scheduled_at.lte.${endRange.endISO}),and(scheduled_at.is.null,created_at.gte.${startRange.startISO},created_at.lte.${endRange.endISO})`,
+        );
       } else if (input.startDate) {
-        // Only start date - get timezone-aware start of day
+        // Only start date - get timezone-aware start of day with fallback
         const { startISO } = getLocalDayRange(
           input.startDate,
           DEFAULT_TIMEZONE,
         );
-        query = query.gte("scheduled_at", startISO);
+        query = query.or(
+          `scheduled_at.gte.${startISO},and(scheduled_at.is.null,created_at.gte.${startISO})`,
+        );
       } else if (input.endDate) {
-        // Only end date - get timezone-aware end of day
+        // Only end date - get timezone-aware end of day with fallback
         const { endISO } = getLocalDayRange(input.endDate, DEFAULT_TIMEZONE);
-        query = query.lte("scheduled_at", endISO);
+        query = query.or(
+          `scheduled_at.lte.${endISO},and(scheduled_at.is.null,created_at.lte.${endISO})`,
+        );
       }
 
       const { data: cases, error } = await query;
@@ -365,6 +427,14 @@ export const listCasesRouter = createTRPCRouter({
           createdAt: note.created_at,
         }));
 
+        // Categorize failure if this is a failed case
+        const callEndedReason = scheduledCall?.ended_reason ?? null;
+        const failureCategory = categorizeFailure(
+          callEndedReason,
+          callStatus,
+          emailStatus,
+        );
+
         return {
           id: c.id,
           caseId: c.id,
@@ -386,6 +456,7 @@ export const listCasesRouter = createTRPCRouter({
           caseStatus: c.status,
           veterinarian: "Dr. Staff", // TODO: Get from user/case
           status: compositeStatus,
+          failureCategory,
           phoneSent: deriveDeliveryStatus(callStatus, hasPhone),
           emailSent: deriveDeliveryStatus(emailStatus, hasEmail),
           dischargeSummary: dischargeSummary?.content ?? "",
@@ -447,6 +518,19 @@ export const listCasesRouter = createTRPCRouter({
       // Apply status filter (client-side since it's derived)
       if (input.status) {
         filteredCases = filteredCases.filter((c) => c.status === input.status);
+      }
+
+      // Apply failure category filter
+      if (input.failureCategory) {
+        if (input.failureCategory === "all_failed") {
+          // Show all failed cases
+          filteredCases = filteredCases.filter((c) => c.status === "failed");
+        } else {
+          // Filter by specific failure category
+          filteredCases = filteredCases.filter(
+            (c) => c.failureCategory === input.failureCategory,
+          );
+        }
       }
 
       // Apply search filter

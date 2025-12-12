@@ -290,6 +290,18 @@ export interface DischargeCase {
 // =============================================================================
 
 /**
+ * Failure counts by category for the dashboard
+ */
+export interface FailureCategoryCounts {
+  silenceTimeout: number; // silence-timed-out
+  noAnswer: number; // dial-no-answer, customer-did-not-answer
+  connectionError: number; // SIP errors, failed-to-connect
+  voicemail: number; // voicemail detection
+  emailFailed: number; // Email delivery failures
+  other: number; // Other/unknown failures
+}
+
+/**
  * Summary statistics for the dashboard
  * Aligned with new StatusFilter values
  */
@@ -297,7 +309,8 @@ export interface DischargeSummaryStats {
   readyToSend: number; // Cases ready to approve (was pendingReview)
   scheduled: number; // Waiting for scheduled time
   sent: number; // Successfully delivered (was completed)
-  failed: number; // Delivery failed
+  failed: number; // Delivery failed (total)
+  failureCategories: FailureCategoryCounts; // Breakdown by failure reason
   total: number;
   needsReview: number; // Cases missing contact info
   needsAttention: number; // Cases flagged as urgent by AI
@@ -316,6 +329,19 @@ export interface DischargeSummaryStats {
 export type ViewMode = "all" | "needs_review" | "needs_attention";
 
 /**
+ * Failure category for filtering failed cases by specific reason
+ * Maps to: scheduled_discharge_calls.ended_reason patterns
+ */
+export type FailureCategory =
+  | "all_failed" // All failures combined
+  | "silence_timeout" // Call ended due to silence timeout
+  | "no_answer" // Customer did not answer
+  | "connection_error" // SIP/connection errors
+  | "voicemail" // Reached voicemail
+  | "email_failed" // Email delivery failed
+  | "other"; // Other/unknown failure reasons
+
+/**
  * Status filter for the discharge queue
  * Maps to new simplified filter tabs
  */
@@ -324,7 +350,8 @@ export type StatusFilter =
   | "ready_to_send" // pending_review - ready to approve and schedule
   | "scheduled" // scheduled - waiting for scheduled time
   | "sent" // completed - successfully delivered
-  | "failed"; // failed - delivery failed
+  | "failed" // failed - delivery failed (shows all failures)
+  | FailureCategory; // Specific failure category filters
 
 /**
  * Pagination state

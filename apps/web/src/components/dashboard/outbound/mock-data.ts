@@ -394,6 +394,14 @@ export const mockStats: DischargeSummaryStats = {
   scheduled: mockDischargeCases.filter((c) => c.status === "scheduled").length,
   sent: mockDischargeCases.filter((c) => c.status === "completed").length,
   failed: mockDischargeCases.filter((c) => c.status === "failed").length,
+  failureCategories: {
+    silenceTimeout: 0,
+    noAnswer: 0,
+    connectionError: 0,
+    voicemail: 0,
+    emailFailed: 0,
+    other: mockDischargeCases.filter((c) => c.status === "failed").length,
+  },
   total: mockDischargeCases.length,
   needsReview: mockDischargeCases.filter(
     (c) => !c.owner.phone || !c.owner.email,
