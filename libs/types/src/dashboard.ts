@@ -449,6 +449,7 @@ export interface CaseListItem {
   type: "checkup" | "emergency" | "surgery" | "follow_up" | null;
   created_at: string;
   scheduled_at?: string;
+  is_starred: boolean;
   patient: {
     id: string;
     name: string;

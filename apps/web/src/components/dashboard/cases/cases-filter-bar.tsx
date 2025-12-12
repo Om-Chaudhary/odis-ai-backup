@@ -28,6 +28,7 @@ import {
   Database,
   Tag,
   CircleDot,
+  Star,
 } from "lucide-react";
 import { cn } from "@odis-ai/utils";
 import type { QuickFilterId } from "../filters/quick-filters";
@@ -85,6 +86,11 @@ interface CasesFilterBarProps {
   /** Callback when date range preset changes */
   onDateRangePresetChange: (preset: DateRangePreset | null) => void;
 
+  /** Whether to show only starred cases */
+  starredOnly: boolean;
+  /** Callback when starred filter changes */
+  onStarredChange: (starred: boolean) => void;
+
   /** Callback to clear all active filters */
   onClearFilters: () => void;
 }
@@ -130,21 +136,27 @@ export function CasesFilterBar({
   onSourceFilterChange,
   dateRangePreset,
   onDateRangePresetChange,
+  starredOnly,
+  onStarredChange,
   onClearFilters,
 }: CasesFilterBarProps) {
   // Check if any filters are active (excluding search, as it's always visible)
   const hasActiveFilters =
-    quickFilters.size > 0 || statusFilter !== "all" || sourceFilter !== "all";
+    quickFilters.size > 0 ||
+    statusFilter !== "all" ||
+    sourceFilter !== "all" ||
+    starredOnly;
 
-  // Count active filters in the panel (Missing Discharge, Missing SOAP, Status, Source)
+  // Count active filters in the panel (Missing Discharge, Missing SOAP, Status, Source, Starred)
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (quickFilters.has("missingDischarge")) count++;
     if (quickFilters.has("missingSoap")) count++;
     if (statusFilter !== "all") count++;
     if (sourceFilter !== "all") count++;
+    if (starredOnly) count++;
     return count;
-  }, [quickFilters, statusFilter, sourceFilter]);
+  }, [quickFilters, statusFilter, sourceFilter, starredOnly]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -172,6 +184,28 @@ export function CasesFilterBar({
 
       {/* Filter Bar Row */}
       <div className="flex items-center gap-2">
+        {/* Starred Quick Filter Button */}
+        <Button
+          variant={starredOnly ? "default" : "outline"}
+          size="sm"
+          onClick={() => onStarredChange(!starredOnly)}
+          className={cn(
+            "transition-smooth gap-2",
+            starredOnly
+              ? "bg-amber-500 hover:bg-amber-600"
+              : "border-amber-200 text-amber-600 hover:border-amber-300 hover:bg-amber-50",
+          )}
+        >
+          <Star
+            className={cn(
+              "h-4 w-4",
+              starredOnly && "fill-white text-white",
+              !starredOnly && "fill-amber-400 text-amber-500",
+            )}
+          />
+          Starred
+        </Button>
+
         {/* Filter Toggle Button */}
         <Collapsible>
           <CollapsibleTrigger asChild>
