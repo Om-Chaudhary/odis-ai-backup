@@ -35,6 +35,11 @@ interface ScheduledCallMetadata {
   [key: string]: unknown;
 }
 
+interface ScheduledCallStructuredData {
+  urgent_case?: boolean;
+  [key: string]: unknown;
+}
+
 interface ScheduledCallData {
   id: string;
   status: string;
@@ -48,6 +53,8 @@ interface ScheduledCallData {
   customer_phone: string | null;
   dynamic_variables: unknown;
   metadata: ScheduledCallMetadata | null;
+  structured_data: ScheduledCallStructuredData | null;
+  urgent_reason_summary: string | null;
 }
 
 interface ScheduledEmailData {
@@ -238,7 +245,9 @@ export const listCasesRouter = createTRPCRouter({
             summary,
             customer_phone,
             dynamic_variables,
-            metadata
+            metadata,
+            structured_data,
+            urgent_reason_summary
           ),
           scheduled_discharge_emails (
             id,
@@ -381,8 +390,14 @@ export const listCasesRouter = createTRPCRouter({
                 transcript: scheduledCall.transcript,
                 summary: scheduledCall.summary,
                 customerPhone: scheduledCall.customer_phone,
+                structuredData: scheduledCall.structured_data,
+                urgentReasonSummary: scheduledCall.urgent_reason_summary,
               }
             : null,
+          isUrgentCase:
+            (
+              scheduledCall?.structured_data as ScheduledCallStructuredData | null
+            )?.urgent_case === true,
           scheduledEmail: scheduledEmail
             ? {
                 id: scheduledEmail.id,

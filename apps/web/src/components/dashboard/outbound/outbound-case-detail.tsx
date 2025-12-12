@@ -20,7 +20,9 @@ import {
   Calendar,
   Wand2,
   Info,
+  AlertTriangle,
 } from "lucide-react";
+import { api } from "~/trpc/client";
 import { formatPhoneNumber } from "@odis-ai/utils/phone";
 import { format, formatDistanceToNow, isPast, parseISO } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
@@ -41,6 +43,22 @@ import type {
   DischargeCaseStatus,
   SoapNote,
 } from "./types";
+
+// Scheduled call data with structured output support
+interface ScheduledCallData {
+  id: string;
+  status: string;
+  scheduledFor: string | null;
+  startedAt: string | null;
+  endedAt: string | null;
+  durationSeconds: number | null;
+  endedReason: string | null;
+  transcript: string | null;
+  summary: string | null;
+  customerPhone: string | null;
+  structuredData?: { urgent_case?: boolean; [key: string]: unknown } | null;
+  urgentReasonSummary?: string | null;
+}
 
 // Case data interface for the detail panel
 interface CaseData {
@@ -67,12 +85,13 @@ interface CaseData {
   dischargeSummary: string;
   callScript: unknown;
   emailContent: string;
-  scheduledCall: unknown;
+  scheduledCall: ScheduledCallData | null;
   scheduledEmail: unknown;
   idexxNotes: string | null;
   soapNotes: SoapNote[];
   scheduledEmailFor: string | null;
   scheduledCallFor: string | null;
+  isUrgentCase?: boolean;
 }
 
 interface OutboundCaseDetailProps {
@@ -146,6 +165,11 @@ export function OutboundCaseDetail({
 
       {/* Scrollable Content */}
       <div className="flex-1 space-y-4 overflow-auto p-4">
+        {/* Urgent Reason Section - Show prominently for urgent cases */}
+        {caseData.isUrgentCase && caseData.scheduledCall?.id && (
+          <UrgentReasonSection callId={caseData.scheduledCall.id} />
+        )}
+
         {/* Clinical Notes Section - Most Prominent */}
         {(hasIdexxNotes || hasSoapNotes) && (
           <ClinicalNotesSection
@@ -799,13 +823,9 @@ function OutcomeDetails({
   scheduledCall,
 }: {
   status: "completed" | "failed";
-  scheduledCall: unknown;
+  scheduledCall: ScheduledCallData | null;
 }) {
-  const call = scheduledCall as {
-    endedReason?: string;
-    durationSeconds?: number;
-    transcript?: string;
-  } | null;
+  const call = scheduledCall;
 
   return (
     <Card
@@ -854,6 +874,67 @@ function EmptyDetailState() {
         Click a row in the table to view details
       </p>
     </div>
+  );
+}
+
+/**
+ * Urgent Reason Section
+ * Displays why a case was flagged as urgent by the AI
+ * Triggers LLM summary generation on load if not cached
+ */
+function UrgentReasonSection({ callId }: { callId: string }) {
+  const {
+    data: summaryData,
+    isLoading,
+    error,
+  } = api.outbound.getUrgentSummary.useQuery(
+    { callId },
+    {
+      // Only fetch once, don't refetch on window focus
+      staleTime: Infinity,
+      refetchOnWindowFocus: false,
+    },
+  );
+
+  return (
+    <Card className="border-orange-200 bg-orange-50/50">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <AlertTriangle className="h-4 w-4 text-orange-600" />
+          Needs Attention
+          <Badge variant="secondary" className="bg-orange-100 text-orange-700">
+            AI Flagged
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-orange-700">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm">Analyzing transcript...</span>
+          </div>
+        ) : error ? (
+          <p className="text-sm text-red-600">
+            {error.message || "Failed to load urgent reason"}
+          </p>
+        ) : summaryData?.summary ? (
+          <div className="space-y-2">
+            <p className="text-sm leading-relaxed text-orange-800">
+              {summaryData.summary}
+            </p>
+            {summaryData.cached && (
+              <p className="text-muted-foreground text-xs">
+                Previously analyzed
+              </p>
+            )}
+          </div>
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            This case was flagged as urgent by the AI agent.
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

@@ -53,7 +53,20 @@ interface TransformedCase {
   structuredContent: unknown;
   callScript: unknown;
   emailContent: string;
-  scheduledCall: unknown;
+  scheduledCall: {
+    id: string;
+    status: string;
+    scheduledFor: string | null;
+    startedAt: string | null;
+    endedAt: string | null;
+    durationSeconds: number | null;
+    endedReason: string | null;
+    transcript: string | null;
+    summary: string | null;
+    customerPhone: string | null;
+    structuredData?: { urgent_case?: boolean; [key: string]: unknown } | null;
+    urgentReasonSummary?: string | null;
+  } | null;
   scheduledEmail: unknown;
   timestamp: string;
   createdAt: string;
@@ -62,6 +75,7 @@ interface TransformedCase {
   soapNotes: SoapNote[];
   scheduledEmailFor: string | null;
   scheduledCallFor: string | null;
+  isUrgentCase?: boolean;
 }
 
 // Map old status to new StatusFilter for API
@@ -102,7 +116,10 @@ export function OutboundDischargesClient() {
 
   const [viewMode, setViewMode] = useQueryState("view", {
     defaultValue: "all" as ViewMode,
-    parse: (v) => (v === "needs_review" ? "needs_review" : "all") as ViewMode,
+    parse: (v) =>
+      (["all", "needs_review", "needs_attention"].includes(v)
+        ? v
+        : "all") as ViewMode,
   });
 
   const [statusFilter, setStatusFilter] = useQueryState("status", {
@@ -274,6 +291,12 @@ export function OutboundDischargesClient() {
     [cases],
   );
 
+  // Cases needing attention (flagged as urgent by AI)
+  const needsAttentionCases = useMemo(
+    () => cases.filter((c) => c.isUrgentCase === true),
+    [cases],
+  );
+
   // Map old stats to new format
   const stats: DischargeSummaryStats = useMemo(() => {
     const raw = statsData ?? {
@@ -284,6 +307,7 @@ export function OutboundDischargesClient() {
       completed: 0,
       failed: 0,
       total: 0,
+      needsAttention: 0,
     };
     return {
       readyToSend: raw.pendingReview + raw.ready + raw.inProgress,
@@ -292,8 +316,11 @@ export function OutboundDischargesClient() {
       failed: raw.failed,
       total: raw.total,
       needsReview: needsReviewCases.length,
+      needsAttention:
+        (raw as { needsAttention?: number }).needsAttention ??
+        needsAttentionCases.length,
     };
-  }, [statsData, needsReviewCases.length]);
+  }, [statsData, needsReviewCases.length, needsAttentionCases.length]);
 
   // Handlers
   const handleDateChange = useCallback(
@@ -521,6 +548,48 @@ export function OutboundDischargesClient() {
               />
             </PageFooter>
           </PageContainer>
+        ) : viewMode === "needs_attention" ? (
+          // Needs Attention View - Cases flagged as urgent
+          <OutboundSplitLayout
+            showRightPanel={selectedCase !== null}
+            onCloseRightPanel={handleClosePanel}
+            leftPanel={
+              <>
+                <PageContent>
+                  <OutboundCaseTable
+                    cases={needsAttentionCases}
+                    selectedCaseId={selectedCase?.id ?? null}
+                    onSelectCase={handleSelectCase}
+                    onKeyNavigation={handleKeyNavigation}
+                    isLoading={isLoading}
+                    onQuickSchedule={handleQuickSchedule}
+                    schedulingCaseId={schedulingCaseId}
+                  />
+                </PageContent>
+                <PageFooter>
+                  <OutboundPagination
+                    page={page}
+                    pageSize={pageSize}
+                    total={needsAttentionCases.length}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
+                  />
+                </PageFooter>
+              </>
+            }
+            rightPanel={
+              <OutboundCaseDetail
+                caseData={selectedCase}
+                deliveryToggles={deliveryToggles}
+                onToggleChange={setDeliveryToggles}
+                onApprove={handleApproveAndSend}
+                onSkip={handleSkip}
+                onRetry={handleRetry}
+                isSubmitting={isSubmitting}
+                testModeEnabled={settingsData?.testModeEnabled ?? false}
+              />
+            }
+          />
         ) : (
           // All Discharges View - Split Layout
           <OutboundSplitLayout

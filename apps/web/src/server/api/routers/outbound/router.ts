@@ -10,11 +10,13 @@ import { getStatsRouter } from "./procedures/get-stats";
 import { approveRouter } from "./procedures/approve";
 import { skipRouter } from "./procedures/skip";
 import { retryRouter } from "./procedures/retry";
+import { getUrgentSummaryRouter } from "./procedures/get-urgent-summary";
 
 export const outboundRouter = createTRPCRouter({
   // Queries
   listDischargeCases: listCasesRouter.listDischargeCases,
   getDischargeCaseStats: getStatsRouter.getDischargeCaseStats,
+  getUrgentSummary: getUrgentSummaryRouter.getUrgentSummary,
 
   // Mutations
   approveAndSchedule: approveRouter.approveAndSchedule,

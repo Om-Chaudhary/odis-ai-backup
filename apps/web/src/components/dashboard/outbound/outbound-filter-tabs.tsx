@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, List, UserX } from "lucide-react";
+import { Search, List, UserX, AlertTriangle } from "lucide-react";
 import { cn } from "@odis-ai/utils";
 import type { StatusFilter, ViewMode, DischargeSummaryStats } from "./types";
 import { OutboundDateNav } from "./outbound-date-nav";
@@ -108,6 +108,30 @@ export function OutboundFilterTabs({
                   )}
                 >
                   {counts.needsReview}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => onViewModeChange("needs_attention")}
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all duration-200",
+                viewMode === "needs_attention"
+                  ? "bg-white text-orange-700 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700",
+              )}
+            >
+              <AlertTriangle className="h-3.5 w-3.5" />
+              Needs Attention
+              {counts.needsAttention > 0 && (
+                <span
+                  className={cn(
+                    "inline-flex h-4 min-w-4 items-center justify-center rounded px-1 text-[10px] font-semibold tabular-nums",
+                    viewMode === "needs_attention"
+                      ? "bg-orange-100 text-orange-700"
+                      : "bg-slate-100 text-slate-500",
+                  )}
+                >
+                  {counts.needsAttention}
                 </span>
               )}
             </button>

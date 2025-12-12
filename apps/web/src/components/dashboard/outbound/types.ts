@@ -300,6 +300,7 @@ export interface DischargeSummaryStats {
   failed: number; // Delivery failed
   total: number;
   needsReview: number; // Cases missing contact info
+  needsAttention: number; // Cases flagged as urgent by AI
 }
 
 // =============================================================================
@@ -310,8 +311,9 @@ export interface DischargeSummaryStats {
  * View mode for the outbound dashboard
  * - all: Default view showing all discharges
  * - needs_review: Cases missing phone or email contact info
+ * - needs_attention: Cases flagged as urgent by AI (urgent_case structured output)
  */
-export type ViewMode = "all" | "needs_review";
+export type ViewMode = "all" | "needs_review" | "needs_attention";
 
 /**
  * Status filter for the discharge queue

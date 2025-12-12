@@ -398,4 +398,5 @@ export const mockStats: DischargeSummaryStats = {
   needsReview: mockDischargeCases.filter(
     (c) => !c.owner.phone || !c.owner.email,
   ).length,
+  needsAttention: 0, // Mock data doesn't include urgent cases
 };

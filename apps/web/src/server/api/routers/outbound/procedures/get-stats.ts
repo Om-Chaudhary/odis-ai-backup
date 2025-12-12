@@ -14,6 +14,11 @@ interface ScheduledCallMetadata {
   [key: string]: unknown;
 }
 
+interface ScheduledCallStructuredData {
+  urgent_case?: boolean;
+  [key: string]: unknown;
+}
+
 interface CaseRow {
   id: string;
   status: string | null;
@@ -23,6 +28,7 @@ interface CaseRow {
     status: string;
     scheduled_for: string | null;
     metadata: ScheduledCallMetadata | null;
+    structured_data: ScheduledCallStructuredData | null;
   }>;
   scheduled_discharge_emails: Array<{
     id: string;
@@ -57,7 +63,7 @@ export const getStatsRouter = createTRPCRouter({
           id,
           status,
           discharge_summaries (id),
-          scheduled_discharge_calls (id, status, scheduled_for, metadata),
+          scheduled_discharge_calls (id, status, scheduled_for, metadata, structured_data),
           scheduled_discharge_emails (id, status, scheduled_for)
         `,
         )
@@ -93,6 +99,7 @@ export const getStatsRouter = createTRPCRouter({
       let inProgress = 0;
       let completed = 0;
       let failed = 0;
+      let needsAttention = 0;
 
       for (const c of (cases as CaseRow[]) ?? []) {
         const hasDischargeSummary = (c.discharge_summaries?.length ?? 0) > 0;
@@ -103,6 +110,12 @@ export const getStatsRouter = createTRPCRouter({
         const isTestCall = callData?.metadata?.test_call === true;
         if (!testModeEnabled && isTestCall) {
           continue;
+        }
+
+        // Check if flagged as urgent by AI
+        const isUrgentCase = callData?.structured_data?.urgent_case === true;
+        if (isUrgentCase) {
+          needsAttention++;
         }
 
         const callStatus = callData?.status ?? null;
@@ -170,6 +183,7 @@ export const getStatsRouter = createTRPCRouter({
         inProgress,
         completed,
         failed,
+        needsAttention,
         total:
           pendingReview + scheduled + ready + inProgress + completed + failed,
       };
