@@ -14,15 +14,18 @@ import {
   Calendar,
   Database,
   FileCode,
+  Star,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { CaseListItem } from "@odis-ai/types";
 import { cn } from "@odis-ai/utils";
 import { QuickActionsMenu } from "../shared/quick-actions-menu";
 import { Badge } from "@odis-ai/ui/badge";
+import { api } from "~/trpc/client";
 
 interface CaseListItemCompactProps {
   caseData: CaseListItem;
+  onStarToggle?: () => void; // Callback to refresh data after starring
 }
 
 function getStatusIconBgColor(status: string) {
@@ -77,9 +80,32 @@ function formatType(type: string | null): string {
     .join(" ");
 }
 
-export function CaseListItemCompact({ caseData }: CaseListItemCompactProps) {
+export function CaseListItemCompact({
+  caseData,
+  onStarToggle,
+}: CaseListItemCompactProps) {
   const SpeciesIcon =
     caseData.patient.species?.toLowerCase() === "feline" ? Cat : Dog;
+
+  const utils = api.useUtils();
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  const toggleStarMutation = api.dashboard.toggleStarred.useMutation({
+    onSuccess: () => {
+      // Invalidate the cases query to refetch data
+      void utils.dashboard.getAllCases.invalidate();
+      onStarToggle?.();
+    },
+  });
+
+  const handleStarClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    toggleStarMutation.mutate({
+      caseId: caseData.id,
+      starred: !caseData.is_starred,
+    });
+  };
 
   // Prioritize scheduled_at for date display
 
@@ -99,16 +125,36 @@ export function CaseListItemCompact({ caseData }: CaseListItemCompactProps) {
 
           {/* Main Content Area */}
           <div className="min-w-0 flex-1">
-            {/* Patient Name */}
-            <div className="mb-1.5">
-              <h3 className="truncate text-base font-semibold text-slate-900">
-                {caseData.patient.name}
-              </h3>
-              {caseData.patient.owner_name && (
-                <p className="mt-0.5 truncate text-xs text-slate-500">
-                  {caseData.patient.owner_name}
-                </p>
-              )}
+            {/* Patient Name with Star */}
+            <div className="mb-1.5 flex items-start gap-2">
+              <button
+                onClick={handleStarClick}
+                disabled={toggleStarMutation.isPending}
+                className={cn(
+                  "transition-smooth mt-0.5 shrink-0 rounded p-0.5 hover:bg-slate-100",
+                  toggleStarMutation.isPending && "opacity-50",
+                )}
+                title={caseData.is_starred ? "Remove star" : "Star this case"}
+              >
+                <Star
+                  className={cn(
+                    "h-4 w-4 transition-colors",
+                    caseData.is_starred
+                      ? "fill-amber-400 text-amber-400"
+                      : "text-slate-400 hover:text-amber-400",
+                  )}
+                />
+              </button>
+              <div className="min-w-0 flex-1">
+                <h3 className="truncate text-base font-semibold text-slate-900">
+                  {caseData.patient.name}
+                </h3>
+                {caseData.patient.owner_name && (
+                  <p className="mt-0.5 truncate text-xs text-slate-500">
+                    {caseData.patient.owner_name}
+                  </p>
+                )}
+              </div>
             </div>
             <div className="mb-2 flex flex-wrap items-center gap-1.5">
               {caseData.source && (

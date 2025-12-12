@@ -14,16 +14,19 @@ import {
   Mail,
   Database,
   FileCode,
+  Star,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import type { CaseListItem } from "@odis-ai/types";
 import { cn } from "@odis-ai/utils";
 import { QuickActionsMenu } from "../shared/quick-actions-menu";
 import { Badge } from "@odis-ai/ui/badge";
+import { api } from "~/trpc/client";
 
 interface CaseListCardProps {
   caseData: CaseListItem;
   index?: number; // For staggered animations
+  onStarToggle?: () => void; // Callback to refresh data after starring
 }
 
 function getStatusIconBgColor(status: string) {
@@ -78,9 +81,33 @@ function formatType(type: string | null): string {
     .join(" ");
 }
 
-export function CaseListCard({ caseData, index = 0 }: CaseListCardProps) {
+export function CaseListCard({
+  caseData,
+  index = 0,
+  onStarToggle,
+}: CaseListCardProps) {
   const SpeciesIcon =
     caseData.patient.species?.toLowerCase() === "feline" ? Cat : Dog;
+
+  const utils = api.useUtils();
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  const toggleStarMutation = api.dashboard.toggleStarred.useMutation({
+    onSuccess: () => {
+      // Invalidate the cases query to refetch data
+      void utils.dashboard.getAllCases.invalidate();
+      onStarToggle?.();
+    },
+  });
+
+  const handleStarClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    toggleStarMutation.mutate({
+      caseId: caseData.id,
+      starred: !caseData.is_starred,
+    });
+  };
 
   // Determine animation delay class based on index
   const animationClass =
@@ -122,43 +149,65 @@ export function CaseListCard({ caseData, index = 0 }: CaseListCardProps) {
             </div>
             <div className="min-w-0 flex-1">
               <div className="mb-2 flex items-start justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <h3 className="mb-1.5 truncate text-lg font-semibold text-slate-900">
-                    {caseData.patient.name}
-                  </h3>
-                  {caseData.patient.owner_name && (
-                    <p className="mb-1.5 truncate text-xs text-slate-500">
-                      {caseData.patient.owner_name}
-                    </p>
-                  )}
-                  <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-                    {caseData.source && (
-                      <Badge
-                        variant="outline"
-                        className="h-5 gap-1 border-slate-200 bg-slate-50/50 px-1.5 text-[10px] font-medium text-slate-600"
-                      >
-                        {(() => {
-                          const SourceIcon = getSourceIcon(caseData.source);
-                          return (
-                            <>
-                              <SourceIcon className="h-2.5 w-2.5" />
-                              {formatSource(caseData.source)}
-                            </>
-                          );
-                        })()}
-                      </Badge>
+                <div className="flex min-w-0 flex-1 items-start gap-2">
+                  <button
+                    onClick={handleStarClick}
+                    disabled={toggleStarMutation.isPending}
+                    className={cn(
+                      "transition-smooth mt-0.5 shrink-0 rounded p-1 hover:bg-slate-100",
+                      toggleStarMutation.isPending && "opacity-50",
                     )}
-                    {caseData.type && (
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "h-5 border px-1.5 text-[10px] font-medium",
-                          getTypeColor(caseData.type),
-                        )}
-                      >
-                        {formatType(caseData.type)}
-                      </Badge>
+                    title={
+                      caseData.is_starred ? "Remove star" : "Star this case"
+                    }
+                  >
+                    <Star
+                      className={cn(
+                        "h-5 w-5 transition-colors",
+                        caseData.is_starred
+                          ? "fill-amber-400 text-amber-400"
+                          : "text-slate-400 hover:text-amber-400",
+                      )}
+                    />
+                  </button>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="mb-1.5 truncate text-lg font-semibold text-slate-900">
+                      {caseData.patient.name}
+                    </h3>
+                    {caseData.patient.owner_name && (
+                      <p className="mb-1.5 truncate text-xs text-slate-500">
+                        {caseData.patient.owner_name}
+                      </p>
                     )}
+                    <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+                      {caseData.source && (
+                        <Badge
+                          variant="outline"
+                          className="h-5 gap-1 border-slate-200 bg-slate-50/50 px-1.5 text-[10px] font-medium text-slate-600"
+                        >
+                          {(() => {
+                            const SourceIcon = getSourceIcon(caseData.source);
+                            return (
+                              <>
+                                <SourceIcon className="h-2.5 w-2.5" />
+                                {formatSource(caseData.source)}
+                              </>
+                            );
+                          })()}
+                        </Badge>
+                      )}
+                      {caseData.type && (
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "h-5 border px-1.5 text-[10px] font-medium",
+                            getTypeColor(caseData.type),
+                          )}
+                        >
+                          {formatType(caseData.type)}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
                 {/* Quick Actions Menu */}

@@ -17,7 +17,7 @@ import { getDateFromPreset } from "./cases-date-range-selector";
 import type { QuickFilterId } from "../filters/quick-filters";
 import type { DateRangePreset } from "@odis-ai/utils/date-ranges";
 import { getDateRangeFromPreset } from "@odis-ai/utils/date-ranges";
-import type { CaseStatus } from "@odis-ai/types";
+import type { CaseListItem } from "@odis-ai/types";
 import { format, parseISO, startOfDay } from "date-fns";
 
 type ViewMode = "grid" | "list";
@@ -81,6 +81,12 @@ export function CasesTab({
 
   const [quickFiltersStr, setQuickFiltersStr] = useQueryState("quickFilters", {
     defaultValue: "",
+  });
+
+  const [starredOnly, setStarredOnly] = useQueryState("starred", {
+    defaultValue: false,
+    parse: (value) => value === "true",
+    serialize: (value) => (value ? "true" : ""),
   });
 
   // Convert string to Set for easier manipulation
@@ -151,10 +157,11 @@ export function CasesTab({
     endDate,
     missingDischarge: quickFilters.has("missingDischarge") ? true : undefined,
     missingSoap: quickFilters.has("missingSoap") ? true : undefined,
+    starred: starredOnly ? true : undefined,
   });
 
   // Use cases directly from backend (backend handles filtering)
-  const filteredCases = data?.cases ?? [];
+  const filteredCases = (data?.cases ?? []) as CaseListItem[];
 
   return (
     <div className="animate-tab-content space-y-6">
@@ -247,12 +254,18 @@ export function CasesTab({
             }
             setPage(1);
           }}
+          starredOnly={starredOnly ?? false}
+          onStarredChange={(starred) => {
+            void setStarredOnly(starred);
+            setPage(1);
+          }}
           onClearFilters={() => {
             setSearch("");
             void setQuickFiltersStr("");
             void setStatusFilter(null);
             void setSourceFilter(null);
             void setDateRangePreset(null);
+            void setStarredOnly(false);
             setPage(1);
           }}
         />
@@ -295,27 +308,13 @@ export function CasesTab({
           {viewMode === "grid" ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filteredCases.map((caseData) => (
-                <CaseListCard
-                  key={caseData.id}
-                  caseData={{
-                    ...caseData,
-                    status: (caseData.status ?? "draft") as CaseStatus,
-                    created_at: caseData.created_at ?? new Date().toISOString(),
-                  }}
-                />
+                <CaseListCard key={caseData.id} caseData={caseData} />
               ))}
             </div>
           ) : (
             <div className="space-y-2">
               {filteredCases.map((caseData) => (
-                <CaseListItemCompact
-                  key={caseData.id}
-                  caseData={{
-                    ...caseData,
-                    status: (caseData.status ?? "draft") as CaseStatus,
-                    created_at: caseData.created_at ?? new Date().toISOString(),
-                  }}
-                />
+                <CaseListItemCompact key={caseData.id} caseData={caseData} />
               ))}
             </div>
           )}

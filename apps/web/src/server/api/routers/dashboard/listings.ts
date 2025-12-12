@@ -29,6 +29,7 @@ export const listingsRouter = createTRPCRouter({
         endDate: z.string().nullable().optional(),
         missingDischarge: z.boolean().optional(),
         missingSoap: z.boolean().optional(),
+        starred: z.boolean().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -80,6 +81,7 @@ export const listingsRouter = createTRPCRouter({
           type,
           created_at,
           scheduled_at,
+          is_starred,
           patients (
             id,
             name,
@@ -98,6 +100,10 @@ export const listingsRouter = createTRPCRouter({
 
       if (input.source) {
         query = query.eq("source", input.source);
+      }
+
+      if (input.starred === true) {
+        query = query.eq("is_starred", true);
       }
 
       if (startIso) {
@@ -271,6 +277,8 @@ export const listingsRouter = createTRPCRouter({
           source: c.source,
           type: c.type,
           created_at: c.created_at,
+          scheduled_at: c.scheduled_at,
+          is_starred: c.is_starred ?? false,
           patient: {
             id: patient?.id ?? "",
             name: patient?.name ?? "Unknown",
@@ -660,6 +668,56 @@ export const listingsRouter = createTRPCRouter({
           total: totalFiltered,
           totalPages: Math.ceil(totalFiltered / input.pageSize),
         },
+      };
+    }),
+
+  /**
+   * Toggle starred status for a case
+   */
+  toggleStarred: protectedProcedure
+    .input(
+      z.object({
+        caseId: z.string().uuid(),
+        starred: z.boolean(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user.id;
+
+      // Verify the case belongs to the user
+      const { data: existingCase, error: fetchError } = await ctx.supabase
+        .from("cases")
+        .select("id, user_id")
+        .eq("id", input.caseId)
+        .eq("user_id", userId)
+        .single();
+
+      if (fetchError || !existingCase) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Case not found or access denied",
+        });
+      }
+
+      // Update the starred status
+      const { error: updateError } = await ctx.supabase
+        .from("cases")
+        .update({ is_starred: input.starred })
+        .eq("id", input.caseId)
+        .eq("user_id", userId);
+
+      if (updateError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to update case starred status",
+          cause: updateError,
+        });
+      }
+
+      return {
+        success: true,
+        caseId: input.caseId,
+        starred: input.starred,
       };
     }),
 });
