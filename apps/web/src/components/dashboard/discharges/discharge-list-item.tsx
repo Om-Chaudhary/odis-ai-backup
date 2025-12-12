@@ -497,7 +497,7 @@ export function DischargeListItem({
             "border-slate-100 bg-slate-50/50 opacity-75",
         )}
         onClick={() => {
-          window.location.href = `/dashboard/discharges/${caseData.id}`;
+          window.location.href = `/admin/discharges/${caseData.id}`;
         }}
       >
         <CardContent className="p-4">

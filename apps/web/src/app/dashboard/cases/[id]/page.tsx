@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
 /**
- * Redirect from old route /dashboard/cases/[id] to new route /dashboard/discharges/[id]
+ * Redirect from old route /dashboard/cases/[id] to new route /admin/discharges/[id]
  * This maintains backward compatibility for any bookmarked or shared links
  */
 export default function CaseDetailPageRedirect() {
@@ -15,7 +15,7 @@ export default function CaseDetailPageRedirect() {
 
   useEffect(() => {
     if (id) {
-      router.replace(`/dashboard/discharges/${id}`);
+      router.replace(`/admin/discharges/${id}`);
     }
   }, [id, router]);
 

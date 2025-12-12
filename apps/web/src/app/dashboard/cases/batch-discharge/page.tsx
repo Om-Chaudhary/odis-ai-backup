@@ -5,14 +5,14 @@ import { useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
 /**
- * Redirect from old route /dashboard/cases/batch-discharge to new route /dashboard/discharges/batch
+ * Redirect from old route /dashboard/cases/batch-discharge to new route /admin/discharges/batch
  * This maintains backward compatibility for any bookmarked or shared links
  */
 export default function BatchDischargePageRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/dashboard/discharges/batch");
+    router.replace("/admin/discharges/batch");
   }, [router]);
 
   return (

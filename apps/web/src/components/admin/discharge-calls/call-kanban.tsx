@@ -458,7 +458,7 @@ export function CallKanban({
                         Case
                       </h4>
                       <a
-                        href={`/dashboard/discharges/${selectedCall.caseId}`}
+                        href={`/admin/discharges/${selectedCall.caseId}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-1 text-sm text-teal-600 hover:text-teal-700"

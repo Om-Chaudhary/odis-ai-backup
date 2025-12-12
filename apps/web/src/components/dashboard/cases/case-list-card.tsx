@@ -223,7 +223,7 @@ export function CaseListCard({ caseData, index = 0 }: CaseListCardProps) {
       </CardContent>
 
       <CardFooter className="border-t border-slate-100 bg-slate-50/30 p-4">
-        <Link href={`/dashboard/discharges/${caseData.id}`} className="w-full">
+        <Link href={`/admin/discharges/${caseData.id}`} className="w-full">
           <Button
             variant="outline"
             size="sm"

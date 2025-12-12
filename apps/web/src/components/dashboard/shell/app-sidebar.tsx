@@ -6,10 +6,8 @@ import {
   Settings,
   Command,
   LogOut,
-  MessageSquare,
-  FileText,
   PhoneIncoming,
-  ChevronRight,
+  PhoneOutgoing,
 } from "lucide-react";
 import {
   Sidebar,
@@ -22,16 +20,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarSeparator,
 } from "@odis-ai/ui/sidebar";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@odis-ai/ui/collapsible";
 import { Avatar, AvatarFallback, AvatarImage } from "@odis-ai/ui/avatar";
 import { Button } from "@odis-ai/ui/button";
 import Link from "next/link";
@@ -50,8 +40,6 @@ function buildUrl(clinicSlug: string | null, path: string): string {
   // Map legacy paths to clinic-scoped paths
   const pathMap: Record<string, string> = {
     "/dashboard": `/dashboard/${clinicSlug}`,
-    "/dashboard/discharges": `/dashboard/${clinicSlug}/discharges`,
-    "/dashboard/calls/inbound": `/dashboard/${clinicSlug}/inbound-calls`,
     "/dashboard/settings": `/dashboard/${clinicSlug}/settings`,
   };
   return pathMap[path] ?? path;
@@ -84,9 +72,9 @@ export function AppSidebar({
 
   // Build clinic-scoped URLs
   const dashboardUrl = buildUrl(clinicSlug, "/dashboard");
-  const dischargesUrl = buildUrl(clinicSlug, "/dashboard/discharges");
-  const inboundCallsUrl = buildUrl(clinicSlug, "/dashboard/calls/inbound");
   const settingsUrl = buildUrl(clinicSlug, "/dashboard/settings");
+  const inboundDischargesUrl = "/dashboard/inbound";
+  const outboundDischargesUrl = "/dashboard/outbound";
 
   // Menu items with dynamic URLs
   const mainNavItems = [
@@ -97,17 +85,16 @@ export function AppSidebar({
     },
   ];
 
-  // Communications submenu items
-  const communicationsNavItems = [
+  const dischargeItems = [
     {
-      title: "Discharges",
-      url: dischargesUrl,
-      icon: FileText,
+      title: "Inbound",
+      url: inboundDischargesUrl,
+      icon: PhoneIncoming,
     },
     {
-      title: "Inbound Calls",
-      url: inboundCallsUrl,
-      icon: PhoneIncoming,
+      title: "Outbound",
+      url: outboundDischargesUrl,
+      icon: PhoneOutgoing,
     },
   ];
 
@@ -118,15 +105,6 @@ export function AppSidebar({
       icon: Settings,
     },
   ];
-
-  // Check if any communications route is active for auto-expanding
-  // Supports both legacy paths and clinic-scoped paths
-  const isCommunicationsActive =
-    communicationsNavItems.some(
-      (item) => pathname === item.url || pathname.startsWith(item.url + "/"),
-    ) ||
-    pathname.includes("/discharges") ||
-    pathname.includes("/inbound-calls");
 
   // Check if current path matches a nav item (supports nested paths)
   const isPathActive = (url: string) => {
@@ -179,49 +157,28 @@ export function AppSidebar({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-
-              {/* Communications Collapsible Menu */}
-              <Collapsible
-                asChild
-                defaultOpen={isCommunicationsActive}
-                className="group/collapsible"
-              >
-                <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton
-                      tooltip="Communications"
-                      isActive={isCommunicationsActive}
-                    >
-                      <MessageSquare />
-                      <span>Communications</span>
-                      <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                      {communicationsNavItems.map((item) => (
-                        <SidebarMenuSubItem key={item.title}>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={
-                              isPathActive(item.url) ||
-                              (item.title === "Discharges" &&
-                                pathname.includes("/discharges")) ||
-                              (item.title === "Inbound Calls" &&
-                                pathname.includes("/inbound-calls"))
-                            }
-                          >
-                            <Link href={item.url}>
-                              <item.icon className="size-4" />
-                              <span>{item.title}</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarSeparator />
+        <SidebarGroup>
+          <SidebarGroupLabel>Discharges</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {dischargeItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isPathActive(item.url)}
+                    tooltip={item.title}
+                  >
+                    <Link href={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
-              </Collapsible>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

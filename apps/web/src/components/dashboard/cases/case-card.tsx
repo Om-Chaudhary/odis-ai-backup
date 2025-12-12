@@ -348,7 +348,7 @@ export function CaseCard({
 
     if (workflowStatus === "completed") {
       return (
-        <Link href={`/dashboard/discharges/${caseData.id}`} className="w-full">
+        <Link href={`/admin/discharges/${caseData.id}`} className="w-full">
           <Button
             variant="outline"
             className="transition-smooth w-full gap-2 hover:bg-slate-50"
@@ -496,7 +496,7 @@ export function CaseCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem asChild>
-                <Link href={`/dashboard/discharges/${caseData.id}`}>
+                <Link href={`/admin/discharges/${caseData.id}`}>
                   <Eye className="mr-2 h-4 w-4" /> View Details
                 </Link>
               </DropdownMenuItem>
@@ -726,7 +726,7 @@ export function CaseCard({
             className="transition-smooth w-full justify-start gap-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
             asChild
           >
-            <Link href={`/dashboard/discharges/${caseData.id}`}>
+            <Link href={`/admin/discharges/${caseData.id}`}>
               <Eye className="h-4 w-4" />
               View Details
             </Link>

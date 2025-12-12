@@ -364,7 +364,7 @@ export function CallTriageTable({
                             </div>
                             {call.caseId && (
                               <a
-                                href={`/dashboard/discharges/${call.caseId}`}
+                                href={`/admin/discharges/${call.caseId}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-1 text-teal-600 hover:text-teal-700"

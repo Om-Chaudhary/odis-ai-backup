@@ -86,7 +86,7 @@ export function CasesNeedingAttentionCard({
               .map((c) => (
                 <Link
                   key={c.id}
-                  href={`/dashboard/discharges/${c.id}`}
+                  href={`/admin/discharges/${c.id}`}
                   className="block rounded-lg border border-amber-200 bg-amber-50/50 p-3 transition-all hover:border-amber-300 hover:bg-amber-50 hover:shadow-sm"
                 >
                   <div className="flex items-start justify-between gap-3">

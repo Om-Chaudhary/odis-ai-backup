@@ -267,7 +267,7 @@ export function DischargeListItemRedesigned({
     }
 
     // Navigate to details page
-    window.location.href = `/dashboard/discharges/${caseData.id}`;
+    window.location.href = `/admin/discharges/${caseData.id}`;
   };
 
   // Render action buttons

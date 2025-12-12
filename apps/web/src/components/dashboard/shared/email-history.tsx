@@ -108,7 +108,7 @@ export function EmailHistory() {
 
   const handleRowClick = (caseId: string | null) => {
     if (caseId) {
-      router.push(`/dashboard/discharges/${caseId}`);
+      router.push(`/admin/discharges/${caseId}`);
     }
   };
 
@@ -239,7 +239,7 @@ export function EmailHistory() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 router.push(
-                                  `/dashboard/discharges/${email.caseId}`,
+                                  `/admin/discharges/${email.caseId}`,
                                 );
                               }}
                             >
