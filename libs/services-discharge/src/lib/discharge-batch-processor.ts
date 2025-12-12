@@ -530,27 +530,32 @@ export class DischargeBatchProcessor {
    * Calculate schedule times based on user preferences
    *
    * Schedule:
-   * - Email: Next day (Day 1) at specified time
-   * - Call: 2 days after the email (Day 3) at 2 PM
+   * - Email: Next day (Day 1) at specified time (default: 10 AM business hours)
+   * - Call: 2 days after the email (Day 3) at specified time (default: 4 PM for 4-7 PM window)
    */
   static calculateScheduleTimes(
-    emailTimeString: string, // Format: "HH:mm" (e.g., "09:00", "14:30")
+    emailTimeString: string, // Format: "HH:mm" (e.g., "10:00", "14:30")
+    callTimeString?: string, // Format: "HH:mm" (e.g., "16:00") - defaults to 16:00 (4 PM)
   ): { emailScheduleTime: Date; callScheduleTime: Date } {
     const now = new Date();
 
-    // Parse hour and minute from the time string
-    const [hours, minutes] = emailTimeString.split(":").map(Number);
+    // Parse hour and minute from the email time string
+    const [emailHours, emailMinutes] = emailTimeString.split(":").map(Number);
 
     // Email: Next day at specified time (Day 1)
     let emailScheduleTime = addDays(now, 1);
-    emailScheduleTime = setHours(emailScheduleTime, hours ?? 9);
-    emailScheduleTime = setMinutes(emailScheduleTime, minutes ?? 0);
+    emailScheduleTime = setHours(emailScheduleTime, emailHours ?? 10); // Default: 10 AM
+    emailScheduleTime = setMinutes(emailScheduleTime, emailMinutes ?? 0);
     emailScheduleTime = setSeconds(emailScheduleTime, 0);
 
-    // Call: 2 days after the email (Day 3) = 3 days from now at 2 PM
+    // Parse call time or use default (4 PM for 4-7 PM evening window)
+    const callTime = callTimeString ?? "16:00";
+    const [callHours, callMinutes] = callTime.split(":").map(Number);
+
+    // Call: 2 days after the email (Day 3) = 3 days from now at specified time
     let callScheduleTime = addDays(now, 3);
-    callScheduleTime = setHours(callScheduleTime, 14);
-    callScheduleTime = setMinutes(callScheduleTime, 0);
+    callScheduleTime = setHours(callScheduleTime, callHours ?? 16); // Default: 4 PM
+    callScheduleTime = setMinutes(callScheduleTime, callMinutes ?? 0);
     callScheduleTime = setSeconds(callScheduleTime, 0);
 
     return {

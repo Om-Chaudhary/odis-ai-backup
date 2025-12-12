@@ -234,10 +234,10 @@ export interface DischargeSettings {
   emailHeaderText?: string | null; // Custom header text for emails
   emailFooterText?: string | null; // Custom footer text for emails
   // Outbound discharge scheduling settings
-  preferredEmailStartTime?: string | null; // HH:mm format (e.g., "09:00")
+  preferredEmailStartTime?: string | null; // HH:mm format (default: "10:00" business hours)
   preferredEmailEndTime?: string | null; // HH:mm format (e.g., "12:00")
-  preferredCallStartTime?: string | null; // HH:mm format (e.g., "14:00")
-  preferredCallEndTime?: string | null; // HH:mm format (e.g., "17:00")
+  preferredCallStartTime?: string | null; // HH:mm format (default: "16:00" for 4-7 PM window)
+  preferredCallEndTime?: string | null; // HH:mm format (default: "19:00" for 4-7 PM window)
   emailDelayDays?: number | null; // Days after appointment to send email (default: 1)
   callDelayDays?: number | null; // Days after email to make call (default: 2)
   maxCallRetries?: number | null; // Max retry attempts for failed calls (default: 3)

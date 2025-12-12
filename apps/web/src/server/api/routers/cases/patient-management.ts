@@ -379,13 +379,13 @@ export const patientManagementRouter = createTRPCRouter({
       emailFooterText: clinic?.email_footer_text ?? null,
       // Outbound discharge scheduling settings
       preferredEmailStartTime:
-        formatTime(data?.preferred_email_start_time) ?? "09:00",
+        formatTime(data?.preferred_email_start_time) ?? "10:00", // Default: 10 AM business hours
       preferredEmailEndTime:
         formatTime(data?.preferred_email_end_time) ?? "12:00",
       preferredCallStartTime:
-        formatTime(data?.preferred_call_start_time) ?? "14:00",
+        formatTime(data?.preferred_call_start_time) ?? "16:00", // Default: 4 PM (4-7 PM window)
       preferredCallEndTime:
-        formatTime(data?.preferred_call_end_time) ?? "17:00",
+        formatTime(data?.preferred_call_end_time) ?? "19:00", // Default: 7 PM (end of 4-7 PM window)
       emailDelayDays: data?.email_delay_days ?? 1,
       callDelayDays: data?.call_delay_days ?? 2,
       maxCallRetries: data?.max_call_retries ?? 3,
