@@ -8,3 +8,4 @@ export * from "./cases-filter-bar";
 export * from "./cases-needing-attention-card";
 export * from "./cases-tab";
 export * from "./delete-case-dialog";
+export * from "./needs-review-tab";
