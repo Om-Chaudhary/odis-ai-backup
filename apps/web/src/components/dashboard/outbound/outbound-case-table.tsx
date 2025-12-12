@@ -92,9 +92,9 @@ interface OutboundCaseTableProps<T extends TableCaseBase> {
   onSelectCase: (caseItem: T) => void;
   onKeyNavigation: (direction: "up" | "down") => void;
   isLoading: boolean;
-  // Quick scheduling props
+  // Quick scheduling props (supports concurrent scheduling)
   onQuickSchedule?: (caseItem: T) => void;
-  schedulingCaseId?: string | null;
+  schedulingCaseIds?: Set<string>;
 }
 
 /**
@@ -119,7 +119,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
   onKeyNavigation,
   isLoading,
   onQuickSchedule,
-  schedulingCaseId,
+  schedulingCaseIds,
 }: OutboundCaseTableProps<T>) {
   const tableRef = useRef<HTMLDivElement>(null);
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
@@ -254,7 +254,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                   <ActionCell
                     caseItem={caseItem}
                     onQuickSchedule={onQuickSchedule}
-                    isScheduling={schedulingCaseId === caseItem.id}
+                    isScheduling={schedulingCaseIds?.has(caseItem.id) ?? false}
                   />
                 </td>
 

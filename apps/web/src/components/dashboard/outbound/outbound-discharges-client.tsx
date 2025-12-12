@@ -223,8 +223,10 @@ export function OutboundDischargesClient() {
     emailEnabled: true,
     immediateDelivery: false,
   });
-  // Track which case is being scheduled from the table quick action
-  const [schedulingCaseId, setSchedulingCaseId] = useState<string | null>(null);
+  // Track which cases are being scheduled from the table quick action (supports concurrent scheduling)
+  const [schedulingCaseIds, setSchedulingCaseIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   const casesRef = useRef<TransformedCase[]>([]);
 
@@ -283,12 +285,12 @@ export function OutboundDischargesClient() {
         : "Discharge scheduled";
       toast.success(message);
       setSelectedCase(null);
-      setSchedulingCaseId(null);
+      // Note: schedulingCaseIds cleanup happens in handleQuickSchedule's finally block
       void refetch();
     },
     onError: (error) => {
       toast.error("Failed to schedule", { description: error.message });
-      setSchedulingCaseId(null);
+      // Note: schedulingCaseIds cleanup happens in handleQuickSchedule's finally block
     },
   });
 
@@ -358,10 +360,10 @@ export function OutboundDischargesClient() {
       return;
     }
 
-    // Mark as handled
-    deepLinkHandledRef.current = consultationId;
-
     if (deepLinkData?.found && deepLinkData.date) {
+      // Mark as handled (date navigation)
+      deepLinkHandledRef.current = consultationId;
+
       // Navigate to the case's date
       const caseDate = format(
         startOfDay(parseISO(deepLinkData.date)),
@@ -370,9 +372,10 @@ export function OutboundDischargesClient() {
       void setDateStr(caseDate);
       void setStatusFilter("all"); // Reset to "all" to ensure the case is visible
       void setPage(1);
-      // Clear the consultation ID from URL after handling
-      void setConsultationId(null);
+      // Don't clear consultationId yet - wait until case is selected (see below)
     } else if (deepLinkData && !deepLinkData.found) {
+      // Mark as handled (not found case)
+      deepLinkHandledRef.current = consultationId;
       toast.error("Case not found", {
         description: `No case found for consultation ID: ${consultationId}`,
       });
@@ -551,10 +554,11 @@ export function OutboundDischargesClient() {
     });
   }, [selectedCase, retryDelivery]);
 
-  // Quick schedule from table row
+  // Quick schedule from table row (supports concurrent scheduling)
   const handleQuickSchedule = useCallback(
     async (caseItem: TransformedCase) => {
-      setSchedulingCaseId(caseItem.id);
+      // Add to set instead of replacing (enables concurrent scheduling)
+      setSchedulingCaseIds((prev) => new Set(prev).add(caseItem.id));
       try {
         await approveAndSchedule.mutateAsync({
           caseId: caseItem.id,
@@ -563,6 +567,13 @@ export function OutboundDischargesClient() {
         });
       } catch {
         // Error is handled by mutation onError
+      } finally {
+        // Remove from set when done (success or error)
+        setSchedulingCaseIds((prev) => {
+          const next = new Set(prev);
+          next.delete(caseItem.id);
+          return next;
+        });
       }
     },
     [approveAndSchedule],
@@ -595,6 +606,8 @@ export function OutboundDischargesClient() {
       toast.success("Case opened", {
         description: `${targetCase.patient.name} - ${targetCase.owner.name ?? "Unknown owner"}`,
       });
+      // Clear the consultation ID from URL now that case is selected
+      void setConsultationId(null);
     }
   }, [
     deepLinkData?.found,
@@ -602,6 +615,7 @@ export function OutboundDischargesClient() {
     cases,
     isLoading,
     handleSelectCase,
+    setConsultationId,
   ]);
 
   // Needs review handlers (placeholder - would need API endpoints)
@@ -719,7 +733,7 @@ export function OutboundDischargesClient() {
                     onKeyNavigation={handleKeyNavigation}
                     isLoading={isLoading}
                     onQuickSchedule={handleQuickSchedule}
-                    schedulingCaseId={schedulingCaseId}
+                    schedulingCaseIds={schedulingCaseIds}
                   />
                 </PageContent>
                 <PageFooter>
@@ -761,7 +775,7 @@ export function OutboundDischargesClient() {
                     onKeyNavigation={handleKeyNavigation}
                     isLoading={isLoading}
                     onQuickSchedule={handleQuickSchedule}
-                    schedulingCaseId={schedulingCaseId}
+                    schedulingCaseIds={schedulingCaseIds}
                   />
                 </PageContent>
                 <PageFooter>
