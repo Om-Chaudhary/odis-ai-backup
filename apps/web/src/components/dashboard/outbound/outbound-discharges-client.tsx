@@ -16,6 +16,7 @@ import type {
   SoapNote,
   DischargeSummaryStats,
 } from "./types";
+import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
 import { PageContainer, PageToolbar, PageContent, PageFooter } from "../layout";
 import { OutboundFilterTabs } from "./outbound-filter-tabs";
 import { OutboundCaseTable } from "./outbound-case-table";
@@ -50,7 +51,7 @@ interface TransformedCase {
   phoneSent: "sent" | "pending" | "failed" | "not_applicable" | null;
   emailSent: "sent" | "pending" | "failed" | "not_applicable" | null;
   dischargeSummary: string;
-  structuredContent: unknown;
+  structuredContent: StructuredDischargeSummary | null;
   callScript: unknown;
   emailContent: string;
   scheduledCall: {

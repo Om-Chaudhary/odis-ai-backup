@@ -7,31 +7,8 @@
 
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { createClient } from "@odis-ai/db/server";
+import { getClinicByUserId } from "@odis-ai/clinics/utils";
 import { listAppointmentRequestsInput } from "../schemas";
-
-/**
- * Get user's clinic ID for filtering
- */
-async function getUserClinicId(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string,
-) {
-  const { data: user, error } = await supabase
-    .from("users")
-    .select("id, role, clinic_id")
-    .eq("id", userId)
-    .single();
-
-  if (error || !user) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to fetch user information",
-    });
-  }
-
-  return user;
-}
 
 export const listAppointmentsRouter = createTRPCRouter({
   /**
@@ -40,20 +17,20 @@ export const listAppointmentsRouter = createTRPCRouter({
   listAppointmentRequests: protectedProcedure
     .input(listAppointmentRequestsInput)
     .query(async ({ ctx, input }) => {
-      const supabase = await createClient();
+      const userId = ctx.user.id;
 
-      // Get current user's clinic
-      const user = await getUserClinicId(supabase, ctx.user.id);
+      // Get current user's clinic (gracefully handles missing user record)
+      const clinic = await getClinicByUserId(userId, ctx.supabase);
 
       // Build query
-      let query = supabase
+      let query = ctx.supabase
         .from("appointment_requests")
         .select("*", { count: "exact" })
         .order("created_at", { ascending: false });
 
       // Filter by clinic (users only see their clinic's data)
-      if (user.clinic_id) {
-        query = query.eq("clinic_id", user.clinic_id);
+      if (clinic?.id) {
+        query = query.eq("clinic_id", clinic.id);
       }
 
       // Apply status filter

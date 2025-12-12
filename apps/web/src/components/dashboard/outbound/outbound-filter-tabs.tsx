@@ -78,30 +78,30 @@ export function OutboundFilterTabs({
             <button
               onClick={() => onViewModeChange("all")}
               className={cn(
-                "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all duration-200",
+                "flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-medium transition-all duration-200",
                 viewMode === "all"
                   ? "bg-white text-teal-700 shadow-sm"
                   : "text-slate-500 hover:text-slate-700",
               )}
             >
-              <List className="h-3.5 w-3.5" />
+              <List className="h-3 w-3" />
               All
             </button>
             <button
               onClick={() => onViewModeChange("needs_review")}
               className={cn(
-                "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all duration-200",
+                "flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-medium transition-all duration-200",
                 viewMode === "needs_review"
                   ? "bg-white text-amber-700 shadow-sm"
                   : "text-slate-500 hover:text-slate-700",
               )}
             >
-              <UserX className="h-3.5 w-3.5" />
+              <UserX className="h-3 w-3" />
               Missing
               {counts.needsReview > 0 && (
                 <span
                   className={cn(
-                    "inline-flex h-4 min-w-4 items-center justify-center rounded px-1 text-[10px] font-semibold tabular-nums",
+                    "inline-flex h-3.5 min-w-3.5 items-center justify-center rounded px-0.5 text-[9px] font-semibold tabular-nums",
                     viewMode === "needs_review"
                       ? "bg-amber-100 text-amber-700"
                       : "bg-slate-100 text-slate-500",
@@ -114,18 +114,18 @@ export function OutboundFilterTabs({
             <button
               onClick={() => onViewModeChange("needs_attention")}
               className={cn(
-                "flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-all duration-200",
+                "flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-medium whitespace-nowrap transition-all duration-200",
                 viewMode === "needs_attention"
                   ? "bg-white text-orange-700 shadow-sm"
                   : "text-slate-500 hover:text-slate-700",
               )}
             >
-              <AlertTriangle className="h-3.5 w-3.5" />
+              <AlertTriangle className="h-3 w-3" />
               Needs Attention
               {counts.needsAttention > 0 && (
                 <span
                   className={cn(
-                    "inline-flex h-4 min-w-4 items-center justify-center rounded px-1 text-[10px] font-semibold tabular-nums",
+                    "inline-flex h-3.5 min-w-3.5 items-center justify-center rounded px-0.5 text-[9px] font-semibold tabular-nums",
                     viewMode === "needs_attention"
                       ? "bg-orange-100 text-orange-700"
                       : "bg-slate-100 text-slate-500",

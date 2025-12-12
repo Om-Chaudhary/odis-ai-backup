@@ -6,31 +6,8 @@
 
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { createClient } from "@odis-ai/db/server";
+import { getClinicByUserId } from "@odis-ai/clinics/utils";
 import { updateAppointmentRequestInput } from "../schemas";
-
-/**
- * Get user's clinic ID for authorization
- */
-async function getUserClinicId(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string,
-) {
-  const { data: user, error } = await supabase
-    .from("users")
-    .select("id, role, clinic_id")
-    .eq("id", userId)
-    .single();
-
-  if (error || !user) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to fetch user information",
-    });
-  }
-
-  return user;
-}
 
 export const updateAppointmentRouter = createTRPCRouter({
   /**
@@ -39,13 +16,13 @@ export const updateAppointmentRouter = createTRPCRouter({
   updateAppointmentRequest: protectedProcedure
     .input(updateAppointmentRequestInput)
     .mutation(async ({ ctx, input }) => {
-      const supabase = await createClient();
+      const userId = ctx.user.id;
 
-      // Get current user's clinic
-      const user = await getUserClinicId(supabase, ctx.user.id);
+      // Get current user's clinic (gracefully handles missing user record)
+      const clinic = await getClinicByUserId(userId, ctx.supabase);
 
       // First, verify the appointment belongs to the user's clinic
-      const { data: appointment, error: fetchError } = await supabase
+      const { data: appointment, error: fetchError } = await ctx.supabase
         .from("appointment_requests")
         .select("id, clinic_id, status")
         .eq("id", input.id)
@@ -58,8 +35,8 @@ export const updateAppointmentRouter = createTRPCRouter({
         });
       }
 
-      // Check authorization
-      if (user.clinic_id && appointment.clinic_id !== user.clinic_id) {
+      // Check authorization - only allow updates to appointments in user's clinic
+      if (clinic?.id && appointment.clinic_id !== clinic.id) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You don't have access to this appointment request",
@@ -86,7 +63,7 @@ export const updateAppointmentRouter = createTRPCRouter({
       }
 
       // Update the appointment
-      const { data: updated, error: updateError } = await supabase
+      const { data: updated, error: updateError } = await ctx.supabase
         .from("appointment_requests")
         .update(updateData)
         .eq("id", input.id)

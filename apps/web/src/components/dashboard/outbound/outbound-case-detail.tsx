@@ -43,6 +43,16 @@ import type {
   DischargeCaseStatus,
   SoapNote,
 } from "./types";
+import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
+import {
+  Pill,
+  Activity,
+  Utensils,
+  Eye,
+  CalendarCheck,
+  Syringe,
+  Heart,
+} from "lucide-react";
 
 // Scheduled call data with structured output support
 interface ScheduledCallData {
@@ -83,6 +93,7 @@ interface CaseData {
   phoneSent: "sent" | "pending" | "failed" | "not_applicable" | null;
   emailSent: "sent" | "pending" | "failed" | "not_applicable" | null;
   dischargeSummary: string;
+  structuredContent: StructuredDischargeSummary | null;
   callScript: unknown;
   emailContent: string;
   scheduledCall: ScheduledCallData | null;
@@ -141,7 +152,9 @@ export function OutboundCaseDetail({
   const showScheduleInfo = caseData.status === "scheduled";
 
   // Check if discharge summary needs to be generated
-  const hasDischargeSummary = Boolean(caseData.dischargeSummary?.trim());
+  const hasStructuredContent = Boolean(caseData.structuredContent?.patientName);
+  const hasDischargeSummary =
+    hasStructuredContent || Boolean(caseData.dischargeSummary?.trim());
   const needsGeneration = !hasDischargeSummary && isEditable;
 
   // Get call script from dynamic variables
@@ -229,8 +242,12 @@ export function OutboundCaseDetail({
                   </>
                 )}
               </div>
+            ) : caseData.structuredContent ? (
+              <StructuredDischargeSummaryDisplay
+                content={caseData.structuredContent}
+              />
             ) : (
-              <p className="text-muted-foreground text-sm leading-relaxed">
+              <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap">
                 {caseData.dischargeSummary || "No discharge summary available."}
               </p>
             )}
@@ -279,6 +296,7 @@ export function OutboundCaseDetail({
                     <TabsContent value="call_script" className="mt-4">
                       <PreviewContent
                         content={callScript}
+                        structuredContent={caseData.structuredContent}
                         onPlay={() => {
                           // TODO: Implement TTS preview
                         }}
@@ -295,6 +313,7 @@ export function OutboundCaseDetail({
                         content={
                           caseData.emailContent || caseData.dischargeSummary
                         }
+                        structuredContent={caseData.structuredContent}
                         onEdit={() => {
                           // TODO: Implement edit modal
                         }}
@@ -535,17 +554,21 @@ function ClinicalNotesSection({
  */
 function PreviewContent({
   content,
+  structuredContent,
   onPlay,
   onEdit,
   isEditable,
   type,
 }: {
   content: string;
+  structuredContent?: StructuredDischargeSummary | null;
   onPlay?: () => void;
   onEdit: () => void;
   isEditable: boolean;
   type: "call" | "email";
 }) {
+  const hasStructured = Boolean(structuredContent?.patientName);
+
   return (
     <div>
       <div className="mb-3 flex gap-2">
@@ -562,11 +585,354 @@ function PreviewContent({
           </Button>
         )}
       </div>
-      <div className="bg-muted/50 max-h-48 overflow-auto rounded-md p-3">
-        <p className="text-sm whitespace-pre-wrap">
-          {content || "No content available."}
-        </p>
+
+      {hasStructured && structuredContent ? (
+        type === "call" ? (
+          <CallScriptStructuredPreview content={structuredContent} />
+        ) : (
+          <EmailStructuredPreview content={structuredContent} />
+        )
+      ) : (
+        <div className="bg-muted/50 max-h-48 overflow-auto rounded-md p-3">
+          <p className="text-sm whitespace-pre-wrap">
+            {content || "No content available."}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Call Script Structured Preview
+ * Shows what the AI voice agent will say in a conversational format
+ */
+function CallScriptStructuredPreview({
+  content,
+}: {
+  content: StructuredDischargeSummary;
+}) {
+  const hasMedications = content.medications && content.medications.length > 0;
+  const hasHomeCare =
+    content.homeCare &&
+    [
+      content.homeCare.activity,
+      content.homeCare.diet,
+      content.homeCare.woundCare,
+    ].some(Boolean);
+  const hasFollowUp = content.followUp?.required;
+  const hasWarningSigns =
+    content.warningSigns && content.warningSigns.length > 0;
+
+  return (
+    <div className="max-h-64 space-y-3 overflow-auto rounded-lg border bg-gradient-to-br from-teal-50/50 to-emerald-50/30 p-4 dark:from-teal-950/30 dark:to-emerald-950/20">
+      {/* Opening - Greeting */}
+      <div className="flex gap-3">
+        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-500 text-xs font-bold text-white">
+          1
+        </div>
+        <div>
+          <p className="text-xs font-semibold text-teal-700 dark:text-teal-400">
+            Greeting
+          </p>
+          <p className="text-muted-foreground text-sm">
+            &ldquo;Hi, this is ODIS calling from the veterinary clinic about{" "}
+            <span className="font-medium text-teal-700 dark:text-teal-400">
+              {content.patientName}
+            </span>
+            &apos;s visit today...&rdquo;
+          </p>
+        </div>
       </div>
+
+      {/* Visit Summary */}
+      {content.appointmentSummary && (
+        <div className="flex gap-3">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-500 text-xs font-bold text-white">
+            2
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-teal-700 dark:text-teal-400">
+              Visit Summary
+            </p>
+            <p className="text-muted-foreground text-sm">
+              {content.appointmentSummary}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Medications */}
+      {hasMedications && (
+        <div className="flex gap-3">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-white">
+            <Pill className="h-3 w-3" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+              Medications to Give
+            </p>
+            <ul className="mt-1 space-y-1">
+              {content.medications?.map((med, idx) => (
+                <li key={idx} className="text-muted-foreground text-sm">
+                  • <span className="font-medium">{med.name}</span>
+                  {med.frequency && ` - ${med.frequency}`}
+                  {med.duration && ` for ${med.duration}`}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {/* Home Care */}
+      {hasHomeCare && (
+        <div className="flex gap-3">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-500 text-xs font-bold text-white">
+            <Heart className="h-3 w-3" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-blue-700 dark:text-blue-400">
+              Home Care Tips
+            </p>
+            <div className="text-muted-foreground mt-1 space-y-0.5 text-sm">
+              {content.homeCare?.activity && (
+                <p>• Activity: {content.homeCare.activity}</p>
+              )}
+              {content.homeCare?.diet && <p>• Diet: {content.homeCare.diet}</p>}
+              {content.homeCare?.woundCare && (
+                <p>• Wound care: {content.homeCare.woundCare}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Follow-up */}
+      {hasFollowUp && (
+        <div className="flex gap-3">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-violet-500 text-xs font-bold text-white">
+            <CalendarCheck className="h-3 w-3" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-violet-700 dark:text-violet-400">
+              Follow-up Reminder
+            </p>
+            <p className="text-muted-foreground text-sm">
+              &ldquo;Please schedule a follow-up
+              {content.followUp?.date && ` ${content.followUp.date}`}
+              {content.followUp?.reason && ` for ${content.followUp.reason}`}
+              ...&rdquo;
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Warning Signs */}
+      {hasWarningSigns && (
+        <div className="flex gap-3">
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+            <AlertTriangle className="h-3 w-3" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-red-700 dark:text-red-400">
+              When to Call Back
+            </p>
+            <p className="text-muted-foreground text-sm">
+              &ldquo;Please call us right away if you notice:{" "}
+              {content.warningSigns?.join(", ")}...&rdquo;
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Closing */}
+      <div className="flex gap-3">
+        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-400 text-xs font-bold text-white">
+          ✓
+        </div>
+        <div>
+          <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+            Closing
+          </p>
+          <p className="text-muted-foreground text-sm">
+            &ldquo;Do you have any questions about {content.patientName}&apos;s
+            care?&rdquo;
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Email Structured Preview
+ * Shows what the email will look like with sections
+ */
+function EmailStructuredPreview({
+  content,
+}: {
+  content: StructuredDischargeSummary;
+}) {
+  const hasTreatments =
+    content.treatmentsToday && content.treatmentsToday.length > 0;
+  const hasVaccinations =
+    content.vaccinationsGiven && content.vaccinationsGiven.length > 0;
+  const hasMedications = content.medications && content.medications.length > 0;
+  const hasHomeCare =
+    content.homeCare &&
+    [
+      content.homeCare.activity,
+      content.homeCare.diet,
+      content.homeCare.woundCare,
+      content.homeCare.monitoring && content.homeCare.monitoring.length > 0,
+    ].some(Boolean);
+  const hasFollowUp = content.followUp?.required;
+  const hasWarningSigns =
+    content.warningSigns && content.warningSigns.length > 0;
+
+  return (
+    <div className="max-h-64 overflow-auto rounded-lg border bg-white p-4 shadow-sm dark:bg-slate-900">
+      {/* Email Header */}
+      <div className="mb-4 border-b pb-3">
+        <div className="flex items-center gap-2">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-100 dark:bg-teal-900">
+            <PawPrint className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+          </div>
+          <div>
+            <p className="font-semibold text-slate-800 dark:text-slate-200">
+              Discharge Summary for {content.patientName}
+            </p>
+            <p className="text-muted-foreground text-xs">
+              Thank you for visiting our clinic!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Appointment Summary */}
+      {content.appointmentSummary && (
+        <div className="mb-3">
+          <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+            {content.appointmentSummary}
+          </p>
+        </div>
+      )}
+
+      {/* Treatment Summary */}
+      {[hasTreatments, hasVaccinations].some(Boolean) && (
+        <div className="mb-3 rounded-md bg-slate-50 p-3 dark:bg-slate-800/50">
+          <p className="mb-2 text-xs font-semibold text-slate-500 uppercase">
+            Today&apos;s Care
+          </p>
+          {hasTreatments && (
+            <ul className="text-muted-foreground space-y-0.5 text-sm">
+              {content.treatmentsToday?.map((t, i) => (
+                <li key={i}>• {t}</li>
+              ))}
+            </ul>
+          )}
+          {hasVaccinations && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {content.vaccinationsGiven?.map((v, i) => (
+                <span
+                  key={i}
+                  className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400"
+                >
+                  💉 {v}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Medications Section */}
+      {hasMedications && (
+        <div className="mb-3 rounded-md border border-amber-200 bg-amber-50 p-3 dark:border-amber-800/50 dark:bg-amber-950/30">
+          <p className="mb-2 text-xs font-semibold text-amber-700 uppercase dark:text-amber-400">
+            💊 Medications
+          </p>
+          <div className="space-y-2">
+            {content.medications?.map((med, idx) => (
+              <div
+                key={idx}
+                className="rounded bg-white/70 p-2 text-sm dark:bg-slate-900/50"
+              >
+                <span className="font-medium text-amber-800 dark:text-amber-300">
+                  {med.name}
+                </span>
+                {[med.dosage, med.frequency].some(Boolean) && (
+                  <span className="text-muted-foreground">
+                    {" "}
+                    — {med.dosage}
+                    {med.dosage && med.frequency && ", "}
+                    {med.frequency}
+                  </span>
+                )}
+                {med.duration && (
+                  <span className="text-muted-foreground">
+                    {" "}
+                    for {med.duration}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Home Care */}
+      {hasHomeCare && (
+        <div className="mb-3 rounded-md bg-blue-50 p-3 dark:bg-blue-950/30">
+          <p className="mb-2 text-xs font-semibold text-blue-700 uppercase dark:text-blue-400">
+            🏠 Home Care
+          </p>
+          <div className="text-muted-foreground space-y-1 text-sm">
+            {content.homeCare?.activity && (
+              <p>
+                <strong>Activity:</strong> {content.homeCare.activity}
+              </p>
+            )}
+            {content.homeCare?.diet && (
+              <p>
+                <strong>Diet:</strong> {content.homeCare.diet}
+              </p>
+            )}
+            {content.homeCare?.woundCare && (
+              <p>
+                <strong>Wound Care:</strong> {content.homeCare.woundCare}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Follow-up */}
+      {hasFollowUp && (
+        <div className="mb-3 flex items-center gap-2 rounded-md bg-violet-50 p-3 dark:bg-violet-950/30">
+          <CalendarCheck className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+          <p className="text-sm text-violet-700 dark:text-violet-300">
+            <strong>Follow-up:</strong>{" "}
+            {content.followUp?.date ?? "Schedule as needed"}
+            {content.followUp?.reason && ` — ${content.followUp.reason}`}
+          </p>
+        </div>
+      )}
+
+      {/* Warning Signs */}
+      {hasWarningSigns && (
+        <div className="rounded-md border border-red-200 bg-red-50 p-3 dark:border-red-800/50 dark:bg-red-950/30">
+          <p className="mb-1 text-xs font-semibold text-red-700 uppercase dark:text-red-400">
+            ⚠️ Call us if you notice:
+          </p>
+          <ul className="text-sm text-red-700 dark:text-red-400">
+            {content.warningSigns?.map((sign, idx) => (
+              <li key={idx}>• {sign}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
@@ -958,6 +1324,279 @@ function UrgentReasonSection({ callId }: { callId: string }) {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+/**
+ * Structured Discharge Summary Display
+ * Renders the discharge summary in beautifully formatted sections
+ */
+function StructuredDischargeSummaryDisplay({
+  content,
+}: {
+  content: StructuredDischargeSummary;
+}) {
+  const hasAppointmentSummary = Boolean(content.appointmentSummary?.trim());
+  const hasDiagnosis = Boolean(content.diagnosis?.trim());
+  const hasTreatments =
+    content.treatmentsToday && content.treatmentsToday.length > 0;
+  const hasVaccinations =
+    content.vaccinationsGiven && content.vaccinationsGiven.length > 0;
+  const hasMedications = content.medications && content.medications.length > 0;
+  const hasHomeCare =
+    content.homeCare &&
+    [
+      content.homeCare.activity,
+      content.homeCare.diet,
+      content.homeCare.woundCare,
+      content.homeCare.monitoring && content.homeCare.monitoring.length > 0,
+    ].some(Boolean);
+  const hasFollowUp = content.followUp?.required;
+  const hasWarningSigns =
+    content.warningSigns && content.warningSigns.length > 0;
+
+  return (
+    <div className="space-y-4">
+      {/* Appointment Summary - Friendly intro */}
+      {hasAppointmentSummary && (
+        <div className="rounded-lg bg-teal-50/50 p-3 dark:bg-teal-950/20">
+          <p className="text-sm leading-relaxed text-teal-800 dark:text-teal-300">
+            {content.appointmentSummary}
+          </p>
+        </div>
+      )}
+
+      {/* Diagnosis */}
+      {hasDiagnosis && (
+        <div>
+          <div className="mb-1.5 flex items-center gap-1.5">
+            <Stethoscope className="h-3.5 w-3.5 text-slate-500" />
+            <span className="text-xs font-semibold tracking-wide text-slate-600 uppercase dark:text-slate-400">
+              Diagnosis
+            </span>
+          </div>
+          <p className="text-muted-foreground text-sm">{content.diagnosis}</p>
+        </div>
+      )}
+
+      {/* Treatments & Vaccinations Grid */}
+      {[hasTreatments, hasVaccinations].some(Boolean) && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {/* Treatments Today */}
+          {hasTreatments && (
+            <div className="rounded-lg border bg-slate-50/50 p-3 dark:bg-slate-900/30">
+              <div className="mb-2 flex items-center gap-1.5">
+                <Activity className="h-3.5 w-3.5 text-blue-500" />
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                  Today&apos;s Care
+                </span>
+              </div>
+              <ul className="space-y-1">
+                {content.treatmentsToday?.map((treatment, idx) => (
+                  <li
+                    key={idx}
+                    className="text-muted-foreground flex items-start gap-2 text-sm"
+                  >
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
+                    {treatment}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Vaccinations */}
+          {hasVaccinations && (
+            <div className="rounded-lg border bg-emerald-50/50 p-3 dark:bg-emerald-950/20">
+              <div className="mb-2 flex items-center gap-1.5">
+                <Syringe className="h-3.5 w-3.5 text-emerald-500" />
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                  Vaccinations
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {content.vaccinationsGiven?.map((vaccine, idx) => (
+                  <Badge
+                    key={idx}
+                    variant="secondary"
+                    className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400"
+                  >
+                    {vaccine}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Medications */}
+      {hasMedications && (
+        <div className="rounded-lg border border-amber-200/50 bg-amber-50/50 p-3 dark:border-amber-800/30 dark:bg-amber-950/20">
+          <div className="mb-2 flex items-center gap-1.5">
+            <Pill className="h-3.5 w-3.5 text-amber-600" />
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+              Take-Home Medications
+            </span>
+          </div>
+          <div className="space-y-2">
+            {content.medications?.map((med, idx) => (
+              <div
+                key={idx}
+                className="rounded-md bg-white/70 p-2.5 dark:bg-slate-900/50"
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="font-medium text-amber-800 dark:text-amber-300">
+                    {med.name}
+                  </span>
+                  {med.dosage && (
+                    <span className="text-muted-foreground text-xs">
+                      {med.dosage}
+                    </span>
+                  )}
+                </div>
+                {[med.frequency, med.duration].some(Boolean) && (
+                  <p className="text-muted-foreground mt-0.5 text-xs">
+                    {med.frequency}
+                    {med.frequency && med.duration && " · "}
+                    {med.duration}
+                  </p>
+                )}
+                {med.instructions && (
+                  <p className="mt-1 text-xs text-amber-700 dark:text-amber-400">
+                    ℹ️ {med.instructions}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Home Care Instructions */}
+      {hasHomeCare && (
+        <div className="rounded-lg border bg-slate-50/50 p-3 dark:bg-slate-900/30">
+          <div className="mb-2 flex items-center gap-1.5">
+            <Heart className="h-3.5 w-3.5 text-pink-500" />
+            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+              Home Care
+            </span>
+          </div>
+          <div className="space-y-2">
+            {content.homeCare?.activity && (
+              <div className="flex items-start gap-2 text-sm">
+                <Activity className="text-muted-foreground mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <div>
+                  <span className="text-muted-foreground text-xs font-medium">
+                    Activity:
+                  </span>
+                  <p className="text-muted-foreground">
+                    {content.homeCare.activity}
+                  </p>
+                </div>
+              </div>
+            )}
+            {content.homeCare?.diet && (
+              <div className="flex items-start gap-2 text-sm">
+                <Utensils className="text-muted-foreground mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <div>
+                  <span className="text-muted-foreground text-xs font-medium">
+                    Diet:
+                  </span>
+                  <p className="text-muted-foreground">
+                    {content.homeCare.diet}
+                  </p>
+                </div>
+              </div>
+            )}
+            {content.homeCare?.woundCare && (
+              <div className="flex items-start gap-2 text-sm">
+                <Eye className="text-muted-foreground mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <div>
+                  <span className="text-muted-foreground text-xs font-medium">
+                    Wound Care:
+                  </span>
+                  <p className="text-muted-foreground">
+                    {content.homeCare.woundCare}
+                  </p>
+                </div>
+              </div>
+            )}
+            {content.homeCare?.monitoring &&
+              content.homeCare.monitoring.length > 0 && (
+                <div className="text-sm">
+                  <span className="text-muted-foreground text-xs font-medium">
+                    Watch for:
+                  </span>
+                  <ul className="mt-1 space-y-0.5">
+                    {content.homeCare.monitoring.map((item, idx) => (
+                      <li
+                        key={idx}
+                        className="text-muted-foreground flex items-start gap-2 text-sm"
+                      >
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+          </div>
+        </div>
+      )}
+
+      {/* Follow-up */}
+      {hasFollowUp && (
+        <div className="rounded-lg border border-blue-200/50 bg-blue-50/50 p-3 dark:border-blue-800/30 dark:bg-blue-950/20">
+          <div className="flex items-center gap-2">
+            <CalendarCheck className="h-4 w-4 text-blue-500" />
+            <span className="text-sm font-medium text-blue-800 dark:text-blue-300">
+              Follow-up{" "}
+              {content.followUp?.date && (
+                <span className="font-normal">{content.followUp.date}</span>
+              )}
+            </span>
+          </div>
+          {content.followUp?.reason && (
+            <p className="text-muted-foreground mt-1 pl-6 text-sm">
+              {content.followUp.reason}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Warning Signs */}
+      {hasWarningSigns && (
+        <div className="rounded-lg border border-red-200/50 bg-red-50/50 p-3 dark:border-red-900/30 dark:bg-red-950/20">
+          <div className="mb-2 flex items-center gap-1.5">
+            <AlertTriangle className="h-3.5 w-3.5 text-red-500" />
+            <span className="text-xs font-semibold text-red-700 dark:text-red-400">
+              Call Us If You Notice
+            </span>
+          </div>
+          <ul className="space-y-1">
+            {content.warningSigns?.map((sign, idx) => (
+              <li
+                key={idx}
+                className="flex items-start gap-2 text-sm text-red-700 dark:text-red-400"
+              >
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-red-400" />
+                {sign}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Additional Notes */}
+      {content.notes && (
+        <div className="border-t pt-3">
+          <p className="text-muted-foreground text-sm italic">
+            {content.notes}
+          </p>
+        </div>
+      )}
+    </div>
   );
 }
 

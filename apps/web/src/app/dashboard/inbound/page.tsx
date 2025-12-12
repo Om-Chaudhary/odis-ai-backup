@@ -1,22 +1,42 @@
-import { InboundCallsClient } from "~/components/dashboard/calls/inbound-calls-client";
+import { Suspense } from "react";
+import { Loader2 } from "lucide-react";
+import { InboundClient } from "~/components/dashboard/inbound";
 import { InboundCallsErrorBoundary } from "~/components/dashboard/calls/inbound-calls-error-boundary";
 
 export const metadata = {
-  title: "Inbound Calls | Dashboard",
-  description: "View and manage inbound VAPI calls",
+  title: "Inbound | Dashboard",
+  description:
+    "View and manage inbound calls, appointment requests, and messages",
 };
 
-export default function DashboardInboundCallsPage() {
+/**
+ * Inbound Dashboard Page
+ *
+ * Manages incoming communications from VAPI AI assistants:
+ * - Appointment requests from schedule-appointment tool
+ * - Messages from leave-message tool
+ * - Inbound call logs
+ */
+export default function DashboardInboundPage() {
   return (
-    <div className="container mx-auto py-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">Inbound Calls</h1>
-        <p className="text-muted-foreground mt-2">
-          View and manage incoming calls handled by your VAPI assistants
-        </p>
-      </div>
+    <div className="flex h-full flex-col">
       <InboundCallsErrorBoundary>
-        <InboundCallsClient />
+        <Suspense
+          fallback={
+            <div className="flex h-[50vh] items-center justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-100">
+                  <Loader2 className="h-6 w-6 animate-spin text-teal-600" />
+                </div>
+                <p className="text-sm text-slate-500">
+                  Loading inbound data...
+                </p>
+              </div>
+            </div>
+          }
+        >
+          <InboundClient />
+        </Suspense>
       </InboundCallsErrorBoundary>
     </div>
   );
