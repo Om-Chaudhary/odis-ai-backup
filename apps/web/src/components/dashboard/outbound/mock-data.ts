@@ -387,13 +387,15 @@ export const mockDischargeCases: DischargeCase[] = generateMockCases(12);
  * Mock statistics computed from mock cases
  */
 export const mockStats: DischargeSummaryStats = {
-  pendingReview: mockDischargeCases.filter((c) => c.status === "pending_review")
-    .length,
+  readyToSend:
+    mockDischargeCases.filter((c) => c.status === "pending_review").length +
+    mockDischargeCases.filter((c) => c.status === "ready").length +
+    mockDischargeCases.filter((c) => c.status === "in_progress").length,
   scheduled: mockDischargeCases.filter((c) => c.status === "scheduled").length,
-  ready: mockDischargeCases.filter((c) => c.status === "ready").length,
-  inProgress: mockDischargeCases.filter((c) => c.status === "in_progress")
-    .length,
-  completed: mockDischargeCases.filter((c) => c.status === "completed").length,
+  sent: mockDischargeCases.filter((c) => c.status === "completed").length,
   failed: mockDischargeCases.filter((c) => c.status === "failed").length,
   total: mockDischargeCases.length,
+  needsReview: mockDischargeCases.filter(
+    (c) => !c.owner.phone || !c.owner.email,
+  ).length,
 };

@@ -291,15 +291,15 @@ export interface DischargeCase {
 
 /**
  * Summary statistics for the dashboard
+ * Aligned with new StatusFilter values
  */
 export interface DischargeSummaryStats {
-  pendingReview: number;
-  scheduled: number;
-  ready: number;
-  inProgress: number;
-  completed: number;
-  failed: number;
+  readyToSend: number; // Cases ready to approve (was pendingReview)
+  scheduled: number; // Waiting for scheduled time
+  sent: number; // Successfully delivered (was completed)
+  failed: number; // Delivery failed
   total: number;
+  needsReview: number; // Cases missing contact info
 }
 
 // =============================================================================
@@ -307,10 +307,38 @@ export interface DischargeSummaryStats {
 // =============================================================================
 
 /**
+ * View mode for the outbound dashboard
+ * - all: Default view showing all discharges
+ * - needs_review: Cases missing phone or email contact info
+ */
+export type ViewMode = "all" | "needs_review";
+
+/**
+ * Status filter for the discharge queue
+ * Maps to new simplified filter tabs
+ */
+export type StatusFilter =
+  | "all"
+  | "ready_to_send" // pending_review - ready to approve and schedule
+  | "scheduled" // scheduled - waiting for scheduled time
+  | "sent" // completed - successfully delivered
+  | "failed"; // failed - delivery failed
+
+/**
+ * Pagination state
+ */
+export interface PaginationState {
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
+/**
  * Filter state for the case table
  */
 export interface OutboundFiltersState {
-  status: DischargeCaseStatus | "all";
+  status: StatusFilter;
+  viewMode: ViewMode;
   searchTerm: string;
   dateRange: {
     start: string;

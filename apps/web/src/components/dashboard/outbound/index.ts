@@ -2,15 +2,10 @@
  * Outbound Discharge Call Manager Components
  *
  * Architecture:
- * - Split-view layout (react-resizable-panels)
- * - Left panel: Full-width case queue table with filters
- * - Right panel: Case detail (slides in on selection)
- *
- * Data sources:
- * - cases + patients (case & patient info)
- * - discharge_summaries (AI content)
- * - scheduled_discharge_calls (VAPI calls)
- * - scheduled_discharge_emails (Resend emails)
+ * - Full-screen compact layout with pagination
+ * - Split-view (react-resizable-panels): table + detail panel
+ * - View modes: All Discharges / Needs Review (inline edit)
+ * - Status filters: All, Ready to Send, Scheduled, Sent, Failed
  */
 
 // Main client component
@@ -19,11 +14,17 @@ export { OutboundDischargesClient } from "./outbound-discharges-client";
 // Layout components
 export { OutboundSplitLayout } from "./outbound-split-layout";
 
-// Filters
+// Filters & Navigation
 export { OutboundFilterTabs } from "./outbound-filter-tabs";
+export { OutboundViewTabs } from "./outbound-view-tabs";
+export { OutboundDateNav } from "./outbound-date-nav";
 
 // Table components
 export { OutboundCaseTable } from "./outbound-case-table";
+export { OutboundNeedsReviewTable } from "./outbound-needs-review-table";
+
+// Pagination
+export { OutboundPagination } from "./outbound-pagination";
 
 // Detail panel
 export { OutboundCaseDetail } from "./outbound-case-detail";
@@ -33,6 +34,9 @@ export { OutboundErrorBoundary } from "./outbound-error-boundary";
 
 // Empty state
 export { OutboundEmptyState } from "./outbound-empty-state";
+
+// Alert banner
+export { OutboundMissingContactsBanner } from "./outbound-missing-contacts-banner";
 
 // Skeletons
 export {
@@ -54,6 +58,10 @@ export type {
   DeliveryStatus,
   BatchStatus,
   BatchItemStatus,
+  // Filter types
+  ViewMode,
+  StatusFilter,
+  PaginationState,
   // Entity types
   Patient,
   Owner,
