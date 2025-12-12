@@ -11,10 +11,10 @@
  */
 
 import { TRPCError } from "@trpc/server";
-import { addDays, setHours, setMinutes, setSeconds } from "date-fns";
 import { getClinicUserIds } from "@odis-ai/clinics/utils";
 import { generateStructuredDischargeSummaryWithRetry } from "@odis-ai/ai/generate-structured-discharge";
 import { normalizeToE164, normalizeEmail } from "@odis-ai/utils/phone";
+import { calculateScheduleTime } from "@odis-ai/utils/timezone";
 import type { NormalizedEntities } from "@odis-ai/validators/scribe";
 import type { Json } from "@odis-ai/types";
 import { scheduleEmailExecution, scheduleCallExecution } from "@odis-ai/qstash";
@@ -34,28 +34,6 @@ const getCallExecutor = () =>
   import("@odis-ai/services-discharge/call-executor").then(
     (m) => m.executeScheduledCall,
   );
-
-/**
- * Calculate scheduled time based on delay days and preferred time
- */
-function calculateScheduleTime(
-  baseDate: Date,
-  delayDays: number,
-  preferredTime: string, // HH:MM or HH:MM:SS format
-): Date {
-  // Add delay days
-  let scheduled = addDays(baseDate, delayDays);
-
-  // Parse preferred time
-  const [hours, minutes] = preferredTime.split(":").map(Number);
-
-  // Set the preferred time
-  scheduled = setHours(scheduled, hours ?? 9);
-  scheduled = setMinutes(scheduled, minutes ?? 0);
-  scheduled = setSeconds(scheduled, 0);
-
-  return scheduled;
-}
 
 export const approveRouter = createTRPCRouter({
   approveAndSchedule: protectedProcedure

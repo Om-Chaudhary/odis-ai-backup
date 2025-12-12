@@ -9,7 +9,8 @@
 // @react-email/components during Next.js static page generation.
 import type { SupabaseClientType } from "@odis-ai/types/supabase";
 import type { User } from "@supabase/supabase-js";
-import { addDays, setHours, setMinutes, setSeconds } from "date-fns";
+import { addDays } from "date-fns";
+import { fromZonedTime } from "date-fns-tz";
 
 /**
  * Dynamically import the DischargeOrchestrator to avoid bundling
@@ -527,15 +528,18 @@ export class DischargeBatchProcessor {
   }
 
   /**
-   * Calculate schedule times based on user preferences
+   * Calculate schedule times based on user preferences in Pacific timezone.
    *
    * Schedule:
-   * - Email: Next day (Day 1) at specified time (default: 10 AM business hours)
-   * - Call: 2 days after the email (Day 3) at specified time (default: 4 PM for 4-7 PM window)
+   * - Email: Next day (Day 1) at specified time (default: 10 AM Pacific)
+   * - Call: 2 days after the email (Day 3) at specified time (default: 4 PM Pacific)
+   *
+   * Times are stored as UTC in the database, so we convert from Pacific to UTC.
    */
   static calculateScheduleTimes(
-    emailTimeString: string, // Format: "HH:mm" (e.g., "10:00", "14:30")
-    callTimeString?: string, // Format: "HH:mm" (e.g., "16:00") - defaults to 16:00 (4 PM)
+    emailTimeString: string, // Format: "HH:mm" (e.g., "10:00", "14:30") in Pacific time
+    callTimeString?: string, // Format: "HH:mm" (e.g., "16:00") in Pacific time - defaults to 16:00 (4 PM)
+    timezone = "America/Los_Angeles",
   ): { emailScheduleTime: Date; callScheduleTime: Date } {
     const now = new Date();
 
@@ -543,20 +547,40 @@ export class DischargeBatchProcessor {
     const [emailHours, emailMinutes] = emailTimeString.split(":").map(Number);
 
     // Email: Next day at specified time (Day 1)
-    let emailScheduleTime = addDays(now, 1);
-    emailScheduleTime = setHours(emailScheduleTime, emailHours ?? 10); // Default: 10 AM
-    emailScheduleTime = setMinutes(emailScheduleTime, emailMinutes ?? 0);
-    emailScheduleTime = setSeconds(emailScheduleTime, 0);
+    const emailTargetDate = addDays(now, 1);
+    const emailYear = emailTargetDate.getFullYear();
+    const emailMonth = String(emailTargetDate.getMonth() + 1).padStart(2, "0");
+    const emailDay = String(emailTargetDate.getDate()).padStart(2, "0");
+    const emailHour = String(emailHours ?? 10).padStart(2, "0");
+    const emailMinute = String(emailMinutes ?? 0).padStart(2, "0");
+
+    // Create local time string and convert to UTC
+    const emailLocalString = `${emailYear}-${emailMonth}-${emailDay}T${emailHour}:${emailMinute}:00`;
+    const emailScheduleTime = fromZonedTime(emailLocalString, timezone);
 
     // Parse call time or use default (4 PM for 4-7 PM evening window)
     const callTime = callTimeString ?? "16:00";
     const [callHours, callMinutes] = callTime.split(":").map(Number);
 
     // Call: 2 days after the email (Day 3) = 3 days from now at specified time
-    let callScheduleTime = addDays(now, 3);
-    callScheduleTime = setHours(callScheduleTime, callHours ?? 16); // Default: 4 PM
-    callScheduleTime = setMinutes(callScheduleTime, callMinutes ?? 0);
-    callScheduleTime = setSeconds(callScheduleTime, 0);
+    const callTargetDate = addDays(now, 3);
+    const callYear = callTargetDate.getFullYear();
+    const callMonth = String(callTargetDate.getMonth() + 1).padStart(2, "0");
+    const callDay = String(callTargetDate.getDate()).padStart(2, "0");
+    const callHour = String(callHours ?? 16).padStart(2, "0");
+    const callMinute = String(callMinutes ?? 0).padStart(2, "0");
+
+    // Create local time string and convert to UTC
+    const callLocalString = `${callYear}-${callMonth}-${callDay}T${callHour}:${callMinute}:00`;
+    const callScheduleTime = fromZonedTime(callLocalString, timezone);
+
+    console.log("[DischargeBatchProcessor] Schedule times calculated", {
+      emailLocalString,
+      callLocalString,
+      timezone,
+      emailScheduleTimeUTC: emailScheduleTime.toISOString(),
+      callScheduleTimeUTC: callScheduleTime.toISOString(),
+    });
 
     return {
       emailScheduleTime,

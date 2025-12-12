@@ -373,3 +373,53 @@ export function getPresetDateRange(
       return getLocalDayRange(zonedNow, timezone);
   }
 }
+
+/**
+ * Calculate scheduled time based on delay days and preferred time in a specific timezone.
+ *
+ * The preferredTime is in the clinic's local timezone (e.g., Pacific).
+ * We need to convert this to UTC for storage in the database.
+ *
+ * @param baseDate - The base date to calculate from (typically current date)
+ * @param delayDays - Number of days to add to the base date
+ * @param preferredTime - Time in HH:MM or HH:MM:SS format (in local timezone)
+ * @param timezone - IANA timezone string (defaults to America/Los_Angeles)
+ * @returns Date object in UTC representing the scheduled time
+ *
+ * @example
+ * // User sets preferred time as 09:00 (9 AM Pacific) with 1 day delay
+ * const baseDate = new Date("2024-12-12T12:00:00Z");
+ * const result = calculateScheduleTime(baseDate, 1, "09:00", "America/Los_Angeles");
+ * // During PST (UTC-8): Returns 2024-12-13T17:00:00Z (9 AM PST = 5 PM UTC)
+ * // During PDT (UTC-7): Returns 2024-12-13T16:00:00Z (9 AM PDT = 4 PM UTC)
+ */
+export function calculateScheduleTime(
+  baseDate: Date,
+  delayDays: number,
+  preferredTime: string, // HH:MM or HH:MM:SS format (in local time)
+  timezone: string = DEFAULT_TIMEZONE,
+): Date {
+  // Add delay days to get the target date
+  const targetDate = new Date(baseDate);
+  targetDate.setDate(targetDate.getDate() + delayDays);
+
+  // Parse preferred time (e.g., "09:00" or "16:00")
+  const [hours, minutes] = preferredTime.split(":").map(Number);
+
+  // Create a date string representing the target time in the local timezone
+  // Format: "YYYY-MM-DD HH:mm:ss" - this will be interpreted as local time
+  const year = targetDate.getFullYear();
+  const month = String(targetDate.getMonth() + 1).padStart(2, "0");
+  const day = String(targetDate.getDate()).padStart(2, "0");
+  const hour = String(hours ?? 9).padStart(2, "0");
+  const minute = String(minutes ?? 0).padStart(2, "0");
+
+  // Create a Date object representing this time in the specified timezone
+  // and convert it to UTC
+  const localDateString = `${year}-${month}-${day}T${hour}:${minute}:00`;
+
+  // fromZonedTime takes a local time in the specified timezone and returns UTC
+  const utcDate = fromZonedTime(localDateString, timezone);
+
+  return utcDate;
+}
