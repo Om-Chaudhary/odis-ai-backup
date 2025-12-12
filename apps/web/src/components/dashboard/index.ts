@@ -3,6 +3,7 @@ export * from "./calls";
 export * from "./cases";
 export * from "./discharges";
 export * from "./filters";
+export * from "./layout";
 export * from "./outbound";
 export * from "./profile";
 export * from "./settings";
