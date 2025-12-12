@@ -41,19 +41,18 @@ export const statsRouter = createTRPCRouter({
         .length ?? 0;
 
     // Get call stats (exclude test mode calls if test mode is disabled)
-    let callsQuery = ctx.supabase
+    const { data: allCalls } = await ctx.supabase
       .from("scheduled_discharge_calls")
       .select("status, created_at, metadata")
       .eq("user_id", userId);
 
-    // If test mode is disabled, filter out test calls
-    if (!testModeEnabled) {
-      callsQuery = callsQuery
-        .not("metadata->test_call", "is", null)
-        .neq("metadata->test_call", true);
-    }
-
-    const { data: calls } = await callsQuery;
+    // Filter out test calls when test mode is disabled
+    const calls = testModeEnabled
+      ? allCalls
+      : allCalls?.filter((call) => {
+          const metadata = call.metadata as { test_call?: boolean } | null;
+          return metadata?.test_call !== true;
+        });
 
     const totalCalls = calls?.length ?? 0;
     const completedCalls =

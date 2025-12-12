@@ -30,6 +30,11 @@ interface DischargeSummaryData {
   created_at: string;
 }
 
+interface ScheduledCallMetadata {
+  test_call?: boolean;
+  [key: string]: unknown;
+}
+
 interface ScheduledCallData {
   id: string;
   status: string;
@@ -42,6 +47,7 @@ interface ScheduledCallData {
   summary: string | null;
   customer_phone: string | null;
   dynamic_variables: unknown;
+  metadata: ScheduledCallMetadata | null;
 }
 
 interface ScheduledEmailData {
@@ -177,6 +183,15 @@ export const listCasesRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
 
+      // Get user's test mode setting
+      const { data: userSettings } = await ctx.supabase
+        .from("users")
+        .select("test_mode_enabled")
+        .eq("id", userId)
+        .single();
+
+      const testModeEnabled = userSettings?.test_mode_enabled ?? false;
+
       // Get all user IDs in the same clinic for shared view
       const clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
 
@@ -222,7 +237,8 @@ export const listCasesRouter = createTRPCRouter({
             transcript,
             summary,
             customer_phone,
-            dynamic_variables
+            dynamic_variables,
+            metadata
           ),
           scheduled_discharge_emails (
             id,
@@ -280,6 +296,11 @@ export const listCasesRouter = createTRPCRouter({
         const emailStatus = scheduledEmail?.status ?? null;
         const callScheduledFor = scheduledCall?.scheduled_for ?? null;
         const emailScheduledFor = scheduledEmail?.scheduled_for ?? null;
+
+        // Check if this is a test call (metadata.test_call === true)
+        const callMetadata =
+          scheduledCall?.metadata as ScheduledCallMetadata | null;
+        const isTestCall = callMetadata?.test_call === true;
 
         const compositeStatus = deriveDischargeStatus(
           c.status,
@@ -379,11 +400,18 @@ export const listCasesRouter = createTRPCRouter({
           soapNotes,
           scheduledEmailFor: emailScheduledFor,
           scheduledCallFor: callScheduledFor,
+          isTestCall,
         };
       });
 
-      // Apply status filter (client-side since it's derived)
+      // Filter out test calls when test mode is disabled
+      // This ensures production users don't see test cases in their dashboard
       let filteredCases = transformedCases;
+      if (!testModeEnabled) {
+        filteredCases = filteredCases.filter((c) => !c.isTestCall);
+      }
+
+      // Apply status filter (client-side since it's derived)
       if (input.status) {
         filteredCases = filteredCases.filter((c) => c.status === input.status);
       }

@@ -72,6 +72,8 @@ export const approveAndScheduleInput = z.object({
   caseId: z.string().uuid(),
   phoneEnabled: z.boolean().default(true),
   emailEnabled: z.boolean().default(true),
+  /** When true, sends immediately instead of using scheduled delays (useful for test mode) */
+  immediateDelivery: z.boolean().default(false),
 });
 
 export const skipCaseInput = z.object({

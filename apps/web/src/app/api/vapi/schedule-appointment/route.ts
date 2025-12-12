@@ -166,7 +166,10 @@ function extractToolArguments(body: Record<string, unknown>): {
       | Array<{
           id?: string;
           parameters?: Record<string, unknown>;
-          function?: { name?: string; arguments?: string };
+          function?: {
+            name?: string;
+            arguments?: string | Record<string, unknown>;
+          };
         }>
       | undefined;
 
@@ -186,25 +189,37 @@ function extractToolArguments(body: Record<string, unknown>): {
         };
       }
 
-      // Try function.arguments (OpenAI format - arguments is a JSON string)
+      // Try function.arguments (could be JSON string or already parsed object)
       if (firstTool?.function?.arguments) {
-        try {
-          const parsedArgs = JSON.parse(firstTool.function.arguments) as Record<
-            string,
-            unknown
-          >;
+        const args = firstTool.function.arguments;
+
+        // Handle already parsed object (VAPI format)
+        if (typeof args === "object" && args !== null) {
           return {
-            arguments: parsedArgs,
+            arguments: args,
             toolCallId: firstTool?.id,
             callId,
             assistantId,
           };
-        } catch (e) {
-          // If parsing fails, log and continue to fallback
-          logger.warn("Failed to parse function.arguments", {
-            arguments: firstTool.function.arguments,
-            error: e instanceof Error ? e.message : String(e),
-          });
+        }
+
+        // Handle JSON string (OpenAI format)
+        if (typeof args === "string") {
+          try {
+            const parsedArgs = JSON.parse(args) as Record<string, unknown>;
+            return {
+              arguments: parsedArgs,
+              toolCallId: firstTool?.id,
+              callId,
+              assistantId,
+            };
+          } catch (e) {
+            // If parsing fails, log and continue to fallback
+            logger.warn("Failed to parse function.arguments", {
+              arguments: args,
+              error: e instanceof Error ? e.message : String(e),
+            });
+          }
         }
       }
 
@@ -223,7 +238,10 @@ function extractToolArguments(body: Record<string, unknown>): {
           toolCall?: {
             id?: string;
             parameters?: Record<string, unknown>;
-            function?: { name?: string; arguments?: string };
+            function?: {
+              name?: string;
+              arguments?: string | Record<string, unknown>;
+            };
           };
         }>
       | undefined;
@@ -244,27 +262,39 @@ function extractToolArguments(body: Record<string, unknown>): {
         };
       }
 
-      // Try function.arguments (OpenAI format)
+      // Try function.arguments (could be JSON string or already parsed object)
       if (firstTool?.function?.arguments) {
-        try {
-          const parsedArgs = JSON.parse(firstTool.function.arguments) as Record<
-            string,
-            unknown
-          >;
+        const args = firstTool.function.arguments;
+
+        // Handle already parsed object (VAPI format)
+        if (typeof args === "object" && args !== null) {
           return {
-            arguments: parsedArgs,
+            arguments: args,
             toolCallId: firstTool?.id,
             callId,
             assistantId,
           };
-        } catch (e) {
-          logger.warn(
-            "Failed to parse function.arguments in toolWithToolCallList",
-            {
-              arguments: firstTool.function.arguments,
-              error: e instanceof Error ? e.message : String(e),
-            },
-          );
+        }
+
+        // Handle JSON string (OpenAI format)
+        if (typeof args === "string") {
+          try {
+            const parsedArgs = JSON.parse(args) as Record<string, unknown>;
+            return {
+              arguments: parsedArgs,
+              toolCallId: firstTool?.id,
+              callId,
+              assistantId,
+            };
+          } catch (e) {
+            logger.warn(
+              "Failed to parse function.arguments in toolWithToolCallList",
+              {
+                arguments: args,
+                error: e instanceof Error ? e.message : String(e),
+              },
+            );
+          }
         }
       }
 

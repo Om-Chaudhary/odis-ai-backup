@@ -14,6 +14,7 @@ import { TRPCError } from "@trpc/server";
 import { addDays, setHours, setMinutes, setSeconds } from "date-fns";
 import { getClinicUserIds } from "@odis-ai/clinics/utils";
 import { generateStructuredDischargeSummaryWithRetry } from "@odis-ai/ai/generate-structured-discharge";
+import { normalizeToE164, normalizeEmail } from "@odis-ai/utils/phone";
 import type { NormalizedEntities } from "@odis-ai/validators/scribe";
 import type { Json } from "@odis-ai/types";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
@@ -51,11 +52,11 @@ export const approveRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user.id;
 
-      // Fetch user discharge settings
+      // Fetch user discharge settings (including test mode)
       const { data: userSettings } = await ctx.supabase
         .from("users")
         .select(
-          "email_delay_days, call_delay_days, preferred_email_start_time, preferred_call_start_time",
+          "email_delay_days, call_delay_days, preferred_email_start_time, preferred_call_start_time, test_mode_enabled, test_contact_email, test_contact_phone, test_contact_name",
         )
         .eq("id", userId)
         .single();
@@ -66,6 +67,10 @@ export const approveRouter = createTRPCRouter({
         userSettings?.preferred_email_start_time ?? "09:00";
       const preferredCallTime =
         userSettings?.preferred_call_start_time ?? "14:00";
+      const testModeEnabled = userSettings?.test_mode_enabled ?? false;
+      const testContactEmail = userSettings?.test_contact_email ?? null;
+      const testContactPhone = userSettings?.test_contact_phone ?? null;
+      const testContactName = userSettings?.test_contact_name ?? null;
 
       // Get all user IDs in the same clinic for shared access
       const clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
@@ -102,6 +107,69 @@ export const approveRouter = createTRPCRouter({
       const patient = Array.isArray(caseInfo.patient)
         ? caseInfo.patient[0]
         : caseInfo.patient;
+
+      // Normalize phone and email to proper formats
+      // Phone: E.164 format (+1XXXXXXXXXX for US numbers)
+      // Email: lowercase, trimmed, validated
+      let normalizedPhone = normalizeToE164(patient?.owner_phone);
+      let normalizedEmail = normalizeEmail(patient?.owner_email);
+      let recipientName = patient?.owner_name ?? null;
+
+      // Test mode: Override with test contacts
+      if (testModeEnabled) {
+        console.log("[Approve] Test mode enabled - using test contacts", {
+          caseId: input.caseId,
+          testContactEmail,
+          testContactPhone,
+          originalEmail: patient?.owner_email,
+          originalPhone: patient?.owner_phone,
+        });
+
+        // Override with test contacts if available
+        if (testContactPhone) {
+          const normalizedTestPhone = normalizeToE164(testContactPhone);
+          if (normalizedTestPhone) {
+            normalizedPhone = normalizedTestPhone;
+          } else {
+            console.warn("[Approve] Test mode: Invalid test phone format", {
+              testContactPhone,
+            });
+          }
+        }
+
+        if (testContactEmail) {
+          const normalizedTestEmail = normalizeEmail(testContactEmail);
+          if (normalizedTestEmail) {
+            normalizedEmail = normalizedTestEmail;
+          } else {
+            console.warn("[Approve] Test mode: Invalid test email format", {
+              testContactEmail,
+            });
+          }
+        }
+
+        // Use test contact name if available
+        if (testContactName) {
+          recipientName = testContactName;
+        }
+      }
+
+      // Log normalization results for debugging
+      if (patient?.owner_phone && !normalizedPhone && !testModeEnabled) {
+        console.warn(
+          "[Approve] Invalid phone number format, cannot normalize",
+          {
+            caseId: input.caseId,
+            originalPhone: patient.owner_phone,
+          },
+        );
+      }
+      if (patient?.owner_email && !normalizedEmail && !testModeEnabled) {
+        console.warn("[Approve] Invalid email format, cannot normalize", {
+          caseId: input.caseId,
+          originalEmail: patient.owner_email,
+        });
+      }
 
       // Check for existing discharge summary
       const existingDischargeSummary = caseInfo.dischargeSummaries?.[0];
@@ -291,6 +359,16 @@ export const approveRouter = createTRPCRouter({
       }
 
       const now = new Date();
+
+      // Log if immediate delivery mode is being used
+      if (input.immediateDelivery) {
+        console.log("[Approve] Immediate delivery mode - scheduling for now", {
+          caseId: input.caseId,
+          phoneEnabled: input.phoneEnabled,
+          emailEnabled: input.emailEnabled,
+        });
+      }
+
       const results: {
         callScheduled: boolean;
         emailScheduled: boolean;
@@ -307,23 +385,22 @@ export const approveRouter = createTRPCRouter({
         summaryId,
       };
 
-      // Schedule email if enabled and email available
+      // Schedule email if enabled and email available (normalized)
       // Email goes out first (typically 1 day after approval)
-      if (input.emailEnabled && patient?.owner_email) {
-        const emailScheduledFor = calculateScheduleTime(
-          now,
-          emailDelayDays,
-          preferredEmailTime,
-        );
+      // In immediate mode, schedule for 30 seconds from now
+      if (input.emailEnabled && normalizedEmail) {
+        const emailScheduledFor = input.immediateDelivery
+          ? new Date(now.getTime() + 30 * 1000) // 30 seconds from now
+          : calculateScheduleTime(now, emailDelayDays, preferredEmailTime);
 
         const { data: emailData, error: emailError } = await ctx.supabase
           .from("scheduled_discharge_emails")
           .insert({
             user_id: userId,
             case_id: input.caseId,
-            recipient_email: patient.owner_email,
-            recipient_name: patient.owner_name,
-            subject: `Discharge Instructions for ${patient.name}`,
+            recipient_email: normalizedEmail, // Use normalized email (or test contact in test mode)
+            recipient_name: recipientName,
+            subject: `Discharge Instructions for ${patient?.name ?? "Your Pet"}`,
             html_content: summaryContent,
             scheduled_for: emailScheduledFor.toISOString(),
             status: "queued",
@@ -340,26 +417,25 @@ export const approveRouter = createTRPCRouter({
         }
       }
 
-      // Schedule call if enabled and phone available
+      // Schedule call if enabled and phone available (normalized to E.164)
       // Call goes out after email (typically 2 days after approval)
-      if (input.phoneEnabled && patient?.owner_phone) {
-        const callScheduledFor = calculateScheduleTime(
-          now,
-          callDelayDays,
-          preferredCallTime,
-        );
+      // In immediate mode, schedule for 1 minute from now (slightly after email)
+      if (input.phoneEnabled && normalizedPhone) {
+        const callScheduledFor = input.immediateDelivery
+          ? new Date(now.getTime() + 60 * 1000) // 1 minute from now
+          : calculateScheduleTime(now, callDelayDays, preferredCallTime);
 
         const { data: callData, error: callError } = await ctx.supabase
           .from("scheduled_discharge_calls")
           .insert({
             user_id: userId,
             case_id: input.caseId,
-            customer_phone: patient.owner_phone,
+            customer_phone: normalizedPhone, // Use normalized phone in E.164 format (or test contact in test mode)
             scheduled_for: callScheduledFor.toISOString(),
             status: "queued",
             dynamic_variables: {
               pet_name: patient?.name,
-              owner_name: patient?.owner_name,
+              owner_name: recipientName ?? patient?.owner_name,
               species: patient?.species,
               breed: patient?.breed,
               discharge_summary: summaryContent,
@@ -378,9 +454,35 @@ export const approveRouter = createTRPCRouter({
       }
 
       if (!results.callScheduled && !results.emailScheduled) {
+        // Provide specific error message based on what failed
+        const issues: string[] = [];
+
+        if (input.phoneEnabled) {
+          if (!patient?.owner_phone) {
+            issues.push("No phone number on file");
+          } else if (!normalizedPhone) {
+            issues.push(`Invalid phone format: "${patient.owner_phone}"`);
+          }
+        }
+
+        if (input.emailEnabled) {
+          if (!patient?.owner_email) {
+            issues.push("No email address on file");
+          } else if (!normalizedEmail) {
+            issues.push(`Invalid email format: "${patient.owner_email}"`);
+          }
+        }
+
+        if (!input.phoneEnabled && !input.emailEnabled) {
+          issues.push("Both phone and email delivery are disabled");
+        }
+
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "No contact information available or both channels disabled",
+          message:
+            issues.length > 0
+              ? `Cannot schedule delivery: ${issues.join(", ")}`
+              : "No valid contact information available",
         });
       }
 

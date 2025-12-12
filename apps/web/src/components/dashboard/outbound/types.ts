@@ -367,6 +367,8 @@ export type PreviewTab = "call_script" | "email";
 export interface DeliveryToggles {
   phoneEnabled: boolean;
   emailEnabled: boolean;
+  /** When true, sends immediately instead of using scheduled delays (useful for test mode) */
+  immediateDelivery?: boolean;
 }
 
 // =============================================================================

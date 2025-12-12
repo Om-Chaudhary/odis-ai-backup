@@ -9,6 +9,11 @@ import { getClinicUserIds } from "@odis-ai/clinics/utils";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { getDischargeCaseStatsInput } from "../schemas";
 
+interface ScheduledCallMetadata {
+  test_call?: boolean;
+  [key: string]: unknown;
+}
+
 interface CaseRow {
   id: string;
   status: string | null;
@@ -17,6 +22,7 @@ interface CaseRow {
     id: string;
     status: string;
     scheduled_for: string | null;
+    metadata: ScheduledCallMetadata | null;
   }>;
   scheduled_discharge_emails: Array<{
     id: string;
@@ -31,6 +37,15 @@ export const getStatsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
 
+      // Get user's test mode setting
+      const { data: userSettings } = await ctx.supabase
+        .from("users")
+        .select("test_mode_enabled")
+        .eq("id", userId)
+        .single();
+
+      const testModeEnabled = userSettings?.test_mode_enabled ?? false;
+
       // Get all user IDs in the same clinic for shared view
       const clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
 
@@ -42,7 +57,7 @@ export const getStatsRouter = createTRPCRouter({
           id,
           status,
           discharge_summaries (id),
-          scheduled_discharge_calls (id, status, scheduled_for),
+          scheduled_discharge_calls (id, status, scheduled_for, metadata),
           scheduled_discharge_emails (id, status, scheduled_for)
         `,
         )
@@ -83,6 +98,12 @@ export const getStatsRouter = createTRPCRouter({
         const hasDischargeSummary = (c.discharge_summaries?.length ?? 0) > 0;
         const callData = c.scheduled_discharge_calls?.[0];
         const emailData = c.scheduled_discharge_emails?.[0];
+
+        // Skip test calls when test mode is disabled
+        const isTestCall = callData?.metadata?.test_call === true;
+        if (!testModeEnabled && isTestCall) {
+          continue;
+        }
 
         const callStatus = callData?.status ?? null;
         const emailStatus = emailData?.status ?? null;

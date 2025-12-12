@@ -21,11 +21,12 @@ import {
   Wand2,
   Info,
 } from "lucide-react";
+import { formatPhoneNumber } from "@odis-ai/utils/phone";
 import { format, formatDistanceToNow, isPast, parseISO } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
 import { Button } from "@odis-ai/ui/button";
-import { Switch } from "@odis-ai/ui/switch";
-import { Label } from "@odis-ai/ui/label";
+import { Checkbox } from "@odis-ai/ui/checkbox";
+import { Zap, Clock } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/ui/tabs";
 import { Badge } from "@odis-ai/ui/badge";
 import { Separator } from "@odis-ai/ui/separator";
@@ -82,6 +83,8 @@ interface OutboundCaseDetailProps {
   onSkip: () => void;
   onRetry?: () => void;
   isSubmitting: boolean;
+  /** When true, shows immediate delivery option */
+  testModeEnabled?: boolean;
 }
 
 /**
@@ -102,6 +105,7 @@ export function OutboundCaseDetail({
   onSkip,
   onRetry,
   isSubmitting,
+  testModeEnabled = false,
 }: OutboundCaseDetailProps) {
   const [activeTab, setActiveTab] = useState<PreviewTab>("call_script");
   const [communicationExpanded, setCommunicationExpanded] = useState(false);
@@ -166,23 +170,8 @@ export function OutboundCaseDetail({
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                {needsGeneration ? (
-                  <>
-                    <Wand2 className="h-4 w-4 text-amber-600" />
-                    AI Discharge Summary
-                    <Badge
-                      variant="outline"
-                      className="border-amber-300 text-xs text-amber-700"
-                    >
-                      Pending
-                    </Badge>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4 text-teal-600" />
-                    AI Discharge Summary
-                  </>
-                )}
+                <Sparkles className="h-4 w-4 text-teal-600" />
+                AI Discharge Summary
               </CardTitle>
             </div>
           </CardHeader>
@@ -311,6 +300,7 @@ export function OutboundCaseDetail({
             hasEmail={!!caseData.owner.email}
             phone={caseData.owner.phone}
             email={caseData.owner.email}
+            testModeEnabled={testModeEnabled}
           />
         )}
       </div>
@@ -410,7 +400,7 @@ function PatientHeader({ caseData }: { caseData: CaseData }) {
             className="flex items-center gap-1.5 text-teal-600 hover:text-teal-700 hover:underline"
           >
             <Phone className="h-4 w-4" />
-            <span>{caseData.owner.phone}</span>
+            <span>{formatPhoneNumber(caseData.owner.phone)}</span>
           </a>
         )}
         {caseData.owner.email && (
@@ -433,37 +423,12 @@ function PatientHeader({ caseData }: { caseData: CaseData }) {
  * Clinical Notes Section - Shows IDEXX or SOAP notes
  */
 function ClinicalNotesSection({
-  idexxNotes,
   soapNotes,
-  hasIdexxNotes,
 }: {
   idexxNotes: string | null;
   soapNotes: SoapNote[];
   hasIdexxNotes: boolean;
 }) {
-  if (hasIdexxNotes && idexxNotes) {
-    return (
-      <Card className="border-teal-200 bg-teal-50/50">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-sm font-medium">
-            <Stethoscope className="h-4 w-4 text-teal-600" />
-            IDEXX Neo Notes
-            <Badge variant="secondary" className="text-xs">
-              Clinical
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="max-h-64 overflow-auto rounded-md bg-white p-3">
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">
-              {idexxNotes}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   // Show SOAP notes
   if (soapNotes && soapNotes.length > 0) {
     const latestNote = soapNotes[0]!;
@@ -650,6 +615,7 @@ function ScheduleInfoCard({
 
 /**
  * Delivery toggle section with contact info display
+ * Uses checkboxes with card-based layout for better UX
  */
 function DeliveryToggleSection({
   toggles,
@@ -658,6 +624,7 @@ function DeliveryToggleSection({
   hasEmail,
   phone,
   email,
+  testModeEnabled = false,
 }: {
   toggles: DeliveryToggles;
   onChange: (toggles: DeliveryToggles) => void;
@@ -665,61 +632,160 @@ function DeliveryToggleSection({
   hasEmail: boolean;
   phone: string | null;
   email: string | null;
+  testModeEnabled?: boolean;
 }) {
   return (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium">Delivery Options</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-0.5">
-            <Label htmlFor="phone-toggle" className="flex items-center gap-2">
-              <Phone className="h-4 w-4" />
-              Phone Call
-            </Label>
-            {hasPhone ? (
-              <span className="text-muted-foreground text-xs">{phone}</span>
-            ) : (
-              <Badge variant="outline" className="w-fit text-xs">
-                No phone available
-              </Badge>
-            )}
-          </div>
-          <Switch
-            id="phone-toggle"
-            checked={toggles.phoneEnabled}
-            onCheckedChange={(checked) =>
-              onChange({ ...toggles, phoneEnabled: checked })
-            }
-            disabled={!hasPhone}
-          />
+      <CardContent className="space-y-3">
+        {/* Delivery Method Selection - Card-based checkboxes */}
+        <div className="grid grid-cols-2 gap-2">
+          {/* Phone Call Option */}
+          <label
+            htmlFor="phone-checkbox"
+            className={`relative flex cursor-pointer flex-col rounded-lg border-2 p-3 transition-all ${
+              toggles.phoneEnabled && hasPhone
+                ? "border-teal-500 bg-teal-50/50"
+                : hasPhone
+                  ? "border-gray-200 hover:border-gray-300"
+                  : "cursor-not-allowed border-gray-100 bg-gray-50 opacity-60"
+            }`}
+          >
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="phone-checkbox"
+                checked={toggles.phoneEnabled}
+                onCheckedChange={(checked) =>
+                  onChange({ ...toggles, phoneEnabled: checked as boolean })
+                }
+                disabled={!hasPhone}
+                className="mt-0.5"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <Phone className="h-3.5 w-3.5 text-teal-600" />
+                  <span className="text-sm font-medium">Call</span>
+                </div>
+                {hasPhone ? (
+                  <p className="text-muted-foreground mt-0.5 truncate text-xs">
+                    {formatPhoneNumber(phone)}
+                  </p>
+                ) : (
+                  <p className="mt-0.5 text-xs text-amber-600">No phone</p>
+                )}
+              </div>
+            </div>
+          </label>
+
+          {/* Email Option */}
+          <label
+            htmlFor="email-checkbox"
+            className={`relative flex cursor-pointer flex-col rounded-lg border-2 p-3 transition-all ${
+              toggles.emailEnabled && hasEmail
+                ? "border-teal-500 bg-teal-50/50"
+                : hasEmail
+                  ? "border-gray-200 hover:border-gray-300"
+                  : "cursor-not-allowed border-gray-100 bg-gray-50 opacity-60"
+            }`}
+          >
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="email-checkbox"
+                checked={toggles.emailEnabled}
+                onCheckedChange={(checked) =>
+                  onChange({ ...toggles, emailEnabled: checked as boolean })
+                }
+                disabled={!hasEmail}
+                className="mt-0.5"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <Mail className="h-3.5 w-3.5 text-teal-600" />
+                  <span className="text-sm font-medium">Email</span>
+                </div>
+                {hasEmail ? (
+                  <p className="text-muted-foreground mt-0.5 truncate text-xs">
+                    {email}
+                  </p>
+                ) : (
+                  <p className="mt-0.5 text-xs text-amber-600">No email</p>
+                )}
+              </div>
+            </div>
+          </label>
         </div>
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-0.5">
-            <Label htmlFor="email-toggle" className="flex items-center gap-2">
-              <Mail className="h-4 w-4" />
-              Email
-            </Label>
-            {hasEmail ? (
-              <span className="text-muted-foreground max-w-[200px] truncate text-xs">
-                {email}
-              </span>
-            ) : (
-              <Badge variant="outline" className="w-fit text-xs">
-                No email available
-              </Badge>
-            )}
+
+        {/* Timing Selection - Only show in test mode */}
+        {testModeEnabled && (
+          <div className="space-y-2 border-t pt-2">
+            <p className="text-xs font-medium text-amber-700">
+              Test Mode Timing
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {/* Scheduled (default) */}
+              <label
+                htmlFor="scheduled-timing"
+                className={`relative flex cursor-pointer items-center gap-2 rounded-lg border-2 p-2.5 transition-all ${
+                  !toggles.immediateDelivery
+                    ? "border-amber-500 bg-amber-50/50"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+              >
+                <input
+                  type="radio"
+                  id="scheduled-timing"
+                  name="delivery-timing"
+                  checked={!toggles.immediateDelivery}
+                  onChange={() =>
+                    onChange({ ...toggles, immediateDelivery: false })
+                  }
+                  className="sr-only"
+                />
+                <Clock
+                  className={`h-4 w-4 ${!toggles.immediateDelivery ? "text-amber-600" : "text-gray-400"}`}
+                />
+                <div>
+                  <span className="text-sm font-medium">Scheduled</span>
+                  <p className="text-muted-foreground text-xs">
+                    Use delay settings
+                  </p>
+                </div>
+              </label>
+
+              {/* Immediate */}
+              <label
+                htmlFor="immediate-timing"
+                className={`relative flex cursor-pointer items-center gap-2 rounded-lg border-2 p-2.5 transition-all ${
+                  toggles.immediateDelivery
+                    ? "border-amber-500 bg-amber-50/50"
+                    : "border-gray-200 hover:border-gray-300"
+                }`}
+              >
+                <input
+                  type="radio"
+                  id="immediate-timing"
+                  name="delivery-timing"
+                  checked={toggles.immediateDelivery}
+                  onChange={() =>
+                    onChange({ ...toggles, immediateDelivery: true })
+                  }
+                  className="sr-only"
+                />
+                <Zap
+                  className={`h-4 w-4 ${toggles.immediateDelivery ? "text-amber-600" : "text-gray-400"}`}
+                />
+                <div>
+                  <span className="text-sm font-medium">Immediate</span>
+                  <p className="text-muted-foreground text-xs">
+                    Send right away
+                  </p>
+                </div>
+              </label>
+            </div>
           </div>
-          <Switch
-            id="email-toggle"
-            checked={toggles.emailEnabled}
-            onCheckedChange={(checked) =>
-              onChange({ ...toggles, emailEnabled: checked })
-            }
-            disabled={!hasEmail}
-          />
-        </div>
+        )}
       </CardContent>
     </Card>
   );

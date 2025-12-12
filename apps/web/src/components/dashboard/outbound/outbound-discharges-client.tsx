@@ -4,6 +4,8 @@ import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { useQueryState, parseAsInteger } from "nuqs";
 import { format, parseISO, startOfDay, endOfDay } from "date-fns";
+import { TestTube, Settings } from "lucide-react";
+import Link from "next/link";
 import { api } from "~/trpc/client";
 
 import type {
@@ -21,6 +23,7 @@ import { OutboundCaseDetail } from "./outbound-case-detail";
 import { OutboundSplitLayout } from "./outbound-split-layout";
 import { OutboundPagination } from "./outbound-pagination";
 import { OutboundNeedsReviewTable } from "./outbound-needs-review-table";
+import { Button } from "@odis-ai/ui/button";
 
 // Type for transformed case from API
 interface TransformedCase {
@@ -146,6 +149,7 @@ export function OutboundDischargesClient() {
   const [deliveryToggles, setDeliveryToggles] = useState<DeliveryToggles>({
     phoneEnabled: true,
     emailEnabled: true,
+    immediateDelivery: false,
   });
   // Track which case is being scheduled from the table quick action
   const [schedulingCaseId, setSchedulingCaseId] = useState<string | null>(null);
@@ -181,6 +185,9 @@ export function OutboundDischargesClient() {
     startDate,
     endDate,
   });
+
+  // Fetch discharge settings (for test mode indicator)
+  const { data: settingsData } = api.cases.getDischargeSettings.useQuery();
 
   // Mutations
   const approveAndSchedule = api.outbound.approveAndSchedule.useMutation({
@@ -338,10 +345,11 @@ export function OutboundDischargesClient() {
 
   const handleSelectCase = useCallback((caseItem: TransformedCase) => {
     setSelectedCase(caseItem);
-    setDeliveryToggles({
+    setDeliveryToggles((prev) => ({
       phoneEnabled: !!caseItem.owner.phone,
       emailEnabled: !!caseItem.owner.email,
-    });
+      immediateDelivery: prev.immediateDelivery ?? false, // Preserve the immediate delivery setting
+    }));
   }, []);
 
   const handleClosePanel = useCallback(() => {
@@ -378,6 +386,7 @@ export function OutboundDischargesClient() {
       caseId: selectedCase.id,
       phoneEnabled: deliveryToggles.phoneEnabled,
       emailEnabled: deliveryToggles.emailEnabled,
+      immediateDelivery: deliveryToggles.immediateDelivery ?? false,
     });
   }, [selectedCase, deliveryToggles, approveAndSchedule]);
 
@@ -414,7 +423,7 @@ export function OutboundDischargesClient() {
 
   // Needs review handlers (placeholder - would need API endpoints)
   const handleUpdateContact = useCallback(
-    async (caseId: string, field: "phone" | "email", value: string) => {
+    async (_caseId: string, field: "phone" | "email", _value: string) => {
       // TODO: Implement API call to update contact
       toast.success(`Updated ${field} for case`);
       void refetch();
@@ -436,6 +445,43 @@ export function OutboundDischargesClient() {
 
   return (
     <div className="flex h-[calc(100vh-64px)] flex-col gap-2">
+      {/* Test Mode Banner */}
+      {settingsData?.testModeEnabled && (
+        <div className="mx-auto w-full max-w-[1800px] px-4">
+          <div className="flex items-center justify-between rounded-lg border-2 border-amber-500/50 bg-amber-50/80 px-4 py-3 shadow-sm backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/20">
+                <TestTube className="h-4 w-4 text-amber-700" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-amber-900">
+                  Test Mode Active
+                </h3>
+                <p className="text-xs text-amber-700">
+                  All calls/emails will be sent to:{" "}
+                  <span className="font-medium">
+                    {settingsData.testContactEmail ??
+                      settingsData.testContactPhone ??
+                      "test contact"}
+                  </span>
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="border-amber-600/30 text-amber-800 hover:bg-amber-100/50"
+            >
+              <Link href="/dashboard/settings">
+                <Settings className="mr-2 h-3.5 w-3.5" />
+                Settings
+              </Link>
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Compact Toolbar - Date + View Tabs + Status Filters + Search */}
       <PageToolbar className="rounded-lg border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 py-2 shadow-md shadow-teal-500/5 backdrop-blur-md">
         <OutboundFilterTabs
@@ -513,6 +559,7 @@ export function OutboundDischargesClient() {
                 onSkip={handleSkip}
                 onRetry={handleRetry}
                 isSubmitting={isSubmitting}
+                testModeEnabled={settingsData?.testModeEnabled ?? false}
               />
             }
           />
