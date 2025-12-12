@@ -189,12 +189,14 @@ export function OutboundCaseDetail({
 
         {/* Discharge Summary */}
         <Card
-          className={needsGeneration ? "border-amber-200 bg-amber-50/50" : ""}
+          className={
+            needsGeneration ? "border-amber-500/20 bg-amber-500/5" : ""
+          }
         >
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                <Sparkles className="h-4 w-4 text-teal-600" />
+                <Sparkles className="h-4 w-4 text-teal-600 dark:text-teal-400" />
                 AI Discharge Summary
               </CardTitle>
             </div>
@@ -331,7 +333,7 @@ export function OutboundCaseDetail({
 
       {/* Sticky Action Bar */}
       {(isEditable || showRetry) && (
-        <div className="bg-background border-t p-4">
+        <div className="bg-muted/10 border-t p-4">
           <div className="flex gap-3">
             <Button
               variant="outline"
@@ -342,7 +344,7 @@ export function OutboundCaseDetail({
               Skip
             </Button>
             <Button
-              className={`flex-1 ${needsGeneration ? "bg-amber-600 hover:bg-amber-700" : "bg-teal-600 hover:bg-teal-700"}`}
+              className={`flex-1 ${needsGeneration ? "bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600" : "bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600"}`}
               onClick={showRetry ? onRetry : onApprove}
               disabled={isSubmitting}
             >
@@ -381,7 +383,7 @@ function PatientHeader({ caseData }: { caseData: CaseData }) {
     : null;
 
   return (
-    <div className="space-y-3 p-4 pt-10">
+    <div className="bg-muted/20 space-y-3 p-4 pt-10">
       {/* Patient Name & Case Link */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
@@ -421,7 +423,7 @@ function PatientHeader({ caseData }: { caseData: CaseData }) {
         {caseData.owner.phone && (
           <a
             href={`tel:${caseData.owner.phone}`}
-            className="flex items-center gap-1.5 text-teal-600 hover:text-teal-700 hover:underline"
+            className="flex items-center gap-1.5 text-teal-600 hover:text-teal-700 hover:underline dark:text-teal-400"
           >
             <Phone className="h-4 w-4" />
             <span>{formatPhoneNumber(caseData.owner.phone)}</span>
@@ -430,7 +432,7 @@ function PatientHeader({ caseData }: { caseData: CaseData }) {
         {caseData.owner.email && (
           <a
             href={`mailto:${caseData.owner.email}`}
-            className="flex items-center gap-1.5 text-teal-600 hover:text-teal-700 hover:underline"
+            className="flex items-center gap-1.5 text-teal-600 hover:text-teal-700 hover:underline dark:text-teal-400"
           >
             <Mail className="h-4 w-4" />
             <span className="max-w-[200px] truncate">
@@ -457,10 +459,10 @@ function ClinicalNotesSection({
   if (soapNotes && soapNotes.length > 0) {
     const latestNote = soapNotes[0]!;
     return (
-      <Card className="border-blue-200 bg-blue-50/50">
+      <Card className="border-blue-500/20 bg-blue-500/5">
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-sm font-medium">
-            <Stethoscope className="h-4 w-4 text-blue-600" />
+            <Stethoscope className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             SOAP Notes
             <Badge variant="secondary" className="text-xs">
               Clinical
@@ -468,45 +470,55 @@ function ClinicalNotesSection({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="max-h-64 space-y-3 overflow-auto rounded-md bg-white p-3">
+          <div className="bg-background max-h-64 space-y-3 overflow-auto rounded-md p-3">
             {latestNote.subjective && (
               <div>
-                <p className="text-xs font-semibold text-blue-700 uppercase">
+                <p className="text-xs font-semibold text-blue-600 uppercase dark:text-blue-400">
                   Subjective
                 </p>
-                <p className="text-sm">{latestNote.subjective}</p>
+                <p className="text-muted-foreground text-sm">
+                  {latestNote.subjective}
+                </p>
               </div>
             )}
             {latestNote.objective && (
               <div>
-                <p className="text-xs font-semibold text-blue-700 uppercase">
+                <p className="text-xs font-semibold text-blue-600 uppercase dark:text-blue-400">
                   Objective
                 </p>
-                <p className="text-sm">{latestNote.objective}</p>
+                <p className="text-muted-foreground text-sm">
+                  {latestNote.objective}
+                </p>
               </div>
             )}
             {latestNote.assessment && (
               <div>
-                <p className="text-xs font-semibold text-blue-700 uppercase">
+                <p className="text-xs font-semibold text-blue-600 uppercase dark:text-blue-400">
                   Assessment
                 </p>
-                <p className="text-sm">{latestNote.assessment}</p>
+                <p className="text-muted-foreground text-sm">
+                  {latestNote.assessment}
+                </p>
               </div>
             )}
             {latestNote.plan && (
               <div>
-                <p className="text-xs font-semibold text-blue-700 uppercase">
+                <p className="text-xs font-semibold text-blue-600 uppercase dark:text-blue-400">
                   Plan
                 </p>
-                <p className="text-sm">{latestNote.plan}</p>
+                <p className="text-muted-foreground text-sm">
+                  {latestNote.plan}
+                </p>
               </div>
             )}
             {latestNote.clientInstructions && (
               <div>
-                <p className="text-xs font-semibold text-blue-700 uppercase">
+                <p className="text-xs font-semibold text-blue-600 uppercase dark:text-blue-400">
                   Client Instructions
                 </p>
-                <p className="text-sm">{latestNote.clientInstructions}</p>
+                <p className="text-muted-foreground text-sm">
+                  {latestNote.clientInstructions}
+                </p>
               </div>
             )}
           </div>
@@ -591,39 +603,43 @@ function ScheduleInfoCard({
   const callTime = formatScheduleTime(callScheduledFor);
 
   return (
-    <Card className="border-purple-200 bg-purple-50/50">
+    <Card className="border-violet-500/20 bg-violet-500/5">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-sm font-medium">
-          <Calendar className="h-4 w-4 text-purple-600" />
+          <Calendar className="h-4 w-4 text-violet-600 dark:text-violet-400" />
           Scheduled Communications
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         {emailTime && (
           <div className="flex items-start gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100">
-              <Mail className="h-4 w-4 text-purple-600" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-500/10">
+              <Mail className="h-4 w-4 text-violet-600 dark:text-violet-400" />
             </div>
             <div>
               <p className="text-sm font-medium">Email</p>
               <p className="text-muted-foreground text-xs">
                 {emailTime.absolute}
               </p>
-              <p className="text-xs text-purple-600">{emailTime.relative}</p>
+              <p className="text-xs text-violet-600 dark:text-violet-400">
+                {emailTime.relative}
+              </p>
             </div>
           </div>
         )}
         {callTime && (
           <div className="flex items-start gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100">
-              <Phone className="h-4 w-4 text-purple-600" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-500/10">
+              <Phone className="h-4 w-4 text-violet-600 dark:text-violet-400" />
             </div>
             <div>
               <p className="text-sm font-medium">Phone Call</p>
               <p className="text-muted-foreground text-xs">
                 {callTime.absolute}
               </p>
-              <p className="text-xs text-purple-600">{callTime.relative}</p>
+              <p className="text-xs text-violet-600 dark:text-violet-400">
+                {callTime.relative}
+              </p>
             </div>
           </div>
         )}
@@ -671,10 +687,10 @@ function DeliveryToggleSection({
             htmlFor="phone-checkbox"
             className={`relative flex cursor-pointer flex-col rounded-lg border-2 p-3 transition-all ${
               toggles.phoneEnabled && hasPhone
-                ? "border-teal-500 bg-teal-50/50"
+                ? "border-teal-500 bg-teal-500/10"
                 : hasPhone
-                  ? "border-gray-200 hover:border-gray-300"
-                  : "cursor-not-allowed border-gray-100 bg-gray-50 opacity-60"
+                  ? "border-border hover:border-border/80"
+                  : "border-border/50 bg-muted/50 cursor-not-allowed opacity-60"
             }`}
           >
             <div className="flex items-start gap-2">
@@ -689,7 +705,7 @@ function DeliveryToggleSection({
               />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <Phone className="h-3.5 w-3.5 text-teal-600" />
+                  <Phone className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
                   <span className="text-sm font-medium">Call</span>
                 </div>
                 {hasPhone ? (
@@ -697,7 +713,9 @@ function DeliveryToggleSection({
                     {formatPhoneNumber(phone)}
                   </p>
                 ) : (
-                  <p className="mt-0.5 text-xs text-amber-600">No phone</p>
+                  <p className="mt-0.5 text-xs text-amber-600 dark:text-amber-400">
+                    No phone
+                  </p>
                 )}
               </div>
             </div>
@@ -708,10 +726,10 @@ function DeliveryToggleSection({
             htmlFor="email-checkbox"
             className={`relative flex cursor-pointer flex-col rounded-lg border-2 p-3 transition-all ${
               toggles.emailEnabled && hasEmail
-                ? "border-teal-500 bg-teal-50/50"
+                ? "border-teal-500 bg-teal-500/10"
                 : hasEmail
-                  ? "border-gray-200 hover:border-gray-300"
-                  : "cursor-not-allowed border-gray-100 bg-gray-50 opacity-60"
+                  ? "border-border hover:border-border/80"
+                  : "border-border/50 bg-muted/50 cursor-not-allowed opacity-60"
             }`}
           >
             <div className="flex items-start gap-2">
@@ -726,7 +744,7 @@ function DeliveryToggleSection({
               />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <Mail className="h-3.5 w-3.5 text-teal-600" />
+                  <Mail className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
                   <span className="text-sm font-medium">Email</span>
                 </div>
                 {hasEmail ? (
@@ -734,7 +752,9 @@ function DeliveryToggleSection({
                     {email}
                   </p>
                 ) : (
-                  <p className="mt-0.5 text-xs text-amber-600">No email</p>
+                  <p className="mt-0.5 text-xs text-amber-600 dark:text-amber-400">
+                    No email
+                  </p>
                 )}
               </div>
             </div>
@@ -744,7 +764,7 @@ function DeliveryToggleSection({
         {/* Timing Selection - Only show in test mode */}
         {testModeEnabled && (
           <div className="space-y-2 border-t pt-2">
-            <p className="text-xs font-medium text-amber-700">
+            <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
               Test Mode Timing
             </p>
             <div className="grid grid-cols-2 gap-2">
@@ -753,8 +773,8 @@ function DeliveryToggleSection({
                 htmlFor="scheduled-timing"
                 className={`relative flex cursor-pointer items-center gap-2 rounded-lg border-2 p-2.5 transition-all ${
                   !toggles.immediateDelivery
-                    ? "border-amber-500 bg-amber-50/50"
-                    : "border-gray-200 hover:border-gray-300"
+                    ? "border-amber-500 bg-amber-500/10"
+                    : "border-border hover:border-border/80"
                 }`}
               >
                 <input
@@ -768,7 +788,7 @@ function DeliveryToggleSection({
                   className="sr-only"
                 />
                 <Clock
-                  className={`h-4 w-4 ${!toggles.immediateDelivery ? "text-amber-600" : "text-gray-400"}`}
+                  className={`h-4 w-4 ${!toggles.immediateDelivery ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}
                 />
                 <div>
                   <span className="text-sm font-medium">Scheduled</span>
@@ -783,8 +803,8 @@ function DeliveryToggleSection({
                 htmlFor="immediate-timing"
                 className={`relative flex cursor-pointer items-center gap-2 rounded-lg border-2 p-2.5 transition-all ${
                   toggles.immediateDelivery
-                    ? "border-amber-500 bg-amber-50/50"
-                    : "border-gray-200 hover:border-gray-300"
+                    ? "border-amber-500 bg-amber-500/10"
+                    : "border-border hover:border-border/80"
                 }`}
               >
                 <input
@@ -798,7 +818,7 @@ function DeliveryToggleSection({
                   className="sr-only"
                 />
                 <Zap
-                  className={`h-4 w-4 ${toggles.immediateDelivery ? "text-amber-600" : "text-gray-400"}`}
+                  className={`h-4 w-4 ${toggles.immediateDelivery ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}
                 />
                 <div>
                   <span className="text-sm font-medium">Immediate</span>
@@ -831,8 +851,8 @@ function OutcomeDetails({
     <Card
       className={
         status === "failed"
-          ? "border-red-200 bg-red-50"
-          : "border-green-200 bg-green-50"
+          ? "border-destructive/20 bg-destructive/5"
+          : "border-emerald-500/20 bg-emerald-500/5"
       }
     >
       <CardHeader className="pb-2">
@@ -842,11 +862,11 @@ function OutcomeDetails({
       </CardHeader>
       <CardContent className="space-y-2">
         {status === "failed" && call?.endedReason && (
-          <p className="text-sm text-red-700">Reason: {call.endedReason}</p>
+          <p className="text-destructive text-sm">Reason: {call.endedReason}</p>
         )}
         {status === "completed" && (
           <>
-            <p className="text-sm text-green-700">
+            <p className="text-sm text-emerald-700 dark:text-emerald-400">
               Communications were delivered successfully.
             </p>
             {call?.durationSeconds && (
@@ -868,9 +888,9 @@ function OutcomeDetails({
 function EmptyDetailState() {
   return (
     <div className="flex h-full flex-col items-center justify-center p-8 text-center">
-      <PawPrint className="text-muted-foreground/50 mb-4 h-12 w-12" />
+      <PawPrint className="mb-4 h-12 w-12 text-teal-600/30 dark:text-teal-400/30" />
       <p className="text-muted-foreground font-medium">No case selected</p>
-      <p className="text-muted-foreground text-sm">
+      <p className="text-muted-foreground/60 text-sm">
         Click a row in the table to view details
       </p>
     </div>
@@ -897,29 +917,32 @@ function UrgentReasonSection({ callId }: { callId: string }) {
   );
 
   return (
-    <Card className="border-orange-200 bg-orange-50/50">
+    <Card className="border-orange-500/20 bg-orange-500/5">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-sm font-medium">
-          <AlertTriangle className="h-4 w-4 text-orange-600" />
+          <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
           Needs Attention
-          <Badge variant="secondary" className="bg-orange-100 text-orange-700">
+          <Badge
+            variant="secondary"
+            className="bg-orange-500/10 text-orange-700 dark:text-orange-400"
+          >
             AI Flagged
           </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="flex items-center gap-2 text-orange-700">
+          <div className="flex items-center gap-2 text-orange-700 dark:text-orange-400">
             <Loader2 className="h-4 w-4 animate-spin" />
             <span className="text-sm">Analyzing transcript...</span>
           </div>
         ) : error ? (
-          <p className="text-sm text-red-600">
+          <p className="text-destructive text-sm">
             {error.message || "Failed to load urgent reason"}
           </p>
         ) : summaryData?.summary ? (
           <div className="space-y-2">
-            <p className="text-sm leading-relaxed text-orange-800">
+            <p className="text-sm leading-relaxed text-orange-800 dark:text-orange-400">
               {summaryData.summary}
             </p>
             {summaryData.cached && (
