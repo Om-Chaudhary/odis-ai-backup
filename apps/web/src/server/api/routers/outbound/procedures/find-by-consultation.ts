@@ -1,7 +1,12 @@
 /**
  * Find Case by Consultation ID Procedure
  *
- * Looks up a case by its IDEXX Neo consultation ID (stored in external_id).
+ * Looks up a case by its IDEXX Neo consultation ID or appointment ID.
+ * Searches in multiple locations:
+ * 1. external_id column (stored as "idexx-appt-{appointmentId}")
+ * 2. metadata->idexx->consultation_id (the IDEXX Neo consultation ID)
+ * 3. metadata->idexx->appointment_id (the IDEXX Neo appointment ID)
+ *
  * Used for deep linking from the Chrome extension.
  */
 
@@ -33,22 +38,80 @@ export const findByConsultationRouter = createTRPCRouter({
       // Get all user IDs in the same clinic for shared view
       const clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
 
-      // Look up case by external_id (IDEXX consultation ID)
-      const { data: caseData, error } = await ctx.supabase
+      // The consultation ID could match:
+      // 1. external_id column (stored as "idexx-appt-{appointmentId}")
+      // 2. metadata->idexx->consultation_id (the IDEXX Neo consultation ID)
+      // 3. metadata->idexx->appointment_id (the IDEXX Neo appointment ID)
+      const rawId = input.consultationId.replace(/^idexx-appt-/, "");
+      const prefixedId = `idexx-appt-${rawId}`;
+
+      // First try external_id (exact match with prefix)
+      const { data: caseByExternalId, error: extIdError } = await ctx.supabase
         .from("cases")
         .select("id, scheduled_at, created_at")
-        .eq("external_id", input.consultationId)
+        .eq("external_id", prefixedId)
         .in("user_id", clinicUserIds)
         .maybeSingle();
 
-      if (error) {
+      if (extIdError) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to find case: ${error.message}`,
+          message: `Failed to find case: ${extIdError.message}`,
         });
       }
 
-      if (!caseData) {
+      if (caseByExternalId) {
+        const caseDate =
+          caseByExternalId.scheduled_at ?? caseByExternalId.created_at;
+        return {
+          found: true,
+          caseId: caseByExternalId.id,
+          date: caseDate,
+        };
+      }
+
+      // If not found by external_id, try metadata->idexx->consultation_id
+      const { data: caseByConsultationId, error: consultError } =
+        await ctx.supabase
+          .from("cases")
+          .select("id, scheduled_at, created_at")
+          .eq("metadata->idexx->>consultation_id", rawId)
+          .in("user_id", clinicUserIds)
+          .maybeSingle();
+
+      if (consultError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to find case: ${consultError.message}`,
+        });
+      }
+
+      if (caseByConsultationId) {
+        const caseDate =
+          caseByConsultationId.scheduled_at ?? caseByConsultationId.created_at;
+        return {
+          found: true,
+          caseId: caseByConsultationId.id,
+          date: caseDate,
+        };
+      }
+
+      // If still not found, try metadata->idexx->appointment_id
+      const { data: caseByAppointmentId, error: apptError } = await ctx.supabase
+        .from("cases")
+        .select("id, scheduled_at, created_at")
+        .eq("metadata->idexx->>appointment_id", rawId)
+        .in("user_id", clinicUserIds)
+        .maybeSingle();
+
+      if (apptError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to find case: ${apptError.message}`,
+        });
+      }
+
+      if (!caseByAppointmentId) {
         return {
           found: false,
           caseId: null,
@@ -56,13 +119,12 @@ export const findByConsultationRouter = createTRPCRouter({
         };
       }
 
-      // Return the case ID and the date to navigate to
-      // Use scheduled_at (appointment date) if available, otherwise created_at
-      const caseDate = caseData.scheduled_at ?? caseData.created_at;
+      const caseDate =
+        caseByAppointmentId.scheduled_at ?? caseByAppointmentId.created_at;
 
       return {
         found: true,
-        caseId: caseData.id,
+        caseId: caseByAppointmentId.id,
         date: caseDate,
       };
     }),
