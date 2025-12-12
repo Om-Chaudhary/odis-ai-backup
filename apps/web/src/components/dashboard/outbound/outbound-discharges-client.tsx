@@ -150,13 +150,15 @@ export function OutboundDischargesClient() {
     return startOfDay(new Date());
   }, [dateStr]);
 
-  // Date range for API
+  // Date range for API - send YYYY-MM-DD strings, backend handles timezone conversion
   const { startDate, endDate } = useMemo(
     () => ({
-      startDate: startOfDay(currentDate).toISOString(),
-      endDate: endOfDay(currentDate).toISOString(),
+      // Send the same YYYY-MM-DD string for both start and end
+      // The backend's getLocalDayRange() will convert to proper UTC boundaries
+      startDate: dateStr ?? format(startOfDay(new Date()), "yyyy-MM-dd"),
+      endDate: dateStr ?? format(startOfDay(new Date()), "yyyy-MM-dd"),
     }),
-    [currentDate],
+    [dateStr],
   );
 
   // Local state

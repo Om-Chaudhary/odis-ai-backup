@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { api } from "~/trpc/client";
+import { format } from "date-fns";
 import { Card, CardContent } from "@odis-ai/ui/card";
 import {
   FolderOpen,
@@ -133,9 +134,13 @@ export function OverviewTab({
   const { startDate: calculatedStartDate, endDate: calculatedEndDate } =
     getDateRangeFromPreset((dateRange as DateRangePreset) ?? "all");
 
-  // Convert dates to ISO strings for API calls
-  const startDate = calculatedStartDate?.toISOString() ?? null;
-  const endDate = calculatedEndDate?.toISOString() ?? null;
+  // Convert dates to YYYY-MM-DD strings for API calls - backend handles timezone conversion
+  const startDate = calculatedStartDate
+    ? format(calculatedStartDate, "yyyy-MM-dd")
+    : null;
+  const endDate = calculatedEndDate
+    ? format(calculatedEndDate, "yyyy-MM-dd")
+    : null;
 
   const { data: stats, isLoading: statsLoading } =
     api.dashboard.getCaseStats.useQuery({ startDate, endDate });

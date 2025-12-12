@@ -97,13 +97,13 @@ export function InboundClient() {
     return startOfDay(new Date());
   }, [dateStr]);
 
-  // Date range for API
+  // Date range for API - send YYYY-MM-DD strings, backend handles timezone conversion
   const { startDate, endDate } = useMemo(
     () => ({
-      startDate: startOfDay(currentDate).toISOString(),
-      endDate: endOfDay(currentDate).toISOString(),
+      startDate: dateStr ?? format(startOfDay(new Date()), "yyyy-MM-dd"),
+      endDate: dateStr ?? format(startOfDay(new Date()), "yyyy-MM-dd"),
     }),
-    [currentDate],
+    [dateStr],
   );
 
   // Local state

@@ -7,6 +7,7 @@
 
 import { TRPCError } from "@trpc/server";
 import { getClinicUserIds } from "@odis-ai/clinics/utils";
+import { getLocalDayRange, DEFAULT_TIMEZONE } from "@odis-ai/utils/timezone";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { listDischargeCasesInput, type DischargeCaseStatus } from "../schemas";
 
@@ -274,15 +275,25 @@ export const listCasesRouter = createTRPCRouter({
         .eq("status", "completed") // Only show completed cases ready for discharge
         .order("created_at", { ascending: false });
 
-      // Apply date filters
-      if (input.startDate) {
-        query = query.gte("created_at", input.startDate);
-      }
-
-      if (input.endDate) {
-        const endDate = new Date(input.endDate);
-        endDate.setHours(23, 59, 59, 999);
-        query = query.lte("created_at", endDate.toISOString());
+      // Apply date filters with proper timezone-aware boundaries
+      if (input.startDate && input.endDate) {
+        // Both dates provided - use timezone-aware range
+        const startRange = getLocalDayRange(input.startDate, DEFAULT_TIMEZONE);
+        const endRange = getLocalDayRange(input.endDate, DEFAULT_TIMEZONE);
+        query = query
+          .gte("created_at", startRange.startISO)
+          .lte("created_at", endRange.endISO);
+      } else if (input.startDate) {
+        // Only start date - get timezone-aware start of day
+        const { startISO } = getLocalDayRange(
+          input.startDate,
+          DEFAULT_TIMEZONE,
+        );
+        query = query.gte("created_at", startISO);
+      } else if (input.endDate) {
+        // Only end date - get timezone-aware end of day
+        const { endISO } = getLocalDayRange(input.endDate, DEFAULT_TIMEZONE);
+        query = query.lte("created_at", endISO);
       }
 
       const { data: cases, error } = await query;

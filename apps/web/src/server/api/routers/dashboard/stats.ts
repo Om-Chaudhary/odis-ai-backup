@@ -7,6 +7,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { startOfMonth, startOfWeek } from "date-fns";
+import { getLocalDayRange, DEFAULT_TIMEZONE } from "@odis-ai/utils/timezone";
 import {
   type CaseWithRelations,
   hasDischargeSummary,
@@ -140,8 +141,22 @@ export const statsRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
-      const startDate = input.startDate ? new Date(input.startDate) : undefined;
-      const endDate = input.endDate ? new Date(input.endDate) : undefined;
+
+      // Get timezone-aware date boundaries for filtering
+      let startIso: string | undefined;
+      let endIso: string | undefined;
+
+      if (input.startDate) {
+        const { startISO } = getLocalDayRange(
+          input.startDate,
+          DEFAULT_TIMEZONE,
+        );
+        startIso = startISO;
+      }
+      if (input.endDate) {
+        const { endISO } = getLocalDayRange(input.endDate, DEFAULT_TIMEZONE);
+        endIso = endISO;
+      }
 
       // Helper function to get date boundaries
       const getDateBoundaries = () => {
@@ -168,13 +183,11 @@ export const statsRouter = createTRPCRouter({
         )
         .eq("user_id", userId);
 
-      if (startDate) {
-        casesQuery = casesQuery.gte("created_at", startDate.toISOString());
+      if (startIso) {
+        casesQuery = casesQuery.gte("created_at", startIso);
       }
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        casesQuery = casesQuery.lte("created_at", end.toISOString());
+      if (endIso) {
+        casesQuery = casesQuery.lte("created_at", endIso);
       }
 
       const { data: allCases } = await casesQuery;
@@ -218,16 +231,11 @@ export const statsRouter = createTRPCRouter({
         })
         .eq("cases.user_id", userId);
 
-      if (startDate) {
-        soapNotesQuery = soapNotesQuery.gte(
-          "created_at",
-          startDate.toISOString(),
-        );
+      if (startIso) {
+        soapNotesQuery = soapNotesQuery.gte("created_at", startIso);
       }
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        soapNotesQuery = soapNotesQuery.lte("created_at", end.toISOString());
+      if (endIso) {
+        soapNotesQuery = soapNotesQuery.lte("created_at", endIso);
       }
 
       const { count: soapNotesCount } = await soapNotesQuery;
@@ -238,18 +246,16 @@ export const statsRouter = createTRPCRouter({
         .select("id", { count: "exact", head: true })
         .eq("user_id", userId);
 
-      if (startDate) {
+      if (startIso) {
         dischargeSummariesQuery = dischargeSummariesQuery.gte(
           "created_at",
-          startDate.toISOString(),
+          startIso,
         );
       }
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
+      if (endIso) {
         dischargeSummariesQuery = dischargeSummariesQuery.lte(
           "created_at",
-          end.toISOString(),
+          endIso,
         );
       }
 
@@ -262,13 +268,11 @@ export const statsRouter = createTRPCRouter({
         .eq("user_id", userId)
         .eq("status", "completed");
 
-      if (startDate) {
-        callsQuery = callsQuery.gte("created_at", startDate.toISOString());
+      if (startIso) {
+        callsQuery = callsQuery.gte("created_at", startIso);
       }
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        callsQuery = callsQuery.lte("created_at", end.toISOString());
+      if (endIso) {
+        callsQuery = callsQuery.lte("created_at", endIso);
       }
 
       const { count: callsCompletedCount } = await callsQuery;
@@ -280,13 +284,11 @@ export const statsRouter = createTRPCRouter({
         .eq("user_id", userId)
         .eq("status", "sent");
 
-      if (startDate) {
-        emailsQuery = emailsQuery.gte("created_at", startDate.toISOString());
+      if (startIso) {
+        emailsQuery = emailsQuery.gte("created_at", startIso);
       }
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        emailsQuery = emailsQuery.lte("created_at", end.toISOString());
+      if (endIso) {
+        emailsQuery = emailsQuery.lte("created_at", endIso);
       }
 
       const { count: emailsSentCount } = await emailsQuery;
