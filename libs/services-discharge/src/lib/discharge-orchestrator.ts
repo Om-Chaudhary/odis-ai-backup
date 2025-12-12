@@ -525,6 +525,40 @@ export class DischargeOrchestrator {
       );
     }
 
+    // CHECK FOR PRE-EXTRACTED ENTITIES (from ingest-time)
+    // This avoids redundant AI calls for IDEXX cases that already have entities
+    if (caseData.entity_extraction) {
+      const preExtractedEntities =
+        caseData.entity_extraction as unknown as NormalizedEntities;
+
+      // Validate that the pre-extracted entities have minimum required data
+      if (
+        preExtractedEntities.patient?.name &&
+        preExtractedEntities.confidence?.overall
+      ) {
+        console.log(
+          "[ORCHESTRATOR] Using pre-extracted entities from ingest (skipping AI extraction)",
+          {
+            caseId,
+            patientName: preExtractedEntities.patient.name,
+            confidence: preExtractedEntities.confidence.overall,
+            source: "existing",
+          },
+        );
+
+        return {
+          step: "extractEntities",
+          status: "completed",
+          duration: Date.now() - startTime,
+          data: {
+            caseId,
+            entities: preExtractedEntities,
+            source: "existing", // Pre-extracted at ingest-time
+          } as ExtractEntitiesResult,
+        };
+      }
+    }
+
     // Determine the text source for entity extraction
     let textToExtract: string | null = null;
     let extractionSource: "transcription" | "idexx_consultation_notes" =
