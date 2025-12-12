@@ -16,12 +16,17 @@ export const metadata = {
  */
 export default function OutboundDischargePage() {
   return (
-    <div className="flex h-full flex-col px-6 py-4">
+    <div className="flex h-full flex-col">
       <OutboundErrorBoundary>
         <Suspense
           fallback={
             <div className="flex h-[50vh] items-center justify-center">
-              <Loader2 className="text-primary h-8 w-8 animate-spin" />
+              <div className="flex flex-col items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-100">
+                  <Loader2 className="h-6 w-6 animate-spin text-teal-600" />
+                </div>
+                <p className="text-sm text-slate-500">Loading discharges...</p>
+              </div>
             </div>
           }
         >

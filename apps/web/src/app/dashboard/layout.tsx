@@ -13,6 +13,7 @@ import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { AUTH_PARAMS } from "@odis-ai/constants/auth";
 import { getClinicByUserId } from "@odis-ai/clinics/utils";
+import { Toaster } from "sonner";
 
 export const metadata: Metadata = {
   title: "Dashboard | Odis AI",
@@ -137,6 +138,7 @@ export default async function DashboardLayout({
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
       </SidebarInset>
+      <Toaster richColors />
     </SidebarProvider>
   );
 }
