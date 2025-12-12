@@ -30,6 +30,7 @@ import {
 import {
   createInboundCallRecord,
   fetchExistingCall,
+  type ExistingCallRecord,
 } from "./inbound-call-helpers";
 import type { VapiCallResponse } from "../../client";
 import {
@@ -37,6 +38,7 @@ import {
   mapInboundCallToUser,
 } from "../../inbound-calls";
 import { scheduleCallExecution } from "@odis-ai/qstash/client";
+import { generateUrgentSummary } from "@odis-ai/ai";
 
 const logger = loggers.webhook.child("end-of-call-report");
 
@@ -112,7 +114,7 @@ export async function handleEndOfCallReport(
 async function handleInboundCallEnd(
   call: VapiWebhookCall,
   message: EndOfCallReportMessage,
-  existingCall: { id: string; metadata: unknown },
+  existingCall: ExistingCallRecord,
   supabase: SupabaseClient,
 ): Promise<void> {
   // Cast to VapiCallResponse for compatibility with existing functions
@@ -180,7 +182,7 @@ async function handleInboundCallEnd(
 async function handleOutboundCallEnd(
   call: VapiWebhookCall,
   message: EndOfCallReportMessage,
-  existingCall: { id: string; metadata: unknown },
+  existingCall: ExistingCallRecord,
   supabase: SupabaseClient,
 ): Promise<void> {
   // Calculate duration
@@ -202,6 +204,9 @@ async function handleOutboundCallEnd(
   // Extract sentiment
   const userSentiment = extractSentiment(analysis);
 
+  // Get structured data from analysis or artifact
+  const structuredData = analysis.structuredData ?? artifact.structuredOutputs;
+
   // Prepare update data
   const updateData: Record<string, unknown> = {
     status: finalStatus,
@@ -216,7 +221,7 @@ async function handleOutboundCallEnd(
     call_analysis: analysis,
     summary: analysis.summary,
     success_evaluation: analysis.successEvaluation,
-    structured_data: analysis.structuredData ?? artifact.structuredOutputs,
+    structured_data: structuredData,
     user_sentiment: userSentiment,
     cost,
   };
@@ -234,6 +239,12 @@ async function handleOutboundCallEnd(
     hasSummary: !!analysis.summary,
     userSentiment,
   });
+
+  // Handle urgent case detection
+  const isUrgentCase = structuredData?.urgent_case === true;
+  if (isUrgentCase) {
+    await handleUrgentCase(call, existingCall, updateData, supabase);
+  }
 
   // Handle retry logic for failed calls
   if (finalStatus === "failed" && shouldRetry(call.endedReason, metadata)) {
@@ -254,11 +265,85 @@ async function handleOutboundCallEnd(
 }
 
 /**
+ * Handle urgent case detection
+ *
+ * When VAPI structured output flags a case as urgent:
+ * 1. Generate AI summary explaining why it's urgent
+ * 2. Update the parent case's is_urgent flag
+ */
+async function handleUrgentCase(
+  call: VapiWebhookCall,
+  existingCall: ExistingCallRecord,
+  updateData: Record<string, unknown>,
+  supabase: SupabaseClient,
+): Promise<void> {
+  logger.info("Urgent case detected", {
+    callId: call.id,
+    dbId: existingCall.id,
+    caseId: existingCall.case_id,
+    hasTranscript: !!call.transcript,
+  });
+
+  // Generate urgent summary if transcript is available
+  if (call.transcript && call.transcript.trim().length > 0) {
+    try {
+      const urgentSummary = await generateUrgentSummary({
+        transcript: call.transcript,
+      });
+
+      updateData.urgent_reason_summary = urgentSummary;
+
+      logger.info("Generated urgent case summary", {
+        callId: call.id,
+        dbId: existingCall.id,
+        summaryLength: urgentSummary.length,
+      });
+    } catch (summaryError) {
+      logger.error("Failed to generate urgent summary", {
+        callId: call.id,
+        dbId: existingCall.id,
+        error:
+          summaryError instanceof Error
+            ? summaryError.message
+            : String(summaryError),
+      });
+      // Continue without summary - the UI can still lazy-load it
+    }
+  }
+
+  // Update parent case's is_urgent flag if case_id is available
+  if (existingCall.case_id) {
+    const { error: caseUpdateError } = await supabase
+      .from("cases")
+      .update({ is_urgent: true })
+      .eq("id", existingCall.case_id);
+
+    if (caseUpdateError) {
+      logger.error("Failed to update case is_urgent flag", {
+        callId: call.id,
+        caseId: existingCall.case_id,
+        error: caseUpdateError.message,
+      });
+    } else {
+      logger.info("Updated case is_urgent flag", {
+        callId: call.id,
+        caseId: existingCall.case_id,
+      });
+    }
+  } else {
+    logger.warn("Urgent case detected but no case_id available", {
+      callId: call.id,
+      dbId: existingCall.id,
+    });
+  }
+}
+
+/**
  * Handle retry logic for failed calls
  */
 async function handleRetryLogic(
   call: VapiWebhookCall,
-  existingCall: { id: string; metadata: unknown },
+  existingCall: ExistingCallRecord,
   updateData: Record<string, unknown>,
   metadata: Record<string, unknown>,
   _supabase: SupabaseClient,

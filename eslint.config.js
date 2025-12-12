@@ -203,6 +203,7 @@ export default tseslint.config(
                 "scope:qstash",
                 "scope:clinics",
                 "scope:env",
+                "scope:ai",
               ],
             },
             {
