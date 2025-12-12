@@ -67,6 +67,8 @@ interface TransformedCase {
     customerPhone: string | null;
     structuredData?: { urgent_case?: boolean; [key: string]: unknown } | null;
     urgentReasonSummary?: string | null;
+    recordingUrl?: string | null;
+    stereoRecordingUrl?: string | null;
   } | null;
   scheduledEmail: unknown;
   timestamp: string;

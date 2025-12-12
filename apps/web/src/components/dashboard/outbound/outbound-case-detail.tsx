@@ -23,8 +23,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   XCircle,
-  Volume2,
-  Pause,
 } from "lucide-react";
 import { api } from "~/trpc/client";
 import { formatPhoneNumber } from "@odis-ai/utils/phone";
@@ -48,6 +46,7 @@ import type {
   SoapNote,
 } from "./types";
 import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
+import { CallRecordingPlayer } from "./call-recording-player";
 import {
   Pill,
   Activity,
@@ -72,6 +71,8 @@ interface ScheduledCallData {
   customerPhone: string | null;
   structuredData?: { urgent_case?: boolean; [key: string]: unknown } | null;
   urgentReasonSummary?: string | null;
+  recordingUrl?: string | null;
+  stereoRecordingUrl?: string | null;
 }
 
 // Case data interface for the detail panel
@@ -143,7 +144,8 @@ export function OutboundCaseDetail({
 }: OutboundCaseDetailProps) {
   const [activeTab, setActiveTab] = useState<PreviewTab>("call_script");
   const [communicationExpanded, setCommunicationExpanded] = useState(false);
-  const [dischargeSummaryExpanded, setDischargeSummaryExpanded] = useState(false);
+  const [dischargeSummaryExpanded, setDischargeSummaryExpanded] =
+    useState(false);
 
   if (!caseData) {
     return <EmptyDetailState />;
@@ -157,7 +159,8 @@ export function OutboundCaseDetail({
   const showScheduleInfo = caseData.status === "scheduled";
 
   // Check if case has been sent (completed or failed)
-  const isSentCase = caseData.status === "completed" || caseData.status === "failed";
+  const isSentCase =
+    caseData.status === "completed" || caseData.status === "failed";
 
   // Check if discharge summary needs to be generated
   const hasStructuredContent = Boolean(caseData.structuredContent?.patientName);
@@ -263,10 +266,8 @@ export function OutboundCaseDetail({
                 testModeEnabled={testModeEnabled}
               />
             )}
-
           </>
         )}
-
       </div>
 
       {/* Sticky Action Bar */}
@@ -321,7 +322,8 @@ function PatientHeader({ caseData }: { caseData: CaseData }) {
     : null;
 
   // Check if case has been sent to hide the case type badge
-  const isSentCase = caseData.status === "completed" || caseData.status === "failed";
+  const isSentCase =
+    caseData.status === "completed" || caseData.status === "failed";
 
   return (
     <div className="bg-muted/20 space-y-3 p-4 pt-10">
@@ -1161,9 +1163,11 @@ function DeliveryCompleteCard({
       const transcript = call.transcript;
       if (transcript.length > 200) {
         // Generate a simple summary from transcript
-        const sentences = transcript.split('.').filter(s => s.trim().length > 0);
-        const firstSentence = sentences[0]?.trim() + '.';
-        const lastSentence = sentences[sentences.length - 1]?.trim() + '.';
+        const sentences = transcript
+          .split(".")
+          .filter((s) => s.trim().length > 0);
+        const firstSentence = sentences[0]?.trim() + ".";
+        const lastSentence = sentences[sentences.length - 1]?.trim() + ".";
         return `${firstSentence} Call completed successfully.`;
       }
       return "Call completed successfully with owner. Discharge instructions provided.";
@@ -1197,7 +1201,7 @@ function DeliveryCompleteCard({
               {getDeliverySummary()}
             </p>
             {call?.endedReason && (
-              <p className="text-red-600 dark:text-red-400 text-sm">
+              <p className="text-sm text-red-600 dark:text-red-400">
                 Reason: {call.endedReason}
               </p>
             )}
@@ -1210,89 +1214,98 @@ function DeliveryCompleteCard({
             <div className="grid gap-3 sm:grid-cols-2">
               {/* Phone Call status - moved to left */}
               <div className="flex items-center gap-2">
-                <div className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                  phoneStatus === "sent"
-                    ? "bg-emerald-100"
-                    : phoneStatus === "failed"
-                    ? "bg-red-100"
-                    : !hasOwnerPhone
-                    ? "bg-slate-100"
-                    : "bg-slate-100"
-                }`}>
-                  <Phone className={`h-4 w-4 ${
+                <div
+                  className={`flex h-8 w-8 items-center justify-center rounded-full ${
                     phoneStatus === "sent"
-                      ? "text-emerald-600"
+                      ? "bg-emerald-100"
                       : phoneStatus === "failed"
-                      ? "text-red-600"
-                      : "text-slate-500"
-                  }`} />
+                        ? "bg-red-100"
+                        : !hasOwnerPhone
+                          ? "bg-slate-100"
+                          : "bg-slate-100"
+                  }`}
+                >
+                  <Phone
+                    className={`h-4 w-4 ${
+                      phoneStatus === "sent"
+                        ? "text-emerald-600"
+                        : phoneStatus === "failed"
+                          ? "text-red-600"
+                          : "text-slate-500"
+                    }`}
+                  />
                 </div>
                 <div>
                   <p className="text-sm font-medium">Phone Call</p>
-                  <p className={`text-xs ${
-                    phoneStatus === "sent"
-                      ? "text-emerald-600"
-                      : phoneStatus === "failed"
-                      ? "text-red-600"
-                      : "text-slate-500"
-                  }`}>
-                    {phoneStatus === "sent" && call?.durationSeconds ? (
-                      `${Math.floor(call.durationSeconds / 60)}m ${call.durationSeconds % 60}s`
-                    ) : phoneStatus === "sent" ? (
-                      "Completed"
-                    ) : phoneStatus === "failed" ? (
-                      "Failed"
-                    ) : !hasOwnerPhone ? (
-                      "No phone available"
-                    ) : phoneStatus === "not_applicable" ? (
-                      "Not applicable"
-                    ) : (
-                      "Not sent"
-                    )}
+                  <p
+                    className={`text-xs ${
+                      phoneStatus === "sent"
+                        ? "text-emerald-600"
+                        : phoneStatus === "failed"
+                          ? "text-red-600"
+                          : "text-slate-500"
+                    }`}
+                  >
+                    {phoneStatus === "sent" && call?.durationSeconds
+                      ? `${Math.floor(call.durationSeconds / 60)}m ${call.durationSeconds % 60}s`
+                      : phoneStatus === "sent"
+                        ? "Completed"
+                        : phoneStatus === "failed"
+                          ? "Failed"
+                          : !hasOwnerPhone
+                            ? "No phone available"
+                            : phoneStatus === "not_applicable"
+                              ? "Not applicable"
+                              : "Not sent"}
                   </p>
                 </div>
               </div>
 
               {/* Email status - moved to right */}
               <div className="flex items-center gap-2">
-                <div className={`flex h-8 w-8 items-center justify-center rounded-full ${
-                  emailStatus === "sent"
-                    ? "bg-emerald-100"
-                    : emailStatus === "failed"
-                    ? "bg-red-100"
-                    : !hasOwnerEmail
-                    ? "bg-slate-100"
-                    : "bg-slate-100"
-                }`}>
-                  <Mail className={`h-4 w-4 ${
+                <div
+                  className={`flex h-8 w-8 items-center justify-center rounded-full ${
                     emailStatus === "sent"
-                      ? "text-emerald-600"
+                      ? "bg-emerald-100"
                       : emailStatus === "failed"
-                      ? "text-red-600"
-                      : "text-slate-500"
-                  }`} />
+                        ? "bg-red-100"
+                        : !hasOwnerEmail
+                          ? "bg-slate-100"
+                          : "bg-slate-100"
+                  }`}
+                >
+                  <Mail
+                    className={`h-4 w-4 ${
+                      emailStatus === "sent"
+                        ? "text-emerald-600"
+                        : emailStatus === "failed"
+                          ? "text-red-600"
+                          : "text-slate-500"
+                    }`}
+                  />
                 </div>
                 <div>
                   <p className="text-sm font-medium">Email</p>
-                  <p className={`text-xs ${
-                    emailStatus === "sent"
-                      ? "text-emerald-600"
-                      : emailStatus === "failed"
-                      ? "text-red-600"
-                      : !hasOwnerEmail
-                      ? "text-slate-500"
-                      : "text-slate-500"
-                  }`}>
+                  <p
+                    className={`text-xs ${
+                      emailStatus === "sent"
+                        ? "text-emerald-600"
+                        : emailStatus === "failed"
+                          ? "text-red-600"
+                          : !hasOwnerEmail
+                            ? "text-slate-500"
+                            : "text-slate-500"
+                    }`}
+                  >
                     {emailStatus === "sent"
                       ? "Sent"
                       : emailStatus === "failed"
-                      ? "Failed"
-                      : !hasOwnerEmail
-                      ? "No email available"
-                      : emailStatus === "not_applicable"
-                      ? "Not applicable"
-                      : "Not sent"
-                    }
+                        ? "Failed"
+                        : !hasOwnerEmail
+                          ? "No email available"
+                          : emailStatus === "not_applicable"
+                            ? "Not applicable"
+                            : "Not sent"}
                   </p>
                 </div>
               </div>
@@ -1683,7 +1696,8 @@ function CommunicationSummarySection({
 
   // Determine tab labels
   const getCallTabLabel = () => {
-    if (phoneWasSent && caseData.scheduledCall?.transcript) return "Call Transcript";
+    if (phoneWasSent && caseData.scheduledCall?.transcript)
+      return "Call Transcript";
     if (phoneWasSent) return "Call Sent";
     if (phoneCanBeSent) return "Call Script";
     return "Call Script";
@@ -1751,40 +1765,15 @@ function CallTabContent({
   phoneCanBeSent: boolean;
   hasOwnerPhone: boolean;
 }) {
-  // If phone was sent and we have transcript, show full transcript with audio
-  if (phoneWasSent && caseData.scheduledCall?.transcript) {
+  // If phone was sent, show audio player with transcript
+  if (phoneWasSent && caseData.scheduledCall) {
     return (
-      <CallTranscriptDisplay
+      <CallRecordingPlayer
+        recordingUrl={caseData.scheduledCall.recordingUrl ?? null}
         transcript={caseData.scheduledCall.transcript}
-        callData={caseData.scheduledCall}
+        durationSeconds={caseData.scheduledCall.durationSeconds}
+        summary={caseData.scheduledCall.summary}
       />
-    );
-  }
-
-  // If phone was sent but no transcript, show sent confirmation
-  if (phoneWasSent) {
-    return (
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-sm font-medium">
-            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-            Call Completed
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-emerald-50/50 rounded-md p-3">
-            <p className="text-sm text-emerald-700">
-              Phone call was completed successfully.
-            </p>
-            {caseData.scheduledCall?.durationSeconds && (
-              <p className="text-xs text-emerald-600 mt-1">
-                Duration: {Math.floor(caseData.scheduledCall.durationSeconds / 60)}m{" "}
-                {caseData.scheduledCall.durationSeconds % 60}s
-              </p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
     );
   }
 
@@ -1829,7 +1818,7 @@ function CallTabContent({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="bg-slate-50 rounded-md p-3">
+          <div className="rounded-md bg-slate-50 p-3">
             <p className="text-sm text-slate-600">
               No phone number available for this owner.
             </p>
@@ -1891,7 +1880,9 @@ function EmailTabContent({
           ) : (
             <div className="bg-muted/50 max-h-96 overflow-auto rounded-md p-3">
               <p className="text-sm whitespace-pre-wrap">
-                {caseData.emailContent || caseData.dischargeSummary || "No email content available."}
+                {caseData.emailContent ||
+                  caseData.dischargeSummary ||
+                  "No email content available."}
               </p>
             </div>
           )}
@@ -1941,7 +1932,7 @@ function EmailTabContent({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="bg-slate-50 rounded-md p-3">
+          <div className="rounded-md bg-slate-50 p-3">
             <p className="text-sm text-slate-600">
               No email address available for this owner.
             </p>
@@ -1968,202 +1959,14 @@ function EmailTabContent({
         ) : (
           <div className="bg-muted/50 max-h-96 overflow-auto rounded-md p-3">
             <p className="text-sm whitespace-pre-wrap">
-              {caseData.emailContent || caseData.dischargeSummary || "No email content available."}
+              {caseData.emailContent ||
+                caseData.dischargeSummary ||
+                "No email content available."}
             </p>
           </div>
         )}
       </CardContent>
     </Card>
-  );
-}
-
-/**
- * Call Recording Playback Component
- */
-function CallTranscriptDisplay({
-  transcript,
-  callData,
-}: {
-  transcript: string;
-  callData: ScheduledCallData;
-}) {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(callData.durationSeconds || 0);
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-    // TODO: Implement actual audio playback
-  };
-
-  const handleSeek = (value: number[]) => {
-    setCurrentTime(value[0]!);
-    // TODO: Implement actual audio seeking
-  };
-
-  return (
-    <div className="space-y-4">
-      {/* Audio Controls */}
-      <Card className="bg-slate-50/50 dark:bg-slate-900/30">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-sm font-medium">
-            <Phone className="h-4 w-4 text-slate-500" />
-            Call Recording
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-4">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePlayPause}
-              className="h-10 w-10 rounded-full p-0"
-            >
-              {isPlaying ? (
-                <Pause className="h-4 w-4" />
-              ) : (
-                <Play className="h-4 w-4" />
-              )}
-            </Button>
-
-            <div className="flex-1 space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">{formatTime(currentTime)}</span>
-                <span className="text-muted-foreground">{formatTime(duration)}</span>
-              </div>
-
-              {/* Progress slider */}
-              <div className="relative">
-                <input
-                  type="range"
-                  min={0}
-                  max={duration}
-                  value={currentTime}
-                  onChange={(e) => handleSeek([parseInt(e.target.value)])}
-                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider"
-                />
-              </div>
-            </div>
-
-            <Volume2 className="h-4 w-4 text-muted-foreground" />
-          </div>
-
-          <div className="mt-2 text-xs text-muted-foreground">
-            Call Duration: {formatTime(duration)}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Transcript */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-sm font-medium">
-            <FileText className="h-4 w-4 text-slate-500" />
-            Call Transcript
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-muted/50 max-h-80 overflow-auto rounded-md p-4">
-            <TranscriptDisplay transcript={transcript} />
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-/**
- * Transcript Display Component with improved formatting
- */
-function TranscriptDisplay({ transcript }: { transcript: string }) {
-  // Parse the transcript and format it with color coding and spacing
-  const parseTranscript = (text: string) => {
-    const lines = text.split('\n').filter(line => line.trim().length > 0);
-    const parsedLines: { speaker: 'AI' | 'User' | 'Other'; text: string }[] = [];
-
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-      if (trimmedLine.startsWith('AI:')) {
-        parsedLines.push({
-          speaker: 'AI',
-          text: trimmedLine.substring(3).trim()
-        });
-      } else if (trimmedLine.startsWith('User:')) {
-        parsedLines.push({
-          speaker: 'User',
-          text: trimmedLine.substring(5).trim()
-        });
-      } else if (trimmedLine.includes(': ')) {
-        // Handle other speaker formats like "Assistant: " or "Customer: "
-        const colonIndex = trimmedLine.indexOf(': ');
-        const speaker = trimmedLine.substring(0, colonIndex).trim();
-        const text = trimmedLine.substring(colonIndex + 2).trim();
-
-        // Map common speaker names to our standard format
-        if (speaker.toLowerCase().includes('ai') ||
-            speaker.toLowerCase().includes('assistant') ||
-            speaker.toLowerCase().includes('bot')) {
-          parsedLines.push({ speaker: 'AI', text });
-        } else if (speaker.toLowerCase().includes('user') ||
-                   speaker.toLowerCase().includes('customer') ||
-                   speaker.toLowerCase().includes('client')) {
-          parsedLines.push({ speaker: 'User', text });
-        } else {
-          parsedLines.push({ speaker: 'Other', text: trimmedLine });
-        }
-      } else if (trimmedLine.length > 0) {
-        // If no speaker prefix, treat as continuation of previous speaker or other
-        parsedLines.push({ speaker: 'Other', text: trimmedLine });
-      }
-    }
-
-    return parsedLines;
-  };
-
-  const formattedLines = parseTranscript(transcript);
-
-  if (formattedLines.length === 0) {
-    return (
-      <div className="text-sm text-slate-500 italic">
-        No transcript available
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-3">
-      {formattedLines.map((line, index) => (
-        <div key={index} className="leading-relaxed">
-          {line.speaker === 'AI' && (
-            <div>
-              <span className="font-semibold text-teal-600 dark:text-teal-400">AI:</span>
-              <span className="ml-2 text-sm text-slate-700 dark:text-slate-300">
-                {line.text}
-              </span>
-            </div>
-          )}
-          {line.speaker === 'User' && (
-            <div>
-              <span className="font-semibold text-blue-600 dark:text-blue-400">User:</span>
-              <span className="ml-2 text-sm text-slate-700 dark:text-slate-300">
-                {line.text}
-              </span>
-            </div>
-          )}
-          {line.speaker === 'Other' && (
-            <div className="text-sm text-slate-600 dark:text-slate-400">
-              {line.text}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
   );
 }
 

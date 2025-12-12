@@ -68,28 +68,29 @@ export const getStatsRouter = createTRPCRouter({
           scheduled_discharge_emails (id, status, scheduled_for)
         `,
         )
-        .in("user_id", clinicUserIds)
-        .eq("status", "completed");
+        .in("user_id", clinicUserIds);
 
       // Apply date filters with proper timezone-aware boundaries
+      // Use scheduled_at (appointment time) instead of created_at (sync time)
+      // This matches how the extension groups cases by appointment date
       if (input.startDate && input.endDate) {
         // Both dates provided - use timezone-aware range
         const startRange = getLocalDayRange(input.startDate, DEFAULT_TIMEZONE);
         const endRange = getLocalDayRange(input.endDate, DEFAULT_TIMEZONE);
         query = query
-          .gte("created_at", startRange.startISO)
-          .lte("created_at", endRange.endISO);
+          .gte("scheduled_at", startRange.startISO)
+          .lte("scheduled_at", endRange.endISO);
       } else if (input.startDate) {
         // Only start date - get timezone-aware start of day
         const { startISO } = getLocalDayRange(
           input.startDate,
           DEFAULT_TIMEZONE,
         );
-        query = query.gte("created_at", startISO);
+        query = query.gte("scheduled_at", startISO);
       } else if (input.endDate) {
         // Only end date - get timezone-aware end of day
         const { endISO } = getLocalDayRange(input.endDate, DEFAULT_TIMEZONE);
-        query = query.lte("created_at", endISO);
+        query = query.lte("scheduled_at", endISO);
       }
 
       const { data: cases, error } = await query;

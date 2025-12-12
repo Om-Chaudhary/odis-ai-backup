@@ -56,6 +56,8 @@ interface ScheduledCallData {
   metadata: ScheduledCallMetadata | null;
   structured_data: ScheduledCallStructuredData | null;
   urgent_reason_summary: string | null;
+  recording_url: string | null;
+  stereo_recording_url: string | null;
 }
 
 interface ScheduledEmailData {
@@ -248,7 +250,9 @@ export const listCasesRouter = createTRPCRouter({
             dynamic_variables,
             metadata,
             structured_data,
-            urgent_reason_summary
+            urgent_reason_summary,
+            recording_url,
+            stereo_recording_url
           ),
           scheduled_discharge_emails (
             id,
@@ -272,28 +276,29 @@ export const listCasesRouter = createTRPCRouter({
           { count: "exact" },
         )
         .in("user_id", clinicUserIds)
-        .eq("status", "completed") // Only show completed cases ready for discharge
-        .order("created_at", { ascending: false });
+        .order("scheduled_at", { ascending: false, nullsFirst: false });
 
       // Apply date filters with proper timezone-aware boundaries
+      // Use scheduled_at (appointment time) instead of created_at (sync time)
+      // This matches how the extension groups cases by appointment date
       if (input.startDate && input.endDate) {
         // Both dates provided - use timezone-aware range
         const startRange = getLocalDayRange(input.startDate, DEFAULT_TIMEZONE);
         const endRange = getLocalDayRange(input.endDate, DEFAULT_TIMEZONE);
         query = query
-          .gte("created_at", startRange.startISO)
-          .lte("created_at", endRange.endISO);
+          .gte("scheduled_at", startRange.startISO)
+          .lte("scheduled_at", endRange.endISO);
       } else if (input.startDate) {
         // Only start date - get timezone-aware start of day
         const { startISO } = getLocalDayRange(
           input.startDate,
           DEFAULT_TIMEZONE,
         );
-        query = query.gte("created_at", startISO);
+        query = query.gte("scheduled_at", startISO);
       } else if (input.endDate) {
         // Only end date - get timezone-aware end of day
         const { endISO } = getLocalDayRange(input.endDate, DEFAULT_TIMEZONE);
-        query = query.lte("created_at", endISO);
+        query = query.lte("scheduled_at", endISO);
       }
 
       const { data: cases, error } = await query;
@@ -403,6 +408,8 @@ export const listCasesRouter = createTRPCRouter({
                 customerPhone: scheduledCall.customer_phone,
                 structuredData: scheduledCall.structured_data,
                 urgentReasonSummary: scheduledCall.urgent_reason_summary,
+                recordingUrl: scheduledCall.recording_url,
+                stereoRecordingUrl: scheduledCall.stereo_recording_url,
               }
             : null,
           isUrgentCase:

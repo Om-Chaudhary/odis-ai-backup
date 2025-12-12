@@ -143,7 +143,7 @@ export function AudioPlayer({ url, duration, onTimeUpdate }: AudioPlayerProps) {
 
             <Button
               size="icon"
-              className="h-10 w-10 rounded-full"
+              className="h-10 w-10 rounded-full bg-teal-600 text-white shadow-md hover:bg-teal-700"
               onClick={togglePlay}
             >
               {isPlaying ? (
