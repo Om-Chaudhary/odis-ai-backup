@@ -43,6 +43,8 @@ export type CaseWithPatients = {
   source: string | null;
   type: "checkup" | "emergency" | "surgery" | "follow_up" | null;
   created_at: string | null;
+  scheduled_at: string | null;
+  is_starred: boolean | null;
   patients: SupabasePatientsResponse;
 };
 

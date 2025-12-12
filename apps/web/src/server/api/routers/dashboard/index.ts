@@ -34,6 +34,7 @@ export const dashboardRouter = createTRPCRouter({
   getAllCases: listingsRouter.getAllCases,
   getCallHistory: listingsRouter.getCallHistory,
   getEmailHistory: listingsRouter.getEmailHistory,
+  toggleStarred: listingsRouter.toggleStarred,
 });
 
 // Re-export types for convenience
