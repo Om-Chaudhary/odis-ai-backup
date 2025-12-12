@@ -2,8 +2,8 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { toast } from "sonner";
-import { useQueryState, parseAsInteger } from "nuqs";
-import { format, parseISO, startOfDay, endOfDay } from "date-fns";
+import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
+import { format, parseISO, startOfDay } from "date-fns";
 import { TestTube, Settings } from "lucide-react";
 import Link from "next/link";
 import { api } from "~/trpc/client";
@@ -140,6 +140,7 @@ function mapStatusFilterToFailureCategory(
  * - Full-screen layout with pagination
  * - Compact table rows
  * - Inline editing for cases needing review
+ * - Deep linking via consultationId query param (IDEXX Neo integration)
  */
 export function OutboundDischargesClient() {
   // URL-synced state
@@ -181,6 +182,12 @@ export function OutboundDischargesClient() {
   const [pageSize, setPageSize] = useQueryState(
     "size",
     parseAsInteger.withDefault(25),
+  );
+
+  // Deep link support: IDEXX Neo consultation ID
+  const [consultationId, setConsultationId] = useQueryState(
+    "consultationId",
+    parseAsString,
   );
 
   // Parse current date
@@ -255,6 +262,19 @@ export function OutboundDischargesClient() {
   // Fetch discharge settings (for test mode indicator)
   const { data: settingsData } = api.cases.getDischargeSettings.useQuery();
 
+  // Deep link: Find case by IDEXX consultation ID
+  const { data: deepLinkData, isLoading: isDeepLinkLoading } =
+    api.outbound.findByConsultationId.useQuery(
+      { consultationId: consultationId ?? "" },
+      {
+        enabled: !!consultationId,
+        staleTime: Infinity, // Don't refetch once we have the result
+      },
+    );
+
+  // Track if we've handled the deep link to avoid re-processing
+  const deepLinkHandledRef = useRef<string | null>(null);
+
   // Mutations
   const approveAndSchedule = api.outbound.approveAndSchedule.useMutation({
     onSuccess: (data) => {
@@ -325,6 +345,48 @@ export function OutboundDischargesClient() {
     document.addEventListener("keydown", handleCmdK);
     return () => document.removeEventListener("keydown", handleCmdK);
   }, []);
+
+  // Deep link handling: Navigate to correct date when case is found
+  useEffect(() => {
+    // Skip if no consultation ID or already handled this one
+    if (!consultationId || deepLinkHandledRef.current === consultationId) {
+      return;
+    }
+
+    // Skip if still loading
+    if (isDeepLinkLoading) {
+      return;
+    }
+
+    // Mark as handled
+    deepLinkHandledRef.current = consultationId;
+
+    if (deepLinkData?.found && deepLinkData.date) {
+      // Navigate to the case's date
+      const caseDate = format(
+        startOfDay(parseISO(deepLinkData.date)),
+        "yyyy-MM-dd",
+      );
+      void setDateStr(caseDate);
+      void setStatusFilter("all"); // Reset to "all" to ensure the case is visible
+      void setPage(1);
+      // Clear the consultation ID from URL after handling
+      void setConsultationId(null);
+    } else if (deepLinkData && !deepLinkData.found) {
+      toast.error("Case not found", {
+        description: `No case found for consultation ID: ${consultationId}`,
+      });
+      void setConsultationId(null);
+    }
+  }, [
+    consultationId,
+    deepLinkData,
+    isDeepLinkLoading,
+    setDateStr,
+    setStatusFilter,
+    setPage,
+    setConsultationId,
+  ]);
 
   // Derived data
   const cases = useMemo(
@@ -505,6 +567,42 @@ export function OutboundDischargesClient() {
     },
     [approveAndSchedule],
   );
+
+  // Deep link handling: Auto-select case once data loads
+  // Track if we've auto-selected to avoid repeating
+  const deepLinkSelectedRef = useRef<string | null>(null);
+  useEffect(() => {
+    // Wait for cases to load after date navigation
+    if (
+      !deepLinkData?.found ||
+      !deepLinkData.caseId ||
+      isLoading ||
+      cases.length === 0
+    ) {
+      return;
+    }
+
+    // Skip if we've already selected this case via deep link
+    if (deepLinkSelectedRef.current === deepLinkData.caseId) {
+      return;
+    }
+
+    // Find and select the case
+    const targetCase = cases.find((c) => c.id === deepLinkData.caseId);
+    if (targetCase) {
+      deepLinkSelectedRef.current = deepLinkData.caseId;
+      handleSelectCase(targetCase);
+      toast.success("Case opened", {
+        description: `${targetCase.patient.name} - ${targetCase.owner.name ?? "Unknown owner"}`,
+      });
+    }
+  }, [
+    deepLinkData?.found,
+    deepLinkData?.caseId,
+    cases,
+    isLoading,
+    handleSelectCase,
+  ]);
 
   // Needs review handlers (placeholder - would need API endpoints)
   const handleUpdateContact = useCallback(
