@@ -37,6 +37,11 @@ export const IDEXX_ALLOWED_ORIGINS = [
   // NeoSuite domains
   "https://neosuite.com",
   "https://*.neosuite.com",
+
+  // VAPI domains (for tool calls and webhooks)
+  "https://vapi.ai",
+  "https://*.vapi.ai",
+  "https://dashboard.vapi.ai",
 ] as const;
 
 /**

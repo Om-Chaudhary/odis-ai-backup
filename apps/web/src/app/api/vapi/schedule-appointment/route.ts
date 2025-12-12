@@ -14,6 +14,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@odis-ai/db/server";
 import { loggers } from "@odis-ai/logger";
+import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/api/cors";
 
 const logger = loggers.api.child("vapi-schedule-appointment");
 
@@ -148,13 +149,16 @@ export async function POST(request: NextRequest) {
       logger.warn("Validation failed", {
         errors: validation.error.format(),
       });
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Validation failed",
-          details: validation.error.format(),
-        },
-        { status: 400 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          {
+            success: false,
+            error: "Validation failed",
+            details: validation.error.format(),
+          },
+          { status: 400 },
+        ),
       );
     }
 
@@ -166,14 +170,17 @@ export async function POST(request: NextRequest) {
     // Look up clinic by assistant_id
     const clinic = await findClinicByAssistantId(supabase, input.assistant_id);
     if (!clinic) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Clinic not found",
-          message:
-            "Unable to identify clinic from assistant_id. Please contact support.",
-        },
-        { status: 404 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          {
+            success: false,
+            error: "Clinic not found",
+            message:
+              "Unable to identify clinic from assistant_id. Please contact support.",
+          },
+          { status: 404 },
+        ),
       );
     }
 
@@ -227,14 +234,17 @@ export async function POST(request: NextRequest) {
         error: insertError,
         clinicId: clinic.id,
       });
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Failed to save appointment request",
-          message:
-            "We couldn't save your appointment request. Please try again or call the clinic directly.",
-        },
-        { status: 500 },
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          {
+            success: false,
+            error: "Failed to save appointment request",
+            message:
+              "We couldn't save your appointment request. Please try again or call the clinic directly.",
+          },
+          { status: 500 },
+        ),
       );
     }
 
@@ -247,28 +257,41 @@ export async function POST(request: NextRequest) {
     });
 
     // Return success response for VAPI
-    return NextResponse.json({
-      success: true,
-      message: `Your appointment request has been submitted to ${clinic.name}. The clinic will contact you to confirm the appointment.`,
-      appointment_request_id: inserted.id,
-      clinic_name: clinic.name,
-    });
+    return withCorsHeaders(
+      request,
+      NextResponse.json({
+        success: true,
+        message: `Your appointment request has been submitted to ${clinic.name}. The clinic will contact you to confirm the appointment.`,
+        appointment_request_id: inserted.id,
+        clinic_name: clinic.name,
+      }),
+    );
   } catch (error) {
     logger.error("Unexpected error in schedule-appointment", {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
     });
 
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Internal server error",
-        message:
-          "Something went wrong. Please try again or call the clinic directly.",
-      },
-      { status: 500 },
+    return withCorsHeaders(
+      request,
+      NextResponse.json(
+        {
+          success: false,
+          error: "Internal server error",
+          message:
+            "Something went wrong. Please try again or call the clinic directly.",
+        },
+        { status: 500 },
+      ),
     );
   }
+}
+
+/**
+ * CORS preflight handler
+ */
+export function OPTIONS(request: NextRequest) {
+  return handleCorsPreflightRequest(request);
 }
 
 /**
