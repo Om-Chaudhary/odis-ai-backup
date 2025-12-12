@@ -18,6 +18,8 @@ import {
   ChevronUp,
   Sparkles,
   Calendar,
+  Wand2,
+  Info,
 } from "lucide-react";
 import { format, formatDistanceToNow, isPast, parseISO } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
@@ -115,6 +117,10 @@ export function OutboundCaseDetail({
     caseData.status === "completed" || caseData.status === "failed";
   const showScheduleInfo = caseData.status === "scheduled";
 
+  // Check if discharge summary needs to be generated
+  const hasDischargeSummary = Boolean(caseData.dischargeSummary?.trim());
+  const needsGeneration = !hasDischargeSummary && isEditable;
+
   // Get call script from dynamic variables
   const callScript =
     typeof caseData.callScript === "object" && caseData.callScript !== null
@@ -125,6 +131,7 @@ export function OutboundCaseDetail({
   // Determine which clinical notes to show
   const hasIdexxNotes = Boolean(caseData.idexxNotes?.trim());
   const hasSoapNotes = caseData.soapNotes && caseData.soapNotes.length > 0;
+  const hasClinicalData = hasIdexxNotes || hasSoapNotes;
 
   return (
     <div className="flex h-full flex-col">
@@ -153,91 +160,139 @@ export function OutboundCaseDetail({
         )}
 
         {/* Discharge Summary */}
-        <Card>
+        <Card
+          className={needsGeneration ? "border-amber-200 bg-amber-50/50" : ""}
+        >
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                <Sparkles className="h-4 w-4 text-teal-600" />
-                AI Discharge Summary
+                {needsGeneration ? (
+                  <>
+                    <Wand2 className="h-4 w-4 text-amber-600" />
+                    AI Discharge Summary
+                    <Badge
+                      variant="outline"
+                      className="border-amber-300 text-xs text-amber-700"
+                    >
+                      Pending
+                    </Badge>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 text-teal-600" />
+                    AI Discharge Summary
+                  </>
+                )}
               </CardTitle>
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              {caseData.dischargeSummary || "No discharge summary available."}
-            </p>
+            {needsGeneration ? (
+              <div className="space-y-2">
+                {isSubmitting ? (
+                  <div className="flex items-center gap-2 text-amber-700">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm font-medium">
+                      Generating discharge instructions...
+                    </span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-start gap-2 rounded-md bg-amber-100/50 p-3">
+                      <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                      <div className="text-sm text-amber-800">
+                        <p className="font-medium">
+                          Discharge summary will be auto-generated
+                        </p>
+                        <p className="mt-1 text-amber-700">
+                          {hasClinicalData
+                            ? "Content will be created from the clinical notes above when you approve."
+                            : "A basic discharge message will be created from patient information."}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                {caseData.dischargeSummary || "No discharge summary available."}
+              </p>
+            )}
           </CardContent>
         </Card>
 
-        {/* Communication Preview - Collapsible */}
-        <Collapsible
-          open={communicationExpanded}
-          onOpenChange={setCommunicationExpanded}
-        >
-          <Card>
-            <CollapsibleTrigger asChild>
-              <CardHeader className="hover:bg-muted/50 cursor-pointer pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                    <FileText className="h-4 w-4" />
-                    Communication Preview
-                  </CardTitle>
-                  {communicationExpanded ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </div>
-              </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent className="pt-0">
-                <Tabs
-                  value={activeTab}
-                  onValueChange={(v) => setActiveTab(v as PreviewTab)}
-                >
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="call_script" className="gap-2">
-                      <Phone className="h-4 w-4" />
-                      Call Script
-                    </TabsTrigger>
-                    <TabsTrigger value="email" className="gap-2">
-                      <Mail className="h-4 w-4" />
-                      Email
-                    </TabsTrigger>
-                  </TabsList>
+        {/* Communication Preview - Collapsible (only show if content exists) */}
+        {hasDischargeSummary && (
+          <Collapsible
+            open={communicationExpanded}
+            onOpenChange={setCommunicationExpanded}
+          >
+            <Card>
+              <CollapsibleTrigger asChild>
+                <CardHeader className="hover:bg-muted/50 cursor-pointer pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                      <FileText className="h-4 w-4" />
+                      Communication Preview
+                    </CardTitle>
+                    {communicationExpanded ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    )}
+                  </div>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="pt-0">
+                  <Tabs
+                    value={activeTab}
+                    onValueChange={(v) => setActiveTab(v as PreviewTab)}
+                  >
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="call_script" className="gap-2">
+                        <Phone className="h-4 w-4" />
+                        Call Script
+                      </TabsTrigger>
+                      <TabsTrigger value="email" className="gap-2">
+                        <Mail className="h-4 w-4" />
+                        Email
+                      </TabsTrigger>
+                    </TabsList>
 
-                  <TabsContent value="call_script" className="mt-4">
-                    <PreviewContent
-                      content={callScript}
-                      onPlay={() => {
-                        // TODO: Implement TTS preview
-                      }}
-                      onEdit={() => {
-                        // TODO: Implement edit modal
-                      }}
-                      isEditable={isEditable}
-                      type="call"
-                    />
-                  </TabsContent>
+                    <TabsContent value="call_script" className="mt-4">
+                      <PreviewContent
+                        content={callScript}
+                        onPlay={() => {
+                          // TODO: Implement TTS preview
+                        }}
+                        onEdit={() => {
+                          // TODO: Implement edit modal
+                        }}
+                        isEditable={isEditable}
+                        type="call"
+                      />
+                    </TabsContent>
 
-                  <TabsContent value="email" className="mt-4">
-                    <PreviewContent
-                      content={
-                        caseData.emailContent || caseData.dischargeSummary
-                      }
-                      onEdit={() => {
-                        // TODO: Implement edit modal
-                      }}
-                      isEditable={isEditable}
-                      type="email"
-                    />
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
+                    <TabsContent value="email" className="mt-4">
+                      <PreviewContent
+                        content={
+                          caseData.emailContent || caseData.dischargeSummary
+                        }
+                        onEdit={() => {
+                          // TODO: Implement edit modal
+                        }}
+                        isEditable={isEditable}
+                        type="email"
+                      />
+                    </TabsContent>
+                  </Tabs>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+        )}
 
         {/* Outcome Details for completed/failed */}
         {showOutcome && (
@@ -273,16 +328,28 @@ export function OutboundCaseDetail({
               Skip
             </Button>
             <Button
-              className="flex-1 bg-teal-600 hover:bg-teal-700"
+              className={`flex-1 ${needsGeneration ? "bg-amber-600 hover:bg-amber-700" : "bg-teal-600 hover:bg-teal-700"}`}
               onClick={showRetry ? onRetry : onApprove}
               disabled={isSubmitting}
             >
               {isSubmitting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {needsGeneration ? "Generating..." : "Scheduling..."}
+                </>
               ) : showRetry ? (
-                <RotateCcw className="mr-2 h-4 w-4" />
-              ) : null}
-              {showRetry ? "Retry" : "Approve & Send"}
+                <>
+                  <RotateCcw className="mr-2 h-4 w-4" />
+                  Retry
+                </>
+              ) : needsGeneration ? (
+                <>
+                  <Wand2 className="mr-2 h-4 w-4" />
+                  Generate & Send
+                </>
+              ) : (
+                "Approve & Send"
+              )}
             </Button>
           </div>
         </div>
