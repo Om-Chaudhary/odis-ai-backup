@@ -58,7 +58,7 @@ export function NeedsReviewTab() {
     data: cases,
     isLoading,
     refetch,
-  } = api.dashboard.getCasesNeedingAttention.useQuery({ limit: 50 });
+  } = api.dashboard.getCasesNeedingAttention.useQuery({ limit: 20 });
 
   const updatePatient = api.cases.updatePatientInfo.useMutation({
     onSuccess: () => {

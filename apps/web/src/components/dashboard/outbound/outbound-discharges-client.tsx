@@ -80,6 +80,7 @@ interface TransformedCase {
   scheduledEmailFor: string | null;
   scheduledCallFor: string | null;
   isUrgentCase?: boolean;
+  isStarred?: boolean;
 }
 
 // Failure category values for URL parsing
@@ -227,6 +228,10 @@ export function OutboundDischargesClient() {
   const [schedulingCaseIds, setSchedulingCaseIds] = useState<Set<string>>(
     new Set(),
   );
+  // Track which cases are having their star toggled
+  const [togglingStarCaseIds, setTogglingStarCaseIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   const casesRef = useRef<TransformedCase[]>([]);
 
@@ -312,6 +317,15 @@ export function OutboundDischargesClient() {
     },
     onError: (error) => {
       toast.error("Failed to retry", { description: error.message });
+    },
+  });
+
+  const toggleStarred = api.dashboard.toggleStarred.useMutation({
+    onSuccess: () => {
+      void refetch();
+    },
+    onError: (error) => {
+      toast.error("Failed to update star", { description: error.message });
     },
   });
 
@@ -579,6 +593,25 @@ export function OutboundDischargesClient() {
     [approveAndSchedule],
   );
 
+  // Toggle star on a case
+  const handleToggleStar = useCallback(
+    async (caseId: string, starred: boolean) => {
+      setTogglingStarCaseIds((prev) => new Set(prev).add(caseId));
+      try {
+        await toggleStarred.mutateAsync({ caseId, starred });
+      } catch {
+        // Error is handled by mutation onError
+      } finally {
+        setTogglingStarCaseIds((prev) => {
+          const next = new Set(prev);
+          next.delete(caseId);
+          return next;
+        });
+      }
+    },
+    [toggleStarred],
+  );
+
   // Deep link handling: Auto-select case once data loads
   // Track if we've auto-selected to avoid repeating
   const deepLinkSelectedRef = useRef<string | null>(null);
@@ -734,6 +767,8 @@ export function OutboundDischargesClient() {
                     isLoading={isLoading}
                     onQuickSchedule={handleQuickSchedule}
                     schedulingCaseIds={schedulingCaseIds}
+                    onToggleStar={handleToggleStar}
+                    togglingStarCaseIds={togglingStarCaseIds}
                   />
                 </PageContent>
                 <PageFooter>
@@ -776,6 +811,8 @@ export function OutboundDischargesClient() {
                     isLoading={isLoading}
                     onQuickSchedule={handleQuickSchedule}
                     schedulingCaseIds={schedulingCaseIds}
+                    onToggleStar={handleToggleStar}
+                    togglingStarCaseIds={togglingStarCaseIds}
                   />
                 </PageContent>
                 <PageFooter>

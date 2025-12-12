@@ -11,6 +11,7 @@ import {
   MinusCircle,
   Loader2,
   Send,
+  Star,
 } from "lucide-react";
 import { Button } from "@odis-ai/ui/button";
 import { cn } from "@odis-ai/utils";
@@ -38,6 +39,7 @@ interface TableCaseBase {
   scheduledCall?: {
     endedReason?: string | null;
   } | null;
+  isStarred?: boolean;
 }
 
 /**
@@ -95,6 +97,9 @@ interface OutboundCaseTableProps<T extends TableCaseBase> {
   // Quick scheduling props (supports concurrent scheduling)
   onQuickSchedule?: (caseItem: T) => void;
   schedulingCaseIds?: Set<string>;
+  // Star toggle props
+  onToggleStar?: (caseId: string, starred: boolean) => void;
+  togglingStarCaseIds?: Set<string>;
 }
 
 /**
@@ -120,6 +125,8 @@ export function OutboundCaseTable<T extends TableCaseBase>({
   isLoading,
   onQuickSchedule,
   schedulingCaseIds,
+  onToggleStar,
+  togglingStarCaseIds,
 }: OutboundCaseTableProps<T>) {
   const tableRef = useRef<HTMLDivElement>(null);
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
@@ -181,11 +188,14 @@ export function OutboundCaseTable<T extends TableCaseBase>({
       <table className="w-full min-w-0 table-fixed">
         <thead className="sticky top-0 z-10 border-b border-teal-100/50 bg-gradient-to-r from-teal-50/40 to-white/60 backdrop-blur-sm">
           <tr className="text-xs text-slate-500">
-            <th className="h-10 w-[28%] pl-3 text-left font-medium">Patient</th>
+            <th className="h-10 w-[5%] pl-3 text-center font-medium">
+              <Star className="mx-auto h-3.5 w-3.5" />
+            </th>
+            <th className="h-10 w-[25%] text-left font-medium">Patient</th>
             <th className="h-10 w-[14%] text-left font-medium">Case Type</th>
             <th className="h-10 w-[10%] text-center font-medium">Phone</th>
             <th className="h-10 w-[10%] text-center font-medium">Email</th>
-            <th className="h-10 w-[18%] text-center font-medium">Actions</th>
+            <th className="h-10 w-[16%] text-center font-medium">Actions</th>
             <th className="h-10 w-[20%] pr-3 text-right font-medium">Time</th>
           </tr>
         </thead>
@@ -220,8 +230,35 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                   }
                 }}
               >
+                {/* Star */}
+                <td className="py-3 pl-3 text-center">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleStar?.(caseItem.id, !caseItem.isStarred);
+                    }}
+                    disabled={togglingStarCaseIds?.has(caseItem.id)}
+                    className={cn(
+                      "rounded p-1 transition-all hover:bg-slate-100",
+                      togglingStarCaseIds?.has(caseItem.id) && "opacity-50",
+                    )}
+                    title={
+                      caseItem.isStarred ? "Remove star" : "Star this case"
+                    }
+                  >
+                    <Star
+                      className={cn(
+                        "h-4 w-4 transition-colors",
+                        caseItem.isStarred
+                          ? "fill-amber-400 text-amber-400"
+                          : "text-slate-300 hover:text-amber-400",
+                      )}
+                    />
+                  </button>
+                </td>
+
                 {/* Patient */}
-                <td className="py-3 pl-3">
+                <td className="py-3">
                   <div className="flex flex-col gap-0.5 overflow-hidden">
                     <span className="truncate text-sm font-medium text-slate-800">
                       {caseItem.patient.name}
@@ -519,11 +556,12 @@ function CaseTableSkeleton() {
     <div className="w-full overflow-hidden p-3">
       {/* Header skeleton */}
       <div className="mb-4 flex gap-3 border-b border-teal-100/50 pb-3">
-        <div className="h-3 w-[28%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[5%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[25%] animate-pulse rounded bg-teal-100/50" />
         <div className="h-3 w-[14%] animate-pulse rounded bg-teal-100/50" />
         <div className="h-3 w-[10%] animate-pulse rounded bg-teal-100/50" />
         <div className="h-3 w-[10%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[18%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[16%] animate-pulse rounded bg-teal-100/50" />
         <div className="h-3 w-[20%] animate-pulse rounded bg-teal-100/50" />
       </div>
       {/* Row skeletons */}
@@ -532,7 +570,10 @@ function CaseTableSkeleton() {
           key={i}
           className="flex items-center gap-3 border-b border-teal-50 py-3"
         >
-          <div className="w-[28%] space-y-1.5">
+          <div className="flex w-[5%] justify-center">
+            <div className="h-4 w-4 animate-pulse rounded bg-teal-50" />
+          </div>
+          <div className="w-[25%] space-y-1.5">
             <div className="h-4 w-20 animate-pulse rounded bg-teal-100/40" />
             <div className="h-3 w-28 animate-pulse rounded bg-teal-50" />
           </div>
@@ -543,7 +584,7 @@ function CaseTableSkeleton() {
           <div className="flex w-[10%] justify-center">
             <div className="h-6 w-6 animate-pulse rounded-full bg-teal-50" />
           </div>
-          <div className="flex w-[18%] justify-center">
+          <div className="flex w-[16%] justify-center">
             <div className="h-7 w-16 animate-pulse rounded-md bg-teal-50" />
           </div>
           <div className="h-3 w-14 animate-pulse rounded bg-teal-50" />
