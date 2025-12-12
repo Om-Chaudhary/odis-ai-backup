@@ -2,20 +2,25 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { toast } from "sonner";
-import { useQueryState } from "nuqs";
+import { useQueryState, parseAsInteger } from "nuqs";
 import { format, parseISO, startOfDay, endOfDay } from "date-fns";
 import { api } from "~/trpc/client";
 
 import type {
   DischargeCaseStatus,
-  OutboundFiltersState,
+  StatusFilter,
+  ViewMode,
   DeliveryToggles,
   SoapNote,
+  DischargeSummaryStats,
 } from "./types";
+import { PageContainer, PageToolbar, PageContent, PageFooter } from "../layout";
 import { OutboundFilterTabs } from "./outbound-filter-tabs";
 import { OutboundCaseTable } from "./outbound-case-table";
 import { OutboundCaseDetail } from "./outbound-case-detail";
 import { OutboundSplitLayout } from "./outbound-split-layout";
+import { OutboundPagination } from "./outbound-pagination";
+import { OutboundNeedsReviewTable } from "./outbound-needs-review-table";
 
 // Type for transformed case from API
 interface TransformedCase {
@@ -52,29 +57,67 @@ interface TransformedCase {
   extremeCaseCheck: unknown;
   idexxNotes: string | null;
   soapNotes: SoapNote[];
-  // Schedule timing
   scheduledEmailFor: string | null;
   scheduledCallFor: string | null;
 }
 
+// Map old status to new StatusFilter for API
+function mapStatusFilterToApiStatus(
+  filter: StatusFilter,
+): DischargeCaseStatus | undefined {
+  switch (filter) {
+    case "all":
+      return undefined;
+    case "ready_to_send":
+      return "pending_review";
+    case "scheduled":
+      return "scheduled";
+    case "sent":
+      return "completed";
+    case "failed":
+      return "failed";
+    default:
+      return undefined;
+  }
+}
+
 /**
- * Outbound Discharge Call Manager Client
+ * Outbound Discharge Manager - Full Screen Compact Layout
  *
- * Main client component for the veterinary AI discharge call manager.
  * Features:
- * - Day-based navigation for reviewing cases
- * - Full-width table by default, panel slides in on selection
- * - Filter tabs with counts including "Scheduled"
- * - Case queue table with keyboard navigation
- * - Detail panel with call script/email preview
+ * - View tabs: All Discharges / Needs Review
+ * - Status filters: All, Ready to Send, Scheduled, Sent, Failed
+ * - Full-screen layout with pagination
+ * - Compact table rows
+ * - Inline editing for cases needing review
  */
 export function OutboundDischargesClient() {
-  // Date navigation - use URL query param for sync
+  // URL-synced state
   const [dateStr, setDateStr] = useQueryState("date", {
     defaultValue: format(startOfDay(new Date()), "yyyy-MM-dd"),
   });
 
-  // Parse current date from URL param
+  const [viewMode, setViewMode] = useQueryState("view", {
+    defaultValue: "all" as ViewMode,
+    parse: (v) => (v === "needs_review" ? "needs_review" : "all") as ViewMode,
+  });
+
+  const [statusFilter, setStatusFilter] = useQueryState("status", {
+    defaultValue: "all" as StatusFilter,
+    parse: (v) =>
+      (["all", "ready_to_send", "scheduled", "sent", "failed"].includes(v)
+        ? v
+        : "all") as StatusFilter,
+  });
+
+  const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
+
+  const [pageSize, setPageSize] = useQueryState(
+    "size",
+    parseAsInteger.withDefault(25),
+  );
+
+  // Parse current date
   const currentDate = useMemo(() => {
     if (dateStr) {
       try {
@@ -86,42 +129,27 @@ export function OutboundDischargesClient() {
     return startOfDay(new Date());
   }, [dateStr]);
 
-  // Calculate date range for API queries
-  const { startDate, endDate } = useMemo(() => {
-    return {
+  // Date range for API
+  const { startDate, endDate } = useMemo(
+    () => ({
       startDate: startOfDay(currentDate).toISOString(),
       endDate: endOfDay(currentDate).toISOString(),
-    };
-  }, [currentDate]);
-
-  // Handle date change from day pagination
-  const handleDateChange = useCallback(
-    (newDate: Date) => {
-      const newDateStr = format(startOfDay(newDate), "yyyy-MM-dd");
-      void setDateStr(newDateStr);
-    },
-    [setDateStr],
+    }),
+    [currentDate],
   );
 
-  // Selected case state
+  // Local state
   const [selectedCase, setSelectedCase] = useState<TransformedCase | null>(
     null,
   );
-
-  // Filter state (status and search only, date is in URL)
-  const [filters, setFilters] = useState<OutboundFiltersState>({
-    status: "all",
-    searchTerm: "",
-    dateRange: { start: "", end: "" },
-  });
-
-  // Delivery toggles for selected case
+  const [searchTerm, setSearchTerm] = useState("");
   const [deliveryToggles, setDeliveryToggles] = useState<DeliveryToggles>({
     phoneEnabled: true,
     emailEnabled: true,
   });
+  // Track which case is being scheduled from the table quick action
+  const [schedulingCaseId, setSchedulingCaseId] = useState<string | null>(null);
 
-  // Refs for data stability
   const casesRef = useRef<TransformedCase[]>([]);
 
   // Fetch cases
@@ -131,16 +159,15 @@ export function OutboundDischargesClient() {
     refetch,
   } = api.outbound.listDischargeCases.useQuery(
     {
-      page: 1,
-      pageSize: 50,
-      status: filters.status !== "all" ? filters.status : undefined,
-      search: filters.searchTerm || undefined,
-      startDate: startDate,
-      endDate: endDate,
+      page: page,
+      pageSize: pageSize,
+      status: mapStatusFilterToApiStatus(statusFilter),
+      search: searchTerm || undefined,
+      startDate,
+      endDate,
     },
     {
       refetchInterval: () => {
-        // Poll faster if any case is in progress
         const hasActive = casesRef.current.some(
           (c) => c.status === "in_progress",
         );
@@ -149,23 +176,26 @@ export function OutboundDischargesClient() {
     },
   );
 
-  // Fetch stats for filter badges
+  // Fetch stats
   const { data: statsData } = api.outbound.getDischargeCaseStats.useQuery({
-    startDate: startDate,
-    endDate: endDate,
+    startDate,
+    endDate,
   });
 
   // Mutations
   const approveAndSchedule = api.outbound.approveAndSchedule.useMutation({
-    onSuccess: () => {
-      toast.success("Discharge scheduled successfully");
+    onSuccess: (data) => {
+      const message = data.summaryGenerated
+        ? "Discharge generated and scheduled"
+        : "Discharge scheduled";
+      toast.success(message);
       setSelectedCase(null);
+      setSchedulingCaseId(null);
       void refetch();
     },
     onError: (error) => {
-      toast.error("Failed to schedule discharge", {
-        description: error.message,
-      });
+      toast.error("Failed to schedule", { description: error.message });
+      setSchedulingCaseId(null);
     },
   });
 
@@ -176,9 +206,7 @@ export function OutboundDischargesClient() {
       void refetch();
     },
     onError: (error) => {
-      toast.error("Failed to skip case", {
-        description: error.message,
-      });
+      toast.error("Failed to skip", { description: error.message });
     },
   });
 
@@ -188,9 +216,7 @@ export function OutboundDischargesClient() {
       void refetch();
     },
     onError: (error) => {
-      toast.error("Failed to retry", {
-        description: error.message,
-      });
+      toast.error("Failed to retry", { description: error.message });
     },
   });
 
@@ -201,7 +227,7 @@ export function OutboundDischargesClient() {
     }
   }, [casesData?.cases]);
 
-  // Escape key to close panel
+  // Escape to close panel
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === "Escape" && selectedCase) {
@@ -212,44 +238,116 @@ export function OutboundDischargesClient() {
     return () => document.removeEventListener("keydown", handleEscape);
   }, [selectedCase]);
 
+  // Cmd+K for search
+  useEffect(() => {
+    const handleCmdK = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        const searchInput = document.querySelector<HTMLInputElement>(
+          'input[placeholder="Search..."]',
+        );
+        searchInput?.focus();
+      }
+    };
+    document.addEventListener("keydown", handleCmdK);
+    return () => document.removeEventListener("keydown", handleCmdK);
+  }, []);
+
+  // Derived data
   const cases = useMemo(
     () => (casesData?.cases ?? []) as TransformedCase[],
     [casesData?.cases],
   );
-  const stats = statsData ?? {
-    pendingReview: 0,
-    scheduled: 0,
-    ready: 0,
-    inProgress: 0,
-    completed: 0,
-    failed: 0,
-    total: 0,
-  };
 
-  // Handle case selection
+  const totalCases = casesData?.pagination?.total ?? cases.length;
+
+  // Cases needing review (missing contact info)
+  const needsReviewCases = useMemo(
+    () => cases.filter((c) => !c.owner.phone || !c.owner.email),
+    [cases],
+  );
+
+  // Map old stats to new format
+  const stats: DischargeSummaryStats = useMemo(() => {
+    const raw = statsData ?? {
+      pendingReview: 0,
+      scheduled: 0,
+      ready: 0,
+      inProgress: 0,
+      completed: 0,
+      failed: 0,
+      total: 0,
+    };
+    return {
+      readyToSend: raw.pendingReview + raw.ready + raw.inProgress,
+      scheduled: raw.scheduled,
+      sent: raw.completed,
+      failed: raw.failed,
+      total: raw.total,
+      needsReview: needsReviewCases.length,
+    };
+  }, [statsData, needsReviewCases.length]);
+
+  // Handlers
+  const handleDateChange = useCallback(
+    (newDate: Date) => {
+      void setDateStr(format(startOfDay(newDate), "yyyy-MM-dd"));
+      void setPage(1);
+    },
+    [setDateStr, setPage],
+  );
+
+  const handleViewModeChange = useCallback(
+    (mode: ViewMode) => {
+      void setViewMode(mode);
+      setSelectedCase(null);
+      void setPage(1);
+    },
+    [setViewMode, setPage],
+  );
+
+  const handleStatusChange = useCallback(
+    (status: StatusFilter) => {
+      void setStatusFilter(status);
+      setSelectedCase(null);
+      void setPage(1);
+    },
+    [setStatusFilter, setPage],
+  );
+
+  const handleSearchChange = useCallback((term: string) => {
+    setSearchTerm(term);
+  }, []);
+
+  const handlePageChange = useCallback(
+    (newPage: number) => {
+      void setPage(newPage);
+      setSelectedCase(null);
+    },
+    [setPage],
+  );
+
+  const handlePageSizeChange = useCallback(
+    (newSize: number) => {
+      void setPageSize(newSize);
+      void setPage(1);
+      setSelectedCase(null);
+    },
+    [setPageSize, setPage],
+  );
+
   const handleSelectCase = useCallback((caseItem: TransformedCase) => {
     setSelectedCase(caseItem);
-
-    // Reset delivery toggles based on contact availability
     setDeliveryToggles({
       phoneEnabled: !!caseItem.owner.phone,
       emailEnabled: !!caseItem.owner.email,
     });
-
-    // Show warning if missing contact info
-    if (!caseItem.owner.phone && !caseItem.owner.email) {
-      toast.warning("Missing contact information", {
-        description: "No phone or email available for this owner.",
-      });
-    }
   }, []);
 
-  // Handle closing detail panel
   const handleClosePanel = useCallback(() => {
     setSelectedCase(null);
   }, []);
 
-  // Handle keyboard navigation
   const handleKeyNavigation = useCallback(
     (direction: "up" | "down") => {
       if (cases.length === 0) return;
@@ -273,39 +371,9 @@ export function OutboundDischargesClient() {
     [cases, selectedCase, handleSelectCase],
   );
 
-  // Handle status filter
-  const handleStatusFilter = useCallback(
-    (status: DischargeCaseStatus | "all") => {
-      setFilters((prev: OutboundFiltersState) => ({ ...prev, status }));
-      setSelectedCase(null); // Close panel when changing filter
-    },
-    [],
-  );
-
-  // Handle search
-  const handleSearchChange = useCallback((searchTerm: string) => {
-    setFilters((prev: OutboundFiltersState) => ({ ...prev, searchTerm }));
-  }, []);
-
-  // Cmd+K to focus search
-  useEffect(() => {
-    const handleCmdK = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        const searchInput = document.querySelector<HTMLInputElement>(
-          'input[placeholder="Search patients..."]',
-        );
-        searchInput?.focus();
-      }
-    };
-    document.addEventListener("keydown", handleCmdK);
-    return () => document.removeEventListener("keydown", handleCmdK);
-  }, []);
-
-  // Handle approve & send action
+  // Action handlers
   const handleApproveAndSend = useCallback(async () => {
     if (!selectedCase) return;
-
     await approveAndSchedule.mutateAsync({
       caseId: selectedCase.id,
       phoneEnabled: deliveryToggles.phoneEnabled,
@@ -313,19 +381,13 @@ export function OutboundDischargesClient() {
     });
   }, [selectedCase, deliveryToggles, approveAndSchedule]);
 
-  // Handle skip action
   const handleSkip = useCallback(async () => {
     if (!selectedCase) return;
-
-    await skipCase.mutateAsync({
-      caseId: selectedCase.id,
-    });
+    await skipCase.mutateAsync({ caseId: selectedCase.id });
   }, [selectedCase, skipCase]);
 
-  // Handle retry action
   const handleRetry = useCallback(async () => {
     if (!selectedCase) return;
-
     await retryDelivery.mutateAsync({
       caseId: selectedCase.id,
       retryCall: selectedCase.phoneSent === "failed",
@@ -333,53 +395,128 @@ export function OutboundDischargesClient() {
     });
   }, [selectedCase, retryDelivery]);
 
+  // Quick schedule from table row
+  const handleQuickSchedule = useCallback(
+    async (caseItem: TransformedCase) => {
+      setSchedulingCaseId(caseItem.id);
+      try {
+        await approveAndSchedule.mutateAsync({
+          caseId: caseItem.id,
+          phoneEnabled: !!caseItem.owner.phone,
+          emailEnabled: !!caseItem.owner.email,
+        });
+      } catch {
+        // Error is handled by mutation onError
+      }
+    },
+    [approveAndSchedule],
+  );
+
+  // Needs review handlers (placeholder - would need API endpoints)
+  const handleUpdateContact = useCallback(
+    async (caseId: string, field: "phone" | "email", value: string) => {
+      // TODO: Implement API call to update contact
+      toast.success(`Updated ${field} for case`);
+      void refetch();
+    },
+    [refetch],
+  );
+
+  const handleRemoveFromQueue = useCallback(
+    async (caseId: string) => {
+      await skipCase.mutateAsync({ caseId });
+    },
+    [skipCase],
+  );
+
   const isSubmitting =
     approveAndSchedule.isPending ||
     skipCase.isPending ||
     retryDelivery.isPending;
 
   return (
-    <div className="flex h-full flex-col">
-      {/* Page Header */}
-
-      {/* Filter Tabs with Date Navigation and Search */}
-      <OutboundFilterTabs
-        activeTab={filters.status}
-        onTabChange={handleStatusFilter}
-        counts={stats}
-        searchTerm={filters.searchTerm}
-        onSearchChange={handleSearchChange}
-        currentDate={currentDate}
-        onDateChange={handleDateChange}
-        isLoading={isLoading}
-      />
-
-      {/* Split Layout: Table + Detail */}
-      <div className="mt-4 min-h-0 flex-1">
-        <OutboundSplitLayout
-          showRightPanel={selectedCase !== null}
-          onCloseRightPanel={handleClosePanel}
-          leftPanel={
-            <OutboundCaseTable
-              cases={cases}
-              selectedCaseId={selectedCase?.id ?? null}
-              onSelectCase={handleSelectCase}
-              onKeyNavigation={handleKeyNavigation}
-              isLoading={isLoading}
-            />
-          }
-          rightPanel={
-            <OutboundCaseDetail
-              caseData={selectedCase}
-              deliveryToggles={deliveryToggles}
-              onToggleChange={setDeliveryToggles}
-              onApprove={handleApproveAndSend}
-              onSkip={handleSkip}
-              onRetry={handleRetry}
-              isSubmitting={isSubmitting}
-            />
-          }
+    <div className="flex h-[calc(100vh-64px)] flex-col gap-2">
+      {/* Compact Toolbar - Date + View Tabs + Status Filters + Search */}
+      <PageToolbar className="rounded-lg border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 py-2 shadow-md shadow-teal-500/5 backdrop-blur-md">
+        <OutboundFilterTabs
+          activeStatus={statusFilter}
+          onStatusChange={handleStatusChange}
+          counts={stats}
+          searchTerm={searchTerm}
+          onSearchChange={handleSearchChange}
+          currentDate={currentDate}
+          onDateChange={handleDateChange}
+          isLoading={isLoading}
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
         />
+      </PageToolbar>
+
+      {/* Main Content Area */}
+      <div className="min-h-0 flex-1">
+        {viewMode === "needs_review" ? (
+          // Needs Review View
+          <PageContainer className="h-full">
+            <PageContent>
+              <OutboundNeedsReviewTable
+                cases={needsReviewCases}
+                isLoading={isLoading}
+                onUpdateContact={handleUpdateContact}
+                onRemoveFromQueue={handleRemoveFromQueue}
+              />
+            </PageContent>
+            <PageFooter>
+              <OutboundPagination
+                page={page}
+                pageSize={pageSize}
+                total={needsReviewCases.length}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+              />
+            </PageFooter>
+          </PageContainer>
+        ) : (
+          // All Discharges View - Split Layout
+          <OutboundSplitLayout
+            showRightPanel={selectedCase !== null}
+            onCloseRightPanel={handleClosePanel}
+            leftPanel={
+              <>
+                <PageContent>
+                  <OutboundCaseTable
+                    cases={cases}
+                    selectedCaseId={selectedCase?.id ?? null}
+                    onSelectCase={handleSelectCase}
+                    onKeyNavigation={handleKeyNavigation}
+                    isLoading={isLoading}
+                    onQuickSchedule={handleQuickSchedule}
+                    schedulingCaseId={schedulingCaseId}
+                  />
+                </PageContent>
+                <PageFooter>
+                  <OutboundPagination
+                    page={page}
+                    pageSize={pageSize}
+                    total={totalCases}
+                    onPageChange={handlePageChange}
+                    onPageSizeChange={handlePageSizeChange}
+                  />
+                </PageFooter>
+              </>
+            }
+            rightPanel={
+              <OutboundCaseDetail
+                caseData={selectedCase}
+                deliveryToggles={deliveryToggles}
+                onToggleChange={setDeliveryToggles}
+                onApprove={handleApproveAndSend}
+                onSkip={handleSkip}
+                onRetry={handleRetry}
+                isSubmitting={isSubmitting}
+              />
+            }
+          />
+        )}
       </div>
     </div>
   );
