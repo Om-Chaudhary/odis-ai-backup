@@ -5,6 +5,7 @@
  */
 
 import { TRPCError } from "@trpc/server";
+import { getClinicUserIds } from "@odis-ai/clinics/utils";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { skipCaseInput } from "../schemas";
 
@@ -14,12 +15,15 @@ export const skipRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user.id;
 
-      // Verify case ownership
+      // Get all user IDs in the same clinic for shared access
+      const clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
+
+      // Verify case belongs to clinic
       const { data: caseData, error: fetchError } = await ctx.supabase
         .from("cases")
         .select("id, metadata")
         .eq("id", input.caseId)
-        .eq("user_id", userId)
+        .in("user_id", clinicUserIds)
         .single();
 
       if (fetchError || !caseData) {

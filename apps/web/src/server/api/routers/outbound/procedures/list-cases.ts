@@ -6,6 +6,7 @@
  */
 
 import { TRPCError } from "@trpc/server";
+import { getClinicUserIds } from "@odis-ai/clinics/utils";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { listDischargeCasesInput, type DischargeCaseStatus } from "../schemas";
 
@@ -175,6 +176,9 @@ export const listCasesRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
 
+      // Get all user IDs in the same clinic for shared view
+      const clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
+
       // Build base query with all related data
       let query = ctx.supabase
         .from("cases")
@@ -240,7 +244,7 @@ export const listCasesRouter = createTRPCRouter({
         `,
           { count: "exact" },
         )
-        .eq("user_id", userId)
+        .in("user_id", clinicUserIds)
         .eq("status", "completed") // Only show completed cases ready for discharge
         .order("created_at", { ascending: false });
 
