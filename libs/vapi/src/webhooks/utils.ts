@@ -122,14 +122,23 @@ export function mapEndedReasonToStatus(
 
 /**
  * List of ended reasons that indicate a failed call
+ *
+ * These reasons indicate the call did not successfully reach a live person
+ * or deliver the intended message, so they should be marked as failed for retry.
  */
 const FAILED_ENDED_REASONS = [
+  // Dialing failures
   "dial-busy",
   "dial-failed",
   "dial-no-answer",
-  "assistant-error",
+  // Timeout failures
+  "silence-timed-out",
+  "customer-did-not-answer",
   "exceeded-max-duration",
+  // Voicemail (handled specially based on settings)
   "voicemail",
+  // Assistant/system errors
+  "assistant-error",
   "assistant-not-found",
   "assistant-not-invalid",
   "assistant-not-provided",
@@ -138,8 +147,12 @@ const FAILED_ENDED_REASONS = [
   "assistant-request-returned-unspeakable-error",
   "assistant-request-returned-invalid-json",
   "assistant-request-returned-no-content",
+  // Provider failures
   "twilio-failed-to-connect-call",
   "vonage-rejected",
+  // Connection errors (partial match)
+  "sip-outbound-call-failed",
+  "failed-to-connect",
 ];
 
 /**
@@ -191,8 +204,15 @@ export function shouldMarkInboundCallAsFailed(endedReason?: string): boolean {
 
 /**
  * Reasons that should trigger a retry
+ * These are transient failures where trying again later might succeed
  */
-const RETRYABLE_REASONS = ["dial-busy", "dial-no-answer", "voicemail"];
+const RETRYABLE_REASONS = [
+  "dial-busy",
+  "dial-no-answer",
+  "voicemail",
+  "silence-timed-out",
+  "customer-did-not-answer",
+];
 
 /**
  * Determine if a call should be retried based on ended reason

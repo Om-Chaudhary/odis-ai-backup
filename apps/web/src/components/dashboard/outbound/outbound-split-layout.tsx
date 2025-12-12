@@ -45,12 +45,15 @@ export function OutboundSplitLayout({
   }, [onCloseRightPanel]);
 
   return (
-    <PanelGroup direction="horizontal" className="h-full gap-3">
+    <PanelGroup
+      direction="horizontal"
+      className="h-full w-full gap-3 overflow-hidden"
+    >
       {/* Left Panel - Table */}
-      <Panel defaultSize={100} minSize={35} className="overflow-hidden">
+      <Panel defaultSize={100} minSize={35} className="min-w-0 overflow-hidden">
         <div
           className={cn(
-            "flex h-full flex-col overflow-hidden",
+            "flex h-full w-full flex-col overflow-hidden",
             "rounded-xl border border-teal-200/40",
             "bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70",
             "shadow-lg shadow-teal-500/5 backdrop-blur-md",

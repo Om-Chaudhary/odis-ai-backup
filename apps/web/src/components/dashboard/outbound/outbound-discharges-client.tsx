@@ -529,7 +529,7 @@ export function OutboundDischargesClient() {
     retryDelivery.isPending;
 
   return (
-    <div className="flex h-[calc(100vh-64px)] flex-col gap-2">
+    <div className="flex h-[calc(100vh-64px)] w-full flex-col gap-2 overflow-hidden">
       {/* Test Mode Banner */}
       {settingsData?.testModeEnabled && (
         <div className="mx-auto w-full max-w-[1800px] px-4">
@@ -584,7 +584,7 @@ export function OutboundDischargesClient() {
       </PageToolbar>
 
       {/* Main Content Area */}
-      <div className="min-h-0 flex-1">
+      <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
         {viewMode === "needs_review" ? (
           // Needs Review View
           <PageContainer className="h-full">

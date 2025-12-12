@@ -35,6 +35,55 @@ interface TableCaseBase {
   scheduledEmailFor: string | null;
   scheduledCallFor: string | null;
   dischargeSummary?: string;
+  scheduledCall?: {
+    endedReason?: string | null;
+  } | null;
+}
+
+/**
+ * Get a friendly failure reason from ended_reason
+ */
+function getFailureReason(
+  endedReason: string | null | undefined,
+  emailFailed: boolean,
+): string {
+  if (emailFailed && !endedReason) {
+    return "Email failed";
+  }
+
+  if (!endedReason) {
+    return "Failed";
+  }
+
+  const reason = endedReason.toLowerCase();
+
+  if (reason.includes("silence-timed-out")) {
+    return "No response";
+  }
+  if (
+    reason.includes("customer-did-not-answer") ||
+    reason.includes("dial-no-answer")
+  ) {
+    return "No pickup";
+  }
+  if (reason.includes("dial-busy")) {
+    return "Line busy";
+  }
+  if (reason.includes("voicemail")) {
+    return "Voicemail";
+  }
+  if (
+    reason.includes("sip") ||
+    reason.includes("failed-to-connect") ||
+    reason.includes("twilio")
+  ) {
+    return "Connection error";
+  }
+  if (reason.includes("error")) {
+    return "Call error";
+  }
+
+  return "Failed";
 }
 
 interface OutboundCaseTableProps<T extends TableCaseBase> {
@@ -128,16 +177,16 @@ export function OutboundCaseTable<T extends TableCaseBase>({
   }
 
   return (
-    <div ref={tableRef} className="h-full overflow-auto">
-      <table className="w-full">
+    <div ref={tableRef} className="h-full w-full overflow-auto">
+      <table className="w-full min-w-0 table-fixed">
         <thead className="sticky top-0 z-10 border-b border-teal-100/50 bg-gradient-to-r from-teal-50/40 to-white/60 backdrop-blur-sm">
           <tr className="text-xs text-slate-500">
-            <th className="h-10 w-[32%] pl-4 text-left font-medium">Patient</th>
-            <th className="h-10 w-[15%] text-left font-medium">Case Type</th>
-            <th className="h-10 w-[8%] text-center font-medium">Phone</th>
-            <th className="h-10 w-[8%] text-center font-medium">Email</th>
-            <th className="h-10 w-[22%] text-center font-medium">Actions</th>
-            <th className="h-10 w-[15%] pr-4 text-right font-medium">Time</th>
+            <th className="h-10 w-[28%] pl-3 text-left font-medium">Patient</th>
+            <th className="h-10 w-[14%] text-left font-medium">Case Type</th>
+            <th className="h-10 w-[10%] text-center font-medium">Phone</th>
+            <th className="h-10 w-[10%] text-center font-medium">Email</th>
+            <th className="h-10 w-[18%] text-center font-medium">Actions</th>
+            <th className="h-10 w-[20%] pr-3 text-right font-medium">Time</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-teal-50">
@@ -172,12 +221,12 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                 }}
               >
                 {/* Patient */}
-                <td className="py-3 pl-4">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-medium text-slate-800">
+                <td className="py-3 pl-3">
+                  <div className="flex flex-col gap-0.5 overflow-hidden">
+                    <span className="truncate text-sm font-medium text-slate-800">
                       {caseItem.patient.name}
                     </span>
-                    <span className="text-xs text-slate-500">
+                    <span className="truncate text-xs text-slate-500">
                       {caseItem.owner.name ?? "Unknown Owner"}
                     </span>
                   </div>
@@ -210,7 +259,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                 </td>
 
                 {/* Time / Schedule */}
-                <td className="py-3 pr-4 text-right text-xs">
+                <td className="py-3 pr-3 text-right text-xs">
                   <ScheduleTimeDisplay
                     status={caseItem.status}
                     timestamp={caseItem.timestamp}
@@ -289,9 +338,13 @@ function ActionCell<T extends TableCaseBase>({
   }
 
   if (caseItem.status === "failed") {
+    const failureReason = getFailureReason(
+      caseItem.scheduledCall?.endedReason,
+      caseItem.emailSent === "failed",
+    );
     return (
       <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
-        Failed
+        {failureReason}
       </span>
     );
   }
@@ -463,37 +516,37 @@ function DeliveryIcon({
  */
 function CaseTableSkeleton() {
   return (
-    <div className="p-4">
+    <div className="w-full overflow-hidden p-3">
       {/* Header skeleton */}
-      <div className="mb-4 flex gap-4 border-b border-teal-100/50 pb-3">
-        <div className="h-3 w-[32%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[15%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[8%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[8%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[22%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[15%] animate-pulse rounded bg-teal-100/50" />
+      <div className="mb-4 flex gap-3 border-b border-teal-100/50 pb-3">
+        <div className="h-3 w-[28%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[14%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[10%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[10%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[18%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[20%] animate-pulse rounded bg-teal-100/50" />
       </div>
       {/* Row skeletons */}
       {Array.from({ length: 10 }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-4 border-b border-teal-50 py-3"
+          className="flex items-center gap-3 border-b border-teal-50 py-3"
         >
-          <div className="w-[32%] space-y-1.5">
-            <div className="h-4 w-24 animate-pulse rounded bg-teal-100/40" />
-            <div className="h-3 w-32 animate-pulse rounded bg-teal-50" />
+          <div className="w-[28%] space-y-1.5">
+            <div className="h-4 w-20 animate-pulse rounded bg-teal-100/40" />
+            <div className="h-3 w-28 animate-pulse rounded bg-teal-50" />
           </div>
-          <div className="h-5 w-16 animate-pulse rounded-md bg-teal-50" />
-          <div className="flex w-[8%] justify-center">
+          <div className="h-5 w-14 animate-pulse rounded-md bg-teal-50" />
+          <div className="flex w-[10%] justify-center">
             <div className="h-6 w-6 animate-pulse rounded-full bg-teal-50" />
           </div>
-          <div className="flex w-[8%] justify-center">
+          <div className="flex w-[10%] justify-center">
             <div className="h-6 w-6 animate-pulse rounded-full bg-teal-50" />
           </div>
-          <div className="flex w-[22%] justify-center">
-            <div className="h-7 w-20 animate-pulse rounded-md bg-teal-50" />
+          <div className="flex w-[18%] justify-center">
+            <div className="h-7 w-16 animate-pulse rounded-md bg-teal-50" />
           </div>
-          <div className="h-3 w-16 animate-pulse rounded bg-teal-50" />
+          <div className="h-3 w-14 animate-pulse rounded bg-teal-50" />
         </div>
       ))}
     </div>

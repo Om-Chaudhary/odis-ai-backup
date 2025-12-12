@@ -106,7 +106,7 @@ export function PageToolbar({ children, className }: PageToolbarProps) {
  */
 export function PageContent({ children, className }: PageContentProps) {
   return (
-    <div className={cn("min-h-0 flex-1 overflow-auto", className)}>
+    <div className={cn("min-h-0 min-w-0 flex-1 overflow-auto", className)}>
       {children}
     </div>
   );
