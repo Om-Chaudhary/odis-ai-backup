@@ -101,6 +101,7 @@ interface CaseRow {
   user_id: string;
   metadata: CaseMetadata | null;
   extreme_case_check: unknown;
+  is_starred: boolean | null;
   patients: PatientData[];
   discharge_summaries: DischargeSummaryData[];
   scheduled_discharge_calls: ScheduledCallData[];
@@ -272,6 +273,7 @@ export const listCasesRouter = createTRPCRouter({
           user_id,
           metadata,
           extreme_case_check,
+          is_starred,
           patients (
             id,
             name,
@@ -505,6 +507,7 @@ export const listCasesRouter = createTRPCRouter({
           scheduledEmailFor: emailScheduledFor,
           scheduledCallFor: callScheduledFor,
           isTestCall,
+          isStarred: c.is_starred ?? false,
         };
       });
 
