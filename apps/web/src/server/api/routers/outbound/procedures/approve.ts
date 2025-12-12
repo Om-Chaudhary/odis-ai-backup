@@ -2,6 +2,7 @@
  * Approve and Schedule Procedure
  *
  * Schedules discharge call and/or email for a case.
+ * Auto-generates discharge summary if missing using SOAP notes or entity extraction.
  * Uses user-configured delay settings:
  * - email_delay_days (default 1): Days after approval to send email
  * - call_delay_days (default 2): Days after approval to make call
@@ -11,8 +12,16 @@
 
 import { TRPCError } from "@trpc/server";
 import { addDays, setHours, setMinutes, setSeconds } from "date-fns";
+import { getClinicUserIds } from "@odis-ai/clinics/utils";
+import { generateStructuredDischargeSummaryWithRetry } from "@odis-ai/ai/generate-structured-discharge";
+import type { NormalizedEntities } from "@odis-ai/validators/scribe";
+import type { Json } from "@odis-ai/types";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { approveAndScheduleInput } from "../schemas";
+
+// Dynamic import for lazy-loaded library
+const getCasesService = () =>
+  import("@odis-ai/services-cases").then((m) => m.CasesService);
 
 /**
  * Calculate scheduled time based on delay days and preferred time
@@ -58,65 +67,224 @@ export const approveRouter = createTRPCRouter({
       const preferredCallTime =
         userSettings?.preferred_call_start_time ?? "14:00";
 
-      // Fetch case with patient and discharge summary
-      const { data: caseData, error: caseError } = await ctx.supabase
+      // Get all user IDs in the same clinic for shared access
+      const clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
+
+      // Verify case belongs to clinic
+      const { data: caseCheck, error: caseCheckError } = await ctx.supabase
         .from("cases")
-        .select(
-          `
-          id,
-          status,
-          patients (
-            id,
-            name,
-            species,
-            breed,
-            owner_name,
-            owner_phone,
-            owner_email
-          ),
-          discharge_summaries (
-            id,
-            content,
-            structured_content
-          )
-        `,
-        )
+        .select("id, user_id")
         .eq("id", input.caseId)
-        .eq("user_id", userId)
+        .in("user_id", clinicUserIds)
         .single();
 
-      if (caseError || !caseData) {
+      if (caseCheckError || !caseCheck) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Case not found",
         });
       }
 
-      const patient = Array.isArray(caseData.patients)
-        ? caseData.patients[0]
-        : caseData.patients;
-      const dischargeSummary = Array.isArray(caseData.discharge_summaries)
-        ? caseData.discharge_summaries[0]
-        : caseData.discharge_summaries;
+      // Fetch case with all related data using CasesService
+      const CasesService = await getCasesService();
+      const caseInfo = await CasesService.getCaseWithEntities(
+        ctx.supabase,
+        input.caseId,
+      );
 
-      if (!dischargeSummary) {
+      if (!caseInfo) {
         throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Case does not have a discharge summary",
+          code: "NOT_FOUND",
+          message: "Case not found",
         });
+      }
+
+      const patient = Array.isArray(caseInfo.patient)
+        ? caseInfo.patient[0]
+        : caseInfo.patient;
+
+      // Check for existing discharge summary
+      const existingDischargeSummary = caseInfo.dischargeSummaries?.[0];
+      let summaryContent = existingDischargeSummary?.content ?? "";
+      let summaryId: string | undefined = existingDischargeSummary?.id;
+      let wasGenerated = false;
+
+      // Auto-generate discharge summary if missing
+      if (!existingDischargeSummary) {
+        console.log(
+          "[Approve] No discharge summary found, auto-generating...",
+          {
+            caseId: input.caseId,
+            hasSoapNotes: !!caseInfo.soapNotes?.length,
+            hasEntities: !!caseInfo.entities,
+          },
+        );
+
+        // Step 1: Extract SOAP content from soap_notes
+        let soapContent: string | null = null;
+        if (caseInfo.soapNotes && caseInfo.soapNotes.length > 0) {
+          const latestSoapNote = caseInfo.soapNotes[0];
+          if (latestSoapNote) {
+            // Priority 1: client_instructions
+            if (latestSoapNote.client_instructions) {
+              soapContent = latestSoapNote.client_instructions;
+              console.log(
+                "[Approve] Using client_instructions from SOAP notes",
+              );
+            } else {
+              // Priority 2: Combine SOAP sections
+              const sections: string[] = [];
+              if (latestSoapNote.subjective) {
+                sections.push(`Subjective:\n${latestSoapNote.subjective}`);
+              }
+              if (latestSoapNote.objective) {
+                sections.push(`Objective:\n${latestSoapNote.objective}`);
+              }
+              if (latestSoapNote.assessment) {
+                sections.push(`Assessment:\n${latestSoapNote.assessment}`);
+              }
+              if (latestSoapNote.plan) {
+                sections.push(`Plan:\n${latestSoapNote.plan}`);
+              }
+              if (sections.length > 0) {
+                soapContent = sections.join("\n\n");
+                console.log("[Approve] Using combined SOAP sections");
+              }
+            }
+          }
+        }
+
+        // Step 2: Get and enrich entities
+        const entities: NormalizedEntities | null = caseInfo.entities ?? null;
+
+        // Enrich entities with patient data if available
+        if (entities && patient) {
+          CasesService.enrichEntitiesWithPatient(entities, patient);
+        }
+
+        // Enrich with IDEXX metadata if patient name is missing
+        if (
+          entities &&
+          (!entities.patient?.name || entities.patient.name === "unknown")
+        ) {
+          const idexxMetadata = caseInfo.metadata as {
+            idexx?: {
+              pet_name?: string;
+              species?: string;
+              client_first_name?: string;
+              client_last_name?: string;
+              owner_name?: string;
+              notes?: string;
+            };
+          } | null;
+
+          if (idexxMetadata?.idexx) {
+            const idexx = idexxMetadata.idexx;
+            if (idexx.pet_name?.trim()) {
+              entities.patient.name = idexx.pet_name;
+            }
+            if (
+              (!entities.patient.owner.name ||
+                entities.patient.owner.name === "unknown") &&
+              (idexx.owner_name ||
+                (idexx.client_first_name && idexx.client_last_name))
+            ) {
+              entities.patient.owner.name =
+                idexx.owner_name ??
+                `${idexx.client_first_name} ${idexx.client_last_name}`.trim();
+            }
+            // Use IDEXX notes as fallback for SOAP content
+            if (!soapContent && idexx.notes) {
+              soapContent = idexx.notes;
+              console.log("[Approve] Using IDEXX notes as fallback");
+            }
+          }
+        }
+
+        // Validate we have enough data to generate
+        if (!soapContent && !entities) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message:
+              "Cannot generate discharge summary: No clinical notes or entity data available",
+          });
+        }
+
+        // Step 3: Generate discharge summary
+        console.log("[Approve] Generating structured discharge summary...", {
+          caseId: input.caseId,
+          hasSoapContent: !!soapContent,
+          hasEntities: !!entities,
+          patientName: patient?.name ?? entities?.patient?.name,
+        });
+
+        const { structured, plainText } =
+          await generateStructuredDischargeSummaryWithRetry({
+            soapContent,
+            entityExtraction: entities,
+            patientData: {
+              name: patient?.name ?? entities?.patient?.name ?? undefined,
+              species:
+                patient?.species ?? entities?.patient?.species ?? undefined,
+              breed: patient?.breed ?? entities?.patient?.breed ?? undefined,
+              owner_name:
+                patient?.owner_name ??
+                entities?.patient?.owner?.name ??
+                undefined,
+            },
+          });
+
+        // Step 4: Save to database
+        const { data: newSummary, error: summaryError } = await ctx.supabase
+          .from("discharge_summaries")
+          .insert({
+            case_id: input.caseId,
+            user_id: userId,
+            content: plainText,
+            structured_content: structured as unknown as Json,
+          })
+          .select("id, content, structured_content")
+          .single();
+
+        if (summaryError || !newSummary) {
+          console.error(
+            "[Approve] Failed to save generated summary:",
+            summaryError,
+          );
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to save generated discharge summary",
+          });
+        }
+
+        console.log(
+          "[Approve] Successfully generated and saved discharge summary",
+          {
+            caseId: input.caseId,
+            summaryId: newSummary.id,
+          },
+        );
+
+        summaryContent = newSummary.content;
+        summaryId = newSummary.id;
+        wasGenerated = true;
       }
 
       const now = new Date();
       const results: {
         callScheduled: boolean;
         emailScheduled: boolean;
+        summaryGenerated: boolean;
         callId?: string;
         emailId?: string;
         emailScheduledFor?: string;
         callScheduledFor?: string;
+        summaryId?: string;
       } = {
         callScheduled: false,
         emailScheduled: false,
+        summaryGenerated: wasGenerated,
+        summaryId,
       };
 
       // Schedule email if enabled and email available
@@ -136,7 +304,7 @@ export const approveRouter = createTRPCRouter({
             recipient_email: patient.owner_email,
             recipient_name: patient.owner_name,
             subject: `Discharge Instructions for ${patient.name}`,
-            html_content: dischargeSummary.content, // TODO: Use proper email template
+            html_content: summaryContent,
             scheduled_for: emailScheduledFor.toISOString(),
             status: "queued",
           })
@@ -170,11 +338,11 @@ export const approveRouter = createTRPCRouter({
             scheduled_for: callScheduledFor.toISOString(),
             status: "queued",
             dynamic_variables: {
-              pet_name: patient.name,
-              owner_name: patient.owner_name,
-              species: patient.species,
-              breed: patient.breed,
-              discharge_summary: dischargeSummary.content,
+              pet_name: patient?.name,
+              owner_name: patient?.owner_name,
+              species: patient?.species,
+              breed: patient?.breed,
+              discharge_summary: summaryContent,
             },
           })
           .select("id")
