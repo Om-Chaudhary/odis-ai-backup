@@ -1,6 +1,12 @@
 /**
  * Date grouping utilities for call history
+ *
+ * Uses timezone-aware date handling to ensure consistent grouping
+ * regardless of where the code runs (client or server).
  */
+
+import { toZonedTime, format as formatTz } from "date-fns-tz";
+import { DEFAULT_TIMEZONE } from "./timezone";
 
 export type DateGroup = "today" | "yesterday" | "this_week" | "older";
 
@@ -12,13 +18,27 @@ export interface DateGroupLabel {
 
 /**
  * Get the date group for a given timestamp
+ *
+ * @param timestamp - UTC timestamp (ISO string or Date)
+ * @param timezone - IANA timezone string (defaults to DEFAULT_TIMEZONE)
  */
-export function getDateGroup(timestamp: string | Date): DateGroup {
-  const date = new Date(timestamp);
+export function getDateGroup(
+  timestamp: string | Date,
+  timezone: string = DEFAULT_TIMEZONE,
+): DateGroup {
+  const date = typeof timestamp === "string" ? new Date(timestamp) : timestamp;
   const now = new Date();
 
+  // Convert both dates to the target timezone for comparison
+  const zonedDate = toZonedTime(date, timezone);
+  const zonedNow = toZonedTime(now, timezone);
+
   // Reset time to midnight for accurate day comparison
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const today = new Date(
+    zonedNow.getFullYear(),
+    zonedNow.getMonth(),
+    zonedNow.getDate(),
+  );
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
 
@@ -26,9 +46,9 @@ export function getDateGroup(timestamp: string | Date): DateGroup {
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
   const callDate = new Date(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate(),
+    zonedDate.getFullYear(),
+    zonedDate.getMonth(),
+    zonedDate.getDate(),
   );
 
   if (callDate.getTime() === today.getTime()) {
@@ -76,11 +96,14 @@ export function getDateGroupLabel(
 
 /**
  * Group an array of items by date
+ *
  * @param items - Array of items with created_at timestamp
+ * @param timezone - IANA timezone string (defaults to DEFAULT_TIMEZONE)
  * @returns Map of date groups to items
  */
 export function groupByDate<T extends { created_at: string }>(
   items: T[],
+  timezone: string = DEFAULT_TIMEZONE,
 ): Map<DateGroup, T[]> {
   const groups = new Map<DateGroup, T[]>([
     ["today", []],
@@ -90,7 +113,7 @@ export function groupByDate<T extends { created_at: string }>(
   ]);
 
   items.forEach((item) => {
-    const group = getDateGroup(item.created_at);
+    const group = getDateGroup(item.created_at, timezone);
     groups.get(group)?.push(item);
   });
 
@@ -109,36 +132,47 @@ export const DATE_GROUP_ORDER: DateGroup[] = [
 
 /**
  * Format a date for display in a specific group
+ *
+ * @param timestamp - UTC timestamp (ISO string or Date)
+ * @param group - The date group this timestamp belongs to
+ * @param timezone - IANA timezone string (defaults to DEFAULT_TIMEZONE)
  */
 export function formatDateInGroup(
   timestamp: string | Date,
   group: DateGroup,
+  timezone: string = DEFAULT_TIMEZONE,
 ): string {
-  const date = new Date(timestamp);
+  const date = typeof timestamp === "string" ? new Date(timestamp) : timestamp;
 
   if (group === "today" || group === "yesterday") {
     // Show time for recent calls
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
+    return formatTz(date, "h:mm a", { timeZone: timezone });
   } else {
     // Show date for older calls
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year:
-        date.getFullYear() !== new Date().getFullYear() ? "numeric" : undefined,
-    });
+    const now = new Date();
+    const zonedDate = toZonedTime(date, timezone);
+    const zonedNow = toZonedTime(now, timezone);
+    const sameYear = zonedDate.getFullYear() === zonedNow.getFullYear();
+
+    if (sameYear) {
+      return formatTz(date, "MMM d", { timeZone: timezone });
+    } else {
+      return formatTz(date, "MMM d, yyyy", { timeZone: timezone });
+    }
   }
 }
 
 /**
  * Get relative time string (e.g., "2 hours ago", "3 days ago")
+ *
+ * @param timestamp - UTC timestamp (ISO string or Date)
+ * @param timezone - IANA timezone string (defaults to DEFAULT_TIMEZONE)
  */
-export function getRelativeTime(timestamp: string | Date): string {
-  const date = new Date(timestamp);
+export function getRelativeTime(
+  timestamp: string | Date,
+  timezone: string = DEFAULT_TIMEZONE,
+): string {
+  const date = typeof timestamp === "string" ? new Date(timestamp) : timestamp;
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffSeconds = Math.floor(diffMs / 1000);
@@ -156,10 +190,14 @@ export function getRelativeTime(timestamp: string | Date): string {
     return `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`;
   } else {
     // For older dates, return formatted date
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: date.getFullYear() !== now.getFullYear() ? "numeric" : undefined,
-    });
+    const zonedDate = toZonedTime(date, timezone);
+    const zonedNow = toZonedTime(now, timezone);
+    const sameYear = zonedDate.getFullYear() === zonedNow.getFullYear();
+
+    if (sameYear) {
+      return formatTz(date, "MMM d", { timeZone: timezone });
+    } else {
+      return formatTz(date, "MMM d, yyyy", { timeZone: timezone });
+    }
   }
 }

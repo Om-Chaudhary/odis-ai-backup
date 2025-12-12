@@ -6,7 +6,9 @@ import { sharingRouter } from "~/server/api/routers/sharing";
 import { usersRouter } from "~/server/api/routers/users";
 import { dashboardRouter } from "~/server/api/routers/dashboard";
 import { inboundCallsRouter } from "~/server/api/routers/inbound-calls";
+import { inboundRouter } from "~/server/api/routers/inbound";
 import { adminDischargeCallsRouter } from "~/server/api/routers/admin-discharge-calls";
+import { outboundRouter } from "~/server/api/routers/outbound";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
 /**
@@ -23,7 +25,9 @@ export const appRouter = createTRPCRouter({
   users: usersRouter,
   dashboard: dashboardRouter,
   inboundCalls: inboundCallsRouter,
+  inbound: inboundRouter,
   adminDischargeCalls: adminDischargeCallsRouter,
+  outbound: outboundRouter,
 });
 
 export type AppRouter = typeof appRouter;

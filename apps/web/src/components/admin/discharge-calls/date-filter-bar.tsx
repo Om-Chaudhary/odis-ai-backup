@@ -56,27 +56,31 @@ export function DateFilterBar({ value, onChange }: DateFilterBarProps) {
         break;
       case "today":
         onChange({
-          startDate: startOfDay(now).toISOString(),
-          endDate: endOfDay(now).toISOString(),
+          startDate: format(startOfDay(now), "yyyy-MM-dd"),
+          endDate: format(startOfDay(now), "yyyy-MM-dd"),
         });
         break;
-      case "yesterday":
+      case "yesterday": {
         const yesterday = subDays(now, 1);
         onChange({
-          startDate: startOfDay(yesterday).toISOString(),
-          endDate: endOfDay(yesterday).toISOString(),
+          startDate: format(startOfDay(yesterday), "yyyy-MM-dd"),
+          endDate: format(startOfDay(yesterday), "yyyy-MM-dd"),
         });
         break;
+      }
       case "week":
         onChange({
-          startDate: startOfWeek(now, { weekStartsOn: 1 }).toISOString(),
-          endDate: endOfDay(now).toISOString(),
+          startDate: format(
+            startOfWeek(now, { weekStartsOn: 1 }),
+            "yyyy-MM-dd",
+          ),
+          endDate: format(startOfDay(now), "yyyy-MM-dd"),
         });
         break;
       case "month":
         onChange({
-          startDate: startOfMonth(now).toISOString(),
-          endDate: endOfDay(now).toISOString(),
+          startDate: format(startOfMonth(now), "yyyy-MM-dd"),
+          endDate: format(startOfDay(now), "yyyy-MM-dd"),
         });
         break;
     }

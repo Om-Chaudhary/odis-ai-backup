@@ -116,9 +116,13 @@ export function CasesTab({
       return { startDate, endDate };
     }, [dateRangePreset, currentDate]);
 
-  // Convert dates to ISO strings for API calls
-  const startDate = calculatedStartDate?.toISOString() ?? null;
-  const endDate = calculatedEndDate?.toISOString() ?? null;
+  // Convert dates to YYYY-MM-DD strings for API calls - backend handles timezone conversion
+  const startDate = calculatedStartDate
+    ? format(calculatedStartDate, "yyyy-MM-dd")
+    : null;
+  const endDate = calculatedEndDate
+    ? format(calculatedEndDate, "yyyy-MM-dd")
+    : null;
 
   // Load view preference from localStorage on mount
   useEffect(() => {

@@ -63,6 +63,15 @@ export async function createInboundCallRecord(
 }
 
 /**
+ * Existing call record with optional case_id for outbound calls
+ */
+export interface ExistingCallRecord {
+  id: string;
+  metadata: unknown;
+  case_id?: string | null;
+}
+
+/**
  * Fetch existing call record
  *
  * @param vapiCallId - VAPI call ID
@@ -74,10 +83,10 @@ export async function fetchExistingCall(
   vapiCallId: string,
   tableName: string,
   supabase: SupabaseClient,
-): Promise<{ id: string; metadata: unknown } | null> {
+): Promise<ExistingCallRecord | null> {
   const { data, error } = await supabase
     .from(tableName)
-    .select("id, metadata")
+    .select("id, metadata, case_id")
     .eq("vapi_call_id", vapiCallId)
     .single();
 

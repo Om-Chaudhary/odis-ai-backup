@@ -4,6 +4,7 @@
   "sourceRoot": "libs/vapi/src",
   "projectType": "library",
   "tags": ["type:lib", "scope:vapi", "platform:node"],
+  "implicitDependencies": ["ai"],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",

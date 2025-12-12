@@ -8,6 +8,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import type { CallStatus } from "@odis-ai/types";
+import { getLocalDayRange, DEFAULT_TIMEZONE } from "@odis-ai/utils/timezone";
 import { type CaseWithPatients, type DynamicVariables } from "./types";
 
 export const listingsRouter = createTRPCRouter({
@@ -33,28 +34,39 @@ export const listingsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
 
-      // Validate and parse dates
-      let startDate: Date | undefined;
-      let endDate: Date | undefined;
+      // Validate and parse dates with timezone-aware boundaries
+      let startIso: string | undefined;
+      let endIso: string | undefined;
 
       if (input.startDate) {
-        startDate = new Date(input.startDate);
-        if (isNaN(startDate.getTime())) {
+        // Validate the date format
+        const testDate = new Date(input.startDate);
+        if (isNaN(testDate.getTime())) {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "Invalid startDate format",
           });
         }
+        // Get timezone-aware start of day
+        const { startISO } = getLocalDayRange(
+          input.startDate,
+          DEFAULT_TIMEZONE,
+        );
+        startIso = startISO;
       }
 
       if (input.endDate) {
-        endDate = new Date(input.endDate);
-        if (isNaN(endDate.getTime())) {
+        // Validate the date format
+        const testDate = new Date(input.endDate);
+        if (isNaN(testDate.getTime())) {
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: "Invalid endDate format",
           });
         }
+        // Get timezone-aware end of day
+        const { endISO } = getLocalDayRange(input.endDate, DEFAULT_TIMEZONE);
+        endIso = endISO;
       }
 
       // Build base query
@@ -88,14 +100,12 @@ export const listingsRouter = createTRPCRouter({
         query = query.eq("source", input.source);
       }
 
-      if (startDate) {
-        query = query.gte("created_at", startDate.toISOString());
+      if (startIso) {
+        query = query.gte("created_at", startIso);
       }
 
-      if (endDate) {
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        query = query.lte("created_at", end.toISOString());
+      if (endIso) {
+        query = query.lte("created_at", endIso);
       }
 
       // If missingDischarge or missingSoap filters are active, we need to fetch all cases

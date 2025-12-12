@@ -8,6 +8,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { checkCaseDischargeReadiness } from "@odis-ai/utils/discharge-readiness";
+import { getLocalDayRange, DEFAULT_TIMEZONE } from "@odis-ai/utils/timezone";
 import type { BackendCase } from "@odis-ai/types";
 import { getClinicUserIds } from "@odis-ai/clinics/utils";
 
@@ -36,25 +37,24 @@ export const userCasesRouter = createTRPCRouter({
 
       // Determine date range: use startDate/endDate if provided, otherwise use single date
       // If no date parameters provided at all, search all time (used when search is active)
-      let startDate: Date | null = null;
-      let endDate: Date | null = null;
+      // Uses timezone-aware boundaries to ensure cases are filtered by LOCAL day, not UTC day
+      let startIso: string | null = null;
+      let endIso: string | null = null;
       const hasDateFilter = !!(input.startDate ?? input.endDate ?? input.date);
 
       if (input.startDate && input.endDate) {
-        // Date range mode
-        startDate = new Date(input.startDate);
-        startDate.setUTCHours(0, 0, 0, 0);
-        endDate = new Date(input.endDate);
-        endDate.setUTCHours(23, 59, 59, 999);
+        // Date range mode - get proper timezone-aware boundaries
+        const startRange = getLocalDayRange(input.startDate, DEFAULT_TIMEZONE);
+        const endRange = getLocalDayRange(input.endDate, DEFAULT_TIMEZONE);
+        startIso = startRange.startISO;
+        endIso = endRange.endISO;
       } else if (input.date) {
-        // Single date mode (backward compatible)
-        const selectedDate = new Date(input.date);
-        selectedDate.setUTCHours(0, 0, 0, 0);
-        endDate = new Date(selectedDate);
-        endDate.setUTCHours(23, 59, 59, 999);
-        startDate = selectedDate;
+        // Single date mode (backward compatible) - get proper timezone-aware boundaries
+        const dayRange = getLocalDayRange(input.date, DEFAULT_TIMEZONE);
+        startIso = dayRange.startISO;
+        endIso = dayRange.endISO;
       }
-      // else: no date filter = search all time (startDate and endDate remain null)
+      // else: no date filter = search all time (startIso and endIso remain null)
 
       // Get total count - filter by scheduled_at (with created_at fallback when scheduled_at is null)
       // We need to count cases where:
@@ -62,10 +62,7 @@ export const userCasesRouter = createTRPCRouter({
       // 2. scheduled_at is null AND created_at is in range
       let count: number | null = null;
 
-      if (hasDateFilter && startDate && endDate) {
-        const startIso = startDate.toISOString();
-        const endIso = endDate.toISOString();
-
+      if (hasDateFilter && startIso && endIso) {
         // Use .or() to implement COALESCE(scheduled_at, created_at) logic
         // Filter by clinic users for shared dashboard access
         const { count: filteredCount } = await ctx.supabase
@@ -151,10 +148,7 @@ export const userCasesRouter = createTRPCRouter({
 
       // Apply date filter by scheduled_at (with created_at fallback when scheduled_at is null)
       // Cases are shown on the day they are scheduled for, or created_at if not scheduled
-      if (hasDateFilter && startDate && endDate) {
-        const startIso = startDate.toISOString();
-        const endIso = endDate.toISOString();
-
+      if (hasDateFilter && startIso && endIso) {
         // Use .or() to implement COALESCE(scheduled_at, created_at) logic
         dataQuery = dataQuery.or(
           `and(scheduled_at.gte.${startIso},scheduled_at.lte.${endIso}),and(scheduled_at.is.null,created_at.gte.${startIso},created_at.lte.${endIso})`,
@@ -275,9 +269,10 @@ export const userCasesRouter = createTRPCRouter({
             ? 1
             : Math.ceil(totalCases / input.pageSize),
         },
-        date: startDate
-          ? startDate.toISOString().split("T")[0]
-          : new Date().toISOString().split("T")[0], // Return start date in YYYY-MM-DD format, or today if no filter
+        date:
+          input.date ??
+          input.startDate ??
+          new Date().toISOString().split("T")[0], // Return date in YYYY-MM-DD format, or today if no filter
         userEmail: ctx.user.email, // Include user email for transform layer
         testModeSettings: {
           enabled: testModeEnabled,

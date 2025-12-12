@@ -7,6 +7,7 @@ import {
   LogOut,
   PhoneIncoming,
   PhoneOutgoing,
+  ChevronsUpDown,
 } from "lucide-react";
 import {
   Sidebar,
@@ -20,14 +21,110 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
+  useSidebar,
 } from "@odis-ai/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@odis-ai/ui/avatar";
-import { Button } from "@odis-ai/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@odis-ai/ui/dropdown-menu";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { signOut } from "~/server/actions/auth";
 import type { User } from "@supabase/supabase-js";
+
+interface NavUserProps {
+  user: User;
+  fullName: string;
+  initials: string;
+  avatarUrl?: string | null;
+  settingsUrl: string;
+}
+
+function NavUser({
+  user,
+  fullName,
+  initials,
+  avatarUrl,
+  settingsUrl,
+}: NavUserProps) {
+  const { isMobile } = useSidebar();
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <SidebarMenuButton
+          size="lg"
+          className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+        >
+          <Avatar className="h-8 w-8 rounded-lg">
+            {avatarUrl && <AvatarImage src={avatarUrl} alt={fullName} />}
+            <AvatarFallback className="rounded-lg bg-[#31aba3]/10 text-[#31aba3]">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div className="grid flex-1 text-left text-sm leading-tight">
+            <span className="truncate font-semibold">{fullName}</span>
+            <span className="text-muted-foreground truncate text-xs">
+              {user.email}
+            </span>
+          </div>
+          <ChevronsUpDown className="ml-auto size-4" />
+        </SidebarMenuButton>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+        side={isMobile ? "bottom" : "right"}
+        align="end"
+        sideOffset={4}
+      >
+        <DropdownMenuLabel className="p-0 font-normal">
+          <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+            <Avatar className="h-8 w-8 rounded-lg">
+              {avatarUrl && <AvatarImage src={avatarUrl} alt={fullName} />}
+              <AvatarFallback className="rounded-lg bg-[#31aba3]/10 text-[#31aba3]">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-semibold">{fullName}</span>
+              <span className="text-muted-foreground truncate text-xs">
+                {user.email}
+              </span>
+            </div>
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem asChild>
+            <Link href={settingsUrl}>
+              <Settings />
+              Settings
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          asChild
+          className="text-red-600 focus:bg-red-50 focus:text-red-600"
+        >
+          <form action={signOut} className="w-full">
+            <button type="submit" className="flex w-full items-center gap-2">
+              <LogOut />
+              Log out
+            </button>
+          </form>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 /**
  * Build a clinic-scoped URL
@@ -133,9 +230,9 @@ export function AppSidebar({
                     className="h-8 w-8 rounded-lg"
                   />
                 </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
+                <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Odis AI</span>
-                  <span className="text-muted-foreground truncate text-xs">
+                  <span className="text-muted-foreground truncate overflow-hidden text-xs text-ellipsis">
                     {clinicName}
                   </span>
                 </div>
@@ -213,37 +310,16 @@ export function AppSidebar({
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="py-3">
+      <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <div className="flex items-center gap-3 px-2 py-1">
-              <Avatar className="h-8 w-8 shrink-0 rounded-lg">
-                {profile?.avatar_url && (
-                  <AvatarImage src={profile.avatar_url} alt={fullName} />
-                )}
-                <AvatarFallback className="rounded-lg bg-[#31aba3]/10 text-[#31aba3]">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">{fullName}</span>
-                <span className="text-muted-foreground truncate text-xs">
-                  {user.email}
-                </span>
-              </div>
-            </div>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <form action={signOut} className="w-full">
-              <Button
-                type="submit"
-                variant="ghost"
-                className="w-full justify-start text-slate-700 transition-all hover:bg-red-50 hover:text-red-600"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
-              </Button>
-            </form>
+            <NavUser
+              user={user}
+              fullName={fullName}
+              initials={initials}
+              avatarUrl={profile?.avatar_url}
+              settingsUrl={settingsUrl}
+            />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
