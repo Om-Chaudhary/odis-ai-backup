@@ -163,23 +163,27 @@ export const approveRouter = createTRPCRouter({
         }
 
         // Enrich with IDEXX metadata if patient name is missing
-        if (
-          entities &&
-          (!entities.patient?.name || entities.patient.name === "unknown")
-        ) {
-          const idexxMetadata = caseInfo.metadata as {
-            idexx?: {
-              pet_name?: string;
-              species?: string;
-              client_first_name?: string;
-              client_last_name?: string;
-              owner_name?: string;
-              notes?: string;
-            };
-          } | null;
+        // Also use IDEXX consultation_notes as fallback for SOAP content
+        const idexxMetadata = caseInfo.metadata as {
+          idexx?: {
+            pet_name?: string;
+            species?: string;
+            client_first_name?: string;
+            client_last_name?: string;
+            owner_name?: string;
+            notes?: string;
+            consultation_notes?: string;
+          };
+        } | null;
 
-          if (idexxMetadata?.idexx) {
-            const idexx = idexxMetadata.idexx;
+        if (idexxMetadata?.idexx) {
+          const idexx = idexxMetadata.idexx;
+
+          // Enrich entities with patient name if missing
+          if (
+            entities &&
+            (!entities.patient?.name || entities.patient.name === "unknown")
+          ) {
             if (idexx.pet_name?.trim()) {
               entities.patient.name = idexx.pet_name;
             }
@@ -193,8 +197,24 @@ export const approveRouter = createTRPCRouter({
                 idexx.owner_name ??
                 `${idexx.client_first_name} ${idexx.client_last_name}`.trim();
             }
-            // Use IDEXX notes as fallback for SOAP content
-            if (!soapContent && idexx.notes) {
+          }
+
+          // Use IDEXX consultation_notes (rich clinical data) or notes as fallback for SOAP content
+          if (!soapContent) {
+            if (idexx.consultation_notes) {
+              // Strip HTML tags from consultation_notes
+              soapContent = idexx.consultation_notes
+                .replace(/<[^>]*>/g, " ")
+                .replace(/&nbsp;/g, " ")
+                .replace(/&amp;/g, "&")
+                .replace(/&lt;/g, "<")
+                .replace(/&gt;/g, ">")
+                .replace(/\s+/g, " ")
+                .trim();
+              console.log(
+                "[Approve] Using IDEXX consultation_notes as fallback",
+              );
+            } else if (idexx.notes) {
               soapContent = idexx.notes;
               console.log("[Approve] Using IDEXX notes as fallback");
             }

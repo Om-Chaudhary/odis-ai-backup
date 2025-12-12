@@ -18,10 +18,13 @@ import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/api/cors";
 
 const logger = loggers.api.child("vapi-schedule-appointment");
 
+// Default VAPI assistant ID for clinic lookup
+const DEFAULT_ASSISTANT_ID = "ae3e6a54-17a3-4915-9c3e-48779b5dbf09";
+
 // --- Request Schema ---
 const ScheduleAppointmentSchema = z.object({
-  // VAPI context (for clinic lookup)
-  assistant_id: z.string().min(1, "assistant_id is required"),
+  // VAPI context (for clinic lookup) - defaults to standard inbound assistant
+  assistant_id: z.string().optional().default(DEFAULT_ASSISTANT_ID),
 
   // Client info
   client_first_name: z.string().min(1, "client_first_name is required"),
@@ -136,29 +139,231 @@ function parsePreferredTime(timeStr?: string): string | null {
 }
 
 /**
+ * Extract tool arguments from VAPI request payload
+ * VAPI can send tool calls in multiple formats:
+ * 1. Direct: { client_first_name: "...", ... }
+ * 2. Tool-calls message with parameters: { message: { toolCallList: [{ parameters: {...} }] } }
+ * 3. Tool-calls message with function.arguments (OpenAI format): { message: { toolCallList: [{ function: { arguments: "{...}" } }] } }
+ * 4. toolWithToolCallList format: { message: { toolWithToolCallList: [{ toolCall: { ... } }] } }
+ */
+function extractToolArguments(body: Record<string, unknown>): {
+  arguments: Record<string, unknown>;
+  toolCallId?: string;
+  callId?: string;
+  assistantId?: string;
+} {
+  // Check if this is a VAPI webhook format with message wrapper
+  const message = body.message as Record<string, unknown> | undefined;
+
+  if (message) {
+    // Extract call info for context
+    const call = message.call as Record<string, unknown> | undefined;
+    const callId = call?.id as string | undefined;
+    const assistantId = call?.assistantId as string | undefined;
+
+    // Check for toolCallList format
+    const toolCallList = message.toolCallList as
+      | Array<{
+          id?: string;
+          parameters?: Record<string, unknown>;
+          function?: { name?: string; arguments?: string };
+        }>
+      | undefined;
+
+    if (toolCallList && toolCallList.length > 0) {
+      const firstTool = toolCallList[0];
+
+      // Try parameters first (VAPI native format)
+      if (
+        firstTool?.parameters &&
+        Object.keys(firstTool.parameters).length > 0
+      ) {
+        return {
+          arguments: firstTool.parameters,
+          toolCallId: firstTool?.id,
+          callId,
+          assistantId,
+        };
+      }
+
+      // Try function.arguments (OpenAI format - arguments is a JSON string)
+      if (firstTool?.function?.arguments) {
+        try {
+          const parsedArgs = JSON.parse(firstTool.function.arguments) as Record<
+            string,
+            unknown
+          >;
+          return {
+            arguments: parsedArgs,
+            toolCallId: firstTool?.id,
+            callId,
+            assistantId,
+          };
+        } catch (e) {
+          // If parsing fails, log and continue to fallback
+          logger.warn("Failed to parse function.arguments", {
+            arguments: firstTool.function.arguments,
+            error: e instanceof Error ? e.message : String(e),
+          });
+        }
+      }
+
+      // Return empty if neither format has data
+      return {
+        arguments: firstTool?.parameters ?? {},
+        toolCallId: firstTool?.id,
+        callId,
+        assistantId,
+      };
+    }
+
+    // Check for toolWithToolCallList format
+    const toolWithToolCallList = message.toolWithToolCallList as
+      | Array<{
+          toolCall?: {
+            id?: string;
+            parameters?: Record<string, unknown>;
+            function?: { name?: string; arguments?: string };
+          };
+        }>
+      | undefined;
+
+    if (toolWithToolCallList && toolWithToolCallList.length > 0) {
+      const firstTool = toolWithToolCallList[0]?.toolCall;
+
+      // Try parameters first
+      if (
+        firstTool?.parameters &&
+        Object.keys(firstTool.parameters).length > 0
+      ) {
+        return {
+          arguments: firstTool.parameters,
+          toolCallId: firstTool?.id,
+          callId,
+          assistantId,
+        };
+      }
+
+      // Try function.arguments (OpenAI format)
+      if (firstTool?.function?.arguments) {
+        try {
+          const parsedArgs = JSON.parse(firstTool.function.arguments) as Record<
+            string,
+            unknown
+          >;
+          return {
+            arguments: parsedArgs,
+            toolCallId: firstTool?.id,
+            callId,
+            assistantId,
+          };
+        } catch (e) {
+          logger.warn(
+            "Failed to parse function.arguments in toolWithToolCallList",
+            {
+              arguments: firstTool.function.arguments,
+              error: e instanceof Error ? e.message : String(e),
+            },
+          );
+        }
+      }
+
+      return {
+        arguments: firstTool?.parameters ?? {},
+        toolCallId: firstTool?.id,
+        callId,
+        assistantId,
+      };
+    }
+  }
+
+  // Fallback: assume direct format (arguments at top level)
+  return { arguments: body };
+}
+
+/**
+ * Build response in VAPI tool call format if toolCallId is present
+ * Otherwise return a standard JSON response
+ */
+function buildVapiResponse(
+  request: NextRequest,
+  result: Record<string, unknown>,
+  toolCallId?: string,
+  status = 200,
+) {
+  // If this is a VAPI tool call, return in VAPI's expected format
+  if (toolCallId) {
+    return withCorsHeaders(
+      request,
+      NextResponse.json({
+        results: [
+          {
+            toolCallId,
+            result: JSON.stringify(result),
+          },
+        ],
+      }),
+    );
+  }
+
+  // Standard JSON response for direct API calls
+  return withCorsHeaders(request, NextResponse.json(result, { status }));
+}
+
+/**
  * Handle POST request - submit appointment request
  */
 export async function POST(request: NextRequest) {
   try {
     // Parse request body
-    const body = await request.json();
+    const rawBody = await request.json();
+
+    // Log raw request for debugging (info level to show in Vercel)
+    logger.info("Raw request body received", { body: rawBody });
+
+    // Extract arguments from VAPI payload format
+    const {
+      arguments: toolArgs,
+      toolCallId,
+      callId,
+      assistantId,
+    } = extractToolArguments(rawBody as Record<string, unknown>);
+
+    logger.info("Extracted tool arguments", {
+      toolArgs,
+      toolCallId,
+      callId,
+      assistantId,
+    });
+
+    // Build the body for validation, adding assistant_id and vapi_call_id if available
+    const body = {
+      ...toolArgs,
+      // Use assistant_id from call if not in args
+      assistant_id:
+        (toolArgs.assistant_id as string) ??
+        assistantId ??
+        DEFAULT_ASSISTANT_ID,
+      // Use call_id as vapi_call_id if not in args
+      vapi_call_id: (toolArgs.vapi_call_id as string) ?? callId,
+    };
 
     // Validate input
     const validation = ScheduleAppointmentSchema.safeParse(body);
     if (!validation.success) {
       logger.warn("Validation failed", {
         errors: validation.error.format(),
+        receivedBody: body,
       });
-      return withCorsHeaders(
+      return buildVapiResponse(
         request,
-        NextResponse.json(
-          {
-            success: false,
-            error: "Validation failed",
-            details: validation.error.format(),
-          },
-          { status: 400 },
-        ),
+        {
+          success: false,
+          error: "Validation failed",
+          details: validation.error.format(),
+        },
+        toolCallId,
+        400,
       );
     }
 
@@ -170,17 +375,16 @@ export async function POST(request: NextRequest) {
     // Look up clinic by assistant_id
     const clinic = await findClinicByAssistantId(supabase, input.assistant_id);
     if (!clinic) {
-      return withCorsHeaders(
+      return buildVapiResponse(
         request,
-        NextResponse.json(
-          {
-            success: false,
-            error: "Clinic not found",
-            message:
-              "Unable to identify clinic from assistant_id. Please contact support.",
-          },
-          { status: 404 },
-        ),
+        {
+          success: false,
+          error: "Clinic not found",
+          message:
+            "Unable to identify clinic from assistant_id. Please contact support.",
+        },
+        toolCallId,
+        404,
       );
     }
 
@@ -188,15 +392,16 @@ export async function POST(request: NextRequest) {
     const requestedDate = parsePreferredDate(input.preferred_date);
     const requestedTime = parsePreferredTime(input.preferred_time);
 
-    // Build appointment request record
+    // Build appointment request record (simplified - uses proper columns instead of metadata)
     const appointmentRequest = {
       clinic_id: clinic.id,
       client_name: `${input.client_first_name} ${input.client_last_name}`,
       client_phone: input.client_phone,
       patient_name: input.patient_name,
       reason: input.reason_for_visit,
+      // Time fields are now nullable - only set if provided
       requested_date: requestedDate?.toISOString().split("T")[0] ?? null,
-      requested_start_time: requestedTime ?? "09:00:00", // Default to 9am if not specified
+      requested_start_time: requestedTime ?? null,
       requested_end_time: requestedTime
         ? // Add 30 minutes for end time
           (() => {
@@ -207,16 +412,18 @@ export async function POST(request: NextRequest) {
             const endMinute = (minute + 30) % 60;
             return `${endHour.toString().padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}:00`;
           })()
-        : "09:30:00",
+        : null,
       status: "pending",
       vapi_call_id: input.vapi_call_id ?? null,
+      // These are now proper columns instead of metadata
+      species: input.species,
+      breed: input.breed ?? null,
+      is_new_client: input.is_new_client,
+      is_outlier: input.is_outlier,
+      notes: input.notes ?? null,
+      // Keep metadata for any additional context
       metadata: {
         source: "vapi",
-        species: input.species,
-        breed: input.breed ?? null,
-        is_new_client: input.is_new_client,
-        is_outlier: input.is_outlier,
-        notes: input.notes ?? null,
         preferred_date_raw: input.preferred_date ?? null,
         preferred_time_raw: input.preferred_time ?? null,
       },
@@ -234,17 +441,16 @@ export async function POST(request: NextRequest) {
         error: insertError,
         clinicId: clinic.id,
       });
-      return withCorsHeaders(
+      return buildVapiResponse(
         request,
-        NextResponse.json(
-          {
-            success: false,
-            error: "Failed to save appointment request",
-            message:
-              "We couldn't save your appointment request. Please try again or call the clinic directly.",
-          },
-          { status: 500 },
-        ),
+        {
+          success: false,
+          error: "Failed to save appointment request",
+          message:
+            "We couldn't save your appointment request. Please try again or call the clinic directly.",
+        },
+        toolCallId,
+        500,
       );
     }
 
@@ -254,17 +460,19 @@ export async function POST(request: NextRequest) {
       clinicName: clinic.name,
       patientName: input.patient_name,
       isNewClient: input.is_new_client,
+      toolCallId,
     });
 
     // Return success response for VAPI
-    return withCorsHeaders(
+    return buildVapiResponse(
       request,
-      NextResponse.json({
+      {
         success: true,
         message: `Your appointment request has been submitted to ${clinic.name}. The clinic will contact you to confirm the appointment.`,
         appointment_request_id: inserted.id,
         clinic_name: clinic.name,
-      }),
+      },
+      toolCallId,
     );
   } catch (error) {
     logger.error("Unexpected error in schedule-appointment", {
@@ -272,6 +480,8 @@ export async function POST(request: NextRequest) {
       stack: error instanceof Error ? error.stack : undefined,
     });
 
+    // For catch block, we may not have toolCallId available
+    // Return standard error response
     return withCorsHeaders(
       request,
       NextResponse.json(
@@ -304,7 +514,6 @@ export async function GET() {
     endpoint: "/api/vapi/schedule-appointment",
     method: "POST",
     required_fields: [
-      "assistant_id",
       "client_first_name",
       "client_last_name",
       "client_phone",
@@ -315,11 +524,13 @@ export async function GET() {
       "is_outlier",
     ],
     optional_fields: [
+      "assistant_id",
       "breed",
       "preferred_date",
       "preferred_time",
       "notes",
       "vapi_call_id",
     ],
+    default_assistant_id: DEFAULT_ASSISTANT_ID,
   });
 }

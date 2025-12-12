@@ -67,6 +67,7 @@ interface SoapNoteData {
 interface CaseMetadata {
   idexx?: {
     notes?: string;
+    consultation_notes?: string;
   };
   [key: string]: unknown;
 }
@@ -293,8 +294,19 @@ export const listCasesRouter = createTRPCRouter({
         const hasEmail = !!patient?.owner_email;
 
         // Extract IDEXX notes from metadata
+        // Priority: consultation_notes (rich clinical data) > notes (short appointment note)
         const metadata = c.metadata;
-        const idexxNotes = metadata?.idexx?.notes ?? null;
+        const rawConsultationNotes = metadata?.idexx?.consultation_notes;
+        const idexxNotes = rawConsultationNotes
+          ? rawConsultationNotes
+              .replace(/<[^>]*>/g, " ")
+              .replace(/&nbsp;/g, " ")
+              .replace(/&amp;/g, "&")
+              .replace(/&lt;/g, "<")
+              .replace(/&gt;/g, ">")
+              .replace(/\s+/g, " ")
+              .trim()
+          : (metadata?.idexx?.notes ?? null);
 
         // Transform SOAP notes
         const soapNotes = (c.soap_notes ?? []).map((note) => ({

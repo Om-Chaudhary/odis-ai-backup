@@ -258,7 +258,7 @@ export interface DischargeCase {
   emailContent: string;
 
   // Clinical notes
-  idexxNotes: string | null; // IDEXX Neo consultation notes from metadata.idexx.notes
+  idexxNotes: string | null; // IDEXX Neo consultation notes (from metadata.idexx.consultation_notes, fallback to metadata.idexx.notes)
   soapNotes: SoapNote[]; // SOAP notes from soap_notes table
 
   // Scheduling
