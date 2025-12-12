@@ -5,23 +5,14 @@ import { format, formatDistanceToNow, parseISO, isPast } from "date-fns";
 import {
   Phone,
   Mail,
-  CheckCircle,
+  CheckCircle2,
   Clock,
   AlertCircle,
   MinusCircle,
   Loader2,
-  Calendar,
+  Send,
 } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@odis-ai/ui/table";
-import { Badge } from "@odis-ai/ui/badge";
-import { Skeleton } from "@odis-ai/ui/skeleton";
+import { Button } from "@odis-ai/ui/button";
 import { cn } from "@odis-ai/utils";
 import type { DischargeCaseStatus } from "./types";
 
@@ -33,6 +24,8 @@ interface TableCaseBase {
   };
   owner: {
     name: string | null;
+    phone: string | null;
+    email: string | null;
   };
   caseType: string | null;
   status: DischargeCaseStatus;
@@ -41,6 +34,7 @@ interface TableCaseBase {
   timestamp: string;
   scheduledEmailFor: string | null;
   scheduledCallFor: string | null;
+  dischargeSummary?: string;
 }
 
 interface OutboundCaseTableProps<T extends TableCaseBase> {
@@ -49,18 +43,20 @@ interface OutboundCaseTableProps<T extends TableCaseBase> {
   onSelectCase: (caseItem: T) => void;
   onKeyNavigation: (direction: "up" | "down") => void;
   isLoading: boolean;
+  // Quick scheduling props
+  onQuickSchedule?: (caseItem: T) => void;
+  schedulingCaseId?: string | null;
 }
 
 /**
- * Case Table Component
+ * Case Table Component (Compact Layout)
  *
  * Table columns:
  * 1. Patient: Pet name (bold) + owner name (muted, below)
  * 2. Case Type: Procedure/visit reason
- * 3. Status: Colored badge
- * 4. Phone: Icon showing sent/pending/failed/not-applicable
- * 5. Email: Icon showing sent/pending/failed/not-applicable
- * 6. Time: Discharge timestamp
+ * 3. Phone: Icon showing sent/pending/failed/not-applicable
+ * 4. Email: Icon showing sent/pending/failed/not-applicable
+ * 5. Time: Discharge timestamp
  *
  * Keyboard navigation:
  * - Arrow Up/Down: Navigate rows
@@ -73,6 +69,8 @@ export function OutboundCaseTable<T extends TableCaseBase>({
   onSelectCase,
   onKeyNavigation,
   isLoading,
+  onQuickSchedule,
+  schedulingCaseId,
 }: OutboundCaseTableProps<T>) {
   const tableRef = useRef<HTMLDivElement>(null);
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
@@ -131,34 +129,38 @@ export function OutboundCaseTable<T extends TableCaseBase>({
 
   return (
     <div ref={tableRef} className="h-full overflow-auto">
-      <Table>
-        <TableHeader className="bg-background sticky top-0 z-10">
-          <TableRow>
-            <TableHead className="w-[220px] pl-4">Patient</TableHead>
-            <TableHead className="w-[120px]">Case Type</TableHead>
-            <TableHead className="w-[100px]">Status</TableHead>
-            <TableHead className="w-[60px]">Phone</TableHead>
-            <TableHead className="w-[60px]">Email</TableHead>
-            <TableHead className="w-[80px]">Time</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
+      <table className="w-full">
+        <thead className="sticky top-0 z-10 border-b border-teal-100/50 bg-gradient-to-r from-teal-50/40 to-white/60 backdrop-blur-sm">
+          <tr className="text-xs text-slate-500">
+            <th className="h-10 w-[32%] pl-4 text-left font-medium">Patient</th>
+            <th className="h-10 w-[15%] text-left font-medium">Case Type</th>
+            <th className="h-10 w-[8%] text-center font-medium">Phone</th>
+            <th className="h-10 w-[8%] text-center font-medium">Email</th>
+            <th className="h-10 w-[22%] text-center font-medium">Actions</th>
+            <th className="h-10 w-[15%] pr-4 text-right font-medium">Time</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-teal-50">
           {cases.map((caseItem) => {
             const isSelected = selectedCaseId === caseItem.id;
             return (
-              <TableRow
+              <tr
                 key={caseItem.id}
                 ref={isSelected ? selectedRowRef : null}
                 className={cn(
-                  "cursor-pointer transition-colors",
-                  isSelected && "border-l-2 border-l-teal-500 bg-teal-50",
-                  caseItem.status === "failed" && !isSelected && "bg-red-50/50",
+                  "group cursor-pointer transition-all duration-150",
+                  isSelected
+                    ? "border-l-2 border-l-teal-500 bg-teal-50/70"
+                    : "hover:bg-teal-50/30",
+                  caseItem.status === "failed" &&
+                    !isSelected &&
+                    "bg-red-50/30 hover:bg-red-50/50",
                   caseItem.status === "in_progress" &&
                     !isSelected &&
-                    "bg-teal-50/30",
+                    "bg-teal-50/20",
                   caseItem.status === "scheduled" &&
                     !isSelected &&
-                    "bg-purple-50/30",
+                    "bg-purple-50/20",
                 )}
                 onClick={() => onSelectCase(caseItem)}
                 tabIndex={0}
@@ -170,51 +172,143 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                 }}
               >
                 {/* Patient */}
-                <TableCell className="pl-4">
-                  <div className="flex flex-col">
-                    <span className="font-medium">{caseItem.patient.name}</span>
-                    <span className="text-muted-foreground text-sm">
+                <td className="py-3 pl-4">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-medium text-slate-800">
+                      {caseItem.patient.name}
+                    </span>
+                    <span className="text-xs text-slate-500">
                       {caseItem.owner.name ?? "Unknown Owner"}
                     </span>
                   </div>
-                </TableCell>
+                </td>
 
                 {/* Case Type */}
-                <TableCell className="text-sm">
-                  {formatCaseType(caseItem.caseType)}
-                </TableCell>
-
-                {/* Status */}
-                <TableCell>
-                  <StatusBadge status={caseItem.status} />
-                </TableCell>
+                <td className="py-3">
+                  <span className="inline-flex rounded-md bg-slate-100/80 px-2 py-0.5 text-xs font-medium text-slate-600">
+                    {formatCaseType(caseItem.caseType)}
+                  </span>
+                </td>
 
                 {/* Phone Status */}
-                <TableCell>
+                <td className="py-3 text-center">
                   <DeliveryIcon status={caseItem.phoneSent} type="phone" />
-                </TableCell>
+                </td>
 
                 {/* Email Status */}
-                <TableCell>
+                <td className="py-3 text-center">
                   <DeliveryIcon status={caseItem.emailSent} type="email" />
-                </TableCell>
+                </td>
+
+                {/* Actions */}
+                <td className="py-3 text-center">
+                  <ActionCell
+                    caseItem={caseItem}
+                    onQuickSchedule={onQuickSchedule}
+                    isScheduling={schedulingCaseId === caseItem.id}
+                  />
+                </td>
 
                 {/* Time / Schedule */}
-                <TableCell className="text-sm">
+                <td className="py-3 pr-4 text-right text-xs">
                   <ScheduleTimeDisplay
                     status={caseItem.status}
                     timestamp={caseItem.timestamp}
                     scheduledEmailFor={caseItem.scheduledEmailFor}
                     scheduledCallFor={caseItem.scheduledCallFor}
                   />
-                </TableCell>
-              </TableRow>
+                </td>
+              </tr>
             );
           })}
-        </TableBody>
-      </Table>
+        </tbody>
+      </table>
     </div>
   );
+}
+
+/**
+ * Action cell for quick scheduling
+ * Shows "Schedule" button for pending_review cases, status badge for others
+ */
+function ActionCell<T extends TableCaseBase>({
+  caseItem,
+  onQuickSchedule,
+  isScheduling,
+}: {
+  caseItem: T;
+  onQuickSchedule?: (caseItem: T) => void;
+  isScheduling: boolean;
+}) {
+  const hasContact =
+    Boolean(caseItem.owner.phone) || Boolean(caseItem.owner.email);
+  const canSchedule =
+    caseItem.status === "pending_review" && hasContact && onQuickSchedule;
+
+  if (isScheduling) {
+    return (
+      <div className="flex items-center justify-center gap-1.5 text-amber-600">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        <span className="text-xs font-medium">Generating...</span>
+      </div>
+    );
+  }
+
+  if (canSchedule) {
+    return (
+      <Button
+        size="sm"
+        variant="outline"
+        className="h-7 gap-1.5 border-teal-200 bg-teal-50 px-3 text-xs font-medium text-teal-700 hover:bg-teal-100 hover:text-teal-800"
+        onClick={(e) => {
+          e.stopPropagation();
+          onQuickSchedule(caseItem);
+        }}
+      >
+        <Send className="h-3 w-3" />
+        Schedule
+      </Button>
+    );
+  }
+
+  // Show status badge for other statuses
+  if (caseItem.status === "scheduled") {
+    return (
+      <span className="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+        Scheduled
+      </span>
+    );
+  }
+
+  if (caseItem.status === "completed") {
+    return (
+      <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+        Sent
+      </span>
+    );
+  }
+
+  if (caseItem.status === "failed") {
+    return (
+      <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+        Failed
+      </span>
+    );
+  }
+
+  if (caseItem.status === "in_progress") {
+    return (
+      <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+        In Progress
+      </span>
+    );
+  }
+
+  if (caseItem.status === "pending_review" && !hasContact) {
+    return <span className="text-xs text-slate-400">No contact</span>;
+  }
+
+  return null;
 }
 
 /**
@@ -303,51 +397,6 @@ function formatCaseType(caseType: string | null): string {
 }
 
 /**
- * Status badge with appropriate color
- */
-function StatusBadge({ status }: { status: DischargeCaseStatus }) {
-  const config: Record<
-    DischargeCaseStatus,
-    { label: string; className: string; icon?: React.ReactNode }
-  > = {
-    pending_review: {
-      label: "Pending",
-      className: "bg-amber-100 text-amber-800 border-amber-200",
-    },
-    scheduled: {
-      label: "Scheduled",
-      className: "bg-purple-100 text-purple-800 border-purple-200",
-      icon: <Calendar className="mr-1 h-3 w-3" />,
-    },
-    ready: {
-      label: "Ready",
-      className: "bg-blue-100 text-blue-800 border-blue-200",
-    },
-    in_progress: {
-      label: "In Progress",
-      className: "bg-teal-100 text-teal-800 border-teal-200 animate-pulse",
-      icon: <Loader2 className="mr-1 h-3 w-3 animate-spin" />,
-    },
-    completed: {
-      label: "Completed",
-      className: "bg-green-100 text-green-800 border-green-200",
-    },
-    failed: {
-      label: "Failed",
-      className: "bg-red-100 text-red-800 border-red-200",
-    },
-  };
-
-  const { label, className, icon } = config[status];
-  return (
-    <Badge variant="outline" className={cn("font-medium", className)}>
-      {icon}
-      {label}
-    </Badge>
-  );
-}
-
-/**
  * Delivery status icon for phone/email columns
  */
 function DeliveryIcon({
@@ -361,41 +410,51 @@ function DeliveryIcon({
 
   if (status === "sent") {
     return (
-      <CheckCircle
-        className="h-4 w-4 text-green-600"
-        aria-label={`${type} sent`}
-      />
+      <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100">
+        <CheckCircle2
+          className="h-3.5 w-3.5 text-emerald-600"
+          aria-label={`${type} sent`}
+        />
+      </div>
     );
   }
   if (status === "pending") {
     return (
-      <Clock
-        className="h-4 w-4 text-amber-600"
-        aria-label={`${type} pending`}
-      />
+      <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-100">
+        <Clock
+          className="h-3.5 w-3.5 text-amber-600"
+          aria-label={`${type} pending`}
+        />
+      </div>
     );
   }
   if (status === "failed") {
     return (
-      <AlertCircle
-        className="h-4 w-4 text-red-600"
-        aria-label={`${type} failed`}
-      />
+      <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-100">
+        <AlertCircle
+          className="h-3.5 w-3.5 text-red-600"
+          aria-label={`${type} failed`}
+        />
+      </div>
     );
   }
   if (status === "not_applicable") {
     return (
-      <MinusCircle
-        className="text-muted-foreground h-4 w-4"
-        aria-label={`No ${type}`}
-      />
+      <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-200">
+        <MinusCircle
+          className="h-3.5 w-3.5 text-slate-500"
+          aria-label={`No ${type}`}
+        />
+      </div>
     );
   }
   return (
-    <Icon
-      className="text-muted-foreground/50 h-4 w-4"
-      aria-label={`${type} not scheduled`}
-    />
+    <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-200">
+      <Icon
+        className="h-3.5 w-3.5 text-slate-500"
+        aria-label={`${type} not scheduled`}
+      />
+    </div>
   );
 }
 
@@ -404,28 +463,37 @@ function DeliveryIcon({
  */
 function CaseTableSkeleton() {
   return (
-    <div className="space-y-2 p-4">
+    <div className="p-4">
       {/* Header skeleton */}
-      <div className="flex gap-4 border-b pb-2 pl-4">
-        <Skeleton className="h-4 w-[220px]" />
-        <Skeleton className="h-4 w-[120px]" />
-        <Skeleton className="h-4 w-[100px]" />
-        <Skeleton className="h-4 w-[60px]" />
-        <Skeleton className="h-4 w-[60px]" />
-        <Skeleton className="h-4 w-[80px]" />
+      <div className="mb-4 flex gap-4 border-b border-teal-100/50 pb-3">
+        <div className="h-3 w-[32%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[15%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[8%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[8%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[22%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[15%] animate-pulse rounded bg-teal-100/50" />
       </div>
       {/* Row skeletons */}
       {Array.from({ length: 10 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-4 py-3 pl-4">
-          <div className="w-[220px] space-y-1">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-3 w-32" />
+        <div
+          key={i}
+          className="flex items-center gap-4 border-b border-teal-50 py-3"
+        >
+          <div className="w-[32%] space-y-1.5">
+            <div className="h-4 w-24 animate-pulse rounded bg-teal-100/40" />
+            <div className="h-3 w-32 animate-pulse rounded bg-teal-50" />
           </div>
-          <Skeleton className="h-4 w-[120px]" />
-          <Skeleton className="h-6 w-[80px] rounded-full" />
-          <Skeleton className="h-4 w-4 rounded-full" />
-          <Skeleton className="h-4 w-4 rounded-full" />
-          <Skeleton className="h-4 w-[60px]" />
+          <div className="h-5 w-16 animate-pulse rounded-md bg-teal-50" />
+          <div className="flex w-[8%] justify-center">
+            <div className="h-6 w-6 animate-pulse rounded-full bg-teal-50" />
+          </div>
+          <div className="flex w-[8%] justify-center">
+            <div className="h-6 w-6 animate-pulse rounded-full bg-teal-50" />
+          </div>
+          <div className="flex w-[22%] justify-center">
+            <div className="h-7 w-20 animate-pulse rounded-md bg-teal-50" />
+          </div>
+          <div className="h-3 w-16 animate-pulse rounded bg-teal-50" />
         </div>
       ))}
     </div>
@@ -437,10 +505,12 @@ function CaseTableSkeleton() {
  */
 function CaseTableEmpty() {
   return (
-    <div className="flex h-full flex-col items-center justify-center py-16 text-center">
-      <CheckCircle className="text-muted-foreground mb-4 h-12 w-12" />
-      <p className="text-lg font-medium">All caught up!</p>
-      <p className="text-muted-foreground text-sm">
+    <div className="flex h-full flex-col items-center justify-center py-20 text-center">
+      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-teal-100 to-emerald-100">
+        <CheckCircle2 className="h-8 w-8 text-teal-600" />
+      </div>
+      <p className="text-lg font-semibold text-slate-800">All caught up!</p>
+      <p className="mt-1 text-sm text-slate-500">
         No discharge cases require attention right now.
       </p>
     </div>
