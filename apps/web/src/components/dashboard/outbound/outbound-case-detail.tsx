@@ -21,6 +21,10 @@ import {
   Wand2,
   Info,
   AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  Volume2,
+  Pause,
 } from "lucide-react";
 import { api } from "~/trpc/client";
 import { formatPhoneNumber } from "@odis-ai/utils/phone";
@@ -139,6 +143,7 @@ export function OutboundCaseDetail({
 }: OutboundCaseDetailProps) {
   const [activeTab, setActiveTab] = useState<PreviewTab>("call_script");
   const [communicationExpanded, setCommunicationExpanded] = useState(false);
+  const [dischargeSummaryExpanded, setDischargeSummaryExpanded] = useState(false);
 
   if (!caseData) {
     return <EmptyDetailState />;
@@ -150,6 +155,9 @@ export function OutboundCaseDetail({
   const showOutcome =
     caseData.status === "completed" || caseData.status === "failed";
   const showScheduleInfo = caseData.status === "scheduled";
+
+  // Check if case has been sent (completed or failed)
+  const isSentCase = caseData.status === "completed" || caseData.status === "failed";
 
   // Check if discharge summary needs to be generated
   const hasStructuredContent = Boolean(caseData.structuredContent?.patientName);
@@ -178,176 +186,87 @@ export function OutboundCaseDetail({
 
       {/* Scrollable Content */}
       <div className="flex-1 space-y-4 overflow-auto p-4">
-        {/* Urgent Reason Section - Show prominently for urgent cases */}
-        {caseData.isUrgentCase && caseData.scheduledCall?.id && (
-          <UrgentReasonSection callId={caseData.scheduledCall.id} />
-        )}
+        {isSentCase ? (
+          /* Layout for SENT cases (completed/failed) */
+          <>
+            {/* Delivery Complete Card */}
+            <DeliveryCompleteCard
+              status={caseData.status as "completed" | "failed"}
+              scheduledCall={caseData.scheduledCall}
+              caseData={caseData}
+            />
 
-        {/* Clinical Notes Section - Most Prominent */}
-        {(hasIdexxNotes || hasSoapNotes) && (
-          <ClinicalNotesSection
-            idexxNotes={caseData.idexxNotes}
-            soapNotes={caseData.soapNotes}
-            hasIdexxNotes={hasIdexxNotes}
-          />
-        )}
-
-        {/* Schedule Info for Scheduled Cases */}
-        {showScheduleInfo && (
-          <ScheduleInfoCard
-            emailScheduledFor={caseData.scheduledEmailFor}
-            callScheduledFor={caseData.scheduledCallFor}
-          />
-        )}
-
-        {/* Discharge Summary */}
-        <Card
-          className={
-            needsGeneration ? "border-amber-500/20 bg-amber-500/5" : ""
-          }
-        >
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                <Sparkles className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-                AI Discharge Summary
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {needsGeneration ? (
-              <div className="space-y-2">
-                {isSubmitting ? (
-                  <div className="flex items-center gap-2 text-amber-700">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-sm font-medium">
-                      Generating discharge instructions...
-                    </span>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex items-start gap-2 rounded-md bg-amber-100/50 p-3">
-                      <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-                      <div className="text-sm text-amber-800">
-                        <p className="font-medium">
-                          Discharge summary will be auto-generated
-                        </p>
-                        <p className="mt-1 text-amber-700">
-                          {hasClinicalData
-                            ? "Content will be created from the clinical notes above when you approve."
-                            : "A basic discharge message will be created from patient information."}
-                        </p>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            ) : caseData.structuredContent ? (
-              <StructuredDischargeSummaryDisplay
-                content={caseData.structuredContent}
-              />
-            ) : (
-              <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap">
-                {caseData.dischargeSummary || "No discharge summary available."}
-              </p>
+            {/* Urgent Reason Section - Show prominently for urgent cases */}
+            {caseData.isUrgentCase && caseData.scheduledCall?.id && (
+              <UrgentReasonSection callId={caseData.scheduledCall.id} />
             )}
-          </CardContent>
-        </Card>
 
-        {/* Communication Preview - Collapsible (only show if content exists) */}
-        {hasDischargeSummary && (
-          <Collapsible
-            open={communicationExpanded}
-            onOpenChange={setCommunicationExpanded}
-          >
-            <Card>
-              <CollapsibleTrigger asChild>
-                <CardHeader className="hover:bg-muted/50 cursor-pointer pb-2">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                      <FileText className="h-4 w-4" />
-                      Communication Preview
-                    </CardTitle>
-                    {communicationExpanded ? (
-                      <ChevronUp className="h-4 w-4" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4" />
-                    )}
-                  </div>
-                </CardHeader>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <CardContent className="pt-0">
-                  <Tabs
-                    value={activeTab}
-                    onValueChange={(v) => setActiveTab(v as PreviewTab)}
-                  >
-                    <TabsList className="grid w-full grid-cols-2">
-                      <TabsTrigger value="call_script" className="gap-2">
-                        <Phone className="h-4 w-4" />
-                        Call Script
-                      </TabsTrigger>
-                      <TabsTrigger value="email" className="gap-2">
-                        <Mail className="h-4 w-4" />
-                        Email
-                      </TabsTrigger>
-                    </TabsList>
+            {/* Clinical Notes Section */}
+            {(hasIdexxNotes || hasSoapNotes) && (
+              <ClinicalNotesSection
+                idexxNotes={caseData.idexxNotes}
+                soapNotes={caseData.soapNotes}
+                hasIdexxNotes={hasIdexxNotes}
+              />
+            )}
 
-                    <TabsContent value="call_script" className="mt-4">
-                      <PreviewContent
-                        content={callScript}
-                        structuredContent={caseData.structuredContent}
-                        onPlay={() => {
-                          // TODO: Implement TTS preview
-                        }}
-                        onEdit={() => {
-                          // TODO: Implement edit modal
-                        }}
-                        isEditable={isEditable}
-                        type="call"
-                      />
-                    </TabsContent>
+            {/* Communication Summary (intelligent display based on what was sent/available) */}
+            <CommunicationSummarySection
+              caseData={caseData}
+              callScript={callScript}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
+          </>
+        ) : (
+          /* Layout for UNSENT cases (pending_review, ready, scheduled) */
+          <>
+            {/* Urgent Reason Section - Show prominently for urgent cases */}
+            {caseData.isUrgentCase && caseData.scheduledCall?.id && (
+              <UrgentReasonSection callId={caseData.scheduledCall.id} />
+            )}
 
-                    <TabsContent value="email" className="mt-4">
-                      <PreviewContent
-                        content={
-                          caseData.emailContent || caseData.dischargeSummary
-                        }
-                        structuredContent={caseData.structuredContent}
-                        onEdit={() => {
-                          // TODO: Implement edit modal
-                        }}
-                        isEditable={isEditable}
-                        type="email"
-                      />
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
+            {/* Clinical Notes Section - Most Prominent */}
+            {(hasIdexxNotes || hasSoapNotes) && (
+              <ClinicalNotesSection
+                idexxNotes={caseData.idexxNotes}
+                soapNotes={caseData.soapNotes}
+                hasIdexxNotes={hasIdexxNotes}
+              />
+            )}
+
+            {/* Schedule Info for Scheduled Cases */}
+            {showScheduleInfo && (
+              <ScheduleInfoCard
+                emailScheduledFor={caseData.scheduledEmailFor}
+                callScheduledFor={caseData.scheduledCallFor}
+              />
+            )}
+
+            {/* Communication Summary */}
+            <CommunicationSummarySection
+              caseData={caseData}
+              callScript={callScript}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
+
+            {/* Delivery Options for unsent cases */}
+            {isEditable && (
+              <DeliveryToggleSection
+                toggles={deliveryToggles}
+                onChange={onToggleChange}
+                hasPhone={!!caseData.owner.phone}
+                hasEmail={!!caseData.owner.email}
+                phone={caseData.owner.phone}
+                email={caseData.owner.email}
+                testModeEnabled={testModeEnabled}
+              />
+            )}
+
+          </>
         )}
 
-        {/* Outcome Details for completed/failed */}
-        {showOutcome && (
-          <OutcomeDetails
-            status={caseData.status as "completed" | "failed"}
-            scheduledCall={caseData.scheduledCall}
-          />
-        )}
-
-        {/* Delivery Toggles */}
-        {isEditable && (
-          <DeliveryToggleSection
-            toggles={deliveryToggles}
-            onChange={onToggleChange}
-            hasPhone={!!caseData.owner.phone}
-            hasEmail={!!caseData.owner.email}
-            phone={caseData.owner.phone}
-            email={caseData.owner.email}
-            testModeEnabled={testModeEnabled}
-          />
-        )}
       </div>
 
       {/* Sticky Action Bar */}
@@ -401,6 +320,9 @@ function PatientHeader({ caseData }: { caseData: CaseData }) {
     ? calculateAge(caseData.patient.dateOfBirth)
     : null;
 
+  // Check if case has been sent to hide the case type badge
+  const isSentCase = caseData.status === "completed" || caseData.status === "failed";
+
   return (
     <div className="bg-muted/20 space-y-3 p-4 pt-10">
       {/* Patient Name & Case Link */}
@@ -416,7 +338,8 @@ function PatientHeader({ caseData }: { caseData: CaseData }) {
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          {caseData.caseType && (
+          {/* Only show case type badge for unsent cases */}
+          {!isSentCase && caseData.caseType && (
             <Badge variant="outline" className="whitespace-nowrap">
               <PawPrint className="mr-1 h-3 w-3" />
               {formatCaseType(caseData.caseType)}
@@ -1202,45 +1125,178 @@ function DeliveryToggleSection({
 }
 
 /**
- * Outcome details for completed/failed cases
+ * Delivery Complete Card for sent cases
  */
-function OutcomeDetails({
+function DeliveryCompleteCard({
   status,
   scheduledCall,
+  caseData,
 }: {
   status: "completed" | "failed";
   scheduledCall: ScheduledCallData | null;
+  caseData: CaseData;
 }) {
   const call = scheduledCall;
+  const isCompleted = status === "completed";
+
+  // Determine actual delivery status from case data
+  const emailStatus = caseData.emailSent;
+  const phoneStatus = caseData.phoneSent;
+  const hasOwnerEmail = Boolean(caseData.owner.email);
+  const hasOwnerPhone = Boolean(caseData.owner.phone);
+
+  // Generate delivery summary
+  const getDeliverySummary = () => {
+    if (status === "failed") {
+      return "Communications could not be delivered.";
+    }
+
+    if (call?.summary) {
+      // Use existing call summary if available
+      return call.summary;
+    }
+
+    if (call?.transcript) {
+      // Extract key points from transcript for a brief summary
+      const transcript = call.transcript;
+      if (transcript.length > 200) {
+        // Generate a simple summary from transcript
+        const sentences = transcript.split('.').filter(s => s.trim().length > 0);
+        const firstSentence = sentences[0]?.trim() + '.';
+        const lastSentence = sentences[sentences.length - 1]?.trim() + '.';
+        return `${firstSentence} Call completed successfully.`;
+      }
+      return "Call completed successfully with owner. Discharge instructions provided.";
+    }
+
+    return "Communications were delivered successfully.";
+  };
 
   return (
     <Card
       className={
         status === "failed"
-          ? "border-destructive/20 bg-destructive/5"
+          ? "border-red-500/20 bg-red-500/5"
           : "border-emerald-500/20 bg-emerald-500/5"
       }
     >
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">
-          {status === "completed" ? "Delivery Complete" : "Delivery Failed"}
+        <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          {isCompleted ? (
+            <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          ) : (
+            <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+          )}
+          {isCompleted ? "Delivery Complete" : "Delivery Failed"}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2">
-        {status === "failed" && call?.endedReason && (
-          <p className="text-destructive text-sm">Reason: {call.endedReason}</p>
-        )}
-        {status === "completed" && (
+      <CardContent className="space-y-3">
+        {status === "failed" ? (
           <>
-            <p className="text-sm text-emerald-700 dark:text-emerald-400">
-              Communications were delivered successfully.
+            <p className="text-sm text-red-700 dark:text-red-400">
+              {getDeliverySummary()}
             </p>
-            {call?.durationSeconds && (
-              <p className="text-muted-foreground text-xs">
-                Call duration: {Math.floor(call.durationSeconds / 60)}m{" "}
-                {call.durationSeconds % 60}s
+            {call?.endedReason && (
+              <p className="text-red-600 dark:text-red-400 text-sm">
+                Reason: {call.endedReason}
               </p>
             )}
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-emerald-700 dark:text-emerald-400">
+              {getDeliverySummary()}
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {/* Phone Call status - moved to left */}
+              <div className="flex items-center gap-2">
+                <div className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                  phoneStatus === "sent"
+                    ? "bg-emerald-100"
+                    : phoneStatus === "failed"
+                    ? "bg-red-100"
+                    : !hasOwnerPhone
+                    ? "bg-slate-100"
+                    : "bg-slate-100"
+                }`}>
+                  <Phone className={`h-4 w-4 ${
+                    phoneStatus === "sent"
+                      ? "text-emerald-600"
+                      : phoneStatus === "failed"
+                      ? "text-red-600"
+                      : "text-slate-500"
+                  }`} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Phone Call</p>
+                  <p className={`text-xs ${
+                    phoneStatus === "sent"
+                      ? "text-emerald-600"
+                      : phoneStatus === "failed"
+                      ? "text-red-600"
+                      : "text-slate-500"
+                  }`}>
+                    {phoneStatus === "sent" && call?.durationSeconds ? (
+                      `${Math.floor(call.durationSeconds / 60)}m ${call.durationSeconds % 60}s`
+                    ) : phoneStatus === "sent" ? (
+                      "Completed"
+                    ) : phoneStatus === "failed" ? (
+                      "Failed"
+                    ) : !hasOwnerPhone ? (
+                      "No phone available"
+                    ) : phoneStatus === "not_applicable" ? (
+                      "Not applicable"
+                    ) : (
+                      "Not sent"
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Email status - moved to right */}
+              <div className="flex items-center gap-2">
+                <div className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                  emailStatus === "sent"
+                    ? "bg-emerald-100"
+                    : emailStatus === "failed"
+                    ? "bg-red-100"
+                    : !hasOwnerEmail
+                    ? "bg-slate-100"
+                    : "bg-slate-100"
+                }`}>
+                  <Mail className={`h-4 w-4 ${
+                    emailStatus === "sent"
+                      ? "text-emerald-600"
+                      : emailStatus === "failed"
+                      ? "text-red-600"
+                      : "text-slate-500"
+                  }`} />
+                </div>
+                <div>
+                  <p className="text-sm font-medium">Email</p>
+                  <p className={`text-xs ${
+                    emailStatus === "sent"
+                      ? "text-emerald-600"
+                      : emailStatus === "failed"
+                      ? "text-red-600"
+                      : !hasOwnerEmail
+                      ? "text-slate-500"
+                      : "text-slate-500"
+                  }`}>
+                    {emailStatus === "sent"
+                      ? "Sent"
+                      : emailStatus === "failed"
+                      ? "Failed"
+                      : !hasOwnerEmail
+                      ? "No email available"
+                      : emailStatus === "not_applicable"
+                      ? "Not applicable"
+                      : "Not sent"
+                    }
+                  </p>
+                </div>
+              </div>
+            </div>
           </>
         )}
       </CardContent>
@@ -1596,6 +1652,517 @@ function StructuredDischargeSummaryDisplay({
           </p>
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Communication Summary Section - intelligent display based on actual delivery status
+ */
+function CommunicationSummarySection({
+  caseData,
+  callScript,
+  activeTab,
+  setActiveTab,
+}: {
+  caseData: CaseData;
+  callScript: string;
+  activeTab: PreviewTab;
+  setActiveTab: (tab: PreviewTab) => void;
+}) {
+  const emailStatus = caseData.emailSent;
+  const phoneStatus = caseData.phoneSent;
+  const hasOwnerEmail = Boolean(caseData.owner.email);
+  const hasOwnerPhone = Boolean(caseData.owner.phone);
+
+  // Determine what to show for each tab
+  const emailWasSent = emailStatus === "sent";
+  const phoneWasSent = phoneStatus === "sent";
+  const emailCanBeSent = hasOwnerEmail && !emailWasSent;
+  const phoneCanBeSent = hasOwnerPhone && !phoneWasSent;
+
+  // Determine tab labels
+  const getCallTabLabel = () => {
+    if (phoneWasSent && caseData.scheduledCall?.transcript) return "Call Transcript";
+    if (phoneWasSent) return "Call Sent";
+    if (phoneCanBeSent) return "Call Script";
+    return "Call Script";
+  };
+
+  const getEmailTabLabel = () => {
+    if (emailWasSent) return "Email Sent";
+    if (emailCanBeSent) return "Email Preview";
+    return "Email";
+  };
+
+  return (
+    <div className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => setActiveTab(v as PreviewTab)}
+      >
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="call_script" className="gap-2">
+            <Phone className="h-4 w-4" />
+            {getCallTabLabel()}
+          </TabsTrigger>
+          <TabsTrigger value="email" className="gap-2">
+            <Mail className="h-4 w-4" />
+            {getEmailTabLabel()}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="call_script" className="mt-4">
+          <CallTabContent
+            caseData={caseData}
+            callScript={callScript}
+            phoneWasSent={phoneWasSent}
+            phoneCanBeSent={phoneCanBeSent}
+            hasOwnerPhone={hasOwnerPhone}
+          />
+        </TabsContent>
+
+        <TabsContent value="email" className="mt-4">
+          <EmailTabContent
+            caseData={caseData}
+            emailWasSent={emailWasSent}
+            emailCanBeSent={emailCanBeSent}
+            hasOwnerEmail={hasOwnerEmail}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+/**
+ * Call Tab Content - shows transcript if sent, schedule button if not sent, or script preview
+ */
+function CallTabContent({
+  caseData,
+  callScript,
+  phoneWasSent,
+  phoneCanBeSent,
+  hasOwnerPhone,
+}: {
+  caseData: CaseData;
+  callScript: string;
+  phoneWasSent: boolean;
+  phoneCanBeSent: boolean;
+  hasOwnerPhone: boolean;
+}) {
+  // If phone was sent and we have transcript, show full transcript with audio
+  if (phoneWasSent && caseData.scheduledCall?.transcript) {
+    return (
+      <CallTranscriptDisplay
+        transcript={caseData.scheduledCall.transcript}
+        callData={caseData.scheduledCall}
+      />
+    );
+  }
+
+  // If phone was sent but no transcript, show sent confirmation
+  if (phoneWasSent) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            Call Completed
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-emerald-50/50 rounded-md p-3">
+            <p className="text-sm text-emerald-700">
+              Phone call was completed successfully.
+            </p>
+            {caseData.scheduledCall?.durationSeconds && (
+              <p className="text-xs text-emerald-600 mt-1">
+                Duration: {Math.floor(caseData.scheduledCall.durationSeconds / 60)}m{" "}
+                {caseData.scheduledCall.durationSeconds % 60}s
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // If phone can be sent, show schedule button
+  if (phoneCanBeSent) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
+            <Phone className="h-4 w-4 text-slate-500" />
+            Call Not Scheduled
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-slate-600">
+            This call has not been scheduled yet.
+          </p>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => {
+              // TODO: Implement schedule call functionality
+              console.log("Schedule call");
+            }}
+          >
+            <Phone className="mr-2 h-4 w-4" />
+            Schedule Call
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // If no phone available, show not available message
+  if (!hasOwnerPhone) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
+            <Phone className="h-4 w-4 text-slate-400" />
+            Call Not Available
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-slate-50 rounded-md p-3">
+            <p className="text-sm text-slate-600">
+              No phone number available for this owner.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Fallback: show call script
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <Phone className="h-4 w-4 text-slate-500" />
+          Call Script
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="bg-muted/50 max-h-80 overflow-auto rounded-md p-3">
+          <p className="text-sm whitespace-pre-wrap">
+            {callScript || "No call script available."}
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * Email Tab Content - shows sent email if sent, schedule button if not sent, or preview
+ */
+function EmailTabContent({
+  caseData,
+  emailWasSent,
+  emailCanBeSent,
+  hasOwnerEmail,
+}: {
+  caseData: CaseData;
+  emailWasSent: boolean;
+  emailCanBeSent: boolean;
+  hasOwnerEmail: boolean;
+}) {
+  // If email was sent, show the sent email content
+  if (emailWasSent) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            Email Sent
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {caseData.structuredContent ? (
+            <div className="max-h-96 overflow-auto">
+              <EmailStructuredPreview content={caseData.structuredContent} />
+            </div>
+          ) : (
+            <div className="bg-muted/50 max-h-96 overflow-auto rounded-md p-3">
+              <p className="text-sm whitespace-pre-wrap">
+                {caseData.emailContent || caseData.dischargeSummary || "No email content available."}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // If email can be sent, show schedule button
+  if (emailCanBeSent) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
+            <Mail className="h-4 w-4 text-slate-500" />
+            Email Not Scheduled
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-slate-600">
+            This email has not been scheduled yet.
+          </p>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => {
+              // TODO: Implement schedule email functionality
+              console.log("Schedule email");
+            }}
+          >
+            <Mail className="mr-2 h-4 w-4" />
+            Schedule Email
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // If no email available, show not available message
+  if (!hasOwnerEmail) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
+            <Mail className="h-4 w-4 text-slate-400" />
+            Email Not Available
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-slate-50 rounded-md p-3">
+            <p className="text-sm text-slate-600">
+              No email address available for this owner.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Fallback: show email preview
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <Mail className="h-4 w-4 text-slate-500" />
+          Email Preview
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {caseData.structuredContent ? (
+          <div className="max-h-96 overflow-auto">
+            <EmailStructuredPreview content={caseData.structuredContent} />
+          </div>
+        ) : (
+          <div className="bg-muted/50 max-h-96 overflow-auto rounded-md p-3">
+            <p className="text-sm whitespace-pre-wrap">
+              {caseData.emailContent || caseData.dischargeSummary || "No email content available."}
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * Call Recording Playback Component
+ */
+function CallTranscriptDisplay({
+  transcript,
+  callData,
+}: {
+  transcript: string;
+  callData: ScheduledCallData;
+}) {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(callData.durationSeconds || 0);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handlePlayPause = () => {
+    setIsPlaying(!isPlaying);
+    // TODO: Implement actual audio playback
+  };
+
+  const handleSeek = (value: number[]) => {
+    setCurrentTime(value[0]!);
+    // TODO: Implement actual audio seeking
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Audio Controls */}
+      <Card className="bg-slate-50/50 dark:bg-slate-900/30">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
+            <Phone className="h-4 w-4 text-slate-500" />
+            Call Recording
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePlayPause}
+              className="h-10 w-10 rounded-full p-0"
+            >
+              {isPlaying ? (
+                <Pause className="h-4 w-4" />
+              ) : (
+                <Play className="h-4 w-4" />
+              )}
+            </Button>
+
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">{formatTime(currentTime)}</span>
+                <span className="text-muted-foreground">{formatTime(duration)}</span>
+              </div>
+
+              {/* Progress slider */}
+              <div className="relative">
+                <input
+                  type="range"
+                  min={0}
+                  max={duration}
+                  value={currentTime}
+                  onChange={(e) => handleSeek([parseInt(e.target.value)])}
+                  className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider"
+                />
+              </div>
+            </div>
+
+            <Volume2 className="h-4 w-4 text-muted-foreground" />
+          </div>
+
+          <div className="mt-2 text-xs text-muted-foreground">
+            Call Duration: {formatTime(duration)}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Transcript */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium">
+            <FileText className="h-4 w-4 text-slate-500" />
+            Call Transcript
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-muted/50 max-h-80 overflow-auto rounded-md p-4">
+            <TranscriptDisplay transcript={transcript} />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+/**
+ * Transcript Display Component with improved formatting
+ */
+function TranscriptDisplay({ transcript }: { transcript: string }) {
+  // Parse the transcript and format it with color coding and spacing
+  const parseTranscript = (text: string) => {
+    const lines = text.split('\n').filter(line => line.trim().length > 0);
+    const parsedLines: { speaker: 'AI' | 'User' | 'Other'; text: string }[] = [];
+
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      if (trimmedLine.startsWith('AI:')) {
+        parsedLines.push({
+          speaker: 'AI',
+          text: trimmedLine.substring(3).trim()
+        });
+      } else if (trimmedLine.startsWith('User:')) {
+        parsedLines.push({
+          speaker: 'User',
+          text: trimmedLine.substring(5).trim()
+        });
+      } else if (trimmedLine.includes(': ')) {
+        // Handle other speaker formats like "Assistant: " or "Customer: "
+        const colonIndex = trimmedLine.indexOf(': ');
+        const speaker = trimmedLine.substring(0, colonIndex).trim();
+        const text = trimmedLine.substring(colonIndex + 2).trim();
+
+        // Map common speaker names to our standard format
+        if (speaker.toLowerCase().includes('ai') ||
+            speaker.toLowerCase().includes('assistant') ||
+            speaker.toLowerCase().includes('bot')) {
+          parsedLines.push({ speaker: 'AI', text });
+        } else if (speaker.toLowerCase().includes('user') ||
+                   speaker.toLowerCase().includes('customer') ||
+                   speaker.toLowerCase().includes('client')) {
+          parsedLines.push({ speaker: 'User', text });
+        } else {
+          parsedLines.push({ speaker: 'Other', text: trimmedLine });
+        }
+      } else if (trimmedLine.length > 0) {
+        // If no speaker prefix, treat as continuation of previous speaker or other
+        parsedLines.push({ speaker: 'Other', text: trimmedLine });
+      }
+    }
+
+    return parsedLines;
+  };
+
+  const formattedLines = parseTranscript(transcript);
+
+  if (formattedLines.length === 0) {
+    return (
+      <div className="text-sm text-slate-500 italic">
+        No transcript available
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {formattedLines.map((line, index) => (
+        <div key={index} className="leading-relaxed">
+          {line.speaker === 'AI' && (
+            <div>
+              <span className="font-semibold text-teal-600 dark:text-teal-400">AI:</span>
+              <span className="ml-2 text-sm text-slate-700 dark:text-slate-300">
+                {line.text}
+              </span>
+            </div>
+          )}
+          {line.speaker === 'User' && (
+            <div>
+              <span className="font-semibold text-blue-600 dark:text-blue-400">User:</span>
+              <span className="ml-2 text-sm text-slate-700 dark:text-slate-300">
+                {line.text}
+              </span>
+            </div>
+          )}
+          {line.speaker === 'Other' && (
+            <div className="text-sm text-slate-600 dark:text-slate-400">
+              {line.text}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
