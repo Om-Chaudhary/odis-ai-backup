@@ -133,9 +133,9 @@ export function AppSidebar({
                     className="h-8 w-8 rounded-lg"
                   />
                 </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
+                <div className="grid min-w-0 flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Odis AI</span>
-                  <span className="text-muted-foreground truncate text-xs">
+                  <span className="text-muted-foreground truncate overflow-hidden text-xs text-ellipsis">
                     {clinicName}
                   </span>
                 </div>
