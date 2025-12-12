@@ -8,7 +8,6 @@ import {
   PanelResizeHandle,
   type ImperativePanelHandle,
 } from "react-resizable-panels";
-import { Button } from "@odis-ai/ui/button";
 import { cn } from "@odis-ai/utils";
 
 interface OutboundSplitLayoutProps {
@@ -19,12 +18,11 @@ interface OutboundSplitLayoutProps {
 }
 
 /**
- * Split Layout Component
+ * Split Layout - Glassmorphism Theme
  *
- * Resizable split-view using react-resizable-panels:
- * - Left panel: Full width by default, 60% when detail panel is open
- * - Draggable divider: Only visible when right panel is open
- * - Right panel: Hidden by default, slides in when case is selected (40%)
+ * Resizable split-view with glassmorphism styling:
+ * - Left: Table (full width when no selection, 30% with detail)
+ * - Right: Detail panel (70% when open, collapses to 0)
  */
 export function OutboundSplitLayout({
   leftPanel,
@@ -34,11 +32,9 @@ export function OutboundSplitLayout({
 }: OutboundSplitLayoutProps) {
   const rightPanelRef = useRef<ImperativePanelHandle>(null);
 
-  // Expand/collapse panel based on showRightPanel prop
   useEffect(() => {
     if (showRightPanel) {
-      // Open to 60% width
-      rightPanelRef.current?.resize(60);
+      rightPanelRef.current?.resize(70);
     } else {
       rightPanelRef.current?.collapse();
     }
@@ -49,48 +45,71 @@ export function OutboundSplitLayout({
   }, [onCloseRightPanel]);
 
   return (
-    <PanelGroup
-      direction="horizontal"
-      className="h-full overflow-hidden rounded-lg border"
-    >
-      {/* Left Panel - Case Table (full width when no selection) */}
-      <Panel defaultSize={100} minSize={40} className="overflow-auto">
-        {leftPanel}
+    <PanelGroup direction="horizontal" className="h-full gap-3">
+      {/* Left Panel - Table */}
+      <Panel defaultSize={100} minSize={35} className="overflow-hidden">
+        <div
+          className={cn(
+            "flex h-full flex-col overflow-hidden",
+            "rounded-xl border border-teal-200/40",
+            "bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70",
+            "shadow-lg shadow-teal-500/5 backdrop-blur-md",
+          )}
+        >
+          {leftPanel}
+        </div>
       </Panel>
 
-      {/* Resize Handle - Only visible when right panel is shown */}
+      {/* Resize Handle */}
       <PanelResizeHandle
         className={cn(
-          "bg-border hover:bg-primary/20 relative w-1.5 transition-colors",
+          "group relative w-2 transition-all duration-200",
           !showRightPanel && "hidden",
         )}
       >
-        <div className="bg-border absolute inset-y-0 left-1/2 w-px -translate-x-1/2" />
+        <div
+          className={cn(
+            "absolute inset-y-4 left-1/2 w-1 -translate-x-1/2 rounded-full",
+            "bg-teal-200/50 transition-all duration-200",
+            "group-hover:bg-teal-400/60 group-hover:shadow-sm",
+            "group-active:bg-teal-500/70",
+          )}
+        />
       </PanelResizeHandle>
 
-      {/* Right Panel - Case Detail (hidden by default, opens to 60%) */}
+      {/* Right Panel - Detail */}
       <Panel
         ref={rightPanelRef}
         defaultSize={0}
-        minSize={30}
+        minSize={25}
         maxSize={75}
         collapsible
         collapsedSize={0}
         onCollapse={handlePanelCollapse}
-        className={cn("overflow-auto border-l", !showRightPanel && "hidden")}
+        className={cn("overflow-hidden", !showRightPanel && "hidden")}
       >
-        <div className="relative h-full">
-          {/* Close button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-2 right-2 z-10 h-8 w-8"
+        <div
+          className={cn(
+            "relative flex h-full flex-col overflow-hidden",
+            "rounded-xl border border-teal-200/40",
+            "bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70",
+            "shadow-lg shadow-teal-500/5 backdrop-blur-md",
+          )}
+        >
+          {/* Close Button */}
+          <button
             onClick={onCloseRightPanel}
-            aria-label="Close detail panel"
+            className={cn(
+              "absolute top-3 right-3 z-10",
+              "flex h-7 w-7 items-center justify-center rounded-lg",
+              "text-slate-400 transition-all duration-200",
+              "hover:bg-slate-100 hover:text-slate-600",
+            )}
+            aria-label="Close"
           >
             <X className="h-4 w-4" />
-          </Button>
-          {rightPanel}
+          </button>
+          <div className="flex-1 overflow-auto">{rightPanel}</div>
         </div>
       </Panel>
     </PanelGroup>
