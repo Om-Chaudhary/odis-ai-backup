@@ -1,5 +1,5 @@
 "use client";
-import { Phone, FileText, Volume2, AlertCircle } from "lucide-react";
+import { Phone, FileText, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
 import { AudioPlayer } from "@odis-ai/ui/audio-player";
 import { cn } from "@odis-ai/utils";
@@ -11,8 +11,6 @@ interface CallRecordingPlayerProps {
   transcript: string | null;
   /** Duration in seconds (used for display if audio metadata isn't available) */
   durationSeconds?: number | null;
-  /** Optional call summary from AI analysis */
-  summary?: string | null;
   /** Optional class name for the container */
   className?: string;
 }
@@ -27,7 +25,6 @@ export function CallRecordingPlayer({
   recordingUrl,
   transcript,
   durationSeconds,
-  summary,
   className,
 }: CallRecordingPlayerProps) {
   // If no recording URL, show a message
@@ -54,23 +51,6 @@ export function CallRecordingPlayer({
     <div className={cn("space-y-4", className)}>
       {/* Audio Player */}
       <AudioPlayer url={recordingUrl} duration={durationSeconds ?? undefined} />
-
-      {/* AI Summary (if available) */}
-      {summary && (
-        <Card className="border-teal-200/40 bg-teal-50/30 dark:bg-teal-900/10">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-teal-700 dark:text-teal-400">
-              <Volume2 className="h-4 w-4" />
-              Call Summary
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-              {summary}
-            </p>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Transcript */}
       {transcript && (

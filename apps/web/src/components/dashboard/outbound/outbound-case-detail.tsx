@@ -1843,7 +1843,6 @@ function CallTabContent({
         recordingUrl={caseData.scheduledCall.recordingUrl ?? null}
         transcript={caseData.scheduledCall.transcript}
         durationSeconds={caseData.scheduledCall.durationSeconds}
-        summary={caseData.scheduledCall.summary}
       />
     );
   }
