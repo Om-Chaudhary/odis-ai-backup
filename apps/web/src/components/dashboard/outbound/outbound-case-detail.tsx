@@ -147,6 +147,30 @@ export function OutboundCaseDetail({
   const [dischargeSummaryExpanded, setDischargeSummaryExpanded] =
     useState(false);
 
+  // Mutation for scheduling remaining outreach
+  const utils = api.useUtils();
+  const scheduleRemainingMutation =
+    api.outbound.scheduleRemainingOutreach.useMutation({
+      onSuccess: () => {
+        // Invalidate the cases list to refresh data
+        void utils.outbound.listDischargeCases.invalidate();
+      },
+    });
+
+  const handleScheduleRemaining = (options: {
+    scheduleCall: boolean;
+    scheduleEmail: boolean;
+    immediateDelivery: boolean;
+  }) => {
+    if (!caseData) return;
+    scheduleRemainingMutation.mutate({
+      caseId: caseData.caseId,
+      scheduleCall: options.scheduleCall,
+      scheduleEmail: options.scheduleEmail,
+      immediateDelivery: options.immediateDelivery,
+    });
+  };
+
   if (!caseData) {
     return <EmptyDetailState />;
   }
@@ -197,6 +221,8 @@ export function OutboundCaseDetail({
               status={caseData.status as "completed" | "failed"}
               scheduledCall={caseData.scheduledCall}
               caseData={caseData}
+              onScheduleRemaining={handleScheduleRemaining}
+              isScheduling={scheduleRemainingMutation.isPending}
             />
 
             {/* Urgent Reason Section - Show prominently for urgent cases */}
@@ -1131,16 +1157,27 @@ function DeliveryToggleSection({
 
 /**
  * Delivery Complete Card for sent cases
+ * Shows delivery status and allows scheduling remaining outreach for partial cases
  */
 function DeliveryCompleteCard({
   status,
   scheduledCall,
   caseData,
+  onScheduleRemaining,
+  isScheduling,
 }: {
   status: "completed" | "failed";
   scheduledCall: ScheduledCallData | null;
   caseData: CaseData;
+  onScheduleRemaining?: (options: {
+    scheduleCall: boolean;
+    scheduleEmail: boolean;
+    immediateDelivery: boolean;
+  }) => void;
+  isScheduling?: boolean;
 }) {
+  const [showScheduleOptions, setShowScheduleOptions] = useState(false);
+  const [immediateDelivery, setImmediateDelivery] = useState(false);
   const call = scheduledCall;
   const isCompleted = status === "completed";
 
@@ -1149,6 +1186,16 @@ function DeliveryCompleteCard({
   const phoneStatus = caseData.phoneSent;
   const hasOwnerEmail = Boolean(caseData.owner.email);
   const hasOwnerPhone = Boolean(caseData.owner.phone);
+
+  // Detect partial outreach - one method sent, other can still be scheduled
+  const emailSent = emailStatus === "sent";
+  const phoneSent = phoneStatus === "sent";
+  const canScheduleCall =
+    !phoneSent && hasOwnerPhone && phoneStatus !== "pending";
+  const canScheduleEmail =
+    !emailSent && hasOwnerEmail && emailStatus !== "pending";
+  const hasPartialOutreach =
+    (emailSent || phoneSent) && (canScheduleCall || canScheduleEmail);
 
   // Get friendly failure reason from ended_reason
   const getFailureReason = (
@@ -1384,6 +1431,156 @@ function DeliveryCompleteCard({
                 </div>
               </div>
             </div>
+
+            {/* Schedule Remaining Outreach Section */}
+            {hasPartialOutreach && onScheduleRemaining && (
+              <div className="mt-4 border-t border-emerald-200/50 pt-4">
+                {!showScheduleOptions ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                    onClick={() => setShowScheduleOptions(true)}
+                  >
+                    {canScheduleCall && canScheduleEmail ? (
+                      <>
+                        <Calendar className="mr-2 h-4 w-4" />
+                        Schedule Remaining Outreach
+                      </>
+                    ) : canScheduleCall ? (
+                      <>
+                        <Phone className="mr-2 h-4 w-4" />
+                        Schedule Phone Call
+                      </>
+                    ) : (
+                      <>
+                        <Mail className="mr-2 h-4 w-4" />
+                        Schedule Email
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium text-emerald-800 dark:text-emerald-300">
+                      Schedule{" "}
+                      {canScheduleCall && canScheduleEmail
+                        ? "Remaining"
+                        : canScheduleCall
+                          ? "Call"
+                          : "Email"}
+                    </p>
+
+                    {/* Delivery Method Selection */}
+                    {canScheduleCall && canScheduleEmail && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/50 p-2">
+                          <Phone className="h-4 w-4 text-emerald-600" />
+                          <span className="text-sm">Call</span>
+                        </div>
+                        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/50 p-2">
+                          <Mail className="h-4 w-4 text-emerald-600" />
+                          <span className="text-sm">Email</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Timing Selection */}
+                    <div className="grid grid-cols-2 gap-2">
+                      <label
+                        htmlFor="schedule-remaining-scheduled"
+                        className={`relative flex cursor-pointer items-center gap-2 rounded-lg border-2 p-2.5 transition-all ${
+                          !immediateDelivery
+                            ? "border-emerald-500 bg-emerald-500/10"
+                            : "border-slate-200 hover:border-slate-300"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          id="schedule-remaining-scheduled"
+                          name="schedule-remaining-timing"
+                          checked={!immediateDelivery}
+                          onChange={() => setImmediateDelivery(false)}
+                          className="sr-only"
+                        />
+                        <Clock
+                          className={`h-4 w-4 ${!immediateDelivery ? "text-emerald-600" : "text-slate-400"}`}
+                        />
+                        <div>
+                          <span className="text-sm font-medium">Scheduled</span>
+                          <p className="text-muted-foreground text-xs">
+                            Use delay settings
+                          </p>
+                        </div>
+                      </label>
+
+                      <label
+                        htmlFor="schedule-remaining-immediate"
+                        className={`relative flex cursor-pointer items-center gap-2 rounded-lg border-2 p-2.5 transition-all ${
+                          immediateDelivery
+                            ? "border-emerald-500 bg-emerald-500/10"
+                            : "border-slate-200 hover:border-slate-300"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          id="schedule-remaining-immediate"
+                          name="schedule-remaining-timing"
+                          checked={immediateDelivery}
+                          onChange={() => setImmediateDelivery(true)}
+                          className="sr-only"
+                        />
+                        <Zap
+                          className={`h-4 w-4 ${immediateDelivery ? "text-emerald-600" : "text-slate-400"}`}
+                        />
+                        <div>
+                          <span className="text-sm font-medium">Immediate</span>
+                          <p className="text-muted-foreground text-xs">
+                            Send right away
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => {
+                          setShowScheduleOptions(false);
+                          setImmediateDelivery(false);
+                        }}
+                        disabled={isScheduling}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                        onClick={() => {
+                          onScheduleRemaining({
+                            scheduleCall: canScheduleCall,
+                            scheduleEmail: canScheduleEmail,
+                            immediateDelivery,
+                          });
+                        }}
+                        disabled={isScheduling}
+                      >
+                        {isScheduling ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Scheduling...
+                          </>
+                        ) : (
+                          "Schedule"
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </CardContent>

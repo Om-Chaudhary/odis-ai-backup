@@ -12,6 +12,7 @@ import { skipRouter } from "./procedures/skip";
 import { retryRouter } from "./procedures/retry";
 import { getUrgentSummaryRouter } from "./procedures/get-urgent-summary";
 import { findByConsultationRouter } from "./procedures/find-by-consultation";
+import { scheduleRemainingRouter } from "./procedures/schedule-remaining";
 
 export const outboundRouter = createTRPCRouter({
   // Queries
@@ -24,4 +25,5 @@ export const outboundRouter = createTRPCRouter({
   approveAndSchedule: approveRouter.approveAndSchedule,
   skipCase: skipRouter.skipCase,
   retryFailedDelivery: retryRouter.retryFailedDelivery,
+  scheduleRemainingOutreach: scheduleRemainingRouter.scheduleRemainingOutreach,
 });
