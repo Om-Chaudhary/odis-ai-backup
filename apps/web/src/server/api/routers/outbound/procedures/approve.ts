@@ -12,6 +12,7 @@
 
 import { TRPCError } from "@trpc/server";
 import { getClinicUserIds } from "@odis-ai/clinics/utils";
+import { getClinicVapiConfigByUserId } from "@odis-ai/clinics/vapi-config";
 import { generateStructuredDischargeSummaryWithRetry } from "@odis-ai/ai/generate-structured-discharge";
 import { normalizeToE164, normalizeEmail } from "@odis-ai/utils/phone";
 import { calculateScheduleTime } from "@odis-ai/utils/timezone";
@@ -24,16 +25,6 @@ import { approveAndScheduleInput } from "../schemas";
 // Dynamic imports for lazy-loaded libraries
 const getCasesService = () =>
   import("@odis-ai/services-cases").then((m) => m.CasesService);
-
-const getEmailExecutor = () =>
-  import("@odis-ai/services-discharge/email-executor").then(
-    (m) => m.executeScheduledEmail,
-  );
-
-const getCallExecutor = () =>
-  import("@odis-ai/services-discharge/call-executor").then(
-    (m) => m.executeScheduledCall,
-  );
 
 export const approveRouter = createTRPCRouter({
   approveAndSchedule: protectedProcedure
@@ -351,11 +342,16 @@ export const approveRouter = createTRPCRouter({
 
       // Log if immediate delivery mode is being used
       if (input.immediateDelivery) {
-        console.log("[Approve] Immediate delivery mode - scheduling for now", {
-          caseId: input.caseId,
-          phoneEnabled: input.phoneEnabled,
-          emailEnabled: input.emailEnabled,
-        });
+        console.log(
+          "[Approve] Immediate delivery mode - scheduling via queue",
+          {
+            caseId: input.caseId,
+            phoneEnabled: input.phoneEnabled,
+            emailEnabled: input.emailEnabled,
+            emailDelay: "1 minute",
+            callDelay: "2 minutes",
+          },
+        );
       }
 
       const results: {
@@ -376,10 +372,10 @@ export const approveRouter = createTRPCRouter({
 
       // Schedule email if enabled and email available (normalized)
       // Email goes out first (typically 1 day after approval)
-      // In immediate mode, execute directly without QStash delay
+      // In immediate mode, schedule via QStash with 1 minute delay
       if (input.emailEnabled && normalizedEmail) {
         const emailScheduledFor = input.immediateDelivery
-          ? new Date(now.getTime() + 5 * 1000) // 5 seconds buffer for immediate
+          ? new Date(now.getTime() + 60 * 1000) // 1 minute delay for immediate
           : calculateScheduleTime(now, emailDelayDays, preferredEmailTime);
 
         const { data: emailData, error: emailError } = await ctx.supabase
@@ -400,76 +396,44 @@ export const approveRouter = createTRPCRouter({
         if (emailError) {
           console.error("[Approve] Failed to schedule email:", emailError);
         } else {
-          // Execute immediately or schedule via QStash
-          if (input.immediateDelivery) {
-            // Immediate mode: execute email directly
-            console.log("[Approve] Immediate delivery - executing email now", {
+          // Schedule via QStash (both immediate and normal modes use the queue)
+          try {
+            const qstashMessageId = await scheduleEmailExecution(
+              emailData.id,
+              emailScheduledFor,
+            );
+
+            // Update email record with QStash message ID
+            await ctx.supabase
+              .from("scheduled_discharge_emails")
+              .update({ qstash_message_id: qstashMessageId })
+              .eq("id", emailData.id);
+
+            console.log("[Approve] Email scheduled via QStash", {
               emailId: emailData.id,
-              recipientEmail: normalizedEmail,
+              qstashMessageId,
+              scheduledFor: emailScheduledFor.toISOString(),
+              immediateMode: input.immediateDelivery,
+            });
+          } catch (qstashError) {
+            console.error("[Approve] Failed to schedule email via QStash:", {
+              emailId: emailData.id,
+              error:
+                qstashError instanceof Error
+                  ? qstashError.message
+                  : String(qstashError),
             });
 
-            try {
-              const executeScheduledEmail = await getEmailExecutor();
-              const result = await executeScheduledEmail(
-                emailData.id,
-                ctx.supabase,
-              );
-              if (!result.success) {
-                console.error("[Approve] Immediate email execution failed:", {
-                  emailId: emailData.id,
-                  error: result.error,
-                });
-                // Don't throw - email record was created, just execution failed
-              }
-            } catch (execError) {
-              console.error("[Approve] Immediate email execution error:", {
-                emailId: emailData.id,
-                error:
-                  execError instanceof Error
-                    ? execError.message
-                    : String(execError),
-              });
-              // Don't throw - email record was created
-            }
-          } else {
-            // Normal mode: schedule via QStash for delayed execution
-            try {
-              const qstashMessageId = await scheduleEmailExecution(
-                emailData.id,
-                emailScheduledFor,
-              );
+            // Rollback: delete the email record since QStash scheduling failed
+            await ctx.supabase
+              .from("scheduled_discharge_emails")
+              .delete()
+              .eq("id", emailData.id);
 
-              // Update email record with QStash message ID
-              await ctx.supabase
-                .from("scheduled_discharge_emails")
-                .update({ qstash_message_id: qstashMessageId })
-                .eq("id", emailData.id);
-
-              console.log("[Approve] Email scheduled via QStash", {
-                emailId: emailData.id,
-                qstashMessageId,
-                scheduledFor: emailScheduledFor.toISOString(),
-              });
-            } catch (qstashError) {
-              console.error("[Approve] Failed to schedule email via QStash:", {
-                emailId: emailData.id,
-                error:
-                  qstashError instanceof Error
-                    ? qstashError.message
-                    : String(qstashError),
-              });
-
-              // Rollback: delete the email record since QStash scheduling failed
-              await ctx.supabase
-                .from("scheduled_discharge_emails")
-                .delete()
-                .eq("id", emailData.id);
-
-              throw new TRPCError({
-                code: "INTERNAL_SERVER_ERROR",
-                message: "Failed to schedule email delivery",
-              });
-            }
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Failed to schedule email delivery",
+            });
           }
 
           results.emailScheduled = true;
@@ -480,17 +444,51 @@ export const approveRouter = createTRPCRouter({
 
       // Schedule call if enabled and phone available (normalized to E.164)
       // Call goes out after email (typically 2 days after approval)
-      // In immediate mode, execute directly without QStash delay
+      // In immediate mode, schedule via QStash with 2 minute delay (after email)
       if (input.phoneEnabled && normalizedPhone) {
         const callScheduledFor = input.immediateDelivery
-          ? new Date(now.getTime() + 10 * 1000) // 10 seconds buffer for immediate
+          ? new Date(now.getTime() + 2 * 60 * 1000) // 2 minute delay for immediate (after email)
           : calculateScheduleTime(now, callDelayDays, preferredCallTime);
+
+        // Fetch VAPI configuration for the user's clinic
+        const vapiConfig = await getClinicVapiConfigByUserId(
+          userId,
+          ctx.supabase,
+        );
+
+        if (!vapiConfig.outboundAssistantId) {
+          console.error("[Approve] Missing VAPI assistant configuration", {
+            userId,
+            clinicName: vapiConfig.clinicName,
+            source: vapiConfig.source,
+          });
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message:
+              "VAPI assistant not configured. Please contact support to set up call scheduling.",
+          });
+        }
+
+        if (!vapiConfig.phoneNumberId) {
+          console.error("[Approve] Missing VAPI phone number configuration", {
+            userId,
+            clinicName: vapiConfig.clinicName,
+            source: vapiConfig.source,
+          });
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message:
+              "VAPI phone number not configured. Please contact support to set up call scheduling.",
+          });
+        }
 
         const { data: callData, error: callError } = await ctx.supabase
           .from("scheduled_discharge_calls")
           .insert({
             user_id: userId,
             case_id: input.caseId,
+            assistant_id: vapiConfig.outboundAssistantId,
+            phone_number_id: vapiConfig.phoneNumberId,
             customer_phone: normalizedPhone, // Use normalized phone in E.164 format (or test contact in test mode)
             scheduled_for: callScheduledFor.toISOString(),
             status: "queued",
@@ -508,81 +506,49 @@ export const approveRouter = createTRPCRouter({
         if (callError) {
           console.error("[Approve] Failed to schedule call:", callError);
         } else {
-          // Execute immediately or schedule via QStash
-          if (input.immediateDelivery) {
-            // Immediate mode: execute call directly
-            console.log("[Approve] Immediate delivery - executing call now", {
+          // Schedule via QStash (both immediate and normal modes use the queue)
+          try {
+            const qstashMessageId = await scheduleCallExecution(
+              callData.id,
+              callScheduledFor,
+            );
+
+            // Update call record with QStash message ID in metadata
+            const updatedMetadata = {
+              ...(callData.metadata as Record<string, unknown> | null),
+              qstash_message_id: qstashMessageId,
+            };
+
+            await ctx.supabase
+              .from("scheduled_discharge_calls")
+              .update({ metadata: updatedMetadata })
+              .eq("id", callData.id);
+
+            console.log("[Approve] Call scheduled via QStash", {
               callId: callData.id,
-              customerPhone: normalizedPhone,
+              qstashMessageId,
+              scheduledFor: callScheduledFor.toISOString(),
+              immediateMode: input.immediateDelivery,
+            });
+          } catch (qstashError) {
+            console.error("[Approve] Failed to schedule call via QStash:", {
+              callId: callData.id,
+              error:
+                qstashError instanceof Error
+                  ? qstashError.message
+                  : String(qstashError),
             });
 
-            try {
-              const executeScheduledCall = await getCallExecutor();
-              const result = await executeScheduledCall(
-                callData.id,
-                ctx.supabase,
-              );
-              if (!result.success) {
-                console.error("[Approve] Immediate call execution failed:", {
-                  callId: callData.id,
-                  error: result.error,
-                });
-                // Don't throw - call record was created, just execution failed
-              }
-            } catch (execError) {
-              console.error("[Approve] Immediate call execution error:", {
-                callId: callData.id,
-                error:
-                  execError instanceof Error
-                    ? execError.message
-                    : String(execError),
-              });
-              // Don't throw - call record was created
-            }
-          } else {
-            // Normal mode: schedule via QStash for delayed execution
-            try {
-              const qstashMessageId = await scheduleCallExecution(
-                callData.id,
-                callScheduledFor,
-              );
+            // Rollback: delete the call record since QStash scheduling failed
+            await ctx.supabase
+              .from("scheduled_discharge_calls")
+              .delete()
+              .eq("id", callData.id);
 
-              // Update call record with QStash message ID in metadata
-              const updatedMetadata = {
-                ...(callData.metadata as Record<string, unknown> | null),
-                qstash_message_id: qstashMessageId,
-              };
-
-              await ctx.supabase
-                .from("scheduled_discharge_calls")
-                .update({ metadata: updatedMetadata })
-                .eq("id", callData.id);
-
-              console.log("[Approve] Call scheduled via QStash", {
-                callId: callData.id,
-                qstashMessageId,
-                scheduledFor: callScheduledFor.toISOString(),
-              });
-            } catch (qstashError) {
-              console.error("[Approve] Failed to schedule call via QStash:", {
-                callId: callData.id,
-                error:
-                  qstashError instanceof Error
-                    ? qstashError.message
-                    : String(qstashError),
-              });
-
-              // Rollback: delete the call record since QStash scheduling failed
-              await ctx.supabase
-                .from("scheduled_discharge_calls")
-                .delete()
-                .eq("id", callData.id);
-
-              throw new TRPCError({
-                code: "INTERNAL_SERVER_ERROR",
-                message: "Failed to schedule call delivery",
-              });
-            }
+            throw new TRPCError({
+              code: "INTERNAL_SERVER_ERROR",
+              message: "Failed to schedule call delivery",
+            });
           }
 
           results.callScheduled = true;
