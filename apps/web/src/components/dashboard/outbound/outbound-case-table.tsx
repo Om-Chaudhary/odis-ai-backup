@@ -107,9 +107,9 @@ interface OutboundCaseTableProps<T extends TableCaseBase> {
  *
  * Table columns:
  * 1. Patient: Pet name (bold) + owner name (muted, below)
- * 2. Case Type: Procedure/visit reason
- * 3. Phone: Icon showing sent/pending/failed/not-applicable
- * 4. Email: Icon showing sent/pending/failed/not-applicable
+ * 2. Phone: Icon showing sent/pending/failed/not-applicable
+ * 3. Email: Icon showing sent/pending/failed/not-applicable
+ * 4. Actions: Quick schedule button or status badge
  * 5. Time: Discharge timestamp
  *
  * Keyboard navigation:
@@ -188,15 +188,14 @@ export function OutboundCaseTable<T extends TableCaseBase>({
       <table className="w-full min-w-0 table-fixed">
         <thead className="sticky top-0 z-10 border-b border-teal-100/50 bg-gradient-to-r from-teal-50/40 to-white/60 backdrop-blur-sm">
           <tr className="text-xs text-slate-500">
-            <th className="h-10 w-[5%] pl-3 text-center font-medium">
-              <Star className="mx-auto h-3.5 w-3.5" />
+            <th className="h-12 w-[6%] pl-4 text-center font-medium">
+              <Star className="mx-auto h-4 w-4" />
             </th>
-            <th className="h-10 w-[25%] text-left font-medium">Patient</th>
-            <th className="h-10 w-[14%] text-left font-medium">Case Type</th>
-            <th className="h-10 w-[10%] text-center font-medium">Phone</th>
-            <th className="h-10 w-[10%] text-center font-medium">Email</th>
-            <th className="h-10 w-[16%] text-center font-medium">Actions</th>
-            <th className="h-10 w-[20%] pr-3 text-right font-medium">Time</th>
+            <th className="h-12 w-[35%] text-left font-medium">Patient</th>
+            <th className="h-12 w-[12%] text-center font-medium">Phone</th>
+            <th className="h-12 w-[12%] text-center font-medium">Email</th>
+            <th className="h-12 w-[20%] text-center font-medium">Actions</th>
+            <th className="h-12 w-[15%] pr-4 text-right font-medium">Time</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-teal-50">
@@ -231,7 +230,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                 }}
               >
                 {/* Star */}
-                <td className="py-3 pl-3 text-center">
+                <td className="py-4 pl-4 text-center">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -239,7 +238,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                     }}
                     disabled={togglingStarCaseIds?.has(caseItem.id)}
                     className={cn(
-                      "rounded p-1 transition-all hover:bg-slate-100",
+                      "rounded p-1.5 transition-all hover:bg-slate-100",
                       togglingStarCaseIds?.has(caseItem.id) && "opacity-50",
                     )}
                     title={
@@ -248,7 +247,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                   >
                     <Star
                       className={cn(
-                        "h-4 w-4 transition-colors",
+                        "h-5 w-5 transition-colors",
                         caseItem.isStarred
                           ? "fill-amber-400 text-amber-400"
                           : "text-slate-300 hover:text-amber-400",
@@ -258,36 +257,29 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                 </td>
 
                 {/* Patient */}
-                <td className="py-3">
-                  <div className="flex flex-col gap-0.5 overflow-hidden">
-                    <span className="truncate text-sm font-medium text-slate-800">
+                <td className="py-4">
+                  <div className="flex flex-col gap-1 overflow-hidden">
+                    <span className="truncate text-base font-semibold text-slate-800">
                       {caseItem.patient.name}
                     </span>
-                    <span className="truncate text-xs text-slate-500">
+                    <span className="truncate text-sm text-slate-500">
                       {caseItem.owner.name ?? "Unknown Owner"}
                     </span>
                   </div>
                 </td>
 
-                {/* Case Type */}
-                <td className="py-3">
-                  <span className="inline-flex rounded-md bg-slate-100/80 px-2 py-0.5 text-xs font-medium text-slate-600">
-                    {formatCaseType(caseItem.caseType)}
-                  </span>
-                </td>
-
                 {/* Phone Status */}
-                <td className="py-3 text-center">
+                <td className="py-4 text-center">
                   <DeliveryIcon status={caseItem.phoneSent} type="phone" />
                 </td>
 
                 {/* Email Status */}
-                <td className="py-3 text-center">
+                <td className="py-4 text-center">
                   <DeliveryIcon status={caseItem.emailSent} type="email" />
                 </td>
 
                 {/* Actions */}
-                <td className="py-3 text-center">
+                <td className="py-4 text-center">
                   <ActionCell
                     caseItem={caseItem}
                     onQuickSchedule={onQuickSchedule}
@@ -296,7 +288,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                 </td>
 
                 {/* Time / Schedule */}
-                <td className="py-3 pr-3 text-right text-xs">
+                <td className="py-4 pr-4 text-right text-sm">
                   <ScheduleTimeDisplay
                     status={caseItem.status}
                     timestamp={caseItem.timestamp}
@@ -478,13 +470,6 @@ function formatTime(timestamp: string): string {
   }
 }
 
-/**
- * Format case type for display
- */
-function formatCaseType(caseType: string | null): string {
-  if (!caseType) return "-";
-  return caseType.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
 
 /**
  * Delivery status icon for phone/email columns
@@ -556,38 +541,38 @@ function CaseTableSkeleton() {
     <div className="w-full overflow-hidden p-3">
       {/* Header skeleton */}
       <div className="mb-4 flex gap-3 border-b border-teal-100/50 pb-3">
-        <div className="h-3 w-[5%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[25%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[14%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[10%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[10%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[16%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[6%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[35%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[12%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[12%] animate-pulse rounded bg-teal-100/50" />
         <div className="h-3 w-[20%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[15%] animate-pulse rounded bg-teal-100/50" />
       </div>
       {/* Row skeletons */}
       {Array.from({ length: 10 }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-3 border-b border-teal-50 py-3"
+          className="flex items-center gap-3 border-b border-teal-50 py-4"
         >
-          <div className="flex w-[5%] justify-center">
-            <div className="h-4 w-4 animate-pulse rounded bg-teal-50" />
+          <div className="flex w-[6%] justify-center">
+            <div className="h-5 w-5 animate-pulse rounded bg-teal-50" />
           </div>
-          <div className="w-[25%] space-y-1.5">
-            <div className="h-4 w-20 animate-pulse rounded bg-teal-100/40" />
-            <div className="h-3 w-28 animate-pulse rounded bg-teal-50" />
+          <div className="w-[35%] space-y-1.5">
+            <div className="h-4 w-24 animate-pulse rounded bg-teal-100/40" />
+            <div className="h-3 w-32 animate-pulse rounded bg-teal-50" />
           </div>
-          <div className="h-5 w-14 animate-pulse rounded-md bg-teal-50" />
-          <div className="flex w-[10%] justify-center">
+          <div className="flex w-[12%] justify-center">
             <div className="h-6 w-6 animate-pulse rounded-full bg-teal-50" />
           </div>
-          <div className="flex w-[10%] justify-center">
+          <div className="flex w-[12%] justify-center">
             <div className="h-6 w-6 animate-pulse rounded-full bg-teal-50" />
           </div>
-          <div className="flex w-[16%] justify-center">
-            <div className="h-7 w-16 animate-pulse rounded-md bg-teal-50" />
+          <div className="flex w-[20%] justify-center">
+            <div className="h-7 w-20 animate-pulse rounded-md bg-teal-50" />
           </div>
-          <div className="h-3 w-14 animate-pulse rounded bg-teal-50" />
+          <div className="flex w-[15%] justify-end pr-4">
+            <div className="h-3 w-16 animate-pulse rounded bg-teal-50" />
+          </div>
         </div>
       ))}
     </div>
