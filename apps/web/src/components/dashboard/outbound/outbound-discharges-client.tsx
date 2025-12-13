@@ -198,9 +198,10 @@ export function OutboundDischargesClient() {
   const { data: settingsData } = api.cases.getDischargeSettings.useQuery();
 
   // Deep link: Find case by IDEXX consultation ID
+  // Pass pageSize so the backend can calculate which page the case is on
   const { data: deepLinkData, isLoading: isDeepLinkLoading } =
     api.outbound.findByConsultationId.useQuery(
-      { consultationId: consultationId ?? "" },
+      { consultationId: consultationId ?? "", pageSize },
       {
         enabled: !!consultationId,
         staleTime: Infinity, // Don't refetch once we have the result
@@ -298,7 +299,7 @@ export function OutboundDischargesClient() {
     return () => document.removeEventListener("keydown", handleCmdK);
   }, []);
 
-  // Deep link handling: Navigate to correct date when case is found
+  // Deep link handling: Navigate to correct date and page when case is found
   useEffect(() => {
     // Skip if no consultation ID or already handled this one
     if (!consultationId || deepLinkHandledRef.current === consultationId) {
@@ -314,13 +315,14 @@ export function OutboundDischargesClient() {
       // Mark as handled (date navigation)
       deepLinkHandledRef.current = consultationId;
 
-      // Navigate to the case's date
+      // Navigate to the case's date and correct page
       const caseDate = format(
         startOfDay(parseISO(deepLinkData.date)),
         "yyyy-MM-dd",
       );
       void setDateStr(caseDate);
-      void setPage(1);
+      // Navigate to the page where the case is located (defaults to 1 if not provided)
+      void setPage(deepLinkData.page ?? 1);
       // Don't clear consultationId yet - wait until case is selected (see below)
     } else if (deepLinkData && !deepLinkData.found) {
       // Mark as handled (not found case)
