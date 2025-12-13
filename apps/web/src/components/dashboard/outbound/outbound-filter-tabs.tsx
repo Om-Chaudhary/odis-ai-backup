@@ -1,24 +1,8 @@
 "use client";
 
-import {
-  Search,
-  List,
-  UserX,
-  AlertTriangle,
-  PhoneOff,
-  Clock,
-  Wifi,
-  Voicemail,
-  Mail,
-  CircleAlert,
-} from "lucide-react";
+import { Search, List, UserX, AlertTriangle } from "lucide-react";
 import { cn } from "@odis-ai/utils";
-import type {
-  StatusFilter,
-  ViewMode,
-  DischargeSummaryStats,
-  FailureCategory,
-} from "./types";
+import type { ViewMode, DischargeSummaryStats } from "./types";
 import { OutboundDateNav } from "./outbound-date-nav";
 
 interface OutboundFilterTabsProps {
@@ -52,7 +36,6 @@ export function OutboundFilterTabs({
   viewMode,
   onViewModeChange,
 }: OutboundFilterTabsProps) {
-
   return (
     <div className="flex items-center justify-between gap-6">
       {/* Left: Date Navigator */}

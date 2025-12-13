@@ -10,12 +10,10 @@ import { api } from "~/trpc/client";
 
 import type {
   DischargeCaseStatus,
-  StatusFilter,
   ViewMode,
   DeliveryToggles,
   SoapNote,
   DischargeSummaryStats,
-  FailureCategory,
 } from "./types";
 import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
 import { PageContainer, PageToolbar, PageContent, PageFooter } from "../layout";
@@ -83,22 +81,6 @@ interface TransformedCase {
   isStarred?: boolean;
 }
 
-// Failure category values for URL parsing
-const FAILURE_CATEGORIES: FailureCategory[] = [
-  "all_failed",
-  "silence_timeout",
-  "no_answer",
-  "connection_error",
-  "voicemail",
-  "email_failed",
-  "other",
-];
-
-// Check if a status filter is a failure category
-function isFailureCategory(filter: StatusFilter): filter is FailureCategory {
-  return FAILURE_CATEGORIES.includes(filter as FailureCategory);
-}
-
 // Map status filter to API status (for non-failure filters)
 
 /**
@@ -125,7 +107,6 @@ export function OutboundDischargesClient() {
         ? v
         : "all") as ViewMode,
   });
-
 
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
 
@@ -241,7 +222,9 @@ export function OutboundDischargesClient() {
       void refetch();
     },
     onError: (error) => {
-      toast.error("Failed to schedule", { description: error.message });
+      toast.error("Failed to schedule", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
       // Note: schedulingCaseIds cleanup happens in handleQuickSchedule's finally block
     },
   });
@@ -253,7 +236,9 @@ export function OutboundDischargesClient() {
       void refetch();
     },
     onError: (error) => {
-      toast.error("Failed to skip", { description: error.message });
+      toast.error("Failed to skip", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
     },
   });
 
@@ -263,7 +248,9 @@ export function OutboundDischargesClient() {
       void refetch();
     },
     onError: (error) => {
-      toast.error("Failed to retry", { description: error.message });
+      toast.error("Failed to retry", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
     },
   });
 
@@ -272,7 +259,9 @@ export function OutboundDischargesClient() {
       void refetch();
     },
     onError: (error) => {
-      toast.error("Failed to update star", { description: error.message });
+      toast.error("Failed to update star", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
     },
   });
 
@@ -331,7 +320,6 @@ export function OutboundDischargesClient() {
         "yyyy-MM-dd",
       );
       void setDateStr(caseDate);
-      void setStatusFilter("all"); // Reset to "all" to ensure the case is visible
       void setPage(1);
       // Don't clear consultationId yet - wait until case is selected (see below)
     } else if (deepLinkData && !deepLinkData.found) {
@@ -422,7 +410,6 @@ export function OutboundDischargesClient() {
     },
     [setViewMode, setPage],
   );
-
 
   const handleSearchChange = useCallback((term: string) => {
     setSearchTerm(term);
@@ -651,7 +638,7 @@ export function OutboundDischargesClient() {
       )}
 
       {/* Simplified Toolbar - Date + View Tabs + Search */}
-      <PageToolbar className="bg-transparent border-none backdrop-blur-none shadow-none">
+      <PageToolbar className="border-none bg-transparent shadow-none backdrop-blur-none">
         <OutboundFilterTabs
           counts={stats}
           searchTerm={searchTerm}

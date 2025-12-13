@@ -100,7 +100,14 @@
       "mcp__vapi-mcp__list_calls",
       "Bash(pnpm test:all:*)",
       "Bash(pnpm test:*)",
-      "Bash(pnpm test:libs:*)"
+      "Bash(pnpm test:libs:*)",
+      "Bash(pkill:*)",
+      "Bash(git fetch:*)",
+      "Bash(git rebase:*)",
+      "Bash(git stash:*)",
+      "Bash(gh pr create:*)",
+      "mcp__github__create_pull_request",
+      "Bash(git merge:*)"
     ],
     "deny": [],
     "ask": []
