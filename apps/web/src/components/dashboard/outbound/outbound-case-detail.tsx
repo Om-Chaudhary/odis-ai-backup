@@ -1052,75 +1052,78 @@ function DeliveryToggleSection({
           </label>
         </div>
 
-        {/* Timing Selection - Only show in test mode */}
-        {testModeEnabled && (
-          <div className="space-y-2 border-t pt-2">
-            <p className="text-xs font-medium text-amber-700 dark:text-amber-400">
-              Test Mode Timing
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {/* Scheduled (default) */}
-              <label
-                htmlFor="scheduled-timing"
-                className={`relative flex cursor-pointer items-center gap-2 rounded-lg border-2 p-2.5 transition-all ${
-                  !toggles.immediateDelivery
-                    ? "border-amber-500 bg-amber-500/10"
-                    : "border-border hover:border-border/80"
-                }`}
-              >
-                <input
-                  type="radio"
-                  id="scheduled-timing"
-                  name="delivery-timing"
-                  checked={!toggles.immediateDelivery}
-                  onChange={() =>
-                    onChange({ ...toggles, immediateDelivery: false })
-                  }
-                  className="sr-only"
-                />
-                <Clock
-                  className={`h-4 w-4 ${!toggles.immediateDelivery ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}
-                />
-                <div>
-                  <span className="text-sm font-medium">Scheduled</span>
-                  <p className="text-muted-foreground text-xs">
-                    Use delay settings
-                  </p>
-                </div>
-              </label>
+        {/* Timing Selection - Available to all users */}
+        <div className="space-y-2 border-t pt-2">
+          <p className="text-muted-foreground text-xs font-medium">
+            Delivery Timing
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {/* Scheduled (default) */}
+            <label
+              htmlFor="scheduled-timing"
+              className={`relative flex cursor-pointer items-center gap-2 rounded-lg border-2 p-2.5 transition-all ${
+                !toggles.immediateDelivery
+                  ? "border-teal-500 bg-teal-500/10"
+                  : "border-border hover:border-border/80"
+              }`}
+            >
+              <input
+                type="radio"
+                id="scheduled-timing"
+                name="delivery-timing"
+                checked={!toggles.immediateDelivery}
+                onChange={() =>
+                  onChange({ ...toggles, immediateDelivery: false })
+                }
+                className="sr-only"
+              />
+              <Clock
+                className={`h-4 w-4 ${!toggles.immediateDelivery ? "text-teal-600 dark:text-teal-400" : "text-muted-foreground"}`}
+              />
+              <div>
+                <span className="text-sm font-medium">Scheduled</span>
+                <p className="text-muted-foreground text-xs">
+                  Use delay settings
+                </p>
+              </div>
+            </label>
 
-              {/* Immediate */}
-              <label
-                htmlFor="immediate-timing"
-                className={`relative flex cursor-pointer items-center gap-2 rounded-lg border-2 p-2.5 transition-all ${
-                  toggles.immediateDelivery
-                    ? "border-amber-500 bg-amber-500/10"
-                    : "border-border hover:border-border/80"
-                }`}
-              >
-                <input
-                  type="radio"
-                  id="immediate-timing"
-                  name="delivery-timing"
-                  checked={toggles.immediateDelivery}
-                  onChange={() =>
-                    onChange({ ...toggles, immediateDelivery: true })
-                  }
-                  className="sr-only"
-                />
-                <Zap
-                  className={`h-4 w-4 ${toggles.immediateDelivery ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground"}`}
-                />
-                <div>
-                  <span className="text-sm font-medium">Immediate</span>
-                  <p className="text-muted-foreground text-xs">
-                    Send right away
-                  </p>
-                </div>
-              </label>
-            </div>
+            {/* Immediate */}
+            <label
+              htmlFor="immediate-timing"
+              className={`relative flex cursor-pointer items-center gap-2 rounded-lg border-2 p-2.5 transition-all ${
+                toggles.immediateDelivery
+                  ? "border-teal-500 bg-teal-500/10"
+                  : "border-border hover:border-border/80"
+              }`}
+            >
+              <input
+                type="radio"
+                id="immediate-timing"
+                name="delivery-timing"
+                checked={toggles.immediateDelivery}
+                onChange={() =>
+                  onChange({ ...toggles, immediateDelivery: true })
+                }
+                className="sr-only"
+              />
+              <Zap
+                className={`h-4 w-4 ${toggles.immediateDelivery ? "text-teal-600 dark:text-teal-400" : "text-muted-foreground"}`}
+              />
+              <div>
+                <span className="text-sm font-medium">Immediate</span>
+                <p className="text-muted-foreground text-xs">Send right away</p>
+              </div>
+            </label>
           </div>
-        )}
+
+          {/* Test mode indicator */}
+          {testModeEnabled && (
+            <p className="text-xs text-amber-600 dark:text-amber-400">
+              Test mode: Will send to your test contacts
+            </p>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
