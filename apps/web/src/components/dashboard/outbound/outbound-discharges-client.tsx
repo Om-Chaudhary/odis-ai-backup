@@ -100,37 +100,6 @@ function isFailureCategory(filter: StatusFilter): filter is FailureCategory {
 }
 
 // Map status filter to API status (for non-failure filters)
-function mapStatusFilterToApiStatus(
-  filter: StatusFilter,
-): DischargeCaseStatus | undefined {
-  // Failure categories are handled separately via failureCategory param
-  if (isFailureCategory(filter)) {
-    return "failed"; // All failure categories filter on failed status
-  }
-
-  switch (filter) {
-    case "all":
-      return undefined;
-    case "ready_to_send":
-      return "pending_review";
-    case "scheduled":
-      return "scheduled";
-    case "sent":
-      return "completed";
-    default:
-      return undefined;
-  }
-}
-
-// Map status filter to failure category for API
-function mapStatusFilterToFailureCategory(
-  filter: StatusFilter,
-): FailureCategory | undefined {
-  if (isFailureCategory(filter)) {
-    return filter;
-  }
-  return undefined;
-}
 
 /**
  * Outbound Discharge Manager - Full Screen Compact Layout
@@ -157,26 +126,6 @@ export function OutboundDischargesClient() {
         : "all") as ViewMode,
   });
 
-  const [statusFilter, setStatusFilter] = useQueryState("status", {
-    defaultValue: "all" as StatusFilter,
-    parse: (v) => {
-      const validStatuses = [
-        "all",
-        "ready_to_send",
-        "scheduled",
-        "sent",
-        // Failure categories
-        "all_failed",
-        "silence_timeout",
-        "no_answer",
-        "connection_error",
-        "voicemail",
-        "email_failed",
-        "other",
-      ];
-      return (validStatuses.includes(v) ? v : "all") as StatusFilter;
-    },
-  });
 
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
 
@@ -244,8 +193,6 @@ export function OutboundDischargesClient() {
     {
       page: page,
       pageSize: pageSize,
-      status: mapStatusFilterToApiStatus(statusFilter),
-      failureCategory: mapStatusFilterToFailureCategory(statusFilter),
       search: searchTerm || undefined,
       startDate,
       endDate,
@@ -400,7 +347,6 @@ export function OutboundDischargesClient() {
     deepLinkData,
     isDeepLinkLoading,
     setDateStr,
-    setStatusFilter,
     setPage,
     setConsultationId,
   ]);
@@ -477,14 +423,6 @@ export function OutboundDischargesClient() {
     [setViewMode, setPage],
   );
 
-  const handleStatusChange = useCallback(
-    (status: StatusFilter) => {
-      void setStatusFilter(status);
-      setSelectedCase(null);
-      void setPage(1);
-    },
-    [setStatusFilter, setPage],
-  );
 
   const handleSearchChange = useCallback((term: string) => {
     setSearchTerm(term);
@@ -712,11 +650,9 @@ export function OutboundDischargesClient() {
         </div>
       )}
 
-      {/* Compact Toolbar - Date + View Tabs + Status Filters + Search */}
-      <PageToolbar className="rounded-lg border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 py-2 shadow-md shadow-teal-500/5 backdrop-blur-md">
+      {/* Simplified Toolbar - Date + View Tabs + Search */}
+      <PageToolbar className="bg-transparent border-none backdrop-blur-none shadow-none">
         <OutboundFilterTabs
-          activeStatus={statusFilter}
-          onStatusChange={handleStatusChange}
           counts={stats}
           searchTerm={searchTerm}
           onSearchChange={handleSearchChange}
