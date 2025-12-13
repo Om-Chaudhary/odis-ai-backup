@@ -86,25 +86,17 @@ export function mapEndedReasonToStatus(
   }
 
   // Voicemail handling:
-  // - If voicemail detection enabled and hangup is false: mark as completed (message was left)
-  // - If voicemail detection enabled and hangup is true: mark as failed (no message left, retry needed)
-  if (
-    endedReason.toLowerCase().includes("voicemail") &&
-    metadata?.voicemail_detection_enabled === true
-  ) {
-    const hangupOnVoicemail = metadata?.voicemail_hangup_on_detection === true;
-
-    logger.debug("Voicemail detected with detection enabled", {
+  // Always mark voicemail calls as completed - we do not retry voicemail.
+  // The customer's voicemail was reached, which is a successful outcome.
+  if (endedReason.toLowerCase().includes("voicemail")) {
+    logger.debug("Voicemail detected - marking as completed", {
       endedReason,
-      voicemailDetectionEnabled: metadata.voicemail_detection_enabled,
-      hangupOnVoicemail,
-      outcome: hangupOnVoicemail
-        ? "failed (hung up)"
-        : "completed (message left)",
+      voicemailDetectionEnabled: metadata?.voicemail_detection_enabled,
+      hangupOnVoicemail: metadata?.voicemail_hangup_on_detection,
+      outcome: "completed (voicemail reached)",
     });
 
-    // If configured to hang up on voicemail, treat as failed so it can be retried
-    return hangupOnVoicemail ? "failed" : "completed";
+    return "completed";
   }
 
   // Failed calls
@@ -125,6 +117,8 @@ export function mapEndedReasonToStatus(
  *
  * These reasons indicate the call did not successfully reach a live person
  * or deliver the intended message, so they should be marked as failed for retry.
+ *
+ * NOTE: "voicemail" is intentionally excluded - voicemail is a successful outcome.
  */
 const FAILED_ENDED_REASONS = [
   // Dialing failures
@@ -135,8 +129,6 @@ const FAILED_ENDED_REASONS = [
   "silence-timed-out",
   "customer-did-not-answer",
   "exceeded-max-duration",
-  // Voicemail (handled specially based on settings)
-  "voicemail",
   // Assistant/system errors
   "assistant-error",
   "assistant-not-found",
@@ -168,15 +160,9 @@ export function shouldMarkAsFailed(
 ): boolean {
   if (!endedReason) return false;
 
-  // Voicemail handling:
-  // - If voicemail detection enabled AND hangup is false: DON'T mark as failed (message was left)
-  // - If voicemail detection enabled AND hangup is true: MARK as failed (hung up without message)
-  if (
-    endedReason.toLowerCase().includes("voicemail") &&
-    metadata?.voicemail_detection_enabled === true
-  ) {
-    const hangupOnVoicemail = metadata?.voicemail_hangup_on_detection === true;
-    return hangupOnVoicemail; // Failed only if we hung up without leaving message
+  // Voicemail is never marked as failed - it's a successful outcome
+  if (endedReason.toLowerCase().includes("voicemail")) {
+    return false;
   }
 
   return FAILED_ENDED_REASONS.some((reason) =>
@@ -205,11 +191,14 @@ export function shouldMarkInboundCallAsFailed(endedReason?: string): boolean {
 /**
  * Reasons that should trigger a retry
  * These are transient failures where trying again later might succeed
+ *
+ * NOTE: "voicemail" is intentionally excluded - we do NOT retry voicemail calls.
+ * If voicemail detection is enabled and hangup is configured, the call is marked
+ * as completed (voicemail reached) rather than failed, so no retry is needed.
  */
 const RETRYABLE_REASONS = [
   "dial-busy",
   "dial-no-answer",
-  "voicemail",
   "silence-timed-out",
   "customer-did-not-answer",
 ];
@@ -225,26 +214,17 @@ export function shouldRetry(
   endedReason?: string,
   metadata?: Record<string, unknown>,
 ): boolean {
-  // Voicemail retry logic:
-  // - If hangup on voicemail is enabled: RETRY (agent hung up, try again later)
-  // - If hangup is disabled (leave message): DON'T RETRY (message was successfully left)
-  if (
-    endedReason?.toLowerCase().includes("voicemail") &&
-    metadata?.voicemail_detection_enabled === true
-  ) {
-    const hangupOnVoicemail = metadata?.voicemail_hangup_on_detection === true;
-
-    logger.debug("Voicemail retry decision", {
+  // Never retry voicemail calls - voicemail is considered a successful outcome
+  // whether we left a message or hung up. The customer has been reached.
+  if (endedReason?.toLowerCase().includes("voicemail")) {
+    logger.debug("Voicemail detected - no retry", {
       endedReason,
-      voicemailDetectionEnabled: metadata.voicemail_detection_enabled,
-      hangupOnVoicemail,
-      willRetry: hangupOnVoicemail,
-      reason: hangupOnVoicemail
-        ? "Hung up on voicemail - will retry to reach live person"
-        : "Message left successfully - no retry needed",
+      voicemailDetectionEnabled: metadata?.voicemail_detection_enabled,
+      hangupOnVoicemail: metadata?.voicemail_hangup_on_detection,
+      reason: "Voicemail calls are never retried",
     });
 
-    return hangupOnVoicemail;
+    return false;
   }
 
   return RETRYABLE_REASONS.some((reason) =>
