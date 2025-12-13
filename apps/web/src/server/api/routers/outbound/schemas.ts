@@ -109,6 +109,16 @@ export const retryFailedDeliveryInput = z.object({
   retryEmail: z.boolean().default(false),
 });
 
+export const scheduleRemainingOutreachInput = z.object({
+  caseId: z.string().uuid(),
+  /** Schedule the phone call for this case */
+  scheduleCall: z.boolean().default(false),
+  /** Schedule the email for this case */
+  scheduleEmail: z.boolean().default(false),
+  /** When true, sends immediately instead of using scheduled delays */
+  immediateDelivery: z.boolean().default(false),
+});
+
 // =============================================================================
 // Type Exports
 // =============================================================================
@@ -130,3 +140,6 @@ export type SkipCaseInput = z.infer<typeof skipCaseInput>;
 export type UpdateCallScriptInput = z.infer<typeof updateCallScriptInput>;
 export type UpdateEmailContentInput = z.infer<typeof updateEmailContentInput>;
 export type RetryFailedDeliveryInput = z.infer<typeof retryFailedDeliveryInput>;
+export type ScheduleRemainingOutreachInput = z.infer<
+  typeof scheduleRemainingOutreachInput
+>;
