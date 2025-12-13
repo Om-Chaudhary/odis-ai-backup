@@ -11,20 +11,158 @@
  */
 
 import { TRPCError } from "@trpc/server";
-import { getClinicUserIds } from "@odis-ai/clinics/utils";
+import { getClinicUserIds, getClinicByUserId } from "@odis-ai/clinics/utils";
 import { getClinicVapiConfigByUserId } from "@odis-ai/clinics/vapi-config";
 import { generateStructuredDischargeSummaryWithRetry } from "@odis-ai/ai/generate-structured-discharge";
 import { normalizeToE164, normalizeEmail } from "@odis-ai/utils/phone";
 import { calculateScheduleTime } from "@odis-ai/utils/timezone";
 import type { NormalizedEntities } from "@odis-ai/validators/scribe";
 import type { Json } from "@odis-ai/types";
-import { scheduleEmailExecution, scheduleCallExecution } from "@odis-ai/qstash";
+import { scheduleEmailExecution } from "@odis-ai/qstash";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { approveAndScheduleInput } from "../schemas";
 
 // Dynamic imports for lazy-loaded libraries
 const getCasesService = () =>
   import("@odis-ai/services-cases").then((m) => m.CasesService);
+
+/**
+ * IDEXX metadata structure for entity extraction
+ */
+interface IdexxMetadata {
+  pet_name?: string;
+  patient_name?: string;
+  patient_species?: string;
+  patient_breed?: string;
+  species?: string;
+  breed?: string;
+  client_name?: string;
+  client_first_name?: string;
+  client_last_name?: string;
+  owner_name?: string;
+  client_phone?: string;
+  client_email?: string;
+  appointment_reason?: string;
+  appointment_type?: string;
+  products_services?: string;
+  consultation_notes?: string;
+  notes?: string;
+  provider_name?: string;
+}
+
+/**
+ * Builds NormalizedEntities from IDEXX metadata when AI extraction isn't possible
+ * (e.g., consultation_notes too short for AI extraction)
+ */
+function buildEntitiesFromIdexxMetadata(
+  idexx: IdexxMetadata,
+  patient: {
+    name?: string | null;
+    species?: string | null;
+    breed?: string | null;
+    owner_name?: string | null;
+    owner_phone?: string | null;
+    owner_email?: string | null;
+  } | null,
+): NormalizedEntities {
+  // Build owner name from available sources
+  let ownerName =
+    idexx.client_name ?? idexx.owner_name ?? patient?.owner_name ?? "unknown";
+  if (
+    ownerName === "unknown" &&
+    idexx.client_first_name &&
+    idexx.client_last_name
+  ) {
+    ownerName = `${idexx.client_first_name} ${idexx.client_last_name}`.trim();
+  }
+
+  // Determine species
+  const speciesRaw =
+    idexx.patient_species ?? idexx.species ?? patient?.species ?? "unknown";
+  const speciesLower = speciesRaw.toLowerCase();
+  const validSpecies = [
+    "dog",
+    "cat",
+    "bird",
+    "rabbit",
+    "other",
+    "unknown",
+  ] as const;
+  type ValidSpecies = (typeof validSpecies)[number];
+  const species: ValidSpecies = validSpecies.includes(
+    speciesLower as ValidSpecies,
+  )
+    ? (speciesLower as ValidSpecies)
+    : "unknown";
+
+  // Parse procedures from products_services
+  const procedures: string[] = [];
+  if (idexx.products_services) {
+    procedures.push(
+      ...idexx.products_services
+        .split(/[,;]/)
+        .map((s) => s.trim())
+        .filter(Boolean),
+    );
+  }
+
+  // Determine case type from appointment_type
+  let caseType: NormalizedEntities["caseType"] = "exam";
+  if (idexx.appointment_type) {
+    const appointmentTypeLower = idexx.appointment_type.toLowerCase();
+    if (appointmentTypeLower.includes("follow")) caseType = "follow_up";
+    else if (appointmentTypeLower.includes("surgery")) caseType = "surgery";
+    else if (appointmentTypeLower.includes("dental")) caseType = "dental";
+    else if (
+      appointmentTypeLower.includes("vaccine") ||
+      appointmentTypeLower.includes("vaccination")
+    )
+      caseType = "vaccination";
+    else if (appointmentTypeLower.includes("emergency")) caseType = "emergency";
+    else if (
+      appointmentTypeLower.includes("checkup") ||
+      appointmentTypeLower.includes("wellness")
+    )
+      caseType = "checkup";
+  }
+
+  // Build clinical notes from available sources
+  let followUpInstructions: string | undefined;
+  if (idexx.consultation_notes) {
+    followUpInstructions = idexx.consultation_notes
+      .replace(/<[^>]*>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/\s+/g, " ")
+      .trim();
+  } else if (idexx.notes) {
+    followUpInstructions = idexx.notes;
+  }
+
+  return {
+    patient: {
+      name: idexx.pet_name ?? idexx.patient_name ?? patient?.name ?? "unknown",
+      species,
+      breed: idexx.patient_breed ?? idexx.breed ?? patient?.breed ?? undefined,
+      owner: {
+        name: ownerName,
+        phone: idexx.client_phone ?? patient?.owner_phone ?? undefined,
+        email: idexx.client_email ?? patient?.owner_email ?? undefined,
+      },
+    },
+    clinical: {
+      visitReason: idexx.appointment_reason ?? undefined,
+      chiefComplaint: idexx.appointment_reason ?? undefined,
+      procedures: procedures.length > 0 ? procedures : undefined,
+      followUpInstructions,
+      productsServicesProvided: procedures.length > 0 ? procedures : undefined,
+    },
+    caseType,
+    confidence: { overall: 0.7, patient: 0.7, clinical: 0.6 }, // Lower confidence since not AI-extracted
+  };
+}
 
 export const approveRouter = createTRPCRouter({
   approveAndSchedule: protectedProcedure
@@ -450,110 +588,139 @@ export const approveRouter = createTRPCRouter({
           ? new Date(now.getTime() + 2 * 60 * 1000) // 2 minute delay for immediate (after email)
           : calculateScheduleTime(now, callDelayDays, preferredCallTime);
 
-        // Fetch VAPI configuration for the user's clinic
-        const vapiConfig = await getClinicVapiConfigByUserId(
-          userId,
-          ctx.supabase,
-        );
+        // Get clinic data for call variables
+        const clinic = await getClinicByUserId(userId, ctx.supabase);
 
-        if (!vapiConfig.outboundAssistantId) {
-          console.error("[Approve] Missing VAPI assistant configuration", {
-            userId,
-            clinicName: vapiConfig.clinicName,
-            source: vapiConfig.source,
-          });
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message:
-              "VAPI assistant not configured. Please contact support to set up call scheduling.",
-          });
-        }
-
-        if (!vapiConfig.phoneNumberId) {
-          console.error("[Approve] Missing VAPI phone number configuration", {
-            userId,
-            clinicName: vapiConfig.clinicName,
-            source: vapiConfig.source,
-          });
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message:
-              "VAPI phone number not configured. Please contact support to set up call scheduling.",
-          });
-        }
-
-        const { data: callData, error: callError } = await ctx.supabase
-          .from("scheduled_discharge_calls")
-          .insert({
-            user_id: userId,
-            case_id: input.caseId,
-            assistant_id: vapiConfig.outboundAssistantId,
-            phone_number_id: vapiConfig.phoneNumberId,
-            customer_phone: normalizedPhone, // Use normalized phone in E.164 format (or test contact in test mode)
-            scheduled_for: callScheduledFor.toISOString(),
-            status: "queued",
-            dynamic_variables: {
-              pet_name: patient?.name,
-              owner_name: recipientName ?? patient?.owner_name,
-              species: patient?.species,
-              breed: patient?.breed,
-              discharge_summary: summaryContent,
-            },
-          })
-          .select("id, metadata")
+        // Get user's first name for agent name
+        const { data: userInfo } = await ctx.supabase
+          .from("users")
+          .select("first_name, clinic_name, clinic_phone")
+          .eq("id", userId)
           .single();
 
-        if (callError) {
-          console.error("[Approve] Failed to schedule call:", callError);
-        } else {
-          // Schedule via QStash (both immediate and normal modes use the queue)
-          try {
-            const qstashMessageId = await scheduleCallExecution(
-              callData.id,
-              callScheduledFor,
+        // Step 1: Ensure entities exist for proper variable extraction
+        // If entities are missing, extract from IDEXX metadata
+        let entities = caseInfo.entities;
+
+        // Get IDEXX metadata for entity extraction
+        const idexxMetadata = caseInfo.metadata as {
+          idexx?: IdexxMetadata;
+        } | null;
+
+        if (!entities && idexxMetadata?.idexx) {
+          console.log(
+            "[Approve] No entities found, extracting from IDEXX metadata",
+            {
+              caseId: input.caseId,
+              hasConsultationNotes: !!idexxMetadata.idexx.consultation_notes,
+              hasProductsServices: !!idexxMetadata.idexx.products_services,
+            },
+          );
+
+          // Try AI extraction first (CasesService.extractEntitiesFromIdexx)
+          const aiEntities = await CasesService.extractEntitiesFromIdexx(
+            idexxMetadata.idexx as Record<string, unknown>,
+          );
+
+          if (aiEntities) {
+            entities = aiEntities;
+            console.log("[Approve] AI extraction successful", {
+              caseId: input.caseId,
+              patientName: entities.patient.name,
+              confidence: entities.confidence?.overall,
+            });
+          } else {
+            // Fall back to building entities from IDEXX metadata directly
+            entities = buildEntitiesFromIdexxMetadata(
+              idexxMetadata.idexx,
+              patient ?? null,
             );
-
-            // Update call record with QStash message ID in metadata
-            const updatedMetadata = {
-              ...(callData.metadata as Record<string, unknown> | null),
-              qstash_message_id: qstashMessageId,
-            };
-
-            await ctx.supabase
-              .from("scheduled_discharge_calls")
-              .update({ metadata: updatedMetadata })
-              .eq("id", callData.id);
-
-            console.log("[Approve] Call scheduled via QStash", {
-              callId: callData.id,
-              qstashMessageId,
-              scheduledFor: callScheduledFor.toISOString(),
-              immediateMode: input.immediateDelivery,
-            });
-          } catch (qstashError) {
-            console.error("[Approve] Failed to schedule call via QStash:", {
-              callId: callData.id,
-              error:
-                qstashError instanceof Error
-                  ? qstashError.message
-                  : String(qstashError),
-            });
-
-            // Rollback: delete the call record since QStash scheduling failed
-            await ctx.supabase
-              .from("scheduled_discharge_calls")
-              .delete()
-              .eq("id", callData.id);
-
-            throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: "Failed to schedule call delivery",
+            console.log("[Approve] Built entities from IDEXX metadata", {
+              caseId: input.caseId,
+              patientName: entities.patient.name,
+              visitReason: entities.clinical.visitReason,
+              procedures: entities.clinical.procedures,
             });
           }
 
+          // Save entities to case for future use
+          const { error: updateError } = await ctx.supabase
+            .from("cases")
+            .update({ entity_extraction: entities as unknown as Json })
+            .eq("id", input.caseId);
+
+          if (updateError) {
+            console.error(
+              "[Approve] Failed to save extracted entities:",
+              updateError,
+            );
+            // Don't throw - continue with scheduling
+          } else {
+            console.log("[Approve] Saved extracted entities to case", {
+              caseId: input.caseId,
+            });
+          }
+        }
+
+        // Step 2: Use CasesService.scheduleDischargeCall for complete variable extraction
+        // This will:
+        // - Extract all entity variables (patient_species, primary_diagnosis, medication_names, etc.)
+        // - Generate AI call intelligence (assessment_questions, emergency_criteria, etc.)
+        // - Add clinic configuration (clinic_name, clinic_phone, emergency_phone)
+        // - Handle QStash scheduling
+        try {
+          const clinicName =
+            clinic?.name ?? userInfo?.clinic_name ?? "Your Clinic";
+          const clinicPhone = clinic?.phone ?? userInfo?.clinic_phone ?? "";
+          const agentName = userInfo?.first_name ?? "Sarah";
+
+          console.log(
+            "[Approve] Scheduling call via CasesService with full variable extraction",
+            {
+              caseId: input.caseId,
+              clinicName,
+              hasEntities: !!entities,
+              scheduledFor: callScheduledFor.toISOString(),
+            },
+          );
+
+          const scheduledCall = await CasesService.scheduleDischargeCall(
+            ctx.supabase,
+            userId,
+            input.caseId,
+            {
+              scheduledAt: callScheduledFor,
+              summaryContent,
+              clinicName,
+              clinicPhone,
+              emergencyPhone: clinicPhone, // Use clinic phone as emergency phone
+              agentName,
+            },
+          );
+
+          console.log("[Approve] Call scheduled via CasesService", {
+            callId: scheduledCall.id,
+            scheduledFor: scheduledCall.scheduled_for,
+            variableCount: Object.keys(scheduledCall.dynamic_variables ?? {})
+              .length,
+          });
+
           results.callScheduled = true;
-          results.callId = callData.id;
-          results.callScheduledFor = callScheduledFor.toISOString();
+          results.callId = scheduledCall.id;
+          results.callScheduledFor = scheduledCall.scheduled_for;
+        } catch (scheduleError) {
+          console.error("[Approve] Failed to schedule call via CasesService:", {
+            caseId: input.caseId,
+            error:
+              scheduleError instanceof Error
+                ? scheduleError.message
+                : String(scheduleError),
+          });
+
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to schedule call delivery",
+          });
         }
       }
 
