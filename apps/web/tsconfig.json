@@ -71,7 +71,9 @@
       "@odis-ai/auth": ["../../libs/auth/src/index.ts"],
       "@odis-ai/auth/*": ["../../libs/auth/src/*"],
       "@odis-ai/styles": ["../../libs/styles/src/index.css"],
-      "@odis-ai/styles/*": ["../../libs/styles/src/*"]
+      "@odis-ai/styles/*": ["../../libs/styles/src/*"],
+      "@odis-ai/slack": ["../../libs/slack/src/index.ts"],
+      "@odis-ai/slack/*": ["../../libs/slack/src/*"]
     }
   },
   "include": [

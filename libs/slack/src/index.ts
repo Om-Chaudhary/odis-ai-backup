@@ -63,3 +63,16 @@ export {
   verifySlackRequest,
   getSignatureHeaders,
 } from "./signature";
+
+// OAuth
+export {
+  generateInstallUrl,
+  generateStateToken,
+  SLACK_BOT_SCOPES,
+  handleOAuthCallback,
+} from "./oauth";
+export type {
+  OAuthCallbackResult,
+  OAuthCallbackError,
+  OAuthCallbackResponse,
+} from "./oauth";

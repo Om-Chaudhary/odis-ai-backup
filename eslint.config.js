@@ -132,6 +132,7 @@ export default tseslint.config(
                 "scope:qstash",
                 "scope:resend",
                 "scope:retell",
+                "scope:slack",
               ],
             },
             // ============================================
