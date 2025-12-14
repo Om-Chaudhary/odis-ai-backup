@@ -7,8 +7,6 @@
 
 import crypto from "crypto";
 
-const SLACK_SIGNING_SECRET = process.env.SLACK_SIGNING_SECRET;
-
 /**
  * Verify a Slack request signature
  *
@@ -22,7 +20,8 @@ export function verifySlackSignature(
   timestamp: string,
   signature: string,
 ): boolean {
-  if (!SLACK_SIGNING_SECRET) {
+  const signingSecret = process.env.SLACK_SIGNING_SECRET;
+  if (!signingSecret) {
     console.error("[SLACK_SIGNATURE] SLACK_SIGNING_SECRET not configured");
     return false;
   }
@@ -43,7 +42,7 @@ export function verifySlackSignature(
   const sigBaseString = `v0:${timestamp}:${body}`;
 
   // Compute HMAC-SHA256
-  const hmac = crypto.createHmac("sha256", SLACK_SIGNING_SECRET);
+  const hmac = crypto.createHmac("sha256", signingSecret);
   hmac.update(sigBaseString);
   const computedSignature = `v0=${hmac.digest("hex")}`;
 

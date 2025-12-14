@@ -157,7 +157,7 @@ export interface SlackInteractionPayload {
   user: {
     id: string;
     username: string;
-    name: string;
+    name?: string;
     teamId: string;
   };
   team: {
