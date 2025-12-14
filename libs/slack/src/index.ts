@@ -76,3 +76,41 @@ export type {
   OAuthCallbackError,
   OAuthCallbackResponse,
 } from "./oauth";
+
+// Commands
+export { routeCommand } from "./commands";
+export { handleAdd } from "./commands/add";
+export { handleList } from "./commands/list";
+export { handleStatus } from "./commands/status";
+export { handleDelete } from "./commands/delete";
+export { handleHelp } from "./commands/help";
+
+// Blocks
+export {
+  buildReminderMessageBlocks,
+  getReminderMessageText,
+  buildAddTaskModal,
+  buildDeleteConfirmModal,
+} from "./blocks";
+export type { ReminderMessageInput } from "./blocks";
+
+// Legacy Block Builders (from commands)
+export { buildHelpMessage } from "./blocks/help-message";
+export { buildTaskList } from "./blocks/task-list";
+export { buildStatusMessage } from "./blocks/status-message";
+
+// Webhooks
+export {
+  handleInteraction,
+  handleButtonAction,
+  handleModalSubmit,
+} from "./webhooks";
+export type {
+  InteractionHandlerResult,
+  ButtonActionResult,
+  ModalSubmitResult,
+} from "./webhooks";
+
+// Scheduler
+export { sendDailyReminders } from "./scheduler";
+export type { DailyTriggerResult } from "./scheduler";
