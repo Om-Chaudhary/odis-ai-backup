@@ -6,7 +6,7 @@
  */
 
 import type { CommandContext, CommandResponse } from "../types";
-import { createServerClient } from "@odis-ai/db";
+import { createServiceClient } from "@odis-ai/db/server";
 import type { SlackTask } from "../types";
 import { buildTaskList } from "../blocks/task-list";
 
@@ -14,7 +14,7 @@ import { buildTaskList } from "../blocks/task-list";
  * Fetch all active tasks for a channel
  */
 async function fetchChannelTasks(channelId: string): Promise<SlackTask[]> {
-  const supabase = await createServerClient();
+  const supabase = await createServiceClient();
 
   const { data, error } = await supabase
     .from("slack_tasks")

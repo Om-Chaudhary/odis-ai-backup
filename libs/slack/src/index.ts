@@ -6,8 +6,16 @@
  */
 
 // Client
-export { slackClient, setTokenResolver, clearClientCache } from "./client";
+export {
+  slackClient,
+  setTokenResolver,
+  clearClientCache,
+  isTokenResolverInitialized,
+} from "./client";
 export type { TokenResolver } from "./client";
+
+// Initialization
+export { initializeSlackClient, ensureSlackClientInitialized } from "./init";
 export type { ISlackClient } from "./slack-client.interface";
 
 // Types

@@ -6,7 +6,7 @@
  */
 
 import type { CommandContext, CommandResponse } from "../types";
-import { createServerClient } from "@odis-ai/db";
+import { createServiceClient } from "@odis-ai/db/server";
 import type { SlackTask, SlackTaskCompletion } from "../types";
 import { buildStatusMessage } from "../blocks/status-message";
 
@@ -23,7 +23,7 @@ interface TaskWithCompletion extends SlackTask {
 async function fetchTasksWithStatus(
   channelId: string,
 ): Promise<TaskWithCompletion[]> {
-  const supabase = await createServerClient();
+  const supabase = await createServiceClient();
   const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
   // Fetch all active tasks for the channel

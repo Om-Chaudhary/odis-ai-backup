@@ -24,6 +24,7 @@ const clientCache = new Map<string, WebClient>();
 export type TokenResolver = (teamId: string) => Promise<string | null>;
 
 let tokenResolver: TokenResolver | null = null;
+let isInitialized = false;
 
 /**
  * Set the token resolver function
@@ -32,6 +33,14 @@ let tokenResolver: TokenResolver | null = null;
  */
 export function setTokenResolver(resolver: TokenResolver): void {
   tokenResolver = resolver;
+  isInitialized = true;
+}
+
+/**
+ * Check if the token resolver has been initialized
+ */
+export function isTokenResolverInitialized(): boolean {
+  return isInitialized;
 }
 
 /**

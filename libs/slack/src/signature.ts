@@ -26,10 +26,10 @@ export function verifySlackSignature(
     return false;
   }
 
-  // Check timestamp to prevent replay attacks (5 minute window)
+  // Check timestamp to prevent replay attacks (2 minute window for tighter security)
   const timestampSeconds = parseInt(timestamp, 10);
   const now = Math.floor(Date.now() / 1000);
-  if (Math.abs(now - timestampSeconds) > 300) {
+  if (Math.abs(now - timestampSeconds) > 120) {
     console.warn("[SLACK_SIGNATURE] Request timestamp too old", {
       requestTime: timestampSeconds,
       serverTime: now,

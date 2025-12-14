@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { verifySignatureAppRouter } from "@upstash/qstash/dist/nextjs";
 import { createServiceClient } from "@odis-ai/db/server";
 import { sendDailyReminders } from "@odis-ai/slack/scheduler";
+import { ensureSlackClientInitialized } from "@odis-ai/slack";
 
 /**
  * Daily Reminders Cron Endpoint
@@ -24,6 +25,9 @@ import { sendDailyReminders } from "@odis-ai/slack/scheduler";
 async function handler(_req: NextRequest) {
   try {
     console.log("[SLACK_CRON] Daily reminders triggered");
+
+    // Initialize Slack client (idempotent - needed for posting messages)
+    ensureSlackClientInitialized();
 
     // Get Supabase service client (bypasses RLS)
     const supabase = await createServiceClient();

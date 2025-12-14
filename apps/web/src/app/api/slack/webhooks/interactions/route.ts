@@ -6,9 +6,12 @@
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { verifySlackRequest } from "@odis-ai/slack";
+import {
+  verifySlackRequest,
+  ensureSlackClientInitialized,
+} from "@odis-ai/slack";
 import { handleInteraction } from "@odis-ai/slack/webhooks";
-import { createServiceClient } from "@odis-ai/db";
+import { createServiceClient } from "@odis-ai/db/server";
 
 /**
  * POST /api/slack/webhooks/interactions
@@ -51,8 +54,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Initialize Slack client (idempotent)
+    ensureSlackClientInitialized();
+
     // Create Supabase service client (bypasses RLS)
-    const supabase = createServiceClient();
+    const supabase = await createServiceClient();
 
     // Handle the interaction
     const result = await handleInteraction(payload, supabase);

@@ -67,28 +67,8 @@ async function handleCompleteTask(
   const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
   try {
-    // Check if already completed today
-    const { data: existing, error: checkError } = await supabase
-      .from("slack_task_completions")
-      .select("id")
-      .eq("task_id", taskId)
-      .eq("completion_date", today)
-      .single();
-
-    if (checkError && checkError.code !== "PGRST116") {
-      // Not a "no rows" error
-      console.error("[SLACK_BUTTON] Failed to check completion", {
-        taskId,
-        error: checkError.message,
-      });
-      return { ok: false, error: "Database error checking completion" };
-    }
-
-    if (existing) {
-      return { ok: false, error: "Task already completed today" };
-    }
-
-    // Insert completion record
+    // Try to insert completion record directly
+    // The unique constraint (task_id, completion_date) handles race conditions
     const { error: insertError } = await supabase
       .from("slack_task_completions")
       .insert({
@@ -100,9 +80,14 @@ async function handleCompleteTask(
       });
 
     if (insertError) {
+      // Handle unique constraint violation (task already completed)
+      if (insertError.code === "23505") {
+        return { ok: false, error: "Task already completed today" };
+      }
       console.error("[SLACK_BUTTON] Failed to insert completion", {
         taskId,
         error: insertError.message,
+        code: insertError.code,
       });
       return { ok: false, error: "Failed to mark task complete" };
     }

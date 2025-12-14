@@ -9,6 +9,7 @@ import { interactionPayloadSchema } from "../validators";
 import { handleButtonAction } from "./handlers/button-action";
 import { handleModalSubmit } from "./handlers/modal-submit";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { KnownBlock } from "@slack/types";
 
 export interface InteractionHandlerResult {
   ok: boolean;
@@ -178,7 +179,7 @@ function normalizeInteractionPayload(
     message: message
       ? {
           ts: String(message.ts),
-          blocks: message.blocks as Array<unknown>,
+          blocks: message.blocks as KnownBlock[],
         }
       : undefined,
   };

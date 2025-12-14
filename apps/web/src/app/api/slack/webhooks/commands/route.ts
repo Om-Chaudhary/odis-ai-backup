@@ -10,6 +10,7 @@ import {
   verifySlackRequest,
   slashCommandPayloadSchema,
   routeCommand,
+  ensureSlackClientInitialized,
   type CommandContext,
   type SlashCommandPayloadInput,
 } from "@odis-ai/slack";
@@ -76,6 +77,9 @@ export async function POST(request: Request): Promise<NextResponse> {
       userId: payload.user_id,
       channelId: payload.channel_id,
     });
+
+    // Initialize Slack client (idempotent - needed for modal opening)
+    ensureSlackClientInitialized();
 
     // Build context and route command
     const context = buildContext(payload);

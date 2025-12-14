@@ -327,10 +327,10 @@ async function storeReminderMessage(
       task_id: taskId,
       completion_date: completionDate,
       message_ts: messageTs,
-      completed_by_user_id: "system", // Placeholder
+      completed_by_user_id: "system", // Placeholder - will be updated when user completes
       completed_by_username: null,
       completed_at: null, // Not completed yet
-    } as SlackTaskCompletionInsert & { completed_at: null },
+    },
     {
       onConflict: "task_id,completion_date",
     },
