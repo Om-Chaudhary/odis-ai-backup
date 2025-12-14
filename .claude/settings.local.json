@@ -108,7 +108,12 @@
       "Bash(gh pr create:*)",
       "mcp__github__create_pull_request",
       "Bash(git merge:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "mcp__nx-mcp__nx_workspace",
+      "mcp__nx-mcp__nx_project_details",
+      "Bash(pnpm nx typecheck:*)",
+      "Bash(npx nx:*)",
+      "Bash(pnpm lint:all:*)"
     ],
     "deny": [],
     "ask": []
