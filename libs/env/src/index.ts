@@ -35,6 +35,10 @@ export const env = createEnv({
     RESEND_API_KEY: z.string().min(1),
     // IDEXX Credential Encryption
     IDEXX_ENCRYPTION_KEY: z.string().min(32), // Minimum 32 bytes (256 bits) for AES-256
+    // Slack Configuration
+    SLACK_CLIENT_ID: z.string().optional(),
+    SLACK_CLIENT_SECRET: z.string().optional(),
+    SLACK_SIGNING_SECRET: z.string().optional(),
     // Environment identifier
     APP_ENV: z
       .enum(["development", "staging", "production"])
@@ -75,6 +79,9 @@ export const env = createEnv({
       process.env.VAPI_DEFAULT_INBOUND_ASSISTANT_ID,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     IDEXX_ENCRYPTION_KEY: process.env.IDEXX_ENCRYPTION_KEY,
+    SLACK_CLIENT_ID: process.env.SLACK_CLIENT_ID,
+    SLACK_CLIENT_SECRET: process.env.SLACK_CLIENT_SECRET,
+    SLACK_SIGNING_SECRET: process.env.SLACK_SIGNING_SECRET,
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
