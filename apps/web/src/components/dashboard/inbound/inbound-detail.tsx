@@ -15,6 +15,7 @@ import {
   Loader2,
   FileText,
   Mail,
+  Trash2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
 import { Button } from "@odis-ai/ui/button";
@@ -38,6 +39,9 @@ interface InboundDetailProps {
   onRejectAppointment: (id: string, notes?: string) => Promise<void>;
   onMarkMessageRead: (id: string) => Promise<void>;
   onResolveMessage: (id: string) => Promise<void>;
+  onDeleteCall?: (id: string) => Promise<void>;
+  onDeleteAppointment?: (id: string) => Promise<void>;
+  onDeleteMessage?: (id: string) => Promise<void>;
   isSubmitting: boolean;
 }
 
@@ -56,6 +60,9 @@ export function InboundDetail({
   onRejectAppointment,
   onMarkMessageRead,
   onResolveMessage,
+  onDeleteCall,
+  onDeleteAppointment,
+  onDeleteMessage,
   isSubmitting,
 }: InboundDetailProps) {
   if (!item) {
@@ -64,12 +71,19 @@ export function InboundDetail({
 
   return (
     <div className="flex h-full flex-col">
-      {viewMode === "calls" && <CallDetail call={item as InboundCall} />}
+      {viewMode === "calls" && (
+        <CallDetail
+          call={item as InboundCall}
+          onDelete={onDeleteCall}
+          isSubmitting={isSubmitting}
+        />
+      )}
       {viewMode === "appointments" && (
         <AppointmentDetail
           appointment={item as AppointmentRequest}
           onConfirm={onConfirmAppointment}
           onReject={onRejectAppointment}
+          onDelete={onDeleteAppointment}
           isSubmitting={isSubmitting}
         />
       )}
@@ -78,6 +92,7 @@ export function InboundDetail({
           message={item as ClinicMessage}
           onMarkRead={onMarkMessageRead}
           onResolve={onResolveMessage}
+          onDelete={onDeleteMessage}
           isSubmitting={isSubmitting}
         />
       )}
@@ -89,7 +104,17 @@ export function InboundDetail({
 // Call Detail
 // =============================================================================
 
-function CallDetail({ call }: { call: InboundCall }) {
+function CallDetail({
+  call,
+  onDelete,
+  isSubmitting,
+}: {
+  call: InboundCall;
+  onDelete?: (id: string) => Promise<void>;
+  isSubmitting: boolean;
+}) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
@@ -202,6 +227,53 @@ function CallDetail({ call }: { call: InboundCall }) {
           </Card>
         )}
       </div>
+
+      {/* Delete Footer */}
+      {onDelete && (
+        <div className="bg-muted/10 border-t p-4">
+          {showDeleteConfirm ? (
+            <div className="space-y-3">
+              <p className="text-muted-foreground text-sm">
+                Are you sure you want to delete this call? This action cannot be
+                undone.
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="flex-1"
+                  onClick={() => onDelete(call.id)}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="mr-2 h-4 w-4" />
+                  )}
+                  Confirm Delete
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              className="w-full border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={isSubmitting}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Call
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -214,15 +286,18 @@ function AppointmentDetail({
   appointment,
   onConfirm,
   onReject,
+  onDelete,
   isSubmitting,
 }: {
   appointment: AppointmentRequest;
   onConfirm: (id: string) => Promise<void>;
   onReject: (id: string, notes?: string) => Promise<void>;
+  onDelete?: (id: string) => Promise<void>;
   isSubmitting: boolean;
 }) {
   const [rejectNotes, setRejectNotes] = useState("");
   const [showRejectForm, setShowRejectForm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const isPending = appointment.status === "pending";
 
   return (
@@ -355,72 +430,118 @@ function AppointmentDetail({
       </div>
 
       {/* Action Footer */}
-      {isPending && (
-        <div className="bg-muted/10 border-t p-4">
-          {showRejectForm ? (
-            <div className="space-y-3">
-              <Textarea
-                placeholder="Reason for rejection (optional)"
-                value={rejectNotes}
-                onChange={(e) => setRejectNotes(e.target.value)}
-                className="min-h-[80px]"
-              />
+      <div className="bg-muted/10 border-t p-4">
+        {isPending ? (
+          <>
+            {showRejectForm ? (
+              <div className="space-y-3">
+                <Textarea
+                  placeholder="Reason for rejection (optional)"
+                  value={rejectNotes}
+                  onChange={(e) => setRejectNotes(e.target.value)}
+                  className="min-h-[80px]"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      setShowRejectForm(false);
+                      setRejectNotes("");
+                    }}
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    className="flex-1"
+                    onClick={() =>
+                      onReject(appointment.id, rejectNotes || undefined)
+                    }
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <XCircle className="mr-2 h-4 w-4" />
+                    )}
+                    Confirm Rejection
+                  </Button>
+                </div>
+              </div>
+            ) : (
               <div className="flex gap-2">
                 <Button
                   variant="outline"
-                  className="flex-1"
-                  onClick={() => {
-                    setShowRejectForm(false);
-                    setRejectNotes("");
-                  }}
+                  className="flex-1 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+                  onClick={() => setShowRejectForm(true)}
                   disabled={isSubmitting}
                 >
-                  Cancel
+                  <XCircle className="mr-2 h-4 w-4" />
+                  Reject
                 </Button>
                 <Button
-                  variant="destructive"
-                  className="flex-1"
-                  onClick={() =>
-                    onReject(appointment.id, rejectNotes || undefined)
-                  }
+                  className="flex-1 bg-teal-600 hover:bg-teal-700"
+                  onClick={() => onConfirm(appointment.id)}
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
-                    <XCircle className="mr-2 h-4 w-4" />
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
                   )}
-                  Confirm Rejection
+                  Confirm Appointment
                 </Button>
               </div>
-            </div>
-          ) : (
-            <div className="flex gap-2">
+            )}
+          </>
+        ) : onDelete ? (
+          <>
+            {showDeleteConfirm ? (
+              <div className="space-y-3">
+                <p className="text-muted-foreground text-sm">
+                  Are you sure you want to delete this appointment request? This
+                  action cannot be undone.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    className="flex-1"
+                    onClick={() => onDelete(appointment.id)}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="mr-2 h-4 w-4" />
+                    )}
+                    Confirm Delete
+                  </Button>
+                </div>
+              </div>
+            ) : (
               <Button
                 variant="outline"
-                className="flex-1 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
-                onClick={() => setShowRejectForm(true)}
+                className="w-full border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+                onClick={() => setShowDeleteConfirm(true)}
                 disabled={isSubmitting}
               >
-                <XCircle className="mr-2 h-4 w-4" />
-                Reject
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Appointment
               </Button>
-              <Button
-                className="flex-1 bg-teal-600 hover:bg-teal-700"
-                onClick={() => onConfirm(appointment.id)}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="mr-2 h-4 w-4" />
-                )}
-                Confirm Appointment
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -433,15 +554,19 @@ function MessageDetail({
   message,
   onMarkRead,
   onResolve,
+  onDelete,
   isSubmitting,
 }: {
   message: ClinicMessage;
   onMarkRead: (id: string) => Promise<void>;
   onResolve: (id: string) => Promise<void>;
+  onDelete?: (id: string) => Promise<void>;
   isSubmitting: boolean;
 }) {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const isNew = message.status === "new";
   const isRead = message.status === "read";
+  const isResolved = message.status === "resolved";
   const isUrgent = message.priority === "urgent";
 
   return (
@@ -536,13 +661,13 @@ function MessageDetail({
       </div>
 
       {/* Action Footer */}
-      {(isNew || isRead) && (
-        <div
-          className={cn(
-            "border-t p-4",
-            isUrgent ? "bg-destructive/5" : "bg-muted/10",
-          )}
-        >
+      <div
+        className={cn(
+          "border-t p-4",
+          isUrgent ? "bg-destructive/5" : "bg-muted/10",
+        )}
+      >
+        {isNew || isRead ? (
           <div className="flex gap-2">
             {isNew && (
               <Button
@@ -577,8 +702,52 @@ function MessageDetail({
               Mark as Resolved
             </Button>
           </div>
-        </div>
-      )}
+        ) : isResolved && onDelete ? (
+          <>
+            {showDeleteConfirm ? (
+              <div className="space-y-3">
+                <p className="text-muted-foreground text-sm">
+                  Are you sure you want to delete this message? This action
+                  cannot be undone.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    className="flex-1"
+                    onClick={() => onDelete(message.id)}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="mr-2 h-4 w-4" />
+                    )}
+                    Confirm Delete
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                className="w-full border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={isSubmitting}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Message
+              </Button>
+            )}
+          </>
+        ) : null}
+      </div>
     </div>
   );
 }
