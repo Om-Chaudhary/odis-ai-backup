@@ -83,3 +83,4 @@ Returns the list of calls that were cleaned up.';
 
 -- Grant execute permission to authenticated users (for admin operations)
 GRANT EXECUTE ON FUNCTION cleanup_stale_scheduled_calls TO authenticated;
+

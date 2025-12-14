@@ -74,3 +74,4 @@ SET
 WHERE status = 'failed'
   AND created_at < (NOW() - INTERVAL '7 days')
   AND (metadata IS NULL OR NOT (metadata ? 'archived_at'));
+
