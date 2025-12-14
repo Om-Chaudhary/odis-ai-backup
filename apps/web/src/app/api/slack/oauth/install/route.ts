@@ -13,12 +13,19 @@ export async function GET() {
     // Generate state token for CSRF protection
     const state = generateStateToken();
 
-    // TODO: Store state in session/cookie for verification in callback
-    // For now, we'll skip state verification for simplicity
-
     const installUrl = generateInstallUrl(state);
+    const response = NextResponse.redirect(installUrl);
 
-    return NextResponse.redirect(installUrl);
+    // Store state in HTTP-only cookie for verification in callback
+    response.cookies.set("slack_oauth_state", state, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 600, // 10 minutes
+      path: "/api/slack/oauth",
+    });
+
+    return response;
   } catch (error) {
     console.error("[SLACK_INSTALL] Failed to generate install URL", {
       error: error instanceof Error ? error.message : String(error),

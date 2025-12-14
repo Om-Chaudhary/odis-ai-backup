@@ -13,8 +13,27 @@ import { encrypt } from "@odis-ai/crypto";
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get("code");
+  const state = searchParams.get("state");
   const error = searchParams.get("error");
   const errorDescription = searchParams.get("error_description");
+
+  // Verify CSRF state token
+  const storedState = request.cookies.get("slack_oauth_state")?.value;
+
+  if (!storedState || storedState !== state) {
+    console.error("[SLACK_CALLBACK] State mismatch - possible CSRF attack", {
+      hasStoredState: !!storedState,
+      hasReceivedState: !!state,
+    });
+
+    const errorUrl = new URL("/slack/install-error", request.url);
+    errorUrl.searchParams.set("error", "csrf_validation_failed");
+    errorUrl.searchParams.set(
+      "description",
+      "Security validation failed. Please try again.",
+    );
+    return NextResponse.redirect(errorUrl);
+  }
 
   // Handle error from Slack
   if (error) {
