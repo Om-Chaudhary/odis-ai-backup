@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { useQueryState, parseAsInteger } from "nuqs";
-import { format, parseISO, startOfDay, endOfDay } from "date-fns";
+import { format, parseISO, startOfDay } from "date-fns";
 import { api } from "~/trpc/client";
 
 import type {
@@ -39,9 +39,7 @@ type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
  */
 export function InboundClient() {
   // URL-synced state
-  const [dateStr, setDateStr] = useQueryState("date", {
-    defaultValue: format(startOfDay(new Date()), "yyyy-MM-dd"),
-  });
+  const [dateStr, setDateStr] = useQueryState("date");
 
   const [viewMode, setViewMode] = useQueryState("view", {
     defaultValue: "appointments" as ViewMode,
@@ -85,7 +83,7 @@ export function InboundClient() {
     parseAsInteger.withDefault(25),
   );
 
-  // Parse current date
+  // Parse current date (only used if date filter is applied)
   const currentDate = useMemo(() => {
     if (dateStr) {
       try {
@@ -97,11 +95,11 @@ export function InboundClient() {
     return startOfDay(new Date());
   }, [dateStr]);
 
-  // Date range for API - send YYYY-MM-DD strings, backend handles timezone conversion
+  // Date range for API - only send if dateStr is present (otherwise show all)
   const { startDate, endDate } = useMemo(
     () => ({
-      startDate: dateStr ?? format(startOfDay(new Date()), "yyyy-MM-dd"),
-      endDate: dateStr ?? format(startOfDay(new Date()), "yyyy-MM-dd"),
+      startDate: dateStr ?? undefined,
+      endDate: dateStr ?? undefined,
     }),
     [dateStr],
   );
@@ -387,8 +385,12 @@ export function InboundClient() {
 
   // Handlers
   const handleDateChange = useCallback(
-    (newDate: Date) => {
-      void setDateStr(format(startOfDay(newDate), "yyyy-MM-dd"));
+    (newDate: Date | null) => {
+      if (newDate === null) {
+        void setDateStr(null);
+      } else {
+        void setDateStr(format(startOfDay(newDate), "yyyy-MM-dd"));
+      }
       void setPage(1);
     },
     [setDateStr, setPage],

@@ -168,7 +168,7 @@ function CallsHeader() {
       <th className="h-10 w-[15%] text-center font-medium">Status</th>
       <th className="h-10 w-[15%] text-center font-medium">Sentiment</th>
       <th className="h-10 w-[15%] text-center font-medium">Cost</th>
-      <th className="h-10 w-[15%] pr-4 text-right font-medium">Time</th>
+      <th className="h-10 w-[15%] pr-4 text-right font-medium">Date/Time</th>
     </tr>
   );
 }
@@ -183,7 +183,7 @@ function AppointmentsHeader() {
       <th className="h-10 w-[20%] text-left font-medium">Reason</th>
       <th className="h-10 w-[12%] text-center font-medium">Status</th>
       <th className="h-10 w-[16%] text-center font-medium">Actions</th>
-      <th className="h-10 w-[15%] pr-4 text-right font-medium">Requested</th>
+      <th className="h-10 w-[15%] pr-4 text-right font-medium">Appt Date</th>
     </tr>
   );
 }
@@ -196,7 +196,7 @@ function MessagesHeader() {
       <th className="h-10 w-[10%] text-center font-medium">Priority</th>
       <th className="h-10 w-[10%] text-center font-medium">Status</th>
       <th className="h-10 w-[12%] text-center font-medium">Actions</th>
-      <th className="h-10 w-[13%] pr-4 text-right font-medium">Time</th>
+      <th className="h-10 w-[13%] pr-4 text-right font-medium">Date/Time</th>
     </tr>
   );
 }
@@ -237,9 +237,14 @@ function CallRow({ call }: { call: InboundCall }) {
         </span>
       </td>
       <td className="py-3 pr-4 text-right">
-        <span className="text-muted-foreground text-xs">
-          {format(new Date(call.created_at), "h:mm a")}
-        </span>
+        <div className="flex flex-col items-end gap-0.5">
+          <span className="text-xs font-medium">
+            {format(new Date(call.created_at), "MMM d, yyyy")}
+          </span>
+          <span className="text-muted-foreground text-xs">
+            {format(new Date(call.created_at), "h:mm a")}
+          </span>
+        </div>
       </td>
     </>
   );
@@ -392,9 +397,14 @@ function MessageRow({
         )}
       </td>
       <td className="py-3 pr-4 text-right">
-        <span className="text-muted-foreground text-xs">
-          {format(new Date(message.createdAt), "h:mm a")}
-        </span>
+        <div className="flex flex-col items-end gap-0.5">
+          <span className="text-xs font-medium">
+            {format(new Date(message.createdAt), "MMM d, yyyy")}
+          </span>
+          <span className="text-muted-foreground text-xs">
+            {format(new Date(message.createdAt), "h:mm a")}
+          </span>
+        </div>
       </td>
     </>
   );

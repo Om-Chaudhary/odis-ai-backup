@@ -38,7 +38,7 @@ interface InboundFilterTabsProps {
   onSearchChange?: (term: string) => void;
   // Date navigation
   currentDate: Date;
-  onDateChange: (date: Date) => void;
+  onDateChange: (date: Date | null) => void;
   isLoading?: boolean;
 }
 
@@ -67,6 +67,7 @@ export function InboundFilterTabs({
   // Date navigation
   const goToPreviousDay = () => onDateChange(subDays(currentDate, 1));
   const goToNextDay = () => onDateChange(addDays(currentDate, 1));
+  const goToToday = () => onDateChange(new Date());
   const isAtToday = isToday(currentDate);
 
   const dateLabel = isToday(currentDate)
@@ -268,40 +269,64 @@ export function InboundFilterTabs({
     <div className="flex items-center justify-between gap-3">
       {/* Left: Date nav + View tabs */}
       <div className="flex items-center gap-4">
-        {/* Date Navigation */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center rounded-lg border border-teal-200/50 bg-white/60">
-            <button
-              onClick={goToPreviousDay}
-              disabled={isLoading}
-              className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-l-lg text-slate-600 transition-all duration-200",
-                isLoading
-                  ? "cursor-not-allowed opacity-50"
-                  : "hover:bg-teal-50 hover:text-teal-700",
-              )}
-              aria-label="Previous day"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <div className="h-4 w-px bg-teal-200/50" />
-            <button
-              onClick={goToNextDay}
-              disabled={isAtToday || isLoading}
-              className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-r-lg text-slate-600 transition-all duration-200",
-                isAtToday || isLoading
-                  ? "cursor-not-allowed opacity-40"
-                  : "hover:bg-teal-50 hover:text-teal-700",
-              )}
-              aria-label="Next day"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
+        {/* Date Navigation - Optional filtering by date */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onDateChange(null)}
+            className={cn(
+              "rounded-md px-2 py-1 text-xs font-medium transition-all duration-200",
+              "border",
+              !currentDate || isAtToday
+                ? "border-teal-200/60 bg-white/90 text-teal-700 shadow-sm"
+                : "border-transparent bg-white/40 text-slate-600 hover:bg-white/60",
+            )}
+          >
+            All Dates
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center rounded-lg border border-teal-200/50 bg-white/60">
+              <button
+                onClick={goToPreviousDay}
+                disabled={isLoading}
+                className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-l-lg text-slate-600 transition-all duration-200",
+                  isLoading
+                    ? "cursor-not-allowed opacity-50"
+                    : "hover:bg-teal-50 hover:text-teal-700",
+                )}
+                aria-label="Previous day"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <div className="h-4 w-px bg-teal-200/50" />
+              <button
+                onClick={goToToday}
+                className={cn(
+                  "flex h-8 items-center justify-center px-2 text-xs font-medium text-slate-600 transition-all duration-200",
+                  isLoading
+                    ? "cursor-not-allowed opacity-50"
+                    : "hover:bg-teal-50 hover:text-teal-700",
+                )}
+                aria-label="Today"
+              >
+                {dateLabel}
+              </button>
+              <div className="h-4 w-px bg-teal-200/50" />
+              <button
+                onClick={goToNextDay}
+                disabled={isAtToday || isLoading}
+                className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-r-lg text-slate-600 transition-all duration-200",
+                  isAtToday || isLoading
+                    ? "cursor-not-allowed opacity-40"
+                    : "hover:bg-teal-50 hover:text-teal-700",
+                )}
+                aria-label="Next day"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
-          <span className="text-sm font-semibold text-slate-800">
-            {dateLabel}
-          </span>
         </div>
 
         {/* View Mode Tabs */}
