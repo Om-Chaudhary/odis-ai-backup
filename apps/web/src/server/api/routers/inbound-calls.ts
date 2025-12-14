@@ -412,4 +412,62 @@ export const inboundCallsRouter = createTRPCRouter({
         },
       };
     }),
+
+  /**
+   * Delete an inbound call
+   */
+  deleteInboundCall: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const supabase = await createClient();
+
+      // Get current user's role and clinic
+      const user = await getUserWithClinic(supabase, ctx.user.id);
+
+      // First, verify the call exists and check access
+      const { data: call, error: fetchError } = await supabase
+        .from("inbound_vapi_calls")
+        .select("id, clinic_name, user_id")
+        .eq("id", input.id)
+        .single();
+
+      if (fetchError || !call) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Call not found",
+        });
+      }
+
+      // Check access
+      const isAdminOrOwner =
+        user.role === "admin" || user.role === "practice_owner";
+
+      if (
+        !isAdminOrOwner &&
+        call.clinic_name !== user.clinic_name &&
+        call.user_id !== user.id
+      ) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You don't have access to this call",
+        });
+      }
+
+      // Delete the call
+      const { error: deleteError } = await supabase
+        .from("inbound_vapi_calls")
+        .delete()
+        .eq("id", input.id);
+
+      if (deleteError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to delete call: ${deleteError.message}`,
+        });
+      }
+
+      return {
+        success: true,
+      };
+    }),
 });

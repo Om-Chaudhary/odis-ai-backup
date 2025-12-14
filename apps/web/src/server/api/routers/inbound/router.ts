@@ -13,6 +13,8 @@ import { listMessagesRouter } from "./procedures/list-messages";
 import { getStatsRouter } from "./procedures/get-stats";
 import { updateAppointmentRouter } from "./procedures/update-appointment";
 import { updateMessageRouter } from "./procedures/update-message";
+import { deleteAppointmentRouter } from "./procedures/delete-appointment";
+import { deleteMessageRouter } from "./procedures/delete-message";
 
 export const inboundRouter = createTRPCRouter({
   // Queries
@@ -24,4 +26,6 @@ export const inboundRouter = createTRPCRouter({
   updateAppointmentRequest: updateAppointmentRouter.updateAppointmentRequest,
   updateClinicMessage: updateMessageRouter.updateClinicMessage,
   markMessageRead: updateMessageRouter.markMessageRead,
+  deleteAppointmentRequest: deleteAppointmentRouter.deleteAppointmentRequest,
+  deleteClinicMessage: deleteMessageRouter.deleteClinicMessage,
 });

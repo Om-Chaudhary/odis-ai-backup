@@ -147,36 +147,39 @@ export function InboundClient() {
   );
 
   // Fetch calls (existing router)
-  const { data: callsData, isLoading: callsLoading } =
-    api.inboundCalls.listInboundCalls.useQuery(
-      {
-        page,
-        pageSize,
-        status: getCallApiStatus(callStatus) as
-          | "queued"
-          | "ringing"
-          | "in_progress"
-          | "completed"
-          | "failed"
-          | "cancelled"
-          | undefined,
-        search: searchTerm || undefined,
-        startDate,
-        endDate,
+  const {
+    data: callsData,
+    isLoading: callsLoading,
+    refetch: refetchCalls,
+  } = api.inboundCalls.listInboundCalls.useQuery(
+    {
+      page,
+      pageSize,
+      status: getCallApiStatus(callStatus) as
+        | "queued"
+        | "ringing"
+        | "in_progress"
+        | "completed"
+        | "failed"
+        | "cancelled"
+        | undefined,
+      search: searchTerm || undefined,
+      startDate,
+      endDate,
+    },
+    {
+      enabled: viewMode === "calls",
+      refetchInterval: () => {
+        const hasActive = callsRef.current.some(
+          (c) =>
+            c.status === "ringing" ||
+            c.status === "in_progress" ||
+            c.status === "queued",
+        );
+        return hasActive ? 5000 : 30000;
       },
-      {
-        enabled: viewMode === "calls",
-        refetchInterval: () => {
-          const hasActive = callsRef.current.some(
-            (c) =>
-              c.status === "ringing" ||
-              c.status === "in_progress" ||
-              c.status === "queued",
-          );
-          return hasActive ? 5000 : 30000;
-        },
-      },
-    );
+    },
+  );
 
   // Fetch appointments
   const {
@@ -269,6 +272,41 @@ export function InboundClient() {
     },
     onError: (error) => {
       toast.error("Failed to mark as read", { description: error.message });
+    },
+  });
+
+  const deleteCall = api.inboundCalls.deleteInboundCall.useMutation({
+    onSuccess: () => {
+      toast.success("Call deleted");
+      setSelectedItem(null);
+      void refetchCalls();
+    },
+    onError: (error) => {
+      toast.error("Failed to delete call", { description: error.message });
+    },
+  });
+
+  const deleteAppointment = api.inbound.deleteAppointmentRequest.useMutation({
+    onSuccess: () => {
+      toast.success("Appointment deleted");
+      setSelectedItem(null);
+      void refetchAppointments();
+    },
+    onError: (error) => {
+      toast.error("Failed to delete appointment", {
+        description: error.message,
+      });
+    },
+  });
+
+  const deleteMessage = api.inbound.deleteClinicMessage.useMutation({
+    onSuccess: () => {
+      toast.success("Message deleted");
+      setSelectedItem(null);
+      void refetchMessages();
+    },
+    onError: (error) => {
+      toast.error("Failed to delete message", { description: error.message });
     },
   });
 
@@ -525,10 +563,34 @@ export function InboundClient() {
     [updateMessage],
   );
 
+  const handleDeleteCall = useCallback(
+    async (id: string) => {
+      await deleteCall.mutateAsync({ id });
+    },
+    [deleteCall],
+  );
+
+  const handleDeleteAppointment = useCallback(
+    async (id: string) => {
+      await deleteAppointment.mutateAsync({ id });
+    },
+    [deleteAppointment],
+  );
+
+  const handleDeleteMessage = useCallback(
+    async (id: string) => {
+      await deleteMessage.mutateAsync({ id });
+    },
+    [deleteMessage],
+  );
+
   const isSubmitting =
     updateAppointment.isPending ||
     updateMessage.isPending ||
-    markRead.isPending;
+    markRead.isPending ||
+    deleteCall.isPending ||
+    deleteAppointment.isPending ||
+    deleteMessage.isPending;
 
   return (
     <div className="flex h-[calc(100vh-64px)] flex-col gap-2">
@@ -595,6 +657,9 @@ export function InboundClient() {
               onRejectAppointment={handleRejectAppointment}
               onMarkMessageRead={handleMarkMessageRead}
               onResolveMessage={handleResolveMessage}
+              onDeleteCall={handleDeleteCall}
+              onDeleteAppointment={handleDeleteAppointment}
+              onDeleteMessage={handleDeleteMessage}
               isSubmitting={isSubmitting}
             />
           }
