@@ -1,0 +1,37 @@
+{
+  "display_information": {
+    "name": "ODIS Daily Checklist",
+    "description": "Daily operations checklist bot for clinic teams",
+    "background_color": "#2563EB"
+  },
+  "features": {
+    "bot_user": {
+      "display_name": "ODIS Checklist",
+      "always_online": true
+    },
+    "slash_commands": [
+      {
+        "command": "/checklist",
+        "url": "https://odisai.net/api/slack/webhooks/commands",
+        "description": "Manage daily checklist tasks",
+        "usage_hint": "[add | list | status | delete | help]",
+        "should_escape": false
+      }
+    ]
+  },
+  "oauth_config": {
+    "redirect_urls": ["https://odisai.net/api/slack/oauth/callback"],
+    "scopes": {
+      "bot": ["channels:read", "chat:write", "commands", "users:read"]
+    }
+  },
+  "settings": {
+    "interactivity": {
+      "is_enabled": true,
+      "request_url": "https://odisai.net/api/slack/webhooks/interactions"
+    },
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": false,
+    "token_rotation_enabled": false
+  }
+}

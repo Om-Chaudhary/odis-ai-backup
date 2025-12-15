@@ -11,11 +11,7 @@ import {
   buildReminderMessageBlocks,
   getReminderMessageText,
 } from "../blocks/reminder-message";
-import type {
-  SlackReminderChannel,
-  SlackTask,
-  SlackTaskCompletionInsert,
-} from "../types";
+import type { SlackReminderChannel, SlackTask } from "../types";
 
 /**
  * Result of a daily reminder trigger
