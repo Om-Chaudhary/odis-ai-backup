@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import { Outfit } from "next/font/google";
-import { Inter } from "next/font/google";
-import { Lora } from "next/font/google";
+import { Outfit, Inter, Lora, Plus_Jakarta_Sans } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import "~/styles/globals.css";
 import ClientPostHogProvider from "~/components/providers/client-posthog-provider";
@@ -24,6 +22,12 @@ const inter = Inter({
 const lora = Lora({
   subsets: ["latin"],
   variable: "--font-lora",
+  display: "swap",
+});
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-plus-jakarta",
   display: "swap",
 });
 
@@ -171,7 +175,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`font-sans antialiased ${outfit.variable} ${inter.variable} ${lora.variable} ${geistMono.variable}`}
+        className={`font-sans antialiased ${outfit.variable} ${inter.variable} ${lora.variable} ${plusJakarta.variable} ${geistMono.variable}`}
       >
         <ClientPostHogProvider>
           <TRPCReactProvider>
