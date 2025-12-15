@@ -88,9 +88,7 @@ export function setupNavigationMocks(options?: {
 /**
  * Create mock Next.js headers
  */
-export function createMockHeaders(
-  headers?: Record<string, string>
-): Headers {
+export function createMockHeaders(headers?: Record<string, string>): Headers {
   const h = new Headers();
   if (headers) {
     Object.entries(headers).forEach(([key, value]) => {
@@ -112,7 +110,10 @@ export function createMockCookies(cookies?: Record<string, string>) {
       return value ? { name, value } : undefined;
     }),
     getAll: vi.fn(() =>
-      Array.from(cookieStore.entries()).map(([name, value]) => ({ name, value }))
+      Array.from(cookieStore.entries()).map(([name, value]) => ({
+        name,
+        value,
+      })),
     ),
     has: vi.fn((name: string) => cookieStore.has(name)),
     set: vi.fn((name: string, value: string) => {
@@ -131,7 +132,7 @@ export const MockNextImage = vi.fn(
   (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
     // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
     return <img {...props} />;
-  }
+  },
 );
 
 /**
@@ -148,7 +149,7 @@ export const MockNextLink = vi.fn(
         {children}
       </a>
     );
-  }
+  },
 );
 
 import React from "react";
