@@ -311,6 +311,27 @@
 }
 
 /* ============================================
+   Landing Page Animation Utilities
+   ============================================ */
+
+.animate-float-subtle {
+  animation: float-subtle 20s ease-in-out infinite;
+}
+
+.animate-pulse-glow-subtle {
+  animation: pulse-glow-subtle 4s ease-in-out infinite;
+}
+
+.animate-section-fade-in {
+  animation: section-fade-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+}
+
+.animate-orb-drift {
+  animation: orb-drift 30s ease-in-out infinite;
+}
+
+/* ============================================
    Delay Utilities
    ============================================ */
 
