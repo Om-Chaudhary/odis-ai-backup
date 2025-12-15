@@ -1,162 +1,134 @@
 "use client";
 
-import * as React from "react";
-import { motion } from "framer-motion";
-import { Check, ArrowRight } from "lucide-react";
-import { cn } from "~/lib/utils";
-
-type PlanLevel = "starter" | "growth" | "enterprise";
-
-interface PricingPlan {
-  name: string;
-  level: PlanLevel;
-  price: string;
-  popular?: boolean;
-  bestFor: string;
-  features: string[];
-}
-
-const plans: PricingPlan[] = [
-  {
-    name: "Starter",
-    price: "$199",
-    level: "starter",
-    bestFor: "Solo practitioners and small clinics",
-    features: [
-      "1 phone line",
-      "Inbound call handling",
-      "Appointment scheduling",
-      "Basic PIMS integration",
-      "Email support",
-      "Unlimited AI voice minutes",
-    ],
-  },
-  {
-    name: "Growth",
-    price: "$399",
-    level: "growth",
-    popular: true,
-    bestFor: "Multi-vet practices ready to scale",
-    features: [
-      "3 phone lines",
-      "Inbound + outbound calls",
-      "Discharge follow-ups",
-      "Priority PIMS integration",
-      "Slack support + onboarding call",
-      "Unlimited AI voice minutes",
-    ],
-  },
-  {
-    name: "Enterprise",
-    price: "Custom",
-    level: "enterprise",
-    bestFor: "Multi-location and hospital groups",
-    features: [
-      "Unlimited phone lines",
-      "Custom AI voice training",
-      "Multi-location dashboard",
-      "Dedicated account manager",
-      "SLA guarantee",
-      "Unlimited AI voice minutes",
-    ],
-  },
-];
+import { NeonGradientCard } from "~/components/ui/neon-gradient-card";
+import { BlurFade } from "~/components/ui/blur-fade";
+import { ShimmerButton } from "~/components/ui/shimmer-button";
+import { Calendar, ArrowRight } from "lucide-react";
 
 export function PricingSection() {
-  const [selectedPlan, setSelectedPlan] = React.useState<PlanLevel>("growth");
-
   return (
-    <section id="pricing" className="bg-background py-24 lg:py-32">
-      <div className="mx-auto max-w-6xl px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="mb-16 text-center"
-        >
-          <span className="text-primary mb-3 block text-xs font-medium tracking-widest uppercase">
-            Pricing
-          </span>
-          <h2 className="font-display text-foreground mb-4 text-3xl font-medium tracking-tight lg:text-4xl">
-            Simple, Transparent Pricing
-          </h2>
-          <p className="text-muted-foreground mx-auto max-w-xl text-lg">
-            Start small and scale as you grow. All plans include unlimited AI
-            voice minutes.
-          </p>
-        </motion.div>
+    <section id="pricing" className="relative w-full py-24 lg:py-32">
+      {/* Background gradient */}
+      <div className="from-background to-background pointer-events-none absolute inset-0 bg-gradient-to-b via-[#31aba3]/5" />
 
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3 lg:gap-8">
-          {plans.map((plan, index) => (
-            <motion.div
-              key={plan.name}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              onClick={() => setSelectedPlan(plan.level)}
-              className={cn(
-                "relative cursor-pointer rounded-2xl p-8 transition-all duration-300",
-                selectedPlan === plan.level
-                  ? "glass-teal ring-primary scale-[1.02] shadow-xl ring-2"
-                  : "glass-card hover:shadow-lg",
-              )}
-            >
-              {/* Popular badge */}
-              {plan.popular && (
-                <span className="bg-foreground text-background absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-4 py-1 text-xs font-medium">
-                  Most Popular
-                </span>
-              )}
+      <div className="relative mx-auto max-w-5xl px-6 lg:px-8">
+        <BlurFade delay={0.1} inView>
+          <div className="mb-16 text-center">
+            <span className="font-display text-primary mb-3 inline-flex items-center gap-2 text-xs font-medium tracking-widest uppercase">
+              <span className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
+              Get Started
+            </span>
+            <h2 className="font-display text-foreground mb-4 text-4xl font-medium tracking-tight lg:text-5xl">
+              Let&apos;s Talk About Your Practice
+            </h2>
+            <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
+              Every clinic is different. We&apos;ll create a custom plan that
+              fits your call volume, integrations, and workflow.
+            </p>
+          </div>
+        </BlurFade>
 
-              <div className="mb-6">
-                <h3 className="text-foreground mb-2 text-xl font-semibold">
-                  {plan.name}
-                </h3>
-                <div className="mb-3 flex items-baseline gap-1">
-                  <span className="font-display text-foreground text-4xl font-bold">
-                    {plan.price}
-                  </span>
-                  {plan.price !== "Custom" && (
-                    <span className="text-muted-foreground text-base">
-                      /month
-                    </span>
-                  )}
-                </div>
-                <p className="text-muted-foreground text-sm">{plan.bestFor}</p>
+        <BlurFade delay={0.2} inView>
+          <NeonGradientCard className="mx-auto max-w-3xl">
+            <div className="space-y-8 p-10 text-center lg:p-12">
+              <div className="bg-primary/10 mx-auto flex h-16 w-16 items-center justify-center rounded-full">
+                <Calendar className="text-primary h-8 w-8" />
               </div>
 
-              {/* Features list */}
-              <ul className="mb-8 space-y-3">
-                {plan.features.map((feature, i) => (
-                  <li
-                    key={i}
-                    className="text-foreground/80 flex items-center gap-3 text-sm"
-                  >
-                    <span className="bg-primary/10 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full">
-                      <Check className="text-primary h-3 w-3" />
-                    </span>
-                    {feature}
-                  </li>
-                ))}
-              </ul>
+              <div>
+                <h3 className="font-display text-foreground mb-3 text-3xl font-medium lg:text-4xl">
+                  Book a 15-Minute Demo
+                </h3>
+                <p className="text-muted-foreground mx-auto max-w-xl text-lg">
+                  See OdisAI in action. We&apos;ll walk through how it works for
+                  your clinic and answer all your questions—no sales pitch.
+                </p>
+              </div>
 
-              {/* CTA button */}
-              <button
-                className={cn(
-                  "group flex w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-all duration-300",
-                  selectedPlan === plan.level
-                    ? "bg-foreground text-background hover:bg-foreground/90"
-                    : "bg-secondary text-foreground hover:bg-secondary/80",
-                )}
-              >
-                {plan.level === "enterprise" ? "Contact Sales" : "Get Started"}
-                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-              </button>
-            </motion.div>
-          ))}
-        </div>
+              <div className="space-y-4">
+                <div className="grid gap-4 text-left sm:grid-cols-2">
+                  <div className="glass-card rounded-xl p-4">
+                    <p className="text-foreground text-sm font-semibold">
+                      ✓ See live call demo
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      Hear how natural it sounds
+                    </p>
+                  </div>
+                  <div className="glass-card rounded-xl p-4">
+                    <p className="text-foreground text-sm font-semibold">
+                      ✓ Discuss your PIMS
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      We integrate with major systems
+                    </p>
+                  </div>
+                  <div className="glass-card rounded-xl p-4">
+                    <p className="text-foreground text-sm font-semibold">
+                      ✓ Custom pricing
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      Based on your call volume
+                    </p>
+                  </div>
+                  <div className="glass-card rounded-xl p-4">
+                    <p className="text-foreground text-sm font-semibold">
+                      ✓ Go live in days
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      Not weeks or months
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-center">
+                  <ShimmerButton
+                    className="group relative overflow-hidden rounded-full bg-gradient-to-r from-[#31aba3] to-[#2da096] px-8 py-4 text-base font-semibold text-white shadow-lg transition-all hover:shadow-xl hover:shadow-[#31aba3]/20"
+                    onClick={() => {
+                      window.location.href =
+                        "mailto:hello@odis.ai?subject=Demo Request&body=Hi, I'd like to schedule a demo to learn more about OdisAI for my veterinary practice.";
+                    }}
+                  >
+                    <span className="flex items-center gap-2">
+                      Book Your Demo
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    </span>
+                  </ShimmerButton>
+
+                  <a
+                    href="tel:+1234567890"
+                    className="border-border bg-background/50 inline-flex items-center justify-center gap-2 rounded-full border px-8 py-4 text-base font-medium backdrop-blur-sm transition-all hover:border-[#31aba3]/50 hover:bg-[#31aba3]/5"
+                  >
+                    Or call us directly
+                  </a>
+                </div>
+              </div>
+
+              <p className="text-muted-foreground text-sm">
+                <strong className="text-foreground">
+                  No commitment required.
+                </strong>{" "}
+                See if it&apos;s a good fit first.
+              </p>
+            </div>
+          </NeonGradientCard>
+        </BlurFade>
+
+        {/* Trust signals */}
+        <BlurFade delay={0.3} inView>
+          <div className="mt-16 text-center">
+            <p className="text-muted-foreground mb-6 text-sm font-medium">
+              Trusted by 100+ veterinary clinics
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-8 opacity-60 grayscale">
+              {/* Integration logos placeholder */}
+              <div className="text-muted-foreground text-xs">IDEXX</div>
+              <div className="text-muted-foreground text-xs">ezyVet</div>
+              <div className="text-muted-foreground text-xs">Cornerstone</div>
+              <div className="text-muted-foreground text-xs">Avimark</div>
+            </div>
+          </div>
+        </BlurFade>
       </div>
     </section>
   );

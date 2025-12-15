@@ -1,134 +1,207 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Star } from "lucide-react";
+import { cn } from "~/lib/utils";
+import { Marquee } from "~/components/ui/marquee";
+import { AvatarCircles } from "~/components/ui/avatar-circles";
+import { NumberTicker } from "~/components/ui/number-ticker";
+import { BlurFade } from "~/components/ui/blur-fade";
+
+const testimonials = [
+  {
+    quote:
+      "Before OdisAI, our front desk was drowning. Now pet parents get answers instantly, and we've seen a real bump in booked appointments.",
+    author: "Dr. Deepti Pal",
+    role: "Veterinarian",
+    clinic: "Willow Creek Animal Hospital",
+    rating: 5,
+    img: "/images/testimonials/dr-deepti-pal.png",
+    profileUrl: "#",
+  },
+  {
+    quote:
+      "The AI calls pet parents the day after discharge to check in. Our clients love it, and my techs finally have time to breathe.",
+    author: "Dr. Tais Perpetuo",
+    role: "Practice Owner",
+    clinic: "Coastal Paws Veterinary",
+    rating: 5,
+    img: "/images/testimonials/dr-tais-perpetuo.png",
+    profileUrl: "#",
+  },
+  {
+    quote:
+      "We calculated how many appointments we were losing from missed calls. OdisAI recovered them—and then some.",
+    author: "Jenn",
+    role: "Practice Manager",
+    clinic: "Riverbend Pet Clinic",
+    rating: 5,
+    img: "/images/testimonials/jenn.png",
+    profileUrl: "#",
+  },
+  {
+    quote:
+      "The voice sounds so natural that clients don't even realize it's AI until we tell them. It's honestly impressive.",
+    author: "Kayla",
+    role: "Veterinary Technician",
+    clinic: "Maple Grove Vet",
+    rating: 5,
+    img: "/images/testimonials/kayla.png",
+    profileUrl: "#",
+  },
+];
+
+const firstRow = testimonials.slice(0, Math.ceil(testimonials.length / 2));
+const secondRow = testimonials.slice(Math.ceil(testimonials.length / 2));
+
+const ReviewCard = ({
+  img,
+  author,
+  role,
+  clinic,
+  quote,
+  rating,
+}: {
+  img: string;
+  author: string;
+  role: string;
+  clinic: string;
+  quote: string;
+  rating: number;
+}) => {
+  return (
+    <figure
+      className={cn(
+        "relative h-full w-80 cursor-pointer overflow-hidden rounded-2xl border p-6",
+        "border-border/50 bg-background/50 hover:bg-background/80 backdrop-blur-sm",
+        "transition-all duration-300 hover:shadow-xl hover:shadow-[#31aba3]/10",
+      )}
+    >
+      <div className="mb-4 flex items-center gap-3">
+        <img
+          className="h-12 w-12 rounded-full border-2 border-[#31aba3]/20 object-cover"
+          width={48}
+          height={48}
+          alt={author}
+          src={img}
+        />
+        <div className="flex-1">
+          <figcaption className="text-foreground text-sm font-semibold">
+            {author}
+          </figcaption>
+          <p className="text-muted-foreground text-xs">
+            {role} · {clinic}
+          </p>
+        </div>
+      </div>
+
+      {/* Rating stars */}
+      <div className="mb-3 flex gap-0.5">
+        {[...Array(rating)].map((_, i) => (
+          <Star key={i} className="h-3.5 w-3.5 fill-[#31aba3] text-[#31aba3]" />
+        ))}
+      </div>
+
+      <blockquote className="text-foreground/90 text-sm leading-relaxed">
+        &quot;{quote}&quot;
+      </blockquote>
+    </figure>
+  );
+};
 
 export const TestimonialsSection = () => {
-  const testimonials = [
-    {
-      quote:
-        "Before OdisAI, our front desk was drowning. Now pet parents get answers instantly, and we've seen a real bump in booked appointments.",
-      author: "Dr. Sarah Chen",
-      role: "Owner",
-      clinic: "Willow Creek Animal Hospital",
-      rating: 5,
-      delay: 0,
-    },
-    {
-      quote:
-        "The AI calls pet parents the day after discharge to check in. Our clients love it, and my techs finally have time to breathe.",
-      author: "Maria Torres",
-      role: "Practice Manager",
-      clinic: "Coastal Paws Veterinary",
-      rating: 5,
-      delay: 0.1,
-    },
-    {
-      quote:
-        "We calculated how many appointments we were losing from missed calls. OdisAI recovered them—and then some.",
-      author: "Dr. James Okonkwo",
-      role: "DVM",
-      clinic: "Riverbend Pet Clinic",
-      rating: 5,
-      delay: 0.2,
-    },
-  ];
+  const avatarUrls = testimonials.map((t) => ({
+    imageUrl: t.img,
+    profileUrl: t.profileUrl,
+  }));
 
   const impactStats = [
-    { value: "847", label: "Calls handled" },
-    { value: "126", label: "Appointments booked" },
-    { value: "89", label: "Follow-ups completed" },
-    { value: "64", label: "After-hours resolved" },
+    { value: 847, label: "Calls handled", suffix: "" },
+    { value: 126, label: "Appointments booked", suffix: "" },
+    { value: 94, label: "Calls answered", suffix: "%" },
+    { value: 4.9, label: "Client satisfaction", suffix: "/5", decimals: 1 },
   ];
 
   return (
-    <section
-      id="case-studies"
-      className="bg-secondary/40 w-full py-24 lg:py-32"
-    >
-      <div className="mx-auto max-w-6xl px-6 lg:px-8">
+    <section id="testimonials" className="relative w-full py-24 lg:py-32">
+      {/* Background gradient */}
+      <div className="from-background to-background pointer-events-none absolute inset-0 bg-gradient-to-b via-[#31aba3]/3" />
+
+      <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
         {/* Section header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.6 }}
-          className="mb-16 text-center"
-        >
-          <span className="text-primary mb-3 block text-xs font-medium tracking-widest uppercase">
-            Testimonials
-          </span>
-          <h2 className="font-display text-foreground mb-4 text-3xl font-medium tracking-tight lg:text-4xl">
-            What Veterinary Teams Are Saying
-          </h2>
-          <p className="text-muted-foreground mx-auto max-w-xl text-lg">
-            See how clinics are reclaiming their time and never missing a pet
-            parent call
-          </p>
-        </motion.div>
+        <BlurFade delay={0.1} inView>
+          <div className="mb-16 text-center">
+            <span className="font-display text-primary mb-3 inline-flex items-center gap-2 text-xs font-medium tracking-widest uppercase">
+              <span className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
+              Testimonials
+            </span>
+            <h2 className="font-display text-foreground mb-6 text-4xl font-medium tracking-tight lg:text-5xl">
+              What Veterinary Teams Are Saying
+            </h2>
+            <div className="mx-auto flex items-center justify-center gap-3">
+              <AvatarCircles numPeople={100} avatarUrls={avatarUrls} />
+              <p className="text-muted-foreground text-lg">
+                Trusted by{" "}
+                <span className="text-foreground font-semibold">100+</span>{" "}
+                clinics
+              </p>
+            </div>
+          </div>
+        </BlurFade>
 
-        <div className="mb-12 grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {testimonials.map((testimonial, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.6, delay: testimonial.delay }}
-              className="glass-card flex h-full flex-col rounded-2xl p-8 transition-all duration-300 hover:shadow-xl"
-            >
-              {/* Rating stars */}
-              <div className="mb-4 flex gap-1">
-                {[...Array(testimonial.rating)].map((_, i) => (
-                  <Star key={i} className="fill-primary text-primary h-4 w-4" />
-                ))}
-              </div>
+        {/* Marquee testimonials */}
+        <div className="relative mb-16 flex w-full flex-col items-center justify-center overflow-hidden">
+          <BlurFade delay={0.2} inView className="w-full">
+            <Marquee pauseOnHover className="[--duration:40s]">
+              {firstRow.map((review) => (
+                <ReviewCard key={review.author} {...review} />
+              ))}
+            </Marquee>
+          </BlurFade>
 
-              <blockquote className="text-foreground/90 mb-6 flex-grow text-base leading-relaxed">
-                &quot;{testimonial.quote}&quot;
-              </blockquote>
+          <BlurFade delay={0.3} inView className="w-full">
+            <Marquee reverse pauseOnHover className="[--duration:40s]">
+              {secondRow.map((review) => (
+                <ReviewCard key={review.author} {...review} />
+              ))}
+            </Marquee>
+          </BlurFade>
 
-              <div className="border-border border-t pt-4">
-                <p className="text-foreground text-sm font-semibold">
-                  {testimonial.author}
-                </p>
-                <p className="text-muted-foreground text-sm">
-                  {testimonial.role}, {testimonial.clinic}
-                </p>
-              </div>
-            </motion.div>
-          ))}
+          {/* Gradient overlays */}
+          <div className="from-background pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r to-transparent" />
+          <div className="from-background pointer-events-none absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l to-transparent" />
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-50px" }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="glass-teal mx-auto max-w-3xl rounded-2xl p-8 lg:p-10"
-        >
-          <div className="mb-8 text-center">
-            <span className="text-primary mb-2 block text-xs font-medium tracking-widest uppercase">
-              Last Week&apos;s Impact
-            </span>
-            <h3 className="text-foreground text-xl font-semibold">
-              Real results from real clinics
-            </h3>
-          </div>
+        {/* Impact stats */}
+        <BlurFade delay={0.4} inView>
+          <div className="glass-teal mx-auto max-w-4xl rounded-3xl p-10 lg:p-12">
+            <div className="mb-10 text-center">
+              <span className="font-display text-primary mb-2 inline-flex items-center gap-2 text-xs font-medium tracking-widest uppercase">
+                <span className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
+                Last Week&apos;s Impact
+              </span>
+              <h3 className="font-display text-foreground text-2xl font-medium lg:text-3xl">
+                Real results from real clinics
+              </h3>
+            </div>
 
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-            {impactStats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="font-display text-primary mb-1 text-3xl font-bold lg:text-4xl">
-                  {stat.value}
+            <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
+              {impactStats.map((stat, index) => (
+                <div key={index} className="text-center">
+                  <div className="font-display text-primary mb-2 flex items-baseline justify-center gap-1 text-4xl font-bold lg:text-5xl">
+                    <NumberTicker
+                      value={stat.value}
+                      decimalPlaces={stat.decimals ?? 0}
+                    />
+                    <span className="text-2xl">{stat.suffix}</span>
+                  </div>
+                  <div className="text-muted-foreground text-sm font-medium">
+                    {stat.label}
+                  </div>
                 </div>
-                <div className="text-muted-foreground text-sm">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </motion.div>
+        </BlurFade>
       </div>
     </section>
   );

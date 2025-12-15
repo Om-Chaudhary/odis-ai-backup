@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Minus } from "lucide-react";
+import { BlurFade } from "~/components/ui/blur-fade";
 
 type FAQItem = {
   question: string;
@@ -53,30 +54,35 @@ export const FAQSection = ({
   };
 
   return (
-    <section className="bg-background w-full py-24 lg:py-32">
+    <section className="relative w-full py-24 lg:py-32">
       <div className="mx-auto max-w-6xl px-6 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
           <div className="lg:col-span-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="lg:sticky lg:top-32"
-            >
-              <span className="text-primary mb-3 block text-xs font-medium tracking-widest uppercase">
-                Support
-              </span>
-              <h2 className="font-display text-foreground mb-4 text-3xl font-medium tracking-tight lg:text-4xl">
-                {title}
-              </h2>
-              <p className="text-muted-foreground">
-                Can&apos;t find what you&apos;re looking for?{" "}
-                <a href="#contact" className="text-primary hover:underline">
-                  Get in touch
-                </a>
-              </p>
-            </motion.div>
+            <BlurFade delay={0.1} inView>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="lg:sticky lg:top-32"
+              >
+                <span className="text-primary mb-3 block text-xs font-medium tracking-widest uppercase">
+                  Support
+                </span>
+                <h2 className="font-display text-foreground mb-4 text-3xl font-medium tracking-tight lg:text-4xl">
+                  {title}
+                </h2>
+                <p className="text-muted-foreground">
+                  Can&apos;t find what you&apos;re looking for?{" "}
+                  <a
+                    href="mailto:hello@odis.ai"
+                    className="text-primary hover:underline"
+                  >
+                    Get in touch
+                  </a>
+                </p>
+              </motion.div>
+            </BlurFade>
           </div>
 
           <div className="lg:col-span-8">

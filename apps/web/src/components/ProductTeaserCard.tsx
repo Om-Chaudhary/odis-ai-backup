@@ -1,130 +1,165 @@
 "use client";
-import { motion } from "framer-motion";
-import { Play, ArrowRight } from "lucide-react";
+
+import { PhoneCall, ArrowRight, Check } from "lucide-react";
+import { BlurFade } from "~/components/ui/blur-fade";
 import Image from "next/image";
+import { usePostHog } from "posthog-js/react";
 
-type ProductTeaserCardProps = {
-  eyebrow?: string;
-  headline?: string;
-  subheadline?: string;
-  imageSrc?: string;
-  primaryButtonText?: string;
-  primaryButtonHref?: string;
-  secondaryButtonText?: string;
-  secondaryButtonHref?: string;
-};
+const DEMO_PHONE_NUMBER = "(925) 678-5640";
+const DEMO_PHONE_TEL = "tel:+19256785640";
 
-export const ProductTeaserCard = (props: ProductTeaserCardProps) => {
-  const {
-    eyebrow = "BUILT FOR VETERINARY PRACTICES",
-    headline = "Never Miss Another Call. Never Forget a Follow-Up.",
-    subheadline = "OdisAI handles your clinic's inbound and outbound calls with AI voice agents that sound natural, book appointments, answer questions, and follow up with pet parents—24/7.",
-    imageSrc = "/warm-veterinary-clinic-reception-with-phone-and-ha.jpg",
-    primaryButtonText = "Book a Demo",
-    primaryButtonHref = "",
-    secondaryButtonText = "Hear a Sample Call",
-    secondaryButtonHref = "",
-  } = props;
+export const ProductTeaserCard = () => {
+  const posthog = usePostHog();
+
+  const handleDemoPhoneClick = () => {
+    posthog?.capture("demo_phone_clicked", {
+      location: "hero_primary_cta",
+      phone_number: DEMO_PHONE_NUMBER,
+    });
+  };
+
+  const handleBookDemoClick = () => {
+    posthog?.capture("book_demo_clicked", {
+      location: "hero_secondary_cta",
+    });
+  };
 
   return (
-    <section className="gradient-mesh relative w-full overflow-hidden px-6 pt-28 pb-12 lg:px-8">
-      <div className="bg-primary/5 pointer-events-none absolute top-32 right-[15%] h-72 w-72 rounded-full blur-3xl" />
-      <div className="bg-primary/3 pointer-events-none absolute bottom-20 left-[10%] h-96 w-96 rounded-full blur-3xl" />
+    <section className="relative w-full overflow-hidden bg-white px-6 pt-28 pb-20 lg:px-8 lg:pt-36 lg:pb-28">
+      {/* Subtle gradient accent */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-24 right-0 h-[500px] w-[500px] rounded-full bg-[#31aba3]/[0.03] blur-3xl" />
+        <div className="absolute -bottom-32 -left-32 h-[400px] w-[400px] rounded-full bg-[#31aba3]/[0.02] blur-3xl" />
+      </div>
 
       <div className="relative mx-auto max-w-6xl">
-        <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-2 lg:gap-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1] }}
-            className="glass-card order-2 rounded-3xl p-10 lg:order-1 lg:p-12"
-          >
-            <motion.span
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="text-primary mb-6 inline-flex items-center gap-2 text-xs font-medium tracking-widest uppercase"
-            >
-              <span className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
-              {eyebrow}
-            </motion.span>
+        <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-2 lg:gap-20">
+          {/* Left column - Content */}
+          <div className="order-2 lg:order-1">
+            {/* Eyebrow */}
+            <BlurFade delay={0.1} inView>
+              <p className="font-display text-primary mb-4 text-sm font-medium tracking-widest uppercase">
+                AI-Powered Client Communications
+              </p>
+            </BlurFade>
 
-            <h1 className="text-foreground font-display mb-5 text-4xl leading-[1.1] font-medium tracking-tight text-balance lg:text-5xl">
-              {headline}
-            </h1>
-
-            <p className="text-muted-foreground mb-8 max-w-lg text-lg leading-relaxed text-pretty">
-              {subheadline}
-            </p>
-
-            <div className="flex flex-wrap gap-3">
-              <a
-                href={primaryButtonHref}
-                onClick={(e) => e.preventDefault()}
-                className="group bg-foreground text-background hover:bg-foreground/90 hover:shadow-foreground/10 inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
-              >
-                {primaryButtonText}
-                <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
-              </a>
-              <a
-                href={secondaryButtonHref}
-                onClick={(e) => e.preventDefault()}
-                className="group text-foreground border-border hover:bg-secondary/50 hover:border-border/80 inline-flex items-center gap-2 rounded-full border px-6 py-3.5 text-sm font-medium transition-all duration-300"
-              >
-                <span className="bg-primary/10 group-hover:bg-primary/15 flex h-8 w-8 items-center justify-center rounded-full transition-colors">
-                  <Play
-                    className="text-primary ml-0.5 h-3.5 w-3.5"
-                    fill="currentColor"
-                  />
+            {/* Main headline */}
+            <BlurFade delay={0.15} inView>
+              <h1 className="font-display text-foreground text-4xl leading-[1.15] font-semibold tracking-tight sm:text-5xl lg:text-[3.25rem]">
+                Never miss another call.{" "}
+                <span className="text-muted-foreground">
+                  Your AI receptionist for every pet parent conversation.
                 </span>
-                {secondaryButtonText}
-              </a>
-            </div>
-          </motion.div>
+              </h1>
+            </BlurFade>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{
-              duration: 0.7,
-              delay: 0.2,
-              ease: [0.25, 0.1, 0.25, 1],
-            }}
-            className="relative order-1 lg:order-2"
-          >
-            <div className="gradient-border relative aspect-square overflow-hidden rounded-3xl lg:aspect-[4/5]">
-              <div className="from-primary/5 to-primary/10 absolute inset-[1px] overflow-hidden rounded-[calc(1.5rem-1px)] bg-gradient-to-br via-transparent">
+            {/* Feature list */}
+            <BlurFade delay={0.25} inView>
+              <ul className="mt-8 space-y-3">
+                {[
+                  "Answer every call, day or night",
+                  "Book appointments directly into your PIMS",
+                  "Automate post-visit follow-up calls",
+                ].map((feature, i) => (
+                  <li
+                    key={i}
+                    className="flex items-center gap-3 text-sm text-slate-600"
+                  >
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#31aba3]/10">
+                      <Check className="h-3 w-3 text-[#31aba3]" />
+                    </span>
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            </BlurFade>
+
+            {/* CTA Buttons */}
+            <BlurFade delay={0.3} inView>
+              <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center">
+                {/* Primary CTA - Demo Phone */}
+                <a
+                  href={DEMO_PHONE_TEL}
+                  onClick={handleDemoPhoneClick}
+                  className="group inline-flex items-center gap-3 rounded-full bg-[#31aba3] px-6 py-3.5 text-white transition-all duration-200 hover:bg-[#2a9690] hover:shadow-lg hover:shadow-[#31aba3]/20"
+                >
+                  <PhoneCall className="h-4 w-4" />
+                  <span className="font-medium">
+                    Try Demo: {DEMO_PHONE_NUMBER}
+                  </span>
+                </a>
+
+                {/* Secondary CTA */}
+                <a
+                  href="mailto:hello@odis.ai?subject=Demo Request"
+                  onClick={handleBookDemoClick}
+                  className="group inline-flex items-center gap-2 px-2 py-3.5 text-sm font-medium text-slate-700 transition-colors hover:text-[#31aba3]"
+                >
+                  Book a personalized demo
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </a>
+              </div>
+            </BlurFade>
+
+            {/* Trust line */}
+            <BlurFade delay={0.35} inView>
+              <p className="mt-8 text-sm text-slate-500">
+                Trusted by 100+ veterinary clinics • IDEXX Neo integration
+              </p>
+            </BlurFade>
+          </div>
+
+          {/* Right column - Image */}
+          <BlurFade delay={0.2} inView className="order-1 lg:order-2">
+            <div className="relative">
+              {/* Main image container */}
+              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-slate-100">
                 <Image
-                  src={imageSrc || "/placeholder.svg"}
-                  alt="OdisAI Voice Agent"
+                  src="/images/warm-veterinary-clinic-reception-with-phone-and-ha.jpg"
+                  alt="Veterinary clinic reception with staff helping pet parents"
                   fill
                   className="object-cover"
+                  priority
                 />
-                <div className="from-foreground/5 absolute inset-0 bg-gradient-to-t via-transparent to-transparent" />
+                {/* Subtle overlay gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent" />
+              </div>
+
+              {/* Floating card - stats */}
+              <div className="absolute -bottom-6 -left-4 rounded-xl border border-slate-100 bg-white p-4 shadow-lg sm:-left-8">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50">
+                    <span className="text-sm font-bold text-emerald-600">
+                      94%
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">
+                      First-ring answer rate
+                    </p>
+                    <p className="text-xs text-slate-500">24/7 availability</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating card - time saved */}
+              <div className="absolute top-6 -right-4 rounded-xl border border-slate-100 bg-white p-4 shadow-lg sm:-right-8">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#31aba3]/10">
+                    <span className="text-sm font-bold text-[#31aba3]">
+                      3h+
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-900">
+                      Saved daily
+                    </p>
+                    <p className="text-xs text-slate-500">Per staff member</p>
+                  </div>
+                </div>
               </div>
             </div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.6 }}
-              className="glass-strong absolute -bottom-4 -left-4 rounded-2xl p-4 shadow-xl lg:bottom-8 lg:-left-8"
-            >
-              <div className="flex items-center gap-3">
-                <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-                  <span className="text-primary text-lg">24</span>
-                </div>
-                <div>
-                  <p className="text-foreground text-sm font-semibold">
-                    24/7 Available
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    Never miss a call
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
+          </BlurFade>
         </div>
       </div>
     </section>

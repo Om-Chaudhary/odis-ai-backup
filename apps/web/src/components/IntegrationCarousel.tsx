@@ -172,22 +172,10 @@ export const IntegrationCarousel = ({
           className="mb-20 flex flex-col items-center"
         >
           <div className="flex flex-col items-center gap-4">
-            <h2
-              className="mb-0 text-center text-[40px] leading-tight font-normal tracking-tight text-[#222222]"
-              style={{
-                fontFamily: "var(--font-figtree), Figtree",
-                fontWeight: "400",
-                fontSize: "40px",
-              }}
-            >
+            <h2 className="font-display text-foreground mb-0 text-center text-[40px] leading-tight font-medium tracking-tight">
               {title}
             </h2>
-            <p
-              className="mt-2 max-w-[600px] text-center text-lg leading-7 text-[#666666]"
-              style={{
-                fontFamily: "var(--font-figtree), Figtree",
-              }}
-            >
+            <p className="text-muted-foreground mt-2 max-w-[600px] text-center font-sans text-lg leading-7">
               {subtitle}
             </p>
           </div>

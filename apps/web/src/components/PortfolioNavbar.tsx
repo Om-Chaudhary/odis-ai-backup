@@ -1,33 +1,31 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  navigationMenuTriggerStyle,
+} from "~/components/ui/navigation-menu";
+import { cn } from "~/lib/utils";
+import { Logo } from "@odis-ai/ui/Logo";
 
 const navigationLinks = [
-  { name: "Features", href: "#features" },
-  { name: "Pricing", href: "#pricing" },
-  { name: "How It Works", href: "#how-it-works" },
-  { name: "Case Studies", href: "#case-studies" },
-] as { name: string; href: string }[];
+  { name: "Features", link: "#features" },
+  { name: "How It Works", link: "#how-it-works" },
+  { name: "Testimonials", link: "#testimonials" },
+  { name: "Sample Call", link: "#sample-call" },
+];
 
 export const PortfolioNavbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
-  const closeMobileMenu = () => setIsMobileMenuOpen(false);
 
   const handleLinkClick = (href: string) => {
-    closeMobileMenu();
+    setIsMobileMenuOpen(false);
     const element = document.querySelector(href);
     if (element) {
       element.scrollIntoView({ behavior: "smooth" });
@@ -35,88 +33,80 @@ export const PortfolioNavbar = () => {
   };
 
   return (
-    <nav
-      className={`fixed top-0 right-0 left-0 z-50 transition-all duration-500 ease-out ${
-        isScrolled ? "glass-strong py-3 shadow-sm" : "bg-transparent py-5"
-      }`}
-    >
-      <div className="mx-auto max-w-6xl px-6 lg:px-8">
+    <nav className="bg-background/60 fixed top-0 right-0 left-0 z-40 border-b border-white/10 py-4 backdrop-blur-xl backdrop-saturate-150">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="flex items-center justify-between">
-          <div className="flex-shrink-0">
-            <button
-              onClick={() => handleLinkClick("#home")}
-              className="text-foreground hover:text-primary font-display text-xl font-semibold tracking-tight transition-colors duration-200"
+          <button
+            onClick={() => handleLinkClick("#home")}
+            className="font-display text-foreground hover:text-primary flex items-center gap-2 text-xl font-semibold tracking-tight transition-colors"
+          >
+            <Logo size="lg" className="h-8 w-8" />
+            OdisAI
+          </button>
+
+          {/* Desktop Navigation using shadcn NavigationMenu */}
+          <div className="hidden items-center gap-2 md:flex">
+            <NavigationMenu>
+              <NavigationMenuList className="gap-1">
+                {navigationLinks.map((link) => (
+                  <NavigationMenuItem key={link.name}>
+                    <NavigationMenuLink
+                      className={cn(
+                        navigationMenuTriggerStyle(),
+                        "text-muted-foreground hover:text-foreground cursor-pointer bg-transparent transition-all hover:bg-white/10 focus:bg-white/10",
+                      )}
+                      onClick={() => handleLinkClick(link.link)}
+                    >
+                      {link.name}
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                ))}
+              </NavigationMenuList>
+            </NavigationMenu>
+            <a
+              href="mailto:hello@odis.ai?subject=Demo Request"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-primary/25 ml-4 rounded-full px-6 py-2.5 text-sm font-semibold transition-all hover:shadow-lg"
             >
-              OdisAI
-            </button>
+              Book Demo
+            </a>
           </div>
 
-          <div className="hidden md:block">
-            <div className="flex items-center gap-1">
-              {navigationLinks.map((link) => (
-                <button
-                  key={link.name}
-                  onClick={() => handleLinkClick(link.href)}
-                  className="text-foreground/80 hover:text-foreground hover:bg-foreground/[0.04] rounded-full px-4 py-2 text-sm font-medium transition-all duration-200"
-                >
-                  {link.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="hidden md:block">
-            <button
-              onClick={() => handleLinkClick("#contact")}
-              className="bg-foreground text-background hover:bg-foreground/90 hover:shadow-foreground/10 rounded-full px-5 py-2.5 text-sm font-medium transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg"
-            >
-              Book a Demo
-            </button>
-          </div>
-
-          <div className="md:hidden">
-            <button
-              onClick={toggleMobileMenu}
-              className="text-foreground hover:text-primary rounded-lg p-2 transition-colors duration-200"
-              aria-label="Toggle mobile menu"
-            >
-              {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-            </button>
-          </div>
+          <button
+            onClick={toggleMobileMenu}
+            className="text-foreground rounded-lg p-2 transition-colors hover:bg-white/10 md:hidden"
+            aria-label="Toggle menu"
+          >
+            {isMobileMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
+          </button>
         </div>
       </div>
 
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="glass-strong border-border/50 mt-3 border-t md:hidden"
-          >
-            <div className="space-y-2 px-6 py-6">
-              {navigationLinks.map((link) => (
-                <button
-                  key={link.name}
-                  onClick={() => handleLinkClick(link.href)}
-                  className="text-foreground/80 hover:text-foreground hover:bg-foreground/[0.04] block w-full rounded-lg px-4 py-3 text-left text-base font-medium transition-colors duration-200"
-                >
-                  {link.name}
-                </button>
-              ))}
-              <div className="border-border/50 mt-2 border-t pt-4">
-                <button
-                  onClick={() => handleLinkClick("#contact")}
-                  className="bg-foreground text-background w-full rounded-full px-5 py-3 text-sm font-medium"
-                >
-                  Book a Demo
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Mobile menu with glass effect */}
+      {isMobileMenuOpen && (
+        <div className="bg-background/80 border-t border-white/10 backdrop-blur-xl md:hidden">
+          <div className="space-y-1 px-6 py-4">
+            {navigationLinks.map((link) => (
+              <button
+                key={link.name}
+                onClick={() => handleLinkClick(link.link)}
+                className="text-foreground block w-full rounded-lg px-4 py-3 text-left text-base font-medium transition-colors hover:bg-white/10"
+              >
+                {link.name}
+              </button>
+            ))}
+            <a
+              href="mailto:hello@odis.ai?subject=Demo Request"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4 block w-full rounded-full px-6 py-3 text-center text-base font-semibold transition-all"
+            >
+              Book Demo
+            </a>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };
