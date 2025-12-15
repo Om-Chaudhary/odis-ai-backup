@@ -11,6 +11,7 @@ export {
 export type { ReminderMessageInput } from "./reminder-message";
 
 export { buildAddTaskModal } from "./add-task-modal";
+export type { AddTaskModalMetadata } from "./add-task-modal";
 
 export { buildDeleteConfirmModal } from "./delete-confirm-modal";
 

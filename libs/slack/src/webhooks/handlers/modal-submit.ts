@@ -103,13 +103,15 @@ async function handleAddTaskSubmit(
 
   const { title, description, time } = validation.data;
 
-  // Parse metadata to get channel ID
-  let channelId: string;
+  // Parse metadata to get channel IDs
+  let slackChannelId: string;
+  let reminderChannelId: string;
   try {
     const metadata = JSON.parse(view.privateMetadata ?? "{}");
-    channelId = metadata.channelId;
-    if (!channelId) {
-      throw new Error("No channelId in metadata");
+    slackChannelId = metadata.slackChannelId;
+    reminderChannelId = metadata.reminderChannelId;
+    if (!slackChannelId || !reminderChannelId) {
+      throw new Error("Missing channel IDs in metadata");
     }
   } catch (error) {
     console.error("[SLACK_MODAL] Failed to parse private metadata", {
@@ -137,7 +139,7 @@ async function handleAddTaskSubmit(
     const { data: task, error: insertError } = await supabase
       .from("slack_tasks")
       .insert({
-        channel_id: channelId,
+        channel_id: reminderChannelId, // Use reminder channel UUID for database FK
         title,
         description: description ?? null,
         reminder_time: dbTime,
@@ -153,7 +155,7 @@ async function handleAddTaskSubmit(
       return { ok: false, error: "Failed to create task" };
     }
 
-    // Send confirmation message to channel
+    // Send confirmation message to channel using Slack channel ID
     const blocks = buildReminderMessageBlocks({
       task: {
         id: task.id,
@@ -168,7 +170,7 @@ async function handleAddTaskSubmit(
     });
 
     await slackClient.postMessage(payload.team.id, {
-      channel: channelId,
+      channel: slackChannelId, // Use Slack channel ID for posting messages
       text: getReminderMessageText({
         id: task.id,
         channelId: task.channel_id,

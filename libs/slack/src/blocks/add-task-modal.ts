@@ -8,14 +8,26 @@ import type { KnownBlock } from "@slack/types";
 import type { SlackModalView } from "../types";
 
 /**
+ * Metadata for the add task modal
+ */
+export interface AddTaskModalMetadata {
+  /** Slack channel ID (e.g., C123456) for posting messages */
+  slackChannelId: string;
+  /** Reminder channel UUID from slack_reminder_channels table */
+  reminderChannelId: string;
+}
+
+/**
  * Build the "Add Task" modal view
  *
  * Collects task title, description, and reminder time.
  *
- * @param channelId - Channel ID to store in private metadata
+ * @param metadata - Channel information to store in private metadata
  * @returns Modal view definition
  */
-export function buildAddTaskModal(channelId: string): SlackModalView {
+export function buildAddTaskModal(
+  metadata: AddTaskModalMetadata,
+): SlackModalView {
   const blocks: KnownBlock[] = [
     {
       type: "input",
@@ -78,7 +90,7 @@ export function buildAddTaskModal(channelId: string): SlackModalView {
   return {
     type: "modal",
     callbackId: "add_task_modal",
-    privateMetadata: JSON.stringify({ channelId }),
+    privateMetadata: JSON.stringify(metadata),
     title: {
       type: "plain_text",
       text: "Add New Task",
