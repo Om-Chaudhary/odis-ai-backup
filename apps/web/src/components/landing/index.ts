@@ -1,39 +1,39 @@
 /**
  * Landing Page Components
  *
- * All components for the main marketing landing page, exported with clear naming.
+ * All components for the main marketing landing page, exported with clear semantic naming.
  * Import from this barrel file for cleaner imports in page.tsx
  */
 
 // Navigation
-export { PortfolioNavbar as LandingNavbar } from "../PortfolioNavbar";
+export { LandingNavbar } from "./navbar/LandingNavbar";
 
 // Hero Section
-export { ProductTeaserCard as HeroSection } from "../ProductTeaserCard";
+export { HeroSection } from "./hero/HeroSection";
 
 // Sample Calls / Audio Demo Section
-export { AudioDemoSection as SampleCallsSection } from "../audio-demo";
+export { AudioDemoSection as SampleCallsSection } from "./audio-demo";
 
 // Compare Section (Before/After)
-export { CompareSection } from "../CompareSection";
-
-// Features / Use Cases Section
-export { UseCases as FeaturesSection } from "../UseCases";
+export { CompareSection } from "./compare/CompareSection";
 
 // How It Works Section
-export { HowItWorks as HowItWorksSection } from "../HowItWorks";
+export { HowItWorks as HowItWorksSection } from "./how-it-works/HowItWorks";
 
 // Testimonials Section
-export { TestimonialsSection } from "../TestimonialsSection";
+export { TestimonialsSection } from "./testimonials/TestimonialsSection";
 
 // Integrations Section
-export { IntegrationCarousel as IntegrationsSection } from "../IntegrationCarousel";
+export { IntegrationCarousel as IntegrationsSection } from "./integrations/IntegrationCarousel";
 
 // CTA / Pricing Section
-export { PricingSection as CTASection } from "../PricingSection";
+export { PricingSection as CTASection } from "./pricing/PricingSection";
 
 // FAQ Section
-export { FAQSection } from "../FAQSection";
+export { FAQSection } from "./faq/FAQSection";
 
 // Footer
-export { Footer as LandingFooter } from "../Footer";
+export { Footer as LandingFooter } from "./footer/Footer";
+
+// Scroll Effects
+export { ScrollProgress } from "./scroll-progress";
