@@ -72,25 +72,40 @@ export async function handleAdd(
 
   const supabase = await createServiceClient();
 
+  // Get workspace ID from team_id
+  const { data: workspace, error: workspaceError } = await supabase
+    .from("slack_workspaces")
+    .select("id")
+    .eq("team_id", context.teamId)
+    .single();
+
+  if (workspaceError || !workspace) {
+    console.error("[SLACK_ADD] Workspace not found:", workspaceError);
+    return {
+      responseType: "ephemeral",
+      text: "❌ Workspace not found. Please reinstall the app.",
+    };
+  }
+
   // Ensure channel is registered for reminders
   const { data: existingChannel } = await supabase
     .from("slack_reminder_channels")
     .select("id")
-    .eq("team_id", context.teamId)
+    .eq("workspace_id", workspace.id)
     .eq("channel_id", context.channelId)
     .single();
 
-  let channelId = existingChannel?.id;
+  let reminderChannelId = existingChannel?.id;
 
-  if (!channelId) {
+  if (!reminderChannelId) {
     // Register this channel for reminders
     const { data: newChannel, error: channelError } = await supabase
       .from("slack_reminder_channels")
       .insert({
-        team_id: context.teamId,
+        workspace_id: workspace.id,
         channel_id: context.channelId,
         channel_name: context.channelName || "unknown",
-        reminder_time: reminderTime,
+        added_by_user_id: context.userId,
         is_active: true,
       })
       .select("id")
@@ -104,16 +119,16 @@ export async function handleAdd(
       };
     }
 
-    channelId = newChannel.id;
+    reminderChannelId = newChannel.id;
   }
 
   // Create the task
   const { error: taskError } = await supabase.from("slack_tasks").insert({
-    channel_id: channelId,
+    channel_id: reminderChannelId,
     title,
     reminder_time: reminderTime,
     is_active: true,
-    created_by: context.userId,
+    created_by_user_id: context.userId,
   });
 
   if (taskError) {
