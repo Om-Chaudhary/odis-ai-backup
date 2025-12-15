@@ -154,11 +154,6 @@ const config = {
 
   // Server-side packages that should not be bundled
   serverExternalPackages: ["resend"],
-
-  // Nx configuration
-  nx: {
-    svgr: false,
-  },
 };
 
 export default withNx(config);
