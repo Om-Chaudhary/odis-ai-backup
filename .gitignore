@@ -8,6 +8,7 @@
 HOME/
 # testing
 /coverage
+**/coverage
 
 # database
 /prisma/db.sqlite
