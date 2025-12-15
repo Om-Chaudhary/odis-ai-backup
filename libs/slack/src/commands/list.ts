@@ -13,19 +13,47 @@ import { buildTaskList } from "../blocks/task-list";
 /**
  * Fetch all active tasks for a channel
  */
-async function fetchChannelTasks(channelId: string): Promise<SlackTask[]> {
+async function fetchChannelTasks(
+  teamId: string,
+  slackChannelId: string,
+): Promise<SlackTask[]> {
   const supabase = await createServiceClient();
 
+  // Get workspace ID from team_id
+  const { data: workspace } = await supabase
+    .from("slack_workspaces")
+    .select("id")
+    .eq("team_id", teamId)
+    .single();
+
+  if (!workspace) {
+    throw new Error("Workspace not found");
+  }
+
+  // Get the reminder channel record
+  const { data: channel } = await supabase
+    .from("slack_reminder_channels")
+    .select("id")
+    .eq("workspace_id", workspace.id)
+    .eq("channel_id", slackChannelId)
+    .single();
+
+  if (!channel) {
+    // No channel registered = no tasks
+    return [];
+  }
+
+  // Fetch tasks for this channel
   const { data, error } = await supabase
     .from("slack_tasks")
     .select("*")
-    .eq("channel_id", channelId)
+    .eq("channel_id", channel.id)
     .eq("is_active", true)
     .order("reminder_time", { ascending: true });
 
   if (error) {
     console.error("[SLACK_COMMANDS] Failed to fetch tasks", {
-      channelId,
+      slackChannelId,
       error: error.message,
     });
     throw new Error("Failed to fetch tasks from database");
@@ -54,7 +82,7 @@ export async function handleList(
   context: CommandContext,
 ): Promise<CommandResponse> {
   try {
-    const tasks = await fetchChannelTasks(context.channelId);
+    const tasks = await fetchChannelTasks(context.teamId, context.channelId);
 
     if (tasks.length === 0) {
       return {

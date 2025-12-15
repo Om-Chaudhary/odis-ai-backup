@@ -21,22 +21,47 @@ interface TaskWithCompletion extends SlackTask {
  * Fetch tasks with today's completion status
  */
 async function fetchTasksWithStatus(
-  channelId: string,
+  teamId: string,
+  slackChannelId: string,
 ): Promise<TaskWithCompletion[]> {
   const supabase = await createServiceClient();
   const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+  // Get workspace ID from team_id
+  const { data: workspace } = await supabase
+    .from("slack_workspaces")
+    .select("id")
+    .eq("team_id", teamId)
+    .single();
+
+  if (!workspace) {
+    throw new Error("Workspace not found");
+  }
+
+  // Get the reminder channel record
+  const { data: channel } = await supabase
+    .from("slack_reminder_channels")
+    .select("id")
+    .eq("workspace_id", workspace.id)
+    .eq("channel_id", slackChannelId)
+    .single();
+
+  if (!channel) {
+    // No channel registered = no tasks
+    return [];
+  }
 
   // Fetch all active tasks for the channel
   const { data: tasks, error: tasksError } = await supabase
     .from("slack_tasks")
     .select("*")
-    .eq("channel_id", channelId)
+    .eq("channel_id", channel.id)
     .eq("is_active", true)
     .order("reminder_time", { ascending: true });
 
   if (tasksError) {
     console.error("[SLACK_COMMANDS] Failed to fetch tasks", {
-      channelId,
+      slackChannelId,
       error: tasksError.message,
     });
     throw new Error("Failed to fetch tasks from database");
@@ -56,7 +81,7 @@ async function fetchTasksWithStatus(
 
   if (completionsError) {
     console.error("[SLACK_COMMANDS] Failed to fetch completions", {
-      channelId,
+      slackChannelId,
       error: completionsError.message,
     });
     // Don't throw - just show tasks as incomplete
@@ -100,7 +125,10 @@ export async function handleStatus(
   context: CommandContext,
 ): Promise<CommandResponse> {
   try {
-    const tasksWithStatus = await fetchTasksWithStatus(context.channelId);
+    const tasksWithStatus = await fetchTasksWithStatus(
+      context.teamId,
+      context.channelId,
+    );
 
     if (tasksWithStatus.length === 0) {
       return {
