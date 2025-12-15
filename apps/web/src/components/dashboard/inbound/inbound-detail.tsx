@@ -24,6 +24,7 @@ import { Separator } from "@odis-ai/ui/separator";
 import { Textarea } from "@odis-ai/ui/textarea";
 import { cn } from "@odis-ai/utils";
 import { formatPhoneNumber } from "@odis-ai/utils/phone";
+import { CallRecordingPlayer } from "../outbound/call-recording-player";
 import type {
   ViewMode,
   AppointmentRequest,
@@ -195,37 +196,12 @@ function CallDetail({
           </Card>
         )}
 
-        {/* Transcript */}
-        {call.transcript && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                <MessageSquare className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-                Transcript
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground max-h-64 overflow-y-auto text-sm leading-relaxed whitespace-pre-wrap">
-                {call.transcript}
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Recording */}
-        {call.recording_url && (
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                <Play className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-                Recording
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <audio controls src={call.recording_url} className="w-full" />
-            </CardContent>
-          </Card>
-        )}
+        {/* Call Recording and Transcript */}
+        <CallRecordingPlayer
+          recordingUrl={call.recording_url}
+          transcript={call.transcript}
+          durationSeconds={call.duration_seconds}
+        />
       </div>
 
       {/* Delete Footer */}
@@ -299,6 +275,75 @@ function AppointmentDetail({
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const isPending = appointment.status === "pending";
+
+  // Static data for Gordita case (phone: 408-537-3012)
+  const isGorditaCase =
+    appointment.clientPhone === "4085373012" ||
+    appointment.clientPhone === "408-537-3012" ||
+    appointment.clientPhone === "+14085373012";
+
+  const staticCallData = isGorditaCase
+    ? {
+        recording_url:
+          "/audio/019b201f-bac7-799a-a49e-1e2b00b9f9d9-1765770701325-1328927f-cbfe-465e-973a-6d72b02b5d84-stereo.wav",
+        transcript: `AI: Hello, you have reached the after-hours assistant at Alam Rock Animal Hospital. How can I help you today?
+
+User: Uh, you don't speak Spanish?
+
+AI: I'm sorry, yes, I do speak Spanish. How can I help you today?
+
+User: Can I make an appointment to put my little dog to sleep?
+
+AI: I understand this can be a very difficult decision. Are you looking to schedule an appointment to discuss options with the veterinarian?
+
+User: No. Yeah. Yes yes, she is already in a lot of pain.
+
+AI: I'm very sorry for what you're going through with your little dog. I understand this is very difficult. We are going to schedule an appointment so the veterinarian can help her. Are you a current client, or would this be your first visit with us?
+
+User: Yes. No, I take her there already for her vaccines.
+
+AI: Thank you for confirming. What is your full name?
+
+User: My name is Mónica.
+
+AI: Thank you, Mónica. What is the best phone number to contact you?
+
+User: And it's four zero eight five thirty-seven thirty-two.
+
+AI: Thank you. Let me confirm the number. Four—
+
+User: Yes.
+
+AI: —eight Five. Three seven three two three two
+
+User: Thirty twelve. The last one.
+
+AI: Thank you for the correction. So—
+
+User: Three zero one two. Uh-huh.
+
+AI: —the number is perfect, thank you for the correction. What is your little dog's name?
+
+User: Gordita.
+
+AI: Thank you, Mónica. What type of animal is Gordita? Is she a dog, cat, or another animal?
+
+User: She is a dog, she is a Yorkie.
+
+AI: Thank you for the information. Do you have a preferred day or time for the appointment?
+
+User: It can be today or tomorrow.
+
+AI: I understand. Please allow me a moment to process your request. I am going to send your appointment request for Gordita. The clinic will contact you during business hours to confirm the appointment. Okay! Is there anything else I can help you with?
+
+User: No. Thank you.
+
+AI: I have sent your appointment request for Gordita. The clinic will contact you during business hours to confirm. Thank you for calling Alam Rock Animal Hospital. Have a good night and take care of Gordita.
+
+User: Okay. Thank you. Yes. I will.`,
+        duration_seconds: 189,
+      }
+    : null;
 
   return (
     <div className="flex h-full flex-col">
@@ -427,6 +472,15 @@ function AppointmentDetail({
             </p>
           </CardContent>
         </Card>
+
+        {/* Call Recording and Transcript */}
+        {staticCallData && (
+          <CallRecordingPlayer
+            recordingUrl={staticCallData.recording_url}
+            transcript={staticCallData.transcript}
+            durationSeconds={staticCallData.duration_seconds}
+          />
+        )}
       </div>
 
       {/* Action Footer */}
