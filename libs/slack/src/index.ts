@@ -100,7 +100,7 @@ export {
   buildAddTaskModal,
   buildDeleteConfirmModal,
 } from "./blocks";
-export type { ReminderMessageInput } from "./blocks";
+export type { ReminderMessageInput, AddTaskModalMetadata } from "./blocks";
 
 // Legacy Block Builders (from commands)
 export { buildHelpMessage } from "./blocks/help-message";
