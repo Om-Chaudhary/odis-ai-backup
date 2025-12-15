@@ -1,10 +1,6 @@
-import { FlatCompat } from "@eslint/eslintrc";
 import tseslint from "typescript-eslint";
 import nxPlugin from "@nx/eslint-plugin";
-
-const compat = new FlatCompat({
-  baseDirectory: import.meta.dirname,
-});
+import nextPlugin from "@next/eslint-plugin-next";
 
 export default tseslint.config(
   {
@@ -37,7 +33,17 @@ export default tseslint.config(
       "**/*.md",
     ],
   },
-  ...compat.extends("next/core-web-vitals"),
+  // Next.js plugin for Next.js-specific linting rules
+  {
+    files: ["**/*.{js,jsx,ts,tsx}"],
+    plugins: {
+      "@next/next": nextPlugin,
+    },
+    rules: {
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs["core-web-vitals"].rules,
+    },
+  },
   {
     files: ["**/*.ts", "**/*.tsx"],
     plugins: {
