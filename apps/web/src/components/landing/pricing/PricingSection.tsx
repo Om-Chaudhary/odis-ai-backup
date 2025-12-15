@@ -1,0 +1,151 @@
+"use client";
+
+import { useRef } from "react";
+import { motion, useInView, useReducedMotion } from "motion/react";
+import { NeonGradientCard } from "~/components/ui/neon-gradient-card";
+import { ShimmerButton } from "~/components/ui/shimmer-button";
+import { Calendar, ArrowRight, Phone } from "lucide-react";
+import { cn } from "~/lib/utils";
+import { SectionBackground } from "~/components/ui/section-background";
+
+const DEMO_PHONE_NUMBER = "(925) 678-5640";
+const DEMO_PHONE_TEL = "tel:+19256785640";
+
+// Animation variants - consistent with hero
+const fadeUpVariant = {
+  hidden: { opacity: 0, y: 20, filter: "blur(8px)" },
+  visible: { opacity: 1, y: 0, filter: "blur(0px)" },
+};
+
+export function PricingSection() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  const shouldReduceMotion = useReducedMotion();
+
+  const transition = {
+    duration: shouldReduceMotion ? 0 : 0.6,
+    ease: [0.22, 1, 0.36, 1] as const,
+  };
+
+  return (
+    <section
+      ref={sectionRef}
+      id="pricing"
+      className="relative w-full overflow-hidden py-24 lg:py-32"
+    >
+      {/* Cohesive background */}
+      <SectionBackground variant="accent-warm" />
+
+      <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+        <motion.div
+          variants={fadeUpVariant}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          transition={{ ...transition, delay: 0.35 }}
+          className="mb-12 text-center lg:mb-16"
+        >
+          <span className="font-display text-primary mb-4 inline-flex items-center gap-2 text-xs font-medium tracking-widest uppercase">
+            <span className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
+            Get Started
+          </span>
+          <h2 className="font-display mb-4 text-4xl font-medium tracking-tight text-slate-800 lg:text-5xl">
+            Let&apos;s Talk About Your Practice
+          </h2>
+          <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
+            Every clinic is different. We&apos;ll create a custom plan that fits
+            your call volume, integrations, and workflow.
+          </p>
+        </motion.div>
+
+        <motion.div
+          variants={fadeUpVariant}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          transition={{ ...transition, delay: 0.45 }}
+        >
+          <NeonGradientCard
+            className="mx-auto max-w-2xl"
+            neonColors={{
+              firstColor: "#14b8a6",
+              secondColor: "#10b981",
+            }}
+          >
+            <div className="space-y-6 p-8 text-center sm:p-10">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-teal-500/15 to-emerald-500/15">
+                <Phone className="h-7 w-7 text-teal-600" />
+              </div>
+
+              <div>
+                <h3 className="font-display mb-2 text-2xl font-medium text-slate-900 sm:text-3xl">
+                  Try It Right Now
+                </h3>
+                <p className="text-base text-slate-600">
+                  Call our demo line and hear Odis handle a veterinary call
+                  live.
+                </p>
+              </div>
+
+              {/* Primary CTA - Demo Phone */}
+              <a
+                href={DEMO_PHONE_TEL}
+                className={cn(
+                  "group inline-flex items-center justify-center gap-3 rounded-full px-8 py-4",
+                  "bg-gradient-to-r from-teal-600 to-emerald-600",
+                  "text-lg font-semibold text-white shadow-lg shadow-teal-500/25",
+                  "transition-all duration-300",
+                  "hover:scale-[1.02] hover:shadow-xl hover:shadow-teal-500/30",
+                )}
+              >
+                <Phone className="h-5 w-5" />
+                <span>Call Demo: {DEMO_PHONE_NUMBER}</span>
+              </a>
+
+              <p className="text-sm text-slate-500">or</p>
+
+              {/* Secondary CTA - Schedule Demo */}
+              <div className="flex justify-center">
+                <ShimmerButton
+                  className="group relative overflow-hidden rounded-full border border-slate-200 bg-white/80 px-6 py-3 text-sm font-medium text-slate-700 shadow-sm backdrop-blur-sm transition-all hover:border-teal-300 hover:bg-teal-50 hover:text-teal-700"
+                  onClick={() => {
+                    window.location.href =
+                      "mailto:hello@odis.ai?subject=Demo Request&body=Hi, I'd like to schedule a demo to learn more about OdisAI for my veterinary practice.";
+                  }}
+                >
+                  <span className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    Schedule a personalized demo
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </span>
+                </ShimmerButton>
+              </div>
+
+              <p className="text-xs text-slate-500">No commitment required</p>
+            </div>
+          </NeonGradientCard>
+        </motion.div>
+
+        {/* Trust signals */}
+        <motion.div
+          variants={fadeUpVariant}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          transition={{ ...transition, delay: 0.55 }}
+          className="mt-12 text-center lg:mt-16"
+        >
+          <p className="mb-6 text-sm font-medium text-slate-600">
+            Trusted by 100+ veterinary clinics
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-8">
+            {/* Integration logos placeholder */}
+            <div className="text-xs font-medium text-slate-500">IDEXX</div>
+            <div className="text-xs font-medium text-slate-500">ezyVet</div>
+            <div className="text-xs font-medium text-slate-500">
+              Cornerstone
+            </div>
+            <div className="text-xs font-medium text-slate-500">Avimark</div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
