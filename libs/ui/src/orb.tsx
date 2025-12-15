@@ -9,15 +9,15 @@ export type AgentState = null | "thinking" | "listening" | "talking";
 
 type OrbProps = {
   colors?: [string, string];
-  colorsRef?: React.RefObject<[string, string]>;
+  colorsRef?: React.RefObject<[string, string] | null>;
   resizeDebounce?: number;
   seed?: number;
   agentState?: AgentState;
   volumeMode?: "auto" | "manual";
   manualInput?: number;
   manualOutput?: number;
-  inputVolumeRef?: React.RefObject<number>;
-  outputVolumeRef?: React.RefObject<number>;
+  inputVolumeRef?: React.RefObject<number | null>;
+  outputVolumeRef?: React.RefObject<number | null>;
   getInputVolume?: () => number;
   getOutputVolume?: () => number;
   className?: string;
@@ -80,14 +80,14 @@ function Scene({
   getOutputVolume,
 }: {
   colors: [string, string];
-  colorsRef?: React.RefObject<[string, string]>;
+  colorsRef?: React.RefObject<[string, string] | null>;
   seed?: number;
   agentState: AgentState;
   volumeMode: "auto" | "manual";
   manualInput?: number;
   manualOutput?: number;
-  inputVolumeRef?: React.RefObject<number>;
-  outputVolumeRef?: React.RefObject<number>;
+  inputVolumeRef?: React.RefObject<number | null>;
+  outputVolumeRef?: React.RefObject<number | null>;
   getInputVolume?: () => number;
   getOutputVolume?: () => number;
 }) {
