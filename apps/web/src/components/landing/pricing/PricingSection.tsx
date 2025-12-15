@@ -105,13 +105,15 @@ export function PricingSection() {
               {/* Secondary CTA - Schedule Demo */}
               <div className="flex justify-center">
                 <ShimmerButton
-                  className="group relative overflow-hidden rounded-full border border-slate-200 bg-white/80 px-6 py-3 text-sm font-medium text-slate-700 shadow-sm backdrop-blur-sm transition-all hover:border-teal-300 hover:bg-teal-50 hover:text-teal-700"
+                  background="linear-gradient(135deg, #14b8a6 0%, #10b981 100%)"
+                  shimmerColor="rgba(255, 255, 255, 0.5)"
+                  className="group relative overflow-hidden px-6 py-3 text-sm font-semibold shadow-lg shadow-teal-500/20 transition-all hover:shadow-xl hover:shadow-teal-500/30"
                   onClick={() => {
                     window.location.href =
                       "mailto:hello@odis.ai?subject=Demo Request&body=Hi, I'd like to schedule a demo to learn more about OdisAI for my veterinary practice.";
                   }}
                 >
-                  <span className="flex items-center gap-2">
+                  <span className="flex items-center gap-2 text-white">
                     <Calendar className="h-4 w-4" />
                     Schedule a personalized demo
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

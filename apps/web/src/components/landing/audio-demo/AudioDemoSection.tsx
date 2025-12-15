@@ -6,54 +6,59 @@ import { Mic } from "lucide-react";
 import { AudioDemoCard, type DemoCardData } from "./AudioDemoCard";
 import { SectionBackground } from "~/components/ui/section-background";
 
-// Demo cards with pet avatars - OUTBOUND calls first (per user request)
+// Demo cards with real VAPI call recordings - organized for 2-column staggered layout
 const demoCards: DemoCardData[] = [
+  // Real call: Chloe - Ear infection follow-up (61s)
   {
-    id: "discharge-followup",
-    title: "Discharge Follow-up",
-    description:
-      "Odis checks in after Luna's dental cleaning to ensure recovery is going well",
-    duration: 92,
-    audioUrl: "/audio/discharge-followup.mp3",
-    petName: "Luna",
+    id: "chloe-ear-followup",
+    title: "Ear Infection Follow-up",
+    description: "Checking on medication and ear cleaning",
+    duration: 61,
+    audioUrl:
+      "https://storage.vapi.ai/019b0b35-9dfd-7eeb-8f84-827e9b9b1623-1765419709915-fa94c4a3-ab1a-4c9c-a33a-afc713b0494e-mono.wav",
+    petName: "Chloe",
+    petImage:
+      "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=100&h=100&fit=crop&crop=face",
+    callType: "outbound",
+  },
+  // Real call: Pishi - Deworming follow-up (60s)
+  {
+    id: "pishi-deworming-followup",
+    title: "Deworming Follow-up",
+    description: "Post-treatment check on scratching and stool",
+    duration: 60,
+    audioUrl:
+      "https://storage.vapi.ai/019b0605-d8f5-7bb0-aaee-71af8165573c-1765332680243-7bf39c88-7600-44f3-9dd6-d53e78ed2773-mono.wav",
+    petName: "Pishi",
+    petImage:
+      "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=100&h=100&fit=crop&crop=face",
+    callType: "outbound",
+  },
+  // Real call: Lucy - Eye cleaning follow-up (38s)
+  {
+    id: "lucy-eye-followup",
+    title: "Eye Cleaning Follow-up",
+    description: "Quick check after eye crust removal",
+    duration: 38,
+    audioUrl:
+      "https://storage.vapi.ai/019b0608-92cf-7660-90ab-217a1d8e8b28-1765332842717-615cc169-64c9-4123-b0bd-66fcc8479411-mono.wav",
+    petName: "Lucy",
     petImage:
       "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=100&h=100&fit=crop&crop=face",
     callType: "outbound",
   },
+  // Real call: Missy - Nail trim follow-up (25s)
   {
-    id: "appointment-booking",
-    title: "Appointment Booking",
-    description: "A new client calls to schedule Bailey's first wellness exam",
-    duration: 68,
-    audioUrl: "/audio/appointment-booking.mp3",
-    petName: "Bailey",
+    id: "missy-nail-followup",
+    title: "Nail Trim Follow-up",
+    description: "Brief check-in after grooming visit",
+    duration: 25,
+    audioUrl:
+      "https://storage.vapi.ai/019b0608-a3d0-7006-893e-bb8780038c4a-1765332827998-573401b1-76ec-4db4-b9b0-12188db82df2-mono.wav",
+    petName: "Missy",
     petImage:
-      "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=100&h=100&fit=crop&crop=face",
-    callType: "inbound",
-  },
-  {
-    id: "after-hours",
-    title: "After-Hours Call",
-    description:
-      "Pet parent calls at 11pm worried about Whiskers' behavior changes",
-    duration: 54,
-    audioUrl: "/audio/after-hours.mp3",
-    petName: "Whiskers",
-    petImage:
-      "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=100&h=100&fit=crop&crop=face",
-    callType: "inbound",
-  },
-  {
-    id: "emergency-triage",
-    title: "Emergency Triage",
-    description:
-      "Odis handles urgent call about Cooper's potential chocolate ingestion",
-    duration: 78,
-    audioUrl: "/audio/emergency-triage.mp3",
-    petName: "Cooper",
-    petImage:
-      "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=100&h=100&fit=crop&crop=face",
-    callType: "inbound",
+      "https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=100&h=100&fit=crop&crop=face",
+    callType: "outbound",
   },
 ];
 
@@ -221,8 +226,6 @@ export function AudioDemoSection() {
     ease: [0.22, 1, 0.36, 1] as const,
   };
 
-  // Stagger offset for cascading layout (larger on desktop)
-  const staggerOffset = isMobile ? 0 : 60;
 
   return (
     <section
@@ -233,7 +236,7 @@ export function AudioDemoSection() {
       {/* Cohesive background */}
       <SectionBackground variant="transition" />
 
-      <div className="relative mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <motion.div
           variants={disableAnimations ? {} : fadeUpVariant}
@@ -262,11 +265,14 @@ export function AudioDemoSection() {
           </p>
         </motion.div>
 
-        {/* Staggered Vertical Layout */}
-        <div className="flex flex-col gap-6 py-4 lg:gap-8">
+        {/* Two-column staggered grid with rotation */}
+        <div className="grid grid-cols-1 gap-8 py-4 md:grid-cols-2 md:gap-10 lg:gap-12">
           {demoCards.map((card, index) => {
             const isActive = activeCardId === card.id;
             const shouldBlur = !isMobile && activeCardId !== null && !isActive;
+            // Determine column: even indices = left (rotate left), odd = right (rotate right)
+            const isLeftColumn = index % 2 === 0;
+            const rotation = isMobile ? 0 : isLeftColumn ? -1.5 : 1.5;
 
             return (
               <AudioDemoCard
@@ -281,7 +287,7 @@ export function AudioDemoSection() {
                 onVolumeChange={(v) => handleVolumeChange(card.id, v)}
                 currentSpeed={speeds[card.id] ?? 1}
                 currentVolume={volumes[card.id] ?? 1}
-                staggerOffset={staggerOffset}
+                rotation={rotation}
                 disableAnimations={disableAnimations}
                 // Blur effect
                 isBlurred={shouldBlur}

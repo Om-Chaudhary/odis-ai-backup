@@ -49,24 +49,42 @@ function TransitionBackground() {
   return (
     <>
       {/* Base gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white via-slate-50/50 to-white" />
+      <div className="absolute inset-0 bg-gradient-to-b from-white via-slate-50/40 to-white" />
 
-      {/* Subtle radial glow */}
+      {/* Radial teal glow - top center */}
       <div
-        className="absolute inset-0 opacity-30"
+        className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(49, 171, 163, 0.06) 0%, transparent 60%)",
+            "radial-gradient(ellipse 90% 45% at 50% 0%, rgba(49, 171, 163, 0.05) 0%, transparent 55%)",
+        }}
+      />
+
+      {/* Emerald accent - bottom right corner */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 50% 40% at 85% 90%, rgba(16, 185, 129, 0.04) 0%, transparent 50%)",
+        }}
+      />
+
+      {/* Subtle center depth */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 70% 50% at 50% 50%, rgba(49, 171, 163, 0.02) 0%, transparent 60%)",
         }}
       />
 
       {/* Very subtle dot pattern */}
       <div
-        className="absolute inset-0 opacity-[0.03]"
+        className="absolute inset-0 opacity-[0.025]"
         style={{
           backgroundImage:
             "radial-gradient(circle, #31aba3 0.5px, transparent 0.5px)",
-          backgroundSize: "40px 40px",
+          backgroundSize: "36px 36px",
         }}
       />
     </>
@@ -78,33 +96,51 @@ function SubtleWarmBackground() {
   return (
     <>
       {/* Base gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white via-teal-50/20 to-emerald-50/10" />
+      <div className="absolute inset-0 bg-gradient-to-br from-white via-teal-50/25 to-emerald-50/15" />
 
       {/* Primary radial glow - top right */}
       <div
-        className="absolute inset-0 opacity-40"
+        className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 60% 50% at 80% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 60%)",
+            "radial-gradient(ellipse 65% 55% at 80% 15%, rgba(16, 185, 129, 0.08) 0%, transparent 60%)",
         }}
       />
 
       {/* Secondary subtle glow - bottom left */}
       <div
-        className="absolute inset-0 opacity-25"
+        className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 50% 40% at 20% 80%, rgba(49, 171, 163, 0.05) 0%, transparent 50%)",
+            "radial-gradient(ellipse 55% 45% at 15% 85%, rgba(49, 171, 163, 0.06) 0%, transparent 55%)",
+        }}
+      />
+
+      {/* Center depth glow */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 60% 50% at 50% 50%, rgba(49, 171, 163, 0.03) 0%, transparent 55%)",
+        }}
+      />
+
+      {/* Emerald accent top-left */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 40% 35% at 10% 20%, rgba(16, 185, 129, 0.04) 0%, transparent 50%)",
         }}
       />
 
       {/* Dot pattern */}
       <div
-        className="absolute inset-0 opacity-[0.04]"
+        className="absolute inset-0 opacity-[0.03]"
         style={{
           backgroundImage:
             "radial-gradient(circle, #31aba3 0.5px, transparent 0.5px)",
-          backgroundSize: "36px 36px",
+          backgroundSize: "32px 32px",
         }}
       />
     </>
@@ -116,33 +152,51 @@ function SubtleCoolBackground() {
   return (
     <>
       {/* Base gradient - cooler tones */}
-      <div className="absolute inset-0 bg-gradient-to-bl from-slate-50/60 via-white to-teal-50/10" />
+      <div className="absolute inset-0 bg-gradient-to-bl from-slate-50/50 via-white to-teal-50/15" />
 
       {/* Primary radial glow - top left */}
       <div
-        className="absolute inset-0 opacity-35"
+        className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 55% 45% at 15% 25%, rgba(100, 116, 139, 0.06) 0%, transparent 55%)",
+            "radial-gradient(ellipse 60% 50% at 12% 20%, rgba(100, 116, 139, 0.05) 0%, transparent 55%)",
         }}
       />
 
       {/* Teal accent - center right */}
       <div
-        className="absolute inset-0 opacity-25"
+        className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse 45% 50% at 85% 50%, rgba(49, 171, 163, 0.05) 0%, transparent 50%)",
+            "radial-gradient(ellipse 50% 55% at 88% 50%, rgba(49, 171, 163, 0.05) 0%, transparent 55%)",
         }}
       />
 
-      {/* Dot pattern */}
+      {/* Center depth glow */}
       <div
-        className="absolute inset-0 opacity-[0.03]"
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 55% 45% at 50% 50%, rgba(49, 171, 163, 0.02) 0%, transparent 55%)",
+        }}
+      />
+
+      {/* Emerald hint bottom */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 45% 35% at 50% 95%, rgba(16, 185, 129, 0.03) 0%, transparent 50%)",
+        }}
+      />
+
+      {/* Dot pattern - mix of slate and teal */}
+      <div
+        className="absolute inset-0 opacity-[0.025]"
         style={{
           backgroundImage:
-            "radial-gradient(circle, #64748b 0.5px, transparent 0.5px)",
-          backgroundSize: "32px 32px",
+            "radial-gradient(circle, #31aba3 0.5px, transparent 0.5px)",
+          backgroundSize: "34px 34px",
         }}
       />
     </>
@@ -154,55 +208,62 @@ function AccentWarmBackground() {
   return (
     <>
       {/* Base gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white via-teal-50/30 to-emerald-50/20" />
+      <div className="absolute inset-0 bg-gradient-to-b from-white via-teal-50/25 to-emerald-50/15" />
 
-      {/* Animated gradient overlay - primary */}
+      {/* Primary radial accent - upper area */}
       <div
-        className="absolute inset-0 opacity-50"
+        className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(circle at 70% 30%, rgba(16, 185, 129, 0.10) 0%, rgba(16, 185, 129, 0.03) 40%, transparent 65%)",
-          animation: "gradient-move 22s ease-in-out infinite",
+            "radial-gradient(ellipse 80% 50% at 65% 20%, rgba(16, 185, 129, 0.07) 0%, transparent 55%)",
         }}
       />
 
-      {/* Animated gradient overlay - secondary */}
+      {/* Secondary radial accent - lower area */}
       <div
-        className="absolute inset-0 opacity-35"
+        className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(circle at 30% 70%, rgba(49, 171, 163, 0.08) 0%, rgba(49, 171, 163, 0.02) 45%, transparent 70%)",
-          animation: "gradient-move-reverse 26s ease-in-out infinite",
+            "radial-gradient(ellipse 70% 45% at 35% 75%, rgba(49, 171, 163, 0.05) 0%, transparent 55%)",
+        }}
+      />
+
+      {/* Center depth glow */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 65% 55% at 50% 50%, rgba(49, 171, 163, 0.035) 0%, transparent 60%)",
         }}
       />
 
       {/* Floating orb - top right area */}
       <div
-        className="absolute top-[15%] right-[10%] h-[350px] w-[350px] rounded-full opacity-20 blur-3xl"
+        className="absolute top-[10%] right-[8%] h-[300px] w-[300px] rounded-full blur-3xl"
         style={{
           background:
-            "radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, transparent 60%)",
+            "radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 55%)",
           animation: "float-slow 14s ease-in-out infinite",
         }}
       />
 
       {/* Floating orb - bottom left area */}
       <div
-        className="absolute bottom-[20%] left-[5%] h-[250px] w-[250px] rounded-full opacity-15 blur-2xl"
+        className="absolute bottom-[15%] left-[5%] h-[220px] w-[220px] rounded-full blur-2xl"
         style={{
           background:
-            "radial-gradient(circle, rgba(49, 171, 163, 0.10) 0%, transparent 60%)",
+            "radial-gradient(circle, rgba(49, 171, 163, 0.06) 0%, transparent 55%)",
           animation: "float-slow-reverse 16s ease-in-out infinite",
         }}
       />
 
       {/* Dot pattern */}
       <div
-        className="absolute inset-0 opacity-[0.05]"
+        className="absolute inset-0 opacity-[0.025]"
         style={{
           backgroundImage:
             "radial-gradient(circle, #31aba3 0.5px, transparent 0.5px)",
-          backgroundSize: "32px 32px",
+          backgroundSize: "30px 30px",
         }}
       />
     </>
@@ -214,55 +275,62 @@ function AccentCoolBackground() {
   return (
     <>
       {/* Base gradient - cooler dominant */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-50/40 via-white to-teal-50/15" />
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-50/35 via-white to-teal-50/12" />
 
-      {/* Animated gradient overlay - slate primary */}
+      {/* Primary radial - slate upper area */}
       <div
-        className="absolute inset-0 opacity-40"
+        className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(circle at 25% 35%, rgba(100, 116, 139, 0.08) 0%, rgba(100, 116, 139, 0.02) 45%, transparent 65%)",
-          animation: "gradient-move 24s ease-in-out infinite",
+            "radial-gradient(ellipse 70% 50% at 25% 30%, rgba(100, 116, 139, 0.05) 0%, transparent 55%)",
         }}
       />
 
-      {/* Animated gradient overlay - teal accent */}
+      {/* Teal accent - lower right */}
       <div
-        className="absolute inset-0 opacity-30"
+        className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(circle at 75% 65%, rgba(49, 171, 163, 0.07) 0%, rgba(49, 171, 163, 0.02) 40%, transparent 60%)",
-          animation: "gradient-move-reverse 28s ease-in-out infinite",
+            "radial-gradient(ellipse 60% 50% at 80% 70%, rgba(49, 171, 163, 0.05) 0%, transparent 55%)",
+        }}
+      />
+
+      {/* Center depth glow */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 55% 45% at 50% 50%, rgba(49, 171, 163, 0.025) 0%, transparent 55%)",
         }}
       />
 
       {/* Floating orb - top left (slate tinted) */}
       <div
-        className="absolute top-[10%] left-[8%] h-[300px] w-[300px] rounded-full opacity-18 blur-3xl"
+        className="absolute top-[8%] left-[6%] h-[260px] w-[260px] rounded-full blur-3xl"
         style={{
           background:
-            "radial-gradient(circle, rgba(100, 116, 139, 0.10) 0%, transparent 60%)",
+            "radial-gradient(circle, rgba(100, 116, 139, 0.06) 0%, transparent 55%)",
           animation: "float-slow 15s ease-in-out infinite",
         }}
       />
 
       {/* Floating orb - bottom right (teal accent) */}
       <div
-        className="absolute right-[12%] bottom-[15%] h-[280px] w-[280px] rounded-full opacity-15 blur-2xl"
+        className="absolute right-[10%] bottom-[12%] h-[240px] w-[240px] rounded-full blur-2xl"
         style={{
           background:
-            "radial-gradient(circle, rgba(49, 171, 163, 0.08) 0%, transparent 60%)",
+            "radial-gradient(circle, rgba(49, 171, 163, 0.055) 0%, transparent 55%)",
           animation: "float-slow-reverse 18s ease-in-out infinite",
         }}
       />
 
-      {/* Dot pattern - slate colored */}
+      {/* Dot pattern - teal tinted for cohesion */}
       <div
-        className="absolute inset-0 opacity-[0.04]"
+        className="absolute inset-0 opacity-[0.025]"
         style={{
           backgroundImage:
-            "radial-gradient(circle, #64748b 0.5px, transparent 0.5px)",
-          backgroundSize: "36px 36px",
+            "radial-gradient(circle, #31aba3 0.5px, transparent 0.5px)",
+          backgroundSize: "34px 34px",
         }}
       />
     </>

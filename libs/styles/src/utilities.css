@@ -311,6 +311,40 @@
 }
 
 /* ============================================
+   Text Effect Animation Utilities
+   ============================================ */
+
+.animate-gradient-text {
+  animation: gradient-text 8s linear infinite;
+}
+
+.animate-shiny-text {
+  animation: shiny-text 8s infinite;
+}
+
+.animate-text-shimmer {
+  animation: text-shimmer 3s ease-in-out infinite;
+  background-size: 200% auto;
+}
+
+.animate-word-fade-in {
+  animation: word-fade-in 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-letter-bounce {
+  animation: letter-bounce 0.5s ease-in-out;
+}
+
+.animate-aurora-pulse {
+  animation: aurora-pulse 4s ease-in-out infinite;
+}
+
+.animate-text-glow {
+  animation: text-glow 3s ease-in-out infinite;
+}
+
+/* ============================================
    Landing Page Animation Utilities
    ============================================ */
 

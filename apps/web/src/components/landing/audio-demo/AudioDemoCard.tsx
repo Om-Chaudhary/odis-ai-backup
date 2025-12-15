@@ -35,13 +35,12 @@ interface AudioDemoCardProps {
   currentSpeed?: number;
   currentVolume?: number;
   index: number;
-  // Staggered layout props
-  staggerOffset?: number;
+  // Rotation for staggered layout (in degrees)
+  rotation?: number;
   // Animation control
   disableAnimations?: boolean;
   // Blur effect when another card is active
   isBlurred?: boolean;
-  isExpanded?: boolean;
   onHoverStart?: () => void;
   onHoverEnd?: () => void;
 }
@@ -98,7 +97,7 @@ function AudioWaveform({
   });
 
   return (
-    <div className="flex h-10 items-center justify-center gap-[2px]">
+    <div className="flex h-8 items-center justify-center gap-[2px]">
       {bars}
     </div>
   );
@@ -117,10 +116,9 @@ export const AudioDemoCard = forwardRef<HTMLDivElement, AudioDemoCardProps>(
       currentSpeed = 1,
       currentVolume = 1,
       index,
-      staggerOffset = 0,
+      rotation = 0,
       disableAnimations = false,
       isBlurred = false,
-      _isExpanded = false,
       onHoverStart,
       onHoverEnd,
     },
@@ -150,27 +148,30 @@ export const AudioDemoCard = forwardRef<HTMLDivElement, AudioDemoCardProps>(
       onSpeedChange(SPEED_OPTIONS[nextIndex] ?? 1);
     }, [currentSpeed, onSpeedChange]);
 
+    // Determine vertical offset for stagger effect (right column starts lower)
+    const isRightColumn = index % 2 === 1;
+    const verticalOffset = isRightColumn ? 32 : 0;
+
     // Animation variants with enhanced hover expansion
     const cardVariants: Variants = disableAnimations
       ? {
-          hidden: { opacity: 1 },
-          visible: { opacity: 1 },
+          hidden: { opacity: 1, rotate: rotation, y: verticalOffset },
+          visible: { opacity: 1, rotate: rotation, y: verticalOffset },
         }
       : {
-          hidden: { opacity: 0, y: 40, scale: 0.95 },
+          hidden: { opacity: 0, y: 40 + verticalOffset, scale: 0.95, rotate: 0 },
           visible: {
             opacity: 1,
-            y: 0,
+            y: verticalOffset,
             scale: 1,
+            rotate: rotation,
             transition: {
               duration: 0.7,
-              delay: 0.15 + index * 0.15,
+              delay: 0.15 + index * 0.1,
               ease: [0.22, 1, 0.36, 1],
             },
           },
         };
-
-    const isOdd = index % 2 === 1;
 
     return (
       <motion.div
@@ -183,36 +184,33 @@ export const AudioDemoCard = forwardRef<HTMLDivElement, AudioDemoCardProps>(
           disableAnimations
             ? undefined
             : {
-                scale: 1.03,
-                y: -8,
+                scale: 1.05,
+                rotate: 0,
+                y: verticalOffset - 8,
                 transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
               }
         }
         onHoverStart={onHoverStart}
         onHoverEnd={onHoverEnd}
         className={cn(
-          "group relative flex w-full flex-col overflow-hidden rounded-2xl border bg-white/98 backdrop-blur-md",
-          "p-4 sm:p-5",
-          "shadow-[0_4px_24px_rgba(0,0,0,0.06)]",
+          "group relative flex w-full flex-col overflow-hidden rounded-xl border bg-white/98 backdrop-blur-md",
+          "p-3 sm:p-4",
+          "shadow-[0_4px_20px_rgba(0,0,0,0.06)]",
           "transition-all duration-500 ease-out",
-          "hover:shadow-[0_20px_60px_rgba(0,0,0,0.15)]",
+          "hover:shadow-[0_16px_48px_rgba(0,0,0,0.12)]",
           isPlaying
             ? "z-10 border-teal-400 ring-2 ring-teal-400/30"
             : "border-slate-100/80 hover:border-teal-200/60",
           // Subtle blur when another card is focused
           isBlurred && "scale-[0.97] opacity-50 blur-[2px]",
         )}
-        style={{
-          // Apply stagger offset for cascading layout - alternating left/right
-          transform: `translateX(${isOdd ? staggerOffset : -staggerOffset}px)`,
-        }}
       >
         {/* Call type badge */}
         {card.callType && (
-          <div className="absolute top-3 right-3">
+          <div className="absolute top-2 right-2">
             <span
               className={cn(
-                "rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase",
+                "rounded-full px-2 py-0.5 text-[9px] font-semibold tracking-wide uppercase",
                 card.callType === "outbound"
                   ? "bg-emerald-50 text-emerald-600"
                   : "bg-blue-50 text-blue-600",
@@ -224,13 +222,13 @@ export const AudioDemoCard = forwardRef<HTMLDivElement, AudioDemoCardProps>(
         )}
 
         {/* Header: Pet Avatar + Title + Description */}
-        <div className="mb-4 flex items-start gap-3">
+        <div className="mb-3 flex items-start gap-2.5">
           {/* Pet Avatar with ring animation when playing */}
           <div className="relative shrink-0">
             <motion.div
               className={cn(
-                "relative h-12 w-12 overflow-hidden rounded-full",
-                isPlaying && "ring-2 ring-teal-400 ring-offset-2",
+                "relative h-10 w-10 overflow-hidden rounded-full",
+                isPlaying && "ring-2 ring-teal-400 ring-offset-1",
               )}
               animate={isPlaying ? { scale: [1, 1.02, 1] } : { scale: 1 }}
               transition={
@@ -242,7 +240,7 @@ export const AudioDemoCard = forwardRef<HTMLDivElement, AudioDemoCardProps>(
                 alt={card.petName}
                 fill
                 className="object-cover"
-                sizes="48px"
+                sizes="40px"
               />
             </motion.div>
             {/* Playing indicator dot */}
@@ -252,47 +250,47 @@ export const AudioDemoCard = forwardRef<HTMLDivElement, AudioDemoCardProps>(
                   initial={{ scale: 0, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0, opacity: 0 }}
-                  className="absolute -right-0.5 -bottom-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-white shadow-sm"
+                  className="absolute -right-0.5 -bottom-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-white shadow-sm"
                 >
-                  <span className="relative flex h-2.5 w-2.5">
+                  <span className="relative flex h-2 w-2">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-teal-400 opacity-75" />
-                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-teal-500" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-teal-500" />
                   </span>
                 </motion.span>
               )}
             </AnimatePresence>
           </div>
 
-          <div className="min-w-0 flex-1 pr-12">
-            <h3 className="text-base font-semibold text-slate-800 sm:text-lg">
+          <div className="min-w-0 flex-1 pr-10">
+            <h3 className="text-sm font-semibold text-slate-800 sm:text-base">
               {card.title}
             </h3>
-            <p className="text-sm text-slate-500">
+            <p className="text-xs text-slate-500">
               {card.petName} •{" "}
-              <span className="font-mono text-xs">
+              <span className="font-mono text-[10px]">
                 {formatDuration(card.duration)}
               </span>
             </p>
             {card.description && (
-              <p className="mt-1 line-clamp-2 text-xs text-slate-400">
+              <p className="mt-0.5 line-clamp-1 text-[11px] text-slate-400">
                 {card.description}
               </p>
             )}
           </div>
         </div>
 
-        {/* ElevenLabs-style audio controls */}
-        <div className="rounded-xl bg-gradient-to-br from-slate-50 to-slate-100/50 p-3 sm:p-4">
+        {/* Compact audio controls */}
+        <div className="rounded-lg bg-gradient-to-br from-slate-50 to-slate-100/50 p-2.5 sm:p-3">
           {/* Waveform visualization */}
           <div
             ref={progressBarRef}
-            className="relative mb-3 cursor-pointer"
+            className="relative mb-2 cursor-pointer"
             onClick={handleProgressClick}
           >
             <AudioWaveform
               progress={progress}
               isPlaying={isPlaying}
-              barCount={50}
+              barCount={35}
             />
             {/* Hover scrubber indicator */}
             <div className="absolute inset-0 opacity-0 transition-opacity group-hover:opacity-100">
@@ -304,7 +302,7 @@ export const AudioDemoCard = forwardRef<HTMLDivElement, AudioDemoCardProps>(
           </div>
 
           {/* Time display */}
-          <div className="mb-3 flex justify-between text-xs text-slate-400">
+          <div className="mb-2 flex justify-between text-[10px] text-slate-400">
             <span className="font-mono tabular-nums">
               {formatDuration(currentTime)}
             </span>
@@ -320,7 +318,7 @@ export const AudioDemoCard = forwardRef<HTMLDivElement, AudioDemoCardProps>(
               <button
                 onClick={handleSpeedClick}
                 className={cn(
-                  "flex h-8 items-center justify-center rounded-lg px-2 text-xs font-semibold transition-all",
+                  "flex h-7 items-center justify-center rounded-md px-1.5 text-[10px] font-semibold transition-all",
                   "text-slate-500 hover:bg-slate-200/80 hover:text-slate-700",
                   "focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:outline-none",
                 )}
@@ -330,47 +328,47 @@ export const AudioDemoCard = forwardRef<HTMLDivElement, AudioDemoCardProps>(
             </div>
 
             {/* Center controls: Skip back, Play/Pause, Skip forward */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5">
               <button
                 onClick={() => onSeek?.(Math.max(0, progress - 0.1))}
                 className={cn(
-                  "flex h-9 w-9 items-center justify-center rounded-full transition-all",
+                  "flex h-7 w-7 items-center justify-center rounded-full transition-all",
                   "text-slate-400 hover:bg-slate-200/80 hover:text-slate-600",
                   "focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:outline-none",
                 )}
                 aria-label="Skip back 10 seconds"
               >
-                <SkipBack className="h-4 w-4" />
+                <SkipBack className="h-3 w-3" />
               </button>
 
               <button
                 onClick={onTogglePlay}
                 className={cn(
-                  "flex h-12 w-12 items-center justify-center rounded-full transition-all duration-200",
+                  "flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200",
                   "focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:outline-none",
                   isPlaying
-                    ? "bg-teal-500 text-white shadow-lg shadow-teal-500/40 hover:bg-teal-600"
-                    : "bg-slate-800 text-white shadow-lg shadow-slate-800/30 hover:bg-slate-700",
+                    ? "bg-teal-500 text-white shadow-md shadow-teal-500/40 hover:bg-teal-600"
+                    : "bg-slate-800 text-white shadow-md shadow-slate-800/30 hover:bg-slate-700",
                 )}
                 aria-label={isPlaying ? "Pause audio" : "Play audio"}
               >
                 {isPlaying ? (
-                  <Pause className="h-5 w-5" fill="currentColor" />
+                  <Pause className="h-4 w-4" fill="currentColor" />
                 ) : (
-                  <Play className="ml-0.5 h-5 w-5" fill="currentColor" />
+                  <Play className="ml-0.5 h-4 w-4" fill="currentColor" />
                 )}
               </button>
 
               <button
                 onClick={() => onSeek?.(Math.min(1, progress + 0.1))}
                 className={cn(
-                  "flex h-9 w-9 items-center justify-center rounded-full transition-all",
+                  "flex h-7 w-7 items-center justify-center rounded-full transition-all",
                   "text-slate-400 hover:bg-slate-200/80 hover:text-slate-600",
                   "focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:outline-none",
                 )}
                 aria-label="Skip forward 10 seconds"
               >
-                <SkipForward className="h-4 w-4" />
+                <SkipForward className="h-3 w-3" />
               </button>
             </div>
 
@@ -381,16 +379,16 @@ export const AudioDemoCard = forwardRef<HTMLDivElement, AudioDemoCardProps>(
                 onMouseEnter={() => setShowVolumeSlider(true)}
                 onMouseLeave={() => setShowVolumeSlider(false)}
                 className={cn(
-                  "flex h-8 w-8 items-center justify-center rounded-lg transition-all",
+                  "flex h-7 w-7 items-center justify-center rounded-md transition-all",
                   "text-slate-500 hover:bg-slate-200/80 hover:text-slate-700",
                   "focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:outline-none",
                 )}
                 aria-label="Volume control"
               >
                 {currentVolume === 0 ? (
-                  <VolumeX className="h-4 w-4" />
+                  <VolumeX className="h-3.5 w-3.5" />
                 ) : (
-                  <Volume2 className="h-4 w-4" />
+                  <Volume2 className="h-3.5 w-3.5" />
                 )}
               </button>
 
@@ -403,7 +401,7 @@ export const AudioDemoCard = forwardRef<HTMLDivElement, AudioDemoCardProps>(
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     onMouseEnter={() => setShowVolumeSlider(true)}
                     onMouseLeave={() => setShowVolumeSlider(false)}
-                    className="absolute right-0 bottom-full z-20 mb-2 rounded-lg bg-white p-3 shadow-xl ring-1 ring-slate-100"
+                    className="absolute right-0 bottom-full z-20 mb-2 rounded-lg bg-white p-2.5 shadow-xl ring-1 ring-slate-100"
                   >
                     <input
                       type="range"
@@ -414,7 +412,7 @@ export const AudioDemoCard = forwardRef<HTMLDivElement, AudioDemoCardProps>(
                       onChange={(e) =>
                         onVolumeChange?.(parseFloat(e.target.value))
                       }
-                      className="h-1.5 w-20 cursor-pointer appearance-none rounded-full bg-slate-200 accent-teal-500"
+                      className="h-1 w-16 cursor-pointer appearance-none rounded-full bg-slate-200 accent-teal-500"
                     />
                   </motion.div>
                 )}
