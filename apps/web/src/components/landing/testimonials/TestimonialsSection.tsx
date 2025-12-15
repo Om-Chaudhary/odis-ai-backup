@@ -149,7 +149,7 @@ export const TestimonialsSection = () => {
     <section
       ref={sectionRef}
       id="testimonials"
-      className="relative w-full overflow-hidden py-24 lg:py-32"
+      className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >
       {/* Cohesive background */}
       <SectionBackground variant="transition" />
@@ -167,7 +167,7 @@ export const TestimonialsSection = () => {
             <span className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
             Testimonials
           </span>
-          <h2 className="font-display mb-6 text-4xl font-medium tracking-tight text-slate-800 lg:text-5xl">
+          <h2 className="font-display mb-6 text-2xl font-medium tracking-tight text-slate-800 sm:text-3xl md:text-4xl lg:text-5xl">
             What Veterinary Teams Are Saying
           </h2>
           <div className="mx-auto flex items-center justify-center gap-3">

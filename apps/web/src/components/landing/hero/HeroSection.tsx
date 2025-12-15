@@ -8,7 +8,6 @@ import { usePostHog } from "posthog-js/react";
 import { cn } from "~/lib/utils";
 import { PhoneRingIcon } from "~/components/ui/phone-ring-icon";
 import { LightRays } from "@odis-ai/ui/light-rays";
-import { SafariFrame } from "~/components/ui/safari-frame";
 import { ScrollIndicator } from "~/components/ui/scroll-indicator";
 import { Logo } from "@odis-ai/ui/Logo";
 import { WordRotate } from "~/components/ui/word-rotate";
@@ -30,7 +29,13 @@ const ROTATING_WORDS = [
 const FEATURES = [
   { text: "Answer every call, 24/7—even at 3am", icon: "check" },
   { text: "Automate discharge follow-ups & reminders", icon: "check" },
-  { text: "Recover ", hasNumber: true, numberValue: 12000, suffix: "+/month in missed appointments", icon: "check" },
+  {
+    text: "Recover ",
+    hasNumber: true,
+    numberValue: 12000,
+    suffix: "+/month in missed appointments",
+    icon: "check",
+  },
 ];
 
 // Animation variants - smooth, slower fade-ins
@@ -46,12 +51,12 @@ const containerVariants = {
 };
 
 const itemVariants = {
-  hidden: { 
-    opacity: 0, 
+  hidden: {
+    opacity: 0,
     y: 16,
   },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     y: 0,
     transition: {
       duration: 0.8,
@@ -62,8 +67,8 @@ const itemVariants = {
 
 const scaleUpVariant = {
   hidden: { opacity: 0, scale: 0.96 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     scale: 1,
     transition: {
       duration: 1,
@@ -92,10 +97,13 @@ export function HeroSection() {
   };
 
   // Base transition
-  const transition = useMemo(() => ({
-    duration: shouldReduceMotion ? 0 : 0.6,
-    ease: [0.22, 1, 0.36, 1] as const,
-  }), [shouldReduceMotion]);
+  const transition = useMemo(
+    () => ({
+      duration: shouldReduceMotion ? 0 : 0.6,
+      ease: [0.22, 1, 0.36, 1] as const,
+    }),
+    [shouldReduceMotion],
+  );
 
   return (
     <section
@@ -220,9 +228,9 @@ export function HeroSection() {
       <div className="relative mx-auto flex w-full max-w-7xl flex-1 items-start px-4 pt-16 sm:px-6 sm:pt-20 lg:px-8 lg:pt-24">
         <div className="grid w-full grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-12 xl:gap-16">
           {/* Left Column - Content */}
-          <div className="order-2 lg:order-1 lg:col-span-6 xl:col-span-6">
+          <div className="order-1 lg:col-span-6 xl:col-span-6">
             {/* Headline with Text Effects */}
-            <motion.div 
+            <motion.div
               className="mt-6 space-y-3"
               variants={containerVariants}
               initial="hidden"
@@ -230,7 +238,7 @@ export function HeroSection() {
             >
               {/* Main Headline - only WordRotate is animated */}
               <motion.div variants={itemVariants}>
-                <h1 className="font-display text-3xl leading-[1.15] font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
+                <h1 className="font-display text-3xl leading-[1.15] font-semibold tracking-tight text-slate-900 sm:text-4xl md:text-5xl lg:text-6xl">
                   Your AI Receptionist That{" "}
                   <span className="relative inline-block">
                     <WordRotate
@@ -251,7 +259,7 @@ export function HeroSection() {
               {/* Subheadline - only gradient text is animated */}
               <motion.p
                 variants={itemVariants}
-                className="text-lg leading-relaxed font-medium text-slate-500 sm:text-xl lg:text-2xl"
+                className="text-base leading-relaxed font-medium text-slate-500 sm:text-lg md:text-xl lg:text-2xl"
               >
                 Every call answered.{" "}
                 <AnimatedGradientText
@@ -288,8 +296,9 @@ export function HeroSection() {
                       <>
                         {feature.text}
                         <span className="font-semibold text-teal-600">
-                          $<NumberTicker 
-                            value={feature.numberValue ?? 0} 
+                          $
+                          <NumberTicker
+                            value={feature.numberValue ?? 0}
                             delay={600}
                             format={(val) => val.toLocaleString()}
                           />
@@ -320,7 +329,7 @@ export function HeroSection() {
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 className={cn(
-                  "group relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full px-6 py-3 sm:px-8",
+                  "group relative inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 whitespace-nowrap sm:px-8",
                   "bg-gradient-to-r from-teal-600 to-emerald-600",
                   "text-sm font-semibold text-white shadow-lg shadow-teal-500/25 sm:text-base",
                   "transition-all duration-300 ease-out",
@@ -336,7 +345,7 @@ export function HeroSection() {
                   <PhoneRingIcon
                     size={16}
                     ringing
-                    className="shrink-0 group-hover:animate-phone-ring"
+                    className="group-hover:animate-phone-ring shrink-0"
                   />
                   <span>Try Demo: {DEMO_PHONE_NUMBER}</span>
                 </span>
@@ -351,7 +360,7 @@ export function HeroSection() {
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 className={cn(
-                  "group inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full px-5 py-3 sm:px-6",
+                  "group inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 whitespace-nowrap sm:px-6",
                   "border border-slate-200 bg-white/80 backdrop-blur-sm",
                   "text-sm font-semibold text-slate-700 sm:text-base",
                   "transition-all duration-300 ease-out",
@@ -369,7 +378,7 @@ export function HeroSection() {
           </div>
 
           {/* Right Column - Visual (positioned to the right) */}
-          <div className="relative order-1 mx-auto w-full max-w-lg px-4 sm:max-w-xl sm:px-0 lg:order-2 lg:col-span-6 lg:ml-auto lg:max-w-[90%] xl:col-span-6">
+          <div className="relative order-2 mx-auto w-full max-w-lg px-4 sm:max-w-xl sm:px-0 lg:col-span-6 lg:ml-auto lg:max-w-[90%] xl:col-span-6">
             <motion.div
               variants={scaleUpVariant}
               initial="hidden"
@@ -408,22 +417,76 @@ export function HeroSection() {
                 />
               </div>
 
-              {/* Safari Frame with Product UI */}
-              <SafariFrame
-                url="app.odis.ai/dashboard"
-                className="relative mx-auto shadow-2xl ring-1 shadow-teal-500/20 ring-white/50"
-              >
-                <div className="relative aspect-[16/10] overflow-hidden">
+              {/* Hero Image */}
+              <div className="relative mx-auto overflow-hidden rounded-xl shadow-2xl ring-1 shadow-teal-500/20 ring-white/50">
+                <div className="relative aspect-[16/12] overflow-hidden sm:aspect-[16/10]">
+                  {/* Main Image */}
                   <Image
-                    src="/images/hero/hero-dashboard.png"
+                    src="/images/hero/hero-1.png"
                     alt="Odis AI outbound calls dashboard showing patient follow-ups"
                     fill
-                    className="object-cover object-left-top"
+                    className="object-cover object-center"
                     priority
-                    sizes="(max-width: 768px) 100vw, (max-width: 1024px) 60vw, 55vw"
+                    sizes="(max-width: 640px) 90vw, (max-width: 1024px) 60vw, 55vw"
+                  />
+
+                  {/* Subtle gradient overlay - top to bottom fade */}
+                  <motion.div
+                    className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-slate-900/10"
+                    initial={{ opacity: 0 }}
+                    animate={isInView ? { opacity: 1 } : { opacity: 0 }}
+                    transition={{
+                      duration: 1.2,
+                      delay: 0.6,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                  />
+
+                  {/* Subtle vignette effect */}
+                  <motion.div
+                    className="pointer-events-none absolute inset-0"
+                    style={{
+                      background:
+                        "radial-gradient(circle at center, transparent 40%, rgba(0, 0, 0, 0.15) 100%)",
+                    }}
+                    initial={{ opacity: 0 }}
+                    animate={isInView ? { opacity: 1 } : { opacity: 0 }}
+                    transition={{
+                      duration: 1.2,
+                      delay: 0.7,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                  />
+
+                  {/* Subtle teal accent glow on edges */}
+                  <motion.div
+                    className="pointer-events-none absolute inset-0 opacity-30 mix-blend-soft-light"
+                    style={{
+                      background:
+                        "radial-gradient(ellipse at top left, rgba(16, 185, 129, 0.2) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(49, 171, 163, 0.2) 0%, transparent 50%)",
+                    }}
+                    initial={{ opacity: 0 }}
+                    animate={isInView ? { opacity: 0.3 } : { opacity: 0 }}
+                    transition={{
+                      duration: 1.5,
+                      delay: 0.8,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
+                  />
+
+                  {/* Inner glow border */}
+                  <motion.div
+                    className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-white/20 ring-inset"
+                    initial={{ opacity: 0 }}
+                    animate={isInView ? { opacity: 1 } : { opacity: 0 }}
+                    transition={{
+                      duration: 1,
+                      delay: 0.9,
+                      ease: [0.22, 1, 0.36, 1],
+                    }}
                   />
                 </div>
-              </SafariFrame>
+              </div>
             </motion.div>
           </div>
         </div>

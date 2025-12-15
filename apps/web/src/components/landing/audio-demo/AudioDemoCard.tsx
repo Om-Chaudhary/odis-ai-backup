@@ -69,16 +69,18 @@ function AudioWaveform({
     // Create varied heights for organic look
     const baseHeight = 0.3 + Math.sin(i * 0.5) * 0.3 + Math.cos(i * 0.3) * 0.2;
     const height = Math.max(0.15, Math.min(1, baseHeight));
+    // Round to 4 decimal places to ensure consistent SSR/client rendering
+    const heightPercent = Math.round(height * 10000) / 100;
 
     return (
       <motion.div
         key={i}
         className={cn(
-          "w-[2px] rounded-full transition-colors duration-150",
+          "min-w-[2px] flex-1 rounded-full transition-colors duration-150",
           isActive ? "bg-teal-500" : "bg-slate-200",
         )}
         style={{
-          height: `${height * 100}%`,
+          height: `${heightPercent}%`,
         }}
         animate={
           isPlaying && isActive
@@ -96,11 +98,7 @@ function AudioWaveform({
     );
   });
 
-  return (
-    <div className="flex h-8 items-center justify-center gap-[2px]">
-      {bars}
-    </div>
-  );
+  return <div className="flex h-8 w-full items-center gap-[2px]">{bars}</div>;
 }
 
 export const AudioDemoCard = forwardRef<HTMLDivElement, AudioDemoCardProps>(
@@ -148,21 +146,17 @@ export const AudioDemoCard = forwardRef<HTMLDivElement, AudioDemoCardProps>(
       onSpeedChange(SPEED_OPTIONS[nextIndex] ?? 1);
     }, [currentSpeed, onSpeedChange]);
 
-    // Determine vertical offset for stagger effect (right column starts lower)
-    const isRightColumn = index % 2 === 1;
-    const verticalOffset = isRightColumn ? 32 : 0;
-
     // Animation variants with enhanced hover expansion
     const cardVariants: Variants = disableAnimations
       ? {
-          hidden: { opacity: 1, rotate: rotation, y: verticalOffset },
-          visible: { opacity: 1, rotate: rotation, y: verticalOffset },
+          hidden: { opacity: 1, rotate: rotation },
+          visible: { opacity: 1, rotate: rotation },
         }
       : {
-          hidden: { opacity: 0, y: 40 + verticalOffset, scale: 0.95, rotate: 0 },
+          hidden: { opacity: 0, y: 40, scale: 0.95, rotate: 0 },
           visible: {
             opacity: 1,
-            y: verticalOffset,
+            y: 0,
             scale: 1,
             rotate: rotation,
             transition: {
@@ -184,9 +178,9 @@ export const AudioDemoCard = forwardRef<HTMLDivElement, AudioDemoCardProps>(
           disableAnimations
             ? undefined
             : {
-                scale: 1.05,
+                scale: 1.03,
                 rotate: 0,
-                y: verticalOffset - 8,
+                y: -4,
                 transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
               }
         }
@@ -318,7 +312,7 @@ export const AudioDemoCard = forwardRef<HTMLDivElement, AudioDemoCardProps>(
               <button
                 onClick={handleSpeedClick}
                 className={cn(
-                  "flex h-7 items-center justify-center rounded-md px-1.5 text-[10px] font-semibold transition-all",
+                  "flex h-11 min-w-[44px] items-center justify-center rounded-md px-3 text-xs font-semibold transition-all",
                   "text-slate-500 hover:bg-slate-200/80 hover:text-slate-700",
                   "focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:outline-none",
                 )}
@@ -328,23 +322,23 @@ export const AudioDemoCard = forwardRef<HTMLDivElement, AudioDemoCardProps>(
             </div>
 
             {/* Center controls: Skip back, Play/Pause, Skip forward */}
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-1">
               <button
                 onClick={() => onSeek?.(Math.max(0, progress - 0.1))}
                 className={cn(
-                  "flex h-7 w-7 items-center justify-center rounded-full transition-all",
+                  "flex h-11 w-11 items-center justify-center rounded-full transition-all",
                   "text-slate-400 hover:bg-slate-200/80 hover:text-slate-600",
                   "focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:outline-none",
                 )}
                 aria-label="Skip back 10 seconds"
               >
-                <SkipBack className="h-3 w-3" />
+                <SkipBack className="h-4 w-4" />
               </button>
 
               <button
                 onClick={onTogglePlay}
                 className={cn(
-                  "flex h-9 w-9 items-center justify-center rounded-full transition-all duration-200",
+                  "flex h-12 w-12 items-center justify-center rounded-full transition-all duration-200",
                   "focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:outline-none",
                   isPlaying
                     ? "bg-teal-500 text-white shadow-md shadow-teal-500/40 hover:bg-teal-600"
@@ -353,22 +347,22 @@ export const AudioDemoCard = forwardRef<HTMLDivElement, AudioDemoCardProps>(
                 aria-label={isPlaying ? "Pause audio" : "Play audio"}
               >
                 {isPlaying ? (
-                  <Pause className="h-4 w-4" fill="currentColor" />
+                  <Pause className="h-5 w-5" fill="currentColor" />
                 ) : (
-                  <Play className="ml-0.5 h-4 w-4" fill="currentColor" />
+                  <Play className="ml-0.5 h-5 w-5" fill="currentColor" />
                 )}
               </button>
 
               <button
                 onClick={() => onSeek?.(Math.min(1, progress + 0.1))}
                 className={cn(
-                  "flex h-7 w-7 items-center justify-center rounded-full transition-all",
+                  "flex h-11 w-11 items-center justify-center rounded-full transition-all",
                   "text-slate-400 hover:bg-slate-200/80 hover:text-slate-600",
                   "focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:outline-none",
                 )}
                 aria-label="Skip forward 10 seconds"
               >
-                <SkipForward className="h-3 w-3" />
+                <SkipForward className="h-4 w-4" />
               </button>
             </div>
 
@@ -379,16 +373,16 @@ export const AudioDemoCard = forwardRef<HTMLDivElement, AudioDemoCardProps>(
                 onMouseEnter={() => setShowVolumeSlider(true)}
                 onMouseLeave={() => setShowVolumeSlider(false)}
                 className={cn(
-                  "flex h-7 w-7 items-center justify-center rounded-md transition-all",
+                  "flex h-11 w-11 items-center justify-center rounded-md transition-all",
                   "text-slate-500 hover:bg-slate-200/80 hover:text-slate-700",
                   "focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:outline-none",
                 )}
                 aria-label="Volume control"
               >
                 {currentVolume === 0 ? (
-                  <VolumeX className="h-3.5 w-3.5" />
+                  <VolumeX className="h-4 w-4" />
                 ) : (
-                  <Volume2 className="h-3.5 w-3.5" />
+                  <Volume2 className="h-4 w-4" />
                 )}
               </button>
 

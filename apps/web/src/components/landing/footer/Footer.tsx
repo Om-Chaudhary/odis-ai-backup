@@ -72,16 +72,16 @@ export const Footer = ({
     copyrightText ?? `© ${currentYear} ${companyName}. All rights reserved.`;
   return (
     <footer className="bg-secondary/30 border-border w-full border-t">
-      <div className="mx-auto max-w-[1200px] px-8 py-16">
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         {/* Main Footer Content */}
-        <div className="mb-12 grid grid-cols-2 gap-8 md:grid-cols-6">
+        <div className="mb-12 grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
           {/* Brand Column */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="col-span-2"
+            className="col-span-1 sm:col-span-2 lg:col-span-2"
           >
             <div className="mb-4">
               <h3 className="font-display mb-2 text-xl font-semibold text-slate-800">

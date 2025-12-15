@@ -226,12 +226,11 @@ export function AudioDemoSection() {
     ease: [0.22, 1, 0.36, 1] as const,
   };
 
-
   return (
     <section
       ref={sectionRef}
       id="sample-calls"
-      className="relative w-full overflow-hidden py-20 md:py-24 lg:py-32"
+      className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >
       {/* Cohesive background */}
       <SectionBackground variant="transition" />
@@ -252,7 +251,7 @@ export function AudioDemoSection() {
           </span>
 
           {/* Title */}
-          <h2 className="font-display mb-4 text-3xl font-medium tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
+          <h2 className="font-display mb-4 text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl md:text-4xl lg:text-5xl">
             Hear{" "}
             <span className="bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
               Odis in Action
@@ -265,14 +264,13 @@ export function AudioDemoSection() {
           </p>
         </motion.div>
 
-        {/* Two-column staggered grid with rotation */}
-        <div className="grid grid-cols-1 gap-8 py-4 md:grid-cols-2 md:gap-10 lg:gap-12">
+        {/* Single column with alternating rotation */}
+        <div className="mx-auto flex max-w-lg flex-col gap-6 py-4 sm:gap-8 md:gap-10">
           {demoCards.map((card, index) => {
             const isActive = activeCardId === card.id;
             const shouldBlur = !isMobile && activeCardId !== null && !isActive;
-            // Determine column: even indices = left (rotate left), odd = right (rotate right)
-            const isLeftColumn = index % 2 === 0;
-            const rotation = isMobile ? 0 : isLeftColumn ? -1.5 : 1.5;
+            // Alternate rotation: even indices = rotate left, odd = rotate right
+            const rotation = isMobile ? 0 : index % 2 === 0 ? -2 : 2;
 
             return (
               <AudioDemoCard

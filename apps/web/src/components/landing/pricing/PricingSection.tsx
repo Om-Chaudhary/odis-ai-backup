@@ -31,10 +31,10 @@ export function PricingSection() {
     <section
       ref={sectionRef}
       id="pricing"
-      className="relative w-full overflow-hidden py-24 lg:py-32"
+      className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >
       {/* Cohesive background */}
-      <SectionBackground variant="accent-warm" />
+      <SectionBackground variant="subtle-warm" />
 
       <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <motion.div
@@ -48,7 +48,7 @@ export function PricingSection() {
             <span className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
             Get Started
           </span>
-          <h2 className="font-display mb-4 text-4xl font-medium tracking-tight text-slate-800 lg:text-5xl">
+          <h2 className="font-display mb-4 text-2xl font-medium tracking-tight text-slate-800 sm:text-3xl md:text-4xl lg:text-5xl">
             Let&apos;s Talk About Your Practice
           </h2>
           <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
@@ -70,13 +70,13 @@ export function PricingSection() {
               secondColor: "#10b981",
             }}
           >
-            <div className="space-y-6 p-8 text-center sm:p-10">
+            <div className="space-y-6 p-10 text-center sm:p-12 md:p-14">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-teal-500/15 to-emerald-500/15">
                 <Phone className="h-7 w-7 text-teal-600" />
               </div>
 
               <div>
-                <h3 className="font-display mb-2 text-2xl font-medium text-slate-900 sm:text-3xl">
+                <h3 className="font-display mb-2 text-lg font-medium text-slate-900 sm:text-xl md:text-2xl">
                   Try It Right Now
                 </h3>
                 <p className="text-base text-slate-600">

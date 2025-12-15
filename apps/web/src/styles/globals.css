@@ -23,6 +23,23 @@
     @apply bg-background text-foreground;
   }
   
+  /* Standardized shadow utilities */
+  .shadow-card {
+    @apply shadow-lg shadow-slate-900/5;
+  }
+  
+  .shadow-card-hover {
+    @apply shadow-xl shadow-slate-900/10;
+  }
+  
+  .shadow-card-accent {
+    @apply shadow-lg shadow-teal-500/20;
+  }
+  
+  .shadow-card-accent-hover {
+    @apply shadow-xl shadow-teal-500/30;
+  }
+  
   /* Custom animated scrollbar */
   ::-webkit-scrollbar {
     width: 10px;
@@ -285,4 +302,26 @@
       transform: rotate(360deg);
     }
   }
+
+  /* Integration carousel scroll animations */
+  @keyframes scroll-left {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @keyframes scroll-left-slow {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  --animate-scroll-left: scroll-left 30s linear infinite;
+  --animate-scroll-left-slow: scroll-left-slow 40s linear infinite;
 }

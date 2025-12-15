@@ -52,11 +52,11 @@ export const HowItWorks = () => {
     <section
       ref={sectionRef}
       id="how-it-works"
-      className="relative w-full overflow-hidden py-24 lg:py-32"
+      className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >
       <SectionBackground variant="transition" />
 
-      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
           variants={fadeUpVariant}
@@ -70,7 +70,7 @@ export const HowItWorks = () => {
             How It Works
           </span>
 
-          <h2 className="font-display mb-4 text-4xl font-medium tracking-tight text-slate-800 lg:text-5xl">
+          <h2 className="font-display mb-4 text-2xl font-medium tracking-tight text-slate-800 sm:text-3xl md:text-4xl lg:text-5xl">
             Live in{" "}
             <span className="bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
               48 Hours
@@ -96,17 +96,17 @@ export const HowItWorks = () => {
                 className="group relative"
               >
                 {/* Card */}
-                <div className="relative h-full overflow-hidden rounded-2xl border border-border/50 bg-background/60 p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-teal-500/15 sm:p-8">
+                <div className="border-border/50 bg-background/60 relative h-full overflow-hidden rounded-2xl border p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-teal-500/15 sm:p-8">
                   {/* Step indicator */}
                   <div className="mb-6 flex items-center gap-4">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-teal-500/10 transition-all duration-300 group-hover:bg-teal-500/15 group-hover:scale-105">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-teal-500/10 transition-all duration-300 group-hover:scale-105 group-hover:bg-teal-500/15">
                       <Icon className="h-5 w-5 text-teal-600" />
                     </div>
                     <div className="flex flex-col">
                       <span className="text-xs font-medium tracking-wider text-slate-400 uppercase">
                         Step {step.step}
                       </span>
-                      <h3 className="font-display text-xl font-semibold text-slate-800">
+                      <h3 className="font-display text-lg font-semibold text-slate-800 sm:text-xl md:text-2xl">
                         {step.title}
                       </h3>
                     </div>

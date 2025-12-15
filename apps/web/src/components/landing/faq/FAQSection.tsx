@@ -115,7 +115,7 @@ export const FAQSection = ({
     <section
       ref={sectionRef}
       id="faq"
-      className="relative w-full overflow-hidden py-24 lg:py-32"
+      className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >
       {/* Cohesive background */}
       <SectionBackground variant="transition" />
@@ -134,7 +134,7 @@ export const FAQSection = ({
                 <span className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
                 Support
               </span>
-              <h2 className="font-display mb-4 text-3xl font-medium tracking-tight text-slate-800 lg:text-4xl">
+              <h2 className="font-display mb-4 text-2xl font-medium tracking-tight text-slate-800 sm:text-3xl md:text-4xl">
                 {title}
               </h2>
               <p className="text-muted-foreground mb-6">
@@ -231,7 +231,7 @@ export const FAQSection = ({
                       {/* Question number */}
                       <span
                         className={cn(
-                          "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-xs font-semibold transition-all duration-300",
+                          "flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg text-sm font-semibold transition-all duration-300",
                           isOpen
                             ? "bg-teal-500 text-white"
                             : "bg-slate-100 text-slate-500 group-hover:bg-teal-100 group-hover:text-teal-600",

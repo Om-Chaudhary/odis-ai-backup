@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -98,8 +97,8 @@ const IntegrationCard = ({ app }: { app: IntegrationApp }) => {
     >
       {/* Status indicator */}
       {app.status === "active" && (
-        <div className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-teal-500 shadow">
-          <Check className="h-3 w-3 text-white" />
+        <div className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-teal-500 shadow">
+          <Check className="h-3.5 w-3.5 text-white" />
         </div>
       )}
 
@@ -134,8 +133,6 @@ export const IntegrationCarousel = ({
   bottomRowApps = defaultBottomRowApps,
 }: IntegrationCarouselProps) => {
   const sectionRef = useRef<HTMLElement>(null);
-  const topRowRef = useRef<HTMLDivElement>(null);
-  const bottomRowRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
   const shouldReduceMotion = useReducedMotion();
 
@@ -144,50 +141,11 @@ export const IntegrationCarousel = ({
     ease: [0.22, 1, 0.36, 1] as const,
   };
 
-  useEffect(() => {
-    if (shouldReduceMotion) return;
-
-    let topAnimationId: number;
-    let bottomAnimationId: number;
-    let topPosition = 0;
-    let bottomPosition = 0;
-
-    const animateTopRow = () => {
-      if (topRowRef.current) {
-        topPosition -= 0.5;
-        if (Math.abs(topPosition) >= topRowRef.current.scrollWidth / 2) {
-          topPosition = 0;
-        }
-        topRowRef.current.style.transform = `translateX(${topPosition}px)`;
-      }
-      topAnimationId = requestAnimationFrame(animateTopRow);
-    };
-
-    const animateBottomRow = () => {
-      if (bottomRowRef.current) {
-        bottomPosition -= 0.65;
-        if (Math.abs(bottomPosition) >= bottomRowRef.current.scrollWidth / 2) {
-          bottomPosition = 0;
-        }
-        bottomRowRef.current.style.transform = `translateX(${bottomPosition}px)`;
-      }
-      bottomAnimationId = requestAnimationFrame(animateBottomRow);
-    };
-
-    topAnimationId = requestAnimationFrame(animateTopRow);
-    bottomAnimationId = requestAnimationFrame(animateBottomRow);
-
-    return () => {
-      cancelAnimationFrame(topAnimationId);
-      cancelAnimationFrame(bottomAnimationId);
-    };
-  }, [shouldReduceMotion]);
-
   return (
     <section
       ref={sectionRef}
       id="integrations"
-      className="relative w-full overflow-hidden py-24 lg:py-32"
+      className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >
       {/* Cohesive background */}
       <SectionBackground variant="subtle-warm" />
@@ -204,7 +162,7 @@ export const IntegrationCarousel = ({
             <span className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
             Integrations
           </span>
-          <h2 className="font-display mb-4 max-w-2xl text-4xl font-medium tracking-tight text-slate-800 lg:text-5xl">
+          <h2 className="font-display mb-4 max-w-2xl text-2xl font-medium tracking-tight text-slate-800 sm:text-3xl md:text-4xl lg:text-5xl">
             {title}
           </h2>
           <p className="text-muted-foreground max-w-xl text-lg">{subtitle}</p>
@@ -255,9 +213,13 @@ export const IntegrationCarousel = ({
         className="relative h-[240px] overflow-hidden"
       >
         <div
-          ref={topRowRef}
           className="absolute top-6 flex items-start gap-6 whitespace-nowrap"
-          style={{ willChange: "transform" }}
+          style={{
+            animation: shouldReduceMotion
+              ? "none"
+              : "scroll-left 30s linear infinite",
+            willChange: "transform",
+          }}
         >
           {[...topRowApps, ...topRowApps].map((app, index) => (
             <IntegrationCard key={`top-${index}`} app={app} />
@@ -269,9 +231,13 @@ export const IntegrationCarousel = ({
         <div className="from-background pointer-events-none absolute inset-y-0 left-0 z-20 w-48 bg-gradient-to-r to-transparent lg:w-60" />
 
         <div
-          ref={bottomRowRef}
           className="absolute top-[130px] flex items-start gap-6 whitespace-nowrap"
-          style={{ willChange: "transform" }}
+          style={{
+            animation: shouldReduceMotion
+              ? "none"
+              : "scroll-left-slow 40s linear infinite",
+            willChange: "transform",
+          }}
         >
           {[...bottomRowApps, ...bottomRowApps].map((app, index) => (
             <IntegrationCard key={`bottom-${index}`} app={app} />

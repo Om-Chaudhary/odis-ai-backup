@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { Menu, X } from "lucide-react";
 import {
   NavigationMenu,
@@ -109,28 +110,49 @@ export const LandingNavbar = () => {
         </div>
       </div>
 
-      {/* Mobile menu with glass effect */}
-      {isMobileMenuOpen && (
-        <div className="bg-background/80 border-t border-white/10 backdrop-blur-xl md:hidden">
-          <div className="space-y-1 px-6 py-4">
-            {navigationLinks.map((link) => (
-              <button
-                key={link.name}
-                onClick={() => handleLinkClick(link.link)}
-                className="block w-full rounded-lg px-4 py-3 text-left text-base font-medium text-slate-800 transition-colors hover:bg-white/10"
-              >
-                {link.name}
-              </button>
-            ))}
-            <a
-              href="mailto:hello@odis.ai?subject=Demo Request"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4 block w-full rounded-full px-6 py-3 text-center text-base font-semibold transition-all"
+      {/* Mobile menu with backdrop and animations */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            {/* Backdrop overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-30 bg-slate-900/20 backdrop-blur-sm md:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+
+            {/* Menu content */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="bg-background/95 border-t border-white/10 backdrop-blur-xl md:hidden"
             >
-              Book Demo
-            </a>
-          </div>
-        </div>
-      )}
+              <div className="space-y-1 px-6 py-4">
+                {navigationLinks.map((link) => (
+                  <button
+                    key={link.name}
+                    onClick={() => handleLinkClick(link.link)}
+                    className="block w-full rounded-lg px-4 py-3 text-left text-base font-medium text-slate-800 transition-colors hover:bg-white/10"
+                  >
+                    {link.name}
+                  </button>
+                ))}
+                <a
+                  href="mailto:hello@odis.ai?subject=Demo Request"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4 block w-full rounded-full px-6 py-3 text-center text-base font-semibold transition-all"
+                >
+                  Book Demo
+                </a>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </nav>
   );
 };

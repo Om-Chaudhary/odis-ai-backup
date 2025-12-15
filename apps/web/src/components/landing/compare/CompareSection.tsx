@@ -72,7 +72,7 @@ function LiveStat({
         )}
         <span className="text-teal-300">{suffix}</span>
       </div>
-      <div className="mt-1 text-xs text-white/60 sm:text-sm">{label}</div>
+      <div className="mt-1 text-xs text-white/75 sm:text-sm">{label}</div>
     </motion.div>
   );
 }
@@ -103,7 +103,7 @@ export const CompareSection = () => {
   return (
     <section
       ref={sectionRef}
-      className="relative w-full overflow-hidden py-24 lg:py-32"
+      className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >
       {/* Soft radial dark gradient - flows naturally with surrounding light sections */}
       <div className="pointer-events-none absolute inset-0">
@@ -141,7 +141,8 @@ export const CompareSection = () => {
         <div
           className="absolute -top-10 right-[8%] h-[450px] w-[450px] rounded-full blur-3xl"
           style={{
-            background: "radial-gradient(circle, rgba(49, 171, 163, 0.12) 0%, transparent 55%)",
+            background:
+              "radial-gradient(circle, rgba(49, 171, 163, 0.12) 0%, transparent 55%)",
             animation: "float-slow 14s ease-in-out infinite",
           }}
         />
@@ -150,7 +151,8 @@ export const CompareSection = () => {
         <div
           className="absolute -bottom-10 left-[8%] h-[400px] w-[400px] rounded-full blur-3xl"
           style={{
-            background: "radial-gradient(circle, rgba(49, 171, 163, 0.10) 0%, transparent 55%)",
+            background:
+              "radial-gradient(circle, rgba(49, 171, 163, 0.10) 0%, transparent 55%)",
             animation: "float-slow-reverse 16s ease-in-out infinite",
           }}
         />
@@ -159,7 +161,8 @@ export const CompareSection = () => {
         <div
           className="absolute top-1/2 left-1/2 h-[350px] w-[350px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
           style={{
-            background: "radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 60%)",
+            background:
+              "radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 60%)",
             animation: "float-gentle 20s ease-in-out infinite",
           }}
         />
@@ -168,7 +171,8 @@ export const CompareSection = () => {
         <div
           className="absolute inset-0 opacity-[0.015]"
           style={{
-            backgroundImage: "radial-gradient(circle, rgba(49, 171, 163, 0.6) 0.5px, transparent 0.5px)",
+            backgroundImage:
+              "radial-gradient(circle, rgba(49, 171, 163, 0.6) 0.5px, transparent 0.5px)",
             backgroundSize: "28px 28px",
           }}
         />
@@ -192,13 +196,13 @@ export const CompareSection = () => {
           </motion.span>
           <motion.h2
             variants={fadeUpVariant}
-            className="font-display mb-4 text-4xl font-medium tracking-tight text-white lg:text-5xl"
+            className="font-display mb-4 text-2xl font-medium tracking-tight text-white sm:text-3xl md:text-4xl lg:text-5xl"
           >
             What changes with OdisAI
           </motion.h2>
           <motion.p
             variants={fadeUpVariant}
-            className="mx-auto max-w-xl text-base text-white/60 sm:text-lg"
+            className="mx-auto max-w-xl text-base text-white/80 sm:text-lg"
           >
             Average results per clinic in the last 30 days
           </motion.p>
@@ -233,9 +237,9 @@ export const CompareSection = () => {
           transition={{ ...transition, delay: 0.6 }}
           className="mt-16 text-center lg:mt-20"
         >
-          <p className="text-sm text-white/50 sm:text-base">
+          <p className="text-sm text-white/70 sm:text-base">
             Trusted by{" "}
-            <span className="font-medium text-white/80">
+            <span className="font-medium text-white/90">
               150+ veterinary clinics
             </span>
           </p>
