@@ -85,11 +85,7 @@ export const AudioDemoCard = forwardRef<HTMLDivElement, AudioDemoCardProps>(
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true, margin: "-50px" }}
-        whileHover={
-          disableAnimations
-            ? undefined
-            : { y: offsetY - 8, scale: 1.03, rotate: 0 }
-        }
+        whileHover={disableAnimations ? undefined : { scale: 1.04 }}
         onHoverStart={onHoverStart}
         onHoverEnd={onHoverEnd}
         className={cn(

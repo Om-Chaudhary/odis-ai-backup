@@ -50,12 +50,12 @@ const demoCards: DemoCardData[] = [
   },
 ];
 
-// More dynamic scattered positions - asymmetric organic feel
+// Balanced scattered positions - alternating up/down for even distribution
 const scatteredPositions = [
-  { offsetY: 0, rotation: -2, translateX: 0 },
-  { offsetY: 40, rotation: 1.5, translateX: 8 },
-  { offsetY: 16, rotation: 0.8, translateX: -4 },
-  { offsetY: 56, rotation: -1, translateX: 12 },
+  { offsetY: -12, rotation: -1.5 }, // Top-left: slight up
+  { offsetY: 8, rotation: 1 }, // Top-right: slight down
+  { offsetY: 6, rotation: 0.8 }, // Bottom-left: slight down
+  { offsetY: -10, rotation: -0.8 }, // Bottom-right: slight up
 ];
 
 // Animation variants
@@ -234,15 +234,15 @@ export function AudioDemoSection() {
           </p>
         </motion.div>
 
-        {/* Dynamic Scattered Cards Layout */}
+        {/* Balanced 2x2 Grid with Scattered Effect */}
         <div
           className={cn(
-            // Mobile: simple 2-col grid, no transforms
-            "grid grid-cols-2 gap-4",
-            // Tablet/Desktop: asymmetric layout with more breathing room
-            "md:flex md:flex-wrap md:justify-center md:gap-6",
-            // Extra bottom padding for scattered offsets
-            "lg:gap-8 lg:pb-16",
+            // Even 2x2 grid at all breakpoints
+            "mx-auto grid max-w-3xl grid-cols-2 gap-5",
+            // Desktop: larger gaps for more breathing room
+            "md:gap-8 lg:gap-10",
+            // Vertical padding to accommodate scatter offsets
+            "py-4 lg:py-6",
           )}
         >
           {demoCards.map((card, index) => {
@@ -251,40 +251,22 @@ export function AudioDemoSection() {
             const shouldBlur = !isMobile && activeCardId !== null && !isActive;
 
             return (
-              <div
+              <AudioDemoCard
                 key={card.id}
-                className={cn(
-                  // Mobile: auto width in grid
-                  "w-full",
-                  // Desktop: varied widths for organic feel
-                  "md:w-[calc(50%-1rem)]",
-                  "lg:w-[280px]",
-                  // Horizontal offset for scattered effect
-                  !isMobile && index === 1 && "lg:ml-8",
-                  !isMobile && index === 2 && "lg:mr-4",
-                  !isMobile && index === 3 && "lg:ml-12",
-                )}
-                style={{
-                  // Additional horizontal shift on desktop
-                  marginLeft: isMobile ? undefined : position?.translateX,
-                }}
-              >
-                <AudioDemoCard
-                  card={card}
-                  index={index}
-                  isPlaying={playingId === card.id}
-                  progress={progress[card.id] ?? 0}
-                  onTogglePlay={() => handleTogglePlay(card.id)}
-                  // Only apply scattered positioning on desktop
-                  offsetY={isMobile ? 0 : (position?.offsetY ?? 0)}
-                  rotation={isMobile ? 0 : (position?.rotation ?? 0)}
-                  disableAnimations={disableAnimations}
-                  // Blur effect
-                  isBlurred={shouldBlur}
-                  onHoverStart={() => !isMobile && setHoveredId(card.id)}
-                  onHoverEnd={() => !isMobile && setHoveredId(null)}
-                />
-              </div>
+                card={card}
+                index={index}
+                isPlaying={playingId === card.id}
+                progress={progress[card.id] ?? 0}
+                onTogglePlay={() => handleTogglePlay(card.id)}
+                // Only apply scattered positioning on desktop
+                offsetY={isMobile ? 0 : (position?.offsetY ?? 0)}
+                rotation={isMobile ? 0 : (position?.rotation ?? 0)}
+                disableAnimations={disableAnimations}
+                // Blur effect
+                isBlurred={shouldBlur}
+                onHoverStart={() => !isMobile && setHoveredId(card.id)}
+                onHoverEnd={() => !isMobile && setHoveredId(null)}
+              />
             );
           })}
         </div>
