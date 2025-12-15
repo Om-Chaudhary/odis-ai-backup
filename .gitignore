@@ -50,7 +50,10 @@ yarn-error.log*
 *.tsbuildinfo
 
 # idea files
-.idea.playwright-mcp/
+.idea
+
+# playwright mcp screenshots
+.playwright-mcp/
 
 
 
