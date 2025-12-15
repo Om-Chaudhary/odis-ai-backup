@@ -1,36 +1,66 @@
 "use client";
 
+import { useRef } from "react";
+import { motion, useInView, useReducedMotion } from "motion/react";
 import { NeonGradientCard } from "~/components/ui/neon-gradient-card";
-import { BlurFade } from "~/components/ui/blur-fade";
 import { ShimmerButton } from "~/components/ui/shimmer-button";
 import { Calendar, ArrowRight } from "lucide-react";
+import { SectionBackground } from "~/components/ui/section-background";
+
+// Animation variants - consistent with hero
+const fadeUpVariant = {
+  hidden: { opacity: 0, y: 20, filter: "blur(8px)" },
+  visible: { opacity: 1, y: 0, filter: "blur(0px)" },
+};
 
 export function PricingSection() {
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  const shouldReduceMotion = useReducedMotion();
+
+  const transition = {
+    duration: shouldReduceMotion ? 0 : 0.6,
+    ease: [0.22, 1, 0.36, 1] as const,
+  };
+
   return (
-    <section id="pricing" className="relative w-full py-24 lg:py-32">
-      {/* Background gradient */}
-      <div className="from-background to-background pointer-events-none absolute inset-0 bg-gradient-to-b via-[#31aba3]/5" />
+    <section
+      ref={sectionRef}
+      id="pricing"
+      className="relative w-full overflow-hidden py-24 lg:py-32"
+    >
+      {/* Cohesive background */}
+      <SectionBackground variant="accent-warm" />
 
-      <div className="relative mx-auto max-w-5xl px-6 lg:px-8">
-        <BlurFade delay={0.1} inView>
-          <div className="mb-16 text-center">
-            <span className="font-display text-primary mb-3 inline-flex items-center gap-2 text-xs font-medium tracking-widest uppercase">
-              <span className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
-              Get Started
-            </span>
-            <h2 className="font-display text-foreground mb-4 text-4xl font-medium tracking-tight lg:text-5xl">
-              Let&apos;s Talk About Your Practice
-            </h2>
-            <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
-              Every clinic is different. We&apos;ll create a custom plan that
-              fits your call volume, integrations, and workflow.
-            </p>
-          </div>
-        </BlurFade>
+      <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
+        <motion.div
+          variants={fadeUpVariant}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          transition={{ ...transition, delay: 0.35 }}
+          className="mb-12 text-center lg:mb-16"
+        >
+          <span className="font-display text-primary mb-4 inline-flex items-center gap-2 text-xs font-medium tracking-widest uppercase">
+            <span className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
+            Get Started
+          </span>
+          <h2 className="font-display text-foreground mb-4 text-4xl font-medium tracking-tight lg:text-5xl">
+            Let&apos;s Talk About Your Practice
+          </h2>
+          <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
+            Every clinic is different. We&apos;ll create a custom plan that fits
+            your call volume, integrations, and workflow.
+          </p>
+        </motion.div>
 
-        <BlurFade delay={0.2} inView>
+        <motion.div
+          variants={fadeUpVariant}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          transition={{ ...transition, delay: 0.45 }}
+        >
           <NeonGradientCard className="mx-auto max-w-3xl">
-            <div className="space-y-8 p-10 text-center lg:p-12">
+            <div className="space-y-6 p-6 text-center sm:space-y-8 sm:p-10 lg:p-12">
               <div className="bg-primary/10 mx-auto flex h-16 w-16 items-center justify-center rounded-full">
                 <Calendar className="text-primary h-8 w-8" />
               </div>
@@ -46,7 +76,7 @@ export function PricingSection() {
               </div>
 
               <div className="space-y-4">
-                <div className="grid gap-4 text-left sm:grid-cols-2">
+                <div className="grid gap-3 text-left sm:grid-cols-2 sm:gap-4">
                   <div className="glass-card rounded-xl p-4">
                     <p className="text-foreground text-sm font-semibold">
                       ✓ See live call demo
@@ -112,23 +142,27 @@ export function PricingSection() {
               </p>
             </div>
           </NeonGradientCard>
-        </BlurFade>
+        </motion.div>
 
         {/* Trust signals */}
-        <BlurFade delay={0.3} inView>
-          <div className="mt-16 text-center">
-            <p className="text-muted-foreground mb-6 text-sm font-medium">
-              Trusted by 100+ veterinary clinics
-            </p>
-            <div className="flex flex-wrap items-center justify-center gap-8 opacity-60 grayscale">
-              {/* Integration logos placeholder */}
-              <div className="text-muted-foreground text-xs">IDEXX</div>
-              <div className="text-muted-foreground text-xs">ezyVet</div>
-              <div className="text-muted-foreground text-xs">Cornerstone</div>
-              <div className="text-muted-foreground text-xs">Avimark</div>
-            </div>
+        <motion.div
+          variants={fadeUpVariant}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          transition={{ ...transition, delay: 0.55 }}
+          className="mt-12 text-center lg:mt-16"
+        >
+          <p className="text-muted-foreground mb-6 text-sm font-medium">
+            Trusted by 100+ veterinary clinics
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-8 opacity-60 grayscale">
+            {/* Integration logos placeholder */}
+            <div className="text-muted-foreground text-xs">IDEXX</div>
+            <div className="text-muted-foreground text-xs">ezyVet</div>
+            <div className="text-muted-foreground text-xs">Cornerstone</div>
+            <div className="text-muted-foreground text-xs">Avimark</div>
           </div>
-        </BlurFade>
+        </motion.div>
       </div>
     </section>
   );

@@ -1,11 +1,19 @@
 "use client";
 
+import { useRef } from "react";
+import { motion, useInView, useReducedMotion } from "motion/react";
 import { Star } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Marquee } from "~/components/ui/marquee";
 import { AvatarCircles } from "~/components/ui/avatar-circles";
 import { NumberTicker } from "~/components/ui/number-ticker";
-import { BlurFade } from "~/components/ui/blur-fade";
+import { SectionBackground } from "~/components/ui/section-background";
+
+// Animation variants - consistent with hero
+const fadeUpVariant = {
+  hidden: { opacity: 0, y: 20, filter: "blur(8px)" },
+  visible: { opacity: 1, y: 0, filter: "blur(0px)" },
+};
 
 const testimonials = [
   {
@@ -109,6 +117,10 @@ const ReviewCard = ({
 };
 
 export const TestimonialsSection = () => {
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  const shouldReduceMotion = useReducedMotion();
+
   const avatarUrls = testimonials.map((t) => ({
     imageUrl: t.img,
     profileUrl: t.profileUrl,
@@ -121,50 +133,75 @@ export const TestimonialsSection = () => {
     { value: 4.9, label: "Client satisfaction", suffix: "/5", decimals: 1 },
   ];
 
-  return (
-    <section id="testimonials" className="relative w-full py-24 lg:py-32">
-      {/* Background gradient */}
-      <div className="from-background to-background pointer-events-none absolute inset-0 bg-gradient-to-b via-[#31aba3]/3" />
+  const transition = {
+    duration: shouldReduceMotion ? 0 : 0.6,
+    ease: [0.22, 1, 0.36, 1] as const,
+  };
 
-      <div className="relative mx-auto max-w-7xl px-6 lg:px-8">
+  return (
+    <section
+      ref={sectionRef}
+      id="testimonials"
+      className="relative w-full overflow-hidden py-24 lg:py-32"
+    >
+      {/* Cohesive background */}
+      <SectionBackground variant="transition" />
+
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section header */}
-        <BlurFade delay={0.1} inView>
-          <div className="mb-16 text-center">
-            <span className="font-display text-primary mb-3 inline-flex items-center gap-2 text-xs font-medium tracking-widest uppercase">
-              <span className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
-              Testimonials
-            </span>
-            <h2 className="font-display text-foreground mb-6 text-4xl font-medium tracking-tight lg:text-5xl">
-              What Veterinary Teams Are Saying
-            </h2>
-            <div className="mx-auto flex items-center justify-center gap-3">
-              <AvatarCircles numPeople={100} avatarUrls={avatarUrls} />
-              <p className="text-muted-foreground text-lg">
-                Trusted by{" "}
-                <span className="text-foreground font-semibold">100+</span>{" "}
-                clinics
-              </p>
-            </div>
+        <motion.div
+          variants={fadeUpVariant}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          transition={{ ...transition, delay: 0.25 }}
+          className="mb-12 text-center lg:mb-16"
+        >
+          <span className="font-display text-primary mb-4 inline-flex items-center gap-2 text-xs font-medium tracking-widest uppercase">
+            <span className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
+            Testimonials
+          </span>
+          <h2 className="font-display text-foreground mb-6 text-4xl font-medium tracking-tight lg:text-5xl">
+            What Veterinary Teams Are Saying
+          </h2>
+          <div className="mx-auto flex items-center justify-center gap-3">
+            <AvatarCircles numPeople={100} avatarUrls={avatarUrls} />
+            <p className="text-muted-foreground text-lg">
+              Trusted by{" "}
+              <span className="text-foreground font-semibold">100+</span>{" "}
+              clinics
+            </p>
           </div>
-        </BlurFade>
+        </motion.div>
 
         {/* Marquee testimonials */}
-        <div className="relative mb-16 flex w-full flex-col items-center justify-center overflow-hidden">
-          <BlurFade delay={0.2} inView className="w-full">
+        <div className="relative mb-12 flex w-full flex-col items-center justify-center overflow-hidden lg:mb-16">
+          <motion.div
+            variants={fadeUpVariant}
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
+            transition={{ ...transition, delay: 0.35 }}
+            className="w-full"
+          >
             <Marquee pauseOnHover className="[--duration:40s]">
               {firstRow.map((review) => (
                 <ReviewCard key={review.author} {...review} />
               ))}
             </Marquee>
-          </BlurFade>
+          </motion.div>
 
-          <BlurFade delay={0.3} inView className="w-full">
+          <motion.div
+            variants={fadeUpVariant}
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
+            transition={{ ...transition, delay: 0.45 }}
+            className="w-full"
+          >
             <Marquee reverse pauseOnHover className="[--duration:40s]">
               {secondRow.map((review) => (
                 <ReviewCard key={review.author} {...review} />
               ))}
             </Marquee>
-          </BlurFade>
+          </motion.div>
 
           {/* Gradient overlays */}
           <div className="from-background pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r to-transparent" />
@@ -172,9 +209,14 @@ export const TestimonialsSection = () => {
         </div>
 
         {/* Impact stats */}
-        <BlurFade delay={0.4} inView>
-          <div className="glass-teal mx-auto max-w-4xl rounded-3xl p-10 lg:p-12">
-            <div className="mb-10 text-center">
+        <motion.div
+          variants={fadeUpVariant}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          transition={{ ...transition, delay: 0.55 }}
+        >
+          <div className="glass-teal mx-auto max-w-4xl rounded-3xl p-6 sm:p-10 lg:p-12">
+            <div className="mb-8 text-center lg:mb-10">
               <span className="font-display text-primary mb-2 inline-flex items-center gap-2 text-xs font-medium tracking-widest uppercase">
                 <span className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
                 Last Week&apos;s Impact
@@ -184,7 +226,7 @@ export const TestimonialsSection = () => {
               </h3>
             </div>
 
-            <div className="grid grid-cols-2 gap-8 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-6 lg:grid-cols-4 lg:gap-8">
               {impactStats.map((stat, index) => (
                 <div key={index} className="text-center">
                   <div className="font-display text-primary mb-2 flex items-baseline justify-center gap-1 text-4xl font-bold lg:text-5xl">
@@ -201,7 +243,7 @@ export const TestimonialsSection = () => {
               ))}
             </div>
           </div>
-        </BlurFade>
+        </motion.div>
       </div>
     </section>
   );

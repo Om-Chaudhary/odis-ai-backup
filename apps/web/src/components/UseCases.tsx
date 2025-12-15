@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef } from "react";
+import { motion, useInView, useReducedMotion } from "motion/react";
 import {
   PhoneIncoming,
   PhoneOutgoing,
@@ -9,8 +11,14 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { BentoCard, BentoGrid } from "~/components/ui/bento-grid";
-import { BlurFade } from "~/components/ui/blur-fade";
 import { AnimatedList, AnimatedListItem } from "~/components/ui/animated-list";
+import { SectionBackground } from "~/components/ui/section-background";
+
+// Animation variants - consistent with hero
+const fadeUpVariant = {
+  hidden: { opacity: 0, y: 20, filter: "blur(8px)" },
+  visible: { opacity: 1, y: 0, filter: "blur(0px)" },
+};
 
 const notifications = [
   {
@@ -155,32 +163,57 @@ export const UseCases = () => {
     },
   ];
 
-  return (
-    <section id="features" className="relative w-full py-24 lg:py-32">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <BlurFade delay={0.1} inView>
-          <div className="mb-16 text-center">
-            <span className="font-display text-primary mb-3 inline-flex items-center gap-2 text-xs font-medium tracking-widest uppercase">
-              <span className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
-              Capabilities
-            </span>
-            <h2 className="font-display text-foreground mb-4 text-4xl font-medium tracking-tight lg:text-5xl">
-              Everything Your Clinic Needs
-            </h2>
-            <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
-              Handle both inbound and outbound calls with AI that sounds natural
-              and integrates seamlessly
-            </p>
-          </div>
-        </BlurFade>
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  const shouldReduceMotion = useReducedMotion();
 
-        <BlurFade delay={0.2} inView>
+  const transition = {
+    duration: shouldReduceMotion ? 0 : 0.6,
+    ease: [0.22, 1, 0.36, 1] as const,
+  };
+
+  return (
+    <section
+      ref={sectionRef}
+      id="features"
+      className="relative w-full overflow-hidden py-24 lg:py-32"
+    >
+      {/* Cohesive background */}
+      <SectionBackground variant="subtle-cool" />
+
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <motion.div
+          variants={fadeUpVariant}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          transition={{ ...transition, delay: 0.15 }}
+          className="mb-12 text-center lg:mb-16"
+        >
+          <span className="font-display text-primary mb-4 inline-flex items-center gap-2 text-xs font-medium tracking-widest uppercase">
+            <span className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
+            Capabilities
+          </span>
+          <h2 className="font-display text-foreground mb-4 text-4xl font-medium tracking-tight lg:text-5xl">
+            Everything Your Clinic Needs
+          </h2>
+          <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
+            Handle both inbound and outbound calls with AI that sounds natural
+            and integrates seamlessly
+          </p>
+        </motion.div>
+
+        <motion.div
+          variants={fadeUpVariant}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          transition={{ ...transition, delay: 0.25 }}
+        >
           <BentoGrid className="auto-rows-[200px]">
             {features.map((feature, idx) => (
               <BentoCard key={idx} {...feature} />
             ))}
           </BentoGrid>
-        </BlurFade>
+        </motion.div>
       </div>
     </section>
   );

@@ -1,14 +1,25 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useRef } from "react";
+import {
+  motion,
+  AnimatePresence,
+  useInView,
+  useReducedMotion,
+} from "motion/react";
 import { Plus, Minus } from "lucide-react";
-import { BlurFade } from "~/components/ui/blur-fade";
+import { SectionBackground } from "~/components/ui/section-background";
 
-type FAQItem = {
+// Animation variants - consistent with hero
+const fadeUpVariant = {
+  hidden: { opacity: 0, y: 20, filter: "blur(8px)" },
+  visible: { opacity: 1, y: 0, filter: "blur(0px)" },
+};
+
+interface FAQItem {
   question: string;
   answer: string;
-};
+}
 
 const defaultFAQs: FAQItem[] = [
   {
@@ -43,46 +54,65 @@ const defaultFAQs: FAQItem[] = [
   },
 ];
 
+interface FAQSectionProps {
+  title?: string;
+  faqs?: FAQItem[];
+}
+
 export const FAQSection = ({
   title = "Frequently asked questions",
   faqs = defaultFAQs,
-}) => {
+}: FAQSectionProps) => {
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  const shouldReduceMotion = useReducedMotion();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  const transition = {
+    duration: shouldReduceMotion ? 0 : 0.6,
+    ease: [0.22, 1, 0.36, 1] as const,
+  };
 
   const toggleFAQ = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
   return (
-    <section className="relative w-full py-24 lg:py-32">
-      <div className="mx-auto max-w-6xl px-6 lg:px-8">
-        <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
+    <section
+      ref={sectionRef}
+      id="faq"
+      className="relative w-full overflow-hidden py-24 lg:py-32"
+    >
+      {/* Cohesive background */}
+      <SectionBackground variant="transition" />
+
+      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="grid gap-8 lg:grid-cols-12 lg:gap-16">
           <div className="lg:col-span-4">
-            <BlurFade delay={0.1} inView>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-                className="lg:sticky lg:top-32"
-              >
-                <span className="text-primary mb-3 block text-xs font-medium tracking-widest uppercase">
-                  Support
-                </span>
-                <h2 className="font-display text-foreground mb-4 text-3xl font-medium tracking-tight lg:text-4xl">
-                  {title}
-                </h2>
-                <p className="text-muted-foreground">
-                  Can&apos;t find what you&apos;re looking for?{" "}
-                  <a
-                    href="mailto:hello@odis.ai"
-                    className="text-primary hover:underline"
-                  >
-                    Get in touch
-                  </a>
-                </p>
-              </motion.div>
-            </BlurFade>
+            <motion.div
+              variants={fadeUpVariant}
+              initial="hidden"
+              animate={isInView ? "visible" : "hidden"}
+              transition={{ ...transition, delay: 0.4 }}
+              className="lg:sticky lg:top-32"
+            >
+              <span className="text-primary mb-4 inline-flex items-center gap-2 text-xs font-medium tracking-widest uppercase">
+                <span className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
+                Support
+              </span>
+              <h2 className="font-display text-foreground mb-4 text-3xl font-medium tracking-tight lg:text-4xl">
+                {title}
+              </h2>
+              <p className="text-muted-foreground">
+                Can&apos;t find what you&apos;re looking for?{" "}
+                <a
+                  href="mailto:hello@odis.ai"
+                  className="text-primary hover:underline"
+                >
+                  Get in touch
+                </a>
+              </p>
+            </motion.div>
           </div>
 
           <div className="lg:col-span-8">
@@ -90,18 +120,18 @@ export const FAQSection = ({
               {faqs.map((faq, index) => (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: index * 0.05 }}
+                  variants={fadeUpVariant}
+                  initial="hidden"
+                  animate={isInView ? "visible" : "hidden"}
+                  transition={{ ...transition, delay: 0.45 + index * 0.05 }}
                   className="border-border border-b"
                 >
                   <button
                     onClick={() => toggleFAQ(index)}
-                    className="group flex w-full items-center justify-between py-6 text-left"
+                    className="group flex w-full items-center justify-between py-5 text-left sm:py-6"
                     aria-expanded={openIndex === index}
                   >
-                    <span className="text-foreground group-hover:text-primary pr-8 text-base font-medium transition-colors duration-200 lg:text-lg">
+                    <span className="text-foreground group-hover:text-primary pr-6 text-base font-medium transition-colors duration-200 sm:pr-8 lg:text-lg">
                       {faq.question}
                     </span>
                     <motion.div
@@ -124,12 +154,12 @@ export const FAQSection = ({
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{
-                          duration: 0.3,
+                          duration: shouldReduceMotion ? 0 : 0.3,
                           ease: [0.25, 0.1, 0.25, 1],
                         }}
                         className="overflow-hidden"
                       >
-                        <div className="pr-12 pb-6">
+                        <div className="pr-10 pb-5 sm:pr-12 sm:pb-6">
                           <p className="text-muted-foreground text-base leading-relaxed">
                             {faq.answer}
                           </p>
