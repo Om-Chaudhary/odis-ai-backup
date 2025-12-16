@@ -2,9 +2,10 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { SectionBackground } from "../ui/section-background";
-import { Check, Zap } from "lucide-react";
+import { Check } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
 
@@ -130,7 +131,7 @@ const IntegrationCard = ({ app }: { app: IntegrationApp }) => {
 
 export const IntegrationsSection = ({
   buttonText = "See All Integrations",
-  buttonHref = "#",
+  buttonHref = "/integrations",
   title = "Connects with your practice management system.",
   subtitle = "OdisAI integrates with the tools you already use—so every call syncs seamlessly with your patient records.",
   topRowApps = defaultTopRowApps,
@@ -188,7 +189,7 @@ export const IntegrationsSection = ({
             transition={{ ...transition, delay: 0.4 }}
             className="mt-6"
           >
-            <a
+            <Link
               href={buttonHref}
               className="group inline-flex cursor-pointer items-center gap-2 rounded-full border border-teal-200 bg-teal-50/80 px-5 py-2.5 text-center text-sm font-medium text-teal-700 backdrop-blur-sm transition-all duration-200 hover:border-teal-300 hover:bg-teal-100/80 hover:shadow-lg"
             >
@@ -196,7 +197,7 @@ export const IntegrationsSection = ({
               <span className="transition-transform group-hover:translate-x-0.5">
                 →
               </span>
-            </a>
+            </Link>
           </motion.div>
         </motion.div>
       </div>

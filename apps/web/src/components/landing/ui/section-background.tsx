@@ -19,7 +19,7 @@ type SectionBackgroundVariant =
   | "accent-cta"
   | "fade-out";
 
-interface SectionBackgroundProps {
+export interface SectionBackgroundProps {
   variant: SectionBackgroundVariant;
   className?: string;
 }
