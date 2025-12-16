@@ -113,16 +113,16 @@ export const listMessagesRouter = createTRPCRouter({
           createdAt: new Date(
             today.getFullYear(),
             today.getMonth(),
-            today.getDate(),
-            19,
+            today.getDate() + 1,
+            3,
             9,
             0,
-          ).toISOString(), // 7:09 PM
+          ).toISOString(), // 7:09 PM PST (next day 3:09 AM UTC)
           updatedAt: new Date(
             today.getFullYear(),
             today.getMonth(),
-            today.getDate(),
-            19,
+            today.getDate() + 1,
+            3,
             9,
             0,
           ).toISOString(),
@@ -144,16 +144,16 @@ export const listMessagesRouter = createTRPCRouter({
           createdAt: new Date(
             today.getFullYear(),
             today.getMonth(),
-            today.getDate(),
-            19,
+            today.getDate() + 1,
+            3,
             2,
             0,
-          ).toISOString(), // 7:02 PM
+          ).toISOString(), // 7:02 PM PST (next day 3:02 AM UTC)
           updatedAt: new Date(
             today.getFullYear(),
             today.getMonth(),
-            today.getDate(),
-            19,
+            today.getDate() + 1,
+            3,
             2,
             0,
           ).toISOString(),

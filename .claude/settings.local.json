@@ -121,7 +121,10 @@
       "Bash(ls:*)",
       "Bash(wc:*)",
       "Bash(lsof:*)",
-      "Bash(npx vercel:*)"
+      "Bash(npx vercel:*)",
+      "Bash(vercel ls:*)",
+      "Bash(vercel domains:*)",
+      "Bash(vercel project:*)"
     ],
     "deny": [],
     "ask": []
