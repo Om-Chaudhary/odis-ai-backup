@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { cn } from "~/lib/utils";
 import { ChevronDown } from "lucide-react";
+import { usePageLoaded } from "~/hooks/use-page-loaded";
 
 interface ScrollIndicatorProps {
   className?: string;
@@ -15,6 +16,8 @@ export function ScrollIndicator({
   targetId = "#features",
   label = "Scroll to explore",
 }: ScrollIndicatorProps) {
+  const isPageLoaded = usePageLoaded(150);
+
   const handleClick = () => {
     const element = document.querySelector(targetId);
     if (element) {
@@ -26,8 +29,8 @@ export function ScrollIndicator({
     <motion.button
       onClick={handleClick}
       initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 1.5, duration: 0.5 }}
+      animate={isPageLoaded ? { opacity: 1, y: 0 } : { opacity: 0, y: -10 }}
+      transition={{ delay: 1.2, duration: 0.6 }}
       className={cn(
         "group flex flex-col items-center gap-2 text-slate-400 transition-colors hover:text-slate-600",
         className,
@@ -58,6 +61,8 @@ export function ScrollMouseIndicator({
   className,
   targetId = "#features",
 }: Pick<ScrollIndicatorProps, "className" | "targetId">) {
+  const isPageLoaded = usePageLoaded(150);
+
   const handleClick = () => {
     const element = document.querySelector(targetId);
     if (element) {
@@ -69,8 +74,8 @@ export function ScrollMouseIndicator({
     <motion.button
       onClick={handleClick}
       initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 1.5, duration: 0.5 }}
+      animate={isPageLoaded ? { opacity: 1, y: 0 } : { opacity: 0, y: -10 }}
+      transition={{ delay: 1.2, duration: 0.6 }}
       className={cn("group flex flex-col items-center gap-3", className)}
       aria-label="Scroll to explore"
     >

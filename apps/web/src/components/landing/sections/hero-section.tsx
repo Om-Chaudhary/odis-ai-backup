@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { usePostHog } from "posthog-js/react";
 import { cn } from "~/lib/utils";
+import { usePageLoaded } from "~/hooks/use-page-loaded";
 import { PhoneRingIcon } from "../ui/phone-ring-icon";
 import { ScrollIndicator } from "../ui/scroll-indicator";
 import { Logo } from "@odis-ai/ui/Logo";
@@ -29,25 +30,26 @@ const FEATURES = [
   "Recover $12,000+/month in missed appointments",
 ];
 
-// Animation variants - clean, subtle
+// Animation variants - slower, more noticeable
+// Increased durations and stagger for better visual impact
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.2,
+      staggerChildren: 0.15,
+      delayChildren: 0.1,
     },
   },
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 24 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.6,
+      duration: 0.8,
       ease: [0.22, 1, 0.36, 1] as const,
     },
   },
@@ -57,7 +59,11 @@ export function HeroSection() {
   const posthog = usePostHog();
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  const isPageLoaded = usePageLoaded(150); // Wait for page load + 150ms
   const shouldReduceMotion = useReducedMotion();
+
+  // Only start animations once page is loaded AND section is in view
+  const shouldAnimate = isPageLoaded && isInView;
 
   const handleDemoPhoneClick = () => {
     posthog?.capture("demo_phone_clicked", {
@@ -68,7 +74,7 @@ export function HeroSection() {
 
   const transition = useMemo(
     () => ({
-      duration: shouldReduceMotion ? 0 : 0.6,
+      duration: shouldReduceMotion ? 0 : 0.8,
       ease: [0.22, 1, 0.36, 1] as const,
     }),
     [shouldReduceMotion],
@@ -93,8 +99,8 @@ export function HeroSection() {
       {/* Navbar */}
       <motion.nav
         initial={{ opacity: 0, y: -16 }}
-        animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: -16 }}
-        transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+        animate={shouldAnimate ? { opacity: 1, y: 0 } : { opacity: 0, y: -16 }}
+        transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
         className="relative z-20 w-full px-4 pt-6 sm:px-6 lg:px-8"
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between">
@@ -126,7 +132,7 @@ export function HeroSection() {
             className="order-1"
             variants={containerVariants}
             initial="hidden"
-            animate={isInView ? "visible" : "hidden"}
+            animate={shouldAnimate ? "visible" : "hidden"}
           >
             {/* Headline */}
             <motion.h1
@@ -203,11 +209,13 @@ export function HeroSection() {
           {/* Right Column - Image */}
           <motion.div
             className="relative order-2"
-            initial={{ opacity: 0, scale: 0.98 }}
+            initial={{ opacity: 0, scale: 0.96 }}
             animate={
-              isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.98 }
+              shouldAnimate
+                ? { opacity: 1, scale: 1 }
+                : { opacity: 0, scale: 0.96 }
             }
-            transition={{ ...transition, delay: 0.3 }}
+            transition={{ ...transition, delay: 0.4 }}
           >
             <div className="relative overflow-hidden rounded-2xl bg-white shadow-xl ring-1 shadow-slate-200/50 ring-slate-200/50">
               <div className="relative aspect-[4/3]">
