@@ -98,7 +98,7 @@ export const listMessagesRouter = createTRPCRouter({
       const staticMessages = [
         {
           id: "eric-silva-static",
-          clinicId: clinic?.id ?? null,
+          clinicId: "demo-clinic-eric-silva",
           callerName: "Eric Silva",
           callerPhone: "4084260512",
           messageContent:
@@ -129,7 +129,7 @@ export const listMessagesRouter = createTRPCRouter({
         },
         {
           id: "maria-serpa-static",
-          clinicId: clinic?.id ?? null,
+          clinicId: "demo-clinic-maria-serpa",
           callerName: "Maria Serpa",
           callerPhone: "4085612356",
           messageContent:
