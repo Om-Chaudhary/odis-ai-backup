@@ -23,7 +23,6 @@ const navigationLinks = [
   { name: "Features", link: "#features" },
   { name: "How It Works", link: "#how-it-works" },
   { name: "Testimonials", link: "#testimonials" },
-  { name: "Sample Call", link: "#sample-call" },
 ];
 
 const SCROLL_THRESHOLD = 100;
