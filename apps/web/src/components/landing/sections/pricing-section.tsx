@@ -124,30 +124,6 @@ export function PricingSection() {
                 <Phone className="h-5 w-5" />
                 <span>Call Demo: {DEMO_PHONE_NUMBER}</span>
               </a>
-
-              <p className="text-sm text-slate-500">or</p>
-
-              {/* Secondary CTA - Schedule Demo */}
-              <div className="flex justify-center">
-                <ShimmerButton
-                  background="linear-gradient(135deg, #14b8a6 0%, #10b981 100%)"
-                  shimmerColor="rgba(255, 255, 255, 0.5)"
-                  className="group relative overflow-hidden px-6 py-3 text-sm font-semibold shadow-lg shadow-teal-500/20 transition-all hover:shadow-xl hover:shadow-teal-500/30"
-                  onClick={() => {
-                    handleScheduleDemoClick();
-                    window.location.href =
-                      "mailto:hello@odis.ai?subject=Demo Request&body=Hi, I'd like to schedule a demo to learn more about OdisAI for my veterinary practice.";
-                  }}
-                >
-                  <span className="flex items-center gap-2 text-white">
-                    <Calendar className="h-4 w-4" />
-                    Schedule a personalized demo
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </span>
-                </ShimmerButton>
-              </div>
-
-              <p className="text-xs text-slate-500">No commitment required</p>
             </div>
           </NeonGradientCard>
         </motion.div>

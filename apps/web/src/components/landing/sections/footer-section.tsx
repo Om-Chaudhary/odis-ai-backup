@@ -30,7 +30,6 @@ const defaultSections: FooterSection[] = [
   {
     title: "Product",
     links: [
-      { label: "Sample Calls", href: "#sample-call" },
       { label: "How It Works", href: "#how-it-works" },
       { label: "Integrations", href: "#integrations" },
       { label: "Testimonials", href: "#testimonials" },
