@@ -97,8 +97,6 @@ export async function updateSession(request: ProxyRequest) {
     "/terms-of-service",
     "/cookie-policy",
     "/case-studies",
-    "/hands-free",
-    "/save-time",
     "/",
   ];
 
