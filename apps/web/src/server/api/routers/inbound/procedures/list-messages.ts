@@ -93,13 +93,96 @@ export const listMessagesRouter = createTRPCRouter({
         updatedAt: msg.updated_at,
       }));
 
+      // Add static mock messages for Eric Silva and Maria Serpa
+      const today = new Date();
+      const staticMessages = [
+        {
+          id: "eric-silva-static",
+          clinicId: clinic?.id ?? null,
+          callerName: "Eric Silva",
+          callerPhone: "4084260512",
+          messageContent:
+            "Caller noticed stitches coming loose on their pet, Jack. There's very little bleeding, and the pet is not in discomfort. Caller requests a callback for further instructions.",
+          messageType: "callback_request",
+          priority: "normal",
+          status: "new",
+          assignedToUserId: null,
+          vapiCallId: null,
+          metadata: {},
+          readAt: null,
+          createdAt: new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate(),
+            19,
+            9,
+            0,
+          ).toISOString(), // 7:09 PM
+          updatedAt: new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate(),
+            19,
+            9,
+            0,
+          ).toISOString(),
+        },
+        {
+          id: "maria-serpa-static",
+          clinicId: clinic?.id ?? null,
+          callerName: "Maria Serpa",
+          callerPhone: "4085612356",
+          messageContent:
+            "Caller Maria Serpa would like to cancel her dog's appointment.",
+          messageType: "appointment_change",
+          priority: "normal",
+          status: "new",
+          assignedToUserId: null,
+          vapiCallId: null,
+          metadata: {},
+          readAt: null,
+          createdAt: new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate(),
+            19,
+            2,
+            0,
+          ).toISOString(), // 7:02 PM
+          updatedAt: new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate(),
+            19,
+            2,
+            0,
+          ).toISOString(),
+        },
+      ];
+
+      // Filter out any existing database messages for Eric Silva and Maria Serpa
+      const filteredMessages = transformedMessages.filter(
+        (msg) =>
+          msg.callerPhone !== "4084260512" &&
+          msg.callerPhone !== "408-426-0512" &&
+          msg.callerPhone !== "+14084260512" &&
+          msg.callerPhone !== "4085612356" &&
+          msg.callerPhone !== "408-561-2356" &&
+          msg.callerPhone !== "+14085612356",
+      );
+
+      // Prepend static messages to the filtered results (they appear first due to DESC order)
+      const allMessages = [...staticMessages, ...filteredMessages];
+
       return {
-        messages: transformedMessages,
+        messages: allMessages,
         pagination: {
           page: input.page,
           pageSize: input.pageSize,
-          total: count ?? 0,
-          totalPages: Math.ceil((count ?? 0) / input.pageSize),
+          total: (count ?? 0) + staticMessages.length,
+          totalPages: Math.ceil(
+            ((count ?? 0) + staticMessages.length) / input.pageSize,
+          ),
         },
       };
     }),
