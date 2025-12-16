@@ -18,9 +18,26 @@ const isoDateSchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in ISO format (YYYY-MM-DD)")
   .refine(
-    (date) => {
-      const parsed = new Date(date);
-      return !Number.isNaN(parsed.getTime());
+    (dateString) => {
+      // Parse the date string
+      const [yearStr, monthStr, dayStr] = dateString.split("-");
+      if (!yearStr || !monthStr || !dayStr) return false;
+
+      const year = Number(yearStr);
+      const month = Number(monthStr);
+      const day = Number(dayStr);
+
+      // Create a date from the parsed components
+      const parsed = new Date(year, month - 1, day); // month is 0-indexed
+
+      // Check if the date is valid by verifying the parsed components match the input
+      // This ensures Feb 31 is rejected (would become Mar 3) and Feb 29 on non-leap years is rejected
+      return (
+        parsed.getFullYear() === year &&
+        parsed.getMonth() === month - 1 &&
+        parsed.getDate() === day &&
+        !Number.isNaN(parsed.getTime())
+      );
     },
     {
       message: "Date must be a valid date",

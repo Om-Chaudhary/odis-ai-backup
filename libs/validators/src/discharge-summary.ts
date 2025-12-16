@@ -132,7 +132,10 @@ export type DischargeCaseType = z.infer<typeof DischargeCaseTypeSchema>;
 
 export const StructuredDischargeSummarySchema = z.object({
   // Patient identification (brief)
-  patientName: z.string().describe("Pet's name"),
+  patientName: z
+    .string()
+    .min(1, "Patient name is required")
+    .describe("Pet's name"),
 
   // Case type for curated warning fallback (optional - AI will classify)
   caseType: DischargeCaseTypeSchema.optional().describe(
