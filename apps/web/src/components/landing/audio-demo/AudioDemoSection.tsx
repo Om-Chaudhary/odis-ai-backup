@@ -310,7 +310,7 @@ export function AudioDemoSection() {
         </motion.div>
 
         {/* Single column with alternating rotation */}
-        <div className="mx-auto flex max-w-lg flex-col gap-6 py-4 sm:gap-8 md:gap-10">
+        <div className="mx-auto flex max-w-lg flex-col gap-12 py-4 sm:gap-16 md:gap-20">
           {demoCards.map((card, index) => {
             const isActive = activeCardId === card.id;
             const shouldBlur = !isMobile && activeCardId !== null && !isActive;

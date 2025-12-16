@@ -210,38 +210,40 @@ function WarmVioletBackground() {
 }
 
 /**
- * Subtle Dark - Soft navy/slate pool (not harsh black)
- * Effect: Data credibility, contrast for numbers
- * Includes smooth transition overlays at top/bottom
+ * Subtle Dark - Very soft slate tint (NOT a dark section)
+ * Effect: Gentle contrast for data emphasis while staying light
+ * Much more transparent to flow with surrounding sections
  */
 function SubtleDarkBackground() {
   return (
     <>
-      {/* Main dark radial - soft navy/slate */}
+      {/* Base: soft slate gradient - very transparent */}
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-100/60 via-slate-200/50 to-slate-100/60" />
+
+      {/* Main radial tint - soft slate, NOT dark */}
       <div
         className="absolute inset-0"
         style={{
           background: `
-            radial-gradient(ellipse 130% 90% at 50% 50%, 
-              rgba(15, 23, 42, 0.78) 0%,
-              rgba(15, 23, 42, 0.65) 35%,
-              rgba(30, 41, 59, 0.45) 55%,
-              rgba(51, 65, 85, 0.20) 72%,
+            radial-gradient(ellipse 120% 80% at 50% 50%, 
+              rgba(71, 85, 105, 0.18) 0%,
+              rgba(100, 116, 139, 0.12) 40%,
+              rgba(148, 163, 184, 0.06) 65%,
               transparent 100%
             )
           `,
         }}
       />
 
-      {/* Secondary radial for depth - slightly offset */}
+      {/* Secondary depth layer - very subtle */}
       <div
         className="absolute inset-0"
         style={{
           background: `
-            radial-gradient(ellipse 100% 70% at 50% 55%, 
-              rgba(15, 23, 42, 0.45) 0%,
-              rgba(30, 41, 59, 0.25) 40%,
-              transparent 75%
+            radial-gradient(ellipse 90% 60% at 50% 55%, 
+              rgba(51, 65, 85, 0.10) 0%,
+              rgba(71, 85, 105, 0.05) 50%,
+              transparent 80%
             )
           `,
         }}
@@ -249,59 +251,69 @@ function SubtleDarkBackground() {
 
       {/* Top transition fade - blends from previous section */}
       <div
-        className="absolute inset-x-0 top-0 h-24"
+        className="absolute inset-x-0 top-0 h-32"
         style={{
           background:
-            "linear-gradient(to bottom, rgba(255, 255, 255, 0.15) 0%, transparent 100%)",
+            "linear-gradient(to bottom, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%)",
         }}
       />
 
       {/* Bottom transition fade - blends to next section */}
       <div
-        className="absolute inset-x-0 bottom-0 h-24"
+        className="absolute inset-x-0 bottom-0 h-32"
         style={{
           background:
-            "linear-gradient(to top, rgba(255, 255, 255, 0.12) 0%, transparent 100%)",
+            "linear-gradient(to top, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%)",
         }}
       />
 
-      {/* Teal glow - top right (softened) */}
+      {/* Teal glow - top right */}
       <div
-        className="absolute -top-10 right-[8%] h-[400px] w-[400px] rounded-full blur-3xl"
+        className="absolute -top-10 right-[8%] h-[350px] w-[350px] rounded-full blur-3xl"
         style={{
           background:
-            "radial-gradient(circle, rgba(49, 171, 163, 0.10) 0%, transparent 55%)",
+            "radial-gradient(circle, rgba(20, 184, 166, 0.12) 0%, transparent 55%)",
           animation: "float-slow 14s ease-in-out infinite",
         }}
       />
 
       {/* Teal glow - bottom left */}
       <div
-        className="absolute -bottom-10 left-[8%] h-[350px] w-[350px] rounded-full blur-3xl"
+        className="absolute -bottom-10 left-[8%] h-[320px] w-[320px] rounded-full blur-3xl"
         style={{
           background:
-            "radial-gradient(circle, rgba(49, 171, 163, 0.08) 0%, transparent 55%)",
+            "radial-gradient(circle, rgba(20, 184, 166, 0.10) 0%, transparent 55%)",
           animation: "float-slow-reverse 16s ease-in-out infinite",
         }}
       />
 
-      {/* Violet accent - center subtle */}
+      {/* Violet accent - center */}
       <div
-        className="absolute top-1/2 left-1/2 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
+        className="absolute top-1/2 left-1/2 h-[280px] w-[280px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
         style={{
           background:
-            "radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, transparent 60%)",
+            "radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 60%)",
           animation: "float-gentle 20s ease-in-out infinite",
+        }}
+      />
+
+      {/* Indigo accent - adds depth */}
+      <div
+        className="absolute top-[30%] left-[20%] h-[250px] w-[250px] rounded-full blur-3xl"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(99, 102, 241, 0.06) 0%, transparent 55%)",
+          animation: "mesh-drift 18s ease-in-out infinite",
         }}
       />
 
       {/* Subtle dot pattern - teal tinted */}
       <div
-        className="absolute inset-0 opacity-[0.015]"
+        className="absolute inset-0 opacity-[0.025]"
         style={{
           backgroundImage:
-            "radial-gradient(circle, rgba(49, 171, 163, 0.8) 0.5px, transparent 0.5px)",
-          backgroundSize: "28px 28px",
+            "radial-gradient(circle, rgba(20, 184, 166, 0.6) 0.5px, transparent 0.5px)",
+          backgroundSize: "30px 30px",
         }}
       />
     </>

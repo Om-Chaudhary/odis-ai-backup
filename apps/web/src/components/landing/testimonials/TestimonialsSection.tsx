@@ -182,10 +182,9 @@ export const TestimonialsSection = () => {
             What Veterinary Teams Are Saying
           </h2>
           <div className="mx-auto flex items-center justify-center gap-3">
-            <AvatarCircles numPeople={100} avatarUrls={avatarUrls} />
+            <AvatarCircles avatarUrls={avatarUrls} />
             <p className="text-muted-foreground text-lg">
-              Trusted by{" "}
-              <span className="font-semibold text-slate-800">100+</span> clinics
+              Trusted by leading veterinary practices
             </p>
           </div>
         </motion.div>

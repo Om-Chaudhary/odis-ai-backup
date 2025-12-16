@@ -161,7 +161,7 @@ export function PricingSection() {
           className="mt-12 text-center lg:mt-16"
         >
           <p className="mb-6 text-sm font-medium text-slate-600">
-            Trusted by 100+ veterinary clinics
+            Trusted by veterinary teams nationwide
           </p>
           <div className="flex flex-wrap items-center justify-center gap-8">
             {/* Integration logos placeholder */}

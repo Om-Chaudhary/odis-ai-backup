@@ -158,7 +158,9 @@ export const HowItWorks = () => {
           className="text-muted-foreground mt-12 text-center text-sm"
         >
           No lengthy contracts · Cancel anytime · Trusted by{" "}
-          <span className="font-medium text-slate-700">100+ clinics</span>
+          <span className="font-medium text-slate-700">
+            veterinary teams nationwide
+          </span>
         </motion.p>
       </div>
     </section>

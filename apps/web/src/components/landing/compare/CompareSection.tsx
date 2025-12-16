@@ -63,18 +63,18 @@ function LiveStat({
       }}
       className="group flex flex-col items-center text-center"
     >
-      <Icon className="mb-3 h-6 w-6 text-teal-400 transition-transform duration-300 group-hover:scale-110" />
-      <div className="font-display text-2xl font-bold text-white tabular-nums sm:text-3xl">
+      <Icon className="mb-3 h-6 w-6 text-teal-600 transition-transform duration-300 group-hover:scale-110" />
+      <div className="font-display text-2xl font-bold text-slate-900 tabular-nums sm:text-3xl">
         {isInView && (
           <NumberTicker
             value={value}
             decimalPlaces={decimals}
-            className="text-white"
+            className="text-slate-900"
           />
         )}
-        <span className="text-teal-300">{suffix}</span>
+        <span className="text-teal-600">{suffix}</span>
       </div>
-      <div className="mt-1 text-xs text-white/75 sm:text-sm">{label}</div>
+      <div className="mt-1 text-xs text-slate-600 sm:text-sm">{label}</div>
     </motion.div>
   );
 }
@@ -116,7 +116,7 @@ export const CompareSection = () => {
       ref={sectionRef as React.LegacyRef<HTMLElement>}
       className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >
-      {/* Subtle dark background - soft navy/slate with smooth transitions */}
+      {/* Subtle tinted background - soft slate with smooth transitions */}
       <SectionBackground variant="subtle-dark" />
 
       <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
@@ -130,20 +130,20 @@ export const CompareSection = () => {
         >
           <motion.span
             variants={fadeUpVariant}
-            className="font-display mb-4 inline-flex items-center gap-2 text-xs font-medium tracking-widest text-teal-400 uppercase"
+            className="font-display mb-4 inline-flex items-center gap-2 text-xs font-medium tracking-widest text-teal-600 uppercase"
           >
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-teal-400" />
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-teal-500" />
             Real Results
           </motion.span>
           <motion.h2
             variants={fadeUpVariant}
-            className="font-display mb-4 text-2xl font-medium tracking-tight text-white sm:text-3xl md:text-4xl lg:text-5xl"
+            className="font-display mb-4 text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl md:text-4xl lg:text-5xl"
           >
             What changes with OdisAI
           </motion.h2>
           <motion.p
             variants={fadeUpVariant}
-            className="mx-auto max-w-xl text-base text-white/80 sm:text-lg"
+            className="mx-auto max-w-xl text-base text-slate-600 sm:text-lg"
           >
             Average results per clinic in the last 30 days
           </motion.p>
@@ -178,10 +178,10 @@ export const CompareSection = () => {
           transition={{ ...transition, delay: 0.6 }}
           className="mt-16 text-center lg:mt-20"
         >
-          <p className="text-sm text-white/70 sm:text-base">
+          <p className="text-sm text-slate-500 sm:text-base">
             Trusted by{" "}
-            <span className="font-medium text-white/90">
-              150+ veterinary clinics
+            <span className="font-medium text-slate-700">
+              veterinary teams nationwide
             </span>
           </p>
         </motion.div>
