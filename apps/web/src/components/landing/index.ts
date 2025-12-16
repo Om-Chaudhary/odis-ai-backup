@@ -5,38 +5,46 @@
  * Import from this barrel file for cleaner imports in page.tsx
  */
 
-// Navigation
-export { LandingNavbar } from "./navbar/LandingNavbar";
+// =============================================================================
+// Sections
+// =============================================================================
 
 // Hero Section
-export { HeroSection } from "./hero/HeroSection";
+export { HeroSection } from "./sections/hero-section";
 
 // Sample Calls / Audio Demo Section
-export { AudioDemoSection as SampleCallsSection } from "./audio-demo";
+export { AudioDemoSection as SampleCallsSection } from "./sections/audio-demo-section";
 
 // Compare Section (Before/After)
-export { CompareSection } from "./compare/CompareSection";
+export { CompareSection } from "./sections/compare-section";
 
 // How It Works Section
-export { HowItWorks as HowItWorksSection } from "./how-it-works/HowItWorks";
+export { HowItWorksSection } from "./sections/how-it-works-section";
 
 // Testimonials Section
-export { TestimonialsSection } from "./testimonials/TestimonialsSection";
+export { TestimonialsSection } from "./sections/testimonials-section";
 
 // Integrations Section
-export { IntegrationCarousel as IntegrationsSection } from "./integrations/IntegrationCarousel";
+export { IntegrationsSection } from "./sections/integrations-section";
 
 // CTA / Pricing Section
-export { PricingSection as CTASection } from "./pricing/PricingSection";
+export { PricingSection as CTASection } from "./sections/pricing-section";
 
 // FAQ Section
-export { FAQSection } from "./faq/FAQSection";
+export { FAQSection } from "./sections/faq-section";
 
 // Footer
-export { Footer as LandingFooter } from "./footer/Footer";
+export { FooterSection as LandingFooter } from "./sections/footer-section";
+
+// =============================================================================
+// Shared Components
+// =============================================================================
+
+// Navigation
+export { LandingNavbar } from "./shared/landing-navbar";
 
 // Scroll Effects
-export { ScrollProgress } from "./scroll-progress";
+export { ScrollProgress } from "./shared/scroll-progress";
 
 // Analytics
 export {
@@ -44,4 +52,22 @@ export {
   trackBookDemoClick,
   trackDemoPhoneClick,
   trackScheduleDemoClick,
-} from "./LandingAnalytics";
+} from "./shared/landing-analytics";
+
+// Audio Demo Card (used by AudioDemoSection)
+export { AudioDemoCard } from "./shared/audio-demo-card";
+
+// =============================================================================
+// UI Components (Landing-specific)
+// =============================================================================
+
+export { SectionBackground } from "./ui/section-background";
+export { AnimatedGradientText } from "./ui/animated-gradient-text";
+export { WordRotate } from "./ui/word-rotate";
+export { PhoneRingIcon } from "./ui/phone-ring-icon";
+export { ScrollIndicator } from "./ui/scroll-indicator";
+export { Marquee } from "./ui/marquee";
+export { AvatarCircles } from "./ui/avatar-circles";
+export { NumberTicker } from "./ui/number-ticker";
+export { NeonGradientCard } from "./ui/neon-gradient-card";
+export { ShimmerButton } from "./ui/shimmer-button";
