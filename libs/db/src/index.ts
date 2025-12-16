@@ -11,7 +11,7 @@ export {
   createClient as createServerClient,
   createServiceClient,
 } from "./server";
-export * from "./middleware";
+export * from "./proxy";
 
 // Repositories
 export * from "./repositories/base";
