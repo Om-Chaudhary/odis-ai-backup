@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useInView, useReducedMotion } from "motion/react";
+import { motion, useInView, useReducedMotion } from "framer-motion";
 import { Link2, Settings, Rocket, Check } from "lucide-react";
 import { SectionBackground } from "../ui/section-background";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";

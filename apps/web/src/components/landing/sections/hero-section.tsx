@@ -2,8 +2,7 @@
 
 import { useRef, useMemo } from "react";
 import Image from "next/image";
-import { motion, useInView, useReducedMotion } from "motion/react";
-import { Play, ArrowRight } from "lucide-react";
+import { motion, useInView, useReducedMotion } from "framer-motion";
 import { usePostHog } from "posthog-js/react";
 import { cn } from "~/lib/utils";
 import { PhoneRingIcon } from "../ui/phone-ring-icon";
@@ -64,12 +63,6 @@ export function HeroSection() {
     posthog?.capture("demo_phone_clicked", {
       location: "hero_primary_cta",
       phone_number: DEMO_PHONE_NUMBER,
-    });
-  };
-
-  const handleWatchDemoClick = () => {
-    posthog?.capture("watch_demo_clicked", {
-      location: "hero_secondary_cta",
     });
   };
 

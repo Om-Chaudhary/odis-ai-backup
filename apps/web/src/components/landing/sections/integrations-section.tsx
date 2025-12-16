@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { motion, useInView, useReducedMotion } from "motion/react";
+import Image from "next/image";
+import { motion, useInView, useReducedMotion } from "framer-motion";
 import { SectionBackground } from "../ui/section-background";
 import { Check, Zap } from "lucide-react";
 import { cn } from "~/lib/utils";
@@ -103,9 +104,11 @@ const IntegrationCard = ({ app }: { app: IntegrationApp }) => {
         </div>
       )}
 
-      <img
+      <Image
         src={app.logo}
         alt={app.name}
+        width={120}
+        height={40}
         className={cn(
           "block h-10 w-full object-contain transition-all duration-300",
           "group-hover:scale-105",

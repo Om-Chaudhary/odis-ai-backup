@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { motion, useInView, useReducedMotion } from "motion/react";
+import { motion, useInView, useReducedMotion } from "framer-motion";
 import { Mic } from "lucide-react";
 import { usePostHog } from "posthog-js/react";
 import { AudioDemoCard, type DemoCardData } from "../shared/audio-demo-card";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useInView, useReducedMotion } from "motion/react";
+import { motion, useInView, useReducedMotion } from "framer-motion";
 import { usePostHog } from "posthog-js/react";
 import { NeonGradientCard } from "../ui/neon-gradient-card";
 import { ShimmerButton } from "../ui/shimmer-button";

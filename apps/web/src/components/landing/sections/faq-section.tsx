@@ -6,7 +6,7 @@ import {
   AnimatePresence,
   useInView,
   useReducedMotion,
-} from "motion/react";
+} from "framer-motion";
 import { usePostHog } from "posthog-js/react";
 import {
   Plus,

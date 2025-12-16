@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, useState, useRef, useCallback } from "react";
-import { motion, type Variants, AnimatePresence } from "motion/react";
+import { motion, type Variants, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import {
   Play,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useInView, useReducedMotion } from "motion/react";
+import { motion, useInView, useReducedMotion } from "framer-motion";
 import { Star } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Marquee } from "../ui/marquee";
