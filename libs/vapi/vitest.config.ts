@@ -19,8 +19,14 @@ export default defineConfig({
     setupFiles: [],
     coverage: {
       provider: "v8",
-      reporter: ["text", "json", "html"],
+      reporter: ["text", "json", "html", "lcov"],
       reportsDirectory: path.resolve(__dirname, "coverage"),
+      thresholds: {
+        lines: 60,
+        functions: 60,
+        branches: 50,
+        statements: 60,
+      },
       exclude: [
         "node_modules/",
         "**/*.d.ts",
@@ -28,6 +34,7 @@ export default defineConfig({
         "**/*.test.ts",
         "**/*.spec.ts",
         "**/index.ts",
+        "**/types/**",
       ],
     },
   },

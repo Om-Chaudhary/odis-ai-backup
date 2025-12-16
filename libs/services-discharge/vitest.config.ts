@@ -9,7 +9,7 @@ export default defineConfig({
     }),
   ],
   test: {
-    name: "utils",
+    name: "services-discharge",
     globals: true,
     environment: "node",
     root: __dirname,
