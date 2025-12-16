@@ -37,3 +37,11 @@ export { Footer as LandingFooter } from "./footer/Footer";
 
 // Scroll Effects
 export { ScrollProgress } from "./scroll-progress";
+
+// Analytics
+export {
+  LandingAnalytics,
+  trackBookDemoClick,
+  trackDemoPhoneClick,
+  trackScheduleDemoClick,
+} from "./LandingAnalytics";

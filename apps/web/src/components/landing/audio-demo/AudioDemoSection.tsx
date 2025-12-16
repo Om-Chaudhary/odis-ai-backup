@@ -3,8 +3,10 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { Mic } from "lucide-react";
+import { usePostHog } from "posthog-js/react";
 import { AudioDemoCard, type DemoCardData } from "./AudioDemoCard";
 import { SectionBackground } from "~/components/ui/section-background";
+import { useSectionVisibility } from "~/hooks/useSectionVisibility";
 
 // Demo cards with real VAPI call recordings - organized for 2-column staggered layout
 const demoCards: DemoCardData[] = [
@@ -69,9 +71,23 @@ const fadeUpVariant = {
 };
 
 export function AudioDemoSection() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  const posthog = usePostHog();
+  const sectionVisibilityRef =
+    useSectionVisibility<HTMLElement>("sample-calls");
+  const localRef = useRef<HTMLElement>(null);
+  const isInView = useInView(localRef, { once: true, margin: "-100px" });
   const shouldReduceMotion = useReducedMotion();
+
+  // Combine refs for both visibility tracking and animation
+  const sectionRef = (el: HTMLElement | null) => {
+    (localRef as React.MutableRefObject<HTMLElement | null>).current = el;
+    (
+      sectionVisibilityRef as React.MutableRefObject<HTMLElement | null>
+    ).current = el;
+  };
+
+  // Track when audio started playing for duration calculation
+  const playStartTimeRef = useRef<number | null>(null);
 
   // Detect if mobile (for disabling animations)
   const [isMobile, setIsMobile] = useState(false);
@@ -156,6 +172,22 @@ export function AudioDemoSection() {
     const currentAudioRefs = audioRefs.current;
 
     const handleEnded = (id: string) => {
+      // Track audio completion
+      const card = demoCards.find((c) => c.id === id);
+      const listenDuration = playStartTimeRef.current
+        ? Date.now() - playStartTimeRef.current
+        : 0;
+
+      posthog.capture("audio_demo_completed", {
+        demo_id: id,
+        pet_name: card?.petName,
+        call_type: card?.callType,
+        demo_title: card?.title,
+        listen_duration_ms: listenDuration,
+        audio_duration_seconds: card?.duration,
+      });
+
+      playStartTimeRef.current = null;
       setPlayingId(null);
       setProgress((prev) => ({ ...prev, [id]: 0 }));
     };
@@ -171,7 +203,7 @@ export function AudioDemoSection() {
         audio.removeEventListener("ended", onEnded);
       });
     };
-  }, []);
+  }, [posthog]);
 
   const handleTogglePlay = useCallback(
     (cardId: string) => {
@@ -181,6 +213,7 @@ export function AudioDemoSection() {
       if (playingId === cardId) {
         // Pause current
         audio.pause();
+        playStartTimeRef.current = null;
         setPlayingId(null);
       } else {
         // Stop any playing audio
@@ -188,12 +221,24 @@ export function AudioDemoSection() {
           const currentAudio = audioRefs.current.get(playingId);
           currentAudio?.pause();
         }
+
+        // Track audio play start
+        const card = demoCards.find((c) => c.id === cardId);
+        posthog.capture("audio_demo_played", {
+          demo_id: cardId,
+          pet_name: card?.petName,
+          call_type: card?.callType,
+          demo_title: card?.title,
+          audio_duration_seconds: card?.duration,
+        });
+
         // Play new audio
+        playStartTimeRef.current = Date.now();
         audio.play().catch(console.error);
         setPlayingId(cardId);
       }
     },
-    [playingId],
+    [playingId, posthog],
   );
 
   const handleSeek = useCallback((cardId: string, newProgress: number) => {
@@ -228,7 +273,7 @@ export function AudioDemoSection() {
 
   return (
     <section
-      ref={sectionRef}
+      ref={sectionRef as React.LegacyRef<HTMLElement>}
       id="sample-calls"
       className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Menu, X } from "lucide-react";
+import { usePostHog } from "posthog-js/react";
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -12,6 +13,7 @@ import {
 } from "~/components/ui/navigation-menu";
 import { cn } from "~/lib/utils";
 import { Logo } from "@odis-ai/ui/Logo";
+import { trackBookDemoClick } from "../LandingAnalytics";
 
 const navigationLinks = [
   { name: "Features", link: "#features" },
@@ -23,11 +25,16 @@ const navigationLinks = [
 const SCROLL_THRESHOLD = 100;
 
 export const LandingNavbar = () => {
+  const posthog = usePostHog();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const scrollYRef = useRef(0);
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+
+  const handleBookDemoClick = (location: string) => {
+    trackBookDemoClick(posthog, location);
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -90,6 +97,7 @@ export const LandingNavbar = () => {
             </NavigationMenu>
             <a
               href="mailto:hello@odis.ai?subject=Demo Request"
+              onClick={() => handleBookDemoClick("navbar-desktop")}
               className="bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-primary/25 ml-4 rounded-full px-6 py-2.5 text-sm font-semibold transition-all hover:shadow-lg"
             >
               Book Demo
@@ -144,6 +152,7 @@ export const LandingNavbar = () => {
                 ))}
                 <a
                   href="mailto:hello@odis.ai?subject=Demo Request"
+                  onClick={() => handleBookDemoClick("navbar-mobile")}
                   className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4 block w-full rounded-full px-6 py-3 text-center text-base font-semibold transition-all"
                 >
                   Book Demo

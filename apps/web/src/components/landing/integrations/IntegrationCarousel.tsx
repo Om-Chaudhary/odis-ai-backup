@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { SectionBackground } from "~/components/ui/section-background";
 import { Check, Zap } from "lucide-react";
 import { cn } from "~/lib/utils";
+import { useSectionVisibility } from "~/hooks/useSectionVisibility";
 
 // Animation variants - consistent with hero
 const fadeUpVariant = {
@@ -132,9 +133,19 @@ export const IntegrationCarousel = ({
   topRowApps = defaultTopRowApps,
   bottomRowApps = defaultBottomRowApps,
 }: IntegrationCarouselProps) => {
-  const sectionRef = useRef<HTMLElement>(null);
-  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  const sectionVisibilityRef =
+    useSectionVisibility<HTMLElement>("integrations");
+  const localRef = useRef<HTMLElement>(null);
+  const isInView = useInView(localRef, { once: true, margin: "-100px" });
   const shouldReduceMotion = useReducedMotion();
+
+  // Combine refs for both visibility tracking and animation
+  const sectionRef = (el: HTMLElement | null) => {
+    (localRef as React.MutableRefObject<HTMLElement | null>).current = el;
+    (
+      sectionVisibilityRef as React.MutableRefObject<HTMLElement | null>
+    ).current = el;
+  };
 
   const transition = {
     duration: shouldReduceMotion ? 0 : 0.6,
@@ -143,7 +154,7 @@ export const IntegrationCarousel = ({
 
   return (
     <section
-      ref={sectionRef}
+      ref={sectionRef as React.LegacyRef<HTMLElement>}
       id="integrations"
       className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >

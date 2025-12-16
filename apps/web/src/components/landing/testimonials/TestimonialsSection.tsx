@@ -7,6 +7,7 @@ import { cn } from "~/lib/utils";
 import { Marquee } from "~/components/ui/marquee";
 import { AvatarCircles } from "~/components/ui/avatar-circles";
 import { SectionBackground } from "~/components/ui/section-background";
+import { useSectionVisibility } from "~/hooks/useSectionVisibility";
 
 // Animation variants - consistent with hero
 const fadeUpVariant = {
@@ -131,9 +132,19 @@ const ReviewCard = ({
 };
 
 export const TestimonialsSection = () => {
-  const sectionRef = useRef<HTMLElement>(null);
-  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  const sectionVisibilityRef =
+    useSectionVisibility<HTMLElement>("testimonials");
+  const localRef = useRef<HTMLElement>(null);
+  const isInView = useInView(localRef, { once: true, margin: "-100px" });
   const shouldReduceMotion = useReducedMotion();
+
+  // Combine refs for both visibility tracking and animation
+  const sectionRef = (el: HTMLElement | null) => {
+    (localRef as React.MutableRefObject<HTMLElement | null>).current = el;
+    (
+      sectionVisibilityRef as React.MutableRefObject<HTMLElement | null>
+    ).current = el;
+  };
 
   const avatarUrls = testimonials.map((t) => ({
     imageUrl: t.img,
@@ -147,7 +158,7 @@ export const TestimonialsSection = () => {
 
   return (
     <section
-      ref={sectionRef}
+      ref={sectionRef as React.LegacyRef<HTMLElement>}
       id="testimonials"
       className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >

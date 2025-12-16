@@ -10,11 +10,13 @@ import {
   FAQSection,
   LandingFooter,
   ScrollProgress,
+  LandingAnalytics,
 } from "~/components/landing";
 
 export default function Page() {
   return (
     <>
+      <LandingAnalytics />
       <ScrollProgress />
       <LandingNavbar />
       <HeroSection />

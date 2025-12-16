@@ -7,6 +7,7 @@ import {
   useInView,
   useReducedMotion,
 } from "motion/react";
+import { usePostHog } from "posthog-js/react";
 import {
   Plus,
   Minus,
@@ -17,6 +18,8 @@ import {
 } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { SectionBackground } from "~/components/ui/section-background";
+import { useSectionVisibility } from "~/hooks/useSectionVisibility";
+import { trackDemoPhoneClick } from "../LandingAnalytics";
 
 const DEMO_PHONE_NUMBER = "(925) 678-5640";
 const DEMO_PHONE_TEL = "tel:+19256785640";
@@ -97,10 +100,24 @@ export const FAQSection = ({
   title = "Frequently asked questions",
   faqs = defaultFAQs,
 }: FAQSectionProps) => {
-  const sectionRef = useRef<HTMLElement>(null);
-  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  const posthog = usePostHog();
+  const sectionVisibilityRef = useSectionVisibility<HTMLElement>("faq");
+  const localRef = useRef<HTMLElement>(null);
+  const isInView = useInView(localRef, { once: true, margin: "-100px" });
   const shouldReduceMotion = useReducedMotion();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  // Combine refs for both visibility tracking and animation
+  const sectionRef = (el: HTMLElement | null) => {
+    (localRef as React.MutableRefObject<HTMLElement | null>).current = el;
+    (
+      sectionVisibilityRef as React.MutableRefObject<HTMLElement | null>
+    ).current = el;
+  };
+
+  const handleDemoPhoneClick = () => {
+    trackDemoPhoneClick(posthog, "faq-sidebar", DEMO_PHONE_NUMBER);
+  };
 
   const transition = {
     duration: shouldReduceMotion ? 0 : 0.6,
@@ -113,7 +130,7 @@ export const FAQSection = ({
 
   return (
     <section
-      ref={sectionRef}
+      ref={sectionRef as React.LegacyRef<HTMLElement>}
       id="faq"
       className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >
@@ -186,6 +203,7 @@ export const FAQSection = ({
                   </p>
                   <a
                     href={DEMO_PHONE_TEL}
+                    onClick={handleDemoPhoneClick}
                     className={cn(
                       "inline-flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3",
                       "bg-gradient-to-r from-teal-600 to-emerald-600",

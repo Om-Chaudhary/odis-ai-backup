@@ -2,11 +2,17 @@
 
 import { useRef } from "react";
 import { motion, useInView, useReducedMotion } from "motion/react";
+import { usePostHog } from "posthog-js/react";
 import { NeonGradientCard } from "~/components/ui/neon-gradient-card";
 import { ShimmerButton } from "~/components/ui/shimmer-button";
 import { Calendar, ArrowRight, Phone } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { SectionBackground } from "~/components/ui/section-background";
+import { useSectionVisibility } from "~/hooks/useSectionVisibility";
+import {
+  trackDemoPhoneClick,
+  trackScheduleDemoClick,
+} from "../LandingAnalytics";
 
 const DEMO_PHONE_NUMBER = "(925) 678-5640";
 const DEMO_PHONE_TEL = "tel:+19256785640";
@@ -18,9 +24,27 @@ const fadeUpVariant = {
 };
 
 export function PricingSection() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  const posthog = usePostHog();
+  const sectionVisibilityRef = useSectionVisibility<HTMLElement>("cta");
+  const localRef = useRef<HTMLElement>(null);
+  const isInView = useInView(localRef, { once: true, margin: "-100px" });
   const shouldReduceMotion = useReducedMotion();
+
+  // Combine refs for both visibility tracking and animation
+  const sectionRef = (el: HTMLElement | null) => {
+    (localRef as React.MutableRefObject<HTMLElement | null>).current = el;
+    (
+      sectionVisibilityRef as React.MutableRefObject<HTMLElement | null>
+    ).current = el;
+  };
+
+  const handleDemoPhoneClick = () => {
+    trackDemoPhoneClick(posthog, "cta-section", DEMO_PHONE_NUMBER);
+  };
+
+  const handleScheduleDemoClick = () => {
+    trackScheduleDemoClick(posthog, "cta-section");
+  };
 
   const transition = {
     duration: shouldReduceMotion ? 0 : 0.6,
@@ -29,7 +53,7 @@ export function PricingSection() {
 
   return (
     <section
-      ref={sectionRef}
+      ref={sectionRef as React.LegacyRef<HTMLElement>}
       id="pricing"
       className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >
@@ -88,6 +112,7 @@ export function PricingSection() {
               {/* Primary CTA - Demo Phone */}
               <a
                 href={DEMO_PHONE_TEL}
+                onClick={handleDemoPhoneClick}
                 className={cn(
                   "group inline-flex items-center justify-center gap-3 rounded-full px-8 py-4",
                   "bg-gradient-to-r from-teal-600 to-emerald-600",
@@ -109,6 +134,7 @@ export function PricingSection() {
                   shimmerColor="rgba(255, 255, 255, 0.5)"
                   className="group relative overflow-hidden px-6 py-3 text-sm font-semibold shadow-lg shadow-teal-500/20 transition-all hover:shadow-xl hover:shadow-teal-500/30"
                   onClick={() => {
+                    handleScheduleDemoClick();
                     window.location.href =
                       "mailto:hello@odis.ai?subject=Demo Request&body=Hi, I'd like to schedule a demo to learn more about OdisAI for my veterinary practice.";
                   }}

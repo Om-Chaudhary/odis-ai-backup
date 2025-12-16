@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import { Link2, Settings, Rocket, Check } from "lucide-react";
 import { SectionBackground } from "~/components/ui/section-background";
+import { useSectionVisibility } from "~/hooks/useSectionVisibility";
 
 // Animation variants
 const fadeUpVariant = {
@@ -12,9 +13,19 @@ const fadeUpVariant = {
 };
 
 export const HowItWorks = () => {
-  const sectionRef = useRef<HTMLElement>(null);
-  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+  const sectionVisibilityRef =
+    useSectionVisibility<HTMLElement>("how-it-works");
+  const localRef = useRef<HTMLElement>(null);
+  const isInView = useInView(localRef, { once: true, margin: "-100px" });
   const shouldReduceMotion = useReducedMotion();
+
+  // Combine refs for both visibility tracking and animation
+  const sectionRef = (el: HTMLElement | null) => {
+    (localRef as React.MutableRefObject<HTMLElement | null>).current = el;
+    (
+      sectionVisibilityRef as React.MutableRefObject<HTMLElement | null>
+    ).current = el;
+  };
 
   const steps = [
     {
@@ -50,7 +61,7 @@ export const HowItWorks = () => {
 
   return (
     <section
-      ref={sectionRef}
+      ref={sectionRef as React.LegacyRef<HTMLElement>}
       id="how-it-works"
       className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >
