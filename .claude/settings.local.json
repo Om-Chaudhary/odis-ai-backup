@@ -120,7 +120,8 @@
       "WebFetch(domain:missedcalls.help)",
       "Bash(ls:*)",
       "Bash(wc:*)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "Bash(npx vercel:*)"
     ],
     "deny": [],
     "ask": []

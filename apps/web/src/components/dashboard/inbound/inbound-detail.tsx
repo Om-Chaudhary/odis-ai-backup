@@ -14,6 +14,7 @@ import {
   Loader2,
   Mail,
   Trash2,
+  FileText,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
 import { Button } from "@odis-ai/ui/button";
@@ -22,7 +23,7 @@ import { Separator } from "@odis-ai/ui/separator";
 import { Textarea } from "@odis-ai/ui/textarea";
 import { cn } from "@odis-ai/utils";
 import { formatPhoneNumber } from "@odis-ai/utils/phone";
-import { InboundCallRecording } from "./inbound-call-recording";
+import { CallRecordingPlayer } from "../outbound/call-recording-player";
 import type {
   ViewMode,
   AppointmentRequest,
@@ -177,13 +178,7 @@ function CallDetail({
           </CardContent>
         </Card>
 
-        {/* Call Recording and Transcript (includes AI-enhanced summary) */}
-        {call.vapi_call_id && (
-          <InboundCallRecording
-            vapiCallId={call.vapi_call_id}
-            clinicName={call.clinic_name ?? undefined}
-          />
-        )}
+        {/* Call Recording and Transcript - Only available for specific demo cases */}
       </div>
 
       {/* Delete Footer */}
@@ -386,10 +381,7 @@ function AppointmentDetail({
           </CardContent>
         </Card>
 
-        {/* Call Recording and Transcript */}
-        {appointment.vapiCallId && (
-          <InboundCallRecording vapiCallId={appointment.vapiCallId} />
-        )}
+        {/* Call Recording and Transcript - Only available for specific demo cases */}
       </div>
 
       {/* Action Footer */}
@@ -746,10 +738,7 @@ Assistant: I've noted your request to cancel Charlie's appointment. Thank you fo
           </CardContent>
         </Card>
 
-        {/* Call Recording and Transcript */}
-        {message.vapiCallId && (
-          <InboundCallRecording vapiCallId={message.vapiCallId} />
-        )}
+        {/* Call Recording and Transcript - Only available for specific demo cases */}
       </div>
 
       {/* Action Footer */}
