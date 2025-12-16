@@ -230,6 +230,40 @@ export const inboundCallsRouter = createTRPCRouter({
     }),
 
   /**
+   * Get inbound call by VAPI call ID
+   * Used to fetch recording/transcript for appointments and messages
+   */
+  getInboundCallByVapiId: protectedProcedure
+    .input(z.object({ vapiCallId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const supabase = await createClient();
+
+      // Verify user has access (will throw if not)
+      await getUserWithClinic(supabase, ctx.user.id);
+
+      const { data: call, error } = await supabase
+        .from("inbound_vapi_calls")
+        .select(
+          "recording_url, stereo_recording_url, transcript, transcript_messages, duration_seconds, summary",
+        )
+        .eq("vapi_call_id", input.vapiCallId)
+        .single();
+
+      if (error || !call) {
+        // Return null instead of throwing - call may not exist yet
+        return null;
+      }
+
+      return {
+        recordingUrl: call.stereo_recording_url ?? call.recording_url,
+        transcript: call.transcript,
+        transcriptMessages: call.transcript_messages,
+        durationSeconds: call.duration_seconds,
+        summary: call.summary,
+      };
+    }),
+
+  /**
    * Get inbound call statistics
    */
   getInboundCallStats: protectedProcedure
@@ -469,5 +503,68 @@ export const inboundCallsRouter = createTRPCRouter({
       return {
         success: true,
       };
+    }),
+
+  /**
+   * Translate transcript to English and generate summary
+   */
+  translateTranscript: protectedProcedure
+    .input(z.object({ transcript: z.string().min(1) }))
+    .mutation(async ({ input }) => {
+      try {
+        const { translateTranscript } = await import("@odis-ai/ai");
+        return await translateTranscript({ transcript: input.transcript });
+      } catch (error) {
+        console.error("[TRANSLATE_TRPC] Error translating transcript:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to translate transcript",
+        });
+      }
+    }),
+
+  /**
+   * Clean up transcript by fixing transcription errors
+   * Uses AI to correct misspellings, remove filler words, and fix proper nouns
+   */
+  cleanTranscript: protectedProcedure
+    .input(
+      z.object({
+        transcript: z.string().min(1),
+        clinicName: z.string().optional(),
+        knowledgeBase: z
+          .object({
+            hospitalNames: z.array(z.string()).optional(),
+            staffNames: z.array(z.string()).optional(),
+            petNames: z.array(z.string()).optional(),
+            customTerms: z.array(z.string()).optional(),
+          })
+          .optional(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const { cleanTranscript } = await import("@odis-ai/ai");
+        return await cleanTranscript({
+          transcript: input.transcript,
+          clinicName: input.clinicName,
+          knowledgeBase: input.knowledgeBase,
+        });
+      } catch (error) {
+        console.error(
+          "[CLEAN_TRANSCRIPT_TRPC] Error cleaning transcript:",
+          error,
+        );
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to clean transcript",
+        });
+      }
     }),
 });

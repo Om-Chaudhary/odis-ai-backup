@@ -33,10 +33,7 @@ import {
   type ExistingCallRecord,
 } from "./inbound-call-helpers";
 import type { VapiCallResponse } from "../../client";
-import {
-  formatInboundCallData,
-  mapInboundCallToUser,
-} from "../../inbound-calls";
+import { mapInboundCallToUser } from "../../inbound-calls";
 import { scheduleCallExecution } from "@odis-ai/qstash/client";
 import { generateUrgentSummary } from "@odis-ai/ai";
 
@@ -123,9 +120,6 @@ async function handleInboundCallEnd(
   // Map assistant to clinic/user
   const { clinicName, userId } = await mapInboundCallToUser(callResponse);
 
-  // Format call data
-  const callData = formatInboundCallData(callResponse, clinicName, userId);
-
   // Determine final status
   let finalStatus = mapVapiStatus(call.status);
   if (call.endedReason) {
@@ -141,30 +135,69 @@ async function handleInboundCallEnd(
     }
   }
 
-  callData.status = finalStatus;
-
-  // Extract artifact data
+  // Extract artifact and analysis data from message (same as outbound handler)
   const artifact = message.artifact ?? {};
+  const analysis = call.analysis ?? {};
 
-  // Update with artifact data if available
-  if (artifact.stereoRecordingUrl) {
-    callData.stereo_recording_url = artifact.stereoRecordingUrl;
-  }
-  if (artifact.structuredOutputs) {
-    callData.structured_data = artifact.structuredOutputs;
-  }
+  // Calculate duration
+  const durationSeconds = calculateDuration(call.startedAt, call.endedAt);
 
-  logger.info("Inbound call ended", {
+  // Calculate total cost
+  const cost = calculateTotalCost(call.costs);
+
+  // Extract sentiment
+  const userSentiment = extractSentiment(analysis);
+
+  // Get structured data from analysis or artifact
+  const structuredData =
+    (analysis as { structuredData?: unknown }).structuredData ??
+    artifact.structuredOutputs;
+
+  // Prepare update data - extract all fields like outbound handler does
+  const updateData: Record<string, unknown> = {
+    vapi_call_id: call.id,
+    assistant_id: call.assistantId ?? null,
+    user_id: userId,
+    clinic_name: clinicName,
+    customer_phone: call.customer?.number ?? null,
+    status: finalStatus,
+    started_at: call.startedAt ?? null,
+    ended_at: call.endedAt ?? null,
+    duration_seconds: durationSeconds,
+    // IMPORTANT: Fall back to artifact.recordingUrl if call.recordingUrl is missing
+    recording_url: call.recordingUrl ?? artifact.recordingUrl ?? null,
+    stereo_recording_url: artifact.stereoRecordingUrl ?? null,
+    transcript: call.transcript ?? null,
+    transcript_messages: call.messages ?? null,
+    call_analysis: analysis,
+    summary: analysis.summary ?? null,
+    success_evaluation: analysis.successEvaluation ?? null,
+    structured_data: structuredData ?? null,
+    user_sentiment: userSentiment,
+    cost,
+    ended_reason: call.endedReason ?? null,
+  };
+
+  logger.info("Inbound call ended - extracted data", {
     callId: call.id,
+    dbId: existingCall.id,
     status: finalStatus,
     endedReason: call.endedReason,
     clinicName,
     userId,
+    duration: durationSeconds,
+    cost,
+    hasRecording: !!call.recordingUrl || !!artifact.recordingUrl,
+    hasStereoRecording: !!artifact.stereoRecordingUrl,
+    hasTranscript: !!call.transcript,
+    hasMessages: !!call.messages,
+    hasSummary: !!analysis.summary,
+    userSentiment,
   });
 
   const { error: updateError } = await supabase
     .from("inbound_vapi_calls")
-    .update(callData)
+    .update(updateData)
     .eq("id", existingCall.id);
 
   if (updateError) {
