@@ -10,10 +10,10 @@
  * Supports both sequential and parallel execution modes.
  */
 
-import { CasesService } from "@odis-ai/services-cases";
+// Dynamic imports to avoid circular dependencies and lazy-load constraints:
+// - CasesService is imported dynamically where needed
+// - AI functions are imported dynamically to avoid lazy-load constraint from test mocks
 import { ExecutionPlan } from "@odis-ai/services-shared";
-import { generateStructuredDischargeSummaryWithRetry } from "@odis-ai/ai/generate-structured-discharge";
-import { extractEntitiesWithRetry } from "@odis-ai/ai/normalize-scribe";
 import { scheduleEmailExecution } from "@odis-ai/qstash/client";
 import { isValidEmail } from "@odis-ai/resend/utils";
 // Dynamic import to avoid Next.js bundling issues during static generation
@@ -469,6 +469,9 @@ export class DischargeOrchestrator {
                 : undefined,
           };
 
+    // Dynamic import to avoid circular dependency
+    // eslint-disable-next-line @nx/enforce-module-boundaries
+    const { CasesService } = await import("@odis-ai/services-cases");
     const result = await CasesService.ingest(
       this.supabase,
       this.user.id,
@@ -689,7 +692,9 @@ export class DischargeOrchestrator {
       textLength: textToExtract.length,
     });
 
-    // Run entity extraction
+    // Run entity extraction (dynamic import to avoid lazy-load constraint)
+    const { extractEntitiesWithRetry } =
+      await import("@odis-ai/ai/normalize-scribe");
     const entities = await extractEntitiesWithRetry(
       textToExtract,
       extractionSource,
@@ -732,6 +737,9 @@ export class DischargeOrchestrator {
         : patientData.patients;
 
       if (patient) {
+        // Dynamic import to avoid circular dependency
+        // eslint-disable-next-line @nx/enforce-module-boundaries
+        const { CasesService } = await import("@odis-ai/services-cases");
         CasesService.enrichEntitiesWithPatient(entities, patient as PatientRow);
         console.log("[ORCHESTRATOR] Enriched entities with database patient", {
           caseId,
@@ -834,8 +842,11 @@ export class DischargeOrchestrator {
       throw new Error("Case ID required for summary generation");
     }
 
-    // Get case data
-    const caseInfo = await CasesService.getCaseWithEntities(
+    // Get case data (dynamic import to avoid circular dependency)
+    // eslint-disable-next-line @nx/enforce-module-boundaries
+    const { CasesService: CasesServiceModule } =
+      await import("@odis-ai/services-cases");
+    const caseInfo = await CasesServiceModule.getCaseWithEntities(
       this.supabase,
       caseId,
     );
@@ -956,6 +967,9 @@ export class DischargeOrchestrator {
     });
 
     // Generate structured summary with SOAP content if available
+    // Dynamic import to avoid lazy-load constraint
+    const { generateStructuredDischargeSummaryWithRetry } =
+      await import("@odis-ai/ai/generate-structured-discharge");
     const { structured: structuredContent, plainText: summaryContent } =
       await generateStructuredDischargeSummaryWithRetry({
         soapContent, // Now includes fresh SOAP notes from database
@@ -1025,8 +1039,11 @@ export class DischargeOrchestrator {
       throw new Error("Case ID required for email preparation");
     }
 
-    // Get case data
-    const caseInfo = await CasesService.getCaseWithEntities(
+    // Get case data (dynamic import to avoid circular dependency)
+    // eslint-disable-next-line @nx/enforce-module-boundaries
+    const { CasesService: CasesServiceEmail } =
+      await import("@odis-ai/services-cases");
+    const caseInfo = await CasesServiceEmail.getCaseWithEntities(
       this.supabase,
       caseId,
     );
@@ -1146,9 +1163,12 @@ export class DischargeOrchestrator {
     // Get caseId (optional)
     const caseId = this.getCaseId();
 
-    // Get recipient name from patient data
+    // Get recipient name from patient data (dynamic import to avoid circular dependency)
+    // eslint-disable-next-line @nx/enforce-module-boundaries
+    const { CasesService: CasesServiceSchedule } =
+      await import("@odis-ai/services-cases");
     const caseInfo = caseId
-      ? await CasesService.getCaseWithEntities(this.supabase, caseId)
+      ? await CasesServiceSchedule.getCaseWithEntities(this.supabase, caseId)
       : null;
     const patient = caseInfo ? this.normalizePatient(caseInfo.patient) : null;
     const recipientName = patient?.owner_name ?? undefined;
@@ -1510,7 +1530,11 @@ export class DischargeOrchestrator {
     // Pass the user's default schedule delay override via scheduledAt
     // If scheduledAt is undefined, CasesService will use the override from user settings
     // Use clinic table data when available, fallback to user table for backward compatibility
-    const scheduledCall = await CasesService.scheduleDischargeCall(
+    // Dynamic import to avoid circular dependency
+    // eslint-disable-next-line @nx/enforce-module-boundaries
+    const { CasesService: CasesServiceCall } =
+      await import("@odis-ai/services-cases");
+    const scheduledCall = await CasesServiceCall.scheduleDischargeCall(
       this.supabase,
       this.user.id,
       caseId,

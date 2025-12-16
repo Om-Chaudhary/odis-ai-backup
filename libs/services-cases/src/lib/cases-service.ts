@@ -1,15 +1,6 @@
 import { type NormalizedEntities } from "@odis-ai/validators/scribe";
-import { extractEntitiesWithRetry } from "@odis-ai/ai/normalize-scribe";
-import { generateStructuredDischargeSummaryWithRetry } from "@odis-ai/ai/generate-structured-discharge";
-import { generateCallIntelligenceFromEntities } from "@odis-ai/ai/generate-assessment-questions";
 import { scheduleCallExecution } from "@odis-ai/qstash/client";
-import { buildDynamicVariables } from "@odis-ai/vapi/knowledge-base";
 import type { AIGeneratedCallIntelligence } from "@odis-ai/vapi/types";
-import { extractVapiVariablesFromEntities } from "@odis-ai/vapi/extract-variables";
-import {
-  extractFirstName,
-  normalizeVariablesToSnakeCase,
-} from "@odis-ai/vapi/utils";
 import { normalizeToE164 } from "@odis-ai/utils/phone";
 import { getClinicVapiConfigByUserId } from "@odis-ai/clinics/vapi-config";
 
@@ -76,7 +67,9 @@ export const CasesService = {
     // 1. Normalize Data
     if (payload.mode === "text") {
       transcriptionText = payload.text;
-      // Run AI Normalization
+      // Run AI Normalization (dynamic import to avoid lazy-load constraint)
+      const { extractEntitiesWithRetry } =
+        await import("@odis-ai/ai/normalize-scribe");
       entities = await extractEntitiesWithRetry(
         payload.text,
         payload.options?.inputType,
@@ -633,7 +626,9 @@ export const CasesService = {
         },
       );
 
-      // Generate structured discharge summary
+      // Generate structured discharge summary (dynamic import to avoid lazy-load constraint)
+      const { generateStructuredDischargeSummaryWithRetry } =
+        await import("@odis-ai/ai/generate-structured-discharge");
       const { structured, plainText } =
         await generateStructuredDischargeSummaryWithRetry({
           entityExtraction: entities,
@@ -756,7 +751,9 @@ export const CasesService = {
         },
       );
 
-      // 4. Run AI extraction
+      // 4. Run AI extraction (dynamic import to avoid lazy-load constraint)
+      const { extractEntitiesWithRetry } =
+        await import("@odis-ai/ai/normalize-scribe");
       const entities = await extractEntitiesWithRetry(
         cleanedText,
         "idexx_consultation_notes",
@@ -777,7 +774,9 @@ export const CasesService = {
           "unknown",
         ] as const;
         type ValidSpecies = (typeof validSpecies)[number];
-        entities.patient.species = validSpecies.includes(species as ValidSpecies)
+        entities.patient.species = validSpecies.includes(
+          species as ValidSpecies,
+        )
           ? (species as ValidSpecies)
           : "unknown";
       }
@@ -821,17 +820,19 @@ export const CasesService = {
       );
 
       if (acceptedItems.length > 0) {
-        entities.clinical.productsServicesProvided = acceptedItems.map((item) =>
-          item.quantity > 1
-            ? `${item.productService} (Qty: ${item.quantity})`
-            : item.productService,
+        entities.clinical.productsServicesProvided = acceptedItems.map(
+          (item) =>
+            item.quantity > 1
+              ? `${item.productService} (Qty: ${item.quantity})`
+              : item.productService,
         );
       }
       if (declinedItems.length > 0) {
-        entities.clinical.productsServicesDeclined = declinedItems.map((item) =>
-          item.quantity > 1
-            ? `${item.productService} (Qty: ${item.quantity})`
-            : item.productService,
+        entities.clinical.productsServicesDeclined = declinedItems.map(
+          (item) =>
+            item.quantity > 1
+              ? `${item.productService} (Qty: ${item.quantity})`
+              : item.productService,
         );
       }
 
@@ -891,15 +892,15 @@ export const CasesService = {
         return null;
       }
 
-      console.log(
-        "[CasesService] Pre-generating call intelligence at ingest",
-        {
-          caseId,
-          petName: entities.patient.name,
-          diagnosis: entities.clinical.diagnoses?.[0],
-        },
-      );
+      console.log("[CasesService] Pre-generating call intelligence at ingest", {
+        caseId,
+        petName: entities.patient.name,
+        diagnosis: entities.clinical.diagnoses?.[0],
+      });
 
+      // Dynamic import to avoid lazy-load constraint
+      const { generateCallIntelligenceFromEntities } =
+        await import("@odis-ai/ai/generate-assessment-questions");
       const intelligence = await generateCallIntelligenceFromEntities(entities);
 
       // Store in case metadata
@@ -1053,7 +1054,9 @@ export const CasesService = {
 
       if (transcriptionData?.transcript) {
         try {
-          // Extract entities from transcription
+          // Extract entities from transcription (dynamic import to avoid lazy-load constraint)
+          const { extractEntitiesWithRetry } =
+            await import("@odis-ai/ai/normalize-scribe");
           const extractedEntities = await extractEntitiesWithRetry(
             transcriptionData.transcript,
             "transcript",
@@ -1126,13 +1129,17 @@ export const CasesService = {
     if (!entities) throw new Error("Case has no entities");
 
     // 2. Extract AI-extracted variables (species, breed, age, diagnoses, etc.)
+    // Dynamic import to avoid lazy-load constraint
+    const { extractVapiVariablesFromEntities } =
+      await import("@odis-ai/vapi/extract-variables");
     const extractedVars = extractVapiVariablesFromEntities(entities);
 
     // 2a. Check for pre-generated AI call intelligence (generated at ingest-time)
     // This eliminates AI wait time when scheduling calls for IDEXX cases
     let aiIntelligence: AIGeneratedCallIntelligence | null = null;
-    const preGeneratedIntelligence = (caseInfo?.metadata as CaseMetadata)
-      ?.callIntelligence;
+    // Safely access callIntelligence from metadata
+    const caseMeta = caseInfo?.metadata as CaseMetadata | null;
+    const preGeneratedIntelligence = caseMeta?.callIntelligence;
 
     if (preGeneratedIntelligence) {
       // Use pre-generated intelligence from ingest-time (instant!)
@@ -1141,7 +1148,8 @@ export const CasesService = {
         {
           caseId,
           generatedAt: preGeneratedIntelligence.generatedAt,
-          questionCount: preGeneratedIntelligence.assessmentQuestions?.length ?? 0,
+          questionCount:
+            preGeneratedIntelligence.assessmentQuestions?.length ?? 0,
           callApproach: preGeneratedIntelligence.callApproach,
           confidence: preGeneratedIntelligence.confidence,
         },
@@ -1170,6 +1178,9 @@ export const CasesService = {
           },
         );
 
+        // Dynamic import to avoid lazy-load constraint
+        const { generateCallIntelligenceFromEntities } =
+          await import("@odis-ai/ai/generate-assessment-questions");
         const intelligence =
           await generateCallIntelligenceFromEntities(entities);
         aiIntelligence = {
@@ -1205,6 +1216,11 @@ export const CasesService = {
     // 3. Build Dynamic Variables with knowledge base integration
     // Use extractFirstName to get only the first word of the pet name
     // (many vet systems store "FirstName LastName" but we only want first name for calls)
+    // Dynamic imports to avoid lazy-load constraint
+    const { buildDynamicVariables } =
+      await import("@odis-ai/vapi/knowledge-base");
+    const { extractFirstName, normalizeVariablesToSnakeCase } =
+      await import("@odis-ai/vapi/utils");
     const variablesResult = buildDynamicVariables({
       baseVariables: {
         clinicName: options.clinicName ?? "Your Clinic",
@@ -1375,6 +1391,38 @@ export const CasesService = {
       });
     }
 
+    // Auto-stagger calls to prevent VAPI concurrency limit (10 calls max)
+    // Query existing queued calls in the same 5-minute window for this user
+    const STAGGER_MINUTES = 2; // Match batch processor stagger interval
+    const windowStart = new Date(scheduledAt.getTime() - 2.5 * 60 * 1000);
+    const windowEnd = new Date(scheduledAt.getTime() + 2.5 * 60 * 1000);
+
+    const { count: existingCallsInWindow } = await supabase
+      .from("scheduled_discharge_calls")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .eq("status", "queued")
+      .neq("case_id", caseId) // Exclude current case if being updated
+      .gte("scheduled_for", windowStart.toISOString())
+      .lte("scheduled_for", windowEnd.toISOString());
+
+    if (existingCallsInWindow && existingCallsInWindow > 0) {
+      const staggerOffset = existingCallsInWindow * STAGGER_MINUTES * 60 * 1000;
+      const originalScheduledAt = scheduledAt;
+      scheduledAt = new Date(scheduledAt.getTime() + staggerOffset);
+
+      console.log(
+        "[CasesService] Auto-staggering call to prevent concurrency limit",
+        {
+          caseId,
+          existingCallsInWindow,
+          staggerMinutes: existingCallsInWindow * STAGGER_MINUTES,
+          originalScheduledAt: originalScheduledAt.toISOString(),
+          staggeredScheduledAt: scheduledAt.toISOString(),
+        },
+      );
+    }
+
     // Check if a call already exists for this case
     // If it exists, update it instead of creating a new one to persist status
     const { data: existingCall } = await supabase
@@ -1464,6 +1512,7 @@ export const CasesService = {
           );
 
           // Dynamic import to avoid circular dependencies
+          // eslint-disable-next-line @nx/enforce-module-boundaries -- dynamic import breaks runtime cycle
           const { executeScheduledCall } =
             await import("@odis-ai/services-discharge/call-executor");
           const result = await executeScheduledCall(scheduledCall.id, supabase);
@@ -1549,6 +1598,7 @@ export const CasesService = {
         );
 
         // Dynamic import to avoid circular dependencies
+        // eslint-disable-next-line @nx/enforce-module-boundaries -- dynamic import breaks runtime cycle
         const { executeScheduledCall } =
           await import("@odis-ai/services-discharge/call-executor");
         const result = await executeScheduledCall(scheduledCall.id, supabase);
