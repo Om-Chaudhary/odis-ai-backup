@@ -17,11 +17,11 @@ import { NumberTicker } from "@odis-ai/ui/number-ticker";
 const DEMO_PHONE_NUMBER = "(925) 678-5640";
 const DEMO_PHONE_TEL = "tel:+19256785640";
 
-// Rotating words for dynamic headline
+// Rotating words for dynamic headline - vet-specific benefits
 const ROTATING_WORDS = [
-  "Never Takes a Day Off",
-  "Works While You Sleep",
   "Never Misses a Call",
+  "Works While You Sleep",
+  "Handles After-Hours",
   "Is Always Available",
 ];
 
@@ -138,12 +138,21 @@ export function HeroSection() {
         </div>
       </motion.nav>
 
-      {/* Enhanced Background Elements */}
+      {/* Enhanced Background Elements - Hero Glow with Violet Accents */}
       <div className="pointer-events-none absolute inset-0">
-        {/* Base gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white via-teal-50/20 to-emerald-50/15" />
+        {/* Base gradient background - white to teal-50 */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white via-teal-50/20 to-white" />
 
-        {/* Animated gradient overlay - primary */}
+        {/* Primary teal radial - center focal point */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(20, 184, 166, 0.08) 0%, transparent 60%)",
+          }}
+        />
+
+        {/* Animated gradient overlay - primary teal */}
         <div
           className="absolute inset-0 opacity-30"
           style={{
@@ -153,29 +162,39 @@ export function HeroSection() {
           }}
         />
 
-        {/* Animated gradient overlay - secondary */}
+        {/* NEW: Violet accent orb - top right (key differentiator) */}
         <div
-          className="absolute inset-0 opacity-20"
+          className="absolute -top-[10%] right-[5%] h-[450px] w-[450px] rounded-full blur-3xl"
           style={{
             background:
-              "radial-gradient(circle at 70% 60%, rgba(49, 171, 163, 0.06) 0%, rgba(49, 171, 163, 0.02) 50%, transparent 80%)",
-            animation: "gradient-move-reverse 25s ease-in-out infinite",
+              "radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, transparent 60%)",
+            animation: "float-slow 16s ease-in-out infinite",
           }}
         />
 
-        {/* Floating accent orb - top left */}
+        {/* Floating emerald orb - bottom left balance */}
         <div
-          className="absolute top-1/4 left-[15%] h-[500px] w-[500px] rounded-full opacity-15 blur-3xl"
+          className="absolute bottom-[10%] left-[8%] h-[350px] w-[350px] rounded-full blur-3xl"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 55%)",
+            animation: "float-slow-reverse 18s ease-in-out infinite",
+          }}
+        />
+
+        {/* Teal accent orb - top left */}
+        <div
+          className="absolute top-1/4 left-[15%] h-[400px] w-[400px] rounded-full opacity-15 blur-3xl"
           style={{
             background:
               "radial-gradient(circle, rgba(16, 185, 129, 0.10) 0%, transparent 60%)",
-            animation: "float-slow 12s ease-in-out infinite",
+            animation: "float-slow 14s ease-in-out infinite",
           }}
         />
 
-        {/* Floating accent orb - bottom right */}
+        {/* Teal accent orb - bottom right */}
         <div
-          className="absolute right-[10%] bottom-1/4 h-[400px] w-[400px] rounded-full opacity-12 blur-3xl"
+          className="absolute right-[12%] bottom-1/4 h-[320px] w-[320px] rounded-full opacity-12 blur-3xl"
           style={{
             background:
               "radial-gradient(circle, rgba(49, 171, 163, 0.08) 0%, transparent 60%)",
@@ -183,32 +202,33 @@ export function HeroSection() {
           }}
         />
 
-        {/* Floating accent orb - center */}
+        {/* Secondary violet hint - center-left for depth */}
+        <div
+          className="absolute top-[40%] left-[25%] h-[280px] w-[280px] rounded-full opacity-60 blur-3xl"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(167, 139, 250, 0.06) 0%, transparent 55%)",
+            animation: "float-gentle 20s ease-in-out infinite",
+          }}
+        />
+
+        {/* Center depth glow */}
         <div
           className="absolute top-1/2 left-1/2 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-10 blur-2xl"
           style={{
             background:
-              "radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 70%)",
+              "radial-gradient(circle, rgba(20, 184, 166, 0.06) 0%, transparent 70%)",
             animation: "float-gentle 18s ease-in-out infinite",
           }}
         />
 
         {/* Subtle dot pattern overlay */}
         <div
-          className="absolute inset-0 opacity-[0.04]"
+          className="absolute inset-0 opacity-[0.03]"
           style={{
             backgroundImage:
               "radial-gradient(circle, #31aba3 0.5px, transparent 0.5px)",
             backgroundSize: "32px 32px",
-          }}
-        />
-
-        {/* Radial glow behind content area */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(49, 171, 163, 0.04) 0%, transparent 60%)",
           }}
         />
 
@@ -236,15 +256,34 @@ export function HeroSection() {
               initial="hidden"
               animate={isInView ? "visible" : "hidden"}
             >
-              {/* Main Headline - only WordRotate is animated */}
+              {/* Main Headline - with gradient and highlighter effect */}
               <motion.div variants={itemVariants}>
-                <h1 className="font-display text-3xl leading-[1.15] font-semibold tracking-tight text-slate-900 sm:text-4xl md:text-5xl lg:text-6xl">
-                  Your AI Receptionist That{" "}
+                <h1 className="font-display text-3xl leading-[1.15] font-semibold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">
+                  {/* "Your AI Receptionist" with subtle gradient */}
+                  <span className="bg-gradient-to-r from-slate-900 via-slate-800 to-teal-800 bg-clip-text text-transparent">
+                    Your AI Receptionist
+                  </span>{" "}
+                  {/* "That" - smaller, thin for visual transition */}
+                  <span className="text-[0.85em] font-light text-slate-900">
+                    That
+                  </span>{" "}
+                  {/* Rotating text with highlighter effect */}
                   <span className="relative inline-block">
+                    {/* Animated highlighter background */}
+                    <motion.span
+                      className="absolute -inset-x-2 inset-y-1 -z-10 -skew-y-1 rounded-sm bg-teal-100/50"
+                      initial={{ scaleX: 0, originX: 0 }}
+                      animate={{ scaleX: 1 }}
+                      transition={{
+                        duration: 0.4,
+                        delay: 0.8,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                    />
                     <WordRotate
                       words={ROTATING_WORDS}
                       duration={4000}
-                      className="bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent"
+                      className="relative bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent"
                       motionProps={{
                         initial: { opacity: 0, y: 12 },
                         animate: { opacity: 1, y: 0 },

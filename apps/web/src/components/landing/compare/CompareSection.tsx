@@ -10,6 +10,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { NumberTicker } from "~/components/ui/number-ticker";
+import { SectionBackground } from "~/components/ui/section-background";
 
 // Animation variants
 const fadeUpVariant = {
@@ -105,78 +106,8 @@ export const CompareSection = () => {
       ref={sectionRef}
       className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >
-      {/* Soft radial dark gradient - flows naturally with surrounding light sections */}
-      <div className="pointer-events-none absolute inset-0">
-        {/* Main radial "pool" of dark - soft edges fade to transparent */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `
-              radial-gradient(ellipse 130% 90% at 50% 50%, 
-                rgba(15, 32, 39, 0.82) 0%,
-                rgba(18, 38, 45, 0.65) 35%,
-                rgba(24, 48, 56, 0.4) 55%,
-                rgba(32, 58, 68, 0.18) 72%,
-                transparent 100%
-              )
-            `,
-          }}
-        />
-
-        {/* Secondary radial for depth - slightly offset */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `
-              radial-gradient(ellipse 100% 70% at 50% 55%, 
-                rgba(20, 40, 48, 0.5) 0%,
-                rgba(25, 50, 58, 0.25) 40%,
-                transparent 75%
-              )
-            `,
-          }}
-        />
-
-        {/* Animated teal glow - top right */}
-        <div
-          className="absolute -top-10 right-[8%] h-[450px] w-[450px] rounded-full blur-3xl"
-          style={{
-            background:
-              "radial-gradient(circle, rgba(49, 171, 163, 0.12) 0%, transparent 55%)",
-            animation: "float-slow 14s ease-in-out infinite",
-          }}
-        />
-
-        {/* Animated teal glow - bottom left */}
-        <div
-          className="absolute -bottom-10 left-[8%] h-[400px] w-[400px] rounded-full blur-3xl"
-          style={{
-            background:
-              "radial-gradient(circle, rgba(49, 171, 163, 0.10) 0%, transparent 55%)",
-            animation: "float-slow-reverse 16s ease-in-out infinite",
-          }}
-        />
-
-        {/* Center teal accent - subtle glow */}
-        <div
-          className="absolute top-1/2 left-1/2 h-[350px] w-[350px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
-          style={{
-            background:
-              "radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 60%)",
-            animation: "float-gentle 20s ease-in-out infinite",
-          }}
-        />
-
-        {/* Subtle teal-tinted dot pattern */}
-        <div
-          className="absolute inset-0 opacity-[0.015]"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle, rgba(49, 171, 163, 0.6) 0.5px, transparent 0.5px)",
-            backgroundSize: "28px 28px",
-          }}
-        />
-      </div>
+      {/* Subtle dark background - soft navy/slate with smooth transitions */}
+      <SectionBackground variant="subtle-dark" />
 
       <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}

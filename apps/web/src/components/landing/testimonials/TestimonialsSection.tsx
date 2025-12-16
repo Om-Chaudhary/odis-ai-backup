@@ -151,8 +151,8 @@ export const TestimonialsSection = () => {
       id="testimonials"
       className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >
-      {/* Cohesive background */}
-      <SectionBackground variant="transition" />
+      {/* Warm mesh gradient - trustworthy, social proof emphasis */}
+      <SectionBackground variant="mesh-warm" />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section header */}

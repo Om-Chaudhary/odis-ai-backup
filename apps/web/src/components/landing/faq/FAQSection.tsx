@@ -117,8 +117,8 @@ export const FAQSection = ({
       id="faq"
       className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >
-      {/* Cohesive background */}
-      <SectionBackground variant="transition" />
+      {/* Fade out background - gentle transition to footer */}
+      <SectionBackground variant="fade-out" />
 
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-12 lg:gap-16">

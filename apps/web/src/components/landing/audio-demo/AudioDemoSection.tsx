@@ -232,8 +232,8 @@ export function AudioDemoSection() {
       id="sample-calls"
       className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >
-      {/* Cohesive background */}
-      <SectionBackground variant="transition" />
+      {/* Warm violet background - purple hints blending with teal */}
+      <SectionBackground variant="warm-violet" />
 
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
