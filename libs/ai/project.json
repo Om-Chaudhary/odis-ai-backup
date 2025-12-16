@@ -5,6 +5,19 @@
   "projectType": "library",
   "tags": ["type:lib", "scope:ai", "platform:node"],
   "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run",
+        "cwd": "libs/ai"
+      },
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/libs/ai/vitest.config.ts"
+      ]
+    },
     "typecheck": {
       "executor": "nx:run-commands",
       "options": {
