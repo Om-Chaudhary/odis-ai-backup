@@ -717,6 +717,7 @@ export function OutboundDischargesClient() {
                 onRetry={handleRetry}
                 isSubmitting={isSubmitting}
                 testModeEnabled={settingsData?.testModeEnabled ?? false}
+                onDelete={handleClosePanel}
               />
             }
           />
@@ -761,6 +762,7 @@ export function OutboundDischargesClient() {
                 onRetry={handleRetry}
                 isSubmitting={isSubmitting}
                 testModeEnabled={settingsData?.testModeEnabled ?? false}
+                onDelete={handleClosePanel}
               />
             }
           />

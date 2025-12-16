@@ -38,6 +38,8 @@ export function DeleteCaseDialog({
       toast.success("Case deleted successfully");
       void utils.dashboard.getAllCases.invalidate();
       void utils.dashboard.getCaseStats.invalidate();
+      void utils.outbound.listDischargeCases.invalidate();
+      void utils.outbound.getDischargeCaseStats.invalidate();
       onOpenChange(false);
       onSuccess?.();
     },

@@ -23,6 +23,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   XCircle,
+  Trash2,
 } from "lucide-react";
 import { api } from "~/trpc/client";
 import { formatPhoneNumber } from "@odis-ai/utils/phone";
@@ -47,6 +48,7 @@ import type {
 } from "./types";
 import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
 import { CallRecordingPlayer } from "./call-recording-player";
+import { DeleteCaseDialog } from "../cases/delete-case-dialog";
 import {
   Pill,
   Activity,
@@ -120,6 +122,8 @@ interface OutboundCaseDetailProps {
   isSubmitting: boolean;
   /** When true, shows immediate delivery option */
   testModeEnabled?: boolean;
+  /** Called after case is successfully deleted */
+  onDelete?: () => void;
 }
 
 /**
@@ -141,6 +145,7 @@ export function OutboundCaseDetail({
   onRetry,
   isSubmitting,
   testModeEnabled = false,
+  onDelete,
 }: OutboundCaseDetailProps) {
   const [activeTab, setActiveTab] = useState<PreviewTab>("call_script");
   const [communicationExpanded, setCommunicationExpanded] = useState(false);
@@ -207,7 +212,7 @@ export function OutboundCaseDetail({
   return (
     <div className="flex h-full flex-col">
       {/* Patient Header */}
-      <PatientHeader caseData={caseData} />
+      <PatientHeader caseData={caseData} onDelete={onDelete} />
 
       <Separator />
 
@@ -342,7 +347,15 @@ export function OutboundCaseDetail({
 /**
  * Patient header with contact info and case link
  */
-function PatientHeader({ caseData }: { caseData: CaseData }) {
+function PatientHeader({
+  caseData,
+  onDelete,
+}: {
+  caseData: CaseData;
+  onDelete?: () => void;
+}) {
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
   const age = caseData.patient.dateOfBirth
     ? calculateAge(caseData.patient.dateOfBirth)
     : null;
@@ -379,6 +392,16 @@ function PatientHeader({ caseData }: { caseData: CaseData }) {
               View Case
             </Button>
           </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 gap-1.5"
+            onClick={() => setDeleteDialogOpen(true)}
+            title="Delete this case"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete
+          </Button>
         </div>
       </div>
 
@@ -411,6 +434,14 @@ function PatientHeader({ caseData }: { caseData: CaseData }) {
           </a>
         )}
       </div>
+
+      <DeleteCaseDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        caseId={caseData.id}
+        patientName={caseData.patient.name}
+        onSuccess={onDelete}
+      />
     </div>
   );
 }
