@@ -116,7 +116,7 @@ export type GeneratedCallIntelligence = z.infer<
  */
 export const GenerateCallIntelligenceInputSchema = z.object({
   /** Patient name */
-  petName: z.string(),
+  petName: z.string().min(1, "Pet name is required and cannot be empty"),
 
   /** Patient species */
   species: z.string().optional(),

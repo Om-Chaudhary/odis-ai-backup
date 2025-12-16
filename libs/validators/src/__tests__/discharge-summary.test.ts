@@ -327,7 +327,7 @@ describe("Helper Functions", () => {
     it("returns success for valid summary", () => {
       const validSummary = {
         patientName: "Max",
-        caseType: "checkup" as const,
+        caseType: "wellness" as const,
       };
       const result = validateStructuredSummary(validSummary);
       expect(result.success).toBe(true);
@@ -338,7 +338,7 @@ describe("Helper Functions", () => {
 
     it("returns error for invalid summary", () => {
       const invalidSummary = {
-        caseType: "checkup",
+        caseType: "wellness",
         // Missing patientName
       };
       const result = validateStructuredSummary(invalidSummary);
