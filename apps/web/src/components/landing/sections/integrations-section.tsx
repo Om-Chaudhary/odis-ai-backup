@@ -181,24 +181,6 @@ export const IntegrationsSection = ({
           </h2>
           <p className="text-muted-foreground max-w-xl text-lg">{subtitle}</p>
 
-          {/* Integration status badges */}
-          <motion.div
-            variants={fadeUpVariant}
-            initial="hidden"
-            animate={isInView ? "visible" : "hidden"}
-            transition={{ ...transition, delay: 0.35 }}
-            className="mt-6 flex flex-wrap items-center justify-center gap-3"
-          >
-            <div className="flex items-center gap-2 rounded-full bg-teal-50 px-3 py-1.5 text-xs font-medium text-teal-700">
-              <Check className="h-3.5 w-3.5" />
-              <span>3 Active integrations</span>
-            </div>
-            <div className="flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700">
-              <Zap className="h-3.5 w-3.5" />
-              <span>4 Coming soon</span>
-            </div>
-          </motion.div>
-
           <motion.div
             variants={fadeUpVariant}
             initial="hidden"

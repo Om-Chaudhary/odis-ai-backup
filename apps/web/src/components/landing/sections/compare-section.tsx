@@ -141,12 +141,6 @@ export const CompareSection = () => {
           >
             What changes with OdisAI
           </motion.h2>
-          <motion.p
-            variants={fadeUpVariant}
-            className="mx-auto max-w-xl text-base text-slate-600 sm:text-lg"
-          >
-            Average results per clinic in the last 30 days
-          </motion.p>
         </motion.div>
 
         {/* Stats Grid */}

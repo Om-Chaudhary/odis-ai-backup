@@ -25,9 +25,9 @@ const ROTATING_WORDS = [
 
 // Feature bullets - simplified
 const FEATURES = [
-  "Answer every call, 24/7—even at 3am",
   "Automate discharge follow-ups & reminders",
-  "Recover $12,000+/month in missed appointments",
+  "Answer every call, 24/7—even at 3am",
+  "Recover thousands in missed appointments",
 ];
 
 // Animation variants - slower, more noticeable
@@ -139,7 +139,7 @@ export function HeroSection() {
               variants={itemVariants}
               className="font-display text-4xl leading-[1.1] font-semibold tracking-tight text-slate-900 sm:text-5xl lg:text-6xl"
             >
-              Your AI Receptionist
+              Your AI Assistant
               <br />
               <WordRotate
                 words={ROTATING_WORDS}
@@ -166,7 +166,7 @@ export function HeroSection() {
                 colorTo="#14b8a6"
                 className="font-semibold"
               >
-                Every call answered. Every pet parent reached.
+                Every call fufilled. Every pet parent reached.
               </AnimatedGradientText>{" "}
               <span className="font-semibold text-slate-700">24/7.</span>
             </motion.p>

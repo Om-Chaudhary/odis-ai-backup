@@ -299,13 +299,14 @@ export function AudioDemoSection() {
           <h2 className="font-display mb-4 text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl md:text-4xl lg:text-5xl">
             Hear{" "}
             <span className="bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
-              Odis in Action
-            </span>
+              Odis
+            </span>{" "}
+            in Action
           </h2>
 
           {/* Subtitle */}
           <p className="mx-auto max-w-xl text-base text-slate-600 sm:text-lg">
-            Real conversations. Real results. Listen to actual AI-handled calls.
+            Real conversations. Real results. Hear Odis handle a call live.
           </p>
         </motion.div>
 
