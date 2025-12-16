@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
-import { Outfit } from "next/font/google";
-import { Inter } from "next/font/google";
-import { Lora } from "next/font/google";
+import { Outfit, Inter, Lora, Plus_Jakarta_Sans } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import "~/styles/globals.css";
 import ClientPostHogProvider from "~/components/providers/client-posthog-provider";
@@ -27,32 +25,38 @@ const lora = Lora({
   display: "swap",
 });
 
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-plus-jakarta",
+  display: "swap",
+});
+
 const geistMono = GeistMono;
 
 const siteUrl = env.NEXT_PUBLIC_SITE_URL;
 
 export const metadata: Metadata = {
   title: {
-    default: "Odis AI - Veterinary Practice Management Software",
-    template: "%s | Odis AI",
+    default: "OdisAI - AI Voice Agents for Veterinary Clinics",
+    template: "%s | OdisAI",
   },
   description:
-    "Streamline your veterinary practice with Odis AI. Advanced practice management software designed for modern veterinary clinics. Features include patient management, appointment scheduling, billing, and more.",
+    "Never miss another call. OdisAI handles your clinic's inbound and outbound calls with AI voice agents that sound natural, book appointments, and follow up with pet parents 24/7.",
   keywords: [
+    "veterinary AI",
+    "AI voice agents",
+    "veterinary phone answering",
+    "vet clinic automation",
+    "pet parent follow-up",
+    "veterinary appointment booking",
+    "AI receptionist",
     "veterinary practice management",
-    "veterinary software",
-    "vet clinic management",
     "animal hospital software",
-    "veterinary appointment scheduling",
-    "vet billing software",
-    "veterinary EMR",
-    "pet clinic management",
-    "veterinary practice automation",
-    "vet clinic software",
+    "24/7 veterinary phone service",
   ],
-  authors: [{ name: "Odis AI" }],
-  creator: "Odis AI",
-  publisher: "Odis AI",
+  authors: [{ name: "OdisAI" }],
+  creator: "OdisAI",
+  publisher: "OdisAI",
   formatDetection: {
     email: false,
     address: false,
@@ -66,24 +70,24 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: siteUrl,
-    title: "Odis AI - Veterinary Practice Management Software",
+    title: "OdisAI - AI Voice Agents for Veterinary Clinics",
     description:
-      "Streamline your veterinary practice with Odis AI. Advanced practice management software designed for modern veterinary clinics.",
-    siteName: "Odis AI",
+      "Never miss another call. OdisAI handles your clinic's inbound and outbound calls with AI voice agents that sound natural, book appointments, and follow up with pet parents 24/7.",
+    siteName: "OdisAI",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Odis AI - Veterinary Practice Management Software",
+        alt: "OdisAI - AI Voice Agents for Veterinary Clinics",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Odis AI - Veterinary Practice Management Software",
+    title: "OdisAI - AI Voice Agents for Veterinary Clinics",
     description:
-      "Streamline your veterinary practice with Odis AI. Advanced practice management software designed for modern veterinary clinics.",
+      "Never miss another call. OdisAI handles your clinic's inbound and outbound calls with AI voice agents that sound natural, book appointments, and follow up with pet parents 24/7.",
     images: ["/og-image.png"],
     creator: "@odisai",
   },
@@ -120,8 +124,8 @@ const jsonLd = {
       "@type": "WebSite",
       "@id": `${siteUrl}/#website`,
       url: siteUrl,
-      name: "Odis AI",
-      description: "Veterinary Practice Management Software",
+      name: "OdisAI",
+      description: "AI Voice Agents for Veterinary Clinics",
       publisher: {
         "@id": `${siteUrl}/#organization`,
       },
@@ -139,7 +143,7 @@ const jsonLd = {
     {
       "@type": "Organization",
       "@id": `${siteUrl}/#organization`,
-      name: "Odis AI",
+      name: "OdisAI",
       url: siteUrl,
       logo: {
         "@type": "ImageObject",
@@ -147,8 +151,7 @@ const jsonLd = {
         width: 128,
         height: 128,
       },
-      description:
-        "Leading provider of veterinary practice management software",
+      description: "Leading provider of AI voice agents for veterinary clinics",
       sameAs: [
         "https://twitter.com/odisai",
         "https://linkedin.com/company/odis-ai",
@@ -172,7 +175,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`font-sans ${outfit.variable} ${inter.variable} ${lora.variable} ${geistMono.variable}`}
+        className={`font-sans antialiased ${outfit.variable} ${inter.variable} ${lora.variable} ${plusJakarta.variable} ${geistMono.variable}`}
       >
         <ClientPostHogProvider>
           <TRPCReactProvider>

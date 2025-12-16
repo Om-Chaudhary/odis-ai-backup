@@ -1,5 +1,6 @@
 {
-  "dependencies": {
-    "react-resizable-panels": "^3.0.6"
-  }
+  "name": "web",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module"
 }

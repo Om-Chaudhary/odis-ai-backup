@@ -9,13 +9,13 @@ interface SectionVisibilityOptions {
   rootMargin?: string;
 }
 
-export function useSectionVisibility(
+export function useSectionVisibility<T extends HTMLElement = HTMLDivElement>(
   sectionName: string,
   options: SectionVisibilityOptions = {},
 ) {
   const posthog = usePostHog();
   const deviceInfo = useDeviceDetection();
-  const sectionRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<T>(null);
   const hasBeenViewed = useRef(false);
   const viewStartTime = useRef<number | null>(null);
   const pageLoadTime = useRef(Date.now());

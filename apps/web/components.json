@@ -1,32 +1,21 @@
 {
   "$schema": "https://ui.shadcn.com/schema.json",
   "style": "new-york",
-  "rsc": true,
+  "rsc": false,
   "tsx": true,
   "tailwind": {
-    "config": "",
+    "config": "tailwind.config.ts",
     "css": "src/styles/globals.css",
     "baseColor": "neutral",
     "cssVariables": true,
     "prefix": ""
   },
-  "iconLibrary": "lucide",
   "aliases": {
     "components": "~/components",
     "utils": "~/lib/utils",
-    "ui": "@odis-ai/ui",
+    "ui": "~/components/ui",
     "lib": "~/lib",
     "hooks": "~/hooks"
   },
-  "registries": {
-    "@tweakcn": "https://tweakcn.com/r/{name}.json",
-    "@aceternity": "https://ui.aceternity.com/registry/{name}.json",
-    "@originui": "https://originui.com/r/{name}.json",
-    "@cult": "https://cult-ui.com/r/{name}.json",
-    "@kibo": "https://www.kibo-ui.com/r/{name}.json",
-    "@reui": "https://reui.io/r/{name}.json",
-    "@magicui": "https://magicui.com/r/{name}.json",
-    "@elevenlabs": "https://ui.elevenlabs.io/r/{name}.json",
-    "@alpine": "https://alpine-registry.vercel.app/r/{name}.json"
-  }
+  "iconLibrary": "lucide"
 }

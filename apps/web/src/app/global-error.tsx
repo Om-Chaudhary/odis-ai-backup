@@ -1,22 +1,35 @@
 "use client";
 
 export default function GlobalError({
-  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
   return (
-    <html>
+    <html lang="en">
       <body>
-        <div className="flex min-h-screen items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold">Something went wrong!</h1>
-            <p className="mt-4">{error.message || "An unexpected error occurred."}</p>
+        <div
+          style={{
+            display: "flex",
+            minHeight: "100vh",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <div style={{ textAlign: "center" }}>
+            <h2>Something went wrong!</h2>
             <button
               onClick={() => reset()}
-              className="mt-8 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+              style={{
+                marginTop: "16px",
+                padding: "8px 16px",
+                backgroundColor: "#2563eb",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
             >
               Try again
             </button>

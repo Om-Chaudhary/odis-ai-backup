@@ -6,6 +6,87 @@
  */
 
 /* ============================================
+   Glassmorphic Utilities
+   ============================================ */
+
+.glass {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.04), 0 2px 8px -1px rgba(0, 0, 0, 0.02), inset 0 1px 0
+    rgba(255, 255, 255, 0.6);
+}
+
+.glass-strong {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.92) 100%);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.06), 0 4px 16px -2px rgba(0, 0, 0, 0.03), inset 0 1px 0
+    rgba(255, 255, 255, 0.8);
+}
+
+.glass-subtle {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.4) 100%);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 12px -2px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.glass-card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.9) 100%);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 16px -2px rgba(0, 0, 0, 0.04), 0 12px 48px -8px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.glass-teal {
+  background: linear-gradient(135deg, rgba(45, 160, 150, 0.08) 0%, rgba(45, 160, 150, 0.03) 100%);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(45, 160, 150, 0.15);
+  box-shadow: 0 4px 24px -4px rgba(45, 160, 150, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.gradient-mesh {
+  background: radial-gradient(at 20% 20%, rgba(45, 160, 150, 0.08) 0%, transparent 50%),
+    radial-gradient(at 80% 80%, rgba(45, 160, 150, 0.06) 0%, transparent 50%),
+    radial-gradient(at 40% 60%, rgba(100, 200, 190, 0.04) 0%, transparent 40%), hsl(var(--background));
+}
+
+.gradient-border {
+  position: relative;
+  background: hsl(var(--card));
+  border-radius: var(--radius);
+}
+
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(45, 160, 150, 0.4) 0%,
+    rgba(45, 160, 150, 0.1) 50%,
+    rgba(45, 160, 150, 0.3) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.glow-primary {
+  box-shadow: 0 0 20px -5px rgba(45, 160, 150, 0.3), 0 0 40px -10px rgba(45, 160, 150, 0.2);
+}
+
+/* ============================================
    Background Patterns
    ============================================ */
 
@@ -227,6 +308,61 @@
 .animate-gradient-patient-care-hover {
   animation: gradient-patient-care-hover 3s ease-in-out infinite;
   background-size: 200% 200%;
+}
+
+/* ============================================
+   Text Effect Animation Utilities
+   ============================================ */
+
+.animate-gradient-text {
+  animation: gradient-text 8s linear infinite;
+}
+
+.animate-shiny-text {
+  animation: shiny-text 8s infinite;
+}
+
+.animate-text-shimmer {
+  animation: text-shimmer 3s ease-in-out infinite;
+  background-size: 200% auto;
+}
+
+.animate-word-fade-in {
+  animation: word-fade-in 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-letter-bounce {
+  animation: letter-bounce 0.5s ease-in-out;
+}
+
+.animate-aurora-pulse {
+  animation: aurora-pulse 4s ease-in-out infinite;
+}
+
+.animate-text-glow {
+  animation: text-glow 3s ease-in-out infinite;
+}
+
+/* ============================================
+   Landing Page Animation Utilities
+   ============================================ */
+
+.animate-float-subtle {
+  animation: float-subtle 20s ease-in-out infinite;
+}
+
+.animate-pulse-glow-subtle {
+  animation: pulse-glow-subtle 4s ease-in-out infinite;
+}
+
+.animate-section-fade-in {
+  animation: section-fade-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  opacity: 0;
+}
+
+.animate-orb-drift {
+  animation: orb-drift 30s ease-in-out infinite;
 }
 
 /* ============================================

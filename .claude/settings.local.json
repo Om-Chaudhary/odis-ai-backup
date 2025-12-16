@@ -113,7 +113,14 @@
       "mcp__nx-mcp__nx_project_details",
       "Bash(pnpm nx typecheck:*)",
       "Bash(npx nx:*)",
-      "Bash(pnpm lint:all:*)"
+      "Bash(pnpm lint:all:*)",
+      "mcp__playwright__browser_close",
+      "mcp__playwright__browser_resize",
+      "WebFetch(domain:www.vetdodo.com)",
+      "WebFetch(domain:missedcalls.help)",
+      "Bash(ls:*)",
+      "Bash(wc:*)",
+      "Bash(lsof:*)"
     ],
     "deny": [],
     "ask": []
