@@ -10,7 +10,7 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   navigationMenuTriggerStyle,
-} from "~/components/ui/navigation-menu";
+} from "@odis-ai/ui/navigation-menu";
 import { cn } from "~/lib/utils";
 import { Logo } from "@odis-ai/ui/Logo";
 import { trackBookDemoClick } from "./landing-analytics";
