@@ -57,6 +57,10 @@ export {
 // Audio Demo Card (used by AudioDemoSection)
 export { AudioDemoCard } from "./shared/audio-demo-card";
 
+// Cal.com Embed (used by Demo page)
+export { CalEmbed } from "./shared/cal-embed";
+export { CalEmbedWrapper } from "./shared/cal-embed-wrapper";
+
 // =============================================================================
 // UI Components (Landing-specific)
 // =============================================================================
