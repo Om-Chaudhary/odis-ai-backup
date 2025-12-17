@@ -56,7 +56,7 @@ export default function WaitlistModal({
   useEffect(() => {
     if (isOpen && !modalOpenTime.current) {
       modalOpenTime.current = Date.now();
-      posthog.capture("waitlist_modal_opened", {
+      posthog?.capture?.("waitlist_modal_opened", {
         trigger_location: triggerLocation,
         device_type: deviceInfo.device_type,
         viewport_width: deviceInfo.viewport_width,
@@ -74,7 +74,7 @@ export default function WaitlistModal({
       ? Date.now() - formStartTime.current
       : 0;
 
-    posthog.capture("waitlist_form_submitted", {
+    posthog?.capture?.("waitlist_form_submitted", {
       user_role: formData.role,
       has_practice_name: !!formData.practiceName,
       form_completion_time: formCompletionTime,
@@ -101,7 +101,7 @@ export default function WaitlistModal({
 
       setIsSubmitted(true);
 
-      posthog.capture("waitlist_signup_success", {
+      posthog?.capture?.("waitlist_signup_success", {
         user_role: formData.role,
         practice_name: formData.practiceName,
         email_domain: formData.email.split("@")[1],
@@ -115,7 +115,7 @@ export default function WaitlistModal({
       const errorMessage = err instanceof Error ? err.message : String(err);
       console.error("Waitlist signup error:", err);
 
-      posthog.capture("waitlist_signup_error", {
+      posthog?.capture?.("waitlist_signup_error", {
         error: errorMessage,
         device_type: deviceInfo.device_type,
         form_data: {
@@ -152,7 +152,7 @@ export default function WaitlistModal({
       ? Date.now() - modalOpenTime.current
       : 0;
 
-    posthog.capture("waitlist_modal_closed", {
+    posthog?.capture?.("waitlist_modal_closed", {
       closed_without_submit: !isSubmitted,
       time_spent_in_modal: timeSpentInModal,
       device_type: deviceInfo.device_type,
@@ -171,13 +171,13 @@ export default function WaitlistModal({
     if (!hasFormStarted.current) {
       hasFormStarted.current = true;
       formStartTime.current = Date.now();
-      posthog.capture("waitlist_form_started", {
+      posthog?.capture?.("waitlist_form_started", {
         form_type: "waitlist_signup",
         device_type: deviceInfo.device_type,
       });
     }
 
-    posthog.capture("form_field_focused", {
+    posthog?.capture?.("form_field_focused", {
       field_name: fieldName,
       form_type: "waitlist_signup",
       device_type: deviceInfo.device_type,
@@ -187,7 +187,7 @@ export default function WaitlistModal({
   const handleFieldBlur = (fieldName: string, isRequired: boolean) => {
     const fieldValue = formData[fieldName as keyof typeof formData];
     if (!fieldValue && isRequired) {
-      posthog.capture("form_field_blur_empty", {
+      posthog?.capture?.("form_field_blur_empty", {
         field_name: fieldName,
         is_required: isRequired,
         device_type: deviceInfo.device_type,
@@ -201,7 +201,7 @@ export default function WaitlistModal({
     fieldEditCounts.current[fieldName]++;
 
     if (fieldEditCounts.current[fieldName] > 1) {
-      posthog.capture("form_field_edited", {
+      posthog?.capture?.("form_field_edited", {
         field_name: fieldName,
         edit_count: fieldEditCounts.current[fieldName],
         device_type: deviceInfo.device_type,

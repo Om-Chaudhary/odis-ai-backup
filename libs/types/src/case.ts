@@ -5,10 +5,10 @@
  */
 
 import type { Database } from "./database.types";
-import type { NormalizedEntities } from "@odis-ai/validators";
+import type { NormalizedEntities } from "./entities";
 import type { IdexxMetadata } from "./idexx";
 
-export type { NormalizedEntities } from "@odis-ai/validators";
+export type { NormalizedEntities } from "./entities";
 export type { IdexxMetadata } from "./idexx";
 
 /* ========================================

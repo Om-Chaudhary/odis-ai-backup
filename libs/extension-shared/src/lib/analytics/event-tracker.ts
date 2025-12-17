@@ -7,10 +7,8 @@
  * They use timeouts to prevent hanging and should never block the main application flow.
  */
 
-/* eslint-disable func-style */
-
-import { getSupabaseClient } from '../supabase/client';
-import { logger } from '../utils/logger';
+import { getSupabaseClient } from "../supabase/client";
+import { logger } from "../utils/logger";
 import type {
   UserEvent,
   FeatureUsage,
@@ -18,9 +16,9 @@ import type {
   ErrorLog,
   TrackEventOptions,
   AnalyticsPlatform,
-} from './types';
+} from "./types";
 
-const analyticsLogger = logger.child('[ANALYTICS]');
+const analyticsLogger = logger.child("[ANALYTICS]");
 
 // Timeout constants for analytics operations
 const ANALYTICS_TIMEOUT_MS = 5000; // 5 seconds max for any analytics operation
@@ -30,12 +28,18 @@ const AUTH_CHECK_TIMEOUT_MS = 3000; // 3 seconds max for auth check
  * Wrap a promise with a timeout
  * Returns undefined if timeout is reached (non-blocking behavior)
  */
-async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, operationName: string): Promise<T | undefined> {
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  operationName: string,
+): Promise<T | undefined> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
-  const timeoutPromise = new Promise<undefined>(resolve => {
+  const timeoutPromise = new Promise<undefined>((resolve) => {
     timeoutId = setTimeout(() => {
-      analyticsLogger.warn(`Analytics operation timed out: ${operationName}`, { timeoutMs });
+      analyticsLogger.warn(`Analytics operation timed out: ${operationName}`, {
+        timeoutMs,
+      });
       resolve(undefined);
     }, timeoutMs);
   });
@@ -46,7 +50,9 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, operationN
     return result;
   } catch (error) {
     if (timeoutId) clearTimeout(timeoutId);
-    analyticsLogger.warn(`Analytics operation failed: ${operationName}`, { error });
+    analyticsLogger.warn(`Analytics operation failed: ${operationName}`, {
+      error,
+    });
     return undefined;
   }
 }
@@ -57,7 +63,11 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, operationN
 async function getUserWithTimeout(): Promise<{ id: string } | null> {
   try {
     const supabase = getSupabaseClient();
-    const result = await withTimeout(supabase.auth.getUser(), AUTH_CHECK_TIMEOUT_MS, 'getUser');
+    const result = await withTimeout(
+      supabase.auth.getUser(),
+      AUTH_CHECK_TIMEOUT_MS,
+      "getUser",
+    );
     return result?.data?.user ?? null;
   } catch {
     return null;
@@ -68,27 +78,30 @@ async function getUserWithTimeout(): Promise<{ id: string } | null> {
  * Detect the current platform
  */
 export function detectPlatform(): AnalyticsPlatform {
-  if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+  if (typeof chrome !== "undefined" && chrome.runtime?.id) {
     // Check if it's Firefox (Firefox also has chrome.runtime but with different properties)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (typeof (globalThis as any).browser !== 'undefined' && (globalThis as any).browser.runtime) {
-      return 'firefox_extension';
+    if (
+      typeof (globalThis as any).browser !== "undefined" &&
+      (globalThis as any).browser.runtime
+    ) {
+      return "firefox_extension";
     }
-    return 'chrome_extension';
+    return "chrome_extension";
   }
 
   // For iOS, this would be detected differently (likely via user agent or app context)
   // For now, default to web
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     // Could check user agent for iOS
-    const userAgent = window.navigator?.userAgent || '';
+    const userAgent = window.navigator?.userAgent || "";
     if (/iPhone|iPad|iPod/i.test(userAgent)) {
-      return 'ios';
+      return "ios";
     }
-    return 'web';
+    return "web";
   }
 
-  return 'web';
+  return "web";
 }
 
 /**
@@ -103,13 +116,13 @@ export function generateSessionId(): string {
  */
 export async function getSessionId(): Promise<string> {
   try {
-    const stored = sessionStorage.getItem('analytics_session_id');
+    const stored = sessionStorage.getItem("analytics_session_id");
     if (stored) {
       return stored;
     }
 
     const sessionId = generateSessionId();
-    sessionStorage.setItem('analytics_session_id', sessionId);
+    sessionStorage.setItem("analytics_session_id", sessionId);
     return sessionId;
   } catch {
     // Fallback if sessionStorage is not available
@@ -123,13 +136,18 @@ export async function getSessionId(): Promise<string> {
  * This function is designed to be non-blocking. It will timeout after ANALYTICS_TIMEOUT_MS
  * and will never throw errors that could break the calling code.
  */
-export async function trackEvent(event: Omit<UserEvent, 'platform'>, options: TrackEventOptions = {}): Promise<void> {
+export async function trackEvent(
+  event: Omit<UserEvent, "platform">,
+  options: TrackEventOptions = {},
+): Promise<void> {
   try {
     // Use timeout-wrapped auth check
     const user = await getUserWithTimeout();
 
     if (!user) {
-      analyticsLogger.debug('Cannot track event: user not authenticated or auth timed out');
+      analyticsLogger.debug(
+        "Cannot track event: user not authenticated or auth timed out",
+      );
       return;
     }
 
@@ -146,7 +164,7 @@ export async function trackEvent(event: Omit<UserEvent, 'platform'>, options: Tr
     const supabase = getSupabaseClient();
     const insertResult = await withTimeout(
       Promise.resolve(
-        supabase.from('user_events').insert({
+        supabase.from("user_events").insert({
           user_id: user.id,
           event_type: fullEvent.event_type,
           event_category: fullEvent.event_category,
@@ -159,31 +177,36 @@ export async function trackEvent(event: Omit<UserEvent, 'platform'>, options: Tr
           discharge_summary_id: fullEvent.discharge_summary_id,
           scheduled_call_id: fullEvent.scheduled_call_id,
           scheduled_email_id: fullEvent.scheduled_email_id,
-          metadata: fullEvent.metadata || {},
-          properties: fullEvent.properties || {},
+          metadata: fullEvent.metadata ?? {},
+          properties: fullEvent.properties ?? {},
           success: fullEvent.success ?? true,
           error_message: fullEvent.error_message,
           error_code: fullEvent.error_code,
         }),
       ),
       ANALYTICS_TIMEOUT_MS,
-      'insert_user_event',
+      "insert_user_event",
     );
 
     if (insertResult?.error) {
-      analyticsLogger.debug('Failed to track event', { error: insertResult.error, event_type: fullEvent.event_type });
+      analyticsLogger.debug("Failed to track event", {
+        error: insertResult.error,
+        event_type: fullEvent.event_type,
+      });
       return;
     }
 
-    analyticsLogger.debug('Event tracked', { event_type: fullEvent.event_type });
+    analyticsLogger.debug("Event tracked", {
+      event_type: fullEvent.event_type,
+    });
 
     // Track feature usage if requested (fire and forget - don't await)
-    if (options.trackFeatureUsage && event.event_category === 'feature') {
+    if (options.trackFeatureUsage && event.event_category === "feature") {
       trackFeatureUsage({
         feature_name: event.event_type,
         feature_category: event.event_category,
         platform,
-      }).catch(() => {}); // Fire and forget
+      }).catch(() => void 0); // Fire and forget
     }
 
     // Update session analytics if requested (fire and forget - don't await)
@@ -193,10 +216,13 @@ export async function trackEvent(event: Omit<UserEvent, 'platform'>, options: Tr
         platform,
         event_type: event.event_type,
         event_category: event.event_category,
-      }).catch(() => {}); // Fire and forget
+      }).catch(() => void 0); // Fire and forget
     }
   } catch (error) {
-    analyticsLogger.debug('Error tracking event', { error, event_type: event.event_type });
+    analyticsLogger.debug("Error tracking event", {
+      error,
+      event_type: event.event_type,
+    });
     // Don't throw - analytics failures shouldn't break the app
   }
 }
@@ -220,15 +246,15 @@ export async function trackFeatureUsage(feature: FeatureUsage): Promise<void> {
     const existingResult = await withTimeout(
       Promise.resolve(
         supabase
-          .from('feature_usage')
-          .select('id, usage_count')
-          .eq('user_id', user.id)
-          .eq('feature_name', feature.feature_name)
-          .eq('platform', feature.platform)
+          .from("feature_usage")
+          .select("id, usage_count")
+          .eq("user_id", user.id)
+          .eq("feature_name", feature.feature_name)
+          .eq("platform", feature.platform)
           .single(),
       ),
       ANALYTICS_TIMEOUT_MS,
-      'select_feature_usage',
+      "select_feature_usage",
     );
 
     const existing = existingResult?.data;
@@ -238,22 +264,22 @@ export async function trackFeatureUsage(feature: FeatureUsage): Promise<void> {
       await withTimeout(
         Promise.resolve(
           supabase
-            .from('feature_usage')
+            .from("feature_usage")
             .update({
               usage_count: existing.usage_count + 1,
               last_used_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             })
-            .eq('id', existing.id),
+            .eq("id", existing.id),
         ),
         ANALYTICS_TIMEOUT_MS,
-        'update_feature_usage',
+        "update_feature_usage",
       );
     } else {
       // Insert new record with timeout
       await withTimeout(
         Promise.resolve(
-          supabase.from('feature_usage').insert({
+          supabase.from("feature_usage").insert({
             user_id: user.id,
             feature_name: feature.feature_name,
             feature_category: feature.feature_category,
@@ -261,15 +287,18 @@ export async function trackFeatureUsage(feature: FeatureUsage): Promise<void> {
             usage_count: 1,
             first_used_at: new Date().toISOString(),
             last_used_at: new Date().toISOString(),
-            metadata: feature.metadata || {},
+            metadata: feature.metadata ?? {},
           }),
         ),
         ANALYTICS_TIMEOUT_MS,
-        'insert_feature_usage',
+        "insert_feature_usage",
       );
     }
   } catch (error) {
-    analyticsLogger.debug('Error tracking feature usage', { error, feature_name: feature.feature_name });
+    analyticsLogger.debug("Error tracking feature usage", {
+      error,
+      feature_name: feature.feature_name,
+    });
   }
 }
 
@@ -279,8 +308,10 @@ export async function trackFeatureUsage(feature: FeatureUsage): Promise<void> {
  * Non-blocking function with timeout protection.
  * Returns a session ID immediately, database insert happens in background.
  */
-export async function startSession(analytics: Partial<SessionAnalytics> = {}): Promise<string> {
-  const sessionId = analytics.session_id || (await getSessionId());
+export async function startSession(
+  analytics: Partial<SessionAnalytics> = {},
+): Promise<string> {
+  const sessionId = analytics.session_id ?? (await getSessionId());
 
   try {
     const user = await getUserWithTimeout();
@@ -308,36 +339,38 @@ export async function startSession(analytics: Partial<SessionAnalytics> = {}): P
     // Insert with timeout - don't block on this
     const result = await withTimeout(
       Promise.resolve(
-        supabase.from('session_analytics').insert({
+        supabase.from("session_analytics").insert({
           user_id: user.id,
           session_id: sessionData.session_id!,
           platform: sessionData.platform!,
           started_at: sessionData.started_at,
-          event_count: sessionData.event_count || 0,
-          cases_created: sessionData.cases_created || 0,
-          discharges_sent: sessionData.discharges_sent || 0,
-          actions_performed: sessionData.actions_performed || [],
-          features_used: sessionData.features_used || [],
+          event_count: sessionData.event_count ?? 0,
+          cases_created: sessionData.cases_created ?? 0,
+          discharges_sent: sessionData.discharges_sent ?? 0,
+          actions_performed: sessionData.actions_performed ?? [],
+          features_used: sessionData.features_used ?? [],
           user_agent: sessionData.user_agent,
           extension_version: sessionData.extension_version,
           app_version: sessionData.app_version,
           device_info: sessionData.device_info,
-          metadata: sessionData.metadata || {},
+          metadata: sessionData.metadata ?? {},
         }),
       ),
       ANALYTICS_TIMEOUT_MS,
-      'insert_session',
+      "insert_session",
     );
 
     if (result?.error) {
-      analyticsLogger.debug('Failed to start session in DB', { error: result.error });
+      analyticsLogger.debug("Failed to start session in DB", {
+        error: result.error,
+      });
     } else {
-      analyticsLogger.debug('Session started', { session_id: sessionId });
+      analyticsLogger.debug("Session started", { session_id: sessionId });
     }
 
     return sessionId;
   } catch (error) {
-    analyticsLogger.debug('Error starting session', { error });
+    analyticsLogger.debug("Error starting session", { error });
     return sessionId;
   }
 }
@@ -370,14 +403,14 @@ export async function updateSessionAnalytics(update: {
     const sessionResult = await withTimeout(
       Promise.resolve(
         supabase
-          .from('session_analytics')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('session_id', update.session_id)
+          .from("session_analytics")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("session_id", update.session_id)
           .single(),
       ),
       ANALYTICS_TIMEOUT_MS,
-      'select_session',
+      "select_session",
     );
 
     const session = sessionResult?.data;
@@ -387,44 +420,49 @@ export async function updateSessionAnalytics(update: {
       startSession({
         session_id: update.session_id,
         platform: update.platform,
-      }).catch(() => {});
+      }).catch(() => void 0);
       return;
     }
 
     // Build update object
     const updates: Partial<SessionAnalytics> = {
-      event_count: (session.event_count || 0) + 1,
+      event_count: (session.event_count ?? 0) + 1,
     };
 
     // Update arrays
-    const actionsPerformed = [...(session.actions_performed || [])];
+    const actionsPerformed = [...(session.actions_performed ?? [])];
     if (update.action && !actionsPerformed.includes(update.action)) {
       actionsPerformed.push(update.action);
       updates.actions_performed = actionsPerformed;
     }
 
-    const featuresUsed = [...(session.features_used || [])];
+    const featuresUsed = [...(session.features_used ?? [])];
     if (update.feature && !featuresUsed.includes(update.feature)) {
       featuresUsed.push(update.feature);
       updates.features_used = featuresUsed;
     }
 
     if (update.case_created) {
-      updates.cases_created = (session.cases_created || 0) + 1;
+      updates.cases_created = (session.cases_created ?? 0) + 1;
     }
 
     if (update.discharge_sent) {
-      updates.discharges_sent = (session.discharges_sent || 0) + 1;
+      updates.discharges_sent = (session.discharges_sent ?? 0) + 1;
     }
 
     // Update with timeout
     await withTimeout(
-      Promise.resolve(supabase.from('session_analytics').update(updates).eq('id', session.id)),
+      Promise.resolve(
+        supabase.from("session_analytics").update(updates).eq("id", session.id),
+      ),
       ANALYTICS_TIMEOUT_MS,
-      'update_session',
+      "update_session",
     );
   } catch (error) {
-    analyticsLogger.debug('Error updating session analytics', { error, session_id: update.session_id });
+    analyticsLogger.debug("Error updating session analytics", {
+      error,
+      session_id: update.session_id,
+    });
   }
 }
 
@@ -447,56 +485,61 @@ export async function endSession(sessionId: string): Promise<void> {
     const sessionResult = await withTimeout(
       Promise.resolve(
         supabase
-          .from('session_analytics')
-          .select('started_at')
-          .eq('user_id', user.id)
-          .eq('session_id', sessionId)
+          .from("session_analytics")
+          .select("started_at")
+          .eq("user_id", user.id)
+          .eq("session_id", sessionId)
           .single(),
       ),
       ANALYTICS_TIMEOUT_MS,
-      'select_session_for_end',
+      "select_session_for_end",
     );
 
     const session = sessionResult?.data;
 
-    if (!session || !session.started_at) {
+    if (!session?.started_at) {
       return;
     }
 
     const endedAt = new Date();
     const startedAt = new Date(session.started_at);
-    const durationSeconds = Math.floor((endedAt.getTime() - startedAt.getTime()) / 1000);
+    const durationSeconds = Math.floor(
+      (endedAt.getTime() - startedAt.getTime()) / 1000,
+    );
 
     // Update with timeout
     const updateResult = await withTimeout(
       Promise.resolve(
         supabase
-          .from('session_analytics')
+          .from("session_analytics")
           .update({
             ended_at: endedAt.toISOString(),
             duration_seconds: durationSeconds,
             updated_at: endedAt.toISOString(),
           })
-          .eq('user_id', user.id)
-          .eq('session_id', sessionId),
+          .eq("user_id", user.id)
+          .eq("session_id", sessionId),
       ),
       ANALYTICS_TIMEOUT_MS,
-      'update_session_end',
+      "update_session_end",
     );
 
     if (updateResult?.error) {
-      analyticsLogger.debug('Failed to end session', { error: updateResult.error, sessionId });
+      analyticsLogger.debug("Failed to end session", {
+        error: updateResult.error,
+        sessionId,
+      });
     } else {
-      analyticsLogger.debug('Session ended', { sessionId, durationSeconds });
+      analyticsLogger.debug("Session ended", { sessionId, durationSeconds });
       // Clear session ID from storage
       try {
-        sessionStorage.removeItem('analytics_session_id');
+        sessionStorage.removeItem("analytics_session_id");
       } catch {
         // Ignore storage errors
       }
     }
   } catch (error) {
-    analyticsLogger.debug('Error ending session', { error, sessionId });
+    analyticsLogger.debug("Error ending session", { error, sessionId });
   }
 }
 
@@ -513,8 +556,8 @@ export async function logError(error: ErrorLog): Promise<void> {
     // Insert with timeout
     const result = await withTimeout(
       Promise.resolve(
-        supabase.from('error_logs').insert({
-          user_id: user?.id || null,
+        supabase.from("error_logs").insert({
+          user_id: user?.id ?? null,
           error_type: error.error_type,
           error_code: error.error_code,
           error_message: error.error_message,
@@ -523,24 +566,30 @@ export async function logError(error: ErrorLog): Promise<void> {
           case_id: error.case_id,
           event_id: error.event_id,
           stack_trace: error.stack_trace,
-          error_data: error.error_data || {},
+          error_data: error.error_data ?? {},
           request_data: error.request_data,
           response_data: error.response_data,
-          resolved: error.resolved || false,
+          resolved: error.resolved ?? false,
           resolution_notes: error.resolution_notes,
         }),
       ),
       ANALYTICS_TIMEOUT_MS,
-      'insert_error_log',
+      "insert_error_log",
     );
 
     if (result?.error) {
-      analyticsLogger.debug('Failed to log error to DB', { error: result.error, error_type: error.error_type });
+      analyticsLogger.debug("Failed to log error to DB", {
+        error: result.error,
+        error_type: error.error_type,
+      });
     } else {
-      analyticsLogger.debug('Error logged', { error_type: error.error_type });
+      analyticsLogger.debug("Error logged", { error_type: error.error_type });
     }
   } catch (err) {
-    analyticsLogger.debug('Error logging error', { error: err, error_type: error.error_type });
+    analyticsLogger.debug("Error logging error", {
+      error: err,
+      error_type: error.error_type,
+    });
   }
 }
 
@@ -555,14 +604,14 @@ export async function trackError(
     event_id?: string;
     request_data?: Record<string, unknown>;
     response_data?: Record<string, unknown>;
-    error_type?: ErrorLog['error_type'];
+    error_type?: ErrorLog["error_type"];
   } = {},
 ): Promise<void> {
   const platform = detectPlatform();
 
   // Log to error_logs table
   await logError({
-    error_type: context.error_type || 'runtime_error',
+    error_type: context.error_type ?? "runtime_error",
     error_message: error.message,
     error_code: error.name,
     platform,
@@ -581,9 +630,9 @@ export async function trackError(
   // Also track as an error event
   await trackEvent(
     {
-      event_type: `error_${context.error_type?.replace('_error', '') || 'runtime'}`,
-      event_category: 'error',
-      event_action: 'fail',
+      event_type: `error_${context.error_type?.replace("_error", "") ?? "runtime"}`,
+      event_category: "error",
+      event_action: "fail",
       source: context.source,
       case_id: context.case_id,
       success: false,

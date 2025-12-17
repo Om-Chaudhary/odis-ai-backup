@@ -111,6 +111,7 @@ export function MarketingNavbar({
   ctaText = "Book Demo",
   ctaHref = "mailto:hello@odis.ai?subject=Demo Request",
 }: MarketingNavbarProps) {
+  // usePostHog may return null during SSG/SSR when provider isn't mounted
   const posthog = usePostHog();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

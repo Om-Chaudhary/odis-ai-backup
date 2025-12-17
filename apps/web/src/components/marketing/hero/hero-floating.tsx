@@ -31,7 +31,7 @@ export default function HeroFloating() {
   }, [isVisible]);
 
   const handleButtonClick = () => {
-    posthog.capture("waitlist_cta_clicked", {
+    posthog?.capture?.("waitlist_cta_clicked", {
       location: "hero",
       button_text: "Join Waitlist - it's free",
       device_type: deviceInfo.device_type,
@@ -47,7 +47,7 @@ export default function HeroFloating() {
     }
 
     hoverTimeoutRef.current = setTimeout(() => {
-      posthog.capture("cta_button_hover", {
+      posthog?.capture?.("cta_button_hover", {
         location: "hero",
         button_text: "Join Waitlist - it's free",
         device_type: deviceInfo.device_type,

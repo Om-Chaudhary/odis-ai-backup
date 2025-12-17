@@ -12,7 +12,7 @@ export function DemoPhoneCTA() {
   const deviceInfo = useDeviceDetection();
 
   const handlePhoneClick = () => {
-    posthog.capture("demo_phone_clicked", {
+    posthog?.capture?.("demo_phone_clicked", {
       location: "hero_cta",
       phone_number: DEMO_PHONE_NUMBER,
       device_type: deviceInfo.device_type,
