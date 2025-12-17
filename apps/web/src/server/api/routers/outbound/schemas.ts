@@ -119,6 +119,12 @@ export const scheduleRemainingOutreachInput = z.object({
   immediateDelivery: z.boolean().default(false),
 });
 
+export const cancelScheduledDeliveryInput = z.object({
+  caseId: z.string().uuid(),
+  cancelCall: z.boolean().default(false),
+  cancelEmail: z.boolean().default(false),
+});
+
 // =============================================================================
 // Type Exports
 // =============================================================================
@@ -142,4 +148,7 @@ export type UpdateEmailContentInput = z.infer<typeof updateEmailContentInput>;
 export type RetryFailedDeliveryInput = z.infer<typeof retryFailedDeliveryInput>;
 export type ScheduleRemainingOutreachInput = z.infer<
   typeof scheduleRemainingOutreachInput
+>;
+export type CancelScheduledDeliveryInput = z.infer<
+  typeof cancelScheduledDeliveryInput
 >;
