@@ -20,21 +20,21 @@ export const browserEnv: BrowserEnv = {
   SUPABASE_URL:
     typeof __SUPABASE_URL__ !== "undefined"
       ? __SUPABASE_URL__
-      : ((typeof process !== "undefined" &&
-          process.env?.NEXT_PUBLIC_SUPABASE_URL) ??
-        ""),
+      : typeof process !== "undefined"
+        ? (process.env?.NEXT_PUBLIC_SUPABASE_URL ?? "")
+        : "",
   SUPABASE_ANON_KEY:
     typeof __SUPABASE_ANON_KEY__ !== "undefined"
       ? __SUPABASE_ANON_KEY__
-      : ((typeof process !== "undefined" &&
-          process.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY) ??
-        ""),
+      : typeof process !== "undefined"
+        ? (process.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "")
+        : "",
   SITE_URL:
     typeof __SITE_URL__ !== "undefined"
       ? __SITE_URL__
-      : ((typeof process !== "undefined" &&
-          process.env?.NEXT_PUBLIC_SITE_URL) ??
-        ""),
+      : typeof process !== "undefined"
+        ? (process.env?.NEXT_PUBLIC_SITE_URL ?? "")
+        : "",
 };
 
 export const IS_BROWSER = typeof window !== "undefined";

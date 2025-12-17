@@ -97,6 +97,9 @@
     "../../libs/testing/**/*",
     "../../libs/**/*.test.ts",
     "../../libs/**/*.test.tsx",
-    "../../libs/**/__tests__/**"
+    "../../libs/**/__tests__/**",
+    "../../libs/extension-storage/**/*",
+    "../../libs/extension-shared/**/*",
+    "../../libs/extension-env/**/*"
   ]
 }
