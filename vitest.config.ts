@@ -69,3 +69,13 @@ export function createVitestConfig(options: {
     },
   });
 }
+
+// Default export for Nx plugin compatibility
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: "node",
+    include: [],
+    passWithNoTests: true,
+  },
+});

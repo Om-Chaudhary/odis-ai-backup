@@ -1,0 +1,22 @@
+/* Base extension styles */
+:root {
+  --odis-primary: #3b82f6;
+  --odis-primary-hover: #2563eb;
+  --odis-bg: #ffffff;
+  --odis-text: #1f2937;
+  --odis-border: #e5e7eb;
+  --background: #ffffff;
+  --foreground: #0f172a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--odis-bg);
+  color: var(--odis-text);
+}

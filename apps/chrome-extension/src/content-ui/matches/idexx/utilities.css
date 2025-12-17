@@ -1,0 +1,7 @@
+/* Utilities placeholder */
+.odis-flex { display: flex; }
+.odis-items-center { align-items: center; }
+.odis-justify-between { justify-content: space-between; }
+.odis-gap-2 { gap: 0.5rem; }
+.odis-p-2 { padding: 0.5rem; }
+.odis-text-sm { font-size: 0.875rem; }

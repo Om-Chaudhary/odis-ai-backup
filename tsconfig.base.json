@@ -110,7 +110,24 @@
       ],
       "@odis-ai/services-shared": ["libs/services-shared/src/index.ts"],
       "@odis-ai/slack": ["libs/slack/src/index.ts"],
-      "@odis-ai/slack/*": ["libs/slack/src/*"]
+      "@odis-ai/slack/*": ["libs/slack/src/*"],
+
+      "@odis-ai/extension-shared": ["libs/extension-shared/src/index.ts"],
+      "@odis-ai/extension-shared/*": ["libs/extension-shared/src/*"],
+      "@odis-ai/extension-storage": ["libs/extension-storage/src/index.ts"],
+      "@odis-ai/extension-storage/*": ["libs/extension-storage/src/*"],
+      "@odis-ai/extension-env": ["libs/extension-env/src/index.ts"],
+      "@odis-ai/extension-env/*": ["libs/extension-env/src/*"],
+
+      "@odis-ai/db/browser": ["libs/db/src/browser.ts"],
+      "@odis-ai/env/browser": ["libs/env/src/browser.ts"],
+      "@odis-ai/logger/browser": ["libs/logger/src/browser.ts"],
+      "@odis-ai/vapi/browser": ["libs/vapi/src/browser.ts"],
+      "@odis-ai/ui/extension": ["libs/ui/src/extension/index.ts"],
+
+      "@src/*": ["apps/chrome-extension/src/*"],
+      "@root/*": ["apps/chrome-extension/*"],
+      "@database-types": ["libs/types/src/database.types.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

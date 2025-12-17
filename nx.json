@@ -74,7 +74,8 @@
     },
     "test": {
       "cache": true,
-      "inputs": ["default", "^production"]
+      "inputs": ["default", "^production"],
+      "outputs": ["{projectRoot}/coverage"]
     },
     "typecheck": {
       "cache": true,

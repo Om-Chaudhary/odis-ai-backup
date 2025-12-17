@@ -1,0 +1,26 @@
+/* Panel styles */
+.App {
+  text-align: center;
+  min-height: 100vh;
+  padding: 1rem;
+}
+
+.App-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.App-logo {
+  height: 80px;
+  pointer-events: none;
+}
+
+button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
