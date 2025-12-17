@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/hooks/src",
   "projectType": "library",
-  "tags": ["type:lib", "scope:hooks", "platform:browser"],
+  "tags": ["type:util", "scope:shared", "platform:browser"],
   "targets": {
     "lint": {
       "executor": "nx:run-commands",

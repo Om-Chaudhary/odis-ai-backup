@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/vapi/src",
   "projectType": "library",
-  "tags": ["type:lib", "scope:vapi", "platform:node"],
+  "tags": ["type:integration", "scope:server", "platform:node"],
   "implicitDependencies": ["ai"],
   "targets": {
     "test": {

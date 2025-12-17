@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/ui/src",
   "projectType": "library",
-  "tags": ["type:lib", "scope:ui", "platform:browser"],
+  "tags": ["type:ui", "scope:shared", "platform:browser"],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",

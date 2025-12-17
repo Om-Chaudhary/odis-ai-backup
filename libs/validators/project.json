@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/validators/src",
   "projectType": "library",
-  "tags": ["type:lib", "scope:validators", "platform:neutral"],
+  "tags": ["type:util", "scope:shared", "platform:neutral"],
   "targets": {
     "test": {
       "executor": "nx:run-commands",

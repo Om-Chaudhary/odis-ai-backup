@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/testing/src",
   "projectType": "library",
-  "tags": ["type:lib", "scope:testing", "platform:node"],
+  "tags": ["type:testing", "scope:shared", "platform:neutral"],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",
