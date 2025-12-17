@@ -2,5 +2,8 @@
   "name": "web",
   "private": true,
   "version": "0.0.1",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@calcom/embed-react": "^1.5.3"
+  }
 }
