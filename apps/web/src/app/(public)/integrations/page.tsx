@@ -45,7 +45,7 @@ export default function IntegrationsPage() {
       <SectionContainer
         id="active-integrations"
         backgroundVariant="cool-blue"
-        padding="large"
+        padding="default"
       >
         <SectionHeader
           badge="Available Now"
@@ -78,7 +78,7 @@ export default function IntegrationsPage() {
         <SectionContainer
           id="coming-soon"
           backgroundVariant="warm-violet"
-          padding="large"
+          padding="default"
         >
           <SectionHeader
             badge="Coming Soon"

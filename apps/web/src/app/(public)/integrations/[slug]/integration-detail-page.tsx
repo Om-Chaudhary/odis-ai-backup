@@ -97,7 +97,7 @@ export function IntegrationDetailPage({
       <SectionContainer
         id="overview"
         backgroundVariant="cool-blue"
-        padding="large"
+        padding="default"
       >
         <div
           ref={overviewRef}
@@ -167,7 +167,7 @@ export function IntegrationDetailPage({
         <SectionContainer
           id="features"
           backgroundVariant="warm-violet"
-          padding="large"
+          padding="default"
         >
           <SectionHeader
             badge="Features"
@@ -198,7 +198,7 @@ export function IntegrationDetailPage({
         <SectionContainer
           id="how-it-works"
           backgroundVariant="subtle-dark"
-          padding="large"
+          padding="default"
         >
           <SectionHeader
             badge="How It Works"

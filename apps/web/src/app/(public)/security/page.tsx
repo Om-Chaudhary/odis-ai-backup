@@ -149,7 +149,7 @@ export default function SecurityPage() {
       <SectionContainer
         id="security-features"
         backgroundVariant="cool-blue"
-        padding="large"
+        padding="default"
       >
         <SectionHeader
           badge="Security Features"
@@ -179,7 +179,7 @@ export default function SecurityPage() {
       <SectionContainer
         id="compliance"
         backgroundVariant="warm-violet"
-        padding="large"
+        padding="default"
       >
         <SectionHeader
           badge="Compliance"
@@ -238,7 +238,7 @@ export default function SecurityPage() {
       <SectionContainer
         id="data-handling"
         backgroundVariant="subtle-dark"
-        padding="large"
+        padding="default"
       >
         <SectionHeader
           badge="Data Handling"

@@ -169,7 +169,7 @@ export default function PricingPage() {
       <SectionContainer
         id="pricing-tiers"
         backgroundVariant="cool-blue"
-        padding="large"
+        padding="default"
       >
         <div ref={pricingRef} className="grid gap-8 md:grid-cols-3">
           {pricingTiers.map((tier, index) => (
@@ -203,7 +203,7 @@ export default function PricingPage() {
       <SectionContainer
         id="pricing-faq"
         backgroundVariant="subtle-dark"
-        padding="large"
+        padding="default"
       >
         <SectionHeader
           badge="FAQ"

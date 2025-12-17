@@ -94,7 +94,7 @@ export default function FeaturesPage() {
       <SectionContainer
         id="core-features"
         backgroundVariant="cool-blue"
-        padding="large"
+        padding="default"
       >
         <SectionHeader
           badge="Core Features"
@@ -120,7 +120,7 @@ export default function FeaturesPage() {
       <SectionContainer
         id="benefits"
         backgroundVariant="warm-violet"
-        padding="large"
+        padding="default"
       >
         <SectionHeader
           badge="Benefits"
