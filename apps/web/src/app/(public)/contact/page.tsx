@@ -78,7 +78,7 @@ export default function ContactPage() {
       />
 
       {/* Contact Section */}
-      <SectionContainer backgroundVariant="cool-blue" padding="large">
+      <SectionContainer backgroundVariant="cool-blue" padding="default">
         <div ref={formRef} className="grid gap-12 lg:grid-cols-2">
           {/* Contact Form */}
           <motion.div

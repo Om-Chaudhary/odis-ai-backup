@@ -124,7 +124,7 @@ export function CTASection({
       ref={ref}
       id={id}
       className={cn(
-        "relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32",
+        "relative w-full overflow-hidden py-12 sm:py-16 md:py-20",
         className,
       )}
     >

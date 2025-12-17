@@ -97,7 +97,7 @@ export function PageHero({
     <section
       ref={ref}
       id={id}
-      className={`relative w-full overflow-hidden pt-32 pb-16 sm:pt-40 sm:pb-20 md:pb-24 lg:pb-32 ${className ?? ""}`}
+      className={`relative w-full overflow-hidden pt-24 pb-8 sm:pt-28 sm:pb-10 md:pt-32 md:pb-12 ${className ?? ""}`}
     >
       <SectionBackground variant={backgroundVariant} />
 
