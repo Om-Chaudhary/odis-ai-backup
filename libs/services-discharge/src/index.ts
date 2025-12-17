@@ -52,6 +52,9 @@
 export { executeScheduledCall } from "./lib/call-executor";
 export { executeScheduledEmail } from "./lib/email-executor";
 
+// Export email content generator for use in outbound procedures
+export { generateDischargeEmailContent } from "./lib/email-content-generator";
+
 // Export types
 export type {
   CallExecutionResult,

@@ -192,6 +192,50 @@ export const scheduleRemainingRouter = createTRPCRouter({
           ? new Date(now.getTime() + 60 * 1000)
           : calculateScheduleTime(now, emailDelayDays, preferredEmailTime);
 
+        // Generate formatted email content using DischargeEmailTemplate
+        const structuredContent = dischargeSummary?.structured_content;
+
+        // Get clinic branding for email template
+        const clinic = await getClinicByUserId(userId, ctx.supabase);
+        const { data: userData } = await ctx.supabase
+          .from("users")
+          .select("clinic_name, clinic_phone, clinic_email")
+          .eq("id", userId)
+          .single();
+
+        // Import branding helper
+        const { createClinicBranding } =
+          await import("@odis-ai/types/clinic-branding");
+        const branding = createClinicBranding({
+          clinicName: clinic?.name ?? userData?.clinic_name ?? undefined,
+          clinicPhone: clinic?.phone ?? userData?.clinic_phone ?? undefined,
+          clinicEmail: clinic?.email ?? userData?.clinic_email ?? undefined,
+          primaryColor: clinic?.primary_color ?? undefined,
+          logoUrl: clinic?.logo_url ?? undefined,
+          emailHeaderText: clinic?.email_header_text ?? undefined,
+          emailFooterText: clinic?.email_footer_text ?? undefined,
+        });
+
+        // Import and use the email content generator
+        const { generateDischargeEmailContent } =
+          await import("@odis-ai/services-discharge");
+        const emailContent = await generateDischargeEmailContent(
+          summaryContent,
+          patient?.name ?? "your pet",
+          patient?.species ?? undefined,
+          patient?.breed ?? undefined,
+          branding,
+          structuredContent as never, // Type assertion to satisfy StructuredDischargeSummary
+          null,
+        );
+
+        console.log("[ScheduleRemaining] Generated formatted email content", {
+          caseId: input.caseId,
+          hasStructuredContent: !!structuredContent,
+          htmlLength: emailContent.html.length,
+          textLength: emailContent.text.length,
+        });
+
         const { data: emailData, error: emailError } = await ctx.supabase
           .from("scheduled_discharge_emails")
           .insert({
@@ -199,8 +243,9 @@ export const scheduleRemainingRouter = createTRPCRouter({
             case_id: input.caseId,
             recipient_email: normalizedEmail,
             recipient_name: recipientName,
-            subject: `Discharge Instructions for ${patient?.name ?? "Your Pet"}`,
-            html_content: summaryContent,
+            subject: emailContent.subject,
+            html_content: emailContent.html,
+            text_content: emailContent.text,
             scheduled_for: emailScheduledFor.toISOString(),
             status: "queued",
           })

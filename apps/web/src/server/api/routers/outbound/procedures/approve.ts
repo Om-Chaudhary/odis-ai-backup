@@ -12,8 +12,6 @@
 
 import { TRPCError } from "@trpc/server";
 import { getClinicUserIds, getClinicByUserId } from "@odis-ai/clinics/utils";
-import { getClinicVapiConfigByUserId } from "@odis-ai/clinics/vapi-config";
-import { generateStructuredDischargeSummaryWithRetry } from "@odis-ai/ai/generate-structured-discharge";
 import { normalizeToE164, normalizeEmail } from "@odis-ai/utils/phone";
 import { calculateScheduleTime } from "@odis-ai/utils/timezone";
 import type { NormalizedEntities } from "@odis-ai/validators/scribe";
@@ -25,6 +23,10 @@ import { approveAndScheduleInput } from "../schemas";
 // Dynamic imports for lazy-loaded libraries
 const getCasesService = () =>
   import("@odis-ai/services-cases").then((m) => m.CasesService);
+const getGenerateStructuredDischargeSummaryWithRetry = () =>
+  import("@odis-ai/ai/generate-structured-discharge").then(
+    (m) => m.generateStructuredDischargeSummaryWithRetry,
+  );
 
 /**
  * IDEXX metadata structure for entity extraction
@@ -424,6 +426,8 @@ export const approveRouter = createTRPCRouter({
           patientName: patient?.name ?? entities?.patient?.name,
         });
 
+        const generateStructuredDischargeSummaryWithRetry =
+          await getGenerateStructuredDischargeSummaryWithRetry();
         const { structured, plainText } =
           await generateStructuredDischargeSummaryWithRetry({
             soapContent,
@@ -516,6 +520,57 @@ export const approveRouter = createTRPCRouter({
           ? new Date(now.getTime() + 60 * 1000) // 1 minute delay for immediate
           : calculateScheduleTime(now, emailDelayDays, preferredEmailTime);
 
+        // Generate formatted email content using DischargeEmailTemplate
+        // First, get structured content from the discharge summary
+        const { data: dischargeSummaryData } = await ctx.supabase
+          .from("discharge_summaries")
+          .select("content, structured_content")
+          .eq("id", summaryId!)
+          .single();
+
+        const structuredContent = dischargeSummaryData?.structured_content;
+
+        // Get clinic branding for email template
+        const clinic = await getClinicByUserId(userId, ctx.supabase);
+        const { data: userData } = await ctx.supabase
+          .from("users")
+          .select("clinic_name, clinic_phone, clinic_email")
+          .eq("id", userId)
+          .single();
+
+        // Import branding helper
+        const { createClinicBranding } =
+          await import("@odis-ai/types/clinic-branding");
+        const branding = createClinicBranding({
+          clinicName: clinic?.name ?? userData?.clinic_name ?? undefined,
+          clinicPhone: clinic?.phone ?? userData?.clinic_phone ?? undefined,
+          clinicEmail: clinic?.email ?? userData?.clinic_email ?? undefined,
+          primaryColor: clinic?.primary_color ?? undefined,
+          logoUrl: clinic?.logo_url ?? undefined,
+          emailHeaderText: clinic?.email_header_text ?? undefined,
+          emailFooterText: clinic?.email_footer_text ?? undefined,
+        });
+
+        // Import and use the email content generator
+        const { generateDischargeEmailContent } =
+          await import("@odis-ai/services-discharge");
+        const emailContent = await generateDischargeEmailContent(
+          summaryContent,
+          patient?.name ?? "your pet",
+          patient?.species ?? undefined,
+          patient?.breed ?? undefined,
+          branding,
+          structuredContent as never, // Type assertion to satisfy StructuredDischargeSummary
+          null,
+        );
+
+        console.log("[Approve] Generated formatted email content", {
+          caseId: input.caseId,
+          hasStructuredContent: !!structuredContent,
+          htmlLength: emailContent.html.length,
+          textLength: emailContent.text.length,
+        });
+
         const { data: emailData, error: emailError } = await ctx.supabase
           .from("scheduled_discharge_emails")
           .insert({
@@ -523,8 +578,9 @@ export const approveRouter = createTRPCRouter({
             case_id: input.caseId,
             recipient_email: normalizedEmail, // Use normalized email (or test contact in test mode)
             recipient_name: recipientName,
-            subject: `Discharge Instructions for ${patient?.name ?? "Your Pet"}`,
-            html_content: summaryContent,
+            subject: emailContent.subject,
+            html_content: emailContent.html,
+            text_content: emailContent.text,
             scheduled_for: emailScheduledFor.toISOString(),
             status: "queued",
           })
