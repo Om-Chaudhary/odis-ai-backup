@@ -2,8 +2,10 @@
 
 import { useRef, useMemo } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { usePostHog } from "posthog-js/react";
+import { Calendar } from "lucide-react";
 import { cn } from "@odis-ai/utils";
 import { usePageLoaded } from "~/hooks/use-page-loaded";
 import { PhoneRingIcon } from "../ui/phone-ring-icon";
@@ -72,6 +74,12 @@ export function HeroSection() {
     });
   };
 
+  const handleScheduleDemoClick = () => {
+    posthog?.capture("schedule_demo_clicked", {
+      location: "hero_secondary_cta",
+    });
+  };
+
   const transition = useMemo(
     () => ({
       duration: shouldReduceMotion ? 0 : 0.8,
@@ -110,8 +118,8 @@ export function HeroSection() {
               OdisAI
             </span>
           </div>
-          <a
-            href="mailto:hello@odis.ai?subject=Demo Request"
+          <Link
+            href="/demo"
             className={cn(
               "rounded-full px-5 py-2.5 text-sm font-medium",
               "bg-slate-900 text-white",
@@ -120,7 +128,7 @@ export function HeroSection() {
             )}
           >
             Book Demo
-          </a>
+          </Link>
         </div>
       </motion.nav>
 
@@ -186,11 +194,10 @@ export function HeroSection() {
               variants={itemVariants}
               className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center"
             >
-              {/* Primary CTA */}
-              <a
-                href={DEMO_PHONE_TEL}
-                onClick={handleDemoPhoneClick}
-                aria-label={`Call demo line at ${DEMO_PHONE_NUMBER}`}
+              {/* Primary CTA - Schedule Demo */}
+              <Link
+                href="/demo"
+                onClick={handleScheduleDemoClick}
                 className={cn(
                   "inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5",
                   "bg-teal-600 text-white",
@@ -200,8 +207,26 @@ export function HeroSection() {
                   "focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 focus-visible:outline-none",
                 )}
               >
+                <Calendar className="h-4 w-4 shrink-0" />
+                <span>Schedule a Demo</span>
+              </Link>
+
+              {/* Secondary CTA - Try Now */}
+              <a
+                href={DEMO_PHONE_TEL}
+                onClick={handleDemoPhoneClick}
+                aria-label={`Call demo line at ${DEMO_PHONE_NUMBER}`}
+                className={cn(
+                  "inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5",
+                  "bg-white text-slate-700 ring-1 ring-slate-200",
+                  "text-sm font-medium",
+                  "transition-all duration-200",
+                  "hover:bg-slate-50",
+                  "focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 focus-visible:outline-none",
+                )}
+              >
                 <PhoneRingIcon size={16} ringing className="shrink-0" />
-                <span>Try Demo: {DEMO_PHONE_NUMBER}</span>
+                <span>Try Now: {DEMO_PHONE_NUMBER}</span>
               </a>
             </motion.div>
           </motion.div>

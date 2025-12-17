@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import Link from "next/link";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { usePostHog } from "posthog-js/react";
 import { NeonGradientCard } from "../ui/neon-gradient-card";
@@ -101,29 +102,48 @@ export function PricingSection() {
 
               <div>
                 <h3 className="font-display mb-2 text-lg font-medium text-slate-900 sm:text-xl md:text-2xl">
-                  Try It Right Now
+                  Experience OdisAI
                 </h3>
                 <p className="text-base text-slate-600">
-                  Call our demo line and hear Odis handle a veterinary call
-                  live.
+                  Schedule a personalized demo or call our demo line to hear
+                  Odis in action right now.
                 </p>
               </div>
 
-              {/* Primary CTA - Demo Phone */}
-              <a
-                href={DEMO_PHONE_TEL}
-                onClick={handleDemoPhoneClick}
-                className={cn(
-                  "group inline-flex items-center justify-center gap-3 rounded-full px-8 py-4",
-                  "bg-gradient-to-r from-teal-600 to-emerald-600",
-                  "text-lg font-semibold text-white shadow-lg shadow-teal-500/25",
-                  "transition-all duration-300",
-                  "hover:scale-[1.02] hover:shadow-xl hover:shadow-teal-500/30",
-                )}
-              >
-                <Phone className="h-5 w-5" />
-                <span>Call Demo: {DEMO_PHONE_NUMBER}</span>
-              </a>
+              {/* CTA Buttons */}
+              <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+                {/* Primary CTA - Schedule Demo */}
+                <Link
+                  href="/demo"
+                  onClick={handleScheduleDemoClick}
+                  className={cn(
+                    "group inline-flex items-center justify-center gap-3 rounded-full px-8 py-4",
+                    "bg-gradient-to-r from-teal-600 to-emerald-600",
+                    "text-lg font-semibold text-white shadow-lg shadow-teal-500/25",
+                    "transition-all duration-300",
+                    "hover:scale-[1.02] hover:shadow-xl hover:shadow-teal-500/30",
+                  )}
+                >
+                  <Calendar className="h-5 w-5" />
+                  <span>Schedule a Demo</span>
+                </Link>
+
+                {/* Secondary CTA - Call Now */}
+                <a
+                  href={DEMO_PHONE_TEL}
+                  onClick={handleDemoPhoneClick}
+                  className={cn(
+                    "group inline-flex items-center justify-center gap-3 rounded-full px-8 py-4",
+                    "bg-white text-slate-700 ring-1 ring-slate-200",
+                    "text-lg font-semibold shadow-lg",
+                    "transition-all duration-300",
+                    "hover:scale-[1.02] hover:bg-slate-50",
+                  )}
+                >
+                  <Phone className="h-5 w-5" />
+                  <span>Call: {DEMO_PHONE_NUMBER}</span>
+                </a>
+              </div>
             </div>
           </NeonGradientCard>
         </motion.div>
