@@ -151,13 +151,13 @@ export const LandingNavbar = () => {
                 >
                   <Link href="/login">Sign In</Link>
                 </Button>
-                <a
-                  href="mailto:hello@odis.ai?subject=Demo Request"
+                <Link
+                  href="/demo"
                   onClick={() => handleBookDemoClick("navbar-desktop")}
                   className="bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-primary/25 ml-2 rounded-full px-6 py-2.5 text-sm font-semibold transition-all hover:shadow-lg"
                 >
                   Book Demo
-                </a>
+                </Link>
               </>
             )}
           </div>
@@ -229,13 +229,13 @@ export const LandingNavbar = () => {
                     >
                       Sign In
                     </Link>
-                    <a
-                      href="mailto:hello@odis.ai?subject=Demo Request"
+                    <Link
+                      href="/demo"
                       onClick={() => handleBookDemoClick("navbar-mobile")}
                       className="bg-primary text-primary-foreground hover:bg-primary/90 mt-2 block w-full rounded-full px-6 py-3 text-center text-base font-semibold transition-all"
                     >
                       Book Demo
-                    </a>
+                    </Link>
                   </>
                 )}
               </div>

@@ -80,7 +80,7 @@ export interface MarketingNavbarProps {
   ctaText?: string;
   /**
    * Custom CTA href
-   * @default "mailto:hello@odis.ai?subject=Demo Request"
+   * @default "/demo"
    */
   ctaHref?: string;
 }
@@ -109,7 +109,7 @@ export function MarketingNavbar({
   scrollThreshold = 100,
   showCTA = true,
   ctaText = "Book Demo",
-  ctaHref = "mailto:hello@odis.ai?subject=Demo Request",
+  ctaHref = "/demo",
 }: MarketingNavbarProps) {
   // usePostHog may return null during SSG/SSR when provider isn't mounted
   const posthog = usePostHog();
@@ -273,8 +273,9 @@ export function MarketingNavbar({
                           {item.name}
                         </NavigationMenuLink>
                       ) : (
-                        <Link href={item.href} legacyBehavior passHref>
-                          <NavigationMenuLink
+                        <NavigationMenuLink asChild>
+                          <Link
+                            href={item.href}
                             className={cn(
                               navigationMenuTriggerStyle(),
                               "text-muted-foreground bg-transparent transition-all hover:bg-white/10 hover:text-slate-800 focus:bg-white/10",
@@ -282,8 +283,8 @@ export function MarketingNavbar({
                             )}
                           >
                             {item.name}
-                          </NavigationMenuLink>
-                        </Link>
+                          </Link>
+                        </NavigationMenuLink>
                       )}
                     </NavigationMenuItem>
                   );
@@ -313,13 +314,13 @@ export function MarketingNavbar({
                   <Link href="/login">Sign In</Link>
                 </Button>
                 {showCTA && (
-                  <a
+                  <Link
                     href={ctaHref}
                     onClick={() => handleBookDemoClick("navbar-desktop")}
                     className="bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-primary/25 ml-2 rounded-full px-6 py-2.5 text-sm font-semibold transition-all hover:shadow-lg"
                   >
                     {ctaText}
-                  </a>
+                  </Link>
                 )}
               </>
             )}
@@ -427,13 +428,13 @@ export function MarketingNavbar({
                       Sign In
                     </Link>
                     {showCTA && (
-                      <a
+                      <Link
                         href={ctaHref}
                         onClick={() => handleBookDemoClick("navbar-mobile")}
                         className="bg-primary text-primary-foreground hover:bg-primary/90 mt-2 block w-full rounded-full px-6 py-3 text-center text-base font-semibold transition-all"
                       >
                         {ctaText}
-                      </a>
+                      </Link>
                     )}
                   </>
                 )}
