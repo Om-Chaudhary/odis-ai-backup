@@ -10,7 +10,6 @@ export * from "./database.types";
 
 // Domain types
 export * from "./case";
-export * from "./case-study";
 export * from "./clinic-branding";
 export * from "./dashboard";
 export * from "./entities";
