@@ -4,10 +4,7 @@
  */
 
 // Re-export browser client
-export { createBrowserClient } from "./client";
+export { createClient as createBrowserClient } from "./client";
 
-// Re-export database types
-export type { Database } from "./database.types";
-
-// Re-export TypeScript types (no runtime dependencies)
-export type * from "./types";
+// Re-export database types from @odis-ai/types
+export type { Database } from "@odis-ai/types";
