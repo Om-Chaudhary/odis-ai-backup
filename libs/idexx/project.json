@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/idexx/src",
   "projectType": "library",
-  "tags": ["type:lib", "scope:idexx", "platform:node"],
+  "tags": ["type:integration", "scope:shared", "platform:neutral"],
   "targets": {
     "test": {
       "executor": "nx:run-commands",

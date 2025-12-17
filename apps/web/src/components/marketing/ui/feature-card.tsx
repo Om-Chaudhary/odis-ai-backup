@@ -3,7 +3,7 @@
 import type { ReactNode, ComponentType, SVGProps } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Check } from "lucide-react";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis-ai/utils";
 
 export interface FeatureCardProps {
   /**

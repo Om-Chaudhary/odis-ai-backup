@@ -67,3 +67,4 @@ vitest.config.*.timestamp*
 .next
 out
 dist/libs/services-*
+dist/apps/

@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/resend/src",
   "projectType": "library",
-  "tags": ["type:lib", "scope:resend", "platform:node"],
+  "tags": ["type:integration", "scope:server", "platform:node"],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",

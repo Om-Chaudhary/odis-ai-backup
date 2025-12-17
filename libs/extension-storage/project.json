@@ -1,0 +1,24 @@
+{
+  "name": "extension-storage",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/extension-storage/src",
+  "projectType": "library",
+  "tags": ["type:data-access", "scope:extension", "platform:browser"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p libs/extension-storage/tsconfig.json",
+        "cwd": "{workspaceRoot}"
+      },
+      "cache": true
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/extension-storage/**/*.{ts,tsx}"]
+      }
+    }
+  }
+}

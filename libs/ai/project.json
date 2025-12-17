@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/ai/src",
   "projectType": "library",
-  "tags": ["type:lib", "scope:ai", "platform:node"],
+  "tags": ["type:util", "scope:server", "platform:node"],
   "targets": {
     "test": {
       "executor": "nx:run-commands",

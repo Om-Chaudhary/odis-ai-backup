@@ -1,0 +1,14 @@
+/* Popup styles */
+.popup-container {
+  width: 350px;
+  min-height: 400px;
+}
+
+.popup-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #31aba3 0%, #3bbfb7 100%);
+  border-bottom: 1px solid #2a9890;
+}

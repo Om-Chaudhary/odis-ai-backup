@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/styles/src",
   "projectType": "library",
-  "tags": ["type:lib", "scope:styles", "platform:neutral"],
+  "tags": ["type:ui", "scope:shared", "platform:browser"],
   "targets": {
     "lint": {
       "executor": "nx:run-commands",

@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, Check, Clock } from "lucide-react";
 import Image from "next/image";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis-ai/utils";
 
 export type IntegrationStatus = "active" | "coming-soon" | "beta";
 

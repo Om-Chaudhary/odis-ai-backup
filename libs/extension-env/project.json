@@ -1,0 +1,17 @@
+{
+  "name": "extension-env",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/extension-env/src",
+  "projectType": "library",
+  "tags": ["type:config", "scope:extension", "platform:browser"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p libs/extension-env/tsconfig.json",
+        "cwd": "{workspaceRoot}"
+      },
+      "cache": true
+    }
+  }
+}

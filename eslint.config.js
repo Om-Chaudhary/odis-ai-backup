@@ -84,18 +84,7 @@ export default tseslint.config(
           allow: ["^~/.*"],
           depConstraints: [
             // ============================================
-            // Type-based constraints
-            // ============================================
-            {
-              sourceTag: "type:app",
-              onlyDependOnLibsWithTags: ["type:app", "type:lib"],
-            },
-            {
-              sourceTag: "type:lib",
-              onlyDependOnLibsWithTags: ["type:lib"],
-            },
-            // ============================================
-            // Platform-based constraints
+            // PLATFORM CONSTRAINTS (Critical for Browser/Node separation)
             // ============================================
             {
               sourceTag: "platform:browser",
@@ -109,279 +98,114 @@ export default tseslint.config(
               onlyDependOnLibsWithTags: ["platform:neutral"],
             },
             // platform:node can depend on any platform (no constraint needed)
+
             // ============================================
-            // Application layer
+            // TYPE CONSTRAINTS (Architectural layers)
             // ============================================
+            // Apps can depend on anything
             {
-              sourceTag: "scope:web",
+              sourceTag: "type:app",
               onlyDependOnLibsWithTags: [
-                "scope:web",
-                "scope:ui",
-                "scope:hooks",
-                "scope:auth",
-                "scope:styles",
-                "scope:utils",
-                "scope:types",
-                "scope:validators",
-                "scope:services",
-                "scope:db",
-                "scope:vapi",
-                "scope:idexx",
-                "scope:api-client",
-                "scope:api",
-                "scope:ai",
-                "scope:clinics",
-                "scope:constants",
-                "scope:crypto",
-                "scope:email",
-                "scope:env",
-                "scope:logger",
-                "scope:qstash",
-                "scope:resend",
-                "scope:retell",
-                "scope:slack",
+                "type:app",
+                "type:service",
+                "type:integration",
+                "type:data-access",
+                "type:ui",
+                "type:util",
+                "type:config",
+                "type:types",
+                "type:testing",
               ],
             },
+            // Services can depend on integrations, data-access, utils, config, types
+            {
+              sourceTag: "type:service",
+              onlyDependOnLibsWithTags: [
+                "type:service",
+                "type:integration",
+                "type:data-access",
+                "type:util",
+                "type:config",
+                "type:types",
+              ],
+            },
+            // Integrations can depend on data-access, utils, config, types
+            {
+              sourceTag: "type:integration",
+              onlyDependOnLibsWithTags: [
+                "type:integration",
+                "type:data-access",
+                "type:util",
+                "type:config",
+                "type:types",
+              ],
+            },
+            // Data-access can depend on utils, config, types
+            {
+              sourceTag: "type:data-access",
+              onlyDependOnLibsWithTags: [
+                "type:data-access",
+                "type:util",
+                "type:config",
+                "type:types",
+              ],
+            },
+            // UI can depend on utils, types
+            {
+              sourceTag: "type:ui",
+              onlyDependOnLibsWithTags: ["type:ui", "type:util", "type:types"],
+            },
+            // Utils can depend on utils, config, types
+            {
+              sourceTag: "type:util",
+              onlyDependOnLibsWithTags: [
+                "type:util",
+                "type:config",
+                "type:types",
+              ],
+            },
+            // Config can depend on config only (foundation)
+            {
+              sourceTag: "type:config",
+              onlyDependOnLibsWithTags: ["type:config"],
+            },
+            // Types can depend on types only (foundation)
+            {
+              sourceTag: "type:types",
+              onlyDependOnLibsWithTags: ["type:types"],
+            },
+            // Testing can depend on anything
+            {
+              sourceTag: "type:testing",
+              onlyDependOnLibsWithTags: [
+                "type:testing",
+                "type:service",
+                "type:integration",
+                "type:data-access",
+                "type:ui",
+                "type:util",
+                "type:config",
+                "type:types",
+              ],
+            },
+
             // ============================================
-            // New Platform Apps (Chrome Extension, Electron)
+            // SCOPE CONSTRAINTS (Domain boundaries)
             // ============================================
+            // Extension scope can only use shared and extension libs (CRITICAL: No server access)
             {
-              sourceTag: "scope:chrome-extension",
-              onlyDependOnLibsWithTags: [
-                "scope:ui",
-                "scope:hooks",
-                "scope:auth",
-                "scope:styles",
-                "scope:utils",
-                "scope:types",
-                "scope:validators",
-                "scope:api-client",
-                "scope:constants",
-                "scope:env",
-              ],
+              sourceTag: "scope:extension",
+              onlyDependOnLibsWithTags: ["scope:extension", "scope:shared"],
             },
+            // Server scope can use server and shared libs
             {
-              sourceTag: "scope:electron",
-              onlyDependOnLibsWithTags: [
-                "scope:ui",
-                "scope:hooks",
-                "scope:auth",
-                "scope:styles",
-                "scope:utils",
-                "scope:types",
-                "scope:validators",
-                "scope:api-client",
-                "scope:db",
-                "scope:constants",
-                "scope:env",
-              ],
+              sourceTag: "scope:server",
+              onlyDependOnLibsWithTags: ["scope:server", "scope:shared"],
             },
-            // ============================================
-            // Domain/Service layer
-            // ============================================
+            // Shared scope can only use shared libs
             {
-              sourceTag: "scope:services",
-              onlyDependOnLibsWithTags: [
-                "scope:services",
-                "scope:db",
-                "scope:utils",
-                "scope:types",
-                "scope:validators",
-                "scope:vapi",
-                "scope:idexx",
-                "scope:ai",
-                "scope:qstash",
-                "scope:clinics",
-                "scope:resend",
-                "scope:email",
-                "scope:env",
-                "scope:logger",
-              ],
-            },
-            {
-              sourceTag: "scope:vapi",
-              onlyDependOnLibsWithTags: [
-                "scope:vapi",
-                "scope:utils",
-                "scope:types",
-                "scope:validators",
-                "scope:db",
-                "scope:idexx",
-                "scope:logger",
-                "scope:qstash",
-                "scope:clinics",
-                "scope:env",
-                "scope:ai",
-              ],
-            },
-            {
-              sourceTag: "scope:idexx",
-              onlyDependOnLibsWithTags: [
-                "scope:idexx",
-                "scope:utils",
-                "scope:types",
-                "scope:validators",
-                "scope:retell",
-                "scope:crypto",
-                "scope:db",
-                "scope:vapi",
-              ],
-            },
-            // ============================================
-            // Infrastructure layer
-            // ============================================
-            {
-              sourceTag: "scope:db",
-              onlyDependOnLibsWithTags: [
-                "scope:db",
-                "scope:utils",
-                "scope:types",
-                "scope:validators",
-                "scope:constants",
-                "scope:logger",
-                "scope:api",
-                "scope:env",
-              ],
-            },
-            {
-              sourceTag: "scope:api",
-              onlyDependOnLibsWithTags: [
-                "scope:api",
-                "scope:db",
-                "scope:types",
-                "scope:env",
-                "scope:utils",
-              ],
-            },
-            {
-              sourceTag: "scope:clinics",
-              onlyDependOnLibsWithTags: [
-                "scope:clinics",
-                "scope:types",
-                "scope:logger",
-                "scope:env",
-              ],
-            },
-            {
-              sourceTag: "scope:ai",
-              onlyDependOnLibsWithTags: [
-                "scope:ai",
-                "scope:validators",
-                "scope:types",
-                "scope:env",
-              ],
-            },
-            {
-              sourceTag: "scope:email",
-              onlyDependOnLibsWithTags: [
-                "scope:email",
-                "scope:validators",
-                "scope:types",
-              ],
-            },
-            {
-              sourceTag: "scope:retell",
-              onlyDependOnLibsWithTags: [
-                "scope:retell",
-                "scope:utils",
-                "scope:vapi",
-              ],
-            },
-            {
-              sourceTag: "scope:crypto",
-              onlyDependOnLibsWithTags: ["scope:crypto", "scope:env"],
-            },
-            {
-              sourceTag: "scope:resend",
-              onlyDependOnLibsWithTags: ["scope:resend", "scope:env"],
-            },
-            // ============================================
-            // UI layer
-            // ============================================
-            {
-              sourceTag: "scope:ui",
-              onlyDependOnLibsWithTags: [
-                "scope:ui",
-                "scope:utils",
-                "scope:types",
-              ],
-            },
-            {
-              sourceTag: "scope:hooks",
-              onlyDependOnLibsWithTags: ["scope:hooks", "scope:utils"],
-            },
-            {
-              sourceTag: "scope:auth",
-              onlyDependOnLibsWithTags: [
-                "scope:auth",
-                "scope:env",
-                "scope:types",
-              ],
-            },
-            {
-              sourceTag: "scope:styles",
-              onlyDependOnLibsWithTags: ["scope:styles"],
-            },
-            {
-              sourceTag: "scope:api-client",
-              onlyDependOnLibsWithTags: [
-                "scope:api-client",
-                "scope:utils",
-                "scope:types",
-                "scope:validators",
-              ],
-            },
-            // ============================================
-            // Foundation layer (no/minimal deps)
-            // ============================================
-            {
-              sourceTag: "scope:utils",
-              onlyDependOnLibsWithTags: [
-                "scope:utils",
-                "scope:types",
-                "scope:validators",
-              ],
-            },
-            {
-              sourceTag: "scope:validators",
-              onlyDependOnLibsWithTags: ["scope:validators", "scope:types"],
-            },
-            {
-              sourceTag: "scope:types",
-              onlyDependOnLibsWithTags: ["scope:types", "scope:validators"],
-            },
-            {
-              sourceTag: "scope:logger",
-              onlyDependOnLibsWithTags: ["scope:logger"],
-            },
-            {
-              sourceTag: "scope:constants",
-              onlyDependOnLibsWithTags: ["scope:constants"],
-            },
-            {
-              sourceTag: "scope:qstash",
-              onlyDependOnLibsWithTags: ["scope:qstash"],
-            },
-            {
-              sourceTag: "scope:env",
-              onlyDependOnLibsWithTags: ["scope:env"],
-            },
-            // ============================================
-            // Testing (can depend on anything)
-            // ============================================
-            {
-              sourceTag: "scope:testing",
-              onlyDependOnLibsWithTags: [
-                "scope:testing",
-                "scope:types",
-                "scope:validators",
-                "scope:utils",
-                "scope:db",
-                "scope:vapi",
-                "scope:services",
-                "scope:api",
-                "scope:ui",
-              ],
+              sourceTag: "scope:shared",
+              onlyDependOnLibsWithTags: ["scope:shared"],
             },
           ],
         },

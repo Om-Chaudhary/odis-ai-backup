@@ -16,7 +16,7 @@ import {
   HelpCircle,
   Sparkles,
 } from "lucide-react";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis-ai/utils";
 import { SectionBackground } from "../ui/section-background";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
 import { trackDemoPhoneClick } from "../shared/landing-analytics";

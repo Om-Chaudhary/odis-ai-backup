@@ -42,8 +42,6 @@
       "@odis-ai/vapi/*": ["../../libs/vapi/src/*"],
       "@odis-ai/idexx": ["../../libs/idexx/src/index.ts"],
       "@odis-ai/idexx/*": ["../../libs/idexx/src/*"],
-      "@odis-ai/api-client": ["../../libs/api-client/src/index.ts"],
-      "@odis-ai/api-client/*": ["../../libs/api-client/src/*"],
       "@odis-ai/email": ["../../libs/email/src/index.ts"],
       "@odis-ai/email/*": ["../../libs/email/src/*"],
       "@odis-ai/ai": ["../../libs/ai/src/index.ts"],
@@ -97,6 +95,10 @@
     "../../libs/testing/**/*",
     "../../libs/**/*.test.ts",
     "../../libs/**/*.test.tsx",
-    "../../libs/**/__tests__/**"
+    "../../libs/**/__tests__/**",
+    "../../libs/extension-storage/**/*",
+    "../../libs/extension-shared/**/*",
+    "../../libs/extension-env/**/*",
+    "../../libs/ui/src/extension/**/*"
   ]
 }

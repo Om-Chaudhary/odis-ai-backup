@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/logger/src",
   "projectType": "library",
-  "tags": ["type:lib", "scope:logger", "platform:node"],
+  "tags": ["type:util", "scope:shared", "platform:neutral"],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",

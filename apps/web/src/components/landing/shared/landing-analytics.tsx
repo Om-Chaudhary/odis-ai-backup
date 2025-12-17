@@ -25,7 +25,8 @@ export function LandingAnalytics() {
 
   // Track pageview on mount
   useEffect(() => {
-    if (hasTrackedPageview.current) return;
+    // Skip if already tracked or posthog not available
+    if (hasTrackedPageview.current || !posthog?.capture) return;
     hasTrackedPageview.current = true;
 
     // Parse UTM params from URL
@@ -55,7 +56,7 @@ export function LandingAnalytics() {
 
     // Register UTM params as super properties for this session
     if (Object.keys(filteredUtmParams).length > 0) {
-      posthog.register(filteredUtmParams);
+      posthog.register?.(filteredUtmParams);
     }
   }, [posthog, deviceInfo]);
 
@@ -69,16 +70,18 @@ export function LandingAnalytics() {
  * Call this from any CTA that leads to booking a demo
  */
 export function trackBookDemoClick(
-  posthog: ReturnType<typeof usePostHog>,
+  posthog: ReturnType<typeof usePostHog> | null | undefined,
   location: string,
 ) {
+  if (!posthog?.capture) return;
+
   posthog.capture("book_demo_clicked", {
     location,
     timestamp: new Date().toISOString(),
   });
 
   // Set a property indicating user has shown demo interest
-  posthog.people.set({
+  posthog.people?.set({
     demo_interest_shown: true,
     demo_interest_location: location,
     demo_interest_date: new Date().toISOString(),
@@ -89,10 +92,12 @@ export function trackBookDemoClick(
  * Track a demo phone call click
  */
 export function trackDemoPhoneClick(
-  posthog: ReturnType<typeof usePostHog>,
+  posthog: ReturnType<typeof usePostHog> | null | undefined,
   location: string,
   phoneNumber: string,
 ) {
+  if (!posthog?.capture) return;
+
   posthog.capture("demo_phone_clicked", {
     location,
     phone_number: phoneNumber,
@@ -104,16 +109,18 @@ export function trackDemoPhoneClick(
  * Track schedule demo click and identify user intent
  */
 export function trackScheduleDemoClick(
-  posthog: ReturnType<typeof usePostHog>,
+  posthog: ReturnType<typeof usePostHog> | null | undefined,
   location: string,
 ) {
+  if (!posthog?.capture) return;
+
   posthog.capture("schedule_demo_clicked", {
     location,
     timestamp: new Date().toISOString(),
   });
 
   // Set a property indicating user has shown scheduling interest
-  posthog.people.set({
+  posthog.people?.set({
     schedule_interest_shown: true,
     schedule_interest_location: location,
     schedule_interest_date: new Date().toISOString(),

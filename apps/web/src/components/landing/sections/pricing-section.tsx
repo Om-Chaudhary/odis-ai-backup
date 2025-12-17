@@ -6,7 +6,7 @@ import { usePostHog } from "posthog-js/react";
 import { NeonGradientCard } from "../ui/neon-gradient-card";
 import { ShimmerButton } from "../ui/shimmer-button";
 import { Calendar, ArrowRight, Phone } from "lucide-react";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis-ai/utils";
 import { SectionBackground } from "../ui/section-background";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
 import {

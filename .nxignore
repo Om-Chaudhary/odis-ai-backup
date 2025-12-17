@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Nx Ignore File
 # Files and directories that should not be processed as Nx projects
 
@@ -25,3 +26,7 @@ build/
 *.tmp
 *.temp
 .DS_Store
+=======
+# Build output directories - should not be scanned for projects
+dist/
+>>>>>>> nx-monorepo-refactoring

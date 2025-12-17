@@ -1,4 +1,4 @@
-import { cn } from "~/lib/utils";
+import { cn } from "@odis-ai/utils";
 
 interface Avatar {
   imageUrl: string;

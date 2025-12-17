@@ -38,8 +38,6 @@
       "@odis-ai/vapi/*": ["libs/vapi/src/*"],
       "@odis-ai/idexx": ["libs/idexx/src/index.ts"],
       "@odis-ai/idexx/*": ["libs/idexx/src/*"],
-      "@odis-ai/api-client": ["libs/api-client/src/index.ts"],
-      "@odis-ai/api-client/*": ["libs/api-client/src/*"],
       "@odis-ai/email": ["libs/email/src/index.ts"],
       "@odis-ai/email/*": ["libs/email/src/*"],
       "@odis-ai/ai": ["libs/ai/src/index.ts"],
@@ -76,7 +74,6 @@
       "~/lib/ui/*": ["libs/ui/src/*"],
       "~/lib/vapi/*": ["libs/vapi/src/*"],
       "~/lib/idexx/*": ["libs/idexx/src/*"],
-      "~/lib/api-client/*": ["libs/api-client/src/*"],
       "~/lib/clinics/*": ["libs/clinics/src/*"],
       "~/lib/ai/*": ["libs/ai/src/*"],
       "~/lib/qstash/*": ["libs/qstash/src/*"],
@@ -110,7 +107,24 @@
       ],
       "@odis-ai/services-shared": ["libs/services-shared/src/index.ts"],
       "@odis-ai/slack": ["libs/slack/src/index.ts"],
-      "@odis-ai/slack/*": ["libs/slack/src/*"]
+      "@odis-ai/slack/*": ["libs/slack/src/*"],
+
+      "@odis-ai/extension-shared": ["libs/extension-shared/src/index.ts"],
+      "@odis-ai/extension-shared/*": ["libs/extension-shared/src/*"],
+      "@odis-ai/extension-storage": ["libs/extension-storage/src/index.ts"],
+      "@odis-ai/extension-storage/*": ["libs/extension-storage/src/*"],
+      "@odis-ai/extension-env": ["libs/extension-env/src/index.ts"],
+      "@odis-ai/extension-env/*": ["libs/extension-env/src/*"],
+
+      "@odis-ai/db/browser": ["libs/db/src/browser.ts"],
+      "@odis-ai/env/browser": ["libs/env/src/browser.ts"],
+      "@odis-ai/logger/browser": ["libs/logger/src/browser.ts"],
+      "@odis-ai/vapi/browser": ["libs/vapi/src/browser.ts"],
+      "@odis-ai/ui/extension": ["libs/ui/src/extension/index.ts"],
+
+      "@src/*": ["apps/chrome-extension/src/*"],
+      "@root/*": ["apps/chrome-extension/*"],
+      "@database-types": ["libs/types/src/database.types.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
