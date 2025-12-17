@@ -7,7 +7,7 @@ import { ArrowRight, Phone } from "lucide-react";
 import { SectionBackground } from "~/components/landing/ui/section-background";
 import type { SectionBackgroundProps } from "~/components/landing/ui/section-background";
 import { Button } from "@odis-ai/ui/button";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis-ai/utils";
 
 export interface CTASectionProps {
   /**

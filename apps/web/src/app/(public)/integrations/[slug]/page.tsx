@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { IntegrationDetailPage } from "./integration-detail-page";
 import {
   getIntegrationBySlug,
@@ -87,12 +88,12 @@ function ComingSoonIntegration({ integration }: { integration: Integration }) {
           >
             Notify Me
           </a>
-          <a
+          <Link
             href="/integrations"
             className="inline-flex items-center justify-center rounded-full border border-slate-300 px-6 py-3 font-semibold text-slate-700 transition-all hover:bg-slate-50"
           >
             View All Integrations
-          </a>
+          </Link>
         </div>
       </div>
     </div>

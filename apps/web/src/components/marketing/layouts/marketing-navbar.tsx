@@ -16,7 +16,7 @@ import {
   navigationMenuTriggerStyle,
 } from "@odis-ai/ui/navigation-menu";
 import { Button } from "@odis-ai/ui/button";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis-ai/utils";
 import { Logo } from "@odis-ai/ui/Logo";
 import { trackBookDemoClick } from "~/components/landing/shared/landing-analytics";
 import { createClient } from "@odis-ai/db/client";

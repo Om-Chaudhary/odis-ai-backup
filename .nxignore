@@ -1,0 +1,2 @@
+# Build output directories - should not be scanned for projects
+dist/

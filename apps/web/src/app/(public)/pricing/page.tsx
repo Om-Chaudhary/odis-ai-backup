@@ -12,7 +12,7 @@ import {
 } from "~/components/marketing";
 import { Button } from "@odis-ai/ui/button";
 import Link from "next/link";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis-ai/utils";
 
 // TODO: Replace with actual pricing data
 const pricingTiers = [

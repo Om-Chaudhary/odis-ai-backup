@@ -76,7 +76,7 @@ export default tseslint.config(
       "@typescript-eslint/no-unsafe-argument": "off",
       "@typescript-eslint/no-unsafe-return": "off",
       "@nx/enforce-module-boundaries": [
-        "warn",
+        "error",
         {
           enforceBuildableLibDependency: false,
           allowCircularSelfDependency: true,

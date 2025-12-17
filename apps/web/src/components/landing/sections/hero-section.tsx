@@ -4,7 +4,7 @@ import { useRef, useMemo } from "react";
 import Image from "next/image";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { usePostHog } from "posthog-js/react";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis-ai/utils";
 import { usePageLoaded } from "~/hooks/use-page-loaded";
 import { PhoneRingIcon } from "../ui/phone-ring-icon";
 import { ScrollIndicator } from "../ui/scroll-indicator";

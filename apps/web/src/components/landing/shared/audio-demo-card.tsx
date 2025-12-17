@@ -11,7 +11,7 @@ import {
   SkipBack,
   SkipForward,
 } from "lucide-react";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis-ai/utils";
 
 export interface DemoCardData {
   id: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import { type ComponentPropsWithoutRef, type CSSProperties } from "react";
-import { cn } from "~/lib/utils";
+import { cn } from "@odis-ai/utils";
 
 export interface AnimatedGradientTextProps extends ComponentPropsWithoutRef<"span"> {
   /** Animation speed multiplier (default: 1) */
