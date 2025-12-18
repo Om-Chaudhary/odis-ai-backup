@@ -118,10 +118,13 @@ export type FeatureCategory = 'discharge' | 'templates' | 'extraction' | 'sync' 
  */
 export interface UserEvent {
   /** Specific event type identifier */
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   event_type: EventType | string;
   /** High-level category grouping */
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   event_category: EventCategory | string;
   /** Action verb */
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   event_action: EventAction | string;
   /** Platform where event occurred */
   platform: AnalyticsPlatform;
@@ -156,8 +159,10 @@ export interface UserEvent {
  */
 export interface FeatureUsage {
   /** Name of the feature */
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   feature_name: FeatureName | string;
   /** Category of the feature */
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   feature_category: FeatureCategory | string;
   /** Platform where feature is used */
   platform: AnalyticsPlatform;
@@ -206,6 +211,7 @@ export interface SessionAnalytics {
  */
 export interface ErrorLog {
   /** Type of error */
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   error_type: 'api_error' | 'validation_error' | 'network_error' | 'runtime_error' | string;
   /** Optional error code */
   error_code?: string;
