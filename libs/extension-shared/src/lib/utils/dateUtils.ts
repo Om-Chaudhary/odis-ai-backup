@@ -83,7 +83,10 @@ export const formatDateToLocalString = (date: Date): string => {
  * @returns Date object in local timezone
  */
 export const parseLocalDateString = (dateString: string, timeOfDay: 'start' | 'end' | 'midnight' = 'start'): Date => {
-  const [year, month, day] = dateString.split('-').map(Number);
+  const parts = dateString.split('-').map(Number);
+  const year = parts[0] ?? 0;
+  const month = parts[1] ?? 1;
+  const day = parts[2] ?? 1;
 
   const date = new Date(year, month - 1, day);
 

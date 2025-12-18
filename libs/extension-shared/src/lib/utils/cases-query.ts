@@ -82,7 +82,11 @@ export interface CasesQueryOptions {
  * const { data, error } = await query;
  * ```
  */
-export const buildCasesQuery = (supabase: SupabaseClient<Database>, options: CasesQueryOptions = {}) => {
+export const buildCasesQuery = (
+  supabase: SupabaseClient<Database>,
+  options: CasesQueryOptions = {}
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): any => {
   const {
     startDate,
     endDate,
