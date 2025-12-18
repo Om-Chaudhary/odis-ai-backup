@@ -2,19 +2,13 @@ import type { ComplianceSection } from "~/components/legal/compliance-document";
 
 /**
  * Privacy Policy Content
- *
- * TODO: Replace "COMPANY_NAME" with your actual company name throughout this file
- * TODO: Update contact information in the Contact section
- * TODO: Customize sections based on your specific data practices
- * TODO: Review and update third-party services list
- * TODO: Add any additional sections specific to your business
  */
 
-export const COMPANY_NAME = "COMPANY_NAME";
-export const CONTACT_EMAIL = "privacy@company.com"; // TODO: Update with actual email
-export const COMPANY_ADDRESS = "123 Business Street, City, State 12345"; // TODO: Update with actual address
-export const LAST_UPDATED = "January 1, 2025"; // TODO: Update with actual date
-export const EFFECTIVE_DATE = "January 1, 2025"; // TODO: Update with actual date
+export const COMPANY_NAME = "OdisAI, Inc.";
+export const CONTACT_EMAIL = "admin@odisai.net"; 
+export const COMPANY_ADDRESS = "N/A"; 
+export const LAST_UPDATED = "December 1, 2025"; 
+export const EFFECTIVE_DATE = "June 9, 2025";
 
 export const privacyPolicySections: ComplianceSection[] = [
   {
@@ -684,10 +678,6 @@ export const privacyPolicySections: ComplianceSection[] = [
             <strong>Address:</strong> {COMPANY_ADDRESS}
           </p>
         </div>
-        <p className="mt-4">
-          [TODO: Add additional contact methods such as phone, postal address,
-          or data protection officer contact if applicable]
-        </p>
       </>
     ),
   },

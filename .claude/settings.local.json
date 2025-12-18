@@ -124,7 +124,9 @@
       "Bash(npx vercel:*)",
       "Bash(vercel ls:*)",
       "Bash(vercel domains:*)",
-      "Bash(vercel project:*)"
+      "Bash(vercel project:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__get-library-docs"
     ],
     "deny": [],
     "ask": []

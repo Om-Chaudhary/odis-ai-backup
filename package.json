@@ -29,7 +29,14 @@
     "update-types": "node scripts/update-types.js",
     "graph": "nx graph",
     "docs:nx": "node scripts/generate-nx-docs.js",
-    "prepare": "husky"
+    "prepare": "husky",
+    "extension:dev": "nx dev chrome-extension",
+    "extension:build": "NODE_ENV=production nx build chrome-extension",
+    "extension:zip": "nx zip chrome-extension",
+    "extension:lint": "nx lint chrome-extension",
+    "extension:lint:fix": "nx lint chrome-extension --fix",
+    "extension:test": "nx test chrome-extension",
+    "extension:typecheck": "nx typecheck chrome-extension"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.69.0",

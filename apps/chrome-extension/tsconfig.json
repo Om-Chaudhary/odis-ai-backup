@@ -5,7 +5,7 @@
     "module": "ESNext",
     "lib": ["ES2022", "DOM", "DOM.Iterable", "WebWorker"],
     "jsx": "react-jsx",
-    "types": ["chrome", "vite/client", "node"],
+    "types": ["chrome", "vite/client", "node", "vitest/globals"],
     "noEmit": true,
     "skipLibCheck": true,
     "strict": false,

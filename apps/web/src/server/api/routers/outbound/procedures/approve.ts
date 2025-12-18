@@ -224,6 +224,18 @@ export const approveRouter = createTRPCRouter({
         });
       }
 
+      // Block scheduling for euthanasia/DOA/deceased cases
+      // These cases should never receive follow-up calls
+      const BLOCKED_CASE_TYPES = ["euthanasia", "doa", "deceased"];
+      const caseType = caseInfo.entities?.caseType?.toLowerCase();
+      if (caseType && BLOCKED_CASE_TYPES.includes(caseType)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Discharge calls cannot be scheduled for euthanasia or deceased cases",
+        });
+      }
+
       const patient = Array.isArray(caseInfo.patient)
         ? caseInfo.patient[0]
         : caseInfo.patient;

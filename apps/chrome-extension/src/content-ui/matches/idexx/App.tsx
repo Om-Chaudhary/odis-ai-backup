@@ -1,5 +1,4 @@
 import { BrandedMenuBar } from './components/menu/BrandedMenuBar';
-// import { SyncScheduleButton } from './components/schedule/SyncScheduleButton'; // REMOVED: Sync schedule button
 import { setupCalendarGridIconsObserver } from './utils/dom/calendar-grid-icons-injector';
 import { detectCKEditor, injectBrandedMenuBar } from './utils/dom/ckeditor-detector';
 import { setupScheduleIconsObserver } from './utils/dom/schedule-icons-injector';
@@ -70,7 +69,6 @@ const injectGlobalStyles = () => {
 export default function App() {
   const isInjectedRef = useRef(false);
   const cleanupRef = useRef<(() => void) | null>(null);
-  // REMOVED: syncButtonCleanupRef - no longer needed since sync button was removed
   const syncButtonInjectedRef = useRef(false); // Track if schedule icons were injected
   const scheduleIconsCleanupRef = useRef<(() => void) | null>(null);
   const calendarGridIconsCleanupRef = useRef<(() => void) | null>(null);
@@ -85,53 +83,6 @@ export default function App() {
     soapTemplatesStorage.initializeDefaultTemplates().catch(error => {
       odisLogger.error('Failed to initialize default templates', { error });
     });
-
-    // REMOVED: Inject sync button into document body (outside Shadow DOM)
-    // const injectSyncButton = () => {
-    //   // Don't inject if already injected
-    //   if (syncButtonInjectedRef.current) {
-    //     return;
-    //   }
-
-    //   // Always remove existing container if it exists (to avoid React root conflicts)
-    //   const existingContainer = document.getElementById('odis-sync-schedule-button');
-    //   if (existingContainer && existingContainer.parentNode) {
-    //     existingContainer.parentNode.removeChild(existingContainer);
-    //   }
-
-    //   // Create fresh container for sync button
-    //   const buttonContainer = document.createElement('div');
-    //   buttonContainer.id = 'odis-sync-schedule-button';
-    //   // Ensure it's positioned correctly and visible
-    //   buttonContainer.style.cssText = `
-    //     position: fixed;
-    //     bottom: 20px;
-    //     right: 320px;
-    //     z-index: 999999;
-    //     pointer-events: auto;
-    //   `;
-    //   document.body.appendChild(buttonContainer);
-
-    //   // Render React component into the container (wrapped with auth provider)
-    //   const root = createRoot(buttonContainer);
-    //   root.render(
-    //     <SupabaseAuthProvider>
-    //       <SyncScheduleButton />
-    //     </SupabaseAuthProvider>,
-    //   );
-
-    //   // Store cleanup function
-    //   syncButtonCleanupRef.current = () => {
-    //     root.unmount();
-    //     if (buttonContainer && buttonContainer.parentNode) {
-    //       buttonContainer.parentNode.removeChild(buttonContainer);
-    //     }
-    //     syncButtonInjectedRef.current = false;
-    //   };
-
-    //   syncButtonInjectedRef.current = true;
-    //   odisLogger.info('Sync schedule button injected into page');
-    // };
 
     // Inject schedule status icons into appointment popup
     const injectScheduleIcons = () => {
