@@ -241,6 +241,7 @@ async function enrichCallVariables(
 
   try {
     // Dynamic imports to avoid circular dependencies
+    // eslint-disable-next-line @nx/enforce-module-boundaries
     const { CasesService } = await import("@odis-ai/services-cases");
     const { buildDynamicVariables } =
       await import("@odis-ai/vapi/knowledge-base");

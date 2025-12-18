@@ -844,8 +844,9 @@ export class DischargeOrchestrator {
 
     // Get case data (dynamic import to avoid circular dependency)
     // eslint-disable-next-line @nx/enforce-module-boundaries
-    const { CasesService: CasesServiceModule } =
-      await import("@odis-ai/services-cases");
+    const { CasesService: CasesServiceModule } = await import(
+      "@odis-ai/services-cases"
+    );
     const caseInfo = await CasesServiceModule.getCaseWithEntities(
       this.supabase,
       caseId,
@@ -1041,8 +1042,9 @@ export class DischargeOrchestrator {
 
     // Get case data (dynamic import to avoid circular dependency)
     // eslint-disable-next-line @nx/enforce-module-boundaries
-    const { CasesService: CasesServiceEmail } =
-      await import("@odis-ai/services-cases");
+    const { CasesService: CasesServiceEmail } = await import(
+      "@odis-ai/services-cases"
+    );
     const caseInfo = await CasesServiceEmail.getCaseWithEntities(
       this.supabase,
       caseId,
@@ -1165,8 +1167,9 @@ export class DischargeOrchestrator {
 
     // Get recipient name from patient data (dynamic import to avoid circular dependency)
     // eslint-disable-next-line @nx/enforce-module-boundaries
-    const { CasesService: CasesServiceSchedule } =
-      await import("@odis-ai/services-cases");
+    const { CasesService: CasesServiceSchedule } = await import(
+      "@odis-ai/services-cases"
+    );
     const caseInfo = caseId
       ? await CasesServiceSchedule.getCaseWithEntities(this.supabase, caseId)
       : null;
@@ -1532,8 +1535,9 @@ export class DischargeOrchestrator {
     // Use clinic table data when available, fallback to user table for backward compatibility
     // Dynamic import to avoid circular dependency
     // eslint-disable-next-line @nx/enforce-module-boundaries
-    const { CasesService: CasesServiceCall } =
-      await import("@odis-ai/services-cases");
+    const { CasesService: CasesServiceCall } = await import(
+      "@odis-ai/services-cases"
+    );
     const scheduledCall = await CasesServiceCall.scheduleDischargeCall(
       this.supabase,
       this.user.id,
