@@ -1,4 +1,4 @@
-/* eslint-disable func-style */
+ 
 
 import { getSupabaseClient } from './client';
 import { useEffect, useState } from 'react';

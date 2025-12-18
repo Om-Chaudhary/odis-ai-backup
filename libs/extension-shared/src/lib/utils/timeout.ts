@@ -6,7 +6,7 @@
 
 import { logger } from './logger';
 
-/* eslint-disable func-style */
+ 
 
 /**
  * Error thrown when a timeout occurs

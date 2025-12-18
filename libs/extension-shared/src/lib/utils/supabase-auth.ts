@@ -48,7 +48,7 @@ export const getAuthSession = async (): Promise<Session | null> => {
 export const requireAuthSession = async (): Promise<Session> => {
   const session = await getAuthSession();
 
-  if (!session || !session.user) {
+  if (!session?.user) {
     throw new Error(AUTH_ERROR_MESSAGE);
   }
 

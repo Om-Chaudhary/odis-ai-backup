@@ -1,4 +1,4 @@
-/* eslint-disable func-style */
+ 
 
 import { logger } from '../utils/logger';
 import { createClient } from '@supabase/supabase-js';

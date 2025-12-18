@@ -62,7 +62,7 @@ export const isAuthError = (error: unknown): boolean => {
  * }
  * ```
  */
-export const formatErrorMessage = (error: unknown, defaultMessage: string = 'An error occurred'): string => {
+export const formatErrorMessage = (error: unknown, defaultMessage = 'An error occurred'): string => {
   if (!error) return defaultMessage;
 
   if (error instanceof Error) {

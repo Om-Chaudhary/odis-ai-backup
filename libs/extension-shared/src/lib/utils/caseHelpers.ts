@@ -12,7 +12,7 @@ import { formatTimeForDisplay, formatDateForDisplay, now } from './dateUtils';
  * @returns Display name string
  */
 export const getPatientDisplayName = (patientName?: string | null, caseCreatedAt?: string | null): string => {
-  if (patientName && patientName.trim()) {
+  if (patientName?.trim()) {
     return patientName;
   }
 
