@@ -4,6 +4,8 @@
  * Helper functions for working with VAPI dynamic variables and formatting.
  */
 
+import type { AssessmentQuestion } from "./types";
+
 /**
  * Extracts the first word from a pet name
  *
@@ -160,4 +162,96 @@ export function normalizeVariablesToSnakeCase(
   }
 
   return result;
+}
+
+/**
+ * Formats an array of strings into a human-readable comma-separated string
+ *
+ * Used to convert array variables (like emergency_criteria) into text
+ * that can be naturally incorporated into VAPI prompts.
+ *
+ * @param arr - Array of strings to format
+ * @returns Comma-separated string, or empty string if array is empty/undefined
+ *
+ * @example
+ * formatArrayForSpeech(['Collapse', 'Difficulty breathing', 'Uncontrolled bleeding'])
+ * // 'Collapse, Difficulty breathing, Uncontrolled bleeding'
+ *
+ * formatArrayForSpeech([])
+ * // ''
+ *
+ * formatArrayForSpeech(undefined)
+ * // ''
+ */
+export function formatArrayForSpeech(arr: string[] | undefined): string {
+  if (!arr || arr.length === 0) return "";
+  return arr.join(", ");
+}
+
+/**
+ * Formats an array of strings into a bulleted list for prompts
+ *
+ * Creates a more readable format for longer lists that will be
+ * included in the system prompt as reference material.
+ *
+ * @param arr - Array of strings to format
+ * @returns Bulleted list string, or empty string if array is empty/undefined
+ *
+ * @example
+ * formatArrayAsBulletList(['Watch for vomiting', 'Monitor appetite'])
+ * // '• Watch for vomiting\n• Monitor appetite'
+ */
+export function formatArrayAsBulletList(arr: string[] | undefined): string {
+  if (!arr || arr.length === 0) return "";
+  return arr.map((item) => `• ${item}`).join("\n");
+}
+
+/**
+ * Formats assessment questions into a numbered list for VAPI prompts
+ *
+ * Converts the structured AssessmentQuestion objects into a simple
+ * numbered list that the AI can use during the call.
+ *
+ * @param questions - Array of AssessmentQuestion objects
+ * @returns Numbered list of questions, or empty string if empty/undefined
+ *
+ * @example
+ * formatAssessmentQuestionsForPrompt([
+ *   { question: 'How is the appetite?' },
+ *   { question: 'Any vomiting since the visit?' }
+ * ])
+ * // '1. How is the appetite?\n2. Any vomiting since the visit?'
+ */
+export function formatAssessmentQuestionsForPrompt(
+  questions: AssessmentQuestion[] | undefined,
+): string {
+  if (!questions || questions.length === 0) return "";
+  return questions.map((q, i) => `${i + 1}. ${q.question}`).join("\n");
+}
+
+/**
+ * Formats assessment questions with context for detailed prompts
+ *
+ * Includes both the question and its context (why it's being asked)
+ * for more comprehensive prompt inclusion.
+ *
+ * @param questions - Array of AssessmentQuestion objects
+ * @returns Formatted questions with context
+ */
+export function formatAssessmentQuestionsWithContext(
+  questions: AssessmentQuestion[] | undefined,
+): string {
+  if (!questions || questions.length === 0) return "";
+  return questions
+    .map((q, i) => {
+      let formatted = `${i + 1}. ${q.question}`;
+      if (q.context) {
+        formatted += `\n   Context: ${q.context}`;
+      }
+      if (q.concerningResponses && q.concerningResponses.length > 0) {
+        formatted += `\n   Watch for: ${q.concerningResponses.join(", ")}`;
+      }
+      return formatted;
+    })
+    .join("\n\n");
 }

@@ -156,7 +156,7 @@ const FAILED_ENDED_REASONS = [
  */
 export function shouldMarkAsFailed(
   endedReason?: string,
-  metadata?: Record<string, unknown>,
+  _metadata?: Record<string, unknown>,
 ): boolean {
   if (!endedReason) return false;
 

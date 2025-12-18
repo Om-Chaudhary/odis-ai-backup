@@ -442,6 +442,37 @@ export function extractVapiVariablesFromEntities(
     variables.extraction_confidence = entities.confidence.overall.toFixed(2);
   }
 
+  // ============================================
+  // Boolean Flags for Conditional Prompt Logic
+  // These allow the prompt to conditionally include sections
+  // ============================================
+
+  // Has medications prescribed (take-home meds)
+  variables.has_medications =
+    entities.clinical?.medications && entities.clinical.medications.length > 0
+      ? "true"
+      : "false";
+
+  // Has vaccinations administered
+  variables.has_vaccinations =
+    entities.clinical?.vaccinations && entities.clinical.vaccinations.length > 0
+      ? "true"
+      : "false";
+
+  // Has diagnoses
+  variables.has_diagnoses =
+    entities.clinical?.diagnoses && entities.clinical.diagnoses.length > 0
+      ? "true"
+      : "false";
+
+  // Has recheck scheduled
+  variables.has_recheck = entities.clinical?.recheckRequired ? "true" : "false";
+
+  // Has follow-up instructions
+  variables.has_follow_up_instructions = entities.clinical?.followUpInstructions
+    ? "true"
+    : "false";
+
   return variables;
 }
 
