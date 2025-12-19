@@ -1,7 +1,8 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { DischargeCallsTriageClient } from "./client";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Discharge Calls Triage | Admin | Odis AI",
   description: "Review and categorize pilot discharge calls",
 };

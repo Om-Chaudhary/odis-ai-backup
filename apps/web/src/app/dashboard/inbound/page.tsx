@@ -1,9 +1,10 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import { InboundClient } from "~/components/dashboard/inbound";
 import { InboundCallsErrorBoundary } from "~/components/dashboard/calls/inbound-calls-error-boundary";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Inbound | Dashboard",
   description:
     "View and manage inbound calls, appointment requests, and messages",

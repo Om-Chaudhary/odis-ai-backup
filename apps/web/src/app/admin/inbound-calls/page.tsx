@@ -1,7 +1,8 @@
+import type { Metadata } from "next";
 import { InboundCallsClient } from "~/components/dashboard/calls/inbound-calls-client";
 import { InboundCallsErrorBoundary } from "~/components/dashboard/calls/inbound-calls-error-boundary";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Inbound Calls | Dashboard",
   description: "View and manage inbound VAPI calls",
 };
