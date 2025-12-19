@@ -130,7 +130,10 @@
       "Bash(pnpm nx dev:*)",
       "Bash(pnpm nx lint:*)",
       "Bash(pnpm nx run-many:*)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(NX_DAEMON=false pnpm dev)",
+      "Bash(open http://localhost:3000/dashboard/inbound)",
+      "Bash(pnpm nx build:*)"
     ],
     "deny": [],
     "ask": []

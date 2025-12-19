@@ -183,7 +183,7 @@ function CallDetail({
       "+1 (727) 576-0033",
       "+1 (253) 227-8892",
       "+1 (510) 320-7704",
-    ].includes(call.customer_phone);
+    ].includes(call.customer_phone ?? "");
 
   const silentCallData = isSilentCall
     ? {
