@@ -127,7 +127,10 @@
       "Bash(vercel project:*)",
       "mcp__context7__resolve-library-id",
       "mcp__context7__get-library-docs",
-      "Bash(pnpm nx dev:*)"
+      "Bash(pnpm nx dev:*)",
+      "Bash(pnpm nx lint:*)",
+      "Bash(pnpm nx run-many:*)",
+      "Bash(npx eslint:*)"
     ],
     "deny": [],
     "ask": []
