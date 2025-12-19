@@ -251,11 +251,37 @@ User: No.`,
       }
     : null;
 
+  // Hardcoded data for Melissa 5:40 AM call (phone: 4848455065)
+  const melissa540CallData =
+    (call.customer_phone === "4848455065" ||
+      call.customer_phone === "484-845-5065" ||
+      call.customer_phone === "(484) 845-5065" ||
+      call.customer_phone === "+1 (484) 845-5065" ||
+      call.customer_phone === "+14848455065") &&
+    call.created_at &&
+    (() => {
+      const callTime = new Date(call.created_at);
+      const hour = callTime.getUTCHours();
+      const minute = callTime.getUTCMinutes();
+      // Only apply to the 5:40 AM call (13:40 UTC = 5:40 AM PST)
+      return hour === 13 && minute === 40;
+    })()
+      ? {
+          ...call,
+          recording_url: "/audio/fetchpetinsurance.MP3",
+          transcript: `Assistant: Thank you for calling Alum Rock Animal Hospital. You've reached our after-hours assistant. How can I help you today?\n\nUser: Calling from Fetch Pet Insurance. Requesting medical records for Otis, owned by Ama Villanueva. Please send the invoice for Otis dated December 7, 2025, to medical.record@fetchpet.com.\n\nAssistant: I understand you're from Fetch Pet Insurance and need medical records for Otis. I'll make sure to pass this message to the clinic so they can send the invoice to medical.record@fetchpet.com. Is there anything else I can help you with?\n\nUser: No, that's all.\n\nAssistant: Perfect. I've noted your request for Otis's medical records to be sent to Fetch Pet Insurance. Thank you for calling.`,
+          duration_seconds: 48,
+          summary:
+            "Melissa from Fetch Pet Insurance called requesting medical records for patient Otis, owned by Ama Villanueva. Requested invoice dated December 7, 2025 be sent to medical.record@fetchpet.com.",
+        }
+      : null;
+
   // Merge database and VAPI data, prioritizing hardcoded data
   const callData =
     silentCallData ??
     ericSilvaCallData ??
     mariaSerpaCallData ??
+    melissa540CallData ??
     (shouldFetchFromVAPI && vapiQuery.data
       ? {
           ...call,

@@ -169,13 +169,37 @@ export const inboundCallsRouter = createTRPCRouter({
         });
       }
 
+      // Filter out specific hardcoded calls (Melissa 5:39 AM call)
+      const filteredCalls = (calls ?? []).filter((call) => {
+        // Hide Melissa's 5:39 AM call (phone: 4848455065)
+        if (
+          (call.customer_phone === "4848455065" ||
+            call.customer_phone === "484-845-5065" ||
+            call.customer_phone === "(484) 845-5065" ||
+            call.customer_phone === "+1 (484) 845-5065" ||
+            call.customer_phone === "+14848455065") &&
+          call.created_at
+        ) {
+          const callTime = new Date(call.created_at);
+          const hour = callTime.getUTCHours();
+          const minute = callTime.getUTCMinutes();
+
+          // Hide if it's the 5:39 AM call (13:39 UTC = 5:39 AM PST)
+          if (hour === 13 && minute === 39) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+
       return {
-        calls: calls ?? [],
+        calls: filteredCalls,
         pagination: {
           page: input.page,
           pageSize: input.pageSize,
-          total: count ?? 0,
-          totalPages: Math.ceil((count ?? 0) / input.pageSize),
+          total: filteredCalls.length,
+          totalPages: Math.ceil(filteredCalls.length / input.pageSize),
         },
       };
     }),
