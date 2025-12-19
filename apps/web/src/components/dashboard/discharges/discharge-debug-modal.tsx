@@ -85,7 +85,7 @@ async function buildVapiVariables(
   return {
     variables: normalizedVariables,
     phoneNumber,
-    testModeEnabled: settings.testModeEnabled,
+    testModeEnabled: settings.testModeEnabled ?? false,
     validation: variablesResult.validation,
   };
 }

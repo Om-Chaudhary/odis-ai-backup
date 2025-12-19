@@ -42,7 +42,6 @@ export function transformIdexxToCallRequest(
 
     // VAPI call configuration
     callType: "discharge" as const, // IDEXX imports are typically discharge calls
-    agentName: "Sarah",
     clinicName: pageData.clinic.name,
     clinicPhone: clinicPhoneFormatted,
     emergencyPhone: emergencyPhoneFormatted,
