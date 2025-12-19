@@ -161,7 +161,7 @@ export const inboundCallsRouter = createTRPCRouter({
       const to = from + input.pageSize - 1;
       query = query.range(from, to);
 
-      const { data: calls, error } = await query;
+      const { data: calls, error, count } = await query;
 
       if (error) {
         throw new TRPCError({
@@ -486,7 +486,7 @@ export const inboundCallsRouter = createTRPCRouter({
       const to = from + input.pageSize - 1;
       query = query.range(from, to);
 
-      const { data: calls, error } = await query;
+      const { data: calls, error, count } = await query;
 
       if (error) {
         throw new TRPCError({
