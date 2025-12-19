@@ -26,6 +26,7 @@ export const inboundRouter = createTRPCRouter({
     callAssociationsRouter.checkCallAppointmentAssociation,
   checkCallMessageAssociation:
     callAssociationsRouter.checkCallMessageAssociation,
+  getCallerNameByPhone: callAssociationsRouter.getCallerNameByPhone,
 
   // Mutations
   updateAppointmentRequest: updateAppointmentRouter.updateAppointmentRequest,
