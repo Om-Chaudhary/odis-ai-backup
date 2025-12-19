@@ -212,6 +212,18 @@ export default tseslint.config(
       ],
     },
   },
+  // Chrome extension specific rules - needs strictNullChecks off
+  {
+    files: ["apps/chrome-extension/**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/prefer-nullish-coalescing": "off",
+      "@typescript-eslint/no-unnecessary-type-assertion": "off",
+      "@typescript-eslint/prefer-optional-chain": "off",
+      "@typescript-eslint/no-base-to-string": "off",
+      "@typescript-eslint/no-floating-promises": "off",
+      "@typescript-eslint/no-misused-promises": "off",
+    },
+  },
   {
     linterOptions: {
       reportUnusedDisableDirectives: true,

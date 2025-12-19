@@ -196,10 +196,6 @@ export const scheduleCallSchema = z
     }),
 
     // Clinic information (REQUIRED)
-    agentName: z
-      .string()
-      .default("Sarah")
-      .describe("AI agent name (first name only)"),
     clinicName: z.string().min(1, "Clinic name is required"),
     clinicPhone: z
       .string()

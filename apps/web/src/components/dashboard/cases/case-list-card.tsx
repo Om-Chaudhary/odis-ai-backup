@@ -90,7 +90,6 @@ export function CaseListCard({
     caseData.patient.species?.toLowerCase() === "feline" ? Cat : Dog;
 
   const utils = api.useUtils();
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   const toggleStarMutation = api.dashboard.toggleStarred.useMutation({
     onSuccess: () => {
       // Invalidate the cases query to refetch data
@@ -102,7 +101,6 @@ export function CaseListCard({
   const handleStarClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     toggleStarMutation.mutate({
       caseId: caseData.id,
       starred: !caseData.is_starred,

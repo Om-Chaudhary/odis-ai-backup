@@ -6,7 +6,6 @@ import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
 import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/api/cors";
-import { generateStructuredDischargeSummaryWithRetry } from "@odis-ai/ai/generate-structured-discharge";
 import { normalizePhoneNumber } from "@odis-ai/utils/phone";
 import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
 
@@ -176,6 +175,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate structured discharge summary using AI
+    // Dynamic import for lazy-loaded ai library
+    const { generateStructuredDischargeSummaryWithRetry } =
+      await import("@odis-ai/ai/generate-structured-discharge");
+
     let summaryContent: string;
     let structuredContent: StructuredDischargeSummary | null = null;
     try {

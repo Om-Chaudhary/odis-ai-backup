@@ -1,6 +1,5 @@
 "use server";
 
-import { createSquadPhoneCall } from "@odis-ai/vapi";
 import { env } from "@odis-ai/env";
 import { createServiceClient } from "@odis-ai/db/server";
 import type {
@@ -216,7 +215,8 @@ export async function initiateSquadTestCall(
       variableCount: Object.keys(variables).length,
     });
 
-    // Create the squad call
+    // Create the squad call (dynamic import for lazy-loaded vapi library)
+    const { createSquadPhoneCall } = await import("@odis-ai/vapi");
     const callResponse = await createSquadPhoneCall({
       phoneNumber,
       squadId: FOLLOWUP_SQUAD_ID,

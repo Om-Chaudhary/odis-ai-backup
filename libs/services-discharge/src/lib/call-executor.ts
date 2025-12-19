@@ -277,7 +277,7 @@ async function enrichCallVariables(
     const freshVars = buildDynamicVariables({
       baseVariables: {
         clinicName: (dynamicVariables?.clinic_name as string) ?? "Your Clinic",
-        agentName: (dynamicVariables?.agent_name as string) ?? "Sarah",
+        agentName: "Sarah",
         petName:
           caseInfo.entities.patient.name &&
           caseInfo.entities.patient.name !== "unknown" &&

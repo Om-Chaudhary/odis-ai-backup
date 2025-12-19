@@ -7,7 +7,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { generateUrgentSummary } from "@odis-ai/ai";
 
 const getUrgentSummaryInput = z.object({
   callId: z.string().uuid(),
@@ -59,6 +58,8 @@ export const getUrgentSummaryRouter = createTRPCRouter({
       }
 
       try {
+        // Dynamic import for lazy-loaded ai library
+        const { generateUrgentSummary } = await import("@odis-ai/ai");
         const summary = await generateUrgentSummary({
           transcript: call.transcript,
         });

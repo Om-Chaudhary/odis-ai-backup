@@ -4,14 +4,7 @@ import { useState } from "react";
 import { Button } from "@odis-ai/ui/button";
 import { Badge } from "@odis-ai/ui/badge";
 import { ScrollArea } from "@odis-ai/ui/scroll-area";
-import {
-  ChevronDown,
-  ChevronUp,
-  Loader2,
-  Mail,
-  Minimize2,
-  Phone,
-} from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, Mail, Phone } from "lucide-react";
 import { cn } from "@odis-ai/utils";
 import type { DashboardCase } from "@odis-ai/types";
 

@@ -1,8 +1,6 @@
- 
-
-import { logger } from '../utils/logger';
-import { createClient } from '@supabase/supabase-js';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { logger } from "../utils/logger";
+import { createClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Singleton pattern for Supabase client
 let supabaseClient: SupabaseClient | null = null;
@@ -14,22 +12,28 @@ const STORAGE_TIMEOUT_MS = 5000;
  * Wrap a promise with a timeout
  * Returns the fallback value if timeout is reached
  */
-function withStorageTimeout<T>(promise: Promise<T>, fallbackValue: T, operationName: string): Promise<T> {
+function withStorageTimeout<T>(
+  promise: Promise<T>,
+  fallbackValue: T,
+  operationName: string,
+): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
-  const timeoutPromise = new Promise<T>(resolve => {
+  const timeoutPromise = new Promise<T>((resolve) => {
     timeoutId = setTimeout(() => {
-      logger.warn(`[Supabase Storage] ${operationName} timed out after ${STORAGE_TIMEOUT_MS}ms`);
+      logger.warn(
+        `[Supabase Storage] ${operationName} timed out after ${STORAGE_TIMEOUT_MS}ms`,
+      );
       resolve(fallbackValue);
     }, STORAGE_TIMEOUT_MS);
   });
 
   return Promise.race([promise, timeoutPromise])
-    .then(result => {
+    .then((result) => {
       if (timeoutId) clearTimeout(timeoutId);
       return result;
     })
-    .catch(error => {
+    .catch((error) => {
       if (timeoutId) clearTimeout(timeoutId);
       logger.error(`[Supabase Storage] ${operationName} error`, { error });
       return fallbackValue;
@@ -46,10 +50,12 @@ function withStorageTimeout<T>(promise: Promise<T>, fallbackValue: T, operationN
 const chromeStorageAdapter = {
   getItem: async (key: string): Promise<string | null> => {
     try {
-      const storagePromise = chrome.storage.local.get(key).then(result => (result[key] as string | undefined) || null);
+      const storagePromise = chrome.storage.local
+        .get(key)
+        .then((result) => (result[key] as string | undefined) ?? null);
       return await withStorageTimeout(storagePromise, null, `getItem(${key})`);
     } catch (error) {
-      logger.error('[Supabase Storage] Error getting item', { error, key });
+      logger.error("[Supabase Storage] Error getting item", { error, key });
       return null;
     }
   },
@@ -58,7 +64,7 @@ const chromeStorageAdapter = {
       const storagePromise = chrome.storage.local.set({ [key]: value });
       await withStorageTimeout(storagePromise, undefined, `setItem(${key})`);
     } catch (error) {
-      logger.error('[Supabase Storage] Error setting item', { error, key });
+      logger.error("[Supabase Storage] Error setting item", { error, key });
     }
   },
   removeItem: async (key: string): Promise<void> => {
@@ -66,7 +72,7 @@ const chromeStorageAdapter = {
       const storagePromise = chrome.storage.local.remove(key);
       await withStorageTimeout(storagePromise, undefined, `removeItem(${key})`);
     } catch (error) {
-      logger.error('[Supabase Storage] Error removing item', { error, key });
+      logger.error("[Supabase Storage] Error removing item", { error, key });
     }
   },
 };
@@ -90,14 +96,17 @@ export const getSupabaseClient = (): SupabaseClient => {
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(
-      'Supabase configuration is missing. Please set CEB_SUPABASE_URL and CEB_SUPABASE_ANON_KEY in your .env file.',
+      "Supabase configuration is missing. Please set CEB_SUPABASE_URL and CEB_SUPABASE_ANON_KEY in your .env file.",
     );
   }
 
   // Validate that these aren't the placeholder values
-  if (supabaseUrl.includes('your-supabase') || supabaseAnonKey.includes('your-supabase')) {
+  if (
+    supabaseUrl.includes("your-supabase") ||
+    supabaseAnonKey.includes("your-supabase")
+  ) {
     throw new Error(
-      'Please replace placeholder Supabase values in .env with your actual Supabase project credentials.',
+      "Please replace placeholder Supabase values in .env with your actual Supabase project credentials.",
     );
   }
 

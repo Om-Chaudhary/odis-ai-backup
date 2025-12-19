@@ -1,6 +1,7 @@
 "use client";
 
-import { Phone } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Phone, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -11,8 +12,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
 import { Badge } from "@odis-ai/ui/badge";
 import type { DashboardCase, DischargeSettings } from "@odis-ai/types";
-import { buildDynamicVariables } from "@odis-ai/vapi/knowledge-base";
-import { normalizeVariablesToSnakeCase } from "@odis-ai/vapi/utils";
 
 interface DischargeDebugModalProps {
   open: boolean;
@@ -21,14 +20,29 @@ interface DischargeDebugModalProps {
   settings: DischargeSettings;
 }
 
+interface DebugData {
+  variables: Record<string, unknown>;
+  phoneNumber: string;
+  testModeEnabled: boolean;
+  validation: { valid: boolean; warnings: string[]; errors: string[] };
+}
+
 /**
  * Simulates building VAPI variables for a discharge call
  * This matches the logic in CasesService.scheduleDischargeCall
+ * Uses dynamic imports to comply with lazy-loading boundaries
  */
-function buildVapiVariables(
+async function buildVapiVariables(
   caseData: DashboardCase,
   settings: DischargeSettings,
-) {
+): Promise<DebugData> {
+  // Dynamic imports for lazy-loaded vapi library
+  const [{ buildDynamicVariables }, { normalizeVariablesToSnakeCase }] =
+    await Promise.all([
+      import("@odis-ai/vapi/knowledge-base"),
+      import("@odis-ai/vapi/utils"),
+    ]);
+
   // Build base variables (matching CasesService.scheduleDischargeCall logic)
   // Agent name: Use first name from vetName, or default to "Sarah"
   const agentName = settings.vetName?.trim()
@@ -82,7 +96,20 @@ export function DischargeDebugModal({
   caseData,
   settings,
 }: DischargeDebugModalProps) {
-  const debugData = buildVapiVariables(caseData, settings);
+  const [debugData, setDebugData] = useState<DebugData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!open) return;
+
+    setLoading(true);
+    buildVapiVariables(caseData, settings)
+      .then(setDebugData)
+      .catch((error) => {
+        console.error("Failed to build VAPI variables:", error);
+      })
+      .finally(() => setLoading(false));
+  }, [open, caseData, settings]);
 
   // Group variables by category for better display
   const coreVariables = [
@@ -114,6 +141,7 @@ export function DischargeDebugModal({
   ];
 
   const getVariableValue = (key: string) => {
+    if (!debugData) return null;
     const value = debugData.variables[key];
     if (value === null || value === undefined) return null;
     if (Array.isArray(value)) return value;
@@ -168,250 +196,258 @@ export function DischargeDebugModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
-          {/* Call Configuration */}
-          <Card>
-            <CardHeader className="p-2 pb-1">
-              <CardTitle className="text-xs font-semibold">
-                Call Configuration
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-2 pt-0">
-              <div className="space-y-1.5 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Phone Number:</span>
-                  <Badge
-                    variant={debugData.testModeEnabled ? "default" : "outline"}
-                    className="font-mono text-[10px]"
-                  >
-                    {debugData.phoneNumber || "—"}
-                  </Badge>
-                </div>
-                {debugData.testModeEnabled && (
+        {loading || !debugData ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {/* Call Configuration */}
+            <Card>
+              <CardHeader className="p-2 pb-1">
+                <CardTitle className="text-xs font-semibold">
+                  Call Configuration
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-2 pt-0">
+                <div className="space-y-1.5 text-xs">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Test Mode:</span>
-                    <Badge variant="default" className="text-[10px]">
-                      Enabled
+                    <span className="text-muted-foreground">Phone Number:</span>
+                    <Badge
+                      variant={
+                        debugData.testModeEnabled ? "default" : "outline"
+                      }
+                      className="font-mono text-[10px]"
+                    >
+                      {debugData.phoneNumber || "—"}
                     </Badge>
                   </div>
-                )}
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Validation:</span>
-                  <Badge
-                    variant={
-                      debugData.validation.valid ? "default" : "destructive"
-                    }
-                    className="text-[10px]"
-                  >
-                    {debugData.validation.valid ? "Valid" : "Invalid"}
-                  </Badge>
+                  {debugData.testModeEnabled && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Test Mode:</span>
+                      <Badge variant="default" className="text-[10px]">
+                        Enabled
+                      </Badge>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Validation:</span>
+                    <Badge
+                      variant={
+                        debugData.validation.valid ? "default" : "destructive"
+                      }
+                      className="text-[10px]"
+                    >
+                      {debugData.validation.valid ? "Valid" : "Invalid"}
+                    </Badge>
+                  </div>
+                  {debugData.validation.warnings.length > 0 && (
+                    <div className="mt-2 rounded bg-amber-50 p-2 dark:bg-amber-950">
+                      <p className="text-[10px] font-semibold text-amber-800 dark:text-amber-200">
+                        Warnings:
+                      </p>
+                      <ul className="mt-1 list-inside list-disc space-y-0.5 text-[10px] text-amber-700 dark:text-amber-300">
+                        {debugData.validation.warnings.map((warning, i) => (
+                          <li key={i}>{warning}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {debugData.validation.errors.length > 0 && (
+                    <div className="mt-2 rounded bg-red-50 p-2 dark:bg-red-950">
+                      <p className="text-[10px] font-semibold text-red-800 dark:text-red-200">
+                        Errors:
+                      </p>
+                      <ul className="mt-1 list-inside list-disc space-y-0.5 text-[10px] text-red-700 dark:text-red-300">
+                        {debugData.validation.errors.map((error, i) => (
+                          <li key={i}>{error}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
-                {debugData.validation.warnings.length > 0 && (
-                  <div className="mt-2 rounded bg-amber-50 p-2 dark:bg-amber-950">
-                    <p className="text-[10px] font-semibold text-amber-800 dark:text-amber-200">
-                      Warnings:
-                    </p>
-                    <ul className="mt-1 list-inside list-disc space-y-0.5 text-[10px] text-amber-700 dark:text-amber-300">
-                      {debugData.validation.warnings.map((warning, i) => (
-                        <li key={i}>{warning}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {debugData.validation.errors.length > 0 && (
-                  <div className="mt-2 rounded bg-red-50 p-2 dark:bg-red-950">
-                    <p className="text-[10px] font-semibold text-red-800 dark:text-red-200">
-                      Errors:
-                    </p>
-                    <ul className="mt-1 list-inside list-disc space-y-0.5 text-[10px] text-red-700 dark:text-red-300">
-                      {debugData.validation.errors.map((error, i) => (
-                        <li key={i}>{error}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Core Variables */}
-          <Card>
-            <CardHeader className="p-2 pb-1">
-              <CardTitle className="text-xs font-semibold">
-                Core Variables ({coreVariables.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-2 pt-0">
-              <div className="space-y-1.5">
-                {coreVariables.map((key) => {
-                  const value = getVariableValue(key);
-                  return (
-                    <div key={key} className="space-y-0.5">
-                      <div className="flex items-center gap-1.5">
-                        <Badge
-                          variant="outline"
-                          className="h-4 px-1.5 py-0 font-mono text-[10px]"
-                        >
-                          {key}
-                        </Badge>
-                        {value === null && (
+            {/* Core Variables */}
+            <Card>
+              <CardHeader className="p-2 pb-1">
+                <CardTitle className="text-xs font-semibold">
+                  Core Variables ({coreVariables.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-2 pt-0">
+                <div className="space-y-1.5">
+                  {coreVariables.map((key) => {
+                    const value = getVariableValue(key);
+                    return (
+                      <div key={key} className="space-y-0.5">
+                        <div className="flex items-center gap-1.5">
                           <Badge
-                            variant="secondary"
-                            className="h-4 px-1.5 py-0 text-[10px]"
+                            variant="outline"
+                            className="h-4 px-1.5 py-0 font-mono text-[10px]"
                           >
-                            null
+                            {key}
                           </Badge>
+                          {value === null && (
+                            <Badge
+                              variant="secondary"
+                              className="h-4 px-1.5 py-0 text-[10px]"
+                            >
+                              null
+                            </Badge>
+                          )}
+                        </div>
+                        {value !== null && (
+                          <pre className="bg-muted max-h-24 overflow-auto rounded p-1.5 text-[10px] leading-tight">
+                            {formatValue(value)}
+                          </pre>
                         )}
                       </div>
-                      {value !== null && (
-                        <pre className="bg-muted max-h-24 overflow-auto rounded p-1.5 text-[10px] leading-tight">
-                          {formatValue(value)}
-                        </pre>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Clinic Variables */}
-          <Card>
-            <CardHeader className="p-2 pb-1">
-              <CardTitle className="text-xs font-semibold">
-                Clinic Variables ({clinicVariables.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-2 pt-0">
-              <div className="space-y-1.5">
-                {clinicVariables.map((key) => {
-                  const value = getVariableValue(key);
-                  return (
-                    <div key={key} className="space-y-0.5">
-                      <div className="flex items-center gap-1.5">
-                        <Badge
-                          variant="outline"
-                          className="h-4 px-1.5 py-0 font-mono text-[10px]"
-                        >
-                          {key}
-                        </Badge>
-                        {value === null && (
+            {/* Clinic Variables */}
+            <Card>
+              <CardHeader className="p-2 pb-1">
+                <CardTitle className="text-xs font-semibold">
+                  Clinic Variables ({clinicVariables.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-2 pt-0">
+                <div className="space-y-1.5">
+                  {clinicVariables.map((key) => {
+                    const value = getVariableValue(key);
+                    return (
+                      <div key={key} className="space-y-0.5">
+                        <div className="flex items-center gap-1.5">
                           <Badge
-                            variant="secondary"
-                            className="h-4 px-1.5 py-0 text-[10px]"
+                            variant="outline"
+                            className="h-4 px-1.5 py-0 font-mono text-[10px]"
                           >
-                            null
+                            {key}
                           </Badge>
+                          {value === null && (
+                            <Badge
+                              variant="secondary"
+                              className="h-4 px-1.5 py-0 text-[10px]"
+                            >
+                              null
+                            </Badge>
+                          )}
+                        </div>
+                        {value !== null && (
+                          <pre className="bg-muted max-h-24 overflow-auto rounded p-1.5 text-[10px] leading-tight">
+                            {formatValue(value)}
+                          </pre>
                         )}
                       </div>
-                      {value !== null && (
-                        <pre className="bg-muted max-h-24 overflow-auto rounded p-1.5 text-[10px] leading-tight">
-                          {formatValue(value)}
-                        </pre>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Clinical Variables */}
-          <Card>
-            <CardHeader className="p-2 pb-1">
-              <CardTitle className="text-xs font-semibold">
-                Clinical Variables ({clinicalVariables.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-2 pt-0">
-              <div className="space-y-1.5">
-                {clinicalVariables.map((key) => {
-                  const value = getVariableValue(key);
-                  return (
-                    <div key={key} className="space-y-0.5">
-                      <div className="flex items-center gap-1.5">
-                        <Badge
-                          variant="outline"
-                          className="h-4 px-1.5 py-0 font-mono text-[10px]"
-                        >
-                          {key}
-                        </Badge>
-                        {value === null && (
+            {/* Clinical Variables */}
+            <Card>
+              <CardHeader className="p-2 pb-1">
+                <CardTitle className="text-xs font-semibold">
+                  Clinical Variables ({clinicalVariables.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-2 pt-0">
+                <div className="space-y-1.5">
+                  {clinicalVariables.map((key) => {
+                    const value = getVariableValue(key);
+                    return (
+                      <div key={key} className="space-y-0.5">
+                        <div className="flex items-center gap-1.5">
                           <Badge
-                            variant="secondary"
-                            className="h-4 px-1.5 py-0 text-[10px]"
+                            variant="outline"
+                            className="h-4 px-1.5 py-0 font-mono text-[10px]"
                           >
-                            null
+                            {key}
                           </Badge>
+                          {value === null && (
+                            <Badge
+                              variant="secondary"
+                              className="h-4 px-1.5 py-0 text-[10px]"
+                            >
+                              null
+                            </Badge>
+                          )}
+                        </div>
+                        {value !== null && (
+                          <pre className="bg-muted max-h-32 overflow-auto rounded p-1.5 text-[10px] leading-tight">
+                            {formatValue(value)}
+                          </pre>
                         )}
                       </div>
-                      {value !== null && (
-                        <pre className="bg-muted max-h-32 overflow-auto rounded p-1.5 text-[10px] leading-tight">
-                          {formatValue(value)}
-                        </pre>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Knowledge Base Variables */}
-          <Card>
-            <CardHeader className="p-2 pb-1">
-              <CardTitle className="text-xs font-semibold">
-                Knowledge Base Variables ({knowledgeBaseVariables.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-2 pt-0">
-              <div className="space-y-1.5">
-                {knowledgeBaseVariables.map((key) => {
-                  const value = getVariableValue(key);
-                  return (
-                    <div key={key} className="space-y-0.5">
-                      <div className="flex items-center gap-1.5">
-                        <Badge
-                          variant="outline"
-                          className="h-4 px-1.5 py-0 font-mono text-[10px]"
-                        >
-                          {key}
-                        </Badge>
-                        {value === null && (
+            {/* Knowledge Base Variables */}
+            <Card>
+              <CardHeader className="p-2 pb-1">
+                <CardTitle className="text-xs font-semibold">
+                  Knowledge Base Variables ({knowledgeBaseVariables.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-2 pt-0">
+                <div className="space-y-1.5">
+                  {knowledgeBaseVariables.map((key) => {
+                    const value = getVariableValue(key);
+                    return (
+                      <div key={key} className="space-y-0.5">
+                        <div className="flex items-center gap-1.5">
                           <Badge
-                            variant="secondary"
-                            className="h-4 px-1.5 py-0 text-[10px]"
+                            variant="outline"
+                            className="h-4 px-1.5 py-0 font-mono text-[10px]"
                           >
-                            null
+                            {key}
                           </Badge>
+                          {value === null && (
+                            <Badge
+                              variant="secondary"
+                              className="h-4 px-1.5 py-0 text-[10px]"
+                            >
+                              null
+                            </Badge>
+                          )}
+                        </div>
+                        {value !== null && (
+                          <pre className="bg-muted max-h-32 overflow-auto rounded p-1.5 text-[10px] leading-tight">
+                            {formatValue(value)}
+                          </pre>
                         )}
                       </div>
-                      {value !== null && (
-                        <pre className="bg-muted max-h-32 overflow-auto rounded p-1.5 text-[10px] leading-tight">
-                          {formatValue(value)}
-                        </pre>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* All Variables (Raw JSON) */}
-          <Card>
-            <CardHeader className="p-2 pb-1">
-              <CardTitle className="text-xs font-semibold">
-                All Variables (Raw JSON)
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-2 pt-0">
-              <pre className="bg-muted max-h-64 overflow-auto rounded p-2 text-[10px] leading-tight">
-                {JSON.stringify(debugData.variables, null, 2)}
-              </pre>
-            </CardContent>
-          </Card>
-        </div>
+            {/* All Variables (Raw JSON) */}
+            <Card>
+              <CardHeader className="p-2 pb-1">
+                <CardTitle className="text-xs font-semibold">
+                  All Variables (Raw JSON)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-2 pt-0">
+                <pre className="bg-muted max-h-64 overflow-auto rounded p-2 text-[10px] leading-tight">
+                  {JSON.stringify(debugData.variables, null, 2)}
+                </pre>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

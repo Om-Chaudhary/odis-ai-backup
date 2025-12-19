@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/extension-storage/src",
   "projectType": "library",
-  "tags": ["type:data-access", "scope:extension", "platform:browser"],
+  "tags": ["type:util", "scope:extension", "scope:shared", "platform:browser"],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",

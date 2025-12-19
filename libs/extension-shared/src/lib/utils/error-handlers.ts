@@ -23,23 +23,28 @@
 export const isAuthError = (error: unknown): boolean => {
   if (!error) return false;
 
-  const errorMessage = error instanceof Error ? error.message : String(error);
+  const errorMessage =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : JSON.stringify(error);
   const lowerMessage = errorMessage.toLowerCase();
 
   // Common authentication error patterns
   const authPatterns = [
-    'not signed in',
-    'not authenticated',
-    'authentication failed',
-    'unauthorized',
-    'no auth token',
-    'no access token',
-    'sign in',
-    'please sign in',
-    'user is not signed in',
+    "not signed in",
+    "not authenticated",
+    "authentication failed",
+    "unauthorized",
+    "no auth token",
+    "no access token",
+    "sign in",
+    "please sign in",
+    "user is not signed in",
   ];
 
-  return authPatterns.some(pattern => lowerMessage.includes(pattern));
+  return authPatterns.some((pattern) => lowerMessage.includes(pattern));
 };
 
 /**
@@ -62,24 +67,27 @@ export const isAuthError = (error: unknown): boolean => {
  * }
  * ```
  */
-export const formatErrorMessage = (error: unknown, defaultMessage = 'An error occurred'): string => {
+export const formatErrorMessage = (
+  error: unknown,
+  defaultMessage = "An error occurred",
+): string => {
   if (!error) return defaultMessage;
 
   if (error instanceof Error) {
     return error.message || defaultMessage;
   }
 
-  if (typeof error === 'string') {
+  if (typeof error === "string") {
     return error;
   }
 
-  if (typeof error === 'object' && error !== null) {
+  if (typeof error === "object" && error !== null) {
     // Try to extract message from error object
     const errorObj = error as Record<string, unknown>;
-    if (typeof errorObj.message === 'string') {
+    if (typeof errorObj.message === "string") {
       return errorObj.message;
     }
-    if (typeof errorObj.error === 'string') {
+    if (typeof errorObj.error === "string") {
       return errorObj.error;
     }
   }
@@ -119,61 +127,66 @@ export const handleSupabaseError = (
   hint?: string;
 } => {
   if (!error) {
-    return { message: 'An unknown error occurred' };
+    return { message: "An unknown error occurred" };
   }
 
   // Handle Supabase PostgREST errors
-  if (typeof error === 'object' && error !== null) {
+  if (typeof error === "object" && error !== null) {
     const errorObj = error as Record<string, unknown>;
 
     // Supabase error structure
-    if (typeof errorObj.message === 'string') {
+    if (typeof errorObj.message === "string") {
       return {
         message: errorObj.message,
-        code: typeof errorObj.code === 'string' ? errorObj.code : undefined,
-        details: typeof errorObj.details === 'string' ? errorObj.details : undefined,
-        hint: typeof errorObj.hint === 'string' ? errorObj.hint : undefined,
+        code: typeof errorObj.code === "string" ? errorObj.code : undefined,
+        details:
+          typeof errorObj.details === "string" ? errorObj.details : undefined,
+        hint: typeof errorObj.hint === "string" ? errorObj.hint : undefined,
       };
     }
 
     // Handle PostgREST error codes
-    if (typeof errorObj.code === 'string') {
+    if (typeof errorObj.code === "string") {
       const code = errorObj.code;
-      let message = 'Database error occurred';
+      let message = "Database error occurred";
 
       // Common PostgREST error codes
       switch (code) {
-        case 'PGRST116':
-          message = 'No rows found';
+        case "PGRST116":
+          message = "No rows found";
           break;
-        case '23505':
-          message = 'A record with this information already exists';
+        case "23505":
+          message = "A record with this information already exists";
           break;
-        case '23503':
-          message = 'Referenced record does not exist';
+        case "23503":
+          message = "Referenced record does not exist";
           break;
-        case '23502':
-          message = 'Required field is missing';
+        case "23502":
+          message = "Required field is missing";
           break;
-        case '42501':
-          message = 'Insufficient privileges';
+        case "42501":
+          message = "Insufficient privileges";
           break;
         default:
-          message = typeof errorObj.message === 'string' ? errorObj.message : `Database error: ${code}`;
+          message =
+            typeof errorObj.message === "string"
+              ? errorObj.message
+              : `Database error: ${code}`;
       }
 
       return {
         message,
         code,
-        details: typeof errorObj.details === 'string' ? errorObj.details : undefined,
-        hint: typeof errorObj.hint === 'string' ? errorObj.hint : undefined,
+        details:
+          typeof errorObj.details === "string" ? errorObj.details : undefined,
+        hint: typeof errorObj.hint === "string" ? errorObj.hint : undefined,
       };
     }
   }
 
   // Fallback to standard error formatting
   return {
-    message: formatErrorMessage(error, 'An error occurred'),
+    message: formatErrorMessage(error, "An error occurred"),
   };
 };
 
@@ -195,9 +208,12 @@ export const handleSupabaseError = (
  * }
  * ```
  */
-export const getUserFriendlyErrorMessage = (error: unknown, context?: string): string => {
+export const getUserFriendlyErrorMessage = (
+  error: unknown,
+  context?: string,
+): string => {
   if (isAuthError(error)) {
-    return 'Please sign in to the extension to continue.';
+    return "Please sign in to the extension to continue.";
   }
 
   const message = formatErrorMessage(error);

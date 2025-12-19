@@ -1,9 +1,7 @@
- 
-
-import { getSupabaseClient } from './client';
-import { useEffect, useState } from 'react';
-import type { AuthUser, AuthSession } from './types';
-import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
+import { getSupabaseClient } from "./client";
+import { useEffect, useState } from "react";
+import type { AuthUser, AuthSession } from "./types";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 
 interface UseSupabaseAuthReturn {
   user: AuthUser;
@@ -18,10 +16,11 @@ interface UseSupabaseAuthReturn {
  */
 function trackSessionStart(): void {
   // Fire and forget - don't await, don't block auth flow
-  import('../analytics/event-tracker')
+  import("../analytics/event-tracker")
     .then(({ startSession }) => {
       startSession({
-        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
+        user_agent:
+          typeof navigator !== "undefined" ? navigator.userAgent : undefined,
         extension_version: chrome?.runtime?.getManifest?.()?.version,
       }).catch(() => {
         // Silently ignore - analytics should never break auth
@@ -38,10 +37,10 @@ function trackSessionStart(): void {
  */
 function trackSessionEnd(): void {
   // Fire and forget - don't await, don't block auth flow
-  import('../analytics/event-tracker')
+  import("../analytics/event-tracker")
     .then(({ endSession, getSessionId }) => {
       getSessionId()
-        .then(sessionId => {
+        .then((sessionId) => {
           endSession(sessionId).catch(() => {
             // Silently ignore
           });
@@ -100,37 +99,41 @@ export const useSupabaseAuth = (): UseSupabaseAuthReturn => {
         }
       } catch (err) {
         if (mounted) {
-          setError(err instanceof Error ? err : new Error('Failed to initialize auth'));
+          setError(
+            err instanceof Error ? err : new Error("Failed to initialize auth"),
+          );
           setLoading(false);
         }
       }
     };
 
-    initAuth();
+    void initAuth();
 
     // Subscribe to auth changes
     const supabase = getSupabaseClient();
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event: AuthChangeEvent, newSession: Session | null) => {
-      // Auth state changed - session updated
+    } = supabase.auth.onAuthStateChange(
+      (event: AuthChangeEvent, newSession: Session | null) => {
+        // Auth state changed - session updated
 
-      if (mounted) {
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-        setLoading(false);
+        if (mounted) {
+          setSession(newSession);
+          setUser(newSession?.user ?? null);
+          setLoading(false);
 
-        // Start session tracking when user signs in (fire and forget)
-        if (event === 'SIGNED_IN' && newSession?.user) {
-          trackSessionStart();
+          // Start session tracking when user signs in (fire and forget)
+          if (event === "SIGNED_IN" && newSession?.user) {
+            trackSessionStart();
+          }
+
+          // End session tracking when user signs out (fire and forget)
+          if (event === "SIGNED_OUT") {
+            trackSessionEnd();
+          }
         }
-
-        // End session tracking when user signs out (fire and forget)
-        if (event === 'SIGNED_OUT') {
-          trackSessionEnd();
-        }
-      }
-    });
+      },
+    );
 
     // Cleanup
     return () => {

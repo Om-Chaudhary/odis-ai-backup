@@ -3,11 +3,7 @@
 import { useRef } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { Phone, Calendar, Clock } from "lucide-react";
-import {
-  MarketingLayout,
-  PageHero,
-  SectionContainer,
-} from "~/components/marketing";
+import { MarketingLayout, SectionContainer } from "~/components/marketing";
 import { CalEmbedWrapper } from "~/components/landing/shared/cal-embed-wrapper";
 
 const whatToExpect = [

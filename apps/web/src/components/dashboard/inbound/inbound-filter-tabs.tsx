@@ -1,8 +1,6 @@
 "use client";
 
 import {
-  Search,
-  Phone,
   Calendar as CalendarIcon,
   MessageSquare,
   ChevronLeft,
@@ -58,8 +56,8 @@ export function InboundFilterTabs({
   messageStatus,
   onMessageStatusChange,
   stats,
-  searchTerm = "",
-  onSearchChange,
+  searchTerm: _searchTerm = "",
+  onSearchChange: _onSearchChange,
   currentDate,
   onDateChange,
   isLoading = false,

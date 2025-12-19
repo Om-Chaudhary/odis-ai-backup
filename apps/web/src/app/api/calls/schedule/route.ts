@@ -10,7 +10,12 @@ import { env } from "~/env";
 import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/api/cors";
 import { getClinicByUserId } from "@odis-ai/clinics/utils";
 import { getClinicVapiConfigByUserId } from "@odis-ai/clinics/vapi-config";
-import { extractFirstName } from "@odis-ai/vapi/utils";
+
+// Dynamic import for lazy-loaded vapi library
+async function getVapiUtils() {
+  const { extractFirstName } = await import("@odis-ai/vapi/utils");
+  return { extractFirstName };
+}
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)
@@ -107,14 +112,14 @@ export async function POST(request: NextRequest) {
     let clinicName = validated.clinicName;
     let clinicPhone = validated.clinicPhone;
     let emergencyPhone = validated.emergencyPhone;
-    let agentName = validated.agentName ?? "Sarah";
+    const agentName = "Sarah"; // Always use Sarah
     let testModeEnabled = false;
 
     // Fetch user settings to check test mode and fill in missing clinic settings
     const { data: userSettings, error: userError } = await supabase
       .from("users")
       .select(
-        "clinic_name, clinic_phone, first_name, test_mode_enabled, test_contact_phone",
+        "clinic_name, clinic_phone, test_mode_enabled, test_contact_phone",
       )
       .eq("id", user.id)
       .single();
@@ -139,11 +144,6 @@ export async function POST(request: NextRequest) {
           userSettings.clinic_phone ??
           clinicPhone ??
           "";
-      }
-
-      // Use user's first name as agent name if not provided
-      if (!validated.agentName && userSettings.first_name) {
-        agentName = userSettings.first_name;
       }
 
       // Handle test mode (always check, even if clinic settings are provided)
@@ -194,6 +194,7 @@ export async function POST(request: NextRequest) {
     // Prepare call variables from input data (snake_case for VAPI)
     // Use extractFirstName to get only the first word of the pet name
     // (many vet systems store "FirstName LastName" but we only want first name for calls)
+    const { extractFirstName } = await getVapiUtils();
     const callVariables = {
       // Core identification
       pet_name: extractFirstName(validated.petName),

@@ -1,5 +1,5 @@
-import { COLORS } from './const';
-import { IS_DEV } from '@odis-ai/extension-env';
+import { COLORS } from "./const";
+import { IS_DEV } from "@odis-ai/extension-env";
 
 /**
  * Log levels in order of severity (lowest to highest)
@@ -15,10 +15,10 @@ enum LogLevel {
  * Emoji icons for each log level
  */
 const LOG_EMOJIS = {
-  [LogLevel.DEBUG]: '🔍',
-  [LogLevel.INFO]: 'ℹ️',
-  [LogLevel.WARN]: '⚠️',
-  [LogLevel.ERROR]: '❌',
+  [LogLevel.DEBUG]: "🔍",
+  [LogLevel.INFO]: "ℹ️",
+  [LogLevel.WARN]: "⚠️",
+  [LogLevel.ERROR]: "❌",
 } as const;
 
 /**
@@ -35,10 +35,10 @@ const LOG_COLORS = {
  * CSS styles for browser console output
  */
 const LOG_STYLES = {
-  [LogLevel.DEBUG]: 'color: #888; font-weight: normal;',
-  [LogLevel.INFO]: 'color: #2196F3; font-weight: normal;',
-  [LogLevel.WARN]: 'color: #FF9800; font-weight: bold;',
-  [LogLevel.ERROR]: 'color: #F44336; font-weight: bold;',
+  [LogLevel.DEBUG]: "color: #888; font-weight: normal;",
+  [LogLevel.INFO]: "color: #2196F3; font-weight: normal;",
+  [LogLevel.WARN]: "color: #FF9800; font-weight: bold;",
+  [LogLevel.ERROR]: "color: #F44336; font-weight: bold;",
 } as const;
 
 /**
@@ -80,7 +80,8 @@ type LogTransport = (entry: LogEntry) => void;
 /**
  * Check if we're in a browser environment (supports CSS styling)
  */
-const isBrowser = typeof window !== 'undefined' && typeof window.console !== 'undefined';
+const isBrowser =
+  typeof window !== "undefined" && typeof window.console !== "undefined";
 
 /**
  * Default console transport with colors and emojis
@@ -88,8 +89,8 @@ const isBrowser = typeof window !== 'undefined' && typeof window.console !== 'un
 const consoleTransport: LogTransport = (entry: LogEntry) => {
   const { level, message, context, prefix, timestamp } = entry;
   const emoji = LOG_EMOJIS[level];
-  const timestampStr = timestamp ? `[${timestamp}] ` : '';
-  const prefixStr = prefix ? `${prefix} ` : '';
+  const timestampStr = timestamp ? `[${timestamp}] ` : "";
+  const prefixStr = prefix ? `${prefix} ` : "";
 
   // Build the formatted message
   const formattedMessage = `${emoji} ${timestampStr}${prefixStr}${message}`;
@@ -173,7 +174,7 @@ class Logger {
    * Remove a transport
    */
   removeTransport(transport: LogTransport): void {
-    this.transports = this.transports.filter(t => t !== transport);
+    this.transports = this.transports.filter((t) => t !== transport);
   }
 
   /**
@@ -193,7 +194,12 @@ class Logger {
   /**
    * Internal method to log an entry
    */
-  private log(level: LogLevel, message: string, context?: Record<string, unknown>, prefix?: string): void {
+  private log(
+    level: LogLevel,
+    message: string,
+    context?: Record<string, unknown>,
+    prefix?: string,
+  ): void {
     if (level < this.config.level) {
       return;
     }
@@ -203,16 +209,18 @@ class Logger {
       message,
       context: this.config.includeContext ? context : undefined,
       prefix,
-      timestamp: this.config.includeTimestamp ? new Date().toISOString() : undefined,
+      timestamp: this.config.includeTimestamp
+        ? new Date().toISOString()
+        : undefined,
     };
 
-    this.transports.forEach(transport => {
+    this.transports.forEach((transport) => {
       try {
         transport(entry);
       } catch (error) {
         // Fallback to console if transport fails (use plain console to avoid recursion)
 
-        console.error('❌ [Logger] Transport error:', error);
+        console.error("❌ [Logger] Transport error:", error);
       }
     });
   }
@@ -220,28 +228,44 @@ class Logger {
   /**
    * Log a debug message
    */
-  debug(message: string, context?: Record<string, unknown>, prefix?: string): void {
+  debug(
+    message: string,
+    context?: Record<string, unknown>,
+    prefix?: string,
+  ): void {
     this.log(LogLevel.DEBUG, message, context, prefix);
   }
 
   /**
    * Log an info message
    */
-  info(message: string, context?: Record<string, unknown>, prefix?: string): void {
+  info(
+    message: string,
+    context?: Record<string, unknown>,
+    prefix?: string,
+  ): void {
     this.log(LogLevel.INFO, message, context, prefix);
   }
 
   /**
    * Log a warning message
    */
-  warn(message: string, context?: Record<string, unknown>, prefix?: string): void {
+  warn(
+    message: string,
+    context?: Record<string, unknown>,
+    prefix?: string,
+  ): void {
     this.log(LogLevel.WARN, message, context, prefix);
   }
 
   /**
    * Log an error message
    */
-  error(message: string, context?: Record<string, unknown>, prefix?: string): void {
+  error(
+    message: string,
+    context?: Record<string, unknown>,
+    prefix?: string,
+  ): void {
     this.log(LogLevel.ERROR, message, context, prefix);
   }
 
@@ -258,20 +282,36 @@ class Logger {
     const originalWarn = childLogger.warn.bind(childLogger);
     const originalError = childLogger.error.bind(childLogger);
 
-    childLogger.debug = (message: string, context?: Record<string, unknown>, prefixOverride?: string) => {
-      originalDebug(message, context, prefixOverride || prefix);
+    childLogger.debug = (
+      message: string,
+      context?: Record<string, unknown>,
+      prefixOverride?: string,
+    ) => {
+      originalDebug(message, context, prefixOverride ?? prefix);
     };
 
-    childLogger.info = (message: string, context?: Record<string, unknown>, prefixOverride?: string) => {
-      originalInfo(message, context, prefixOverride || prefix);
+    childLogger.info = (
+      message: string,
+      context?: Record<string, unknown>,
+      prefixOverride?: string,
+    ) => {
+      originalInfo(message, context, prefixOverride ?? prefix);
     };
 
-    childLogger.warn = (message: string, context?: Record<string, unknown>, prefixOverride?: string) => {
-      originalWarn(message, context, prefixOverride || prefix);
+    childLogger.warn = (
+      message: string,
+      context?: Record<string, unknown>,
+      prefixOverride?: string,
+    ) => {
+      originalWarn(message, context, prefixOverride ?? prefix);
     };
 
-    childLogger.error = (message: string, context?: Record<string, unknown>, prefixOverride?: string) => {
-      originalError(message, context, prefixOverride || prefix);
+    childLogger.error = (
+      message: string,
+      context?: Record<string, unknown>,
+      prefixOverride?: string,
+    ) => {
+      originalError(message, context, prefixOverride ?? prefix);
     };
 
     return childLogger;

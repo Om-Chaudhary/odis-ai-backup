@@ -10,10 +10,10 @@
  * - Falls back to local time if server time is unavailable
  */
 
-import { logger } from './logger';
-import { getSupabaseClient } from '../supabase/client';
+import { logger } from "./logger";
+import { getSupabaseClient } from "../supabase/client";
 
-const serverDateLogger = logger.child('[serverDateUtils]');
+const serverDateLogger = logger.child("[serverDateUtils]");
 
 /**
  * Cache for server time synchronization
@@ -53,22 +53,27 @@ const fetchServerTime = async (): Promise<Date | null> => {
     // Method 1: Try to use database function (most accurate)
     try {
       const { data: rpcData, error: rpcError } = (await Promise.race([
-        supabase.rpc('get_server_time'),
-        new Promise<{ data: null; error: Error }>(resolve =>
-          setTimeout(() => resolve({ data: null, error: new Error('Timeout') }), SYNC_TIMEOUT),
+        supabase.rpc("get_server_time"),
+        new Promise<{ data: null; error: Error }>((resolve) =>
+          setTimeout(
+            () => resolve({ data: null, error: new Error("Timeout") }),
+            SYNC_TIMEOUT,
+          ),
         ),
       ])) as { data: string | null; error: Error | null };
 
       if (!rpcError && rpcData) {
         const serverTime = new Date(rpcData);
-        serverDateLogger.debug('Server time fetched via RPC', {
+        serverDateLogger.debug("Server time fetched via RPC", {
           serverTime: serverTime.toISOString(),
         });
         return serverTime;
       }
     } catch {
       // RPC function not available, try fallback method
-      serverDateLogger.debug('RPC function not available, using fallback method');
+      serverDateLogger.debug(
+        "RPC function not available, using fallback method",
+      );
     }
 
     // Method 2: Estimate server time using request timing
@@ -80,9 +85,12 @@ const fetchServerTime = async (): Promise<Date | null> => {
       const startTime = Date.now();
 
       const { error } = (await Promise.race([
-        supabase.from('cases').select('id').limit(1).maybeSingle(),
-        new Promise<{ error: Error }>(resolve =>
-          setTimeout(() => resolve({ error: new Error('Timeout') }), SYNC_TIMEOUT),
+        supabase.from("cases").select("id").limit(1).maybeSingle(),
+        new Promise<{ error: Error }>((resolve) =>
+          setTimeout(
+            () => resolve({ error: new Error("Timeout") }),
+            SYNC_TIMEOUT,
+          ),
         ),
       ])) as { error: Error | null };
 
@@ -98,16 +106,17 @@ const fetchServerTime = async (): Promise<Date | null> => {
 
       // Small delay between measurements
       if (i < numMeasurements - 1) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }
 
     if (measurements.length > 0) {
       // Use average of measurements for better accuracy
-      const avgServerTime = measurements.reduce((a, b) => a + b, 0) / measurements.length;
+      const avgServerTime =
+        measurements.reduce((a, b) => a + b, 0) / measurements.length;
       const serverTime = new Date(avgServerTime);
 
-      serverDateLogger.debug('Server time estimated via request timing', {
+      serverDateLogger.debug("Server time estimated via request timing", {
         serverTime: serverTime.toISOString(),
         measurements: measurements.length,
       });
@@ -115,10 +124,12 @@ const fetchServerTime = async (): Promise<Date | null> => {
       return serverTime;
     }
 
-    serverDateLogger.warn('Failed to fetch server time, falling back to local time');
+    serverDateLogger.warn(
+      "Failed to fetch server time, falling back to local time",
+    );
     return null;
   } catch (error) {
-    serverDateLogger.warn('Error fetching server time', { error });
+    serverDateLogger.warn("Error fetching server time", { error });
     return null;
   }
 };
@@ -145,14 +156,14 @@ export const syncServerTime = async (): Promise<boolean> => {
       lastSync: localTimeAtSync,
     };
 
-    serverDateLogger.debug('Server time synced', {
+    serverDateLogger.debug("Server time synced", {
       serverTime: serverTime.toISOString(),
       offset: `${offset}ms`,
     });
 
     return true;
   } catch (error) {
-    serverDateLogger.warn('Failed to sync server time', { error });
+    serverDateLogger.warn("Failed to sync server time", { error });
     return false;
   }
 };
@@ -163,7 +174,10 @@ export const syncServerTime = async (): Promise<boolean> => {
  */
 export const getCurrentDate = async (): Promise<Date> => {
   // Check if cache is valid
-  if (serverTimeCache && Date.now() - serverTimeCache.lastSync < CACHE_DURATION) {
+  if (
+    serverTimeCache &&
+    Date.now() - serverTimeCache.lastSync < CACHE_DURATION
+  ) {
     // Use cached server time with offset
     const elapsed = Date.now() - serverTimeCache.localTimeAtSync;
     return new Date(serverTimeCache.serverTime.getTime() + elapsed);
@@ -178,7 +192,7 @@ export const getCurrentDate = async (): Promise<Date> => {
   }
 
   // Fallback to local time
-  serverDateLogger.debug('Using local time as fallback');
+  serverDateLogger.debug("Using local time as fallback");
   return new Date();
 };
 
@@ -188,7 +202,10 @@ export const getCurrentDate = async (): Promise<Date> => {
  * For best accuracy, call syncServerTime() first
  */
 export const getCurrentDateSync = (): Date => {
-  if (serverTimeCache && Date.now() - serverTimeCache.lastSync < CACHE_DURATION) {
+  if (
+    serverTimeCache &&
+    Date.now() - serverTimeCache.lastSync < CACHE_DURATION
+  ) {
     // Use cached server time with offset
     const elapsed = Date.now() - serverTimeCache.localTimeAtSync;
     return new Date(serverTimeCache.serverTime.getTime() + elapsed);
@@ -210,7 +227,8 @@ export const getCurrentISOString = async (): Promise<string> => {
  * Get current date/time as ISO string (UTC) synchronously
  * Uses cached server time if available
  */
-export const getCurrentISOStringSync = (): string => getCurrentDateSync().toISOString();
+export const getCurrentISOStringSync = (): string =>
+  getCurrentDateSync().toISOString();
 
 /**
  * Get today's date in local timezone formatted as YYYY-MM-DD
@@ -219,8 +237,8 @@ export const getCurrentISOStringSync = (): string => getCurrentDateSync().toISOS
 export const getTodayLocalDate = async (): Promise<string> => {
   const date = await getCurrentDate();
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
 
@@ -231,8 +249,8 @@ export const getTodayLocalDate = async (): Promise<string> => {
 export const getTodayLocalDateSync = (): string => {
   const date = getCurrentDateSync();
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
 
@@ -240,7 +258,7 @@ export const getTodayLocalDateSync = (): string => {
  * Get start of day in local timezone using server time
  */
 export const getStartOfDay = async (date?: Date): Promise<Date> => {
-  const baseDate = date || (await getCurrentDate());
+  const baseDate = date ?? (await getCurrentDate());
   const startOfDay = new Date(baseDate);
   startOfDay.setHours(0, 0, 0, 0);
   return startOfDay;
@@ -250,7 +268,7 @@ export const getStartOfDay = async (date?: Date): Promise<Date> => {
  * Get start of day in local timezone (synchronous)
  */
 export const getStartOfDaySync = (date?: Date): Date => {
-  const baseDate = date || getCurrentDateSync();
+  const baseDate = date ?? getCurrentDateSync();
   const startOfDay = new Date(baseDate);
   startOfDay.setHours(0, 0, 0, 0);
   return startOfDay;
@@ -260,7 +278,7 @@ export const getStartOfDaySync = (date?: Date): Date => {
  * Get end of day in local timezone using server time
  */
 export const getEndOfDay = async (date?: Date): Promise<Date> => {
-  const baseDate = date || (await getCurrentDate());
+  const baseDate = date ?? (await getCurrentDate());
   const endOfDay = new Date(baseDate);
   endOfDay.setHours(23, 59, 59, 999);
   return endOfDay;
@@ -270,7 +288,7 @@ export const getEndOfDay = async (date?: Date): Promise<Date> => {
  * Get end of day in local timezone (synchronous)
  */
 export const getEndOfDaySync = (date?: Date): Date => {
-  const baseDate = date || getCurrentDateSync();
+  const baseDate = date ?? getCurrentDateSync();
   const endOfDay = new Date(baseDate);
   endOfDay.setHours(23, 59, 59, 999);
   return endOfDay;
@@ -317,4 +335,5 @@ export const clearServerTimeCache = (): void => {
  * Get the current server time offset in milliseconds
  * Returns null if server time is not synced
  */
-export const getServerTimeOffset = (): number | null => serverTimeCache?.offset ?? null;
+export const getServerTimeOffset = (): number | null =>
+  serverTimeCache?.offset ?? null;

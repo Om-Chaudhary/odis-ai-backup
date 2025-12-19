@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, List, UserX, ClipboardCheck } from "lucide-react";
+import { List, UserX, ClipboardCheck } from "lucide-react";
 import { cn } from "@odis-ai/utils";
 import type { ViewMode } from "./types";
 

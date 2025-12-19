@@ -12,14 +12,9 @@ import {
   RotateCcw,
   ExternalLink,
   Loader2,
-  FileText,
   Stethoscope,
-  ChevronDown,
-  ChevronUp,
-  Sparkles,
   Calendar,
   Wand2,
-  Info,
   AlertTriangle,
   CheckCircle2,
   XCircle,
@@ -35,11 +30,6 @@ import { Zap, Clock } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/ui/tabs";
 import { Badge } from "@odis-ai/ui/badge";
 import { Separator } from "@odis-ai/ui/separator";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@odis-ai/ui/collapsible";
 import type {
   PreviewTab,
   DeliveryToggles,
@@ -148,8 +138,9 @@ export function OutboundCaseDetail({
   onDelete,
 }: OutboundCaseDetailProps) {
   const [activeTab, setActiveTab] = useState<PreviewTab>("call_script");
-  const [communicationExpanded, setCommunicationExpanded] = useState(false);
-  const [dischargeSummaryExpanded, setDischargeSummaryExpanded] =
+  // Reserved for future collapsible sections
+  const [_communicationExpanded, _setCommunicationExpanded] = useState(false);
+  const [_dischargeSummaryExpanded, _setDischargeSummaryExpanded] =
     useState(false);
 
   // Mutation for scheduling remaining outreach
@@ -183,7 +174,7 @@ export function OutboundCaseDetail({
   const isEditable =
     caseData.status === "pending_review" || caseData.status === "ready";
   const showRetry = caseData.status === "failed";
-  const showOutcome =
+  const _showOutcome =
     caseData.status === "completed" || caseData.status === "failed";
   const showScheduleInfo = caseData.status === "scheduled";
 
@@ -207,7 +198,7 @@ export function OutboundCaseDetail({
   // Determine which clinical notes to show
   const hasIdexxNotes = Boolean(caseData.idexxNotes?.trim());
   const hasSoapNotes = caseData.soapNotes && caseData.soapNotes.length > 0;
-  const hasClinicalData = hasIdexxNotes || hasSoapNotes;
+  const _hasClinicalData = hasIdexxNotes || hasSoapNotes;
 
   return (
     <div className="flex h-full flex-col">
@@ -534,7 +525,7 @@ function ClinicalNotesSection({
 /**
  * Preview content for call script or email
  */
-function PreviewContent({
+function _PreviewContent({
   content,
   structuredContent,
   onPlay,
@@ -1321,7 +1312,7 @@ function DeliveryCompleteCard({
           .split(".")
           .filter((s) => s.trim().length > 0);
         const firstSentence = sentences[0]?.trim() + ".";
-        const lastSentence = sentences[sentences.length - 1]?.trim() + ".";
+        const _lastSentence = sentences[sentences.length - 1]?.trim() + ".";
         return `${firstSentence} Call completed successfully.`;
       }
       return "Call completed successfully with owner. Discharge instructions provided.";
@@ -1702,7 +1693,7 @@ function UrgentReasonSection({ callId }: { callId: string }) {
  * Structured Discharge Summary Display
  * Renders the discharge summary in beautifully formatted sections
  */
-function StructuredDischargeSummaryDisplay({
+function _StructuredDischargeSummaryDisplay({
   content,
 }: {
   content: StructuredDischargeSummary;

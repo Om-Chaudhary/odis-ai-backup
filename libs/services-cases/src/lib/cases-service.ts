@@ -1224,7 +1224,7 @@ export const CasesService = {
     const variablesResult = buildDynamicVariables({
       baseVariables: {
         clinicName: options.clinicName ?? "Your Clinic",
-        agentName: options.agentName ?? "Sarah",
+        agentName: "Sarah",
         petName: extractFirstName(entities.patient.name),
         ownerName: entities.patient.owner.name,
         // Keep date phrasing generic to avoid incorrect relative day mentions
@@ -1505,30 +1505,29 @@ export const CasesService = {
           // Test mode: execute call immediately without QStash delay
           console.log(
             "[CasesService] Test mode enabled - executing call immediately",
-          {
-            callId: scheduledCall.id,
-            testPhone: customerPhone,
-          },
-        );
-
-        // Dynamic import to avoid circular dependencies
-        // eslint-disable-next-line @nx/enforce-module-boundaries
-        const { executeScheduledCall } = await import(
-          "@odis-ai/services-discharge/call-executor"
-        );
-        const result = await executeScheduledCall(scheduledCall.id, supabase);
-        if (!result.success) {
-          console.error(
-            "[CasesService] Immediate call execution failed - call may not execute",
             {
               callId: scheduledCall.id,
-              error: result.error,
+              testPhone: customerPhone,
             },
           );
-          // Don't throw - call record was created successfully
-        }
-      } else {
-        // Normal mode: reschedule QStash for the updated time
+
+          // Dynamic import to avoid circular dependencies
+          // eslint-disable-next-line @nx/enforce-module-boundaries
+          const { executeScheduledCall } =
+            await import("@odis-ai/services-discharge/call-executor");
+          const result = await executeScheduledCall(scheduledCall.id, supabase);
+          if (!result.success) {
+            console.error(
+              "[CasesService] Immediate call execution failed - call may not execute",
+              {
+                callId: scheduledCall.id,
+                error: result.error,
+              },
+            );
+            // Don't throw - call record was created successfully
+          }
+        } else {
+          // Normal mode: reschedule QStash for the updated time
           const qstashMessageId = await scheduleCallExecution(
             scheduledCall.id,
             scheduledAt,
@@ -1600,9 +1599,8 @@ export const CasesService = {
 
         // Dynamic import to avoid circular dependencies
         // eslint-disable-next-line @nx/enforce-module-boundaries
-        const { executeScheduledCall } = await import(
-          "@odis-ai/services-discharge/call-executor"
-        );
+        const { executeScheduledCall } =
+          await import("@odis-ai/services-discharge/call-executor");
         const result = await executeScheduledCall(scheduledCall.id, supabase);
         if (!result.success) {
           console.error(

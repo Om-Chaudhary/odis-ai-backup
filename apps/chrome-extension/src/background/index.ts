@@ -1,23 +1,31 @@
-import 'webextension-polyfill';
-import { logger, formatErrorMessage } from '@odis-ai/extension-shared';
-import { exampleThemeStorage } from '@odis-ai/extension-storage';
+import "webextension-polyfill";
+import {
+  logger,
+  formatErrorMessage,
+  trackError,
+} from "@odis-ai/extension-shared";
+import { exampleThemeStorage } from "@odis-ai/extension-storage";
 
-const bgLogger = logger.child('[Background]');
+const bgLogger = logger.child("[Background]");
 
-exampleThemeStorage.get().then(theme => {
-  bgLogger.debug('theme', { theme });
+void exampleThemeStorage.get().then((theme) => {
+  bgLogger.debug("theme", { theme });
 });
 
-bgLogger.info('Background loaded');
-bgLogger.info("Edit 'chrome-extension/src/background/index.ts' and save to reload.");
+bgLogger.info("Background loaded");
+bgLogger.info(
+  "Edit 'chrome-extension/src/background/index.ts' and save to reload.",
+);
 
 // Listen for messages from content scripts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'OPEN_EMAIL_EDITOR') {
+  if (message.type === "OPEN_EMAIL_EDITOR") {
     const { dischargeSummaryId } = message;
-    const url = chrome.runtime.getURL(`email-editor/index.html?id=${dischargeSummaryId}`);
+    const url = chrome.runtime.getURL(
+      `email-editor/index.html?id=${dischargeSummaryId}`,
+    );
 
-    chrome.tabs.create({ url }, tab => {
+    chrome.tabs.create({ url }, (tab) => {
       sendResponse({ success: true, tabId: tab?.id });
     });
 
@@ -26,20 +34,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   // Handle API calls from content scripts (bypasses CORS)
-  if (message.type === 'API_REQUEST') {
+  if (message.type === "API_REQUEST") {
     const { url, method, headers, body } = message;
 
-    bgLogger.info('Making API request', { url, method });
+    bgLogger.info("Making API request", { url, method });
 
     fetch(url, {
-      method: method || 'GET',
+      method: method || "GET",
       headers: headers || {},
       body: body ? JSON.stringify(body) : undefined,
     })
-      .then(async response => {
+      .then(async (response) => {
         // Determine content type
-        const contentType = response.headers.get('content-type') || '';
-        const isJson = contentType.includes('application/json');
+        const contentType = response.headers.get("content-type") || "";
+        const isJson = contentType.includes("application/json");
 
         let data: unknown = {};
         let errorMessage: string | undefined;
@@ -65,7 +73,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
           }
         } catch (parseError) {
-          bgLogger.warn('Failed to parse response', { parseError, contentType, status: response.status });
+          bgLogger.warn("Failed to parse response", {
+            parseError,
+            contentType,
+            status: response.status,
+          });
           // data remains {}
         }
 
@@ -86,19 +98,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             finalErrorMessage = `Server Error: The server encountered an error processing your request. Please try again later.`;
           } else if (errorMessage) {
             finalErrorMessage = errorMessage;
-          } else if (typeof data === 'object' && data !== null) {
+          } else if (typeof data === "object" && data !== null) {
             const errorObj = data as Record<string, unknown>;
             // Try common error message fields
             finalErrorMessage =
-              (typeof errorObj.error === 'string' ? errorObj.error : undefined) ||
-              (typeof errorObj.message === 'string' ? errorObj.message : undefined) ||
-              (typeof errorObj.details === 'string' ? errorObj.details : undefined) ||
+              (typeof errorObj.error === "string"
+                ? errorObj.error
+                : undefined) ||
+              (typeof errorObj.message === "string"
+                ? errorObj.message
+                : undefined) ||
+              (typeof errorObj.details === "string"
+                ? errorObj.details
+                : undefined) ||
               `API error: ${response.status} ${response.statusText}`;
           } else {
             finalErrorMessage = `API error: ${response.status} ${response.statusText}`;
           }
 
-          bgLogger.error('API request failed', {
+          bgLogger.error("API request failed", {
             url,
             method,
             status: response.status,
@@ -109,14 +127,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
           // Track API error
           try {
-            const { trackError } = await import('@odis-ai/extension-shared');
             await trackError(new Error(finalErrorMessage), {
-              source: 'background_script',
-              error_type: 'api_error',
+              source: "background_script",
+              error_type: "api_error",
               request_data: {
                 url,
                 method,
-                body: body ? JSON.parse(typeof body === 'string' ? body : JSON.stringify(body)) : undefined,
+                body: body
+                  ? JSON.parse(
+                      typeof body === "string" ? body : JSON.stringify(body),
+                    )
+                  : undefined,
               },
               response_data: {
                 status: response.status,
@@ -142,26 +163,31 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           });
         }
       })
-      .catch(async error => {
-        bgLogger.error('API request failed', {
+      .catch(async (error) => {
+        bgLogger.error("API request failed", {
           url,
           method,
-          error: formatErrorMessage(error, 'Network error'),
+          error: formatErrorMessage(error, "Network error"),
           errorDetails:
-            error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error,
+            error instanceof Error
+              ? { name: error.name, message: error.message, stack: error.stack }
+              : error,
         });
 
         // Track error
         if (error instanceof Error) {
           try {
-            const { trackError } = await import('@odis-ai/extension-shared');
             await trackError(error, {
-              source: 'background_script',
-              error_type: 'api_error',
+              source: "background_script",
+              error_type: "api_error",
               request_data: {
                 url,
                 method,
-                body: body ? JSON.parse(typeof body === 'string' ? body : JSON.stringify(body)) : undefined,
+                body: body
+                  ? JSON.parse(
+                      typeof body === "string" ? body : JSON.stringify(body),
+                    )
+                  : undefined,
               },
             });
           } catch {
@@ -170,14 +196,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
 
         // Provide more specific error messages
-        let errorMsg = formatErrorMessage(error, 'Network error');
-        if (error instanceof TypeError && error.message === 'Failed to fetch') {
-          errorMsg = 'Network error: Unable to connect to server. Please check your internet connection.';
+        let errorMsg = formatErrorMessage(error, "Network error");
+        if (error instanceof TypeError && error.message === "Failed to fetch") {
+          errorMsg =
+            "Network error: Unable to connect to server. Please check your internet connection.";
         } else if (error instanceof Error) {
-          if (error.message.includes('timeout')) {
-            errorMsg = 'Request timeout: The server took too long to respond.';
-          } else if (error.message.includes('CORS')) {
-            errorMsg = 'CORS error: Cross-origin request blocked.';
+          if (error.message.includes("timeout")) {
+            errorMsg = "Request timeout: The server took too long to respond.";
+          } else if (error.message.includes("CORS")) {
+            errorMsg = "CORS error: Cross-origin request blocked.";
           }
         }
 
@@ -192,23 +219,28 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   // Handle page refresh request (e.g., after sign-in in popup)
-  if (message.type === 'REFRESH_PAGE') {
-    bgLogger.info('Refreshing active tab after authentication');
+  if (message.type === "REFRESH_PAGE") {
+    bgLogger.info("Refreshing active tab after authentication");
 
-    chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]?.id) {
         chrome.tabs.reload(tabs[0].id, { bypassCache: true }, () => {
           if (chrome.runtime.lastError) {
-            bgLogger.error('Failed to refresh tab', { error: chrome.runtime.lastError.message });
-            sendResponse({ success: false, error: chrome.runtime.lastError.message });
+            bgLogger.error("Failed to refresh tab", {
+              error: chrome.runtime.lastError.message,
+            });
+            sendResponse({
+              success: false,
+              error: chrome.runtime.lastError.message,
+            });
           } else {
-            bgLogger.info('Tab refreshed successfully');
+            bgLogger.info("Tab refreshed successfully");
             sendResponse({ success: true });
           }
         });
       } else {
-        bgLogger.warn('No active tab found to refresh');
-        sendResponse({ success: false, error: 'No active tab found' });
+        bgLogger.warn("No active tab found to refresh");
+        sendResponse({ success: false, error: "No active tab found" });
       }
     });
 
@@ -217,24 +249,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   // Handle schedule sync request from dashboard
-  if (message.type === 'SYNC_SCHEDULE') {
+  if (message.type === "SYNC_SCHEDULE") {
     const { startDate, endDate } = message;
 
-    bgLogger.info('Received schedule sync request, forwarding to IDEXX tab', { startDate, endDate });
+    bgLogger.info("Received schedule sync request, forwarding to IDEXX tab", {
+      startDate,
+      endDate,
+    });
 
     // Find IDEXX tabs
     chrome.tabs.query(
       {
         url: [
-          'https://*.idexxneo.com/*',
-          'https://*.idexxneocloud.com/*',
-          'https://neo.vet/*',
-          'https://*.neosuite.com/*',
+          "https://*.idexxneo.com/*",
+          "https://*.idexxneocloud.com/*",
+          "https://neo.vet/*",
+          "https://*.neosuite.com/*",
         ],
       },
-      tabs => {
+      (tabs) => {
         if (chrome.runtime.lastError) {
-          bgLogger.error('Error querying IDEXX tabs', { error: chrome.runtime.lastError.message });
+          bgLogger.error("Error querying IDEXX tabs", {
+            error: chrome.runtime.lastError.message,
+          });
           sendResponse({
             success: false,
             error: `Failed to find IDEXX tab: ${chrome.runtime.lastError.message}`,
@@ -243,10 +280,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
 
         if (!tabs || tabs.length === 0) {
-          bgLogger.warn('No IDEXX tabs found');
+          bgLogger.warn("No IDEXX tabs found");
           sendResponse({
             success: false,
-            error: 'No IDEXX tab found. Please open an IDEXX Neo page and try again.',
+            error:
+              "No IDEXX tab found. Please open an IDEXX Neo page and try again.",
           });
           return;
         }
@@ -255,11 +293,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const idexxTab = tabs[0];
         const tabId = idexxTab.id;
         if (!tabId) {
-          sendResponse({ success: false, error: 'Invalid IDEXX tab' });
+          sendResponse({ success: false, error: "Invalid IDEXX tab" });
           return;
         }
 
-        bgLogger.info('Sending sync request to IDEXX content script', { tabId });
+        bgLogger.info("Sending sync request to IDEXX content script", {
+          tabId,
+        });
 
         // Guard to prevent multiple responses
         let responseSent = false;
@@ -268,7 +308,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             responseSent = true;
             sendResponse(response);
           } else {
-            bgLogger.warn('Attempted to send multiple responses, ignoring', { tabId });
+            bgLogger.warn("Attempted to send multiple responses, ignoring", {
+              tabId,
+            });
           }
         };
 
@@ -277,57 +319,70 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           chrome.tabs.sendMessage(
             tabId,
             {
-              type: 'SYNC_SCHEDULE',
+              type: "SYNC_SCHEDULE",
               startDate,
               endDate,
             },
-            response => {
+            (response) => {
               // Check if tab still exists
               if (chrome.runtime.lastError) {
-                const errorMsg = chrome.runtime.lastError.message || 'Unknown error';
+                const errorMsg =
+                  chrome.runtime.lastError.message || "Unknown error";
 
                 // Check if content script isn't loaded (only attempt injection on first try)
                 const isContentScriptMissing =
-                  (errorMsg.includes('Could not establish connection') ||
-                    errorMsg.includes('Receiving end does not exist')) &&
+                  (errorMsg.includes("Could not establish connection") ||
+                    errorMsg.includes("Receiving end does not exist")) &&
                   !isRetry;
 
                 if (isContentScriptMissing) {
-                  bgLogger.warn('Content script not loaded, attempting to inject', { tabId });
+                  bgLogger.warn(
+                    "Content script not loaded, attempting to inject",
+                    { tabId },
+                  );
 
                   // Inject both JS and CSS files as specified in manifest
                   Promise.all([
                     chrome.scripting.executeScript({
                       target: { tabId },
-                      files: ['content-ui/idexx.iife.js'],
+                      files: ["content-ui/idexx.iife.js"],
                     }),
                     chrome.scripting
                       .insertCSS({
                         target: { tabId },
-                        files: ['content-ui/idexx.css'],
+                        files: ["content-ui/idexx.css"],
                       })
-                      .catch(err => {
+                      .catch((err) => {
                         // CSS injection failure is non-critical, log but continue
-                        bgLogger.warn('Failed to inject CSS (non-critical)', { error: err, tabId });
+                        bgLogger.warn("Failed to inject CSS (non-critical)", {
+                          error: err,
+                          tabId,
+                        });
                       }),
                   ])
                     .then(() => {
-                      bgLogger.info('Content script injected successfully, retrying sync message', { tabId });
+                      bgLogger.info(
+                        "Content script injected successfully, retrying sync message",
+                        { tabId },
+                      );
                       // Wait for script initialization before retrying
                       setTimeout(() => {
                         sendSyncMessage(true);
                       }, 1000); // Increased timeout for script initialization
                     })
-                    .catch(error => {
-                      bgLogger.error('Failed to inject content script', {
-                        error: formatErrorMessage(error, 'Unknown injection error'),
+                    .catch((error) => {
+                      bgLogger.error("Failed to inject content script", {
+                        error: formatErrorMessage(
+                          error,
+                          "Unknown injection error",
+                        ),
                         tabId,
                       });
                       safeSendResponse({
                         success: false,
                         error: formatErrorMessage(
                           error,
-                          'Content script not loaded. Please reload the IDEXX Neo page and try again.',
+                          "Content script not loaded. Please reload the IDEXX Neo page and try again.",
                         ),
                       });
                     });
@@ -335,7 +390,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 }
 
                 // Other errors or retry failed
-                bgLogger.error('Error sending message to IDEXX tab', {
+                bgLogger.error("Error sending message to IDEXX tab", {
                   error: errorMsg,
                   tabId,
                   isRetry,
@@ -356,7 +411,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               } else {
                 safeSendResponse({
                   success: false,
-                  error: 'No response from IDEXX content script',
+                  error: "No response from IDEXX content script",
                 });
               }
             },
@@ -373,24 +428,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   // Handle notes reconciliation request
-  if (message.type === 'RECONCILE_NOTES') {
+  if (message.type === "RECONCILE_NOTES") {
     const { startDate, endDate } = message;
 
-    bgLogger.info('Received notes reconciliation request, forwarding to IDEXX tab', { startDate, endDate });
+    bgLogger.info(
+      "Received notes reconciliation request, forwarding to IDEXX tab",
+      { startDate, endDate },
+    );
 
     // Find IDEXX tabs
     chrome.tabs.query(
       {
         url: [
-          'https://*.idexxneo.com/*',
-          'https://*.idexxneocloud.com/*',
-          'https://neo.vet/*',
-          'https://*.neosuite.com/*',
+          "https://*.idexxneo.com/*",
+          "https://*.idexxneocloud.com/*",
+          "https://neo.vet/*",
+          "https://*.neosuite.com/*",
         ],
       },
-      tabs => {
+      (tabs) => {
         if (chrome.runtime.lastError) {
-          bgLogger.error('Error querying IDEXX tabs', { error: chrome.runtime.lastError.message });
+          bgLogger.error("Error querying IDEXX tabs", {
+            error: chrome.runtime.lastError.message,
+          });
           sendResponse({
             success: false,
             error: `Failed to find IDEXX tab: ${chrome.runtime.lastError.message}`,
@@ -399,10 +459,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
 
         if (!tabs || tabs.length === 0) {
-          bgLogger.warn('No IDEXX tabs found');
+          bgLogger.warn("No IDEXX tabs found");
           sendResponse({
             success: false,
-            error: 'No IDEXX tab found. Please open an IDEXX Neo page and try again.',
+            error:
+              "No IDEXX tab found. Please open an IDEXX Neo page and try again.",
           });
           return;
         }
@@ -411,27 +472,34 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const idexxTab = tabs[0];
         const tabId = idexxTab.id;
         if (!tabId) {
-          sendResponse({ success: false, error: 'Invalid IDEXX tab' });
+          sendResponse({ success: false, error: "Invalid IDEXX tab" });
           return;
         }
 
-        bgLogger.info('Sending reconciliation request to IDEXX content script', { tabId });
+        bgLogger.info(
+          "Sending reconciliation request to IDEXX content script",
+          { tabId },
+        );
 
         // Send message to content script
         chrome.tabs.sendMessage(
           tabId,
           {
-            type: 'RECONCILE_NOTES',
+            type: "RECONCILE_NOTES",
             startDate,
             endDate,
           },
-          response => {
+          (response) => {
             if (chrome.runtime.lastError) {
-              const errorMsg = chrome.runtime.lastError.message || 'Unknown error';
-              bgLogger.error('Error sending reconciliation message to IDEXX tab', {
-                error: errorMsg,
-                tabId,
-              });
+              const errorMsg =
+                chrome.runtime.lastError.message || "Unknown error";
+              bgLogger.error(
+                "Error sending reconciliation message to IDEXX tab",
+                {
+                  error: errorMsg,
+                  tabId,
+                },
+              );
               sendResponse({
                 success: false,
                 error: formatErrorMessage(
@@ -448,7 +516,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             } else {
               sendResponse({
                 success: false,
-                error: 'No response from IDEXX content script',
+                error: "No response from IDEXX content script",
               });
             }
           },
