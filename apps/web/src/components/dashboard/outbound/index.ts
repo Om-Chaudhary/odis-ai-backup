@@ -71,9 +71,11 @@ export type {
   ScheduledEmail,
   DischargeCase,
   DischargeBatch,
+  SoapNote,
   // Stats & settings
   DischargeSummaryStats,
   UserDischargeSettings,
+  FailureCategoryCounts,
   // UI state
   OutboundFiltersState,
   PanelConfig,

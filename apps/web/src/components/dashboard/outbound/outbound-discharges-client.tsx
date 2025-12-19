@@ -6,7 +6,6 @@ import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
 import { format, parseISO, startOfDay } from "date-fns";
 import { TestTube, Settings } from "lucide-react";
 import Link from "next/link";
-import { api } from "~/trpc/client";
 
 import type {
   DischargeCaseStatus,
@@ -23,7 +22,9 @@ import { OutboundCaseDetail } from "./outbound-case-detail";
 import { OutboundSplitLayout } from "./outbound-split-layout";
 import { OutboundPagination } from "./outbound-pagination";
 import { OutboundNeedsReviewTable } from "./outbound-needs-review-table";
+import { ScheduleAllModal } from "./schedule-all-modal";
 import { Button } from "@odis-ai/ui/button";
+import { useOutboundData, useOutboundMutations } from "./hooks";
 
 // Type for transformed case from API
 interface TransformedCase {
@@ -154,124 +155,66 @@ export function OutboundDischargesClient() {
     emailEnabled: true,
     immediateDelivery: false,
   });
-  // Track which cases are being scheduled from the table quick action (supports concurrent scheduling)
-  const [schedulingCaseIds, setSchedulingCaseIds] = useState<Set<string>>(
-    new Set(),
-  );
-  // Track which cases are having their star toggled
-  const [togglingStarCaseIds, setTogglingStarCaseIds] = useState<Set<string>>(
-    new Set(),
-  );
 
-  const casesRef = useRef<TransformedCase[]>([]);
-
-  // Fetch cases
-  const {
-    data: casesData,
-    isLoading,
-    refetch,
-  } = api.outbound.listDischargeCases.useQuery(
-    {
-      page: page,
-      pageSize: pageSize,
-      search: searchTerm || undefined,
-      startDate,
-      endDate,
-    },
-    {
-      refetchInterval: () => {
-        const hasActive = casesRef.current.some(
-          (c) => c.status === "in_progress",
-        );
-        return hasActive ? 5000 : 30000;
-      },
-    },
-  );
-
-  // Fetch stats
-  const { data: statsData } = api.outbound.getDischargeCaseStats.useQuery({
-    startDate,
-    endDate,
-  });
-
-  // Fetch discharge settings (for test mode indicator)
-  const { data: settingsData } = api.cases.getDischargeSettings.useQuery();
-
-  // Deep link: Find case by IDEXX consultation ID
-  // Pass pageSize so the backend can calculate which page the case is on
-  const { data: deepLinkData, isLoading: isDeepLinkLoading } =
-    api.outbound.findByConsultationId.useQuery(
-      { consultationId: consultationId ?? "", pageSize },
-      {
-        enabled: !!consultationId,
-        staleTime: Infinity, // Don't refetch once we have the result
-      },
-    );
+  // Schedule All modal state
+  const [scheduleAllModalOpen, setScheduleAllModalOpen] = useState(false);
 
   // Track if we've handled the deep link to avoid re-processing
   const deepLinkHandledRef = useRef<string | null>(null);
 
-  // Mutations
-  const approveAndSchedule = api.outbound.approveAndSchedule.useMutation({
-    onSuccess: (data) => {
-      const message = data.summaryGenerated
-        ? "Discharge generated and scheduled"
-        : "Discharge scheduled";
-      toast.success(message);
+  // Use custom hooks for data and mutations
+  const {
+    cases,
+    totalCases,
+    stats: statsData,
+    settings: settingsData,
+    deepLinkData,
+    isDeepLinkLoading,
+    isLoading,
+    refetch,
+  } = useOutboundData({
+    page,
+    pageSize,
+    searchTerm,
+    startDate,
+    endDate,
+    consultationId,
+  });
+
+  const {
+    handleApproveAndSend: approveAndSendHandler,
+    handleSkip: skipHandler,
+    handleRetry: retryHandler,
+    handleQuickSchedule,
+    handleToggleStar,
+    isSubmitting,
+    schedulingCaseIds,
+    togglingStarCaseIds,
+  } = useOutboundMutations({
+    onSuccess: () => {
       setSelectedCase(null);
-      // Note: schedulingCaseIds cleanup happens in handleQuickSchedule's finally block
       void refetch();
-    },
-    onError: (error) => {
-      toast.error("Failed to schedule", {
-        description: error instanceof Error ? error.message : "Unknown error",
-      });
-      // Note: schedulingCaseIds cleanup happens in handleQuickSchedule's finally block
     },
   });
 
-  const skipCase = api.outbound.skipCase.useMutation({
-    onSuccess: () => {
-      toast.success("Case skipped");
-      setSelectedCase(null);
-      void refetch();
-    },
-    onError: (error) => {
-      toast.error("Failed to skip", {
-        description: error instanceof Error ? error.message : "Unknown error",
-      });
-    },
-  });
+  // Wrapper handlers for use in component
+  const handleApproveAndSend = useCallback(async () => {
+    if (!selectedCase) return;
+    await approveAndSendHandler(selectedCase.id, deliveryToggles);
+  }, [selectedCase, deliveryToggles, approveAndSendHandler]);
 
-  const retryDelivery = api.outbound.retryFailedDelivery.useMutation({
-    onSuccess: () => {
-      toast.success("Retry scheduled");
-      void refetch();
-    },
-    onError: (error) => {
-      toast.error("Failed to retry", {
-        description: error instanceof Error ? error.message : "Unknown error",
-      });
-    },
-  });
+  const handleSkip = useCallback(async () => {
+    if (!selectedCase) return;
+    await skipHandler(selectedCase.id);
+  }, [selectedCase, skipHandler]);
 
-  const toggleStarred = api.dashboard.toggleStarred.useMutation({
-    onSuccess: () => {
-      void refetch();
-    },
-    onError: (error) => {
-      toast.error("Failed to update star", {
-        description: error instanceof Error ? error.message : "Unknown error",
-      });
-    },
-  });
-
-  // Update ref when data changes
-  useEffect(() => {
-    if (casesData?.cases) {
-      casesRef.current = casesData.cases as TransformedCase[];
-    }
-  }, [casesData?.cases]);
+  const handleRetry = useCallback(async () => {
+    if (!selectedCase) return;
+    await retryHandler(selectedCase.id, {
+      retryCall: selectedCase.phoneSent === "failed",
+      retryEmail: selectedCase.emailSent === "failed",
+    });
+  }, [selectedCase, retryHandler]);
 
   // Escape to close panel
   useEffect(() => {
@@ -341,23 +284,38 @@ export function OutboundDischargesClient() {
     setConsultationId,
   ]);
 
-  // Derived data
-  const cases = useMemo(
-    () => (casesData?.cases ?? []) as TransformedCase[],
-    [casesData?.cases],
-  );
-
-  const totalCases = casesData?.pagination?.total ?? cases.length;
-
   // Cases needing review (missing contact info)
   const needsReviewCases = useMemo(
-    () => cases.filter((c) => !c.owner.phone || !c.owner.email),
+    () =>
+      (cases as TransformedCase[]).filter(
+        (c) => !c.owner.phone || !c.owner.email,
+      ),
     [cases],
   );
 
   // Cases needing attention (flagged as urgent by AI)
   const needsAttentionCases = useMemo(
-    () => cases.filter((c) => c.isUrgentCase === true),
+    () => (cases as TransformedCase[]).filter((c) => c.isUrgentCase === true),
+    [cases],
+  );
+
+  // Cases for Schedule All modal (transform to expected format)
+  const scheduleableCasesForModal = useMemo(
+    () =>
+      cases.map((c) => ({
+        id: c.id,
+        patient: {
+          name: c.patient.name,
+          species: c.patient.species,
+        },
+        owner: {
+          name: c.owner.name,
+          phone: c.owner.phone,
+          email: c.owner.email,
+        },
+        status: c.status,
+        hasSummary: !!c.dischargeSummary,
+      })),
     [cases],
   );
 
@@ -434,11 +392,12 @@ export function OutboundDischargesClient() {
     [setPageSize, setPage],
   );
 
-  const handleSelectCase = useCallback((caseItem: TransformedCase) => {
-    setSelectedCase(caseItem);
+  const handleSelectCase = useCallback((caseItem: unknown) => {
+    const typedCase = caseItem as TransformedCase;
+    setSelectedCase(typedCase);
     setDeliveryToggles((prev) => ({
-      phoneEnabled: !!caseItem.owner.phone,
-      emailEnabled: !!caseItem.owner.email,
+      phoneEnabled: !!typedCase.owner.phone,
+      emailEnabled: !!typedCase.owner.email,
       immediateDelivery: prev.immediateDelivery ?? false, // Preserve the immediate delivery setting
     }));
   }, []);
@@ -449,20 +408,21 @@ export function OutboundDischargesClient() {
 
   const handleKeyNavigation = useCallback(
     (direction: "up" | "down") => {
-      if (cases.length === 0) return;
+      const typedCases = cases as TransformedCase[];
+      if (typedCases.length === 0) return;
 
       const currentIndex = selectedCase
-        ? cases.findIndex((c) => c.id === selectedCase.id)
+        ? typedCases.findIndex((c) => c.id === selectedCase.id)
         : -1;
 
       let newIndex: number;
       if (direction === "up") {
-        newIndex = currentIndex <= 0 ? cases.length - 1 : currentIndex - 1;
+        newIndex = currentIndex <= 0 ? typedCases.length - 1 : currentIndex - 1;
       } else {
-        newIndex = currentIndex >= cases.length - 1 ? 0 : currentIndex + 1;
+        newIndex = currentIndex >= typedCases.length - 1 ? 0 : currentIndex + 1;
       }
 
-      const newCase = cases[newIndex];
+      const newCase = typedCases[newIndex];
       if (newCase) {
         handleSelectCase(newCase);
       }
@@ -470,74 +430,15 @@ export function OutboundDischargesClient() {
     [cases, selectedCase, handleSelectCase],
   );
 
-  // Action handlers
-  const handleApproveAndSend = useCallback(async () => {
-    if (!selectedCase) return;
-    await approveAndSchedule.mutateAsync({
-      caseId: selectedCase.id,
-      phoneEnabled: deliveryToggles.phoneEnabled,
-      emailEnabled: deliveryToggles.emailEnabled,
-      immediateDelivery: deliveryToggles.immediateDelivery ?? false,
-    });
-  }, [selectedCase, deliveryToggles, approveAndSchedule]);
+  // Open Schedule All modal
+  const handleOpenScheduleAll = useCallback(() => {
+    setScheduleAllModalOpen(true);
+  }, []);
 
-  const handleSkip = useCallback(async () => {
-    if (!selectedCase) return;
-    await skipCase.mutateAsync({ caseId: selectedCase.id });
-  }, [selectedCase, skipCase]);
-
-  const handleRetry = useCallback(async () => {
-    if (!selectedCase) return;
-    await retryDelivery.mutateAsync({
-      caseId: selectedCase.id,
-      retryCall: selectedCase.phoneSent === "failed",
-      retryEmail: selectedCase.emailSent === "failed",
-    });
-  }, [selectedCase, retryDelivery]);
-
-  // Quick schedule from table row (supports concurrent scheduling)
-  const handleQuickSchedule = useCallback(
-    async (caseItem: TransformedCase) => {
-      // Add to set instead of replacing (enables concurrent scheduling)
-      setSchedulingCaseIds((prev) => new Set(prev).add(caseItem.id));
-      try {
-        await approveAndSchedule.mutateAsync({
-          caseId: caseItem.id,
-          phoneEnabled: !!caseItem.owner.phone,
-          emailEnabled: !!caseItem.owner.email,
-        });
-      } catch {
-        // Error is handled by mutation onError
-      } finally {
-        // Remove from set when done (success or error)
-        setSchedulingCaseIds((prev) => {
-          const next = new Set(prev);
-          next.delete(caseItem.id);
-          return next;
-        });
-      }
-    },
-    [approveAndSchedule],
-  );
-
-  // Toggle star on a case
-  const handleToggleStar = useCallback(
-    async (caseId: string, starred: boolean) => {
-      setTogglingStarCaseIds((prev) => new Set(prev).add(caseId));
-      try {
-        await toggleStarred.mutateAsync({ caseId, starred });
-      } catch {
-        // Error is handled by mutation onError
-      } finally {
-        setTogglingStarCaseIds((prev) => {
-          const next = new Set(prev);
-          next.delete(caseId);
-          return next;
-        });
-      }
-    },
-    [toggleStarred],
-  );
+  // Handle Schedule All complete
+  const handleScheduleAllComplete = useCallback(() => {
+    void refetch();
+  }, [refetch]);
 
   // Deep link handling: Auto-select case once data loads
   // Track if we've auto-selected to avoid repeating
@@ -578,7 +479,7 @@ export function OutboundDischargesClient() {
     setConsultationId,
   ]);
 
-  // Needs review handlers (placeholder - would need API endpoints)
+  // Needs review handlers
   const handleUpdateContact = useCallback(
     async (_caseId: string, field: "phone" | "email", _value: string) => {
       // TODO: Implement API call to update contact
@@ -590,15 +491,10 @@ export function OutboundDischargesClient() {
 
   const handleRemoveFromQueue = useCallback(
     async (caseId: string) => {
-      await skipCase.mutateAsync({ caseId });
+      await skipHandler(caseId);
     },
-    [skipCase],
+    [skipHandler],
   );
-
-  const isSubmitting =
-    approveAndSchedule.isPending ||
-    skipCase.isPending ||
-    retryDelivery.isPending;
 
   return (
     <div className="flex h-[calc(100vh-64px)] w-full flex-col gap-2 overflow-hidden">
@@ -650,6 +546,8 @@ export function OutboundDischargesClient() {
           isLoading={isLoading}
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}
+          onScheduleAll={handleOpenScheduleAll}
+          scheduleAllDisabled={cases.length === 0 || isLoading}
         />
       </PageToolbar>
 
@@ -768,6 +666,15 @@ export function OutboundDischargesClient() {
           />
         )}
       </div>
+
+      {/* Schedule All Modal */}
+      <ScheduleAllModal
+        open={scheduleAllModalOpen}
+        onOpenChange={setScheduleAllModalOpen}
+        cases={scheduleableCasesForModal}
+        testModeEnabled={settingsData?.testModeEnabled ?? false}
+        onComplete={handleScheduleAllComplete}
+      />
     </div>
   );
 }

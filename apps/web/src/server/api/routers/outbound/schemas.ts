@@ -125,6 +125,19 @@ export const cancelScheduledDeliveryInput = z.object({
   cancelEmail: z.boolean().default(false),
 });
 
+export const batchScheduleInput = z.object({
+  /** List of case IDs to schedule */
+  caseIds: z.array(z.string().uuid()).min(1).max(100),
+  /** Enable phone calls for all cases */
+  phoneEnabled: z.boolean().default(true),
+  /** Enable emails for all cases */
+  emailEnabled: z.boolean().default(true),
+  /** Timing mode: 'scheduled' uses delay settings, 'immediate' staggers 1 min apart */
+  timingMode: z.enum(["scheduled", "immediate"]).default("scheduled"),
+  /** Stagger interval in seconds for immediate mode (min: 30, max: 300) */
+  staggerIntervalSeconds: z.number().min(30).max(300).default(60),
+});
+
 // =============================================================================
 // Type Exports
 // =============================================================================
@@ -152,3 +165,4 @@ export type ScheduleRemainingOutreachInput = z.infer<
 export type CancelScheduledDeliveryInput = z.infer<
   typeof cancelScheduledDeliveryInput
 >;
+export type BatchScheduleInput = z.infer<typeof batchScheduleInput>;
