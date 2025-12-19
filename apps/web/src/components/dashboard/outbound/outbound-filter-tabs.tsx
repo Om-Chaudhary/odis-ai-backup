@@ -1,7 +1,14 @@
 "use client";
 
-import { Search, List, UserX, AlertTriangle } from "lucide-react";
+import {
+  Search,
+  List,
+  UserX,
+  AlertTriangle,
+  CalendarClock,
+} from "lucide-react";
 import { cn } from "@odis-ai/utils";
+import { Button } from "@odis-ai/ui/button";
 import type { ViewMode, DischargeSummaryStats } from "./types";
 import { OutboundDateNav } from "./outbound-date-nav";
 
@@ -18,6 +25,9 @@ interface OutboundFilterTabsProps {
   // View mode
   viewMode: ViewMode;
   onViewModeChange?: (mode: ViewMode) => void;
+  // Schedule All
+  onScheduleAll?: () => void;
+  scheduleAllDisabled?: boolean;
 }
 
 /**
@@ -35,16 +45,29 @@ export function OutboundFilterTabs({
   isLoading = false,
   viewMode,
   onViewModeChange,
+  onScheduleAll,
+  scheduleAllDisabled = false,
 }: OutboundFilterTabsProps) {
   return (
     <div className="flex items-center justify-between gap-6">
-      {/* Left: Date Navigator */}
-      <div className="flex items-center">
+      {/* Left: Date Navigator + Schedule All */}
+      <div className="flex items-center gap-3">
         <OutboundDateNav
           currentDate={currentDate}
           onDateChange={onDateChange}
           isLoading={isLoading}
         />
+        {onScheduleAll && (
+          <Button
+            onClick={onScheduleAll}
+            disabled={scheduleAllDisabled}
+            size="sm"
+            className="bg-teal-600 hover:bg-teal-700"
+          >
+            <CalendarClock className="mr-2 h-4 w-4" />
+            Schedule All
+          </Button>
+        )}
       </div>
 
       {/* Center: View Mode Filter Tabs */}
