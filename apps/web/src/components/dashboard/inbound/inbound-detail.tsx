@@ -796,19 +796,53 @@ function MessageDetail({
   const isResolved = message.status === "resolved";
   const isUrgent = message.priority === "urgent";
 
-  // Static data for Eric Silva case (phone: 4084260512)
-  const isEricSilvaCase =
-    message.callerPhone === "4084260512" ||
-    message.callerPhone === "408-426-0512" ||
-    message.callerPhone === "+14084260512";
+  // Check for demo call data in metadata (for static demo messages like Eric Silva, Maria Serpa)
+  const demoCallData = (
+    message.metadata as {
+      demoCallData?: {
+        recordingUrl: string;
+        transcript: string;
+        durationSeconds: number;
+        summary: string;
+      };
+    }
+  )?.demoCallData;
 
-  // Static data for Maria Serpa case (phone: 4085612356)
-  const isMariaSerpaCase =
-    message.callerPhone === "4085612356" ||
-    message.callerPhone === "408-561-2356" ||
-    message.callerPhone === "+14085612356";
+  // Fetch call data dynamically for messages with a vapiCallId (skip if we have demo data)
+  const callDataQuery = api.inboundCalls.getCallDataForAppointment.useQuery(
+    { vapiCallId: message.vapiCallId! },
+    {
+      enabled: !!message.vapiCallId && !demoCallData,
+      staleTime: 5 * 60 * 1000, // 5 minutes cache
+      retry: 1,
+    },
+  );
 
-  const ericSilvaCallData = isEricSilvaCase
+  // Get call data from demo metadata or query result
+  const callData = demoCallData
+    ? {
+        recording_url: demoCallData.recordingUrl,
+        transcript: demoCallData.transcript,
+        duration_seconds: demoCallData.durationSeconds,
+        summary: demoCallData.summary,
+      }
+    : callDataQuery.data
+      ? {
+          recording_url: callDataQuery.data.recordingUrl,
+          transcript: callDataQuery.data.transcript,
+          duration_seconds: callDataQuery.data.duration,
+          summary: callDataQuery.data.summary,
+        }
+      : null;
+
+  const isLoadingCallData =
+    callDataQuery.isLoading && !!message.vapiCallId && !demoCallData;
+  const hasCallData = !!demoCallData || !!message.vapiCallId;
+
+  // Old hardcoded data removed - now using dynamic fetch via callDataQuery or metadata.demoCallData
+  // Keeping this for reference during transition period
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _oldEricSilvaCallData = false
     ? {
         recording_url: "/audio/JackStitches.MP3",
         transcript: `User: Hello?
@@ -854,7 +888,8 @@ User: No.`,
       }
     : null;
 
-  const mariaSerpaCallData = isMariaSerpaCase
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _oldMariaSerpaCallData = false
     ? {
         recording_url: "/audio/cancelAppt.MP3",
         transcript: `Assistant: Hello, You have reached the After Hours Assistant at Alam Rock Animal Hospital. How can I help you today?
@@ -880,7 +915,8 @@ Assistant: I've noted your request to cancel Charlie's appointment. Thank you fo
       }
     : null;
 
-  const currentCallData = ericSilvaCallData ?? mariaSerpaCallData;
+  // Use dynamically fetched call data
+  const currentCallData = callData;
 
   return (
     <div className="flex h-full flex-col">
@@ -944,32 +980,42 @@ Assistant: I've noted your request to cancel Charlie's appointment. Thank you fo
             <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap">
               {message.messageContent}
             </p>
-            {/* Additional message info for Maria Serpa */}
-            {isMariaSerpaCase && (
-              <div className="mt-3 border-t pt-3">
-                <p className="text-muted-foreground text-sm">
-                  The original appointment was for{" "}
-                  <strong>Dec 17th at 8:30am</strong>
-                </p>
-                <p className="mt-1 text-sm font-medium text-red-600">
-                  ⚠️ Appointment was canceled on Neo
-                </p>
-              </div>
-            )}
           </CardContent>
         </Card>
 
         {/* Call Recording and Transcript */}
-        {currentCallData && (
-          <CallRecordingPlayer
-            recordingUrl={currentCallData.recording_url}
-            transcript={currentCallData.transcript}
-            durationSeconds={currentCallData.duration_seconds}
-          />
+        {hasCallData && (
+          <>
+            {isLoadingCallData ? (
+              <Card>
+                <CardContent className="p-6">
+                  <div className="text-muted-foreground flex items-center justify-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading call recording...
+                  </div>
+                </CardContent>
+              </Card>
+            ) : currentCallData?.recording_url ? (
+              <CallRecordingPlayer
+                recordingUrl={currentCallData.recording_url}
+                transcript={currentCallData.transcript ?? null}
+                durationSeconds={currentCallData.duration_seconds ?? null}
+              />
+            ) : callDataQuery.error ? (
+              <Card>
+                <CardContent className="p-6">
+                  <div className="text-muted-foreground flex items-center justify-center gap-2 text-sm">
+                    <AlertTriangle className="h-4 w-4" />
+                    Unable to load call recording
+                  </div>
+                </CardContent>
+              </Card>
+            ) : null}
+          </>
         )}
 
         {/* Call Summary */}
-        {currentCallData && (
+        {currentCallData?.summary && (
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm font-medium">
