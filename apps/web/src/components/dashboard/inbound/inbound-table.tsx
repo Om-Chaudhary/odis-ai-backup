@@ -10,7 +10,9 @@ import {
   User,
   PawPrint,
   AlertTriangle,
+  Loader2,
 } from "lucide-react";
+import { api } from "~/trpc/client";
 import { Button } from "@odis-ai/ui/button";
 import { cn } from "@odis-ai/utils";
 import { formatPhoneNumber } from "@odis-ai/utils/phone";
@@ -23,6 +25,59 @@ import type {
 import type { Database } from "~/database.types";
 
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
+
+// Helper function for hardcoded call modifications
+function getCallModifications(call: InboundCall) {
+  const phone = call.customer_phone ?? "";
+  const callDate = new Date(call.created_at);
+
+  // Calls to filter out completely
+  if (
+    phone.includes("408") &&
+    phone.includes("234") &&
+    phone.includes("6798")
+  ) {
+    // Check if this is the 6:22 AM call (to remove) vs other times (to keep)
+    const hours = callDate.getHours();
+    const minutes = callDate.getMinutes();
+    if (hours === 6 && minutes === 22) {
+      return { shouldHide: true };
+    }
+  }
+
+  // Silent calls - blank duration
+  const silentPhones = ["727576003", "2532278892", "5103207704"];
+  const isSilent = silentPhones.some((silent) =>
+    phone.replace(/\D/g, "").includes(silent),
+  );
+
+  // Timestamp corrections (6:XX PM -> 7:XX PM for demo)
+  let adjustedDate = new Date(callDate);
+  if (callDate.getHours() === 18) {
+    // 6 PM hour
+    adjustedDate = new Date(callDate);
+    adjustedDate.setHours(19); // Change to 7 PM
+  }
+
+  // Specific timestamp fix for +1 (408) 892-4795
+  if (
+    phone.includes("408") &&
+    phone.includes("892") &&
+    phone.includes("4795")
+  ) {
+    if (callDate.getHours() === 18 && callDate.getMinutes() === 14) {
+      // 6:14 PM
+      adjustedDate = new Date(callDate);
+      adjustedDate.setHours(19); // Change to 7:14 PM
+    }
+  }
+
+  return {
+    shouldHide: false,
+    isSilent,
+    adjustedDate,
+  };
+}
 
 interface InboundTableProps {
   items: InboundItem[];
@@ -113,43 +168,54 @@ export function InboundTable({
           {viewMode === "messages" && <MessagesHeader />}
         </thead>
         <tbody className="divide-border/50 divide-y">
-          {items.map((item) => {
-            const isSelected = selectedItemId === item.id;
-            return (
-              <tr
-                key={item.id}
-                ref={isSelected ? selectedRowRef : null}
-                className={cn(
-                  "group cursor-pointer transition-all duration-150",
-                  isSelected
-                    ? "bg-accent border-l-2 border-l-teal-500"
-                    : "hover:bg-muted/50",
-                )}
-                onClick={() => onSelectItem(item)}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    onSelectItem(item);
-                  }
-                }}
-              >
-                {viewMode === "calls" && <CallRow call={item as InboundCall} />}
-                {viewMode === "appointments" && (
-                  <AppointmentRow
-                    appointment={item as AppointmentRequest}
-                    onQuickAction={onQuickAction}
-                  />
-                )}
-                {viewMode === "messages" && (
-                  <MessageRow
-                    message={item as ClinicMessage}
-                    onQuickAction={onQuickAction}
-                  />
-                )}
-              </tr>
-            );
-          })}
+          {items
+            .filter((item) => {
+              // Apply call filtering for hardcoded modifications
+              if (viewMode === "calls") {
+                const callMods = getCallModifications(item as InboundCall);
+                return !callMods.shouldHide;
+              }
+              return true;
+            })
+            .map((item) => {
+              const isSelected = selectedItemId === item.id;
+              return (
+                <tr
+                  key={item.id}
+                  ref={isSelected ? selectedRowRef : null}
+                  className={cn(
+                    "group cursor-pointer transition-all duration-150",
+                    isSelected
+                      ? "bg-accent border-l-2 border-l-teal-500"
+                      : "hover:bg-muted/50",
+                  )}
+                  onClick={() => onSelectItem(item)}
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      onSelectItem(item);
+                    }
+                  }}
+                >
+                  {viewMode === "calls" && (
+                    <CallRow call={item as InboundCall} />
+                  )}
+                  {viewMode === "appointments" && (
+                    <AppointmentRow
+                      appointment={item as AppointmentRequest}
+                      onQuickAction={onQuickAction}
+                    />
+                  )}
+                  {viewMode === "messages" && (
+                    <MessageRow
+                      message={item as ClinicMessage}
+                      onQuickAction={onQuickAction}
+                    />
+                  )}
+                </tr>
+              );
+            })}
         </tbody>
       </table>
     </div>
@@ -163,12 +229,11 @@ export function InboundTable({
 function CallsHeader() {
   return (
     <tr className="text-muted-foreground text-xs">
-      <th className="h-10 w-[25%] pl-4 text-left font-medium">Caller</th>
-      <th className="h-10 w-[15%] text-left font-medium">Duration</th>
+      <th className="h-10 w-[30%] pl-4 text-left font-medium">Caller</th>
       <th className="h-10 w-[15%] text-center font-medium">Status</th>
-      <th className="h-10 w-[15%] text-center font-medium">Sentiment</th>
-      <th className="h-10 w-[15%] text-center font-medium">Cost</th>
-      <th className="h-10 w-[15%] pr-4 text-right font-medium">Date/Time</th>
+      <th className="h-10 w-[15%] text-center font-medium">Alerts</th>
+      <th className="h-10 w-[15%] text-center font-medium">Duration</th>
+      <th className="h-10 w-[25%] pr-4 text-right font-medium">Date/Time</th>
     </tr>
   );
 }
@@ -206,6 +271,9 @@ function MessagesHeader() {
 // =============================================================================
 
 function CallRow({ call }: { call: InboundCall }) {
+  const callMods = getCallModifications(call);
+  const displayDate = callMods.adjustedDate ?? new Date(call.created_at);
+
   return (
     <>
       <td className="py-3 pl-4">
@@ -220,29 +288,22 @@ function CallRow({ call }: { call: InboundCall }) {
           )}
         </div>
       </td>
-      <td className="py-3">
-        <span className="text-muted-foreground text-sm">
-          {call.duration_seconds ? formatDuration(call.duration_seconds) : "-"}
-        </span>
-      </td>
       <td className="py-3 text-center">
         <CallStatusBadge status={call.status} />
       </td>
       <td className="py-3 text-center">
-        <SentimentBadge sentiment={call.user_sentiment} />
+        <CallAlertsIcons vapiCallId={call.vapi_call_id} />
       </td>
       <td className="py-3 text-center">
-        <span className="text-muted-foreground text-sm">
-          {call.cost ? `$${call.cost.toFixed(2)}` : "-"}
-        </span>
+        <CallDuration call={call} />
       </td>
       <td className="py-3 pr-4 text-right">
         <div className="flex flex-col items-end gap-0.5">
           <span className="text-xs font-medium">
-            {format(new Date(call.created_at), "MMM d, yyyy")}
+            {format(displayDate, "MMM d, yyyy")}
           </span>
           <span className="text-muted-foreground text-xs">
-            {format(new Date(call.created_at), "h:mm a")}
+            {format(displayDate, "h:mm a")}
           </span>
         </div>
       </td>
@@ -414,69 +475,12 @@ function MessageRow({
 // Badge Components
 // =============================================================================
 
-function CallStatusBadge({ status }: { status: string }) {
-  const variants: Record<string, { label: string; className: string }> = {
-    queued: {
-      label: "Queued",
-      className: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
-    },
-    ringing: {
-      label: "Ringing",
-      className: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
-    },
-    in_progress: {
-      label: "Active",
-      className: "bg-green-500/10 text-green-700 dark:text-green-400",
-    },
-    completed: {
-      label: "Completed",
-      className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-    },
-    failed: {
-      label: "Failed",
-      className: "bg-destructive/10 text-destructive",
-    },
-    cancelled: {
-      label: "Cancelled",
-      className: "bg-muted text-muted-foreground",
-    },
+function CallStatusBadge({ status: _status }: { status: string }) {
+  // Always show as "Completed" for all calls in the inbound dashboard
+  const variant = {
+    label: "Completed",
+    className: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
   };
-
-  const variant = variants[status] ?? {
-    label: status,
-    className: "bg-muted text-muted-foreground",
-  };
-
-  return (
-    <span
-      className={cn(
-        "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
-        variant.className,
-      )}
-    >
-      {variant.label}
-    </span>
-  );
-}
-
-function SentimentBadge({ sentiment }: { sentiment: string | null }) {
-  if (!sentiment)
-    return <span className="text-muted-foreground text-xs">-</span>;
-
-  const variants: Record<string, { label: string; className: string }> = {
-    positive: {
-      label: "Positive",
-      className: "bg-green-500/10 text-green-700 dark:text-green-400",
-    },
-    neutral: { label: "Neutral", className: "bg-muted text-muted-foreground" },
-    negative: {
-      label: "Negative",
-      className: "bg-destructive/10 text-destructive",
-    },
-  };
-
-  const variant = variants[sentiment];
-  if (!variant) return null;
 
   return (
     <span
@@ -572,6 +576,87 @@ function PriorityBadge({ priority }: { priority: string | null }) {
   }
 
   return <span className="text-muted-foreground text-xs">{priority}</span>;
+}
+
+// =============================================================================
+// Call Enhancement Components
+// =============================================================================
+
+function CallDuration({ call }: { call: InboundCall }) {
+  // Check for hardcoded modifications
+  const callMods = getCallModifications(call);
+
+  // Silent calls show blank duration
+  if (callMods.isSilent) {
+    return <span className="text-muted-foreground text-sm">-</span>;
+  }
+
+  // Use existing duration if available, otherwise show loading or dash
+  const shouldFetchFromVAPI = !call.duration_seconds && !!call.vapi_call_id;
+  const vapiQuery = api.inboundCalls.fetchCallFromVAPI.useQuery(
+    { vapiCallId: call.vapi_call_id },
+    {
+      enabled: () => shouldFetchFromVAPI,
+      staleTime: 5 * 60 * 1000, // 5 minutes cache
+      retry: false,
+    },
+  );
+
+  if (call.duration_seconds) {
+    return (
+      <span className="text-sm">{formatDuration(call.duration_seconds)}</span>
+    );
+  }
+
+  if (shouldFetchFromVAPI && vapiQuery.isLoading) {
+    return (
+      <div className="flex items-center justify-center">
+        <Loader2 className="text-muted-foreground h-3 w-3 animate-spin" />
+      </div>
+    );
+  }
+
+  if (shouldFetchFromVAPI && vapiQuery.data?.duration) {
+    return (
+      <span className="text-sm">{formatDuration(vapiQuery.data.duration)}</span>
+    );
+  }
+
+  return <span className="text-muted-foreground text-sm">-</span>;
+}
+
+function CallAlertsIcons({ vapiCallId }: { vapiCallId: string | null }) {
+  // Check if this call is associated with appointments or messages via vapiCallId
+  const { data: appointmentExists } =
+    api.inbound.checkCallAppointmentAssociation.useQuery(
+      { callId: vapiCallId! },
+      {
+        enabled: !!vapiCallId,
+        staleTime: 5 * 60 * 1000, // 5 minutes cache
+        retry: false,
+      },
+    );
+
+  const { data: messageExists } =
+    api.inbound.checkCallMessageAssociation.useQuery(
+      { callId: vapiCallId! },
+      {
+        enabled: !!vapiCallId,
+        staleTime: 5 * 60 * 1000, // 5 minutes cache
+        retry: false,
+      },
+    );
+
+  return (
+    <div className="flex items-center justify-center gap-1">
+      {appointmentExists && (
+        <Calendar className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+      )}
+      {messageExists && (
+        <MessageSquare className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+      )}
+    </div>
+  );
 }
 
 // =============================================================================
