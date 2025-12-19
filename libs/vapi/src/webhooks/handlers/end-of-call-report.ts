@@ -137,21 +137,64 @@ async function handleInboundCallEnd(
 
   // Extract artifact and analysis data from message (same as outbound handler)
   const artifact = message.artifact ?? {};
-  const analysis = call.analysis ?? {};
+  // Analysis can be at call level OR message level
+  const analysis = call.analysis ?? message.analysis ?? {};
 
-  // Calculate duration
-  const durationSeconds = calculateDuration(call.startedAt, call.endedAt);
+  // Calculate duration - check both call and message level
+  const startedAt = call.startedAt ?? message.startedAt;
+  const endedAt = call.endedAt ?? message.endedAt;
+  const durationSeconds = calculateDuration(startedAt, endedAt);
 
   // Calculate total cost
-  const cost = calculateTotalCost(call.costs);
+  const cost = calculateTotalCost(call.costs) ?? message.cost;
 
-  // Extract sentiment
+  // Extract sentiment - check analysis at both levels
   const userSentiment = extractSentiment(analysis);
 
   // Get structured data from analysis or artifact
   const structuredData =
     (analysis as { structuredData?: unknown }).structuredData ??
     artifact.structuredOutputs;
+
+  // COMPREHENSIVE DATA EXTRACTION with multiple fallback sources
+  // Recording URL: call.recordingUrl -> artifact.recordingUrl -> message.recordingUrl
+  const recordingUrl =
+    call.recordingUrl ?? artifact.recordingUrl ?? message.recordingUrl ?? null;
+
+  // Stereo Recording URL: artifact only (or message level if available)
+  const stereoRecordingUrl =
+    artifact.stereoRecordingUrl ?? message.stereoRecordingUrl ?? null;
+
+  // Transcript: call.transcript -> artifact.transcript -> message.transcript
+  const transcript =
+    call.transcript ?? artifact.transcript ?? message.transcript ?? null;
+
+  // Messages: call.messages -> artifact.messages
+  const transcriptMessages = call.messages ?? artifact.messages ?? null;
+
+  // Log data sources for debugging
+  logger.debug("Inbound call data sources", {
+    callId: call.id,
+    recordingSource: call.recordingUrl
+      ? "call"
+      : artifact.recordingUrl
+        ? "artifact"
+        : message.recordingUrl
+          ? "message"
+          : "none",
+    transcriptSource: call.transcript
+      ? "call"
+      : artifact.transcript
+        ? "artifact"
+        : message.transcript
+          ? "message"
+          : "none",
+    analysisSource: call.analysis
+      ? "call"
+      : message.analysis
+        ? "message"
+        : "none",
+  });
 
   // Prepare update data - extract all fields like outbound handler does
   const updateData: Record<string, unknown> = {
@@ -161,36 +204,35 @@ async function handleInboundCallEnd(
     clinic_name: clinicName,
     customer_phone: call.customer?.number ?? null,
     status: finalStatus,
-    started_at: call.startedAt ?? null,
-    ended_at: call.endedAt ?? null,
+    started_at: startedAt ?? null,
+    ended_at: endedAt ?? null,
     duration_seconds: durationSeconds,
-    // IMPORTANT: Fall back to artifact.recordingUrl if call.recordingUrl is missing
-    recording_url: call.recordingUrl ?? artifact.recordingUrl ?? null,
-    stereo_recording_url: artifact.stereoRecordingUrl ?? null,
-    transcript: call.transcript ?? null,
-    transcript_messages: call.messages ?? null,
+    recording_url: recordingUrl,
+    stereo_recording_url: stereoRecordingUrl,
+    transcript: transcript,
+    transcript_messages: transcriptMessages,
     call_analysis: analysis,
     summary: analysis.summary ?? null,
     success_evaluation: analysis.successEvaluation ?? null,
     structured_data: structuredData ?? null,
     user_sentiment: userSentiment,
     cost,
-    ended_reason: call.endedReason ?? null,
+    ended_reason: call.endedReason ?? message.endedReason ?? null,
   };
 
   logger.info("Inbound call ended - extracted data", {
     callId: call.id,
     dbId: existingCall.id,
     status: finalStatus,
-    endedReason: call.endedReason,
+    endedReason: call.endedReason ?? message.endedReason,
     clinicName,
     userId,
     duration: durationSeconds,
     cost,
-    hasRecording: !!call.recordingUrl || !!artifact.recordingUrl,
-    hasStereoRecording: !!artifact.stereoRecordingUrl,
-    hasTranscript: !!call.transcript,
-    hasMessages: !!call.messages,
+    hasRecording: !!recordingUrl,
+    hasStereoRecording: !!stereoRecordingUrl,
+    hasTranscript: !!transcript,
+    hasMessages: !!transcriptMessages,
     hasSummary: !!analysis.summary,
     userSentiment,
   });
