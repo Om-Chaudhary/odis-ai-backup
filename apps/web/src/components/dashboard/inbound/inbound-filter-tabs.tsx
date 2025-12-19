@@ -5,6 +5,7 @@ import {
   MessageSquare,
   ChevronLeft,
   ChevronRight,
+  Phone,
 } from "lucide-react";
 import { format, addDays, subDays, isToday, isYesterday } from "date-fns";
 import { cn } from "@odis-ai/utils";
