@@ -330,6 +330,30 @@ export function InboundFilterTabs({
       {/* Center: View Mode Filter Tabs */}
       <div className="flex items-center gap-1 rounded-lg border border-teal-100/50 bg-white/40 p-1">
         <button
+          onClick={() => onViewModeChange("calls")}
+          className={cn(
+            "flex items-center gap-2 rounded-md px-4 py-2.5 text-base font-medium transition-all duration-200",
+            viewMode === "calls"
+              ? "bg-white text-teal-700 shadow-sm"
+              : "text-slate-500 hover:text-slate-700",
+          )}
+        >
+          <Phone className="h-5 w-5" />
+          Calls
+          {stats.calls.inProgress > 0 && (
+            <span
+              className={cn(
+                "inline-flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-sm font-semibold tabular-nums",
+                viewMode === "calls"
+                  ? "bg-blue-100 text-blue-700"
+                  : "bg-blue-100 text-blue-600",
+              )}
+            >
+              {stats.calls.inProgress}
+            </span>
+          )}
+        </button>
+        <button
           onClick={() => onViewModeChange("appointments")}
           className={cn(
             "flex items-center gap-2 rounded-md px-4 py-2.5 text-base font-medium transition-all duration-200",
