@@ -333,6 +333,16 @@ function AppointmentDetail({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const isPending = appointment.status === "pending";
 
+  // Fetch call recording from VAPI if appointment has an associated call
+  const vapiQuery = api.inboundCalls.fetchCallFromVAPI.useQuery(
+    { vapiCallId: appointment.vapiCallId! },
+    {
+      enabled: !!appointment.vapiCallId,
+      staleTime: 5 * 60 * 1000, // 5 minutes cache
+      retry: false,
+    },
+  );
+
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
@@ -461,7 +471,36 @@ function AppointmentDetail({
           </CardContent>
         </Card>
 
-        {/* Call Recording and Transcript - Only available for specific demo cases */}
+        {/* Call Recording and Transcript */}
+        {appointment.vapiCallId && (
+          <>
+            {vapiQuery.isLoading ? (
+              <Card>
+                <CardContent className="p-6">
+                  <div className="text-muted-foreground flex items-center justify-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading call recording...
+                  </div>
+                </CardContent>
+              </Card>
+            ) : vapiQuery.data?.recordingUrl ? (
+              <CallRecordingPlayer
+                recordingUrl={vapiQuery.data.recordingUrl}
+                transcript={vapiQuery.data.transcript ?? null}
+                durationSeconds={vapiQuery.data.duration ?? null}
+              />
+            ) : vapiQuery.error ? (
+              <Card>
+                <CardContent className="p-6">
+                  <div className="text-muted-foreground flex items-center justify-center gap-2 text-sm">
+                    <AlertTriangle className="h-4 w-4" />
+                    Unable to load call recording
+                  </div>
+                </CardContent>
+              </Card>
+            ) : null}
+          </>
+        )}
       </div>
 
       {/* Action Footer */}
