@@ -567,4 +567,61 @@ export const inboundCallsRouter = createTRPCRouter({
         });
       }
     }),
+
+  /**
+   * Fetch call data directly from VAPI API
+   * Used as fallback when database data is incomplete (e.g., missing recording_url)
+   */
+  fetchCallFromVAPI: protectedProcedure
+    .input(
+      z.object({
+        vapiCallId: z.string(),
+      }),
+    )
+    .query(async ({ input }) => {
+      try {
+        const { getCall } = await import("@odis-ai/vapi");
+        const callData = await getCall(input.vapiCallId);
+
+        console.log("[FETCH_CALL_FROM_VAPI] Successfully fetched call data", {
+          callId: input.vapiCallId,
+          status: callData.status,
+          hasRecording: !!callData.recordingUrl,
+          hasTranscript: !!callData.transcript,
+          hasSummary: !!callData.analysis?.summary,
+        });
+
+        return {
+          id: callData.id,
+          status: callData.status,
+          recordingUrl: callData.recordingUrl,
+          transcript: callData.transcript,
+          messages: callData.messages,
+          analysis: callData.analysis,
+          startedAt: callData.startedAt,
+          endedAt: callData.endedAt,
+          duration:
+            callData.endedAt && callData.startedAt
+              ? Math.floor(
+                  (new Date(callData.endedAt).getTime() -
+                    new Date(callData.startedAt).getTime()) /
+                    1000,
+                )
+              : null,
+        };
+      } catch (error) {
+        console.error("[FETCH_CALL_FROM_VAPI] Error fetching call data:", {
+          callId: input.vapiCallId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error
+              ? `Failed to fetch call data: ${error.message}`
+              : "Failed to fetch call data from VAPI",
+        });
+      }
+    }),
 });

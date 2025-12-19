@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
+import { api } from "~/trpc/client";
 import {
   Phone,
   Calendar,
@@ -115,6 +116,29 @@ function CallDetail({
 }) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  // Fetch call data from VAPI if database data is missing critical fields
+  const shouldFetchFromVAPI = !call.recording_url && !!call.vapi_call_id;
+  const vapiQuery = api.inboundCalls.fetchCallFromVAPI.useQuery(
+    { vapiCallId: call.vapi_call_id },
+    {
+      enabled: () => shouldFetchFromVAPI,
+      staleTime: 5 * 60 * 1000, // 5 minutes cache
+      retry: false, // Don't retry on error
+    },
+  );
+
+  // Merge database and VAPI data
+  const callData =
+    shouldFetchFromVAPI && vapiQuery.data
+      ? {
+          ...call,
+          recording_url: vapiQuery.data.recordingUrl ?? call.recording_url,
+          transcript: vapiQuery.data.transcript ?? call.transcript,
+          summary: vapiQuery.data.analysis?.summary ?? call.summary,
+          duration_seconds: vapiQuery.data.duration ?? call.duration_seconds,
+        }
+      : call;
+
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
@@ -155,9 +179,16 @@ function CallDetail({
               <div>
                 <p className="text-muted-foreground">Duration</p>
                 <p className="font-medium">
-                  {call.duration_seconds
-                    ? formatDuration(call.duration_seconds)
-                    : "N/A"}
+                  {callData.duration_seconds ? (
+                    formatDuration(callData.duration_seconds)
+                  ) : vapiQuery.isLoading ? (
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      Loading...
+                    </span>
+                  ) : (
+                    "N/A"
+                  )}
                 </p>
               </div>
               <div>
@@ -178,7 +209,56 @@ function CallDetail({
           </CardContent>
         </Card>
 
-        {/* Call Recording and Transcript - Only available for specific demo cases */}
+        {/* Call Recording and Transcript */}
+        {vapiQuery.isLoading && shouldFetchFromVAPI ? (
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-muted-foreground flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading call recording...
+              </div>
+            </CardContent>
+          </Card>
+        ) : callData.recording_url ? (
+          <CallRecordingPlayer
+            recordingUrl={callData.recording_url}
+            transcript={callData.transcript}
+            durationSeconds={callData.duration_seconds}
+          />
+        ) : vapiQuery.error && shouldFetchFromVAPI ? (
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 text-amber-600">
+                <AlertTriangle className="h-4 w-4" />
+                <span className="text-sm">
+                  Unable to load call recording from VAPI
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {/* Call Summary */}
+        {callData.summary && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                <FileText className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+                Call Summary
+                {shouldFetchFromVAPI && vapiQuery.data && !call.summary && (
+                  <Badge variant="secondary" className="ml-auto text-xs">
+                    From VAPI
+                  </Badge>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                {callData.summary}
+              </p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Delete Footer */}
