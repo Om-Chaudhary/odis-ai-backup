@@ -14,7 +14,11 @@
  *   - VAPI_WEBHOOK_SECRET: (optional) Secret for webhook signature verification
  */
 
-import "dotenv/config";
+import { config } from "dotenv";
+
+// Load .env.local first (for local development), then .env as fallback
+config({ path: ".env.local" });
+config({ path: ".env" });
 
 // Inbound assistant IDs that need webhook configuration
 const INBOUND_ASSISTANT_IDS = [
