@@ -1,16 +1,11 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { toast } from "sonner";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useQueryState, parseAsInteger } from "nuqs";
 import { format, parseISO, startOfDay } from "date-fns";
-import { api } from "~/trpc/client";
 
 import type {
   ViewMode,
-  AppointmentRequest,
-  ClinicMessage,
-  InboundStats,
   CallStatusFilter,
   AppointmentStatusFilter,
   MessageStatusFilter,
@@ -18,14 +13,11 @@ import type {
 } from "./types";
 import { PageToolbar, PageContent, PageFooter } from "../layout";
 import { InboundFilterTabs } from "./inbound-filter-tabs";
-import { InboundTable } from "./inbound-table";
+import { InboundTable } from "./table";
 import { InboundDetail } from "./inbound-detail";
 import { InboundSplitLayout } from "./inbound-split-layout";
 import { InboundPagination } from "./inbound-pagination";
-
-// Database types for inbound calls
-import type { Database } from "~/database.types";
-type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
+import { useInboundData, useInboundMutations } from "./hooks";
 
 /**
  * Inbound Dashboard Client
@@ -108,226 +100,50 @@ export function InboundClient() {
   const [selectedItem, setSelectedItem] = useState<InboundItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Refs for polling stability
-  const callsRef = useRef<InboundCall[]>([]);
-  const appointmentsRef = useRef<AppointmentRequest[]>([]);
-  const messagesRef = useRef<ClinicMessage[]>([]);
-
-  // Map filter to API status
-  const getCallApiStatus = useCallback(
-    (filter: CallStatusFilter): string | undefined => {
-      if (filter === "all") return undefined;
-      return filter;
-    },
-    [],
-  );
-
-  const getAppointmentApiStatus = useCallback(
-    (filter: AppointmentStatusFilter): string | undefined => {
-      if (filter === "all") return undefined;
-      return filter;
-    },
-    [],
-  );
-
-  const getMessageApiStatus = useCallback(
-    (filter: MessageStatusFilter): string | undefined => {
-      if (filter === "all" || filter === "urgent") return undefined;
-      return filter;
-    },
-    [],
-  );
-
-  const getMessageApiPriority = useCallback(
-    (filter: MessageStatusFilter): string | undefined => {
-      if (filter === "urgent") return "urgent";
-      return undefined;
-    },
-    [],
-  );
-
-  // Fetch calls (existing router)
+  // Use custom hooks for data and mutations
   const {
-    data: callsData,
-    isLoading: callsLoading,
-    refetch: refetchCalls,
-  } = api.inboundCalls.listInboundCalls.useQuery(
-    {
-      page,
-      pageSize,
-      status: getCallApiStatus(callStatus) as
-        | "queued"
-        | "ringing"
-        | "in_progress"
-        | "completed"
-        | "failed"
-        | "cancelled"
-        | undefined,
-      search: searchTerm || undefined,
-      startDate,
-      endDate,
-    },
-    {
-      enabled: viewMode === "calls",
-      refetchInterval: () => {
-        const hasActive = callsRef.current.some(
-          (c) =>
-            c.status === "ringing" ||
-            c.status === "in_progress" ||
-            c.status === "queued",
-        );
-        return hasActive ? 5000 : 30000;
-      },
-    },
-  );
-
-  // Fetch appointments
-  const {
-    data: appointmentsData,
-    isLoading: appointmentsLoading,
-    refetch: refetchAppointments,
-  } = api.inbound.listAppointmentRequests.useQuery(
-    {
-      page,
-      pageSize,
-      status: getAppointmentApiStatus(appointmentStatus) as
-        | "pending"
-        | "confirmed"
-        | "rejected"
-        | "cancelled"
-        | undefined,
-      search: searchTerm || undefined,
-      startDate,
-      endDate,
-    },
-    {
-      enabled: viewMode === "appointments",
-      refetchInterval: 30000,
-    },
-  );
-
-  // Fetch messages
-  const {
-    data: messagesData,
-    isLoading: messagesLoading,
-    refetch: refetchMessages,
-  } = api.inbound.listClinicMessages.useQuery(
-    {
-      page,
-      pageSize,
-      status: getMessageApiStatus(messageStatus) as
-        | "new"
-        | "read"
-        | "resolved"
-        | undefined,
-      priority: getMessageApiPriority(messageStatus) as
-        | "urgent"
-        | "normal"
-        | undefined,
-      search: searchTerm || undefined,
-      startDate,
-      endDate,
-    },
-    {
-      enabled: viewMode === "messages",
-      refetchInterval: 30000,
-    },
-  );
-
-  // Fetch stats
-  const { data: statsData } = api.inbound.getInboundStats.useQuery({
+    currentItems,
+    currentPagination,
+    stats,
+    isLoading,
+    refetchCalls,
+    refetchAppointments,
+    refetchMessages,
+  } = useInboundData({
+    viewMode,
+    page,
+    pageSize,
+    callStatus,
+    appointmentStatus,
+    messageStatus,
+    searchTerm,
     startDate,
     endDate,
   });
 
-  // Mutations
-  const updateAppointment = api.inbound.updateAppointmentRequest.useMutation({
-    onSuccess: () => {
-      toast.success("Appointment updated");
+  const {
+    handleConfirmAppointment,
+    handleRejectAppointment,
+    handleMarkMessageRead,
+    handleResolveMessage,
+    handleDeleteCall,
+    handleDeleteAppointment,
+    handleDeleteMessage,
+    isSubmitting,
+  } = useInboundMutations({
+    onAppointmentSuccess: () => {
       setSelectedItem(null);
       void refetchAppointments();
     },
-    onError: (error) => {
-      toast.error("Failed to update appointment", {
-        description: error.message,
-      });
-    },
-  });
-
-  const updateMessage = api.inbound.updateClinicMessage.useMutation({
-    onSuccess: () => {
-      toast.success("Message updated");
+    onMessageSuccess: () => {
       setSelectedItem(null);
       void refetchMessages();
     },
-    onError: (error) => {
-      toast.error("Failed to update message", { description: error.message });
-    },
-  });
-
-  const markRead = api.inbound.markMessageRead.useMutation({
-    onSuccess: () => {
-      toast.success("Marked as read");
-      void refetchMessages();
-    },
-    onError: (error) => {
-      toast.error("Failed to mark as read", { description: error.message });
-    },
-  });
-
-  const deleteCall = api.inboundCalls.deleteInboundCall.useMutation({
-    onSuccess: () => {
-      toast.success("Call deleted");
+    onCallSuccess: () => {
       setSelectedItem(null);
       void refetchCalls();
     },
-    onError: (error) => {
-      toast.error("Failed to delete call", { description: error.message });
-    },
   });
-
-  const deleteAppointment = api.inbound.deleteAppointmentRequest.useMutation({
-    onSuccess: () => {
-      toast.success("Appointment deleted");
-      setSelectedItem(null);
-      void refetchAppointments();
-    },
-    onError: (error) => {
-      toast.error("Failed to delete appointment", {
-        description: error.message,
-      });
-    },
-  });
-
-  const deleteMessage = api.inbound.deleteClinicMessage.useMutation({
-    onSuccess: () => {
-      toast.success("Message deleted");
-      setSelectedItem(null);
-      void refetchMessages();
-    },
-    onError: (error) => {
-      toast.error("Failed to delete message", { description: error.message });
-    },
-  });
-
-  // Update refs when data changes
-  useEffect(() => {
-    if (callsData?.calls) {
-      callsRef.current = callsData.calls;
-    }
-  }, [callsData?.calls]);
-
-  useEffect(() => {
-    if (appointmentsData?.appointments) {
-      appointmentsRef.current = appointmentsData.appointments;
-    }
-  }, [appointmentsData?.appointments]);
-
-  useEffect(() => {
-    if (messagesData?.messages) {
-      messagesRef.current = messagesData.messages;
-    }
-  }, [messagesData?.messages]);
 
   // Escape to close panel
   useEffect(() => {
@@ -339,87 +155,6 @@ export function InboundClient() {
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, [selectedItem]);
-
-  // Derived data
-  const calls = useMemo(() => callsData?.calls ?? [], [callsData?.calls]);
-  const appointments = useMemo(
-    () => appointmentsData?.appointments ?? [],
-    [appointmentsData?.appointments],
-  );
-  const messages = useMemo(
-    () => messagesData?.messages ?? [],
-    [messagesData?.messages],
-  );
-
-  // Get current items based on view mode
-  const currentItems = useMemo(() => {
-    switch (viewMode) {
-      case "calls":
-        return calls;
-      case "appointments":
-        return appointments;
-      case "messages":
-        return messages;
-      default:
-        return [];
-    }
-  }, [viewMode, calls, appointments, messages]);
-
-  const currentPagination = useMemo(() => {
-    switch (viewMode) {
-      case "calls":
-        return callsData?.pagination ?? { page: 1, pageSize: 25, total: 0 };
-      case "appointments":
-        return (
-          appointmentsData?.pagination ?? {
-            page: 1,
-            pageSize: 25,
-            total: 0,
-          }
-        );
-      case "messages":
-        return messagesData?.pagination ?? { page: 1, pageSize: 25, total: 0 };
-      default:
-        return { page: 1, pageSize: 25, total: 0 };
-    }
-  }, [viewMode, callsData, appointmentsData, messagesData]);
-
-  const isLoading = useMemo(() => {
-    switch (viewMode) {
-      case "calls":
-        return callsLoading;
-      case "appointments":
-        return appointmentsLoading;
-      case "messages":
-        return messagesLoading;
-      default:
-        return false;
-    }
-  }, [viewMode, callsLoading, appointmentsLoading, messagesLoading]);
-
-  // Stats for filter tabs
-  const stats: InboundStats = useMemo(() => {
-    return (
-      statsData ?? {
-        appointments: {
-          total: 0,
-          pending: 0,
-          confirmed: 0,
-          rejected: 0,
-          cancelled: 0,
-        },
-        messages: { total: 0, new: 0, read: 0, resolved: 0, urgent: 0 },
-        calls: {
-          total: 0,
-          completed: 0,
-          inProgress: 0,
-          failed: 0,
-          cancelled: 0,
-        },
-        totals: { appointments: 0, messages: 0, calls: 0, needsAttention: 0 },
-      }
-    );
-  }, [statsData]);
 
   // Handlers
   const handleDateChange = useCallback(
@@ -524,73 +259,6 @@ export function InboundClient() {
     [currentItems, selectedItem, handleSelectItem],
   );
 
-  // Action handlers
-  const handleConfirmAppointment = useCallback(
-    async (id: string) => {
-      await updateAppointment.mutateAsync({
-        id,
-        status: "confirmed",
-      });
-    },
-    [updateAppointment],
-  );
-
-  const handleRejectAppointment = useCallback(
-    async (id: string, notes?: string) => {
-      await updateAppointment.mutateAsync({
-        id,
-        status: "rejected",
-        notes,
-      });
-    },
-    [updateAppointment],
-  );
-
-  const handleMarkMessageRead = useCallback(
-    async (id: string) => {
-      await markRead.mutateAsync({ id });
-    },
-    [markRead],
-  );
-
-  const handleResolveMessage = useCallback(
-    async (id: string) => {
-      await updateMessage.mutateAsync({
-        id,
-        status: "resolved",
-      });
-    },
-    [updateMessage],
-  );
-
-  const handleDeleteCall = useCallback(
-    async (id: string) => {
-      await deleteCall.mutateAsync({ id });
-    },
-    [deleteCall],
-  );
-
-  const handleDeleteAppointment = useCallback(
-    async (id: string) => {
-      await deleteAppointment.mutateAsync({ id });
-    },
-    [deleteAppointment],
-  );
-
-  const handleDeleteMessage = useCallback(
-    async (id: string) => {
-      await deleteMessage.mutateAsync({ id });
-    },
-    [deleteMessage],
-  );
-
-  const isSubmitting =
-    updateAppointment.isPending ||
-    updateMessage.isPending ||
-    markRead.isPending ||
-    deleteCall.isPending ||
-    deleteAppointment.isPending ||
-    deleteMessage.isPending;
 
   return (
     <div className="flex h-[calc(100vh-64px)] flex-col gap-2">

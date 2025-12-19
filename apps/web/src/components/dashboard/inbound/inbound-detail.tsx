@@ -24,7 +24,7 @@ import { Separator } from "@odis-ai/ui/separator";
 import { Textarea } from "@odis-ai/ui/textarea";
 import { cn } from "@odis-ai/utils";
 import { formatPhoneNumber } from "@odis-ai/utils/phone";
-import { CallRecordingPlayer } from "../outbound/call-recording-player";
+import { CallRecordingPlayer } from "../shared";
 import type {
   ViewMode,
   AppointmentRequest,
