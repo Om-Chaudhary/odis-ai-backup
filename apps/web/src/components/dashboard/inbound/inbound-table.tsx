@@ -29,7 +29,8 @@ type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 // Helper function for hardcoded call modifications
 function getCallModifications(call: InboundCall) {
   const phone = call.customer_phone ?? "";
-  const callDate = new Date(call.created_at);
+  // Use started_at (actual VAPI call time) with fallback to created_at
+  const callDate = new Date(call.started_at ?? call.created_at);
 
   // Calls to filter out completely
   if (
@@ -272,21 +273,17 @@ function MessagesHeader() {
 
 function CallRow({ call }: { call: InboundCall }) {
   const callMods = getCallModifications(call);
-  const displayDate = callMods.adjustedDate ?? new Date(call.created_at);
+  // Use started_at (actual VAPI call time) with fallback to created_at
+  const displayDate =
+    callMods.adjustedDate ?? new Date(call.started_at ?? call.created_at);
 
   return (
     <>
       <td className="py-3 pl-4">
-        <div className="flex flex-col gap-0.5">
-          <span className="text-sm font-medium">
-            {formatPhoneNumber(call.customer_phone ?? "") || "Unknown"}
-          </span>
-          {call.clinic_name && (
-            <span className="text-muted-foreground text-xs">
-              {call.clinic_name}
-            </span>
-          )}
-        </div>
+        <CallerDisplay
+          phone={call.customer_phone}
+          clinicName={call.clinic_name}
+        />
       </td>
       <td className="py-3 text-center">
         <CallStatusBadge status={call.status} />
@@ -581,6 +578,105 @@ function PriorityBadge({ priority }: { priority: string | null }) {
 // =============================================================================
 // Call Enhancement Components
 // =============================================================================
+
+/**
+ * Static mapping for known demo phone numbers
+ * These are hardcoded demo messages that don't exist in the database
+ */
+const DEMO_PHONE_NAMES: Record<string, string> = {
+  // Eric Silva
+  "4084260512": "Eric Silva",
+  "14084260512": "Eric Silva",
+  "+14084260512": "Eric Silva",
+  // Maria Serpa
+  "4085612356": "Maria Serpa",
+  "14085612356": "Maria Serpa",
+  "+14085612356": "Maria Serpa",
+  // Melissa
+  "4848455065": "Melissa",
+  "14848455065": "Melissa",
+  "+14848455065": "Melissa",
+};
+
+/**
+ * Gets caller name from static mapping first, then falls back to API
+ */
+function getDemoCallerName(phone: string | null): string | null {
+  if (!phone) return null;
+
+  // Normalize phone to digits only
+  const normalized = phone.replace(/\D/g, "");
+
+  // Check various formats in our static mapping
+  const formats = [normalized, `+1${normalized}`, normalized.slice(-10)];
+  for (const format of formats) {
+    const name = DEMO_PHONE_NAMES[format];
+    if (name) return name;
+  }
+
+  // Also check the last 10 digits against our mapping
+  const last10 = normalized.slice(-10);
+  for (const [mappedPhone, name] of Object.entries(DEMO_PHONE_NAMES)) {
+    const mappedLast10 = mappedPhone.replace(/\D/g, "").slice(-10);
+    if (mappedLast10 === last10) {
+      return name;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Displays caller name if available, otherwise falls back to phone number
+ * Looks up caller name from static mapping and database
+ */
+function CallerDisplay({
+  phone,
+  clinicName,
+}: {
+  phone: string | null;
+  clinicName: string | null;
+}) {
+  const formattedPhone = formatPhoneNumber(phone ?? "") || "Unknown";
+
+  // Check static demo mapping first
+  const demoName = getDemoCallerName(phone);
+
+  // Query for caller name by phone number (skip if we found demo name)
+  const { data: callerInfo, isLoading } =
+    api.inbound.getCallerNameByPhone.useQuery(
+      { phone: phone ?? "" },
+      {
+        enabled: !!phone && !demoName,
+        staleTime: 5 * 60 * 1000, // 5 minutes cache
+        retry: false,
+      },
+    );
+
+  // Display caller name: demo name > API result > phone number
+  const displayName = demoName ?? callerInfo?.name ?? formattedPhone;
+  const hasName = !!(demoName ?? callerInfo?.name);
+
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-sm font-medium">
+        {isLoading && !demoName ? (
+          <span className="text-muted-foreground">{formattedPhone}</span>
+        ) : (
+          displayName
+        )}
+      </span>
+      {/* Show phone number below name if we found a name, otherwise show clinic */}
+      {hasName ? (
+        <span className="text-muted-foreground text-xs">{formattedPhone}</span>
+      ) : (
+        clinicName && (
+          <span className="text-muted-foreground text-xs">{clinicName}</span>
+        )
+      )}
+    </div>
+  );
+}
 
 function CallDuration({ call }: { call: InboundCall }) {
   // Check for hardcoded modifications
