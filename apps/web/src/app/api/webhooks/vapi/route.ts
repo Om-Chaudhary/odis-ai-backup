@@ -38,18 +38,54 @@ export async function POST(request: NextRequest) {
     // Parse request body
     const body = await request.text();
 
+    // Log raw webhook receipt for diagnostics
+    logger.info("Webhook received", {
+      timestamp: new Date().toISOString(),
+      contentLength: body.length,
+      userAgent: request.headers.get("user-agent"),
+    });
+
     // Validate and parse payload
     const payload = parseWebhookPayload(body);
 
     if (!payload) {
+      logger.warn("Invalid webhook payload", {
+        bodyLength: body.length,
+        bodyPreview: body.substring(0, 200),
+      });
       return withCorsHeaders(
         request,
         NextResponse.json({ error: "Invalid payload" }, { status: 400 }),
       );
     }
 
+    // Extract call info for detailed logging
+    const call = (
+      payload.message as {
+        call?: { id?: string; type?: string; assistantId?: string };
+      }
+    ).call;
+    const isInbound = call?.type === "inboundPhoneCall";
+
+    logger.info("Webhook parsed successfully", {
+      messageType: payload.message.type,
+      callId: call?.id,
+      callType: call?.type,
+      assistantId: call?.assistantId,
+      isInbound,
+    });
+
     // Handle the webhook using the modular dispatcher
     const response = await handleVapiWebhook(payload);
+
+    // Log completion for inbound calls specifically
+    if (isInbound && payload.message.type === "end-of-call-report") {
+      logger.info("Inbound end-of-call-report processed", {
+        callId: call?.id,
+        assistantId: call?.assistantId,
+        responseSuccess: (response as { success?: boolean })?.success,
+      });
+    }
 
     // Return appropriate response with CORS headers
     return withCorsHeaders(
