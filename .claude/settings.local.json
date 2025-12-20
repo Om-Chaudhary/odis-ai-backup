@@ -136,7 +136,8 @@
       "Bash(pnpm nx build:*)",
       "Bash(grep:*)",
       "Bash(npx tsx:*)",
-      "Bash(source:*)"
+      "Bash(source:*)",
+      "mcp__playwright__browser_press_key"
     ],
     "deny": [],
     "ask": []
