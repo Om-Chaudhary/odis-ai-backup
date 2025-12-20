@@ -35,7 +35,6 @@ import {
 import type { VapiCallResponse } from "../../client";
 import { mapInboundCallToUser } from "../../inbound-calls";
 import { scheduleCallExecution } from "@odis-ai/qstash/client";
-import { generateUrgentSummary } from "@odis-ai/ai";
 
 const logger = loggers.webhook.child("end-of-call-report");
 
@@ -315,11 +314,14 @@ async function handleOutboundCallEnd(
     userSentiment,
   });
 
-  // Handle urgent case detection
-  const isUrgentCase = structuredData?.urgent_case === true;
-  if (isUrgentCase) {
-    await handleUrgentCase(call, existingCall, updateData, supabase);
-  }
+  // Handle attention case detection (new structured outputs)
+  await handleAttentionCase(
+    call,
+    existingCall,
+    structuredData,
+    updateData,
+    supabase,
+  );
 
   // Handle retry logic for failed calls
   if (finalStatus === "failed" && shouldRetry(call.endedReason, metadata)) {
@@ -340,76 +342,66 @@ async function handleOutboundCallEnd(
 }
 
 /**
- * Handle urgent case detection
+ * Handle attention case detection from structured outputs
  *
- * When VAPI structured output flags a case as urgent:
- * 1. Generate AI summary explaining why it's urgent
- * 2. Update the parent case's is_urgent flag
+ * Processes the new attention classification fields:
+ * - needs_attention (boolean)
+ * - attention_types (string[])
+ * - attention_severity (string)
+ * - attention_summary (string)
  */
-async function handleUrgentCase(
+async function handleAttentionCase(
   call: VapiWebhookCall,
   existingCall: ExistingCallRecord,
+  structuredData: Record<string, unknown> | undefined,
   updateData: Record<string, unknown>,
   supabase: SupabaseClient,
 ): Promise<void> {
-  logger.info("Urgent case detected", {
+  const needsAttention = structuredData?.needs_attention === true;
+
+  if (!needsAttention) {
+    return;
+  }
+
+  logger.info("Attention case detected", {
     callId: call.id,
     dbId: existingCall.id,
     caseId: existingCall.case_id,
-    hasTranscript: !!call.transcript,
+    attentionTypes: structuredData?.attention_types,
+    severity: structuredData?.attention_severity,
   });
 
-  // Generate urgent summary if transcript is available
-  if (call.transcript && call.transcript.trim().length > 0) {
-    try {
-      const urgentSummary = await generateUrgentSummary({
-        transcript: call.transcript,
-      });
+  // Set attention fields
+  updateData.attention_types =
+    (structuredData?.attention_types as string[]) ?? [];
+  updateData.attention_severity =
+    (structuredData?.attention_severity as string) ?? "routine";
+  updateData.attention_flagged_at = new Date().toISOString();
+  updateData.attention_summary =
+    (structuredData?.attention_summary as string) ?? null;
 
-      updateData.urgent_reason_summary = urgentSummary;
-
-      logger.info("Generated urgent case summary", {
-        callId: call.id,
-        dbId: existingCall.id,
-        summaryLength: urgentSummary.length,
-      });
-    } catch (summaryError) {
-      logger.error("Failed to generate urgent summary", {
-        callId: call.id,
-        dbId: existingCall.id,
-        error:
-          summaryError instanceof Error
-            ? summaryError.message
-            : String(summaryError),
-      });
-      // Continue without summary - the UI can still lazy-load it
-    }
-  }
-
-  // Update parent case's is_urgent flag if case_id is available
-  if (existingCall.case_id) {
+  // If critical severity, also mark parent case as urgent
+  if (
+    structuredData?.attention_severity === "critical" &&
+    existingCall.case_id
+  ) {
     const { error: caseUpdateError } = await supabase
       .from("cases")
       .update({ is_urgent: true })
       .eq("id", existingCall.case_id);
 
     if (caseUpdateError) {
-      logger.error("Failed to update case is_urgent flag", {
+      logger.error("Failed to update case is_urgent for critical attention", {
         callId: call.id,
         caseId: existingCall.case_id,
         error: caseUpdateError.message,
       });
     } else {
-      logger.info("Updated case is_urgent flag", {
+      logger.info("Updated case is_urgent for critical attention", {
         callId: call.id,
         caseId: existingCall.case_id,
       });
     }
-  } else {
-    logger.warn("Urgent case detected but no case_id available", {
-      callId: call.id,
-      dbId: existingCall.id,
-    });
   }
 }
 
