@@ -127,6 +127,10 @@ export function OutboundFilterTabs({
                   viewMode === "needs_attention"
                     ? "bg-orange-100 text-orange-700"
                     : "bg-slate-100 text-slate-500",
+                  // Pulsing red when critical cases exist
+                  (counts.needsAttentionBreakdown?.critical ?? 0) > 0 &&
+                    viewMode !== "needs_attention" &&
+                    "animate-pulse bg-red-100 text-red-700",
                 )}
               >
                 {counts.needsAttention}

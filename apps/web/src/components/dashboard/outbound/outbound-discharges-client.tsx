@@ -22,6 +22,7 @@ import { OutboundCaseDetail } from "./outbound-case-detail";
 import { OutboundSplitLayout } from "./outbound-split-layout";
 import { OutboundPagination } from "./outbound-pagination";
 import { OutboundNeedsReviewTable } from "./outbound-needs-review-table";
+import { OutboundNeedsAttentionTable } from "./outbound-needs-attention-table";
 import { ScheduleAllModal } from "./schedule-all-modal";
 import { Button } from "@odis-ai/ui/button";
 import { useOutboundData, useOutboundMutations } from "./hooks";
@@ -65,8 +66,7 @@ interface TransformedCase {
     transcript: string | null;
     summary: string | null;
     customerPhone: string | null;
-    structuredData?: { urgent_case?: boolean; [key: string]: unknown } | null;
-    urgentReasonSummary?: string | null;
+    structuredData?: Record<string, unknown> | null;
     recordingUrl?: string | null;
     stereoRecordingUrl?: string | null;
   } | null;
@@ -78,8 +78,13 @@ interface TransformedCase {
   soapNotes: SoapNote[];
   scheduledEmailFor: string | null;
   scheduledCallFor: string | null;
-  isUrgentCase?: boolean;
   isStarred?: boolean;
+  // Attention fields
+  attentionTypes: string[] | null;
+  attentionSeverity: string | null;
+  attentionSummary: string | null;
+  attentionFlaggedAt: string | null;
+  needsAttention: boolean;
 }
 
 // Map status filter to API status (for non-failure filters)
@@ -293,11 +298,23 @@ export function OutboundDischargesClient() {
     [cases],
   );
 
-  // Cases needing attention (flagged as urgent by AI)
-  const needsAttentionCases = useMemo(
-    () => (cases as TransformedCase[]).filter((c) => c.isUrgentCase === true),
-    [cases],
-  );
+  // Cases needing attention (flagged by AI)
+  // Sorted by severity: critical first, then urgent, then routine
+  const needsAttentionCases = useMemo(() => {
+    const filtered = (cases as TransformedCase[]).filter(
+      (c) => c.needsAttention === true,
+    );
+    const severityOrder: Record<string, number> = {
+      critical: 0,
+      urgent: 1,
+      routine: 2,
+    };
+    return [...filtered].sort((a, b) => {
+      const aOrder = severityOrder[a.attentionSeverity ?? ""] ?? 3;
+      const bOrder = severityOrder[b.attentionSeverity ?? ""] ?? 3;
+      return aOrder - bOrder;
+    });
+  }, [cases]);
 
   // Cases for Schedule All modal (transform to expected format)
   const scheduleableCasesForModal = useMemo(
@@ -330,6 +347,11 @@ export function OutboundDischargesClient() {
       failed: 0,
       total: 0,
       needsAttention: 0,
+      needsAttentionBreakdown: {
+        critical: 0,
+        urgent: 0,
+        routine: 0,
+      },
       failureCategories: {
         silenceTimeout: 0,
         noAnswer: 0,
@@ -350,6 +372,15 @@ export function OutboundDischargesClient() {
       needsAttention:
         (raw as { needsAttention?: number }).needsAttention ??
         needsAttentionCases.length,
+      needsAttentionBreakdown: (
+        raw as {
+          needsAttentionBreakdown?: {
+            critical: number;
+            urgent: number;
+            routine: number;
+          };
+        }
+      ).needsAttentionBreakdown,
     };
   }, [statsData, needsReviewCases.length, needsAttentionCases.length]);
 
@@ -575,23 +606,18 @@ export function OutboundDischargesClient() {
             </PageFooter>
           </PageContainer>
         ) : viewMode === "needs_attention" ? (
-          // Needs Attention View - Cases flagged as urgent
+          // Needs Attention View - Cases flagged by AI, sorted by severity
           <OutboundSplitLayout
             showRightPanel={selectedCase !== null}
             onCloseRightPanel={handleClosePanel}
             leftPanel={
               <>
                 <PageContent>
-                  <OutboundCaseTable
+                  <OutboundNeedsAttentionTable
                     cases={needsAttentionCases}
                     selectedCaseId={selectedCase?.id ?? null}
                     onSelectCase={handleSelectCase}
-                    onKeyNavigation={handleKeyNavigation}
                     isLoading={isLoading}
-                    onQuickSchedule={handleQuickSchedule}
-                    schedulingCaseIds={schedulingCaseIds}
-                    onToggleStar={handleToggleStar}
-                    togglingStarCaseIds={togglingStarCaseIds}
                   />
                 </PageContent>
                 <PageFooter>

@@ -302,6 +302,15 @@ export interface FailureCategoryCounts {
 }
 
 /**
+ * Attention severity breakdown counts
+ */
+export interface AttentionSeverityBreakdown {
+  critical: number;
+  urgent: number;
+  routine: number;
+}
+
+/**
  * Summary statistics for the dashboard
  * Aligned with new StatusFilter values
  */
@@ -313,7 +322,8 @@ export interface DischargeSummaryStats {
   failureCategories: FailureCategoryCounts; // Breakdown by failure reason
   total: number;
   needsReview: number; // Cases missing contact info
-  needsAttention: number; // Cases flagged as urgent by AI
+  needsAttention: number; // Cases flagged as needing attention by AI
+  needsAttentionBreakdown?: AttentionSeverityBreakdown; // Breakdown by severity
 }
 
 // =============================================================================
@@ -324,7 +334,7 @@ export interface DischargeSummaryStats {
  * View mode for the outbound dashboard
  * - all: Default view showing all discharges
  * - needs_review: Cases missing phone or email contact info
- * - needs_attention: Cases flagged as urgent by AI (urgent_case structured output)
+ * - needs_attention: Cases flagged by AI with attention types
  */
 export type ViewMode = "all" | "needs_review" | "needs_attention";
 

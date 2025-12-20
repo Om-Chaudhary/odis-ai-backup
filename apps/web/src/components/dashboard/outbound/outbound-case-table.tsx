@@ -16,6 +16,10 @@ import {
 import { Button } from "@odis-ai/ui/button";
 import { cn } from "@odis-ai/utils";
 import type { DischargeCaseStatus } from "./types";
+import {
+  AttentionBadgeGroup,
+  CriticalPulsingDot,
+} from "../shared/attention-badges";
 
 // Minimum required fields for table display
 interface TableCaseBase {
@@ -40,6 +44,11 @@ interface TableCaseBase {
     endedReason?: string | null;
   } | null;
   isStarred?: boolean;
+  // Attention fields
+  needsAttention?: boolean;
+  attentionTypes?: string[] | null;
+  attentionSeverity?: string | null;
+  attentionSummary?: string | null;
 }
 
 /**
@@ -210,8 +219,19 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                   isSelected
                     ? "border-l-2 border-l-teal-500 bg-teal-50/70"
                     : "hover:bg-teal-50/30",
+                  // Attention case highlighting (when not selected)
+                  !isSelected &&
+                    caseItem.needsAttention &&
+                    caseItem.attentionSeverity === "critical" &&
+                    "border-l-2 border-l-red-500 bg-red-50/40 hover:bg-red-50/60",
+                  !isSelected &&
+                    caseItem.needsAttention &&
+                    caseItem.attentionSeverity === "urgent" &&
+                    "bg-orange-50/30 hover:bg-orange-50/50",
+                  // Status styling (only when no attention highlighting)
                   caseItem.status === "failed" &&
                     !isSelected &&
+                    !caseItem.needsAttention &&
                     "bg-red-50/30 hover:bg-red-50/50",
                   caseItem.status === "in_progress" &&
                     !isSelected &&
@@ -265,6 +285,19 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                     <span className="truncate text-sm text-slate-500">
                       {caseItem.owner.name ?? "Unknown Owner"}
                     </span>
+                    {/* Attention indicators */}
+                    {caseItem.needsAttention && (
+                      <div className="mt-0.5 flex items-center gap-1.5">
+                        {caseItem.attentionSeverity === "critical" && (
+                          <CriticalPulsingDot />
+                        )}
+                        <AttentionBadgeGroup
+                          types={caseItem.attentionTypes ?? []}
+                          maxVisible={2}
+                          size="sm"
+                        />
+                      </div>
+                    )}
                   </div>
                 </td>
 
@@ -469,7 +502,6 @@ function formatTime(timestamp: string): string {
     return "-";
   }
 }
-
 
 /**
  * Delivery status icon for phone/email columns

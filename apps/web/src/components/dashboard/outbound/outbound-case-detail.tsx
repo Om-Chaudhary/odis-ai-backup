@@ -37,9 +37,14 @@ import type {
 } from "./types";
 import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
 import { CallRecordingPlayer } from "../shared";
+import {
+  AttentionTypeBadge,
+  AttentionSeverityBadge,
+} from "../shared/attention-badges";
 import { DeleteCaseDialog } from "../cases/delete-case-dialog";
 import { EmptyDetailState } from "./detail/detail-empty-state";
 import { EmailStructuredPreview } from "./detail/structured-preview";
+import { cn } from "@odis-ai/utils";
 
 // Scheduled call data with structured output support
 interface ScheduledCallData {
@@ -53,8 +58,7 @@ interface ScheduledCallData {
   transcript: string | null;
   summary: string | null;
   customerPhone: string | null;
-  structuredData?: { urgent_case?: boolean; [key: string]: unknown } | null;
-  urgentReasonSummary?: string | null;
+  structuredData?: Record<string, unknown> | null;
   recordingUrl?: string | null;
   stereoRecordingUrl?: string | null;
 }
@@ -91,7 +95,12 @@ interface CaseData {
   soapNotes: SoapNote[];
   scheduledEmailFor: string | null;
   scheduledCallFor: string | null;
-  isUrgentCase?: boolean;
+  // Attention fields
+  attentionTypes?: string[] | null;
+  attentionSeverity?: string | null;
+  attentionSummary?: string | null;
+  attentionFlaggedAt?: string | null;
+  needsAttention?: boolean;
 }
 
 interface OutboundCaseDetailProps {
@@ -206,9 +215,9 @@ export function OutboundCaseDetail({
               isScheduling={scheduleRemainingMutation.isPending}
             />
 
-            {/* Urgent Reason Section - Show prominently for urgent cases */}
-            {caseData.isUrgentCase && caseData.scheduledCall?.id && (
-              <UrgentReasonSection callId={caseData.scheduledCall.id} />
+            {/* Attention Section - Show prominently for flagged cases */}
+            {caseData.needsAttention && (
+              <AttentionSection caseData={caseData} />
             )}
 
             {/* Clinical Notes Section */}
@@ -231,9 +240,9 @@ export function OutboundCaseDetail({
         ) : (
           /* Layout for UNSENT cases (pending_review, ready, scheduled) */
           <>
-            {/* Urgent Reason Section - Show prominently for urgent cases */}
-            {caseData.isUrgentCase && caseData.scheduledCall?.id && (
-              <UrgentReasonSection callId={caseData.scheduledCall.id} />
+            {/* Attention Section - Show prominently for flagged cases */}
+            {caseData.needsAttention && (
+              <AttentionSection caseData={caseData} />
             )}
 
             {/* Clinical Notes Section - Most Prominent */}
@@ -1209,62 +1218,63 @@ function DeliveryCompleteCard({
 }
 
 /**
- * Urgent Reason Section
- * Displays why a case was flagged as urgent by the AI
- * Triggers LLM summary generation on load if not cached
+ * Attention Section
+ * Displays attention data for flagged cases with new structured outputs
  */
-function UrgentReasonSection({ callId }: { callId: string }) {
-  const {
-    data: summaryData,
-    isLoading,
-    error,
-  } = api.outbound.getUrgentSummary.useQuery(
-    { callId },
-    {
-      // Only fetch once, don't refetch on window focus
-      staleTime: Infinity,
-      refetchOnWindowFocus: false,
-    },
-  );
+function AttentionSection({ caseData }: { caseData: CaseData }) {
+  if (!caseData.needsAttention) return null;
+
+  const severityColors: Record<string, string> = {
+    critical: "border-red-500/30 bg-red-500/5",
+    urgent: "border-orange-500/20 bg-orange-500/5",
+    routine: "border-blue-500/20 bg-blue-500/5",
+  };
+
+  const severity = caseData.attentionSeverity ?? "routine";
+  const cardClass = severityColors[severity] ?? severityColors.routine;
 
   return (
-    <Card className="border-orange-500/20 bg-orange-500/5">
+    <Card className={cardClass}>
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-sm font-medium">
-          <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+          <AlertTriangle
+            className={cn(
+              "h-4 w-4",
+              severity === "critical" && "text-red-600",
+              severity === "urgent" && "text-orange-600",
+              severity === "routine" && "text-blue-600",
+            )}
+          />
           Needs Attention
-          <Badge
-            variant="secondary"
-            className="bg-orange-500/10 text-orange-700 dark:text-orange-400"
-          >
-            AI Flagged
-          </Badge>
+          <AttentionSeverityBadge severity={severity} size="sm" />
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="flex items-center gap-2 text-orange-700 dark:text-orange-400">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-sm">Analyzing transcript...</span>
+      <CardContent className="space-y-3">
+        {/* Attention Types */}
+        {caseData.attentionTypes && caseData.attentionTypes.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {caseData.attentionTypes.map((type) => (
+              <AttentionTypeBadge key={type} type={type} size="md" />
+            ))}
           </div>
-        ) : error ? (
-          <p className="text-destructive text-sm">
-            {error.message || "Failed to load urgent reason"}
-          </p>
-        ) : summaryData?.summary ? (
-          <div className="space-y-2">
-            <p className="text-sm leading-relaxed text-orange-800 dark:text-orange-400">
-              {summaryData.summary}
+        )}
+
+        {/* AI Summary */}
+        {caseData.attentionSummary && (
+          <div className="rounded-md bg-white/50 p-3">
+            <p className="text-sm leading-relaxed">
+              {caseData.attentionSummary}
             </p>
-            {summaryData.cached && (
-              <p className="text-muted-foreground text-xs">
-                Previously analyzed
-              </p>
-            )}
           </div>
-        ) : (
-          <p className="text-muted-foreground text-sm">
-            This case was flagged as urgent by the AI agent.
+        )}
+
+        {/* Flagged timestamp */}
+        {caseData.attentionFlaggedAt && (
+          <p className="text-muted-foreground text-xs">
+            Flagged{" "}
+            {formatDistanceToNow(parseISO(caseData.attentionFlaggedAt), {
+              addSuffix: true,
+            })}
           </p>
         )}
       </CardContent>
