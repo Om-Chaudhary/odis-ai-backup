@@ -55,6 +55,20 @@ export const failureCategoryEnum = z.enum([
   "other",
 ]);
 
+export const attentionTypeEnum = z.enum([
+  "health_concern",
+  "callback_request",
+  "medication_question",
+  "appointment_needed",
+  "dissatisfaction",
+  "billing_question",
+  "emergency_signs",
+]);
+
+export const attentionSeverityEnum = z.enum(["routine", "urgent", "critical"]);
+
+export const viewModeEnum = z.enum(["all", "needs_review", "needs_attention"]);
+
 // =============================================================================
 // Input Schemas
 // =============================================================================
@@ -64,6 +78,9 @@ export const listDischargeCasesInput = z.object({
   pageSize: z.number().min(5).max(100).default(20),
   status: dischargeCaseStatusEnum.optional(),
   failureCategory: failureCategoryEnum.optional(),
+  viewMode: viewModeEnum.optional(),
+  attentionTypes: z.array(attentionTypeEnum).optional(),
+  attentionSeverity: attentionSeverityEnum.optional(),
   search: z.string().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
@@ -147,6 +164,9 @@ export type EmailStatus = z.infer<typeof emailStatusEnum>;
 export type DischargeCaseStatus = z.infer<typeof dischargeCaseStatusEnum>;
 export type ReviewCategory = z.infer<typeof reviewCategoryEnum>;
 export type FailureCategory = z.infer<typeof failureCategoryEnum>;
+export type AttentionType = z.infer<typeof attentionTypeEnum>;
+export type AttentionSeverity = z.infer<typeof attentionSeverityEnum>;
+export type ViewMode = z.infer<typeof viewModeEnum>;
 export type ListDischargeCasesInput = z.infer<typeof listDischargeCasesInput>;
 export type GetDischargeCaseStatsInput = z.infer<
   typeof getDischargeCaseStatsInput

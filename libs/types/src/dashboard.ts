@@ -518,3 +518,32 @@ export interface CaseStats {
     };
   };
 }
+
+/**
+ * Attention type for cases flagged during calls
+ * Represents different categories of concerns raised by pet owners
+ */
+export type AttentionType =
+  | "health_concern"
+  | "callback_request"
+  | "medication_question"
+  | "appointment_needed"
+  | "dissatisfaction"
+  | "billing_question"
+  | "emergency_signs";
+
+/**
+ * Attention severity levels
+ * Used to prioritize cases in the dashboard
+ */
+export type AttentionSeverity = "routine" | "urgent" | "critical";
+
+/**
+ * Attention information for flagged cases
+ */
+export interface AttentionInfo {
+  types: AttentionType[];
+  severity: AttentionSeverity;
+  flaggedAt: string;
+  summary: string | null;
+}
