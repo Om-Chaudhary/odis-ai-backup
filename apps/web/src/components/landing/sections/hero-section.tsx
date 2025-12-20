@@ -245,7 +245,7 @@ export function HeroSection() {
             <div className="relative overflow-hidden rounded-2xl bg-white shadow-xl ring-1 shadow-slate-200/50 ring-slate-200/50">
               <div className="relative aspect-[4/3]">
                 <Image
-                  src="/images/hero/hero-1.png"
+                  src="/images/hero/hero.jpg"
                   alt="Odis AI outbound calls dashboard showing patient follow-ups"
                   fill
                   className="object-cover object-center"
