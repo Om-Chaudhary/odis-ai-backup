@@ -1,3 +1,5 @@
+"use client";
+
 import { useRouter } from "next/navigation";
 import { Button } from "@odis-ai/ui/button";
 import { Badge } from "@odis-ai/ui/badge";

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { addDays, setHours, setMinutes, setSeconds } from "date-fns";
 import type { Step, ScheduleMode } from "../types";
