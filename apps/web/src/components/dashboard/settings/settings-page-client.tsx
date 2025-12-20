@@ -9,7 +9,7 @@ import {
   Send,
   PhoneIncoming,
 } from "lucide-react";
-import { DischargeSettingsForm } from "../discharges/discharge-settings-form";
+import { DischargeSettingsForm } from "./discharge-settings";
 import { api } from "~/trpc/client";
 import type { DischargeSettings } from "@odis-ai/types";
 import { toast } from "sonner";
