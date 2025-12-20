@@ -40,10 +40,7 @@ interface ScheduledCallMetadata {
   [key: string]: unknown;
 }
 
-interface ScheduledCallStructuredData {
-  urgent_case?: boolean;
-  [key: string]: unknown;
-}
+type ScheduledCallStructuredData = Record<string, unknown>;
 
 interface ScheduledCallData {
   id: string;
@@ -59,9 +56,12 @@ interface ScheduledCallData {
   dynamic_variables: unknown;
   metadata: ScheduledCallMetadata | null;
   structured_data: ScheduledCallStructuredData | null;
-  urgent_reason_summary: string | null;
   recording_url: string | null;
   stereo_recording_url: string | null;
+  attention_types: string[] | null;
+  attention_severity: string | null;
+  attention_flagged_at: string | null;
+  attention_summary: string | null;
 }
 
 interface ScheduledEmailData {
@@ -306,9 +306,12 @@ export const listCasesRouter = createTRPCRouter({
             dynamic_variables,
             metadata,
             structured_data,
-            urgent_reason_summary,
             recording_url,
-            stereo_recording_url
+            stereo_recording_url,
+            attention_types,
+            attention_severity,
+            attention_flagged_at,
+            attention_summary
           ),
           scheduled_discharge_emails (
             id,
@@ -480,15 +483,11 @@ export const listCasesRouter = createTRPCRouter({
                 summary: scheduledCall.summary,
                 customerPhone: scheduledCall.customer_phone,
                 structuredData: scheduledCall.structured_data,
-                urgentReasonSummary: scheduledCall.urgent_reason_summary,
                 recordingUrl: scheduledCall.recording_url,
                 stereoRecordingUrl: scheduledCall.stereo_recording_url,
               }
             : null,
-          isUrgentCase:
-            (
-              scheduledCall?.structured_data as ScheduledCallStructuredData | null
-            )?.urgent_case === true,
+          isUrgentCase: scheduledCall?.attention_severity === "critical",
           scheduledEmail: scheduledEmail
             ? {
                 id: scheduledEmail.id,
@@ -508,6 +507,12 @@ export const listCasesRouter = createTRPCRouter({
           scheduledCallFor: callScheduledFor,
           isTestCall,
           isStarred: c.is_starred ?? false,
+          // Attention fields
+          attentionTypes: scheduledCall?.attention_types ?? null,
+          attentionSeverity: scheduledCall?.attention_severity ?? null,
+          attentionFlaggedAt: scheduledCall?.attention_flagged_at ?? null,
+          attentionSummary: scheduledCall?.attention_summary ?? null,
+          needsAttention: (scheduledCall?.attention_types?.length ?? 0) > 0,
         };
       });
 
@@ -534,6 +539,11 @@ export const listCasesRouter = createTRPCRouter({
             (c) => c.failureCategory === input.failureCategory,
           );
         }
+      }
+
+      // Apply view mode filter for needs_attention
+      if (input.viewMode === "needs_attention") {
+        filteredCases = filteredCases.filter((c) => c.needsAttention);
       }
 
       // Apply search filter

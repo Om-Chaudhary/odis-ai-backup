@@ -15,11 +15,6 @@ interface ScheduledCallMetadata {
   [key: string]: unknown;
 }
 
-interface ScheduledCallStructuredData {
-  urgent_case?: boolean;
-  [key: string]: unknown;
-}
-
 interface CaseRow {
   id: string;
   status: string | null;
@@ -30,7 +25,8 @@ interface CaseRow {
     scheduled_for: string | null;
     ended_reason: string | null;
     metadata: ScheduledCallMetadata | null;
-    structured_data: ScheduledCallStructuredData | null;
+    attention_types: string[] | null;
+    attention_severity: string | null;
   }>;
   scheduled_discharge_emails: Array<{
     id: string;
@@ -122,7 +118,7 @@ export const getStatsRouter = createTRPCRouter({
           id,
           status,
           discharge_summaries (id),
-          scheduled_discharge_calls (id, status, scheduled_for, ended_reason, metadata, structured_data),
+          scheduled_discharge_calls (id, status, scheduled_for, ended_reason, metadata, attention_types, attention_severity),
           scheduled_discharge_emails (id, status, scheduled_for)
         `,
         )
@@ -179,6 +175,11 @@ export const getStatsRouter = createTRPCRouter({
       let failed = 0;
       let needsAttention = 0;
 
+      // Attention severity breakdown
+      let needsAttentionCritical = 0;
+      let needsAttentionUrgent = 0;
+      let needsAttentionRoutine = 0;
+
       // Failure category counts
       const failureCategories = {
         silenceTimeout: 0,
@@ -200,10 +201,15 @@ export const getStatsRouter = createTRPCRouter({
           continue;
         }
 
-        // Check if flagged as urgent by AI
-        const isUrgentCase = callData?.structured_data?.urgent_case === true;
-        if (isUrgentCase) {
+        // Check if flagged by AI (attention types present)
+        const hasAttentionTypes = (callData?.attention_types?.length ?? 0) > 0;
+        if (hasAttentionTypes) {
           needsAttention++;
+          // Track severity breakdown
+          const severity = callData?.attention_severity ?? "routine";
+          if (severity === "critical") needsAttentionCritical++;
+          else if (severity === "urgent") needsAttentionUrgent++;
+          else needsAttentionRoutine++;
         }
 
         const callStatus = callData?.status ?? null;
