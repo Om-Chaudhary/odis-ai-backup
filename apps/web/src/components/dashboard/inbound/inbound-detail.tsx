@@ -839,12 +839,8 @@ function MessageDetail({
     callDataQuery.isLoading && !!message.vapiCallId && !demoCallData;
   const hasCallData = !!demoCallData || !!message.vapiCallId;
 
-  // Old hardcoded data removed - now using dynamic fetch via callDataQuery or metadata.demoCallData
-  // Keeping this for reference during transition period
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _oldEricSilvaCallData = false
-    ? {
-        recording_url: "/audio/JackStitches.MP3",
+  // Use dynamically fetched call data
+  const currentCallData = callData;
         transcript: `User: Hello?
 
 AI: Thank you for calling Alum Rock Animal Hospital. You've reached the after hours assistant. Are you looking to schedule an appointment? Or do you have a concern about your pet?

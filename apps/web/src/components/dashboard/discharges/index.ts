@@ -6,7 +6,6 @@ export * from "./call-queue-indicator";
 export * from "./discharge-activity-list";
 export * from "./discharge-debug-modal";
 export * from "./discharge-list-item";
-export * from "./discharge-list-item-redesigned";
 export * from "./discharge-management-client";
 export * from "./discharge-settings-form";
 export * from "./discharge-settings-panel";

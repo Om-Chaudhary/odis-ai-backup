@@ -1,6 +1,5 @@
 export * from "./app-sidebar";
 export * from "./dashboard-breadcrumb";
-export * from "./dashboard-content";
 export * from "./dashboard-content-with-tabs";
 export * from "./dashboard-customization";
 export * from "./dashboard-navigation";
