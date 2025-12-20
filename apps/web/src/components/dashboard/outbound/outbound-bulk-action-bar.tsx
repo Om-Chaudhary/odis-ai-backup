@@ -15,7 +15,7 @@ interface BulkActionBarProps {
  * Floating bulk action bar for multi-select operations
  * Appears at bottom of screen when cases are selected
  */
-export function BulkActionBar({
+export function OutboundBulkActionBar({
   selectedCount,
   onScheduleSelected,
   onClearSelection,
