@@ -175,11 +175,6 @@ export const getStatsRouter = createTRPCRouter({
       let failed = 0;
       let needsAttention = 0;
 
-      // Attention severity breakdown
-      let needsAttentionCritical = 0;
-      let needsAttentionUrgent = 0;
-      let needsAttentionRoutine = 0;
-
       // Failure category counts
       const failureCategories = {
         silenceTimeout: 0,
@@ -205,11 +200,7 @@ export const getStatsRouter = createTRPCRouter({
         const hasAttentionTypes = (callData?.attention_types?.length ?? 0) > 0;
         if (hasAttentionTypes) {
           needsAttention++;
-          // Track severity breakdown
-          const severity = callData?.attention_severity ?? "routine";
-          if (severity === "critical") needsAttentionCritical++;
-          else if (severity === "urgent") needsAttentionUrgent++;
-          else needsAttentionRoutine++;
+          // Note: Severity breakdown tracking can be added here in the future if needed
         }
 
         const callStatus = callData?.status ?? null;

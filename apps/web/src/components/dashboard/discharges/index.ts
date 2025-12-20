@@ -1,5 +1,5 @@
 export * from "./batch-discharge-dialog";
-export * from "./batch-discharge-page-client";
+export * from "./batch-discharge"; // Refactored module
 export * from "./batch-progress-monitor";
 export * from "./batch-schedule-config";
 export * from "./call-queue-indicator";
@@ -7,7 +7,6 @@ export * from "./discharge-activity-list";
 export * from "./discharge-debug-modal";
 export * from "./discharge-list-item";
 export * from "./discharge-management-client";
-export * from "./discharge-settings-form";
 export * from "./discharge-settings-panel";
 export * from "./discharge-status-badge";
 export * from "./discharge-status-indicator";

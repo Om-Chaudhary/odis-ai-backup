@@ -1,4 +1,4 @@
-import { BatchDischargePageClient } from "~/components/dashboard/discharges/batch-discharge-page-client";
+import { BatchDischargeWizard } from "~/components/dashboard/discharges/batch-discharge";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function ClinicBatchDischargePage() {
-  return <BatchDischargePageClient />;
+  return <BatchDischargeWizard />;
 }

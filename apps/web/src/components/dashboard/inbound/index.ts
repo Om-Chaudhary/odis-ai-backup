@@ -16,7 +16,8 @@ export { InboundTable } from "./table";
 export * from "./table";
 
 // Detail module
-export { InboundDetail } from "./inbound-detail";
+export { InboundDetail } from "./inbound-detail-refactored";
+export * from "./detail";
 
 // Demo data
 export * from "./demo-data";

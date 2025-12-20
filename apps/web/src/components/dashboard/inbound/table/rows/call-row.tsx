@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import type { Database } from "~/database.types";
 import { CallerDisplay, CallDuration, CallAlertsIcons } from "../table-cells";
-import { CallStatusBadge } from "../../../shared/status-badges";
+import { CallStatusBadge } from "../../../shared";
 import { getCallModifications } from "../../demo-data";
 
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];

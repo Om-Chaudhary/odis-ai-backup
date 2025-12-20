@@ -3,7 +3,7 @@ import { CheckCircle2 } from "lucide-react";
 import { cn } from "@odis-ai/utils";
 import { Button } from "@odis-ai/ui/button";
 import { formatPhoneNumber } from "@odis-ai/utils/phone";
-import { MessageStatusBadge, PriorityBadge } from "../../../shared/status-badges";
+import { MessageStatusBadge, PriorityBadge } from "../../../shared";
 import type { ClinicMessage } from "../../types";
 
 export function MessageRow({

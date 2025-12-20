@@ -8,7 +8,7 @@ import {
   AttentionBadgeGroup,
   AttentionSeverityBadge,
   CriticalPulsingDot,
-} from "../shared/attention-badges";
+} from "../shared";
 import {
   Tooltip,
   TooltipContent,

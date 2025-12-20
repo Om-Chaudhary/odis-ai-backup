@@ -190,11 +190,11 @@ export function AttentionSeverityBadge({
       className={cn(
         "inline-flex items-center justify-center rounded-full font-semibold",
         sizeClasses[size],
-        config.className,
-        config.pulse && "animate-pulse",
+        config?.className,
+        config?.pulse && "animate-pulse",
       )}
     >
-      {config.label}
+      {config?.label}
     </span>
   );
 }

@@ -26,7 +26,8 @@ export { OutboundNeedsReviewTable } from "./outbound-needs-review-table";
 export { OutboundPagination } from "./outbound-pagination";
 
 // Detail panel
-export { OutboundCaseDetail } from "./outbound-case-detail";
+export { OutboundCaseDetail } from "./outbound-case-detail-refactored";
+export * from "./detail";
 
 // Error handling
 export { OutboundErrorBoundary } from "./outbound-error-boundary";
