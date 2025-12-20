@@ -1,3 +1,4 @@
+export * from "./attention-badges";
 export * from "./call-recording-player";
 export * from "./completion-indicator";
 export * from "./contact-indicator";

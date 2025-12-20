@@ -330,6 +330,8 @@ export type Database = {
           external_id: string | null;
           extreme_case_check: Json | null;
           id: string;
+          is_starred: boolean | null;
+          is_urgent: boolean | null;
           metadata: Json | null;
           scheduled_at: string | null;
           source: string | null;
@@ -345,6 +347,8 @@ export type Database = {
           external_id?: string | null;
           extreme_case_check?: Json | null;
           id?: string;
+          is_starred?: boolean | null;
+          is_urgent?: boolean | null;
           metadata?: Json | null;
           scheduled_at?: string | null;
           source?: string | null;
@@ -360,6 +364,8 @@ export type Database = {
           external_id?: string | null;
           extreme_case_check?: Json | null;
           id?: string;
+          is_starred?: boolean | null;
+          is_urgent?: boolean | null;
           metadata?: Json | null;
           scheduled_at?: string | null;
           source?: string | null;
@@ -594,6 +600,45 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      contact_submissions: {
+        Row: {
+          clinic_name: string | null;
+          created_at: string | null;
+          email: string;
+          first_name: string;
+          id: string;
+          last_name: string;
+          message: string;
+          metadata: Json | null;
+          phone: string | null;
+          source: string | null;
+        };
+        Insert: {
+          clinic_name?: string | null;
+          created_at?: string | null;
+          email: string;
+          first_name: string;
+          id?: string;
+          last_name: string;
+          message: string;
+          metadata?: Json | null;
+          phone?: string | null;
+          source?: string | null;
+        };
+        Update: {
+          clinic_name?: string | null;
+          created_at?: string | null;
+          email?: string;
+          first_name?: string;
+          id?: string;
+          last_name?: string;
+          message?: string;
+          metadata?: Json | null;
+          phone?: string | null;
+          source?: string | null;
+        };
+        Relationships: [];
       };
       discharge_batch_items: {
         Row: {
@@ -1578,6 +1623,10 @@ export type Database = {
       scheduled_discharge_calls: {
         Row: {
           assistant_id: string | null;
+          attention_flagged_at: string | null;
+          attention_severity: string | null;
+          attention_summary: string | null;
+          attention_types: string[] | null;
           call_analysis: Json | null;
           case_id: string | null;
           condition_category: string | null;
@@ -1594,6 +1643,7 @@ export type Database = {
           phone_number_id: string | null;
           qstash_message_id: string | null;
           recording_url: string | null;
+          review_category: string | null;
           scheduled_for: string | null;
           started_at: string | null;
           status: string;
@@ -1604,12 +1654,17 @@ export type Database = {
           transcript: string | null;
           transcript_messages: Json | null;
           updated_at: string;
+          urgent_reason_summary: string | null;
           user_id: string;
           user_sentiment: string | null;
           vapi_call_id: string | null;
         };
         Insert: {
           assistant_id?: string | null;
+          attention_flagged_at?: string | null;
+          attention_severity?: string | null;
+          attention_summary?: string | null;
+          attention_types?: string[] | null;
           call_analysis?: Json | null;
           case_id?: string | null;
           condition_category?: string | null;
@@ -1626,6 +1681,7 @@ export type Database = {
           phone_number_id?: string | null;
           qstash_message_id?: string | null;
           recording_url?: string | null;
+          review_category?: string | null;
           scheduled_for?: string | null;
           started_at?: string | null;
           status?: string;
@@ -1636,12 +1692,17 @@ export type Database = {
           transcript?: string | null;
           transcript_messages?: Json | null;
           updated_at?: string;
+          urgent_reason_summary?: string | null;
           user_id: string;
           user_sentiment?: string | null;
           vapi_call_id?: string | null;
         };
         Update: {
           assistant_id?: string | null;
+          attention_flagged_at?: string | null;
+          attention_severity?: string | null;
+          attention_summary?: string | null;
+          attention_types?: string[] | null;
           call_analysis?: Json | null;
           case_id?: string | null;
           condition_category?: string | null;
@@ -1658,6 +1719,7 @@ export type Database = {
           phone_number_id?: string | null;
           qstash_message_id?: string | null;
           recording_url?: string | null;
+          review_category?: string | null;
           scheduled_for?: string | null;
           started_at?: string | null;
           status?: string;
@@ -1668,6 +1730,7 @@ export type Database = {
           transcript?: string | null;
           transcript_messages?: Json | null;
           updated_at?: string;
+          urgent_reason_summary?: string | null;
           user_id?: string;
           user_sentiment?: string | null;
           vapi_call_id?: string | null;
@@ -1810,6 +1873,174 @@ export type Database = {
           updated_at?: string | null;
           user_agent?: string | null;
           user_id?: string | null;
+        };
+        Relationships: [];
+      };
+      slack_reminder_channels: {
+        Row: {
+          added_by_user_id: string;
+          channel_id: string;
+          channel_name: string;
+          created_at: string | null;
+          id: string;
+          is_active: boolean | null;
+          timezone: string;
+          updated_at: string | null;
+          workspace_id: string | null;
+        };
+        Insert: {
+          added_by_user_id: string;
+          channel_id: string;
+          channel_name: string;
+          created_at?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          timezone?: string;
+          updated_at?: string | null;
+          workspace_id?: string | null;
+        };
+        Update: {
+          added_by_user_id?: string;
+          channel_id?: string;
+          channel_name?: string;
+          created_at?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          timezone?: string;
+          updated_at?: string | null;
+          workspace_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "slack_reminder_channels_workspace_id_fkey";
+            columns: ["workspace_id"];
+            isOneToOne: false;
+            referencedRelation: "slack_workspaces";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      slack_task_completions: {
+        Row: {
+          completed_at: string | null;
+          completed_by_user_id: string;
+          completed_by_username: string | null;
+          completion_date: string;
+          id: string;
+          message_ts: string | null;
+          task_id: string | null;
+        };
+        Insert: {
+          completed_at?: string | null;
+          completed_by_user_id: string;
+          completed_by_username?: string | null;
+          completion_date: string;
+          id?: string;
+          message_ts?: string | null;
+          task_id?: string | null;
+        };
+        Update: {
+          completed_at?: string | null;
+          completed_by_user_id?: string;
+          completed_by_username?: string | null;
+          completion_date?: string;
+          id?: string;
+          message_ts?: string | null;
+          task_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "slack_task_completions_task_id_fkey";
+            columns: ["task_id"];
+            isOneToOne: false;
+            referencedRelation: "slack_tasks";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      slack_tasks: {
+        Row: {
+          channel_id: string | null;
+          created_at: string | null;
+          created_by_user_id: string;
+          description: string | null;
+          id: string;
+          is_active: boolean | null;
+          reminder_time: string;
+          title: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          channel_id?: string | null;
+          created_at?: string | null;
+          created_by_user_id: string;
+          description?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          reminder_time: string;
+          title: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          channel_id?: string | null;
+          created_at?: string | null;
+          created_by_user_id?: string;
+          description?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          reminder_time?: string;
+          title?: string;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "slack_tasks_channel_id_fkey";
+            columns: ["channel_id"];
+            isOneToOne: false;
+            referencedRelation: "slack_reminder_channels";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      slack_workspaces: {
+        Row: {
+          app_id: string;
+          authed_user_id: string | null;
+          bot_token: string;
+          bot_user_id: string;
+          created_at: string | null;
+          id: string;
+          is_active: boolean | null;
+          scope: string;
+          team_id: string;
+          team_name: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          app_id: string;
+          authed_user_id?: string | null;
+          bot_token: string;
+          bot_user_id: string;
+          created_at?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          scope: string;
+          team_id: string;
+          team_name: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          app_id?: string;
+          authed_user_id?: string | null;
+          bot_token?: string;
+          bot_user_id?: string;
+          created_at?: string | null;
+          id?: string;
+          is_active?: boolean | null;
+          scope?: string;
+          team_id?: string;
+          team_name?: string;
+          updated_at?: string | null;
         };
         Relationships: [];
       };
