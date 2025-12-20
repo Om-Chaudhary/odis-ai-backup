@@ -16,10 +16,7 @@ import {
 import { Button } from "@odis-ai/ui/button";
 import { cn } from "@odis-ai/utils";
 import type { DischargeCaseStatus } from "./types";
-import {
-  AttentionBadgeGroup,
-  CriticalPulsingDot,
-} from "../shared/attention-badges";
+import { AttentionBadgeGroup, CriticalPulsingDot } from "../shared";
 
 // Minimum required fields for table display
 interface TableCaseBase {
