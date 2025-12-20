@@ -23,7 +23,6 @@ import { OutboundSplitLayout } from "./outbound-split-layout";
 import { OutboundPagination } from "./outbound-pagination";
 import { OutboundNeedsReviewTable } from "./outbound-needs-review-table";
 import { OutboundNeedsAttentionTable } from "./outbound-needs-attention-table";
-import { ScheduleAllModal } from "./schedule-all-modal";
 import { Button } from "@odis-ai/ui/button";
 import { useOutboundData, useOutboundMutations } from "./hooks";
 
@@ -160,9 +159,6 @@ export function OutboundDischargesClient() {
     emailEnabled: true,
     immediateDelivery: false,
   });
-
-  // Schedule All modal state
-  const [scheduleAllModalOpen, setScheduleAllModalOpen] = useState(false);
 
   // Track if we've handled the deep link to avoid re-processing
   const deepLinkHandledRef = useRef<string | null>(null);
@@ -316,26 +312,6 @@ export function OutboundDischargesClient() {
     });
   }, [cases]);
 
-  // Cases for Schedule All modal (transform to expected format)
-  const scheduleableCasesForModal = useMemo(
-    () =>
-      cases.map((c) => ({
-        id: c.id,
-        patient: {
-          name: c.patient.name,
-          species: c.patient.species,
-        },
-        owner: {
-          name: c.owner.name,
-          phone: c.owner.phone,
-          email: c.owner.email,
-        },
-        status: c.status,
-        hasSummary: !!c.dischargeSummary,
-      })),
-    [cases],
-  );
-
   // Map old stats to new format
   const stats: DischargeSummaryStats = useMemo(() => {
     const raw = statsData ?? {
@@ -461,16 +437,6 @@ export function OutboundDischargesClient() {
     [cases, selectedCase, handleSelectCase],
   );
 
-  // Open Schedule All modal
-  const handleOpenScheduleAll = useCallback(() => {
-    setScheduleAllModalOpen(true);
-  }, []);
-
-  // Handle Schedule All complete
-  const handleScheduleAllComplete = useCallback(() => {
-    void refetch();
-  }, [refetch]);
-
   // Deep link handling: Auto-select case once data loads
   // Track if we've auto-selected to avoid repeating
   const deepLinkSelectedRef = useRef<string | null>(null);
@@ -577,7 +543,6 @@ export function OutboundDischargesClient() {
           isLoading={isLoading}
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}
-          onScheduleAll={handleOpenScheduleAll}
           scheduleAllDisabled={cases.length === 0 || isLoading}
         />
       </PageToolbar>
@@ -692,15 +657,6 @@ export function OutboundDischargesClient() {
           />
         )}
       </div>
-
-      {/* Schedule All Modal */}
-      <ScheduleAllModal
-        open={scheduleAllModalOpen}
-        onOpenChange={setScheduleAllModalOpen}
-        cases={scheduleableCasesForModal}
-        testModeEnabled={settingsData?.testModeEnabled ?? false}
-        onComplete={handleScheduleAllComplete}
-      />
     </div>
   );
 }

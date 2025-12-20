@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { cn } from "@odis-ai/utils";
 import { Button } from "@odis-ai/ui/button";
+import Link from "next/link";
 import type { ViewMode, DischargeSummaryStats } from "./types";
 import { OutboundDateNav } from "./outbound-date-nav";
 
@@ -26,7 +27,6 @@ interface OutboundFilterTabsProps {
   viewMode: ViewMode;
   onViewModeChange?: (mode: ViewMode) => void;
   // Schedule All
-  onScheduleAll?: () => void;
   scheduleAllDisabled?: boolean;
 }
 
@@ -45,7 +45,6 @@ export function OutboundFilterTabs({
   isLoading = false,
   viewMode,
   onViewModeChange,
-  onScheduleAll,
   scheduleAllDisabled = false,
 }: OutboundFilterTabsProps) {
   return (
@@ -57,17 +56,17 @@ export function OutboundFilterTabs({
           onDateChange={onDateChange}
           isLoading={isLoading}
         />
-        {onScheduleAll && (
-          <Button
-            onClick={onScheduleAll}
-            disabled={scheduleAllDisabled}
-            size="sm"
-            className="bg-teal-600 hover:bg-teal-700"
-          >
+        <Button
+          asChild
+          disabled={scheduleAllDisabled}
+          size="sm"
+          className="bg-teal-600 hover:bg-teal-700"
+        >
+          <Link href="/dashboard/outbound/schedule-all">
             <CalendarClock className="mr-2 h-4 w-4" />
             Schedule All
-          </Button>
-        )}
+          </Link>
+        </Button>
       </div>
 
       {/* Center: View Mode Filter Tabs */}
