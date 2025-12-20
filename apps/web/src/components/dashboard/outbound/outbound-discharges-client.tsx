@@ -18,7 +18,7 @@ import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-s
 import { PageContainer, PageToolbar, PageContent, PageFooter } from "../layout";
 import { OutboundFilterTabs } from "./outbound-filter-tabs";
 import { OutboundCaseTable } from "./outbound-case-table";
-import { OutboundCaseDetail } from "./outbound-case-detail";
+import { OutboundCaseDetail } from "./outbound-case-detail-refactored";
 import { OutboundSplitLayout } from "./outbound-split-layout";
 import { OutboundPagination } from "./outbound-pagination";
 import { OutboundNeedsReviewTable } from "./outbound-needs-review-table";

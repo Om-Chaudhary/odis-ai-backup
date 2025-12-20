@@ -7,7 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@odis-ai/ui/dialog";
-import { DischargeSettingsForm } from "./discharge-settings-form";
+import { DischargeSettingsForm } from "../settings/discharge-settings";
 import type { DischargeSettings } from "@odis-ai/types";
 
 interface DischargeSettingsPanelProps {

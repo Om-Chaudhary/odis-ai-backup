@@ -14,7 +14,7 @@ import type {
 import { PageToolbar, PageContent, PageFooter } from "../layout";
 import { InboundFilterTabs } from "./inbound-filter-tabs";
 import { InboundTable } from "./table";
-import { InboundDetail } from "./inbound-detail";
+import { InboundDetail } from "./inbound-detail-refactored";
 import { InboundSplitLayout } from "./inbound-split-layout";
 import { InboundPagination } from "./inbound-pagination";
 import { useInboundData, useInboundMutations } from "./hooks";
@@ -258,7 +258,6 @@ export function InboundClient() {
     },
     [currentItems, selectedItem, handleSelectItem],
   );
-
 
   return (
     <div className="flex h-[calc(100vh-64px)] flex-col gap-2">
