@@ -21,6 +21,7 @@ export { OutboundDateNav } from "./outbound-date-nav";
 // Table components
 export { OutboundCaseTable } from "./outbound-case-table";
 export { OutboundNeedsReviewTable } from "./outbound-needs-review-table";
+export { OutboundBulkActionBar } from "./outbound-bulk-action-bar";
 
 // Pagination
 export { OutboundPagination } from "./outbound-pagination";

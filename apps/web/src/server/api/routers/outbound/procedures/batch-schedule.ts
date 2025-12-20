@@ -226,7 +226,9 @@ export const batchScheduleRouter = createTRPCRouter({
       }
 
       const validCaseIds = new Set(validCases?.map((c) => c.id) ?? []);
-      const invalidCaseIds = input.caseIds.filter((id) => !validCaseIds.has(id));
+      const invalidCaseIds = input.caseIds.filter(
+        (id) => !validCaseIds.has(id),
+      );
 
       // Mark invalid cases as errors
       for (const caseId of invalidCaseIds) {
@@ -243,7 +245,12 @@ export const batchScheduleRouter = createTRPCRouter({
       );
 
       if (caseIdsToProcess.length === 0) {
-        return { results, totalProcessed: 0, totalSuccess: 0, totalFailed: results.length };
+        return {
+          results,
+          totalProcessed: 0,
+          totalSuccess: 0,
+          totalFailed: results.length,
+        };
       }
 
       // Load CasesService once
@@ -257,8 +264,11 @@ export const batchScheduleRouter = createTRPCRouter({
 
       const now = new Date();
       const staggerMs = input.staggerIntervalSeconds * 1000;
+      // Stagger emails by 3 seconds each in scheduled mode to avoid Resend rate limits
+      const scheduledModeEmailStaggerMs = 3000;
       let emailOffset = 0;
       let callOffset = 0;
+      let scheduledEmailIndex = 0;
 
       console.log("[BatchSchedule] Starting batch scheduling", {
         totalCases: caseIdsToProcess.length,
@@ -267,6 +277,7 @@ export const batchScheduleRouter = createTRPCRouter({
         emailEnabled: input.emailEnabled,
         testModeEnabled,
         staggerIntervalSeconds: input.staggerIntervalSeconds,
+        scheduledModeEmailStaggerMs,
       });
 
       // Process each case
@@ -304,7 +315,8 @@ export const batchScheduleRouter = createTRPCRouter({
             results.push({
               caseId,
               success: false,
-              error: "Discharge calls cannot be scheduled for euthanasia or deceased cases",
+              error:
+                "Discharge calls cannot be scheduled for euthanasia or deceased cases",
             });
             continue;
           }
@@ -396,7 +408,8 @@ export const batchScheduleRouter = createTRPCRouter({
               results.push({
                 caseId,
                 success: false,
-                error: "No clinical notes or entity data available for summary generation",
+                error:
+                  "No clinical notes or entity data available for summary generation",
               });
               continue;
             }
@@ -410,10 +423,14 @@ export const batchScheduleRouter = createTRPCRouter({
                 entityExtraction: entities,
                 patientData: {
                   name: patient?.name ?? entities?.patient?.name ?? undefined,
-                  species: patient?.species ?? entities?.patient?.species ?? undefined,
-                  breed: patient?.breed ?? entities?.patient?.breed ?? undefined,
+                  species:
+                    patient?.species ?? entities?.patient?.species ?? undefined,
+                  breed:
+                    patient?.breed ?? entities?.patient?.breed ?? undefined,
                   owner_name:
-                    patient?.owner_name ?? entities?.patient?.owner?.name ?? undefined,
+                    patient?.owner_name ??
+                    entities?.patient?.owner?.name ??
+                    undefined,
                 },
               });
 
@@ -456,18 +473,28 @@ export const batchScheduleRouter = createTRPCRouter({
             if (canSchedulePhone) {
               // Call goes after email with additional stagger
               callScheduledFor = new Date(
-                now.getTime() + (canScheduleEmail ? emailOffset : callOffset) + staggerMs,
+                now.getTime() +
+                  (canScheduleEmail ? emailOffset : callOffset) +
+                  staggerMs,
               );
-              callOffset = canScheduleEmail ? emailOffset : callOffset + staggerMs;
+              callOffset = canScheduleEmail
+                ? emailOffset
+                : callOffset + staggerMs;
             }
           } else {
-            // Scheduled mode - use delay settings
+            // Scheduled mode - use delay settings with staggering to avoid Resend rate limits
             if (canScheduleEmail) {
-              emailScheduledFor = calculateScheduleTime(
+              const baseEmailTime = calculateScheduleTime(
                 now,
                 emailDelayDays,
                 preferredEmailTime,
               );
+              // Stagger emails by 3 seconds each to avoid rate limiting
+              emailScheduledFor = new Date(
+                baseEmailTime.getTime() +
+                  scheduledEmailIndex * scheduledModeEmailStaggerMs,
+              );
+              scheduledEmailIndex++;
             }
             if (canSchedulePhone) {
               callScheduledFor = calculateScheduleTime(
@@ -494,12 +521,13 @@ export const batchScheduleRouter = createTRPCRouter({
 
             const structuredContent = dischargeSummaryData?.structured_content;
 
-            const { createClinicBranding } = await import(
-              "@odis-ai/types/clinic-branding"
-            );
+            const { createClinicBranding } =
+              await import("@odis-ai/types/clinic-branding");
             const branding = createClinicBranding({
-              clinicName: clinic?.name ?? userSettings?.clinic_name ?? undefined,
-              clinicPhone: clinic?.phone ?? userSettings?.clinic_phone ?? undefined,
+              clinicName:
+                clinic?.name ?? userSettings?.clinic_name ?? undefined,
+              clinicPhone:
+                clinic?.phone ?? userSettings?.clinic_phone ?? undefined,
               clinicEmail: clinic?.email ?? undefined,
               primaryColor: clinic?.primary_color ?? undefined,
               logoUrl: clinic?.logo_url ?? undefined,
@@ -507,9 +535,8 @@ export const batchScheduleRouter = createTRPCRouter({
               emailFooterText: clinic?.email_footer_text ?? undefined,
             });
 
-            const { generateDischargeEmailContent } = await import(
-              "@odis-ai/services-discharge"
-            );
+            const { generateDischargeEmailContent } =
+              await import("@odis-ai/services-discharge");
             const emailContent = await generateDischargeEmailContent(
               summaryContent,
               patient?.name ?? "your pet",
@@ -548,6 +575,16 @@ export const batchScheduleRouter = createTRPCRouter({
                   .update({ qstash_message_id: qstashMessageId })
                   .eq("id", emailData.id);
 
+                console.log("[BatchSchedule] Email scheduled", {
+                  caseId,
+                  emailId: emailData.id,
+                  scheduledFor: emailScheduledFor.toISOString(),
+                  staggerIndex:
+                    input.timingMode === "scheduled"
+                      ? scheduledEmailIndex - 1
+                      : undefined,
+                });
+
                 result.emailScheduled = true;
                 result.emailScheduledFor = emailScheduledFor.toISOString();
               } catch (qstashError) {
@@ -556,13 +593,16 @@ export const batchScheduleRouter = createTRPCRouter({
                   .from("scheduled_discharge_emails")
                   .delete()
                   .eq("id", emailData.id);
-                console.error("[BatchSchedule] Failed to schedule email via QStash:", {
-                  caseId,
-                  error:
-                    qstashError instanceof Error
-                      ? qstashError.message
-                      : String(qstashError),
-                });
+                console.error(
+                  "[BatchSchedule] Failed to schedule email via QStash:",
+                  {
+                    caseId,
+                    error:
+                      qstashError instanceof Error
+                        ? qstashError.message
+                        : String(qstashError),
+                  },
+                );
               }
             }
           }
@@ -635,7 +675,8 @@ export const batchScheduleRouter = createTRPCRouter({
           results.push({
             caseId,
             success: false,
-            error: error instanceof Error ? error.message : "Unknown error occurred",
+            error:
+              error instanceof Error ? error.message : "Unknown error occurred",
           });
         }
       }

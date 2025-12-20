@@ -78,6 +78,29 @@ export function useOutboundMutations(
     },
   });
 
+  const batchSchedule = api.outbound.batchSchedule.useMutation({
+    onSuccess: (data) => {
+      const { totalSuccess, totalFailed } = data;
+      if (totalFailed === 0) {
+        toast.success(
+          `Successfully scheduled ${totalSuccess} case${totalSuccess > 1 ? "s" : ""}`,
+        );
+      } else if (totalSuccess > 0) {
+        toast.warning(
+          `Scheduled ${totalSuccess} case${totalSuccess > 1 ? "s" : ""}, ${totalFailed} failed`,
+        );
+      } else {
+        toast.error("Failed to schedule any cases");
+      }
+      onSuccess?.();
+    },
+    onError: (error) => {
+      toast.error("Batch scheduling failed", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    },
+  });
+
   // Action handlers
   const handleApproveAndSend = useCallback(
     async (
@@ -163,10 +186,42 @@ export function useOutboundMutations(
     [toggleStarred],
   );
 
+  // Bulk schedule multiple cases in parallel
+  const handleBulkSchedule = useCallback(
+    async (caseIds: string[]) => {
+      // Add all case IDs to scheduling state
+      setSchedulingCaseIds((prev) => {
+        const next = new Set(prev);
+        caseIds.forEach((id) => next.add(id));
+        return next;
+      });
+
+      try {
+        await batchSchedule.mutateAsync({
+          caseIds,
+          phoneEnabled: true,
+          emailEnabled: true,
+          timingMode: "scheduled", // Use user's delay settings
+          staggerIntervalSeconds: 60,
+        });
+      } finally {
+        // Remove all case IDs from scheduling state
+        setSchedulingCaseIds((prev) => {
+          const next = new Set(prev);
+          caseIds.forEach((id) => next.delete(id));
+          return next;
+        });
+      }
+    },
+    [batchSchedule],
+  );
+
   const isSubmitting =
     approveAndSchedule.isPending ||
     skipCase.isPending ||
     retryDelivery.isPending;
+
+  const isBulkScheduling = batchSchedule.isPending;
 
   return {
     // Mutations
@@ -174,14 +229,17 @@ export function useOutboundMutations(
     skipCase,
     retryDelivery,
     toggleStarred,
+    batchSchedule,
     // Handlers
     handleApproveAndSend,
     handleSkip,
     handleRetry,
     handleQuickSchedule,
     handleToggleStar,
+    handleBulkSchedule,
     // State
     isSubmitting,
+    isBulkScheduling,
     schedulingCaseIds,
     togglingStarCaseIds,
   };

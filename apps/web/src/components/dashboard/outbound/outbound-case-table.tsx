@@ -14,6 +14,7 @@ import {
   Star,
 } from "lucide-react";
 import { Button } from "@odis-ai/ui/button";
+import { Checkbox } from "@odis-ai/ui/checkbox";
 import { cn } from "@odis-ai/utils";
 import type { DischargeCaseStatus } from "./types";
 import { AttentionBadgeGroup, CriticalPulsingDot } from "../shared";
@@ -106,6 +107,10 @@ interface OutboundCaseTableProps<T extends TableCaseBase> {
   // Star toggle props
   onToggleStar?: (caseId: string, starred: boolean) => void;
   togglingStarCaseIds?: Set<string>;
+  // Multi-select props
+  selectedForBulk?: Set<string>;
+  onToggleBulkSelect?: (caseId: string) => void;
+  onSelectAll?: () => void;
 }
 
 /**
@@ -133,6 +138,9 @@ export function OutboundCaseTable<T extends TableCaseBase>({
   schedulingCaseIds,
   onToggleStar,
   togglingStarCaseIds,
+  selectedForBulk = new Set(),
+  onToggleBulkSelect,
+  onSelectAll,
 }: OutboundCaseTableProps<T>) {
   const tableRef = useRef<HTMLDivElement>(null);
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
@@ -194,10 +202,28 @@ export function OutboundCaseTable<T extends TableCaseBase>({
       <table className="w-full min-w-0 table-fixed">
         <thead className="sticky top-0 z-10 border-b border-teal-100/50 bg-gradient-to-r from-teal-50/40 to-white/60 backdrop-blur-sm">
           <tr className="text-xs text-slate-500">
+            {onToggleBulkSelect && (
+              <th className="h-12 w-[5%] pl-4 text-center font-medium">
+                <Checkbox
+                  checked={
+                    cases.length > 0 && selectedForBulk.size === cases.length
+                  }
+                  onCheckedChange={onSelectAll}
+                  aria-label="Select all cases"
+                />
+              </th>
+            )}
             <th className="h-12 w-[6%] pl-4 text-center font-medium">
               <Star className="mx-auto h-4 w-4" />
             </th>
-            <th className="h-12 w-[35%] text-left font-medium">Patient</th>
+            <th
+              className={cn(
+                "h-12 text-left font-medium",
+                onToggleBulkSelect ? "w-[30%]" : "w-[35%]",
+              )}
+            >
+              Patient
+            </th>
             <th className="h-12 w-[12%] text-center font-medium">Phone</th>
             <th className="h-12 w-[12%] text-center font-medium">Email</th>
             <th className="h-12 w-[20%] text-center font-medium">Actions</th>
@@ -246,6 +272,18 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                   }
                 }}
               >
+                {/* Checkbox */}
+                {onToggleBulkSelect && (
+                  <td className="py-4 pl-4 text-center">
+                    <Checkbox
+                      checked={selectedForBulk.has(caseItem.id)}
+                      onCheckedChange={() => onToggleBulkSelect(caseItem.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      aria-label={`Select ${caseItem.patient.name}`}
+                    />
+                  </td>
+                )}
+
                 {/* Star */}
                 <td className="py-4 pl-4 text-center">
                   <button
@@ -570,8 +608,9 @@ function CaseTableSkeleton() {
     <div className="w-full overflow-hidden p-3">
       {/* Header skeleton */}
       <div className="mb-4 flex gap-3 border-b border-teal-100/50 pb-3">
+        <div className="h-3 w-[5%] animate-pulse rounded bg-teal-100/50" />
         <div className="h-3 w-[6%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[35%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[30%] animate-pulse rounded bg-teal-100/50" />
         <div className="h-3 w-[12%] animate-pulse rounded bg-teal-100/50" />
         <div className="h-3 w-[12%] animate-pulse rounded bg-teal-100/50" />
         <div className="h-3 w-[20%] animate-pulse rounded bg-teal-100/50" />
@@ -583,10 +622,13 @@ function CaseTableSkeleton() {
           key={i}
           className="flex items-center gap-3 border-b border-teal-50 py-4"
         >
+          <div className="flex w-[5%] justify-center">
+            <div className="h-4 w-4 animate-pulse rounded bg-teal-50" />
+          </div>
           <div className="flex w-[6%] justify-center">
             <div className="h-5 w-5 animate-pulse rounded bg-teal-50" />
           </div>
-          <div className="w-[35%] space-y-1.5">
+          <div className="w-[30%] space-y-1.5">
             <div className="h-4 w-24 animate-pulse rounded bg-teal-100/40" />
             <div className="h-3 w-32 animate-pulse rounded bg-teal-50" />
           </div>

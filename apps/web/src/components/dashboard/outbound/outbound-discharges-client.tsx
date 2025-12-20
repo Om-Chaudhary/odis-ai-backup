@@ -23,6 +23,7 @@ import { OutboundSplitLayout } from "./outbound-split-layout";
 import { OutboundPagination } from "./outbound-pagination";
 import { OutboundNeedsReviewTable } from "./outbound-needs-review-table";
 import { OutboundNeedsAttentionTable } from "./outbound-needs-attention-table";
+import { OutboundBulkActionBar } from "./outbound-bulk-action-bar";
 import { Button } from "@odis-ai/ui/button";
 import { useOutboundData, useOutboundMutations } from "./hooks";
 
@@ -159,6 +160,9 @@ export function OutboundDischargesClient() {
     emailEnabled: true,
     immediateDelivery: false,
   });
+  const [selectedForBulk, setSelectedForBulk] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Track if we've handled the deep link to avoid re-processing
   const deepLinkHandledRef = useRef<string | null>(null);
@@ -188,12 +192,15 @@ export function OutboundDischargesClient() {
     handleRetry: retryHandler,
     handleQuickSchedule,
     handleToggleStar,
+    handleBulkSchedule,
     isSubmitting,
+    isBulkScheduling,
     schedulingCaseIds,
     togglingStarCaseIds,
   } = useOutboundMutations({
     onSuccess: () => {
       setSelectedCase(null);
+      setSelectedForBulk(new Set());
       void refetch();
     },
   });
@@ -493,6 +500,51 @@ export function OutboundDischargesClient() {
     [skipHandler],
   );
 
+  // Bulk selection handlers
+  const handleToggleBulkSelect = useCallback((caseId: string) => {
+    setSelectedForBulk((prev) => {
+      const next = new Set(prev);
+      if (next.has(caseId)) {
+        next.delete(caseId);
+      } else {
+        next.add(caseId);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    const typedCases = cases as TransformedCase[];
+    // Filter to only selectable cases (pending_review with contact info)
+    const selectableCases = typedCases.filter(
+      (c) =>
+        c.status === "pending_review" &&
+        (Boolean(c.owner.phone) || Boolean(c.owner.email)),
+    );
+
+    if (
+      selectedForBulk.size === selectableCases.length &&
+      selectableCases.length > 0
+    ) {
+      setSelectedForBulk(new Set());
+    } else {
+      setSelectedForBulk(new Set(selectableCases.map((c) => c.id)));
+    }
+  }, [cases, selectedForBulk.size]);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedForBulk(new Set());
+  }, []);
+
+  const handleScheduleSelected = useCallback(async () => {
+    if (selectedForBulk.size === 0) {
+      toast.error("No cases selected");
+      return;
+    }
+
+    await handleBulkSchedule(Array.from(selectedForBulk));
+  }, [selectedForBulk, handleBulkSchedule]);
+
   return (
     <div className="flex h-[calc(100vh-64px)] w-full flex-col gap-2 overflow-hidden">
       {/* Test Mode Banner */}
@@ -628,6 +680,9 @@ export function OutboundDischargesClient() {
                     schedulingCaseIds={schedulingCaseIds}
                     onToggleStar={handleToggleStar}
                     togglingStarCaseIds={togglingStarCaseIds}
+                    selectedForBulk={selectedForBulk}
+                    onToggleBulkSelect={handleToggleBulkSelect}
+                    onSelectAll={handleSelectAll}
                   />
                 </PageContent>
                 <PageFooter>
@@ -657,6 +712,14 @@ export function OutboundDischargesClient() {
           />
         )}
       </div>
+
+      {/* Bulk Action Bar */}
+      <OutboundBulkActionBar
+        selectedCount={selectedForBulk.size}
+        onScheduleSelected={handleScheduleSelected}
+        onClearSelection={handleClearSelection}
+        isProcessing={isBulkScheduling}
+      />
     </div>
   );
 }
