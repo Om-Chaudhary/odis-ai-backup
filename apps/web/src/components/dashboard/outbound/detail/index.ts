@@ -1,7 +1,13 @@
-/**
- * Outbound case detail module exports
- */
+export * from "./patient-header";
+export * from "./clinical-notes-section";
+export * from "./schedule-info-card";
+export * from "./delivery-toggle-section";
+export * from "./delivery-complete-card";
+export * from "./attention-section";
+export * from "./urgent-reason-section";
+export * from "./communication-tabs";
+export * from "./utils";
 
-export { OutboundCaseDetail } from "../outbound-case-detail";
-export { EmptyDetailState } from "./detail-empty-state";
+// Re-export the existing components
+export * from "./detail-empty-state";
 export * from "./structured-preview";
