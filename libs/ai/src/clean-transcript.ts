@@ -16,41 +16,106 @@ import {
 /**
  * Common transcription error patterns in veterinary context
  * These serve as examples for the LLM to learn the pattern
+ * Optimized for Vapi/Deepgram transcription output
  */
 const COMMON_CORRECTIONS = `
-Common transcription errors in veterinary calls:
-- "Alam rock" → "Alum Rock" (hospital name)
-- "alumrock" → "Alum Rock" (hospital name)  
-- "allamrock" → "Alum Rock" (hospital name)
-- "um", "uh", "like", "you know" → remove filler words
+## Vapi/Deepgram Transcription Errors
+
+### Phonetic Mishearings
+- "odis" or "oh dis" → "ODIS" (our company name)
+- "vee eye pee" or "v i p" → "V.I.P."
+- "alam rock" / "alumrock" / "allamrock" → "Alum Rock" (hospital name)
+- "dogtor" → "doctor"
+
+### Filler Words & Speech Disfluencies (REMOVE)
+- "um", "uh", "er", "ah" → remove
+- "like" (when used as filler, not comparison) → remove
+- "you know", "I mean", "so basically" → remove when meaningless
 - "gonna" → "going to"
 - "wanna" → "want to"
 - "kinda" → "kind of"
 - "gotta" → "got to"
-- Repeated words: "I I want" → "I want"
-- False starts: "Can you-- Can you help" → "Can you help"
-- "dogtor" or "doctor" in vet context often means "doctor"
-- Pet breed names are often misheard (e.g., "golden lab" vs "golden retriever", "labrador")
-- Medical terms: "subcutaneous" not "sub Q taneous", "intramuscular" not "intra muscular"
+- "sorta" → "sort of"
+- "lemme" → "let me"
+- "gimme" → "give me"
+
+### Repetitions & False Starts
+- "I I want" → "I want"
+- "Can you-- Can you help" → "Can you help"
+- "We we we have" → "We have"
+- "The the appointment" → "The appointment"
+
+### Veterinary Medical Terms (Correct Spellings)
+- "sub q" / "sub Q taneous" / "subq" → "subcutaneous"
+- "intra muscular" / "I M" → "intramuscular"
+- "I V" / "eye vee" → "IV" (intravenous)
+- "newter" / "nuter" → "neuter"
+- "spey" / "spade" → "spay"
+- "disstemper" → "distemper"
+- "parvo" not "parbow" or "par vo"
+- "rabies" not "rabees"
+- "bordatella" / "bordetela" → "Bordetella"
+- "heart worm" → "heartworm"
+- "flea tick" → "flea and tick"
+
+### Common Medication Names
+- "metronidazole" not "metro nida zole"
+- "gabapentin" not "gaba pentin"
+- "apoquel" not "apo kwell" or "apoquill"
+- "rimadyl" not "rima dill"
+- "carprofen" not "car pro fen"
+- "trazodone" not "trazo done"
+- "cerenia" not "sa renia" or "serenia"
+
+### Pet Breed Corrections
+- "golden lab" → "Golden Labrador" or "Golden Retriever" (use context)
+- "lab" → "Labrador" (when clearly referring to breed)
+- "pit" / "pitt" → "Pit Bull" or "Pitbull"
+- "shih tzu" not "shitzu" or "shits oo"
+- "chihuahua" not "chi wawa"
+- "dachshund" not "dash hound" or "dock sind"
+- "rottweiler" not "rot wiler"
+- "german shepherd" not "german shepard"
+
+### Number/Phone Formatting
+- "one two three four" in phone context → format as phone number when obvious
+- Preserve spoken numbers naturally otherwise
+
+### Speaker Diarization Artifacts
+- "[inaudible]" → keep as-is (indicates unclear audio)
+- "[crosstalk]" → keep as-is (indicates overlapping speech)
+- Remove isolated single-word fragments that don't contribute meaning
 `;
 
-const SYSTEM_PROMPT = `You are an expert transcript editor specializing in veterinary clinic phone calls. Your task is to clean up speech-to-text transcription errors while preserving the exact meaning and flow of the conversation.
+const SYSTEM_PROMPT = `You are an expert transcript editor specializing in veterinary clinic phone calls transcribed by Vapi/Deepgram. Your task is to clean up speech-to-text transcription errors while preserving the exact meaning and flow of the conversation.
 
 ${COMMON_CORRECTIONS}
 
-Guidelines:
-1. Fix obvious transcription errors (misspelled proper nouns, broken words)
-2. Remove unnecessary filler words (um, uh, like, you know) when they add no meaning
-3. Fix repeated words and false starts
-4. Preserve speaker labels exactly (AI:, User:, etc.)
-5. Maintain the conversational tone - don't make it sound robotic
-6. Keep contractions natural ("I'm", "don't", "can't")
-7. Preserve any veterinary/medical terminology accurately
-8. If a clinic name is provided, correct any misspellings of that name
-9. Do NOT change the meaning or add information
-10. Do NOT summarize - output the full transcript
+## Editing Guidelines
 
-Output ONLY the cleaned transcript. No explanations or JSON.`;
+### DO:
+1. Fix phonetic mishearings and misspellings (especially proper nouns, medical terms, medications)
+2. Remove excessive filler words (um, uh, like, you know) that add no meaning
+3. Fix word repetitions and false starts ("I I want" → "I want")
+4. Correct veterinary terminology to proper medical spellings
+5. Preserve speaker labels EXACTLY as provided (AI:, User:, Assistant:, etc.)
+6. Maintain natural conversational tone - keep appropriate contractions ("I'm", "don't", "can't")
+7. Keep "[inaudible]" and "[crosstalk]" markers as-is
+8. If a clinic name is provided, correct any phonetic misspellings of that name
+9. Preserve the COMPLETE transcript - every meaningful exchange
+
+### DO NOT:
+1. Change the meaning or intent of what was said
+2. Add information that wasn't in the original
+3. Summarize or shorten the conversation
+4. Remove meaningful pauses indicated by "..." 
+5. Change speaker attribution
+6. Over-correct casual speech that's grammatically correct
+7. Remove emotional expressions or emphasis ("Oh!", "Wow", "Great!")
+
+### Output Format
+Output ONLY the cleaned transcript text. No explanations, headers, or JSON wrapping.
+Each speaker turn should start on a new line with the speaker label (e.g., "AI:", "User:").`;
 
 function createUserPrompt(
   transcript: string,
