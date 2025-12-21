@@ -8,9 +8,8 @@ type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
 export function CallRow({ call }: { call: InboundCall }) {
   const callMods = getCallModifications(call);
-  // Use started_at (actual VAPI call time) with fallback to created_at
-  const displayDate =
-    callMods.adjustedDate ?? new Date(call.started_at ?? call.created_at);
+  // Use created_at for consistent sorting with backend
+  const displayDate = callMods.adjustedDate ?? new Date(call.created_at);
 
   return (
     <>

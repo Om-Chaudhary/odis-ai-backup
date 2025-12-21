@@ -1,16 +1,9 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQueryState, parseAsInteger } from "nuqs";
-import { format, parseISO, startOfDay } from "date-fns";
 
-import type {
-  ViewMode,
-  CallStatusFilter,
-  AppointmentStatusFilter,
-  MessageStatusFilter,
-  InboundItem,
-} from "./types";
+import type { ViewMode, InboundItem } from "./types";
 import { PageToolbar, PageContent, PageFooter } from "../layout";
 import { InboundFilterTabs } from "./inbound-filter-tabs";
 import { InboundTable } from "./table";
@@ -24,15 +17,12 @@ import { useInboundData, useInboundMutations } from "./hooks";
  *
  * Features:
  * - View tabs: Calls / Appointments / Messages
- * - Status filters per view
  * - Full-screen split layout with pagination
  * - Compact table rows
  * - Detail panel for selected items
  */
 export function InboundClient() {
   // URL-synced state
-  const [dateStr, setDateStr] = useQueryState("date");
-
   const [viewMode, setViewMode] = useQueryState("view", {
     defaultValue: "appointments" as ViewMode,
     parse: (v) =>
@@ -41,59 +31,11 @@ export function InboundClient() {
         : "appointments") as ViewMode,
   });
 
-  const [callStatus, setCallStatus] = useQueryState("callStatus", {
-    defaultValue: "all" as CallStatusFilter,
-    parse: (v) =>
-      (["all", "completed", "in_progress", "failed", "cancelled"].includes(v)
-        ? v
-        : "all") as CallStatusFilter,
-  });
-
-  const [appointmentStatus, setAppointmentStatus] = useQueryState(
-    "appointmentStatus",
-    {
-      defaultValue: "all" as AppointmentStatusFilter,
-      parse: (v) =>
-        (["all", "pending", "confirmed", "rejected"].includes(v)
-          ? v
-          : "all") as AppointmentStatusFilter,
-    },
-  );
-
-  const [messageStatus, setMessageStatus] = useQueryState("messageStatus", {
-    defaultValue: "all" as MessageStatusFilter,
-    parse: (v) =>
-      (["all", "new", "read", "resolved", "urgent"].includes(v)
-        ? v
-        : "all") as MessageStatusFilter,
-  });
-
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
 
   const [pageSize, setPageSize] = useQueryState(
     "size",
     parseAsInteger.withDefault(25),
-  );
-
-  // Parse current date (only used if date filter is applied)
-  const currentDate = useMemo(() => {
-    if (dateStr) {
-      try {
-        return parseISO(dateStr);
-      } catch {
-        return startOfDay(new Date());
-      }
-    }
-    return startOfDay(new Date());
-  }, [dateStr]);
-
-  // Date range for API - only send if dateStr is present (otherwise show all)
-  const { startDate, endDate } = useMemo(
-    () => ({
-      startDate: dateStr ?? undefined,
-      endDate: dateStr ?? undefined,
-    }),
-    [dateStr],
   );
 
   // Local state
@@ -113,12 +55,10 @@ export function InboundClient() {
     viewMode,
     page,
     pageSize,
-    callStatus,
-    appointmentStatus,
-    messageStatus,
+    callStatus: "all",
+    appointmentStatus: "all",
+    messageStatus: "all",
     searchTerm,
-    startDate,
-    endDate,
   });
 
   const {
@@ -157,18 +97,6 @@ export function InboundClient() {
   }, [selectedItem]);
 
   // Handlers
-  const handleDateChange = useCallback(
-    (newDate: Date | null) => {
-      if (newDate === null) {
-        void setDateStr(null);
-      } else {
-        void setDateStr(format(startOfDay(newDate), "yyyy-MM-dd"));
-      }
-      void setPage(1);
-    },
-    [setDateStr, setPage],
-  );
-
   const handleViewModeChange = useCallback(
     (mode: ViewMode) => {
       void setViewMode(mode);
@@ -177,37 +105,6 @@ export function InboundClient() {
     },
     [setViewMode, setPage],
   );
-
-  const handleCallStatusChange = useCallback(
-    (status: CallStatusFilter) => {
-      void setCallStatus(status);
-      setSelectedItem(null);
-      void setPage(1);
-    },
-    [setCallStatus, setPage],
-  );
-
-  const handleAppointmentStatusChange = useCallback(
-    (status: AppointmentStatusFilter) => {
-      void setAppointmentStatus(status);
-      setSelectedItem(null);
-      void setPage(1);
-    },
-    [setAppointmentStatus, setPage],
-  );
-
-  const handleMessageStatusChange = useCallback(
-    (status: MessageStatusFilter) => {
-      void setMessageStatus(status);
-      setSelectedItem(null);
-      void setPage(1);
-    },
-    [setMessageStatus, setPage],
-  );
-
-  const handleSearchChange = useCallback((term: string) => {
-    setSearchTerm(term);
-  }, []);
 
   const handlePageChange = useCallback(
     (newPage: number) => {
@@ -259,25 +156,18 @@ export function InboundClient() {
     [currentItems, selectedItem, handleSelectItem],
   );
 
+  // Suppress unused variable warnings
+  void searchTerm;
+  void setSearchTerm;
+
   return (
     <div className="flex h-[calc(100vh-64px)] flex-col gap-2">
-      {/* Compact Toolbar - Date + View Tabs + Status Filters + Search */}
+      {/* Compact Toolbar - View Tabs */}
       <PageToolbar className="rounded-lg border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 py-2 shadow-md shadow-teal-500/5 backdrop-blur-md">
         <InboundFilterTabs
           viewMode={viewMode}
           onViewModeChange={handleViewModeChange}
-          callStatus={callStatus}
-          onCallStatusChange={handleCallStatusChange}
-          appointmentStatus={appointmentStatus}
-          onAppointmentStatusChange={handleAppointmentStatusChange}
-          messageStatus={messageStatus}
-          onMessageStatusChange={handleMessageStatusChange}
           stats={stats}
-          searchTerm={searchTerm}
-          onSearchChange={handleSearchChange}
-          currentDate={currentDate}
-          onDateChange={handleDateChange}
-          isLoading={isLoading}
         />
       </PageToolbar>
 

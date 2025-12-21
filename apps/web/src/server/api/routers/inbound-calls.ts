@@ -111,11 +111,10 @@ export const inboundCallsRouter = createTRPCRouter({
       // Get current user's role and clinic
       const user = await getUserWithClinic(supabase, ctx.user.id);
 
-      // Build query - sort by started_at (actual VAPI call time) with fallback to created_at
+      // Build query - sort by created_at descending (most recent first)
       let query = supabase
         .from("inbound_vapi_calls")
         .select("*", { count: "exact" })
-        .order("started_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false });
 
       // Apply role-based filtering (prevents SQL injection)
@@ -468,11 +467,10 @@ export const inboundCallsRouter = createTRPCRouter({
         });
       }
 
-      // Build query - sort by started_at (actual VAPI call time) with fallback to created_at
+      // Build query - sort by created_at descending (most recent first)
       let query = supabase
         .from("inbound_vapi_calls")
         .select("*", { count: "exact" })
-        .order("started_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false });
 
       // Filter by clinic
