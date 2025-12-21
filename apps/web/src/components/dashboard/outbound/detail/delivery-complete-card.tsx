@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
 import { Button } from "@odis-ai/ui/button";
