@@ -301,6 +301,7 @@ export const listCasesRouter = createTRPCRouter({
             duration_seconds,
             ended_reason,
             transcript,
+            cleaned_transcript,
             summary,
             customer_phone,
             dynamic_variables,

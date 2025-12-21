@@ -383,7 +383,7 @@ export const userCasesRouter = createTRPCRouter({
           ),
           scheduled_discharge_calls (
             id, status, scheduled_for, ended_at, ended_reason, started_at,
-            vapi_call_id, transcript, transcript_messages, call_analysis,
+            vapi_call_id, transcript, cleaned_transcript, transcript_messages, call_analysis,
             summary, success_evaluation, structured_data, user_sentiment,
             recording_url, stereo_recording_url, duration_seconds, cost, created_at
           ),

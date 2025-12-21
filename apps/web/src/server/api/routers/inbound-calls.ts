@@ -301,7 +301,7 @@ export const inboundCallsRouter = createTRPCRouter({
       const { data: call, error } = await supabase
         .from("inbound_vapi_calls")
         .select(
-          "recording_url, stereo_recording_url, transcript, transcript_messages, duration_seconds, summary",
+          "recording_url, stereo_recording_url, transcript, cleaned_transcript, transcript_messages, duration_seconds, summary",
         )
         .eq("vapi_call_id", input.vapiCallId)
         .single();
@@ -314,6 +314,7 @@ export const inboundCallsRouter = createTRPCRouter({
       return {
         recordingUrl: call.stereo_recording_url ?? call.recording_url,
         transcript: call.transcript,
+        cleanedTranscript: call.cleaned_transcript,
         transcriptMessages: call.transcript_messages,
         durationSeconds: call.duration_seconds,
         summary: call.summary,
