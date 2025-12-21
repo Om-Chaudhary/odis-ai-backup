@@ -111,6 +111,8 @@ export interface InboundCall {
   duration_seconds: number | null;
   cost: number | null;
   transcript: string | null;
+  /** AI-cleaned version of the transcript with typos and transcription errors fixed */
+  cleaned_transcript: string | null;
   summary: string | null;
   recording_url: string | null;
   ended_reason: string | null;

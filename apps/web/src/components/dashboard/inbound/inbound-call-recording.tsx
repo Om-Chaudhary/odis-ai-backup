@@ -47,7 +47,9 @@ interface CleanedTranscriptData {
  *
  * Fetches and displays the recording and transcript for an inbound call
  * linked to an appointment or message via vapiCallId.
- * Automatically cleans up transcription errors and translates non-English transcripts.
+ * Uses pre-cleaned transcript from DB (cleaned at webhook time).
+ * Falls back to on-demand cleaning for older calls without cleaned_transcript.
+ * Automatically translates non-English transcripts.
  */
 export function InboundCallRecording({
   vapiCallId,
@@ -70,7 +72,7 @@ export function InboundCallRecording({
       { enabled: !!vapiCallId },
     );
 
-  // Clean up transcript mutation
+  // Clean up transcript mutation (fallback for calls without pre-cleaned transcript)
   const cleanMutation = api.inboundCalls.cleanTranscript.useMutation({
     onSuccess: (data: CleanedTranscriptData) => {
       setCleanedData(data);
@@ -99,13 +101,26 @@ export function InboundCallRecording({
     },
   });
 
-  // Auto-clean transcript when available (then translate after)
+  // Use pre-cleaned transcript from DB, or fall back to on-demand cleaning for older calls
   useEffect(() => {
-    if (
-      callData?.transcript &&
-      !hasAttemptedCleanup &&
-      !cleanMutation.isPending
-    ) {
+    if (!callData?.transcript) return;
+
+    // If we already have a cleaned transcript from the DB, use it directly
+    if (callData.cleanedTranscript) {
+      setCleanedData({
+        cleanedTranscript: callData.cleanedTranscript,
+        wasModified: callData.cleanedTranscript !== callData.transcript,
+      });
+      // Translate the cleaned transcript if needed
+      if (!hasAttemptedTranslation) {
+        setHasAttemptedTranslation(true);
+        translateMutation.mutate({ transcript: callData.cleanedTranscript });
+      }
+      return;
+    }
+
+    // Fallback: clean on-demand for older calls without pre-cleaned transcript
+    if (!hasAttemptedCleanup && !cleanMutation.isPending) {
       setHasAttemptedCleanup(true);
       cleanMutation.mutate({
         transcript: callData.transcript,
@@ -114,9 +129,12 @@ export function InboundCallRecording({
     }
   }, [
     callData?.transcript,
+    callData?.cleanedTranscript,
     hasAttemptedCleanup,
+    hasAttemptedTranslation,
     cleanMutation.isPending,
     cleanMutation,
+    translateMutation,
     clinicName,
   ]);
 
