@@ -2,9 +2,7 @@ import type { Metadata } from "next";
 import { Outfit, Inter, Lora, Plus_Jakarta_Sans } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import "~/styles/globals.css";
-import ClientPostHogProvider from "~/components/providers/client-posthog-provider";
-import { TRPCReactProvider } from "~/trpc/Provider";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { ClientProviders } from "~/components/providers/client-providers";
 import { env } from "~/env.js";
 
 const outfit = Outfit({
@@ -177,11 +175,7 @@ export default function RootLayout({
       <body
         className={`font-sans antialiased ${outfit.variable} ${inter.variable} ${lora.variable} ${plusJakarta.variable} ${geistMono.variable}`}
       >
-        <ClientPostHogProvider>
-          <TRPCReactProvider>
-            <NuqsAdapter>{children}</NuqsAdapter>
-          </TRPCReactProvider>
-        </ClientPostHogProvider>
+        <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
   );
