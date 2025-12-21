@@ -40,6 +40,9 @@ const ScheduleAppointmentSchema = z.object({
   reason_for_visit: z.string().min(1, "reason_for_visit is required"),
   preferred_date: z.string().optional(),
   preferred_time: z.string().optional(),
+  // Confirmed appointment time (the actual time the AI booked)
+  confirmed_date: z.string().optional(),
+  confirmed_time: z.string().optional(),
   is_new_client: z.boolean(),
   is_outlier: z.boolean(),
   notes: z.string().optional(),
@@ -418,9 +421,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse date and time
+    // Parse preferred date and time (caller's preference)
     const requestedDate = parsePreferredDate(input.preferred_date);
     const requestedTime = parsePreferredTime(input.preferred_time);
+
+    // Parse confirmed date and time (what the AI actually booked)
+    const confirmedDate = parsePreferredDate(input.confirmed_date);
+    const confirmedTime = parsePreferredTime(input.confirmed_time);
 
     // Build appointment request record (simplified - uses proper columns instead of metadata)
     const appointmentRequest = {
@@ -429,7 +436,7 @@ export async function POST(request: NextRequest) {
       client_phone: input.client_phone,
       patient_name: input.patient_name,
       reason: input.reason_for_visit,
-      // Time fields are now nullable - only set if provided
+      // Caller's preferred time (nullable)
       requested_date: requestedDate?.toISOString().split("T")[0] ?? null,
       requested_start_time: requestedTime ?? null,
       requested_end_time: requestedTime
@@ -443,6 +450,9 @@ export async function POST(request: NextRequest) {
             return `${endHour.toString().padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}:00`;
           })()
         : null,
+      // Confirmed appointment time (what AI booked)
+      confirmed_date: confirmedDate?.toISOString().split("T")[0] ?? null,
+      confirmed_time: confirmedTime ?? null,
       status: "pending",
       vapi_call_id: input.vapi_call_id ?? null,
       // These are now proper columns instead of metadata
@@ -456,6 +466,8 @@ export async function POST(request: NextRequest) {
         source: "vapi",
         preferred_date_raw: input.preferred_date ?? null,
         preferred_time_raw: input.preferred_time ?? null,
+        confirmed_date_raw: input.confirmed_date ?? null,
+        confirmed_time_raw: input.confirmed_time ?? null,
       },
     };
 

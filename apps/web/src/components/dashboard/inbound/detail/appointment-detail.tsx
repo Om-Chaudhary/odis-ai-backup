@@ -8,12 +8,15 @@ import { Separator } from "@odis-ai/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
 import {
   Calendar,
+  CalendarCheck,
   User,
   Loader2,
   AlertTriangle,
   CheckCircle2,
   XCircle,
   Trash2,
+  Clock,
+  Heart,
 } from "lucide-react";
 import { formatPhoneNumber } from "@odis-ai/utils/phone";
 import { CallRecordingPlayer } from "../../shared/call-recording-player";
@@ -32,9 +35,43 @@ interface AppointmentRequest {
   reason?: string | null;
   requestedDate?: string | null;
   requestedStartTime?: string | null;
+  // Confirmed appointment (what AI booked)
+  confirmedDate?: string | null;
+  confirmedTime?: string | null;
   notes?: string | null;
   status: string;
   createdAt: string;
+}
+
+/**
+ * Format time string (HH:MM:SS) to readable format (e.g., "2:30 PM")
+ */
+function formatTime(timeStr: string | null | undefined): string {
+  if (!timeStr) return "";
+  const [hourStr, minuteStr] = timeStr.split(":");
+  const hour = parseInt(hourStr ?? "0", 10);
+  const minute = minuteStr ?? "00";
+  const isPM = hour >= 12;
+  const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+  return `${hour12}:${minute} ${isPM ? "PM" : "AM"}`;
+}
+
+/**
+ * Check if the reason indicates a sensitive case (euthanasia, emergency, etc.)
+ */
+function isSensitiveCase(reason: string | null | undefined): boolean {
+  if (!reason) return false;
+  const sensitiveKeywords = [
+    "euthanasia",
+    "put down",
+    "put to sleep",
+    "end of life",
+    "goodbye",
+    "passing",
+    "humane",
+  ];
+  const lowerReason = reason.toLowerCase();
+  return sensitiveKeywords.some((keyword) => lowerReason.includes(keyword));
 }
 
 interface AppointmentDetailProps {
@@ -66,6 +103,10 @@ export function AppointmentDetail({
       retry: false,
     },
   );
+
+  const isSensitive = isSensitiveCase(appointment.reason);
+  const hasConfirmedTime =
+    appointment.confirmedDate != null || appointment.confirmedTime != null;
 
   return (
     <div className="flex h-full flex-col">
@@ -100,6 +141,55 @@ export function AppointmentDetail({
 
       {/* Scrollable Content */}
       <div className="flex-1 space-y-4 overflow-auto p-4">
+        {/* Sensitive Case Alert */}
+        {isSensitive && (
+          <Card className="border-purple-200 bg-purple-50 dark:border-purple-800 dark:bg-purple-950/30">
+            <CardContent className="py-3">
+              <div className="flex items-center gap-2 text-purple-700 dark:text-purple-300">
+                <Heart className="h-4 w-4" />
+                <span className="text-sm font-medium">
+                  Sensitive Case — Please handle with extra care and compassion
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* PROMINENT: Confirmed Appointment Time */}
+        {hasConfirmedTime && (
+          <Card className="border-teal-200 bg-gradient-to-r from-teal-50 to-emerald-50 dark:border-teal-800 dark:from-teal-950/40 dark:to-emerald-950/40">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm font-medium text-teal-700 dark:text-teal-300">
+                <CalendarCheck className="h-4 w-4" />
+                Scheduled Appointment
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <p className="text-2xl font-bold text-teal-900 dark:text-teal-100">
+                    {appointment.confirmedDate
+                      ? format(
+                          new Date(appointment.confirmedDate + "T00:00:00"),
+                          "EEEE, MMMM d",
+                        )
+                      : "Date TBD"}
+                  </p>
+                  {appointment.confirmedTime && (
+                    <p className="mt-1 flex items-center gap-1 text-lg font-semibold text-teal-700 dark:text-teal-300">
+                      <Clock className="h-4 w-4" />
+                      {formatTime(appointment.confirmedTime)}
+                    </p>
+                  )}
+                </div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-600 text-white">
+                  <CheckCircle2 className="h-6 w-6" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Client Info */}
         <Card>
           <CardHeader className="pb-2">
@@ -134,39 +224,55 @@ export function AppointmentDetail({
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <Calendar className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-              Appointment Request
+              Appointment Details
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3 text-sm">
               <div>
                 <p className="text-muted-foreground">Reason for Visit</p>
-                <p className="font-medium">
+                <p
+                  className={`font-medium ${isSensitive ? "text-purple-700 dark:text-purple-300" : ""}`}
+                >
                   {appointment.reason ?? "Not specified"}
                 </p>
               </div>
-              <Separator />
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-muted-foreground">Preferred Date</p>
-                  <p className="font-medium">
-                    {appointment.requestedDate
-                      ? format(
-                          new Date(appointment.requestedDate),
-                          "EEEE, MMMM d, yyyy",
-                        )
-                      : "No preference"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Preferred Time</p>
-                  <p className="font-medium">
-                    {appointment.requestedStartTime
-                      ? appointment.requestedStartTime.slice(0, 5)
-                      : "No preference"}
-                  </p>
-                </div>
-              </div>
+              {/* Only show preferences if different from confirmed or no confirmed time */}
+              {(appointment.requestedDate != null ||
+                appointment.requestedStartTime != null) && (
+                <>
+                  <Separator />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-muted-foreground">
+                        {hasConfirmedTime
+                          ? "Originally Requested"
+                          : "Preferred Date"}
+                      </p>
+                      <p className="font-medium">
+                        {appointment.requestedDate
+                          ? format(
+                              new Date(appointment.requestedDate + "T00:00:00"),
+                              "EEEE, MMMM d, yyyy",
+                            )
+                          : "No preference"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">
+                        {hasConfirmedTime
+                          ? "Originally Requested"
+                          : "Preferred Time"}
+                      </p>
+                      <p className="font-medium">
+                        {appointment.requestedStartTime
+                          ? formatTime(appointment.requestedStartTime)
+                          : "No preference"}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
               {appointment.notes && (
                 <>
                   <Separator />

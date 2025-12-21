@@ -89,6 +89,9 @@ export const listAppointmentsRouter = createTRPCRouter({
         requestedDate: apt.requested_date,
         requestedStartTime: apt.requested_start_time,
         requestedEndTime: apt.requested_end_time,
+        // Confirmed appointment time (what AI booked)
+        confirmedDate: apt.confirmed_date,
+        confirmedTime: apt.confirmed_time,
         status: apt.status,
         isNewClient: apt.is_new_client,
         isOutlier: apt.is_outlier,
