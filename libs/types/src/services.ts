@@ -101,6 +101,9 @@ export interface ScheduledDischargeCall {
   scheduled_for: string;
   status: "queued" | "in-progress" | "completed" | "failed" | "canceled";
   vapi_call_id?: string | null;
+  transcript?: string | null;
+  /** AI-cleaned version of the transcript with typos and transcription errors fixed */
+  cleaned_transcript?: string | null;
   dynamic_variables: Record<string, unknown>;
   metadata: ScheduledCallMetadata;
   created_at: string;

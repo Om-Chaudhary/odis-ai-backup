@@ -35,8 +35,47 @@ import {
 import type { VapiCallResponse } from "../../client";
 import { mapInboundCallToUser } from "../../inbound-calls";
 import { scheduleCallExecution } from "@odis-ai/qstash/client";
+import { cleanTranscript } from "@odis-ai/ai";
 
 const logger = loggers.webhook.child("end-of-call-report");
+
+/**
+ * Clean transcript using AI and handle errors gracefully
+ * Returns null if cleaning fails or transcript is empty
+ */
+async function cleanTranscriptSafely(
+  transcript: string | null | undefined,
+  clinicName: string | null | undefined,
+): Promise<string | null> {
+  if (!transcript || transcript.trim().length === 0) {
+    return null;
+  }
+
+  try {
+    const result = await cleanTranscript({
+      transcript,
+      clinicName,
+    });
+
+    if (result.wasModified) {
+      logger.debug("Transcript cleaned successfully", {
+        originalLength: transcript.length,
+        cleanedLength: result.cleanedTranscript.length,
+      });
+      return result.cleanedTranscript;
+    }
+
+    // If no modifications needed, return original
+    return transcript;
+  } catch (error) {
+    logger.error("Failed to clean transcript", {
+      error: error instanceof Error ? error.message : String(error),
+      transcriptLength: transcript.length,
+    });
+    // Return null on error - UI will fall back to raw transcript
+    return null;
+  }
+}
 
 /**
  * Handle end-of-call-report webhook
@@ -195,6 +234,9 @@ async function handleInboundCallEnd(
         : "none",
   });
 
+  // Clean transcript using AI (async, but don't block webhook response)
+  const cleanedTranscript = await cleanTranscriptSafely(transcript, clinicName);
+
   // Prepare update data - extract all fields like outbound handler does
   const updateData: Record<string, unknown> = {
     vapi_call_id: call.id,
@@ -209,6 +251,7 @@ async function handleInboundCallEnd(
     recording_url: recordingUrl,
     stereo_recording_url: stereoRecordingUrl,
     transcript: transcript,
+    cleaned_transcript: cleanedTranscript,
     transcript_messages: transcriptMessages,
     call_analysis: analysis,
     summary: analysis.summary ?? null,
@@ -231,6 +274,7 @@ async function handleInboundCallEnd(
     hasRecording: !!recordingUrl,
     hasStereoRecording: !!stereoRecordingUrl,
     hasTranscript: !!transcript,
+    hasCleanedTranscript: !!cleanedTranscript,
     hasMessages: !!transcriptMessages,
     hasSummary: !!analysis.summary,
     userSentiment,
@@ -281,6 +325,13 @@ async function handleOutboundCallEnd(
   // Get structured data from analysis or artifact
   const structuredData = analysis.structuredData ?? artifact.structuredOutputs;
 
+  // Get clinic name from metadata for transcript cleaning
+  const clinicName = (metadata.clinic_name as string) ?? null;
+  const transcript = call.transcript ?? null;
+
+  // Clean transcript using AI
+  const cleanedTranscript = await cleanTranscriptSafely(transcript, clinicName);
+
   // Prepare update data
   const updateData: Record<string, unknown> = {
     status: finalStatus,
@@ -290,7 +341,8 @@ async function handleOutboundCallEnd(
     duration_seconds: durationSeconds,
     recording_url: call.recordingUrl ?? artifact.recordingUrl,
     stereo_recording_url: artifact.stereoRecordingUrl,
-    transcript: call.transcript,
+    transcript: transcript,
+    cleaned_transcript: cleanedTranscript,
     transcript_messages: call.messages ?? null,
     call_analysis: analysis,
     summary: analysis.summary,
@@ -309,7 +361,8 @@ async function handleOutboundCallEnd(
     cost,
     hasRecording: !!call.recordingUrl,
     hasStereoRecording: !!artifact.stereoRecordingUrl,
-    hasTranscript: !!call.transcript,
+    hasTranscript: !!transcript,
+    hasCleanedTranscript: !!cleanedTranscript,
     hasSummary: !!analysis.summary,
     userSentiment,
   });
