@@ -128,6 +128,70 @@ All tests pass successfully.
 - The first case (index 0) uses the base schedule time with no stagger
 - Logging provides visibility into scheduled times for debugging
 
+## tRPC Batch Schedule Procedure
+
+The tRPC `batchSchedule` procedure (called from the dashboard via "Send All Discharges" button) also implements staggering:
+
+**File**: `apps/web/src/server/api/routers/outbound/procedures/batch-schedule.ts`
+
+### Staggering Rules:
+
+- **Immediate Mode**: Uses `staggerIntervalSeconds` input parameter (default 60 seconds) for both emails and calls
+- **Scheduled Mode**:
+  - Emails are staggered by 3 seconds each to avoid Resend rate limits
+  - **Calls are staggered by 2 minutes each** to avoid VAPI 10-call concurrency limit
+
+### Why 3 Seconds for Email Staggering?
+
+Resend's free tier has a rate limit of 2 emails/second. With 3-second staggering:
+
+- We stay well under the rate limit
+- Provides buffer for any processing delays
+- Prevents rate limit errors when scheduling 10+ cases at once
+
+### Why 2 Minutes for Call Staggering?
+
+VAPI has a 10-call concurrency limit. Calls that exceed this limit fail with "Over Concurrency Limit" error. With 2-minute staggering:
+
+- Calls are spread out so concurrent execution stays under the 10-call limit
+- Average call duration is ~2-3 minutes, so 2-minute spacing prevents overlap
+- Matches the stagger interval used in `DischargeBatchProcessor`
+
+### Example (Scheduled Mode, 5 cases):
+
+**Emails** scheduled for 10:00:00 AM base time:
+
+- Case 1: 10:00:00 AM
+- Case 2: 10:00:03 AM (+3 seconds)
+- Case 3: 10:00:06 AM (+6 seconds)
+- Case 4: 10:00:09 AM (+9 seconds)
+- Case 5: 10:00:12 AM (+12 seconds)
+
+**Calls** scheduled for 4:00:00 PM base time:
+
+- Case 1: 4:00:00 PM
+- Case 2: 4:02:00 PM (+2 minutes)
+- Case 3: 4:04:00 PM (+4 minutes)
+- Case 4: 4:06:00 PM (+6 minutes)
+- Case 5: 4:08:00 PM (+8 minutes)
+
+## Migration History
+
+### December 19, 2025 - Fix Call Staggering in Batch Schedule
+
+**Problem**: The `batchSchedule` tRPC procedure was not staggering calls in scheduled mode. All calls were scheduled for the exact same time, causing VAPI "Over Concurrency Limit" errors.
+
+**Solution**:
+
+1. Applied migration `stagger_dec20_scheduled_calls` to fix 31 existing calls scheduled for `2025-12-20 01:57:45.934+00`
+2. Updated `batch-schedule.ts` to stagger calls by 2 minutes in scheduled mode
+
+### December 17, 2025 - Stagger Dec 17/18 Scheduled Calls
+
+**Migration**: `20251217000000_stagger_dec18_scheduled_calls.sql`
+
+Fixed 37+ calls that were scheduled for exactly `2025-12-18 22:00:00 UTC` by spreading them out with 2-minute intervals.
+
 ## Future Enhancements
 
 Potential improvements for future consideration:

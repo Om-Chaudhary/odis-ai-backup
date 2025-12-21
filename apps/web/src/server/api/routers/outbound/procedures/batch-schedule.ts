@@ -266,9 +266,12 @@ export const batchScheduleRouter = createTRPCRouter({
       const staggerMs = input.staggerIntervalSeconds * 1000;
       // Stagger emails by 3 seconds each in scheduled mode to avoid Resend rate limits
       const scheduledModeEmailStaggerMs = 3000;
+      // Stagger calls by 2 minutes each in scheduled mode to avoid VAPI 10-call concurrency limit
+      const scheduledModeCallStaggerMs = 2 * 60 * 1000;
       let emailOffset = 0;
       let callOffset = 0;
       let scheduledEmailIndex = 0;
+      let scheduledCallIndex = 0;
 
       console.log("[BatchSchedule] Starting batch scheduling", {
         totalCases: caseIdsToProcess.length,
@@ -278,6 +281,7 @@ export const batchScheduleRouter = createTRPCRouter({
         testModeEnabled,
         staggerIntervalSeconds: input.staggerIntervalSeconds,
         scheduledModeEmailStaggerMs,
+        scheduledModeCallStaggerMs,
       });
 
       // Process each case
@@ -482,14 +486,14 @@ export const batchScheduleRouter = createTRPCRouter({
                 : callOffset + staggerMs;
             }
           } else {
-            // Scheduled mode - use delay settings with staggering to avoid Resend rate limits
+            // Scheduled mode - use delay settings with staggering to avoid rate limits
             if (canScheduleEmail) {
               const baseEmailTime = calculateScheduleTime(
                 now,
                 emailDelayDays,
                 preferredEmailTime,
               );
-              // Stagger emails by 3 seconds each to avoid rate limiting
+              // Stagger emails by 3 seconds each to avoid Resend rate limiting
               emailScheduledFor = new Date(
                 baseEmailTime.getTime() +
                   scheduledEmailIndex * scheduledModeEmailStaggerMs,
@@ -497,11 +501,17 @@ export const batchScheduleRouter = createTRPCRouter({
               scheduledEmailIndex++;
             }
             if (canSchedulePhone) {
-              callScheduledFor = calculateScheduleTime(
+              const baseCallTime = calculateScheduleTime(
                 now,
                 callDelayDays,
                 preferredCallTime,
               );
+              // Stagger calls by 2 minutes each to avoid VAPI 10-call concurrency limit
+              callScheduledFor = new Date(
+                baseCallTime.getTime() +
+                  scheduledCallIndex * scheduledModeCallStaggerMs,
+              );
+              scheduledCallIndex++;
             }
           }
 
@@ -650,6 +660,16 @@ export const batchScheduleRouter = createTRPCRouter({
                   agentName,
                 },
               );
+
+              console.log("[BatchSchedule] Call scheduled", {
+                caseId,
+                callId: scheduledCall.id,
+                scheduledFor: scheduledCall.scheduled_for,
+                staggerIndex:
+                  input.timingMode === "scheduled"
+                    ? scheduledCallIndex - 1
+                    : undefined,
+              });
 
               result.callScheduled = true;
               result.callScheduledFor = scheduledCall.scheduled_for;
