@@ -9,7 +9,11 @@ import type {
   ClinicMessage,
 } from "../types";
 import type { Database } from "~/database.types";
-import { CallsHeader, AppointmentsHeader, MessagesHeader } from "./table-headers";
+import {
+  CallsHeader,
+  AppointmentsHeader,
+  MessagesHeader,
+} from "./table-headers";
 import { CallRow } from "./rows/call-row";
 import { AppointmentRow } from "./rows/appointment-row";
 import { MessageRow } from "./rows/message-row";
@@ -111,7 +115,10 @@ export function InboundTable({
             .filter((item) => {
               // Apply call filtering for hardcoded modifications
               if (viewMode === "calls") {
-                const callMods = getCallModifications(item as InboundCall);
+                // Cast through unknown since InboundItem's InboundCall is a subset of DB row type
+                const callMods = getCallModifications(
+                  item as unknown as InboundCall,
+                );
                 return !callMods.shouldHide;
               }
               return true;
@@ -138,7 +145,7 @@ export function InboundTable({
                   }}
                 >
                   {viewMode === "calls" && (
-                    <CallRow call={item as InboundCall} />
+                    <CallRow call={item as unknown as InboundCall} />
                   )}
                   {viewMode === "appointments" && (
                     <AppointmentRow
