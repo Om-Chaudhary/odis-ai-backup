@@ -72,7 +72,7 @@ export function CallDuration({ call }: { call: InboundCall }) {
 
   // Silent calls show blank duration
   if (callMods.isSilent) {
-    return <span className="text-muted-foreground text-sm">-</span>;
+    return <span className="text-muted-foreground text-xs">-</span>;
   }
 
   // Use existing duration if available, otherwise show loading or dash
@@ -88,25 +88,25 @@ export function CallDuration({ call }: { call: InboundCall }) {
 
   if (call.duration_seconds) {
     return (
-      <span className="text-sm">{formatDuration(call.duration_seconds)}</span>
+      <span className="text-xs">{formatDuration(call.duration_seconds)}</span>
     );
   }
 
   if (shouldFetchFromVAPI && vapiQuery.isLoading) {
     return (
       <div className="flex items-center justify-center">
-        <Loader2 className="text-muted-foreground h-3 w-3 animate-spin" />
+        <Loader2 className="text-muted-foreground h-2.5 w-2.5 animate-spin" />
       </div>
     );
   }
 
   if (shouldFetchFromVAPI && vapiQuery.data?.duration) {
     return (
-      <span className="text-sm">{formatDuration(vapiQuery.data.duration)}</span>
+      <span className="text-xs">{formatDuration(vapiQuery.data.duration)}</span>
     );
   }
 
-  return <span className="text-muted-foreground text-sm">-</span>;
+  return <span className="text-muted-foreground text-xs">-</span>;
 }
 
 /**

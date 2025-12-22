@@ -30,6 +30,8 @@ interface InboundTableProps {
   onKeyNavigation: (direction: "up" | "down") => void;
   isLoading: boolean;
   onQuickAction?: (id: string) => Promise<void>;
+  // Compact mode (when detail sidebar is open)
+  isCompact?: boolean;
 }
 
 /**
@@ -48,6 +50,7 @@ export function InboundTable({
   onKeyNavigation,
   isLoading,
   onQuickAction,
+  isCompact = false,
 }: InboundTableProps) {
   const tableRef = useRef<HTMLDivElement>(null);
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
@@ -106,9 +109,11 @@ export function InboundTable({
     <div ref={tableRef} className="h-full overflow-auto">
       <table className="w-full">
         <thead className="bg-muted/40 sticky top-0 z-10 border-b backdrop-blur-sm">
-          {viewMode === "calls" && <CallsHeader />}
-          {viewMode === "appointments" && <AppointmentsHeader />}
-          {viewMode === "messages" && <MessagesHeader />}
+          {viewMode === "calls" && <CallsHeader isCompact={isCompact} />}
+          {viewMode === "appointments" && (
+            <AppointmentsHeader isCompact={isCompact} />
+          )}
+          {viewMode === "messages" && <MessagesHeader isCompact={isCompact} />}
         </thead>
         <tbody className="divide-border/50 divide-y">
           {items
@@ -145,18 +150,23 @@ export function InboundTable({
                   }}
                 >
                   {viewMode === "calls" && (
-                    <CallRow call={item as unknown as InboundCall} />
+                    <CallRow
+                      call={item as unknown as InboundCall}
+                      isCompact={isCompact}
+                    />
                   )}
                   {viewMode === "appointments" && (
                     <AppointmentRow
                       appointment={item as AppointmentRequest}
                       onQuickAction={onQuickAction}
+                      isCompact={isCompact}
                     />
                   )}
                   {viewMode === "messages" && (
                     <MessageRow
                       message={item as ClinicMessage}
                       onQuickAction={onQuickAction}
+                      isCompact={isCompact}
                     />
                   )}
                 </tr>

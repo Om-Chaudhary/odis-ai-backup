@@ -3,11 +3,11 @@
  *
  * Exports for the redesigned inbound dashboard with tab-based views
  * for calls, appointment requests, and messages.
+ * View mode switching is now in the sidebar navigation.
  */
 
 // Main components
 export { InboundClient } from "./inbound-client";
-export { InboundFilterTabs } from "./inbound-filter-tabs";
 export { InboundSplitLayout } from "./inbound-split-layout";
 export { InboundPagination } from "./inbound-pagination";
 

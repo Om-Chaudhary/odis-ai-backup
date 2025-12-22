@@ -5,18 +5,22 @@ import { formatPhoneNumber } from "@odis-ai/utils/phone";
 import { AppointmentStatusBadge } from "../../../shared";
 import type { AppointmentRequest } from "../../types";
 
+interface AppointmentRowProps {
+  appointment: AppointmentRequest;
+  onQuickAction?: (id: string) => Promise<void>;
+  isCompact?: boolean;
+}
+
 export function AppointmentRow({
   appointment,
   onQuickAction,
-}: {
-  appointment: AppointmentRequest;
-  onQuickAction?: (id: string) => Promise<void>;
-}) {
+  isCompact = false,
+}: AppointmentRowProps) {
   const isPending = appointment.status === "pending";
 
   return (
     <>
-      <td className="py-3 pl-4">
+      <td className="py-3 pl-3">
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-1.5">
             <PawPrint className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
@@ -29,7 +33,7 @@ export function AppointmentRow({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             <User className="text-muted-foreground h-3 w-3" />
             <span className="text-muted-foreground text-xs">
               {appointment.clientName}
@@ -48,49 +52,55 @@ export function AppointmentRow({
         </span>
       </td>
       <td className="py-3">
-        <span className="text-muted-foreground line-clamp-2 text-sm">
+        <span className="text-muted-foreground line-clamp-2 text-xs">
           {appointment.reason ?? "-"}
         </span>
       </td>
       <td className="py-3 text-center">
         <AppointmentStatusBadge status={appointment.status} />
       </td>
-      <td className="py-3 text-center">
-        {isPending && onQuickAction ? (
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-7 gap-1.5 bg-teal-500/10 px-3 text-xs font-medium text-teal-700 hover:bg-teal-500/20 dark:text-teal-400"
-            onClick={(e) => {
-              e.stopPropagation();
-              void onQuickAction(appointment.id);
-            }}
-          >
-            <CheckCircle2 className="h-3 w-3" />
-            Confirm
-          </Button>
-        ) : (
-          <span className="text-muted-foreground text-xs">-</span>
-        )}
-      </td>
-      <td className="py-3 pr-4 text-right">
-        <div className="flex flex-col items-end gap-0.5">
-          {appointment.requestedDate ? (
-            <>
-              <span className="text-xs font-medium">
-                {format(new Date(appointment.requestedDate), "MMM d")}
-              </span>
-              {appointment.requestedStartTime && (
-                <span className="text-muted-foreground text-xs">
-                  {appointment.requestedStartTime.slice(0, 5)}
-                </span>
-              )}
-            </>
+      {!isCompact && (
+        <td className="py-3 text-center">
+          {isPending && onQuickAction ? (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 gap-1.5 bg-teal-500/10 px-2.5 text-xs font-medium text-teal-700 hover:bg-teal-500/20 dark:text-teal-400"
+              onClick={(e) => {
+                e.stopPropagation();
+                void onQuickAction(appointment.id);
+              }}
+            >
+              <CheckCircle2 className="h-3 w-3" />
+              Confirm
+            </Button>
           ) : (
-            <span className="text-muted-foreground text-xs">No preference</span>
+            <span className="text-muted-foreground text-xs">-</span>
           )}
-        </div>
-      </td>
+        </td>
+      )}
+      {!isCompact && (
+        <td className="py-3 pr-3 text-right">
+          <div className="flex flex-col items-end gap-0">
+            {appointment.requestedDate ? (
+              <>
+                <span className="text-xs font-medium">
+                  {format(new Date(appointment.requestedDate), "MMM d")}
+                </span>
+                {appointment.requestedStartTime && (
+                  <span className="text-muted-foreground text-xs">
+                    {appointment.requestedStartTime.slice(0, 5)}
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className="text-muted-foreground text-xs">
+                No preference
+              </span>
+            )}
+          </div>
+        </td>
+      )}
     </>
   );
 }
