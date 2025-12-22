@@ -50,13 +50,7 @@ export {
 // UI Components
 // =============================================================================
 
-export {
-  FeatureCard,
-  type FeatureCardProps,
-  IntegrationCard,
-  type IntegrationCardProps,
-  type IntegrationStatus,
-} from "./ui";
+export { FeatureCard, type FeatureCardProps } from "./ui";
 
 // =============================================================================
 // Skeletons
