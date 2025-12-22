@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@odis-ai/ui/button";
 import { Separator } from "@odis-ai/ui/separator";
-import { Loader2, RotateCcw, Wand2 } from "lucide-react";
+import { Loader2, RotateCcw, Wand2, Maximize2 } from "lucide-react";
 import { api } from "~/trpc/client";
 import type {
   PreviewTab,
@@ -23,6 +23,12 @@ import {
   UrgentReasonSection,
   CommunicationSummarySection,
 } from "./detail";
+import { PatientOwnerCard } from "./detail/patient-owner-card";
+import {
+  WorkflowCanvas,
+  WorkflowModal,
+  type CaseDataForWorkflow,
+} from "./detail/workflow";
 
 // Scheduled call data with structured output support
 interface ScheduledCallData {
@@ -127,6 +133,44 @@ export function OutboundCaseDetail({
       },
     });
 
+  // Transform case data for workflow visualization
+  // IMPORTANT: This hook must be called unconditionally before any early returns
+  const workflowCaseData: CaseDataForWorkflow | null = useMemo(() => {
+    if (!caseData) return null;
+    return {
+      id: caseData.id,
+      caseId: caseData.caseId,
+      status: caseData.status,
+      caseType: caseData.caseType,
+      timestamp:
+        caseData.scheduledCall?.startedAt ??
+        caseData.scheduledEmailFor ??
+        new Date().toISOString(),
+      emailSent: caseData.emailSent,
+      scheduledEmailFor: caseData.scheduledEmailFor,
+      phoneSent: caseData.phoneSent,
+      scheduledCallFor: caseData.scheduledCallFor,
+      scheduledCall: caseData.scheduledCall
+        ? {
+            id: caseData.scheduledCall.id,
+            durationSeconds: caseData.scheduledCall.durationSeconds,
+            transcript: caseData.scheduledCall.transcript,
+            recordingUrl: caseData.scheduledCall.recordingUrl ?? null,
+            summary: caseData.scheduledCall.summary,
+            endedReason: caseData.scheduledCall.endedReason,
+          }
+        : null,
+      needsAttention: caseData.needsAttention,
+      attentionTypes: caseData.attentionTypes,
+      attentionSeverity: caseData.attentionSeverity,
+      attentionSummary: caseData.attentionSummary,
+      owner: {
+        email: caseData.owner.email,
+        phone: caseData.owner.phone,
+      },
+    };
+  }, [caseData]);
+
   const handleScheduleRemaining = (options: {
     scheduleCall: boolean;
     scheduleEmail: boolean;
@@ -141,7 +185,8 @@ export function OutboundCaseDetail({
     });
   };
 
-  if (!caseData) {
+  // Early return after all hooks are called
+  if (!caseData || !workflowCaseData) {
     return <EmptyDetailState />;
   }
 
@@ -173,33 +218,54 @@ export function OutboundCaseDetail({
 
   return (
     <div className="flex h-full flex-col">
-      {/* Patient Header */}
-      <PatientHeader caseData={caseData} onDelete={onDelete} />
-
-      <Separator />
+      {/* Patient/Owner Card (Redesigned) */}
+      <div className="p-4 pb-0">
+        <PatientOwnerCard
+          caseData={{
+            id: caseData.id,
+            caseId: caseData.caseId,
+            patient: caseData.patient,
+            owner: caseData.owner,
+            caseType: caseData.caseType,
+            status: caseData.status,
+          }}
+          onDelete={onDelete}
+        />
+      </div>
 
       {/* Scrollable Content */}
       <div className="flex-1 space-y-4 overflow-auto p-4">
         {isSentCase ? (
-          /* Layout for SENT cases (completed/failed) */
+          /* Layout for SENT cases - Workflow Visualization */
           <>
-            {/* Delivery Complete Card */}
-            <DeliveryCompleteCard
-              status={caseData.status as "completed" | "failed"}
-              scheduledCall={caseData.scheduledCall}
-              caseData={caseData}
-              onScheduleRemaining={handleScheduleRemaining}
-              isScheduling={scheduleRemainingMutation.isPending}
-            />
+            {/* Workflow Timeline */}
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white/50 dark:border-slate-700 dark:bg-slate-900/50">
+              {/* Header with expand button */}
+              <div className="flex items-center justify-between border-b border-slate-200/60 bg-slate-50/50 px-4 py-2">
+                <span className="text-xs font-medium text-slate-600">
+                  Workflow Timeline
+                </span>
+                <WorkflowModal
+                  caseData={workflowCaseData}
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1.5 px-2 text-slate-500 hover:text-teal-700"
+                    >
+                      <Maximize2 className="h-3.5 w-3.5" />
+                      <span className="text-xs">Expand</span>
+                    </Button>
+                  }
+                />
+              </div>
+              <WorkflowCanvas
+                caseData={workflowCaseData}
+                className="h-[380px] min-h-[380px]"
+              />
+            </div>
 
-            {/* Attention Section - Show prominently for flagged cases */}
-            {caseData.needsAttention ? (
-              <AttentionSection caseData={caseData} />
-            ) : caseData.isUrgentCase && caseData.scheduledCall?.id ? (
-              <UrgentReasonSection callId={caseData.scheduledCall.id} />
-            ) : null}
-
-            {/* Clinical Notes Section */}
+            {/* Clinical Notes Section (Collapsed) */}
             {(hasIdexxNotes || hasSoapNotes) && (
               <ClinicalNotesSection
                 idexxNotes={caseData.idexxNotes}
@@ -208,7 +274,7 @@ export function OutboundCaseDetail({
               />
             )}
 
-            {/* Communication Summary */}
+            {/* Communication Summary (Collapsed) */}
             <CommunicationSummarySection
               caseData={caseData}
               callScript={callScript}
@@ -219,14 +285,34 @@ export function OutboundCaseDetail({
         ) : (
           /* Layout for UNSENT cases (pending_review, ready, scheduled) */
           <>
-            {/* Attention Section - Show prominently for flagged cases */}
-            {caseData.needsAttention ? (
-              <AttentionSection caseData={caseData} />
-            ) : caseData.isUrgentCase && caseData.scheduledCall?.id ? (
-              <UrgentReasonSection callId={caseData.scheduledCall.id} />
-            ) : null}
+            {/* Workflow Timeline (Preview Mode) */}
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white/50 dark:border-slate-700 dark:bg-slate-900/50">
+              {/* Header with expand button */}
+              <div className="flex items-center justify-between border-b border-slate-200/60 bg-slate-50/50 px-4 py-2">
+                <span className="text-xs font-medium text-slate-600">
+                  Workflow Preview
+                </span>
+                <WorkflowModal
+                  caseData={workflowCaseData}
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 gap-1.5 px-2 text-slate-500 hover:text-teal-700"
+                    >
+                      <Maximize2 className="h-3.5 w-3.5" />
+                      <span className="text-xs">Expand</span>
+                    </Button>
+                  }
+                />
+              </div>
+              <WorkflowCanvas
+                caseData={workflowCaseData}
+                className="h-[330px] min-h-[330px]"
+              />
+            </div>
 
-            {/* Clinical Notes Section - Most Prominent */}
+            {/* Clinical Notes Section */}
             {(hasIdexxNotes || hasSoapNotes) && (
               <ClinicalNotesSection
                 idexxNotes={caseData.idexxNotes}
