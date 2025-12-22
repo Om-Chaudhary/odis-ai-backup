@@ -11,6 +11,7 @@ export * from "./cards";
 export * from "./call-recording-player";
 export * from "./completion-indicator";
 export * from "./contact-indicator";
+export * from "./date-picker-nav";
 export * from "./email-history";
 export * from "./overview-tab";
 export * from "./patient-select";
