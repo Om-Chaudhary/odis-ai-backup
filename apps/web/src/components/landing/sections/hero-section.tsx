@@ -27,7 +27,7 @@ const ROTATING_WORDS = [
 
 // Feature bullets - simplified
 const FEATURES = [
-  "Automate discharge follow-ups & reminders",
+  "Automate discharge and follow-up calls",
   "Answer every call, 24/7—even at 3am",
   "Recover thousands in missed appointments",
 ];
@@ -175,8 +175,7 @@ export function HeroSection() {
                 className="font-semibold"
               >
                 Every call fufilled. Every pet parent reached.
-              </AnimatedGradientText>{" "}
-              <span className="font-semibold text-slate-700">24/7.</span>
+              </AnimatedGradientText>
             </motion.p>
 
             {/* Feature Bullets - Clean, minimal */}

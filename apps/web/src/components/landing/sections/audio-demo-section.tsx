@@ -36,19 +36,6 @@ const demoCards: DemoCardData[] = [
       "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=100&h=100&fit=crop&crop=face",
     callType: "outbound",
   },
-  // Real call: Lucy - Eye cleaning follow-up (38s)
-  {
-    id: "lucy-eye-followup",
-    title: "Eye Cleaning Follow-up",
-    description: "Quick check after eye crust removal",
-    duration: 38,
-    audioUrl:
-      "https://storage.vapi.ai/019b0608-92cf-7660-90ab-217a1d8e8b28-1765332842717-615cc169-64c9-4123-b0bd-66fcc8479411-mono.wav",
-    petName: "Lucy",
-    petImage:
-      "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=100&h=100&fit=crop&crop=face",
-    callType: "outbound",
-  },
   // Real call: Missy - Nail trim follow-up (25s)
   {
     id: "missy-nail-followup",

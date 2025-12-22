@@ -46,60 +46,9 @@ const testimonials = [
     img: "/images/testimonials/jenn.png",
     profileUrl: "#",
   },
-  {
-    quote:
-      "The voice sounds so natural that clients don't even realize it's AI until we tell them. It's honestly impressive.",
-    author: "Kayla",
-    role: "Veterinary Technician",
-    clinic: "Maple Grove Vet",
-    rating: 5,
-    img: "/images/testimonials/kayla.png",
-    profileUrl: "#",
-  },
-  {
-    quote:
-      "Our team was spending hours on phone calls every day. Since implementing OdisAI, we've cut that in half and quality of care hasn't suffered—it's improved.",
-    author: "Dr. Marcus Chen",
-    role: "Veterinarian",
-    clinic: "Aurora Pet Hospital",
-    rating: 5,
-    img: "/images/testimonials/dr-deepti-pal.png",
-    profileUrl: "#",
-  },
-  {
-    quote:
-      "Clients love the follow-up calls from OdisAI. It makes them feel like we actually care, which we do—and now we have time to show it.",
-    author: "Sarah Mitchell",
-    role: "Practice Owner",
-    clinic: "Sunset Valley Veterinary",
-    rating: 5,
-    img: "/images/testimonials/dr-tais-perpetuo.png",
-    profileUrl: "#",
-  },
-  {
-    quote:
-      "The system is so reliable. It's handled our call volume without a single hiccup. Best investment we made this year.",
-    author: "Robert",
-    role: "Office Manager",
-    clinic: "Harmony Animal Care",
-    rating: 5,
-    img: "/images/testimonials/jenn.png",
-    profileUrl: "#",
-  },
-  {
-    quote:
-      "Pet owners keep asking us who their call was with. The AI voice is indistinguishable from our human staff. That's the level of sophistication we needed.",
-    author: "Emma",
-    role: "Veterinary Technician",
-    clinic: "Parkside Vets",
-    rating: 5,
-    img: "/images/testimonials/kayla.png",
-    profileUrl: "#",
-  },
 ];
 
-const firstRow = testimonials.slice(0, Math.ceil(testimonials.length / 2));
-const secondRow = testimonials.slice(Math.ceil(testimonials.length / 2));
+// With only 3 testimonials, display all in one row
 
 const ReviewCard = ({
   img,
@@ -238,22 +187,8 @@ export const TestimonialsSection = () => {
             transition={{ ...transition, delay: 0.35 }}
             className="w-full"
           >
-            <Marquee pauseOnHover className="[--duration:40s]">
-              {firstRow.map((review) => (
-                <ReviewCard key={review.author} {...review} />
-              ))}
-            </Marquee>
-          </motion.div>
-
-          <motion.div
-            variants={fadeUpVariant}
-            initial="hidden"
-            animate={isInView ? "visible" : "hidden"}
-            transition={{ ...transition, delay: 0.45 }}
-            className="w-full"
-          >
-            <Marquee reverse pauseOnHover className="[--duration:40s]">
-              {secondRow.map((review) => (
+            <Marquee pauseOnHover className="[--duration:30s]">
+              {testimonials.map((review) => (
                 <ReviewCard key={review.author} {...review} />
               ))}
             </Marquee>

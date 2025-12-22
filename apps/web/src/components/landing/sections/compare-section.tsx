@@ -94,7 +94,7 @@ export const CompareSection = () => {
   };
 
   const liveStats = [
-    { icon: Phone, value: 847, label: "Calls handled", suffix: "" },
+    { icon: Phone, value: 947, label: "Calls handled", suffix: "" },
     { icon: Calendar, value: 126, label: "Appointments", suffix: "" },
     { icon: CheckCircle2, value: 94, label: "Answer rate", suffix: "%" },
     {

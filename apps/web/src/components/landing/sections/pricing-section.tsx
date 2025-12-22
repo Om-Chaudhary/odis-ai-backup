@@ -146,28 +146,6 @@ export function PricingSection() {
             </div>
           </NeonGradientCard>
         </motion.div>
-
-        {/* Trust signals */}
-        <motion.div
-          variants={fadeUpVariant}
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-          transition={{ ...transition, delay: 0.55 }}
-          className="mt-12 text-center lg:mt-16"
-        >
-          <p className="mb-6 text-sm font-medium text-slate-600">
-            Trusted by veterinary teams nationwide
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-8">
-            {/* Integration logos placeholder */}
-            <div className="text-xs font-medium text-slate-500">IDEXX</div>
-            <div className="text-xs font-medium text-slate-500">ezyVet</div>
-            <div className="text-xs font-medium text-slate-500">
-              Cornerstone
-            </div>
-            <div className="text-xs font-medium text-slate-500">Avimark</div>
-          </div>
-        </motion.div>
       </div>
     </section>
   );
