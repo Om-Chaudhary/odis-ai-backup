@@ -26,6 +26,7 @@ import {
   type DateRangePreset,
 } from "@odis-ai/utils/date-ranges";
 import { CasesNeedingAttentionCard } from "../cases/cases-needing-attention-card";
+import { OutboundNeedsAttentionCard } from "../outbound/outbound-needs-attention-card";
 import { cn } from "@odis-ai/utils";
 
 function StatCard({
@@ -249,6 +250,11 @@ export function OverviewTab({
             icon={Phone}
           />
         </div>
+      </div>
+
+      {/* Outbound Calls Needing Attention */}
+      <div className="animate-card-in-delay-1">
+        <OutboundNeedsAttentionCard />
       </div>
 
       {/* Weekly Activity Chart */}

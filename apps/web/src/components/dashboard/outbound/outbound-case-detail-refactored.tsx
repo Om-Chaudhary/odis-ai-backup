@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { Button } from "@odis-ai/ui/button";
 import { Separator } from "@odis-ai/ui/separator";
-import { Loader2, RotateCcw, Wand2, Maximize2 } from "lucide-react";
+import { Loader2, RotateCcw, Wand2, ExternalLink } from "lucide-react";
 import { api } from "~/trpc/client";
 import type {
   PreviewTab,
@@ -24,11 +25,7 @@ import {
   CommunicationSummarySection,
 } from "./detail";
 import { PatientOwnerCard } from "./detail/patient-owner-card";
-import {
-  WorkflowCanvas,
-  WorkflowModal,
-  type CaseDataForWorkflow,
-} from "./detail/workflow";
+import { WorkflowCanvas, type CaseDataForWorkflow } from "./detail/workflow";
 
 // Scheduled call data with structured output support
 interface ScheduledCallData {
@@ -245,19 +242,16 @@ export function OutboundCaseDetail({
                 <span className="text-xs font-medium text-slate-600">
                   Workflow Timeline
                 </span>
-                <WorkflowModal
-                  caseData={workflowCaseData}
-                  trigger={
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 gap-1.5 px-2 text-slate-500 hover:text-teal-700"
-                    >
-                      <Maximize2 className="h-3.5 w-3.5" />
-                      <span className="text-xs">Expand</span>
-                    </Button>
-                  }
-                />
+                <Link href={`/dashboard/outbound/workflow/${caseData.caseId}`}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1.5 px-2 text-slate-500 hover:text-teal-700"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    <span className="text-xs">Open</span>
+                  </Button>
+                </Link>
               </div>
               <WorkflowCanvas
                 caseData={workflowCaseData}
@@ -292,19 +286,16 @@ export function OutboundCaseDetail({
                 <span className="text-xs font-medium text-slate-600">
                   Workflow Preview
                 </span>
-                <WorkflowModal
-                  caseData={workflowCaseData}
-                  trigger={
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 gap-1.5 px-2 text-slate-500 hover:text-teal-700"
-                    >
-                      <Maximize2 className="h-3.5 w-3.5" />
-                      <span className="text-xs">Expand</span>
-                    </Button>
-                  }
-                />
+                <Link href={`/dashboard/outbound/workflow/${caseData.caseId}`}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1.5 px-2 text-slate-500 hover:text-teal-700"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    <span className="text-xs">Open</span>
+                  </Button>
+                </Link>
               </div>
               <WorkflowCanvas
                 caseData={workflowCaseData}

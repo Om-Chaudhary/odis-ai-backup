@@ -1,0 +1,204 @@
+/**
+ * Get Discharge Case by ID
+ *
+ * Returns a single discharge case by ID with all related data.
+ */
+
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+
+const getCaseByIdInput = z.object({
+  id: z.string().uuid(),
+});
+
+interface PatientData {
+  id: string;
+  name: string;
+  species: string | null;
+  breed: string | null;
+  owner_name: string | null;
+  owner_phone: string | null;
+  owner_email: string | null;
+}
+
+interface ScheduledCallData {
+  id: string;
+  status: string;
+  scheduled_for: string | null;
+  duration_seconds: number | null;
+  ended_reason: string | null;
+  transcript: string | null;
+  summary: string | null;
+  recording_url: string | null;
+  attention_types: string[] | null;
+  attention_severity: string | null;
+  attention_summary: string | null;
+}
+
+interface ScheduledEmailData {
+  id: string;
+  status: string;
+  scheduled_for: string;
+  sent_at: string | null;
+}
+
+interface CaseRow {
+  id: string;
+  type: string | null;
+  status: string | null;
+  created_at: string;
+  scheduled_at: string | null;
+  patients: PatientData[];
+  scheduled_discharge_calls: ScheduledCallData[];
+  scheduled_discharge_emails: ScheduledEmailData[];
+}
+
+export const getCaseByIdRouter = createTRPCRouter({
+  getCaseById: protectedProcedure
+    .input(getCaseByIdInput)
+    .query(async ({ ctx, input }) => {
+      const { supabase } = ctx;
+
+      const { data, error } = await supabase
+        .from("cases")
+        .select(
+          `
+          id,
+          type,
+          status,
+          created_at,
+          scheduled_at,
+          patients!inner (
+            id,
+            name,
+            species,
+            breed,
+            owner_name,
+            owner_phone,
+            owner_email
+          ),
+          scheduled_discharge_calls (
+            id,
+            status,
+            scheduled_for,
+            duration_seconds,
+            ended_reason,
+            transcript,
+            summary,
+            recording_url,
+            attention_types,
+            attention_severity,
+            attention_summary
+          ),
+          scheduled_discharge_emails (
+            id,
+            status,
+            scheduled_for,
+            sent_at
+          )
+        `,
+        )
+        .eq("id", input.id)
+        .single();
+
+      if (error || !data) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Case not found",
+        });
+      }
+
+      const caseData = data as unknown as CaseRow;
+      const patient = caseData.patients[0];
+      const call = caseData.scheduled_discharge_calls?.[0] ?? null;
+      const email = caseData.scheduled_discharge_emails?.[0] ?? null;
+
+      // Derive statuses
+      const callStatus = call?.status ?? null;
+      const emailStatus = email?.status ?? null;
+
+      function deriveDeliveryStatus(
+        status: string | null,
+        hasContact: boolean,
+      ): "sent" | "pending" | "failed" | "not_applicable" | null {
+        if (!hasContact) return "not_applicable";
+        if (!status) return null;
+        switch (status) {
+          case "completed":
+          case "sent":
+            return "sent";
+          case "queued":
+          case "ringing":
+          case "in_progress":
+            return "pending";
+          case "failed":
+            return "failed";
+          default:
+            return null;
+        }
+      }
+
+      const phoneSent = deriveDeliveryStatus(
+        callStatus,
+        !!patient?.owner_phone,
+      );
+      const emailSent = deriveDeliveryStatus(
+        emailStatus,
+        !!patient?.owner_email,
+      );
+
+      // Derive composite status
+      let status = "pending_review";
+      if (callStatus === "failed" || emailStatus === "failed") {
+        status = "failed";
+      } else if (
+        (callStatus === "completed" || callStatus === null) &&
+        (emailStatus === "sent" || emailStatus === null) &&
+        (callStatus === "completed" || emailStatus === "sent")
+      ) {
+        status = "completed";
+      } else if (callStatus === "ringing" || callStatus === "in_progress") {
+        status = "in_progress";
+      } else if (callStatus === "queued" || emailStatus === "queued") {
+        status = "scheduled";
+      }
+
+      return {
+        caseId: caseData.id,
+        status,
+        caseType: caseData.type,
+        timestamp: caseData.created_at,
+        phoneSent,
+        emailSent,
+        scheduledTime: call?.scheduled_for ?? email?.scheduled_for ?? null,
+        patient: {
+          name: patient?.name ?? "Unknown",
+          ownerName: patient?.owner_name ?? "Unknown",
+          phone: patient?.owner_phone ?? null,
+          email: patient?.owner_email ?? null,
+        },
+        scheduledCall: call
+          ? {
+              id: call.id,
+              durationSeconds: call.duration_seconds,
+              transcript: call.transcript,
+              recordingUrl: call.recording_url,
+              summary: call.summary,
+              endedReason: call.ended_reason,
+            }
+          : null,
+        needsAttention: !!(
+          call?.attention_types && call.attention_types.length > 0
+        ),
+        attentionTypes: call?.attention_types ?? [],
+        attentionSeverity: call?.attention_severity ?? null,
+        attentionSummary: call?.attention_summary ?? null,
+        sentimentScore: null,
+        appointment: {
+          type: caseData.type ?? "Checkup",
+          endedAt: caseData.created_at,
+        },
+      };
+    }),
+});

@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
-import { Button } from "@odis-ai/ui/button";
 import { Phone } from "lucide-react";
 import { CallRecordingPlayer } from "../../../shared";
 
@@ -41,31 +40,22 @@ export function CallTabContent({
     );
   }
 
-  // If phone can be sent, show schedule button
+  // If phone can be sent, show call script preview (not schedule button - that's handled by delivery toggles)
   if (phoneCanBeSent) {
     return (
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-sm font-medium">
             <Phone className="h-4 w-4 text-slate-500" />
-            Call Not Scheduled
+            Call Script
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm text-slate-600">
-            This call has not been scheduled yet.
-          </p>
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={() => {
-              // TODO: Implement schedule call functionality
-              console.log("Schedule call");
-            }}
-          >
-            <Phone className="mr-2 h-4 w-4" />
-            Schedule Call
-          </Button>
+        <CardContent>
+          <div className="bg-muted/50 max-h-80 overflow-auto rounded-md p-3">
+            <p className="text-sm whitespace-pre-wrap">
+              {callScript || "No call script available."}
+            </p>
+          </div>
         </CardContent>
       </Card>
     );
