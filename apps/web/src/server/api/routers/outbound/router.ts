@@ -11,6 +11,7 @@ import { approveRouter } from "./procedures/approve";
 import { skipRouter } from "./procedures/skip";
 import { retryRouter } from "./procedures/retry";
 import { findByConsultationRouter } from "./procedures/find-by-consultation";
+import { findPreviousAttentionDateRouter } from "./procedures/find-previous-attention-date";
 import { scheduleRemainingRouter } from "./procedures/schedule-remaining";
 import { cancelScheduledRouter } from "./procedures/cancel-scheduled";
 import { batchScheduleRouter } from "./procedures/batch-schedule";
@@ -20,6 +21,8 @@ export const outboundRouter = createTRPCRouter({
   listDischargeCases: listCasesRouter.listDischargeCases,
   getDischargeCaseStats: getStatsRouter.getDischargeCaseStats,
   findByConsultationId: findByConsultationRouter.findByConsultationId,
+  findPreviousAttentionDate:
+    findPreviousAttentionDateRouter.findPreviousAttentionDate,
 
   // Mutations
   approveAndSchedule: approveRouter.approveAndSchedule,
