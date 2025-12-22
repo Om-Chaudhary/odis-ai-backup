@@ -1,8 +1,3 @@
-import {
-  SidebarProvider,
-  SidebarInset,
-  SidebarTrigger,
-} from "@odis-ai/ui/sidebar";
 import { AppSidebar } from "~/components/dashboard/shell/app-sidebar";
 import { Separator } from "@odis-ai/ui/separator";
 import { DashboardBreadcrumb } from "~/components/dashboard/shell/dashboard-breadcrumb";
@@ -79,7 +74,7 @@ export default async function DashboardLayout({
   ]);
 
   return (
-    <SidebarProvider className="bg-gradient-to-b from-emerald-50 via-emerald-100/40 to-emerald-50/30">
+    <div className="flex h-screen max-h-screen w-full overflow-hidden bg-gradient-to-b from-emerald-50 via-emerald-100/40 to-emerald-50/30">
       {/* Background Effects */}
       <div className="pointer-events-none fixed inset-0 z-0">
         {/* Animated gradient overlays */}
@@ -122,23 +117,27 @@ export default async function DashboardLayout({
         }}
         className="pointer-events-none fixed inset-0 z-0 opacity-10"
       />
+
+      {/* Sidebar - Icon Rail + Secondary Panel */}
       <AppSidebar
         user={user}
         profile={profile}
         clinicSlug={clinic?.slug ?? null}
-        className="z-20"
       />
-      <SidebarInset className="relative z-10 bg-transparent">
-        <header className="transition-smooth flex h-16 shrink-0 items-center gap-2 ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="animate-fade-in-down flex items-center gap-2 px-4">
-            <SidebarTrigger className="transition-smooth -ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
+
+      {/* Main Content Area */}
+      <main className="relative z-10 flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-transparent">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-slate-200/40 bg-white/40 backdrop-blur-sm">
+          <div className="animate-fade-in-down flex items-center gap-2 px-6">
             <DashboardBreadcrumb />
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
-      </SidebarInset>
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden p-4">
+          {children}
+        </div>
+      </main>
+
       <Toaster richColors />
-    </SidebarProvider>
+    </div>
   );
 }
