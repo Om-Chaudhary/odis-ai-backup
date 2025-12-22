@@ -50,9 +50,10 @@ interface TableCaseBase {
 }
 
 /**
- * Get a friendly failure reason from ended_reason
+ * Get a friendly status message from ended_reason
+ * Maps VAPI/Twilio call end reasons to human-readable statuses
  */
-function getFailureReason(
+function getCallStatus(
   endedReason: string | null | undefined,
   emailFailed: boolean,
 ): string {
@@ -66,30 +67,71 @@ function getFailureReason(
 
   const reason = endedReason.toLowerCase();
 
-  if (reason.includes("silence-timed-out")) {
-    return "No response";
-  }
+  // Customer hung up during call
   if (
-    reason.includes("customer-did-not-answer") ||
-    reason.includes("dial-no-answer")
+    reason.includes("customer-ended-call") ||
+    reason.includes("hangup") ||
+    reason.includes("hang-up")
   ) {
-    return "No pickup";
+    return "Hangup";
   }
-  if (reason.includes("dial-busy")) {
-    return "Line busy";
-  }
-  if (reason.includes("voicemail")) {
+
+  // Voicemail detection
+  if (
+    reason.includes("voicemail") ||
+    reason.includes("machine-detected") ||
+    reason.includes("machine-ended") ||
+    reason.includes("answering-machine")
+  ) {
     return "Voicemail";
   }
+
+  // No answer / didn't pick up
+  if (
+    reason.includes("customer-did-not-answer") ||
+    reason.includes("dial-no-answer") ||
+    reason.includes("no-answer")
+  ) {
+    return "No answer";
+  }
+
+  // Line busy
+  if (reason.includes("dial-busy") || reason.includes("busy")) {
+    return "Busy";
+  }
+
+  // Call rejected/declined
+  if (reason.includes("rejected") || reason.includes("declined")) {
+    return "Declined";
+  }
+
+  // Silence/no response during call
+  if (reason.includes("silence-timed-out") || reason.includes("silence")) {
+    return "No response";
+  }
+
+  // Connection/technical errors
   if (
     reason.includes("sip") ||
     reason.includes("failed-to-connect") ||
-    reason.includes("twilio")
+    reason.includes("twilio") ||
+    reason.includes("network")
   ) {
     return "Connection error";
   }
+
+  // Generic errors
   if (reason.includes("error")) {
     return "Call error";
+  }
+
+  // Invalid number
+  if (
+    reason.includes("invalid") ||
+    reason.includes("unallocated") ||
+    reason.includes("not-in-service")
+  ) {
+    return "Invalid number";
   }
 
   return "Failed";
@@ -111,6 +153,8 @@ interface OutboundCaseTableProps<T extends TableCaseBase> {
   selectedForBulk?: Set<string>;
   onToggleBulkSelect?: (caseId: string) => void;
   onSelectAll?: () => void;
+  // Compact mode (when detail sidebar is open)
+  isCompact?: boolean;
 }
 
 /**
@@ -141,6 +185,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
   selectedForBulk = new Set(),
   onToggleBulkSelect,
   onSelectAll,
+  isCompact = false,
 }: OutboundCaseTableProps<T>) {
   const tableRef = useRef<HTMLDivElement>(null);
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
@@ -202,32 +247,57 @@ export function OutboundCaseTable<T extends TableCaseBase>({
       <table className="w-full min-w-0 table-fixed">
         <thead className="sticky top-0 z-10 border-b border-teal-100/50 bg-gradient-to-r from-teal-50/40 to-white/60 backdrop-blur-sm">
           <tr className="text-xs text-slate-500">
-            {onToggleBulkSelect && (
-              <th className="h-12 w-[5%] pl-4 text-center font-medium">
+            {onToggleBulkSelect && !isCompact && (
+              <th className="h-10 w-[5%] pl-3 text-center font-medium">
                 <Checkbox
                   checked={
                     cases.length > 0 && selectedForBulk.size === cases.length
                   }
                   onCheckedChange={onSelectAll}
                   aria-label="Select all cases"
+                  className="h-4 w-4"
                 />
               </th>
             )}
-            <th className="h-12 w-[6%] pl-4 text-center font-medium">
-              <Star className="mx-auto h-4 w-4" />
-            </th>
+            {!isCompact && (
+              <th className="h-10 w-[5%] pl-3 text-center font-medium">
+                <Star className="mx-auto h-4 w-4" />
+              </th>
+            )}
             <th
               className={cn(
-                "h-12 text-left font-medium",
-                onToggleBulkSelect ? "w-[30%]" : "w-[35%]",
+                "h-10 text-left font-medium",
+                isCompact
+                  ? "w-[60%] pl-4"
+                  : onToggleBulkSelect
+                    ? "w-[32%]"
+                    : "w-[36%]",
               )}
             >
               Patient
             </th>
-            <th className="h-12 w-[12%] text-center font-medium">Phone</th>
-            <th className="h-12 w-[12%] text-center font-medium">Email</th>
-            <th className="h-12 w-[20%] text-center font-medium">Actions</th>
-            <th className="h-12 w-[15%] pr-4 text-right font-medium">Time</th>
+            <th
+              className={cn(
+                "h-10 text-center font-medium",
+                isCompact ? "w-[20%]" : "w-[10%]",
+              )}
+            >
+              Phone
+            </th>
+            <th
+              className={cn(
+                "h-10 text-center font-medium",
+                isCompact ? "w-[20%]" : "w-[10%]",
+              )}
+            >
+              Email
+            </th>
+            {!isCompact && (
+              <th className="h-10 w-[18%] text-center font-medium">Status</th>
+            )}
+            {!isCompact && (
+              <th className="h-10 w-[14%] pr-3 text-right font-medium">Time</th>
+            )}
           </tr>
         </thead>
         <tbody className="divide-y divide-teal-50">
@@ -272,57 +342,60 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                   }
                 }}
               >
-                {/* Checkbox */}
-                {onToggleBulkSelect && (
-                  <td className="py-4 pl-4 text-center">
+                {/* Checkbox - hidden when sidebar is open */}
+                {onToggleBulkSelect && !isCompact && (
+                  <td className="py-3 pl-3 text-center">
                     <Checkbox
                       checked={selectedForBulk.has(caseItem.id)}
                       onCheckedChange={() => onToggleBulkSelect(caseItem.id)}
                       onClick={(e) => e.stopPropagation()}
                       aria-label={`Select ${caseItem.patient.name}`}
+                      className="h-4 w-4"
                     />
                   </td>
                 )}
 
                 {/* Star */}
-                <td className="py-4 pl-4 text-center">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onToggleStar?.(caseItem.id, !caseItem.isStarred);
-                    }}
-                    disabled={togglingStarCaseIds?.has(caseItem.id)}
-                    className={cn(
-                      "rounded p-1.5 transition-all hover:bg-slate-100",
-                      togglingStarCaseIds?.has(caseItem.id) && "opacity-50",
-                    )}
-                    title={
-                      caseItem.isStarred ? "Remove star" : "Star this case"
-                    }
-                  >
-                    <Star
+                {!isCompact && (
+                  <td className="py-3 pl-3 text-center">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleStar?.(caseItem.id, !caseItem.isStarred);
+                      }}
+                      disabled={togglingStarCaseIds?.has(caseItem.id)}
                       className={cn(
-                        "h-5 w-5 transition-colors",
-                        caseItem.isStarred
-                          ? "fill-amber-400 text-amber-400"
-                          : "text-slate-300 hover:text-amber-400",
+                        "rounded p-1 transition-all hover:bg-slate-100",
+                        togglingStarCaseIds?.has(caseItem.id) && "opacity-50",
                       )}
-                    />
-                  </button>
-                </td>
+                      title={
+                        caseItem.isStarred ? "Remove star" : "Star this case"
+                      }
+                    >
+                      <Star
+                        className={cn(
+                          "h-4 w-4 transition-colors",
+                          caseItem.isStarred
+                            ? "fill-amber-400 text-amber-400"
+                            : "text-slate-300 hover:text-amber-400",
+                        )}
+                      />
+                    </button>
+                  </td>
+                )}
 
                 {/* Patient */}
-                <td className="py-4">
-                  <div className="flex flex-col gap-1 overflow-hidden">
-                    <span className="truncate text-base font-semibold text-slate-800">
+                <td className={cn("py-3", isCompact && "pl-4")}>
+                  <div className="flex flex-col gap-0.5 overflow-hidden">
+                    <span className="truncate text-sm font-semibold text-slate-800">
                       {caseItem.patient.name}
                     </span>
-                    <span className="truncate text-sm text-slate-500">
+                    <span className="truncate text-xs text-slate-500">
                       {caseItem.owner.name ?? "Unknown Owner"}
                     </span>
                     {/* Attention indicators */}
                     {caseItem.needsAttention && (
-                      <div className="mt-0.5 flex items-center gap-1.5">
+                      <div className="mt-0.5 flex items-center gap-1">
                         {caseItem.attentionSeverity === "critical" && (
                           <CriticalPulsingDot />
                         )}
@@ -337,33 +410,39 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                 </td>
 
                 {/* Phone Status */}
-                <td className="py-4 text-center">
+                <td className="py-3 text-center">
                   <DeliveryIcon status={caseItem.phoneSent} type="phone" />
                 </td>
 
                 {/* Email Status */}
-                <td className="py-4 text-center">
+                <td className="py-3 text-center">
                   <DeliveryIcon status={caseItem.emailSent} type="email" />
                 </td>
 
-                {/* Actions */}
-                <td className="py-4 text-center">
-                  <ActionCell
-                    caseItem={caseItem}
-                    onQuickSchedule={onQuickSchedule}
-                    isScheduling={schedulingCaseIds?.has(caseItem.id) ?? false}
-                  />
-                </td>
+                {/* Status */}
+                {!isCompact && (
+                  <td className="py-3 text-center">
+                    <StatusCell
+                      caseItem={caseItem}
+                      onQuickSchedule={onQuickSchedule}
+                      isScheduling={
+                        schedulingCaseIds?.has(caseItem.id) ?? false
+                      }
+                    />
+                  </td>
+                )}
 
                 {/* Time / Schedule */}
-                <td className="py-4 pr-4 text-right text-sm">
-                  <ScheduleTimeDisplay
-                    status={caseItem.status}
-                    timestamp={caseItem.timestamp}
-                    scheduledEmailFor={caseItem.scheduledEmailFor}
-                    scheduledCallFor={caseItem.scheduledCallFor}
-                  />
-                </td>
+                {!isCompact && (
+                  <td className="py-3 pr-3 text-right text-xs">
+                    <ScheduleTimeDisplay
+                      status={caseItem.status}
+                      timestamp={caseItem.timestamp}
+                      scheduledEmailFor={caseItem.scheduledEmailFor}
+                      scheduledCallFor={caseItem.scheduledCallFor}
+                    />
+                  </td>
+                )}
               </tr>
             );
           })}
@@ -374,10 +453,10 @@ export function OutboundCaseTable<T extends TableCaseBase>({
 }
 
 /**
- * Action cell for quick scheduling
+ * Status cell showing case status with descriptive messages
  * Shows "Schedule" button for pending_review cases, status badge for others
  */
-function ActionCell<T extends TableCaseBase>({
+function StatusCell<T extends TableCaseBase>({
   caseItem,
   onQuickSchedule,
   isScheduling,
@@ -405,7 +484,7 @@ function ActionCell<T extends TableCaseBase>({
       <Button
         size="sm"
         variant="outline"
-        className="h-7 gap-1.5 border-teal-200 bg-teal-50 px-3 text-xs font-medium text-teal-700 hover:bg-teal-100 hover:text-teal-800"
+        className="h-7 gap-1.5 border-teal-200 bg-teal-50 px-2.5 text-xs font-medium text-teal-700 hover:bg-teal-100 hover:text-teal-800"
         onClick={(e) => {
           e.stopPropagation();
           onQuickSchedule(caseItem);
@@ -429,19 +508,19 @@ function ActionCell<T extends TableCaseBase>({
   if (caseItem.status === "completed") {
     return (
       <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
-        Sent
+        Completed
       </span>
     );
   }
 
   if (caseItem.status === "failed") {
-    const failureReason = getFailureReason(
+    const callStatus = getCallStatus(
       caseItem.scheduledCall?.endedReason,
       caseItem.emailSent === "failed",
     );
     return (
       <span className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
-        {failureReason}
+        {callStatus}
       </span>
     );
   }
@@ -455,7 +534,11 @@ function ActionCell<T extends TableCaseBase>({
   }
 
   if (caseItem.status === "pending_review" && !hasContact) {
-    return <span className="text-xs text-slate-400">No contact</span>;
+    return (
+      <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+        No contact
+      </span>
+    );
   }
 
   return null;
@@ -507,24 +590,30 @@ function ScheduleTimeDisplay({
 
       if (isReady) {
         return (
-          <div className="flex items-center gap-1 text-blue-600">
+          <div className="flex items-center justify-end gap-1 text-blue-600">
             <Icon className="h-3 w-3" />
-            <span>Ready</span>
+            <span className="text-xs">Ready</span>
           </div>
         );
       }
 
       return (
-        <div className="flex items-center gap-1 text-purple-600">
+        <div className="flex items-center justify-end gap-1 text-purple-600">
           <Icon className="h-3 w-3" />
-          <span>{formatDistanceToNow(nextTime, { addSuffix: false })}</span>
+          <span className="text-xs">
+            {formatDistanceToNow(nextTime, { addSuffix: false })}
+          </span>
         </div>
       );
     }
   }
 
   // Default: show the timestamp
-  return <span className="text-muted-foreground">{formatTime(timestamp)}</span>;
+  return (
+    <span className="text-muted-foreground text-xs">
+      {formatTime(timestamp)}
+    </span>
+  );
 }
 
 /**
@@ -582,18 +671,18 @@ function DeliveryIcon({
   }
   if (status === "not_applicable") {
     return (
-      <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-200">
+      <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100">
         <MinusCircle
-          className="h-3.5 w-3.5 text-slate-500"
+          className="h-3.5 w-3.5 text-slate-400"
           aria-label={`No ${type}`}
         />
       </div>
     );
   }
   return (
-    <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-200">
+    <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100">
       <Icon
-        className="h-3.5 w-3.5 text-slate-500"
+        className="h-3.5 w-3.5 text-slate-400"
         aria-label={`${type} not scheduled`}
       />
     </div>
@@ -605,44 +694,44 @@ function DeliveryIcon({
  */
 function CaseTableSkeleton() {
   return (
-    <div className="w-full overflow-hidden p-3">
+    <div className="w-full overflow-hidden p-2">
       {/* Header skeleton */}
-      <div className="mb-4 flex gap-3 border-b border-teal-100/50 pb-3">
+      <div className="mb-3 flex gap-2 border-b border-teal-100/50 pb-2.5">
         <div className="h-3 w-[5%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[6%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[30%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[12%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[12%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[20%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[15%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[5%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[32%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[10%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[10%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[18%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[14%] animate-pulse rounded bg-teal-100/50" />
       </div>
       {/* Row skeletons */}
       {Array.from({ length: 10 }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-3 border-b border-teal-50 py-4"
+          className="flex items-center gap-2 border-b border-teal-50 py-3"
         >
           <div className="flex w-[5%] justify-center">
             <div className="h-4 w-4 animate-pulse rounded bg-teal-50" />
           </div>
-          <div className="flex w-[6%] justify-center">
-            <div className="h-5 w-5 animate-pulse rounded bg-teal-50" />
+          <div className="flex w-[5%] justify-center">
+            <div className="h-4 w-4 animate-pulse rounded bg-teal-50" />
           </div>
-          <div className="w-[30%] space-y-1.5">
+          <div className="w-[32%] space-y-1">
             <div className="h-4 w-24 animate-pulse rounded bg-teal-100/40" />
             <div className="h-3 w-32 animate-pulse rounded bg-teal-50" />
           </div>
-          <div className="flex w-[12%] justify-center">
+          <div className="flex w-[10%] justify-center">
             <div className="h-6 w-6 animate-pulse rounded-full bg-teal-50" />
           </div>
-          <div className="flex w-[12%] justify-center">
+          <div className="flex w-[10%] justify-center">
             <div className="h-6 w-6 animate-pulse rounded-full bg-teal-50" />
           </div>
-          <div className="flex w-[20%] justify-center">
-            <div className="h-7 w-20 animate-pulse rounded-md bg-teal-50" />
+          <div className="flex w-[18%] justify-center">
+            <div className="h-7 w-18 animate-pulse rounded-md bg-teal-50" />
           </div>
-          <div className="flex w-[15%] justify-end pr-4">
-            <div className="h-3 w-16 animate-pulse rounded bg-teal-50" />
+          <div className="flex w-[14%] justify-end pr-3">
+            <div className="h-3 w-14 animate-pulse rounded bg-teal-50" />
           </div>
         </div>
       ))}
@@ -655,12 +744,12 @@ function CaseTableSkeleton() {
  */
 function CaseTableEmpty() {
   return (
-    <div className="flex h-full flex-col items-center justify-center py-20 text-center">
-      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-teal-100 to-emerald-100">
-        <CheckCircle2 className="h-8 w-8 text-teal-600" />
+    <div className="flex h-full flex-col items-center justify-center py-16 text-center">
+      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-teal-100 to-emerald-100">
+        <CheckCircle2 className="h-6 w-6 text-teal-600" />
       </div>
-      <p className="text-lg font-semibold text-slate-800">All caught up!</p>
-      <p className="mt-1 text-sm text-slate-500">
+      <p className="text-sm font-semibold text-slate-800">All caught up!</p>
+      <p className="mt-0.5 text-xs text-slate-500">
         No discharge cases require attention right now.
       </p>
     </div>
