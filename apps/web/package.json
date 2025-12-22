@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "type": "module",
   "dependencies": {
-    "@calcom/embed-react": "^1.5.3"
+    "@calcom/embed-react": "^1.5.3",
+    "@xyflow/react": "^12.10.0"
   }
 }

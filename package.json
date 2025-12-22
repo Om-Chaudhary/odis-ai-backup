@@ -88,6 +88,7 @@
     "@upstash/qstash": "^2.7.29",
     "@vapi-ai/server-sdk": "^0.10.2",
     "@vapi-ai/web": "^2.5.0",
+    "@xyflow/react": "^12.10.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
