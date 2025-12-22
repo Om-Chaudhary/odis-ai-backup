@@ -1,28 +1,35 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useQueryState, parseAsInteger } from "nuqs";
+import { format, parseISO, startOfDay } from "date-fns";
 
 import type { ViewMode, InboundItem } from "./types";
 import { PageToolbar, PageContent, PageFooter } from "../layout";
-import { InboundFilterTabs } from "./inbound-filter-tabs";
 import { InboundTable } from "./table";
 import { InboundDetail } from "./inbound-detail-refactored";
 import { InboundSplitLayout } from "./inbound-split-layout";
 import { InboundPagination } from "./inbound-pagination";
+import { DatePickerNav } from "../shared";
 import { useInboundData, useInboundMutations } from "./hooks";
 
 /**
  * Inbound Dashboard Client
  *
  * Features:
- * - View tabs: Calls / Appointments / Messages
+ * - Date navigation with clickable calendar picker
+ * - View mode controlled via URL query param (?view=calls|appointments|messages)
+ * - View mode switching now in sidebar navigation
  * - Full-screen split layout with pagination
  * - Compact table rows
  * - Detail panel for selected items
  */
 export function InboundClient() {
   // URL-synced state
+  const [dateStr, setDateStr] = useQueryState("date", {
+    defaultValue: format(startOfDay(new Date()), "yyyy-MM-dd"),
+  });
+
   const [viewMode, setViewMode] = useQueryState("view", {
     defaultValue: "appointments" as ViewMode,
     parse: (v) =>
@@ -36,6 +43,27 @@ export function InboundClient() {
   const [pageSize, setPageSize] = useQueryState(
     "size",
     parseAsInteger.withDefault(25),
+  );
+
+  // Parse current date
+  const currentDate = useMemo(() => {
+    if (dateStr) {
+      try {
+        return parseISO(dateStr);
+      } catch {
+        return startOfDay(new Date());
+      }
+    }
+    return startOfDay(new Date());
+  }, [dateStr]);
+
+  // Date range for API - send YYYY-MM-DD strings
+  const { startDate, endDate } = useMemo(
+    () => ({
+      startDate: dateStr ?? format(startOfDay(new Date()), "yyyy-MM-dd"),
+      endDate: dateStr ?? format(startOfDay(new Date()), "yyyy-MM-dd"),
+    }),
+    [dateStr],
   );
 
   // Local state
@@ -59,6 +87,8 @@ export function InboundClient() {
     appointmentStatus: "all",
     messageStatus: "all",
     searchTerm,
+    startDate,
+    endDate,
   });
 
   const {
@@ -96,14 +126,17 @@ export function InboundClient() {
     return () => document.removeEventListener("keydown", handleEscape);
   }, [selectedItem]);
 
+  // Suppress unused setViewMode (view mode now controlled by sidebar navigation)
+  void setViewMode;
+
   // Handlers
-  const handleViewModeChange = useCallback(
-    (mode: ViewMode) => {
-      void setViewMode(mode);
-      setSelectedItem(null);
+  const handleDateChange = useCallback(
+    (newDate: Date) => {
+      void setDateStr(format(startOfDay(newDate), "yyyy-MM-dd"));
       void setPage(1);
+      setSelectedItem(null);
     },
-    [setViewMode, setPage],
+    [setDateStr, setPage],
   );
 
   const handlePageChange = useCallback(
@@ -159,25 +192,24 @@ export function InboundClient() {
   // Suppress unused variable warnings
   void searchTerm;
   void setSearchTerm;
+  void stats;
 
   return (
     <div className="flex h-[calc(100vh-64px)] flex-col gap-2">
-      {/* Compact Toolbar - View Tabs */}
-      <PageToolbar className="rounded-lg border border-teal-200/40 bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70 py-2 shadow-md shadow-teal-500/5 backdrop-blur-md">
-        <InboundFilterTabs
-          viewMode={viewMode}
-          onViewModeChange={handleViewModeChange}
-          stats={stats}
-        />
-      </PageToolbar>
-
-      {/* Main Content Area */}
+      {/* Main Content Area - Full height split layout with toolbar inside left panel */}
       <div className="min-h-0 flex-1">
         <InboundSplitLayout
           showRightPanel={selectedItem !== null}
           onCloseRightPanel={handleClosePanel}
           leftPanel={
             <>
+              <PageToolbar className="border-none bg-transparent px-4 pt-2 shadow-none backdrop-blur-none">
+                <DatePickerNav
+                  currentDate={currentDate}
+                  onDateChange={handleDateChange}
+                  isLoading={isLoading}
+                />
+              </PageToolbar>
               <PageContent>
                 <InboundTable
                   items={currentItems}
@@ -193,6 +225,7 @@ export function InboundClient() {
                         ? handleMarkMessageRead
                         : undefined
                   }
+                  isCompact={selectedItem !== null}
                 />
               </PageContent>
               <PageFooter>
