@@ -6,8 +6,3 @@
  */
 
 export { FeatureCard, type FeatureCardProps } from "./feature-card";
-export {
-  IntegrationCard,
-  type IntegrationCardProps,
-  type IntegrationStatus,
-} from "./integration-card";

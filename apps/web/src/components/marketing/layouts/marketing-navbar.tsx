@@ -88,7 +88,6 @@ export interface MarketingNavbarProps {
 const defaultNavigation: NavItem[] = [
   { name: "Features", href: "#features", isAnchor: true },
   { name: "How It Works", href: "#how-it-works", isAnchor: true },
-  { name: "Integrations", href: "/integrations" },
   { name: "Testimonials", href: "#testimonials", isAnchor: true },
 ];
 
