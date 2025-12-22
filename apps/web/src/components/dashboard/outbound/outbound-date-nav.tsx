@@ -1,9 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
-import { format, addDays, subDays, isToday, isYesterday } from "date-fns";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Calendar as CalendarIcon,
+} from "lucide-react";
+import {
+  format,
+  addDays,
+  subDays,
+  isToday,
+  isYesterday,
+  startOfDay,
+} from "date-fns";
 import { cn } from "@odis-ai/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "@odis-ai/ui/popover";
+import { Calendar } from "@odis-ai/ui/calendar";
 
 interface OutboundDateNavProps {
   currentDate: Date;
@@ -14,13 +27,17 @@ interface OutboundDateNavProps {
 /**
  * Date Navigator - Glassmorphism Theme
  *
- * Layout: [<] [>] Mon, Dec 9 · 78 items · Today
+ * Layout: [<] [>] [Calendar Icon] Mon, Dec 9 · Today
+ *
+ * The calendar icon opens a date picker modal for quick date selection.
  */
 export function OutboundDateNav({
   currentDate,
   onDateChange,
   isLoading = false,
 }: OutboundDateNavProps) {
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
   const onDateChangeRef = useRef(onDateChange);
   useEffect(() => {
     onDateChangeRef.current = onDateChange;
@@ -40,11 +57,22 @@ export function OutboundDateNav({
     onDateChange(today);
   }, [onDateChange]);
 
+  const handleCalendarSelect = useCallback(
+    (date: Date | undefined) => {
+      if (date) {
+        onDateChange(startOfDay(date));
+        setIsCalendarOpen(false);
+      }
+    },
+    [onDateChange],
+  );
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
         isLoading ||
+        isCalendarOpen ||
         document.activeElement instanceof HTMLInputElement ||
         document.activeElement instanceof HTMLTextAreaElement
       ) {
@@ -73,7 +101,7 @@ export function OutboundDateNav({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentDate, isLoading]);
+  }, [currentDate, isLoading, isCalendarOpen]);
 
   const dateLabel = useMemo(() => {
     if (isToday(currentDate)) return "Today";
@@ -84,46 +112,69 @@ export function OutboundDateNav({
   const isAtToday = isToday(currentDate);
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-3">
       {/* Arrow buttons grouped */}
-      <div className="flex items-center rounded-lg border border-teal-200/50 bg-white/60">
+      <div className="flex items-center rounded-md border border-teal-200/50 bg-white/60">
         <button
           onClick={goToPreviousDay}
           disabled={isLoading}
           className={cn(
-            "flex h-10 w-10 items-center justify-center rounded-l-lg text-slate-600 transition-all duration-200",
+            "flex h-8 w-8 items-center justify-center rounded-l-md text-slate-600 transition-all duration-200",
             isLoading
               ? "cursor-not-allowed opacity-50"
               : "hover:bg-teal-50 hover:text-teal-700",
           )}
           aria-label="Previous day"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-4 w-4" />
         </button>
-        <div className="h-5 w-px bg-teal-200/50" />
+        <div className="h-4 w-px bg-teal-200/50" />
         <button
           onClick={goToNextDay}
           disabled={isAtToday || isLoading}
           className={cn(
-            "flex h-10 w-10 items-center justify-center rounded-r-lg text-slate-600 transition-all duration-200",
+            "flex h-8 w-8 items-center justify-center rounded-r-md text-slate-600 transition-all duration-200",
             isAtToday || isLoading
               ? "cursor-not-allowed opacity-40"
               : "hover:bg-teal-50 hover:text-teal-700",
           )}
           aria-label="Next day"
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className="h-4 w-4" />
         </button>
       </div>
 
-      {/* Date info */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-3">
-          <Calendar className="h-5 w-5 text-teal-600" />
-          <span className="text-lg font-semibold text-slate-800">
-            {dateLabel}
-          </span>
-        </div>
+      {/* Date info with clickable calendar */}
+      <div className="flex items-center gap-2">
+        <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              disabled={isLoading}
+              className={cn(
+                "flex items-center gap-2 rounded-md px-2 py-1.5 transition-all duration-200",
+                isLoading
+                  ? "cursor-not-allowed opacity-50"
+                  : "hover:bg-teal-50/50",
+              )}
+              aria-label="Open date picker"
+            >
+              <CalendarIcon className="h-4 w-4 text-teal-600" />
+              <span className="text-sm font-semibold text-slate-800">
+                {dateLabel}
+              </span>
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={currentDate}
+              onSelect={handleCalendarSelect}
+              disabled={(date) => date > new Date()}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
         {!isAtToday && (
           <>
             <span className="text-slate-300">·</span>
@@ -131,7 +182,7 @@ export function OutboundDateNav({
               onClick={goToToday}
               disabled={isLoading}
               className={cn(
-                "text-base font-medium text-teal-600 transition-colors",
+                "text-sm font-medium text-teal-600 transition-colors",
                 "hover:text-teal-700 hover:underline",
               )}
             >

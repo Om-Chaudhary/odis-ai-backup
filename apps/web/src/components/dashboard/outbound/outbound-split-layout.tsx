@@ -89,7 +89,7 @@ export function OutboundSplitLayout({
         collapsible
         collapsedSize={0}
         onCollapse={handlePanelCollapse}
-        className={cn("overflow-hidden", !showRightPanel && "hidden")}
+        className={cn("min-w-0 overflow-hidden", !showRightPanel && "hidden")}
       >
         <div
           className={cn(

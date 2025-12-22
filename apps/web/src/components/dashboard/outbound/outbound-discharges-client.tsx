@@ -12,7 +12,6 @@ import type {
   ViewMode,
   DeliveryToggles,
   SoapNote,
-  DischargeSummaryStats,
 } from "./types";
 import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
 import { PageContainer, PageToolbar, PageContent, PageFooter } from "../layout";
@@ -177,6 +176,9 @@ export function OutboundDischargesClient() {
     isDeepLinkLoading,
     isLoading,
     refetch,
+    previousAttentionDate,
+    previousAttentionCount,
+    hasPreviousAttention,
   } = useOutboundData({
     page,
     pageSize,
@@ -184,6 +186,7 @@ export function OutboundDischargesClient() {
     startDate,
     endDate,
     consultationId,
+    viewMode: viewMode,
   });
 
   const {
@@ -319,53 +322,8 @@ export function OutboundDischargesClient() {
     });
   }, [cases]);
 
-  // Map old stats to new format
-  const stats: DischargeSummaryStats = useMemo(() => {
-    const raw = statsData ?? {
-      pendingReview: 0,
-      scheduled: 0,
-      ready: 0,
-      inProgress: 0,
-      completed: 0,
-      failed: 0,
-      total: 0,
-      needsAttention: 0,
-      needsAttentionBreakdown: {
-        critical: 0,
-        urgent: 0,
-        routine: 0,
-      },
-      failureCategories: {
-        silenceTimeout: 0,
-        noAnswer: 0,
-        connectionError: 0,
-        voicemail: 0,
-        emailFailed: 0,
-        other: 0,
-      },
-    };
-    return {
-      readyToSend: raw.pendingReview + raw.ready + raw.inProgress,
-      scheduled: raw.scheduled,
-      sent: raw.completed,
-      failed: raw.failed,
-      failureCategories: raw.failureCategories,
-      total: raw.total,
-      needsReview: needsReviewCases.length,
-      needsAttention:
-        (raw as { needsAttention?: number }).needsAttention ??
-        needsAttentionCases.length,
-      needsAttentionBreakdown: (
-        raw as {
-          needsAttentionBreakdown?: {
-            critical: number;
-            urgent: number;
-            routine: number;
-          };
-        }
-      ).needsAttentionBreakdown,
-    };
-  }, [statsData, needsReviewCases.length, needsAttentionCases.length]);
+  // Suppress unused statsData (counts were displayed in filter tabs, now in sidebar)
+  void statsData;
 
   // Handlers
   const handleDateChange = useCallback(
@@ -376,14 +334,16 @@ export function OutboundDischargesClient() {
     [setDateStr, setPage],
   );
 
-  const handleViewModeChange = useCallback(
-    (mode: ViewMode) => {
-      void setViewMode(mode);
-      setSelectedCase(null);
+  // Handler for navigating to previous attention date
+  const handleGoToPreviousAttention = useCallback(() => {
+    if (previousAttentionDate) {
+      void setDateStr(previousAttentionDate);
       void setPage(1);
-    },
-    [setViewMode, setPage],
-  );
+    }
+  }, [previousAttentionDate, setDateStr, setPage]);
+
+  // Suppress unused setViewMode (view mode now controlled by sidebar navigation)
+  void setViewMode;
 
   const handleSearchChange = useCallback((term: string) => {
     setSearchTerm(term);
@@ -584,26 +544,20 @@ export function OutboundDischargesClient() {
         </div>
       )}
 
-      {/* Simplified Toolbar - Date + View Tabs + Search */}
-      <PageToolbar className="border-none bg-transparent shadow-none backdrop-blur-none">
-        <OutboundFilterTabs
-          counts={stats}
-          searchTerm={searchTerm}
-          onSearchChange={handleSearchChange}
-          currentDate={currentDate}
-          onDateChange={handleDateChange}
-          isLoading={isLoading}
-          viewMode={viewMode}
-          onViewModeChange={handleViewModeChange}
-          scheduleAllDisabled={cases.length === 0 || isLoading}
-        />
-      </PageToolbar>
-
-      {/* Main Content Area */}
+      {/* Main Content Area - Full height split layout with toolbar inside left panel */}
       <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
         {viewMode === "needs_review" ? (
           // Needs Review View
           <PageContainer className="h-full">
+            <PageToolbar className="border-none bg-transparent shadow-none backdrop-blur-none">
+              <OutboundFilterTabs
+                searchTerm={searchTerm}
+                onSearchChange={handleSearchChange}
+                currentDate={currentDate}
+                onDateChange={handleDateChange}
+                isLoading={isLoading}
+              />
+            </PageToolbar>
             <PageContent>
               <OutboundNeedsReviewTable
                 cases={needsReviewCases}
@@ -629,12 +583,25 @@ export function OutboundDischargesClient() {
             onCloseRightPanel={handleClosePanel}
             leftPanel={
               <>
+                <PageToolbar className="border-none bg-transparent px-4 pt-2 shadow-none backdrop-blur-none">
+                  <OutboundFilterTabs
+                    searchTerm={searchTerm}
+                    onSearchChange={handleSearchChange}
+                    currentDate={currentDate}
+                    onDateChange={handleDateChange}
+                    isLoading={isLoading}
+                  />
+                </PageToolbar>
                 <PageContent>
                   <OutboundNeedsAttentionTable
                     cases={needsAttentionCases}
                     selectedCaseId={selectedCase?.id ?? null}
                     onSelectCase={handleSelectCase}
                     isLoading={isLoading}
+                    hasPreviousAttention={hasPreviousAttention}
+                    previousAttentionDate={previousAttentionDate}
+                    previousAttentionCount={previousAttentionCount}
+                    onGoToPreviousAttention={handleGoToPreviousAttention}
                   />
                 </PageContent>
                 <PageFooter>
@@ -669,6 +636,15 @@ export function OutboundDischargesClient() {
             onCloseRightPanel={handleClosePanel}
             leftPanel={
               <>
+                <PageToolbar className="border-none bg-transparent px-4 pt-2 shadow-none backdrop-blur-none">
+                  <OutboundFilterTabs
+                    searchTerm={searchTerm}
+                    onSearchChange={handleSearchChange}
+                    currentDate={currentDate}
+                    onDateChange={handleDateChange}
+                    isLoading={isLoading}
+                  />
+                </PageToolbar>
                 <PageContent>
                   <OutboundCaseTable
                     cases={cases}
@@ -683,6 +659,7 @@ export function OutboundDischargesClient() {
                     selectedForBulk={selectedForBulk}
                     onToggleBulkSelect={handleToggleBulkSelect}
                     onSelectAll={handleSelectAll}
+                    isCompact={selectedCase !== null}
                   />
                 </PageContent>
                 <PageFooter>
