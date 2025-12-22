@@ -56,7 +56,7 @@ export function OutboundFilterTabs({
           onDateChange={onDateChange}
           isLoading={isLoading}
         />
-        <Button
+        {/* <Button
           asChild
           disabled={scheduleAllDisabled}
           size="sm"
@@ -66,7 +66,7 @@ export function OutboundFilterTabs({
             <CalendarClock className="mr-2 h-4 w-4" />
             Schedule All
           </Link>
-        </Button>
+        </Button> */}
       </div>
 
       {/* Center: View Mode Filter Tabs */}
