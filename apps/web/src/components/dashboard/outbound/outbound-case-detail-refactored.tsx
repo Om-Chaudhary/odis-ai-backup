@@ -93,7 +93,12 @@ interface OutboundCaseDetailProps {
   onApprove: () => void;
   onSkip: () => void;
   onRetry?: () => void;
+  onCancelScheduled?: (options: {
+    cancelCall: boolean;
+    cancelEmail: boolean;
+  }) => void;
   isSubmitting: boolean;
+  isCancelling?: boolean;
   testModeEnabled?: boolean;
   onDelete?: () => void;
 }
@@ -115,7 +120,9 @@ export function OutboundCaseDetail({
   onApprove,
   onSkip,
   onRetry,
+  onCancelScheduled,
   isSubmitting,
+  isCancelling = false,
   testModeEnabled = false,
   onDelete,
 }: OutboundCaseDetailProps) {
@@ -317,6 +324,8 @@ export function OutboundCaseDetail({
               <ScheduleInfoCard
                 emailScheduledFor={caseData.scheduledEmailFor}
                 callScheduledFor={caseData.scheduledCallFor}
+                onCancelScheduled={onCancelScheduled}
+                isCancelling={isCancelling}
               />
             )}
 

@@ -11,7 +11,7 @@ interface UseOutboundMutationsOptions {
 }
 
 /**
- * Hook for managing outbound mutations (approve, skip, retry, star)
+ * Hook for managing outbound mutations (approve, skip, retry, star, cancel)
  */
 export function useOutboundMutations(
   options: UseOutboundMutationsOptions = {},
@@ -24,6 +24,10 @@ export function useOutboundMutations(
   );
   // Track which cases are having their star toggled
   const [togglingStarCaseIds, setTogglingStarCaseIds] = useState<Set<string>>(
+    new Set(),
+  );
+  // Track which cases are being cancelled
+  const [cancellingCaseIds, setCancellingCaseIds] = useState<Set<string>>(
     new Set(),
   );
 
@@ -96,6 +100,47 @@ export function useOutboundMutations(
     },
     onError: (error) => {
       toast.error("Batch scheduling failed", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    },
+  });
+
+  // Cancel mutations
+  const cancelScheduledDelivery =
+    api.outbound.cancelScheduledDelivery.useMutation({
+      onSuccess: (data) => {
+        const cancelled: string[] = [];
+        if (data.callCancelled) cancelled.push("call");
+        if (data.emailCancelled) cancelled.push("email");
+        toast.success(`Cancelled scheduled ${cancelled.join(" and ")}`);
+        onSuccess?.();
+      },
+      onError: (error) => {
+        toast.error("Failed to cancel", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      },
+    });
+
+  const batchCancel = api.outbound.batchCancel.useMutation({
+    onSuccess: (data) => {
+      const { callsCancelled, emailsCancelled, errors } = data;
+      const totalCancelled = callsCancelled + emailsCancelled;
+      if (errors.length === 0) {
+        toast.success(
+          `Cancelled ${totalCancelled} scheduled deliver${totalCancelled > 1 ? "ies" : "y"}`,
+        );
+      } else if (totalCancelled > 0) {
+        toast.warning(
+          `Cancelled ${totalCancelled}, ${errors.length} failed`,
+        );
+      } else {
+        toast.error("Failed to cancel any scheduled deliveries");
+      }
+      onSuccess?.();
+    },
+    onError: (error) => {
+      toast.error("Batch cancellation failed", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     },
@@ -216,12 +261,65 @@ export function useOutboundMutations(
     [batchSchedule],
   );
 
+  // Cancel a single case's scheduled deliveries
+  const handleCancelScheduled = useCallback(
+    async (
+      caseId: string,
+      options: { cancelCall: boolean; cancelEmail: boolean },
+    ) => {
+      setCancellingCaseIds((prev) => new Set(prev).add(caseId));
+      try {
+        await cancelScheduledDelivery.mutateAsync({
+          caseId,
+          cancelCall: options.cancelCall,
+          cancelEmail: options.cancelEmail,
+        });
+      } finally {
+        setCancellingCaseIds((prev) => {
+          const next = new Set(prev);
+          next.delete(caseId);
+          return next;
+        });
+      }
+    },
+    [cancelScheduledDelivery],
+  );
+
+  // Bulk cancel multiple cases' scheduled deliveries
+  const handleBulkCancel = useCallback(
+    async (caseIds: string[]) => {
+      // Add all case IDs to cancelling state
+      setCancellingCaseIds((prev) => {
+        const next = new Set(prev);
+        caseIds.forEach((id) => next.add(id));
+        return next;
+      });
+
+      try {
+        await batchCancel.mutateAsync({
+          caseIds,
+          cancelCalls: true,
+          cancelEmails: true,
+        });
+      } finally {
+        // Remove all case IDs from cancelling state
+        setCancellingCaseIds((prev) => {
+          const next = new Set(prev);
+          caseIds.forEach((id) => next.delete(id));
+          return next;
+        });
+      }
+    },
+    [batchCancel],
+  );
+
   const isSubmitting =
     approveAndSchedule.isPending ||
     skipCase.isPending ||
     retryDelivery.isPending;
 
   const isBulkScheduling = batchSchedule.isPending;
+  const isBulkCancelling = batchCancel.isPending;
 
   return {
     // Mutations
@@ -230,6 +328,8 @@ export function useOutboundMutations(
     retryDelivery,
     toggleStarred,
     batchSchedule,
+    cancelScheduledDelivery,
+    batchCancel,
     // Handlers
     handleApproveAndSend,
     handleSkip,
@@ -237,10 +337,14 @@ export function useOutboundMutations(
     handleQuickSchedule,
     handleToggleStar,
     handleBulkSchedule,
+    handleCancelScheduled,
+    handleBulkCancel,
     // State
     isSubmitting,
     isBulkScheduling,
+    isBulkCancelling,
     schedulingCaseIds,
     togglingStarCaseIds,
+    cancellingCaseIds,
   };
 }

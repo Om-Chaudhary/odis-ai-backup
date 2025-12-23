@@ -15,6 +15,7 @@ import { findPreviousAttentionDateRouter } from "./procedures/find-previous-atte
 import { scheduleRemainingRouter } from "./procedures/schedule-remaining";
 import { cancelScheduledRouter } from "./procedures/cancel-scheduled";
 import { batchScheduleRouter } from "./procedures/batch-schedule";
+import { batchCancelRouter } from "./procedures/batch-cancel";
 import { getCaseByIdRouter } from "./procedures/get-case-by-id";
 
 export const outboundRouter = createTRPCRouter({
@@ -33,4 +34,5 @@ export const outboundRouter = createTRPCRouter({
   scheduleRemainingOutreach: scheduleRemainingRouter.scheduleRemainingOutreach,
   cancelScheduledDelivery: cancelScheduledRouter.cancelScheduledDelivery,
   batchSchedule: batchScheduleRouter.batchSchedule,
+  batchCancel: batchCancelRouter.batchCancel,
 });
