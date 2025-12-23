@@ -200,7 +200,7 @@ export async function POST(request: NextRequest) {
               success: false,
               error: "Validation failed",
               details: validation.error.format(),
-            } satisfies Partial<IdexxIngestResponse>,
+            },
             { status: 400 },
           ),
         );
@@ -210,9 +210,12 @@ export async function POST(request: NextRequest) {
 
       // Check for euthanasia before processing
       const isEuthanasia =
-        appointment.consultation_notes?.toLowerCase().includes("euthanasia") ||
-        appointment.consultation_notes?.toLowerCase().includes("euthanize") ||
-        appointment.appointment_type?.toLowerCase().includes("euthanasia");
+        (appointment.consultation_notes?.toLowerCase().includes("euthanasia") ??
+          false) ||
+        (appointment.consultation_notes?.toLowerCase().includes("euthanize") ??
+          false) ||
+        (appointment.appointment_type?.toLowerCase().includes("euthanasia") ??
+          false);
 
       if (isEuthanasia) {
         console.warn("[CASES_INGEST] Euthanasia case detected - skipping", {
@@ -225,8 +228,7 @@ export async function POST(request: NextRequest) {
           NextResponse.json(
             {
               success: false,
-              error:
-                "Euthanasia cases are not eligible for discharge workflow",
+              error: "Euthanasia cases are not eligible for discharge workflow",
             } satisfies Partial<IdexxIngestResponse>,
             { status: 422 },
           ),
