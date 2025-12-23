@@ -132,18 +132,30 @@ export async function cancelScheduledExecution(
       messageId,
     });
 
-    // Note: QStash doesn't have a direct cancel method in the current SDK
-    // We'll handle cancellation by checking the DB status in the webhook
-    // This is a placeholder for future implementation if QStash adds cancel support
+    // Use the QStash SDK's messages.delete method to cancel the scheduled job
+    await qstashClient.messages.delete(messageId);
 
-    console.warn(
-      "[QSTASH_CLIENT] Cancellation not implemented - will be handled via status check in webhook",
-    );
+    console.log("[QSTASH_CLIENT] Successfully cancelled scheduled execution", {
+      messageId,
+    });
     return true;
   } catch (error) {
+    // Handle case where message is already delivered or doesn't exist
+    const errorMessage =
+      error instanceof Error ? error.message : String(error);
+
+    // QStash returns 404 if message not found (already delivered or expired)
+    if (errorMessage.includes("404") || errorMessage.includes("not found")) {
+      console.warn(
+        "[QSTASH_CLIENT] Message not found - may have already been delivered",
+        { messageId },
+      );
+      return true; // Consider this a "success" since the job won't execute
+    }
+
     console.error("[QSTASH_CLIENT] Failed to cancel execution", {
       messageId,
-      error: error instanceof Error ? error.message : String(error),
+      error: errorMessage,
     });
     return false;
   }

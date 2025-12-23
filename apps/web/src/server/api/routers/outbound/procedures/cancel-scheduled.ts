@@ -2,12 +2,20 @@
  * Cancel Scheduled Delivery Procedure
  *
  * Cancels a scheduled email or call for a case.
+ * Also cancels the associated QStash job to prevent execution.
  */
 
 import { TRPCError } from "@trpc/server";
 import { getClinicUserIds } from "@odis-ai/clinics/utils";
+import { cancelScheduledExecution } from "@odis-ai/qstash";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { cancelScheduledDeliveryInput } from "../schemas";
+
+// Type for call metadata that may contain qstash_message_id
+interface ScheduledCallMetadata {
+  qstash_message_id?: string;
+  [key: string]: unknown;
+}
 
 export const cancelScheduledRouter = createTRPCRouter({
   cancelScheduledDelivery: protectedProcedure
@@ -28,9 +36,13 @@ export const cancelScheduledRouter = createTRPCRouter({
       const results: {
         callCancelled: boolean;
         emailCancelled: boolean;
+        qstashCallCancelled: boolean;
+        qstashEmailCancelled: boolean;
       } = {
         callCancelled: false,
         emailCancelled: false,
+        qstashCallCancelled: false,
+        qstashEmailCancelled: false,
       };
 
       // Cancel call if requested
@@ -39,7 +51,7 @@ export const cancelScheduledRouter = createTRPCRouter({
         const { data: scheduledCall, error: callFetchError } =
           await ctx.supabase
             .from("scheduled_discharge_calls")
-            .select("*")
+            .select("id, metadata, qstash_message_id")
             .eq("case_id", input.caseId)
             .in("user_id", clinicUserIds)
             .eq("status", "queued")
@@ -53,6 +65,34 @@ export const cancelScheduledRouter = createTRPCRouter({
             input.caseId,
           );
         } else {
+          // First, cancel the QStash job to prevent execution
+          const metadata = scheduledCall.metadata as ScheduledCallMetadata | null;
+          const qstashMessageId =
+            scheduledCall.qstash_message_id ?? metadata?.qstash_message_id;
+
+          if (qstashMessageId) {
+            const qstashCancelled =
+              await cancelScheduledExecution(qstashMessageId);
+            results.qstashCallCancelled = qstashCancelled;
+
+            if (!qstashCancelled) {
+              console.warn(
+                "[Cancel] Failed to cancel QStash job for call, proceeding with DB update",
+                { callId: scheduledCall.id, qstashMessageId },
+              );
+            } else {
+              console.log("[Cancel] Successfully cancelled QStash job for call", {
+                callId: scheduledCall.id,
+                qstashMessageId,
+              });
+            }
+          } else {
+            console.warn(
+              "[Cancel] No QStash message ID found for call:",
+              scheduledCall.id,
+            );
+          }
+
           // Update call to cancelled status
           const { error: updateError } = await ctx.supabase
             .from("scheduled_discharge_calls")
@@ -65,6 +105,9 @@ export const cancelScheduledRouter = createTRPCRouter({
             console.error("[Cancel] Failed to cancel call:", updateError);
           } else {
             results.callCancelled = true;
+            console.log("[Cancel] Successfully cancelled call in database", {
+              callId: scheduledCall.id,
+            });
           }
         }
       }
@@ -75,7 +118,7 @@ export const cancelScheduledRouter = createTRPCRouter({
         const { data: scheduledEmail, error: emailFetchError } =
           await ctx.supabase
             .from("scheduled_discharge_emails")
-            .select("*")
+            .select("id, qstash_message_id")
             .eq("case_id", input.caseId)
             .in("user_id", clinicUserIds)
             .eq("status", "queued")
@@ -89,6 +132,37 @@ export const cancelScheduledRouter = createTRPCRouter({
             input.caseId,
           );
         } else {
+          // First, cancel the QStash job to prevent execution
+          if (scheduledEmail.qstash_message_id) {
+            const qstashCancelled = await cancelScheduledExecution(
+              scheduledEmail.qstash_message_id,
+            );
+            results.qstashEmailCancelled = qstashCancelled;
+
+            if (!qstashCancelled) {
+              console.warn(
+                "[Cancel] Failed to cancel QStash job for email, proceeding with DB update",
+                {
+                  emailId: scheduledEmail.id,
+                  qstashMessageId: scheduledEmail.qstash_message_id,
+                },
+              );
+            } else {
+              console.log(
+                "[Cancel] Successfully cancelled QStash job for email",
+                {
+                  emailId: scheduledEmail.id,
+                  qstashMessageId: scheduledEmail.qstash_message_id,
+                },
+              );
+            }
+          } else {
+            console.warn(
+              "[Cancel] No QStash message ID found for email:",
+              scheduledEmail.id,
+            );
+          }
+
           // Update email to cancelled status
           const { error: updateError } = await ctx.supabase
             .from("scheduled_discharge_emails")
@@ -101,6 +175,9 @@ export const cancelScheduledRouter = createTRPCRouter({
             console.error("[Cancel] Failed to cancel email:", updateError);
           } else {
             results.emailCancelled = true;
+            console.log("[Cancel] Successfully cancelled email in database", {
+              emailId: scheduledEmail.id,
+            });
           }
         }
       }
