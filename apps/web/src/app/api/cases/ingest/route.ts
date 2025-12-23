@@ -13,8 +13,16 @@ async function getCasesService() {
 }
 import { z } from "zod";
 import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/api/cors";
+import {
+  IdexxIngestRequestSchema,
+  type IdexxIngestResponse,
+} from "@odis-ai/validators";
 
 // --- Schemas ---
+
+/**
+ * Legacy IngestPayload schema (for backward compatibility)
+ */
 const IngestPayloadSchema = z.discriminatedUnion("mode", [
   z.object({
     mode: z.literal("text"),
@@ -94,6 +102,35 @@ async function authenticateRequest(request: NextRequest) {
   return { user, supabase };
 }
 
+/**
+ * Check if the request body is in the new IDEXX appointment format
+ */
+function isIdexxFormat(body: unknown): boolean {
+  return (
+    typeof body === "object" &&
+    body !== null &&
+    "appointment" in body &&
+    typeof (body as Record<string, unknown>).appointment === "object"
+  );
+}
+
+/**
+ * Transform IDEXX appointment data to IngestPayload format
+ */
+function transformIdexxToPayload(
+  appointment: Record<string, unknown>,
+  options?: { autoSchedule?: boolean },
+): IngestPayload {
+  return {
+    mode: "structured",
+    source: "idexx_extension",
+    data: appointment,
+    options: {
+      autoSchedule: options?.autoSchedule ?? false,
+    },
+  };
+}
+
 // --- Route Handler ---
 export async function GET(request: NextRequest) {
   return withCorsHeaders(
@@ -102,11 +139,36 @@ export async function GET(request: NextRequest) {
       message: "Cases ingest endpoint is available",
       methods: ["POST", "OPTIONS"],
       endpoint: "/api/cases/ingest",
+      formats: [
+        {
+          name: "idexx",
+          description: "IDEXX appointment format with generation tracking",
+          example: {
+            appointment: {
+              pet_name: "Max",
+              species: "dog",
+              consultation_notes: "...",
+            },
+            options: { autoSchedule: false },
+          },
+        },
+        {
+          name: "legacy",
+          description: "Legacy structured/text format",
+          example: {
+            mode: "structured",
+            source: "idexx_extension",
+            data: { pet_name: "Max" },
+          },
+        },
+      ],
     }),
   );
 }
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+
   try {
     // 1. Auth
     const { user, supabase } = await authenticateRequest(request);
@@ -122,46 +184,151 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Parse & Validate
+    // 2. Parse body
     const body = await request.json();
-    const validation = IngestPayloadSchema.safeParse(body);
 
-    if (!validation.success) {
+    // 3. Detect format and validate
+    if (isIdexxFormat(body)) {
+      // New IDEXX appointment format
+      const validation = IdexxIngestRequestSchema.safeParse(body);
+
+      if (!validation.success) {
+        return withCorsHeaders(
+          request,
+          NextResponse.json(
+            {
+              success: false,
+              error: "Validation failed",
+              details: validation.error.format(),
+            } satisfies Partial<IdexxIngestResponse>,
+            { status: 400 },
+          ),
+        );
+      }
+
+      const { appointment, options } = validation.data;
+
+      // Check for euthanasia before processing
+      const isEuthanasia =
+        appointment.consultation_notes?.toLowerCase().includes("euthanasia") ||
+        appointment.consultation_notes?.toLowerCase().includes("euthanize") ||
+        appointment.appointment_type?.toLowerCase().includes("euthanasia");
+
+      if (isEuthanasia) {
+        console.warn("[CASES_INGEST] Euthanasia case detected - skipping", {
+          userId: user.id,
+          petName: appointment.pet_name,
+        });
+
+        return withCorsHeaders(
+          request,
+          NextResponse.json(
+            {
+              success: false,
+              error:
+                "Euthanasia cases are not eligible for discharge workflow",
+            } satisfies Partial<IdexxIngestResponse>,
+            { status: 422 },
+          ),
+        );
+      }
+
+      // Transform to IngestPayload
+      const payload = transformIdexxToPayload(
+        appointment as unknown as Record<string, unknown>,
+        options,
+      );
+
+      console.log("[CASES_INGEST] Processing IDEXX appointment", {
+        userId: user.id,
+        petName: appointment.pet_name,
+        hasConsultationNotes: !!appointment.consultation_notes,
+        autoSchedule: options?.autoSchedule ?? false,
+      });
+
+      // Execute with timing
+      const entityStart = Date.now();
+      const CasesService = await getCasesService();
+      const result = await CasesService.ingest(supabase, user.id, payload);
+      const entityEnd = Date.now();
+
+      // Build detailed response
+      const response: IdexxIngestResponse = {
+        success: true,
+        data: {
+          caseId: result.caseId,
+          patientName: result.entities.patient.name,
+          ownerName: result.entities.patient.owner.name,
+          ownerPhone: result.entities.patient.owner.phone,
+          ownerEmail: result.entities.patient.owner.email,
+          generation: {
+            entityExtraction: result.entities ? "completed" : "failed",
+            dischargeSummary: "completed", // CasesService.ingest() auto-generates for IDEXX
+            callIntelligence: "completed", // CasesService.ingest() auto-generates for IDEXX
+          },
+          scheduledCall: result.scheduledCall
+            ? {
+                id: result.scheduledCall.id,
+                scheduledFor: result.scheduledCall.scheduled_for,
+              }
+            : null,
+          timing: {
+            totalMs: Date.now() - startTime,
+            entityExtractionMs: entityEnd - entityStart,
+          },
+        },
+      };
+
+      console.log("[CASES_INGEST] Successfully processed IDEXX appointment", {
+        userId: user.id,
+        caseId: result.caseId,
+        patientName: result.entities.patient.name,
+        totalMs: response.data?.timing.totalMs,
+      });
+
+      return withCorsHeaders(request, NextResponse.json(response));
+    } else {
+      // Legacy format
+      const validation = IngestPayloadSchema.safeParse(body);
+
+      if (!validation.success) {
+        return withCorsHeaders(
+          request,
+          NextResponse.json(
+            {
+              error: "Validation failed",
+              details: validation.error.format(),
+            },
+            { status: 400 },
+          ),
+        );
+      }
+
+      const payload = validation.data as IngestPayload;
+
+      // Execute Service
+      const CasesService = await getCasesService();
+      const result = await CasesService.ingest(supabase, user.id, payload);
+
+      // Response (legacy format)
       return withCorsHeaders(
         request,
-        NextResponse.json(
-          {
-            error: "Validation failed",
-            details: validation.error.format(),
-          },
-          { status: 400 },
-        ),
+        NextResponse.json({
+          success: true,
+          data: result,
+        }),
       );
     }
-
-    const payload = validation.data as IngestPayload;
-
-    // 3. Execute Service
-    const CasesService = await getCasesService();
-    const result = await CasesService.ingest(supabase, user.id, payload);
-
-    // 4. Response
-    return withCorsHeaders(
-      request,
-      NextResponse.json({
-        success: true,
-        data: result,
-      }),
-    );
   } catch (error) {
     console.error("[CASES_INGEST] Error:", error);
     return withCorsHeaders(
       request,
       NextResponse.json(
         {
+          success: false,
           error:
             error instanceof Error ? error.message : "Internal Server Error",
-        },
+        } satisfies Partial<IdexxIngestResponse>,
         { status: 500 },
       ),
     );

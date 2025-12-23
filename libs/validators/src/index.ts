@@ -20,3 +20,6 @@ export * from "./orchestration";
 
 // Schedule sync schemas
 export * from "./lib/schedule";
+
+// IDEXX ingest schemas
+export * from "./lib/idexx-ingest";
