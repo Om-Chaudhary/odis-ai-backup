@@ -16,6 +16,7 @@ import { EmptyDetailState, AttentionSection } from "./detail";
 import { PatientOwnerCard } from "./detail/patient-owner-card";
 import { DeliveryStatusHero } from "./detail/delivery-status-hero";
 import { QuickActionPanel } from "./detail/quick-action-panel";
+import { ScheduleInfoCard } from "./detail/schedule-info-card";
 import { WorkflowCanvas, type CaseDataForWorkflow } from "./detail/workflow";
 import { CallTabContent } from "./detail/communication-tabs/call-tab-content";
 import { EmailTabContent } from "./detail/communication-tabs/email-tab-content";
@@ -112,9 +113,9 @@ export function OutboundCaseDetail({
   onToggleChange,
   onApprove,
   onRetry,
-  onCancelScheduled: _onCancelScheduled,
+  onCancelScheduled,
   isSubmitting,
-  isCancelling: _isCancelling = false,
+  isCancelling = false,
   testModeEnabled = false,
   onDelete,
 }: OutboundCaseDetailProps) {
@@ -257,6 +258,17 @@ export function OutboundCaseDetail({
           ownerPhone={caseData.owner.phone}
           ownerEmail={caseData.owner.email}
         />
+
+        {/* Schedule Info Card - For scheduled cases */}
+        {isScheduled &&
+          (caseData.scheduledEmailFor ?? caseData.scheduledCallFor) && (
+            <ScheduleInfoCard
+              emailScheduledFor={caseData.scheduledEmailFor}
+              callScheduledFor={caseData.scheduledCallFor}
+              onCancelScheduled={onCancelScheduled}
+              isCancelling={isCancelling}
+            />
+          )}
 
         {/* Quick Action Panel - For actionable cases */}
         {showActionPanel && (

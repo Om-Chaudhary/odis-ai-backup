@@ -27,7 +27,7 @@ export { OutboundBulkActionBar } from "./outbound-bulk-action-bar";
 export { OutboundPagination } from "./outbound-pagination";
 
 // Detail panel
-export { OutboundCaseDetail } from "./outbound-case-detail-refactored";
+export { OutboundCaseDetail } from "./outbound-case-detail";
 export * from "./detail";
 
 // Error handling
