@@ -1,9 +1,9 @@
 # Vapi CLI Configuration
-# Generated for odis-ai-web Next.js project
+# Generated for odis-ai Next.js monorepo
 
 # Project settings
 project:
-  name: odis-ai-web
+  name: odis-ai
   framework: next.js
   language: typescript
 
