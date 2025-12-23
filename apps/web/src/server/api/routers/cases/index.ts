@@ -9,7 +9,6 @@ import { createTRPCRouter } from "~/server/api/trpc";
 import { userCasesRouter } from "./user-cases";
 import { patientManagementRouter } from "./patient-management";
 import { batchOperationsRouter } from "./batch-operations";
-import { adminRouter } from "./admin";
 
 export const casesRouter = createTRPCRouter({
   // User cases procedures
@@ -30,15 +29,6 @@ export const casesRouter = createTRPCRouter({
   getBatchStatus: batchOperationsRouter.getBatchStatus,
   cancelBatch: batchOperationsRouter.cancelBatch,
   getRecentBatches: batchOperationsRouter.getRecentBatches,
-
-  // Admin procedures
-  listCases: adminRouter.listCases,
-  getCase: adminRouter.getCase,
-  updateCase: adminRouter.updateCase,
-  deleteCase: adminRouter.deleteCase,
-  bulkCreateCases: adminRouter.bulkCreateCases,
-  getCaseStats: adminRouter.getCaseStats,
-  getTimeSeriesStats: adminRouter.getTimeSeriesStats,
 });
 
 // Re-export schemas for convenience

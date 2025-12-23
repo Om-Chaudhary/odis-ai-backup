@@ -183,7 +183,7 @@ export function CompleteStep({
       <CardFooter className="flex justify-between border-t bg-slate-50/30 p-4">
         <Button
           variant="outline"
-          onClick={() => router.push("/admin/discharges")}
+          onClick={() => router.push("/dashboard/outbound")}
           className="gap-2"
         >
           <ArrowLeft className="h-4 w-4" />

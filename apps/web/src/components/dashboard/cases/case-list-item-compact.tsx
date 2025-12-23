@@ -240,7 +240,7 @@ export function CaseListItemCompact({
           {/* Actions - Right Side - Aligned to top */}
           <div className="flex shrink-0 items-start gap-2 pt-1">
             {/* View Details - Primary Action */}
-            <Link href={`/admin/discharges/${caseData.id}`}>
+            <Link href={`/dashboard/outbound/${caseData.id}`}>
               <Button
                 variant="default"
                 size="sm"

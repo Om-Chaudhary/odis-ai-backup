@@ -38,7 +38,7 @@ export function QuickActionsPanel() {
       </CardHeader>
       <CardContent>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Link href="/admin/discharges" className="block">
+          <Link href="/dashboard/outbound" className="block">
             <Button
               variant="outline"
               className="h-auto w-full flex-col gap-2 py-4 transition-all hover:border-[#31aba3] hover:bg-[#31aba3]/5"
@@ -48,7 +48,7 @@ export function QuickActionsPanel() {
             </Button>
           </Link>
 
-          <Link href="/admin/discharges?action=new" className="block">
+          <Link href="/dashboard/outbound?action=new" className="block">
             <Button
               variant="outline"
               className="h-auto w-full flex-col gap-2 py-4 transition-all hover:border-[#31aba3] hover:bg-[#31aba3]/5"
@@ -58,7 +58,7 @@ export function QuickActionsPanel() {
             </Button>
           </Link>
 
-          <Link href="/admin/discharges?action=call" className="block">
+          <Link href="/dashboard/outbound?action=call" className="block">
             <Button
               variant="outline"
               className="h-auto w-full flex-col gap-2 py-4 transition-all hover:border-[#31aba3] hover:bg-[#31aba3]/5"

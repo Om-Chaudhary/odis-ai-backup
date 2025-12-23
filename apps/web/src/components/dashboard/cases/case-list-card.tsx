@@ -270,7 +270,7 @@ export function CaseListCard({
       </CardContent>
 
       <CardFooter className="border-t border-slate-100 bg-slate-50/30 p-4">
-        <Link href={`/admin/discharges/${caseData.id}`} className="w-full">
+        <Link href={`/dashboard/outbound/${caseData.id}`} className="w-full">
           <Button
             variant="outline"
             size="sm"
