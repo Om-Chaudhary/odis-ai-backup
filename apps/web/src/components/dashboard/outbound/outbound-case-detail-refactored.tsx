@@ -8,11 +8,11 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@odis-ai/ui/collapsible";
-import { ExternalLink, FileText, Phone, Mail, ChevronDown } from "lucide-react";
+import { ExternalLink, Phone, Mail, ChevronDown } from "lucide-react";
 import { api } from "~/trpc/client";
 import type { DeliveryToggles, DischargeCaseStatus, SoapNote } from "./types";
 import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
-import { EmptyDetailState, ClinicalNotesSection } from "./detail";
+import { EmptyDetailState, AttentionSection } from "./detail";
 import { PatientOwnerCard } from "./detail/patient-owner-card";
 import { DeliveryStatusHero } from "./detail/delivery-status-hero";
 import { QuickActionPanel } from "./detail/quick-action-panel";
@@ -119,7 +119,6 @@ export function OutboundCaseDetail({
   onDelete,
 }: OutboundCaseDetailProps) {
   // Collapsible section states
-  const [clinicalNotesOpen, setClinicalNotesOpen] = useState(false);
   const [callScriptOpen, setCallScriptOpen] = useState(false);
   const [emailPreviewOpen, setEmailPreviewOpen] = useState(false);
   const [workflowOpen, setWorkflowOpen] = useState(false);
@@ -209,11 +208,6 @@ export function OutboundCaseDetail({
           .call_script as string) ?? "")
       : caseData.dischargeSummary;
 
-  // Determine which clinical notes to show
-  const hasIdexxNotes = Boolean(caseData.idexxNotes?.trim());
-  const hasSoapNotes = caseData.soapNotes && caseData.soapNotes.length > 0;
-  const hasClinicalNotes = hasIdexxNotes || hasSoapNotes;
-
   // Determine what to show for communication previews
   const hasOwnerPhone = Boolean(caseData.owner.phone);
   const hasOwnerEmail = Boolean(caseData.owner.email);
@@ -285,37 +279,8 @@ export function OutboundCaseDetail({
           />
         )}
 
-        {/* Clinical Notes - Collapsible */}
-        {hasClinicalNotes && (
-          <Collapsible
-            open={clinicalNotesOpen}
-            onOpenChange={setClinicalNotesOpen}
-          >
-            <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white/50 px-4 py-3 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/50 dark:hover:bg-slate-800/50"
-              >
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-slate-500" />
-                  <span className="text-sm font-medium">Clinical Notes</span>
-                </div>
-                <ChevronDown
-                  className={`h-4 w-4 text-slate-500 transition-transform ${
-                    clinicalNotesOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-2">
-              <ClinicalNotesSection
-                idexxNotes={caseData.idexxNotes}
-                soapNotes={caseData.soapNotes}
-                hasIdexxNotes={hasIdexxNotes}
-              />
-            </CollapsibleContent>
-          </Collapsible>
-        )}
+        {/* Needs Attention Section */}
+        {caseData.needsAttention && <AttentionSection caseData={caseData} />}
 
         {/* Call Script Preview - Collapsible */}
         <Collapsible open={callScriptOpen} onOpenChange={setCallScriptOpen}>
