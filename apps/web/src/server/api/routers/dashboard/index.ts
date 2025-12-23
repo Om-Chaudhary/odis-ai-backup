@@ -11,6 +11,7 @@ import { activityRouter } from "./activity";
 import { performanceRouter } from "./performance";
 import { scheduledRouter } from "./scheduled";
 import { listingsRouter } from "./listings";
+import { widgetsRouter } from "./widgets";
 
 export const dashboardRouter = createTRPCRouter({
   // Stats procedures
@@ -35,6 +36,12 @@ export const dashboardRouter = createTRPCRouter({
   getCallHistory: listingsRouter.getCallHistory,
   getEmailHistory: listingsRouter.getEmailHistory,
   toggleStarred: listingsRouter.toggleStarred,
+
+  // Widget procedures (new dashboard widgets)
+  getCriticalActions: widgetsRouter.getCriticalActions,
+  getTodayOutboundSuccess: widgetsRouter.getTodayOutboundSuccess,
+  getFailedCalls: widgetsRouter.getFailedCalls,
+  getVoicemailQueue: widgetsRouter.getVoicemailQueue,
 });
 
 // Re-export types for convenience

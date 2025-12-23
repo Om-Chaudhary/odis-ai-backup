@@ -2,6 +2,7 @@ import { getUser } from "~/server/actions/auth";
 import { redirect } from "next/navigation";
 import { ExtensionAuthHandler } from "~/components/dashboard/shell/extension-auth-handler";
 import { AUTH_PARAMS } from "@odis-ai/constants/auth";
+import { DashboardContent } from "~/components/dashboard/dashboard-content";
 
 interface ClinicDashboardPageProps {
   params: Promise<{ clinicSlug: string }>;
@@ -46,16 +47,7 @@ export default async function ClinicDashboardPage({
 
   return (
     <ExtensionAuthHandler>
-      <div className="flex h-full items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold text-slate-700">
-            Welcome to Odis AI
-          </h2>
-          <p className="mt-2 text-slate-500">
-            Your dashboard content will appear here
-          </p>
-        </div>
-      </div>
+      <DashboardContent />
     </ExtensionAuthHandler>
   );
 }
