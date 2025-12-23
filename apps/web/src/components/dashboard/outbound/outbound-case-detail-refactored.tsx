@@ -92,7 +92,12 @@ interface OutboundCaseDetailProps {
   onToggleChange: (toggles: DeliveryToggles) => void;
   onApprove: () => void;
   onRetry?: () => void;
+  onCancelScheduled?: (options: {
+    cancelCall: boolean;
+    cancelEmail: boolean;
+  }) => void;
   isSubmitting: boolean;
+  isCancelling?: boolean;
   testModeEnabled?: boolean;
   onDelete?: () => void;
 }
@@ -114,7 +119,9 @@ export function OutboundCaseDetail({
   onToggleChange,
   onApprove,
   onRetry,
+  onCancelScheduled,
   isSubmitting,
+  isCancelling = false,
   testModeEnabled = false,
   onDelete,
 }: OutboundCaseDetailProps) {
@@ -369,19 +376,15 @@ export function OutboundCaseDetail({
                   emailPreviewOpen ? "rotate-180" : ""
                 }`}
               />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-2">
-            <div className="rounded-lg border border-slate-200 bg-white/50 p-4 dark:border-slate-700 dark:bg-slate-900/50">
-              <EmailTabContent
-                caseData={{
-                  structuredContent: caseData.structuredContent,
-                  emailContent: caseData.emailContent,
-                  dischargeSummary: caseData.dischargeSummary,
-                }}
-                emailWasSent={emailSent}
-                emailCanBeSent={emailCanBeSent}
-                hasOwnerEmail={hasOwnerEmail}
+            )}
+
+            {/* Schedule Info for Scheduled Cases */}
+            {showScheduleInfo && (
+              <ScheduleInfoCard
+                emailScheduledFor={caseData.scheduledEmailFor}
+                callScheduledFor={caseData.scheduledCallFor}
+                onCancelScheduled={onCancelScheduled}
+                isCancelling={isCancelling}
               />
             </div>
           </CollapsibleContent>

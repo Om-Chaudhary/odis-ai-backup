@@ -195,10 +195,14 @@ export function OutboundDischargesClient() {
     handleQuickSchedule,
     handleToggleStar,
     handleBulkSchedule,
+    handleCancelScheduled: cancelScheduledHandler,
+    handleBulkCancel,
     isSubmitting,
     isBulkScheduling,
+    isBulkCancelling,
     schedulingCaseIds,
     togglingStarCaseIds,
+    cancellingCaseIds,
   } = useOutboundMutations({
     onSuccess: () => {
       setSelectedCase(null);
@@ -220,6 +224,19 @@ export function OutboundDischargesClient() {
       retryEmail: selectedCase.emailSent === "failed",
     });
   }, [selectedCase, retryHandler]);
+
+  const handleCancelScheduled = useCallback(
+    async (options: { cancelCall: boolean; cancelEmail: boolean }) => {
+      if (!selectedCase) return;
+      await cancelScheduledHandler(selectedCase.id, options);
+    },
+    [selectedCase, cancelScheduledHandler],
+  );
+
+  // Check if current case is being cancelled
+  const isCancellingCurrentCase = selectedCase
+    ? cancellingCaseIds.has(selectedCase.id)
+    : false;
 
   // Escape to close panel
   useEffect(() => {
@@ -492,6 +509,23 @@ export function OutboundDischargesClient() {
     await handleBulkSchedule(Array.from(selectedForBulk));
   }, [selectedForBulk, handleBulkSchedule]);
 
+  const handleCancelSelected = useCallback(async () => {
+    if (selectedForBulk.size === 0) {
+      toast.error("No cases selected");
+      return;
+    }
+
+    await handleBulkCancel(Array.from(selectedForBulk));
+  }, [selectedForBulk, handleBulkCancel]);
+
+  // Determine if any selected cases are scheduled (to show cancel button)
+  const hasScheduledCasesSelected = useMemo(() => {
+    const typedCases = cases as TransformedCase[];
+    return typedCases.some(
+      (c) => selectedForBulk.has(c.id) && c.status === "scheduled",
+    );
+  }, [cases, selectedForBulk]);
+
   return (
     <div className="flex h-[calc(100vh-64px)] w-full flex-col gap-2 overflow-hidden">
       {/* Test Mode Banner */}
@@ -608,7 +642,9 @@ export function OutboundDischargesClient() {
                 onToggleChange={setDeliveryToggles}
                 onApprove={handleApproveAndSend}
                 onRetry={handleRetry}
+                onCancelScheduled={handleCancelScheduled}
                 isSubmitting={isSubmitting}
+                isCancelling={isCancellingCurrentCase}
                 testModeEnabled={settingsData?.testModeEnabled ?? false}
                 onDelete={handleClosePanel}
               />
@@ -665,7 +701,9 @@ export function OutboundDischargesClient() {
                 onToggleChange={setDeliveryToggles}
                 onApprove={handleApproveAndSend}
                 onRetry={handleRetry}
+                onCancelScheduled={handleCancelScheduled}
                 isSubmitting={isSubmitting}
+                isCancelling={isCancellingCurrentCase}
                 testModeEnabled={settingsData?.testModeEnabled ?? false}
                 onDelete={handleClosePanel}
               />
@@ -678,8 +716,11 @@ export function OutboundDischargesClient() {
       <OutboundBulkActionBar
         selectedCount={selectedForBulk.size}
         onScheduleSelected={handleScheduleSelected}
+        onCancelSelected={handleCancelSelected}
         onClearSelection={handleClearSelection}
         isProcessing={isBulkScheduling}
+        isCancelling={isBulkCancelling}
+        showCancelAction={hasScheduledCasesSelected}
       />
     </div>
   );
