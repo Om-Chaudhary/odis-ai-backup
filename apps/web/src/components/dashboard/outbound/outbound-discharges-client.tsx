@@ -25,6 +25,10 @@ import { OutboundNeedsAttentionTable } from "./outbound-needs-attention-table";
 import { OutboundBulkActionBar } from "./outbound-bulk-action-bar";
 import { BulkOperationProgress } from "./bulk-operation-progress";
 import {
+  BulkSendWizardModal,
+  type BulkSendOptions,
+} from "./bulk-send-wizard-modal";
+import {
   BulkOperationProvider,
   useBulkOperation,
 } from "./bulk-operation-context";
@@ -177,6 +181,7 @@ function OutboundDischargesClientInner() {
   const [selectedForBulk, setSelectedForBulk] = useState<Set<string>>(
     new Set(),
   );
+  const [showBulkWizard, setShowBulkWizard] = useState(false);
 
   // Track if we've handled the deep link to avoid re-processing
   const deepLinkHandledRef = useRef<string | null>(null);
@@ -519,63 +524,82 @@ function OutboundDischargesClientInner() {
     setSelectedForBulk(new Set());
   }, []);
 
-  const handleScheduleSelected = useCallback(async () => {
+  // Open wizard modal
+  const handleOpenWizard = useCallback(() => {
     if (selectedForBulk.size === 0) {
       toast.error("No cases selected");
       return;
     }
+    setShowBulkWizard(true);
+  }, [selectedForBulk.size]);
 
-    await handleBulkSchedule(Array.from(selectedForBulk));
-  }, [selectedForBulk, handleBulkSchedule]);
-
-  const handleSendInstantly = useCallback(async () => {
-    if (selectedForBulk.size === 0) {
-      toast.error("No cases selected");
-      return;
-    }
-
-    // Get case data with patient names for progress tracking
+  // Get selected cases data for the wizard modal
+  const selectedCasesForWizard = useMemo(() => {
     const typedCases = cases as TransformedCase[];
-    const selectedCases = typedCases
+    return typedCases
       .filter((c) => selectedForBulk.has(c.id))
       .map((c) => ({
         id: c.id,
         patientName: c.patient.name,
+        ownerName: c.owner.name,
+        ownerPhone: c.owner.phone,
+        ownerEmail: c.owner.email,
       }));
+  }, [cases, selectedForBulk]);
 
-    // Clear selection immediately - the background operation will take over
-    setSelectedForBulk(new Set());
+  // Handle wizard confirmation
+  const handleWizardConfirm = useCallback(
+    async (options: BulkSendOptions) => {
+      const typedCases = cases as TransformedCase[];
+      const selectedCases = typedCases
+        .filter((c) => selectedForBulk.has(c.id))
+        .map((c) => ({
+          id: c.id,
+          patientName: c.patient.name,
+        }));
 
-    // Start background processing with progress callbacks
-    await handleBulkScheduleImmediateBackground(selectedCases, {
-      onStart: () => {
-        bulkOperation.startOperation(selectedCases);
-      },
-      onCaseStart: (caseId) => {
-        bulkOperation.updateCaseStatus(caseId, "generating");
-      },
-      onCaseComplete: (caseId, success, error) => {
-        bulkOperation.updateCaseStatus(
-          caseId,
-          success ? "scheduled" : "failed",
-          error,
-        );
-        bulkOperation.incrementProcessed();
-      },
-      onPhaseChange: (phase) => {
-        bulkOperation.setPhase(phase);
-      },
-      onComplete: () => {
-        void refetch();
-      },
-    });
-  }, [
-    selectedForBulk,
-    cases,
-    handleBulkScheduleImmediateBackground,
-    bulkOperation,
-    refetch,
-  ]);
+      // Clear selection immediately - the background operation will take over
+      setSelectedForBulk(new Set());
+
+      if (options.startNow) {
+        // Start immediately with background processing
+        await handleBulkScheduleImmediateBackground(selectedCases, {
+          onStart: () => {
+            bulkOperation.startOperation(selectedCases);
+          },
+          onCaseStart: (caseId) => {
+            bulkOperation.updateCaseStatus(caseId, "generating");
+          },
+          onCaseComplete: (caseId, success, error) => {
+            bulkOperation.updateCaseStatus(
+              caseId,
+              success ? "scheduled" : "failed",
+              error,
+            );
+            bulkOperation.incrementProcessed();
+          },
+          onPhaseChange: (phase) => {
+            bulkOperation.setPhase(phase);
+          },
+          onComplete: () => {
+            void refetch();
+          },
+        });
+      } else {
+        // Schedule for later - use bulk schedule with scheduled time
+        // TODO: Pass scheduledTime to the API when scheduling for later
+        await handleBulkSchedule(Array.from(selectedForBulk));
+      }
+    },
+    [
+      selectedForBulk,
+      cases,
+      handleBulkScheduleImmediateBackground,
+      handleBulkSchedule,
+      bulkOperation,
+      refetch,
+    ],
+  );
 
   const handleCancelSelected = useCallback(async () => {
     if (selectedForBulk.size === 0) {
@@ -783,14 +807,21 @@ function OutboundDischargesClientInner() {
       {/* Bulk Action Bar */}
       <OutboundBulkActionBar
         selectedCount={selectedForBulk.size}
-        onScheduleSelected={handleScheduleSelected}
-        onSendInstantly={handleSendInstantly}
+        onOpenWizard={handleOpenWizard}
         onCancelSelected={handleCancelSelected}
         onClearSelection={handleClearSelection}
-        isProcessing={isBulkScheduling}
         isCancelling={isBulkCancelling}
         showCancelAction={hasScheduledCasesSelected}
         isBackgroundOperationActive={bulkOperation.phase !== "idle"}
+      />
+
+      {/* Bulk Send Wizard Modal */}
+      <BulkSendWizardModal
+        open={showBulkWizard}
+        onOpenChange={setShowBulkWizard}
+        selectedCases={selectedCasesForWizard}
+        testModeEnabled={settingsData?.testModeEnabled ?? false}
+        onConfirm={handleWizardConfirm}
       />
     </div>
   );

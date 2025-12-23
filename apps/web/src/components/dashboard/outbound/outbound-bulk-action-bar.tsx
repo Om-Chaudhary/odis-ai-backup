@@ -12,30 +12,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@odis-ai/ui/alert-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@odis-ai/ui/dropdown-menu";
-import {
-  X,
-  Send,
-  Loader2,
-  Ban,
-  ChevronDown,
-  Calendar,
-  Zap,
-} from "lucide-react";
+import { X, Send, Loader2, Ban } from "lucide-react";
 import { cn } from "@odis-ai/utils";
 
 interface BulkActionBarProps {
   selectedCount: number;
-  onScheduleSelected: () => void;
-  onSendInstantly: () => void;
+  onOpenWizard: () => void;
   onCancelSelected?: () => void;
   onClearSelection: () => void;
-  isProcessing: boolean;
   isCancelling?: boolean;
   /** Whether to show cancel button (only for scheduled cases) */
   showCancelAction?: boolean;
@@ -49,11 +33,9 @@ interface BulkActionBarProps {
  */
 export function OutboundBulkActionBar({
   selectedCount,
-  onScheduleSelected,
-  onSendInstantly,
+  onOpenWizard,
   onCancelSelected,
   onClearSelection,
-  isProcessing,
   isCancelling = false,
   showCancelAction = false,
   isBackgroundOperationActive = false,
@@ -88,7 +70,7 @@ export function OutboundBulkActionBar({
               variant="ghost"
               size="sm"
               onClick={onClearSelection}
-              disabled={isProcessing || isCancelling}
+              disabled={isCancelling}
               className="h-9"
             >
               <X className="mr-2 h-4 w-4" />
@@ -100,7 +82,7 @@ export function OutboundBulkActionBar({
                 variant="outline"
                 size="sm"
                 onClick={() => setShowCancelDialog(true)}
-                disabled={isProcessing || isCancelling}
+                disabled={isCancelling}
                 className={cn(
                   "h-9 gap-2 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700",
                   isCancelling && "cursor-not-allowed opacity-60",
@@ -120,41 +102,15 @@ export function OutboundBulkActionBar({
               </Button>
             )}
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  size="sm"
-                  disabled={isProcessing || isCancelling}
-                  className={cn(
-                    "h-9 gap-2 bg-teal-600 hover:bg-teal-700",
-                    isProcessing && "cursor-not-allowed opacity-60",
-                  )}
-                >
-                  {isProcessing ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-4 w-4" />
-                      Send
-                      <ChevronDown className="h-3 w-3" />
-                    </>
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={onScheduleSelected}>
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Schedule Selected
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onSendInstantly}>
-                  <Zap className="mr-2 h-4 w-4" />
-                  Send All Instantly
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              size="sm"
+              onClick={onOpenWizard}
+              disabled={isCancelling}
+              className="h-9 gap-2 bg-teal-600 hover:bg-teal-700"
+            >
+              <Send className="h-4 w-4" />
+              Send Multiple
+            </Button>
           </div>
         </div>
       </div>
