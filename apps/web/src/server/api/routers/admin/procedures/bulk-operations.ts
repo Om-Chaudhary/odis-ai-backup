@@ -46,13 +46,13 @@ export const bulkOperationsRouter = createTRPCRouter({
 
         // Log admin action
         console.log(
-          `[Admin Bulk Update] User ${ctx.user.id} updated ${data?.length ?? 0} cases`,
+          `[Admin Bulk Update] User ${ctx.user!.id} updated ${data?.length ?? 0} cases`,
           { caseIds: input.caseIds, updates: input.updates },
         );
 
         return {
           success: true,
-          updated: data?.length ?? 0,
+          updatedCount: data?.length ?? 0,
         };
       } catch (error) {
         console.error("[Admin Bulk Update Cases] Error:", error);
@@ -117,13 +117,13 @@ export const bulkOperationsRouter = createTRPCRouter({
 
         // Log admin action
         console.log(
-          `[Admin Bulk Delete] User ${ctx.user.id} deleted ${data?.length ?? 0} cases`,
+          `[Admin Bulk Delete] User ${ctx.user!.id} deleted ${data?.length ?? 0} cases`,
           { caseIds: input.caseIds },
         );
 
         return {
           success: true,
-          deleted: data?.length ?? 0,
+          deletedCount: data?.length ?? 0,
         };
       } catch (error) {
         console.error("[Admin Bulk Delete Cases] Error:", error);
@@ -175,12 +175,13 @@ export const bulkOperationsRouter = createTRPCRouter({
 
         // Log admin action
         console.log(
-          `[Admin Bulk Cancel] User ${ctx.user.id} cancelled ${cancelledCalls} calls and ${cancelledEmails} emails`,
+          `[Admin Bulk Cancel] User ${ctx.user!.id} cancelled ${cancelledCalls} calls and ${cancelledEmails} emails`,
           { callIds: input.callIds, emailIds: input.emailIds },
         );
 
         return {
           success: true,
+          cancelledCount: cancelledCalls + cancelledEmails,
           cancelledCalls,
           cancelledEmails,
         };
@@ -236,7 +237,7 @@ export const bulkOperationsRouter = createTRPCRouter({
 
         // Log admin action
         console.log(
-          `[Admin Bulk Reschedule] User ${ctx.user.id} rescheduled ${rescheduledCalls} calls and ${rescheduledEmails} emails to ${input.scheduledFor}`,
+          `[Admin Bulk Reschedule] User ${ctx.user!.id} rescheduled ${rescheduledCalls} calls and ${rescheduledEmails} emails to ${input.scheduledFor}`,
         );
 
         return {

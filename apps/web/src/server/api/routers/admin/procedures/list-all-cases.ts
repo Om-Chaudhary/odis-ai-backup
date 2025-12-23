@@ -97,9 +97,21 @@ export const listAllCasesRouter = createTRPCRouter({
         if (error) throw error;
 
         // Apply search filter (client-side for complex matching)
+        // Note: Supabase returns users as object (not array) for foreign key joins
+        type UserJoin = {
+          id: string;
+          email: string;
+          first_name: string | null;
+          last_name: string | null;
+          clinic_name: string | null;
+        } | null;
+
         let cases = (data ?? []).map((c) => {
           const patient = c.patients?.[0];
-          const user = c.users;
+          // Handle users - could be object or array depending on Supabase types
+          const userRaw = (
+            Array.isArray(c.users) ? c.users[0] : c.users
+          ) as unknown as UserJoin;
           const hasDischarge = (c.discharge_summaries?.length ?? 0) > 0;
           const latestCall = c.scheduled_discharge_calls?.[0];
           const latestEmail = c.scheduled_discharge_emails?.[0];
@@ -125,13 +137,13 @@ export const listAllCasesRouter = createTRPCRouter({
                   ownerEmail: patient.owner_email,
                 }
               : null,
-            user: user
+            user: userRaw
               ? {
-                  id: user.id,
-                  email: user.email,
-                  firstName: user.first_name,
-                  lastName: user.last_name,
-                  clinicName: user.clinic_name,
+                  id: userRaw.id,
+                  email: userRaw.email,
+                  firstName: userRaw.first_name,
+                  lastName: userRaw.last_name,
+                  clinicName: userRaw.clinic_name,
                 }
               : null,
             hasDischarge,

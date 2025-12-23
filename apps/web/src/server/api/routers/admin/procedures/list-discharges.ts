@@ -99,8 +99,31 @@ export const listDischargesRouter = createTRPCRouter({
         if (error) throw error;
 
         // Transform and filter by search
+        // Type assertions for Supabase join results
+        type CaseJoin = {
+          id: string;
+          type: string | null;
+          status: string | null;
+          patients: Array<{
+            id: string;
+            name: string;
+            owner_name: string | null;
+          }>;
+        } | null;
+        type UserJoin = {
+          id: string;
+          email: string;
+          clinic_name: string | null;
+        } | null;
+
         let calls = (data ?? []).map((call) => {
-          const patient = call.cases?.patients?.[0];
+          const caseData = (
+            Array.isArray(call.cases) ? call.cases[0] : call.cases
+          ) as unknown as CaseJoin;
+          const patient = caseData?.patients?.[0];
+          const userRaw = (
+            Array.isArray(call.users) ? call.users[0] : call.users
+          ) as unknown as UserJoin;
           return {
             id: call.id,
             caseId: call.case_id,
@@ -122,11 +145,11 @@ export const listDischargesRouter = createTRPCRouter({
             recordingUrl: call.recording_url,
             createdAt: call.created_at,
             updatedAt: call.updated_at,
-            case: call.cases
+            case: caseData
               ? {
-                  id: call.cases.id,
-                  type: call.cases.type,
-                  status: call.cases.status,
+                  id: caseData.id,
+                  type: caseData.type,
+                  status: caseData.status,
                 }
               : null,
             patient: patient
@@ -136,11 +159,11 @@ export const listDischargesRouter = createTRPCRouter({
                   ownerName: patient.owner_name,
                 }
               : null,
-            user: call.users
+            user: userRaw
               ? {
-                  id: call.users.id,
-                  email: call.users.email,
-                  clinicName: call.users.clinic_name,
+                  id: userRaw.id,
+                  email: userRaw.email,
+                  clinicName: userRaw.clinic_name,
                 }
               : null,
           };
@@ -251,8 +274,31 @@ export const listDischargesRouter = createTRPCRouter({
         if (error) throw error;
 
         // Transform and filter by search
+        // Type assertions for Supabase join results
+        type EmailCaseJoin = {
+          id: string;
+          type: string | null;
+          status: string | null;
+          patients: Array<{
+            id: string;
+            name: string;
+            owner_name: string | null;
+          }>;
+        } | null;
+        type EmailUserJoin = {
+          id: string;
+          email: string;
+          clinic_name: string | null;
+        } | null;
+
         let emails = (data ?? []).map((email) => {
-          const patient = email.cases?.patients?.[0];
+          const caseData = (
+            Array.isArray(email.cases) ? email.cases[0] : email.cases
+          ) as unknown as EmailCaseJoin;
+          const patient = caseData?.patients?.[0];
+          const userRaw = (
+            Array.isArray(email.users) ? email.users[0] : email.users
+          ) as unknown as EmailUserJoin;
           return {
             id: email.id,
             caseId: email.case_id,
@@ -266,11 +312,11 @@ export const listDischargesRouter = createTRPCRouter({
             resendEmailId: email.resend_email_id,
             createdAt: email.created_at,
             updatedAt: email.updated_at,
-            case: email.cases
+            case: caseData
               ? {
-                  id: email.cases.id,
-                  type: email.cases.type,
-                  status: email.cases.status,
+                  id: caseData.id,
+                  type: caseData.type,
+                  status: caseData.status,
                 }
               : null,
             patient: patient
@@ -280,11 +326,11 @@ export const listDischargesRouter = createTRPCRouter({
                   ownerName: patient.owner_name,
                 }
               : null,
-            user: email.users
+            user: userRaw
               ? {
-                  id: email.users.id,
-                  email: email.users.email,
-                  clinicName: email.users.clinic_name,
+                  id: userRaw.id,
+                  email: userRaw.email,
+                  clinicName: userRaw.clinic_name,
                 }
               : null,
           };

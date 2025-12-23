@@ -137,7 +137,9 @@
       "Bash(grep:*)",
       "Bash(npx tsx:*)",
       "Bash(source:*)",
-      "mcp__playwright__browser_press_key"
+      "mcp__playwright__browser_press_key",
+      "Bash(pnpm exec tsc:*)",
+      "Bash(../../node_modules/.bin/tsc --noEmit)"
     ],
     "deny": [],
     "ask": []

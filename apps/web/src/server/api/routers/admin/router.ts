@@ -11,6 +11,7 @@ import { listUsersRouter } from "./procedures/list-users";
 import { listAllCasesRouter } from "./procedures/list-all-cases";
 import { listDischargesRouter } from "./procedures/list-discharges";
 import { bulkOperationsRouter } from "./procedures/bulk-operations";
+import { listPatientsRouter } from "./procedures/list-patients";
 
 export const adminRouter = createTRPCRouter({
   // Stats
@@ -34,4 +35,8 @@ export const adminRouter = createTRPCRouter({
   bulkDeleteCases: bulkOperationsRouter.bulkDeleteCases,
   bulkCancelDischarges: bulkOperationsRouter.bulkCancelDischarges,
   bulkReschedule: bulkOperationsRouter.bulkReschedule,
+
+  // Patients
+  listPatients: listPatientsRouter.listPatients,
+  getPatient: listPatientsRouter.getPatient,
 });

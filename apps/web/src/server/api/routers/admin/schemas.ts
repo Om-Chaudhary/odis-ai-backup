@@ -64,6 +64,8 @@ export const caseStatusEnum = z.enum([
   "ongoing",
   "completed",
   "reviewed",
+  "cancelled",
+  "archived",
 ]);
 
 export const listAllCasesInput = paginationInput.extend({
@@ -101,12 +103,14 @@ export const bulkDeleteCasesInput = z.object({
 
 export const dischargeStatusEnum = z.enum([
   "queued",
+  "scheduled",
   "ringing",
   "in_progress",
   "completed",
   "failed",
   "cancelled",
   "sent",
+  "sending",
 ]);
 
 export const listScheduledCallsInput = paginationInput.extend({
@@ -143,6 +147,24 @@ export const bulkRescheduleInput = z.object({
   callIds: z.array(z.string().uuid()).optional(),
   emailIds: z.array(z.string().uuid()).optional(),
   scheduledFor: z.string().datetime(),
+});
+
+// ============================================================================
+// Patient Schemas
+// ============================================================================
+
+export const listPatientsInput = paginationInput.extend({
+  search: z.string().optional(),
+  userId: z.string().uuid().optional(),
+  species: z.string().optional(),
+  sortBy: z
+    .enum(["created_at", "name", "species", "owner_name"])
+    .default("created_at"),
+  sortOrder: z.enum(["asc", "desc"]).default("desc"),
+});
+
+export const getPatientInput = z.object({
+  patientId: z.string().uuid(),
 });
 
 // ============================================================================
