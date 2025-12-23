@@ -137,7 +137,7 @@ export async function GET(request: NextRequest) {
     request,
     NextResponse.json({
       message: "Cases ingest endpoint is available",
-      methods: ["POST", "OPTIONS"],
+      methods: ["POST", "DELETE", "OPTIONS"],
       endpoint: "/api/cases/ingest",
       formats: [
         {
@@ -162,6 +162,10 @@ export async function GET(request: NextRequest) {
           },
         },
       ],
+      deleteExample: {
+        description: "Delete no-show case by appointment ID",
+        example: "DELETE /api/cases/ingest?appointmentId=12345",
+      },
     }),
   );
 }
@@ -355,25 +359,85 @@ export async function PUT(request: NextRequest) {
       {
         error: "Method Not Allowed",
         message: "PUT method is not supported. Use POST instead.",
-        allowedMethods: ["GET", "POST", "OPTIONS"],
+        allowedMethods: ["GET", "POST", "DELETE", "OPTIONS"],
       },
       { status: 405 },
     ),
   );
 }
 
+/**
+ * DELETE handler for no-show case deletion
+ *
+ * Used to delete cases when an IDEXX appointment becomes a no-show or is cancelled.
+ * Expects appointmentId as a query parameter.
+ *
+ * Example: DELETE /api/cases/ingest?appointmentId=12345
+ */
 export async function DELETE(request: NextRequest) {
-  return withCorsHeaders(
-    request,
-    NextResponse.json(
-      {
-        error: "Method Not Allowed",
-        message: "DELETE method is not supported. Use POST instead.",
-        allowedMethods: ["GET", "POST", "OPTIONS"],
-      },
-      { status: 405 },
-    ),
-  );
+  try {
+    // 1. Auth
+    const { user, supabase } = await authenticateRequest(request);
+    if (!user || !supabase) {
+      return withCorsHeaders(
+        request,
+        NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+      );
+    }
+
+    // 2. Get appointmentId from query params
+    const { searchParams } = new URL(request.url);
+    const appointmentId = searchParams.get("appointmentId");
+
+    if (!appointmentId) {
+      return withCorsHeaders(
+        request,
+        NextResponse.json(
+          {
+            success: false,
+            error: "Missing required query parameter: appointmentId",
+          },
+          { status: 400 },
+        ),
+      );
+    }
+
+    // 3. Delete the case
+    const CasesService = await getCasesService();
+    const deleted = await CasesService.deleteNoShowCase(
+      supabase,
+      user.id,
+      appointmentId,
+    );
+
+    console.log("[CASES_INGEST] DELETE request processed", {
+      userId: user.id,
+      appointmentId,
+      deleted,
+    });
+
+    return withCorsHeaders(
+      request,
+      NextResponse.json({
+        success: true,
+        deleted,
+        appointmentId,
+      }),
+    );
+  } catch (error) {
+    console.error("[CASES_INGEST] DELETE error:", error);
+    return withCorsHeaders(
+      request,
+      NextResponse.json(
+        {
+          success: false,
+          error:
+            error instanceof Error ? error.message : "Internal Server Error",
+        },
+        { status: 500 },
+      ),
+    );
+  }
 }
 
 export async function PATCH(request: NextRequest) {
@@ -383,7 +447,7 @@ export async function PATCH(request: NextRequest) {
       {
         error: "Method Not Allowed",
         message: "PATCH method is not supported. Use POST instead.",
-        allowedMethods: ["GET", "POST", "OPTIONS"],
+        allowedMethods: ["GET", "POST", "DELETE", "OPTIONS"],
       },
       { status: 405 },
     ),

@@ -319,6 +319,9 @@ export const CasesService = {
           }
         : (currentMetadata.idexx ?? null);
 
+      // Parse scheduled_at from IDEXX appointment data (if available and not already set)
+      const scheduledAt = parseScheduledAt(context.rawIdexxData);
+
       const updateData: CaseUpdate = {
         // Save entities to dedicated column for faster access
         entity_extraction: mergedEntities as unknown as Json,
@@ -329,6 +332,8 @@ export const CasesService = {
           last_updated_by: context.source,
         } as CaseMetadata as CaseMetadataJson,
         updated_at: new Date().toISOString(),
+        // Only update scheduled_at if we have a new value (don't overwrite existing)
+        ...(scheduledAt ? { scheduled_at: scheduledAt } : {}),
       };
 
       const { error: updateError } = await supabase
@@ -358,12 +363,16 @@ export const CasesService = {
           }
         : null;
 
+      // Parse scheduled_at from IDEXX appointment data
+      const scheduledAt = parseScheduledAt(context.rawIdexxData);
+
       const caseInsert: CaseInsert = {
         user_id: userId,
         status: "ongoing",
         type: mapCaseTypeToDb(entities.caseType),
         source: context.source,
         external_id: externalId,
+        scheduled_at: scheduledAt,
         // Save entities to dedicated column for faster access
         entity_extraction: entities as unknown as Json,
         metadata: {
@@ -1849,6 +1858,68 @@ export const CasesService = {
     if (!current) return incoming;
     return incoming;
   },
+
+  /**
+   * Delete a case by IDEXX appointment ID (for no-show handling)
+   *
+   * Used when an appointment becomes a no-show and should be removed from the cases table.
+   * Only deletes cases with matching external_id pattern "idexx-appt-{appointmentId}".
+   *
+   * @param supabase - Supabase client
+   * @param userId - User ID to scope the deletion
+   * @param appointmentId - IDEXX appointment ID
+   * @returns true if a case was deleted, false if no matching case found
+   */
+  async deleteNoShowCase(
+    supabase: SupabaseClientType,
+    userId: string,
+    appointmentId: string,
+  ): Promise<boolean> {
+    const externalId = `idexx-appt-${appointmentId}`;
+
+    // First check if the case exists
+    const { data: existingCase } = await supabase
+      .from("cases")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("external_id", externalId)
+      .maybeSingle();
+
+    if (!existingCase) {
+      console.log("[CasesService] No case found to delete for no-show", {
+        userId,
+        appointmentId,
+        externalId,
+      });
+      return false;
+    }
+
+    // Delete the case (cascades to related records via FK constraints)
+    const { error } = await supabase
+      .from("cases")
+      .delete()
+      .eq("user_id", userId)
+      .eq("external_id", externalId);
+
+    if (error) {
+      console.error("[CasesService] Failed to delete no-show case", {
+        userId,
+        appointmentId,
+        externalId,
+        error: error.message,
+      });
+      return false;
+    }
+
+    console.log("[CasesService] Deleted no-show case", {
+      userId,
+      appointmentId,
+      externalId,
+      caseId: existingCase.id,
+    });
+
+    return true;
+  },
 };
 
 // --- Helpers ---
@@ -1969,6 +2040,40 @@ function parseWeight(weightStr?: string): number | null {
   if (!weightStr) return null;
   const num = parseFloat(weightStr);
   return isNaN(num) ? null : num;
+}
+
+/**
+ * Parse IDEXX appointment date/time into ISO timestamp
+ * Handles formats like "2024-01-15" and "14:30"
+ */
+function parseScheduledAt(
+  rawData?: Record<string, unknown> | null,
+): string | null {
+  if (!rawData) return null;
+
+  const appointmentDate = rawData.appointment_date as string | undefined;
+  const appointmentTime = rawData.appointment_time as string | undefined;
+
+  if (!appointmentDate) return null;
+
+  try {
+    if (appointmentTime) {
+      // Combine date and time: "2024-01-15" + "14:30" -> "2024-01-15T14:30:00"
+      const dateTime = new Date(`${appointmentDate}T${appointmentTime}:00`);
+      if (!isNaN(dateTime.getTime())) {
+        return dateTime.toISOString();
+      }
+    }
+    // Date only fallback
+    const dateOnly = new Date(appointmentDate);
+    if (!isNaN(dateOnly.getTime())) {
+      return dateOnly.toISOString();
+    }
+  } catch {
+    // Invalid date format
+  }
+
+  return null;
 }
 
 function generateSummaryFromEntities(entities: NormalizedEntities): string {
