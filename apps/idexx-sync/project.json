@@ -1,0 +1,116 @@
+{
+  "name": "idexx-sync",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/idexx-sync/src",
+  "projectType": "application",
+  "tags": ["type:app", "scope:server", "platform:node"],
+  "implicitDependencies": ["idexx", "db", "crypto", "qstash"],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/idexx-sync",
+        "format": ["cjs"],
+        "bundle": false,
+        "main": "apps/idexx-sync/src/main.ts",
+        "tsConfig": "apps/idexx-sync/tsconfig.app.json",
+        "assets": ["apps/idexx-sync/src/assets"],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "outExtension": {
+            ".js": ".js"
+          }
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "generateLockfile": true,
+          "esbuildOptions": {
+            "sourcemap": false,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        }
+      }
+    },
+    "prune-lockfile": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "executor": "@nx/js:prune-lockfile",
+      "outputs": [
+        "{workspaceRoot}/dist/apps/idexx-sync/package.json",
+        "{workspaceRoot}/dist/apps/idexx-sync/pnpm-lock.yaml"
+      ],
+      "options": {
+        "buildTarget": "build"
+      }
+    },
+    "copy-workspace-modules": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "outputs": ["{workspaceRoot}/dist/apps/idexx-sync/workspace_modules"],
+      "executor": "@nx/js:copy-workspace-modules",
+      "options": {
+        "buildTarget": "build"
+      }
+    },
+    "prune": {
+      "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
+      "executor": "nx:noop"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "idexx-sync:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "idexx-sync:build:development"
+        },
+        "production": {
+          "buildTarget": "idexx-sync:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["apps/idexx-sync/**/*.ts"]
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p apps/idexx-sync/tsconfig.app.json",
+        "cwd": "{workspaceRoot}"
+      },
+      "cache": true,
+      "inputs": ["default", "^default"],
+      "dependsOn": ["^typecheck"]
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "options": {
+        "configFile": "apps/idexx-sync/vitest.config.ts"
+      }
+    },
+    "docker:build": {
+      "dependsOn": ["build", "prune"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker build -t idexx-sync -f apps/idexx-sync/Dockerfile .",
+        "cwd": "{workspaceRoot}"
+      }
+    }
+  }
+}
