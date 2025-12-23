@@ -5,7 +5,6 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { api } from "~/trpc/client";
 import {
   Search,
-  Filter,
   ChevronLeft,
   ChevronRight,
   Eye,
@@ -19,7 +18,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
 import { Input } from "@odis-ai/ui/input";
 import { Button } from "@odis-ai/ui/button";
-import { Badge } from "@odis-ai/ui/badge";
 import { Skeleton } from "@odis-ai/ui/skeleton";
 import {
   Select,
@@ -103,7 +101,7 @@ export default function AdminPatientsPage() {
       <Card>
         <CardContent className="flex flex-wrap items-center gap-4 py-4">
           <div className="relative min-w-[250px] flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Search patient, owner, user, or clinic..."
               value={search}
@@ -211,7 +209,7 @@ export default function AdminPatientsPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col">
-                          <span className="text-sm capitalize text-slate-900">
+                          <span className="text-sm text-slate-900 capitalize">
                             {patient.species ?? "—"}
                           </span>
                           <span className="text-xs text-slate-500">
@@ -251,7 +249,7 @@ export default function AdminPatientsPage() {
                           <span className="text-sm text-slate-900">
                             {patient.user?.firstName
                               ? `${patient.user.firstName} ${patient.user.lastName ?? ""}`
-                              : patient.user?.email ?? "—"}
+                              : (patient.user?.email ?? "—")}
                           </span>
                           <span className="text-xs text-slate-500">
                             {patient.user?.clinicName ?? "—"}
@@ -277,9 +275,7 @@ export default function AdminPatientsPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
                               onClick={() =>
-                                router.push(
-                                  `/admin/accounts/${patient.userId}`,
-                                )
+                                router.push(`/admin/accounts/${patient.userId}`)
                               }
                             >
                               <Eye className="mr-2 h-4 w-4" />

@@ -131,9 +131,7 @@ export function useOutboundMutations(
           `Cancelled ${totalCancelled} scheduled deliver${totalCancelled > 1 ? "ies" : "y"}`,
         );
       } else if (totalCancelled > 0) {
-        toast.warning(
-          `Cancelled ${totalCancelled}, ${errors.length} failed`,
-        );
+        toast.warning(`Cancelled ${totalCancelled}, ${errors.length} failed`);
       } else {
         toast.error("Failed to cancel any scheduled deliveries");
       }
@@ -261,6 +259,36 @@ export function useOutboundMutations(
     [batchSchedule],
   );
 
+  // Bulk schedule multiple cases immediately with 1-minute stagger
+  const handleBulkScheduleImmediate = useCallback(
+    async (caseIds: string[]) => {
+      // Add all case IDs to scheduling state
+      setSchedulingCaseIds((prev) => {
+        const next = new Set(prev);
+        caseIds.forEach((id) => next.add(id));
+        return next;
+      });
+
+      try {
+        await batchSchedule.mutateAsync({
+          caseIds,
+          phoneEnabled: true,
+          emailEnabled: true,
+          timingMode: "immediate", // Send now, staggered
+          staggerIntervalSeconds: 60, // 1 minute between each case
+        });
+      } finally {
+        // Remove all case IDs from scheduling state
+        setSchedulingCaseIds((prev) => {
+          const next = new Set(prev);
+          caseIds.forEach((id) => next.delete(id));
+          return next;
+        });
+      }
+    },
+    [batchSchedule],
+  );
+
   // Cancel a single case's scheduled deliveries
   const handleCancelScheduled = useCallback(
     async (
@@ -337,6 +365,7 @@ export function useOutboundMutations(
     handleQuickSchedule,
     handleToggleStar,
     handleBulkSchedule,
+    handleBulkScheduleImmediate,
     handleCancelScheduled,
     handleBulkCancel,
     // State

@@ -195,6 +195,7 @@ export function OutboundDischargesClient() {
     handleQuickSchedule,
     handleToggleStar,
     handleBulkSchedule,
+    handleBulkScheduleImmediate,
     handleCancelScheduled: cancelScheduledHandler,
     handleBulkCancel,
     isSubmitting,
@@ -509,6 +510,15 @@ export function OutboundDischargesClient() {
     await handleBulkSchedule(Array.from(selectedForBulk));
   }, [selectedForBulk, handleBulkSchedule]);
 
+  const handleSendInstantly = useCallback(async () => {
+    if (selectedForBulk.size === 0) {
+      toast.error("No cases selected");
+      return;
+    }
+
+    await handleBulkScheduleImmediate(Array.from(selectedForBulk));
+  }, [selectedForBulk, handleBulkScheduleImmediate]);
+
   const handleCancelSelected = useCallback(async () => {
     if (selectedForBulk.size === 0) {
       toast.error("No cases selected");
@@ -716,6 +726,7 @@ export function OutboundDischargesClient() {
       <OutboundBulkActionBar
         selectedCount={selectedForBulk.size}
         onScheduleSelected={handleScheduleSelected}
+        onSendInstantly={handleSendInstantly}
         onCancelSelected={handleCancelSelected}
         onClearSelection={handleClearSelection}
         isProcessing={isBulkScheduling}

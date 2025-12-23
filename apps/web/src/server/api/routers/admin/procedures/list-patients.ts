@@ -77,9 +77,9 @@ export const listPatientsRouter = createTRPCRouter({
         } | null;
 
         let patients = (data ?? []).map((p) => {
-          const userRaw = (
-            Array.isArray(p.users) ? p.users[0] : p.users
-          ) as unknown as UserJoin;
+          const userRaw = (Array.isArray(p.users)
+            ? p.users[0]
+            : p.users) as unknown as UserJoin;
           return {
             id: p.id,
             name: p.name,
@@ -108,16 +108,18 @@ export const listPatientsRouter = createTRPCRouter({
         // Apply search filter
         if (input.search) {
           const searchLower = input.search.toLowerCase();
+          const matchesSearch = (value: string | null | undefined): boolean =>
+            Boolean(value?.toLowerCase().includes(searchLower));
           patients = patients.filter(
             (p) =>
-              p.name?.toLowerCase().includes(searchLower) ||
-              p.ownerName?.toLowerCase().includes(searchLower) ||
-              p.ownerEmail?.toLowerCase().includes(searchLower) ||
-              p.species?.toLowerCase().includes(searchLower) ||
-              p.breed?.toLowerCase().includes(searchLower) ||
-              p.user?.email?.toLowerCase().includes(searchLower) ||
-              p.user?.clinicName?.toLowerCase().includes(searchLower) ||
-              p.id.toLowerCase().includes(searchLower),
+              matchesSearch(p.name) ||
+              matchesSearch(p.ownerName) ||
+              matchesSearch(p.ownerEmail) ||
+              matchesSearch(p.species) ||
+              matchesSearch(p.breed) ||
+              matchesSearch(p.user?.email) ||
+              matchesSearch(p.user?.clinicName) ||
+              matchesSearch(p.id),
           );
         }
 

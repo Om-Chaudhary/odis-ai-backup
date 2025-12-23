@@ -21,7 +21,6 @@ import { Button } from "@odis-ai/ui/button";
 import { Badge } from "@odis-ai/ui/badge";
 import { Skeleton } from "@odis-ai/ui/skeleton";
 import { Switch } from "@odis-ai/ui/switch";
-import { Label } from "@odis-ai/ui/label";
 import {
   Select,
   SelectContent,
@@ -54,7 +53,9 @@ function StatCard({
 
   return (
     <Card
-      className={href ? "cursor-pointer transition-colors hover:bg-slate-50" : ""}
+      className={
+        href ? "cursor-pointer transition-colors hover:bg-slate-50" : ""
+      }
       onClick={href ? () => router.push(href) : undefined}
     >
       <CardContent className="flex items-center gap-4 py-4">
@@ -90,7 +91,7 @@ export default function UserDetailPage() {
       setIsEditing(false);
       setEditedRole(null);
       setEditedTestMode(null);
-      refetch();
+      void refetch();
     },
     onError: (error) => {
       toast.error(`Failed to update user: ${error.message}`);
@@ -98,7 +99,12 @@ export default function UserDetailPage() {
   });
 
   const handleSaveChanges = () => {
-    type UserRole = "admin" | "veterinarian" | "vet_tech" | "practice_owner" | "client";
+    type UserRole =
+      | "admin"
+      | "veterinarian"
+      | "vet_tech"
+      | "practice_owner"
+      | "client";
     const updates: { role?: UserRole; testModeEnabled?: boolean } = {};
 
     if (editedRole !== null && editedRole !== data?.user.role) {
@@ -183,7 +189,7 @@ export default function UserDetailPage() {
                   : user.email}
               </h1>
               <Badge className={ROLE_COLORS[user.role ?? ""] ?? "bg-slate-100"}>
-                {user.role?.replace("_", " ") ?? "Unknown"}
+                {String(user.role ?? "Unknown").replace("_", " ")}
               </Badge>
               {user.testModeEnabled && (
                 <Badge variant="outline" className="text-amber-600">
@@ -258,7 +264,7 @@ export default function UserDetailPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-xs font-medium uppercase text-slate-500">
+                <p className="text-xs font-medium text-slate-500 uppercase">
                   First Name
                 </p>
                 <p className="text-sm text-slate-900">
@@ -266,29 +272,24 @@ export default function UserDetailPage() {
                 </p>
               </div>
               <div>
-                <p className="text-xs font-medium uppercase text-slate-500">
+                <p className="text-xs font-medium text-slate-500 uppercase">
                   Last Name
                 </p>
-                <p className="text-sm text-slate-900">
-                  {user.lastName ?? "—"}
-                </p>
+                <p className="text-sm text-slate-900">{user.lastName ?? "—"}</p>
               </div>
             </div>
             <div>
-              <p className="text-xs font-medium uppercase text-slate-500">
+              <p className="text-xs font-medium text-slate-500 uppercase">
                 Email
               </p>
               <p className="text-sm text-slate-900">{user.email}</p>
             </div>
             <div>
-              <p className="text-xs font-medium uppercase text-slate-500">
+              <p className="text-xs font-medium text-slate-500 uppercase">
                 Role
               </p>
               {isEditing ? (
-                <Select
-                  value={currentRole ?? ""}
-                  onValueChange={setEditedRole}
-                >
+                <Select value={currentRole ?? ""} onValueChange={setEditedRole}>
                   <SelectTrigger className="mt-1 w-48">
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
@@ -303,14 +304,14 @@ export default function UserDetailPage() {
                   </SelectContent>
                 </Select>
               ) : (
-                <p className="text-sm capitalize text-slate-900">
-                  {user.role?.replace("_", " ") ?? "—"}
+                <p className="text-sm text-slate-900 capitalize">
+                  {user.role ? String(user.role).replace("_", " ") : "—"}
                 </p>
               )}
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium uppercase text-slate-500">
+                <p className="text-xs font-medium text-slate-500 uppercase">
                   Test Mode
                 </p>
                 <p className="text-xs text-slate-400">
@@ -325,7 +326,9 @@ export default function UserDetailPage() {
               ) : (
                 <Badge
                   variant={user.testModeEnabled ? "default" : "outline"}
-                  className={user.testModeEnabled ? "bg-amber-100 text-amber-700" : ""}
+                  className={
+                    user.testModeEnabled ? "bg-amber-100 text-amber-700" : ""
+                  }
                 >
                   {user.testModeEnabled ? "Enabled" : "Disabled"}
                 </Badge>
@@ -333,13 +336,17 @@ export default function UserDetailPage() {
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium uppercase text-slate-500">
+                <p className="text-xs font-medium text-slate-500 uppercase">
                   Onboarding
                 </p>
               </div>
               <Badge
                 variant={user.onboardingCompleted ? "default" : "secondary"}
-                className={user.onboardingCompleted ? "bg-emerald-100 text-emerald-700" : ""}
+                className={
+                  user.onboardingCompleted
+                    ? "bg-emerald-100 text-emerald-700"
+                    : ""
+                }
               >
                 {user.onboardingCompleted ? "Completed" : "Pending"}
               </Badge>
@@ -357,15 +364,13 @@ export default function UserDetailPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="text-xs font-medium uppercase text-slate-500">
+              <p className="text-xs font-medium text-slate-500 uppercase">
                 Clinic Name
               </p>
-              <p className="text-sm text-slate-900">
-                {user.clinicName ?? "—"}
-              </p>
+              <p className="text-sm text-slate-900">{user.clinicName ?? "—"}</p>
             </div>
             <div>
-              <p className="text-xs font-medium uppercase text-slate-500">
+              <p className="text-xs font-medium text-slate-500 uppercase">
                 Clinic Email
               </p>
               <p className="text-sm text-slate-900">
@@ -373,7 +378,7 @@ export default function UserDetailPage() {
               </p>
             </div>
             <div>
-              <p className="text-xs font-medium uppercase text-slate-500">
+              <p className="text-xs font-medium text-slate-500 uppercase">
                 Clinic Phone
               </p>
               <p className="text-sm text-slate-900">
@@ -381,7 +386,7 @@ export default function UserDetailPage() {
               </p>
             </div>
             <div>
-              <p className="text-xs font-medium uppercase text-slate-500">
+              <p className="text-xs font-medium text-slate-500 uppercase">
                 Emergency Phone
               </p>
               <p className="text-sm text-slate-900">
@@ -402,7 +407,7 @@ export default function UserDetailPage() {
           <CardContent>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               <div>
-                <p className="text-xs font-medium uppercase text-slate-500">
+                <p className="text-xs font-medium text-slate-500 uppercase">
                   Email Window
                 </p>
                 <p className="text-sm text-slate-900">
@@ -411,7 +416,7 @@ export default function UserDetailPage() {
                 </p>
               </div>
               <div>
-                <p className="text-xs font-medium uppercase text-slate-500">
+                <p className="text-xs font-medium text-slate-500 uppercase">
                   Call Window
                 </p>
                 <p className="text-sm text-slate-900">
@@ -420,7 +425,7 @@ export default function UserDetailPage() {
                 </p>
               </div>
               <div>
-                <p className="text-xs font-medium uppercase text-slate-500">
+                <p className="text-xs font-medium text-slate-500 uppercase">
                   Email Delay
                 </p>
                 <p className="text-sm text-slate-900">
@@ -428,7 +433,7 @@ export default function UserDetailPage() {
                 </p>
               </div>
               <div>
-                <p className="text-xs font-medium uppercase text-slate-500">
+                <p className="text-xs font-medium text-slate-500 uppercase">
                   Call Delay
                 </p>
                 <p className="text-sm text-slate-900">
@@ -436,7 +441,7 @@ export default function UserDetailPage() {
                 </p>
               </div>
               <div>
-                <p className="text-xs font-medium uppercase text-slate-500">
+                <p className="text-xs font-medium text-slate-500 uppercase">
                   Max Call Retries
                 </p>
                 <p className="text-sm text-slate-900">
@@ -458,7 +463,7 @@ export default function UserDetailPage() {
           <CardContent>
             <div className="flex gap-8">
               <div>
-                <p className="text-xs font-medium uppercase text-slate-500">
+                <p className="text-xs font-medium text-slate-500 uppercase">
                   Created
                 </p>
                 <p className="text-sm text-slate-900">
@@ -472,7 +477,7 @@ export default function UserDetailPage() {
                 </p>
               </div>
               <div>
-                <p className="text-xs font-medium uppercase text-slate-500">
+                <p className="text-xs font-medium text-slate-500 uppercase">
                   Last Updated
                 </p>
                 <p className="text-sm text-slate-900">

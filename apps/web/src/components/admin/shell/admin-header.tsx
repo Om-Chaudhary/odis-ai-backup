@@ -27,7 +27,10 @@ const pathLabels: Record<string, string> = {
   settings: "Settings",
 };
 
-export function AdminHeader({ user, profile }: AdminHeaderProps) {
+export function AdminHeader({
+  user: _user,
+  profile: _profile,
+}: AdminHeaderProps) {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
 

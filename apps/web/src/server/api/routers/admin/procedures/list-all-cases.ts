@@ -109,9 +109,9 @@ export const listAllCasesRouter = createTRPCRouter({
         let cases = (data ?? []).map((c) => {
           const patient = c.patients?.[0];
           // Handle users - could be object or array depending on Supabase types
-          const userRaw = (
-            Array.isArray(c.users) ? c.users[0] : c.users
-          ) as unknown as UserJoin;
+          const userRaw = (Array.isArray(c.users)
+            ? c.users[0]
+            : c.users) as unknown as UserJoin;
           const hasDischarge = (c.discharge_summaries?.length ?? 0) > 0;
           const latestCall = c.scheduled_discharge_calls?.[0];
           const latestEmail = c.scheduled_discharge_emails?.[0];
@@ -157,14 +157,16 @@ export const listAllCasesRouter = createTRPCRouter({
         // Apply search filter
         if (input.search) {
           const searchLower = input.search.toLowerCase();
+          const matchesSearch = (value: string | null | undefined): boolean =>
+            Boolean(value?.toLowerCase().includes(searchLower));
           cases = cases.filter(
             (c) =>
-              c.patient?.name?.toLowerCase().includes(searchLower) ||
-              c.patient?.ownerName?.toLowerCase().includes(searchLower) ||
-              c.patient?.ownerEmail?.toLowerCase().includes(searchLower) ||
-              c.user?.email?.toLowerCase().includes(searchLower) ||
-              c.user?.clinicName?.toLowerCase().includes(searchLower) ||
-              c.id.toLowerCase().includes(searchLower),
+              matchesSearch(c.patient?.name) ||
+              matchesSearch(c.patient?.ownerName) ||
+              matchesSearch(c.patient?.ownerEmail) ||
+              matchesSearch(c.user?.email) ||
+              matchesSearch(c.user?.clinicName) ||
+              matchesSearch(c.id),
           );
         }
 

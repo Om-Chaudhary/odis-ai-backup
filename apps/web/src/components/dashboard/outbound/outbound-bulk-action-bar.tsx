@@ -12,12 +12,27 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@odis-ai/ui/alert-dialog";
-import { X, Send, Loader2, Ban } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@odis-ai/ui/dropdown-menu";
+import {
+  X,
+  Send,
+  Loader2,
+  Ban,
+  ChevronDown,
+  Calendar,
+  Zap,
+} from "lucide-react";
 import { cn } from "@odis-ai/utils";
 
 interface BulkActionBarProps {
   selectedCount: number;
   onScheduleSelected: () => void;
+  onSendInstantly: () => void;
   onCancelSelected?: () => void;
   onClearSelection: () => void;
   isProcessing: boolean;
@@ -33,6 +48,7 @@ interface BulkActionBarProps {
 export function OutboundBulkActionBar({
   selectedCount,
   onScheduleSelected,
+  onSendInstantly,
   onCancelSelected,
   onClearSelection,
   isProcessing,
@@ -100,27 +116,41 @@ export function OutboundBulkActionBar({
               </Button>
             )}
 
-            <Button
-              size="sm"
-              onClick={onScheduleSelected}
-              disabled={isProcessing || isCancelling}
-              className={cn(
-                "h-9 gap-2 bg-teal-600 hover:bg-teal-700",
-                isProcessing && "cursor-not-allowed opacity-60",
-              )}
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Scheduling...
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4" />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  disabled={isProcessing || isCancelling}
+                  className={cn(
+                    "h-9 gap-2 bg-teal-600 hover:bg-teal-700",
+                    isProcessing && "cursor-not-allowed opacity-60",
+                  )}
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      Send
+                      <ChevronDown className="h-3 w-3" />
+                    </>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onScheduleSelected}>
+                  <Calendar className="mr-2 h-4 w-4" />
                   Schedule Selected
-                </>
-              )}
-            </Button>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onSendInstantly}>
+                  <Zap className="mr-2 h-4 w-4" />
+                  Send All Instantly
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

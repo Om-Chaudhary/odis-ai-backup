@@ -89,7 +89,7 @@ export default function AccountsPage() {
       <Card>
         <CardContent className="flex items-center gap-4 py-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Search by email, name, or clinic..."
               value={search}
@@ -185,7 +185,7 @@ export default function AccountsPage() {
                             "bg-slate-100 text-slate-700"
                           }
                         >
-                          {user.role?.replace("_", " ") ?? "Unknown"}
+                          {String(user.role ?? "Unknown").replace("_", " ")}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -256,7 +256,7 @@ export default function AccountsPage() {
                     size="sm"
                     onClick={() =>
                       setPage((p) =>
-                        Math.min(data.pagination.totalPages, p + 1)
+                        Math.min(data.pagination.totalPages, p + 1),
                       )
                     }
                     disabled={page >= data.pagination.totalPages}

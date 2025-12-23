@@ -109,7 +109,7 @@ export default function AdminCasesPage() {
     onSuccess: (result) => {
       toast.success(`Deleted ${result.deletedCount} cases`);
       setSelectedIds([]);
-      refetch();
+      void refetch();
     },
     onError: (error) => {
       toast.error(`Failed to delete cases: ${error.message}`);
@@ -120,7 +120,7 @@ export default function AdminCasesPage() {
     onSuccess: (result) => {
       toast.success(`Updated ${result.updatedCount} cases`);
       setSelectedIds([]);
-      refetch();
+      void refetch();
     },
     onError: (error) => {
       toast.error(`Failed to update cases: ${error.message}`);
@@ -239,7 +239,7 @@ export default function AdminCasesPage() {
       <Card>
         <CardContent className="flex flex-wrap items-center gap-4 py-4">
           <div className="relative min-w-[250px] flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Search patient, owner, user, or case ID..."
               value={search}
@@ -380,7 +380,7 @@ export default function AdminCasesPage() {
                           <span className="text-sm text-slate-900">
                             {caseItem.user?.firstName
                               ? `${caseItem.user.firstName} ${caseItem.user.lastName ?? ""}`
-                              : caseItem.user?.email ?? "—"}
+                              : (caseItem.user?.email ?? "—")}
                           </span>
                           <span className="text-xs text-slate-500">
                             {caseItem.user?.clinicName ?? "—"}
@@ -405,8 +405,9 @@ export default function AdminCasesPage() {
                               <Badge
                                 variant="outline"
                                 className={`text-xs ${
-                                  DISCHARGE_STATUS_COLORS[caseItem.callStatus] ??
-                                  ""
+                                  DISCHARGE_STATUS_COLORS[
+                                    caseItem.callStatus
+                                  ] ?? ""
                                 }`}
                               >
                                 {caseItem.callStatus}

@@ -13,7 +13,7 @@ import { getAdminStatsInput } from "../schemas";
 export const getAdminStatsRouter = createTRPCRouter({
   getAdminStats: adminProcedure
     .input(getAdminStatsInput)
-    .query(async ({ input }) => {
+    .query(async ({ input: _input }) => {
       const supabase = await createServiceClient();
 
       try {

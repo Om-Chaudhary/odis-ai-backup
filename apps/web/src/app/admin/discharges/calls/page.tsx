@@ -10,7 +10,6 @@ import {
   ChevronRight,
   XCircle,
   Eye,
-  Phone,
   AlertTriangle,
   Clock,
   MoreHorizontal,
@@ -118,7 +117,7 @@ export default function AdminCallsPage() {
     onSuccess: (result) => {
       toast.success(`Cancelled ${result.cancelledCount} calls`);
       setSelectedIds([]);
-      refetch();
+      void refetch();
     },
     onError: (error) => {
       toast.error(`Failed to cancel calls: ${error.message}`);
@@ -217,7 +216,7 @@ export default function AdminCallsPage() {
       <Card>
         <CardContent className="flex flex-wrap items-center gap-4 py-4">
           <div className="relative min-w-[250px] flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Search patient, owner, user, or phone..."
               value={search}
@@ -377,7 +376,8 @@ export default function AdminCallsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {call.attentionTypes && call.attentionTypes.length > 0 ? (
+                        {call.attentionTypes &&
+                        call.attentionTypes.length > 0 ? (
                           <div className="flex flex-col gap-1">
                             <Badge
                               className={
@@ -390,7 +390,9 @@ export default function AdminCallsPage() {
                               {call.attentionSeverity ?? "low"}
                             </Badge>
                             <span className="text-xs text-slate-500">
-                              {(call.attentionTypes as string[]).slice(0, 2).join(", ")}
+                              {(call.attentionTypes as string[])
+                                .slice(0, 2)
+                                .join(", ")}
                               {(call.attentionTypes as string[]).length > 2 &&
                                 ` +${(call.attentionTypes as string[]).length - 2}`}
                             </span>
@@ -433,7 +435,7 @@ export default function AdminCallsPage() {
                             {call.recordingUrl && (
                               <DropdownMenuItem
                                 onClick={() =>
-                                  window.open(call.recordingUrl!, "_blank")
+                                  window.open(call.recordingUrl, "_blank")
                                 }
                               >
                                 <Play className="mr-2 h-4 w-4" />

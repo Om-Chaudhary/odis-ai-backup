@@ -10,7 +10,6 @@ import {
   ChevronRight,
   XCircle,
   Eye,
-  Mail,
   Clock,
   MoreHorizontal,
   Send,
@@ -102,7 +101,7 @@ export default function AdminEmailsPage() {
     onSuccess: (result) => {
       toast.success(`Cancelled ${result.cancelledCount} emails`);
       setSelectedIds([]);
-      refetch();
+      void refetch();
     },
     onError: (error) => {
       toast.error(`Failed to cancel emails: ${error.message}`);
@@ -196,7 +195,7 @@ export default function AdminEmailsPage() {
       <Card>
         <CardContent className="flex flex-wrap items-center gap-4 py-4">
           <div className="relative min-w-[250px] flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               placeholder="Search patient, owner, user, or email..."
               value={search}
