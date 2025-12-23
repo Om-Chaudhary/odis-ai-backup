@@ -39,6 +39,8 @@ interface BulkActionBarProps {
   isCancelling?: boolean;
   /** Whether to show cancel button (only for scheduled cases) */
   showCancelAction?: boolean;
+  /** Whether a background operation is active (hides the bar) */
+  isBackgroundOperationActive?: boolean;
 }
 
 /**
@@ -54,10 +56,12 @@ export function OutboundBulkActionBar({
   isProcessing,
   isCancelling = false,
   showCancelAction = false,
+  isBackgroundOperationActive = false,
 }: BulkActionBarProps) {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
-  if (selectedCount === 0) return null;
+  // Hide bar when no cases selected or when background operation is running
+  if (selectedCount === 0 || isBackgroundOperationActive) return null;
 
   const handleCancelConfirm = () => {
     setShowCancelDialog(false);

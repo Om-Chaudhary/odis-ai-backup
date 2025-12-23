@@ -18,6 +18,13 @@ export function DashboardBreadcrumb() {
   const segments = pathname.split("/").filter(Boolean);
   // segments[0] is usually 'dashboard'
 
+  const formatSlugToTitle = (slug: string) => {
+    return slug
+      .split("-")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
+
   const getBreadcrumbName = (segment: string) => {
     switch (segment) {
       case "dashboard":
@@ -33,7 +40,7 @@ export function DashboardBreadcrumb() {
       case "support":
         return "Help & Support";
       default:
-        return segment.charAt(0).toUpperCase() + segment.slice(1);
+        return formatSlugToTitle(segment);
     }
   };
 

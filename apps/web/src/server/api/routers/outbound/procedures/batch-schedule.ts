@@ -263,6 +263,10 @@ export const batchScheduleRouter = createTRPCRouter({
       const caseInfoResults = await Promise.allSettled(caseInfoPromises);
 
       const now = new Date();
+      // For immediate mode, use scheduleBaseTime if provided (allows scheduling after generation completes)
+      const immediateBaseTime = input.scheduleBaseTime
+        ? new Date(input.scheduleBaseTime)
+        : now;
       const staggerMs = input.staggerIntervalSeconds * 1000;
       // Stagger emails by 3 seconds each in scheduled mode to avoid Resend rate limits
       const scheduledModeEmailStaggerMs = 3000;
@@ -282,6 +286,8 @@ export const batchScheduleRouter = createTRPCRouter({
         staggerIntervalSeconds: input.staggerIntervalSeconds,
         scheduledModeEmailStaggerMs,
         scheduledModeCallStaggerMs,
+        scheduleBaseTime: input.scheduleBaseTime,
+        immediateBaseTime: immediateBaseTime.toISOString(),
       });
 
       // Process each case
@@ -469,15 +475,17 @@ export const batchScheduleRouter = createTRPCRouter({
           let callScheduledFor: Date | null = null;
 
           if (input.timingMode === "immediate") {
-            // Staggered immediate scheduling
+            // Staggered immediate scheduling - use immediateBaseTime (may be in the future)
             if (canScheduleEmail) {
-              emailScheduledFor = new Date(now.getTime() + emailOffset);
+              emailScheduledFor = new Date(
+                immediateBaseTime.getTime() + emailOffset,
+              );
               emailOffset += staggerMs;
             }
             if (canSchedulePhone) {
               // Call goes after email with additional stagger
               callScheduledFor = new Date(
-                now.getTime() +
+                immediateBaseTime.getTime() +
                   (canScheduleEmail ? emailOffset : callOffset) +
                   staggerMs,
               );

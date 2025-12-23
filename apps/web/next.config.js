@@ -8,56 +8,6 @@ import "./src/env.js";
 
 /** @type {import("next").NextConfig} */
 const config = {
-  // Redirects for renamed routes (cases -> discharges, moved to admin)
-  async redirects() {
-    return [
-      {
-        source: "/dashboard/cases",
-        destination: "/admin/discharges",
-        permanent: true,
-      },
-      {
-        source: "/dashboard/cases/batch-discharge",
-        destination: "/admin/discharges/batch",
-        permanent: true,
-      },
-      {
-        source: "/dashboard/cases/:id",
-        destination: "/admin/discharges/:id",
-        permanent: true,
-      },
-      {
-        source: "/dashboard/discharges",
-        destination: "/admin/discharges",
-        permanent: true,
-      },
-      {
-        source: "/dashboard/discharges/:path*",
-        destination: "/admin/discharges/:path*",
-        permanent: true,
-      },
-      {
-        source: "/dashboard/calls/inbound",
-        destination: "/admin/calls/inbound",
-        permanent: true,
-      },
-      {
-        source: "/dashboard/:clinicSlug/discharges",
-        destination: "/admin/discharges",
-        permanent: true,
-      },
-      {
-        source: "/dashboard/:clinicSlug/discharges/:path*",
-        destination: "/admin/discharges/:path*",
-        permanent: true,
-      },
-      {
-        source: "/dashboard/:clinicSlug/inbound-calls",
-        destination: "/admin/inbound-calls",
-        permanent: true,
-      },
-    ];
-  },
   async rewrites() {
     return [
       {

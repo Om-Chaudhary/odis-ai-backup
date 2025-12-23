@@ -2,8 +2,6 @@ import { getUser } from "~/server/actions/auth";
 import { redirect } from "next/navigation";
 import { createClient } from "@odis-ai/db/server";
 import { getClinicByUserId } from "@odis-ai/clinics/utils";
-import DashboardProfileHeader from "~/components/dashboard/profile/dashboard-profile-header";
-import { DashboardContentWithTabs } from "~/components/dashboard/shell/dashboard-content-with-tabs";
 import { ExtensionAuthHandler } from "~/components/dashboard/shell/extension-auth-handler";
 import { AUTH_PARAMS } from "@odis-ai/constants/auth";
 
@@ -66,23 +64,16 @@ export default async function DashboardPage({
 
   // Fallback: If no clinic, show default dashboard
   // This allows users without a clinic to still access the dashboard
-  const { data: profile } = await supabase
-    .from("users")
-    .select("first_name, last_name, role, clinic_name, avatar_url")
-    .eq("id", user.id)
-    .single();
-
   return (
     <ExtensionAuthHandler>
-      <div className="space-y-6">
-        <div className="animate-fade-in-down">
-          <DashboardProfileHeader user={user} profile={profile} />
-        </div>
-
-        <div className="animate-fade-in-up stagger-1 h-px bg-slate-200/50" />
-
-        <div className="animate-fade-in-up stagger-2">
-          <DashboardContentWithTabs />
+      <div className="flex h-full items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold text-slate-700">
+            Welcome to Odis AI
+          </h2>
+          <p className="mt-2 text-slate-500">
+            Your dashboard content will appear here
+          </p>
         </div>
       </div>
     </ExtensionAuthHandler>

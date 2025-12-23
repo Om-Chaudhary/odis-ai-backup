@@ -162,6 +162,8 @@ export const batchScheduleInput = z.object({
   timingMode: z.enum(["scheduled", "immediate"]).default("scheduled"),
   /** Stagger interval in seconds for immediate mode (min: 30, max: 300) */
   staggerIntervalSeconds: z.number().min(30).max(300).default(60),
+  /** Base time for stagger calculations in immediate mode (ISO string). If not provided, uses current time. */
+  scheduleBaseTime: z.string().datetime().optional(),
 });
 
 // =============================================================================

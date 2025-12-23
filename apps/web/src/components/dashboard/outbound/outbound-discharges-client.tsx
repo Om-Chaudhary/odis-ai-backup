@@ -17,12 +17,17 @@ import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-s
 import { PageContainer, PageToolbar, PageContent, PageFooter } from "../layout";
 import { OutboundFilterTabs } from "./outbound-filter-tabs";
 import { OutboundCaseTable } from "./outbound-case-table";
-import { OutboundCaseDetail } from "./outbound-case-detail";
+import { OutboundCaseDetail } from "./outbound-case-detail-refactored";
 import { OutboundSplitLayout } from "./outbound-split-layout";
 import { OutboundPagination } from "./outbound-pagination";
 import { OutboundNeedsReviewTable } from "./outbound-needs-review-table";
 import { OutboundNeedsAttentionTable } from "./outbound-needs-attention-table";
 import { OutboundBulkActionBar } from "./outbound-bulk-action-bar";
+import { BulkOperationProgress } from "./bulk-operation-progress";
+import {
+  BulkOperationProvider,
+  useBulkOperation,
+} from "./bulk-operation-context";
 import { Button } from "@odis-ai/ui/button";
 import { useOutboundData, useOutboundMutations } from "./hooks";
 
@@ -98,8 +103,18 @@ interface TransformedCase {
  * - Compact table rows
  * - Inline editing for cases needing review
  * - Deep linking via consultationId query param (IDEXX Neo integration)
+ * - Background bulk scheduling with progress tracking
  */
 export function OutboundDischargesClient() {
+  return (
+    <BulkOperationProvider>
+      <OutboundDischargesClientInner />
+      <BulkOperationProgress />
+    </BulkOperationProvider>
+  );
+}
+
+function OutboundDischargesClientInner() {
   // URL-synced state
   const [dateStr, setDateStr] = useQueryState("date", {
     defaultValue: format(startOfDay(new Date()), "yyyy-MM-dd"),
@@ -189,13 +204,16 @@ export function OutboundDischargesClient() {
     viewMode: viewMode,
   });
 
+  // Bulk operation context for background processing
+  const bulkOperation = useBulkOperation();
+
   const {
     handleApproveAndSend: approveAndSendHandler,
     handleRetry: retryHandler,
     handleQuickSchedule,
     handleToggleStar,
     handleBulkSchedule,
-    handleBulkScheduleImmediate,
+    handleBulkScheduleImmediateBackground,
     handleCancelScheduled: cancelScheduledHandler,
     handleBulkCancel,
     isSubmitting,
@@ -516,8 +534,48 @@ export function OutboundDischargesClient() {
       return;
     }
 
-    await handleBulkScheduleImmediate(Array.from(selectedForBulk));
-  }, [selectedForBulk, handleBulkScheduleImmediate]);
+    // Get case data with patient names for progress tracking
+    const typedCases = cases as TransformedCase[];
+    const selectedCases = typedCases
+      .filter((c) => selectedForBulk.has(c.id))
+      .map((c) => ({
+        id: c.id,
+        patientName: c.patient.name,
+      }));
+
+    // Clear selection immediately - the background operation will take over
+    setSelectedForBulk(new Set());
+
+    // Start background processing with progress callbacks
+    await handleBulkScheduleImmediateBackground(selectedCases, {
+      onStart: () => {
+        bulkOperation.startOperation(selectedCases);
+      },
+      onCaseStart: (caseId) => {
+        bulkOperation.updateCaseStatus(caseId, "generating");
+      },
+      onCaseComplete: (caseId, success, error) => {
+        bulkOperation.updateCaseStatus(
+          caseId,
+          success ? "scheduled" : "failed",
+          error,
+        );
+        bulkOperation.incrementProcessed();
+      },
+      onPhaseChange: (phase) => {
+        bulkOperation.setPhase(phase);
+      },
+      onComplete: () => {
+        void refetch();
+      },
+    });
+  }, [
+    selectedForBulk,
+    cases,
+    handleBulkScheduleImmediateBackground,
+    bulkOperation,
+    refetch,
+  ]);
 
   const handleCancelSelected = useCallback(async () => {
     if (selectedForBulk.size === 0) {
@@ -705,20 +763,18 @@ export function OutboundDischargesClient() {
               </>
             }
             rightPanel={
-              <>
-                <OutboundCaseDetail
-                  caseData={selectedCase}
-                  deliveryToggles={deliveryToggles}
-                  onToggleChange={setDeliveryToggles}
-                  onApprove={handleApproveAndSend}
-                  onRetry={handleRetry}
-                  onCancelScheduled={handleCancelScheduled}
-                  isSubmitting={isSubmitting}
-                  isCancelling={isCancellingCurrentCase}
-                  testModeEnabled={settingsData?.testModeEnabled ?? false}
-                  onDelete={handleClosePanel}
-                />
-              </>
+              <OutboundCaseDetail
+                caseData={selectedCase}
+                deliveryToggles={deliveryToggles}
+                onToggleChange={setDeliveryToggles}
+                onApprove={handleApproveAndSend}
+                onRetry={handleRetry}
+                onCancelScheduled={handleCancelScheduled}
+                isSubmitting={isSubmitting}
+                isCancelling={isCancellingCurrentCase}
+                testModeEnabled={settingsData?.testModeEnabled ?? false}
+                onDelete={handleClosePanel}
+              />
             }
           />
         )}
@@ -734,6 +790,7 @@ export function OutboundDischargesClient() {
         isProcessing={isBulkScheduling}
         isCancelling={isBulkCancelling}
         showCancelAction={hasScheduledCasesSelected}
+        isBackgroundOperationActive={bulkOperation.phase !== "idle"}
       />
     </div>
   );

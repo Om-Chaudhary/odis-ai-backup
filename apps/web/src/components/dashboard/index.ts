@@ -5,7 +5,6 @@ export * from "./discharges";
 export * from "./filters";
 export * from "./layout";
 export * from "./outbound";
-export * from "./profile";
 export * from "./settings";
 export * from "./shared";
 export * from "./shell";

@@ -270,13 +270,103 @@ export function useOutboundMutations(
       });
 
       try {
+        // Schedule starting 1 minute from now to avoid past-time scheduling after generation
+        const scheduleBaseTime = new Date(Date.now() + 60 * 1000).toISOString();
+
         await batchSchedule.mutateAsync({
           caseIds,
           phoneEnabled: true,
           emailEnabled: true,
           timingMode: "immediate", // Send now, staggered
           staggerIntervalSeconds: 60, // 1 minute between each case
+          scheduleBaseTime, // Start scheduling 1 minute from now
         });
+      } finally {
+        // Remove all case IDs from scheduling state
+        setSchedulingCaseIds((prev) => {
+          const next = new Set(prev);
+          caseIds.forEach((id) => next.delete(id));
+          return next;
+        });
+      }
+    },
+    [batchSchedule],
+  );
+
+  /**
+   * Background bulk schedule with progress tracking.
+   * This processes cases in the background and reports progress via callbacks.
+   */
+  const handleBulkScheduleImmediateBackground = useCallback(
+    async (
+      cases: Array<{ id: string; patientName: string }>,
+      callbacks: {
+        onStart: () => void;
+        onCaseStart: (caseId: string) => void;
+        onCaseComplete: (
+          caseId: string,
+          success: boolean,
+          error?: string,
+        ) => void;
+        onPhaseChange: (
+          phase: "generating" | "scheduling" | "complete" | "error",
+        ) => void;
+        onComplete: () => void;
+      },
+    ) => {
+      const caseIds = cases.map((c) => c.id);
+
+      // Add all case IDs to scheduling state
+      setSchedulingCaseIds((prev) => {
+        const next = new Set(prev);
+        caseIds.forEach((id) => next.add(id));
+        return next;
+      });
+
+      callbacks.onStart();
+
+      try {
+        // Mark all cases as generating
+        callbacks.onPhaseChange("generating");
+        for (const caseItem of cases) {
+          callbacks.onCaseStart(caseItem.id);
+        }
+
+        // Schedule starting 1 minute from now to ensure generation completes before scheduling
+        const scheduleBaseTime = new Date(Date.now() + 60 * 1000).toISOString();
+
+        callbacks.onPhaseChange("scheduling");
+
+        const result = await batchSchedule.mutateAsync({
+          caseIds,
+          phoneEnabled: true,
+          emailEnabled: true,
+          timingMode: "immediate",
+          staggerIntervalSeconds: 60,
+          scheduleBaseTime,
+        });
+
+        // Report individual case results
+        for (const caseResult of result.results) {
+          callbacks.onCaseComplete(
+            caseResult.caseId,
+            caseResult.success,
+            caseResult.error,
+          );
+        }
+
+        callbacks.onPhaseChange("complete");
+        callbacks.onComplete();
+      } catch (error) {
+        callbacks.onPhaseChange("error");
+        // Mark all pending cases as failed
+        for (const caseItem of cases) {
+          callbacks.onCaseComplete(
+            caseItem.id,
+            false,
+            error instanceof Error ? error.message : "Unknown error",
+          );
+        }
       } finally {
         // Remove all case IDs from scheduling state
         setSchedulingCaseIds((prev) => {
@@ -366,6 +456,7 @@ export function useOutboundMutations(
     handleToggleStar,
     handleBulkSchedule,
     handleBulkScheduleImmediate,
+    handleBulkScheduleImmediateBackground,
     handleCancelScheduled,
     handleBulkCancel,
     // State
