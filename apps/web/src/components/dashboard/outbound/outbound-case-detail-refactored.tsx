@@ -3,11 +3,14 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Button } from "@odis-ai/ui/button";
-import { Separator } from "@odis-ai/ui/separator";
-import { Loader2, RotateCcw, Wand2, ExternalLink } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@odis-ai/ui/collapsible";
+import { ExternalLink, FileText, Phone, Mail, ChevronDown } from "lucide-react";
 import { api } from "~/trpc/client";
 import type {
-  PreviewTab,
   DeliveryToggles,
   DischargeCaseStatus,
   SoapNote,
@@ -15,17 +18,14 @@ import type {
 import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
 import {
   EmptyDetailState,
-  PatientHeader,
   ClinicalNotesSection,
-  ScheduleInfoCard,
-  DeliveryToggleSection,
-  DeliveryCompleteCard,
-  AttentionSection,
-  UrgentReasonSection,
-  CommunicationSummarySection,
 } from "./detail";
 import { PatientOwnerCard } from "./detail/patient-owner-card";
+import { DeliveryStatusHero } from "./detail/delivery-status-hero";
+import { QuickActionPanel } from "./detail/quick-action-panel";
 import { WorkflowCanvas, type CaseDataForWorkflow } from "./detail/workflow";
+import { CallTabContent } from "./detail/communication-tabs/call-tab-content";
+import { EmailTabContent } from "./detail/communication-tabs/email-tab-content";
 
 // Scheduled call data with structured output support
 interface ScheduledCallData {
@@ -91,7 +91,6 @@ interface OutboundCaseDetailProps {
   deliveryToggles: DeliveryToggles;
   onToggleChange: (toggles: DeliveryToggles) => void;
   onApprove: () => void;
-  onSkip: () => void;
   onRetry?: () => void;
   onCancelScheduled?: (options: {
     cancelCall: boolean;
@@ -104,21 +103,21 @@ interface OutboundCaseDetailProps {
 }
 
 /**
- * Case Detail Panel Component (Refactored)
+ * Case Detail Panel Component (Redesigned)
  *
- * Redesigned for veterinarians/clinicians with emphasis on:
- * 1. Patient & owner contact info (header)
- * 2. Clinical notes (IDEXX or SOAP) - most prominent
- * 3. AI-generated discharge summary
- * 4. Communication preview (call script / email)
- * 5. Delivery options & actions
+ * Optimized for veterinarians with emphasis on:
+ * 1. Clear delivery status at the top
+ * 2. Streamlined action panel with delivery options
+ * 3. Clinical context in collapsible sections
+ * 4. Communication previews accessible but not intrusive
+ *
+ * No skip button - cases remain in queue until explicitly sent
  */
 export function OutboundCaseDetail({
   caseData,
   deliveryToggles,
   onToggleChange,
   onApprove,
-  onSkip,
   onRetry,
   onCancelScheduled,
   isSubmitting,
@@ -126,9 +125,13 @@ export function OutboundCaseDetail({
   testModeEnabled = false,
   onDelete,
 }: OutboundCaseDetailProps) {
-  const [activeTab, setActiveTab] = useState<PreviewTab>("call_script");
+  // Collapsible section states
+  const [clinicalNotesOpen, setClinicalNotesOpen] = useState(false);
+  const [callScriptOpen, setCallScriptOpen] = useState(false);
+  const [emailPreviewOpen, setEmailPreviewOpen] = useState(false);
+  const [workflowOpen, setWorkflowOpen] = useState(false);
 
-  // Mutation for scheduling remaining outreach
+  // Mutation for scheduling remaining outreach (for partial delivery cases)
   const utils = api.useUtils();
   const scheduleRemainingMutation =
     api.outbound.scheduleRemainingOutreach.useMutation({
@@ -138,7 +141,6 @@ export function OutboundCaseDetail({
     });
 
   // Transform case data for workflow visualization
-  // IMPORTANT: This hook must be called unconditionally before any early returns
   const workflowCaseData: CaseDataForWorkflow | null = useMemo(() => {
     if (!caseData) return null;
     return {
@@ -175,33 +177,31 @@ export function OutboundCaseDetail({
     };
   }, [caseData]);
 
-  const handleScheduleRemaining = (options: {
-    scheduleCall: boolean;
-    scheduleEmail: boolean;
-    immediateDelivery: boolean;
-  }) => {
-    if (!caseData) return;
-    scheduleRemainingMutation.mutate({
-      caseId: caseData.caseId,
-      scheduleCall: options.scheduleCall,
-      scheduleEmail: options.scheduleEmail,
-      immediateDelivery: options.immediateDelivery,
-    });
-  };
+  // Suppress unused - keeping for future partial delivery feature
+  void scheduleRemainingMutation;
 
   // Early return after all hooks are called
   if (!caseData || !workflowCaseData) {
     return <EmptyDetailState />;
   }
 
+  // Determine case states
   const isEditable =
     caseData.status === "pending_review" || caseData.status === "ready";
   const showRetry = caseData.status === "failed";
-  const showScheduleInfo = caseData.status === "scheduled";
-
-  // Check if case has been sent (completed or failed)
   const isSentCase =
     caseData.status === "completed" || caseData.status === "failed";
+  const isScheduled = caseData.status === "scheduled";
+
+  // Check for partial delivery (one sent, one not)
+  const phoneSent = caseData.phoneSent === "sent";
+  const emailSent = caseData.emailSent === "sent";
+  const isPartialDelivery =
+    (phoneSent && !emailSent && !!caseData.owner.email) ||
+    (!phoneSent && emailSent && !!caseData.owner.phone);
+
+  // Show action panel for editable, partial, or failed cases
+  const showActionPanel = isEditable || showRetry || isPartialDelivery;
 
   // Check if discharge summary needs to be generated
   const hasStructuredContent = Boolean(caseData.structuredContent?.patientName);
@@ -219,10 +219,17 @@ export function OutboundCaseDetail({
   // Determine which clinical notes to show
   const hasIdexxNotes = Boolean(caseData.idexxNotes?.trim());
   const hasSoapNotes = caseData.soapNotes && caseData.soapNotes.length > 0;
+  const hasClinicalNotes = hasIdexxNotes || hasSoapNotes;
+
+  // Determine what to show for communication previews
+  const hasOwnerPhone = Boolean(caseData.owner.phone);
+  const hasOwnerEmail = Boolean(caseData.owner.email);
+  const phoneCanBeSent = hasOwnerPhone && !phoneSent;
+  const emailCanBeSent = hasOwnerEmail && !emailSent;
 
   return (
     <div className="flex h-full flex-col">
-      {/* Patient/Owner Card (Redesigned) */}
+      {/* Patient/Owner Card */}
       <div className="p-4 pb-0">
         <PatientOwnerCard
           caseData={{
@@ -239,83 +246,135 @@ export function OutboundCaseDetail({
 
       {/* Scrollable Content */}
       <div className="flex-1 space-y-4 overflow-auto p-4">
-        {isSentCase ? (
-          /* Layout for SENT cases - Workflow Visualization */
-          <>
-            {/* Workflow Timeline */}
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white/50 dark:border-slate-700 dark:bg-slate-900/50">
-              {/* Header with expand button */}
-              <div className="flex items-center justify-between border-b border-slate-200/60 bg-slate-50/50 px-4 py-2">
-                <span className="text-xs font-medium text-slate-600">
-                  Workflow Timeline
-                </span>
-                <Link href={`/dashboard/outbound/workflow/${caseData.caseId}`}>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 gap-1.5 px-2 text-slate-500 hover:text-teal-700"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    <span className="text-xs">Open</span>
-                  </Button>
-                </Link>
-              </div>
-              <WorkflowCanvas
-                caseData={workflowCaseData}
-                className="h-[380px] min-h-[380px]"
-              />
-            </div>
+        {/* Delivery Status Hero - Always visible at top */}
+        <DeliveryStatusHero
+          status={caseData.status}
+          emailStatus={caseData.emailSent}
+          phoneStatus={caseData.phoneSent}
+          scheduledEmailFor={caseData.scheduledEmailFor}
+          scheduledCallFor={caseData.scheduledCallFor}
+          scheduledCall={
+            caseData.scheduledCall
+              ? {
+                  id: caseData.scheduledCall.id,
+                  status: caseData.scheduledCall.status,
+                  durationSeconds: caseData.scheduledCall.durationSeconds,
+                  endedReason: caseData.scheduledCall.endedReason,
+                  transcript: caseData.scheduledCall.transcript,
+                  summary: caseData.scheduledCall.summary,
+                }
+              : null
+          }
+          hasOwnerEmail={hasOwnerEmail}
+          hasOwnerPhone={hasOwnerPhone}
+          ownerPhone={caseData.owner.phone}
+          ownerEmail={caseData.owner.email}
+        />
 
-            {/* Clinical Notes Section (Collapsed) */}
-            {(hasIdexxNotes || hasSoapNotes) && (
+        {/* Quick Action Panel - For actionable cases */}
+        {showActionPanel && (
+          <QuickActionPanel
+            status={caseData.status}
+            needsGeneration={needsGeneration}
+            deliveryToggles={deliveryToggles}
+            onToggleChange={onToggleChange}
+            onApprove={onApprove}
+            onRetry={onRetry}
+            isSubmitting={isSubmitting}
+            testModeEnabled={testModeEnabled}
+            hasOwnerPhone={hasOwnerPhone}
+            hasOwnerEmail={hasOwnerEmail}
+            ownerPhone={caseData.owner.phone}
+            ownerEmail={caseData.owner.email}
+            failureReason={caseData.scheduledCall?.endedReason}
+            phoneStatus={caseData.phoneSent}
+            emailStatus={caseData.emailSent}
+          />
+        )}
+
+        {/* Clinical Notes - Collapsible */}
+        {hasClinicalNotes && (
+          <Collapsible open={clinicalNotesOpen} onOpenChange={setClinicalNotesOpen}>
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white/50 px-4 py-3 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/50 dark:hover:bg-slate-800/50"
+              >
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-slate-500" />
+                  <span className="text-sm font-medium">Clinical Notes</span>
+                </div>
+                <ChevronDown
+                  className={`h-4 w-4 text-slate-500 transition-transform ${
+                    clinicalNotesOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2">
               <ClinicalNotesSection
                 idexxNotes={caseData.idexxNotes}
                 soapNotes={caseData.soapNotes}
                 hasIdexxNotes={hasIdexxNotes}
               />
-            )}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
 
-            {/* Communication Summary (Collapsed) */}
-            <CommunicationSummarySection
-              caseData={caseData}
-              callScript={callScript}
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-            />
-          </>
-        ) : (
-          /* Layout for UNSENT cases (pending_review, ready, scheduled) */
-          <>
-            {/* Workflow Timeline (Preview Mode) */}
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white/50 dark:border-slate-700 dark:bg-slate-900/50">
-              {/* Header with expand button */}
-              <div className="flex items-center justify-between border-b border-slate-200/60 bg-slate-50/50 px-4 py-2">
-                <span className="text-xs font-medium text-slate-600">
-                  Workflow Preview
+        {/* Call Script Preview - Collapsible */}
+        <Collapsible open={callScriptOpen} onOpenChange={setCallScriptOpen}>
+          <CollapsibleTrigger asChild>
+            <Button
+              variant="ghost"
+              className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white/50 px-4 py-3 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/50 dark:hover:bg-slate-800/50"
+            >
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-slate-500" />
+                <span className="text-sm font-medium">
+                  {phoneSent && caseData.scheduledCall?.transcript
+                    ? "Call Transcript"
+                    : "Call Script"}
                 </span>
-                <Link href={`/dashboard/outbound/workflow/${caseData.caseId}`}>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 gap-1.5 px-2 text-slate-500 hover:text-teal-700"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                    <span className="text-xs">Open</span>
-                  </Button>
-                </Link>
               </div>
-              <WorkflowCanvas
-                caseData={workflowCaseData}
-                className="h-[330px] min-h-[330px]"
+              <ChevronDown
+                className={`h-4 w-4 text-slate-500 transition-transform ${
+                  callScriptOpen ? "rotate-180" : ""
+                }`}
+              />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2">
+            <div className="rounded-lg border border-slate-200 bg-white/50 p-4 dark:border-slate-700 dark:bg-slate-900/50">
+              <CallTabContent
+                caseData={{
+                  scheduledCall: caseData.scheduledCall,
+                }}
+                callScript={callScript}
+                phoneWasSent={phoneSent}
+                phoneCanBeSent={phoneCanBeSent}
+                hasOwnerPhone={hasOwnerPhone}
               />
             </div>
+          </CollapsibleContent>
+        </Collapsible>
 
-            {/* Clinical Notes Section */}
-            {(hasIdexxNotes || hasSoapNotes) && (
-              <ClinicalNotesSection
-                idexxNotes={caseData.idexxNotes}
-                soapNotes={caseData.soapNotes}
-                hasIdexxNotes={hasIdexxNotes}
+        {/* Email Preview - Collapsible */}
+        <Collapsible open={emailPreviewOpen} onOpenChange={setEmailPreviewOpen}>
+          <CollapsibleTrigger asChild>
+            <Button
+              variant="ghost"
+              className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white/50 px-4 py-3 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/50 dark:hover:bg-slate-800/50"
+            >
+              <div className="flex items-center gap-2">
+                <Mail className="h-4 w-4 text-slate-500" />
+                <span className="text-sm font-medium">
+                  {emailSent ? "Email Sent" : "Email Preview"}
+                </span>
+              </div>
+              <ChevronDown
+                className={`h-4 w-4 text-slate-500 transition-transform ${
+                  emailPreviewOpen ? "rotate-180" : ""
+                }`}
               />
             )}
 
@@ -327,71 +386,54 @@ export function OutboundCaseDetail({
                 onCancelScheduled={onCancelScheduled}
                 isCancelling={isCancelling}
               />
-            )}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
 
-            {/* Communication Summary */}
-            <CommunicationSummarySection
-              caseData={caseData}
-              callScript={callScript}
-              activeTab={activeTab}
-              setActiveTab={setActiveTab}
-            />
-
-            {/* Delivery Options for unsent cases */}
-            {isEditable && (
-              <DeliveryToggleSection
-                toggles={deliveryToggles}
-                onChange={onToggleChange}
-                hasPhone={!!caseData.owner.phone}
-                hasEmail={!!caseData.owner.email}
-                phone={caseData.owner.phone}
-                email={caseData.owner.email}
-                testModeEnabled={testModeEnabled}
-              />
-            )}
-          </>
+        {/* Workflow Timeline - Collapsible, shown for sent/scheduled cases */}
+        {(isSentCase || isScheduled) && (
+          <Collapsible open={workflowOpen} onOpenChange={setWorkflowOpen}>
+            <CollapsibleTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white/50 px-4 py-3 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/50 dark:hover:bg-slate-800/50"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">Workflow Timeline</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/dashboard/outbound/workflow/${caseData.caseId}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 gap-1 px-2 text-slate-500 hover:text-teal-700"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      <span className="text-xs">Open</span>
+                    </Button>
+                  </Link>
+                  <ChevronDown
+                    className={`h-4 w-4 text-slate-500 transition-transform ${
+                      workflowOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </div>
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-2">
+              <div className="overflow-hidden rounded-lg border border-slate-200 bg-white/50 dark:border-slate-700 dark:bg-slate-900/50">
+                <WorkflowCanvas
+                  caseData={workflowCaseData}
+                  className="h-[300px] min-h-[300px]"
+                />
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         )}
       </div>
-
-      {/* Sticky Action Bar */}
-      {(isEditable || showRetry) && (
-        <div className="bg-muted/10 border-t p-4">
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={onSkip}
-              disabled={isSubmitting}
-            >
-              Skip
-            </Button>
-            <Button
-              className={`flex-1 ${needsGeneration ? "bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600" : "bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600"}`}
-              onClick={showRetry ? onRetry : onApprove}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {needsGeneration ? "Generating..." : "Scheduling..."}
-                </>
-              ) : showRetry ? (
-                <>
-                  <RotateCcw className="mr-2 h-4 w-4" />
-                  Retry
-                </>
-              ) : needsGeneration ? (
-                <>
-                  <Wand2 className="mr-2 h-4 w-4" />
-                  Generate & Send
-                </>
-              ) : (
-                "Approve & Send"
-              )}
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

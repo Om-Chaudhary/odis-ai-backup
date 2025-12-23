@@ -5,7 +5,6 @@ import {
   AlertTriangle,
   Check,
   X,
-  Trash2,
   Phone,
   Mail,
   Pencil,
@@ -19,7 +18,6 @@ import {
   TableRow,
 } from "@odis-ai/ui/table";
 import { Skeleton } from "@odis-ai/ui/skeleton";
-import { cn } from "@odis-ai/utils";
 
 interface NeedsReviewCase {
   id: string;
@@ -43,7 +41,6 @@ interface OutboundNeedsReviewTableProps {
     field: "phone" | "email",
     value: string,
   ) => Promise<void>;
-  onRemoveFromQueue: (caseId: string) => Promise<void>;
 }
 
 /**
@@ -56,7 +53,6 @@ export function OutboundNeedsReviewTable({
   cases,
   isLoading,
   onUpdateContact,
-  onRemoveFromQueue,
 }: OutboundNeedsReviewTableProps) {
   if (isLoading) {
     return <NeedsReviewSkeleton />;
@@ -72,11 +68,10 @@ export function OutboundNeedsReviewTable({
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-white">
             <TableRow className="text-xs">
-              <TableHead className="h-8 w-[180px] pl-3">Patient</TableHead>
-              <TableHead className="h-8 w-[140px]">Owner</TableHead>
-              <TableHead className="h-8 w-[160px]">Phone</TableHead>
-              <TableHead className="h-8 w-[200px]">Email</TableHead>
-              <TableHead className="h-8 w-[80px]">Actions</TableHead>
+              <TableHead className="h-8 w-[200px] pl-3">Patient</TableHead>
+              <TableHead className="h-8 w-[160px]">Owner</TableHead>
+              <TableHead className="h-8 w-[180px]">Phone</TableHead>
+              <TableHead className="h-8 w-[240px]">Email</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -85,7 +80,6 @@ export function OutboundNeedsReviewTable({
                 key={caseItem.id}
                 caseItem={caseItem}
                 onUpdateContact={onUpdateContact}
-                onRemoveFromQueue={onRemoveFromQueue}
               />
             ))}
           </TableBody>
@@ -101,7 +95,6 @@ export function OutboundNeedsReviewTable({
 function NeedsReviewRow({
   caseItem,
   onUpdateContact,
-  onRemoveFromQueue,
 }: {
   caseItem: NeedsReviewCase;
   onUpdateContact: (
@@ -109,14 +102,12 @@ function NeedsReviewRow({
     field: "phone" | "email",
     value: string,
   ) => Promise<void>;
-  onRemoveFromQueue: (caseId: string) => Promise<void>;
 }) {
   const [editingField, setEditingField] = useState<"phone" | "email" | null>(
     null,
   );
   const [editValue, setEditValue] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [isRemoving, setIsRemoving] = useState(false);
 
   const missingPhone = !caseItem.owner.phone;
   const missingEmail = !caseItem.owner.email;
@@ -150,15 +141,6 @@ function NeedsReviewRow({
       setIsSaving(false);
     }
   }, [editingField, editValue, caseItem.id, onUpdateContact]);
-
-  const handleRemove = useCallback(async () => {
-    setIsRemoving(true);
-    try {
-      await onRemoveFromQueue(caseItem.id);
-    } finally {
-      setIsRemoving(false);
-    }
-  }, [caseItem.id, onRemoveFromQueue]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -259,7 +241,7 @@ function NeedsReviewRow({
               placeholder="email@example.com"
               autoFocus
               disabled={isSaving}
-              className="h-7 w-40 rounded border border-neutral-300 px-2 text-sm focus:border-neutral-500 focus:outline-none"
+              className="h-7 w-44 rounded border border-neutral-300 px-2 text-sm focus:border-neutral-500 focus:outline-none"
             />
             <button
               onClick={saveEdit}
@@ -289,7 +271,7 @@ function NeedsReviewRow({
             ) : (
               <>
                 <Mail className="h-3.5 w-3.5 text-neutral-400" />
-                <span className="max-w-32 truncate text-sm">
+                <span className="max-w-40 truncate text-sm">
                   {caseItem.owner.email}
                 </span>
                 <button
@@ -302,21 +284,6 @@ function NeedsReviewRow({
             )}
           </div>
         )}
-      </TableCell>
-
-      {/* Actions */}
-      <TableCell className="py-1.5">
-        <button
-          onClick={handleRemove}
-          disabled={isRemoving}
-          className={cn(
-            "flex items-center gap-1 rounded px-2 py-1 text-xs text-red-600 transition-colors hover:bg-red-50",
-            isRemoving && "opacity-50",
-          )}
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-          Remove
-        </button>
       </TableCell>
     </TableRow>
   );
@@ -331,22 +298,20 @@ function NeedsReviewSkeleton() {
   return (
     <div className="space-y-1 p-2">
       <div className="flex gap-3 border-b pb-1.5 pl-3">
-        <Skeleton className="h-3 w-[180px]" />
-        <Skeleton className="h-3 w-[140px]" />
-        <Skeleton className="h-3 w-[160px]" />
         <Skeleton className="h-3 w-[200px]" />
-        <Skeleton className="h-3 w-[80px]" />
+        <Skeleton className="h-3 w-[160px]" />
+        <Skeleton className="h-3 w-[180px]" />
+        <Skeleton className="h-3 w-[240px]" />
       </div>
       {Array.from({ length: 8 }).map((_, i) => (
         <div key={i} className="flex items-center gap-3 py-2 pl-3">
-          <div className="w-[180px] space-y-0.5">
+          <div className="w-[200px] space-y-0.5">
             <Skeleton className="h-3.5 w-20" />
             <Skeleton className="h-2.5 w-16" />
           </div>
-          <Skeleton className="h-3 w-[120px]" />
-          <Skeleton className="h-6 w-[100px]" />
-          <Skeleton className="h-6 w-[140px]" />
-          <Skeleton className="h-6 w-[60px]" />
+          <Skeleton className="h-3 w-[140px]" />
+          <Skeleton className="h-6 w-[120px]" />
+          <Skeleton className="h-6 w-[180px]" />
         </div>
       ))}
     </div>

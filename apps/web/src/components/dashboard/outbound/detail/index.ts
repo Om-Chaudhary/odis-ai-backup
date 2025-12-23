@@ -11,3 +11,7 @@ export * from "./utils";
 // Re-export the existing components
 export * from "./detail-empty-state";
 export * from "./structured-preview";
+
+// New redesigned components
+export * from "./delivery-status-hero";
+export * from "./quick-action-panel";

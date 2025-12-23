@@ -191,7 +191,6 @@ export function OutboundDischargesClient() {
 
   const {
     handleApproveAndSend: approveAndSendHandler,
-    handleSkip: skipHandler,
     handleRetry: retryHandler,
     handleQuickSchedule,
     handleToggleStar,
@@ -217,11 +216,6 @@ export function OutboundDischargesClient() {
     if (!selectedCase) return;
     await approveAndSendHandler(selectedCase.id, deliveryToggles);
   }, [selectedCase, deliveryToggles, approveAndSendHandler]);
-
-  const handleSkip = useCallback(async () => {
-    if (!selectedCase) return;
-    await skipHandler(selectedCase.id);
-  }, [selectedCase, skipHandler]);
 
   const handleRetry = useCallback(async () => {
     if (!selectedCase) return;
@@ -470,13 +464,6 @@ export function OutboundDischargesClient() {
     [refetch],
   );
 
-  const handleRemoveFromQueue = useCallback(
-    async (caseId: string) => {
-      await skipHandler(caseId);
-    },
-    [skipHandler],
-  );
-
   // Bulk selection handlers
   const handleToggleBulkSelect = useCallback((caseId: string) => {
     setSelectedForBulk((prev) => {
@@ -597,7 +584,6 @@ export function OutboundDischargesClient() {
                 cases={needsReviewCases}
                 isLoading={isLoading}
                 onUpdateContact={handleUpdateContact}
-                onRemoveFromQueue={handleRemoveFromQueue}
               />
             </PageContent>
             <PageFooter>
@@ -655,7 +641,6 @@ export function OutboundDischargesClient() {
                 deliveryToggles={deliveryToggles}
                 onToggleChange={setDeliveryToggles}
                 onApprove={handleApproveAndSend}
-                onSkip={handleSkip}
                 onRetry={handleRetry}
                 onCancelScheduled={handleCancelScheduled}
                 isSubmitting={isSubmitting}
@@ -715,7 +700,6 @@ export function OutboundDischargesClient() {
                 deliveryToggles={deliveryToggles}
                 onToggleChange={setDeliveryToggles}
                 onApprove={handleApproveAndSend}
-                onSkip={handleSkip}
                 onRetry={handleRetry}
                 onCancelScheduled={handleCancelScheduled}
                 isSubmitting={isSubmitting}
