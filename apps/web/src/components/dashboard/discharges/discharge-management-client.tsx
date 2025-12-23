@@ -612,7 +612,7 @@ export function DischargeManagementClient() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => router.push("/admin/discharges/batch")}
+            onClick={() => router.push("/dashboard/outbound/batch")}
             disabled={isLoading}
             className="transition-smooth"
           >

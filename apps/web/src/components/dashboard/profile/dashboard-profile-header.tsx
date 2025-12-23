@@ -1,4 +1,3 @@
-import { Button } from "@odis-ai/ui/button";
 import { Badge } from "@odis-ai/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@odis-ai/ui/avatar";
 import { Mail } from "lucide-react";
@@ -71,16 +70,6 @@ export default function DashboardProfileHeader({
         <Badge className="animate-scale-in transition-smooth rounded-md border-0 bg-emerald-100 font-medium text-emerald-700 capitalize hover:bg-emerald-200">
           {roleDisplay}
         </Badge>
-        {role === "admin" && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="transition-smooth border-slate-200 hover:bg-slate-50"
-            asChild
-          >
-            <a href="/admin">Admin Panel</a>
-          </Button>
-        )}
       </div>
     </div>
   );

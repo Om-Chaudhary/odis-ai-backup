@@ -41,7 +41,7 @@ export function QuickActionsMenu({
       onGenerateSoap();
     } else {
       // Navigate to case detail page where SOAP generation can be initiated
-      router.push(`/admin/discharges/${caseId}?action=generate-soap`);
+      router.push(`/dashboard/outbound/${caseId}?action=generate-soap`);
     }
   };
 
@@ -50,7 +50,7 @@ export function QuickActionsMenu({
       onGenerateDischarge();
     } else {
       // Navigate to case detail page where discharge generation can be initiated
-      router.push(`/admin/discharges/${caseId}?action=generate-discharge`);
+      router.push(`/dashboard/outbound/${caseId}?action=generate-discharge`);
     }
   };
 
@@ -95,7 +95,7 @@ export function QuickActionsMenu({
               : "Generate Discharge Summary"}
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href={`/admin/discharges/${caseId}`} className="gap-2">
+            <Link href={`/dashboard/outbound/${caseId}`} className="gap-2">
               <Eye className="h-4 w-4" />
               View Details
             </Link>

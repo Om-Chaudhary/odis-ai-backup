@@ -1,6 +1,6 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import { ZodError } from "zod";
-import { createClient, createServiceClient } from "@odis-ai/db/server";
+import { createClient } from "@odis-ai/db/server";
 
 type CreateContextOptions = {
   headers: Headers;
@@ -91,42 +91,6 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
       ...ctx,
       // infers the `user` as non-nullable
       user: { ...ctx.user },
-    },
-  });
-});
-
-/**
- * Admin-only procedure
- *
- * Extends protectedProcedure to also verify the user has admin role.
- * Use this for admin-only operations like template management.
- * Provides a service client that bypasses RLS for admin operations.
- *
- * @see https://trpc.io/docs/procedures
- */
-export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
-  // Check if user has admin role
-  const { data: userProfile } = await ctx.supabase
-    .from("users")
-    .select("role")
-    .eq("id", ctx.user.id)
-    .single();
-
-  if (userProfile?.role !== "admin") {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Admin access required",
-    });
-  }
-
-  // Create service client for admin operations that bypass RLS
-  const serviceClient = await createServiceClient();
-
-  return next({
-    ctx: {
-      ...ctx,
-      user: { ...ctx.user },
-      serviceClient, // Add service client to context
     },
   });
 });
