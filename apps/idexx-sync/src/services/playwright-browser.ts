@@ -17,7 +17,8 @@ export interface BrowserConfig {
 }
 
 const DEFAULT_CONFIG: BrowserConfig = {
-  headless: true,
+  headless:
+    process.env.NODE_ENV === "production" || process.env.HEADLESS !== "false",
   timeout: 30000,
   viewport: { width: 1920, height: 1080 },
 };
@@ -48,16 +49,6 @@ export class PlaywrightBrowser {
 
     this.browser = await chromium.launch({
       headless: this.config.headless,
-      args: [
-        "--disable-blink-features=AutomationControlled",
-        "--disable-features=IsolateOrigins,site-per-process",
-        "--disable-web-security",
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage",
-        "--disable-accelerated-2d-canvas",
-        "--disable-gpu",
-      ],
     });
 
     console.log("[BROWSER] Chromium launched successfully");

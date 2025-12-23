@@ -17,8 +17,8 @@ ENV HOST=0.0.0.0
 ENV PORT=3001
 ENV NODE_ENV=production
 
-# Enable corepack for pnpm
-RUN corepack enable && corepack prepare pnpm@10.23.0 --activate
+# Install pnpm (corepack in base image has outdated signing keys)
+RUN npm install -g pnpm@10.23.0
 
 WORKDIR /app
 
@@ -26,15 +26,12 @@ WORKDIR /app
 RUN groupadd --system idexx-sync && \
     useradd --system --gid idexx-sync idexx-sync
 
-# Copy built application and dependencies from Nx build output
-# This expects `nx build idexx-sync && nx prune idexx-sync` to have been run
-COPY dist/apps/idexx-sync/ ./
+# Copy built application from Nx build output
+COPY dist/apps/idexx-sync/main.js ./
+COPY dist/apps/idexx-sync/package.json ./
 
-# Install production dependencies only
-RUN pnpm install --prod --frozen-lockfile
-
-# Copy workspace modules if present (from nx copy-workspace-modules)
-COPY dist/apps/idexx-sync/workspace_modules/ ./workspace_modules/ 2>/dev/null || true
+# Install production dependencies (only playwright - rest is bundled)
+RUN pnpm install --prod
 
 # Set ownership to non-root user
 RUN chown -R idexx-sync:idexx-sync /app

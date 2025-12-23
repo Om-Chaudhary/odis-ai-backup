@@ -202,33 +202,26 @@ export class SyncEngine {
   ): Promise<IdexxCredentials | null> {
     try {
       const credentialManager = await IdexxCredentialManager.create();
-
-      // Get user associated with this clinic
       const supabase = await createServiceClient();
-      const { data: user } = await supabase
-        .from("users")
-        .select("id")
+
+      // Get credentials directly by clinic_id
+      const { data: credential, error } = await supabase
+        .from("idexx_credentials")
+        .select("user_id")
         .eq("clinic_id", clinicId)
+        .eq("is_active", true)
+        .limit(1)
         .single();
 
-      if (!user) {
-        // Try getting credentials directly by clinic
-        const { data: credential } = await supabase
-          .from("idexx_credentials")
-          .select("user_id")
-          .eq("clinic_id", clinicId)
-          .eq("is_active", true)
-          .single();
-
-        if (!credential) return null;
-
-        return await credentialManager.getCredentials(
-          credential.user_id,
-          clinicId,
-        );
+      if (error || !credential) {
+        console.log(`[SYNC] No credentials found for clinic ${clinicId}`);
+        return null;
       }
 
-      return await credentialManager.getCredentials(user.id, clinicId);
+      return await credentialManager.getCredentials(
+        credential.user_id,
+        clinicId,
+      );
     } catch (error) {
       console.error("[SYNC] Error getting credentials:", error);
       return null;
