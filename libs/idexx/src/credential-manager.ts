@@ -16,13 +16,13 @@ export interface IdexxCredentials {
 
 export interface StoredCredential {
   id: string;
-  userId: string;
-  clinicId: string | null;
-  encryptionKeyId: string;
-  isActive: boolean;
-  lastUsedAt: string | null;
-  createdAt: string;
-  updatedAt: string;
+  user_id: string;
+  clinic_id: string | null;
+  encryption_key_id: string;
+  is_active: boolean;
+  last_used_at: string | null;
+  created_at: string;
+  updated_at: string;
   username_encrypted: unknown;
   password_encrypted: unknown;
 }
@@ -155,11 +155,11 @@ export class IdexxCredentialManager {
       );
       const username = decrypt(
         usernameEncryptedBuffer,
-        credential.encryptionKeyId,
+        credential.encryption_key_id,
       );
       const password = decrypt(
         passwordEncryptedBuffer,
-        credential.encryptionKeyId,
+        credential.encryption_key_id,
       );
 
       // Update last_used_at
