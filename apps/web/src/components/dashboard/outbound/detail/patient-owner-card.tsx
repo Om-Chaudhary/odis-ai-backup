@@ -4,17 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@odis-ai/ui/button";
 import { Separator } from "@odis-ai/ui/separator";
-import {
-  Mail,
-  Phone,
-  User,
-  ExternalLink,
-  Trash2,
-  Dog,
-  Cat,
-  Bird,
-  Rabbit,
-} from "lucide-react";
+import { Mail, Phone, User, ExternalLink, Trash2 } from "lucide-react";
 import { formatPhoneNumber } from "@odis-ai/utils/phone";
 import { DeleteCaseDialog } from "../../cases/delete-case-dialog";
 import { cn } from "@odis-ai/utils";
@@ -45,27 +35,6 @@ interface PatientOwnerCardProps {
     status: string;
   };
   onDelete?: () => void;
-  onClose?: () => void;
-}
-
-// Get species icon
-function getSpeciesIcon(species: string | null) {
-  const speciesLower = species?.toLowerCase() ?? "";
-
-  if (speciesLower.includes("canine") || speciesLower.includes("dog")) {
-    return <Dog className="h-6 w-6 text-amber-600" />;
-  }
-  if (speciesLower.includes("feline") || speciesLower.includes("cat")) {
-    return <Cat className="h-6 w-6 text-purple-600" />;
-  }
-  if (speciesLower.includes("avian") || speciesLower.includes("bird")) {
-    return <Bird className="h-6 w-6 text-sky-600" />;
-  }
-  if (speciesLower.includes("rabbit") || speciesLower.includes("bunny")) {
-    return <Rabbit className="h-6 w-6 text-pink-600" />;
-  }
-  // Default to dog icon
-  return <Dog className="h-6 w-6 text-slate-500" />;
 }
 
 // Get species emoji
@@ -133,7 +102,6 @@ function calculateAge(dateOfBirth: string | null): string | null {
 export function PatientOwnerCard({
   caseData,
   onDelete,
-  onClose,
 }: PatientOwnerCardProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 

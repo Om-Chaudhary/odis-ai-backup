@@ -1,5 +1,4 @@
 import { AppSidebar } from "~/components/dashboard/shell/app-sidebar";
-import { Separator } from "@odis-ai/ui/separator";
 import { DashboardBreadcrumb } from "~/components/dashboard/shell/dashboard-breadcrumb";
 import { getUser } from "~/server/actions/auth";
 import { createClient } from "@odis-ai/db/server";

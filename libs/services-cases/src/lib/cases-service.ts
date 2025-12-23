@@ -1512,8 +1512,8 @@ export const CasesService = {
           );
 
           // Dynamic import to avoid circular dependencies
-          // eslint-disable-next-line @nx/enforce-module-boundaries
           const { executeScheduledCall } =
+            // eslint-disable-next-line @nx/enforce-module-boundaries
             await import("@odis-ai/services-discharge/call-executor");
           const result = await executeScheduledCall(scheduledCall.id, supabase);
           if (!result.success) {
@@ -1598,8 +1598,8 @@ export const CasesService = {
         );
 
         // Dynamic import to avoid circular dependencies
-        // eslint-disable-next-line @nx/enforce-module-boundaries
         const { executeScheduledCall } =
+          // eslint-disable-next-line @nx/enforce-module-boundaries
           await import("@odis-ai/services-discharge/call-executor");
         const result = await executeScheduledCall(scheduledCall.id, supabase);
         if (!result.success) {

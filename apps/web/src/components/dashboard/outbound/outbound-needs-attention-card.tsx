@@ -9,7 +9,7 @@ import {
 } from "@odis-ai/ui/card";
 import { Button } from "@odis-ai/ui/button";
 import { Badge } from "@odis-ai/ui/badge";
-import { AlertTriangle, Phone, CheckCircle2, ArrowRight } from "lucide-react";
+import { Phone, CheckCircle2, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatDistanceToNow, parseISO } from "date-fns";

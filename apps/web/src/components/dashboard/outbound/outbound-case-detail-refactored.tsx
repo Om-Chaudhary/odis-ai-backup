@@ -10,16 +10,9 @@ import {
 } from "@odis-ai/ui/collapsible";
 import { ExternalLink, FileText, Phone, Mail, ChevronDown } from "lucide-react";
 import { api } from "~/trpc/client";
-import type {
-  DeliveryToggles,
-  DischargeCaseStatus,
-  SoapNote,
-} from "./types";
+import type { DeliveryToggles, DischargeCaseStatus, SoapNote } from "./types";
 import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
-import {
-  EmptyDetailState,
-  ClinicalNotesSection,
-} from "./detail";
+import { EmptyDetailState, ClinicalNotesSection } from "./detail";
 import { PatientOwnerCard } from "./detail/patient-owner-card";
 import { DeliveryStatusHero } from "./detail/delivery-status-hero";
 import { QuickActionPanel } from "./detail/quick-action-panel";
@@ -119,9 +112,9 @@ export function OutboundCaseDetail({
   onToggleChange,
   onApprove,
   onRetry,
-  onCancelScheduled,
+  onCancelScheduled: _onCancelScheduled,
   isSubmitting,
-  isCancelling = false,
+  isCancelling: _isCancelling = false,
   testModeEnabled = false,
   onDelete,
 }: OutboundCaseDetailProps) {
@@ -294,7 +287,10 @@ export function OutboundCaseDetail({
 
         {/* Clinical Notes - Collapsible */}
         {hasClinicalNotes && (
-          <Collapsible open={clinicalNotesOpen} onOpenChange={setClinicalNotesOpen}>
+          <Collapsible
+            open={clinicalNotesOpen}
+            onOpenChange={setClinicalNotesOpen}
+          >
             <CollapsibleTrigger asChild>
               <Button
                 variant="ghost"
@@ -376,15 +372,19 @@ export function OutboundCaseDetail({
                   emailPreviewOpen ? "rotate-180" : ""
                 }`}
               />
-            )}
-
-            {/* Schedule Info for Scheduled Cases */}
-            {showScheduleInfo && (
-              <ScheduleInfoCard
-                emailScheduledFor={caseData.scheduledEmailFor}
-                callScheduledFor={caseData.scheduledCallFor}
-                onCancelScheduled={onCancelScheduled}
-                isCancelling={isCancelling}
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2">
+            <div className="rounded-lg border border-slate-200 bg-white/50 p-4 dark:border-slate-700 dark:bg-slate-900/50">
+              <EmailTabContent
+                caseData={{
+                  dischargeSummary: caseData.dischargeSummary,
+                  structuredContent: caseData.structuredContent,
+                  emailContent: caseData.emailContent,
+                }}
+                emailWasSent={emailSent}
+                emailCanBeSent={emailCanBeSent}
+                hasOwnerEmail={hasOwnerEmail}
               />
             </div>
           </CollapsibleContent>
