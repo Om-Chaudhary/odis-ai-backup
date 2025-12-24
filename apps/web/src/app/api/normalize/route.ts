@@ -24,7 +24,7 @@ import { handleCorsPreflightRequest } from "@odis-ai/api/cors";
 import {
   NormalizeRequestSchema,
   type NormalizeResponse,
-} from "@odis-ai/validators/scribe";
+} from "@odis-ai/validators";
 
 // Dynamic import to avoid bundling @react-email/components during static generation
 async function getCasesService() {

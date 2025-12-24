@@ -11,7 +11,7 @@ import {
   extractTextFromResponse,
 } from "./llamaindex/utils";
 import type { ChatMessage } from "llamaindex";
-import type { NormalizedEntities } from "@odis-ai/validators/scribe";
+import type { NormalizedEntities } from "@odis-ai/validators";
 import {
   type GeneratedCallIntelligence,
   type GenerateCallIntelligenceInput,

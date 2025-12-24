@@ -17,7 +17,7 @@ import type { ChatMessage } from "llamaindex";
 import {
   type NormalizedEntities,
   NormalizedEntitiesSchema,
-} from "@odis-ai/validators/scribe";
+} from "@odis-ai/validators";
 
 /* ========================================
    Prompt Engineering

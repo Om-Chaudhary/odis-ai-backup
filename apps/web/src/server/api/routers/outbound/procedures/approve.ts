@@ -14,7 +14,7 @@ import { TRPCError } from "@trpc/server";
 import { getClinicUserIds, getClinicByUserId } from "@odis-ai/clinics/utils";
 import { normalizeToE164, normalizeEmail } from "@odis-ai/utils/phone";
 import { calculateScheduleTime } from "@odis-ai/utils/timezone";
-import type { NormalizedEntities } from "@odis-ai/validators/scribe";
+import type { NormalizedEntities } from "@odis-ai/validators";
 import type { Json } from "@odis-ai/types";
 import { scheduleEmailExecution } from "@odis-ai/qstash";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";

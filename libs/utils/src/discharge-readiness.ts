@@ -1,6 +1,6 @@
 import type { BackendCase } from "@odis-ai/types/dashboard";
 import { hasValidContact } from "./dashboard-helpers";
-import type { NormalizedEntities } from "@odis-ai/validators/scribe";
+import type { NormalizedEntities } from "@odis-ai/validators";
 
 /**
  * Discharge requirements for a specific user

@@ -1,4 +1,4 @@
-import { type NormalizedEntities } from "@odis-ai/validators/scribe";
+import { type NormalizedEntities } from "@odis-ai/validators";
 import { scheduleCallExecution } from "@odis-ai/qstash/client";
 import type { AIGeneratedCallIntelligence } from "@odis-ai/vapi/types";
 import { normalizeToE164 } from "@odis-ai/utils/phone";

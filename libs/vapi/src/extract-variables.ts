@@ -5,7 +5,7 @@
  * for personalized and contextually-aware phone calls.
  */
 
-import type { NormalizedEntities } from "@odis-ai/validators/scribe";
+import type { NormalizedEntities } from "@odis-ai/validators";
 import { extractFirstName } from "./utils";
 import {
   buildDynamicVariables,
