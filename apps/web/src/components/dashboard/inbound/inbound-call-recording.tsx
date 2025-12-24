@@ -12,14 +12,14 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
-import { AudioPlayer } from "@odis-ai/ui/audio-player";
-import { Badge } from "@odis-ai/ui/badge";
-import { Button } from "@odis-ai/ui/button";
-import { cn } from "@odis-ai/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import { AudioPlayer } from "@odis-ai/shared/ui/audio-player";
+import { Badge } from "@odis-ai/shared/ui/badge";
+import { Button } from "@odis-ai/shared/ui/button";
+import { cn } from "@odis-ai/shared/util";
 import { api } from "~/trpc/client";
 import { SyncedTranscript } from "../calls/synced-transcript";
-import type { TranscriptMessage } from "@odis-ai/types";
+import type { TranscriptMessage } from "@odis-ai/shared/types";
 
 interface InboundCallRecordingProps {
   /** VAPI call ID to fetch recording for */

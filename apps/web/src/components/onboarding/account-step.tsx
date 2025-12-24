@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@odis-ai/ui/button";
-import { Input } from "@odis-ai/ui/input";
-import { Label } from "@odis-ai/ui/label";
-import { createClient } from "@odis-ai/db/client";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Input } from "@odis-ai/shared/ui/input";
+import { Label } from "@odis-ai/shared/ui/label";
+import { createClient } from "@odis-ai/data-access/db/client";
 
 interface AccountStepProps {
   onComplete: (userId: string) => void;

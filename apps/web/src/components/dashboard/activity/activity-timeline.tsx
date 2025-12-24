@@ -1,16 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
-import { Button } from "@odis-ai/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import { Button } from "@odis-ai/shared/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@odis-ai/ui/collapsible";
+} from "@odis-ai/shared/ui/collapsible";
 import { Activity, ChevronDown, ChevronUp } from "lucide-react";
 import { ActivityItemComponent } from "./activity-item";
-import type { ActivityItem } from "@odis-ai/types";
+import type { ActivityItem } from "@odis-ai/shared/types";
 
 interface ActivityTimelineProps {
   activities: ActivityItem[];

@@ -2,7 +2,7 @@
 
 import { memo, type ReactNode } from "react";
 import { Handle, Position } from "@xyflow/react";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 export type NodeStatus = "completed" | "pending" | "failed" | "preview";
 

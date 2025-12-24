@@ -1,4 +1,4 @@
-import { updateSession } from "@odis-ai/db/proxy";
+import { updateSession } from "@odis-ai/data-access/db/proxy";
 import type { NextRequest } from "next/server";
 
 export async function proxy(request: NextRequest) {

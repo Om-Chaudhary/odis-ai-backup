@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { PawPrint, User, CheckCircle2 } from "lucide-react";
-import { Button } from "@odis-ai/ui/button";
-import { formatPhoneNumber } from "@odis-ai/utils/phone";
+import { Button } from "@odis-ai/shared/ui/button";
+import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
 import { AppointmentStatusBadge } from "../../../shared";
 import type { AppointmentRequest } from "../../types";
 

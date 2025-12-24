@@ -13,9 +13,9 @@ import {
   Send,
   Star,
 } from "lucide-react";
-import { Button } from "@odis-ai/ui/button";
-import { Checkbox } from "@odis-ai/ui/checkbox";
-import { cn } from "@odis-ai/utils";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Checkbox } from "@odis-ai/shared/ui/checkbox";
+import { cn } from "@odis-ai/shared/util";
 import type { DischargeCaseStatus } from "./types";
 import { AttentionBadgeGroup, CriticalPulsingDot } from "../shared";
 

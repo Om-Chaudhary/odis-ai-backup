@@ -8,7 +8,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@odis-ai/ui/breadcrumb";
+} from "@odis-ai/shared/ui/breadcrumb";
 import React from "react";
 
 export function DashboardBreadcrumb() {

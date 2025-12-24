@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
-import { EmptyState } from "@odis-ai/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import { EmptyState } from "@odis-ai/shared/ui";
 import { BarChart3 } from "lucide-react";
 import {
   BarChart,
@@ -15,7 +15,7 @@ import {
   Legend,
 } from "recharts";
 import { format, parseISO } from "date-fns";
-import type { WeeklyActivityData } from "@odis-ai/types";
+import type { WeeklyActivityData } from "@odis-ai/shared/types";
 
 interface WeeklyActivityChartProps {
   data: WeeklyActivityData[];

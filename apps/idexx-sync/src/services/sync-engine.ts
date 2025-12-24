@@ -10,8 +10,8 @@ import { PlaywrightBrowser } from "./playwright-browser";
 import { ScheduleScraper } from "./schedule-scraper";
 import { ConsultationScraper } from "./consultation-scraper";
 import { LOGIN_SELECTORS, DASHBOARD_SELECTORS } from "../utils/selectors";
-import { createServiceClient } from "@odis-ai/db";
-import { IdexxCredentialManager } from "@odis-ai/idexx";
+import { createServiceClient } from "@odis-ai/data-access/db";
+import { IdexxCredentialManager } from "@odis-ai/integrations/idexx";
 
 export type SyncType = "pre-open" | "eod";
 

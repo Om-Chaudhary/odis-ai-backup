@@ -5,7 +5,7 @@ import Image from "next/image";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { SectionBackground } from "../ui/section-background";
 import { Check } from "lucide-react";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
 
 // Animation variants - consistent with hero

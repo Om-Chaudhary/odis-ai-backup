@@ -4,7 +4,7 @@
  */
 
 import { Pill, Heart, CalendarCheck, AlertTriangle } from "lucide-react";
-import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
+import type { StructuredDischargeSummary } from "@odis-ai/shared/validators/discharge-summary";
 
 interface CallScriptStructuredPreviewProps {
   content: StructuredDischargeSummary;

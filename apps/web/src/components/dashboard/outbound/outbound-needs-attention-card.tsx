@@ -6,15 +6,15 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@odis-ai/ui/card";
-import { Button } from "@odis-ai/ui/button";
-import { Badge } from "@odis-ai/ui/badge";
+} from "@odis-ai/shared/ui/card";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Badge } from "@odis-ai/shared/ui/badge";
 import { Phone, CheckCircle2, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { api } from "~/trpc/client";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 import {
   AttentionBadgeGroup,
   AttentionSeverityBadge,

@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import type { BatchEligibleCase } from "@odis-ai/types";
+import type { BatchEligibleCase } from "@odis-ai/shared/types";
 import type { ProcessingResult, ProcessingStatus } from "../types";
 import { BATCH_CONCURRENCY } from "../constants";
 

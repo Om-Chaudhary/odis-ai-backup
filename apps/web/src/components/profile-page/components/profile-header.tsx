@@ -1,7 +1,7 @@
-import { Button } from "@odis-ai/ui/button";
-import { Card, CardContent } from "@odis-ai/ui/card";
-import { Badge } from "@odis-ai/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@odis-ai/ui/avatar";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Card, CardContent } from "@odis-ai/shared/ui/card";
+import { Badge } from "@odis-ai/shared/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@odis-ai/shared/ui/avatar";
 import { Camera, Calendar, Mail, MapPin } from "lucide-react";
 
 export default function ProfileHeader() {

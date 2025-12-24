@@ -1,10 +1,10 @@
 import { insertTemplate } from '../../utils/transformation/template-inserter';
-import { useStorage, logger, trackEvent } from '@odis-ai/extension-shared';
-import { soapTemplatesStorage } from '@odis-ai/extension-storage';
+import { useStorage, logger, trackEvent } from '@odis-ai/extension/shared';
+import { soapTemplatesStorage } from '@odis-ai/extension/storage';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { CKEditorInfo } from '../../utils/dom/ckeditor-detector';
-import type { SOAPTemplate } from '@odis-ai/extension-storage';
+import type { SOAPTemplate } from '@odis-ai/extension/storage';
 
 const odisLogger = logger.child('[ODIS]');
 

@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
-import { Button } from "@odis-ai/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import { Button } from "@odis-ai/shared/ui/button";
 import { AlertCircle } from "lucide-react";
 
 interface ScheduledActionsProps {

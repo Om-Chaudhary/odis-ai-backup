@@ -1,7 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
-import { Checkbox } from "@odis-ai/ui/checkbox";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import { Checkbox } from "@odis-ai/shared/ui/checkbox";
 import { Mail, Phone, Clock, Zap } from "lucide-react";
-import { formatPhoneNumber } from "@odis-ai/utils/phone";
+import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
 import type { DeliveryToggles } from "../types";
 
 interface DeliveryToggleSectionProps {

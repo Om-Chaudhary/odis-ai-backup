@@ -1,4 +1,4 @@
-import { logger, now } from '@odis-ai/extension-shared';
+import { logger, now } from '@odis-ai/extension/shared';
 
 /**
  * Schedule appointment data structure

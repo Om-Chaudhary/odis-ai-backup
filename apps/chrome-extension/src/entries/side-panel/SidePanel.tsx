@@ -1,6 +1,6 @@
 import '@src/SidePanel.css';
-import { PROJECT_URL_OBJECT, withErrorBoundary, withSuspense } from '@odis-ai/extension-shared';
-import { cn, ErrorDisplay, LoadingSpinner } from '@odis-ai/ui/extension';
+import { PROJECT_URL_OBJECT, withErrorBoundary, withSuspense } from '@odis-ai/extension/shared';
+import { cn, ErrorDisplay, LoadingSpinner } from '@odis-ai/shared/ui/extension';
 
 const SidePanel = () => {
   const logo = 'side-panel/logo_vertical.svg'; // Always use light logo

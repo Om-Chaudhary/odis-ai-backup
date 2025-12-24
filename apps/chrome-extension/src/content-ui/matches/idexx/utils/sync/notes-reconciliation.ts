@@ -7,7 +7,7 @@
 
 import { createSyncRecord, updateSyncRecord } from './sync-tracking';
 import { fetchConsultationData } from '../extraction/consultation-fetcher';
-import { getSupabaseClient, requireAuthSession, logger } from '@odis-ai/extension-shared';
+import { getSupabaseClient, requireAuthSession, logger } from '@odis-ai/extension/shared';
 import type { IdexxConsultationLine } from '../../types';
 import type { Database } from '@database-types';
 

@@ -11,13 +11,13 @@
  */
 
 import { TRPCError } from "@trpc/server";
-import { getClinicUserIds, getClinicByUserId } from "@odis-ai/clinics/utils";
-import { normalizeToE164, normalizeEmail } from "@odis-ai/utils/phone";
-import { calculateScheduleTime } from "@odis-ai/utils/timezone";
-import { isBlockedExtremeCase } from "@odis-ai/utils/discharge-readiness";
-import type { NormalizedEntities } from "@odis-ai/validators";
-import type { Json } from "@odis-ai/types";
-import { scheduleEmailExecution } from "@odis-ai/qstash";
+import { getClinicUserIds, getClinicByUserId } from "@odis-ai/domain/clinics";
+import { normalizeToE164, normalizeEmail } from "@odis-ai/shared/util/phone";
+import { calculateScheduleTime } from "@odis-ai/shared/util/timezone";
+import { isBlockedExtremeCase } from "@odis-ai/shared/util/discharge-readiness";
+import type { NormalizedEntities } from "@odis-ai/shared/validators";
+import type { Json } from "@odis-ai/shared/types";
+import { scheduleEmailExecution } from "@odis-ai/integrations/qstash";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { approveAndScheduleInput } from "../schemas";
 

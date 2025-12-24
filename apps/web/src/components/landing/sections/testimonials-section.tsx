@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { Star } from "lucide-react";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 import { Marquee } from "../ui/marquee";
 import { AvatarCircles } from "../ui/avatar-circles";
 import { SectionBackground } from "../ui/section-background";

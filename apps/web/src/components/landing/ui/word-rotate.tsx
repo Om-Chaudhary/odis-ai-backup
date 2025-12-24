@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, type MotionProps } from "framer-motion";
 
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 interface WordRotateProps {
   words: string[];

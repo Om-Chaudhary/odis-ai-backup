@@ -11,7 +11,7 @@
  */
 
 import { IdexxApiClient } from './api/idexx-api-client';
-import { getSupabaseClient, logger } from '@odis-ai/extension-shared';
+import { getSupabaseClient, logger } from '@odis-ai/extension/shared';
 import type { CommunicationStatus } from '../components/icons/ScheduleStatusIcons';
 
 const odisLogger = logger.child('[AppointmentStatusFetcher]');

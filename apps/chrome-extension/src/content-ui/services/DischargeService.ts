@@ -1,4 +1,4 @@
-import { logger, now, getCurrentISOString, addDays, addMinutes } from '@odis-ai/extension-shared';
+import { logger, now, getCurrentISOString, addDays, addMinutes } from '@odis-ai/extension/shared';
 
 const odisLogger = logger.child('[ODIS]');
 

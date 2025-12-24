@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@odis-ai/ui/button";
-import { Label } from "@odis-ai/ui/label";
-import { Checkbox } from "@odis-ai/ui/checkbox";
-import { Input } from "@odis-ai/ui/input";
-import { createClient } from "@odis-ai/db/client";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Label } from "@odis-ai/shared/ui/label";
+import { Checkbox } from "@odis-ai/shared/ui/checkbox";
+import { Input } from "@odis-ai/shared/ui/input";
+import { createClient } from "@odis-ai/data-access/db/client";
 import Image from "next/image";
 
 interface PIMSStepProps {

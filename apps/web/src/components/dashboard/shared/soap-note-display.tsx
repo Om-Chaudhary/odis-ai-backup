@@ -6,7 +6,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@odis-ai/ui/accordion";
+} from "@odis-ai/shared/ui/accordion";
 import { FileText } from "lucide-react";
 
 interface SOAPNote {

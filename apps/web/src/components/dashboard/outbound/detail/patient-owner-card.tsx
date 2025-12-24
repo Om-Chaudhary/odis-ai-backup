@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button } from "@odis-ai/ui/button";
-import { Badge } from "@odis-ai/ui/badge";
-import { Separator } from "@odis-ai/ui/separator";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Badge } from "@odis-ai/shared/ui/badge";
+import { Separator } from "@odis-ai/shared/ui/separator";
 import {
   Mail,
   Phone,
@@ -15,9 +15,9 @@ import {
   XCircle,
   Clock,
 } from "lucide-react";
-import { formatPhoneNumber } from "@odis-ai/utils/phone";
+import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
 import { DeleteCaseDialog } from "../../cases/delete-case-dialog";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 import type { DischargeCaseStatus } from "../types";
 
 type DeliveryStatus = "sent" | "pending" | "failed" | "not_applicable" | null;

@@ -6,8 +6,8 @@
  */
 
 import { TRPCError } from "@trpc/server";
-import { getClinicUserIds } from "@odis-ai/clinics/utils";
-import { cancelScheduledExecution } from "@odis-ai/qstash";
+import { getClinicUserIds } from "@odis-ai/domain/clinics";
+import { cancelScheduledExecution } from "@odis-ai/integrations/qstash";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { batchCancelInput } from "../schemas";
 

@@ -9,7 +9,7 @@ import {
   Loader2,
   ChevronLeft,
 } from "lucide-react";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 import {
   AttentionBadgeGroup,
   AttentionSeverityBadge,
@@ -20,8 +20,8 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@odis-ai/ui/tooltip";
-import { Button } from "@odis-ai/ui/button";
+} from "@odis-ai/shared/ui/tooltip";
+import { Button } from "@odis-ai/shared/ui/button";
 
 /**
  * Case interface for needs attention table

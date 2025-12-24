@@ -13,10 +13,10 @@ import {
   type EdgeTypes,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Button } from "@odis-ai/ui/button";
-import { Badge } from "@odis-ai/ui/badge";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Badge } from "@odis-ai/shared/ui/badge";
 import { ArrowLeft, FileText, AlertTriangle } from "lucide-react";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 import { api } from "~/trpc/client";
 
 // Import custom nodes

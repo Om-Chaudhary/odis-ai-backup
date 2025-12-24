@@ -7,10 +7,10 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { checkCaseDischargeReadiness } from "@odis-ai/utils/discharge-readiness";
-import { getLocalDayRange, DEFAULT_TIMEZONE } from "@odis-ai/utils/timezone";
-import type { BackendCase } from "@odis-ai/types";
-import { getClinicUserIds } from "@odis-ai/clinics/utils";
+import { checkCaseDischargeReadiness } from "@odis-ai/shared/util/discharge-readiness";
+import { getLocalDayRange, DEFAULT_TIMEZONE } from "@odis-ai/shared/util/timezone";
+import type { BackendCase } from "@odis-ai/shared/types";
+import { getClinicUserIds } from "@odis-ai/domain/clinics";
 
 export const userCasesRouter = createTRPCRouter({
   /**

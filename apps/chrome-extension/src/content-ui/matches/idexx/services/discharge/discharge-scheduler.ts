@@ -1,6 +1,6 @@
 import { fetchContactInfo } from './contact-info-fetcher';
 import { fetchCurrentConsultationData } from '../../utils/extraction/consultation-fetcher';
-import { logger, getCurrentISOString, now, addDays, addMinutes, requireAuthToken, trackEvent } from '@odis-ai/extension-shared';
+import { logger, getCurrentISOString, now, addDays, addMinutes, requireAuthToken, trackEvent } from '@odis-ai/extension/shared';
 import type { IdexxConsultationLine } from '../../types';
 
 const odisLogger = logger.child('[ODIS]');

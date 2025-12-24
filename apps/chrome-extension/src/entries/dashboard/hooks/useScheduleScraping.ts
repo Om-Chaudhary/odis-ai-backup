@@ -1,4 +1,4 @@
-import { getStartOfDay, getEndOfDay, logger, formatErrorMessage } from '@odis-ai/extension-shared';
+import { getStartOfDay, getEndOfDay, logger, formatErrorMessage } from '@odis-ai/extension/shared';
 import { useState } from 'react';
 
 const odisLogger = logger.child('[ODIS-DASHBOARD]');

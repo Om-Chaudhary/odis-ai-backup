@@ -5,7 +5,7 @@
  * extracts + populates the vital signs form fields
  */
 
-import { getSupabaseClient, logger } from '@odis-ai/extension-shared';
+import { getSupabaseClient, logger } from '@odis-ai/extension/shared';
 
 const odisLogger = logger.child('[ODIS]');
 

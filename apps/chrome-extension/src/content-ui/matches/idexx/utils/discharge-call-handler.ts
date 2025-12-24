@@ -4,7 +4,7 @@ import { fetchClientPhoneNumber } from './extraction/client-fetcher';
 import { fetchCurrentConsultationData } from './extraction/consultation-fetcher';
 import { normalizePhoneNumber, isValidE164PhoneNumber } from './formatting/phone-formatter';
 import { validateConsultationData } from './transformation/consultation-transformer';
-import { logger, getAuthSession, getCurrentISOString } from '@odis-ai/extension-shared';
+import { logger, getAuthSession, getCurrentISOString } from '@odis-ai/extension/shared';
 import type { IdexxConsultationPageData } from '../types';
 
 const odisLogger = logger.child('[ODIS]');

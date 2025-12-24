@@ -1,4 +1,4 @@
-import { getSupabaseClient, logger, getCurrentISOString } from '@odis-ai/extension-shared';
+import { getSupabaseClient, logger, getCurrentISOString } from '@odis-ai/extension/shared';
 import type { ScheduleAppointment } from '../extraction/schedule-extractor';
 import type { Database } from '@database-types';
 

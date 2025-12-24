@@ -1,7 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
 import { AlertTriangle } from "lucide-react";
 import { formatDistanceToNow, parseISO } from "date-fns";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 import { AttentionTypeBadge, AttentionSeverityBadge } from "../../shared";
 
 interface AttentionSectionProps {

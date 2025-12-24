@@ -4,8 +4,8 @@ import { detectCKEditor, injectBrandedMenuBar } from './utils/dom/ckeditor-detec
 import { setupScheduleIconsObserver } from './utils/dom/schedule-icons-injector';
 import { extractConsultationId } from './utils/extraction/consultation-fetcher';
 import { setupVitalsAutoExtraction } from './utils/extraction/vitals-autofill';
-import { logger } from '@odis-ai/extension-shared';
-import { soapTemplatesStorage } from '@odis-ai/extension-storage';
+import { logger } from '@odis-ai/extension/shared';
+import { soapTemplatesStorage } from '@odis-ai/extension/storage';
 import { useEffect, useRef } from 'react';
 
 // Inline CSS for global styles (CSS variables) - injected into host page

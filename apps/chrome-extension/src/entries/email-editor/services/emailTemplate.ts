@@ -5,7 +5,7 @@
  * wrapping the AI-generated content with a beautiful, branded design.
  */
 
-import { now } from '@odis-ai/extension-shared';
+import { now } from '@odis-ai/extension/shared';
 
 export interface DischargeEmailTemplateData {
   petName: string;

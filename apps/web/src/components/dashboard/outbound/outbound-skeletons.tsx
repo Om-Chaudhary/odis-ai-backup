@@ -1,7 +1,7 @@
 "use client";
 
-import { Skeleton } from "@odis-ai/ui/skeleton";
-import { Card, CardContent, CardHeader } from "@odis-ai/ui/card";
+import { Skeleton } from "@odis-ai/shared/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@odis-ai/shared/ui/card";
 
 /**
  * Skeleton for the filter tabs

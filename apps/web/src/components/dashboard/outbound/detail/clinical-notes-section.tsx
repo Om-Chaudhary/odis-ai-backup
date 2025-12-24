@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
-import { Badge } from "@odis-ai/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import { Badge } from "@odis-ai/shared/ui/badge";
 import { Stethoscope } from "lucide-react";
 
 interface SoapNote {

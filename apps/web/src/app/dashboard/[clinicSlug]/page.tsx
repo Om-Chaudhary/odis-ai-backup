@@ -1,7 +1,7 @@
 import { getUser } from "~/server/actions/auth";
 import { redirect } from "next/navigation";
 import { ExtensionAuthHandler } from "~/components/dashboard/shell/extension-auth-handler";
-import { AUTH_PARAMS } from "@odis-ai/constants/auth";
+import { AUTH_PARAMS } from "@odis-ai/shared/constants/auth";
 import { DashboardContent } from "~/components/dashboard/dashboard-content";
 
 interface ClinicDashboardPageProps {

@@ -4,7 +4,7 @@ import {
   detectIdexxPatientNameFromDom,
   searchPatientsByName,
 } from '../../utils/extraction/patient-fetcher';
-import { logger, useSupabaseAuth, getCurrentISOString } from '@odis-ai/extension-shared';
+import { logger, useSupabaseAuth, getCurrentISOString } from '@odis-ai/extension/shared';
 import { useEffect, useState } from 'react';
 import type { PatientWithCase } from '../../types';
 

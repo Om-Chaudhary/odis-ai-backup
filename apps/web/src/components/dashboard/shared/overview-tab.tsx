@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { api } from "~/trpc/client";
 import { format } from "date-fns";
-import { Card, CardContent } from "@odis-ai/ui/card";
+import { Card, CardContent } from "@odis-ai/shared/ui/card";
 import {
   FolderOpen,
   FileText,
@@ -17,17 +17,17 @@ import {
 import { WeeklyActivityChart } from "../activity/weekly-activity-chart";
 import { DailyActivityTimeline } from "../activity/daily-activity-timeline";
 import { OverviewTabSkeleton } from "../shell/dashboard-skeleton";
-import { NumberTicker } from "@odis-ai/ui/number-ticker";
+import { NumberTicker } from "@odis-ai/shared/ui/number-ticker";
 import { useQueryState } from "nuqs";
 import { useRouter } from "next/navigation";
 import { DateFilterButtonGroup } from "../filters/date-filter-button-group";
 import {
   getDateRangeFromPreset,
   type DateRangePreset,
-} from "@odis-ai/utils/date-ranges";
+} from "@odis-ai/shared/util/date-ranges";
 import { CasesNeedingAttentionCard } from "../cases/cases-needing-attention-card";
 import { OutboundNeedsAttentionCard } from "../outbound/outbound-needs-attention-card";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 function StatCard({
   title,

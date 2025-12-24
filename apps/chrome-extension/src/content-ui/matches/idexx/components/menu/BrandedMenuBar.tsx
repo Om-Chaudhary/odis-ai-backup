@@ -4,7 +4,7 @@ import { useNoteInsertion } from '../../hooks/notes/useNoteInsertion';
 import { usePatientSelection } from '../../hooks/patient/usePatientSelection';
 import { useConsultationId } from '../../hooks/useConsultationId';
 import { useConsultationScheduleStatus } from '../../hooks/useConsultationScheduleStatus';
-import { cn } from '@odis-ai/ui/extension';
+import { cn } from '@odis-ai/shared/ui/extension';
 import { useCallback } from 'react';
 import type { CKEditorInfo } from '../../utils/dom/ckeditor-detector';
 

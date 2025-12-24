@@ -1,4 +1,4 @@
-import { logger, getCurrentISOString, now, addMinutes, testModeStorage, IS_DEV, trackEvent } from '@odis-ai/extension-shared';
+import { logger, getCurrentISOString, now, addMinutes, testModeStorage, IS_DEV, trackEvent } from '@odis-ai/extension/shared';
 
 const odisLogger = logger.child('[ODIS-DASHBOARD]');
 

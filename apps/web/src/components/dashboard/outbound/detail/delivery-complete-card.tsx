@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
-import { Button } from "@odis-ai/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import { Button } from "@odis-ai/shared/ui/button";
 import {
   CheckCircle2,
   XCircle,

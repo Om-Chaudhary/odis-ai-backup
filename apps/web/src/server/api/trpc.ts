@@ -1,6 +1,6 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import { ZodError } from "zod";
-import { createClient } from "@odis-ai/db/server";
+import { createClient } from "@odis-ai/data-access/db/server";
 
 type CreateContextOptions = {
   headers: Headers;

@@ -9,9 +9,9 @@ import type { NextRequest } from "next/server";
 import {
   verifySlackRequest,
   ensureSlackClientInitialized,
-} from "@odis-ai/slack";
+} from "@odis-ai/integrations/slack";
 import { handleInteraction } from "@odis-ai/slack/webhooks";
-import { createServiceClient } from "@odis-ai/db/server";
+import { createServiceClient } from "@odis-ai/data-access/db/server";
 
 /**
  * POST /api/slack/webhooks/interactions

@@ -14,7 +14,7 @@
 import { fetchConsultationData } from '../utils/extraction/consultation-fetcher';
 import { upsertPatientFromAppointment } from '../utils/sync/patient-sync';
 import { createSyncRecord, updateSyncRecord } from '../utils/sync/sync-tracking';
-import { logger } from '@odis-ai/extension-shared';
+import { logger } from '@odis-ai/extension/shared';
 import type { IdexxConsultationLine } from '../types';
 import type { IdexxApiClient } from './api/idexx-api-client';
 import type { ScheduleAppointment } from '../utils/extraction/schedule-extractor';

@@ -1,8 +1,8 @@
 import { format } from "date-fns";
 import { CheckCircle2 } from "lucide-react";
-import { cn } from "@odis-ai/utils";
-import { Button } from "@odis-ai/ui/button";
-import { formatPhoneNumber } from "@odis-ai/utils/phone";
+import { cn } from "@odis-ai/shared/util";
+import { Button } from "@odis-ai/shared/ui/button";
+import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
 import { MessageStatusBadge, PriorityBadge } from "../../../shared";
 import type { ClinicMessage } from "../../types";
 

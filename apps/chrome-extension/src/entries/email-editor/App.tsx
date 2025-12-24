@@ -1,7 +1,7 @@
 import { RichTextEditor } from './components/RichTextEditor';
 import { createDischargeEmailTemplate, formatVisitDate } from './services/emailTemplate';
 import { validateAndParseEmailList } from './utils/emailValidation';
-import { getSupabaseClient, logger } from '@odis-ai/extension-shared';
+import { getSupabaseClient, logger } from '@odis-ai/extension/shared';
 import { Eye, EyeOff } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import type { Database } from '@database-types';

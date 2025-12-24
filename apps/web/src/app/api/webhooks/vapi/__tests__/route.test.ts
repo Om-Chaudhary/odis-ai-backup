@@ -43,8 +43,8 @@ vi.mock("@odis-ai/api/cors", () => ({
 
 // Import after mocks
 import { POST, OPTIONS, GET } from "../route";
-import { handleVapiWebhook, parseWebhookPayload } from "@odis-ai/vapi/webhooks";
-import { handleCorsPreflightRequest } from "@odis-ai/api/cors";
+import { handleVapiWebhook, parseWebhookPayload } from "@odis-ai/integrations/vapi/webhooks";
+import { handleCorsPreflightRequest } from "@odis-ai/data-access/api/cors";
 
 describe("VAPI Webhook Route", () => {
   beforeEach(() => {

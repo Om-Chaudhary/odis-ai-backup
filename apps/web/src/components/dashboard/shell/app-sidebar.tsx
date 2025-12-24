@@ -16,7 +16,7 @@ import {
   ChevronRight,
   PanelLeftClose,
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@odis-ai/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@odis-ai/shared/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,19 +25,19 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@odis-ai/ui/dropdown-menu";
+} from "@odis-ai/shared/ui/dropdown-menu";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@odis-ai/ui/tooltip";
+} from "@odis-ai/shared/ui/tooltip";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
 import { signOut } from "~/server/actions/auth";
 import type { User } from "@supabase/supabase-js";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 type ActivePanel = "inbound" | "outbound" | null;
 

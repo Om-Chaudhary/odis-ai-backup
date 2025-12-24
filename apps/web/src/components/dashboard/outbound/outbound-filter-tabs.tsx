@@ -1,7 +1,7 @@
 "use client";
 
 import { Search } from "lucide-react";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 import { OutboundDateNav } from "./outbound-date-nav";
 
 interface OutboundFilterTabsProps {

@@ -5,7 +5,7 @@
  */
 
 import { TRPCError } from "@trpc/server";
-import { getClinicUserIds } from "@odis-ai/clinics/utils";
+import { getClinicUserIds } from "@odis-ai/domain/clinics";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { retryFailedDeliveryInput } from "../schemas";
 

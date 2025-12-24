@@ -6,8 +6,8 @@ import Link from "next/link";
 import { ArrowRight, Phone } from "lucide-react";
 import { SectionBackground } from "~/components/landing/ui/section-background";
 import type { SectionBackgroundProps } from "~/components/landing/ui/section-background";
-import { Button } from "@odis-ai/ui/button";
-import { cn } from "@odis-ai/utils";
+import { Button } from "@odis-ai/shared/ui/button";
+import { cn } from "@odis-ai/shared/util";
 
 export interface CTASectionProps {
   /**

@@ -1,9 +1,9 @@
-import { Button } from "@odis-ai/ui/button";
-import { Badge } from "@odis-ai/ui/badge";
-import { Checkbox } from "@odis-ai/ui/checkbox";
-import { Alert, AlertDescription } from "@odis-ai/ui/alert";
-import { ScrollArea } from "@odis-ai/ui/scroll-area";
-import { Separator } from "@odis-ai/ui/separator";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Badge } from "@odis-ai/shared/ui/badge";
+import { Checkbox } from "@odis-ai/shared/ui/checkbox";
+import { Alert, AlertDescription } from "@odis-ai/shared/ui/alert";
+import { ScrollArea } from "@odis-ai/shared/ui/scroll-area";
+import { Separator } from "@odis-ai/shared/ui/separator";
 import {
   Card,
   CardContent,
@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@odis-ai/ui/card";
+} from "@odis-ai/shared/ui/card";
 import {
   ArrowLeft,
   Send,
@@ -25,8 +25,8 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@odis-ai/utils";
-import type { BatchEligibleCase } from "@odis-ai/types";
+import { cn } from "@odis-ai/shared/util";
+import type { BatchEligibleCase } from "@odis-ai/shared/types";
 import type { ScheduleMode } from "../types";
 
 interface ReviewStepProps {

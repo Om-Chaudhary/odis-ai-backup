@@ -7,7 +7,7 @@ import {
   transformConsultationToCallRequest,
   validateConsultationData,
 } from '../../utils/transformation/consultation-transformer';
-import { logger, now, addDays, formatDateTimeLocal, trackEvent } from '@odis-ai/extension-shared';
+import { logger, now, addDays, formatDateTimeLocal, trackEvent } from '@odis-ai/extension/shared';
 import { useState } from 'react';
 import type { IdexxConsultationPageData } from '../../types';
 

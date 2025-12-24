@@ -4,7 +4,7 @@
 
 import { Calendar, MessageSquare, Loader2 } from "lucide-react";
 import { api } from "~/trpc/client";
-import { formatPhoneNumber } from "@odis-ai/utils/phone";
+import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
 import { formatDuration } from "../../shared/utils";
 import { getDemoCallerName, getCallModifications } from "../demo-data";
 import type { Database } from "~/database.types";

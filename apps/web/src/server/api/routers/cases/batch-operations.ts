@@ -7,7 +7,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { getClinicUserIds } from "@odis-ai/clinics/utils";
+import { getClinicUserIds } from "@odis-ai/domain/clinics";
 
 export const batchOperationsRouter = createTRPCRouter({
   /**

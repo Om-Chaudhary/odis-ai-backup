@@ -1,7 +1,7 @@
 import { scrapeClientPhoneFromPage } from '../../utils/dom/client-dom-scraper';
 import { scrapeClientEmailFromPage } from '../../utils/dom/client-email-scraper';
 import { fetchClientPhoneNumber } from '../../utils/extraction/client-fetcher';
-import { logger } from '@odis-ai/extension-shared';
+import { logger } from '@odis-ai/extension/shared';
 import type { IdexxConsultationPageData } from '../../types';
 
 const odisLogger = logger.child('[ODIS]');

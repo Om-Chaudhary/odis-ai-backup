@@ -6,7 +6,7 @@
  */
 
 /* eslint-disable @nx/enforce-module-boundaries */
-import { listCalls } from "@odis-ai/vapi";
+import { listCalls } from "@odis-ai/integrations/vapi";
 
 interface CallSummary {
   id: string;

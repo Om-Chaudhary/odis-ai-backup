@@ -2,22 +2,22 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { api } from "~/trpc/client";
-import { Button } from "@odis-ai/ui/button";
+import { Button } from "@odis-ai/shared/ui/button";
 import { LayoutGrid, List } from "lucide-react";
 import {
   EmptyState,
   DayPaginationControls,
   getDayDateRange,
-} from "@odis-ai/ui";
+} from "@odis-ai/shared/ui";
 import { CaseListCard } from "./case-list-card";
 import { CaseListItemCompact } from "./case-list-item-compact";
 import { useQueryState } from "nuqs";
 import { CasesFilterBar } from "./cases-filter-bar";
 import { getDateFromPreset } from "./cases-date-range-selector";
 import type { QuickFilterId } from "../filters/quick-filters";
-import type { DateRangePreset } from "@odis-ai/utils/date-ranges";
-import { getDateRangeFromPreset } from "@odis-ai/utils/date-ranges";
-import type { CaseListItem } from "@odis-ai/types";
+import type { DateRangePreset } from "@odis-ai/shared/util/date-ranges";
+import { getDateRangeFromPreset } from "@odis-ai/shared/util/date-ranges";
+import type { CaseListItem } from "@odis-ai/shared/types";
 import { format, parseISO, startOfDay } from "date-fns";
 
 type ViewMode = "grid" | "list";

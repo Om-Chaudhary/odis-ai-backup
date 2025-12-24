@@ -1,11 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Button } from "@odis-ai/ui/button";
-import { Badge } from "@odis-ai/ui/badge";
-import { Alert, AlertDescription } from "@odis-ai/ui/alert";
-import { ScrollArea } from "@odis-ai/ui/scroll-area";
-import { Separator } from "@odis-ai/ui/separator";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Badge } from "@odis-ai/shared/ui/badge";
+import { Alert, AlertDescription } from "@odis-ai/shared/ui/alert";
+import { ScrollArea } from "@odis-ai/shared/ui/scroll-area";
+import { Separator } from "@odis-ai/shared/ui/separator";
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@odis-ai/ui/card";
+} from "@odis-ai/shared/ui/card";
 import {
   CheckCircle,
   XCircle,
@@ -22,7 +22,7 @@ import {
   ArrowLeft,
   RotateCcw,
 } from "lucide-react";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 import type { ProcessingResult } from "../types";
 
 interface CompleteStepProps {

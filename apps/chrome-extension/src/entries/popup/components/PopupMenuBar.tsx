@@ -1,7 +1,7 @@
 import { SyncScheduleButton } from './schedule/SyncScheduleButton';
-import { getAuthSession, logger } from '@odis-ai/extension-shared';
+import { getAuthSession, logger } from '@odis-ai/extension/shared';
 import { trackEvent } from '@odis-ai/extension-shared/lib/analytics/event-tracker';
-import { Button } from '@odis-ai/ui/extension';
+import { Button } from '@odis-ai/shared/ui/extension';
 import { useCurrentTab, isIdexxSchedulePage } from '../hooks/useCurrentTab';
 import { LayoutDashboard, Loader2 } from 'lucide-react';
 import { useState } from 'react';

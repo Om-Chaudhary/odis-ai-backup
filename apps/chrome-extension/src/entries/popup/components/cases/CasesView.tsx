@@ -1,6 +1,6 @@
 import { DateNavigator } from './DateNavigator';
-import { useAuth, now, isAuthError, logger } from '@odis-ai/extension-shared';
-import { Button } from '@odis-ai/ui/extension';
+import { useAuth, now, isAuthError, logger } from '@odis-ai/extension/shared';
+import { Button } from '@odis-ai/shared/ui/extension';
 import { useCases } from '../../hooks/useCases';
 import { LogOut, AlertCircle, RefreshCw } from 'lucide-react';
 import { useState } from 'react';

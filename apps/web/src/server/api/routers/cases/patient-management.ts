@@ -7,8 +7,8 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { getClinicByUserId, getClinicUserIds } from "@odis-ai/clinics/utils";
-import { normalizeEmail, normalizeToE164 } from "@odis-ai/utils/phone";
+import { getClinicByUserId, getClinicUserIds } from "@odis-ai/domain/clinics";
+import { normalizeEmail, normalizeToE164 } from "@odis-ai/shared/util/phone";
 
 export const patientManagementRouter = createTRPCRouter({
   /**

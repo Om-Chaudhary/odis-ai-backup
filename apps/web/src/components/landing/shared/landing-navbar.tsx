@@ -11,12 +11,12 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   navigationMenuTriggerStyle,
-} from "@odis-ai/ui/navigation-menu";
-import { Button } from "@odis-ai/ui/button";
-import { cn } from "@odis-ai/utils";
-import { Logo } from "@odis-ai/ui/Logo";
+} from "@odis-ai/shared/ui/navigation-menu";
+import { Button } from "@odis-ai/shared/ui/button";
+import { cn } from "@odis-ai/shared/util";
+import { Logo } from "@odis-ai/shared/ui/Logo";
 import { trackBookDemoClick } from "./landing-analytics";
-import { createClient } from "@odis-ai/db/client";
+import { createClient } from "@odis-ai/data-access/db/client";
 import type { User } from "@supabase/supabase-js";
 
 const navigationLinks = [

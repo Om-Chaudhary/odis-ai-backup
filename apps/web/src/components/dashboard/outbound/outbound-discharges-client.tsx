@@ -13,7 +13,7 @@ import type {
   DeliveryToggles,
   SoapNote,
 } from "./types";
-import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
+import type { StructuredDischargeSummary } from "@odis-ai/shared/validators/discharge-summary";
 import { PageContainer, PageToolbar, PageContent, PageFooter } from "../layout";
 import { OutboundFilterTabs } from "./outbound-filter-tabs";
 import { OutboundCaseTable } from "./outbound-case-table";
@@ -28,7 +28,7 @@ import {
   BulkOperationProvider,
   useBulkOperation,
 } from "./bulk-operation-context";
-import { Button } from "@odis-ai/ui/button";
+import { Button } from "@odis-ai/shared/ui/button";
 import { useOutboundData, useOutboundMutations } from "./hooks";
 
 // Type for transformed case from API

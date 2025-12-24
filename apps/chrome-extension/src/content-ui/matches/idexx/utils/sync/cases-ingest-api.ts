@@ -1,4 +1,4 @@
-import { logger, requireAuthToken } from '@odis-ai/extension-shared';
+import { logger, requireAuthToken } from '@odis-ai/extension/shared';
 import type { IdexxConsultationPageData } from '../../types';
 
 const odisLogger = logger.child('[ODIS]');

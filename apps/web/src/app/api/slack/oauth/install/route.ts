@@ -6,7 +6,7 @@
  */
 
 import { NextResponse } from "next/server";
-import { generateInstallUrl, generateStateToken } from "@odis-ai/slack";
+import { generateInstallUrl, generateStateToken } from "@odis-ai/integrations/slack";
 
 export async function GET() {
   try {

@@ -30,7 +30,7 @@ const mockAuth = {
 
 const mockFrom = vi.fn();
 
-vi.mock("@odis-ai/db/server", () => ({
+vi.mock("@odis-ai/data-access/db/server", () => ({
   createClient: vi.fn(() =>
     Promise.resolve({
       auth: mockAuth,

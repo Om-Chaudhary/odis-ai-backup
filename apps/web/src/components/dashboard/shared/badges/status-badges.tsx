@@ -3,8 +3,8 @@
  * Provides consistent styling and labels across inbound and outbound dashboards
  */
 
-import { Badge } from "@odis-ai/ui/badge";
-import { cn } from "@odis-ai/utils";
+import { Badge } from "@odis-ai/shared/ui/badge";
+import { cn } from "@odis-ai/shared/util";
 import { AlertTriangle } from "lucide-react";
 
 // =============================================================================

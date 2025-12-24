@@ -11,7 +11,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { BaseWorkflowNode } from "./base-workflow-node";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 type SentimentType = "positive" | "neutral" | "negative";
 

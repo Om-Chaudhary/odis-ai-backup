@@ -1,9 +1,9 @@
-import { Button } from "@odis-ai/ui/button";
-import { Checkbox } from "@odis-ai/ui/checkbox";
-import { Input } from "@odis-ai/ui/input";
-import { Badge } from "@odis-ai/ui/badge";
-import { Alert, AlertDescription } from "@odis-ai/ui/alert";
-import { ScrollArea } from "@odis-ai/ui/scroll-area";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Checkbox } from "@odis-ai/shared/ui/checkbox";
+import { Input } from "@odis-ai/shared/ui/input";
+import { Badge } from "@odis-ai/shared/ui/badge";
+import { Alert, AlertDescription } from "@odis-ai/shared/ui/alert";
+import { ScrollArea } from "@odis-ai/shared/ui/scroll-area";
 import {
   Card,
   CardContent,
@@ -11,7 +11,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@odis-ai/ui/card";
+} from "@odis-ai/shared/ui/card";
 import {
   ArrowRight,
   Search,
@@ -26,8 +26,8 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
-import { cn } from "@odis-ai/utils";
-import type { BatchEligibleCase } from "@odis-ai/types";
+import { cn } from "@odis-ai/shared/util";
+import type { BatchEligibleCase } from "@odis-ai/shared/types";
 import type { DateFilter } from "../types";
 
 interface SelectCasesStepProps {

@@ -1,0 +1,25 @@
+{
+  "name": "domain-discharge-data-access",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/domain/discharge/data-access/src",
+  "projectType": "library",
+  "tags": [
+    "type:service",
+    "scope:server",
+    "platform:node"
+  ],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.json",
+        "cwd": "libs/domain/discharge/data-access"
+      },
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ]
+    }
+  }
+}

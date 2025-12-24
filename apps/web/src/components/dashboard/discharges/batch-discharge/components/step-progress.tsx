@@ -1,4 +1,4 @@
-import { Progress } from "@odis-ai/ui/progress";
+import { Progress } from "@odis-ai/shared/ui/progress";
 import type { Step } from "../types";
 
 interface StepProgressProps {

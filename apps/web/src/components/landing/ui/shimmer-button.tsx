@@ -3,7 +3,7 @@ import React, {
   type CSSProperties,
 } from "react";
 
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 export interface ShimmerButtonProps extends ComponentPropsWithoutRef<"button"> {
   shimmerColor?: string;

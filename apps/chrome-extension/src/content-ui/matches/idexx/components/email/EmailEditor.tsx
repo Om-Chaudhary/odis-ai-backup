@@ -1,4 +1,4 @@
-import { logger } from '@odis-ai/extension-shared';
+import { logger } from '@odis-ai/extension/shared';
 import { useState, useEffect } from 'react';
 import type { DischargeSummary } from '../../utils/discharge-summary-fetcher';
 

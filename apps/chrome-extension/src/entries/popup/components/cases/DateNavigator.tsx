@@ -1,5 +1,5 @@
-import { now, isToday as isTodayUtil, formatDateForDisplay } from '@odis-ai/extension-shared';
-import { Button } from '@odis-ai/ui/extension';
+import { now, isToday as isTodayUtil, formatDateForDisplay } from '@odis-ai/extension/shared';
+import { Button } from '@odis-ai/shared/ui/extension';
 import { CalendarDays, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 
 interface DateNavigatorProps {

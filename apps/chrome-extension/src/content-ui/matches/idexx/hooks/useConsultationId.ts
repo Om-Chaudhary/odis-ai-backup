@@ -8,7 +8,7 @@
  * 4. The URL changes for any other reason (mutation observer fallback)
  */
 
-import { logger } from '@odis-ai/extension-shared';
+import { logger } from '@odis-ai/extension/shared';
 import { useState, useEffect, useCallback } from 'react';
 
 const odisLogger = logger.child('[useConsultationId]');

@@ -1,10 +1,10 @@
 "use client";
 
 import { api } from "~/trpc/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
-import { Button } from "@odis-ai/ui/button";
-import { Badge } from "@odis-ai/ui/badge";
-import { Skeleton } from "@odis-ai/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Badge } from "@odis-ai/shared/ui/badge";
+import { Skeleton } from "@odis-ai/shared/ui/skeleton";
 import {
   PhoneOff,
   DollarSign,
@@ -13,7 +13,7 @@ import {
   Mail,
   RefreshCw,
 } from "lucide-react";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 

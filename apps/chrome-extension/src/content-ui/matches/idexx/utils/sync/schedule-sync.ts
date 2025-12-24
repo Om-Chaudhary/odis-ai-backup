@@ -8,7 +8,7 @@ import {
   buildCasesQuery,
   withTimeout,
   TimeoutError,
-} from '@odis-ai/extension-shared';
+} from '@odis-ai/extension/shared';
 import type { IdexxConsultationLine } from '../../types';
 import type { ScheduleAppointment } from '../extraction/schedule-extractor';
 import type { Database } from '@database-types';

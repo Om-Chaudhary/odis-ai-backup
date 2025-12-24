@@ -1,0 +1,7 @@
+{
+  "name": "integrations-vapi-tools",
+  "": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/integrations/vapi/tools/src",
+  "projectType": "library",
+  "tags": ["type:integration", "scope:server", "platform:node"]
+}

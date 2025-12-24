@@ -1,4 +1,4 @@
-import { getCurrentISOString } from '@odis-ai/extension-shared';
+import { getCurrentISOString } from '@odis-ai/extension/shared';
 import type { DashboardCase } from '../hooks/useDailyDischarges';
 
 /**

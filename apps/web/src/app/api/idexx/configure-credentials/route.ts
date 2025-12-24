@@ -9,11 +9,11 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createClient } from "@odis-ai/db/server";
+import { createClient } from "@odis-ai/data-access/db/server";
 import { getUser } from "~/server/actions/auth";
-import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/api/cors";
-import { IdexxCredentialManager } from "@odis-ai/idexx/credential-manager";
-import { validateIdexxCredentials } from "@odis-ai/idexx/validation";
+import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/data-access/api/cors";
+import { IdexxCredentialManager } from "@odis-ai/integrations/idexx/credential-manager";
+import { validateIdexxCredentials } from "@odis-ai/integrations/idexx/validation";
 
 const configureCredentialsSchema = z.object({
   username: z

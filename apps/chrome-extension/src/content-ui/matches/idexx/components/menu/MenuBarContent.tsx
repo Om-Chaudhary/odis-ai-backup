@@ -4,7 +4,7 @@ import { SendDischargeButton } from './SendDischargeButton';
 import { UnauthenticatedMenuBar } from './UnauthenticatedMenuBar';
 import { DashboardLinkIcon } from '../icons/DashboardLinkIcon';
 import { EmailIcon, PhoneIcon, ContactWarningIcon, UrgentCaseWarningIcon } from '../icons/ScheduleStatusIcons';
-import { AuthGuard } from '@odis-ai/ui/extension';
+import { AuthGuard } from '@odis-ai/shared/ui/extension';
 import type { PatientWithCase } from '../../types';
 import type { CommunicationStatus } from '../icons/ScheduleStatusIcons';
 

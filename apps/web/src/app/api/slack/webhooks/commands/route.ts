@@ -13,7 +13,7 @@ import {
   ensureSlackClientInitialized,
   type CommandContext,
   type SlashCommandPayloadInput,
-} from "@odis-ai/slack";
+} from "@odis-ai/integrations/slack";
 
 /**
  * Parse form-encoded Slack payload

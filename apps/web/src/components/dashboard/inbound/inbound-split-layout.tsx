@@ -8,7 +8,7 @@ import {
   PanelResizeHandle,
   type ImperativePanelHandle,
 } from "react-resizable-panels";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 interface InboundSplitLayoutProps {
   leftPanel: ReactNode;

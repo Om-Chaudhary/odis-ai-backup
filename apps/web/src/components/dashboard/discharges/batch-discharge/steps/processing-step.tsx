@@ -1,14 +1,14 @@
-import { Badge } from "@odis-ai/ui/badge";
-import { Progress } from "@odis-ai/ui/progress";
-import { ScrollArea } from "@odis-ai/ui/scroll-area";
-import { Separator } from "@odis-ai/ui/separator";
+import { Badge } from "@odis-ai/shared/ui/badge";
+import { Progress } from "@odis-ai/shared/ui/progress";
+import { ScrollArea } from "@odis-ai/shared/ui/scroll-area";
+import { Separator } from "@odis-ai/shared/ui/separator";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@odis-ai/ui/card";
+} from "@odis-ai/shared/ui/card";
 import {
   Loader2,
   CheckCircle,
@@ -16,8 +16,8 @@ import {
   SkipForward,
   CircleDashed,
 } from "lucide-react";
-import { cn } from "@odis-ai/utils";
-import type { BatchEligibleCase } from "@odis-ai/types";
+import { cn } from "@odis-ai/shared/util";
+import type { BatchEligibleCase } from "@odis-ai/shared/types";
 import type { ProcessingStatus } from "../types";
 
 interface ProcessingStepProps {

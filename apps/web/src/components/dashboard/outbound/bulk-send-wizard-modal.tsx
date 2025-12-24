@@ -14,7 +14,7 @@ import {
   Calendar as CalendarIcon,
   Send,
 } from "lucide-react";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 import {
   Dialog,
@@ -22,18 +22,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@odis-ai/ui/dialog";
-import { Button } from "@odis-ai/ui/button";
-import { Checkbox } from "@odis-ai/ui/checkbox";
-import { Calendar } from "@odis-ai/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@odis-ai/ui/popover";
+} from "@odis-ai/shared/ui/dialog";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Checkbox } from "@odis-ai/shared/ui/checkbox";
+import { Calendar } from "@odis-ai/shared/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@odis-ai/shared/ui/popover";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis-ai/ui/select";
+} from "@odis-ai/shared/ui/select";
 
 // Types
 interface SelectedCase {

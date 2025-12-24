@@ -1,20 +1,20 @@
 import { Shield, Key, Trash2 } from "lucide-react";
 
-import { Button } from "@odis-ai/ui/button";
+import { Button } from "@odis-ai/shared/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@odis-ai/ui/card";
-import { Input } from "@odis-ai/ui/input";
-import { Label } from "@odis-ai/ui/label";
-import { Separator } from "@odis-ai/ui/separator";
-import { Switch } from "@odis-ai/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/ui/tabs";
-import { Textarea } from "@odis-ai/ui/textarea";
-import { Badge } from "@odis-ai/ui/badge";
+} from "@odis-ai/shared/ui/card";
+import { Input } from "@odis-ai/shared/ui/input";
+import { Label } from "@odis-ai/shared/ui/label";
+import { Separator } from "@odis-ai/shared/ui/separator";
+import { Switch } from "@odis-ai/shared/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/shared/ui/tabs";
+import { Textarea } from "@odis-ai/shared/ui/textarea";
+import { Badge } from "@odis-ai/shared/ui/badge";
 
 export default function ProfileContent() {
   return (

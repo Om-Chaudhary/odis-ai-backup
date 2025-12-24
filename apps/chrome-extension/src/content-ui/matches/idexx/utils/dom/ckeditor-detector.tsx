@@ -1,4 +1,4 @@
-import { logger } from '@odis-ai/extension-shared';
+import { logger } from '@odis-ai/extension/shared';
 import { createRoot } from 'react-dom/client';
 import type { FC } from 'react';
 

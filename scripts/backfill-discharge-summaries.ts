@@ -41,7 +41,7 @@
 
 import { config } from "dotenv";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import type { NormalizedEntities } from "@odis-ai/validators";
+import type { NormalizedEntities } from "@odis-ai/shared/validators";
 
 // Load environment variables from .env.local
 config({ path: ".env.local" });

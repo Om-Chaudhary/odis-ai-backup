@@ -1,7 +1,7 @@
 "use client";
 
 import { Phone } from "lucide-react";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 interface PhoneRingIconProps {
   className?: string;

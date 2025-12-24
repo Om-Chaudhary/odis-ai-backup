@@ -20,7 +20,7 @@
 
 import { idexxApiClient } from '../services/api/idexx-api-client';
 import { ScheduleSyncService } from '../services/schedule-sync-service';
-import { getSupabaseClient, useAuth } from '@odis-ai/extension-shared';
+import { getSupabaseClient, useAuth } from '@odis-ai/extension/shared';
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import type { SyncProgress, SyncResult, ReconciliationResult } from '../services/schedule-sync-service';
 

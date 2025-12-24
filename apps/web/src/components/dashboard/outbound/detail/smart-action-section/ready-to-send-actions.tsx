@@ -1,9 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
-import { Button } from "@odis-ai/ui/button";
-import { Checkbox } from "@odis-ai/ui/checkbox";
-import { Alert, AlertDescription } from "@odis-ai/ui/alert";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Checkbox } from "@odis-ai/shared/ui/checkbox";
+import { Alert, AlertDescription } from "@odis-ai/shared/ui/alert";
 import { AlertCircle, Phone, Mail, Sparkles, Clock, Zap } from "lucide-react";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 import type { DeliveryToggles } from "../../types";
 
 interface ReadyToSendActionsProps {

@@ -1,0 +1,25 @@
+{
+  "name": "shared-testing",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/testing/src",
+  "projectType": "library",
+  "tags": [
+    "type:testing",
+    "scope:shared",
+    "platform:neutral"
+  ],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.json",
+        "cwd": "libs/shared/testing"
+      },
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ]
+    }
+  }
+}

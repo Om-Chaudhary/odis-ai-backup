@@ -8,10 +8,10 @@ import {
   PageHero,
   SectionContainer,
 } from "~/components/marketing";
-import { Button } from "@odis-ai/ui/button";
-import { Input } from "@odis-ai/ui/input";
-import { Textarea } from "@odis-ai/ui/textarea";
-import { Label } from "@odis-ai/ui/label";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Input } from "@odis-ai/shared/ui/input";
+import { Textarea } from "@odis-ai/shared/ui/textarea";
+import { Label } from "@odis-ai/shared/ui/label";
 
 // TODO: Update contact information
 const contactInfo = [

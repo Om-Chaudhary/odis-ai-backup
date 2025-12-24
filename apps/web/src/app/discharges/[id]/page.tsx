@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getUser } from "~/server/actions/auth";
-import { createClient } from "@odis-ai/db/server";
-import { getClinicByUserId } from "@odis-ai/clinics/utils";
+import { createClient } from "@odis-ai/data-access/db/server";
+import { getClinicByUserId } from "@odis-ai/domain/clinics";
 
 interface Props {
   params: Promise<{ id: string }>;

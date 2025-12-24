@@ -1,16 +1,16 @@
-import { Input } from "@odis-ai/ui/input";
-import { Label } from "@odis-ai/ui/label";
-import { Alert, AlertDescription } from "@odis-ai/ui/alert";
-import { Separator } from "@odis-ai/ui/separator";
+import { Input } from "@odis-ai/shared/ui/input";
+import { Label } from "@odis-ai/shared/ui/label";
+import { Alert, AlertDescription } from "@odis-ai/shared/ui/alert";
+import { Separator } from "@odis-ai/shared/ui/separator";
 import { Phone, Info } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@odis-ai/ui/tooltip";
+} from "@odis-ai/shared/ui/tooltip";
 import type { UseFormRegister } from "react-hook-form";
-import type { DischargeSettings } from "@odis-ai/types";
+import type { DischargeSettings } from "@odis-ai/shared/types";
 
 interface VapiConfigSectionProps {
   register: UseFormRegister<DischargeSettings>;

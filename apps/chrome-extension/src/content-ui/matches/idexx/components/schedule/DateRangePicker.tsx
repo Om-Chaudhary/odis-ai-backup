@@ -5,8 +5,8 @@
  * Uses Tailwind CSS for styling.
  */
 
-import { getTodayLocalDate } from '@odis-ai/extension-shared';
-import { Input, Label, Button } from '@odis-ai/ui/extension';
+import { getTodayLocalDate } from '@odis-ai/extension/shared';
+import { Input, Label, Button } from '@odis-ai/shared/ui/extension';
 import { useState, useCallback } from 'react';
 
 export interface DateRange {

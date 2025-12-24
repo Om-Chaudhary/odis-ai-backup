@@ -5,7 +5,7 @@
  */
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { getClinicByUserId } from "@odis-ai/clinics/utils";
+import { getClinicByUserId } from "@odis-ai/domain/clinics";
 import { getInboundStatsInput } from "../schemas";
 
 export const getStatsRouter = createTRPCRouter({

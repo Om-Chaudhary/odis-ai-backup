@@ -1,0 +1,7 @@
+{
+  "name": "integrations-vapi-webhooks",
+  "": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/integrations/vapi/webhooks/src",
+  "projectType": "library",
+  "tags": ["type:integration", "scope:server", "platform:node"]
+}

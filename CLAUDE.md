@@ -39,62 +39,70 @@ pnpm docs:nx             # regenerate docs/reference/NX_PROJECTS.md
 - Analytics: PostHog
 - AI/Voice: VAPI
 
-### Nx Layout
+### Nx Layout (Domain-Grouped Architecture)
 
 ```text
 apps/
   web/                       # Next.js app (dashboard, API routes, server actions)
 
 libs/
-  # API & Client
-  api/                       # API helpers (auth, cors, responses, errors)
-  api-client/                # REST API client utilities
-  auth/                      # Authentication utilities
+  # Shared Infrastructure (cross-cutting concerns)
+  shared/
+    types/                   # Shared TypeScript types (Database, Dashboard, Case, Patient, etc.)
+    validators/              # Zod validation schemas (229 tests, 95%+ coverage)
+    util/                    # Shared utilities (case-transforms, business-hours, phone, date)
+    constants/               # Shared constants & configuration
+    ui/                      # Shared React components (shadcn/ui, 59 components)
+    hooks/                   # Shared React hooks
+    styles/                  # Global styles & Tailwind config
+    logger/                  # Structured logging with namespaces
+    crypto/                  # AES encryption helpers
+    testing/                 # Test utilities, mocks, fixtures, setup
+    env/                     # Environment variable validation
+    email/                   # Email template rendering (React Email)
 
-  # Data & Persistence
-  db/                        # Supabase clients + repository interfaces + implementations
-    ├── interfaces/          # ICasesRepository, IUserRepository, ICallRepository, IEmailRepository
-    ├── repositories/        # Concrete implementations
-    └── lib/entities/        # scribe-transactions
-
-  # Domain Services (split for testability & DI)
-  services-cases/            # Case management service layer
-  services-discharge/        # Discharge workflow orchestration + batch processing
-  services-shared/           # Shared execution plan logic
+  # Data Access Layer (persistence & repositories)
+  data-access/
+    db/                      # Main database library (re-exports below)
+    supabase-client/         # Supabase client initialization (browser, server, service, proxy)
+    repository-interfaces/   # Repository contracts (ICasesRepository, ICallRepository, etc.)
+    repository-impl/         # Concrete Supabase implementations
+    entities/                # Domain entity helpers (scribe transactions)
+    api/                     # API helpers (auth, cors, responses, errors)
 
   # External Integrations
-  idexx/                     # IDEXX Neo transformations & validation
-  vapi/                      # VAPI voice calls (client, call-manager, webhooks, tools, knowledge-base)
-    ├── call-client.interface.ts  # ICallClient for testing
-    ├── knowledge-base/      # Medical specialty knowledge bases
-    ├── webhooks/            # Webhook handlers + tools
-    └── prompts/             # VAPI system prompts
+  integrations/
+    vapi/                    # Main VAPI library (re-exports below)
+      client/                # VAPI SDK wrapper, variables, validators, knowledge base
+      webhooks/              # Webhook infrastructure & dispatcher
+      handlers/              # Event handlers (end-of-call, status-update, etc.)
+      tools/                 # Tool system (registry, executor, built-ins)
+      inbound/               # Inbound call → User mapping
+    idexx/                   # IDEXX Neo transformations & validation
+    qstash/                  # QStash scheduling + IScheduler interface
+    resend/                  # Resend email client + IEmailClient interface
+    slack/                   # Slack integration
+    ai/                      # AI/LLM utilities
+    retell/                  # Legacy Retell integration (deprecated)
 
-  qstash/                    # QStash scheduling + IScheduler interface
-  resend/                    # Resend email client + IEmailClient interface
-  retell/                    # Legacy Retell integration (deprecated)
+  # Domain (business logic & features)
+  domain/
+    cases/
+      data-access/           # CasesService (case management, ingestion, scheduling)
+    discharge/
+      data-access/           # DischargeOrchestrator, batch processor, call/email executors
+    shared/
+      util/                  # Shared service utilities (ExecutionPlan, interfaces)
+    clinics/
+      util/                  # Clinic configuration & VAPI config helpers
+    auth/
+      util/                  # Authentication utilities
 
-  # Shared Infrastructure
-  types/                     # Shared TypeScript types (dashboard, case, services, patient, orchestration)
-  validators/                # Zod validation schemas (236+ tests, 95%+ coverage)
-  utils/                     # Shared utilities (case-transforms, business-hours, phone, date helpers)
-  constants/                 # Shared constants & configuration
-  logger/                    # Structured logging with namespaces
-
-  # UI & Styling
-  ui/                        # Shared React components (shadcn/ui)
-  styles/                    # Global styles & Tailwind config
-  hooks/                     # Shared React hooks
-
-  # Dev & Testing
-  testing/                   # Test utilities, mocks, fixtures, setup
-  env/                       # Environment variable validation
-
-  # Supporting Libraries
-  clinics/                   # Clinic configuration helpers
-  crypto/                    # AES encryption helpers
-  email/                     # Email template rendering (React Email)
-  ai/                        # AI/LLM utilities
+  # Extension (Chrome extension libraries)
+  extension/
+    shared/                  # Shared extension utilities
+    storage/                 # Extension storage abstractions
+    env/                     # Extension environment config
 ```
 
 **Tags**: Use `type:*`, `scope:*`, `platform:*` in new projects.
@@ -164,35 +172,82 @@ const hasActive = useCallback(() => dataRef.current.some((x) => x.active), []);
 - **UI surface**: dashboard call management in `apps/web/src/app/dashboard/calls` and related components.
 - **Dynamic variables**: pass via `assistantOverrides.variableValues`; see `libs/vapi/extract-variables.ts`.
 
-### Import Patterns
+### Import Patterns (Domain-Grouped)
 
 **Shared Libraries:**
 
 ```typescript
-// Types (consolidated from web app)
-import type { DashboardCase, DashboardStats } from "@odis-ai/types";
-import type { CaseData, PatientInfo } from "@odis-ai/types";
+// Types
+import type { DashboardCase, DashboardStats, Database } from "@odis-ai/shared/types";
+import type { CaseData, PatientInfo } from "@odis-ai/shared/types";
 
-// Validators (236+ tests, 95%+ coverage)
-import { dischargeSchema, scheduleSchema } from "@odis-ai/validators";
+// Validators (229 tests, 95%+ coverage)
+import { dischargeSchema, scheduleSchema } from "@odis-ai/shared/validators";
 
-// Utilities (moved from web app)
-import { transformBackendCaseToDashboardCase } from "@odis-ai/utils";
-import { isWithinBusinessHours } from "@odis-ai/utils";
+// Utilities
+import { transformBackendCaseToDashboardCase } from "@odis-ai/shared/util";
+import { isWithinBusinessHours } from "@odis-ai/shared/util";
+import { cn } from "@odis-ai/shared/util";
 
-// Database interfaces & repositories
-import type { ICasesRepository } from "@odis-ai/db/interfaces";
-import { CasesRepository } from "@odis-ai/db/repositories";
+// UI Components
+import { Button } from "@odis-ai/shared/ui";
+import { Card } from "@odis-ai/shared/ui";
 
-// Services (split into focused libs)
-import { CasesService } from "@odis-ai/services-cases";
-import { DischargeOrchestrator } from "@odis-ai/services-discharge";
-import { ExecutionPlan } from "@odis-ai/services-shared";
+// Logging
+import { loggers } from "@odis-ai/shared/logger";
+```
 
-// External integrations
-import { createPhoneCall } from "@odis-ai/vapi";
-import { scheduleMessage } from "@odis-ai/qstash";
-import { sendEmail } from "@odis-ai/resend";
+**Data Access:**
+
+```typescript
+// Supabase clients
+import { createServerClient, createServiceClient } from "@odis-ai/data-access/supabase-client";
+
+// Repository interfaces (for DI/testing)
+import type { ICasesRepository, ICallRepository } from "@odis-ai/data-access/repository-interfaces";
+
+// Repository implementations
+import { CasesRepository, CallRepository } from "@odis-ai/data-access/repository-impl";
+
+// Or use convenience re-export
+import { createServerClient, ICasesRepository, CasesRepository } from "@odis-ai/data-access/db";
+```
+
+**Integrations:**
+
+```typescript
+// VAPI - Client
+import { createPhoneCall, validateVariables } from "@odis-ai/integrations/vapi/client";
+
+// VAPI - Webhooks (for webhook routes)
+import { handleWebhook } from "@odis-ai/integrations/vapi/webhooks";
+
+// Other integrations
+import { scheduleCallExecution } from "@odis-ai/integrations/qstash";
+import { sendEmail } from "@odis-ai/integrations/resend";
+import { transformIdexxData } from "@odis-ai/integrations/idexx";
+```
+
+**Domain:**
+
+```typescript
+// Cases domain
+import { CasesService } from "@odis-ai/domain/cases";
+
+// Discharge domain
+import { DischargeOrchestrator } from "@odis-ai/domain/discharge";
+import { ExecutionPlan } from "@odis-ai/domain/shared";
+
+// Clinic configuration
+import { getClinicByUserId } from "@odis-ai/domain/clinics";
+```
+
+**Extension:**
+
+```typescript
+// Chrome extension
+import { useStorage } from "@odis-ai/extension/shared";
+import { StorageArea } from "@odis-ai/extension/storage";
 ```
 
 ### Authentication & Authorization

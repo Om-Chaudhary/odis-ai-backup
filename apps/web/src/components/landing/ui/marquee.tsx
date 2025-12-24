@@ -1,6 +1,6 @@
 import { type ComponentPropsWithoutRef } from "react";
 
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 interface MarqueeProps extends ComponentPropsWithoutRef<"div"> {
   /**

@@ -14,9 +14,9 @@ import {
   Clock,
   ExternalLink,
 } from "lucide-react";
-import { Button } from "@odis-ai/ui/button";
+import { Button } from "@odis-ai/shared/ui/button";
 import { BaseWorkflowNode, type NodeStatus } from "./base-workflow-node";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 interface ActionNodeData {
   actionType:

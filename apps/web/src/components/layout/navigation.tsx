@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef } from "react";
 import { usePostHog } from "posthog-js/react";
-import { EnhancedButton } from "@odis-ai/ui/enhanced-button";
-import { Logo } from "@odis-ai/ui/Logo";
+import { EnhancedButton } from "@odis-ai/shared/ui/enhanced-button";
+import { Logo } from "@odis-ai/shared/ui/Logo";
 import WaitlistModal from "../marketing/waitlist-modal";
 import { useDeviceDetection } from "~/hooks/useDeviceDetection";
 import Link from "next/link";
-import { createClient } from "@odis-ai/db/client";
-import { Avatar, AvatarFallback, AvatarImage } from "@odis-ai/ui/avatar";
+import { createClient } from "@odis-ai/data-access/db/client";
+import { Avatar, AvatarFallback, AvatarImage } from "@odis-ai/shared/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +16,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@odis-ai/ui/dropdown-menu";
+} from "@odis-ai/shared/ui/dropdown-menu";
 import { signOut } from "~/server/actions/auth";
 import { LayoutDashboard, LogOut, Settings, User } from "lucide-react";
 import type { User as SupabaseUser } from "@supabase/supabase-js";

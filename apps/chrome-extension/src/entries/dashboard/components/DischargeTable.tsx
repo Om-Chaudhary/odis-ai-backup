@@ -6,7 +6,7 @@ import { useDailyDischarges } from '../hooks/useDailyDischarges';
 import { useDischargeActions } from '../hooks/useDischargeActions';
 import { useScheduleScraping } from '../hooks/useScheduleScraping';
 import { getReadyCount } from '../utils/caseStatusHelpers';
-import { isAuthError, formatErrorMessage, testModeStorage, useStorage, IS_DEV } from '@odis-ai/extension-shared';
+import { isAuthError, formatErrorMessage, testModeStorage, useStorage, IS_DEV } from '@odis-ai/extension/shared';
 import { useState } from 'react';
 
 export const DischargeTable = () => {

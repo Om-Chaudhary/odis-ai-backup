@@ -1,5 +1,5 @@
-import { useAuth, logger } from '@odis-ai/extension-shared';
-import { Button, Input, Label } from '@odis-ai/ui/extension';
+import { useAuth, logger } from '@odis-ai/extension/shared';
+import { Button, Input, Label } from '@odis-ai/shared/ui/extension';
 import { useState } from 'react';
 
 export const Auth = () => {

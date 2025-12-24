@@ -7,7 +7,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { getClinicByUserId } from "@odis-ai/clinics/utils";
+import { getClinicByUserId } from "@odis-ai/domain/clinics";
 
 export const deleteAppointmentRouter = createTRPCRouter({
   /**

@@ -1,16 +1,16 @@
 "use client";
 
-import { Label } from "@odis-ai/ui/label";
-import { Button } from "@odis-ai/ui/button";
-import { Input } from "@odis-ai/ui/input";
+import { Label } from "@odis-ai/shared/ui/label";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Input } from "@odis-ai/shared/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis-ai/ui/select";
-import { Separator } from "@odis-ai/ui/separator";
+} from "@odis-ai/shared/ui/select";
+import { Separator } from "@odis-ai/shared/ui/separator";
 import {
   Mail,
   Phone,
@@ -19,7 +19,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { format, addDays, setHours, setMinutes, setSeconds } from "date-fns";
-import type { DischargeSettings } from "@odis-ai/types";
+import type { DischargeSettings } from "@odis-ai/shared/types";
 
 interface BatchScheduleConfigProps {
   emailScheduleTime: Date | null;

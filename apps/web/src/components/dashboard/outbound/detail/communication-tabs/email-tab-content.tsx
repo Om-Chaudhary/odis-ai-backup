@@ -1,8 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
-import { Button } from "@odis-ai/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import { Button } from "@odis-ai/shared/ui/button";
 import { Mail, CheckCircle2 } from "lucide-react";
 import { EmailStructuredPreview } from "../structured-preview";
-import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
+import type { StructuredDischargeSummary } from "@odis-ai/shared/validators/discharge-summary";
 
 interface EmailTabContentProps {
   caseData: {

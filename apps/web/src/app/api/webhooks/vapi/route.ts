@@ -23,10 +23,10 @@
 
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { loggers } from "@odis-ai/logger";
+import { loggers } from "@odis-ai/shared/logger";
 // eslint-disable-next-line @nx/enforce-module-boundaries -- vapi lib used in webhook route
-import { handleVapiWebhook, parseWebhookPayload } from "@odis-ai/vapi/webhooks";
-import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/api/cors";
+import { handleVapiWebhook, parseWebhookPayload } from "@odis-ai/integrations/vapi/webhooks";
+import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/data-access/api/cors";
 
 const logger = loggers.webhook.child("vapi-route");
 

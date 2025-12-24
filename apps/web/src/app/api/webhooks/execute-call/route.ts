@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { verifySignatureAppRouter } from "@upstash/qstash/dist/nextjs";
-import { createServiceClient } from "@odis-ai/db/server";
+import { createServiceClient } from "@odis-ai/data-access/db/server";
 
 // Dynamic import to avoid bundling issues during static generation
 async function getCallExecutor() {

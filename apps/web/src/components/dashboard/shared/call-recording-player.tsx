@@ -1,8 +1,8 @@
 "use client";
 import { Phone, FileText, AlertCircle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
-import { AudioPlayer } from "@odis-ai/ui/audio-player";
-import { cn } from "@odis-ai/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import { AudioPlayer } from "@odis-ai/shared/ui/audio-player";
+import { cn } from "@odis-ai/shared/util";
 
 interface CallRecordingPlayerProps {
   /** URL to the audio recording */

@@ -1,11 +1,11 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
-import { Badge } from "@odis-ai/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import { Badge } from "@odis-ai/shared/ui/badge";
 import { Clock, PhoneCall, Mail } from "lucide-react";
 import { format, parseISO } from "date-fns";
-import type { UpcomingItem } from "@odis-ai/types";
-import { cn } from "@odis-ai/utils";
+import type { UpcomingItem } from "@odis-ai/shared/types";
+import { cn } from "@odis-ai/shared/util";
 
 interface UpcomingItemsProps {
   items: UpcomingItem[];

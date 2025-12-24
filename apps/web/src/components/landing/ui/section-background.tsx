@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 type SectionBackgroundVariant =
   // Legacy variants (kept for backwards compatibility)

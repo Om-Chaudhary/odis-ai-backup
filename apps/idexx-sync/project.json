@@ -4,7 +4,7 @@
   "sourceRoot": "apps/idexx-sync/src",
   "projectType": "application",
   "tags": ["type:app", "scope:server", "platform:node"],
-  "implicitDependencies": ["idexx", "db", "crypto", "qstash"],
+  "implicitDependencies": ["integrations-idexx", "data-access-db", "shared-crypto", "integrations-qstash"],
   "targets": {
     "build": {
       "executor": "@nx/esbuild:esbuild",

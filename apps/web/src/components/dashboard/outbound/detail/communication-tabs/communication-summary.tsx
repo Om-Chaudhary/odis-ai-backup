@@ -1,9 +1,9 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/shared/ui/tabs";
 import { Mail, Phone } from "lucide-react";
 import { CallTabContent } from "./call-tab-content";
 import { EmailTabContent } from "./email-tab-content";
 import type { PreviewTab } from "../../types";
-import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
+import type { StructuredDischargeSummary } from "@odis-ai/shared/validators/discharge-summary";
 
 interface ScheduledCallData {
   id: string;

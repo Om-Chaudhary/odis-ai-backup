@@ -1,7 +1,7 @@
 "use client";
 
 import { CheckCircle, Calendar, Inbox } from "lucide-react";
-import { Button } from "@odis-ai/ui/button";
+import { Button } from "@odis-ai/shared/ui/button";
 
 interface OutboundEmptyStateProps {
   type?: "no-cases" | "all-complete" | "no-results";

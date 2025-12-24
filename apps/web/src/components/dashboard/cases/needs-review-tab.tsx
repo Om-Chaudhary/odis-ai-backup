@@ -19,11 +19,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@odis-ai/ui/table";
-import { Skeleton } from "@odis-ai/ui/skeleton";
-import { Button } from "@odis-ai/ui/button";
-import { EmptyState } from "@odis-ai/ui";
-import { cn } from "@odis-ai/utils";
+} from "@odis-ai/shared/ui/table";
+import { Skeleton } from "@odis-ai/shared/ui/skeleton";
+import { Button } from "@odis-ai/shared/ui/button";
+import { EmptyState } from "@odis-ai/shared/ui";
+import { cn } from "@odis-ai/shared/util";
 import { api } from "~/trpc/client";
 import Link from "next/link";
 

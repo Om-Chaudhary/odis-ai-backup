@@ -1,7 +1,7 @@
 "use server";
 
-import { env } from "@odis-ai/env";
-import { createServiceClient } from "@odis-ai/db/server";
+import { env } from "@odis-ai/shared/env";
+import { createServiceClient } from "@odis-ai/data-access/db/server";
 import type {
   RecentCaseOption,
   SquadTestCallResult,

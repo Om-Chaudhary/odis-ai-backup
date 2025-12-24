@@ -18,7 +18,7 @@ vi.mock("~/env", () => ({
 }));
 
 // Mock dependencies
-vi.mock("@odis-ai/db/server", () => ({
+vi.mock("@odis-ai/data-access/db/server", () => ({
   createClient: vi.fn(),
 }));
 
@@ -65,14 +65,14 @@ vi.mock("@odis-ai/api/cors", () => ({
 
 // Import after mocks
 import { POST, GET, OPTIONS } from "../route";
-import { createClient } from "@odis-ai/db/server";
+import { createClient } from "@odis-ai/data-access/db/server";
 import { createServerClient } from "@supabase/ssr";
 import { getUser } from "~/server/actions/auth";
-import { scheduleCallExecution } from "@odis-ai/qstash/client";
-import { getClinicByUserId } from "@odis-ai/clinics/utils";
-import { getClinicVapiConfigByUserId } from "@odis-ai/clinics/vapi-config";
-import { isFutureTime } from "@odis-ai/utils/business-hours";
-import { handleCorsPreflightRequest } from "@odis-ai/api/cors";
+import { scheduleCallExecution } from "@odis-ai/integrations/qstash/client";
+import { getClinicByUserId } from "@odis-ai/domain/clinics";
+import { getClinicVapiConfigByUserId } from "@odis-ai/domain/clinics";
+import { isFutureTime } from "@odis-ai/shared/util/business-hours";
+import { handleCorsPreflightRequest } from "@odis-ai/data-access/api/cors";
 
 describe("Call Schedule Route", () => {
   // Create chainable mock for Supabase

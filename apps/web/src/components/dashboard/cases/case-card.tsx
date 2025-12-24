@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@odis-ai/ui/button";
-import { Card, CardContent, CardFooter } from "@odis-ai/ui/card";
-import { Input } from "@odis-ai/ui/input";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Card, CardContent, CardFooter } from "@odis-ai/shared/ui/card";
+import { Input } from "@odis-ai/shared/ui/input";
 import {
   Phone,
   Mail,
@@ -27,15 +27,15 @@ import type {
   DashboardCase,
   PatientUpdateInput,
   DischargeSettings,
-} from "@odis-ai/types";
-import type { PartialBackendCase } from "@odis-ai/utils/case-transforms";
-import { cn } from "@odis-ai/utils";
+} from "@odis-ai/shared/types";
+import type { PartialBackendCase } from "@odis-ai/shared/util/case-transforms";
+import { cn } from "@odis-ai/shared/util";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@odis-ai/ui/dropdown-menu";
+} from "@odis-ai/shared/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,15 +45,15 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@odis-ai/ui/alert-dialog";
+} from "@odis-ai/shared/ui/alert-dialog";
 import {
   isPlaceholder,
   hasValidContact,
   getEffectiveContact,
-} from "@odis-ai/utils/dashboard-helpers";
+} from "@odis-ai/shared/util/dashboard-helpers";
 import { ContactIndicator } from "../shared/contact-indicator";
 import { DischargeStatusIndicator } from "../discharges/discharge-status-indicator";
-import { Badge } from "@odis-ai/ui/badge";
+import { Badge } from "@odis-ai/shared/ui/badge";
 
 type WorkflowStatus = "completed" | "in_progress" | "failed" | "ready";
 

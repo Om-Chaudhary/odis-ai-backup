@@ -1,0 +1,16 @@
+{
+  "name": "data-access-supabase-client",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/data-access/supabase-client/src",
+  "projectType": "library",
+  "tags": ["type:data-access", "scope:shared", "platform:node+browser"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.json",
+        "cwd": "libs/data-access/supabase-client"
+      }
+    }
+  }
+}

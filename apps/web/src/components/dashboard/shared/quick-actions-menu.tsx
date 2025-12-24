@@ -9,8 +9,8 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@odis-ai/ui/dropdown-menu";
-import { Button } from "@odis-ai/ui/button";
+} from "@odis-ai/shared/ui/dropdown-menu";
+import { Button } from "@odis-ai/shared/ui/button";
 import { MoreHorizontal, FileText, FileCheck, Eye, Trash2 } from "lucide-react";
 import { DeleteCaseDialog } from "../cases/delete-case-dialog";
 

@@ -6,9 +6,9 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@odis-ai/ui/dialog";
+} from "@odis-ai/shared/ui/dialog";
 import { DischargeSettingsForm } from "../settings/discharge-settings";
-import type { DischargeSettings } from "@odis-ai/types";
+import type { DischargeSettings } from "@odis-ai/shared/types";
 
 interface DischargeSettingsPanelProps {
   open: boolean;

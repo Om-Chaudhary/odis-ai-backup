@@ -5,7 +5,7 @@
  * Sends messages to the background script, which forwards to the IDEXX content script.
  */
 
-import { logger } from '@odis-ai/extension-shared';
+import { logger } from '@odis-ai/extension/shared';
 import { useState, useCallback } from 'react';
 
 export interface SyncResult {

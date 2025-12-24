@@ -3,7 +3,7 @@ import { fetchPatientLatestSoapNote } from '../../utils/extraction/patient-fetch
 import { extractVitalsFromNotes, autoFillVitalSigns } from '../../utils/extraction/vitals-autofill';
 import { formatSoapNoteAsHtml } from '../../utils/formatting/soap-note-fetcher';
 import { insertTemplate } from '../../utils/transformation/template-inserter';
-import { logger, trackEvent } from '@odis-ai/extension-shared';
+import { logger, trackEvent } from '@odis-ai/extension/shared';
 import { useState } from 'react';
 import type { PatientWithCase } from '../../types';
 import type { CKEditorInfo } from '../../utils/dom/ckeditor-detector';

@@ -12,9 +12,9 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createServiceClient } from "@odis-ai/db/server";
-import { loggers } from "@odis-ai/logger";
-import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/api/cors";
+import { createServiceClient } from "@odis-ai/data-access/db/server";
+import { loggers } from "@odis-ai/shared/logger";
+import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/data-access/api/cors";
 
 const logger = loggers.api.child("vapi-leave-message");
 

@@ -1,4 +1,4 @@
-import { logger } from '@odis-ai/extension-shared';
+import { logger } from '@odis-ai/extension/shared';
 
 try {
   chrome.devtools.panels.create('Dev Tools', '/icon-34.png', '/devtools-panel/index.html');

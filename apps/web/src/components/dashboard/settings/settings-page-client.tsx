@@ -11,16 +11,16 @@ import {
 } from "lucide-react";
 import { DischargeSettingsForm } from "./discharge-settings";
 import { api } from "~/trpc/client";
-import type { DischargeSettings } from "@odis-ai/types";
+import type { DischargeSettings } from "@odis-ai/shared/types";
 import { toast } from "sonner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/shared/ui/tabs";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@odis-ai/ui/card";
+} from "@odis-ai/shared/ui/card";
 
 export function SettingsPageClient() {
   const router = useRouter();

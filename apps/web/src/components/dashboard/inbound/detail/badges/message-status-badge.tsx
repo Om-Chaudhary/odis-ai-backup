@@ -1,4 +1,4 @@
-import { Badge } from "@odis-ai/ui/badge";
+import { Badge } from "@odis-ai/shared/ui/badge";
 
 interface MessageStatusBadgeProps {
   status: string;

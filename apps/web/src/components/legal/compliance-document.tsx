@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { ArrowUp } from "lucide-react";
-import { cn } from "@odis-ai/utils";
-import { Button } from "@odis-ai/ui/button";
+import { cn } from "@odis-ai/shared/util";
+import { Button } from "@odis-ai/shared/ui/button";
 
 export interface ComplianceSection {
   id: string;

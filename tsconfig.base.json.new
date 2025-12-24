@@ -1,0 +1,66 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "paths": {
+      "@odis-ai/shared/types": [
+        "libs/shared/types/src/index.ts"
+      ],
+      "@odis-ai/shared/types/*": [
+        "libs/shared/types/src/*"
+      ],
+      "@odis-ai/shared/validators": [
+        "libs/shared/validators/src/index.ts"
+      ],
+      "@odis-ai/shared/validators/*": [
+        "libs/shared/validators/src/*"
+      ],
+      "@odis-ai/shared/util": [
+        "libs/shared/util/src/index.ts"
+      ],
+      "@odis-ai/shared/util/*": [
+        "libs/shared/util/src/*"
+      ],
+      "@odis-ai/shared/constants": [
+        "libs/shared/constants/src/index.ts"
+      ],
+      "@odis-ai/shared/constants/*": [
+        "libs/shared/constants/src/*"
+      ],
+      "@odis-ai/shared/ui": [
+        "libs/shared/ui/src/index.ts"
+      ],
+      "@odis-ai/shared/ui/*": [
+        "libs/shared/ui/src/*"
+      ],
+      "@odis-ai/shared/hooks": [
+        "libs/shared/hooks/src/index.ts"
+      ],
+      "@odis-ai/shared/hooks/*": [
+        "libs/shared/hooks/src/*"
+      ],
+      "@odis-ai/shared/styles": [
+        "libs/shared/styles/src/index.css"
+      ],
+      "@odis-ai/shared/styles/*": [
+        "libs/shared/styles/src/*"
+      ],
+      "@odis-ai/shared/logger": [
+        "libs/shared/logger/src/index.ts"
+      ],
+      "@odis-ai/shared/logger/*": [
+        "libs/shared/logger/src/*"
+      ],
+      "@odis-ai/shared/crypto": [
+        "libs/shared/crypto/src/index.ts"
+      ],
+      "@odis-ai/shared/crypto/*": [
+        "libs/shared/crypto/src/*"
+      ],
+      "@odis-ai/shared/testing": [
+        "libs/shared/testing/src/index.ts"
+      ],
+      "@odis-ai/shared/testing/*": [
+        "libs/shared/testing/src/*"
+tail -5 tsconfig.base.json >> tsconfig.base.json.new && mv tsconfig.base.json.new tsconfig.base.json && rm -f tsconfig.base.json.tmp && echo "✅ Updated tsconfig.base.json with new db split aliases"

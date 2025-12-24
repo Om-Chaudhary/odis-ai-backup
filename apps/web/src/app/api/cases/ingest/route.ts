@@ -1,10 +1,10 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { createClient } from "@odis-ai/db/server";
+import { createClient } from "@odis-ai/data-access/db/server";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
 import { getUser } from "~/server/actions/auth";
-import type { IngestPayload } from "@odis-ai/types";
+import type { IngestPayload } from "@odis-ai/shared/types";
 
 // Dynamic import to avoid bundling @react-email/components during static generation
 async function getCasesService() {
@@ -12,11 +12,11 @@ async function getCasesService() {
   return CasesService;
 }
 import { z } from "zod";
-import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/api/cors";
+import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/data-access/api/cors";
 import {
   IdexxIngestRequestSchema,
   type IdexxIngestResponse,
-} from "@odis-ai/validators";
+} from "@odis-ai/shared/validators";
 
 // --- Schemas ---
 

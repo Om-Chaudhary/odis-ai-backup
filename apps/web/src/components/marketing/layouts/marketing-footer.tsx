@@ -3,7 +3,7 @@
 import { Github, Twitter, Linkedin, Mail, ArrowUpRight } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Logo } from "@odis-ai/ui/Logo";
+import { Logo } from "@odis-ai/shared/ui/Logo";
 
 type FooterLink = {
   label: string;

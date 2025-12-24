@@ -5,7 +5,7 @@
  * Combines schedule sync + notes reconciliation into a single action.
  */
 
-import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@odis-ai/ui/extension';
+import { Button, DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@odis-ai/shared/ui/extension';
 import { useScheduleSync, getPresetLabel } from '../../hooks/useScheduleSync';
 import { RefreshCw, ChevronDown, Loader2, Calendar, CalendarDays, CalendarRange, CalendarClock } from 'lucide-react';
 import { useCallback } from 'react';

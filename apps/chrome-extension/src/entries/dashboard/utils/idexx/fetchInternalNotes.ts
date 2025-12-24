@@ -1,5 +1,5 @@
 import { fetchConsultationData } from '../../../../content-ui/matches/idexx/utils/extraction/consultation-fetcher';
-import { logger } from '@odis-ai/extension-shared';
+import { logger } from '@odis-ai/extension/shared';
 import type { DashboardCase } from '../../hooks/useDailyDischarges';
 
 const odisLogger = logger.child('[ODIS-DASHBOARD]');

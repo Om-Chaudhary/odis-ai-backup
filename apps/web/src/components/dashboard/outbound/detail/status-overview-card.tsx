@@ -1,5 +1,5 @@
-import { Button } from "@odis-ai/ui/button";
-import { Card, CardContent } from "@odis-ai/ui/card";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Card, CardContent } from "@odis-ai/shared/ui/card";
 import {
   Phone,
   Mail,
@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { DischargeCaseStatus } from "../types";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 interface StatusOverviewCardProps {
   status: DischargeCaseStatus;

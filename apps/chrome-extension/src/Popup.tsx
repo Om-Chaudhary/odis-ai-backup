@@ -1,4 +1,4 @@
-import { SupabaseAuthProvider, useAuth } from '@odis-ai/extension-shared';
+import { SupabaseAuthProvider, useAuth } from '@odis-ai/extension/shared';
 
 function PopupContent() {
   const { user, loading } = useAuth();

@@ -8,7 +8,7 @@
 
 import { DateRangePicker } from './DateRangePicker';
 import { useScheduleSync } from '../../hooks/useScheduleSync';
-import { Button, AuthGuard } from '@odis-ai/ui/extension';
+import { Button, AuthGuard } from '@odis-ai/shared/ui/extension';
 import { useState, useCallback } from 'react';
 import type { DateRange } from './DateRangePicker';
 

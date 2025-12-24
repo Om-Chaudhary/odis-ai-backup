@@ -1,0 +1,25 @@
+{
+  "name": "domain-clinics-util",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/domain/clinics/util/src",
+  "projectType": "library",
+  "tags": [
+    "type:util",
+    "scope:shared",
+    "platform:neutral"
+  ],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.json",
+        "cwd": "libs/domain/clinics/util"
+      },
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default"
+      ]
+    }
+  }
+}

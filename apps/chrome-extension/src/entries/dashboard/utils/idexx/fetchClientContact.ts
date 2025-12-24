@@ -1,7 +1,7 @@
 import { scrapeClientPhoneFromPage } from '../../../../content-ui/matches/idexx/utils/dom/client-dom-scraper';
 import { scrapeClientEmailFromPage } from '../../../../content-ui/matches/idexx/utils/dom/client-email-scraper';
 import { fetchClientPhoneNumber } from '../../../../content-ui/matches/idexx/utils/extraction/client-fetcher';
-import { logger } from '@odis-ai/extension-shared';
+import { logger } from '@odis-ai/extension/shared';
 
 const odisLogger = logger.child('[ODIS-DASHBOARD]');
 

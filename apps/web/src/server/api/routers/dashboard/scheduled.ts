@@ -6,7 +6,7 @@
 
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import type { CallStatus, EmailStatus } from "@odis-ai/types";
+import type { CallStatus, EmailStatus } from "@odis-ai/shared/types";
 import {
   type SupabasePatientsResponse,
   type DynamicVariables,

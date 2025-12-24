@@ -17,8 +17,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@odis-ai/ui/dialog";
-import { Button } from "@odis-ai/ui/button";
+} from "@odis-ai/shared/ui/dialog";
+import { Button } from "@odis-ai/shared/ui/button";
 import {
   Maximize2,
   Phone,
@@ -27,7 +27,7 @@ import {
   AlertTriangle,
   X,
 } from "lucide-react";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 // Import custom nodes
 import {

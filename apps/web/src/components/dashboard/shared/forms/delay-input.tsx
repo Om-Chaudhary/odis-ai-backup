@@ -1,12 +1,12 @@
-import { Input } from "@odis-ai/ui/input";
-import { Label } from "@odis-ai/ui/label";
+import { Input } from "@odis-ai/shared/ui/input";
+import { Label } from "@odis-ai/shared/ui/label";
 import { Info } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@odis-ai/ui/tooltip";
+} from "@odis-ai/shared/ui/tooltip";
 
 interface DelayInputProps {
   label: string;

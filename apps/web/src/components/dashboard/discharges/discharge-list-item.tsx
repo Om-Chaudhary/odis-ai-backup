@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent } from "@odis-ai/ui/card";
-import { Button } from "@odis-ai/ui/button";
-import { Input } from "@odis-ai/ui/input";
+import { Card, CardContent } from "@odis-ai/shared/ui/card";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Input } from "@odis-ai/shared/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,21 +13,21 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@odis-ai/ui/alert-dialog";
+} from "@odis-ai/shared/ui/alert-dialog";
 import { Phone, Mail, Edit2, Save, Loader2, AlertTriangle } from "lucide-react";
 import type {
   DashboardCase,
   PatientUpdateInput,
   DischargeSettings,
-} from "@odis-ai/types";
-import { cn } from "@odis-ai/utils";
+} from "@odis-ai/shared/types";
+import { cn } from "@odis-ai/shared/util";
 import {
   isPlaceholder,
   hasValidContact,
   getEffectiveContact,
-} from "@odis-ai/utils/dashboard-helpers";
+} from "@odis-ai/shared/util/dashboard-helpers";
 import { ContactIndicator } from "../shared/contact-indicator";
-import { Badge } from "@odis-ai/ui/badge";
+import { Badge } from "@odis-ai/shared/ui/badge";
 
 /**
  * Workflow status for a discharge case

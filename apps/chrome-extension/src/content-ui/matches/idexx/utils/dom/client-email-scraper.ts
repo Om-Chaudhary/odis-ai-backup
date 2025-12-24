@@ -1,4 +1,4 @@
-import { logger } from '@odis-ai/extension-shared';
+import { logger } from '@odis-ai/extension/shared';
 
 const odisLogger = logger.child('[ODIS]');
 

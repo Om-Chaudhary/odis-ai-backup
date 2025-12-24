@@ -1,4 +1,4 @@
-import { createClient } from "@odis-ai/db/server";
+import { createClient } from "@odis-ai/data-access/db/server";
 import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {

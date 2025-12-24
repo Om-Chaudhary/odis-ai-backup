@@ -1,15 +1,15 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { createClient } from "@odis-ai/db/server";
-import { scheduleCallSchema } from "@odis-ai/retell/validators";
-import { isFutureTime } from "@odis-ai/utils/business-hours";
-import { scheduleCallExecution } from "@odis-ai/qstash/client";
+import { createClient } from "@odis-ai/data-access/db/server";
+import { scheduleCallSchema } from "@odis-ai/integrations/retell/validators";
+import { isFutureTime } from "@odis-ai/shared/util/business-hours";
+import { scheduleCallExecution } from "@odis-ai/integrations/qstash/client";
 import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
-import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/api/cors";
-import { getClinicByUserId } from "@odis-ai/clinics/utils";
-import { getClinicVapiConfigByUserId } from "@odis-ai/clinics/vapi-config";
+import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/data-access/api/cors";
+import { getClinicByUserId } from "@odis-ai/domain/clinics";
+import { getClinicVapiConfigByUserId } from "@odis-ai/domain/clinics";
 
 // Dynamic import for lazy-loaded vapi library
 async function getVapiUtils() {

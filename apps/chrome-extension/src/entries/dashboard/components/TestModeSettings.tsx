@@ -1,5 +1,5 @@
-import { testModeStorage, useStorage, IS_DEV } from '@odis-ai/extension-shared';
-import { Input, Label } from '@odis-ai/ui/extension';
+import { testModeStorage, useStorage, IS_DEV } from '@odis-ai/extension/shared';
+import { Input, Label } from '@odis-ai/shared/ui/extension';
 import { useState, useEffect } from 'react';
 
 /**

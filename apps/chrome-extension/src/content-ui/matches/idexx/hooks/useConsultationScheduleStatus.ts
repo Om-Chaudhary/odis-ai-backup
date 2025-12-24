@@ -6,7 +6,7 @@
  * the current consultation.
  */
 
-import { getSupabaseClient, logger } from '@odis-ai/extension-shared';
+import { getSupabaseClient, logger } from '@odis-ai/extension/shared';
 import { useState, useEffect } from 'react';
 import type { CommunicationStatus } from '../components/icons/ScheduleStatusIcons';
 

@@ -4,7 +4,7 @@ import { useRef, forwardRef, type ReactNode, type HTMLAttributes } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { SectionBackground } from "~/components/landing/ui/section-background";
 import type { SectionBackgroundProps } from "~/components/landing/ui/section-background";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 export interface SectionContainerProps extends HTMLAttributes<HTMLElement> {
   /**

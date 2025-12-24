@@ -1,12 +1,12 @@
 import { AppSidebar } from "~/components/dashboard/shell/app-sidebar";
 import { DashboardBreadcrumb } from "~/components/dashboard/shell/dashboard-breadcrumb";
 import { getUser } from "~/server/actions/auth";
-import { createClient } from "@odis-ai/db/server";
+import { createClient } from "@odis-ai/data-access/db/server";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import type { Metadata } from "next";
-import { AUTH_PARAMS } from "@odis-ai/constants/auth";
-import { getClinicByUserId } from "@odis-ai/clinics/utils";
+import { AUTH_PARAMS } from "@odis-ai/shared/constants/auth";
+import { getClinicByUserId } from "@odis-ai/domain/clinics";
 import { Toaster } from "sonner";
 
 export const metadata: Metadata = {

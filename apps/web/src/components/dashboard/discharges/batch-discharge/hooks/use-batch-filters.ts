@@ -9,7 +9,7 @@ import {
   parseISO,
   format,
 } from "date-fns";
-import type { BatchEligibleCase } from "@odis-ai/types";
+import type { BatchEligibleCase } from "@odis-ai/shared/types";
 import type { DateFilter } from "../types";
 
 export function useBatchFilters(eligibleCases: BatchEligibleCase[]) {

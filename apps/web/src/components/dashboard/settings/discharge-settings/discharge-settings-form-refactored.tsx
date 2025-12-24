@@ -2,10 +2,10 @@
 
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Button } from "@odis-ai/ui/button";
-import { Separator } from "@odis-ai/ui/separator";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Separator } from "@odis-ai/shared/ui/separator";
 import { Loader2 } from "lucide-react";
-import type { DischargeSettings } from "@odis-ai/types";
+import type { DischargeSettings } from "@odis-ai/shared/types";
 import {
   ClinicInfoSection,
   EmailSchedulingSection,

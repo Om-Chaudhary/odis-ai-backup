@@ -1,0 +1,23 @@
+{
+  "name": "data-access-repository-impl",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/data-access/repository-impl/src",
+  "projectType": "library",
+  "tags": ["type:data-access", "scope:server", "platform:node"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.json",
+        "cwd": "libs/data-access/repository-impl"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run",
+        "cwd": "libs/data-access/repository-impl"
+      }
+    }
+  }
+}

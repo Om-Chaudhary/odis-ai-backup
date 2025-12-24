@@ -1,22 +1,22 @@
-import { Button } from "@odis-ai/ui/button";
-import { Input } from "@odis-ai/ui/input";
-import { Label } from "@odis-ai/ui/label";
-import { Switch } from "@odis-ai/ui/switch";
-import { Alert, AlertDescription } from "@odis-ai/ui/alert";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Input } from "@odis-ai/shared/ui/input";
+import { Label } from "@odis-ai/shared/ui/label";
+import { Switch } from "@odis-ai/shared/ui/switch";
+import { Alert, AlertDescription } from "@odis-ai/shared/ui/alert";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis-ai/ui/select";
+} from "@odis-ai/shared/ui/select";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@odis-ai/ui/card";
+} from "@odis-ai/shared/ui/card";
 import {
   ArrowLeft,
   ArrowRight,
@@ -29,7 +29,7 @@ import {
   Timer,
 } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 import { ScheduleModeToggle } from "../components";
 import { TIME_OPTIONS } from "../constants";
 import type { ScheduleMode } from "../types";

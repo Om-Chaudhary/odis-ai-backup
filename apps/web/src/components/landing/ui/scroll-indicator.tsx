@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 import { ChevronDown } from "lucide-react";
 import { usePageLoaded } from "~/hooks/use-page-loaded";
 

@@ -1,18 +1,18 @@
-import { Input } from "@odis-ai/ui/input";
-import { Label } from "@odis-ai/ui/label";
+import { Input } from "@odis-ai/shared/ui/input";
+import { Label } from "@odis-ai/shared/ui/label";
 import { Info } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@odis-ai/ui/tooltip";
+} from "@odis-ai/shared/ui/tooltip";
 import type {
   UseFormRegister,
   UseFormWatch,
   UseFormSetValue,
 } from "react-hook-form";
-import type { DischargeSettings } from "@odis-ai/types";
+import type { DischargeSettings } from "@odis-ai/shared/types";
 
 interface BrandingSectionProps {
   register: UseFormRegister<DischargeSettings>;

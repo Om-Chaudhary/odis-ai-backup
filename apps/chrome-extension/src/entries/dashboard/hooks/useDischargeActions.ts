@@ -2,7 +2,7 @@ import { executeDischargeWorkflow } from '../services/DischargeService';
 import { setCaseSending, setCaseCompleted, setCaseError, getReadyCases } from '../utils/caseStatusHelpers';
 import { caseToClinicalData } from '../utils/caseToClinicalData';
 import { fetchInternalNotesForCase } from '../utils/idexx/fetchInternalNotes';
-import { getSupabaseClient, logger, requireAuthToken, testModeStorage, IS_DEV, trackEvent } from '@odis-ai/extension-shared';
+import { getSupabaseClient, logger, requireAuthToken, testModeStorage, IS_DEV, trackEvent } from '@odis-ai/extension/shared';
 import { useState } from 'react';
 import type { DashboardCase } from './useDailyDischarges';
 

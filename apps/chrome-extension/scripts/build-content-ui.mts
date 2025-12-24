@@ -102,7 +102,7 @@ async function buildContentScript(name: string, entry: string) {
       alias: {
         '@src': resolve(srcDir, 'content-ui'),
         // Explicit aliases for extension-specific paths (nxViteTsPaths may not resolve subpaths correctly)
-        '@odis-ai/ui/extension': resolve(workspaceRoot, 'libs/ui/src/extension/index.ts'),
+        '@odis-ai/shared/ui/extension': resolve(workspaceRoot, 'libs/shared/ui/src/extension/index.ts'),
         '@odis-ai/db/browser': resolve(workspaceRoot, 'libs/db/src/browser.ts'),
         '@odis-ai/env/browser': resolve(workspaceRoot, 'libs/env/src/browser.ts'),
         '@odis-ai/logger/browser': resolve(workspaceRoot, 'libs/logger/src/browser.ts'),

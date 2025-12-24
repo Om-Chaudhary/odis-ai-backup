@@ -1,4 +1,4 @@
-import { getSupabaseClient, logger, requireAuthSession } from '@odis-ai/extension-shared';
+import { getSupabaseClient, logger, requireAuthSession } from '@odis-ai/extension/shared';
 import type { Tables } from '@database-types';
 
 const odisLogger = logger.child('[ODIS]');

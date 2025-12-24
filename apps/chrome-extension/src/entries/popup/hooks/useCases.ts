@@ -1,4 +1,4 @@
-import { getSupabaseClient, logger, fetchCasesByDate } from '@odis-ai/extension-shared';
+import { getSupabaseClient, logger, fetchCasesByDate } from '@odis-ai/extension/shared';
 import { useEffect, useState, useRef } from 'react';
 import type { Tables } from '@database-types';
 

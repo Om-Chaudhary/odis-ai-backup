@@ -141,7 +141,11 @@
       "Bash(pnpm exec tsc:*)",
       "Bash(../../node_modules/.bin/tsc --noEmit)",
       "Bash(pnpm type-check:*)",
-      "Bash(cloc:*)"
+      "Bash(cloc:*)",
+      "Bash(mkdir:*)",
+      "Bash(pnpm nx show:*)",
+      "Bash(python3:*)",
+      "Bash(nx build:*)"
     ],
     "deny": [],
     "ask": []

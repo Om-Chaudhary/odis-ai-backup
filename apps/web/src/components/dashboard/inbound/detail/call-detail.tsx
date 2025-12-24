@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { Button } from "@odis-ai/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
 import {
   Phone,
   Clock,
@@ -12,8 +12,8 @@ import {
   Trash2,
   FileText,
 } from "lucide-react";
-import { Badge } from "@odis-ai/ui/badge";
-import { formatPhoneNumber } from "@odis-ai/utils/phone";
+import { Badge } from "@odis-ai/shared/ui/badge";
+import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
 import { CallRecordingPlayer } from "../../shared/call-recording-player";
 import { api } from "~/trpc/client";
 import { CallStatusBadge, SentimentBadge } from "./badges";

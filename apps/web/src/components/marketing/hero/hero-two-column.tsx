@@ -1,6 +1,6 @@
 "use client";
 
-import { LightRays } from "@odis-ai/ui/light-rays";
+import { LightRays } from "@odis-ai/shared/ui/light-rays";
 import { ProcessAnimation } from "./process-animation";
 import { DemoPhoneCTA } from "./demo-phone-cta";
 

@@ -1,11 +1,11 @@
 "use client";
 
-import { Button } from "@odis-ai/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@odis-ai/ui/popover";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@odis-ai/shared/ui/popover";
 import { Calendar, ChevronDown } from "lucide-react";
-import { cn } from "@odis-ai/utils";
-import type { DateRangePreset } from "@odis-ai/utils/date-ranges";
-import { getDateRangeFromPreset } from "@odis-ai/utils/date-ranges";
+import { cn } from "@odis-ai/shared/util";
+import type { DateRangePreset } from "@odis-ai/shared/util/date-ranges";
+import { getDateRangeFromPreset } from "@odis-ai/shared/util/date-ranges";
 
 /**
  * Available date range preset options for the selector

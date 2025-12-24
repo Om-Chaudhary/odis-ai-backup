@@ -1,11 +1,11 @@
 "use client";
 import { useState } from "react";
 import { format } from "date-fns";
-import { Button } from "@odis-ai/ui/button";
-import { Badge } from "@odis-ai/ui/badge";
-import { Textarea } from "@odis-ai/ui/textarea";
-import { Separator } from "@odis-ai/ui/separator";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Badge } from "@odis-ai/shared/ui/badge";
+import { Textarea } from "@odis-ai/shared/ui/textarea";
+import { Separator } from "@odis-ai/shared/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
 import {
   Calendar,
   CalendarCheck,
@@ -18,7 +18,7 @@ import {
   Clock,
   Heart,
 } from "lucide-react";
-import { formatPhoneNumber } from "@odis-ai/utils/phone";
+import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
 import { CallRecordingPlayer } from "../../shared/call-recording-player";
 import { api } from "~/trpc/client";
 import { AppointmentStatusBadge } from "./badges";

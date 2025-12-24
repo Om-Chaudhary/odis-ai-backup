@@ -1,21 +1,21 @@
-import { Input } from "@odis-ai/ui/input";
-import { Label } from "@odis-ai/ui/label";
+import { Input } from "@odis-ai/shared/ui/input";
+import { Label } from "@odis-ai/shared/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis-ai/ui/select";
+} from "@odis-ai/shared/ui/select";
 import { Phone, Clock, Info } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@odis-ai/ui/tooltip";
+} from "@odis-ai/shared/ui/tooltip";
 import type { UseFormWatch, UseFormSetValue } from "react-hook-form";
-import type { DischargeSettings } from "@odis-ai/types";
+import type { DischargeSettings } from "@odis-ai/shared/types";
 import { TIME_OPTIONS } from "../constants";
 
 interface CallSchedulingSectionProps {

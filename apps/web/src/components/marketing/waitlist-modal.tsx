@@ -9,17 +9,17 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@odis-ai/ui/dialog";
-import { Button } from "@odis-ai/ui/button";
-import { Input } from "@odis-ai/ui/input";
-import { Label } from "@odis-ai/ui/label";
+} from "@odis-ai/shared/ui/dialog";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Input } from "@odis-ai/shared/ui/input";
+import { Label } from "@odis-ai/shared/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis-ai/ui/select";
+} from "@odis-ai/shared/ui/select";
 import { CheckCircle2 } from "lucide-react";
 import { useDeviceDetection } from "~/hooks/useDeviceDetection";
 import { api } from "~/trpc/client";

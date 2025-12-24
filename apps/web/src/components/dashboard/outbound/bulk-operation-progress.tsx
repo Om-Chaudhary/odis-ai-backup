@@ -11,9 +11,9 @@ import {
   Zap,
   Send,
 } from "lucide-react";
-import { Button } from "@odis-ai/ui/button";
-import { Progress } from "@odis-ai/ui/progress";
-import { cn } from "@odis-ai/utils";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Progress } from "@odis-ai/shared/ui/progress";
+import { cn } from "@odis-ai/shared/util";
 import { useBulkOperation } from "./bulk-operation-context";
 
 /**

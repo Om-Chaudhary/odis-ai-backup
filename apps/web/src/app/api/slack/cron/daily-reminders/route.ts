@@ -1,9 +1,9 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { verifySignatureAppRouter } from "@upstash/qstash/dist/nextjs";
-import { createServiceClient } from "@odis-ai/db/server";
+import { createServiceClient } from "@odis-ai/data-access/db/server";
 import { sendDailyReminders } from "@odis-ai/slack/scheduler";
-import { ensureSlackClientInitialized } from "@odis-ai/slack";
+import { ensureSlackClientInitialized } from "@odis-ai/integrations/slack";
 
 /**
  * Daily Reminders Cron Endpoint

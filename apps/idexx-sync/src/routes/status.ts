@@ -6,7 +6,7 @@
 
 import { Router } from "express";
 import type { Request, Response } from "express";
-import { createServiceClient } from "@odis-ai/db";
+import { createServiceClient } from "@odis-ai/data-access/db";
 
 export const statusRouter: ReturnType<typeof Router> = Router();
 

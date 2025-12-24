@@ -1,4 +1,4 @@
-import { logger, now, addDays, createTimeoutAbortController, TimeoutError } from '@odis-ai/extension-shared';
+import { logger, now, addDays, createTimeoutAbortController, TimeoutError } from '@odis-ai/extension/shared';
 import type { ScheduleAppointment } from '../../utils/extraction/schedule-extractor';
 
 const odisLogger = logger.child('[ODIS]');

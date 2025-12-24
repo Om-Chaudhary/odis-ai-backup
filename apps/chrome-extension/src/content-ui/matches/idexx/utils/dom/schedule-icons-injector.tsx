@@ -6,7 +6,7 @@
  */
 
 import { EmailIcon, PhoneIcon, ContactWarningIcon } from '../../components/icons/ScheduleStatusIcons';
-import { getSupabaseClient, logger } from '@odis-ai/extension-shared';
+import { getSupabaseClient, logger } from '@odis-ai/extension/shared';
 import { createRoot } from 'react-dom/client';
 import type { CommunicationStatus } from '../../components/icons/ScheduleStatusIcons';
 import type { Root } from 'react-dom/client';

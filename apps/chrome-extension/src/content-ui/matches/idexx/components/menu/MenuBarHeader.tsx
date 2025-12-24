@@ -1,4 +1,4 @@
-import { cn } from '@odis-ai/ui/extension';
+import { cn } from '@odis-ai/shared/ui/extension';
 
 interface MenuBarHeaderProps {
   isCollapsed: boolean;

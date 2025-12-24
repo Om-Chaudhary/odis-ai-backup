@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button } from "@odis-ai/ui/button";
-import { Badge } from "@odis-ai/ui/badge";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Badge } from "@odis-ai/shared/ui/badge";
 import {
   Mail,
   Phone,
@@ -12,7 +12,7 @@ import {
   PawPrint,
   Trash2,
 } from "lucide-react";
-import { formatPhoneNumber } from "@odis-ai/utils/phone";
+import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
 import { DeleteCaseDialog } from "../../cases/delete-case-dialog";
 import { calculateAge, formatCaseType } from "./utils";
 

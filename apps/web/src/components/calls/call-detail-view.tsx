@@ -26,13 +26,13 @@ import {
   CardHeader,
   CardTitle,
   CardDescription,
-} from "@odis-ai/ui/card";
-import { Button } from "@odis-ai/ui/button";
-import { Separator } from "@odis-ai/ui/separator";
-import { ScrollArea } from "@odis-ai/ui/scroll-area";
+} from "@odis-ai/shared/ui/card";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Separator } from "@odis-ai/shared/ui/separator";
+import { ScrollArea } from "@odis-ai/shared/ui/scroll-area";
 import { DischargeStatusBadge } from "~/components/dashboard/discharges/discharge-status-badge";
-import type { CallDetails } from "@odis-ai/types";
-import { cn } from "@odis-ai/utils";
+import type { CallDetails } from "@odis-ai/shared/types";
+import { cn } from "@odis-ai/shared/util";
 
 interface CallDetailViewProps {
   initialCall: CallDetails;

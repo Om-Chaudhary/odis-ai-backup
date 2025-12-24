@@ -4,7 +4,7 @@
  * Manages schedule_syncs records for auditing sync operations.
  */
 
-import { getSupabaseClient } from '@odis-ai/extension-shared';
+import { getSupabaseClient } from '@odis-ai/extension/shared';
 import type { Database } from '@database-types';
 
 type SyncType = 'schedule' | 'notes' | 'full';

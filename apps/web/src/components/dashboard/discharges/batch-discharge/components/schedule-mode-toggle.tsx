@@ -1,4 +1,4 @@
-import { Button } from "@odis-ai/ui/button";
+import { Button } from "@odis-ai/shared/ui/button";
 import { Timer, Calendar } from "lucide-react";
 import type { ScheduleMode } from "../types";
 

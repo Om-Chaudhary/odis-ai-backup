@@ -1,4 +1,4 @@
-import { initAppWithShadow, logger, formatErrorMessage } from '@odis-ai/extension-shared';
+import { initAppWithShadow, logger, formatErrorMessage } from '@odis-ai/extension/shared';
 import './index.css';
 import App from './App';
 import { reconcileCaseNotes } from './utils/sync/notes-reconciliation';

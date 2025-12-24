@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@odis-ai/ui/button";
-import { Badge } from "@odis-ai/ui/badge";
-import { ScrollArea } from "@odis-ai/ui/scroll-area";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Badge } from "@odis-ai/shared/ui/badge";
+import { ScrollArea } from "@odis-ai/shared/ui/scroll-area";
 import { ChevronDown, ChevronUp, Loader2, Mail, Phone } from "lucide-react";
-import { cn } from "@odis-ai/utils";
-import type { DashboardCase } from "@odis-ai/types";
+import { cn } from "@odis-ai/shared/util";
+import type { DashboardCase } from "@odis-ai/shared/types";
 
 /** Tracks which case is currently being processed and what type of discharge */
 interface LoadingState {

@@ -2,7 +2,7 @@
 
 import { type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 export interface SectionHeaderProps {
   /**

@@ -8,8 +8,8 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { format, subDays } from "date-fns";
-import { getClinicUserIds } from "@odis-ai/clinics/utils";
-import { getLocalDayRange, DEFAULT_TIMEZONE } from "@odis-ai/utils/timezone";
+import { getClinicUserIds } from "@odis-ai/domain/clinics";
+import { getLocalDayRange, DEFAULT_TIMEZONE } from "@odis-ai/shared/util/timezone";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 const findPreviousAttentionDateInput = z.object({

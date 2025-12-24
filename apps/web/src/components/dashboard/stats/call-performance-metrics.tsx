@@ -1,9 +1,9 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
-import { EmptyState } from "@odis-ai/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import { EmptyState } from "@odis-ai/shared/ui";
 import { TrendingUp, Clock, DollarSign, Smile, Meh, Frown } from "lucide-react";
-import type { CallPerformanceMetrics } from "@odis-ai/types";
+import type { CallPerformanceMetrics } from "@odis-ai/shared/types";
 
 interface CallPerformanceMetricsProps {
   metrics: CallPerformanceMetrics;

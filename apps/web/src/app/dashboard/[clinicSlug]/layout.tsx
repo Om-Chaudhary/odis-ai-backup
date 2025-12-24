@@ -1,7 +1,7 @@
 import { redirect, notFound } from "next/navigation";
-import { createClient } from "@odis-ai/db/server";
-import { getClinicBySlug, getClinicByUserId } from "@odis-ai/clinics/utils";
-import { ClinicProvider } from "@odis-ai/ui/clinic-context";
+import { createClient } from "@odis-ai/data-access/db/server";
+import { getClinicBySlug, getClinicByUserId } from "@odis-ai/domain/clinics";
+import { ClinicProvider } from "@odis-ai/shared/ui/clinic-context";
 
 interface ClinicLayoutProps {
   children: React.ReactNode;

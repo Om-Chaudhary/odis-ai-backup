@@ -1,21 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@odis-ai/ui/button";
-import { Input } from "@odis-ai/ui/input";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Input } from "@odis-ai/shared/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis-ai/ui/select";
-import { Label } from "@odis-ai/ui/label";
+} from "@odis-ai/shared/ui/select";
+import { Label } from "@odis-ai/shared/ui/label";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@odis-ai/ui/collapsible";
+} from "@odis-ai/shared/ui/collapsible";
 import {
   Search,
   RefreshCw,
@@ -23,7 +23,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import type { DischargeReadinessFilter } from "@odis-ai/types";
+import type { DischargeReadinessFilter } from "@odis-ai/shared/types";
 
 /**
  * VAPI call end reason filter options

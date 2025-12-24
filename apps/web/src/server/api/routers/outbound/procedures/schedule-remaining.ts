@@ -7,10 +7,10 @@
  */
 
 import { TRPCError } from "@trpc/server";
-import { getClinicUserIds, getClinicByUserId } from "@odis-ai/clinics/utils";
-import { normalizeToE164, normalizeEmail } from "@odis-ai/utils/phone";
-import { calculateScheduleTime } from "@odis-ai/utils/timezone";
-import { scheduleEmailExecution } from "@odis-ai/qstash";
+import { getClinicUserIds, getClinicByUserId } from "@odis-ai/domain/clinics";
+import { normalizeToE164, normalizeEmail } from "@odis-ai/shared/util/phone";
+import { calculateScheduleTime } from "@odis-ai/shared/util/timezone";
+import { scheduleEmailExecution } from "@odis-ai/integrations/qstash";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { scheduleRemainingOutreachInput } from "../schemas";
 

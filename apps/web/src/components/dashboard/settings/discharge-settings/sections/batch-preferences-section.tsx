@@ -1,10 +1,10 @@
-import { Label } from "@odis-ai/ui/label";
-import { Switch } from "@odis-ai/ui/switch";
-import { Separator } from "@odis-ai/ui/separator";
-import { Alert, AlertDescription } from "@odis-ai/ui/alert";
+import { Label } from "@odis-ai/shared/ui/label";
+import { Switch } from "@odis-ai/shared/ui/switch";
+import { Separator } from "@odis-ai/shared/ui/separator";
+import { Alert, AlertDescription } from "@odis-ai/shared/ui/alert";
 import { Calendar } from "lucide-react";
 import type { UseFormWatch, UseFormSetValue } from "react-hook-form";
-import type { DischargeSettings } from "@odis-ai/types";
+import type { DischargeSettings } from "@odis-ai/shared/types";
 
 interface BatchPreferencesSectionProps {
   watch: UseFormWatch<DischargeSettings>;

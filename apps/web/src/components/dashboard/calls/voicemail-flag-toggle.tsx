@@ -1,20 +1,20 @@
 "use client";
 
-import { Switch } from "@odis-ai/ui/switch";
+import { Switch } from "@odis-ai/shared/ui/switch";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@odis-ai/ui/card";
+} from "@odis-ai/shared/ui/card";
 import { Phone, Info } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@odis-ai/ui/tooltip";
+} from "@odis-ai/shared/ui/tooltip";
 
 interface VoicemailFlagToggleProps {
   enabled: boolean;

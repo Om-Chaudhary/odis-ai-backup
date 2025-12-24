@@ -3,17 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
-import { Button } from "@odis-ai/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import { Button } from "@odis-ai/shared/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis-ai/ui/select";
-import { Label } from "@odis-ai/ui/label";
-import { Badge } from "@odis-ai/ui/badge";
+} from "@odis-ai/shared/ui/select";
+import { Label } from "@odis-ai/shared/ui/label";
+import { Badge } from "@odis-ai/shared/ui/badge";
 import {
   Table,
   TableBody,
@@ -21,7 +21,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@odis-ai/ui/table";
+} from "@odis-ai/shared/ui/table";
 import {
   Mail,
   ExternalLink,
@@ -34,7 +34,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
-import type { EmailStatus } from "@odis-ai/types";
+import type { EmailStatus } from "@odis-ai/shared/types";
 
 function getStatusBadge(status: EmailStatus) {
   if (status === "sent") {

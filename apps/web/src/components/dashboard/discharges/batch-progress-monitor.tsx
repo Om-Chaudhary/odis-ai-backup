@@ -8,11 +8,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@odis-ai/ui/dialog";
-import { Button } from "@odis-ai/ui/button";
-import { Progress } from "@odis-ai/ui/progress";
-import { ScrollArea } from "@odis-ai/ui/scroll-area";
-import { Badge } from "@odis-ai/ui/badge";
+} from "@odis-ai/shared/ui/dialog";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Progress } from "@odis-ai/shared/ui/progress";
+import { ScrollArea } from "@odis-ai/shared/ui/scroll-area";
+import { Badge } from "@odis-ai/shared/ui/badge";
 import {
   AlertCircle,
   CheckCircle,
@@ -23,7 +23,7 @@ import {
   XCircle,
   Download,
 } from "lucide-react";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 import { api } from "~/trpc/client";
 import type { AppRouterOutputs } from "~/trpc/client";
 

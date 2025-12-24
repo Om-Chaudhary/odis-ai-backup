@@ -1,9 +1,9 @@
 "use client";
 
 import { api } from "~/trpc/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
-import { Skeleton } from "@odis-ai/ui/skeleton";
-import { NumberTicker } from "@odis-ai/ui/number-ticker";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import { Skeleton } from "@odis-ai/shared/ui/skeleton";
+import { NumberTicker } from "@odis-ai/shared/ui/number-ticker";
 import {
   Phone,
   Mail,
@@ -14,7 +14,7 @@ import {
   DollarSign,
   TrendingUp,
 } from "lucide-react";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 export function OutboundSuccessMetrics() {
   const { data, isLoading } = api.dashboard.getTodayOutboundSuccess.useQuery(

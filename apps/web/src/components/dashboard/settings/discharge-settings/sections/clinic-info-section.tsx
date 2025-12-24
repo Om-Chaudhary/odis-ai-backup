@@ -1,8 +1,8 @@
-import { Input } from "@odis-ai/ui/input";
-import { Label } from "@odis-ai/ui/label";
-import { Separator } from "@odis-ai/ui/separator";
+import { Input } from "@odis-ai/shared/ui/input";
+import { Label } from "@odis-ai/shared/ui/label";
+import { Separator } from "@odis-ai/shared/ui/separator";
 import type { UseFormRegister, FieldErrors } from "react-hook-form";
-import type { DischargeSettings } from "@odis-ai/types";
+import type { DischargeSettings } from "@odis-ai/shared/types";
 
 interface ClinicInfoSectionProps {
   register: UseFormRegister<DischargeSettings>;

@@ -3,8 +3,8 @@ import {
   logger,
   formatErrorMessage,
   trackError,
-} from "@odis-ai/extension-shared";
-import { exampleThemeStorage } from "@odis-ai/extension-storage";
+} from "@odis-ai/extension/shared";
+import { exampleThemeStorage } from "@odis-ai/extension/storage";
 
 const bgLogger = logger.child("[Background]");
 

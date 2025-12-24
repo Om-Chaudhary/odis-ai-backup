@@ -14,9 +14,9 @@ import {
   isYesterday,
   startOfDay,
 } from "date-fns";
-import { cn } from "@odis-ai/utils";
-import { Popover, PopoverContent, PopoverTrigger } from "@odis-ai/ui/popover";
-import { Calendar } from "@odis-ai/ui/calendar";
+import { cn } from "@odis-ai/shared/util";
+import { Popover, PopoverContent, PopoverTrigger } from "@odis-ai/shared/ui/popover";
+import { Calendar } from "@odis-ai/shared/ui/calendar";
 
 interface OutboundDateNavProps {
   currentDate: Date;

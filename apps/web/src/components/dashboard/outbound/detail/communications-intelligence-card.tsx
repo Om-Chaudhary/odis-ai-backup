@@ -1,6 +1,6 @@
-import { Card, CardContent, CardHeader } from "@odis-ai/ui/card";
-import { Badge } from "@odis-ai/ui/badge";
-import { Separator } from "@odis-ai/ui/separator";
+import { Card, CardContent, CardHeader } from "@odis-ai/shared/ui/card";
+import { Badge } from "@odis-ai/shared/ui/badge";
+import { Separator } from "@odis-ai/shared/ui/separator";
 import {
   Brain,
   AlertTriangle,
@@ -9,7 +9,7 @@ import {
   PhoneCall,
   Sparkles,
 } from "lucide-react";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 interface ScheduledCallData {
   id: string;

@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
-import { Button } from "@odis-ai/ui/button";
+import { Button } from "@odis-ai/shared/ui/button";
 import {
   RefreshCw,
   TestTube,
@@ -12,9 +12,9 @@ import {
   ClipboardList,
   Mail,
 } from "lucide-react";
-import { Badge } from "@odis-ai/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/ui/tabs";
-import { EmptyState } from "@odis-ai/ui";
+import { Badge } from "@odis-ai/shared/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/shared/ui/tabs";
+import { EmptyState } from "@odis-ai/shared/ui";
 import { DischargeListItem } from "./discharge-list-item";
 import { type CallEndReasonFilter } from "../filters/consolidated-filter-bar";
 import { BatchDischargeDialog } from "./batch-discharge-dialog";
@@ -27,12 +27,12 @@ import type {
   DashboardCase,
   DischargeSettings,
   PatientUpdateInput,
-} from "@odis-ai/types";
-import { transformBackendCasesToDashboardCases } from "@odis-ai/utils/case-transforms";
+} from "@odis-ai/shared/types";
+import { transformBackendCasesToDashboardCases } from "@odis-ai/shared/util/case-transforms";
 import {
   normalizePlaceholder,
   hasValidContact,
-} from "@odis-ai/utils/dashboard-helpers";
+} from "@odis-ai/shared/util/dashboard-helpers";
 import { toast } from "sonner";
 import {
   format,
@@ -43,7 +43,7 @@ import {
   parseISO,
   startOfDay,
 } from "date-fns";
-import type { DischargeReadinessFilter } from "@odis-ai/types";
+import type { DischargeReadinessFilter } from "@odis-ai/shared/types";
 
 /** Tracks which case is currently being processed and what type of discharge */
 interface LoadingState {

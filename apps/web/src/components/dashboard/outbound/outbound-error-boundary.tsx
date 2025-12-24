@@ -2,8 +2,8 @@
 
 import { Component, type ReactNode } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
-import { Button } from "@odis-ai/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
 
 interface Props {
   children: ReactNode;

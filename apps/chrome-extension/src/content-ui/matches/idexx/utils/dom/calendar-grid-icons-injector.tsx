@@ -14,7 +14,7 @@
 
 import { CalendarGridStatusIcons } from '../../components/icons/ScheduleStatusIcons';
 import { batchGetAppointmentStatuses, clearStatusCache } from '../../services/appointment-status-fetcher';
-import { logger } from '@odis-ai/extension-shared';
+import { logger } from '@odis-ai/extension/shared';
 import { createRoot } from 'react-dom/client';
 import type { AppointmentCommunicationStatus } from '../../services/appointment-status-fetcher';
 import type { Root } from 'react-dom/client';

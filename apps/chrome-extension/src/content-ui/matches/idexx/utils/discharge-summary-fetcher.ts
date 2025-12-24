@@ -1,4 +1,4 @@
-import { getSupabaseClient, requireAuthSession } from '@odis-ai/extension-shared';
+import { getSupabaseClient, requireAuthSession } from '@odis-ai/extension/shared';
 import type { Database } from '@database-types';
 
 type DischargeSummary = Database['public']['Tables']['discharge_summaries']['Row'];

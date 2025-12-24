@@ -6,7 +6,7 @@ import { motion, useInView, useReducedMotion } from "framer-motion";
 import { usePostHog } from "posthog-js/react";
 import { NeonGradientCard } from "../ui/neon-gradient-card";
 import { Calendar, Phone } from "lucide-react";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 import { SectionBackground } from "../ui/section-background";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
 import {

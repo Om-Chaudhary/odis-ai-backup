@@ -24,7 +24,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@odis-ai/ui/card";
+} from "@odis-ai/shared/ui/card";
 import Link from "next/link";
 
 const supportCategories = [

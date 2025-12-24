@@ -1,8 +1,8 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { loggers } from "@odis-ai/logger";
-import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/api/cors";
+import { loggers } from "@odis-ai/shared/logger";
+import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/data-access/api/cors";
 
 const logger = loggers.api.child("appointments-availability");
 
@@ -23,7 +23,7 @@ const availabilityQuerySchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const { createServiceClient } = await import("@odis-ai/db/server");
+    const { createServiceClient } = await import("@odis-ai/data-access/db/server");
     const { searchParams } = new URL(request.url);
     const params = {
       clinic_id: searchParams.get("clinic_id"),

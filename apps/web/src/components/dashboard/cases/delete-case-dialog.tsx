@@ -8,8 +8,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@odis-ai/ui/dialog";
-import { Button } from "@odis-ai/ui/button";
+} from "@odis-ai/shared/ui/dialog";
+import { Button } from "@odis-ai/shared/ui/button";
 import { api } from "~/trpc/client";
 import { toast } from "sonner";
 import { Loader2, Trash2 } from "lucide-react";

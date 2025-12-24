@@ -1,5 +1,5 @@
 import { fetchClientContact } from '../utils/idexx/fetchClientContact';
-import { getSupabaseClient, logger, fetchTodayCases } from '@odis-ai/extension-shared';
+import { getSupabaseClient, logger, fetchTodayCases } from '@odis-ai/extension/shared';
 import { useEffect, useState } from 'react';
 import type { Database } from '@database-types';
 

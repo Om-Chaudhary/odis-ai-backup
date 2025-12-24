@@ -1,5 +1,5 @@
 import { enableEditMode } from '../dom/ckeditor-detector';
-import { logger } from '@odis-ai/extension-shared';
+import { logger } from '@odis-ai/extension/shared';
 import type { CKEditorInfo } from '../dom/ckeditor-detector';
 
 const odisLogger = logger.child('[ODIS]');

@@ -6,11 +6,11 @@ import Link from "next/link";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { usePostHog } from "posthog-js/react";
 import { Calendar } from "lucide-react";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 import { usePageLoaded } from "~/hooks/use-page-loaded";
 import { PhoneRingIcon } from "../ui/phone-ring-icon";
 import { ScrollIndicator } from "../ui/scroll-indicator";
-import { Logo } from "@odis-ai/ui/Logo";
+import { Logo } from "@odis-ai/shared/ui/Logo";
 import { WordRotate } from "../ui/word-rotate";
 import { AnimatedGradientText } from "../ui/animated-gradient-text";
 

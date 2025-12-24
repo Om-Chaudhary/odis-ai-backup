@@ -6,9 +6,9 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
-import { handleOAuthCallback } from "@odis-ai/slack";
-import { createServiceClient } from "@odis-ai/db/server";
-import { encrypt } from "@odis-ai/crypto";
+import { handleOAuthCallback } from "@odis-ai/integrations/slack";
+import { createServiceClient } from "@odis-ai/data-access/db/server";
+import { encrypt } from "@odis-ai/shared/crypto";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;

@@ -1,5 +1,5 @@
 import { scheduleDischarge } from '../../services/discharge/discharge-scheduler';
-import { logger, getUserFriendlyErrorMessage } from '@odis-ai/extension-shared';
+import { logger, getUserFriendlyErrorMessage } from '@odis-ai/extension/shared';
 import { useState } from 'react';
 
 const odisLogger = logger.child('[ODIS]');

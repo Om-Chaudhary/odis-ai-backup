@@ -16,8 +16,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@odis-ai/ui/table";
-import { Skeleton } from "@odis-ai/ui/skeleton";
+} from "@odis-ai/shared/ui/table";
+import { Skeleton } from "@odis-ai/shared/ui/skeleton";
 
 interface NeedsReviewCase {
   id: string;

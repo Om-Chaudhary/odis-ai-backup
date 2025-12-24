@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
-import { Button } from "@odis-ai/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import { Button } from "@odis-ai/shared/ui/button";
 import {
   CheckCircle2,
   Clock,
@@ -8,8 +8,8 @@ import {
   Phone,
   Mail,
 } from "lucide-react";
-import { cn } from "@odis-ai/utils";
-import { Separator } from "@odis-ai/ui/separator";
+import { cn } from "@odis-ai/shared/util";
+import { Separator } from "@odis-ai/shared/ui/separator";
 import type { DeliveryToggles } from "../../types";
 
 interface PartialDeliveryActionsProps {

@@ -1,4 +1,4 @@
-import type { BatchEligibleCase } from "@odis-ai/types";
+import type { BatchEligibleCase } from "@odis-ai/shared/types";
 
 export type DateFilter = "today" | "yesterday" | "day-2" | "day-3" | "day-4";
 

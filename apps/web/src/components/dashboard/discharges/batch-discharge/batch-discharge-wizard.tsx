@@ -2,10 +2,10 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@odis-ai/ui/button";
-import { Badge } from "@odis-ai/ui/badge";
-import { Separator } from "@odis-ai/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/ui/tabs";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Badge } from "@odis-ai/shared/ui/badge";
+import { Separator } from "@odis-ai/shared/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/shared/ui/tabs";
 import {
   ArrowLeft,
   TestTube,
@@ -29,7 +29,7 @@ import {
   CompleteStep,
 } from "./steps";
 import { StepProgress } from "./components";
-import type { BatchEligibleCase } from "@odis-ai/types";
+import type { BatchEligibleCase } from "@odis-ai/shared/types";
 
 export function BatchDischargeWizard() {
   const router = useRouter();

@@ -1,4 +1,4 @@
-import { logger } from '@odis-ai/extension-shared';
+import { logger } from '@odis-ai/extension/shared';
 import type { IdexxConsultationPageData, ScheduleCallRequest } from '../../types';
 
 const odisLogger = logger.child('[ODIS]');

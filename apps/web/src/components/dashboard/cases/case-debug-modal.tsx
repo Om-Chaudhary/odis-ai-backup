@@ -7,11 +7,11 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@odis-ai/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
-import { Badge } from "@odis-ai/ui/badge";
-import { Separator } from "@odis-ai/ui/separator";
-import type { BackendCase } from "@odis-ai/types";
+} from "@odis-ai/shared/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import { Badge } from "@odis-ai/shared/ui/badge";
+import { Separator } from "@odis-ai/shared/ui/separator";
+import type { BackendCase } from "@odis-ai/shared/types";
 import { format } from "date-fns";
 
 // Helper for concise date formatting

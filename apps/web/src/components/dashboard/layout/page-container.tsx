@@ -1,7 +1,7 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 interface PageContainerProps {
   children: ReactNode;

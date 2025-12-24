@@ -3,15 +3,15 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { format } from "date-fns";
 import { api } from "~/trpc/client";
-import { Button } from "@odis-ai/ui/button";
-import { Input } from "@odis-ai/ui/input";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Input } from "@odis-ai/shared/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis-ai/ui/select";
+} from "@odis-ai/shared/ui/select";
 import {
   Table,
   TableBody,
@@ -19,22 +19,22 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@odis-ai/ui/table";
+} from "@odis-ai/shared/ui/table";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@odis-ai/ui/card";
-import { Badge } from "@odis-ai/ui/badge";
+} from "@odis-ai/shared/ui/card";
+import { Badge } from "@odis-ai/shared/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@odis-ai/ui/dialog";
+} from "@odis-ai/shared/ui/dialog";
 import {
   Phone,
   Search,
@@ -45,11 +45,11 @@ import {
   Eye,
 } from "lucide-react";
 import { toast } from "sonner";
-import { PaginationControls } from "@odis-ai/ui";
+import { PaginationControls } from "@odis-ai/shared/ui";
 import { InboundCallDetail } from "./inbound-call-detail";
-import { cn, formatDuration } from "@odis-ai/utils";
-import { formatPhoneNumber } from "@odis-ai/utils/phone";
-import { useDebounce } from "@odis-ai/hooks";
+import { cn, formatDuration } from "@odis-ai/shared/util";
+import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
+import { useDebounce } from "@odis-ai/shared/hooks";
 import type { Database } from "~/database.types";
 
 const PAGE_SIZE = 20;

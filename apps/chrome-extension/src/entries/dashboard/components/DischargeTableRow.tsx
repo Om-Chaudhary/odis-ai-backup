@@ -1,6 +1,6 @@
-import { IS_DEV } from '@odis-ai/extension-shared';
+import { IS_DEV } from '@odis-ai/extension/shared';
 import type { DashboardCase } from '../hooks/useDailyDischarges';
-import type { TestModeState } from '@odis-ai/extension-shared';
+import type { TestModeState } from '@odis-ai/extension/shared';
 
 interface DischargeTableRowProps {
   caseItem: DashboardCase;

@@ -18,20 +18,20 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
-import { Button } from "@odis-ai/ui/button";
-import { Checkbox } from "@odis-ai/ui/checkbox";
-import { Calendar } from "@odis-ai/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "@odis-ai/ui/popover";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Checkbox } from "@odis-ai/shared/ui/checkbox";
+import { Calendar } from "@odis-ai/shared/ui/calendar";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@odis-ai/shared/ui/popover";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@odis-ai/ui/select";
+} from "@odis-ai/shared/ui/select";
 
 import { api } from "~/trpc/client";
 

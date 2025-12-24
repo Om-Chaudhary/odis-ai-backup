@@ -1,6 +1,6 @@
 import './Popup.css';
-import { SupabaseAuthProvider, useAuth, withErrorBoundary, withSuspense } from '@odis-ai/extension-shared';
-import { ErrorDisplay, LoadingSpinner } from '@odis-ai/ui/extension';
+import { SupabaseAuthProvider, useAuth, withErrorBoundary, withSuspense } from '@odis-ai/extension/shared';
+import { ErrorDisplay, LoadingSpinner } from '@odis-ai/shared/ui/extension';
 
 const Header = () => (
   <div

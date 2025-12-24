@@ -10,9 +10,9 @@ import {
   SectionHeader,
   CTASection,
 } from "~/components/marketing";
-import { Button } from "@odis-ai/ui/button";
+import { Button } from "@odis-ai/shared/ui/button";
 import Link from "next/link";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 // TODO: Replace with actual pricing data
 const pricingTiers = [

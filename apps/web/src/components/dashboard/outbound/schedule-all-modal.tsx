@@ -17,7 +17,7 @@ import {
   Clock,
   Users,
 } from "lucide-react";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 import { api } from "~/trpc/client";
 
 import {
@@ -26,10 +26,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@odis-ai/ui/dialog";
-import { Button } from "@odis-ai/ui/button";
-import { Checkbox } from "@odis-ai/ui/checkbox";
-import { Progress } from "@odis-ai/ui/progress";
+} from "@odis-ai/shared/ui/dialog";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Checkbox } from "@odis-ai/shared/ui/checkbox";
+import { Progress } from "@odis-ai/shared/ui/progress";
 
 // Types
 interface ScheduleableCase {

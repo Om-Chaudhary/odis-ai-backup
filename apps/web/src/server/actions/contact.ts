@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@odis-ai/db/server";
+import { createClient } from "@odis-ai/data-access/db/server";
 
 export type ContactFormState = {
   success: boolean;

@@ -1,4 +1,4 @@
-import { initAppWithShadow } from '@odis-ai/extension-shared';
+import { initAppWithShadow } from '@odis-ai/extension/shared';
 import App from './App';
 import './index.css';
 

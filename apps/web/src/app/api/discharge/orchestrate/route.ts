@@ -52,9 +52,9 @@
 
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { authenticateUser } from "@odis-ai/api/auth";
-import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/api/cors";
-import { OrchestrationRequestSchema } from "@odis-ai/validators/orchestration";
+import { authenticateUser } from "@odis-ai/data-access/api/auth";
+import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/data-access/api/cors";
+import { OrchestrationRequestSchema } from "@odis-ai/shared/validators/orchestration";
 
 // Force Node.js runtime and dynamic rendering to avoid static bundling issues
 export const runtime = "nodejs";

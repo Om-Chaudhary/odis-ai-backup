@@ -19,12 +19,12 @@
  */
 
 import type { NextRequest } from "next/server";
-import { errorResponse, successResponse, withAuth } from "@odis-ai/api/auth";
-import { handleCorsPreflightRequest } from "@odis-ai/api/cors";
+import { errorResponse, successResponse, withAuth } from "@odis-ai/data-access/api/auth";
+import { handleCorsPreflightRequest } from "@odis-ai/data-access/api/cors";
 import {
   NormalizeRequestSchema,
   type NormalizeResponse,
-} from "@odis-ai/validators";
+} from "@odis-ai/shared/validators";
 
 // Dynamic import to avoid bundling @react-email/components during static generation
 async function getCasesService() {

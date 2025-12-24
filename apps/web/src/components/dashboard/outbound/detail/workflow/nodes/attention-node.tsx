@@ -3,9 +3,9 @@
 import { memo } from "react";
 import { type NodeProps } from "@xyflow/react";
 import { AlertTriangle, ExternalLink } from "lucide-react";
-import { Badge } from "@odis-ai/ui/badge";
+import { Badge } from "@odis-ai/shared/ui/badge";
 import { BaseWorkflowNode } from "./base-workflow-node";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 type AttentionSeverity = "critical" | "urgent" | "routine";
 

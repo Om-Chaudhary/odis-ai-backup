@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
 import { Phone } from "lucide-react";
 import { CallRecordingPlayer } from "../../../shared";
 

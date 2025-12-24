@@ -2,16 +2,16 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
-import { Button } from "@odis-ai/ui/button";
+import { Button } from "@odis-ai/shared/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@odis-ai/ui/collapsible";
+} from "@odis-ai/shared/ui/collapsible";
 import { ExternalLink, ChevronDown } from "lucide-react";
 import { api } from "~/trpc/client";
 import type { DeliveryToggles, DischargeCaseStatus, SoapNote } from "./types";
-import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
+import type { StructuredDischargeSummary } from "@odis-ai/shared/validators/discharge-summary";
 import { EmptyDetailState, AttentionSection } from "./detail";
 import { PatientOwnerCard } from "./detail/patient-owner-card";
 import { StatusOverviewCard } from "./detail/status-overview-card";

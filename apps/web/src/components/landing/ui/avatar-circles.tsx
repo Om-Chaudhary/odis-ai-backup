@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { cn } from "@odis-ai/utils";
+import { cn } from "@odis-ai/shared/util";
 
 interface Avatar {
   imageUrl: string;
