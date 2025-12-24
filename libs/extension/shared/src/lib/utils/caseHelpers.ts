@@ -2,7 +2,7 @@
  * Utility functions for case-related operations
  */
 
-import { formatTimeForDisplay, formatDateForDisplay, now } from './dateUtils';
+import { formatTimeForDisplay, formatDateForDisplay, now } from "./dateUtils";
 
 /**
  * Get display name for a patient
@@ -11,7 +11,10 @@ import { formatTimeForDisplay, formatDateForDisplay, now } from './dateUtils';
  * @param caseCreatedAt - The case creation timestamp (optional)
  * @returns Display name string
  */
-export const getPatientDisplayName = (patientName?: string | null, caseCreatedAt?: string | null): string => {
+export const getPatientDisplayName = (
+  patientName?: string | null,
+  caseCreatedAt?: string | null,
+): string => {
   if (patientName?.trim()) {
     return patientName;
   }
@@ -30,7 +33,7 @@ export const getPatientDisplayName = (patientName?: string | null, caseCreatedAt
  * @deprecated Use formatTimeForDisplay from dateUtils instead
  */
 export const formatTime = (dateString: string | null): string => {
-  if (!dateString) return '';
+  if (!dateString) return "";
   return formatTimeForDisplay(dateString);
 };
 

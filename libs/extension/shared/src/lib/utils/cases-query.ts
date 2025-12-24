@@ -1,9 +1,9 @@
-import { getStartOfDay, getEndOfDay } from './dateUtils';
-import { requireAuthSession } from './supabase-auth';
-import type { Database } from '../types/database-types';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { getStartOfDay, getEndOfDay } from "./dateUtils";
+import { requireAuthSession } from "./supabase-auth";
+import type { Database } from "../types/database-types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
-type Case = Database['public']['Tables']['cases']['Row'];
+type Case = Database["public"]["Tables"]["cases"]["Row"];
 
 export interface CasesQueryOptions {
   /**
@@ -47,7 +47,7 @@ export interface CasesQueryOptions {
    * Order direction
    * Default: 'ascending'
    */
-  orderDirection?: 'ascending' | 'descending';
+  orderDirection?: "ascending" | "descending";
 
   /**
    * Limit number of results
@@ -84,7 +84,7 @@ export interface CasesQueryOptions {
  */
 export const buildCasesQuery = (
   supabase: SupabaseClient<Database>,
-  options: CasesQueryOptions = {}
+  options: CasesQueryOptions = {},
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any => {
   const {
@@ -92,35 +92,35 @@ export const buildCasesQuery = (
     endDate,
     sources,
     userId,
-    select = '*',
-    orderBy = 'scheduled_at',
-    orderDirection = 'ascending',
+    select = "*",
+    orderBy = "scheduled_at",
+    orderDirection = "ascending",
     limit,
     customFilter,
   } = options;
 
-  let query = supabase.from('cases').select(select);
+  let query = supabase.from("cases").select(select);
 
   // Filter by user_id (defaults to current user if not provided)
   if (userId) {
-    query = query.eq('user_id', userId);
+    query = query.eq("user_id", userId);
   }
 
   // Filter by date range
   if (startDate) {
-    query = query.gte('scheduled_at', startDate.toISOString());
+    query = query.gte("scheduled_at", startDate.toISOString());
   }
 
   if (endDate) {
-    query = query.lte('scheduled_at', endDate.toISOString());
+    query = query.lte("scheduled_at", endDate.toISOString());
   }
 
   // Filter by source(s)
   if (sources) {
     if (Array.isArray(sources)) {
-      query = query.in('source', sources);
+      query = query.in("source", sources);
     } else {
-      query = query.eq('source', sources);
+      query = query.eq("source", sources);
     }
   }
 
@@ -130,7 +130,7 @@ export const buildCasesQuery = (
   }
 
   // Order results
-  query = query.order(orderBy, { ascending: orderDirection === 'ascending' });
+  query = query.order(orderBy, { ascending: orderDirection === "ascending" });
 
   // Apply limit if provided
   if (limit) {
@@ -165,7 +165,7 @@ export const fetchCasesByDateRange = async (
   supabase: SupabaseClient<Database>,
   startDate: Date,
   endDate: Date,
-  options: Omit<CasesQueryOptions, 'startDate' | 'endDate' | 'userId'> = {},
+  options: Omit<CasesQueryOptions, "startDate" | "endDate" | "userId"> = {},
 ): Promise<Case[]> => {
   // Ensure user is authenticated
   const session = await requireAuthSession();
@@ -208,8 +208,9 @@ export const fetchCasesByDateRange = async (
  */
 export const fetchTodayCases = async (
   supabase: SupabaseClient<Database>,
-  options: Omit<CasesQueryOptions, 'startDate' | 'endDate' | 'userId'> = {},
-): Promise<Case[]> => fetchCasesByDateRange(supabase, getStartOfDay(), getEndOfDay(), options);
+  options: Omit<CasesQueryOptions, "startDate" | "endDate" | "userId"> = {},
+): Promise<Case[]> =>
+  fetchCasesByDateRange(supabase, getStartOfDay(), getEndOfDay(), options);
 
 /**
  * Fetch cases for a specific date
@@ -231,7 +232,7 @@ export const fetchTodayCases = async (
 export const fetchCasesByDate = async (
   supabase: SupabaseClient<Database>,
   date: Date,
-  options: Omit<CasesQueryOptions, 'startDate' | 'endDate' | 'userId'> = {},
+  options: Omit<CasesQueryOptions, "startDate" | "endDate" | "userId"> = {},
 ): Promise<Case[]> => {
   const startOfDay = getStartOfDay(date);
   const endOfDay = getEndOfDay(date);

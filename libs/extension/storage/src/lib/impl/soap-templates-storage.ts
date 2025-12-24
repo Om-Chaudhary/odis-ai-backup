@@ -1,4 +1,4 @@
-import { createStorage, StorageEnum } from '../base/index';
+import { createStorage, StorageEnum } from "../base/index";
 
 interface SOAPTemplate {
   id: string;
@@ -17,7 +17,7 @@ interface SOAPTemplatesState {
 }
 
 const storage = createStorage<SOAPTemplatesState>(
-  'soap-templates-storage-key',
+  "soap-templates-storage-key",
   {
     templates: [], // Will be populated with default templates on first run
     selectedTemplateId: null,
@@ -31,8 +31,10 @@ const storage = createStorage<SOAPTemplatesState>(
 export const soapTemplatesStorage = {
   ...storage,
 
-  addTemplate: async (template: Omit<SOAPTemplate, 'id' | 'createdAt' | 'updatedAt'>) => {
-    await storage.set(currentState => {
+  addTemplate: async (
+    template: Omit<SOAPTemplate, "id" | "createdAt" | "updatedAt">,
+  ) => {
+    await storage.set((currentState) => {
       const newTemplate: SOAPTemplate = {
         ...template,
         id: `template-${Date.now()}-${Math.random().toString(36).substring(7)}`,
@@ -47,10 +49,13 @@ export const soapTemplatesStorage = {
     });
   },
 
-  updateTemplate: async (id: string, updates: Partial<Omit<SOAPTemplate, 'id' | 'createdAt'>>) => {
-    await storage.set(currentState => ({
+  updateTemplate: async (
+    id: string,
+    updates: Partial<Omit<SOAPTemplate, "id" | "createdAt">>,
+  ) => {
+    await storage.set((currentState) => ({
       ...currentState,
-      templates: currentState.templates.map(template =>
+      templates: currentState.templates.map((template) =>
         template.id === id
           ? {
               ...template,
@@ -63,25 +68,30 @@ export const soapTemplatesStorage = {
   },
 
   deleteTemplate: async (id: string) => {
-    await storage.set(currentState => ({
+    await storage.set((currentState) => ({
       ...currentState,
-      templates: currentState.templates.filter(template => template.id !== id),
-      selectedTemplateId: currentState.selectedTemplateId === id ? null : currentState.selectedTemplateId,
+      templates: currentState.templates.filter(
+        (template) => template.id !== id,
+      ),
+      selectedTemplateId:
+        currentState.selectedTemplateId === id
+          ? null
+          : currentState.selectedTemplateId,
     }));
   },
 
   getTemplateById: async (id: string): Promise<SOAPTemplate | undefined> => {
     const state = await storage.get();
-    return state.templates.find(template => template.id === id);
+    return state.templates.find((template) => template.id === id);
   },
 
   getTemplatesByCategory: async (category: string): Promise<SOAPTemplate[]> => {
     const state = await storage.get();
-    return state.templates.filter(template => template.category === category);
+    return state.templates.filter((template) => template.category === category);
   },
 
   setSelectedTemplate: async (id: string | null) => {
-    await storage.set(currentState => ({
+    await storage.set((currentState) => ({
       ...currentState,
       selectedTemplateId: id,
     }));
@@ -91,7 +101,8 @@ export const soapTemplatesStorage = {
     const state = await storage.get();
     if (state.templates.length === 0) {
       // Import and add default templates
-      const { defaultTemplates } = await import('../templates/default-templates');
+      const { defaultTemplates } =
+        await import("../templates/default-templates");
       await storage.set({
         templates: defaultTemplates,
         selectedTemplateId: null,

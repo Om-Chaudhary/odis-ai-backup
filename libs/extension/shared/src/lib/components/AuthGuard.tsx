@@ -1,5 +1,5 @@
-import { useAuth } from '../supabase/auth-context';
-import type React from 'react';
+import { useAuth } from "../supabase/auth-context";
+import type React from "react";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -24,7 +24,11 @@ interface AuthGuardProps {
  * </AuthGuard>
  * ```
  */
-export const AuthGuard = ({ children, fallback = null, loadingComponent = null }: AuthGuardProps) => {
+export const AuthGuard = ({
+  children,
+  fallback = null,
+  loadingComponent = null,
+}: AuthGuardProps) => {
   const { user, loading } = useAuth();
 
   if (loading) {

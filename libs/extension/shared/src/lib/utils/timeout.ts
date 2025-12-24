@@ -4,9 +4,7 @@
  * Helper functions for wrapping promises with timeouts to prevent hanging operations.
  */
 
-import { logger } from './logger';
-
- 
+import { logger } from "./logger";
 
 /**
  * Error thrown when a timeout occurs
@@ -17,7 +15,7 @@ export class TimeoutError extends Error {
     public readonly timeoutMs: number,
   ) {
     super(message);
-    this.name = 'TimeoutError';
+    this.name = "TimeoutError";
   }
 }
 
@@ -43,12 +41,21 @@ export class TimeoutError extends Error {
  * }
  * ```
  */
-export async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, operationName = 'operation'): Promise<T> {
+export async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  operationName = "operation",
+): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
   const timeoutPromise = new Promise<never>((_, reject) => {
     timeoutId = setTimeout(() => {
-      reject(new TimeoutError(`${operationName} timed out after ${timeoutMs}ms`, timeoutMs));
+      reject(
+        new TimeoutError(
+          `${operationName} timed out after ${timeoutMs}ms`,
+          timeoutMs,
+        ),
+      );
     }, timeoutMs);
   });
 
@@ -82,13 +89,15 @@ export async function withTimeoutFallback<T>(
   promise: Promise<T>,
   timeoutMs: number,
   fallbackValue: T,
-  operationName = 'operation',
+  operationName = "operation",
 ): Promise<T> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
-  const timeoutPromise = new Promise<T>(resolve => {
+  const timeoutPromise = new Promise<T>((resolve) => {
     timeoutId = setTimeout(() => {
-      logger.warn(`[Timeout] ${operationName} timed out after ${timeoutMs}ms, using fallback`);
+      logger.warn(
+        `[Timeout] ${operationName} timed out after ${timeoutMs}ms, using fallback`,
+      );
       resolve(fallbackValue);
     }, timeoutMs);
   });
@@ -130,7 +139,9 @@ export function createTimeoutAbortController(timeoutMs: number): {
 } {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => {
-    controller.abort(new TimeoutError(`Request timed out after ${timeoutMs}ms`, timeoutMs));
+    controller.abort(
+      new TimeoutError(`Request timed out after ${timeoutMs}ms`, timeoutMs),
+    );
   }, timeoutMs);
 
   return {
@@ -156,7 +167,11 @@ export function createTimeoutAbortController(timeoutMs: number): {
  * }, 30000);
  * ```
  */
-export async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs: number): Promise<Response> {
+export async function fetchWithTimeout(
+  url: string,
+  options: RequestInit = {},
+  timeoutMs: number,
+): Promise<Response> {
   const { controller, cleanup } = createTimeoutAbortController(timeoutMs);
 
   try {
@@ -169,8 +184,11 @@ export async function fetchWithTimeout(url: string, options: RequestInit = {}, t
   } catch (error) {
     cleanup();
     // Convert AbortError to TimeoutError for consistency
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new TimeoutError(`Fetch to ${url} timed out after ${timeoutMs}ms`, timeoutMs);
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new TimeoutError(
+        `Fetch to ${url} timed out after ${timeoutMs}ms`,
+        timeoutMs,
+      );
     }
     throw error;
   }

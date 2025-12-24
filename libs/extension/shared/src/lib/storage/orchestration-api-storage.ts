@@ -1,6 +1,6 @@
-import { logger } from '../utils/logger';
-import { createStorage, StorageEnum } from '@odis-ai/extension/storage';
-import type { BaseStorageType } from '@odis-ai/extension/storage';
+import { logger } from "../utils/logger";
+import { createStorage, StorageEnum } from "@odis-ai/extension/storage";
+import type { BaseStorageType } from "@odis-ai/extension/storage";
 
 /**
  * Feature flag storage for the dual-mode discharge API.
@@ -14,20 +14,23 @@ import type { BaseStorageType } from '@odis-ai/extension/storage';
  *
  * @deprecated Not currently used - extension always uses orchestration mode
  */
-const storage = createStorage<boolean>('orchestration-api-storage-key', false, {
+const storage = createStorage<boolean>("orchestration-api-storage-key", false, {
   storageEnum: StorageEnum.Local,
   liveUpdate: true,
   serialization: {
     serialize: (value: boolean) => JSON.stringify(value),
     deserialize: (text: string | undefined) => {
-      if (!text || text === 'undefined' || text === 'null') {
+      if (!text || text === "undefined" || text === "null") {
         return false;
       }
       try {
         const parsed = JSON.parse(text);
-        return typeof parsed === 'boolean' ? parsed : false;
+        return typeof parsed === "boolean" ? parsed : false;
       } catch (error) {
-        logger.warn('[orchestration-api-storage] Failed to parse storage value, using default', { error });
+        logger.warn(
+          "[orchestration-api-storage] Failed to parse storage value, using default",
+          { error },
+        );
         return false;
       }
     },

@@ -1,9 +1,13 @@
-import { getSupabaseClient } from './client';
-import { useSupabaseAuth } from './use-supabase-auth';
-import { trackEvent, startSession, endSession } from '../analytics/event-tracker';
-import { createContext, useContext, useCallback } from 'react';
-import type { AuthContextValue } from './types';
-import type React from 'react';
+import { getSupabaseClient } from "./client";
+import { useSupabaseAuth } from "./use-supabase-auth";
+import {
+  trackEvent,
+  startSession,
+  endSession,
+} from "../analytics/event-tracker";
+import { createContext, useContext, useCallback } from "react";
+import type { AuthContextValue } from "./types";
+import type React from "react";
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -30,7 +34,9 @@ interface SupabaseAuthProviderProps {
  * }
  * ```
  */
-export const SupabaseAuthProvider = ({ children }: SupabaseAuthProviderProps) => {
+export const SupabaseAuthProvider = ({
+  children,
+}: SupabaseAuthProviderProps) => {
   const { user, session, loading, error } = useSupabaseAuth();
 
   const signIn = useCallback(async (email: string, password: string) => {
@@ -44,9 +50,9 @@ export const SupabaseAuthProvider = ({ children }: SupabaseAuthProviderProps) =>
       // Track failed sign in
       await trackEvent(
         {
-          event_type: 'auth_sign_in',
-          event_category: 'auth',
-          event_action: 'sign_in',
+          event_type: "auth_sign_in",
+          event_category: "auth",
+          event_action: "sign_in",
           success: false,
           error_message: signInError.message,
           error_code: signInError.name,
@@ -59,9 +65,9 @@ export const SupabaseAuthProvider = ({ children }: SupabaseAuthProviderProps) =>
     // Track successful sign in
     await trackEvent(
       {
-        event_type: 'auth_sign_in',
-        event_category: 'auth',
-        event_action: 'sign_in',
+        event_type: "auth_sign_in",
+        event_category: "auth",
+        event_action: "sign_in",
         success: true,
       },
       { updateSession: true },
@@ -82,9 +88,9 @@ export const SupabaseAuthProvider = ({ children }: SupabaseAuthProviderProps) =>
       // Track failed sign up
       await trackEvent(
         {
-          event_type: 'auth_sign_up',
-          event_category: 'auth',
-          event_action: 'sign_up',
+          event_type: "auth_sign_up",
+          event_category: "auth",
+          event_action: "sign_up",
           success: false,
           error_message: signUpError.message,
           error_code: signUpError.name,
@@ -97,9 +103,9 @@ export const SupabaseAuthProvider = ({ children }: SupabaseAuthProviderProps) =>
     // Track successful sign up
     await trackEvent(
       {
-        event_type: 'auth_sign_up',
-        event_category: 'auth',
-        event_action: 'sign_up',
+        event_type: "auth_sign_up",
+        event_category: "auth",
+        event_action: "sign_up",
         success: true,
       },
       { updateSession: true },
@@ -114,7 +120,7 @@ export const SupabaseAuthProvider = ({ children }: SupabaseAuthProviderProps) =>
 
     // End current session before signing out
     try {
-      const { getSessionId } = await import('../analytics/event-tracker');
+      const { getSessionId } = await import("../analytics/event-tracker");
       const sessionId = await getSessionId();
       await endSession(sessionId);
     } catch {
@@ -127,9 +133,9 @@ export const SupabaseAuthProvider = ({ children }: SupabaseAuthProviderProps) =>
       // Track failed sign out
       await trackEvent(
         {
-          event_type: 'auth_sign_out',
-          event_category: 'auth',
-          event_action: 'sign_out',
+          event_type: "auth_sign_out",
+          event_category: "auth",
+          event_action: "sign_out",
           success: false,
           error_message: signOutError.message,
           error_code: signOutError.name,
@@ -142,9 +148,9 @@ export const SupabaseAuthProvider = ({ children }: SupabaseAuthProviderProps) =>
     // Track successful sign out
     await trackEvent(
       {
-        event_type: 'auth_sign_out',
-        event_category: 'auth',
-        event_action: 'sign_out',
+        event_type: "auth_sign_out",
+        event_category: "auth",
+        event_action: "sign_out",
         success: true,
       },
       { updateSession: false },
@@ -194,7 +200,7 @@ export const useAuth = (): AuthContextValue => {
   const context = useContext(AuthContext);
 
   if (context === undefined) {
-    throw new Error('useAuth must be used within a SupabaseAuthProvider');
+    throw new Error("useAuth must be used within a SupabaseAuthProvider");
   }
 
   return context;

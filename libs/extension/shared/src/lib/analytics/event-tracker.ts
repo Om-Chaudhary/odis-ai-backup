@@ -80,7 +80,7 @@ async function getUserWithTimeout(): Promise<{ id: string } | null> {
 export function detectPlatform(): AnalyticsPlatform {
   if (typeof chrome !== "undefined" && chrome.runtime?.id) {
     // Check if it's Firefox (Firefox also has chrome.runtime but with different properties)
-     
+
     if (
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       typeof (globalThis as any).browser !== "undefined" &&

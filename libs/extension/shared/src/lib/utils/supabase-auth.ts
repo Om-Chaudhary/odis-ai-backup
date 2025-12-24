@@ -1,10 +1,11 @@
-import { getSupabaseClient } from '../supabase/client';
-import type { Session } from '@supabase/supabase-js';
+import { getSupabaseClient } from "../supabase/client";
+import type { Session } from "@supabase/supabase-js";
 
 /**
  * Standardized error message for authentication failures
  */
-const AUTH_ERROR_MESSAGE = 'User is not signed in. Please sign in to the extension.';
+const AUTH_ERROR_MESSAGE =
+  "User is not signed in. Please sign in to the extension.";
 
 /**
  * Get the current Supabase session without throwing an error
@@ -76,7 +77,7 @@ export const requireAuthToken = async (): Promise<string> => {
   const session = await requireAuthSession();
 
   if (!session.access_token) {
-    throw new Error('No access token found. Please sign in again.');
+    throw new Error("No access token found. Please sign in again.");
   }
 
   return session.access_token;

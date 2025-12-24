@@ -16,7 +16,7 @@ import {
   getStartOfDaySync,
   getEndOfDaySync,
   isTodaySync,
-} from './serverDateUtils';
+} from "./serverDateUtils";
 
 /**
  * Standard date utility - replaces JavaScript's `new Date()` for current date/time
@@ -69,8 +69,8 @@ export const getTodayLocalDate = (): string => getTodayLocalDateSync();
  */
 export const formatDateToLocalString = (date: Date): string => {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
 
@@ -82,8 +82,11 @@ export const formatDateToLocalString = (date: Date): string => {
  * @param timeOfDay - Optional time to set (defaults to start of day: 00:00:00)
  * @returns Date object in local timezone
  */
-export const parseLocalDateString = (dateString: string, timeOfDay: 'start' | 'end' | 'midnight' = 'start'): Date => {
-  const parts = dateString.split('-').map(Number);
+export const parseLocalDateString = (
+  dateString: string,
+  timeOfDay: "start" | "end" | "midnight" = "start",
+): Date => {
+  const parts = dateString.split("-").map(Number);
   const year = parts[0] ?? 0;
   const month = parts[1] ?? 1;
   const day = parts[2] ?? 1;
@@ -91,11 +94,11 @@ export const parseLocalDateString = (dateString: string, timeOfDay: 'start' | 'e
   const date = new Date(year, month - 1, day);
 
   switch (timeOfDay) {
-    case 'start':
-    case 'midnight':
+    case "start":
+    case "midnight":
       date.setHours(0, 0, 0, 0);
       break;
-    case 'end':
+    case "end":
       date.setHours(23, 59, 59, 999);
       break;
   }
@@ -108,7 +111,8 @@ export const parseLocalDateString = (dateString: string, timeOfDay: 'start' | 'e
  * Uses server-synced time for accuracy
  * Use this for API requests and database storage
  */
-export const getCurrentISOString = (): string => getCurrentDateSync().toISOString();
+export const getCurrentISOString = (): string =>
+  getCurrentDateSync().toISOString();
 
 /**
  * Convert a Date object to ISO string (UTC)
@@ -192,15 +196,15 @@ export const formatDateForDisplay = (date: Date): string => {
   const diffTime = compareDate.getTime() - today.getTime();
   const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return 'Tomorrow';
-  if (diffDays === -1) return 'Yesterday';
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Tomorrow";
+  if (diffDays === -1) return "Yesterday";
 
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
   });
 };
 
@@ -208,10 +212,10 @@ export const formatDateForDisplay = (date: Date): string => {
  * Format time for display (e.g., "3:45 PM")
  */
 export const formatTimeForDisplay = (date: Date | string): string => {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return dateObj.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
+  const dateObj = typeof date === "string" ? new Date(date) : date;
+  return dateObj.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
     hour12: true,
   });
 };
@@ -220,13 +224,13 @@ export const formatTimeForDisplay = (date: Date | string): string => {
  * Format date and time for display
  */
 export const formatDateTimeForDisplay = (date: Date | string): string => {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return dateObj.toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
+  const dateObj = typeof date === "string" ? new Date(date) : date;
+  return dateObj.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
     hour12: true,
   });
 };
@@ -250,10 +254,10 @@ export const compareDates = (date1: Date, date2: Date): number => {
  */
 export const formatDateTimeLocal = (date: Date): string => {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
@@ -263,10 +267,10 @@ export const formatDateTimeLocal = (date: Date): string => {
  */
 export const formatDateForApi = (date: Date): string => {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };

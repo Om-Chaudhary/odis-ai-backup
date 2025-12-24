@@ -1,4 +1,4 @@
-import type { User, Session } from '@supabase/supabase-js';
+import type { User, Session } from "@supabase/supabase-js";
 
 export type AuthUser = User | null;
 export type AuthSession = Session | null;

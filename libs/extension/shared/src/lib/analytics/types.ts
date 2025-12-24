@@ -7,111 +7,121 @@
 /**
  * Supported platforms for analytics
  */
-export type AnalyticsPlatform = 'chrome_extension' | 'firefox_extension' | 'ios' | 'web';
+export type AnalyticsPlatform =
+  | "chrome_extension"
+  | "firefox_extension"
+  | "ios"
+  | "web";
 
 /**
  * Event categories for grouping related events
  */
 export type EventCategory =
-  | 'auth'
-  | 'case'
-  | 'discharge'
-  | 'template'
-  | 'content'
-  | 'dashboard'
-  | 'sync'
-  | 'error'
-  | 'feature';
+  | "auth"
+  | "case"
+  | "discharge"
+  | "template"
+  | "content"
+  | "dashboard"
+  | "sync"
+  | "error"
+  | "feature";
 
 /**
  * Event actions (verbs)
  */
 export type EventAction =
-  | 'sign_up'
-  | 'sign_in'
-  | 'sign_out'
-  | 'create'
-  | 'update'
-  | 'view'
-  | 'delete'
-  | 'schedule'
-  | 'send'
-  | 'insert'
-  | 'extract'
-  | 'sync'
-  | 'generate'
-  | 'start'
-  | 'complete'
-  | 'fail'
-  | 'select'
-  | 'cancel';
+  | "sign_up"
+  | "sign_in"
+  | "sign_out"
+  | "create"
+  | "update"
+  | "view"
+  | "delete"
+  | "schedule"
+  | "send"
+  | "insert"
+  | "extract"
+  | "sync"
+  | "generate"
+  | "start"
+  | "complete"
+  | "fail"
+  | "select"
+  | "cancel";
 
 /**
  * Specific event types
  */
 export type EventType =
   // Authentication
-  | 'auth_sign_up'
-  | 'auth_sign_in'
-  | 'auth_sign_out'
-  | 'auth_onboarding_completed'
+  | "auth_sign_up"
+  | "auth_sign_in"
+  | "auth_sign_out"
+  | "auth_onboarding_completed"
   // Case management
-  | 'case_ingested'
-  | 'case_viewed'
-  | 'case_updated'
-  | 'case_deleted'
+  | "case_ingested"
+  | "case_viewed"
+  | "case_updated"
+  | "case_deleted"
   // Discharge workflow
-  | 'discharge_workflow_started'
-  | 'discharge_workflow_completed'
-  | 'discharge_summary_generated'
-  | 'email_scheduled'
-  | 'email_sent'
-  | 'email_failed'
-  | 'call_scheduled'
-  | 'call_initiated'
-  | 'call_completed'
-  | 'call_failed'
+  | "discharge_workflow_started"
+  | "discharge_workflow_completed"
+  | "discharge_summary_generated"
+  | "email_scheduled"
+  | "email_sent"
+  | "email_failed"
+  | "call_scheduled"
+  | "call_initiated"
+  | "call_completed"
+  | "call_failed"
   // Templates
-  | 'template_inserted'
-  | 'template_selected'
+  | "template_inserted"
+  | "template_selected"
   // Content actions
-  | 'note_inserted'
-  | 'vitals_extracted'
+  | "note_inserted"
+  | "vitals_extracted"
   // Sync actions
-  | 'patient_synced'
-  | 'schedule_synced'
+  | "patient_synced"
+  | "schedule_synced"
   // Dashboard
-  | 'dashboard_send_single'
-  | 'dashboard_send_all'
+  | "dashboard_send_single"
+  | "dashboard_send_all"
   // Errors
-  | 'error_api'
-  | 'error_validation'
-  | 'error_network'
-  | 'error_runtime';
+  | "error_api"
+  | "error_validation"
+  | "error_network"
+  | "error_runtime";
 
 /**
  * Feature names for feature usage tracking
  */
 export type FeatureName =
-  | 'discharge_scheduling'
-  | 'discharge_orchestration'
-  | 'template_insertion'
-  | 'soap_template_insertion'
-  | 'discharge_template_insertion'
-  | 'note_insertion'
-  | 'vitals_extraction'
-  | 'patient_sync'
-  | 'schedule_sync'
-  | 'dashboard_single_send'
-  | 'dashboard_bulk_send'
-  | 'case_ingestion'
-  | 'email_scheduling'
-  | 'call_scheduling';
+  | "discharge_scheduling"
+  | "discharge_orchestration"
+  | "template_insertion"
+  | "soap_template_insertion"
+  | "discharge_template_insertion"
+  | "note_insertion"
+  | "vitals_extraction"
+  | "patient_sync"
+  | "schedule_sync"
+  | "dashboard_single_send"
+  | "dashboard_bulk_send"
+  | "case_ingestion"
+  | "email_scheduling"
+  | "call_scheduling";
 
 /**
  * Feature categories
  */
-export type FeatureCategory = 'discharge' | 'templates' | 'extraction' | 'sync' | 'dashboard' | 'case';
+export type FeatureCategory =
+  | "discharge"
+  | "templates"
+  | "extraction"
+  | "sync"
+  | "dashboard"
+  | "case";
 
 /**
  * Base user event interface
@@ -211,8 +221,7 @@ export interface SessionAnalytics {
  */
 export interface ErrorLog {
   /** Type of error */
-  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-  error_type: 'api_error' | 'validation_error' | 'network_error' | 'runtime_error' | string;
+  error_type: string;
   /** Optional error code */
   error_code?: string;
   /** Human-readable error message */
