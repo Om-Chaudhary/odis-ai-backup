@@ -3,8 +3,7 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@odis-ai/shared/ui/button";
-import { Separator } from "@odis-ai/shared/ui/separator";
-import { Loader2 } from "lucide-react";
+import { Loader2, Save, X } from "lucide-react";
 import type { DischargeSettings } from "@odis-ai/shared/types";
 import {
   ClinicInfoSection,
@@ -67,34 +66,15 @@ export function DischargeSettingsForm({
         />
       )}
 
-      {showClinic && showBranding && <Separator />}
-
       {showOutbound && (
-        <>
-          <div className="space-y-6">
-            {/* Email Scheduling Section */}
-            <EmailSchedulingSection watch={watch} setValue={setValue} />
-
-            <Separator />
-
-            {/* Call Scheduling Section */}
-            <CallSchedulingSection watch={watch} setValue={setValue} />
-
-            <Separator />
-
-            {/* Batch Discharge Preferences */}
-            <BatchPreferencesSection watch={watch} setValue={setValue} />
-          </div>
-        </>
+        <div className="space-y-6">
+          <EmailSchedulingSection watch={watch} setValue={setValue} />
+          <CallSchedulingSection watch={watch} setValue={setValue} />
+          <BatchPreferencesSection watch={watch} setValue={setValue} />
+        </div>
       )}
 
-      {showInbound && (
-        <>
-          <VapiConfigSection register={register} />
-        </>
-      )}
-
-      {showBranding && showSystem && <Separator />}
+      {showInbound && <VapiConfigSection register={register} />}
 
       {showBranding && (
         <BrandingSection
@@ -103,8 +83,6 @@ export function DischargeSettingsForm({
           setValue={setValue}
         />
       )}
-
-      {showBranding && showSystem && <Separator />}
 
       {showSystem && (
         <SystemSettingsSection
@@ -115,16 +93,40 @@ export function DischargeSettingsForm({
         />
       )}
 
-      <div className="flex justify-end gap-3 pt-6">
-        {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
+      {/* Action Buttons */}
+      <div className="flex items-center justify-between gap-3 border-t border-teal-100/50 pt-6">
+        <div className="text-xs text-slate-400">
+          {isDirty ? (
+            <span className="text-amber-600">You have unsaved changes</span>
+          ) : (
+            <span>All changes saved</span>
+          )}
+        </div>
+        <div className="flex gap-3">
+          {onCancel && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              className="border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-700"
+            >
+              <X className="mr-2 h-4 w-4" />
+              Cancel
+            </Button>
+          )}
+          <Button
+            type="submit"
+            disabled={!isDirty || isLoading}
+            className="bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-md shadow-teal-500/20 hover:from-teal-600 hover:to-emerald-600 disabled:from-slate-300 disabled:to-slate-400 disabled:shadow-none"
+          >
+            {isLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" />
+            )}
+            Save Changes
           </Button>
-        )}
-        <Button type="submit" disabled={!isDirty || isLoading}>
-          {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Save Changes
-        </Button>
+        </div>
       </div>
     </form>
   );

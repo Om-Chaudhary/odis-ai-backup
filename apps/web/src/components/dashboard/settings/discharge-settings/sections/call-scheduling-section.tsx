@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@odis-ai/shared/ui/select";
-import { Phone, Clock, Info } from "lucide-react";
+import { Phone, Clock, Info, Calendar, RotateCcw } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -30,18 +30,31 @@ export function CallSchedulingSection({
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
-        <Phone className="h-4 w-4 text-green-500" />
-        <h4 className="text-sm font-medium">Call Scheduling</h4>
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-100/80 text-green-600">
+          <Phone className="h-4 w-4" />
+        </div>
+        <div>
+          <h4 className="text-sm font-medium text-slate-700">
+            Call Scheduling
+          </h4>
+          <p className="text-xs text-slate-500">
+            Configure when follow-up calls are made
+          </p>
+        </div>
       </div>
 
-      <div className="grid gap-4 rounded-lg border p-4">
-        <div className="grid gap-2">
+      <div className="space-y-4 rounded-lg border border-teal-100/60 bg-white/50 p-4 backdrop-blur-sm">
+        {/* Time Window */}
+        <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <Label>Preferred Call Window</Label>
+            <Clock className="h-4 w-4 text-slate-400" />
+            <Label className="text-sm font-medium text-slate-700">
+              Preferred Call Window
+            </Label>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                  <Info className="h-4 w-4 cursor-help text-slate-400 transition-colors hover:text-slate-600" />
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs">
                   <p className="text-sm">
@@ -53,11 +66,10 @@ export function CallSchedulingSection({
               </Tooltip>
             </TooltipProvider>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex-1">
-              <Label className="text-muted-foreground mb-1 block text-xs">
-                Start Time
-              </Label>
+
+          <div className="flex items-end gap-3">
+            <div className="flex-1 space-y-1.5">
+              <Label className="text-xs text-slate-500">Start Time</Label>
               <Select
                 value={watch("preferredCallStartTime") ?? "14:00"}
                 onValueChange={(value) =>
@@ -66,8 +78,8 @@ export function CallSchedulingSection({
                   })
                 }
               >
-                <SelectTrigger>
-                  <Clock className="mr-2 h-4 w-4" />
+                <SelectTrigger className="border-slate-200 bg-white/80 focus:border-teal-400 focus:ring-teal-400/20">
+                  <Clock className="mr-2 h-4 w-4 text-slate-400" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -79,11 +91,13 @@ export function CallSchedulingSection({
                 </SelectContent>
               </Select>
             </div>
-            <span className="text-muted-foreground mt-5">to</span>
-            <div className="flex-1">
-              <Label className="text-muted-foreground mb-1 block text-xs">
-                End Time
-              </Label>
+
+            <div className="flex h-10 items-center px-2">
+              <span className="text-sm text-slate-400">to</span>
+            </div>
+
+            <div className="flex-1 space-y-1.5">
+              <Label className="text-xs text-slate-500">End Time</Label>
               <Select
                 value={watch("preferredCallEndTime") ?? "17:00"}
                 onValueChange={(value) =>
@@ -92,8 +106,8 @@ export function CallSchedulingSection({
                   })
                 }
               >
-                <SelectTrigger>
-                  <Clock className="mr-2 h-4 w-4" />
+                <SelectTrigger className="border-slate-200 bg-white/80 focus:border-teal-400 focus:ring-teal-400/20">
+                  <Clock className="mr-2 h-4 w-4 text-slate-400" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -108,13 +122,20 @@ export function CallSchedulingSection({
           </div>
         </div>
 
-        <div className="grid gap-2">
+        {/* Call Delay Days */}
+        <div className="space-y-3 border-t border-slate-100 pt-4">
           <div className="flex items-center gap-2">
-            <Label htmlFor="callDelayDays">Days After Email</Label>
+            <Calendar className="h-4 w-4 text-slate-400" />
+            <Label
+              htmlFor="callDelayDays"
+              className="text-sm font-medium text-slate-700"
+            >
+              Days After Email
+            </Label>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                  <Info className="h-4 w-4 cursor-help text-slate-400 transition-colors hover:text-slate-600" />
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs">
                   <p className="text-sm">
@@ -125,13 +146,14 @@ export function CallSchedulingSection({
               </Tooltip>
             </TooltipProvider>
           </div>
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-3">
             <Input
               id="callDelayDays"
               type="number"
               min="0"
               max="30"
-              className="w-24"
+              className="w-20 border-slate-200 bg-white/80 text-center focus:border-teal-400 focus:ring-teal-400/20"
               value={watch("callDelayDays") ?? 2}
               onChange={(e) => {
                 const value = e.target.value;
@@ -142,19 +164,26 @@ export function CallSchedulingSection({
                 );
               }}
             />
-            <span className="text-muted-foreground text-sm">
+            <span className="text-sm text-slate-500">
               day{(watch("callDelayDays") ?? 2) !== 1 ? "s" : ""} after email
             </span>
           </div>
         </div>
 
-        <div className="grid gap-2">
+        {/* Max Retries */}
+        <div className="space-y-3 border-t border-slate-100 pt-4">
           <div className="flex items-center gap-2">
-            <Label htmlFor="maxCallRetries">Max Retry Attempts</Label>
+            <RotateCcw className="h-4 w-4 text-slate-400" />
+            <Label
+              htmlFor="maxCallRetries"
+              className="text-sm font-medium text-slate-700"
+            >
+              Max Retry Attempts
+            </Label>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                  <Info className="h-4 w-4 cursor-help text-slate-400 transition-colors hover:text-slate-600" />
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs">
                   <p className="text-sm">
@@ -165,13 +194,14 @@ export function CallSchedulingSection({
               </Tooltip>
             </TooltipProvider>
           </div>
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-3">
             <Input
               id="maxCallRetries"
               type="number"
               min="0"
               max="10"
-              className="w-24"
+              className="w-20 border-slate-200 bg-white/80 text-center focus:border-teal-400 focus:ring-teal-400/20"
               value={watch("maxCallRetries") ?? 3}
               onChange={(e) => {
                 const value = e.target.value;
@@ -182,7 +212,7 @@ export function CallSchedulingSection({
                 );
               }}
             />
-            <span className="text-muted-foreground text-sm">attempts</span>
+            <span className="text-sm text-slate-500">retry attempts</span>
           </div>
         </div>
       </div>

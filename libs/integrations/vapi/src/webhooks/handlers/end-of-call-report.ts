@@ -501,16 +501,25 @@ async function handleAttentionCase(
   });
 
   // Set attention fields
-  // Handle both array and comma-separated string formats from VAPI
+  // Handle array, JSON string, or comma-separated string formats from VAPI
   const rawTypes = parsed?.attention_types;
-  updateData.attention_types = Array.isArray(rawTypes)
-    ? rawTypes
-    : typeof rawTypes === "string"
-      ? rawTypes
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean)
-      : [];
+  let attentionTypes: string[] = [];
+  if (Array.isArray(rawTypes)) {
+    attentionTypes = rawTypes;
+  } else if (typeof rawTypes === "string") {
+    // Try parsing as JSON array first (e.g., '["health_concern","emergency_signs"]')
+    try {
+      const parsedTypes = JSON.parse(rawTypes);
+      attentionTypes = Array.isArray(parsedTypes) ? parsedTypes : [rawTypes];
+    } catch {
+      // Fall back to comma-separated split
+      attentionTypes = rawTypes
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+    }
+  }
+  updateData.attention_types = attentionTypes;
   updateData.attention_severity =
     (parsed?.attention_severity as string) ?? "routine";
   updateData.attention_flagged_at = new Date().toISOString();

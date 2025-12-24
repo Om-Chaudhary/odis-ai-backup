@@ -1,0 +1,543 @@
+/**
+ * ODIS AI Documentation Theme
+ * Maps ODIS design tokens to Docusaurus Infima CSS variables
+ *
+ * Brand Colors:
+ * - Primary: ODIS Teal hsl(174 56% 43%) = #31ABA3
+ * - Background: White #FFFFFF
+ * - Foreground: Near-black #171717
+ */
+
+// Import Tailwind with Docusaurus dark mode support
+@import "tailwindcss";
+@custom-variant dark (&:is([data-theme="dark"] *));
+
+// ============================================
+// ODIS Design Token Definitions
+// Source: libs/shared/styles/src/tokens.css
+// ============================================
+
+// Primary Color: ODIS Teal - hsl(174 56% 43%) = #31ABA3
+$odis-primary: #31aba3;
+$odis-primary-dark: #2a958f;
+$odis-primary-darker: #247f7a;
+$odis-primary-darkest: #1d6965;
+$odis-primary-light: #4bbcb5;
+$odis-primary-lighter: #6eccc6;
+$odis-primary-lightest: #91dcd8;
+
+// Background/Foreground
+$odis-background: #ffffff;
+$odis-foreground: #171717;
+
+// Secondary/Muted
+$odis-secondary: #f5f5f5;
+$odis-muted-foreground: #737373;
+
+// Destructive
+$odis-destructive: #ef4444;
+
+// Border
+$odis-border: #e5e5e5;
+
+// Border Radius
+$odis-radius: 0.5rem;
+
+// ============================================
+// Infima CSS Variable Overrides
+// ============================================
+
+:root {
+  // Primary colors (ODIS Teal)
+  --ifm-color-primary: #{$odis-primary};
+  --ifm-color-primary-dark: #{$odis-primary-dark};
+  --ifm-color-primary-darker: #{$odis-primary-darker};
+  --ifm-color-primary-darkest: #{$odis-primary-darkest};
+  --ifm-color-primary-light: #{$odis-primary-light};
+  --ifm-color-primary-lighter: #{$odis-primary-lighter};
+  --ifm-color-primary-lightest: #{$odis-primary-lightest};
+
+  // Typography
+  --ifm-font-family-base: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --ifm-heading-font-family: "Outfit", system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --ifm-font-family-monospace: "Geist Mono", ui-monospace, SFMono-Regular, Menlo,
+    Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  // Font sizes
+  --ifm-font-size-base: 16px;
+  --ifm-line-height-base: 1.65;
+
+  // Layout
+  --ifm-global-radius: #{$odis-radius};
+  --ifm-code-border-radius: #{$odis-radius};
+  --ifm-button-border-radius: #{$odis-radius};
+  --ifm-card-border-radius: #{$odis-radius};
+  --ifm-alert-border-radius: #{$odis-radius};
+
+  // Background and text
+  --ifm-background-color: #{$odis-background};
+  --ifm-background-surface-color: #{$odis-background};
+  --ifm-font-color-base: #{$odis-foreground};
+
+  // Links
+  --ifm-link-color: #{$odis-primary};
+  --ifm-link-hover-color: #{$odis-primary-dark};
+  --ifm-link-hover-decoration: none;
+
+  // Navbar
+  --ifm-navbar-background-color: #{$odis-background};
+  --ifm-navbar-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --ifm-navbar-link-color: #{$odis-foreground};
+  --ifm-navbar-link-hover-color: #{$odis-primary};
+  --ifm-navbar-height: 4rem;
+  --ifm-navbar-padding-vertical: 0.75rem;
+  --ifm-navbar-padding-horizontal: 1.5rem;
+
+  // Footer
+  --ifm-footer-background-color: #{$odis-foreground};
+  --ifm-footer-color: #{$odis-secondary};
+  --ifm-footer-link-color: #{$odis-secondary};
+  --ifm-footer-link-hover-color: #{$odis-primary-lightest};
+  --ifm-footer-padding-vertical: 2rem;
+  --ifm-footer-padding-horizontal: 1.5rem;
+
+  // Sidebar
+  --ifm-menu-color: #{$odis-foreground};
+  --ifm-menu-color-active: #{$odis-primary};
+  --ifm-menu-color-background-active: #{$odis-primary}1a;
+  --ifm-menu-color-background-hover: #{$odis-secondary};
+
+  // Code blocks
+  --ifm-code-font-size: 90%;
+  --docusaurus-highlighted-code-line-bg: rgba(49, 171, 163, 0.1);
+  --prism-background-color: #f8fafc;
+
+  // Table of Contents
+  --ifm-toc-link-color: #{$odis-muted-foreground};
+  --ifm-toc-border-color: #{$odis-border};
+
+  // Alert/Admonition colors with ODIS teal accents
+  --ifm-color-info: #{$odis-primary};
+  --ifm-color-info-dark: #{$odis-primary-dark};
+  --ifm-color-info-contrast-background: rgba(49, 171, 163, 0.1);
+  --ifm-color-success: #22c55e;
+  --ifm-color-success-dark: #16a34a;
+  --ifm-color-success-contrast-background: rgba(34, 197, 94, 0.1);
+  --ifm-color-warning: #f59e0b;
+  --ifm-color-warning-dark: #d97706;
+  --ifm-color-warning-contrast-background: rgba(245, 158, 11, 0.1);
+  --ifm-color-danger: #{$odis-destructive};
+  --ifm-color-danger-dark: #dc2626;
+  --ifm-color-danger-contrast-background: rgba(239, 68, 68, 0.1);
+
+  // Focus ring (ODIS teal)
+  --ifm-focus-border-color: #{$odis-primary};
+
+  // Spacing
+  --ifm-spacing-horizontal: 1.5rem;
+  --ifm-spacing-vertical: 1rem;
+
+  // Transitions
+  --ifm-transition-fast: 150ms;
+  --ifm-transition-slow: 300ms;
+}
+
+// Dark mode (currently mirrors light for brand consistency per tokens.css)
+[data-theme="dark"] {
+  --ifm-color-primary: #{$odis-primary};
+  --ifm-color-primary-dark: #{$odis-primary-dark};
+  --ifm-color-primary-darker: #{$odis-primary-darker};
+  --ifm-color-primary-darkest: #{$odis-primary-darkest};
+  --ifm-color-primary-light: #{$odis-primary-light};
+  --ifm-color-primary-lighter: #{$odis-primary-lighter};
+  --ifm-color-primary-lightest: #{$odis-primary-lightest};
+
+  // Keep consistent with light mode as per ODIS brand tokens
+  --ifm-background-color: #{$odis-background};
+  --ifm-background-surface-color: #{$odis-background};
+  --ifm-font-color-base: #{$odis-foreground};
+
+  --docusaurus-highlighted-code-line-bg: rgba(49, 171, 163, 0.15);
+}
+
+// ============================================
+// Custom Component Styling
+// ============================================
+
+// Smooth scrolling
+html {
+  scroll-behavior: smooth;
+}
+
+// Navbar branding
+.navbar {
+  border-bottom: 1px solid #{$odis-border};
+
+  &__brand {
+    font-family: var(--ifm-heading-font-family);
+    font-weight: 600;
+  }
+
+  &__title {
+    font-family: var(--ifm-heading-font-family);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  &__link {
+    font-weight: 500;
+    transition: color var(--ifm-transition-fast) ease;
+
+    &:hover {
+      color: var(--ifm-color-primary);
+    }
+
+    &--active {
+      color: var(--ifm-color-primary);
+      font-weight: 600;
+    }
+  }
+}
+
+// Button styling (shadcn-inspired)
+.button {
+  border-radius: var(--ifm-global-radius);
+  font-weight: 500;
+  font-family: var(--ifm-font-family-base);
+  transition: all var(--ifm-transition-fast) ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.button--primary {
+  background-color: var(--ifm-color-primary);
+  border-color: var(--ifm-color-primary);
+
+  &:hover {
+    background-color: var(--ifm-color-primary-dark);
+    border-color: var(--ifm-color-primary-dark);
+  }
+}
+
+.button--secondary {
+  background-color: #{$odis-secondary};
+  border-color: #{$odis-border};
+  color: #{$odis-foreground};
+
+  &:hover {
+    background-color: darken($odis-secondary, 3%);
+  }
+}
+
+// Card styling (glass-inspired from utilities.css)
+.card {
+  border-radius: var(--ifm-global-radius);
+  border: 1px solid #{$odis-border};
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 16px -2px rgba(0, 0, 0, 0.04);
+  transition: box-shadow var(--ifm-transition-slow) ease,
+    transform var(--ifm-transition-slow) ease;
+
+  &:hover {
+    box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+  }
+}
+
+// Sidebar styling
+.menu {
+  &__link {
+    border-radius: calc(var(--ifm-global-radius) - 2px);
+    transition: all var(--ifm-transition-fast) ease;
+
+    &--active {
+      font-weight: 600;
+      background-color: var(--ifm-menu-color-background-active);
+    }
+  }
+
+  &__list-item-collapsible {
+    &:hover {
+      background-color: var(--ifm-menu-color-background-hover);
+    }
+  }
+}
+
+// Code block enhancements
+pre {
+  border-radius: var(--ifm-global-radius);
+  border: 1px solid #{$odis-border};
+}
+
+code {
+  border-radius: calc(var(--ifm-global-radius) - 2px);
+  padding: 0.125rem 0.375rem;
+  font-size: var(--ifm-code-font-size);
+}
+
+// Table styling
+table {
+  border-radius: var(--ifm-global-radius);
+  overflow: hidden;
+  border: 1px solid #{$odis-border};
+
+  th {
+    background-color: #{$odis-secondary};
+    font-weight: 600;
+  }
+
+  tr:hover {
+    background-color: rgba(49, 171, 163, 0.02);
+  }
+}
+
+// Admonition/Alert styling
+.alert {
+  border-radius: var(--ifm-global-radius);
+  border-left-width: 4px;
+
+  .admonitionHeading_node_modules-\@docusaurus-theme-classic-lib-theme-Admonition-Layout-styles-module {
+    font-family: var(--ifm-heading-font-family);
+    font-weight: 600;
+  }
+}
+
+// TOC styling
+.table-of-contents {
+  &__link {
+    transition: color var(--ifm-transition-fast) ease;
+
+    &--active {
+      color: var(--ifm-color-primary);
+      font-weight: 500;
+    }
+  }
+}
+
+// Pagination
+.pagination-nav {
+  &__link {
+    border-radius: var(--ifm-global-radius);
+    border: 1px solid #{$odis-border};
+    transition: all var(--ifm-transition-fast) ease;
+
+    &:hover {
+      border-color: var(--ifm-color-primary);
+      background-color: rgba(49, 171, 163, 0.02);
+    }
+  }
+
+  &__label {
+    font-weight: 600;
+  }
+}
+
+// Search (if using Algolia or local search)
+.DocSearch-Button {
+  border-radius: var(--ifm-global-radius) !important;
+}
+
+// Scrollbar styling (from ODIS utilities.css)
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #{$odis-secondary};
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #{$odis-primary};
+  border-radius: 4px;
+  opacity: 0.6;
+
+  &:hover {
+    opacity: 1;
+    background: #{$odis-primary-dark};
+  }
+}
+
+// Firefox scrollbar
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #{$odis-primary} #{$odis-secondary};
+}
+
+// Hero section styling (for custom homepage if needed)
+.hero {
+  &--primary {
+    background: linear-gradient(
+      135deg,
+      #{$odis-primary-lightest} 0%,
+      #{$odis-background} 100%
+    );
+  }
+
+  &__title {
+    font-family: var(--ifm-heading-font-family);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  &__subtitle {
+    color: #{$odis-muted-foreground};
+  }
+}
+
+// Markdown content styling
+.markdown {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--ifm-heading-font-family);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  h1 {
+    font-weight: 700;
+  }
+
+  a {
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color var(--ifm-transition-fast) ease;
+
+    &:hover {
+      border-bottom-color: var(--ifm-color-primary);
+    }
+  }
+
+  blockquote {
+    border-left-color: var(--ifm-color-primary);
+    background-color: rgba(49, 171, 163, 0.05);
+    border-radius: 0 var(--ifm-global-radius) var(--ifm-global-radius) 0;
+    padding: 1rem 1.5rem;
+  }
+}
+
+// Feature cards (for landing page)
+.feature-card {
+  border: 1px solid #{$odis-border};
+  border-radius: var(--ifm-global-radius);
+  padding: 1.5rem;
+  transition: all var(--ifm-transition-slow) ease;
+
+  &:hover {
+    border-color: var(--ifm-color-primary);
+    box-shadow: 0 8px 32px rgba(49, 171, 163, 0.1);
+    transform: translateY(-4px);
+  }
+
+  h3 {
+    font-family: var(--ifm-heading-font-family);
+    color: var(--ifm-color-primary);
+  }
+}
+
+// Breadcrumbs
+.breadcrumbs {
+  &__link {
+    transition: color var(--ifm-transition-fast) ease;
+
+    &:hover {
+      color: var(--ifm-color-primary);
+    }
+  }
+}
+
+// Footer enhancements
+.footer {
+  &__title {
+    font-family: var(--ifm-heading-font-family);
+    font-weight: 600;
+  }
+
+  &__link-item {
+    transition: color var(--ifm-transition-fast) ease;
+
+    &:hover {
+      color: var(--ifm-color-primary-lightest);
+    }
+  }
+}
+
+// Version badge
+.badge {
+  border-radius: calc(var(--ifm-global-radius) - 2px);
+  font-weight: 500;
+
+  &--primary {
+    background-color: var(--ifm-color-primary);
+  }
+
+  &--secondary {
+    background-color: #{$odis-secondary};
+    color: #{$odis-foreground};
+  }
+}
+
+// Tabs styling
+.tabs {
+  &__item {
+    border-radius: var(--ifm-global-radius) var(--ifm-global-radius) 0 0;
+    transition: all var(--ifm-transition-fast) ease;
+
+    &--active {
+      border-bottom-color: var(--ifm-color-primary);
+      color: var(--ifm-color-primary);
+    }
+  }
+}
+
+// Details/Summary
+details {
+  border-radius: var(--ifm-global-radius);
+  border: 1px solid #{$odis-border};
+
+  summary {
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0.75rem 1rem;
+
+    &:hover {
+      background-color: #{$odis-secondary};
+    }
+  }
+}
+
+// Loading states
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #{$odis-secondary} 25%,
+    #{darken($odis-secondary, 2%)} 50%,
+    #{$odis-secondary} 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+  border-radius: calc(var(--ifm-global-radius) - 2px);
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

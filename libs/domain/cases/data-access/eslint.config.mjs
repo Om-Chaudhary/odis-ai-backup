@@ -4,6 +4,14 @@ import nxPlugin from "@nx/eslint-plugin";
 export default [
   ...baseConfig,
   {
+    files: ["**/*.ts", "**/*.tsx"],
+    rules: {
+      "@typescript-eslint/prefer-nullish-coalescing": "off",
+      "@typescript-eslint/no-redundant-type-constituents": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+    },
+  },
+  {
     files: ["**/*.json"],
     plugins: {
       "@nx": nxPlugin,

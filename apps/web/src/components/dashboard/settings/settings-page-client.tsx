@@ -8,23 +8,57 @@ import {
   Settings as SettingsIcon,
   Send,
   PhoneIncoming,
+  Loader2,
 } from "lucide-react";
 import { DischargeSettingsForm } from "./discharge-settings";
 import { api } from "~/trpc/client";
 import type { DischargeSettings } from "@odis-ai/shared/types";
 import { toast } from "sonner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/shared/ui/tabs";
+import { cn } from "@odis-ai/shared/util";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@odis-ai/shared/ui/card";
+  PageContainer,
+  PageHeader,
+  PageContent,
+} from "../layout/page-container";
+
+const TABS = [
+  {
+    id: "clinic",
+    label: "Clinic Info",
+    icon: Building2,
+    description: "Basic clinic details and contact information",
+  },
+  {
+    id: "outbound",
+    label: "Outbound",
+    icon: Send,
+    description: "Discharge scheduling and follow-up preferences",
+  },
+  {
+    id: "branding",
+    label: "Branding",
+    icon: Palette,
+    description: "Email appearance and custom messaging",
+  },
+  {
+    id: "inbound",
+    label: "Inbound",
+    icon: PhoneIncoming,
+    description: "VAPI configuration for incoming calls",
+  },
+  {
+    id: "system",
+    label: "System",
+    icon: SettingsIcon,
+    description: "Advanced settings and test mode",
+  },
+] as const;
+
+type TabId = (typeof TABS)[number]["id"];
 
 export function SettingsPageClient() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("clinic");
+  const [activeTab, setActiveTab] = useState<TabId>("clinic");
 
   const { data: settingsData, refetch: refetchSettings } =
     api.cases.getDischargeSettings.useQuery();
@@ -51,12 +85,10 @@ export function SettingsPageClient() {
     testContactPhone: "",
     voicemailDetectionEnabled: false,
     defaultScheduleDelayMinutes: null,
-    // Email branding defaults
     primaryColor: "#2563EB",
     logoUrl: null,
     emailHeaderText: null,
     emailFooterText: null,
-    // Outbound discharge scheduling defaults
     preferredEmailStartTime: "09:00",
     preferredEmailEndTime: "12:00",
     preferredCallStartTime: "14:00",
@@ -64,13 +96,11 @@ export function SettingsPageClient() {
     emailDelayDays: 1,
     callDelayDays: 2,
     maxCallRetries: 3,
-    // Batch discharge preferences
     batchIncludeIdexxNotes: true,
     batchIncludeManualTranscriptions: true,
   };
 
   const handleSave = (newSettings: DischargeSettings) => {
-    // Only send non-empty values to avoid validation errors
     updateSettingsMutation.mutate({
       clinicName: newSettings.clinicName || undefined,
       clinicPhone: newSettings.clinicPhone || undefined,
@@ -83,12 +113,10 @@ export function SettingsPageClient() {
       voicemailDetectionEnabled: newSettings.voicemailDetectionEnabled,
       defaultScheduleDelayMinutes:
         newSettings.defaultScheduleDelayMinutes ?? null,
-      // Email branding settings
       primaryColor: newSettings.primaryColor ?? undefined,
       logoUrl: newSettings.logoUrl ?? null,
       emailHeaderText: newSettings.emailHeaderText ?? null,
       emailFooterText: newSettings.emailFooterText ?? null,
-      // Outbound discharge scheduling settings
       preferredEmailStartTime: newSettings.preferredEmailStartTime ?? null,
       preferredEmailEndTime: newSettings.preferredEmailEndTime ?? null,
       preferredCallStartTime: newSettings.preferredCallStartTime ?? null,
@@ -96,7 +124,6 @@ export function SettingsPageClient() {
       emailDelayDays: newSettings.emailDelayDays ?? null,
       callDelayDays: newSettings.callDelayDays ?? null,
       maxCallRetries: newSettings.maxCallRetries ?? null,
-      // Batch discharge preferences
       batchIncludeIdexxNotes: newSettings.batchIncludeIdexxNotes,
       batchIncludeManualTranscriptions:
         newSettings.batchIncludeManualTranscriptions,
@@ -107,159 +134,99 @@ export function SettingsPageClient() {
     router.back();
   };
 
+  const activeTabData = TABS.find((tab) => tab.id === activeTab);
+
   return (
-    <div className="flex h-full flex-col">
+    <PageContainer>
       {/* Header */}
-      <div className="bg-background/95 supports-[backdrop-filter]:bg-background/60 border-b backdrop-blur">
-        <div className="flex h-20 items-center px-8">
-          <div className="flex flex-1 items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-              <p className="text-muted-foreground text-sm">
-                Manage your clinic profile and discharge preferences
-              </p>
+      <PageHeader className="flex-col items-start gap-1 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-lg font-semibold text-slate-800">Settings</h1>
+          <p className="text-sm text-slate-500">
+            Manage your clinic profile and discharge preferences
+          </p>
+        </div>
+        {updateSettingsMutation.isPending && (
+          <div className="flex items-center gap-2 text-sm text-teal-600">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Saving...</span>
+          </div>
+        )}
+      </PageHeader>
+
+      {/* Tab Navigation */}
+      <div className="shrink-0 border-b border-teal-100/50 bg-white/30 backdrop-blur-sm">
+        <div className="flex overflow-x-auto px-4">
+          {TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "group relative flex shrink-0 items-center gap-2 px-4 py-3 text-sm font-medium transition-all",
+                  "hover:text-teal-700",
+                  isActive
+                    ? "text-teal-700"
+                    : "text-slate-500 hover:text-slate-700",
+                )}
+              >
+                <Icon
+                  className={cn(
+                    "h-4 w-4 transition-colors",
+                    isActive
+                      ? "text-teal-600"
+                      : "text-slate-400 group-hover:text-slate-500",
+                  )}
+                />
+                <span className="hidden sm:inline">{tab.label}</span>
+                {/* Active indicator */}
+                {isActive && (
+                  <span className="absolute right-0 bottom-0 left-0 h-0.5 bg-gradient-to-r from-teal-500 to-emerald-500" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Content Area */}
+      <PageContent className="bg-gradient-to-b from-white/20 to-teal-50/10">
+        <div className="mx-auto max-w-3xl p-6">
+          {/* Tab Description Card */}
+          <div className="mb-6 rounded-xl border border-teal-100/60 bg-gradient-to-br from-white/80 via-teal-50/30 to-white/80 p-4 shadow-sm backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              {activeTabData && (
+                <>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-500 text-white shadow-md shadow-teal-500/20">
+                    <activeTabData.icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h2 className="font-semibold text-slate-800">
+                      {activeTabData.label}
+                    </h2>
+                    <p className="text-sm text-slate-500">
+                      {activeTabData.description}
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
+
+          {/* Form Content */}
+          <div className="rounded-xl border border-teal-100/60 bg-gradient-to-br from-white/90 via-white/80 to-teal-50/40 p-6 shadow-lg shadow-teal-500/5 backdrop-blur-md">
+            <DischargeSettingsForm
+              settings={settings}
+              onSave={handleSave}
+              onCancel={handleCancel}
+              isLoading={updateSettingsMutation.isPending}
+              view={activeTab}
+            />
+          </div>
         </div>
-      </div>
-
-      {/* Tabbed Content */}
-      <div className="flex-1 overflow-auto">
-        <div className="px-8 py-8">
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="w-full space-y-8"
-          >
-            <TabsList className="grid w-full max-w-4xl grid-cols-5">
-              <TabsTrigger value="clinic" className="gap-2">
-                <Building2 className="h-4 w-4" />
-                <span className="hidden sm:inline">Clinic Info</span>
-              </TabsTrigger>
-              <TabsTrigger value="outbound" className="gap-2">
-                <Send className="h-4 w-4" />
-                <span className="hidden sm:inline">Outbound</span>
-              </TabsTrigger>
-              <TabsTrigger value="branding" className="gap-2">
-                <Palette className="h-4 w-4" />
-                <span className="hidden sm:inline">Branding</span>
-              </TabsTrigger>
-              <TabsTrigger value="inbound" className="gap-2">
-                <PhoneIncoming className="h-4 w-4" />
-                <span className="hidden sm:inline">Inbound</span>
-              </TabsTrigger>
-              <TabsTrigger value="system" className="gap-2">
-                <SettingsIcon className="h-4 w-4" />
-                <span className="hidden sm:inline">System</span>
-              </TabsTrigger>
-            </TabsList>
-
-            <div className="max-w-4xl">
-              <TabsContent value="clinic" className="mt-0 space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Clinic Information</CardTitle>
-                    <CardDescription>
-                      Configure your clinic details that appear in discharge
-                      communications
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <DischargeSettingsForm
-                      settings={settings}
-                      onSave={handleSave}
-                      onCancel={handleCancel}
-                      isLoading={updateSettingsMutation.isPending}
-                      view="clinic"
-                    />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="outbound" className="mt-0 space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Outbound Discharge Settings</CardTitle>
-                    <CardDescription>
-                      Configure scheduling preferences for discharge emails and
-                      follow-up calls
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <DischargeSettingsForm
-                      settings={settings}
-                      onSave={handleSave}
-                      onCancel={handleCancel}
-                      isLoading={updateSettingsMutation.isPending}
-                      view="outbound"
-                    />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="branding" className="mt-0 space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Email Branding</CardTitle>
-                    <CardDescription>
-                      Customize the appearance of your discharge emails
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <DischargeSettingsForm
-                      settings={settings}
-                      onSave={handleSave}
-                      onCancel={handleCancel}
-                      isLoading={updateSettingsMutation.isPending}
-                      view="branding"
-                    />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="inbound" className="mt-0 space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Inbound Call Settings</CardTitle>
-                    <CardDescription>
-                      Configure how incoming calls are handled (coming soon)
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <DischargeSettingsForm
-                      settings={settings}
-                      onSave={handleSave}
-                      onCancel={handleCancel}
-                      isLoading={updateSettingsMutation.isPending}
-                      view="inbound"
-                    />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="system" className="mt-0 space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>System Configuration</CardTitle>
-                    <CardDescription>
-                      Advanced settings for testing and system behavior
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <DischargeSettingsForm
-                      settings={settings}
-                      onSave={handleSave}
-                      onCancel={handleCancel}
-                      isLoading={updateSettingsMutation.isPending}
-                      view="system"
-                    />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </div>
-          </Tabs>
-        </div>
-      </div>
-    </div>
+      </PageContent>
+    </PageContainer>
   );
 }

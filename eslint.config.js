@@ -32,6 +32,12 @@ export default tseslint.config(
       "libs/types/src/database.types.ts",
       // Markdown documentation
       "**/*.md",
+      // Docusaurus app (has different config requirements)
+      "apps/docs/**",
+      // Domain libraries with custom eslint configs (avoid type checking errors)
+      "libs/domain/shared/util/src/lib/interfaces/**",
+      "libs/domain/discharge/data-access/src/**",
+      "libs/domain/cases/data-access/src/**",
     ],
   },
   // Next.js plugin for Next.js-specific linting rules

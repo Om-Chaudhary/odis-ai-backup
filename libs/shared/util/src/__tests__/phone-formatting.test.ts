@@ -76,7 +76,11 @@ describe("formatPhoneNumberDisplay", () => {
     // TODO: Write a test for US number with dashes
     // Example: "213-777-4445" should return "(213) 777-4445"
     it("handles US number with dashes", () => {
-      // Your test here!
+      const input = "213-777-4445";
+      const expected = "(213) 777-4445";
+      const result = formatPhoneNumberDisplay(input);
+
+      expect(result).toBe(expected);
     });
   });
 
@@ -84,7 +88,8 @@ describe("formatPhoneNumberDisplay", () => {
     // TODO: Write a test for UK number
     // Example: "+442071234567" should return "+44 207 123 4567" (or similar)
     it("formats UK number", () => {
-      // Your test here!
+      const input = "+442071234567";
+      const expected = "+44 20 7123 4567";
     });
 
     // TODO: Write a test for a number with a different country code

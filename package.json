@@ -37,7 +37,11 @@
     "extension:lint": "nx lint chrome-extension",
     "extension:lint:fix": "nx lint chrome-extension --fix",
     "extension:test": "nx test chrome-extension",
-    "extension:typecheck": "nx typecheck chrome-extension"
+    "extension:typecheck": "nx typecheck chrome-extension",
+    "docs:dev": "nx start docs",
+    "docs:build": "nx build docs",
+    "docs:serve": "nx serve docs",
+    "docs:clear": "nx clear docs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.69.0",
@@ -124,7 +128,13 @@
     "type-fest": "^5.3.1",
     "use-stick-to-bottom": "^1.1.1",
     "webextension-polyfill": "^0.12.0",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "@docusaurus/core": "3.9.2",
+    "@docusaurus/preset-classic": "3.9.2",
+    "@mdx-js/react": "^3.0.0",
+    "docusaurus-plugin-sass": "^0.2.6",
+    "prism-react-renderer": "^2.3.0",
+    "sass": "^1.86.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
@@ -182,7 +192,10 @@
     "vite": "^7.0.0",
     "vite-plugin-node-polyfills": "^0.24.0",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^4.0.13"
+    "vitest": "^4.0.13",
+    "@docusaurus/module-type-aliases": "3.9.2",
+    "@docusaurus/tsconfig": "3.9.2",
+    "@docusaurus/types": "3.9.2"
   },
   "ct3aMetadata": {
     "initVersion": "7.39.3"
