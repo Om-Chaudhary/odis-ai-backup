@@ -11,24 +11,24 @@
  * - failed: Red filled icon (failed/error)
  */
 
-import { DashboardLinkIcon } from './DashboardLinkIcon';
+import { DashboardLinkIcon } from "./DashboardLinkIcon";
 
 // Communication status type
-type CommunicationStatus = 'none' | 'scheduled' | 'sent' | 'failed';
+type CommunicationStatus = "none" | "scheduled" | "sent" | "failed";
 
 // Default colors - white for visibility on teal background (BrandedMenuBar)
-const DEFAULT_SCHEDULED_COLOR = '#ffffff'; // white (solid/filled)
-const DEFAULT_UNSCHEDULED_COLOR = 'rgba(255, 255, 255, 0.5)'; // white with opacity (outline)
+const DEFAULT_SCHEDULED_COLOR = "#ffffff"; // white (solid/filled)
+const DEFAULT_UNSCHEDULED_COLOR = "rgba(255, 255, 255, 0.5)"; // white with opacity (outline)
 
 // Dark colors - for light backgrounds (schedule popup)
-const DARK_SCHEDULED_COLOR = '#14b8a6'; // teal-500 (solid/filled)
-const DARK_UNSCHEDULED_COLOR = '#9ca3af'; // gray-400 (outline)
+const DARK_SCHEDULED_COLOR = "#14b8a6"; // teal-500 (solid/filled)
+const DARK_UNSCHEDULED_COLOR = "#9ca3af"; // gray-400 (outline)
 
 // Calendar grid colors - for appointment blocks
-const CALENDAR_SCHEDULED_COLOR = '#111827'; // gray-900 (soft black)
-const CALENDAR_SENT_COLOR = '#16a34a'; // green-600
-const CALENDAR_FAILED_COLOR = '#dc2626'; // red-600
-const CALENDAR_NONE_COLOR = '#9ca3af'; // gray-400 (for menubar variant)
+const CALENDAR_SCHEDULED_COLOR = "#111827"; // gray-900 (soft black)
+const CALENDAR_SENT_COLOR = "#16a34a"; // green-600
+const CALENDAR_FAILED_COLOR = "#dc2626"; // red-600
+const CALENDAR_NONE_COLOR = "#9ca3af"; // gray-400 (for menubar variant)
 
 interface IconProps {
   className?: string;
@@ -45,7 +45,7 @@ interface IconProps {
    * - calendar: black/green/red icons (for calendar grid, hides when none)
    * - menubar: same as calendar but always shows icons (gray when none)
    */
-  variant?: 'light' | 'dark' | 'calendar' | 'menubar';
+  variant?: "light" | "dark" | "calendar" | "menubar";
 }
 
 /**
@@ -53,19 +53,19 @@ interface IconProps {
  */
 const getIconColor = (
   status: CommunicationStatus,
-  variant: 'light' | 'dark' | 'calendar' | 'menubar',
+  variant: "light" | "dark" | "calendar" | "menubar",
   isScheduledLegacy?: boolean,
 ): string | null => {
   // Handle calendar variant with explicit status (hides when none)
-  if (variant === 'calendar') {
+  if (variant === "calendar") {
     switch (status) {
-      case 'none':
+      case "none":
         return null; // Don't render icon
-      case 'scheduled':
+      case "scheduled":
         return CALENDAR_SCHEDULED_COLOR;
-      case 'sent':
+      case "sent":
         return CALENDAR_SENT_COLOR;
-      case 'failed':
+      case "failed":
         return CALENDAR_FAILED_COLOR;
       default:
         return null;
@@ -73,15 +73,15 @@ const getIconColor = (
   }
 
   // Handle menubar variant (same colors as calendar but always shows)
-  if (variant === 'menubar') {
+  if (variant === "menubar") {
     switch (status) {
-      case 'none':
+      case "none":
         return CALENDAR_NONE_COLOR; // Gray outline
-      case 'scheduled':
+      case "scheduled":
         return CALENDAR_SCHEDULED_COLOR;
-      case 'sent':
+      case "sent":
         return CALENDAR_SENT_COLOR;
-      case 'failed':
+      case "failed":
         return CALENDAR_FAILED_COLOR;
       default:
         return CALENDAR_NONE_COLOR;
@@ -89,9 +89,10 @@ const getIconColor = (
   }
 
   // Legacy behavior for light/dark variants (used by popup and menu bar)
-  const isScheduled = status === 'scheduled' || status === 'sent' || isScheduledLegacy;
+  const isScheduled =
+    status === "scheduled" || status === "sent" || isScheduledLegacy;
 
-  if (variant === 'dark') {
+  if (variant === "dark") {
     return isScheduled ? DARK_SCHEDULED_COLOR : DARK_UNSCHEDULED_COLOR;
   }
 
@@ -102,18 +103,21 @@ const getIconColor = (
 /**
  * Get tooltip text based on status
  */
-const getTooltipText = (type: 'email' | 'call', status: CommunicationStatus): string => {
+const getTooltipText = (
+  type: "email" | "call",
+  status: CommunicationStatus,
+): string => {
   switch (status) {
-    case 'none':
-      return type === 'email' ? 'No email scheduled' : 'No call scheduled';
-    case 'scheduled':
-      return type === 'email' ? 'Email scheduled' : 'Call scheduled';
-    case 'sent':
-      return type === 'email' ? 'Email sent' : 'Call completed';
-    case 'failed':
-      return type === 'email' ? 'Email failed' : 'Call failed';
+    case "none":
+      return type === "email" ? "No email scheduled" : "No call scheduled";
+    case "scheduled":
+      return type === "email" ? "Email scheduled" : "Call scheduled";
+    case "sent":
+      return type === "email" ? "Email sent" : "Call completed";
+    case "failed":
+      return type === "email" ? "Email failed" : "Call failed";
     default:
-      return '';
+      return "";
   }
 };
 
@@ -121,23 +125,34 @@ const getTooltipText = (type: 'email' | 'call', status: CommunicationStatus): st
  * Email Icon - Supports multiple states: none, scheduled, sent, failed
  * Always renders as solid/filled icon with color indicating status
  */
-const EmailIcon = ({ className = '', scheduled = false, status, title, size = 16, variant = 'light' }: IconProps) => {
+const EmailIcon = ({
+  className = "",
+  scheduled = false,
+  status,
+  title,
+  size = 16,
+  variant = "light",
+}: IconProps) => {
   // Determine effective status - use explicit status if provided, otherwise derive from scheduled bool
-  const effectiveStatus: CommunicationStatus = status ?? (scheduled ? 'scheduled' : 'none');
+  const effectiveStatus: CommunicationStatus =
+    status ?? (scheduled ? "scheduled" : "none");
 
   // For calendar variant with 'none' status, don't render anything
-  if (variant === 'calendar' && effectiveStatus === 'none') {
+  if (variant === "calendar" && effectiveStatus === "none") {
     return null;
   }
 
   const color = getIconColor(effectiveStatus, variant, scheduled);
   if (!color) return null;
 
-  const tooltipText = title || getTooltipText('email', effectiveStatus);
+  const tooltipText = title || getTooltipText("email", effectiveStatus);
 
   // Always render solid/filled email icon (consistent with phone icon style)
   return (
-    <span title={tooltipText} style={{ display: 'inline-flex', alignItems: 'center' }}>
+    <span
+      title={tooltipText}
+      style={{ display: "inline-flex", alignItems: "center" }}
+    >
       <svg
         className={className}
         width={size}
@@ -145,7 +160,8 @@ const EmailIcon = ({ className = '', scheduled = false, status, title, size = 16
         viewBox="0 0 24 24"
         fill={color}
         stroke="none"
-        style={{ width: size, height: size, minWidth: size }}>
+        style={{ width: size, height: size, minWidth: size }}
+      >
         <path
           fillRule="evenodd"
           clipRule="evenodd"
@@ -160,23 +176,34 @@ const EmailIcon = ({ className = '', scheduled = false, status, title, size = 16
  * Phone Icon - Supports multiple states: none, scheduled, sent, failed
  * Always renders as solid/filled icon with color indicating status
  */
-const PhoneIcon = ({ className = '', scheduled = false, status, title, size = 16, variant = 'light' }: IconProps) => {
+const PhoneIcon = ({
+  className = "",
+  scheduled = false,
+  status,
+  title,
+  size = 16,
+  variant = "light",
+}: IconProps) => {
   // Determine effective status - use explicit status if provided, otherwise derive from scheduled bool
-  const effectiveStatus: CommunicationStatus = status ?? (scheduled ? 'scheduled' : 'none');
+  const effectiveStatus: CommunicationStatus =
+    status ?? (scheduled ? "scheduled" : "none");
 
   // For calendar variant with 'none' status, don't render anything
-  if (variant === 'calendar' && effectiveStatus === 'none') {
+  if (variant === "calendar" && effectiveStatus === "none") {
     return null;
   }
 
   const color = getIconColor(effectiveStatus, variant, scheduled);
   if (!color) return null;
 
-  const tooltipText = title || getTooltipText('call', effectiveStatus);
+  const tooltipText = title || getTooltipText("call", effectiveStatus);
 
   // Always render solid/filled phone icon
   return (
-    <span title={tooltipText} style={{ display: 'inline-flex', alignItems: 'center' }}>
+    <span
+      title={tooltipText}
+      style={{ display: "inline-flex", alignItems: "center" }}
+    >
       <svg
         className={className}
         width={size}
@@ -184,7 +211,8 @@ const PhoneIcon = ({ className = '', scheduled = false, status, title, size = 16
         viewBox="0 0 24 24"
         fill={color}
         stroke="none"
-        style={{ width: size, height: size, minWidth: size }}>
+        style={{ width: size, height: size, minWidth: size }}
+      >
         <path
           fillRule="evenodd"
           clipRule="evenodd"
@@ -211,17 +239,18 @@ const ScheduleStatusIcons = ({
   hasScheduledEmail,
   hasScheduledCall,
   caseId,
-  className = '',
+  className = "",
   iconSize = 16,
 }: StatusIconsProps) => (
   <div
     className={className}
     style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '6px',
+      display: "flex",
+      alignItems: "center",
+      gap: "6px",
       flexShrink: 0,
-    }}>
+    }}
+  >
     <EmailIcon scheduled={hasScheduledEmail} size={iconSize} />
     <PhoneIcon scheduled={hasScheduledCall} size={iconSize} />
     {caseId && <DashboardLinkIcon caseId={caseId} size={iconSize} />}
@@ -236,18 +265,18 @@ interface ContactWarningIconProps {
   missingEmail: boolean;
   missingPhone: boolean;
   size?: number;
-  variant?: 'light' | 'dark' | 'calendar' | 'menubar';
+  variant?: "light" | "dark" | "calendar" | "menubar";
 }
 
-const WARNING_COLOR = '#f59e0b'; // amber-500
-const URGENT_COLOR = '#dc2626'; // red-600
+const WARNING_COLOR = "#f59e0b"; // amber-500
+const URGENT_COLOR = "#dc2626"; // red-600
 
 const ContactWarningIcon = ({
   missingEmail,
   missingPhone,
   size = 16,
   // variant kept for API consistency with other icons
-  variant: _variant = 'menubar',
+  variant: _variant = "menubar",
 }: ContactWarningIconProps) => {
   void _variant; // Suppress unused variable warning
   // Don't show if nothing is missing
@@ -257,19 +286,23 @@ const ContactWarningIcon = ({
 
   // Build tooltip text
   const missingItems: string[] = [];
-  if (missingEmail) missingItems.push('email');
-  if (missingPhone) missingItems.push('phone');
-  const tooltipText = `Missing contact info: ${missingItems.join(' & ')}`;
+  if (missingEmail) missingItems.push("email");
+  if (missingPhone) missingItems.push("phone");
+  const tooltipText = `Missing contact info: ${missingItems.join(" & ")}`;
 
   return (
-    <span title={tooltipText} style={{ display: 'inline-flex', alignItems: 'center' }}>
+    <span
+      title={tooltipText}
+      style={{ display: "inline-flex", alignItems: "center" }}
+    >
       <svg
         width={size}
         height={size}
         viewBox="0 0 24 24"
         fill={WARNING_COLOR}
         stroke="none"
-        style={{ width: size, height: size, minWidth: size }}>
+        style={{ width: size, height: size, minWidth: size }}
+      >
         <path
           fillRule="evenodd"
           clipRule="evenodd"
@@ -288,7 +321,7 @@ interface UrgentCaseWarningIconProps {
   isUrgent: boolean;
   urgentReason?: string | null;
   size?: number;
-  variant?: 'light' | 'dark' | 'calendar' | 'menubar';
+  variant?: "light" | "dark" | "calendar" | "menubar";
 }
 
 const UrgentCaseWarningIcon = ({
@@ -296,7 +329,7 @@ const UrgentCaseWarningIcon = ({
   urgentReason,
   size = 16,
   // variant kept for API consistency with other icons
-  variant: _variant = 'menubar',
+  variant: _variant = "menubar",
 }: UrgentCaseWarningIconProps) => {
   void _variant; // Suppress unused variable warning
   // Don't show if not urgent
@@ -304,17 +337,21 @@ const UrgentCaseWarningIcon = ({
     return null;
   }
 
-  const tooltipText = urgentReason || 'Case flagged as urgent by AI';
+  const tooltipText = urgentReason || "Case flagged as urgent by AI";
 
   return (
-    <span title={tooltipText} style={{ display: 'inline-flex', alignItems: 'center' }}>
+    <span
+      title={tooltipText}
+      style={{ display: "inline-flex", alignItems: "center" }}
+    >
       <svg
         width={size}
         height={size}
         viewBox="0 0 24 24"
         fill={URGENT_COLOR}
         stroke="none"
-        style={{ width: size, height: size, minWidth: size }}>
+        style={{ width: size, height: size, minWidth: size }}
+      >
         <path
           fillRule="evenodd"
           clipRule="evenodd"
@@ -350,14 +387,14 @@ const CalendarGridStatusIcons = ({
   missingPhone = false,
   isUrgent = false,
   urgentReason,
-  className = '',
+  className = "",
   iconSize = 14,
   alwaysShow = true,
 }: CalendarGridIconsProps) => {
   // Check if we have anything to show
   // Note: missing contact replaces the corresponding icon position, not added as extra
-  const hasEmailToShow = emailStatus !== 'none' || missingEmail;
-  const hasPhoneToShow = callStatus !== 'none' || missingPhone;
+  const hasEmailToShow = emailStatus !== "none" || missingEmail;
+  const hasPhoneToShow = callStatus !== "none" || missingPhone;
 
   // If alwaysShow is false and nothing to show, return null
   if (!alwaysShow && !hasEmailToShow && !hasPhoneToShow && !isUrgent) {
@@ -365,30 +402,46 @@ const CalendarGridStatusIcons = ({
   }
 
   // Use 'menubar' variant to always show icons (gray outline for 'none', black for 'scheduled')
-  const iconVariant = 'menubar';
+  const iconVariant = "menubar";
 
   return (
     <div
       className={className}
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '4px',
+        display: "flex",
+        alignItems: "center",
+        gap: "4px",
         flexShrink: 0,
-      }}>
+      }}
+    >
       {/* Email position: show warning if missing email, otherwise show email icon */}
       {missingEmail ? (
-        <ContactWarningIcon missingEmail={true} missingPhone={false} size={iconSize} variant={iconVariant} />
+        <ContactWarningIcon
+          missingEmail={true}
+          missingPhone={false}
+          size={iconSize}
+          variant={iconVariant}
+        />
       ) : (
         <EmailIcon status={emailStatus} size={iconSize} variant={iconVariant} />
       )}
       {/* Phone position: show warning if missing phone, otherwise show phone icon */}
       {missingPhone ? (
-        <ContactWarningIcon missingEmail={false} missingPhone={true} size={iconSize} variant={iconVariant} />
+        <ContactWarningIcon
+          missingEmail={false}
+          missingPhone={true}
+          size={iconSize}
+          variant={iconVariant}
+        />
       ) : (
         <PhoneIcon status={callStatus} size={iconSize} variant={iconVariant} />
       )}
-      <UrgentCaseWarningIcon isUrgent={isUrgent} urgentReason={urgentReason} size={iconSize} variant={iconVariant} />
+      <UrgentCaseWarningIcon
+        isUrgent={isUrgent}
+        urgentReason={urgentReason}
+        size={iconSize}
+        variant={iconVariant}
+      />
     </div>
   );
 };
@@ -401,4 +454,9 @@ export {
   ContactWarningIcon,
   UrgentCaseWarningIcon,
 };
-export type { CommunicationStatus, CalendarGridIconsProps, ContactWarningIconProps, UrgentCaseWarningIconProps };
+export type {
+  CommunicationStatus,
+  CalendarGridIconsProps,
+  ContactWarningIconProps,
+  UrgentCaseWarningIconProps,
+};

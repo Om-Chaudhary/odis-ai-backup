@@ -1,6 +1,6 @@
-import { TemplateDropdown } from './TemplateDropdown';
-import { useState } from 'react';
-import type { CKEditorInfo } from '../../utils/dom/ckeditor-detector';
+import { TemplateDropdown } from "./TemplateDropdown";
+import { useState } from "react";
+import type { CKEditorInfo } from "../../utils/dom/ckeditor-detector";
 
 interface TemplateButtonProps {
   ckeditorInfo: CKEditorInfo;
@@ -16,7 +16,7 @@ export const TemplateButton = ({ ckeditorInfo }: TemplateButtonProps) => {
   };
 
   return (
-    <div style={{ position: 'relative', display: 'inline-block' }}>
+    <div style={{ position: "relative", display: "inline-block" }}>
       <button
         id="odis_template_button"
         type="button"
@@ -28,34 +28,36 @@ export const TemplateButton = ({ ckeditorInfo }: TemplateButtonProps) => {
         aria-disabled="false"
         onClick={handleToggle}
         style={{
-          cursor: 'pointer',
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '4px',
-          padding: '4px 6px',
-          borderRadius: '2px',
-          transition: 'background-color 0.2s',
-          backgroundColor: isOpen ? 'rgba(0, 128, 128, 0.1)' : 'transparent',
+          cursor: "pointer",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "4px",
+          padding: "4px 6px",
+          borderRadius: "2px",
+          transition: "background-color 0.2s",
+          backgroundColor: isOpen ? "rgba(0, 128, 128, 0.1)" : "transparent",
         }}
         onMouseEnter={(e: React.MouseEvent<HTMLButtonElement>) => {
           if (!isOpen) {
-            e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+            e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.05)";
           }
         }}
         onMouseLeave={(e: React.MouseEvent<HTMLButtonElement>) => {
           if (!isOpen) {
-            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.backgroundColor = "transparent";
           }
-        }}>
+        }}
+      >
         <span
           className="cke_button_icon"
           style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '16px',
-            height: '16px',
-          }}>
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "16px",
+            height: "16px",
+          }}
+        >
           {/* ODIS AI Icon - colored paw print */}
           <svg
             width="16"
@@ -63,7 +65,8 @@ export const TemplateButton = ({ ckeditorInfo }: TemplateButtonProps) => {
             viewBox="0 0 24 24"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            style={{ flexShrink: 0 }}>
+            style={{ flexShrink: 0 }}
+          >
             {/* Paw print icon */}
             <path
               d="M8.5 5C8.5 6.38 7.38 7.5 6 7.5C4.62 7.5 3.5 6.38 3.5 5C3.5 3.62 4.62 2.5 6 2.5C7.38 2.5 8.5 3.62 8.5 5Z"
@@ -95,29 +98,48 @@ export const TemplateButton = ({ ckeditorInfo }: TemplateButtonProps) => {
           id="odis_template_button_label"
           className="cke_button_label"
           style={{
-            fontSize: '11px',
-            fontFamily: 'Arial, sans-serif',
-            color: '#333',
-            whiteSpace: 'nowrap',
-          }}>
+            fontSize: "11px",
+            fontFamily: "Arial, sans-serif",
+            color: "#333",
+            whiteSpace: "nowrap",
+          }}
+        >
           Templates
         </span>
         {/* Down arrow indicator */}
         <span
           style={{
-            display: 'inline-flex',
-            width: '8px',
-            height: '8px',
-            marginLeft: '2px',
-          }}>
-          <svg width="8" height="8" viewBox="0 0 8 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M1 2L4 5L7 2" stroke="#666" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            display: "inline-flex",
+            width: "8px",
+            height: "8px",
+            marginLeft: "2px",
+          }}
+        >
+          <svg
+            width="8"
+            height="8"
+            viewBox="0 0 8 8"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M1 2L4 5L7 2"
+              stroke="#666"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </span>
       </button>
 
       {/* Dropdown menu */}
-      {isOpen && <TemplateDropdown ckeditorInfo={ckeditorInfo} onClose={() => setIsOpen(false)} />}
+      {isOpen && (
+        <TemplateDropdown
+          ckeditorInfo={ckeditorInfo}
+          onClose={() => setIsOpen(false)}
+        />
+      )}
     </div>
   );
 };
