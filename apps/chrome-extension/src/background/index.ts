@@ -3,10 +3,12 @@ import {
   logger,
   formatErrorMessage,
   trackError,
+  getGlobalTimeoutManager,
 } from "@odis-ai/extension/shared";
 import { exampleThemeStorage } from "@odis-ai/extension/storage";
 
 const bgLogger = logger.child("[Background]");
+const timeoutManager = getGlobalTimeoutManager();
 
 void exampleThemeStorage.get().then((theme) => {
   bgLogger.debug("theme", { theme });
@@ -16,6 +18,14 @@ bgLogger.info("Background loaded");
 bgLogger.info(
   "Edit 'chrome-extension/src/background/index.ts' and save to reload.",
 );
+
+// Add unhandled rejection handler to prevent silent failures
+self.addEventListener("unhandledrejection", (event) => {
+  bgLogger.error("Unhandled promise rejection", {
+    reason: event.reason,
+    promise: event.promise,
+  });
+});
 
 // Listen for messages from content scripts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -366,9 +376,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         { tabId },
                       );
                       // Wait for script initialization before retrying
-                      setTimeout(() => {
-                        sendSyncMessage(true);
-                      }, 1000); // Increased timeout for script initialization
+                      timeoutManager.setTimeout(
+                        () => {
+                          sendSyncMessage(true);
+                        },
+                        1000,
+                        "Retry sync message after script injection",
+                      );
                     })
                     .catch((error) => {
                       bgLogger.error("Failed to inject content script", {
@@ -400,6 +414,190 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                   error: formatErrorMessage(
                     errorMsg,
                     "Failed to sync schedule. Make sure you're on an IDEXX Neo page.",
+                  ),
+                });
+                return;
+              }
+
+              // Handle successful response
+              if (response) {
+                safeSendResponse(response);
+              } else {
+                safeSendResponse({
+                  success: false,
+                  error: "No response from IDEXX content script",
+                });
+              }
+            },
+          );
+        };
+
+        // Initial attempt to send the message
+        sendSyncMessage();
+      },
+    );
+
+    // Return true to indicate async response
+    return true;
+  }
+
+  // Handle future appointments sync request from popup
+  if (message.type === "SYNC_FUTURE_APPOINTMENTS") {
+    const { startDate, endDate } = message;
+
+    bgLogger.info(
+      "Received future appointments sync request, forwarding to IDEXX tab",
+      { startDate, endDate },
+    );
+
+    // Find IDEXX tabs
+    chrome.tabs.query(
+      {
+        url: [
+          "https://*.idexxneo.com/*",
+          "https://*.idexxneocloud.com/*",
+          "https://neo.vet/*",
+          "https://*.neosuite.com/*",
+        ],
+      },
+      (tabs) => {
+        if (chrome.runtime.lastError) {
+          bgLogger.error("Error querying IDEXX tabs", {
+            error: chrome.runtime.lastError.message,
+          });
+          sendResponse({
+            success: false,
+            error: `Failed to find IDEXX tab: ${chrome.runtime.lastError.message}`,
+          });
+          return;
+        }
+
+        if (!tabs || tabs.length === 0) {
+          bgLogger.warn("No IDEXX tabs found");
+          sendResponse({
+            success: false,
+            error:
+              "No IDEXX tab found. Please open an IDEXX Neo page and try again.",
+          });
+          return;
+        }
+
+        // Use the first IDEXX tab
+        const idexxTab = tabs[0];
+        const tabId = idexxTab.id;
+        if (!tabId) {
+          sendResponse({ success: false, error: "Invalid IDEXX tab" });
+          return;
+        }
+
+        bgLogger.info(
+          "Sending future appointments sync request to IDEXX content script",
+          { tabId },
+        );
+
+        // Guard to prevent multiple responses
+        let responseSent = false;
+        const safeSendResponse = (response: unknown) => {
+          if (!responseSent) {
+            responseSent = true;
+            sendResponse(response);
+          } else {
+            bgLogger.warn("Attempted to send multiple responses, ignoring", {
+              tabId,
+            });
+          }
+        };
+
+        // Helper function to send the sync message
+        const sendSyncMessage = (isRetry = false): void => {
+          chrome.tabs.sendMessage(
+            tabId,
+            {
+              type: "SYNC_FUTURE_APPOINTMENTS",
+              startDate,
+              endDate,
+            },
+            (response) => {
+              // Check if tab still exists
+              if (chrome.runtime.lastError) {
+                const errorMsg =
+                  chrome.runtime.lastError.message || "Unknown error";
+
+                // Check if content script isn't loaded (only attempt injection on first try)
+                const isContentScriptMissing =
+                  (errorMsg.includes("Could not establish connection") ||
+                    errorMsg.includes("Receiving end does not exist")) &&
+                  !isRetry;
+
+                if (isContentScriptMissing) {
+                  bgLogger.warn(
+                    "Content script not loaded, attempting to inject",
+                    { tabId },
+                  );
+
+                  // Inject both JS and CSS files as specified in manifest
+                  Promise.all([
+                    chrome.scripting.executeScript({
+                      target: { tabId },
+                      files: ["content-ui/idexx.iife.js"],
+                    }),
+                    chrome.scripting
+                      .insertCSS({
+                        target: { tabId },
+                        files: ["content-ui/idexx.css"],
+                      })
+                      .catch((err) => {
+                        // CSS injection failure is non-critical, log but continue
+                        bgLogger.warn("Failed to inject CSS (non-critical)", {
+                          error: err,
+                          tabId,
+                        });
+                      }),
+                  ])
+                    .then(() => {
+                      bgLogger.info(
+                        "Content script injected successfully, retrying sync message",
+                        { tabId },
+                      );
+                      // Wait for script initialization before retrying
+                      timeoutManager.setTimeout(
+                        () => {
+                          sendSyncMessage(true);
+                        },
+                        1000,
+                        "Retry sync message after script injection",
+                      );
+                    })
+                    .catch((error) => {
+                      bgLogger.error("Failed to inject content script", {
+                        error: formatErrorMessage(
+                          error,
+                          "Unknown injection error",
+                        ),
+                        tabId,
+                      });
+                      safeSendResponse({
+                        success: false,
+                        error: formatErrorMessage(
+                          error,
+                          "Content script not loaded. Please reload the IDEXX Neo page and try again.",
+                        ),
+                      });
+                    });
+                  return;
+                }
+
+                // Other errors or retry failed
+                bgLogger.error("Error sending message to IDEXX tab", {
+                  error: errorMsg,
+                  tabId,
+                  isRetry,
+                });
+                safeSendResponse({
+                  success: false,
+                  error: formatErrorMessage(
+                    errorMsg,
+                    "Failed to sync future appointments. Make sure you're on an IDEXX Neo page.",
                   ),
                 });
                 return;
