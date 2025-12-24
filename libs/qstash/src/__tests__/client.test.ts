@@ -12,10 +12,14 @@ const originalEnv = process.env;
 
 // Mock the QStash Client
 const mockPublishJSON = vi.fn();
+const mockMessagesDelete = vi.fn();
 
 // Create a mock class that can be instantiated with `new`
 class MockClient {
   publishJSON = mockPublishJSON;
+  messages = {
+    delete: mockMessagesDelete,
+  };
 }
 
 vi.mock("@upstash/qstash", () => ({
