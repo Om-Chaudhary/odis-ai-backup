@@ -51,14 +51,15 @@ vi.mock("@odis-ai/utils/business-hours", () => ({
 }));
 
 vi.mock("@odis-ai/api/cors", () => ({
-  handleCorsPreflightRequest: vi.fn(() =>
-    new Response(null, {
-      status: 204,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      },
-    })
+  handleCorsPreflightRequest: vi.fn(
+    () =>
+      new Response(null, {
+        status: 204,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        },
+      }),
   ),
   withCorsHeaders: vi.fn((_, response) => response),
 }));
@@ -125,10 +126,9 @@ describe("Call Schedule Route", () => {
 
   describe("GET - Health Check", () => {
     it("should return health check status", async () => {
-      const request = new NextRequest(
-        "http://localhost/api/calls/schedule",
-        { method: "GET" }
-      );
+      const request = new NextRequest("http://localhost/api/calls/schedule", {
+        method: "GET",
+      });
 
       const response = await GET(request);
       const data = await response.json();
@@ -141,10 +141,9 @@ describe("Call Schedule Route", () => {
 
   describe("OPTIONS - CORS Preflight", () => {
     it("should handle CORS preflight requests", async () => {
-      const request = new NextRequest(
-        "http://localhost/api/calls/schedule",
-        { method: "OPTIONS" }
-      );
+      const request = new NextRequest("http://localhost/api/calls/schedule", {
+        method: "OPTIONS",
+      });
 
       const response = OPTIONS(request);
 
@@ -163,7 +162,8 @@ describe("Call Schedule Route", () => {
     clinicName: "Test Clinic",
     clinicPhone: "five five five, one two three, four five six seven",
     emergencyPhone: "five five five, nine one one",
-    dischargeSummary: "Patient Max was seen for a wellness check. All vaccinations are up to date.",
+    dischargeSummary:
+      "Patient Max was seen for a wellness check. All vaccinations are up to date.",
     ...overrides,
   });
 
@@ -179,13 +179,10 @@ describe("Call Schedule Route", () => {
         },
       } as never);
 
-      const request = new NextRequest(
-        "http://localhost/api/calls/schedule",
-        {
-          method: "POST",
-          body: JSON.stringify(createValidRequestBody()),
-        }
-      );
+      const request = new NextRequest("http://localhost/api/calls/schedule", {
+        method: "POST",
+        body: JSON.stringify(createValidRequestBody()),
+      });
 
       const response = await POST(request);
       const data = await response.json();
@@ -211,15 +208,14 @@ describe("Call Schedule Route", () => {
       // Past time validation
       vi.mocked(isFutureTime).mockReturnValue(false);
 
-      const request = new NextRequest(
-        "http://localhost/api/calls/schedule",
-        {
-          method: "POST",
-          body: JSON.stringify(createValidRequestBody({
+      const request = new NextRequest("http://localhost/api/calls/schedule", {
+        method: "POST",
+        body: JSON.stringify(
+          createValidRequestBody({
             scheduledFor: new Date(Date.now() - 3600000).toISOString(),
-          })),
-        }
-      );
+          }),
+        ),
+      });
 
       const response = await POST(request);
       const data = await response.json();
@@ -257,15 +253,14 @@ describe("Call Schedule Route", () => {
         });
 
       const futureTime = new Date(Date.now() + 3600000);
-      const request = new NextRequest(
-        "http://localhost/api/calls/schedule",
-        {
-          method: "POST",
-          body: JSON.stringify(createValidRequestBody({
+      const request = new NextRequest("http://localhost/api/calls/schedule", {
+        method: "POST",
+        body: JSON.stringify(
+          createValidRequestBody({
             scheduledFor: futureTime.toISOString(),
-          })),
-        }
-      );
+          }),
+        ),
+      });
 
       const response = await POST(request);
       const data = await response.json();
@@ -299,18 +294,17 @@ describe("Call Schedule Route", () => {
 
       // QStash fails
       vi.mocked(scheduleCallExecution).mockRejectedValue(
-        new Error("QStash error")
+        new Error("QStash error"),
       );
 
-      const request = new NextRequest(
-        "http://localhost/api/calls/schedule",
-        {
-          method: "POST",
-          body: JSON.stringify(createValidRequestBody({
+      const request = new NextRequest("http://localhost/api/calls/schedule", {
+        method: "POST",
+        body: JSON.stringify(
+          createValidRequestBody({
             scheduledFor: new Date(Date.now() + 3600000).toISOString(),
-          })),
-        }
-      );
+          }),
+        ),
+      });
 
       const response = await POST(request);
       const data = await response.json();
@@ -319,7 +313,7 @@ describe("Call Schedule Route", () => {
       expect(data.error).toContain("schedule");
       // Verify delete was called for rollback
       expect(mockSupabase.from).toHaveBeenCalledWith(
-        "scheduled_discharge_calls"
+        "scheduled_discharge_calls",
       );
     });
 
@@ -343,15 +337,14 @@ describe("Call Schedule Route", () => {
           error: { message: "Database error" },
         });
 
-      const request = new NextRequest(
-        "http://localhost/api/calls/schedule",
-        {
-          method: "POST",
-          body: JSON.stringify(createValidRequestBody({
+      const request = new NextRequest("http://localhost/api/calls/schedule", {
+        method: "POST",
+        body: JSON.stringify(
+          createValidRequestBody({
             scheduledFor: new Date(Date.now() + 3600000).toISOString(),
-          })),
-        }
-      );
+          }),
+        ),
+      });
 
       const response = await POST(request);
       const data = await response.json();
@@ -383,13 +376,10 @@ describe("Call Schedule Route", () => {
           error: null,
         });
 
-      const request = new NextRequest(
-        "http://localhost/api/calls/schedule",
-        {
-          method: "POST",
-          body: JSON.stringify(createValidRequestBody()),
-        }
-      );
+      const request = new NextRequest("http://localhost/api/calls/schedule", {
+        method: "POST",
+        body: JSON.stringify(createValidRequestBody()),
+      });
 
       const response = await POST(request);
       const data = await response.json();
@@ -422,18 +412,17 @@ describe("Call Schedule Route", () => {
           error: null,
         });
 
-      const request = new NextRequest(
-        "http://localhost/api/calls/schedule",
-        {
-          method: "POST",
-          headers: {
-            Authorization: "Bearer test-token-123",
-          },
-          body: JSON.stringify(createValidRequestBody({
+      const request = new NextRequest("http://localhost/api/calls/schedule", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer test-token-123",
+        },
+        body: JSON.stringify(
+          createValidRequestBody({
             scheduledFor: new Date(Date.now() + 3600000).toISOString(),
-          })),
-        }
-      );
+          }),
+        ),
+      });
 
       const response = await POST(request);
       const data = await response.json();

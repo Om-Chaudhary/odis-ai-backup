@@ -16,7 +16,10 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { getClinicUserIds } from "@odis-ai/domain/clinics";
-import { getLocalDayRange, DEFAULT_TIMEZONE } from "@odis-ai/shared/util/timezone";
+import {
+  getLocalDayRange,
+  DEFAULT_TIMEZONE,
+} from "@odis-ai/shared/util/timezone";
 import { format, parseISO, startOfDay } from "date-fns";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 

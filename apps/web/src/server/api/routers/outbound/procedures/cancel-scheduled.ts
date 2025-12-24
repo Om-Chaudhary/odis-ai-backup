@@ -66,7 +66,8 @@ export const cancelScheduledRouter = createTRPCRouter({
           );
         } else {
           // First, cancel the QStash job to prevent execution
-          const metadata = scheduledCall.metadata as ScheduledCallMetadata | null;
+          const metadata =
+            scheduledCall.metadata as ScheduledCallMetadata | null;
           const qstashMessageId =
             scheduledCall.qstash_message_id ?? metadata?.qstash_message_id;
 
@@ -81,10 +82,13 @@ export const cancelScheduledRouter = createTRPCRouter({
                 { callId: scheduledCall.id, qstashMessageId },
               );
             } else {
-              console.log("[Cancel] Successfully cancelled QStash job for call", {
-                callId: scheduledCall.id,
-                qstashMessageId,
-              });
+              console.log(
+                "[Cancel] Successfully cancelled QStash job for call",
+                {
+                  callId: scheduledCall.id,
+                  qstashMessageId,
+                },
+              );
             }
           } else {
             console.warn(

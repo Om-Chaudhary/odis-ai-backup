@@ -22,6 +22,51 @@ interface PatientData {
   owner_email: string | null;
 }
 
+// Types for structured output data
+type CallOutcomeData = {
+  call_outcome?: string;
+  conversation_stage_reached?: string;
+  owner_available?: boolean;
+  call_duration_appropriate?: boolean;
+} | null;
+
+type PetHealthData = {
+  pet_recovery_status?: string;
+  symptoms_reported?: string[];
+  new_concerns_raised?: boolean;
+  condition_resolved?: boolean;
+} | null;
+
+type MedicationComplianceData = {
+  medication_discussed?: boolean;
+  medication_compliance?: string;
+  medication_issues?: string[];
+  medication_guidance_provided?: boolean;
+} | null;
+
+type OwnerSentimentData = {
+  owner_sentiment?: string;
+  owner_engagement_level?: string;
+  expressed_gratitude?: boolean;
+  expressed_concern_about_care?: boolean;
+} | null;
+
+type EscalationData = {
+  escalation_triggered?: boolean;
+  escalation_type?: string;
+  transfer_attempted?: boolean;
+  transfer_successful?: boolean;
+  escalation_reason?: string;
+} | null;
+
+type FollowUpData = {
+  recheck_reminder_delivered?: boolean;
+  recheck_confirmed?: boolean;
+  appointment_requested?: boolean;
+  follow_up_call_needed?: boolean;
+  follow_up_reason?: string;
+} | null;
+
 interface ScheduledCallData {
   id: string;
   status: string;
@@ -34,6 +79,13 @@ interface ScheduledCallData {
   attention_types: string[] | null;
   attention_severity: string | null;
   attention_summary: string | null;
+  // New structured output columns
+  call_outcome_data: CallOutcomeData;
+  pet_health_data: PetHealthData;
+  medication_compliance_data: MedicationComplianceData;
+  owner_sentiment_data: OwnerSentimentData;
+  escalation_data: EscalationData;
+  follow_up_data: FollowUpData;
 }
 
 interface ScheduledEmailData {
@@ -89,7 +141,13 @@ export const getCaseByIdRouter = createTRPCRouter({
             recording_url,
             attention_types,
             attention_severity,
-            attention_summary
+            attention_summary,
+            call_outcome_data,
+            pet_health_data,
+            medication_compliance_data,
+            owner_sentiment_data,
+            escalation_data,
+            follow_up_data
           ),
           scheduled_discharge_emails (
             id,
@@ -199,6 +257,13 @@ export const getCaseByIdRouter = createTRPCRouter({
           type: caseData.type ?? "Checkup",
           endedAt: caseData.created_at,
         },
+        // New structured output intelligence fields
+        callOutcomeData: call?.call_outcome_data ?? null,
+        petHealthData: call?.pet_health_data ?? null,
+        medicationComplianceData: call?.medication_compliance_data ?? null,
+        ownerSentimentData: call?.owner_sentiment_data ?? null,
+        escalationData: call?.escalation_data ?? null,
+        followUpData: call?.follow_up_data ?? null,
       };
     }),
 });

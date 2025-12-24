@@ -29,21 +29,25 @@ vi.mock("@odis-ai/integrations/vapi/webhooks", () => ({
 }));
 
 vi.mock("@odis-ai/api/cors", () => ({
-  handleCorsPreflightRequest: vi.fn(() =>
-    new Response(null, {
-      status: 204,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      },
-    })
+  handleCorsPreflightRequest: vi.fn(
+    () =>
+      new Response(null, {
+        status: 204,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        },
+      }),
   ),
   withCorsHeaders: vi.fn((_, response) => response),
 }));
 
 // Import after mocks
 import { POST, OPTIONS, GET } from "../route";
-import { handleVapiWebhook, parseWebhookPayload } from "@odis-ai/integrations/vapi/webhooks";
+import {
+  handleVapiWebhook,
+  parseWebhookPayload,
+} from "@odis-ai/integrations/vapi/webhooks";
 import { handleCorsPreflightRequest } from "@odis-ai/data-access/api/cors";
 
 describe("VAPI Webhook Route", () => {

@@ -35,7 +35,7 @@ vi.mock("@odis-ai/data-access/db/server", () => ({
     Promise.resolve({
       auth: mockAuth,
       from: mockFrom,
-    })
+    }),
   ),
 }));
 
@@ -104,7 +104,7 @@ describe("Authentication Server Actions", () => {
       formData.append("password", "password123");
 
       await expect(signIn(formData)).rejects.toThrow(
-        "NEXT_REDIRECT:/dashboard"
+        "NEXT_REDIRECT:/dashboard",
       );
       expect(mockAuth.signInWithPassword).toHaveBeenCalledWith({
         email: "user@example.com",

@@ -4,7 +4,10 @@ import { createClient } from "@odis-ai/data-access/db/server";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
 import { getUser } from "~/server/actions/auth";
-import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/data-access/api/cors";
+import {
+  handleCorsPreflightRequest,
+  withCorsHeaders,
+} from "@odis-ai/data-access/api/cors";
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)

@@ -7,7 +7,10 @@
 
 import { TRPCError } from "@trpc/server";
 import { getClinicUserIds } from "@odis-ai/domain/clinics";
-import { getLocalDayRange, DEFAULT_TIMEZONE } from "@odis-ai/shared/util/timezone";
+import {
+  getLocalDayRange,
+  DEFAULT_TIMEZONE,
+} from "@odis-ai/shared/util/timezone";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import {
   listDischargeCasesInput,
@@ -42,6 +45,51 @@ interface ScheduledCallMetadata {
 
 type ScheduledCallStructuredData = Record<string, unknown>;
 
+// Types for new structured output data
+type CallOutcomeData = {
+  call_outcome?: string;
+  conversation_stage_reached?: string;
+  owner_available?: boolean;
+  call_duration_appropriate?: boolean;
+} | null;
+
+type PetHealthData = {
+  pet_recovery_status?: string;
+  symptoms_reported?: string[];
+  new_concerns_raised?: boolean;
+  condition_resolved?: boolean;
+} | null;
+
+type MedicationComplianceData = {
+  medication_discussed?: boolean;
+  medication_compliance?: string;
+  medication_issues?: string[];
+  medication_guidance_provided?: boolean;
+} | null;
+
+type OwnerSentimentData = {
+  owner_sentiment?: string;
+  owner_engagement_level?: string;
+  expressed_gratitude?: boolean;
+  expressed_concern_about_care?: boolean;
+} | null;
+
+type EscalationData = {
+  escalation_triggered?: boolean;
+  escalation_type?: string;
+  transfer_attempted?: boolean;
+  transfer_successful?: boolean;
+  escalation_reason?: string;
+} | null;
+
+type FollowUpData = {
+  recheck_reminder_delivered?: boolean;
+  recheck_confirmed?: boolean;
+  appointment_requested?: boolean;
+  follow_up_call_needed?: boolean;
+  follow_up_reason?: string;
+} | null;
+
 interface ScheduledCallData {
   id: string;
   status: string;
@@ -62,6 +110,13 @@ interface ScheduledCallData {
   attention_severity: string | null;
   attention_flagged_at: string | null;
   attention_summary: string | null;
+  // New structured output columns
+  call_outcome_data: CallOutcomeData;
+  pet_health_data: PetHealthData;
+  medication_compliance_data: MedicationComplianceData;
+  owner_sentiment_data: OwnerSentimentData;
+  escalation_data: EscalationData;
+  follow_up_data: FollowUpData;
 }
 
 interface ScheduledEmailData {
@@ -312,7 +367,13 @@ export const listCasesRouter = createTRPCRouter({
             attention_types,
             attention_severity,
             attention_flagged_at,
-            attention_summary
+            attention_summary,
+            call_outcome_data,
+            pet_health_data,
+            medication_compliance_data,
+            owner_sentiment_data,
+            escalation_data,
+            follow_up_data
           ),
           scheduled_discharge_emails (
             id,
@@ -514,6 +575,14 @@ export const listCasesRouter = createTRPCRouter({
           attentionFlaggedAt: scheduledCall?.attention_flagged_at ?? null,
           attentionSummary: scheduledCall?.attention_summary ?? null,
           needsAttention: (scheduledCall?.attention_types?.length ?? 0) > 0,
+          // New structured output intelligence fields
+          callOutcomeData: scheduledCall?.call_outcome_data ?? null,
+          petHealthData: scheduledCall?.pet_health_data ?? null,
+          medicationComplianceData:
+            scheduledCall?.medication_compliance_data ?? null,
+          ownerSentimentData: scheduledCall?.owner_sentiment_data ?? null,
+          escalationData: scheduledCall?.escalation_data ?? null,
+          followUpData: scheduledCall?.follow_up_data ?? null,
         };
       });
 

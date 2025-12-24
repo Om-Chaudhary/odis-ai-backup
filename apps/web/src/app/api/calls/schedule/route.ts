@@ -7,7 +7,10 @@ import { scheduleCallExecution } from "@odis-ai/integrations/qstash/client";
 import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
-import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/data-access/api/cors";
+import {
+  handleCorsPreflightRequest,
+  withCorsHeaders,
+} from "@odis-ai/data-access/api/cors";
 import { getClinicByUserId } from "@odis-ai/domain/clinics";
 import { getClinicVapiConfigByUserId } from "@odis-ai/domain/clinics";
 

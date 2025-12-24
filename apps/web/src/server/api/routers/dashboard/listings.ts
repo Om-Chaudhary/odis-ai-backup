@@ -8,7 +8,10 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import type { CallStatus } from "@odis-ai/shared/types";
-import { getLocalDayRange, DEFAULT_TIMEZONE } from "@odis-ai/shared/util/timezone";
+import {
+  getLocalDayRange,
+  DEFAULT_TIMEZONE,
+} from "@odis-ai/shared/util/timezone";
 import { type CaseWithPatients, type DynamicVariables } from "./types";
 
 export const listingsRouter = createTRPCRouter({

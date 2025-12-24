@@ -68,7 +68,8 @@ export const batchCancelRouter = createTRPCRouter({
                 const metadata =
                   scheduledCall.metadata as ScheduledCallMetadata | null;
                 const qstashMessageId =
-                  scheduledCall.qstash_message_id ?? metadata?.qstash_message_id;
+                  scheduledCall.qstash_message_id ??
+                  metadata?.qstash_message_id;
 
                 if (qstashMessageId) {
                   const qstashCancelled =

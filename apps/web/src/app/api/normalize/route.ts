@@ -19,7 +19,11 @@
  */
 
 import type { NextRequest } from "next/server";
-import { errorResponse, successResponse, withAuth } from "@odis-ai/data-access/api/auth";
+import {
+  errorResponse,
+  successResponse,
+  withAuth,
+} from "@odis-ai/data-access/api/auth";
 import { handleCorsPreflightRequest } from "@odis-ai/data-access/api/cors";
 import {
   NormalizeRequestSchema,

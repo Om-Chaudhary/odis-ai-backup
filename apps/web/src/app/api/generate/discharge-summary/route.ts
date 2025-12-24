@@ -5,7 +5,10 @@ import { generateSummarySchema } from "@odis-ai/shared/validators/discharge";
 import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
-import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/data-access/api/cors";
+import {
+  handleCorsPreflightRequest,
+  withCorsHeaders,
+} from "@odis-ai/data-access/api/cors";
 import { normalizePhoneNumber } from "@odis-ai/shared/util/phone";
 import type { StructuredDischargeSummary } from "@odis-ai/shared/validators/discharge-summary";
 

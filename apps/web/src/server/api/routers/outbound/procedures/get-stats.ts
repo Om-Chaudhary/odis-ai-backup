@@ -6,13 +6,61 @@
 
 import { TRPCError } from "@trpc/server";
 import { getClinicUserIds } from "@odis-ai/domain/clinics";
-import { getLocalDayRange, DEFAULT_TIMEZONE } from "@odis-ai/shared/util/timezone";
+import {
+  getLocalDayRange,
+  DEFAULT_TIMEZONE,
+} from "@odis-ai/shared/util/timezone";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { getDischargeCaseStatsInput } from "../schemas";
 
 interface ScheduledCallMetadata {
   test_call?: boolean;
   [key: string]: unknown;
+}
+
+// Structured output data types
+interface CallOutcomeData {
+  call_outcome?: string;
+  conversation_stage_reached?: string;
+  owner_available?: boolean;
+  call_duration_appropriate?: boolean;
+}
+
+interface PetHealthData {
+  pet_recovery_status?: string;
+  symptoms_reported?: string[];
+  new_concerns_raised?: boolean;
+  condition_resolved?: boolean;
+}
+
+interface MedicationComplianceData {
+  medication_discussed?: boolean;
+  medication_compliance?: string;
+  medication_issues?: string[];
+  medication_guidance_provided?: boolean;
+}
+
+interface OwnerSentimentData {
+  owner_sentiment?: string;
+  owner_engagement_level?: string;
+  expressed_gratitude?: boolean;
+  expressed_concern_about_care?: boolean;
+}
+
+interface EscalationData {
+  escalation_triggered?: boolean;
+  escalation_type?: string;
+  transfer_attempted?: boolean;
+  transfer_successful?: boolean;
+  escalation_reason?: string;
+}
+
+interface FollowUpData {
+  recheck_reminder_delivered?: boolean;
+  recheck_confirmed?: boolean;
+  appointment_requested?: boolean;
+  follow_up_call_needed?: boolean;
+  follow_up_reason?: string;
 }
 
 interface CaseRow {
@@ -27,6 +75,13 @@ interface CaseRow {
     metadata: ScheduledCallMetadata | null;
     attention_types: string[] | null;
     attention_severity: string | null;
+    // New structured output columns
+    call_outcome_data: CallOutcomeData | null;
+    pet_health_data: PetHealthData | null;
+    medication_compliance_data: MedicationComplianceData | null;
+    owner_sentiment_data: OwnerSentimentData | null;
+    escalation_data: EscalationData | null;
+    follow_up_data: FollowUpData | null;
   }>;
   scheduled_discharge_emails: Array<{
     id: string;
@@ -118,7 +173,21 @@ export const getStatsRouter = createTRPCRouter({
           id,
           status,
           discharge_summaries (id),
-          scheduled_discharge_calls (id, status, scheduled_for, ended_reason, metadata, attention_types, attention_severity),
+          scheduled_discharge_calls (
+            id,
+            status,
+            scheduled_for,
+            ended_reason,
+            metadata,
+            attention_types,
+            attention_severity,
+            call_outcome_data,
+            pet_health_data,
+            medication_compliance_data,
+            owner_sentiment_data,
+            escalation_data,
+            follow_up_data
+          ),
           scheduled_discharge_emails (id, status, scheduled_for)
         `,
         )
@@ -185,6 +254,16 @@ export const getStatsRouter = createTRPCRouter({
         other: 0,
       };
 
+      // Call intelligence metrics
+      const callOutcomes: Record<string, number> = {};
+      const petRecoveryStatuses: Record<string, number> = {};
+      const medicationComplianceStatuses: Record<string, number> = {};
+      const ownerSentiments: Record<string, number> = {};
+      let escalationsTriggered = 0;
+      let appointmentsRequested = 0;
+      let followUpCallsNeeded = 0;
+      let recheckConfirmed = 0;
+
       for (const c of (cases as CaseRow[]) ?? []) {
         const hasDischargeSummary = (c.discharge_summaries?.length ?? 0) > 0;
         const callData = c.scheduled_discharge_calls?.[0];
@@ -201,6 +280,52 @@ export const getStatsRouter = createTRPCRouter({
         if (hasAttentionTypes) {
           needsAttention++;
           // Note: Severity breakdown tracking can be added here in the future if needed
+        }
+
+        // Aggregate call intelligence metrics from completed calls
+        if (callData?.status === "completed") {
+          // Call outcome distribution
+          if (callData.call_outcome_data?.call_outcome) {
+            const outcome = callData.call_outcome_data.call_outcome;
+            callOutcomes[outcome] = (callOutcomes[outcome] ?? 0) + 1;
+          }
+
+          // Pet recovery status distribution
+          if (callData.pet_health_data?.pet_recovery_status) {
+            const status = callData.pet_health_data.pet_recovery_status;
+            petRecoveryStatuses[status] =
+              (petRecoveryStatuses[status] ?? 0) + 1;
+          }
+
+          // Medication compliance distribution
+          if (callData.medication_compliance_data?.medication_compliance) {
+            const compliance =
+              callData.medication_compliance_data.medication_compliance;
+            medicationComplianceStatuses[compliance] =
+              (medicationComplianceStatuses[compliance] ?? 0) + 1;
+          }
+
+          // Owner sentiment distribution
+          if (callData.owner_sentiment_data?.owner_sentiment) {
+            const sentiment = callData.owner_sentiment_data.owner_sentiment;
+            ownerSentiments[sentiment] = (ownerSentiments[sentiment] ?? 0) + 1;
+          }
+
+          // Escalation tracking
+          if (callData.escalation_data?.escalation_triggered) {
+            escalationsTriggered++;
+          }
+
+          // Follow-up metrics
+          if (callData.follow_up_data?.appointment_requested) {
+            appointmentsRequested++;
+          }
+          if (callData.follow_up_data?.follow_up_call_needed) {
+            followUpCallsNeeded++;
+          }
+          if (callData.follow_up_data?.recheck_confirmed) {
+            recheckConfirmed++;
+          }
         }
 
         const callStatus = callData?.status ?? null;
@@ -302,6 +427,17 @@ export const getStatsRouter = createTRPCRouter({
         needsAttention,
         total:
           pendingReview + scheduled + ready + inProgress + completed + failed,
+        // Call intelligence analytics
+        callIntelligence: {
+          callOutcomes,
+          petRecoveryStatuses,
+          medicationComplianceStatuses,
+          ownerSentiments,
+          escalationsTriggered,
+          appointmentsRequested,
+          followUpCallsNeeded,
+          recheckConfirmed,
+        },
       };
     }),
 });

@@ -12,7 +12,10 @@ async function getCasesService() {
   return CasesService;
 }
 import { z } from "zod";
-import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/data-access/api/cors";
+import {
+  handleCorsPreflightRequest,
+  withCorsHeaders,
+} from "@odis-ai/data-access/api/cors";
 import {
   IdexxIngestRequestSchema,
   type IdexxIngestResponse,

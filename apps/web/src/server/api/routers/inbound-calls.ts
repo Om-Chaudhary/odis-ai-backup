@@ -570,7 +570,8 @@ export const inboundCallsRouter = createTRPCRouter({
     .input(z.object({ transcript: z.string().min(1) }))
     .mutation(async ({ input }) => {
       try {
-        const { translateTranscript } = await import("@odis-ai/integrations/ai");
+        const { translateTranscript } =
+          await import("@odis-ai/integrations/ai");
         return await translateTranscript({ transcript: input.transcript });
       } catch (error) {
         console.error("[TRANSLATE_TRPC] Error translating transcript:", error);

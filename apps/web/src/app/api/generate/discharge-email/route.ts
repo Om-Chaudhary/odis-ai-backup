@@ -6,7 +6,10 @@ import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
 import { htmlToPlainText } from "@odis-ai/integrations/resend/utils";
-import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/data-access/api/cors";
+import {
+  handleCorsPreflightRequest,
+  withCorsHeaders,
+} from "@odis-ai/data-access/api/cors";
 
 /**
  * Authenticate user from either cookies (web app) or Authorization header (extension)
