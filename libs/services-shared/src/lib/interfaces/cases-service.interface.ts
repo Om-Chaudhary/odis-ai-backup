@@ -6,6 +6,7 @@ import type {
   ScheduledDischargeCall,
 } from "@odis-ai/types/services";
 import type { NormalizedEntities } from "@odis-ai/validators";
+import type { ICallExecutor } from "./call-executor.interface";
 
 type CaseRow = Database["public"]["Tables"]["cases"]["Row"];
 type PatientRow = Database["public"]["Tables"]["patients"]["Row"];
@@ -70,5 +71,6 @@ export interface ICasesService {
     userId: string,
     caseId: string,
     options: CaseScheduleOptions,
+    callExecutor?: ICallExecutor,
   ): Promise<ScheduledDischargeCall>;
 }

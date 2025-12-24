@@ -3,6 +3,7 @@ import { scheduleCallExecution } from "@odis-ai/qstash/client";
 import type { AIGeneratedCallIntelligence } from "@odis-ai/vapi/types";
 import { normalizeToE164 } from "@odis-ai/utils/phone";
 import { getClinicVapiConfigByUserId } from "@odis-ai/clinics/vapi-config";
+import type { ICallExecutor } from "@odis-ai/services-shared";
 
 // Type imports
 import type { Database, Json } from "@odis-ai/types";
@@ -971,6 +972,7 @@ export const CasesService = {
     userId: string,
     caseId: string,
     options: CaseScheduleOptions,
+    callExecutor?: ICallExecutor,
   ): Promise<ScheduledDischargeCall> {
     // 1. Fetch Case Data to build variables
     let caseInfo = await this.getCaseWithEntities(supabase, caseId);
@@ -1508,11 +1510,21 @@ export const CasesService = {
             },
           );
 
-          // Dynamic import to avoid circular dependencies
-          const { executeScheduledCall } =
-            // eslint-disable-next-line @nx/enforce-module-boundaries
-            await import("@odis-ai/services-discharge/call-executor");
-          const result = await executeScheduledCall(scheduledCall.id, supabase);
+          // Use injected executor if provided, otherwise dynamic import
+          let result;
+          if (callExecutor) {
+            result = await callExecutor.executeScheduledCall(
+              scheduledCall.id,
+              supabase,
+            );
+          } else {
+            // Dynamic import to avoid circular dependencies
+            const { executeScheduledCall } =
+              // eslint-disable-next-line @nx/enforce-module-boundaries
+              await import("@odis-ai/services-discharge/call-executor");
+            result = await executeScheduledCall(scheduledCall.id, supabase);
+          }
+
           if (!result.success) {
             console.error(
               "[CasesService] Immediate call execution failed - call may not execute",
@@ -1594,11 +1606,21 @@ export const CasesService = {
           },
         );
 
-        // Dynamic import to avoid circular dependencies
-        const { executeScheduledCall } =
-          // eslint-disable-next-line @nx/enforce-module-boundaries
-          await import("@odis-ai/services-discharge/call-executor");
-        const result = await executeScheduledCall(scheduledCall.id, supabase);
+        // Use injected executor if provided, otherwise dynamic import
+        let result;
+        if (callExecutor) {
+          result = await callExecutor.executeScheduledCall(
+            scheduledCall.id,
+            supabase,
+          );
+        } else {
+          // Dynamic import to avoid circular dependencies
+          const { executeScheduledCall } =
+            // eslint-disable-next-line @nx/enforce-module-boundaries
+            await import("@odis-ai/services-discharge/call-executor");
+          result = await executeScheduledCall(scheduledCall.id, supabase);
+        }
+
         if (!result.success) {
           console.error(
             "[CasesService] Immediate call execution failed - call may not execute",

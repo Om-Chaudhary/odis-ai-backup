@@ -14,6 +14,7 @@
 import type { SupabaseClientType } from "@odis-ai/types/supabase";
 import type { Database } from "@odis-ai/types";
 import type { CallExecutionResult } from "@odis-ai/types/services";
+import type { ICallExecutor } from "@odis-ai/services-shared";
 import { isWithinBusinessHours } from "@odis-ai/utils/business-hours";
 
 /* ========================================
@@ -425,3 +426,11 @@ async function buildVoicemailConfig(
 
   return config;
 }
+
+/**
+ * CallExecutor object implementing ICallExecutor interface
+ * Allows this module to be injected as a dependency
+ */
+export const CallExecutor: ICallExecutor = {
+  executeScheduledCall,
+};

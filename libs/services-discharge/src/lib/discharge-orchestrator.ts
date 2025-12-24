@@ -14,6 +14,7 @@
 // - AI functions are imported dynamically to avoid lazy-load constraint from test mocks
 import { ExecutionPlan } from "@odis-ai/services-shared";
 import type { ICasesService } from "@odis-ai/services-shared";
+import { CallExecutor } from "./call-executor";
 import { scheduleEmailExecution } from "@odis-ai/qstash/client";
 import { isValidEmail } from "@odis-ai/resend/utils";
 // Dynamic import to avoid Next.js bundling issues during static generation
@@ -1531,6 +1532,7 @@ export class DischargeOrchestrator {
         emergencyPhone: clinicPhone, // Using clinic phone as emergency phone
         agentName,
       },
+      CallExecutor, // Inject call executor to avoid circular dependency
     );
 
     return {
