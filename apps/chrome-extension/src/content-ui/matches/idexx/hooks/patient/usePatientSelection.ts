@@ -3,12 +3,16 @@ import {
   fetchPatientByConsultationId,
   detectIdexxPatientNameFromDom,
   searchPatientsByName,
-} from '../../utils/extraction/patient-fetcher';
-import { logger, useSupabaseAuth, getCurrentISOString } from '@odis-ai/extension/shared';
-import { useEffect, useState } from 'react';
-import type { PatientWithCase } from '../../types';
+} from "../../utils/extraction/patient-fetcher";
+import {
+  logger,
+  useSupabaseAuth,
+  getCurrentISOString,
+} from "@odis-ai/extension/shared";
+import { useEffect, useState } from "react";
+import type { PatientWithCase } from "../../types";
 
-const odisLogger = logger.child('[ODIS]');
+const odisLogger = logger.child("[ODIS]");
 
 export interface UsePatientSelectionReturn {
   selectedPatient: PatientWithCase | null;
@@ -25,10 +29,15 @@ export interface UsePatientSelectionReturn {
  *                         when the user has created a case with transcriptions.
  *                         Falls back to DOM name detection if not found.
  */
-export const usePatientSelection = (consultationId?: string | null): UsePatientSelectionReturn => {
+export const usePatientSelection = (
+  consultationId?: string | null,
+): UsePatientSelectionReturn => {
   const { user } = useSupabaseAuth();
-  const [selectedPatient, setSelectedPatient] = useState<PatientWithCase | null>(null);
-  const [selectedPatientHasNotes, setSelectedPatientHasNotes] = useState<boolean | null>(null);
+  const [selectedPatient, setSelectedPatient] =
+    useState<PatientWithCase | null>(null);
+  const [selectedPatientHasNotes, setSelectedPatientHasNotes] = useState<
+    boolean | null
+  >(null);
 
   // Fetch patient data when authenticated or when consultationId changes
   useEffect(() => {
@@ -43,21 +52,27 @@ export const usePatientSelection = (consultationId?: string | null): UsePatientS
         // PRIMARY LOOKUP: Try to find patient by consultation_id first
         // This is more reliable as it matches the exact consultation being viewed
         if (consultationId) {
-          odisLogger.debug('Looking up patient by consultation ID', { consultationId });
-          const patientByConsultation = await fetchPatientByConsultationId(consultationId);
+          odisLogger.debug("Looking up patient by consultation ID", {
+            consultationId,
+          });
+          const patientByConsultation =
+            await fetchPatientByConsultationId(consultationId);
           if (!isMounted) return;
 
           if (patientByConsultation) {
-            odisLogger.info('Found patient by consultation ID', {
+            odisLogger.info("Found patient by consultation ID", {
               consultationId,
               patientName: patientByConsultation.name,
               patientId: patientByConsultation.id,
             });
             matchedPatient = patientByConsultation;
           } else {
-            odisLogger.debug('No patient found by consultation ID, falling back to DOM detection', {
-              consultationId,
-            });
+            odisLogger.debug(
+              "No patient found by consultation ID, falling back to DOM detection",
+              {
+                consultationId,
+              },
+            );
           }
         }
 
@@ -73,7 +88,7 @@ export const usePatientSelection = (consultationId?: string | null): UsePatientS
             if (searchResults.length > 0) {
               // Found matching patient(s) by name
               matchedPatient = searchResults[0]; // Use the most recent one
-              odisLogger.debug('Found patient by DOM name search', {
+              odisLogger.debug("Found patient by DOM name search", {
                 domName,
                 patientId: matchedPatient.id,
               });
@@ -82,10 +97,13 @@ export const usePatientSelection = (consultationId?: string | null): UsePatientS
               matchedPatient = {
                 id: `dom:${domName}`,
                 name: domName,
-                latest_case_id: '',
+                latest_case_id: "",
                 latest_case_date: getCurrentISOString(),
               };
-              odisLogger.debug('No case found for DOM name, using placeholder', { domName });
+              odisLogger.debug(
+                "No case found for DOM name, using placeholder",
+                { domName },
+              );
             }
           }
         }
@@ -102,12 +120,14 @@ export const usePatientSelection = (consultationId?: string | null): UsePatientS
         const patientToSelect = matchedPatient;
 
         // Check if patient has SOAP notes (skip for DOM-only placeholders)
-        if (!patientToSelect.id.startsWith('dom:')) {
+        if (!patientToSelect.id.startsWith("dom:")) {
           try {
-            const soapNote = await fetchPatientLatestSoapNote(patientToSelect.id);
+            const soapNote = await fetchPatientLatestSoapNote(
+              patientToSelect.id,
+            );
             if (isMounted) setSelectedPatientHasNotes(!!soapNote);
           } catch (error) {
-            odisLogger.error('❌ Error checking for SOAP notes', { error });
+            odisLogger.error("❌ Error checking for SOAP notes", { error });
             if (isMounted) setSelectedPatientHasNotes(false);
           }
         } else {
@@ -115,7 +135,7 @@ export const usePatientSelection = (consultationId?: string | null): UsePatientS
           if (isMounted) setSelectedPatientHasNotes(false);
         }
       } catch (error) {
-        odisLogger.error('Error fetching patient data', { error });
+        odisLogger.error("Error fetching patient data", { error });
 
         // If Supabase fetch fails, still try to use DOM-detected name so the UI shows context
         try {
@@ -124,7 +144,7 @@ export const usePatientSelection = (consultationId?: string | null): UsePatientS
             setSelectedPatient({
               id: `dom:${domName}`,
               name: domName,
-              latest_case_id: '',
+              latest_case_id: "",
               latest_case_date: getCurrentISOString(),
             });
           }

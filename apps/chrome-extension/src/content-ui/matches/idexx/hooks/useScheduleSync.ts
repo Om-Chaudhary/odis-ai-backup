@@ -18,17 +18,24 @@
  * ```
  */
 
-import { idexxApiClient } from '../services/api/idexx-api-client';
-import { ScheduleSyncService } from '../services/schedule-sync-service';
-import { getSupabaseClient, useAuth } from '@odis-ai/extension/shared';
-import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
-import type { SyncProgress, SyncResult, ReconciliationResult } from '../services/schedule-sync-service';
+import { idexxApiClient } from "../services/api/idexx-api-client";
+import { ScheduleSyncService } from "../services/schedule-sync-service";
+import { getSupabaseClient, useAuth } from "@odis-ai/extension/shared";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import type {
+  SyncProgress,
+  SyncResult,
+  ReconciliationResult,
+} from "../services/schedule-sync-service";
 
 export interface UseScheduleSyncReturn {
   /** Sync appointments from IDEXX for a date range */
   syncSchedule: (startDate: Date, endDate: Date) => Promise<SyncResult>;
   /** Reconcile consultation notes for previously synced cases */
-  reconcileNotes: (startDate: Date, endDate: Date) => Promise<ReconciliationResult>;
+  reconcileNotes: (
+    startDate: Date,
+    endDate: Date,
+  ) => Promise<ReconciliationResult>;
   /** Whether a sync or reconcile operation is in progress */
   isLoading: boolean;
   /** Whether a sync operation is in progress */
@@ -64,7 +71,8 @@ export const useScheduleSync = (): UseScheduleSyncReturn => {
   const [isReconciling, setIsReconciling] = useState(false);
   const [progress, setProgress] = useState<SyncProgress | null>(null);
   const [lastSyncResult, setLastSyncResult] = useState<SyncResult | null>(null);
-  const [lastReconcileResult, setLastReconcileResult] = useState<ReconciliationResult | null>(null);
+  const [lastReconcileResult, setLastReconcileResult] =
+    useState<ReconciliationResult | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
   // Track mounted state to prevent state updates after unmount
@@ -109,22 +117,27 @@ export const useScheduleSync = (): UseScheduleSyncReturn => {
     if (isMountedRef.current) setLastSyncResult(value);
   }, []);
 
-  const safeSetLastReconcileResult = useCallback((value: ReconciliationResult | null) => {
-    if (isMountedRef.current) setLastReconcileResult(value);
-  }, []);
+  const safeSetLastReconcileResult = useCallback(
+    (value: ReconciliationResult | null) => {
+      if (isMountedRef.current) setLastReconcileResult(value);
+    },
+    [],
+  );
 
   const syncSchedule = useCallback(
     async (startDate: Date, endDate: Date): Promise<SyncResult> => {
       if (!service) {
-        throw new Error('Not authenticated. Please sign in to sync schedule.');
+        throw new Error("Not authenticated. Please sign in to sync schedule.");
       }
 
       if (operationInProgressRef.current) {
-        throw new Error('Another operation is already in progress. Please wait.');
+        throw new Error(
+          "Another operation is already in progress. Please wait.",
+        );
       }
 
       if (startDate > endDate) {
-        throw new Error('Start date must be before end date.');
+        throw new Error("Start date must be before end date.");
       }
 
       operationInProgressRef.current = true;
@@ -142,7 +155,7 @@ export const useScheduleSync = (): UseScheduleSyncReturn => {
         safeSetLastSyncResult(result);
         return result;
       } catch (err) {
-        const error = err instanceof Error ? err : new Error('Sync failed');
+        const error = err instanceof Error ? err : new Error("Sync failed");
         safeSetError(error);
         throw error;
       } finally {
@@ -150,21 +163,31 @@ export const useScheduleSync = (): UseScheduleSyncReturn => {
         safeSetIsSyncing(false);
       }
     },
-    [service, safeSetIsSyncing, safeSetError, safeSetProgress, safeSetLastSyncResult],
+    [
+      service,
+      safeSetIsSyncing,
+      safeSetError,
+      safeSetProgress,
+      safeSetLastSyncResult,
+    ],
   );
 
   const reconcileNotes = useCallback(
     async (startDate: Date, endDate: Date): Promise<ReconciliationResult> => {
       if (!service) {
-        throw new Error('Not authenticated. Please sign in to reconcile notes.');
+        throw new Error(
+          "Not authenticated. Please sign in to reconcile notes.",
+        );
       }
 
       if (operationInProgressRef.current) {
-        throw new Error('Another operation is already in progress. Please wait.');
+        throw new Error(
+          "Another operation is already in progress. Please wait.",
+        );
       }
 
       if (startDate > endDate) {
-        throw new Error('Start date must be before end date.');
+        throw new Error("Start date must be before end date.");
       }
 
       operationInProgressRef.current = true;
@@ -183,7 +206,8 @@ export const useScheduleSync = (): UseScheduleSyncReturn => {
         safeSetLastReconcileResult(result);
         return result;
       } catch (err) {
-        const error = err instanceof Error ? err : new Error('Reconciliation failed');
+        const error =
+          err instanceof Error ? err : new Error("Reconciliation failed");
         safeSetError(error);
         throw error;
       } finally {
@@ -191,7 +215,13 @@ export const useScheduleSync = (): UseScheduleSyncReturn => {
         safeSetIsReconciling(false);
       }
     },
-    [service, safeSetIsReconciling, safeSetError, safeSetProgress, safeSetLastReconcileResult],
+    [
+      service,
+      safeSetIsReconciling,
+      safeSetError,
+      safeSetProgress,
+      safeSetLastReconcileResult,
+    ],
   );
 
   const clearError = useCallback(() => {
