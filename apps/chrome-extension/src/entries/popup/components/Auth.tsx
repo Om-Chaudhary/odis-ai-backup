@@ -1,11 +1,11 @@
-import { useAuth, logger } from '@odis-ai/extension/shared';
-import { Button, Input, Label } from '@odis-ai/shared/ui/extension';
-import { useState } from 'react';
+import { useAuth, logger } from "@odis-ai/extension/shared";
+import { Button, Input, Label } from "@odis-ai/shared/ui/extension";
+import { useState } from "react";
 
 export const Auth = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -30,31 +30,34 @@ export const Auth = () => {
       if (isSignUp) {
         await signUp(email, password);
         setSuccess(true);
-        setEmail('');
-        setPassword('');
-        setConfirmPassword('');
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
       } else {
         await signIn(email, password);
-        setEmail('');
-        setPassword('');
+        setEmail("");
+        setPassword("");
 
         // Refresh the active page to update unauthenticated components
         try {
-          chrome.runtime.sendMessage({ type: 'REFRESH_PAGE' }, () => {
+          chrome.runtime.sendMessage({ type: "REFRESH_PAGE" }, () => {
             if (chrome.runtime.lastError) {
-              logger.warn('[Auth] Failed to refresh page', { error: chrome.runtime.lastError.message });
+              logger.warn("[Auth] Failed to refresh page", {
+                error: chrome.runtime.lastError.message,
+              });
             }
           });
         } catch (refreshError) {
-          logger.warn('[Auth] Error refreshing page', { error: refreshError });
+          logger.warn("[Auth] Error refreshing page", { error: refreshError });
         }
       }
     } catch (err) {
-      logger.error('[Auth] Error during authentication', { error: err });
-      const errorMessage = err instanceof Error ? err.message : 'Authentication failed';
+      logger.error("[Auth] Error during authentication", { error: err });
+      const errorMessage =
+        err instanceof Error ? err.message : "Authentication failed";
       setError(
-        errorMessage.includes('Failed to fetch')
-          ? 'Cannot connect to Supabase. Please ensure email authentication is enabled in your Supabase dashboard (Authentication → Providers → Email).'
+        errorMessage.includes("Failed to fetch")
+          ? "Cannot connect to Supabase. Please ensure email authentication is enabled in your Supabase dashboard (Authentication → Providers → Email)."
           : errorMessage,
       );
     } finally {
@@ -67,13 +70,13 @@ export const Auth = () => {
     try {
       await signOut();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign out failed');
+      setError(err instanceof Error ? err.message : "Sign out failed");
     } finally {
       setLoading(false);
     }
   };
 
-  const passwordsMatch = password === confirmPassword || confirmPassword === '';
+  const passwordsMatch = password === confirmPassword || confirmPassword === "";
 
   // If user is logged in, show user info
   if (user) {
@@ -84,8 +87,13 @@ export const Auth = () => {
             <p className="text-foreground text-sm font-medium">Signed in as</p>
             <p className="text-muted-foreground text-xs">{user.email}</p>
           </div>
-          <Button onClick={handleSignOut} disabled={loading} variant="destructive" size="sm">
-            {loading ? 'Signing out...' : 'Sign Out'}
+          <Button
+            onClick={handleSignOut}
+            disabled={loading}
+            variant="destructive"
+            size="sm"
+          >
+            {loading ? "Signing out..." : "Sign Out"}
           </Button>
         </div>
       </div>
@@ -96,9 +104,13 @@ export const Auth = () => {
   return (
     <div className="w-full max-w-sm space-y-4">
       <div className="space-y-1 text-center">
-        <h1 className="text-primary text-xl font-bold">{isSignUp ? 'Create Account' : 'Welcome Back'}</h1>
+        <h1 className="text-primary text-xl font-bold">
+          {isSignUp ? "Create Account" : "Welcome Back"}
+        </h1>
         <p className="text-muted-foreground text-xs">
-          {isSignUp ? 'Sign up to get started' : 'Sign in to access your account'}
+          {isSignUp
+            ? "Sign up to get started"
+            : "Sign in to access your account"}
         </p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-3">
@@ -109,7 +121,7 @@ export const Auth = () => {
             type="email"
             placeholder="m@example.com"
             value={email}
-            onChange={e => {
+            onChange={(e) => {
               setEmail(e.target.value);
               clearError();
             }}
@@ -124,7 +136,7 @@ export const Auth = () => {
             id="password"
             type="password"
             value={password}
-            onChange={e => {
+            onChange={(e) => {
               setPassword(e.target.value);
               clearError();
             }}
@@ -140,26 +152,42 @@ export const Auth = () => {
               id="confirmPassword"
               type="password"
               value={confirmPassword}
-              onChange={e => {
+              onChange={(e) => {
                 setConfirmPassword(e.target.value);
                 clearError();
               }}
               required
               disabled={loading}
-              className={`h-9 ${!passwordsMatch ? 'border-destructive' : ''}`}
+              className={`h-9 ${!passwordsMatch ? "border-destructive" : ""}`}
             />
-            {!passwordsMatch && <p className="text-destructive text-xs">Passwords do not match</p>}
+            {!passwordsMatch && (
+              <p className="text-destructive text-xs">Passwords do not match</p>
+            )}
           </div>
         )}
         {error && <div className="text-destructive text-xs">{error}</div>}
-        {success && <div className="text-success text-xs">Account created! Please sign in.</div>}
-        <Button type="submit" className="w-full" disabled={loading || (isSignUp && !passwordsMatch)}>
-          {loading ? (isSignUp ? 'Creating...' : 'Signing in...') : isSignUp ? 'Sign Up' : 'Sign In'}
+        {success && (
+          <div className="text-success text-xs">
+            Account created! Please sign in.
+          </div>
+        )}
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={loading || (isSignUp && !passwordsMatch)}
+        >
+          {loading
+            ? isSignUp
+              ? "Creating..."
+              : "Signing in..."
+            : isSignUp
+              ? "Sign Up"
+              : "Sign In"}
         </Button>
       </form>
       <div className="text-center">
         <span className="text-muted-foreground text-xs">
-          {isSignUp ? 'Already have an account?' : "Don't have an account?"}
+          {isSignUp ? "Already have an account?" : "Don't have an account?"}
         </span>
         <Button
           variant="link"
@@ -168,8 +196,9 @@ export const Auth = () => {
             setIsSignUp(!isSignUp);
             setError(null);
             setSuccess(false);
-          }}>
-          {isSignUp ? 'Sign In' : 'Sign Up'}
+          }}
+        >
+          {isSignUp ? "Sign In" : "Sign Up"}
         </Button>
       </div>
     </div>

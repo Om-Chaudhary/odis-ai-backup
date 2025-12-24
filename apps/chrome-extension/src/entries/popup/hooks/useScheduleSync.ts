@@ -5,8 +5,8 @@
  * Sends messages to the background script, which forwards to the IDEXX content script.
  */
 
-import { logger } from '@odis-ai/extension/shared';
-import { useState, useCallback } from 'react';
+import { logger } from "@odis-ai/extension/shared";
+import { useState, useCallback } from "react";
 
 export interface SyncResult {
   success: boolean;
@@ -42,12 +42,14 @@ export interface QuickSyncResult {
   totalDurationMs: number;
 }
 
-export type QuickSyncPreset = 'today' | 'yesterday' | 'last3days' | 'lastweek';
+export type QuickSyncPreset = "today" | "yesterday" | "last3days" | "lastweek";
 
 /**
  * Get date range for a quick sync preset
  */
-export const getDateRangeForPreset = (preset: QuickSyncPreset): { startDate: Date; endDate: Date } => {
+export const getDateRangeForPreset = (
+  preset: QuickSyncPreset,
+): { startDate: Date; endDate: Date } => {
   const now = new Date();
   const endDate = new Date(now);
   endDate.setHours(23, 59, 59, 999);
@@ -55,11 +57,11 @@ export const getDateRangeForPreset = (preset: QuickSyncPreset): { startDate: Dat
   let startDate: Date;
 
   switch (preset) {
-    case 'today':
+    case "today":
       startDate = new Date(now);
       startDate.setHours(0, 0, 0, 0);
       break;
-    case 'yesterday': {
+    case "yesterday": {
       startDate = new Date(now);
       startDate.setDate(startDate.getDate() - 1);
       startDate.setHours(0, 0, 0, 0);
@@ -67,12 +69,12 @@ export const getDateRangeForPreset = (preset: QuickSyncPreset): { startDate: Dat
       yesterdayEnd.setHours(23, 59, 59, 999);
       return { startDate, endDate: yesterdayEnd };
     }
-    case 'last3days':
+    case "last3days":
       startDate = new Date(now);
       startDate.setDate(startDate.getDate() - 2);
       startDate.setHours(0, 0, 0, 0);
       break;
-    case 'lastweek':
+    case "lastweek":
       startDate = new Date(now);
       startDate.setDate(startDate.getDate() - 6);
       startDate.setHours(0, 0, 0, 0);
@@ -87,16 +89,17 @@ export const getDateRangeForPreset = (preset: QuickSyncPreset): { startDate: Dat
  */
 export const getPresetLabel = (preset: QuickSyncPreset): string => {
   const { startDate, endDate } = getDateRangeForPreset(preset);
-  const formatDate = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const formatDate = (d: Date) =>
+    d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
   switch (preset) {
-    case 'today':
+    case "today":
       return `Today (${formatDate(startDate)})`;
-    case 'yesterday':
+    case "yesterday":
       return `Yesterday (${formatDate(startDate)})`;
-    case 'last3days':
+    case "last3days":
       return `Last 3 Days (${formatDate(startDate)} - ${formatDate(endDate)})`;
-    case 'lastweek':
+    case "lastweek":
       return `Last Week (${formatDate(startDate)} - ${formatDate(endDate)})`;
   }
 };
@@ -135,124 +138,149 @@ export interface UseScheduleSyncReturn {
 export const useScheduleSync = (): UseScheduleSyncReturn => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [isReconciling, setIsReconciling] = useState(false);
-  const [currentPreset, setCurrentPreset] = useState<QuickSyncPreset | null>(null);
+  const [currentPreset, setCurrentPreset] = useState<QuickSyncPreset | null>(
+    null,
+  );
   const [lastSyncResult, setLastSyncResult] = useState<SyncResult | null>(null);
-  const [lastReconcileResult, setLastReconcileResult] = useState<ReconcileResult | null>(null);
-  const [lastQuickSyncResult, setLastQuickSyncResult] = useState<QuickSyncResult | null>(null);
+  const [lastReconcileResult, setLastReconcileResult] =
+    useState<ReconcileResult | null>(null);
+  const [lastQuickSyncResult, setLastQuickSyncResult] =
+    useState<QuickSyncResult | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
-  const syncSchedule = useCallback(async (startDate: Date, endDate: Date): Promise<SyncResult> => {
-    if (startDate > endDate) {
-      throw new Error('Start date must be before end date.');
-    }
-
-    setIsSyncing(true);
-    setError(null);
-
-    try {
-      logger.info('Requesting schedule sync via background script', { startDate, endDate });
-
-      // Send message to background script
-      const response = await chrome.runtime.sendMessage({
-        type: 'SYNC_SCHEDULE',
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-      });
-
-      // Handle chrome.runtime.lastError
-      if (chrome.runtime.lastError) {
-        const errorMessage = chrome.runtime.lastError.message || 'Failed to communicate with extension';
-        logger.error('Chrome runtime error during schedule sync', { error: errorMessage });
-        throw new Error(errorMessage);
+  const syncSchedule = useCallback(
+    async (startDate: Date, endDate: Date): Promise<SyncResult> => {
+      if (startDate > endDate) {
+        throw new Error("Start date must be before end date.");
       }
 
-      if (!response || !response.success) {
-        const errorMessage = response?.error || 'Unknown error occurred';
-        logger.error('Schedule sync failed', { error: errorMessage });
-        throw new Error(errorMessage);
+      setIsSyncing(true);
+      setError(null);
+
+      try {
+        logger.info("Requesting schedule sync via background script", {
+          startDate,
+          endDate,
+        });
+
+        // Send message to background script
+        const response = await chrome.runtime.sendMessage({
+          type: "SYNC_SCHEDULE",
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+        });
+
+        // Handle chrome.runtime.lastError
+        if (chrome.runtime.lastError) {
+          const errorMessage =
+            chrome.runtime.lastError.message ||
+            "Failed to communicate with extension";
+          logger.error("Chrome runtime error during schedule sync", {
+            error: errorMessage,
+          });
+          throw new Error(errorMessage);
+        }
+
+        if (!response || !response.success) {
+          const errorMessage = response?.error || "Unknown error occurred";
+          logger.error("Schedule sync failed", { error: errorMessage });
+          throw new Error(errorMessage);
+        }
+
+        logger.info("Schedule sync completed successfully", response);
+
+        // Extract result from nested response structure
+        const syncResult = response.result || response;
+
+        const result: SyncResult = {
+          success: true,
+          created: syncResult.created || 0,
+          updated: syncResult.updated || 0,
+          failed: syncResult.failed || 0,
+          deleted: syncResult.deleted || 0,
+          patientsCreated: syncResult.patientsCreated || 0,
+          patientsUpdated: syncResult.patientsUpdated || 0,
+          notesReconciled: syncResult.notesReconciled || 0,
+          notesFailed: syncResult.notesFailed || 0,
+          durationMs: syncResult.durationMs || 0,
+        };
+
+        setLastSyncResult(result);
+        return result;
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error("Sync failed");
+        setError(error);
+        throw error;
+      } finally {
+        setIsSyncing(false);
+      }
+    },
+    [],
+  );
+
+  const reconcileNotes = useCallback(
+    async (startDate: Date, endDate: Date): Promise<ReconcileResult> => {
+      if (startDate > endDate) {
+        throw new Error("Start date must be before end date.");
       }
 
-      logger.info('Schedule sync completed successfully', response);
+      setIsReconciling(true);
+      setError(null);
 
-      // Extract result from nested response structure
-      const syncResult = response.result || response;
+      try {
+        logger.info("Requesting notes reconciliation via background script", {
+          startDate,
+          endDate,
+        });
 
-      const result: SyncResult = {
-        success: true,
-        created: syncResult.created || 0,
-        updated: syncResult.updated || 0,
-        failed: syncResult.failed || 0,
-        deleted: syncResult.deleted || 0,
-        patientsCreated: syncResult.patientsCreated || 0,
-        patientsUpdated: syncResult.patientsUpdated || 0,
-        notesReconciled: syncResult.notesReconciled || 0,
-        notesFailed: syncResult.notesFailed || 0,
-        durationMs: syncResult.durationMs || 0,
-      };
+        // Send message to background script
+        const response = await chrome.runtime.sendMessage({
+          type: "RECONCILE_NOTES",
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+        });
 
-      setLastSyncResult(result);
-      return result;
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Sync failed');
-      setError(error);
-      throw error;
-    } finally {
-      setIsSyncing(false);
-    }
-  }, []);
+        // Handle chrome.runtime.lastError
+        if (chrome.runtime.lastError) {
+          const errorMessage =
+            chrome.runtime.lastError.message ||
+            "Failed to communicate with extension";
+          logger.error("Chrome runtime error during notes reconciliation", {
+            error: errorMessage,
+          });
+          throw new Error(errorMessage);
+        }
 
-  const reconcileNotes = useCallback(async (startDate: Date, endDate: Date): Promise<ReconcileResult> => {
-    if (startDate > endDate) {
-      throw new Error('Start date must be before end date.');
-    }
+        if (!response || !response.success) {
+          const errorMessage = response?.error || "Unknown error occurred";
+          logger.error("Notes reconciliation failed", { error: errorMessage });
+          throw new Error(errorMessage);
+        }
 
-    setIsReconciling(true);
-    setError(null);
+        logger.info("Notes reconciliation completed successfully", response);
 
-    try {
-      logger.info('Requesting notes reconciliation via background script', { startDate, endDate });
+        const result: ReconcileResult = {
+          success: true,
+          totalCases: response.totalCases || 0,
+          reconciledCount: response.reconciledCount || 0,
+          skippedCount: response.skippedCount || 0,
+          failedCount: response.failedCount || 0,
+          durationMs: response.durationMs || 0,
+        };
 
-      // Send message to background script
-      const response = await chrome.runtime.sendMessage({
-        type: 'RECONCILE_NOTES',
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-      });
-
-      // Handle chrome.runtime.lastError
-      if (chrome.runtime.lastError) {
-        const errorMessage = chrome.runtime.lastError.message || 'Failed to communicate with extension';
-        logger.error('Chrome runtime error during notes reconciliation', { error: errorMessage });
-        throw new Error(errorMessage);
+        setLastReconcileResult(result);
+        return result;
+      } catch (err) {
+        const error =
+          err instanceof Error ? err : new Error("Reconciliation failed");
+        setError(error);
+        throw error;
+      } finally {
+        setIsReconciling(false);
       }
-
-      if (!response || !response.success) {
-        const errorMessage = response?.error || 'Unknown error occurred';
-        logger.error('Notes reconciliation failed', { error: errorMessage });
-        throw new Error(errorMessage);
-      }
-
-      logger.info('Notes reconciliation completed successfully', response);
-
-      const result: ReconcileResult = {
-        success: true,
-        totalCases: response.totalCases || 0,
-        reconciledCount: response.reconciledCount || 0,
-        skippedCount: response.skippedCount || 0,
-        failedCount: response.failedCount || 0,
-        durationMs: response.durationMs || 0,
-      };
-
-      setLastReconcileResult(result);
-      return result;
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error('Reconciliation failed');
-      setError(error);
-      throw error;
-    } finally {
-      setIsReconciling(false);
-    }
-  }, []);
+    },
+    [],
+  );
 
   const clearError = useCallback(() => {
     setError(null);
@@ -270,7 +298,7 @@ export const useScheduleSync = (): UseScheduleSyncReturn => {
       setError(null);
 
       try {
-        logger.info('Starting quick sync', { preset, startDate, endDate });
+        logger.info("Starting quick sync", { preset, startDate, endDate });
 
         // Step 1: Sync schedule
         const syncResult = await syncSchedule(startDate, endDate);
@@ -286,11 +314,12 @@ export const useScheduleSync = (): UseScheduleSyncReturn => {
         };
 
         setLastQuickSyncResult(result);
-        logger.info('Quick sync completed', { preset, result });
+        logger.info("Quick sync completed", { preset, result });
 
         return result;
       } catch (err) {
-        const error = err instanceof Error ? err : new Error('Quick sync failed');
+        const error =
+          err instanceof Error ? err : new Error("Quick sync failed");
         setError(error);
         throw error;
       } finally {

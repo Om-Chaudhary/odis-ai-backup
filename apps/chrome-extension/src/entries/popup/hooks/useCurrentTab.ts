@@ -5,7 +5,7 @@
  * Useful for contextual UI features in the popup.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export interface CurrentTab {
   url: string;
@@ -23,16 +23,19 @@ export const useCurrentTab = () => {
   useEffect(() => {
     const fetchCurrentTab = async () => {
       try {
-        const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+        const tabs = await chrome.tabs.query({
+          active: true,
+          currentWindow: true,
+        });
         if (tabs[0]) {
           setCurrentTab({
-            url: tabs[0].url || '',
-            title: tabs[0].title || '',
+            url: tabs[0].url || "",
+            title: tabs[0].title || "",
             id: tabs[0].id,
           });
         }
       } catch (error) {
-        console.error('Failed to fetch current tab:', error);
+        console.error("Failed to fetch current tab:", error);
       } finally {
         setIsLoading(false);
       }
@@ -41,13 +44,16 @@ export const useCurrentTab = () => {
     void fetchCurrentTab();
 
     // Listen for tab updates
-    const handleTabUpdate = (tabId: number, changeInfo: { url?: string; status?: string }) => {
-      if (changeInfo.url || changeInfo.status === 'complete') {
-        chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+    const handleTabUpdate = (
+      tabId: number,
+      changeInfo: { url?: string; status?: string },
+    ) => {
+      if (changeInfo.url || changeInfo.status === "complete") {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
           if (tabs[0]) {
             setCurrentTab({
-              url: tabs[0].url || '',
-              title: tabs[0].title || '',
+              url: tabs[0].url || "",
+              title: tabs[0].title || "",
               id: tabs[0].id,
             });
           }
@@ -76,7 +82,7 @@ export const isIdexxNeoDomain = (url: string): boolean => {
     /^https:\/\/.*\.neosuite\.com/,
   ];
 
-  return idexxPatterns.some(pattern => pattern.test(url));
+  return idexxPatterns.some((pattern) => pattern.test(url));
 };
 
 /**
@@ -88,12 +94,17 @@ export const isIdexxSchedulePage = (url: string, title: string): boolean => {
   }
 
   // Check URL path
-  const pathnameMatch = url.includes('/schedule') || url.includes('/calendar') || url.includes('/appointment');
+  const pathnameMatch =
+    url.includes("/schedule") ||
+    url.includes("/calendar") ||
+    url.includes("/appointment");
 
   // Check page title
   const titleLower = title.toLowerCase();
   const titleMatch =
-    titleLower.includes('schedule') || titleLower.includes('calendar') || titleLower.includes('appointment');
+    titleLower.includes("schedule") ||
+    titleLower.includes("calendar") ||
+    titleLower.includes("appointment");
 
   return pathnameMatch || titleMatch;
 };

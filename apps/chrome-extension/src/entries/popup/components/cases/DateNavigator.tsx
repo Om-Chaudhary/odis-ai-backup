@@ -1,6 +1,15 @@
-import { now, isToday as isTodayUtil, formatDateForDisplay } from '@odis-ai/extension/shared';
-import { Button } from '@odis-ai/shared/ui/extension';
-import { CalendarDays, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import {
+  now,
+  isToday as isTodayUtil,
+  formatDateForDisplay,
+} from "@odis-ai/extension/shared";
+import { Button } from "@odis-ai/shared/ui/extension";
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+} from "lucide-react";
 
 interface DateNavigatorProps {
   currentDate: Date;
@@ -41,7 +50,8 @@ export const DateNavigator = ({
         variant="ghost"
         size="icon"
         onClick={handlePreviousDay}
-        className="text-primary-foreground hover:text-primary-foreground h-8 w-8 flex-shrink-0 hover:bg-white/20">
+        className="text-primary-foreground hover:text-primary-foreground h-8 w-8 flex-shrink-0 hover:bg-white/20"
+      >
         <ChevronLeft className="h-4 w-4" />
       </Button>
 
@@ -52,7 +62,8 @@ export const DateNavigator = ({
             size="sm"
             onClick={handleToday}
             className="text-primary-foreground hover:text-primary-foreground h-7 w-7 flex-shrink-0 p-0 hover:bg-white/20"
-            title="Jump to today">
+            title="Jump to today"
+          >
             <CalendarDays className="h-4 w-4" />
           </Button>
         )}
@@ -60,7 +71,7 @@ export const DateNavigator = ({
           {formatDate(currentDate)}
           {!loading && caseCount !== null && caseCount !== undefined && (
             <span className="text-primary-foreground/80 ml-2 text-sm font-normal">
-              - {caseCount} {caseCount === 1 ? 'case' : 'cases'}
+              - {caseCount} {caseCount === 1 ? "case" : "cases"}
             </span>
           )}
         </div>
@@ -71,8 +82,9 @@ export const DateNavigator = ({
             onClick={onRefresh}
             disabled={loading}
             className="text-primary-foreground hover:text-primary-foreground h-7 w-7 flex-shrink-0 p-0 hover:bg-white/20"
-            title="Refresh">
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            title="Refresh"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           </Button>
         )}
       </div>
@@ -81,7 +93,8 @@ export const DateNavigator = ({
         variant="ghost"
         size="icon"
         onClick={handleNextDay}
-        className="text-primary-foreground hover:text-primary-foreground h-8 w-8 flex-shrink-0 hover:bg-white/20">
+        className="text-primary-foreground hover:text-primary-foreground h-8 w-8 flex-shrink-0 hover:bg-white/20"
+      >
         <ChevronRight className="h-4 w-4" />
       </Button>
     </div>

@@ -1,9 +1,9 @@
-import { DateNavigator } from './DateNavigator';
-import { useAuth, now, isAuthError, logger } from '@odis-ai/extension/shared';
-import { Button } from '@odis-ai/shared/ui/extension';
-import { useCases } from '../../hooks/useCases';
-import { LogOut, AlertCircle, RefreshCw } from 'lucide-react';
-import { useState } from 'react';
+import { DateNavigator } from "./DateNavigator";
+import { useAuth, now, isAuthError, logger } from "@odis-ai/extension/shared";
+import { Button } from "@odis-ai/shared/ui/extension";
+import { useCases } from "../../hooks/useCases";
+import { LogOut, AlertCircle, RefreshCw } from "lucide-react";
+import { useState } from "react";
 
 export const CasesView = () => {
   const [currentDate, setCurrentDate] = useState(now());
@@ -19,9 +19,9 @@ export const CasesView = () => {
     try {
       await signOut();
     } catch (error) {
-      logger.error('[CasesView] Error signing out', { error });
+      logger.error("[CasesView] Error signing out", { error });
       // Even if sign out fails, try to reload or show error
-      alert('Failed to sign out. Please try again or refresh the extension.');
+      alert("Failed to sign out. Please try again or refresh the extension.");
     }
   };
 
@@ -43,7 +43,9 @@ export const CasesView = () => {
             <AlertCircle className="text-destructive mt-0.5 h-4 w-4 flex-shrink-0" />
             <div className="flex-1 space-y-2">
               <p className="text-destructive text-sm font-medium">
-                {isAuthError(error) ? 'Authentication Error' : 'Failed to load cases'}
+                {isAuthError(error)
+                  ? "Authentication Error"
+                  : "Failed to load cases"}
               </p>
               <p className="text-destructive/80 text-xs">{error}</p>
               {!isAuthError(error) && (
@@ -52,14 +54,18 @@ export const CasesView = () => {
                   variant="outline"
                   size="sm"
                   className="mt-2 h-7 text-xs"
-                  disabled={loading}>
-                  <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
+                  disabled={loading}
+                >
+                  <RefreshCw
+                    className={`h-3 w-3 ${loading ? "animate-spin" : ""}`}
+                  />
                   <span>Retry</span>
                 </Button>
               )}
               {isAuthError(error) && (
                 <p className="text-destructive/70 mt-1 text-xs">
-                  Please sign out and sign in again, or use the sign out button below.
+                  Please sign out and sign in again, or use the sign out button
+                  below.
                 </p>
               )}
             </div>
@@ -73,10 +79,15 @@ export const CasesView = () => {
           onClick={handleSignOut}
           variant="outline"
           className="pointer-events-auto flex w-full items-center justify-center gap-2"
-          size="sm">
+          size="sm"
+        >
           <LogOut className="h-4 w-4" />
           <span>Sign Out</span>
-          {user?.email && <span className="text-muted-foreground ml-auto text-xs">({user.email})</span>}
+          {user?.email && (
+            <span className="text-muted-foreground ml-auto text-xs">
+              ({user.email})
+            </span>
+          )}
         </Button>
       </div>
     </div>
