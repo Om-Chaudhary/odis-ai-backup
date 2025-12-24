@@ -153,12 +153,14 @@ export function useOutboundMutations(
         emailEnabled: boolean;
         immediateDelivery?: boolean;
       },
+      immediate?: boolean,
     ) => {
       await approveAndSchedule.mutateAsync({
         caseId,
         phoneEnabled: deliveryToggles.phoneEnabled,
         emailEnabled: deliveryToggles.emailEnabled,
-        immediateDelivery: deliveryToggles.immediateDelivery ?? false,
+        immediateDelivery:
+          immediate ?? deliveryToggles.immediateDelivery ?? false,
       });
     },
     [approveAndSchedule],

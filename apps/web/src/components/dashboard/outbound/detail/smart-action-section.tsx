@@ -16,7 +16,7 @@ interface SmartActionSectionProps {
   ownerEmail: string | null;
   deliveryToggles: DeliveryToggles;
   onToggleChange: (toggles: DeliveryToggles) => void;
-  onApprove: () => void;
+  onApprove: (immediate?: boolean) => void;
   onRetry?: () => void;
   onCancelScheduled?: (options: {
     cancelCall: boolean;

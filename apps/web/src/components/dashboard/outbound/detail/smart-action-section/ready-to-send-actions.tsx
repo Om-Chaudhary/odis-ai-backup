@@ -2,14 +2,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/ui/card";
 import { Button } from "@odis-ai/ui/button";
 import { Checkbox } from "@odis-ai/ui/checkbox";
 import { Alert, AlertDescription } from "@odis-ai/ui/alert";
-import { AlertCircle, Phone, Mail, Send, Sparkles } from "lucide-react";
+import { AlertCircle, Phone, Mail, Sparkles, Clock, Zap } from "lucide-react";
 import { cn } from "@odis-ai/utils";
 import type { DeliveryToggles } from "../../types";
 
 interface ReadyToSendActionsProps {
   deliveryToggles: DeliveryToggles;
   onToggleChange: (toggles: DeliveryToggles) => void;
-  onApprove: () => void;
+  onApprove: (immediate?: boolean) => void;
   isSubmitting: boolean;
   hasOwnerPhone: boolean;
   hasOwnerEmail: boolean;
@@ -170,13 +170,13 @@ export function ReadyToSendActions({
           </div>
         </div>
 
-        {/* Action Button */}
-        <div className="pt-2">
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-2 pt-2">
           <Button
-            onClick={onApprove}
+            onClick={() => onApprove(false)}
             disabled={!canSchedule || isSubmitting || needsGeneration}
             className={cn(
-              "h-10 w-full gap-2 font-semibold transition-all",
+              "h-10 gap-2 font-semibold transition-all",
               "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700",
               "dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600",
               "shadow-md hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50",
@@ -185,12 +185,34 @@ export function ReadyToSendActions({
             {isSubmitting ? (
               <>
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                <span>Scheduling...</span>
+                <span>...</span>
               </>
             ) : (
               <>
-                <Send className="h-4 w-4" />
-                <span>Schedule for 2 Days</span>
+                <Clock className="h-4 w-4" />
+                <span>Schedule</span>
+              </>
+            )}
+          </Button>
+          <Button
+            onClick={() => onApprove(true)}
+            disabled={!canSchedule || isSubmitting || needsGeneration}
+            className={cn(
+              "h-10 gap-2 font-semibold transition-all",
+              "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700",
+              "dark:from-emerald-500 dark:to-teal-500 dark:hover:from-emerald-600 dark:hover:to-teal-600",
+              "shadow-md hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50",
+            )}
+          >
+            {isSubmitting ? (
+              <>
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <span>...</span>
+              </>
+            ) : (
+              <>
+                <Zap className="h-4 w-4" />
+                <span>Send Now</span>
               </>
             )}
           </Button>

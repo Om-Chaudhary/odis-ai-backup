@@ -235,10 +235,13 @@ function OutboundDischargesClientInner() {
   });
 
   // Wrapper handlers for use in component
-  const handleApproveAndSend = useCallback(async () => {
-    if (!selectedCase) return;
-    await approveAndSendHandler(selectedCase.id, deliveryToggles);
-  }, [selectedCase, deliveryToggles, approveAndSendHandler]);
+  const handleApproveAndSend = useCallback(
+    async (immediate?: boolean) => {
+      if (!selectedCase) return;
+      await approveAndSendHandler(selectedCase.id, deliveryToggles, immediate);
+    },
+    [selectedCase, deliveryToggles, approveAndSendHandler],
+  );
 
   const handleRetry = useCallback(async () => {
     if (!selectedCase) return;
