@@ -12,6 +12,7 @@ import { decrypt, encrypt } from "@odis-ai/crypto/aes-encryption";
 export interface IdexxCredentials {
   username: string;
   password: string;
+  companyId: string;
 }
 
 export interface StoredCredential {
@@ -25,6 +26,7 @@ export interface StoredCredential {
   updated_at: string;
   username_encrypted: unknown;
   password_encrypted: unknown;
+  company_id_encrypted: unknown;
 }
 
 /**
@@ -62,6 +64,7 @@ export class IdexxCredentialManager {
    * @param clinicId - Optional clinic ID
    * @param username - IDEXX username
    * @param password - IDEXX password
+   * @param companyId - IDEXX company ID
    * @param keyId - Encryption key ID (default: 'default')
    * @returns Credential record ID
    */
@@ -70,14 +73,22 @@ export class IdexxCredentialManager {
     clinicId: string | null,
     username: string,
     password: string,
+    companyId: string,
     keyId = "default",
   ): Promise<{ id: string }> {
     // Encrypt credentials
     const { encrypted: usernameEncrypted } = encrypt(username, keyId);
     const { encrypted: passwordEncrypted } = encrypt(password, keyId);
+    const { encrypted: companyIdEncrypted } = encrypt(companyId, keyId);
 
     // Deactivate any existing active credentials for this user/clinic
     await this.deactivateCredentials(userId, clinicId);
+
+    // Convert Buffers to hex string with \x prefix for PostgreSQL bytea
+    // Supabase JS client doesn't properly handle binary data, so use hex encoding
+    const usernameHex = "\\x" + usernameEncrypted.toString("hex");
+    const passwordHex = "\\x" + passwordEncrypted.toString("hex");
+    const companyIdHex = "\\x" + companyIdEncrypted.toString("hex");
 
     // Insert new credential record
     const { data, error } = await this.supabase
@@ -85,8 +96,9 @@ export class IdexxCredentialManager {
       .insert({
         user_id: userId,
         clinic_id: clinicId,
-        username_encrypted: usernameEncrypted,
-        password_encrypted: passwordEncrypted,
+        username_encrypted: usernameHex,
+        password_encrypted: passwordHex,
+        company_id_encrypted: companyIdHex,
         encryption_key_id: keyId,
         is_active: true,
       })
@@ -147,12 +159,33 @@ export class IdexxCredentialManager {
 
     // Decrypt credentials
     try {
-      const usernameEncryptedBuffer = Buffer.from(
-        credential.username_encrypted as Uint8Array,
-      );
-      const passwordEncryptedBuffer = Buffer.from(
-        credential.password_encrypted as Uint8Array,
-      );
+      // Supabase returns bytea as Uint8Array - convert to Buffer for decryption
+      const usernameData = credential.username_encrypted;
+      const passwordData = credential.password_encrypted;
+      const companyIdData = credential.company_id_encrypted;
+
+      // Handle different formats that Supabase might return for bytea
+      // Supabase JS client returns bytea as hex string with \x prefix
+      const parseByteaData = (data: unknown): Buffer => {
+        if (data instanceof Uint8Array) {
+          return Buffer.from(data);
+        }
+        if (Buffer.isBuffer(data)) {
+          return data;
+        }
+        if (typeof data === "string") {
+          // Supabase returns bytea as hex string with \x prefix
+          if (data.startsWith("\\x")) {
+            return Buffer.from(data.slice(2), "hex");
+          }
+          // Try plain hex
+          return Buffer.from(data, "hex");
+        }
+        throw new Error(`Unexpected bytea data type: ${typeof data}`);
+      };
+
+      const usernameEncryptedBuffer = parseByteaData(usernameData);
+      const passwordEncryptedBuffer = parseByteaData(passwordData);
       const username = decrypt(
         usernameEncryptedBuffer,
         credential.encryption_key_id,
@@ -162,13 +195,23 @@ export class IdexxCredentialManager {
         credential.encryption_key_id,
       );
 
+      // Decrypt company ID (may not exist for older credentials)
+      let companyId = "";
+      if (companyIdData) {
+        const companyIdEncryptedBuffer = parseByteaData(companyIdData);
+        companyId = decrypt(
+          companyIdEncryptedBuffer,
+          credential.encryption_key_id,
+        );
+      }
+
       // Update last_used_at
       await this.supabase
         .from("idexx_credentials")
         .update({ last_used_at: new Date().toISOString() })
         .eq("id", credential.id);
 
-      return { username, password };
+      return { username, password, companyId };
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
@@ -184,11 +227,13 @@ export class IdexxCredentialManager {
    *
    * @param username - IDEXX username
    * @param password - IDEXX password
+   * @param companyId - IDEXX company ID
    * @returns true if credentials are valid, false otherwise
    */
   async validateCredentials(
     username: string,
     password: string,
+    companyId: string,
   ): Promise<boolean> {
     // TODO: Implement actual IDEXX Neo login validation
     // This could use Playwright to navigate to IDEXX Neo login page
@@ -199,13 +244,13 @@ export class IdexxCredentialManager {
     //
     // Example implementation would be:
     // 1. Navigate to IDEXX Neo login page
-    // 2. Fill in username and password
+    // 2. Fill in company ID, username, and password
     // 3. Submit form
     // 4. Check for successful redirect or error message
     // 5. Return true if login successful, false otherwise
 
     // Placeholder: basic validation (non-empty)
-    if (!username || !password) {
+    if (!username || !password || !companyId) {
       return false;
     }
 
@@ -266,15 +311,33 @@ export class IdexxCredentialManager {
         const { encrypted: usernameEncryptedNew } = encrypt(username, newKeyId);
         const { encrypted: passwordEncryptedNew } = encrypt(password, newKeyId);
 
+        // Handle company_id if present
+        let companyIdEncryptedNew: Buffer | null = null;
+        if (credential.company_id_encrypted) {
+          const companyIdEncryptedBuffer = Buffer.from(
+            credential.company_id_encrypted as unknown as Uint8Array,
+          );
+          const companyId = decrypt(
+            companyIdEncryptedBuffer,
+            credential.encryption_key_id,
+          );
+          companyIdEncryptedNew = encrypt(companyId, newKeyId).encrypted;
+        }
+
         // Update credential record
+        const updateData: Record<string, unknown> = {
+          username_encrypted: usernameEncryptedNew,
+          password_encrypted: passwordEncryptedNew,
+          encryption_key_id: newKeyId,
+          updated_at: new Date().toISOString(),
+        };
+        if (companyIdEncryptedNew) {
+          updateData.company_id_encrypted = companyIdEncryptedNew;
+        }
+
         const { error: updateError } = await this.supabase
           .from("idexx_credentials")
-          .update({
-            username_encrypted: usernameEncryptedNew,
-            password_encrypted: passwordEncryptedNew,
-            encryption_key_id: newKeyId,
-            updated_at: new Date().toISOString(),
-          })
+          .update(updateData)
           .eq("id", credential.id);
 
         if (updateError) {
