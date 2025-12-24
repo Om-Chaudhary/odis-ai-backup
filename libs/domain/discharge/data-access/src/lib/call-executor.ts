@@ -47,7 +47,8 @@ export async function executeScheduledCall(
   // Dynamic import vapi modules to avoid circular dependencies
   const { createPhoneCall, mapVapiStatus } =
     await import("@odis-ai/integrations/vapi/client");
-  const { normalizeVariablesToSnakeCase } = await import("@odis-ai/integrations/vapi/utils");
+  const { normalizeVariablesToSnakeCase } =
+    await import("@odis-ai/integrations/vapi/utils");
 
   // 1. Fetch scheduled call from database
   const { data: call, error } = await supabase

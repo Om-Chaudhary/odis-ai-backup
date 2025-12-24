@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 import type { SupabaseClientType } from "@odis-ai/shared/types/supabase";
 import type { Database } from "@odis-ai/shared/types";
 import type {

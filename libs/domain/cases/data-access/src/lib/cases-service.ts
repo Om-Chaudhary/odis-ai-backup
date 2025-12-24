@@ -22,7 +22,10 @@ import type {
   ScheduledCallMetadata,
   ScheduledDischargeCall,
 } from "@odis-ai/shared/types/services";
-import type { CaseMetadata, CaseMetadataJson } from "@odis-ai/shared/types/case";
+import type {
+  CaseMetadata,
+  CaseMetadataJson,
+} from "@odis-ai/shared/types/case";
 import {
   buildIdexxConsultationData,
   parseBillingString,
@@ -314,8 +317,7 @@ export const CasesService = {
         throw new Error(`Failed to fetch existing case: ${fetchError.message}`);
       }
 
-      const currentMetadata =
-        (currentCase?.metadata as CaseMetadata | undefined) ?? {};
+      const currentMetadata = (currentCase?.metadata ?? {}) as CaseMetadata;
       const currentEntities = currentMetadata.entities;
 
       const mergedEntities = this.mergeEntities(currentEntities, entities);
@@ -557,10 +559,12 @@ export const CasesService = {
       return null;
     }
 
-    const metadata = (caseData.metadata as CaseMetadata | undefined) ?? {};
+    const metadata = (caseData.metadata ?? {}) as CaseMetadata;
     const entities =
-      (caseData.entity_extraction as NormalizedEntities | undefined) ??
-      metadata.entities;
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+      (caseData.entity_extraction ?? metadata.entities) as
+        | NormalizedEntities
+        | undefined;
 
     const patient = Array.isArray(caseData.patient)
       ? (caseData.patient[0] ?? null)
