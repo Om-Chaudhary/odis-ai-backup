@@ -1176,50 +1176,38 @@ export const CasesService = {
         confidence: preGeneratedIntelligence.confidence,
       };
     } else {
-      // Fallback: Generate at schedule-time (for non-IDEXX cases or legacy data)
-      try {
-        console.log(
-          "[CasesService] Generating AI call intelligence at schedule-time (fallback)",
-          {
-            caseId,
-            petName: entities.patient.name,
-            diagnosis: entities.clinical.diagnoses?.[0],
-          },
-        );
-
-        // Dynamic import to avoid lazy-load constraint
-        const { generateCallIntelligenceFromEntities } =
-          await import("@odis-ai/ai/generate-assessment-questions");
-        const intelligence =
-          await generateCallIntelligenceFromEntities(entities);
-        aiIntelligence = {
-          caseContextSummary: intelligence.caseContextSummary,
-          assessmentQuestions: intelligence.assessmentQuestions,
-          warningSignsToMonitor: intelligence.warningSignsToMonitor,
-          normalExpectations: intelligence.normalExpectations,
-          emergencyCriteria: intelligence.emergencyCriteria,
-          shouldAskClinicalQuestions: intelligence.shouldAskClinicalQuestions,
-          callApproach: intelligence.callApproach,
-          confidence: intelligence.confidence,
-        };
-
-        console.log("[CasesService] AI call intelligence generated", {
+      // Generate AI call intelligence at schedule-time (for non-IDEXX cases or legacy data)
+      console.log(
+        "[CasesService] Generating AI call intelligence at schedule-time",
+        {
           caseId,
-          questionCount: intelligence.assessmentQuestions?.length ?? 0,
-          callApproach: intelligence.callApproach,
-          shouldAskQuestions: intelligence.shouldAskClinicalQuestions,
-          confidence: intelligence.confidence,
-        });
-      } catch (aiError) {
-        // Non-blocking: fall back to static knowledge base
-        console.warn(
-          "[CasesService] Failed to generate AI call intelligence, using static KB",
-          {
-            caseId,
-            error: aiError instanceof Error ? aiError.message : String(aiError),
-          },
-        );
-      }
+          petName: entities.patient.name,
+          diagnosis: entities.clinical.diagnoses?.[0],
+        },
+      );
+
+      // Dynamic import to avoid lazy-load constraint
+      const { generateCallIntelligenceFromEntities } =
+        await import("@odis-ai/ai/generate-assessment-questions");
+      const intelligence = await generateCallIntelligenceFromEntities(entities);
+      aiIntelligence = {
+        caseContextSummary: intelligence.caseContextSummary,
+        assessmentQuestions: intelligence.assessmentQuestions,
+        warningSignsToMonitor: intelligence.warningSignsToMonitor,
+        normalExpectations: intelligence.normalExpectations,
+        emergencyCriteria: intelligence.emergencyCriteria,
+        shouldAskClinicalQuestions: intelligence.shouldAskClinicalQuestions,
+        callApproach: intelligence.callApproach,
+        confidence: intelligence.confidence,
+      };
+
+      console.log("[CasesService] AI call intelligence generated", {
+        caseId,
+        questionCount: intelligence.assessmentQuestions?.length ?? 0,
+        callApproach: intelligence.callApproach,
+        shouldAskQuestions: intelligence.shouldAskClinicalQuestions,
+        confidence: intelligence.confidence,
+      });
     }
 
     // 3. Build Dynamic Variables with knowledge base integration
@@ -1280,9 +1268,9 @@ export const CasesService = {
           : undefined,
       },
       strict: false,
-      // Disable static knowledge base defaults - only use AI-generated intelligence
+      // useDefaults is deprecated (static KB removed)
       useDefaults: false,
-      // Pass AI-generated intelligence (preferred over static KB)
+      // Pass AI-generated intelligence
       aiGeneratedIntelligence: aiIntelligence ?? undefined,
     });
 

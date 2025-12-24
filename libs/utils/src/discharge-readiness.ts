@@ -195,3 +195,121 @@ export function checkCaseDischargeReadiness(
     missingRequirements,
   };
 }
+
+/* ========================================
+   Extreme Case Detection
+   ======================================== */
+
+/**
+ * Keywords that indicate a case should be blocked from discharge calls.
+ * These represent sensitive situations where follow-up calls are inappropriate.
+ */
+const BLOCKED_KEYWORDS = [
+  "euthanasia",
+  "euthanize",
+  "euthanized",
+  "doa",
+  "dead on arrival",
+  "deceased",
+  "passed away",
+  "death during",
+  "humane ending",
+  "compassionate euthanasia",
+  "put to sleep",
+  "pts",
+  "humanely euthanized",
+];
+
+/**
+ * Case types that indicate a blocked case
+ */
+const BLOCKED_CASE_TYPES = ["euthanasia", "doa", "deceased"];
+
+/**
+ * Result of extreme case detection
+ */
+export interface BlockedCaseResult {
+  /** Whether the case should be blocked from discharge calls */
+  blocked: boolean;
+  /** Reason for blocking (if blocked) */
+  reason?: string;
+}
+
+/**
+ * Check if a case represents an extreme situation that should block discharge calls.
+ *
+ * Blocked cases include:
+ * - Euthanasia
+ * - DOA (Dead on Arrival)
+ * - Deceased / death during visit
+ * - Humane ending / compassionate euthanasia
+ *
+ * @param caseData - Data to check for blocked indicators
+ * @returns Result indicating if case is blocked and why
+ */
+export function isBlockedExtremeCase(caseData: {
+  caseType?: string | null;
+  dischargeSummary?: string | null;
+  consultationNotes?: string | null;
+  metadata?: Record<string, unknown> | null;
+}): BlockedCaseResult {
+  // Check caseType enum first (most reliable)
+  if (caseData.caseType) {
+    const normalizedType = caseData.caseType.toLowerCase().trim();
+    if (BLOCKED_CASE_TYPES.includes(normalizedType)) {
+      return { blocked: true, reason: `Case type: ${caseData.caseType}` };
+    }
+  }
+
+  // Check content for keywords
+  const contentParts: string[] = [];
+
+  if (caseData.dischargeSummary) {
+    contentParts.push(caseData.dischargeSummary);
+  }
+
+  if (caseData.consultationNotes) {
+    contentParts.push(caseData.consultationNotes);
+  }
+
+  // Also check metadata fields that might contain relevant info
+  if (caseData.metadata) {
+    // Check IDEXX notes
+    const idexxNotes = (caseData.metadata.idexx as Record<string, unknown>)
+      ?.notes as string | undefined;
+    if (idexxNotes) {
+      contentParts.push(idexxNotes);
+    }
+
+    // Check appointment type
+    const appointmentType = (caseData.metadata.idexx as Record<string, unknown>)
+      ?.appointment_type as string | undefined;
+    if (appointmentType) {
+      contentParts.push(appointmentType);
+    }
+
+    // Check entities caseType
+    const entitiesCaseType = (
+      caseData.metadata.entities as Record<string, unknown>
+    )?.caseType as string | undefined;
+    if (entitiesCaseType) {
+      const normalizedType = entitiesCaseType.toLowerCase().trim();
+      if (BLOCKED_CASE_TYPES.includes(normalizedType)) {
+        return {
+          blocked: true,
+          reason: `Entities case type: ${entitiesCaseType}`,
+        };
+      }
+    }
+  }
+
+  const contentToCheck = contentParts.join(" ").toLowerCase();
+
+  for (const keyword of BLOCKED_KEYWORDS) {
+    if (contentToCheck.includes(keyword)) {
+      return { blocked: true, reason: `Content contains: "${keyword}"` };
+    }
+  }
+
+  return { blocked: false };
+}

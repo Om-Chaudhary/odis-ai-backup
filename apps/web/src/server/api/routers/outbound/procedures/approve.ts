@@ -14,6 +14,7 @@ import { TRPCError } from "@trpc/server";
 import { getClinicUserIds, getClinicByUserId } from "@odis-ai/clinics/utils";
 import { normalizeToE164, normalizeEmail } from "@odis-ai/utils/phone";
 import { calculateScheduleTime } from "@odis-ai/utils/timezone";
+import { isBlockedExtremeCase } from "@odis-ai/utils/discharge-readiness";
 import type { NormalizedEntities } from "@odis-ai/validators";
 import type { Json } from "@odis-ai/types";
 import { scheduleEmailExecution } from "@odis-ai/qstash";
@@ -224,11 +225,25 @@ export const approveRouter = createTRPCRouter({
         });
       }
 
-      // Block scheduling for euthanasia/DOA/deceased cases
+      // Block scheduling for extreme cases (euthanasia, DOA, deceased, humane ending)
       // These cases should never receive follow-up calls
-      const BLOCKED_CASE_TYPES = ["euthanasia", "doa", "deceased"];
-      const caseType = caseInfo.entities?.caseType?.toLowerCase();
-      if (caseType && BLOCKED_CASE_TYPES.includes(caseType)) {
+      const blockedCheck = isBlockedExtremeCase({
+        caseType: caseInfo.entities?.caseType,
+        dischargeSummary: caseInfo.dischargeSummaries?.[0]?.content,
+        consultationNotes: (caseInfo.case.metadata as Record<string, unknown>)
+          ?.idexx
+          ? ((
+              (caseInfo.case.metadata as Record<string, unknown>)
+                ?.idexx as Record<string, unknown>
+            )?.consultation_notes as string | undefined)
+          : undefined,
+        metadata: caseInfo.case.metadata as Record<string, unknown> | null,
+      });
+      if (blockedCheck.blocked) {
+        console.warn("[Approve] Blocked extreme case", {
+          caseId: input.caseId,
+          reason: blockedCheck.reason,
+        });
         throw new TRPCError({
           code: "BAD_REQUEST",
           message:

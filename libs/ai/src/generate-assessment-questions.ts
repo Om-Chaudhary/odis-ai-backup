@@ -203,6 +203,36 @@ function formatInputForPrompt(input: GenerateCallIntelligenceInput): string {
 }
 
 /* ========================================
+   Array Truncation Helper
+   ======================================== */
+
+/**
+ * Truncates arrays in the AI response to fit schema limits.
+ * This prevents validation errors when the AI generates more items than allowed.
+ */
+function truncateCallIntelligenceArrays(
+  data: Record<string, unknown>,
+): Record<string, unknown> {
+  const limits: Record<string, number> = {
+    assessmentQuestions: 5,
+    warningSignsToMonitor: 5,
+    normalExpectations: 4,
+    emergencyCriteria: 4,
+  };
+
+  const result = { ...data };
+  for (const [key, max] of Object.entries(limits)) {
+    if (Array.isArray(result[key]) && result[key].length > max) {
+      console.log(
+        `[CALL_INTELLIGENCE] Truncating ${key} from ${result[key].length} to ${max}`,
+      );
+      result[key] = result[key].slice(0, max);
+    }
+  }
+  return result;
+}
+
+/* ========================================
    Main Generation Function
    ======================================== */
 
@@ -256,9 +286,14 @@ export async function generateCallIntelligence(
       );
     }
 
+    // Truncate arrays to fit schema limits before validation
+    const truncatedResponse = truncateCallIntelligenceArrays(
+      parsedResponse as Record<string, unknown>,
+    );
+
     // Validate against schema
     const validationResult =
-      GeneratedCallIntelligenceSchema.safeParse(parsedResponse);
+      GeneratedCallIntelligenceSchema.safeParse(truncatedResponse);
 
     if (!validationResult.success) {
       console.error(
@@ -381,22 +416,4 @@ export async function generateCallIntelligenceFromEntities(
   };
 
   return generateCallIntelligenceWithRetry(input);
-}
-
-/* ========================================
-   Fallback: Return null on failure
-   ======================================== */
-
-export async function generateCallIntelligenceSafe(
-  input: GenerateCallIntelligenceInput,
-): Promise<GeneratedCallIntelligence | null> {
-  try {
-    return await generateCallIntelligenceWithRetry(input);
-  } catch (error) {
-    console.error(
-      "[CALL_INTELLIGENCE] Failed to generate, will use static KB fallback:",
-      error instanceof Error ? error.message : String(error),
-    );
-    return null;
-  }
 }
