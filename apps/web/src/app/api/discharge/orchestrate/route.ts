@@ -64,7 +64,8 @@ export const dynamic = "force-dynamic";
 async function getDischargeOrchestrator() {
   const { DischargeOrchestrator } =
     await import("@odis-ai/services-discharge/discharge-orchestrator");
-  return DischargeOrchestrator;
+  const { CasesService } = await import("@odis-ai/services-cases");
+  return { DischargeOrchestrator, CasesService };
 }
 
 /**
@@ -125,8 +126,13 @@ export async function POST(request: NextRequest) {
     });
 
     // Create orchestrator and execute workflow (dynamically imported)
-    const DischargeOrchestrator = await getDischargeOrchestrator();
-    const orchestrator = new DischargeOrchestrator(supabase, user);
+    const { DischargeOrchestrator, CasesService } =
+      await getDischargeOrchestrator();
+    const orchestrator = new DischargeOrchestrator(
+      supabase,
+      user,
+      CasesService,
+    );
     const result = await orchestrator.orchestrate(orchestrationRequest);
 
     // Return result with CORS headers

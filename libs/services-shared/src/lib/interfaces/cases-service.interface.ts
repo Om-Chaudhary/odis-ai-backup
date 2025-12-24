@@ -9,6 +9,9 @@ import type { NormalizedEntities } from "@odis-ai/validators";
 
 type CaseRow = Database["public"]["Tables"]["cases"]["Row"];
 type PatientRow = Database["public"]["Tables"]["patients"]["Row"];
+type SoapNoteRow = Database["public"]["Tables"]["soap_notes"]["Row"];
+type DischargeSummaryRow =
+  Database["public"]["Tables"]["discharge_summaries"]["Row"];
 
 /**
  * Interface for case management operations needed by DischargeOrchestrator
@@ -52,10 +55,11 @@ export interface ICasesService {
     caseId: string,
   ): Promise<{
     case: CaseRow;
-    entities?: NormalizedEntities;
-    patient?: PatientRow | PatientRow[] | null;
-    dischargeSummaries?: unknown;
-    metadata?: unknown;
+    entities: NormalizedEntities | undefined;
+    patient: PatientRow | PatientRow[] | null;
+    soapNotes: SoapNoteRow[] | null;
+    dischargeSummaries: DischargeSummaryRow[] | null;
+    metadata: unknown;
   } | null>;
 
   /**

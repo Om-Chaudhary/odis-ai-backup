@@ -10,10 +10,10 @@
  * Supports both sequential and parallel execution modes.
  */
 
-// Dynamic imports to avoid circular dependencies and lazy-load constraints:
-// - CasesService is imported dynamically where needed
+// Dynamic imports to avoid lazy-load constraints:
 // - AI functions are imported dynamically to avoid lazy-load constraint from test mocks
 import { ExecutionPlan } from "@odis-ai/services-shared";
+import type { ICasesService } from "@odis-ai/services-shared";
 import { scheduleEmailExecution } from "@odis-ai/qstash/client";
 import { isValidEmail } from "@odis-ai/resend/utils";
 // Dynamic import to avoid Next.js bundling issues during static generation
@@ -136,6 +136,7 @@ export class DischargeOrchestrator {
   constructor(
     private supabase: SupabaseClientType,
     private user: User,
+    private casesService: ICasesService,
   ) {
     // Context will be set in orchestrate() method
     this.context = {
@@ -469,10 +470,7 @@ export class DischargeOrchestrator {
                 : undefined,
           };
 
-    // Dynamic import to avoid circular dependency
-    // eslint-disable-next-line @nx/enforce-module-boundaries
-    const { CasesService } = await import("@odis-ai/services-cases");
-    const result = await CasesService.ingest(
+    const result = await this.casesService.ingest(
       this.supabase,
       this.user.id,
       payload,
@@ -737,10 +735,10 @@ export class DischargeOrchestrator {
         : patientData.patients;
 
       if (patient) {
-        // Dynamic import to avoid circular dependency
-        // eslint-disable-next-line @nx/enforce-module-boundaries
-        const { CasesService } = await import("@odis-ai/services-cases");
-        CasesService.enrichEntitiesWithPatient(entities, patient as PatientRow);
+        this.casesService.enrichEntitiesWithPatient(
+          entities,
+          patient as PatientRow,
+        );
         console.log("[ORCHESTRATOR] Enriched entities with database patient", {
           caseId,
           dbPatientName: patient.name,
@@ -842,11 +840,8 @@ export class DischargeOrchestrator {
       throw new Error("Case ID required for summary generation");
     }
 
-    // Get case data (dynamic import to avoid circular dependency)
-    // eslint-disable-next-line @nx/enforce-module-boundaries
-    const { CasesService: CasesServiceModule } =
-      await import("@odis-ai/services-cases");
-    const caseInfo = await CasesServiceModule.getCaseWithEntities(
+    // Get case data
+    const caseInfo = await this.casesService.getCaseWithEntities(
       this.supabase,
       caseId,
     );
@@ -1039,11 +1034,8 @@ export class DischargeOrchestrator {
       throw new Error("Case ID required for email preparation");
     }
 
-    // Get case data (dynamic import to avoid circular dependency)
-    // eslint-disable-next-line @nx/enforce-module-boundaries
-    const { CasesService: CasesServiceEmail } =
-      await import("@odis-ai/services-cases");
-    const caseInfo = await CasesServiceEmail.getCaseWithEntities(
+    // Get case data
+    const caseInfo = await this.casesService.getCaseWithEntities(
       this.supabase,
       caseId,
     );
@@ -1163,12 +1155,9 @@ export class DischargeOrchestrator {
     // Get caseId (optional)
     const caseId = this.getCaseId();
 
-    // Get recipient name from patient data (dynamic import to avoid circular dependency)
-    // eslint-disable-next-line @nx/enforce-module-boundaries
-    const { CasesService: CasesServiceSchedule } =
-      await import("@odis-ai/services-cases");
+    // Get recipient name from patient data
     const caseInfo = caseId
-      ? await CasesServiceSchedule.getCaseWithEntities(this.supabase, caseId)
+      ? await this.casesService.getCaseWithEntities(this.supabase, caseId)
       : null;
     const patient = caseInfo ? this.normalizePatient(caseInfo.patient) : null;
     const recipientName = patient?.owner_name ?? undefined;
@@ -1530,11 +1519,7 @@ export class DischargeOrchestrator {
     // Pass the user's default schedule delay override via scheduledAt
     // If scheduledAt is undefined, CasesService will use the override from user settings
     // Use clinic table data when available, fallback to user table for backward compatibility
-    // Dynamic import to avoid circular dependency
-    // eslint-disable-next-line @nx/enforce-module-boundaries
-    const { CasesService: CasesServiceCall } =
-      await import("@odis-ai/services-cases");
-    const scheduledCall = await CasesServiceCall.scheduleDischargeCall(
+    const scheduledCall = await this.casesService.scheduleDischargeCall(
       this.supabase,
       this.user.id,
       caseId,

@@ -15,10 +15,14 @@ import { fromZonedTime } from "date-fns-tz";
 /**
  * Dynamically import the DischargeOrchestrator to avoid bundling
  * @react-email/components during Next.js static page generation.
+ * Also dynamically imports CasesService to avoid circular dependency.
  */
 async function getDischargeOrchestrator() {
   const { DischargeOrchestrator } = await import("./discharge-orchestrator");
-  return DischargeOrchestrator;
+  // Dynamic import to avoid circular dependency between services-discharge and services-cases
+  // eslint-disable-next-line @nx/enforce-module-boundaries
+  const { CasesService } = await import("@odis-ai/services-cases");
+  return { DischargeOrchestrator, CasesService };
 }
 
 export interface BatchProcessingOptions {
@@ -314,8 +318,13 @@ export class DischargeBatchProcessor {
   }> {
     try {
       // Dynamic import to avoid bundling @react-email/components during static generation
-      const DischargeOrchestrator = await getDischargeOrchestrator();
-      const orchestrator = new DischargeOrchestrator(this.supabase, this.user);
+      const { DischargeOrchestrator, CasesService } =
+        await getDischargeOrchestrator();
+      const orchestrator = new DischargeOrchestrator(
+        this.supabase,
+        this.user,
+        CasesService,
+      );
 
       // Build orchestration request
       const orchestrationSteps: Record<string, unknown> = {
