@@ -25,6 +25,12 @@ export interface SyncResult {
 interface IdexxCredentials {
   username: string;
   password: string;
+  companyId: string;
+}
+
+interface ClinicCredentialsResult {
+  credentials: IdexxCredentials;
+  userId: string;
 }
 
 /**
@@ -84,17 +90,20 @@ export class SyncEngine {
           console.log(`[SYNC] Processing clinic: ${clinic.name}`);
 
           // Get credentials for this clinic
-          const credentials = await this.getClinicCredentials(clinic.id);
+          const credentialResult = await this.getClinicCredentials(clinic.id);
 
-          if (!credentials) {
+          if (!credentialResult) {
             errors.push(`No credentials found for clinic: ${clinic.name}`);
             continue;
           }
+
+          const { credentials, userId } = credentialResult;
 
           // Create sync session
           const { data: session, error: sessionError } = await supabase
             .from("idexx_sync_sessions")
             .insert({
+              user_id: userId,
               clinic_id: clinic.id,
               session_type:
                 syncType === "pre-open"
@@ -199,7 +208,7 @@ export class SyncEngine {
    */
   private async getClinicCredentials(
     clinicId: string,
-  ): Promise<IdexxCredentials | null> {
+  ): Promise<ClinicCredentialsResult | null> {
     try {
       const credentialManager = await IdexxCredentialManager.create();
       const supabase = await createServiceClient();
@@ -218,10 +227,19 @@ export class SyncEngine {
         return null;
       }
 
-      return await credentialManager.getCredentials(
+      const credentials = await credentialManager.getCredentials(
         credential.user_id,
         clinicId,
       );
+
+      if (!credentials) {
+        return null;
+      }
+
+      return {
+        credentials,
+        userId: credential.user_id,
+      };
     } catch (error) {
       console.error("[SYNC] Error getting credentials:", error);
       return null;
@@ -241,6 +259,20 @@ export class SyncEngine {
       await page.goto("https://us.idexxneo.com/login", {
         waitUntil: "networkidle",
       });
+
+      // Fill company ID
+      if (credentials.companyId) {
+        const companyIdFilled = await this.browser.fillField(
+          page,
+          LOGIN_SELECTORS.companyIdInput,
+          credentials.companyId,
+        );
+
+        if (!companyIdFilled) {
+          console.error("[SYNC] Could not find company ID field");
+          return false;
+        }
+      }
 
       // Fill username
       const usernameFilled = await this.browser.fillField(
