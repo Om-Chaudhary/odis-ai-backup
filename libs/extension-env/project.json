@@ -3,12 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/extension-env/src",
   "projectType": "library",
-  "tags": [
-    "type:config",
-    "scope:extension",
-    "scope:shared",
-    "platform:browser"
-  ],
+  "tags": ["type:config", "scope:extension", "platform:browser"],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",
