@@ -1,7 +1,7 @@
 import App from './App';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import '@odis-ai/styles';
+import '@odis-ai/shared/styles';
 import './index.css';
 
 const root = createRoot(document.getElementById('root')!);

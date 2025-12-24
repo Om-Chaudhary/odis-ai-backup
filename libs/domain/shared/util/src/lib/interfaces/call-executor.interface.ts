@@ -7,8 +7,8 @@ import type { CallExecutionResult } from "@odis-ai/shared/types/services";
  * Allows services-cases to execute calls in test mode without depending
  * on concrete implementation in services-discharge.
  *
- * Implemented by: executeScheduledCall in @odis-ai/services-discharge
- * Used by: CasesService in @odis-ai/services-cases (test mode only)
+ * Implemented by: executeScheduledCall in @odis-ai/domain/discharge
+ * Used by: CasesService in @odis-ai/domain/cases (test mode only)
  */
 export interface ICallExecutor {
   /**

@@ -16,7 +16,7 @@ import { scheduleRemainingOutreachInput } from "../schemas";
 
 // Dynamic imports for lazy-loaded libraries
 const getCasesService = () =>
-  import("@odis-ai/services-cases").then((m) => m.CasesService);
+  import("@odis-ai/domain/cases").then((m) => m.CasesService);
 
 export const scheduleRemainingRouter = createTRPCRouter({
   scheduleRemainingOutreach: protectedProcedure
@@ -205,7 +205,7 @@ export const scheduleRemainingRouter = createTRPCRouter({
 
         // Import branding helper
         const { createClinicBranding } =
-          await import("@odis-ai/types/clinic-branding");
+          await import("@odis-ai/shared/types/clinic-branding");
         const branding = createClinicBranding({
           clinicName: clinic?.name ?? userData?.clinic_name ?? undefined,
           clinicPhone: clinic?.phone ?? userData?.clinic_phone ?? undefined,
@@ -218,7 +218,7 @@ export const scheduleRemainingRouter = createTRPCRouter({
 
         // Import and use the email content generator
         const { generateDischargeEmailContent } =
-          await import("@odis-ai/services-discharge");
+          await import("@odis-ai/domain/discharge");
         const emailContent = await generateDischargeEmailContent(
           summaryContent,
           patient?.name ?? "your pet",

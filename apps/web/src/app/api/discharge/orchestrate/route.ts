@@ -63,8 +63,8 @@ export const dynamic = "force-dynamic";
 // Dynamic import to avoid bundling @react-email/components during static generation
 async function getDischargeOrchestrator() {
   const { DischargeOrchestrator } =
-    await import("@odis-ai/services-discharge/discharge-orchestrator");
-  const { CasesService } = await import("@odis-ai/services-cases");
+    await import("@odis-ai/domain/discharge/discharge-orchestrator");
+  const { CasesService } = await import("@odis-ai/domain/cases");
   return { DischargeOrchestrator, CasesService };
 }
 

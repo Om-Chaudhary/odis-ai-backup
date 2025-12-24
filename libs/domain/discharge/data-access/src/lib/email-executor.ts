@@ -5,7 +5,7 @@
  * Decoupled from HTTP handling to enable direct invocation in test mode
  * or via webhook in normal mode.
  *
- * @module @odis-ai/services-discharge/email-executor
+ * @module @odis-ai/domain/discharge/email-executor
  */
 
 import type { SupabaseClientType } from "@odis-ai/shared/types/supabase";

@@ -570,7 +570,7 @@ export const inboundCallsRouter = createTRPCRouter({
     .input(z.object({ transcript: z.string().min(1) }))
     .mutation(async ({ input }) => {
       try {
-        const { translateTranscript } = await import("@odis-ai/ai");
+        const { translateTranscript } = await import("@odis-ai/integrations/ai");
         return await translateTranscript({ transcript: input.transcript });
       } catch (error) {
         console.error("[TRANSLATE_TRPC] Error translating transcript:", error);
@@ -605,7 +605,7 @@ export const inboundCallsRouter = createTRPCRouter({
     )
     .mutation(async ({ input }) => {
       try {
-        const { cleanTranscript } = await import("@odis-ai/ai");
+        const { cleanTranscript } = await import("@odis-ai/integrations/ai");
         return await cleanTranscript({
           transcript: input.transcript,
           clinicName: input.clinicName,
@@ -638,7 +638,7 @@ export const inboundCallsRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       try {
-        const { getCall } = await import("@odis-ai/vapi");
+        const { getCall } = await import("@odis-ai/integrations/vapi");
         const callData = await getCall(input.vapiCallId);
 
         console.log("[FETCH_CALL_FROM_VAPI] Successfully fetched call data", {
@@ -747,7 +747,7 @@ export const inboundCallsRouter = createTRPCRouter({
 
       // Fallback: Fetch from VAPI API
       try {
-        const { getCall } = await import("@odis-ai/vapi");
+        const { getCall } = await import("@odis-ai/integrations/vapi");
         const callData = await getCall(input.vapiCallId);
 
         console.log("[GET_CALL_FOR_APPOINTMENT] Fetched from VAPI API", {
@@ -876,7 +876,7 @@ export const inboundCallsRouter = createTRPCRouter({
 
       // Fetch from VAPI API
       try {
-        const { getCall } = await import("@odis-ai/vapi");
+        const { getCall } = await import("@odis-ai/integrations/vapi");
         const vapiCall = await getCall(existingCall.vapi_call_id);
 
         console.log("[SYNC_CALL_FROM_VAPI] Fetched call data from VAPI", {
@@ -1050,7 +1050,7 @@ export const inboundCallsRouter = createTRPCRouter({
         });
       }
 
-      const { getCall } = await import("@odis-ai/vapi");
+      const { getCall } = await import("@odis-ai/integrations/vapi");
 
       const results: Array<{
         id: string;

@@ -42,7 +42,7 @@ vi.mock("@odis-ai/clinics/vapi-config", () => ({
   getClinicVapiConfigByUserId: vi.fn(),
 }));
 
-vi.mock("@odis-ai/vapi/utils", () => ({
+vi.mock("@odis-ai/integrations/vapi/utils", () => ({
   extractFirstName: vi.fn((name: string) => name.split(" ")[0]),
 }));
 

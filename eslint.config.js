@@ -117,6 +117,16 @@ export default tseslint.config(
                 "type:testing",
               ],
             },
+            // Features can depend on data-access, ui, util, types (ADDED for future feature libs)
+            {
+              sourceTag: "type:feature",
+              onlyDependOnLibsWithTags: [
+                "type:data-access",
+                "type:ui",
+                "type:util",
+                "type:types",
+              ],
+            },
             // Services can depend on integrations, data-access, utils, config, types
             {
               sourceTag: "type:service",

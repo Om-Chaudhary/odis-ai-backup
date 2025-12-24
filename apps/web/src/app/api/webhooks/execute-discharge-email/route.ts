@@ -6,7 +6,7 @@ import { createServiceClient } from "@odis-ai/data-access/db/server";
 // Dynamic import to avoid bundling issues during static generation
 async function getEmailExecutor() {
   const { executeScheduledEmail } =
-    await import("@odis-ai/services-discharge/email-executor");
+    await import("@odis-ai/domain/discharge/email-executor");
   return executeScheduledEmail;
 }
 

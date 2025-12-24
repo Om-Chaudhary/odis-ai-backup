@@ -23,7 +23,7 @@ vi.mock("@odis-ai/logger", () => ({
   },
 }));
 
-vi.mock("@odis-ai/vapi/webhooks", () => ({
+vi.mock("@odis-ai/integrations/vapi/webhooks", () => ({
   handleVapiWebhook: vi.fn(),
   parseWebhookPayload: vi.fn(),
 }));

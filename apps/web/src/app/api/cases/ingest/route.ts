@@ -8,7 +8,7 @@ import type { IngestPayload } from "@odis-ai/shared/types";
 
 // Dynamic import to avoid bundling @react-email/components during static generation
 async function getCasesService() {
-  const { CasesService } = await import("@odis-ai/services-cases");
+  const { CasesService } = await import("@odis-ai/domain/cases");
   return CasesService;
 }
 import { z } from "zod";

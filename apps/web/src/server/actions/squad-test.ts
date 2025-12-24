@@ -216,7 +216,7 @@ export async function initiateSquadTestCall(
     });
 
     // Create the squad call (dynamic import for lazy-loaded vapi library)
-    const { createSquadPhoneCall } = await import("@odis-ai/vapi");
+    const { createSquadPhoneCall } = await import("@odis-ai/integrations/vapi");
     const callResponse = await createSquadPhoneCall({
       phoneNumber,
       squadId: FOLLOWUP_SQUAD_ID,

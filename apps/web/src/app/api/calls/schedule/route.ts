@@ -13,7 +13,7 @@ import { getClinicVapiConfigByUserId } from "@odis-ai/domain/clinics";
 
 // Dynamic import for lazy-loaded vapi library
 async function getVapiUtils() {
-  const { extractFirstName } = await import("@odis-ai/vapi/utils");
+  const { extractFirstName } = await import("@odis-ai/integrations/vapi/utils");
   return { extractFirstName };
 }
 

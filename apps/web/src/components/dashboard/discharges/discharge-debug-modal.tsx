@@ -39,8 +39,8 @@ async function buildVapiVariables(
   // Dynamic imports for lazy-loaded vapi library
   const [{ buildDynamicVariables }, { normalizeVariablesToSnakeCase }] =
     await Promise.all([
-      import("@odis-ai/vapi/knowledge-base"),
-      import("@odis-ai/vapi/utils"),
+      import("@odis-ai/integrations/vapi/knowledge-base"),
+      import("@odis-ai/integrations/vapi/utils"),
     ]);
 
   // Build base variables (matching CasesService.scheduleDischargeCall logic)

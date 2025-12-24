@@ -11,7 +11,7 @@ import type { StructuredDischargeSummary } from "@odis-ai/shared/validators/disc
 
 // Dynamic import to avoid bundling @react-email/components during static generation
 async function getCasesService() {
-  const { CasesService } = await import("@odis-ai/services-cases");
+  const { CasesService } = await import("@odis-ai/domain/cases");
   return CasesService;
 }
 
@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
     // Generate structured discharge summary using AI
     // Dynamic import for lazy-loaded ai library
     const { generateStructuredDischargeSummaryWithRetry } =
-      await import("@odis-ai/ai/generate-structured-discharge");
+      await import("@odis-ai/integrations/ai/generate-structured-discharge");
 
     let summaryContent: string;
     let structuredContent: StructuredDischargeSummary | null = null;

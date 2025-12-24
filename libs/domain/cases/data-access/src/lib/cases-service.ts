@@ -78,7 +78,7 @@ export const CasesService = {
       transcriptionText = payload.text;
       // Run AI Normalization (dynamic import to avoid lazy-load constraint)
       const { extractEntitiesWithRetry } =
-        await import("@odis-ai/ai/normalize-scribe");
+        await import("@odis-ai/integrations/ai/normalize-scribe");
       entities = await extractEntitiesWithRetry(
         payload.text,
         payload.options?.inputType,
@@ -646,7 +646,7 @@ export const CasesService = {
 
       // Generate structured discharge summary (dynamic import to avoid lazy-load constraint)
       const { generateStructuredDischargeSummaryWithRetry } =
-        await import("@odis-ai/ai/generate-structured-discharge");
+        await import("@odis-ai/integrations/ai/generate-structured-discharge");
       const { structured, plainText } =
         await generateStructuredDischargeSummaryWithRetry({
           entityExtraction: entities,
@@ -771,7 +771,7 @@ export const CasesService = {
 
       // 4. Run AI extraction (dynamic import to avoid lazy-load constraint)
       const { extractEntitiesWithRetry } =
-        await import("@odis-ai/ai/normalize-scribe");
+        await import("@odis-ai/integrations/ai/normalize-scribe");
       const entities = await extractEntitiesWithRetry(
         cleanedText,
         "idexx_consultation_notes",
@@ -918,7 +918,7 @@ export const CasesService = {
 
       // Dynamic import to avoid lazy-load constraint
       const { generateCallIntelligenceFromEntities } =
-        await import("@odis-ai/ai/generate-assessment-questions");
+        await import("@odis-ai/integrations/ai/generate-assessment-questions");
       const intelligence = await generateCallIntelligenceFromEntities(entities);
 
       // Store in case metadata
@@ -1075,7 +1075,7 @@ export const CasesService = {
         try {
           // Extract entities from transcription (dynamic import to avoid lazy-load constraint)
           const { extractEntitiesWithRetry } =
-            await import("@odis-ai/ai/normalize-scribe");
+            await import("@odis-ai/integrations/ai/normalize-scribe");
           const extractedEntities = await extractEntitiesWithRetry(
             transcriptionData.transcript,
             "transcript",
@@ -1150,7 +1150,7 @@ export const CasesService = {
     // 2. Extract AI-extracted variables (species, breed, age, diagnoses, etc.)
     // Dynamic import to avoid lazy-load constraint
     const { extractVapiVariablesFromEntities } =
-      await import("@odis-ai/vapi/extract-variables");
+      await import("@odis-ai/integrations/vapi/extract-variables");
     const extractedVars = extractVapiVariablesFromEntities(entities);
 
     // 2a. Check for pre-generated AI call intelligence (generated at ingest-time)
@@ -1198,7 +1198,7 @@ export const CasesService = {
 
       // Dynamic import to avoid lazy-load constraint
       const { generateCallIntelligenceFromEntities } =
-        await import("@odis-ai/ai/generate-assessment-questions");
+        await import("@odis-ai/integrations/ai/generate-assessment-questions");
       const intelligence = await generateCallIntelligenceFromEntities(entities);
       aiIntelligence = {
         caseContextSummary: intelligence.caseContextSummary,
@@ -1225,9 +1225,9 @@ export const CasesService = {
     // (many vet systems store "FirstName LastName" but we only want first name for calls)
     // Dynamic imports to avoid lazy-load constraint
     const { buildDynamicVariables } =
-      await import("@odis-ai/vapi/knowledge-base");
+      await import("@odis-ai/integrations/vapi/knowledge-base");
     const { extractFirstName, normalizeVariablesToSnakeCase } =
-      await import("@odis-ai/vapi/utils");
+      await import("@odis-ai/integrations/vapi/utils");
     const variablesResult = buildDynamicVariables({
       baseVariables: {
         clinicName: options.clinicName ?? "Your Clinic",
@@ -1529,7 +1529,7 @@ export const CasesService = {
             // Dynamic import to avoid circular dependencies
             const { executeScheduledCall } =
               // eslint-disable-next-line @nx/enforce-module-boundaries
-              await import("@odis-ai/services-discharge/call-executor");
+              await import("@odis-ai/domain/discharge/call-executor");
             result = await executeScheduledCall(scheduledCall.id, supabase);
           }
 
@@ -1625,7 +1625,7 @@ export const CasesService = {
           // Dynamic import to avoid circular dependencies
           const { executeScheduledCall } =
             // eslint-disable-next-line @nx/enforce-module-boundaries
-            await import("@odis-ai/services-discharge/call-executor");
+            await import("@odis-ai/domain/discharge/call-executor");
           result = await executeScheduledCall(scheduledCall.id, supabase);
         }
 

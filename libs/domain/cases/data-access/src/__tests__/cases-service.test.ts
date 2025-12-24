@@ -9,15 +9,15 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { CasesService } from "../lib/cases-service";
 
 // Mock all external dependencies
-vi.mock("@odis-ai/ai/normalize-scribe", () => ({
+vi.mock("@odis-ai/integrations/ai/normalize-scribe", () => ({
   extractEntitiesWithRetry: vi.fn(),
 }));
 
-vi.mock("@odis-ai/ai/generate-structured-discharge", () => ({
+vi.mock("@odis-ai/integrations/ai/generate-structured-discharge", () => ({
   generateStructuredDischargeSummaryWithRetry: vi.fn(),
 }));
 
-vi.mock("@odis-ai/ai/generate-assessment-questions", () => ({
+vi.mock("@odis-ai/integrations/ai/generate-assessment-questions", () => ({
   generateCallIntelligenceFromEntities: vi.fn(),
 }));
 
@@ -25,11 +25,11 @@ vi.mock("@odis-ai/qstash/client", () => ({
   scheduleCallExecution: vi.fn(),
 }));
 
-vi.mock("@odis-ai/vapi/knowledge-base", () => ({
+vi.mock("@odis-ai/integrations/vapi/knowledge-base", () => ({
   buildDynamicVariables: vi.fn(),
 }));
 
-vi.mock("@odis-ai/vapi/extract-variables", () => ({
+vi.mock("@odis-ai/integrations/vapi/extract-variables", () => ({
   extractVapiVariablesFromEntities: vi.fn(),
 }));
 
@@ -90,7 +90,7 @@ describe("CasesService", () => {
     it("throws when entities cannot be extracted", async () => {
       const mockSupabase = {} as any;
       const { extractEntitiesWithRetry } =
-        await import("@odis-ai/ai/normalize-scribe");
+        await import("@odis-ai/integrations/ai/normalize-scribe");
 
       // Mock to return null (no entities extracted)
       vi.mocked(extractEntitiesWithRetry).mockResolvedValue(

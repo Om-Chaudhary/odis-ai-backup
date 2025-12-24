@@ -8,7 +8,7 @@
  * Uses dynamic imports for vapi modules to avoid circular dependencies:
  * vapi -> qstash -> services-discharge cycle
  *
- * @module @odis-ai/services-discharge/call-executor
+ * @module @odis-ai/domain/discharge/call-executor
  */
 
 import type { SupabaseClientType } from "@odis-ai/shared/types/supabase";
@@ -46,8 +46,8 @@ export async function executeScheduledCall(
 
   // Dynamic import vapi modules to avoid circular dependencies
   const { createPhoneCall, mapVapiStatus } =
-    await import("@odis-ai/vapi/client");
-  const { normalizeVariablesToSnakeCase } = await import("@odis-ai/vapi/utils");
+    await import("@odis-ai/integrations/vapi/client");
+  const { normalizeVariablesToSnakeCase } = await import("@odis-ai/integrations/vapi/utils");
 
   // 1. Fetch scheduled call from database
   const { data: call, error } = await supabase
@@ -243,13 +243,13 @@ async function enrichCallVariables(
   try {
     // Dynamic imports to avoid circular dependencies
     // eslint-disable-next-line @nx/enforce-module-boundaries
-    const { CasesService } = await import("@odis-ai/services-cases");
+    const { CasesService } = await import("@odis-ai/domain/cases");
     const { buildDynamicVariables } =
-      await import("@odis-ai/vapi/knowledge-base");
+      await import("@odis-ai/integrations/vapi/knowledge-base");
     const { extractVapiVariablesFromEntities } =
-      await import("@odis-ai/vapi/extract-variables");
+      await import("@odis-ai/integrations/vapi/extract-variables");
     const { normalizeVariablesToSnakeCase, extractFirstName } =
-      await import("@odis-ai/vapi/utils");
+      await import("@odis-ai/integrations/vapi/utils");
 
     const caseInfo = await CasesService.getCaseWithEntities(
       supabase,

@@ -1,5 +1,5 @@
 /**
- * @odis-ai/services-discharge
+ * @odis-ai/domain/discharge
  *
  * Discharge orchestration, batch processing, and execution services.
  *
@@ -12,16 +12,16 @@
  *   - `executeScheduledEmail` - Executes a scheduled email via Resend
  *
  * - **Orchestrator**: Coordinates multi-step discharge workflows
- *   - Import directly: `@odis-ai/services-discharge/discharge-orchestrator`
+ *   - Import directly: `@odis-ai/domain/discharge/discharge-orchestrator`
  *
  * - **Batch Processor**: Handles batch discharge operations
- *   - Import directly: `@odis-ai/services-discharge/discharge-batch-processor`
+ *   - Import directly: `@odis-ai/domain/discharge/discharge-batch-processor`
  *
  * ## Usage
  *
  * ### Direct Execution (Test Mode)
  * ```typescript
- * import { executeScheduledCall, executeScheduledEmail } from '@odis-ai/services-discharge';
+ * import { executeScheduledCall, executeScheduledEmail } from '@odis-ai/domain/discharge';
  *
  * // Execute call immediately
  * const callResult = await executeScheduledCall(callId, supabase);
@@ -44,8 +44,8 @@
  * The orchestrator and batch processor are not exported from index to avoid
  * bundling @react-email/components during Next.js static page generation.
  * Import them directly when needed:
- * - `@odis-ai/services-discharge/discharge-orchestrator`
- * - `@odis-ai/services-discharge/discharge-batch-processor`
+ * - `@odis-ai/domain/discharge/discharge-orchestrator`
+ * - `@odis-ai/domain/discharge/discharge-batch-processor`
  */
 
 // Export executor functions for direct use

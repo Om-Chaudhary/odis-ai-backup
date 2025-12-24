@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 // Dynamic import to avoid bundling @react-email/components during static generation
 async function getDischargeBatchProcessor() {
   const { DischargeBatchProcessor } =
-    await import("@odis-ai/services-discharge/discharge-batch-processor");
+    await import("@odis-ai/domain/discharge/discharge-batch-processor");
   return DischargeBatchProcessor;
 }
 

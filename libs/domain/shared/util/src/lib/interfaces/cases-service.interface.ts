@@ -23,8 +23,8 @@ type DischargeSummaryRow =
  * Note: CasesService implements these methods (and more), but this interface
  * only exposes what DischargeOrchestrator needs.
  *
- * Implemented by: CasesService in @odis-ai/services-cases
- * Used by: DischargeOrchestrator in @odis-ai/services-discharge
+ * Implemented by: CasesService in @odis-ai/domain/cases
+ * Used by: DischargeOrchestrator in @odis-ai/domain/discharge
  */
 export interface ICasesService {
   /**

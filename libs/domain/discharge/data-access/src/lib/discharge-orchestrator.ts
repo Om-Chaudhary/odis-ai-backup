@@ -638,7 +638,7 @@ export class DischargeOrchestrator {
 
     // Run entity extraction (dynamic import to avoid lazy-load constraint)
     const { extractEntitiesWithRetry } =
-      await import("@odis-ai/ai/normalize-scribe");
+      await import("@odis-ai/integrations/ai/normalize-scribe");
     const entities = await extractEntitiesWithRetry(
       textToExtract,
       extractionSource,
@@ -910,7 +910,7 @@ export class DischargeOrchestrator {
     // Generate structured summary with SOAP content if available
     // Dynamic import to avoid lazy-load constraint
     const { generateStructuredDischargeSummaryWithRetry } =
-      await import("@odis-ai/ai/generate-structured-discharge");
+      await import("@odis-ai/integrations/ai/generate-structured-discharge");
     const { structured: structuredContent, plainText: summaryContent } =
       await generateStructuredDischargeSummaryWithRetry({
         soapContent, // Now includes fresh SOAP notes from database

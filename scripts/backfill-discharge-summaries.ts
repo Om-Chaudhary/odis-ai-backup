@@ -273,7 +273,7 @@ async function extractEntitiesFromNotes(
   }
 
   // Dynamic import
-  const { extractEntitiesWithRetry } = await import("@odis-ai/ai");
+  const { extractEntitiesWithRetry } = await import("@odis-ai/integrations/ai");
 
   const entities = await extractEntitiesWithRetry(
     cleanedText,
@@ -320,7 +320,7 @@ async function generateDischargeSummary(
   },
 ): Promise<{ structured: unknown; plainText: string }> {
   const { generateStructuredDischargeSummaryWithRetry } =
-    await import("@odis-ai/ai");
+    await import("@odis-ai/integrations/ai");
 
   return generateStructuredDischargeSummaryWithRetry({
     entityExtraction: entities as NormalizedEntities | undefined,

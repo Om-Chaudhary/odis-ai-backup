@@ -21,7 +21,7 @@ async function getDischargeOrchestrator() {
   const { DischargeOrchestrator } = await import("./discharge-orchestrator");
   // Dynamic import to avoid circular dependency between services-discharge and services-cases
   // eslint-disable-next-line @nx/enforce-module-boundaries
-  const { CasesService } = await import("@odis-ai/services-cases");
+  const { CasesService } = await import("@odis-ai/domain/cases");
   return { DischargeOrchestrator, CasesService };
 }
 

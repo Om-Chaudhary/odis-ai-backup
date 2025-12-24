@@ -6,7 +6,7 @@ import { createServiceClient } from "@odis-ai/data-access/db/server";
 // Dynamic import to avoid bundling issues during static generation
 async function getCallExecutor() {
   const { executeScheduledCall } =
-    await import("@odis-ai/services-discharge/call-executor");
+    await import("@odis-ai/domain/discharge/call-executor");
   return executeScheduledCall;
 }
 

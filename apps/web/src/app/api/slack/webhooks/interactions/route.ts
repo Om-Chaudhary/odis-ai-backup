@@ -10,7 +10,7 @@ import {
   verifySlackRequest,
   ensureSlackClientInitialized,
 } from "@odis-ai/integrations/slack";
-import { handleInteraction } from "@odis-ai/slack/webhooks";
+import { handleInteraction } from "@odis-ai/integrations/slack/webhooks";
 import { createServiceClient } from "@odis-ai/data-access/db/server";
 
 /**

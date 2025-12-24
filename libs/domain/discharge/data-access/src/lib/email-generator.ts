@@ -32,8 +32,8 @@ export async function generateEmailContent(
 
   // Dynamic import to avoid Next.js bundling issues during static generation
   const { DischargeEmailTemplate } =
-    await import("@odis-ai/email/discharge-email-template");
-  const { htmlToPlainText } = await import("@odis-ai/email");
+    await import("@odis-ai/shared/email/discharge-email-template");
+  const { htmlToPlainText } = await import("@odis-ai/shared/email");
 
   // Generate HTML email (now returns plain HTML string, no React components)
   const html = DischargeEmailTemplate({
