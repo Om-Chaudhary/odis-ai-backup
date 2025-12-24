@@ -1,15 +1,20 @@
-import { getSupabaseClient, logger, getCurrentISOString, requireAuthSession } from '@odis-ai/extension/shared';
-import type { Tables } from '@database-types';
+import {
+  getSupabaseClient,
+  logger,
+  getCurrentISOString,
+  requireAuthSession,
+} from "@odis-ai/extension/shared";
+import type { Tables } from "@odis-ai/shared/types";
 
-const odisLogger = logger.child('[ODIS]');
+const odisLogger = logger.child("[ODIS]");
 
-type Patient = Tables<'patients'>;
-type Case = Tables<'cases'>;
+type Patient = Tables<"patients">;
+type Case = Tables<"cases">;
 
 const getSupabaseErrorCode = (error: unknown): string | undefined => {
-  if (typeof error === 'object' && error !== null && 'code' in error) {
+  if (typeof error === "object" && error !== null && "code" in error) {
     const code = (error as Record<string, unknown>).code;
-    if (typeof code === 'string') return code;
+    if (typeof code === "string") return code;
   }
   return undefined;
 };
@@ -22,7 +27,9 @@ const getSupabaseErrorCode = (error: unknown): string | undefined => {
  *
  * Returns array with single patient (newest match) or empty array if no match found.
  */
-const searchPatientsByName = async (searchTerm: string): Promise<PatientWithCase[]> => {
+const searchPatientsByName = async (
+  searchTerm: string,
+): Promise<PatientWithCase[]> => {
   const supabase = getSupabaseClient();
 
   // Ensure user is authenticated
@@ -34,21 +41,27 @@ const searchPatientsByName = async (searchTerm: string): Promise<PatientWithCase
   // This is more efficient than loading all cases and avoids the 500 limit bug
   // RLS on cases table ensures we only see patients linked to user's cases
   const { data: matchingPatients, error: patientsError } = await supabase
-    .from('patients')
-    .select('id, name, case_id, cases!inner(id, user_id, created_at, updated_at)')
-    .ilike('name', normalizedSearchTerm) // Case-insensitive exact match
-    .eq('cases.user_id', session.user.id) // Filter by current user's cases
-    .order('cases(updated_at)', { ascending: false }) // Most recent case first
+    .from("patients")
+    .select(
+      "id, name, case_id, cases!inner(id, user_id, created_at, updated_at)",
+    )
+    .ilike("name", normalizedSearchTerm) // Case-insensitive exact match
+    .eq("cases.user_id", session.user.id) // Filter by current user's cases
+    .order("cases(updated_at)", { ascending: false }) // Most recent case first
     .limit(1); // We only need the most recent match
 
   if (patientsError) {
-    odisLogger.error('❌ Error searching for patients by name', { error: patientsError });
-    if (getSupabaseErrorCode(patientsError) === 'PGRST116') return [];
+    odisLogger.error("❌ Error searching for patients by name", {
+      error: patientsError,
+    });
+    if (getSupabaseErrorCode(patientsError) === "PGRST116") return [];
     throw patientsError as unknown as Error;
   }
 
   if (!matchingPatients || matchingPatients.length === 0) {
-    odisLogger.debug('No patient found with name', { searchTerm: normalizedSearchTerm });
+    odisLogger.debug("No patient found with name", {
+      searchTerm: normalizedSearchTerm,
+    });
     return [];
   }
 
@@ -67,12 +80,15 @@ const searchPatientsByName = async (searchTerm: string): Promise<PatientWithCase
 
   const matchedPatient: PatientWithCase = {
     id: String(patient.id),
-    name: patient.name || 'Unknown Patient',
-    latest_case_id: String(patient.cases?.id ?? patient.case_id ?? ''),
-    latest_case_date: patient.cases?.updated_at ?? patient.cases?.created_at ?? getCurrentISOString(),
+    name: patient.name || "Unknown Patient",
+    latest_case_id: String(patient.cases?.id ?? patient.case_id ?? ""),
+    latest_case_date:
+      patient.cases?.updated_at ??
+      patient.cases?.created_at ??
+      getCurrentISOString(),
   };
 
-  odisLogger.debug('Found patient by name', {
+  odisLogger.debug("Found patient by name", {
     searchTerm: normalizedSearchTerm,
     patientId: matchedPatient.id,
     caseId: matchedPatient.latest_case_id,
@@ -85,30 +101,39 @@ const searchPatientsByName = async (searchTerm: string): Promise<PatientWithCase
  * Fetch recent unique patients for the current authenticated user
  * Returns patients ordered by most recent case activity
  */
-const fetchRecentPatients = async (limit: number = 10): Promise<PatientWithCase[]> => {
+const fetchRecentPatients = async (limit = 10): Promise<PatientWithCase[]> => {
   const supabase = getSupabaseClient();
 
   // Ensure user is authenticated
   const session = await requireAuthSession();
 
-  odisLogger.debug('Fetching recent patients from most recently modified cases', { userEmail: session.user.email });
+  odisLogger.debug(
+    "Fetching recent patients from most recently modified cases",
+    { userEmail: session.user.email },
+  );
 
   // Source of truth for recency is the cases table, ordered by last modification.
   // We fetch the most recently modified cases for the current user, join patients,
   // then deduplicate by patient to yield patients ordered by their latest case activity.
   // Note: patients.case_id references cases.id (one patient per case)
   const { data: recentCases, error: casesError } = await supabase
-    .from('cases')
-    .select(['id', 'created_at', 'updated_at', 'user_id', 'patients(id, name)'].join(', '))
-    .eq('user_id', session.user.id)
-    .not('patients', 'is', null)
-    .order('updated_at', { ascending: false })
+    .from("cases")
+    .select(
+      ["id", "created_at", "updated_at", "user_id", "patients(id, name)"].join(
+        ", ",
+      ),
+    )
+    .eq("user_id", session.user.id)
+    .not("patients", "is", null)
+    .order("updated_at", { ascending: false })
     // Over-fetch to allow per-patient de-duplication
     .limit(Math.max(limit * 5, 100));
 
   if (casesError) {
-    odisLogger.error('Error fetching recent cases with patients join', { error: casesError });
-    if (getSupabaseErrorCode(casesError) === 'PGRST116') return [];
+    odisLogger.error("Error fetching recent cases with patients join", {
+      error: casesError,
+    });
+    if (getSupabaseErrorCode(casesError) === "PGRST116") return [];
     throw casesError as unknown as Error;
   }
 
@@ -136,10 +161,11 @@ const fetchRecentPatients = async (limit: number = 10): Promise<PatientWithCase[
       seenPatientIds.add(patientId);
       uniquePatients.push({
         id: String(patientId),
-        name: patient?.name || 'Unknown Patient',
-        latest_case_id: String(c.id ?? ''),
+        name: patient?.name || "Unknown Patient",
+        latest_case_id: String(c.id ?? ""),
         // Use updated_at if available, otherwise fall back to created_at
-        latest_case_date: c.updated_at ?? c.created_at ?? new Date().toISOString(),
+        latest_case_date:
+          c.updated_at ?? c.created_at ?? new Date().toISOString(),
       });
 
       if (uniquePatients.length >= limit) break;
@@ -162,18 +188,20 @@ const fetchPatientLatestDischargeSummary = async (patientId: string) => {
 
   // Get the most recent discharge summary for any case linked to this patient
   const { data: summary, error: summaryError } = await supabase
-    .from('discharge_summaries')
-    .select('*, cases!inner(id, user_id, external_id, patients!inner(id, name))')
-    .eq('cases.user_id', session.user.id)
-    .eq('cases.patients.id', patientId)
-    .order('created_at', { ascending: false })
+    .from("discharge_summaries")
+    .select(
+      "*, cases!inner(id, user_id, external_id, patients!inner(id, name))",
+    )
+    .eq("cases.user_id", session.user.id)
+    .eq("cases.patients.id", patientId)
+    .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
   if (summaryError) {
     // If no rows, return null
     const code = (summaryError as { code?: string } | null)?.code;
-    if (code === 'PGRST116') return null;
+    if (code === "PGRST116") return null;
     throw summaryError;
   }
 
@@ -192,18 +220,20 @@ const fetchPatientLatestSoapNote = async (patientId: string) => {
 
   // Get the most recent SOAP note for any case linked to this patient
   const { data: soapNote, error: soapError } = await supabase
-    .from('soap_notes')
-    .select('*, cases!inner(id, user_id, external_id, patients!inner(id, name))')
-    .eq('cases.user_id', session.user.id)
-    .eq('cases.patients.id', patientId)
-    .order('created_at', { ascending: false })
+    .from("soap_notes")
+    .select(
+      "*, cases!inner(id, user_id, external_id, patients!inner(id, name))",
+    )
+    .eq("cases.user_id", session.user.id)
+    .eq("cases.patients.id", patientId)
+    .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
 
   if (soapError) {
     // If no rows, return null
     const code = (soapError as { code?: string } | null)?.code;
-    if (code === 'PGRST116') return null;
+    if (code === "PGRST116") return null;
     throw soapError;
   }
 
@@ -221,12 +251,15 @@ const checkCaseHasTranscriptions = async (caseId: string): Promise<boolean> => {
 
   // Count transcriptions for this case
   const { count, error } = await supabase
-    .from('transcriptions')
-    .select('id', { count: 'exact', head: true })
-    .eq('case_id', caseId);
+    .from("transcriptions")
+    .select("id", { count: "exact", head: true })
+    .eq("case_id", caseId);
 
   if (error) {
-    odisLogger.warn('Error checking transcriptions for case', { error, caseId });
+    odisLogger.warn("Error checking transcriptions for case", {
+      error,
+      caseId,
+    });
     return false;
   }
 
@@ -250,60 +283,78 @@ const checkCaseHasTranscriptions = async (caseId: string): Promise<boolean> => {
  * @param consultationId - The IDEXX consultation ID (from URL or page)
  * @returns PatientWithCase if found and has transcriptions, null otherwise
  */
-const fetchPatientByConsultationId = async (consultationId: string): Promise<PatientWithCase | null> => {
+const fetchPatientByConsultationId = async (
+  consultationId: string,
+): Promise<PatientWithCase | null> => {
   const supabase = getSupabaseClient();
 
   // Ensure user is authenticated
   const session = await requireAuthSession();
 
-  odisLogger.debug('Looking up patient by consultation ID', { consultationId, userId: session.user.id });
+  odisLogger.debug("Looking up patient by consultation ID", {
+    consultationId,
+    userId: session.user.id,
+  });
 
   // Query case by consultation_id in metadata, join to patients
   const { data: caseData, error: caseError } = await supabase
-    .from('cases')
-    .select('id, updated_at, created_at, patients(id, name)')
-    .eq('metadata->idexx->>consultation_id', consultationId)
-    .eq('user_id', session.user.id)
+    .from("cases")
+    .select("id, updated_at, created_at, patients(id, name)")
+    .eq("metadata->idexx->>consultation_id", consultationId)
+    .eq("user_id", session.user.id)
     .maybeSingle();
 
   if (caseError) {
-    odisLogger.warn('Error fetching case by consultation ID', { error: caseError, consultationId });
-    if (getSupabaseErrorCode(caseError) === 'PGRST116') return null;
+    odisLogger.warn("Error fetching case by consultation ID", {
+      error: caseError,
+      consultationId,
+    });
+    if (getSupabaseErrorCode(caseError) === "PGRST116") return null;
     throw caseError as unknown as Error;
   }
 
   if (!caseData) {
-    odisLogger.debug('No case found for consultation ID', { consultationId });
+    odisLogger.debug("No case found for consultation ID", { consultationId });
     return null;
   }
 
   // Check if case has transcriptions before proceeding
   const hasTranscriptions = await checkCaseHasTranscriptions(caseData.id);
   if (!hasTranscriptions) {
-    odisLogger.debug('Case found but has no transcriptions, skipping auto-selection', {
+    odisLogger.debug(
+      "Case found but has no transcriptions, skipping auto-selection",
+      {
+        consultationId,
+        caseId: caseData.id,
+      },
+    );
+    return null;
+  }
+
+  // Type the patients response
+  const patients = caseData.patients as unknown as Array<{
+    id: string;
+    name: string | null;
+  }> | null;
+  const patient = patients?.[0];
+
+  if (!patient) {
+    odisLogger.debug("Case found but no patient linked", {
       consultationId,
       caseId: caseData.id,
     });
     return null;
   }
 
-  // Type the patients response
-  const patients = caseData.patients as unknown as Array<{ id: string; name: string | null }> | null;
-  const patient = patients?.[0];
-
-  if (!patient) {
-    odisLogger.debug('Case found but no patient linked', { consultationId, caseId: caseData.id });
-    return null;
-  }
-
   const result: PatientWithCase = {
     id: String(patient.id),
-    name: patient.name || 'Unknown Patient',
+    name: patient.name || "Unknown Patient",
     latest_case_id: String(caseData.id),
-    latest_case_date: caseData.updated_at ?? caseData.created_at ?? getCurrentISOString(),
+    latest_case_date:
+      caseData.updated_at ?? caseData.created_at ?? getCurrentISOString(),
   };
 
-  odisLogger.debug('Found patient by consultation ID with transcriptions', {
+  odisLogger.debug("Found patient by consultation ID with transcriptions", {
     consultationId,
     patientId: result.id,
     patientName: result.name,
@@ -338,24 +389,24 @@ export interface PatientWithCase {
  */
 export const detectIdexxPatientNameFromDom = (): string | null => {
   try {
-    odisLogger.debug('🔍 Attempting to detect patient name from DOM...');
+    odisLogger.debug("🔍 Attempting to detect patient name from DOM...");
 
     // Try multiple selectors in order of specificity
     const selectors = [
       '[data-qa="patient-signalment-patient-name"].spot-patient-display__pet-name',
       '[data-qa="patient-signalment-patient-name"]',
-      '.spot-patient-display__pet-name',
+      ".spot-patient-display__pet-name",
     ];
 
     for (const selector of selectors) {
       const container = document.querySelector(selector) as HTMLElement | null;
       if (container) {
-        const anchor = container.querySelector('a');
-        const raw = (anchor?.textContent ?? container.textContent ?? '').trim();
+        const anchor = container.querySelector("a");
+        const raw = (anchor?.textContent ?? container.textContent ?? "").trim();
 
         if (raw) {
           // Normalize: collapse whitespace and strip trailing punctuation/spaces
-          const normalized = raw.replace(/\s+/g, ' ').trim();
+          const normalized = raw.replace(/\s+/g, " ").trim();
           return normalized;
         }
       }
@@ -363,7 +414,7 @@ export const detectIdexxPatientNameFromDom = (): string | null => {
 
     return null;
   } catch (error) {
-    odisLogger.error('❌ Error detecting patient name from DOM', { error });
+    odisLogger.error("❌ Error detecting patient name from DOM", { error });
     return null;
   }
 };

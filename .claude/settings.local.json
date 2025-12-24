@@ -145,7 +145,10 @@
       "Bash(mkdir:*)",
       "Bash(pnpm nx show:*)",
       "Bash(python3:*)",
-      "Bash(nx build:*)"
+      "Bash(nx build:*)",
+      "Bash(node --version)",
+      "Bash(NODE_OPTIONS='--trace-deprecation' timeout 10 pnpm dev:*)",
+      "Bash(pnpm nx:*)"
     ],
     "deny": [],
     "ask": []

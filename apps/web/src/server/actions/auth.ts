@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@odis-ai/data-access/db/server";
-import type { Database } from "~/database.types";
+import type { Database } from "@odis-ai/shared/types";
 
 export async function signUp(formData: FormData) {
   const supabase = await createClient();

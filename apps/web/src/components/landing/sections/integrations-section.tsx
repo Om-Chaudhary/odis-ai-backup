@@ -1,11 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import Image from "next/image";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { SectionBackground } from "../ui/section-background";
-import { Check } from "lucide-react";
-import { cn } from "@odis-ai/shared/util";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
 
 // Animation variants - consistent with hero
@@ -81,47 +79,17 @@ const defaultBottomRowApps: IntegrationApp[] = [
   { name: "IDEXX Neo", logo: "/integrations/idexx.svg", status: "active" },
 ];
 
-// Integration card component with hover effect
-const IntegrationCard = ({ app }: { app: IntegrationApp }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
+// Simple grayscale logo component
+const IntegrationLogo = ({ app }: { app: IntegrationApp }) => {
   return (
-    <div
-      className={cn(
-        "group relative flex h-20 w-36 flex-shrink-0 items-center justify-center rounded-2xl px-4 transition-all duration-300",
-        "border border-slate-200/60 bg-white/80 backdrop-blur-sm",
-        "hover:-translate-y-1 hover:border-teal-200 hover:shadow-lg hover:shadow-teal-500/10",
-      )}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Status indicator */}
-      {app.status === "active" && (
-        <div className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-teal-500 shadow">
-          <Check className="h-3.5 w-3.5 text-white" />
-        </div>
-      )}
-
+    <div className="flex h-12 w-32 flex-shrink-0 items-center justify-center px-4">
       <Image
         src={app.logo}
         alt={app.name}
         width={120}
         height={40}
-        className={cn(
-          "block h-10 w-full object-contain transition-all duration-300",
-          "group-hover:scale-105",
-          app.status === "coming-soon" &&
-            "opacity-60 grayscale group-hover:opacity-80 group-hover:grayscale-0",
-        )}
+        className="block h-8 w-full object-contain opacity-50 grayscale transition-all duration-300 hover:opacity-80 hover:grayscale-0"
       />
-
-      {/* Tooltip on hover */}
-      {isHovered && (
-        <div className="absolute -bottom-8 left-1/2 z-30 -translate-x-1/2 rounded-lg bg-slate-800 px-2.5 py-1 text-xs font-medium whitespace-nowrap text-white shadow-lg">
-          {app.name}
-          {app.status === "coming-soon" && " (Coming Soon)"}
-        </div>
-      )}
     </div>
   );
 };
@@ -184,37 +152,37 @@ export const IntegrationsSection = ({
         initial="hidden"
         animate={isInView ? "visible" : "hidden"}
         transition={{ ...transition, delay: 0.5 }}
-        className="relative h-[240px] overflow-hidden"
+        className="relative h-[140px] overflow-hidden"
       >
         <div
-          className="absolute top-6 flex items-start gap-6 whitespace-nowrap"
+          className="absolute top-4 flex items-center gap-12 whitespace-nowrap"
           style={{
             animation: shouldReduceMotion
               ? "none"
-              : "scroll-left 30s linear infinite",
+              : "scroll-left 25s linear infinite",
             willChange: "transform",
           }}
         >
           {[...topRowApps, ...topRowApps].map((app, index) => (
-            <IntegrationCard key={`top-${index}`} app={app} />
+            <IntegrationLogo key={`top-${index}`} app={app} />
           ))}
         </div>
 
         {/* Gradient overlays - using transparent to blend with background */}
-        <div className="from-background pointer-events-none absolute inset-y-0 right-0 z-20 w-48 bg-gradient-to-l to-transparent lg:w-60" />
-        <div className="from-background pointer-events-none absolute inset-y-0 left-0 z-20 w-48 bg-gradient-to-r to-transparent lg:w-60" />
+        <div className="from-background pointer-events-none absolute inset-y-0 right-0 z-20 w-32 bg-gradient-to-l to-transparent lg:w-48" />
+        <div className="from-background pointer-events-none absolute inset-y-0 left-0 z-20 w-32 bg-gradient-to-r to-transparent lg:w-48" />
 
         <div
-          className="absolute top-[130px] flex items-start gap-6 whitespace-nowrap"
+          className="absolute top-[76px] flex items-center gap-12 whitespace-nowrap"
           style={{
             animation: shouldReduceMotion
               ? "none"
-              : "scroll-left-slow 40s linear infinite",
+              : "scroll-left-slow 35s linear infinite",
             willChange: "transform",
           }}
         >
           {[...bottomRowApps, ...bottomRowApps].map((app, index) => (
-            <IntegrationCard key={`bottom-${index}`} app={app} />
+            <IntegrationLogo key={`bottom-${index}`} app={app} />
           ))}
         </div>
       </motion.div>

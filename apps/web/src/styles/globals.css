@@ -2,9 +2,9 @@
 @import "tw-animate-css";
 
 /* Import shared design system */
-@import "../../../../libs/styles/src/tokens.css";
-@import "../../../../libs/styles/src/animations.css";
-@import "../../../../libs/styles/src/utilities.css";
+@import "../../../../libs/shared/styles/src/tokens.css";
+@import "../../../../libs/shared/styles/src/animations.css";
+@import "../../../../libs/shared/styles/src/utilities.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -393,25 +393,23 @@
     }
   }
 
-  /* Integration carousel scroll animations */
-  @keyframes scroll-left {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-50%);
-    }
-  }
+}
 
-  @keyframes scroll-left-slow {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-50%);
-    }
+/* Integration carousel scroll animations - must be at root level */
+@keyframes scroll-left {
+  from {
+    transform: translateX(0);
   }
+  to {
+    transform: translateX(-50%);
+  }
+}
 
-  --animate-scroll-left: scroll-left 30s linear infinite;
-  --animate-scroll-left-slow: scroll-left-slow 40s linear infinite;
+@keyframes scroll-left-slow {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }

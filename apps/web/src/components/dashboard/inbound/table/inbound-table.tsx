@@ -8,7 +8,7 @@ import type {
   AppointmentRequest,
   ClinicMessage,
 } from "../types";
-import type { Database } from "~/database.types";
+import type { Database } from "@odis-ai/shared/types";
 import {
   CallsHeader,
   AppointmentsHeader,

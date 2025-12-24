@@ -3,6 +3,7 @@
  *
  * Provides mocks for Next.js specific functionality
  */
+/* eslint-disable @typescript-eslint/consistent-type-imports */
 import { vi } from "vitest";
 
 /**
@@ -130,7 +131,7 @@ export function createMockCookies(cookies?: Record<string, string>) {
  */
 export const MockNextImage = vi.fn(
   (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
-    // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+    // eslint-disable-next-line @next/next/no-img-element
     return <img {...props} />;
   },
 );

@@ -5,9 +5,9 @@
  * stored in the cases table for IDEXX-sourced appointments.
  */
 
-import type { Database } from '@database-types';
+import type { Database } from "@odis-ai/shared/types";
 
-type Case = Database['public']['Tables']['cases']['Row'];
+type Case = Database["public"]["Tables"]["cases"]["Row"];
 
 /**
  * IDEXX-specific metadata stored in case.metadata.idexx
@@ -61,9 +61,11 @@ export interface CaseMetadata {
 /**
  * Type guard to check if metadata has IDEXX data
  */
-export const hasIdexxMetadata = (metadata: unknown): metadata is CaseMetadata => {
-  if (!metadata || typeof metadata !== 'object') return false;
-  return 'idexx' in metadata;
+export const hasIdexxMetadata = (
+  metadata: unknown,
+): metadata is CaseMetadata => {
+  if (!metadata || typeof metadata !== "object") return false;
+  return "idexx" in metadata;
 };
 
 /**
@@ -88,7 +90,10 @@ export const getIdexxMetadata = (caseItem: Case): IdexxCaseMetadata | null => {
 /**
  * Get patient name from case metadata with fallback
  */
-export const getPatientName = (caseItem: Case, fallback = 'Unknown'): string => {
+export const getPatientName = (
+  caseItem: Case,
+  fallback = "Unknown",
+): string => {
   const idexx = getIdexxMetadata(caseItem);
   return idexx?.patient_name || fallback;
 };

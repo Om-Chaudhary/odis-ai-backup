@@ -1,11 +1,15 @@
-import { getSupabaseClient, logger, fetchCasesByDate } from '@odis-ai/extension/shared';
-import { useEffect, useState, useRef } from 'react';
-import type { Tables } from '@database-types';
+import {
+  getSupabaseClient,
+  logger,
+  fetchCasesByDate,
+} from "@odis-ai/extension/shared";
+import { useEffect, useState, useRef } from "react";
+import type { Tables } from "@odis-ai/shared/types";
 
-const useCasesLogger = logger.child('[useCases]');
+const useCasesLogger = logger.child("[useCases]");
 
-type Case = Tables<'cases'>;
-type Patient = Tables<'patients'>;
+type Case = Tables<"cases">;
+type Patient = Tables<"patients">;
 
 interface CaseWithPatient extends Case {
   patients?: Patient[];
@@ -19,7 +23,11 @@ const FETCH_TIMEOUT = 10000; // 10 seconds timeout
 const createTimeoutPromise = (timeoutMs: number): Promise<never> =>
   new Promise((_, reject) => {
     setTimeout(() => {
-      reject(new Error(`Request timeout: Failed to fetch cases after ${timeoutMs}ms`));
+      reject(
+        new Error(
+          `Request timeout: Failed to fetch cases after ${timeoutMs}ms`,
+        ),
+      );
     }, timeoutMs);
   });
 
@@ -49,7 +57,7 @@ export const useCases = (selectedDate: Date) => {
     // Safety net: Force clear loading after timeout + buffer (15 seconds total)
     // This ensures loading is ALWAYS cleared even if something goes wrong
     loadingTimeoutRef.current = setTimeout(() => {
-      useCasesLogger.warn('Loading state force-cleared after timeout buffer');
+      useCasesLogger.warn("Loading state force-cleared after timeout buffer");
       setLoading(false);
     }, FETCH_TIMEOUT + 5000);
 
@@ -61,13 +69,16 @@ export const useCases = (selectedDate: Date) => {
 
       // Fetch cases with timeout
       const fetchPromise = fetchCasesByDate(supabase, selectedDate, {
-        select: '*, patients (*)',
-        orderBy: 'scheduled_at',
-        orderDirection: 'descending',
+        select: "*, patients (*)",
+        orderBy: "scheduled_at",
+        orderDirection: "descending",
       });
 
       // Race between fetch and timeout
-      const data = await Promise.race([fetchPromise, createTimeoutPromise(FETCH_TIMEOUT)]);
+      const data = await Promise.race([
+        fetchPromise,
+        createTimeoutPromise(FETCH_TIMEOUT),
+      ]);
 
       // Check if request was aborted
       if (abortController.signal.aborted) {
@@ -82,7 +93,10 @@ export const useCases = (selectedDate: Date) => {
       setCases((data as CaseWithPatient[]) || []);
     } catch (err) {
       // Ignore abort errors - but still clear loading
-      if (abortController.signal.aborted || (err instanceof Error && err.name === 'AbortError')) {
+      if (
+        abortController.signal.aborted ||
+        (err instanceof Error && err.name === "AbortError")
+      ) {
         if (loadingTimeoutRef.current) {
           clearTimeout(loadingTimeoutRef.current);
           loadingTimeoutRef.current = null;
@@ -91,9 +105,13 @@ export const useCases = (selectedDate: Date) => {
         return;
       }
 
-      useCasesLogger.error('Error fetching cases', { error: err });
+      useCasesLogger.error("Error fetching cases", { error: err });
       const errorMessage =
-        err instanceof Error ? err.message : typeof err === 'string' ? err : 'Failed to fetch cases. Please try again.';
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+            ? err
+            : "Failed to fetch cases. Please try again.";
       setError(errorMessage);
       setCases([]);
     } finally {

@@ -6,7 +6,7 @@ import {
 } from "~/server/api/trpc";
 import { createServiceClient } from "@odis-ai/data-access/db/server";
 import PostHogClient from "~/lib/posthog";
-import type { Database } from "~/database.types";
+import type { Database } from "@odis-ai/shared/types";
 
 type WaitlistSignup = Database["public"]["Tables"]["waitlist_signups"]["Row"];
 type WaitlistInsert =

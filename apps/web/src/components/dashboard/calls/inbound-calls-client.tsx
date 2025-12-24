@@ -50,7 +50,7 @@ import { InboundCallDetail } from "./inbound-call-detail";
 import { cn, formatDuration } from "@odis-ai/shared/util";
 import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
 import { useDebounce } from "@odis-ai/shared/hooks";
-import type { Database } from "~/database.types";
+import type { Database } from "@odis-ai/shared/types";
 
 const PAGE_SIZE = 20;
 

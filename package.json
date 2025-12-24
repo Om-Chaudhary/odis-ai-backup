@@ -6,7 +6,7 @@
   "scripts": {
     "build": "NX_ISOLATE_PLUGINS=false NODE_ENV=production nx build web",
     "build:all": "NODE_ENV=production nx run-many -t build",
-    "dev": "nx dev web",
+    "dev": "NODE_OPTIONS='--no-deprecation' nx dev web",
     "start": "nx start web",
     "preview": "nx build web && nx start web",
     "kill-dev": "node scripts/kill-dev-servers.js",

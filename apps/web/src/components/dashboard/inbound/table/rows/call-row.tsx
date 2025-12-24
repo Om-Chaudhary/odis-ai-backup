@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import type { Database } from "~/database.types";
+import type { Database } from "@odis-ai/shared/types";
 import { CallerDisplay, CallDuration, CallAlertsIcons } from "../table-cells";
 import { CallStatusBadge } from "../../../shared";
 import { getCallModifications } from "../../demo-data";

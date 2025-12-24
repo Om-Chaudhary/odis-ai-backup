@@ -1,8 +1,8 @@
-import { logger } from '@odis-ai/extension/shared';
-import { useState, useEffect } from 'react';
-import type { DischargeSummary } from '../../utils/discharge-summary-fetcher';
+import { logger } from "@odis-ai/extension/shared";
+import { useState, useEffect } from "react";
+import type { DischargeSummary } from "../../utils/discharge-summary-fetcher";
 
-const odisLogger = logger.child('[ODIS]');
+const odisLogger = logger.child("[ODIS]");
 
 interface EmailEditorProps {
   isOpen: boolean;
@@ -10,19 +10,24 @@ interface EmailEditorProps {
   dischargeSummary: DischargeSummary | null;
 }
 
-export const EmailEditor = ({ isOpen, onClose, dischargeSummary }: EmailEditorProps) => {
-  const [subject, setSubject] = useState('');
-  const [body, setBody] = useState('');
+export const EmailEditor = ({
+  isOpen,
+  onClose,
+  dischargeSummary,
+}: EmailEditorProps) => {
+  const [subject, setSubject] = useState("");
+  const [body, setBody] = useState("");
   const [isSending, setIsSending] = useState(false);
 
-  // @ts-expect-error - cases.patients is included in the query but not in the type
-  const patientName = dischargeSummary?.cases?.patients?.[0]?.name || 'Unknown Patient';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const patientName =
+    (dischargeSummary as any)?.cases?.patients?.[0]?.name || "Unknown Patient";
 
   // Populate email when discharge summary is loaded
   useEffect(() => {
     if (dischargeSummary) {
       setSubject(`Discharge Summary - ${patientName}`);
-      setBody(dischargeSummary.content || '');
+      setBody(dischargeSummary.content || "");
     }
   }, [dischargeSummary, patientName]);
 
@@ -35,12 +40,12 @@ export const EmailEditor = ({ isOpen, onClose, dischargeSummary }: EmailEditorPr
       // This component is kept for backward compatibility but should use the email-editor page instead
       // See: pages/email-editor/src/App.tsx and supabase/functions/send-discharge-email/
 
-      odisLogger.info('Sending email', { subject, body });
-      alert('Email functionality coming soon!');
+      odisLogger.info("Sending email", { subject, body });
+      alert("Email functionality coming soon!");
       onClose();
     } catch (error) {
-      odisLogger.error('Error sending email', { error });
-      alert('Failed to send email. Please try again.');
+      odisLogger.error("Error sending email", { error });
+      alert("Failed to send email. Please try again.");
     } finally {
       setIsSending(false);
     }
@@ -54,7 +59,7 @@ export const EmailEditor = ({ isOpen, onClose, dischargeSummary }: EmailEditorPr
 
   const handleOverlayKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.target !== e.currentTarget) return;
-    if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+    if (e.key === "Escape" || e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       onClose();
     }
@@ -69,13 +74,20 @@ export const EmailEditor = ({ isOpen, onClose, dischargeSummary }: EmailEditorPr
       role="button"
       tabIndex={0}
       onKeyDown={handleOverlayKeyDown}
-      aria-label="Close email editor overlay">
+      aria-label="Close email editor overlay"
+    >
       <div className="odis-email-panel">
         {/* Header */}
         <div className="odis-email-header">
           <div className="odis-email-header-content">
             <div className="odis-email-title">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="odis-email-icon">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                className="odis-email-icon"
+              >
                 <path
                   d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
                   stroke="currentColor"
@@ -112,7 +124,7 @@ export const EmailEditor = ({ isOpen, onClose, dischargeSummary }: EmailEditorPr
               type="text"
               className="odis-email-input"
               value={subject}
-              onChange={e => setSubject(e.target.value)}
+              onChange={(e) => setSubject(e.target.value)}
               placeholder="Enter email subject..."
             />
           </div>
@@ -125,7 +137,7 @@ export const EmailEditor = ({ isOpen, onClose, dischargeSummary }: EmailEditorPr
               id="email-body"
               className="odis-email-textarea"
               value={body}
-              onChange={e => setBody(e.target.value)}
+              onChange={(e) => setBody(e.target.value)}
               placeholder="Enter email message..."
             />
           </div>
@@ -133,17 +145,35 @@ export const EmailEditor = ({ isOpen, onClose, dischargeSummary }: EmailEditorPr
 
         {/* Footer Actions */}
         <div className="odis-email-footer">
-          <button className="odis-email-btn odis-email-btn-secondary" onClick={onClose} disabled={isSending}>
+          <button
+            className="odis-email-btn odis-email-btn-secondary"
+            onClick={onClose}
+            disabled={isSending}
+          >
             Cancel
           </button>
           <button
             className="odis-email-btn odis-email-btn-primary"
             onClick={handleSend}
-            disabled={isSending || !subject.trim() || !body.trim()}>
+            disabled={isSending || !subject.trim() || !body.trim()}
+          >
             {isSending ? (
               <>
-                <svg className="spinner" width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity="0.25" />
+                <svg
+                  className="spinner"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    opacity="0.25"
+                  />
                   <path
                     d="M12 2a10 10 0 0 1 10 10"
                     stroke="currentColor"

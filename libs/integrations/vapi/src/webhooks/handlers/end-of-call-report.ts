@@ -435,6 +435,48 @@ async function handleOutboundCallEnd(
  * - attention_severity (string)
  * - attention_summary (string)
  */
+/**
+ * Parse VAPI structured output format
+ * VAPI returns: { "uuid": { "name": "field_name", "result": value }, ... }
+ * We need: { "field_name": value, ... }
+ */
+function parseVapiStructuredOutput(
+  structuredData: Record<string, unknown> | undefined,
+): Record<string, unknown> {
+  if (!structuredData) return {};
+
+  // Check if it's already in flat format (legacy/backfilled)
+  if ("needs_attention" in structuredData) {
+    return structuredData;
+  }
+
+  // Parse VAPI's UUID-keyed format
+  const parsed: Record<string, unknown> = {};
+  for (const value of Object.values(structuredData)) {
+    if (
+      value &&
+      typeof value === "object" &&
+      "name" in value &&
+      "result" in value
+    ) {
+      const entry = value as { name: string; result: unknown };
+      // Handle nested result objects (e.g., {"attention_types": "[]"})
+      if (
+        entry.result &&
+        typeof entry.result === "object" &&
+        entry.name in (entry.result as Record<string, unknown>)
+      ) {
+        parsed[entry.name] = (entry.result as Record<string, unknown>)[
+          entry.name
+        ];
+      } else {
+        parsed[entry.name] = entry.result;
+      }
+    }
+  }
+  return parsed;
+}
+
 async function handleAttentionCase(
   call: VapiWebhookCall,
   existingCall: ExistingCallRecord,
@@ -442,7 +484,9 @@ async function handleAttentionCase(
   updateData: Record<string, unknown>,
   supabase: SupabaseClient,
 ): Promise<void> {
-  const needsAttention = structuredData?.needs_attention === true;
+  // Parse VAPI's structured output format
+  const parsed = parseVapiStructuredOutput(structuredData);
+  const needsAttention = parsed?.needs_attention === true;
 
   if (!needsAttention) {
     return;
@@ -452,24 +496,28 @@ async function handleAttentionCase(
     callId: call.id,
     dbId: existingCall.id,
     caseId: existingCall.case_id,
-    attentionTypes: structuredData?.attention_types,
-    severity: structuredData?.attention_severity,
+    attentionTypes: parsed?.attention_types,
+    severity: parsed?.attention_severity,
   });
 
   // Set attention fields
-  updateData.attention_types =
-    (structuredData?.attention_types as string[]) ?? [];
+  // Handle both array and comma-separated string formats from VAPI
+  const rawTypes = parsed?.attention_types;
+  updateData.attention_types = Array.isArray(rawTypes)
+    ? rawTypes
+    : typeof rawTypes === "string"
+      ? rawTypes
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+      : [];
   updateData.attention_severity =
-    (structuredData?.attention_severity as string) ?? "routine";
+    (parsed?.attention_severity as string) ?? "routine";
   updateData.attention_flagged_at = new Date().toISOString();
-  updateData.attention_summary =
-    (structuredData?.attention_summary as string) ?? null;
+  updateData.attention_summary = (parsed?.attention_summary as string) ?? null;
 
   // If critical severity, also mark parent case as urgent
-  if (
-    structuredData?.attention_severity === "critical" &&
-    existingCall.case_id
-  ) {
+  if (parsed?.attention_severity === "critical" && existingCall.case_id) {
     const { error: caseUpdateError } = await supabase
       .from("cases")
       .update({ is_urgent: true })

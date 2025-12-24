@@ -10,7 +10,7 @@
  * +12137774445 => (213) 777-4445
  * +442071234567 => +44 20 7123 4567
  */
-export function formatPhoneNumber(phone: string): string {
+export function formatPhoneNumberDisplay(phone: string): string {
   // Remove all non-digit characters except +
   const cleaned = phone.replace(/[^\d+]/g, "");
 
@@ -128,4 +128,146 @@ export function getCountryCode(phone: string): string | null {
 export function isUSNumber(phone: string): boolean {
   const countryCode = getCountryCode(phone);
   return countryCode === "+1";
+}
+
+// =============================================================================
+// MESSY DATA HANDLING
+// For real-world phone numbers from IDEXX/clinic systems that may contain
+// extra text, notes, or formatting issues.
+// =============================================================================
+
+/**
+ * Extract a phone number from messy text that may contain annotations.
+ *
+ * Real-world examples from IDEXX/clinic systems:
+ * - "9258958479 BEST!"
+ * - "NEW 925-346-1245"
+ * - "Home: (925) 555-1234"
+ * - "925.555.1234 cell"
+ * - "CALL FIRST 925-555-1234"
+ * - "925-555-1234 / 925-555-5678" (returns first match)
+ *
+ * @param text - Messy text that may contain a phone number
+ * @returns Extracted phone number (digits only) or null if no valid number found
+ */
+export function extractPhoneNumber(text: string): string | null {
+  if (!text || typeof text !== "string") {
+    return null;
+  }
+
+  // Pattern to match US phone numbers in various formats:
+  // - 10 consecutive digits: 9258958479
+  // - With dashes: 925-895-8479
+  // - With dots: 925.895.8479
+  // - With parens: (925) 895-8479
+  // - With spaces: 925 895 8479
+  // - With country code: 1-925-895-8479 or +1 925-895-8479
+  const phonePatterns = [
+    // US format with optional country code, various separators
+    /(?:\+?1[-.\s]?)?\(?(\d{3})\)?[-.\s]?(\d{3})[-.\s]?(\d{4})/,
+    // 10 consecutive digits
+    /\b(\d{3})(\d{3})(\d{4})\b/,
+  ];
+
+  for (const pattern of phonePatterns) {
+    const match = pattern.exec(text);
+    if (match) {
+      // Extract the three groups (area code, exchange, subscriber)
+      const areaCode = match[1];
+      const exchange = match[2];
+      const subscriber = match[3];
+
+      // Validate area code (first digit can't be 0 or 1 for US numbers)
+      if (areaCode && !areaCode.startsWith("0") && !areaCode.startsWith("1")) {
+        return `${areaCode}${exchange}${subscriber}`;
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Extract and convert a phone number from messy text to E.164 format.
+ *
+ * This is the main function for processing discharge phone numbers.
+ * It handles all the messy real-world data and returns a clean E.164 number.
+ *
+ * @param text - Messy text that may contain a phone number
+ * @returns E.164 formatted phone number or null if no valid number found
+ *
+ * @example
+ * parsePhoneFromText("9258958479 BEST!") // => "+19258958479"
+ * parsePhoneFromText("NEW 925-346-1245") // => "+19253461245"
+ * parsePhoneFromText("Call mom") // => null
+ */
+export function parsePhoneFromText(text: string): string | null {
+  const extracted = extractPhoneNumber(text);
+  if (!extracted) {
+    return null;
+  }
+  return toE164(extracted);
+}
+
+/**
+ * Check if text contains a valid extractable phone number.
+ *
+ * Useful for validation before attempting to schedule a discharge call.
+ *
+ * @param text - Text to check
+ * @returns true if a valid phone number can be extracted
+ */
+export function hasValidPhone(text: string): boolean {
+  return parsePhoneFromText(text) !== null;
+}
+
+/**
+ * Result of phone extraction with details about what was found
+ */
+export interface PhoneExtractionResult {
+  /** Whether a valid phone was found */
+  valid: boolean;
+  /** The extracted phone in E.164 format (if valid) */
+  e164: string | null;
+  /** The raw extracted digits (if any found) */
+  rawDigits: string | null;
+  /** The original input text */
+  originalText: string;
+  /** Any extra text that was removed (for logging/debugging) */
+  extraText: string | null;
+}
+
+/**
+ * Extract phone number with detailed results.
+ *
+ * Useful for debugging or showing users what was extracted vs. discarded.
+ *
+ * @param text - Messy text that may contain a phone number
+ * @returns Detailed extraction result
+ */
+export function extractPhoneWithDetails(text: string): PhoneExtractionResult {
+  const originalText = text || "";
+  const rawDigits = extractPhoneNumber(originalText);
+  const e164 = rawDigits ? toE164(rawDigits) : null;
+
+  // Figure out what extra text was removed
+  let extraText: string | null = null;
+  if (rawDigits && originalText) {
+    // Remove all forms of the phone number from the text to see what's left
+    const cleaned = originalText
+      .replace(/[\d\s\-().+]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (cleaned.length > 0) {
+      extraText = cleaned;
+    }
+  }
+
+  return {
+    valid: e164 !== null,
+    e164,
+    rawDigits,
+    originalText,
+    extraText,
+  };
 }

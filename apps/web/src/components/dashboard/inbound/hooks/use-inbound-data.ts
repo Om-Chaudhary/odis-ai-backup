@@ -12,7 +12,7 @@ import type {
   AppointmentRequest,
   ClinicMessage,
 } from "../types";
-import type { Database } from "~/database.types";
+import type { Database } from "@odis-ai/shared/types";
 
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
@@ -51,9 +51,7 @@ export function useInboundData(params: UseInboundDataParams) {
   const messagesRef = useRef<ClinicMessage[]>([]);
 
   // Map filter to API status
-  const getCallApiStatus = (
-    filter: CallStatusFilter,
-  ): string | undefined => {
+  const getCallApiStatus = (filter: CallStatusFilter): string | undefined => {
     if (filter === "all") return undefined;
     return filter;
   };

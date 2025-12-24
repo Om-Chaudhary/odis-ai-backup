@@ -11,22 +11,25 @@
  * - No DOM/window dependencies (caller handles context validation)
  */
 
-import { fetchConsultationData } from '../utils/extraction/consultation-fetcher';
-import { upsertPatientFromAppointment } from '../utils/sync/patient-sync';
-import { createSyncRecord, updateSyncRecord } from '../utils/sync/sync-tracking';
-import { logger } from '@odis-ai/extension/shared';
-import type { IdexxConsultationLine } from '../types';
-import type { IdexxApiClient } from './api/idexx-api-client';
-import type { ScheduleAppointment } from '../utils/extraction/schedule-extractor';
-import type { Database } from '@database-types';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { fetchConsultationData } from "../utils/extraction/consultation-fetcher";
+import { upsertPatientFromAppointment } from "../utils/sync/patient-sync";
+import {
+  createSyncRecord,
+  updateSyncRecord,
+} from "../utils/sync/sync-tracking";
+import { logger } from "@odis-ai/extension/shared";
+import type { IdexxConsultationLine } from "../types";
+import type { IdexxApiClient } from "./api/idexx-api-client";
+import type { ScheduleAppointment } from "../utils/extraction/schedule-extractor";
+import type { Database } from "@odis-ai/shared/types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
-const odisLogger = logger.child('[ScheduleSyncService]');
+const odisLogger = logger.child("[ScheduleSyncService]");
 
 // Types
-type Case = Database['public']['Tables']['cases']['Row'];
-type CaseInsert = Database['public']['Tables']['cases']['Insert'];
-type CaseStatus = Database['public']['Enums']['CaseStatus'];
+type Case = Database["public"]["Tables"]["cases"]["Row"];
+type CaseInsert = Database["public"]["Tables"]["cases"]["Insert"];
+type CaseStatus = Database["public"]["Enums"]["CaseStatus"];
 
 /**
  * Format consultation line items (products/services) into a readable string
@@ -34,26 +37,31 @@ type CaseStatus = Database['public']['Enums']['CaseStatus'];
  * @param declinedOnly - If true, only return declined items; if false, only return accepted items
  * @returns Formatted string of products/services
  */
-const formatProductsServices = (lines: IdexxConsultationLine[] | undefined, declinedOnly: boolean): string => {
+const formatProductsServices = (
+  lines: IdexxConsultationLine[] | undefined,
+  declinedOnly: boolean,
+): string => {
   if (!lines || lines.length === 0) {
-    return '';
+    return "";
   }
 
-  const filtered = lines.filter(line => (declinedOnly ? line.isDeclined : !line.isDeclined));
+  const filtered = lines.filter((line) =>
+    declinedOnly ? line.isDeclined : !line.isDeclined,
+  );
 
   if (filtered.length === 0) {
-    return '';
+    return "";
   }
 
   return filtered
-    .map(line => {
+    .map((line) => {
       const parts = [line.productService];
       if (line.quantity && line.quantity !== 1) {
         parts.push(`(Qty: ${line.quantity})`);
       }
-      return parts.join(' ');
+      return parts.join(" ");
     })
-    .join('; ');
+    .join("; ");
 };
 
 /**
@@ -89,7 +97,13 @@ interface CaseMetadata {
   [key: string]: unknown;
 }
 
-type SyncPhase = 'initializing' | 'fetching' | 'syncing' | 'reconciling' | 'complete' | 'error';
+type SyncPhase =
+  | "initializing"
+  | "fetching"
+  | "syncing"
+  | "reconciling"
+  | "complete"
+  | "error";
 
 interface SyncProgress {
   phase: SyncPhase;
@@ -147,10 +161,15 @@ interface ReconciliationResult {
  * Check if an appointment should be synced (only finalized appointments)
  */
 const shouldSyncAppointment = (appointment: ScheduleAppointment): boolean => {
-  const status = appointment.status?.toLowerCase().trim() || '';
+  const status = appointment.status?.toLowerCase().trim() || "";
 
   // Only sync finalized/completed appointments
-  return status === 'finalized' || status === 'completed' || status === 'finished' || status === 'done';
+  return (
+    status === "finalized" ||
+    status === "completed" ||
+    status === "finished" ||
+    status === "done"
+  );
 };
 
 /**
@@ -158,41 +177,43 @@ const shouldSyncAppointment = (appointment: ScheduleAppointment): boolean => {
  * These should not be synced, and if previously synced, should be deleted
  */
 const isNoShowAppointment = (appointment: ScheduleAppointment): boolean => {
-  const status = appointment.status?.toLowerCase().trim() || '';
-  return status === 'no show' || status === 'no-show' || status === 'noshow';
+  const status = appointment.status?.toLowerCase().trim() || "";
+  return status === "no show" || status === "no-show" || status === "noshow";
 };
 
 /**
  * Map IDEXX appointment status to valid CaseStatus enum
  */
-const mapAppointmentStatusToCaseStatus = (idexxStatus: string | null): CaseStatus => {
-  const status = idexxStatus?.toLowerCase().trim() || '';
+const mapAppointmentStatusToCaseStatus = (
+  idexxStatus: string | null,
+): CaseStatus => {
+  const status = idexxStatus?.toLowerCase().trim() || "";
 
   switch (status) {
-    case 'finalized':
-    case 'completed':
-    case 'finished':
-    case 'done':
-      return 'completed';
+    case "finalized":
+    case "completed":
+    case "finished":
+    case "done":
+      return "completed";
 
-    case 'in progress':
-    case 'in-progress':
-    case 'ongoing':
-    case 'active':
-    case 'started':
-      return 'ongoing';
+    case "in progress":
+    case "in-progress":
+    case "ongoing":
+    case "active":
+    case "started":
+      return "ongoing";
 
-    case 'reviewed':
-    case 'checked':
-      return 'reviewed';
+    case "reviewed":
+    case "checked":
+      return "reviewed";
 
-    case 'scheduled':
-    case 'pending':
-    case 'upcoming':
-    case 'booked':
-    case 'draft':
+    case "scheduled":
+    case "pending":
+    case "upcoming":
+    case "booked":
+    case "draft":
     default:
-      return 'draft';
+      return "draft";
   }
 };
 
@@ -215,7 +236,7 @@ class ScheduleSyncService {
     const startTime = Date.now();
     const { startDate, endDate, onProgress } = options;
 
-    odisLogger.info('Starting schedule sync', {
+    odisLogger.info("Starting schedule sync", {
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
       userId: this.userId,
@@ -241,30 +262,37 @@ class ScheduleSyncService {
       const syncRecord = await createSyncRecord({
         userId: this.userId,
         syncDate: startDate,
-        syncType: 'schedule',
+        syncType: "schedule",
       });
       result.syncId = syncRecord.id;
 
       // Phase 1: Fetch appointments from IDEXX
       onProgress?.({
-        phase: 'fetching',
+        phase: "fetching",
         current: 0,
         total: 0,
-        message: 'Fetching appointments from IDEXX...',
+        message: "Fetching appointments from IDEXX...",
       });
 
-      const allAppointments = await this.apiClient.fetchAppointments(startDate, endDate);
+      const allAppointments = await this.apiClient.fetchAppointments(
+        startDate,
+        endDate,
+      );
 
       // Filter to only sync finalized appointments
-      const appointments = allAppointments.filter(apt => shouldSyncAppointment(apt));
+      const appointments = allAppointments.filter((apt) =>
+        shouldSyncAppointment(apt),
+      );
       const filteredCount = allAppointments.length - appointments.length;
 
       result.total = appointments.length;
 
       // Identify no-show appointments that might need deletion
-      const noShowAppointments = allAppointments.filter(apt => isNoShowAppointment(apt));
+      const noShowAppointments = allAppointments.filter((apt) =>
+        isNoShowAppointment(apt),
+      );
 
-      odisLogger.info('Fetched appointments', {
+      odisLogger.info("Fetched appointments", {
         total: allAppointments.length,
         filtered: filteredCount,
         finalizedOnly: appointments.length,
@@ -274,7 +302,7 @@ class ScheduleSyncService {
       // Phase 1.5: Delete any previously synced cases that are now no-shows
       if (noShowAppointments.length > 0) {
         onProgress?.({
-          phase: 'syncing',
+          phase: "syncing",
           current: 0,
           total: appointments.length,
           message: `Removing ${noShowAppointments.length} no-show case(s)...`,
@@ -285,7 +313,7 @@ class ScheduleSyncService {
           const deleted = await this.deleteCaseIfExists(externalId);
           if (deleted) {
             result.deleted++;
-            odisLogger.info('Deleted no-show case', {
+            odisLogger.info("Deleted no-show case", {
               appointmentId: noShow.id,
               externalId,
               patientName: noShow.patient.name,
@@ -297,10 +325,10 @@ class ScheduleSyncService {
       // Phase 2: Sync each appointment
       for (let i = 0; i < appointments.length; i++) {
         const appointment = appointments[i];
-        const patientName = appointment.patient.name || 'Unknown';
+        const patientName = appointment.patient.name || "Unknown";
 
         onProgress?.({
-          phase: 'syncing',
+          phase: "syncing",
           current: i + 1,
           total: appointments.length,
           message: `Syncing ${i + 1}/${appointments.length}`,
@@ -313,9 +341,9 @@ class ScheduleSyncService {
           result.failed++;
           result.errors.push({
             id: appointment.id,
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: error instanceof Error ? error.message : "Unknown error",
           });
-          odisLogger.warn('Failed to sync appointment', {
+          odisLogger.warn("Failed to sync appointment", {
             appointmentId: appointment.id,
             error,
           });
@@ -327,7 +355,12 @@ class ScheduleSyncService {
 
       // Update sync record
       await updateSyncRecord(syncRecord.id, {
-        status: result.failed === result.total ? 'failed' : result.failed > 0 ? 'partial' : 'completed',
+        status:
+          result.failed === result.total
+            ? "failed"
+            : result.failed > 0
+              ? "partial"
+              : "completed",
         completedAt: new Date(),
         totalItems: result.total,
         syncedCount: result.created + result.updated,
@@ -336,25 +369,25 @@ class ScheduleSyncService {
       });
 
       onProgress?.({
-        phase: 'complete',
+        phase: "complete",
         current: result.total,
         total: result.total,
         message: `Synced ${result.created} appointments`,
       });
 
-      odisLogger.info('Schedule sync complete', { ...result });
+      odisLogger.info("Schedule sync complete", { ...result });
       return result;
     } catch (error) {
       result.durationMs = Date.now() - startTime;
 
       onProgress?.({
-        phase: 'error',
+        phase: "error",
         current: 0,
         total: 0,
-        message: error instanceof Error ? error.message : 'Sync failed',
+        message: error instanceof Error ? error.message : "Sync failed",
       });
 
-      odisLogger.error('Schedule sync failed', { error });
+      odisLogger.error("Schedule sync failed", { error });
       throw error;
     }
   }
@@ -362,11 +395,19 @@ class ScheduleSyncService {
   /**
    * Reconcile consultation notes for previously synced cases
    */
-  async reconcileNotes(options: ReconcileOptions): Promise<ReconciliationResult> {
+  async reconcileNotes(
+    options: ReconcileOptions,
+  ): Promise<ReconciliationResult> {
     const startTime = Date.now();
-    const { startDate, endDate, skipAlreadyReconciled = true, maxCases, onProgress } = options;
+    const {
+      startDate,
+      endDate,
+      skipAlreadyReconciled = true,
+      maxCases,
+      onProgress,
+    } = options;
 
-    odisLogger.info('Starting notes reconciliation', {
+    odisLogger.info("Starting notes reconciliation", {
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString(),
     });
@@ -375,7 +416,7 @@ class ScheduleSyncService {
     const syncRecord = await createSyncRecord({
       userId: this.userId,
       syncDate: startDate,
-      syncType: 'notes',
+      syncType: "notes",
     });
 
     const result: ReconciliationResult = {
@@ -392,13 +433,18 @@ class ScheduleSyncService {
     try {
       // Fetch cases needing reconciliation
       onProgress?.({
-        phase: 'fetching',
+        phase: "fetching",
         current: 0,
         total: 0,
-        message: 'Finding cases to reconcile...',
+        message: "Finding cases to reconcile...",
       });
 
-      const cases = await this.getCasesNeedingReconciliation(startDate, endDate, skipAlreadyReconciled, maxCases);
+      const cases = await this.getCasesNeedingReconciliation(
+        startDate,
+        endDate,
+        skipAlreadyReconciled,
+        maxCases,
+      );
       result.totalCases = cases.length;
 
       // Process each case
@@ -407,7 +453,7 @@ class ScheduleSyncService {
         const patientName = this.getPatientNameFromCase(caseItem);
 
         onProgress?.({
-          phase: 'reconciling',
+          phase: "reconciling",
           current: i + 1,
           total: cases.length,
           message: `Reconciling ${i + 1}/${cases.length}`,
@@ -425,7 +471,7 @@ class ScheduleSyncService {
           result.failedCount++;
           result.errors.push({
             caseId: caseItem.id,
-            error: error instanceof Error ? error.message : 'Unknown error',
+            error: error instanceof Error ? error.message : "Unknown error",
           });
         }
       }
@@ -435,7 +481,12 @@ class ScheduleSyncService {
 
       // Update sync record
       await updateSyncRecord(syncRecord.id, {
-        status: result.failedCount === result.totalCases ? 'failed' : result.failedCount > 0 ? 'partial' : 'completed',
+        status:
+          result.failedCount === result.totalCases
+            ? "failed"
+            : result.failedCount > 0
+              ? "partial"
+              : "completed",
         completedAt: new Date(),
         totalItems: result.totalCases,
         syncedCount: result.reconciledCount,
@@ -445,20 +496,20 @@ class ScheduleSyncService {
       });
 
       onProgress?.({
-        phase: 'complete',
+        phase: "complete",
         current: result.totalCases,
         total: result.totalCases,
         message: `Reconciled ${result.reconciledCount} cases`,
       });
 
-      odisLogger.info('Notes reconciliation complete', { ...result });
+      odisLogger.info("Notes reconciliation complete", { ...result });
       return result;
     } catch (error) {
       result.durationMs = Date.now() - startTime;
 
       await updateSyncRecord(syncRecord.id, {
-        status: 'failed',
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        status: "failed",
+        errorMessage: error instanceof Error ? error.message : "Unknown error",
       });
 
       throw error;
@@ -468,9 +519,15 @@ class ScheduleSyncService {
   /**
    * Sync a single appointment (patient + case + consultation data)
    */
-  private async syncSingleAppointment(appointment: ScheduleAppointment, result: SyncResult): Promise<void> {
+  private async syncSingleAppointment(
+    appointment: ScheduleAppointment,
+    result: SyncResult,
+  ): Promise<void> {
     // Step 1: Create or update patient
-    const patientResult = await upsertPatientFromAppointment(this.userId, appointment);
+    const patientResult = await upsertPatientFromAppointment(
+      this.userId,
+      appointment,
+    );
 
     if (patientResult.created) {
       result.patientsCreated++;
@@ -486,15 +543,24 @@ class ScheduleSyncService {
 
     if (appointment.consultationId) {
       try {
-        const consultationData = await fetchConsultationData(appointment.consultationId);
+        const consultationData = await fetchConsultationData(
+          appointment.consultationId,
+        );
 
         // Extract notes
-        const notesData = consultationData.consultationNotes as { notes?: string } | undefined;
-        consultationNotes = notesData?.notes || consultationData.consultation?.notes || null;
+        const notesData = consultationData.consultationNotes as
+          | { notes?: string }
+          | undefined;
+        consultationNotes =
+          notesData?.notes || consultationData.consultation?.notes || null;
 
         // Extract products/services
-        productsServices = formatProductsServices(consultationData.consultationLines, false) || null;
-        declinedProductsServices = formatProductsServices(consultationData.consultationLines, true) || null;
+        productsServices =
+          formatProductsServices(consultationData.consultationLines, false) ||
+          null;
+        declinedProductsServices =
+          formatProductsServices(consultationData.consultationLines, true) ||
+          null;
         consultationStatus = consultationData.consultation?.status || null;
 
         // Track successful fetch if we got any data
@@ -503,7 +569,7 @@ class ScheduleSyncService {
         }
       } catch (error) {
         // Non-fatal error - log and continue
-        odisLogger.warn('Failed to fetch consultation data (non-fatal)', {
+        odisLogger.warn("Failed to fetch consultation data (non-fatal)", {
           consultationId: appointment.consultationId,
           appointmentId: appointment.id,
           error,
@@ -537,11 +603,13 @@ class ScheduleSyncService {
   ): Promise<Case> {
     const scheduledAt = appointment.startTime?.toISOString() || null;
     const notesSyncedAt =
-      consultationNotes || productsServices || declinedProductsServices ? new Date().toISOString() : null;
+      consultationNotes || productsServices || declinedProductsServices
+        ? new Date().toISOString()
+        : null;
 
     const caseData: CaseInsert = {
       user_id: this.userId,
-      source: 'idexx_neo',
+      source: "idexx_neo",
       external_id: `idexx-appt-${appointment.id}`,
       scheduled_at: scheduledAt,
       metadata: {
@@ -573,15 +641,15 @@ class ScheduleSyncService {
           notes_synced_at: notesSyncedAt,
         },
       },
-      type: 'checkup',
+      type: "checkup",
       status: mapAppointmentStatusToCaseStatus(appointment.status),
-      visibility: 'private',
+      visibility: "private",
     };
 
     const { data, error } = await this.supabase
-      .from('cases')
+      .from("cases")
       .upsert(caseData, {
-        onConflict: 'user_id,external_id',
+        onConflict: "user_id,external_id",
         ignoreDuplicates: false,
       })
       .select()
@@ -592,7 +660,10 @@ class ScheduleSyncService {
     }
 
     // Link patient to case
-    await this.supabase.from('patients').update({ case_id: data.id }).eq('id', patientId);
+    await this.supabase
+      .from("patients")
+      .update({ case_id: data.id })
+      .eq("id", patientId);
 
     return data;
   }
@@ -607,13 +678,13 @@ class ScheduleSyncService {
     maxCases?: number,
   ): Promise<Case[]> {
     let query = this.supabase
-      .from('cases')
-      .select('*')
-      .eq('user_id', this.userId)
-      .eq('source', 'idexx_neo')
-      .gte('scheduled_at', startDate.toISOString())
-      .lte('scheduled_at', endDate.toISOString())
-      .order('scheduled_at', { ascending: true });
+      .from("cases")
+      .select("*")
+      .eq("user_id", this.userId)
+      .eq("source", "idexx_neo")
+      .gte("scheduled_at", startDate.toISOString())
+      .lte("scheduled_at", endDate.toISOString())
+      .order("scheduled_at", { ascending: true });
 
     if (maxCases) {
       query = query.limit(maxCases);
@@ -629,7 +700,7 @@ class ScheduleSyncService {
 
     // Filter in memory if needed
     if (skipAlreadyReconciled) {
-      cases = cases.filter(c => !this.hasConsultationNotes(c));
+      cases = cases.filter((c) => !this.hasConsultationNotes(c));
     }
 
     return cases;
@@ -657,9 +728,10 @@ class ScheduleSyncService {
     const consultationData = await fetchConsultationData(consultationId);
 
     const consultationNotes =
-      (consultationData.consultationNotes as { notes?: string } | undefined)?.notes ||
+      (consultationData.consultationNotes as { notes?: string } | undefined)
+        ?.notes ||
       consultationData.consultation?.notes ||
-      '';
+      "";
 
     if (!consultationNotes) {
       return false;
@@ -678,7 +750,10 @@ class ScheduleSyncService {
       },
     };
 
-    const { error } = await this.supabase.from('cases').update({ metadata: updatedMetadata }).eq('id', caseItem.id);
+    const { error } = await this.supabase
+      .from("cases")
+      .update({ metadata: updatedMetadata })
+      .eq("id", caseItem.id);
 
     if (error) {
       throw new Error(`Failed to update case: ${error.message}`);
@@ -698,7 +773,7 @@ class ScheduleSyncService {
   /**
    * Helper: Get patient name from case with fallback
    */
-  private getPatientNameFromCase(caseItem: Case, fallback = 'Unknown'): string {
+  private getPatientNameFromCase(caseItem: Case, fallback = "Unknown"): string {
     const idexx = this.getIdexxMetadata(caseItem);
     return idexx?.patient_name || fallback;
   }
@@ -718,10 +793,10 @@ class ScheduleSyncService {
   private async deleteCaseIfExists(externalId: string): Promise<boolean> {
     // First check if the case exists
     const { data: existingCase } = await this.supabase
-      .from('cases')
-      .select('id')
-      .eq('user_id', this.userId)
-      .eq('external_id', externalId)
+      .from("cases")
+      .select("id")
+      .eq("user_id", this.userId)
+      .eq("external_id", externalId)
       .maybeSingle();
 
     if (!existingCase) {
@@ -730,13 +805,13 @@ class ScheduleSyncService {
 
     // Delete the case
     const { error } = await this.supabase
-      .from('cases')
+      .from("cases")
       .delete()
-      .eq('user_id', this.userId)
-      .eq('external_id', externalId);
+      .eq("user_id", this.userId)
+      .eq("external_id", externalId);
 
     if (error) {
-      odisLogger.warn('Failed to delete no-show case', { externalId, error });
+      odisLogger.warn("Failed to delete no-show case", { externalId, error });
       return false;
     }
 
@@ -754,4 +829,11 @@ const createScheduleSyncService = (
 ): ScheduleSyncService => new ScheduleSyncService(apiClient, supabase, userId);
 
 export { ScheduleSyncService, createScheduleSyncService };
-export type { SyncPhase, SyncProgress, SyncOptions, ReconcileOptions, SyncResult, ReconciliationResult };
+export type {
+  SyncPhase,
+  SyncProgress,
+  SyncOptions,
+  ReconcileOptions,
+  SyncResult,
+  ReconciliationResult,
+};

@@ -3,6 +3,7 @@
  *
  * Provides helpers for testing Next.js API routes
  */
+/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 import { NextRequest } from "next/server";
 import { expect } from "vitest";
 
@@ -17,7 +18,9 @@ export interface MockRequestOptions {
 /**
  * Create a mock NextRequest for testing API routes
  */
-export function createMockRequest(options: MockRequestOptions = {}): NextRequest {
+export function createMockRequest(
+  options: MockRequestOptions = {},
+): NextRequest {
   const {
     method = "GET",
     url = "http://localhost:3000/api/test",
@@ -52,7 +55,7 @@ export function createMockRequest(options: MockRequestOptions = {}): NextRequest
  */
 export function createAuthenticatedRequest(
   token: string,
-  options: MockRequestOptions = {}
+  options: MockRequestOptions = {},
 ): NextRequest {
   return createMockRequest({
     ...options,
@@ -68,7 +71,7 @@ export function createAuthenticatedRequest(
  */
 export function createCookieRequest(
   cookies: Record<string, string>,
-  options: MockRequestOptions = {}
+  options: MockRequestOptions = {},
 ): NextRequest {
   const cookieString = Object.entries(cookies)
     .map(([key, value]) => `${key}=${value}`)
@@ -94,16 +97,18 @@ export async function getJsonResponse<T>(response: Response): Promise<T> {
 /**
  * Type helper for Next.js route handler context
  */
-export interface RouteContext<T extends Record<string, string> = Record<string, string>> {
+export interface RouteContext<
+  T extends Record<string, string> = Record<string, string>,
+> {
   params: Promise<T>;
 }
 
 /**
  * Create a mock route context
  */
-export function createMockContext<T extends Record<string, string> = Record<string, string>>(
-  params: T = {} as T
-): RouteContext<T> {
+export function createMockContext<
+  T extends Record<string, string> = Record<string, string>,
+>(params: T = {} as T): RouteContext<T> {
   return {
     params: Promise.resolve(params),
   };
@@ -115,13 +120,17 @@ export function createMockContext<T extends Record<string, string> = Record<stri
 export async function expectErrorResponse(
   response: Response,
   expectedStatus: number,
-  expectedMessageContains?: string
+  expectedMessageContains?: string,
 ): Promise<void> {
   expect(response.status).toBe(expectedStatus);
-  const json = await getJsonResponse<{ error?: string; message?: string }>(response);
+  const json = await getJsonResponse<{ error?: string; message?: string }>(
+    response,
+  );
   if (expectedMessageContains) {
     const message = json.error || json.message || "";
-    expect(message.toLowerCase()).toContain(expectedMessageContains.toLowerCase());
+    expect(message.toLowerCase()).toContain(
+      expectedMessageContains.toLowerCase(),
+    );
   }
 }
 
@@ -130,7 +139,7 @@ export async function expectErrorResponse(
  */
 export async function expectSuccessResponse<T>(
   response: Response,
-  validator?: (data: T) => void
+  validator?: (data: T) => void,
 ): Promise<T> {
   expect(response.ok).toBe(true);
   const json = await getJsonResponse<T>(response);

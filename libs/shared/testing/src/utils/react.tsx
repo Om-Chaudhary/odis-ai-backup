@@ -3,6 +3,7 @@
  *
  * Provides helpers for testing React components with proper providers
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { type ReactElement, type ReactNode } from "react";
 import {
   render,

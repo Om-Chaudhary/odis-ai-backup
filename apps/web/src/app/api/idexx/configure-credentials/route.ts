@@ -11,7 +11,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@odis-ai/data-access/db/server";
 import { getUser } from "~/server/actions/auth";
-import { handleCorsPreflightRequest, withCorsHeaders } from "@odis-ai/data-access/api/cors";
+import {
+  handleCorsPreflightRequest,
+  withCorsHeaders,
+} from "@odis-ai/data-access/api/cors";
 import { IdexxCredentialManager } from "@odis-ai/integrations/idexx/credential-manager";
 import { validateIdexxCredentials } from "@odis-ai/integrations/idexx/validation";
 
@@ -25,6 +28,7 @@ const configureCredentialsSchema = z.object({
     .min(1, "Password is required")
     .max(500, "Password must be 500 characters or less"),
   clinicId: z.string().uuid().optional().nullable(),
+  companyId: z.string().optional().nullable(),
 });
 
 /**
@@ -122,6 +126,7 @@ export async function POST(request: NextRequest) {
           validated.clinicId ?? null,
           validated.username,
           validated.password,
+          validated.companyId ?? "default",
         );
 
         // Log successful configuration

@@ -7,7 +7,7 @@ import { api } from "~/trpc/client";
 import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
 import { formatDuration } from "../../shared/utils";
 import { getDemoCallerName, getCallModifications } from "../demo-data";
-import type { Database } from "~/database.types";
+import type { Database } from "@odis-ai/shared/types";
 
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 

@@ -5,13 +5,17 @@
  * and updates case metadata with the clinical notes and line items.
  */
 
-import { createSyncRecord, updateSyncRecord } from './sync-tracking';
-import { fetchConsultationData } from '../extraction/consultation-fetcher';
-import { getSupabaseClient, requireAuthSession, logger } from '@odis-ai/extension/shared';
-import type { IdexxConsultationLine } from '../../types';
-import type { Database } from '@database-types';
+import { createSyncRecord, updateSyncRecord } from "./sync-tracking";
+import { fetchConsultationData } from "../extraction/consultation-fetcher";
+import {
+  getSupabaseClient,
+  requireAuthSession,
+  logger,
+} from "@odis-ai/extension/shared";
+import type { IdexxConsultationLine } from "../../types";
+import type { Database } from "@odis-ai/shared/types";
 
-const odisLogger = logger.child('[ODIS:Reconciliation]');
+const odisLogger = logger.child("[ODIS:Reconciliation]");
 
 /**
  * Format consultation line items (products/services) into a readable string
@@ -19,43 +23,52 @@ const odisLogger = logger.child('[ODIS:Reconciliation]');
  * @param declinedOnly - If true, only return declined items; if false, only return accepted items
  * @returns Formatted string of products/services
  */
-const formatProductsServices = (lines: IdexxConsultationLine[] | undefined, declinedOnly: boolean): string => {
-  odisLogger.debug('🔍 Formatting products/services', {
+const formatProductsServices = (
+  lines: IdexxConsultationLine[] | undefined,
+  declinedOnly: boolean,
+): string => {
+  odisLogger.debug("🔍 Formatting products/services", {
     totalLines: lines?.length || 0,
     declinedOnly,
     hasLines: !!lines,
   });
 
   if (!lines || lines.length === 0) {
-    odisLogger.debug('⚠️ No lines to format');
-    return '';
+    odisLogger.debug("⚠️ No lines to format");
+    return "";
   }
 
-  const filtered = lines.filter(line => (declinedOnly ? line.isDeclined : !line.isDeclined));
+  const filtered = lines.filter((line) =>
+    declinedOnly ? line.isDeclined : !line.isDeclined,
+  );
 
-  odisLogger.debug('🔍 Filtered products', {
+  odisLogger.debug("🔍 Filtered products", {
     declinedOnly,
     totalLines: lines.length,
     filteredCount: filtered.length,
-    filtered: filtered.map(l => ({ name: l.productService, isDeclined: l.isDeclined, qty: l.quantity })),
+    filtered: filtered.map((l) => ({
+      name: l.productService,
+      isDeclined: l.isDeclined,
+      qty: l.quantity,
+    })),
   });
 
   if (filtered.length === 0) {
-    odisLogger.debug('⚠️ No products after filtering');
-    return '';
+    odisLogger.debug("⚠️ No products after filtering");
+    return "";
   }
 
   const formatted = filtered
-    .map(line => {
+    .map((line) => {
       const parts = [line.productService];
       if (line.quantity && line.quantity !== 1) {
         parts.push(`(Qty: ${line.quantity})`);
       }
-      return parts.join(' ');
+      return parts.join(" ");
     })
-    .join('; ');
+    .join("; ");
 
-  odisLogger.debug('✅ Formatted result', {
+  odisLogger.debug("✅ Formatted result", {
     declinedOnly,
     result: formatted,
   });
@@ -63,7 +76,7 @@ const formatProductsServices = (lines: IdexxConsultationLine[] | undefined, decl
   return formatted;
 };
 
-type Case = Database['public']['Tables']['cases']['Row'];
+type Case = Database["public"]["Tables"]["cases"]["Row"];
 
 interface ReconciliationOptions {
   /** Start date for cases to reconcile (inclusive) */
@@ -91,17 +104,20 @@ interface ReconciliationResult {
 /**
  * Get cases that need notes reconciliation
  */
-const getCasesNeedingReconciliation = async (userId: string, options: ReconciliationOptions): Promise<Case[]> => {
+const getCasesNeedingReconciliation = async (
+  userId: string,
+  options: ReconciliationOptions,
+): Promise<Case[]> => {
   const supabase = getSupabaseClient();
 
   let query = supabase
-    .from('cases')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('source', 'idexx_neo')
-    .gte('scheduled_at', options.startDate.toISOString())
-    .lte('scheduled_at', options.endDate.toISOString())
-    .order('scheduled_at', { ascending: true });
+    .from("cases")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("source", "idexx_neo")
+    .gte("scheduled_at", options.startDate.toISOString())
+    .lte("scheduled_at", options.endDate.toISOString())
+    .order("scheduled_at", { ascending: true });
 
   if (options.maxCases) {
     query = query.limit(options.maxCases);
@@ -117,7 +133,7 @@ const getCasesNeedingReconciliation = async (userId: string, options: Reconcilia
   let cases = data || [];
 
   if (options.skipAlreadyReconciled) {
-    cases = cases.filter(c => {
+    cases = cases.filter((c) => {
       const metadata = c.metadata as Record<string, unknown> | null;
       const idexx = metadata?.idexx as Record<string, unknown> | undefined;
       return !idexx?.consultation_notes;
@@ -131,7 +147,9 @@ const getCasesNeedingReconciliation = async (userId: string, options: Reconcilia
  * Lookup consultation ID from appointment ID
  * This may require calling an IDEXX API or navigating to the consultation page
  */
-const lookupConsultationId = async (appointmentId: string): Promise<string | null> => {
+const lookupConsultationId = async (
+  appointmentId: string,
+): Promise<string | null> => {
   // Implementation depends on IDEXX API capabilities
   // Option 1: IDEXX provides appointment-to-consultation mapping API
   // Option 2: Parse from consultation page URL when user navigates there
@@ -140,7 +158,7 @@ const lookupConsultationId = async (appointmentId: string): Promise<string | nul
   // For now, return null - implementation TBD based on IDEXX API research
   // In practice, the consultation_id should be captured during the initial sync
   // from the appointments API response if available
-  odisLogger.debug('Consultation ID lookup not implemented', { appointmentId });
+  odisLogger.debug("Consultation ID lookup not implemented", { appointmentId });
   return null;
 };
 
@@ -155,7 +173,7 @@ const reconcileSingleCase = async (
   const idexx = metadata?.idexx as Record<string, unknown> | undefined;
 
   if (!idexx) {
-    odisLogger.debug('Case has no IDEXX metadata, skipping', {
+    odisLogger.debug("Case has no IDEXX metadata, skipping", {
       caseId: caseItem.id,
     });
     return false;
@@ -166,12 +184,14 @@ const reconcileSingleCase = async (
 
   if (!consultationId) {
     // Try to find consultation from appointment
-    const lookedUpId = await lookupConsultationId(idexx.appointment_id as string);
+    const lookedUpId = await lookupConsultationId(
+      idexx.appointment_id as string,
+    );
     consultationId = lookedUpId ?? undefined;
   }
 
   if (!consultationId) {
-    odisLogger.debug('No consultation found for case', {
+    odisLogger.debug("No consultation found for case", {
       caseId: caseItem.id,
       appointmentId: idexx.appointment_id,
     });
@@ -183,12 +203,13 @@ const reconcileSingleCase = async (
 
   // Extract notes
   const consultationNotes =
-    (consultationData.consultationNotes as { notes?: string } | undefined)?.notes ||
+    (consultationData.consultationNotes as { notes?: string } | undefined)
+      ?.notes ||
     consultationData.consultation?.notes ||
-    '';
+    "";
 
   // Extract products/services
-  odisLogger.debug('🛒 Raw consultation lines data', {
+  odisLogger.debug("🛒 Raw consultation lines data", {
     caseId: caseItem.id,
     consultationId,
     hasConsultationLines: !!consultationData.consultationLines,
@@ -196,16 +217,24 @@ const reconcileSingleCase = async (
     rawLines: consultationData.consultationLines,
   });
 
-  const productsServices = formatProductsServices(consultationData.consultationLines, false);
-  const declinedProductsServices = formatProductsServices(consultationData.consultationLines, true);
+  const productsServices = formatProductsServices(
+    consultationData.consultationLines,
+    false,
+  );
+  const declinedProductsServices = formatProductsServices(
+    consultationData.consultationLines,
+    true,
+  );
 
-  odisLogger.debug('🛒 Formatted products/services', {
+  odisLogger.debug("🛒 Formatted products/services", {
     caseId: caseItem.id,
     consultationId,
     acceptedProducts: productsServices,
     declinedProducts: declinedProductsServices,
-    acceptedCount: productsServices ? productsServices.split(';').length : 0,
-    declinedCount: declinedProductsServices ? declinedProductsServices.split(';').length : 0,
+    acceptedCount: productsServices ? productsServices.split(";").length : 0,
+    declinedCount: declinedProductsServices
+      ? declinedProductsServices.split(";").length
+      : 0,
   });
 
   // Check if we have any data to reconcile (notes OR products/services)
@@ -213,7 +242,7 @@ const reconcileSingleCase = async (
   const hasProducts = !!productsServices || !!declinedProductsServices;
 
   if (!hasNotes && !hasProducts) {
-    odisLogger.debug('Consultation has no notes or products/services', {
+    odisLogger.debug("Consultation has no notes or products/services", {
       caseId: caseItem.id,
       consultationId,
     });
@@ -229,12 +258,13 @@ const reconcileSingleCase = async (
       consultation_notes: consultationNotes || idexx.consultation_notes,
       consultation_status: consultationData.consultation?.status,
       products_services: productsServices || idexx.products_services,
-      declined_products_services: declinedProductsServices || idexx.declined_products_services,
+      declined_products_services:
+        declinedProductsServices || idexx.declined_products_services,
       notes_synced_at: new Date().toISOString(),
     },
   };
 
-  odisLogger.debug('💾 Saving metadata to database', {
+  odisLogger.debug("💾 Saving metadata to database", {
     caseId: caseItem.id,
     consultationId,
     metadataToSave: {
@@ -246,13 +276,16 @@ const reconcileSingleCase = async (
     },
   });
 
-  const { error } = await supabase.from('cases').update({ metadata: updatedMetadata }).eq('id', caseItem.id);
+  const { error } = await supabase
+    .from("cases")
+    .update({ metadata: updatedMetadata })
+    .eq("id", caseItem.id);
 
   if (error) {
     throw new Error(`Failed to update case: ${error.message}`);
   }
 
-  odisLogger.info('✅ Reconciled case data', {
+  odisLogger.info("✅ Reconciled case data", {
     caseId: caseItem.id,
     consultationId,
     notesLength: consultationNotes.length,
@@ -268,12 +301,14 @@ const reconcileSingleCase = async (
 /**
  * Main reconciliation function
  */
-const reconcileCaseNotes = async (options: ReconciliationOptions): Promise<ReconciliationResult> => {
+const reconcileCaseNotes = async (
+  options: ReconciliationOptions,
+): Promise<ReconciliationResult> => {
   const startTime = Date.now();
   const supabase = getSupabaseClient();
   const session = await requireAuthSession();
 
-  odisLogger.info('Starting notes reconciliation', {
+  odisLogger.info("Starting notes reconciliation", {
     startDate: options.startDate.toISOString(),
     endDate: options.endDate.toISOString(),
   });
@@ -282,7 +317,7 @@ const reconcileCaseNotes = async (options: ReconciliationOptions): Promise<Recon
   const syncRecord = await createSyncRecord({
     userId: session.user.id,
     syncDate: options.startDate,
-    syncType: 'notes',
+    syncType: "notes",
   });
 
   try {
@@ -304,7 +339,7 @@ const reconcileCaseNotes = async (options: ReconciliationOptions): Promise<Recon
       const caseItem = cases[i];
       const metadata = caseItem.metadata as Record<string, unknown> | null;
       const idexx = metadata?.idexx as Record<string, unknown> | undefined;
-      const patientName = (idexx?.patient_name as string) || 'Unknown';
+      const patientName = (idexx?.patient_name as string) || "Unknown";
 
       options.onProgress?.(i + 1, cases.length, patientName);
 
@@ -319,9 +354,9 @@ const reconcileCaseNotes = async (options: ReconciliationOptions): Promise<Recon
         result.failedCount++;
         result.errors.push({
           caseId: caseItem.id,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error.message : "Unknown error",
         });
-        odisLogger.warn('Failed to reconcile case', {
+        odisLogger.warn("Failed to reconcile case", {
           caseId: caseItem.id,
           error,
         });
@@ -332,7 +367,12 @@ const reconcileCaseNotes = async (options: ReconciliationOptions): Promise<Recon
 
     // Update sync record
     await updateSyncRecord(syncRecord.id, {
-      status: result.failedCount === result.totalCases ? 'failed' : result.failedCount > 0 ? 'partial' : 'completed',
+      status:
+        result.failedCount === result.totalCases
+          ? "failed"
+          : result.failedCount > 0
+            ? "partial"
+            : "completed",
       completedAt: new Date(),
       totalItems: result.totalCases,
       syncedCount: result.reconciledCount,
@@ -341,16 +381,20 @@ const reconcileCaseNotes = async (options: ReconciliationOptions): Promise<Recon
       metadata: { durationMs: result.durationMs },
     });
 
-    odisLogger.info('Notes reconciliation complete', { ...result });
+    odisLogger.info("Notes reconciliation complete", { ...result });
     return result;
   } catch (error) {
     await updateSyncRecord(syncRecord.id, {
-      status: 'failed',
-      errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      status: "failed",
+      errorMessage: error instanceof Error ? error.message : "Unknown error",
     });
     throw error;
   }
 };
 
-export { reconcileCaseNotes, getCasesNeedingReconciliation, reconcileSingleCase };
+export {
+  reconcileCaseNotes,
+  getCasesNeedingReconciliation,
+  reconcileSingleCase,
+};
 export type { ReconciliationOptions, ReconciliationResult };

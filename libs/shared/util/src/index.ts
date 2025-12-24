@@ -10,6 +10,7 @@ export * from "./cn";
 
 // Phone utilities
 export * from "./phone";
+export { formatPhoneNumberDisplay } from "./phone-formatting";
 
 // Date utilities
 export * from "./business-hours";

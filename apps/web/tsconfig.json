@@ -3,11 +3,7 @@
   "compilerOptions": {
     "jsx": "preserve",
     "plugins": [{ "name": "next" }],
-    "incremental": true,
-    "baseUrl": ".",
-    "paths": {
-      "~/*": ["./src/*"]
-    }
+    "incremental": true
   },
   "include": [
     "next-env.d.ts",

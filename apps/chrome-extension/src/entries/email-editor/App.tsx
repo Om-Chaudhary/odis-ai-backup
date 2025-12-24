@@ -1,22 +1,30 @@
-import { RichTextEditor } from './components/RichTextEditor';
-import { createDischargeEmailTemplate, formatVisitDate } from './services/emailTemplate';
-import { validateAndParseEmailList } from './utils/emailValidation';
-import { getSupabaseClient, logger } from '@odis-ai/extension/shared';
-import { Eye, EyeOff } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import type { Database } from '@database-types';
+import { RichTextEditor } from "./components/RichTextEditor";
+import {
+  createDischargeEmailTemplate,
+  formatVisitDate,
+} from "./services/emailTemplate";
+import { validateAndParseEmailList } from "./utils/emailValidation";
+import { getSupabaseClient, logger } from "@odis-ai/extension/shared";
+import { Eye, EyeOff } from "lucide-react";
+import { useState, useEffect } from "react";
+import type { Database } from "@odis-ai/shared/types";
 
-type DischargeSummary = Database['public']['Tables']['discharge_summaries']['Row'];
-type User = Database['public']['Tables']['users']['Row'];
+type DischargeSummary =
+  Database["public"]["Tables"]["discharge_summaries"]["Row"];
+type User = Database["public"]["Tables"]["users"]["Row"];
 
 export default function App() {
-  const [dischargeSummary, setDischargeSummary] = useState<DischargeSummary | null>(null);
+  const [dischargeSummary, setDischargeSummary] =
+    useState<DischargeSummary | null>(null);
   const [userProfile, setUserProfile] = useState<User | null>(null);
-  const [subject, setSubject] = useState('');
-  const [editorContent, setEditorContent] = useState('');
-  const [recipientEmails, setRecipientEmails] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [emailValidation, setEmailValidation] = useState<{ valid: string[]; invalid: string[] }>({
+  const [subject, setSubject] = useState("");
+  const [editorContent, setEditorContent] = useState("");
+  const [recipientEmails, setRecipientEmails] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [emailValidation, setEmailValidation] = useState<{
+    valid: string[];
+    invalid: string[];
+  }>({
     valid: [],
     invalid: [],
   });
@@ -25,35 +33,38 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // @ts-expect-error - cases.patients is included in the query but not in the type
-  const patientName = dischargeSummary?.cases?.patients?.[0]?.name || 'Unknown Patient';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const patientName =
+    (dischargeSummary as any)?.cases?.patients?.[0]?.name || "Unknown Patient";
 
   useEffect(() => {
     const loadData = async () => {
       try {
         // Get discharge summary ID from URL params
         const params = new URLSearchParams(window.location.search);
-        const summaryId = params.get('id');
+        const summaryId = params.get("id");
 
         if (!summaryId) {
-          throw new Error('No discharge summary ID provided');
+          throw new Error("No discharge summary ID provided");
         }
 
         const supabase = getSupabaseClient();
 
         // Load discharge summary
         const { data: summaryData, error: summaryError } = await supabase
-          .from('discharge_summaries')
-          .select('*, cases!inner(id, external_id, patients(name))')
-          .eq('id', summaryId)
+          .from("discharge_summaries")
+          .select("*, cases!inner(id, external_id, patients(name))")
+          .eq("id", summaryId)
           .single();
 
         if (summaryError) throw summaryError;
-        if (!summaryData) throw new Error('Discharge summary not found');
+        if (!summaryData) throw new Error("Discharge summary not found");
 
         setDischargeSummary(summaryData);
-        setSubject(`Discharge Summary - ${summaryData.cases?.patients?.[0]?.name || 'Unknown Patient'}`);
-        setEditorContent(summaryData.content || '');
+        setSubject(
+          `Discharge Summary - ${summaryData.cases?.patients?.[0]?.name || "Unknown Patient"}`,
+        );
+        setEditorContent(summaryData.content || "");
 
         // Load user profile for clinic info
         const {
@@ -61,13 +72,17 @@ export default function App() {
         } = await supabase.auth.getUser();
 
         if (user) {
-          const { data: profileData } = await supabase.from('users').select('*').eq('id', user.id).single();
+          const { data: profileData } = await supabase
+            .from("users")
+            .select("*")
+            .eq("id", user.id)
+            .single();
 
           setUserProfile(profileData);
         }
       } catch (err) {
-        logger.error('[ODIS] Error loading data', { error: err });
-        setError(err instanceof Error ? err.message : 'Failed to load data');
+        logger.error("[ODIS] Error loading data", { error: err });
+        setError(err instanceof Error ? err.message : "Failed to load data");
       } finally {
         setIsLoading(false);
       }
@@ -87,7 +102,13 @@ export default function App() {
   }, [recipientEmails]);
 
   const handleSend = async () => {
-    if (!dischargeSummary || emailValidation.valid.length === 0 || !subject.trim() || !editorContent.trim()) return;
+    if (
+      !dischargeSummary ||
+      emailValidation.valid.length === 0 ||
+      !subject.trim() ||
+      !editorContent.trim()
+    )
+      return;
 
     try {
       setIsSending(true);
@@ -98,37 +119,40 @@ export default function App() {
       // Wrap content with branded email template
       const wrappedEmailContent = createDischargeEmailTemplate({
         petName: patientName,
-        ownerName: 'Pet Owner',
-        clinicName: userProfile?.clinic_name || 'OdisAI Veterinary Clinic',
-        clinicPhone: userProfile?.clinic_phone || '',
-        clinicEmail: userProfile?.clinic_email || '',
-        clinicAddress: '',
+        ownerName: "Pet Owner",
+        clinicName: userProfile?.clinic_name || "OdisAI Veterinary Clinic",
+        clinicPhone: userProfile?.clinic_phone || "",
+        clinicEmail: userProfile?.clinic_email || "",
+        clinicAddress: "",
         visitDate: formatVisitDate(dischargeSummary.created_at),
         dischargeSummaryContent: editorContent,
       });
 
       // Plain text version (strip HTML tags)
-      const textContent = editorContent.replace(/<[^>]*>/g, '');
+      const textContent = editorContent.replace(/<[^>]*>/g, "");
 
       // Call Supabase Edge Function to send email via Resend
-      const { error } = await supabase.functions.invoke('send-discharge-email', {
-        body: {
-          to: emailValidation.valid,
-          subject: subject,
-          html: wrappedEmailContent,
-          text: textContent,
-          patientName: patientName,
-          dischargeSummaryId: dischargeSummary.id,
+      const { error } = await supabase.functions.invoke(
+        "send-discharge-email",
+        {
+          body: {
+            to: emailValidation.valid,
+            subject: subject,
+            html: wrappedEmailContent,
+            text: textContent,
+            patientName: patientName,
+            dischargeSummaryId: dischargeSummary.id,
+          },
         },
-      });
+      );
 
       if (error) throw error;
 
       // Close the tab after successful send
       window.close();
     } catch (err) {
-      logger.error('[ODIS] Error sending email', { error: err });
-      setError(err instanceof Error ? err.message : 'Failed to send email');
+      logger.error("[ODIS] Error sending email", { error: err });
+      setError(err instanceof Error ? err.message : "Failed to send email");
     } finally {
       setIsSending(false);
     }
@@ -143,11 +167,11 @@ export default function App() {
 
     const previewHtml = createDischargeEmailTemplate({
       petName: patientName,
-      ownerName: 'Pet Owner',
-      clinicName: userProfile?.clinic_name || 'OdisAI Veterinary Clinic',
-      clinicPhone: userProfile?.clinic_phone || '',
-      clinicEmail: userProfile?.clinic_email || '',
-      clinicAddress: '',
+      ownerName: "Pet Owner",
+      clinicName: userProfile?.clinic_name || "OdisAI Veterinary Clinic",
+      clinicPhone: userProfile?.clinic_phone || "",
+      clinicEmail: userProfile?.clinic_email || "",
+      clinicAddress: "",
       visitDate: formatVisitDate(dischargeSummary.created_at),
       dischargeSummaryContent: editorContent,
     });
@@ -156,7 +180,7 @@ export default function App() {
       <iframe
         srcDoc={previewHtml}
         className="w-full border-0"
-        style={{ minHeight: '800px', height: '100%' }}
+        style={{ minHeight: "800px", height: "100%" }}
         title="Email Preview"
         sandbox="allow-same-origin"
       />
@@ -179,11 +203,14 @@ export default function App() {
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="max-w-md rounded-lg bg-white p-8 text-center shadow-lg">
           <div className="mb-4 text-5xl text-red-500">⚠️</div>
-          <h2 className="mb-2 text-xl font-semibold text-gray-800">Error Loading Email</h2>
+          <h2 className="mb-2 text-xl font-semibold text-gray-800">
+            Error Loading Email
+          </h2>
           <p className="mb-6 text-gray-600">{error}</p>
           <button
             onClick={handleCancel}
-            className="rounded-lg bg-gray-200 px-6 py-2 text-gray-800 transition-colors hover:bg-gray-300">
+            className="rounded-lg bg-gray-200 px-6 py-2 text-gray-800 transition-colors hover:bg-gray-300"
+          >
             Close
           </button>
         </div>
@@ -210,30 +237,55 @@ export default function App() {
                 </svg>
                 Email Discharge Summary
               </h1>
-              <p className="mt-2 text-sm text-white/90">Patient: {patientName}</p>
+              <p className="mt-2 text-sm text-white/90">
+                Patient: {patientName}
+              </p>
             </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setIsPreviewMode(!isPreviewMode)}
                 className="flex items-center gap-2 rounded-lg border border-white/30 bg-white/20 px-4 py-2 transition-colors hover:bg-white/30"
-                disabled={isSending}>
-                {isPreviewMode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                {isPreviewMode ? 'Edit' : 'Preview'}
+                disabled={isSending}
+              >
+                {isPreviewMode ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+                {isPreviewMode ? "Edit" : "Preview"}
               </button>
               <button
                 onClick={handleCancel}
                 className="rounded-lg border border-white/30 bg-white/20 px-4 py-2 transition-colors hover:bg-white/30"
-                disabled={isSending}>
+                disabled={isSending}
+              >
                 Cancel
               </button>
               <button
                 onClick={handleSend}
-                disabled={isSending || emailValidation.valid.length === 0 || !subject.trim() || !editorContent.trim()}
-                className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 font-medium text-[#5ab9b4] transition-all hover:bg-white/90 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50">
+                disabled={
+                  isSending ||
+                  emailValidation.valid.length === 0 ||
+                  !subject.trim() ||
+                  !editorContent.trim()
+                }
+                className="flex items-center gap-2 rounded-lg bg-white px-4 py-2 font-medium text-[#5ab9b4] transition-all hover:bg-white/90 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
+              >
                 {isSending ? (
                   <>
-                    <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity="0.25" />
+                    <svg
+                      className="h-5 w-5 animate-spin"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                    >
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        opacity="0.25"
+                      />
                       <path
                         d="M12 2a10 10 0 0 1 10 10"
                         stroke="currentColor"
@@ -255,7 +307,8 @@ export default function App() {
                         strokeLinejoin="round"
                       />
                     </svg>
-                    Send to {emailValidation.valid.length} recipient{emailValidation.valid.length !== 1 ? 's' : ''}
+                    Send to {emailValidation.valid.length} recipient
+                    {emailValidation.valid.length !== 1 ? "s" : ""}
                   </>
                 )}
               </button>
@@ -271,7 +324,10 @@ export default function App() {
             <>
               {/* Recipient Email */}
               <div className="space-y-2">
-                <label htmlFor="recipient" className="block text-sm font-semibold text-gray-700">
+                <label
+                  htmlFor="recipient"
+                  className="block text-sm font-semibold text-gray-700"
+                >
                   Recipient Email(s) <span className="text-red-500">*</span>
                   <span className="ml-2 text-xs font-normal text-gray-500">
                     (comma-separated for multiple recipients)
@@ -280,31 +336,38 @@ export default function App() {
                 <input
                   id="recipient"
                   type="text"
-                  className="w-full rounded-lg border-2 border-gray-300 px-4 py-3 text-gray-900 transition-colors focus:border-[#5ab9b4] focus:outline-none focus:ring-2 focus:ring-[#5ab9b4]/20"
+                  className="w-full rounded-lg border-2 border-gray-300 px-4 py-3 text-gray-900 transition-colors focus:border-[#5ab9b4] focus:ring-2 focus:ring-[#5ab9b4]/20 focus:outline-none"
                   value={recipientEmails}
-                  onChange={e => setRecipientEmails(e.target.value)}
+                  onChange={(e) => setRecipientEmails(e.target.value)}
                   placeholder="owner@example.com, owner2@example.com"
                   disabled={isSending}
                 />
                 {emailValidation.valid.length > 0 && (
-                  <p className="text-sm text-green-600">✓ {emailValidation.valid.length} valid email(s)</p>
+                  <p className="text-sm text-green-600">
+                    ✓ {emailValidation.valid.length} valid email(s)
+                  </p>
                 )}
                 {emailValidation.invalid.length > 0 && (
-                  <p className="text-sm text-red-600">✗ Invalid email(s): {emailValidation.invalid.join(', ')}</p>
+                  <p className="text-sm text-red-600">
+                    ✗ Invalid email(s): {emailValidation.invalid.join(", ")}
+                  </p>
                 )}
               </div>
 
               {/* Phone Number */}
               <div className="space-y-2">
-                <label htmlFor="phone" className="block text-sm font-semibold text-gray-700">
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-semibold text-gray-700"
+                >
                   Phone Number
                 </label>
                 <input
                   id="phone"
                   type="tel"
-                  className="w-full rounded-lg border-2 border-gray-300 px-4 py-3 text-gray-900 transition-colors focus:border-[#5ab9b4] focus:outline-none focus:ring-2 focus:ring-[#5ab9b4]/20"
+                  className="w-full rounded-lg border-2 border-gray-300 px-4 py-3 text-gray-900 transition-colors focus:border-[#5ab9b4] focus:ring-2 focus:ring-[#5ab9b4]/20 focus:outline-none"
                   value={phoneNumber}
-                  onChange={e => setPhoneNumber(e.target.value)}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
                   placeholder="(123) 456-7890"
                   disabled={isSending}
                 />
@@ -312,15 +375,18 @@ export default function App() {
 
               {/* Subject */}
               <div className="space-y-2">
-                <label htmlFor="subject" className="block text-sm font-semibold text-gray-700">
+                <label
+                  htmlFor="subject"
+                  className="block text-sm font-semibold text-gray-700"
+                >
                   Subject <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="subject"
                   type="text"
-                  className="w-full rounded-lg border-2 border-gray-300 px-4 py-3 text-gray-900 transition-colors focus:border-[#5ab9b4] focus:outline-none focus:ring-2 focus:ring-[#5ab9b4]/20"
+                  className="w-full rounded-lg border-2 border-gray-300 px-4 py-3 text-gray-900 transition-colors focus:border-[#5ab9b4] focus:ring-2 focus:ring-[#5ab9b4]/20 focus:outline-none"
                   value={subject}
-                  onChange={e => setSubject(e.target.value)}
+                  onChange={(e) => setSubject(e.target.value)}
                   placeholder="Enter email subject..."
                   disabled={isSending}
                 />
@@ -344,8 +410,12 @@ export default function App() {
             </>
           ) : (
             <div className="flex min-h-0 flex-1 flex-col">
-              <h3 className="mb-4 text-lg font-semibold text-gray-700">Email Preview</h3>
-              <div className="min-h-0 flex-1 overflow-auto rounded-lg border-2 border-gray-300">{renderPreview()}</div>
+              <h3 className="mb-4 text-lg font-semibold text-gray-700">
+                Email Preview
+              </h3>
+              <div className="min-h-0 flex-1 overflow-auto rounded-lg border-2 border-gray-300">
+                {renderPreview()}
+              </div>
             </div>
           )}
 

@@ -1,6 +1,6 @@
-import { upsertPatientFromAppointment } from './patient-sync';
-import { idexxApiClient } from '../../services/api/idexx-api-client';
-import { fetchConsultationData } from '../extraction/consultation-fetcher';
+import { upsertPatientFromAppointment } from "./patient-sync";
+import { idexxApiClient } from "../../services/api/idexx-api-client";
+import { fetchConsultationData } from "../extraction/consultation-fetcher";
 import {
   getSupabaseClient,
   logger,
@@ -8,16 +8,16 @@ import {
   buildCasesQuery,
   withTimeout,
   TimeoutError,
-} from '@odis-ai/extension/shared';
-import type { IdexxConsultationLine } from '../../types';
-import type { ScheduleAppointment } from '../extraction/schedule-extractor';
-import type { Database } from '@database-types';
+} from "@odis-ai/extension/shared";
+import type { IdexxConsultationLine } from "../../types";
+import type { ScheduleAppointment } from "../extraction/schedule-extractor";
+import type { Database } from "@odis-ai/shared/types";
 
-const odisLogger = logger.child('[ODIS]');
+const odisLogger = logger.child("[ODIS]");
 
-type Case = Database['public']['Tables']['cases']['Row'];
-type CaseInsert = Database['public']['Tables']['cases']['Insert'];
-type CaseStatus = Database['public']['Enums']['CaseStatus'];
+type Case = Database["public"]["Tables"]["cases"]["Row"];
+type CaseInsert = Database["public"]["Tables"]["cases"]["Insert"];
+type CaseStatus = Database["public"]["Enums"]["CaseStatus"];
 
 // Timeout constants for sync operations
 const AUTH_TIMEOUT_MS = 10000; // 10 seconds for auth check
@@ -43,26 +43,31 @@ interface ConsultationNotesResult {
  * @param declinedOnly - If true, only return declined items; if false, only return accepted items
  * @returns Formatted string of products/services
  */
-const formatProductsServices = (lines: IdexxConsultationLine[] | undefined, declinedOnly: boolean): string => {
+const formatProductsServices = (
+  lines: IdexxConsultationLine[] | undefined,
+  declinedOnly: boolean,
+): string => {
   if (!lines || lines.length === 0) {
-    return '';
+    return "";
   }
 
-  const filtered = lines.filter(line => (declinedOnly ? line.isDeclined : !line.isDeclined));
+  const filtered = lines.filter((line) =>
+    declinedOnly ? line.isDeclined : !line.isDeclined,
+  );
 
   if (filtered.length === 0) {
-    return '';
+    return "";
   }
 
   return filtered
-    .map(line => {
+    .map((line) => {
       const parts = [line.productService];
       if (line.quantity && line.quantity !== 1) {
         parts.push(`(Qty: ${line.quantity})`);
       }
-      return parts.join(' ');
+      return parts.join(" ");
     })
-    .join('; ');
+    .join("; ");
 };
 
 /**
@@ -75,14 +80,21 @@ const fetchConsultationNotesForAppointment = async (
 ): Promise<ConsultationNotesResult> => {
   // If no consultation ID, we can't fetch consultation data
   if (!consultationId) {
-    odisLogger.debug('No consultation_id for appointment, skipping consultation data fetch', {
-      appointmentId,
-    });
-    return { success: false, notes: null, error: 'No consultation_id available' };
+    odisLogger.debug(
+      "No consultation_id for appointment, skipping consultation data fetch",
+      {
+        appointmentId,
+      },
+    );
+    return {
+      success: false,
+      notes: null,
+      error: "No consultation_id available",
+    };
   }
 
   try {
-    odisLogger.debug('Fetching consultation data (notes + products/services)', {
+    odisLogger.debug("Fetching consultation data (notes + products/services)", {
       consultationId,
       appointmentId,
       timeoutMs: CONSULTATION_FETCH_TIMEOUT_MS,
@@ -97,15 +109,24 @@ const fetchConsultationNotesForAppointment = async (
 
     // Extract notes from consultation data
     // IDEXX API structure: consultationNotes.notes or consultation.notes
-    const consultationNotes = consultationData.consultationNotes as { notes?: string } | undefined;
-    const rawNotes = consultationNotes?.notes || consultationData.consultation?.notes || '';
+    const consultationNotes = consultationData.consultationNotes as
+      | { notes?: string }
+      | undefined;
+    const rawNotes =
+      consultationNotes?.notes || consultationData.consultation?.notes || "";
 
     // Extract products/services (billing line items)
-    const productsServices = formatProductsServices(consultationData.consultationLines, false);
-    const declinedProductsServices = formatProductsServices(consultationData.consultationLines, true);
+    const productsServices = formatProductsServices(
+      consultationData.consultationLines,
+      false,
+    );
+    const declinedProductsServices = formatProductsServices(
+      consultationData.consultationLines,
+      true,
+    );
 
     // Log what we found
-    odisLogger.debug('🛒 Extracted consultation data', {
+    odisLogger.debug("🛒 Extracted consultation data", {
       consultationId,
       appointmentId,
       notesLength: rawNotes.length,
@@ -120,7 +141,7 @@ const fetchConsultationNotesForAppointment = async (
     const hasProducts = !!productsServices || !!declinedProductsServices;
 
     if (!hasNotes && !hasProducts) {
-      odisLogger.debug('Consultation has no notes or products/services', {
+      odisLogger.debug("Consultation has no notes or products/services", {
         consultationId,
         appointmentId,
       });
@@ -133,7 +154,7 @@ const fetchConsultationNotesForAppointment = async (
       };
     }
 
-    odisLogger.debug('Successfully fetched consultation data', {
+    odisLogger.debug("Successfully fetched consultation data", {
       consultationId,
       appointmentId,
       notesLength: rawNotes.length,
@@ -148,10 +169,11 @@ const fetchConsultationNotesForAppointment = async (
       declinedProductsServices: declinedProductsServices || null,
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
     const isTimeout = error instanceof TimeoutError;
 
-    odisLogger.warn('Failed to fetch consultation data (non-fatal)', {
+    odisLogger.warn("Failed to fetch consultation data (non-fatal)", {
       consultationId,
       appointmentId,
       error: errorMessage,
@@ -161,7 +183,9 @@ const fetchConsultationNotesForAppointment = async (
     return {
       success: false,
       notes: null,
-      error: isTimeout ? `Timeout after ${CONSULTATION_FETCH_TIMEOUT_MS / 1000}s` : errorMessage,
+      error: isTimeout
+        ? `Timeout after ${CONSULTATION_FETCH_TIMEOUT_MS / 1000}s`
+        : errorMessage,
     };
   }
 };
@@ -170,10 +194,15 @@ const fetchConsultationNotesForAppointment = async (
  * Check if an appointment should be synced (only finalized appointments)
  */
 const shouldSyncAppointment = (appointment: ScheduleAppointment): boolean => {
-  const status = appointment.status?.toLowerCase().trim() || '';
+  const status = appointment.status?.toLowerCase().trim() || "";
 
   // Only sync finalized/completed appointments
-  return status === 'finalized' || status === 'completed' || status === 'finished' || status === 'done';
+  return (
+    status === "finalized" ||
+    status === "completed" ||
+    status === "finished" ||
+    status === "done"
+  );
 };
 
 /**
@@ -181,42 +210,44 @@ const shouldSyncAppointment = (appointment: ScheduleAppointment): boolean => {
  * These should not be synced, and if previously synced, should be deleted
  */
 const isNoShowAppointment = (appointment: ScheduleAppointment): boolean => {
-  const status = appointment.status?.toLowerCase().trim() || '';
-  return status === 'no show' || status === 'no-show' || status === 'noshow';
+  const status = appointment.status?.toLowerCase().trim() || "";
+  return status === "no show" || status === "no-show" || status === "noshow";
 };
 
 /**
  * Map IDEXX appointment status to valid CaseStatus enum
  */
-const mapAppointmentStatusToCaseStatus = (idexxStatus: string | null): CaseStatus => {
-  const status = idexxStatus?.toLowerCase().trim() || '';
+const mapAppointmentStatusToCaseStatus = (
+  idexxStatus: string | null,
+): CaseStatus => {
+  const status = idexxStatus?.toLowerCase().trim() || "";
 
   // Map IDEXX statuses to valid database enum values
   switch (status) {
-    case 'finalized':
-    case 'completed':
-    case 'finished':
-    case 'done':
-      return 'completed';
+    case "finalized":
+    case "completed":
+    case "finished":
+    case "done":
+      return "completed";
 
-    case 'in progress':
-    case 'in-progress':
-    case 'ongoing':
-    case 'active':
-    case 'started':
-      return 'ongoing';
+    case "in progress":
+    case "in-progress":
+    case "ongoing":
+    case "active":
+    case "started":
+      return "ongoing";
 
-    case 'reviewed':
-    case 'checked':
-      return 'reviewed';
+    case "reviewed":
+    case "checked":
+      return "reviewed";
 
-    case 'scheduled':
-    case 'pending':
-    case 'upcoming':
-    case 'booked':
-    case 'draft':
+    case "scheduled":
+    case "pending":
+    case "upcoming":
+    case "booked":
+    case "draft":
     default:
-      return 'draft';
+      return "draft";
   }
 };
 
@@ -226,29 +257,40 @@ const mapAppointmentStatusToCaseStatus = (idexxStatus: string | null): CaseStatu
  *
  * This function has an overall timeout of 2 minutes to prevent hanging.
  */
-const syncScheduleFromApi = async (startDate: Date, endDate: Date): Promise<SyncResult> => {
+const syncScheduleFromApi = async (
+  startDate: Date,
+  endDate: Date,
+): Promise<SyncResult> => {
   const syncStartTime = Date.now();
 
   // GUARD: Ensure we are NOT running in an extension page context (like the dashboard)
   // Extension pages have an origin starting with chrome-extension://
-  if (typeof window !== 'undefined' && window.location.origin.startsWith('chrome-extension://')) {
+  if (
+    typeof window !== "undefined" &&
+    window.location.origin.startsWith("chrome-extension://")
+  ) {
     const error = new Error(
-      'syncScheduleFromApi called from extension context! This function must only be called from the content script.',
+      "syncScheduleFromApi called from extension context! This function must only be called from the content script.",
     );
-    odisLogger.error('CRITICAL ERROR: syncScheduleFromApi called from extension context', {
-      origin: window.location.origin,
-      stack: error.stack,
-    });
+    odisLogger.error(
+      "CRITICAL ERROR: syncScheduleFromApi called from extension context",
+      {
+        origin: window.location.origin,
+        stack: error.stack,
+      },
+    );
     throw error;
   }
 
-  odisLogger.info('🟢 syncScheduleFromApi called', {
+  odisLogger.info("🟢 syncScheduleFromApi called", {
     startDate: startDate.toISOString(),
     endDate: endDate.toISOString(),
-    currentUrl: typeof window !== 'undefined' ? window.location.href : 'N/A',
-    currentOrigin: typeof window !== 'undefined' ? window.location.origin : 'N/A',
-    hasDocument: typeof document !== 'undefined',
-    documentLocation: typeof document !== 'undefined' ? document.location?.href : 'N/A',
+    currentUrl: typeof window !== "undefined" ? window.location.href : "N/A",
+    currentOrigin:
+      typeof window !== "undefined" ? window.location.origin : "N/A",
+    hasDocument: typeof document !== "undefined",
+    documentLocation:
+      typeof document !== "undefined" ? document.location?.href : "N/A",
     overallTimeoutMs: OVERALL_SYNC_TIMEOUT_MS,
   });
 
@@ -257,20 +299,22 @@ const syncScheduleFromApi = async (startDate: Date, endDate: Date): Promise<Sync
     return await withTimeout(
       performSync(startDate, endDate, syncStartTime),
       OVERALL_SYNC_TIMEOUT_MS,
-      'syncScheduleFromApi',
+      "syncScheduleFromApi",
     );
   } catch (error) {
     const elapsed = Date.now() - syncStartTime;
 
     if (error instanceof TimeoutError) {
-      odisLogger.error('🔴 Schedule sync timed out', {
+      odisLogger.error("🔴 Schedule sync timed out", {
         elapsedMs: elapsed,
         timeoutMs: OVERALL_SYNC_TIMEOUT_MS,
       });
-      throw new Error(`Schedule sync timed out after ${Math.round(elapsed / 1000)} seconds. Please try again.`);
+      throw new Error(
+        `Schedule sync timed out after ${Math.round(elapsed / 1000)} seconds. Please try again.`,
+      );
     }
 
-    odisLogger.error('🔴 Schedule sync from API failed', {
+    odisLogger.error("🔴 Schedule sync from API failed", {
       error,
       errorMessage: error instanceof Error ? error.message : String(error),
       errorStack: error instanceof Error ? error.stack : undefined,
@@ -284,33 +328,56 @@ const syncScheduleFromApi = async (startDate: Date, endDate: Date): Promise<Sync
 /**
  * Internal function that performs the actual sync
  */
-const performSync = async (startDate: Date, endDate: Date, syncStartTime: number): Promise<SyncResult> => {
+const performSync = async (
+  startDate: Date,
+  endDate: Date,
+  syncStartTime: number,
+): Promise<SyncResult> => {
   // Ensure user is authenticated with timeout
-  odisLogger.info('🟢 Checking authentication...', { elapsedMs: Date.now() - syncStartTime });
+  odisLogger.info("🟢 Checking authentication...", {
+    elapsedMs: Date.now() - syncStartTime,
+  });
   try {
-    await withTimeout(requireAuthSession(), AUTH_TIMEOUT_MS, 'requireAuthSession');
+    await withTimeout(
+      requireAuthSession(),
+      AUTH_TIMEOUT_MS,
+      "requireAuthSession",
+    );
   } catch (error) {
     if (error instanceof TimeoutError) {
-      throw new Error('Authentication check timed out. Please ensure you are signed in and try again.');
+      throw new Error(
+        "Authentication check timed out. Please ensure you are signed in and try again.",
+      );
     }
     throw error;
   }
-  odisLogger.info('🟢 Authentication verified', { elapsedMs: Date.now() - syncStartTime });
+  odisLogger.info("🟢 Authentication verified", {
+    elapsedMs: Date.now() - syncStartTime,
+  });
 
   // Fetch appointments from IDEXX API (already has its own timeout)
-  odisLogger.info('🟢 Calling idexxApiClient.fetchAppointments...', { elapsedMs: Date.now() - syncStartTime });
-  const allAppointments = await idexxApiClient.fetchAppointments(startDate, endDate);
+  odisLogger.info("🟢 Calling idexxApiClient.fetchAppointments...", {
+    elapsedMs: Date.now() - syncStartTime,
+  });
+  const allAppointments = await idexxApiClient.fetchAppointments(
+    startDate,
+    endDate,
+  );
 
   // Filter to only sync finalized appointments
-  const appointments = allAppointments.filter(apt => shouldSyncAppointment(apt));
-  const filteredOut = allAppointments.filter(apt => !shouldSyncAppointment(apt));
+  const appointments = allAppointments.filter((apt) =>
+    shouldSyncAppointment(apt),
+  );
+  const filteredOut = allAppointments.filter(
+    (apt) => !shouldSyncAppointment(apt),
+  );
 
   // Log filtered out appointments for debugging
   if (filteredOut.length > 0) {
-    odisLogger.info('🔵 Filtered out non-finalized appointments', {
+    odisLogger.info("🔵 Filtered out non-finalized appointments", {
       count: filteredOut.length,
-      statuses: [...new Set(filteredOut.map(apt => apt.status))],
-      examples: filteredOut.slice(0, 3).map(apt => ({
+      statuses: [...new Set(filteredOut.map((apt) => apt.status))],
+      examples: filteredOut.slice(0, 3).map((apt) => ({
         id: apt.id,
         status: apt.status,
         clientEmail: apt.client.email,
@@ -321,9 +388,11 @@ const performSync = async (startDate: Date, endDate: Date, syncStartTime: number
   }
 
   // Identify no-show appointments that might need deletion
-  const noShowAppointments = allAppointments.filter(apt => isNoShowAppointment(apt));
+  const noShowAppointments = allAppointments.filter((apt) =>
+    isNoShowAppointment(apt),
+  );
 
-  odisLogger.info('🟢 Appointments fetched', {
+  odisLogger.info("🟢 Appointments fetched", {
     total: allAppointments.length,
     filtered: filteredOut.length,
     finalizedOnly: appointments.length,
@@ -334,7 +403,7 @@ const performSync = async (startDate: Date, endDate: Date, syncStartTime: number
   // Delete any previously synced cases that are now no-shows
   let deletedCount = 0;
   if (noShowAppointments.length > 0) {
-    odisLogger.info('🗑️ Deleting no-show cases...', {
+    odisLogger.info("🗑️ Deleting no-show cases...", {
       count: noShowAppointments.length,
       elapsedMs: Date.now() - syncStartTime,
     });
@@ -347,22 +416,22 @@ const performSync = async (startDate: Date, endDate: Date, syncStartTime: number
       try {
         // Check if case exists before deleting
         const { data: existingCase } = await supabase
-          .from('cases')
-          .select('id')
-          .eq('user_id', session.user.id)
-          .eq('external_id', externalId)
+          .from("cases")
+          .select("id")
+          .eq("user_id", session.user.id)
+          .eq("external_id", externalId)
           .maybeSingle();
 
         if (existingCase) {
           const { error } = await supabase
-            .from('cases')
+            .from("cases")
             .delete()
-            .eq('user_id', session.user.id)
-            .eq('external_id', externalId);
+            .eq("user_id", session.user.id)
+            .eq("external_id", externalId);
 
           if (!error) {
             deletedCount++;
-            odisLogger.info('🗑️ Deleted no-show case', {
+            odisLogger.info("🗑️ Deleted no-show case", {
               appointmentId: noShow.id,
               externalId,
               patientName: noShow.patient.name,
@@ -370,19 +439,22 @@ const performSync = async (startDate: Date, endDate: Date, syncStartTime: number
           }
         }
       } catch (error) {
-        odisLogger.warn('Failed to delete no-show case', { externalId, error });
+        odisLogger.warn("Failed to delete no-show case", { externalId, error });
       }
     }
   }
 
-  odisLogger.info('🟢 Syncing to Supabase (with clinical notes + products/services)...', {
-    elapsedMs: Date.now() - syncStartTime,
-  });
+  odisLogger.info(
+    "🟢 Syncing to Supabase (with clinical notes + products/services)...",
+    {
+      elapsedMs: Date.now() - syncStartTime,
+    },
+  );
   const result = await syncScheduleToSupabase(appointments, syncStartTime);
 
   // Add deleted count to result
   result.deleted = deletedCount;
-  odisLogger.info('🟢 Sync complete', {
+  odisLogger.info("🟢 Sync complete", {
     total: result.total,
     created: result.created,
     updated: result.updated,
@@ -434,16 +506,24 @@ const syncScheduleToSupabase = async (
 
       // Log progress every 5 appointments
       if (i % 5 === 0) {
-        odisLogger.info(`🟢 Processing appointment ${i + 1}/${appointments.length}`, {
-          appointmentId: appointment.id,
-          elapsedMs: Date.now() - startTime,
-        });
+        odisLogger.info(
+          `🟢 Processing appointment ${i + 1}/${appointments.length}`,
+          {
+            appointmentId: appointment.id,
+            elapsedMs: Date.now() - startTime,
+          },
+        );
       }
 
       try {
         // Wrap the entire appointment sync with a timeout
         await withTimeout(
-          syncSingleAppointment(supabase, session.user.id, appointment, results),
+          syncSingleAppointment(
+            supabase,
+            session.user.id,
+            appointment,
+            results,
+          ),
           PER_APPOINTMENT_TIMEOUT_MS,
           `syncAppointment_${appointment.id}`,
         );
@@ -459,7 +539,8 @@ const syncScheduleToSupabase = async (
             elapsedMs: Date.now() - appointmentStartTime,
           });
         } else {
-          errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          errorMessage =
+            error instanceof Error ? error.message : "Unknown error";
           odisLogger.error(`❌ Failed to sync appointment ${appointment.id}`, {
             appointmentId: appointment.id,
             error,
@@ -476,7 +557,10 @@ const syncScheduleToSupabase = async (
 
     return results;
   } catch (error) {
-    odisLogger.error('❌ Schedule sync failed', { error, elapsedMs: Date.now() - startTime });
+    odisLogger.error("❌ Schedule sync failed", {
+      error,
+      elapsedMs: Date.now() - startTime,
+    });
     throw error;
   }
 };
@@ -500,13 +584,18 @@ const syncSingleAppointment = async (
   }
 
   // Step 2: Fetch consultation data (notes + products/services) from consultation endpoint (if consultation_id exists)
-  const notesResult = await fetchConsultationNotesForAppointment(appointment.consultationId ?? null, appointment.id);
+  const notesResult = await fetchConsultationNotesForAppointment(
+    appointment.consultationId ?? null,
+    appointment.id,
+  );
 
   // Track consultation data fetch results
   // Consider it reconciled if we got notes OR products/services
   if (
     notesResult.success &&
-    (notesResult.notes || notesResult.productsServices || notesResult.declinedProductsServices)
+    (notesResult.notes ||
+      notesResult.productsServices ||
+      notesResult.declinedProductsServices)
   ) {
     results.notesReconciled++;
   } else if (!notesResult.success && appointment.consultationId) {
@@ -515,7 +604,13 @@ const syncSingleAppointment = async (
   }
 
   // Step 3: Create or update case linked to patient (with clinical notes)
-  await upsertAppointmentAsCase(supabase, userId, appointment, patientResult.patient.id, notesResult);
+  await upsertAppointmentAsCase(
+    supabase,
+    userId,
+    appointment,
+    patientResult.patient.id,
+    notesResult,
+  );
 
   results.created++;
 };
@@ -533,17 +628,17 @@ const formatDateAsLocalTimestamp = (date: Date | null): string | null => {
   if (!date) return null;
 
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
 
   // Get the timezone offset in minutes and convert to hours
   const offsetMinutes = date.getTimezoneOffset();
   const offsetHours = Math.abs(offsetMinutes / 60);
-  const offsetSign = offsetMinutes > 0 ? '-' : '+'; // Reversed because getTimezoneOffset is backwards
-  const offsetFormatted = `${offsetSign}${String(Math.floor(offsetHours)).padStart(2, '0')}`;
+  const offsetSign = offsetMinutes > 0 ? "-" : "+"; // Reversed because getTimezoneOffset is backwards
+  const offsetFormatted = `${offsetSign}${String(Math.floor(offsetHours)).padStart(2, "0")}`;
 
   // Return timestamp with explicit timezone offset
   // This tells PostgreSQL: "this time is in PST/PDT (offset -08 or -07)"
@@ -569,13 +664,14 @@ const upsertAppointmentAsCase = async (
   // If we successfully fetched data (even if empty), record the sync time
   const consultationNotes = notesResult?.notes || null;
   const productsServices = notesResult?.productsServices || null;
-  const declinedProductsServices = notesResult?.declinedProductsServices || null;
+  const declinedProductsServices =
+    notesResult?.declinedProductsServices || null;
   const notesSyncedAt = notesResult?.success ? new Date().toISOString() : null;
   const consultationStatus = notesResult?.consultationStatus || null;
 
   const caseData: CaseInsert = {
     user_id: userId,
-    source: 'idexx_neo',
+    source: "idexx_neo",
     external_id: `idexx-appt-${appointment.id}`,
     scheduled_at: scheduledAt,
     // Let Supabase auto-generate created_at to current timestamp (when record is created)
@@ -612,18 +708,18 @@ const upsertAppointmentAsCase = async (
     },
 
     // Defaults for existing required columns
-    type: 'checkup',
+    type: "checkup",
     status: mapAppointmentStatusToCaseStatus(appointment.status),
-    visibility: 'private',
+    visibility: "private",
   };
 
   // Upsert using (user_id, external_id) as conflict resolution
   // This allows multiple users to sync the same IDEXX appointment
   // ignoreDuplicates: false ensures we always UPDATE existing records with fresh data
   const { data, error } = await supabase
-    .from('cases')
+    .from("cases")
     .upsert(caseData, {
-      onConflict: 'user_id,external_id',
+      onConflict: "user_id,external_id",
       ignoreDuplicates: false, // Always update existing records with fresh data
     })
     .select()
@@ -634,7 +730,10 @@ const upsertAppointmentAsCase = async (
   }
 
   // Link patient to case if not already linked
-  await supabase.from('patients').update({ case_id: data.id }).eq('id', patientId);
+  await supabase
+    .from("patients")
+    .update({ case_id: data.id })
+    .eq("id", patientId);
 
   return data;
 };
@@ -647,9 +746,9 @@ const getSyncedAppointments = async (): Promise<Case[]> => {
 
   const query = buildCasesQuery(supabase, {
     userId: session.user.id,
-    sources: 'idexx_neo',
-    orderBy: 'scheduled_at',
-    orderDirection: 'descending',
+    sources: "idexx_neo",
+    orderBy: "scheduled_at",
+    orderDirection: "descending",
   });
 
   const { data, error } = await query;
@@ -672,7 +771,11 @@ const deleteSyncedAppointment = async (externalId: string): Promise<void> => {
   // Ensure user is authenticated
   const session = await requireAuthSession();
 
-  const { error } = await supabase.from('cases').delete().eq('user_id', session.user.id).eq('external_id', externalId);
+  const { error } = await supabase
+    .from("cases")
+    .delete()
+    .eq("user_id", session.user.id)
+    .eq("external_id", externalId);
 
   if (error) {
     throw new Error(`Failed to delete appointment: ${error.message}`);
@@ -699,5 +802,10 @@ interface SyncResult {
 }
 
 // Exports
-export { syncScheduleFromApi, syncScheduleToSupabase, getSyncedAppointments, deleteSyncedAppointment };
+export {
+  syncScheduleFromApi,
+  syncScheduleToSupabase,
+  getSyncedAppointments,
+  deleteSyncedAppointment,
+};
 export type { SyncResult };

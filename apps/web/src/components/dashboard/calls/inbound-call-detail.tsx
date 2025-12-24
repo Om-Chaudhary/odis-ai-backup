@@ -2,7 +2,12 @@
 
 import { format } from "date-fns";
 import { Badge } from "@odis-ai/shared/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@odis-ai/shared/ui/card";
 import {
   Phone,
   MessageSquare,
@@ -15,7 +20,7 @@ import {
 } from "lucide-react";
 import { formatDuration } from "@odis-ai/shared/util";
 import { AudioPlayer as CallAudioPlayer } from "@odis-ai/shared/ui";
-import type { Database } from "~/database.types";
+import type { Database } from "@odis-ai/shared/types";
 
 // Use database types instead of manual interface
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];

@@ -3,6 +3,7 @@
  *
  * Extends Vitest with domain-specific assertions
  */
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-empty-object-type, @typescript-eslint/restrict-template-expressions */
 import { expect } from "vitest";
 
 /**
@@ -42,7 +43,9 @@ interface CustomMatchers<R = unknown> {
   /**
    * Assert that a Zod schema validation passes
    */
-  toPassZodSchema<T>(schema: { safeParse: (v: unknown) => { success: boolean } }): R;
+  toPassZodSchema<T>(schema: {
+    safeParse: (v: unknown) => { success: boolean };
+  }): R;
 }
 
 declare module "vitest" {
@@ -113,10 +116,16 @@ export function registerCustomMatchers(): void {
 
     toBeApiSuccess(received: unknown, expectedData?: unknown) {
       const isObject = typeof received === "object" && received !== null;
-      const hasSuccess = isObject && "success" in received && (received as Record<string, unknown>).success === true;
-      const dataMatches = expectedData === undefined ||
-        (isObject && "data" in received &&
-          JSON.stringify((received as Record<string, unknown>).data) === JSON.stringify(expectedData));
+      const hasSuccess =
+        isObject &&
+        "success" in received &&
+        (received as Record<string, unknown>).success === true;
+      const dataMatches =
+        expectedData === undefined ||
+        (isObject &&
+          "data" in received &&
+          JSON.stringify((received as Record<string, unknown>).data) ===
+            JSON.stringify(expectedData));
 
       const pass = hasSuccess && dataMatches;
 
@@ -129,14 +138,22 @@ export function registerCustomMatchers(): void {
       };
     },
 
-    toBeApiError(received: unknown, expectedStatus?: number, expectedMessage?: string) {
+    toBeApiError(
+      received: unknown,
+      expectedStatus?: number,
+      expectedMessage?: string,
+    ) {
       const isObject = typeof received === "object" && received !== null;
       const rec = received as Record<string, unknown>;
       const hasError = isObject && ("error" in rec || rec.success === false);
-      const statusMatches = expectedStatus === undefined || rec.status === expectedStatus;
-      const messageMatches = expectedMessage === undefined ||
-        (typeof rec.error === "string" && rec.error.includes(expectedMessage)) ||
-        (typeof rec.message === "string" && rec.message.includes(expectedMessage));
+      const statusMatches =
+        expectedStatus === undefined || rec.status === expectedStatus;
+      const messageMatches =
+        expectedMessage === undefined ||
+        (typeof rec.error === "string" &&
+          rec.error.includes(expectedMessage)) ||
+        (typeof rec.message === "string" &&
+          rec.message.includes(expectedMessage));
 
       const pass = hasError && statusMatches && messageMatches;
 
@@ -149,7 +166,15 @@ export function registerCustomMatchers(): void {
       };
     },
 
-    toPassZodSchema(received: unknown, schema: { safeParse: (v: unknown) => { success: boolean; error?: { message: string } } }) {
+    toPassZodSchema(
+      received: unknown,
+      schema: {
+        safeParse: (v: unknown) => {
+          success: boolean;
+          error?: { message: string };
+        };
+      },
+    ) {
       const result = schema.safeParse(received);
       const pass = result.success;
 

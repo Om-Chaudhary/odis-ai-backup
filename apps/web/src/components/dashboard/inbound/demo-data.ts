@@ -3,7 +3,7 @@
  * Used for testing and demonstration purposes
  */
 
-import type { Database } from "~/database.types";
+import type { Database } from "@odis-ai/shared/types";
 
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
@@ -120,12 +120,15 @@ export function getCallModifications(call: InboundCall): {
  * Get demo call data for specific test cases
  * Returns merged call data with hardcoded transcript, recording, etc.
  */
-export function getDemoCallData(call: InboundCall, vapiQueryData?: {
-  recordingUrl?: string | null;
-  transcript?: string | null;
-  duration?: number | null;
-  analysis?: { summary?: string | null };
-}) {
+export function getDemoCallData(
+  call: InboundCall,
+  vapiQueryData?: {
+    recordingUrl?: string | null;
+    transcript?: string | null;
+    duration?: number | null;
+    analysis?: { summary?: string | null };
+  },
+) {
   // Check for silent call first
   const silentCall = getSilentCallData(call);
   if (silentCall) return silentCall;

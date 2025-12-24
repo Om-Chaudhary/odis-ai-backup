@@ -8,7 +8,11 @@
  * - Proxy middleware (session refresh)
  */
 
-export * from "./client";
-export * from "./server";
+// Export with specific names to avoid conflicts
+export { createClient as createBrowserClient } from "./client";
+export {
+  createClient as createServerClient,
+  createServiceClient,
+} from "./server";
 export * from "./browser";
 export * from "./proxy";
