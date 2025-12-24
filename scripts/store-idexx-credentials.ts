@@ -1,80 +1,35 @@
 /**
- * Script to store encrypted IDEXX credentials
- *
- * Usage:
- *   pnpm tsx scripts/store-idexx-credentials.ts
- *
- * Before running:
- *   1. Set ENCRYPTION_KEY in your environment
- *   2. Update the userId, clinicId, and credentials below
+ * One-time script to store IDEXX credentials
+ * Run with: npx tsx scripts/store-idexx-credentials.ts
  */
 
-/* eslint-disable @nx/enforce-module-boundaries */
-import { IdexxCredentialManager } from "@odis-ai/idexx";
+import { IdexxCredentialManager } from '@odis-ai/idexx';
 
 async function main() {
-  // ===========================================
-  // CONFIGURE THESE VALUES
-  // ===========================================
+  const userId = 'c51bffe0-0f84-4560-8354-2fa65d646f28'; // garrybath@hotmail.com
+  const clinicId = '33f3bbb8-6613-45bc-a1f2-d55e30c243ae'; // Alum Rock Animal Hospital
+  const username = 'alumrockanimalhospital@yahoo.com';
+  const password = 'GoNeo123!';
+  const companyId = '9229';
 
-  // Get user ID from your users table
-  const userId = "YOUR_USER_UUID_HERE";
+  console.log('Creating credential manager...');
+  const manager = await IdexxCredentialManager.create();
 
-  // Get clinic ID from your clinics table (or null if not clinic-specific)
-  const clinicId: string | null = "YOUR_CLINIC_UUID_HERE";
+  console.log('Storing credentials...');
+  const result = await manager.storeCredentials(
+    userId,
+    clinicId,
+    username,
+    password,
+    companyId
+  );
 
-  // Your IDEXX Neo login credentials
-  const idexxUsername = "your-idexx-username";
-  const idexxPassword = "your-idexx-password";
-
-  // ===========================================
-
-  // Verify encryption key is set
-  if (!process.env.ENCRYPTION_KEY) {
-    console.error("❌ ENCRYPTION_KEY environment variable is not set!");
-    console.log("\nSet it with:");
-    console.log('  export ENCRYPTION_KEY="your-32-character-key-here"');
-    process.exit(1);
-  }
-
-  console.log("🔐 Storing IDEXX credentials...\n");
-  console.log(`  User ID: ${userId}`);
-  console.log(`  Clinic ID: ${clinicId ?? "(none)"}`);
-  console.log(`  Username: ${idexxUsername}`);
-  console.log(`  Password: ${"*".repeat(idexxPassword.length)}`);
-
-  try {
-    // Create credential manager (uses service client internally)
-    const credentialManager = await IdexxCredentialManager.create();
-
-    // Store the credentials (automatically encrypts)
-    const result = await credentialManager.storeCredentials(
-      userId,
-      clinicId,
-      idexxUsername,
-      idexxPassword,
-    );
-
-    console.log("\n✅ Credentials stored successfully!");
-    console.log(`  Credential ID: ${result.id}`);
-
-    // Verify by retrieving them
-    console.log("\n🔍 Verifying credentials can be retrieved...");
-    const retrieved = await credentialManager.getCredentials(userId, clinicId);
-
-    if (retrieved) {
-      console.log("✅ Credentials verified!");
-      console.log(`  Decrypted username: ${retrieved.username}`);
-      console.log(
-        `  Decrypted password: ${"*".repeat(retrieved.password.length)}`,
-      );
-    } else {
-      console.log("❌ Could not retrieve credentials");
-    }
-  } catch (error) {
-    console.error("\n❌ Error:", error);
-    process.exit(1);
-  }
+  console.log('✅ Credentials stored successfully!');
+  console.log('Credential ID:', result.id);
 }
 
-main().catch(console.error);
+main().catch((error) => {
+  console.error('❌ Failed to store credentials:', error);
+  process.exit(1);
+});
+
