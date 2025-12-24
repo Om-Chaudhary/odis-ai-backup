@@ -59,18 +59,24 @@ export async function POST(request: NextRequest) {
       throw new Error("Could not resolve clinic_id");
     }
 
-    // Create or get sync record
+    // Create or get sync record (upsert to handle multiple syncs per day)
     let sync_id = validated.sync_id;
     if (!sync_id) {
+      const syncDate = new Date().toISOString().split("T")[0];
+
       const { data: syncRecord, error: syncError } = await supabase
         .from("schedule_syncs")
-        .insert({
-          clinic_id,
-          sync_date: new Date().toISOString().split("T")[0],
-          status: "completed",
-          appointment_count: validated.appointments.length,
-          sync_type: "schedule",
-        })
+        .upsert(
+          {
+            clinic_id,
+            sync_date: syncDate,
+            status: "completed",
+            appointment_count: validated.appointments.length,
+            sync_type: "schedule",
+            synced_at: new Date().toISOString(),
+          },
+          { onConflict: "clinic_id,sync_date" },
+        )
         .select("id")
         .single();
 
@@ -119,13 +125,14 @@ export async function POST(request: NextRequest) {
       }),
     );
   } catch (error) {
-    logger.error("Sync failed", { error });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logger.error("Sync failed", {
+      error: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return withCorsHeaders(
       request,
-      NextResponse.json(
-        { error: error instanceof Error ? error.message : String(error) },
-        { status: 500 },
-      ),
+      NextResponse.json({ error: errorMessage }, { status: 500 }),
     );
   }
 }
