@@ -15,26 +15,37 @@
  * Login Page Selectors
  */
 export const LOGIN_SELECTORS = {
+  // Company ID field - first input on the page
+  companyIdInput: {
+    primary: 'input[name="companyId"]',
+    fallback1: 'input[name="company_id"]',
+    fallback2: "#companyId",
+    fallback3: "input:first-of-type",
+    fallback4: 'input[placeholder*="Company" i]',
+  },
+
   // Username field
   usernameInput: {
     primary: 'input[name="username"]',
-    fallback1: 'input[type="email"]',
-    fallback2: "#username",
-    fallback3: 'input[placeholder*="email" i]',
+    fallback1: 'input[placeholder="username"]',
+    fallback2: 'input[type="email"]',
+    fallback3: "#username",
+    fallback4: 'input[placeholder*="email" i]',
   },
 
   // Password field
   passwordInput: {
     primary: 'input[name="password"]',
-    fallback1: 'input[type="password"]',
-    fallback2: "#password",
+    fallback1: 'input[placeholder="password"]',
+    fallback2: 'input[type="password"]',
+    fallback3: "#password",
   },
 
   // Submit button
   submitButton: {
-    primary: 'button[type="submit"]',
-    fallback1: 'button:has-text("Sign In")',
-    fallback2: 'button:has-text("Login")',
+    primary: 'button:has-text("Login")',
+    fallback1: 'button[type="submit"]',
+    fallback2: 'button:has-text("Sign In")',
     fallback3: 'input[type="submit"]',
   },
 
