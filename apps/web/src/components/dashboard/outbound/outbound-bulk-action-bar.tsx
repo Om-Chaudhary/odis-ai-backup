@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@odis-ai/ui/button";
 import {
   AlertDialog,
@@ -17,7 +18,8 @@ import { cn } from "@odis-ai/utils";
 
 interface BulkActionBarProps {
   selectedCount: number;
-  onOpenWizard: () => void;
+  /** Selected case IDs for navigation */
+  selectedCaseIds: string[];
   onCancelSelected?: () => void;
   onClearSelection: () => void;
   isCancelling?: boolean;
@@ -33,13 +35,14 @@ interface BulkActionBarProps {
  */
 export function OutboundBulkActionBar({
   selectedCount,
-  onOpenWizard,
+  selectedCaseIds,
   onCancelSelected,
   onClearSelection,
   isCancelling = false,
   showCancelAction = false,
   isBackgroundOperationActive = false,
 }: BulkActionBarProps) {
+  const router = useRouter();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   // Hide bar when no cases selected or when background operation is running
@@ -48,6 +51,13 @@ export function OutboundBulkActionBar({
   const handleCancelConfirm = () => {
     setShowCancelDialog(false);
     onCancelSelected?.();
+  };
+
+  const handleScheduleMultiple = () => {
+    // Navigate to bulk schedule page with case IDs
+    const params = new URLSearchParams();
+    params.set("cases", selectedCaseIds.join(","));
+    router.push(`/dashboard/outbound/bulk-schedule?${params.toString()}`);
   };
 
   return (
@@ -104,12 +114,12 @@ export function OutboundBulkActionBar({
 
             <Button
               size="sm"
-              onClick={onOpenWizard}
+              onClick={handleScheduleMultiple}
               disabled={isCancelling}
               className="h-9 gap-2 bg-teal-600 hover:bg-teal-700"
             >
               <Send className="h-4 w-4" />
-              Send Multiple
+              Schedule Multiple
             </Button>
           </div>
         </div>

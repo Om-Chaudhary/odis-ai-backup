@@ -17,6 +17,7 @@ import { cancelScheduledRouter } from "./procedures/cancel-scheduled";
 import { batchScheduleRouter } from "./procedures/batch-schedule";
 import { batchCancelRouter } from "./procedures/batch-cancel";
 import { getCaseByIdRouter } from "./procedures/get-case-by-id";
+import { getCasesByIdsRouter } from "./procedures/get-cases-by-ids";
 
 export const outboundRouter = createTRPCRouter({
   // Queries
@@ -26,6 +27,7 @@ export const outboundRouter = createTRPCRouter({
   findPreviousAttentionDate:
     findPreviousAttentionDateRouter.findPreviousAttentionDate,
   getCaseById: getCaseByIdRouter.getCaseById,
+  getCasesByIds: getCasesByIdsRouter.getCasesByIds,
 
   // Mutations
   approveAndSchedule: approveRouter.approveAndSchedule,

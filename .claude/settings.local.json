@@ -140,7 +140,8 @@
       "mcp__playwright__browser_press_key",
       "Bash(pnpm exec tsc:*)",
       "Bash(../../node_modules/.bin/tsc --noEmit)",
-      "Bash(pnpm type-check:*)"
+      "Bash(pnpm type-check:*)",
+      "Bash(cloc:*)"
     ],
     "deny": [],
     "ask": []
