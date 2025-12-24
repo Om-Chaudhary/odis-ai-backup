@@ -8,7 +8,7 @@
     "start": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "docusaurus start",
+        "command": "docusaurus start --port 3001",
         "cwd": "apps/docs"
       }
     },
@@ -24,7 +24,7 @@
     "serve": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "docusaurus serve",
+        "command": "docusaurus serve --port 3001",
         "cwd": "apps/docs"
       },
       "dependsOn": ["build"]

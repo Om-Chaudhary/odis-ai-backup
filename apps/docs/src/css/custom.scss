@@ -1,43 +1,47 @@
 /**
  * ODIS AI Documentation Theme
- * Maps ODIS design tokens to Docusaurus Infima CSS variables
+ * Matches the dashboard theme from apps/web exactly
  *
  * Brand Colors:
- * - Primary: ODIS Teal hsl(174 56% 43%) = #31ABA3
+ * - Primary: ODIS Teal HSL(174, 56%, 43%) = #31ABA3
  * - Background: White #FFFFFF
  * - Foreground: Near-black #171717
  */
 
 // ============================================
-// ODIS Design Token Definitions
-// Source: libs/shared/styles/src/tokens.css
+// ODIS Design Tokens (from libs/shared/styles/src/tokens.css)
 // ============================================
 
-// Primary Color: ODIS Teal - hsl(174 56% 43%) = #31ABA3
-$odis-primary: #31aba3;
-$odis-primary-dark: #2a958f;
-$odis-primary-darker: #247f7a;
-$odis-primary-darkest: #1d6965;
-$odis-primary-light: #4bbcb5;
-$odis-primary-lighter: #6eccc6;
-$odis-primary-lightest: #91dcd8;
+// Primary Color: ODIS Teal
+$odis-primary-hsl: 174, 56%, 43%;
+$odis-primary: hsl(174, 56%, 43%); // #31ABA3
+$odis-primary-dark: hsl(174, 56%, 38%);
+$odis-primary-darker: hsl(174, 56%, 33%);
+$odis-primary-darkest: hsl(174, 56%, 28%);
+$odis-primary-light: hsl(174, 56%, 48%);
+$odis-primary-lighter: hsl(174, 56%, 53%);
+$odis-primary-lightest: hsl(174, 56%, 58%);
 
 // Background/Foreground
-$odis-background: #ffffff;
-$odis-foreground: #171717;
+$odis-background: hsl(0, 0%, 100%); // #FFFFFF
+$odis-foreground: hsl(0, 0%, 9%); // #171717
 
 // Secondary/Muted
-$odis-secondary: #f5f5f5;
-$odis-muted-foreground: #737373;
+$odis-secondary: hsl(0, 0%, 96%); // #F5F5F5
+$odis-muted-foreground: hsl(0, 0%, 45%); // #737373
+
+// Sidebar
+$odis-sidebar: hsl(0, 0%, 98%); // #FAFAFA
+$odis-sidebar-accent: hsl(0, 0%, 96%); // #F5F5F5
 
 // Destructive
-$odis-destructive: #ef4444;
+$odis-destructive: hsl(0, 84%, 60%); // #F24B4B
 
 // Border
-$odis-border: #e5e5e5;
+$odis-border: hsl(0, 0%, 90%); // #E5E5E5
 
 // Border Radius
-$odis-radius: 0.5rem;
+$odis-radius: 0.5rem; // 8px
 
 // ============================================
 // Infima CSS Variable Overrides
@@ -53,7 +57,7 @@ $odis-radius: 0.5rem;
   --ifm-color-primary-lighter: #{$odis-primary-lighter};
   --ifm-color-primary-lightest: #{$odis-primary-lightest};
 
-  // Typography
+  // Typography - matching dashboard fonts
   --ifm-font-family-base: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --ifm-heading-font-family: "Outfit", system-ui, -apple-system,
@@ -83,8 +87,8 @@ $odis-radius: 0.5rem;
   --ifm-link-hover-decoration: none;
 
   // Navbar
-  --ifm-navbar-background-color: #{$odis-background};
-  --ifm-navbar-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --ifm-navbar-background-color: rgba(255, 255, 255, 0.4);
+  --ifm-navbar-shadow: none;
   --ifm-navbar-link-color: #{$odis-foreground};
   --ifm-navbar-link-hover-color: #{$odis-primary};
   --ifm-navbar-height: 4rem;
@@ -99,15 +103,15 @@ $odis-radius: 0.5rem;
   --ifm-footer-padding-vertical: 2rem;
   --ifm-footer-padding-horizontal: 1.5rem;
 
-  // Sidebar
+  // Sidebar - matching dashboard sidebar
   --ifm-menu-color: #{$odis-foreground};
   --ifm-menu-color-active: #{$odis-primary};
-  --ifm-menu-color-background-active: #{$odis-primary}1a;
+  --ifm-menu-color-background-active: hsla(174, 56%, 43%, 0.1);
   --ifm-menu-color-background-hover: #{$odis-secondary};
 
   // Code blocks
   --ifm-code-font-size: 90%;
-  --docusaurus-highlighted-code-line-bg: rgba(49, 171, 163, 0.1);
+  --docusaurus-highlighted-code-line-bg: hsla(174, 56%, 43%, 0.1);
   --prism-background-color: #f8fafc;
 
   // Table of Contents
@@ -117,7 +121,7 @@ $odis-radius: 0.5rem;
   // Alert/Admonition colors with ODIS teal accents
   --ifm-color-info: #{$odis-primary};
   --ifm-color-info-dark: #{$odis-primary-dark};
-  --ifm-color-info-contrast-background: rgba(49, 171, 163, 0.1);
+  --ifm-color-info-contrast-background: hsla(174, 56%, 43%, 0.1);
   --ifm-color-success: #22c55e;
   --ifm-color-success-dark: #16a34a;
   --ifm-color-success-contrast-background: rgba(34, 197, 94, 0.1);
@@ -140,7 +144,7 @@ $odis-radius: 0.5rem;
   --ifm-transition-slow: 300ms;
 }
 
-// Dark mode (currently mirrors light for brand consistency per tokens.css)
+// Dark mode (mirrors light for brand consistency)
 [data-theme="dark"] {
   --ifm-color-primary: #{$odis-primary};
   --ifm-color-primary-dark: #{$odis-primary-dark};
@@ -150,26 +154,137 @@ $odis-radius: 0.5rem;
   --ifm-color-primary-lighter: #{$odis-primary-lighter};
   --ifm-color-primary-lightest: #{$odis-primary-lightest};
 
-  // Keep consistent with light mode as per ODIS brand tokens
   --ifm-background-color: #{$odis-background};
   --ifm-background-surface-color: #{$odis-background};
   --ifm-font-color-base: #{$odis-foreground};
 
-  --docusaurus-highlighted-code-line-bg: rgba(49, 171, 163, 0.15);
+  --docusaurus-highlighted-code-line-bg: hsla(174, 56%, 43%, 0.15);
 }
 
 // ============================================
-// Custom Component Styling
+// Dashboard Background - Gradient Mesh
 // ============================================
 
-// Smooth scrolling
 html {
   scroll-behavior: smooth;
 }
 
-// Navbar branding
+// Main page background matching dashboard
+.main-wrapper {
+  background: linear-gradient(to bottom, #ecfdf5, #f0fdfa, #f0fdfa);
+  min-height: 100vh;
+  position: relative;
+
+  &::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(
+        at 20% 20%,
+        rgba(49, 171, 163, 0.08) 0%,
+        transparent 50%
+      ),
+      radial-gradient(at 80% 80%, rgba(49, 171, 163, 0.06) 0%, transparent 50%),
+      radial-gradient(at 40% 60%, rgba(100, 200, 190, 0.04) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: -1;
+  }
+}
+
+// ============================================
+// Glassmorphism Effects (from dashboard)
+// ============================================
+
+.glass {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 255, 255, 0.7) 100%
+  );
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.glass-strong {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(255, 255, 255, 0.92) 100%
+  );
+  backdrop-filter: blur(32px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+.glass-subtle {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.6) 0%,
+    rgba(255, 255, 255, 0.4) 100%
+  );
+  backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-card {
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(248, 250, 252, 0.9) 100%
+  );
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 16px -2px rgba(0, 0, 0, 0.04),
+    0 12px 48px -8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.glass-teal {
+  background: linear-gradient(
+    135deg,
+    rgba(45, 160, 150, 0.08) 0%,
+    rgba(45, 160, 150, 0.03) 100%
+  );
+  backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(45, 160, 150, 0.15);
+}
+
+// ============================================
+// Dashboard Shadow Utilities
+// ============================================
+
+.shadow-card {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px -2px rgba(0, 0, 0, 0.02);
+}
+
+.shadow-card-hover {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px -2px rgba(0, 0, 0, 0.04),
+    0 12px 48px -8px rgba(0, 0, 0, 0.04);
+}
+
+.shadow-card-accent {
+  box-shadow: 0 4px 24px -4px rgba(49, 171, 163, 0.1);
+}
+
+.shadow-card-accent-hover {
+  box-shadow: 0 4px 24px -4px rgba(49, 171, 163, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.glow-primary {
+  box-shadow: 0 0 20px -5px rgba(49, 171, 163, 0.3),
+    0 0 40px -10px rgba(49, 171, 163, 0.2);
+}
+
+// ============================================
+// Navbar - Glass Effect (matching dashboard header)
+// ============================================
+
 .navbar {
-  border-bottom: 1px solid #{$odis-border};
+  background: rgba(255, 255, 255, 0.4) !important;
+  backdrop-filter: blur(12px) saturate(180%);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.4);
 
   &__brand {
     font-family: var(--ifm-heading-font-family);
@@ -197,7 +312,37 @@ html {
   }
 }
 
-// Button styling (shadcn-inspired)
+// ============================================
+// Sidebar - Matching Dashboard Sidebar
+// ============================================
+
+.theme-doc-sidebar-container {
+  background: #{$odis-sidebar};
+  border-right: 1px solid #{$odis-border};
+}
+
+.menu {
+  &__link {
+    border-radius: calc(var(--ifm-global-radius) - 2px);
+    transition: all var(--ifm-transition-fast) ease;
+
+    &--active {
+      font-weight: 600;
+      background-color: hsla(174, 56%, 43%, 0.1);
+    }
+  }
+
+  &__list-item-collapsible {
+    &:hover {
+      background-color: #{$odis-sidebar-accent};
+    }
+  }
+}
+
+// ============================================
+// Button Styling (shadcn-inspired from dashboard)
+// ============================================
+
 .button {
   border-radius: var(--ifm-global-radius);
   font-weight: 500;
@@ -231,56 +376,54 @@ html {
   color: #{$odis-foreground};
 
   &:hover {
-    background-color: #eeeeee; // darken($odis-secondary, 3%)
+    background-color: #eeeeee;
   }
 }
 
-// Card styling (glass-inspired from utilities.css)
+// ============================================
+// Card Styling (glass-card from dashboard)
+// ============================================
+
 .card {
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(248, 250, 252, 0.9) 100%
+  );
+  backdrop-filter: blur(24px) saturate(180%);
   border-radius: var(--ifm-global-radius);
-  border: 1px solid #{$odis-border};
+  border: 1px solid rgba(255, 255, 255, 0.6);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 16px -2px rgba(0, 0, 0, 0.04);
   transition: box-shadow var(--ifm-transition-slow) ease,
     transform var(--ifm-transition-slow) ease;
 
   &:hover {
-    box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 24px -4px rgba(49, 171, 163, 0.1);
     transform: translateY(-2px);
   }
 }
 
-// Sidebar styling
-.menu {
-  &__link {
-    border-radius: calc(var(--ifm-global-radius) - 2px);
-    transition: all var(--ifm-transition-fast) ease;
+// ============================================
+// Code Block Enhancements
+// ============================================
 
-    &--active {
-      font-weight: 600;
-      background-color: var(--ifm-menu-color-background-active);
-    }
-  }
-
-  &__list-item-collapsible {
-    &:hover {
-      background-color: var(--ifm-menu-color-background-hover);
-    }
-  }
-}
-
-// Code block enhancements
 pre {
   border-radius: var(--ifm-global-radius);
   border: 1px solid #{$odis-border};
+  background: #f8fafc !important;
 }
 
 code {
   border-radius: calc(var(--ifm-global-radius) - 2px);
   padding: 0.125rem 0.375rem;
   font-size: var(--ifm-code-font-size);
+  background-color: hsla(174, 56%, 43%, 0.08);
 }
 
-// Table styling
+// ============================================
+// Table Styling
+// ============================================
+
 table {
   border-radius: var(--ifm-global-radius);
   overflow: hidden;
@@ -292,14 +435,23 @@ table {
   }
 
   tr:hover {
-    background-color: rgba(49, 171, 163, 0.02);
+    background-color: hsla(174, 56%, 43%, 0.02);
   }
 }
 
-// Admonition/Alert styling
+// ============================================
+// Admonition/Alert Styling
+// ============================================
+
 .alert {
   border-radius: var(--ifm-global-radius);
   border-left-width: 4px;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(248, 250, 252, 0.9) 100%
+  );
+  backdrop-filter: blur(12px);
 
   .admonitionHeading_node_modules-\@docusaurus-theme-classic-lib-theme-Admonition-Layout-styles-module {
     font-family: var(--ifm-heading-font-family);
@@ -307,7 +459,10 @@ table {
   }
 }
 
-// TOC styling
+// ============================================
+// TOC Styling
+// ============================================
+
 .table-of-contents {
   &__link {
     transition: color var(--ifm-transition-fast) ease;
@@ -319,16 +474,25 @@ table {
   }
 }
 
+// ============================================
 // Pagination
+// ============================================
+
 .pagination-nav {
   &__link {
+    background: linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(248, 250, 252, 0.9) 100%
+    );
+    backdrop-filter: blur(12px);
     border-radius: var(--ifm-global-radius);
     border: 1px solid #{$odis-border};
     transition: all var(--ifm-transition-fast) ease;
 
     &:hover {
       border-color: var(--ifm-color-primary);
-      background-color: rgba(49, 171, 163, 0.02);
+      box-shadow: 0 4px 24px -4px rgba(49, 171, 163, 0.1);
     }
   }
 
@@ -337,61 +501,67 @@ table {
   }
 }
 
-// Search (if using Algolia or local search)
+// ============================================
+// Search Styling
+// ============================================
+
 .DocSearch-Button {
   border-radius: var(--ifm-global-radius) !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(12px);
 }
 
-// Scrollbar styling (from ODIS utilities.css)
+// ============================================
+// Scrollbar Styling (from dashboard)
+// ============================================
+
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #{$odis-secondary};
-  border-radius: 4px;
+  background: linear-gradient(180deg, #{$odis-background} 0%, #{$odis-secondary} 100%);
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #{$odis-primary};
-  border-radius: 4px;
-  opacity: 0.6;
+  background: linear-gradient(
+    180deg,
+    hsla(174, 56%, 43%, 0.6) 0%,
+    hsl(174, 56%, 43%) 50%,
+    hsla(174, 56%, 43%, 0.6) 100%
+  );
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: all 0.3s ease;
+}
 
-  &:hover {
-    opacity: 1;
-    background: #{$odis-primary-dark};
-  }
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    hsla(174, 56%, 43%, 0.8) 0%,
+    hsl(174, 56%, 43%) 50%,
+    hsla(174, 56%, 43%, 0.8) 100%
+  );
+  box-shadow: 0 0 12px hsla(174, 56%, 43%, 0.5);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: hsl(174, 56%, 43%);
 }
 
 // Firefox scrollbar
 * {
   scrollbar-width: thin;
-  scrollbar-color: #{$odis-primary} #{$odis-secondary};
+  scrollbar-color: hsla(174, 56%, 43%, 0.6) #{$odis-secondary};
 }
 
-// Hero section styling (for custom homepage if needed)
-.hero {
-  &--primary {
-    background: linear-gradient(
-      135deg,
-      #{$odis-primary-lightest} 0%,
-      #{$odis-background} 100%
-    );
-  }
+// ============================================
+// Markdown Content Styling
+// ============================================
 
-  &__title {
-    font-family: var(--ifm-heading-font-family);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-  }
-
-  &__subtitle {
-    color: #{$odis-muted-foreground};
-  }
-}
-
-// Markdown content styling
 .markdown {
   h1,
   h2,
@@ -420,22 +590,78 @@ table {
 
   blockquote {
     border-left-color: var(--ifm-color-primary);
-    background-color: rgba(49, 171, 163, 0.05);
+    background: linear-gradient(
+      145deg,
+      hsla(174, 56%, 43%, 0.05) 0%,
+      hsla(174, 56%, 43%, 0.02) 100%
+    );
+    backdrop-filter: blur(8px);
     border-radius: 0 var(--ifm-global-radius) var(--ifm-global-radius) 0;
     padding: 1rem 1.5rem;
   }
 }
 
-// Feature cards (for landing page)
+// ============================================
+// Hero Section Styling
+// ============================================
+
+.hero {
+  &--primary {
+    background: linear-gradient(to bottom, #ecfdf5, #f0fdfa, #f0fdfa);
+    position: relative;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(
+          at 20% 20%,
+          rgba(49, 171, 163, 0.08) 0%,
+          transparent 50%
+        ),
+        radial-gradient(
+          at 80% 80%,
+          rgba(49, 171, 163, 0.06) 0%,
+          transparent 50%
+        );
+      pointer-events: none;
+    }
+  }
+
+  &__title {
+    font-family: var(--ifm-heading-font-family);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  &__subtitle {
+    color: #{$odis-muted-foreground};
+  }
+}
+
+// ============================================
+// Feature Cards (for landing page)
+// ============================================
+
 .feature-card {
-  border: 1px solid #{$odis-border};
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(248, 250, 252, 0.9) 100%
+  );
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   border-radius: var(--ifm-global-radius);
   padding: 1.5rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 16px -2px rgba(0, 0, 0, 0.04);
   transition: all var(--ifm-transition-slow) ease;
 
   &:hover {
-    border-color: var(--ifm-color-primary);
-    box-shadow: 0 8px 32px rgba(49, 171, 163, 0.1);
+    border-color: rgba(49, 171, 163, 0.3);
+    box-shadow: 0 4px 24px -4px rgba(49, 171, 163, 0.15);
     transform: translateY(-4px);
   }
 
@@ -445,7 +671,10 @@ table {
   }
 }
 
+// ============================================
 // Breadcrumbs
+// ============================================
+
 .breadcrumbs {
   &__link {
     transition: color var(--ifm-transition-fast) ease;
@@ -456,7 +685,10 @@ table {
   }
 }
 
-// Footer enhancements
+// ============================================
+// Footer Enhancements
+// ============================================
+
 .footer {
   &__title {
     font-family: var(--ifm-heading-font-family);
@@ -467,12 +699,15 @@ table {
     transition: color var(--ifm-transition-fast) ease;
 
     &:hover {
-      color: var(--ifm-color-primary-lightest);
+      color: #{$odis-primary-lightest};
     }
   }
 }
 
-// Version badge
+// ============================================
+// Version Badge
+// ============================================
+
 .badge {
   border-radius: calc(var(--ifm-global-radius) - 2px);
   font-weight: 500;
@@ -487,7 +722,10 @@ table {
   }
 }
 
-// Tabs styling
+// ============================================
+// Tabs Styling
+// ============================================
+
 .tabs {
   &__item {
     border-radius: var(--ifm-global-radius) var(--ifm-global-radius) 0 0;
@@ -500,8 +738,17 @@ table {
   }
 }
 
+// ============================================
 // Details/Summary
+// ============================================
+
 details {
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(248, 250, 252, 0.9) 100%
+  );
+  backdrop-filter: blur(12px);
   border-radius: var(--ifm-global-radius);
   border: 1px solid #{$odis-border};
 
@@ -516,14 +763,12 @@ details {
   }
 }
 
-// Loading states
+// ============================================
+// Loading States
+// ============================================
+
 .skeleton {
-  background: linear-gradient(
-    90deg,
-    #{$odis-secondary} 25%,
-    #f0f0f0 50%,
-    #{$odis-secondary} 75%
-  );
+  background: linear-gradient(90deg, #{$odis-secondary} 25%, #f0f0f0 50%, #{$odis-secondary} 75%);
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s ease-in-out infinite;
   border-radius: calc(var(--ifm-global-radius) - 2px);
@@ -535,5 +780,64 @@ details {
   }
   100% {
     background-position: -200% 0;
+  }
+}
+
+// ============================================
+// Dashboard Animations
+// ============================================
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulseGlow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(49, 171, 163, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(49, 171, 163, 0);
+  }
+}
+
+// Apply animations to content
+.theme-doc-markdown {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.theme-doc-sidebar-container {
+  animation: scaleIn 0.4s ease-out;
+}
+
+// ============================================
+// Reduced Motion Support
+// ============================================
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

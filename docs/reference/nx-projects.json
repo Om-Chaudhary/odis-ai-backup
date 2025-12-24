@@ -1,112 +1,262 @@
 [
   {
-    "name": "ai",
-    "type": "lib",
-    "scope": "ai",
-    "platform": "node",
-    "sourceRoot": "libs/ai/src",
-    "targets": ["lint", "typecheck"]
+    "name": "chrome-extension",
+    "type": "app",
+    "scope": "extension",
+    "platform": "browser",
+    "sourceRoot": "apps/chrome-extension/src",
+    "targets": [
+      "build",
+      "build-content-ui",
+      "build-deps",
+      "dev",
+      "lint",
+      "serve-static",
+      "test",
+      "typecheck",
+      "vite:build",
+      "vite:preview",
+      "vite:serve",
+      "vitest:test",
+      "watch-deps",
+      "zip"
+    ]
   },
   {
-    "name": "api",
-    "type": "lib",
-    "scope": "api",
+    "name": "data-access-api",
+    "type": "data-access",
+    "scope": "server",
     "platform": "node",
-    "sourceRoot": "libs/api/src",
+    "sourceRoot": "libs/data-access/api/src",
     "targets": [
       "build-deps",
       "lint",
       "test",
+      "test-ci",
+      "test-ci--src/__tests__/cors.test.ts",
       "typecheck",
       "vitest:test",
       "watch-deps"
     ]
   },
   {
-    "name": "api-client",
-    "type": "lib",
-    "scope": "api-client",
-    "platform": "browser",
-    "sourceRoot": "libs/api-client/src",
-    "targets": ["lint", "typecheck"]
-  },
-  {
-    "name": "auth",
-    "type": "lib",
-    "scope": "auth",
-    "platform": "browser",
-    "sourceRoot": "libs/auth/src",
-    "targets": ["lint", "typecheck"]
-  },
-  {
-    "name": "clinics",
-    "type": "lib",
-    "scope": "clinics",
+    "name": "data-access-db",
+    "type": "data-access",
+    "scope": "server",
     "platform": "node",
-    "sourceRoot": "libs/clinics/src",
+    "sourceRoot": "libs/data-access/db/src",
+    "targets": [
+      "build-deps",
+      "lint",
+      "test",
+      "test-ci",
+      "test-ci--src/__tests__/base-repository.test.ts",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
+  },
+  {
+    "name": "data-access-entities",
+    "type": "util",
+    "scope": "shared",
+    "platform": "node",
+    "sourceRoot": "libs/data-access/entities/src",
     "targets": ["lint", "typecheck"]
   },
   {
-    "name": "constants",
-    "type": "lib",
-    "scope": "constants",
+    "name": "data-access-repository-impl",
+    "type": "data-access",
+    "scope": "server",
+    "platform": "node",
+    "sourceRoot": "libs/data-access/repository-impl/src",
+    "targets": [
+      "build-deps",
+      "lint",
+      "test",
+      "test-ci",
+      "test-ci--src/__tests__/base-repository.test.ts",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
+  },
+  {
+    "name": "data-access-repository-interfaces",
+    "type": "types",
+    "scope": "shared",
+    "platform": "node",
+    "sourceRoot": "libs/data-access/repository-interfaces/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "data-access-supabase-client",
+    "type": "data-access",
+    "scope": "shared",
+    "platform": "node+browser",
+    "sourceRoot": "libs/data-access/supabase-client/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "docs",
+    "type": "app",
+    "scope": "docs",
+    "platform": "web",
+    "sourceRoot": "apps/docs",
+    "targets": [
+      "build",
+      "clear",
+      "deploy",
+      "docusaurus",
+      "serve",
+      "start",
+      "swizzle",
+      "typecheck",
+      "write-heading-ids",
+      "write-translations"
+    ]
+  },
+  {
+    "name": "domain-auth-util",
+    "type": "util",
+    "scope": "shared",
     "platform": "neutral",
-    "sourceRoot": "libs/constants/src",
+    "sourceRoot": "libs/domain/auth/util/src",
     "targets": ["lint", "typecheck"]
   },
   {
-    "name": "crypto",
-    "type": "lib",
-    "scope": "crypto",
+    "name": "domain-cases-data-access",
+    "type": "service",
+    "scope": "server",
     "platform": "node",
-    "sourceRoot": "libs/crypto/src",
-    "targets": ["lint", "typecheck"]
-  },
-  {
-    "name": "db",
-    "type": "lib",
-    "scope": "db",
-    "platform": "node",
-    "sourceRoot": "libs/db/src",
+    "sourceRoot": "libs/domain/cases/data-access/src",
     "targets": [
       "build-deps",
       "lint",
       "test",
+      "test-ci",
+      "test-ci--src/__tests__/cases-service.test.ts",
       "typecheck",
       "vitest:test",
       "watch-deps"
     ]
   },
   {
-    "name": "email",
-    "type": "lib",
-    "scope": "email",
-    "platform": "node",
-    "sourceRoot": "libs/email/src",
-    "targets": ["lint", "typecheck"]
-  },
-  {
-    "name": "env",
-    "type": "lib",
-    "scope": "env",
+    "name": "domain-clinics-util",
+    "type": "util",
+    "scope": "shared",
     "platform": "neutral",
-    "sourceRoot": "libs/env/src",
+    "sourceRoot": "libs/domain/clinics/util/src",
     "targets": ["lint", "typecheck"]
   },
   {
-    "name": "hooks",
-    "type": "lib",
-    "scope": "hooks",
-    "platform": "browser",
-    "sourceRoot": "libs/hooks/src",
-    "targets": ["lint", "typecheck"]
-  },
-  {
-    "name": "idexx",
-    "type": "lib",
-    "scope": "idexx",
+    "name": "domain-discharge-data-access",
+    "type": "service",
+    "scope": "server",
     "platform": "node",
-    "sourceRoot": "libs/idexx/src",
+    "sourceRoot": "libs/domain/discharge/data-access/src",
+    "targets": [
+      "build-deps",
+      "lint",
+      "test",
+      "test-ci",
+      "test-ci--src/__tests__/discharge-batch-stagger.test.ts",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
+  },
+  {
+    "name": "domain-shared-util",
+    "type": "service",
+    "scope": "server",
+    "platform": "node",
+    "sourceRoot": "libs/domain/shared/util/src",
+    "targets": [
+      "build-deps",
+      "lint",
+      "test",
+      "test-ci",
+      "test-ci--src/__tests__/execution-plan.test.ts",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
+  },
+  {
+    "name": "extension-env",
+    "type": "config",
+    "scope": "extension",
+    "platform": "browser",
+    "sourceRoot": "libs/extension/env/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "extension-shared",
+    "type": "util",
+    "scope": "extension",
+    "platform": "browser",
+    "sourceRoot": "libs/extension/shared/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "extension-storage",
+    "type": "util",
+    "scope": "extension",
+    "platform": "browser",
+    "sourceRoot": "libs/extension/storage/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "idexx-sync",
+    "type": "app",
+    "scope": "server",
+    "platform": "node",
+    "sourceRoot": "apps/idexx-sync/src",
+    "targets": [
+      "build",
+      "build-deps",
+      "copy-workspace-modules",
+      "docker:build",
+      "docker:run",
+      "lint",
+      "nx-release-publish",
+      "prune",
+      "prune-lockfile",
+      "serve",
+      "start",
+      "start:visible",
+      "sync:eod",
+      "sync:pre-open",
+      "test",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
+  },
+  {
+    "name": "integrations-ai",
+    "type": "util",
+    "scope": "server",
+    "platform": "node",
+    "sourceRoot": "libs/integrations/ai/src",
+    "targets": [
+      "build-deps",
+      "lint",
+      "test",
+      "test-ci",
+      "test-ci--src/__tests__/llamaindex-integration.test.ts",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
+  },
+  {
+    "name": "integrations-idexx",
+    "type": "integration",
+    "scope": "server",
+    "platform": "node",
+    "sourceRoot": "libs/integrations/idexx/src",
     "targets": [
       "build-deps",
       "lint",
@@ -117,12 +267,110 @@
     ]
   },
   {
-    "name": "logger",
-    "type": "lib",
-    "scope": "logger",
+    "name": "integrations-qstash",
+    "type": "integration",
+    "scope": "server",
     "platform": "node",
-    "sourceRoot": "libs/logger/src",
+    "sourceRoot": "libs/integrations/qstash/src",
+    "targets": [
+      "build-deps",
+      "lint",
+      "test",
+      "test-ci",
+      "test-ci--src/__tests__/client.test.ts",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
+  },
+  {
+    "name": "integrations-resend",
+    "type": "integration",
+    "scope": "server",
+    "platform": "node",
+    "sourceRoot": "libs/integrations/resend/src",
     "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "integrations-retell",
+    "type": "integration",
+    "scope": "server",
+    "platform": "node",
+    "sourceRoot": "libs/integrations/retell/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "integrations-slack",
+    "type": "integration",
+    "scope": "server",
+    "platform": "node",
+    "sourceRoot": "libs/integrations/slack/src",
+    "targets": [
+      "build-deps",
+      "lint",
+      "test",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
+  },
+  {
+    "name": "integrations-vapi",
+    "type": "integration",
+    "scope": "server",
+    "platform": "node",
+    "sourceRoot": "libs/integrations/vapi/src",
+    "targets": [
+      "build-deps",
+      "lint",
+      "test",
+      "test-ci",
+      "test-ci--src/__tests__/utils.test.ts",
+      "test-ci--src/__tests__/validators.test.ts",
+      "typecheck",
+      "vitest:test",
+      "watch-deps"
+    ]
+  },
+  {
+    "name": "integrations-vapi-client",
+    "type": "integration",
+    "scope": "server",
+    "platform": "node",
+    "sourceRoot": "libs/integrations/vapi/client/src",
+    "targets": ["lint", "test", "typecheck"]
+  },
+  {
+    "name": "integrations-vapi-handlers",
+    "type": "integration",
+    "scope": "server",
+    "platform": "node",
+    "sourceRoot": "libs/integrations/vapi/handlers/src",
+    "targets": []
+  },
+  {
+    "name": "integrations-vapi-inbound",
+    "type": "integration",
+    "scope": "server",
+    "platform": "node",
+    "sourceRoot": "libs/integrations/vapi/inbound/src",
+    "targets": ["lint"]
+  },
+  {
+    "name": "integrations-vapi-tools",
+    "type": "integration",
+    "scope": "server",
+    "platform": "node",
+    "sourceRoot": "libs/integrations/vapi/tools/src",
+    "targets": []
+  },
+  {
+    "name": "integrations-vapi-webhooks",
+    "type": "integration",
+    "scope": "server",
+    "platform": "node",
+    "sourceRoot": "libs/integrations/vapi/webhooks/src",
+    "targets": ["lint"]
   },
   {
     "name": "odis-ai",
@@ -135,10 +383,23 @@
       "build:all",
       "check",
       "dev",
+      "dev:docs",
+      "docs:build",
+      "docs:clear",
+      "docs:dev",
       "docs:nx",
+      "docs:serve",
+      "extension:build",
+      "extension:dev",
+      "extension:lint",
+      "extension:lint:fix",
+      "extension:test",
+      "extension:typecheck",
+      "extension:zip",
       "format:check",
       "format:write",
       "graph",
+      "kill-dev",
       "lint",
       "lint:all",
       "lint:fix",
@@ -148,6 +409,7 @@
       "test",
       "test:affected",
       "test:all",
+      "test:ci",
       "test:coverage",
       "test:coverage:all",
       "test:libs",
@@ -159,125 +421,112 @@
     ]
   },
   {
-    "name": "qstash",
-    "type": "lib",
-    "scope": "qstash",
-    "platform": "node",
-    "sourceRoot": "libs/qstash/src",
+    "name": "shared-constants",
+    "type": "config",
+    "scope": "shared",
+    "platform": "neutral",
+    "sourceRoot": "libs/shared/constants/src",
     "targets": ["lint", "typecheck"]
   },
   {
-    "name": "resend",
-    "type": "lib",
-    "scope": "resend",
-    "platform": "node",
-    "sourceRoot": "libs/resend/src",
+    "name": "shared-crypto",
+    "type": "util",
+    "scope": "shared",
+    "platform": "neutral",
+    "sourceRoot": "libs/shared/crypto/src",
     "targets": ["lint", "typecheck"]
   },
   {
-    "name": "retell",
-    "type": "lib",
-    "scope": "retell",
+    "name": "shared-email",
+    "type": "util",
+    "scope": "server",
     "platform": "node",
-    "sourceRoot": "libs/retell/src",
+    "sourceRoot": "libs/shared/email/src",
     "targets": ["lint", "typecheck"]
   },
   {
-    "name": "services-cases",
-    "type": "lib",
-    "scope": "services",
-    "platform": "node",
-    "sourceRoot": "libs/services-cases/src",
+    "name": "shared-env",
+    "type": "config",
+    "scope": "shared",
+    "platform": "neutral",
+    "sourceRoot": "libs/shared/env/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "shared-hooks",
+    "type": "util",
+    "scope": "shared",
+    "platform": "browser",
+    "sourceRoot": "libs/shared/hooks/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "shared-logger",
+    "type": "util",
+    "scope": "shared",
+    "platform": "neutral",
+    "sourceRoot": "libs/shared/logger/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "shared-styles",
+    "type": "ui",
+    "scope": "shared",
+    "platform": "browser",
+    "sourceRoot": "libs/shared/styles/src",
+    "targets": ["lint"]
+  },
+  {
+    "name": "shared-testing",
+    "type": "testing",
+    "scope": "shared",
+    "platform": "neutral",
+    "sourceRoot": "libs/shared/testing/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "shared-types",
+    "type": "types",
+    "scope": "shared",
+    "platform": "neutral",
+    "sourceRoot": "libs/shared/types/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "shared-ui",
+    "type": "ui",
+    "scope": "shared",
+    "platform": "browser",
+    "sourceRoot": "libs/shared/ui/src",
+    "targets": ["lint", "typecheck"]
+  },
+  {
+    "name": "shared-util",
+    "type": "util",
+    "scope": "shared",
+    "platform": "neutral",
+    "sourceRoot": "libs/shared/util/src",
     "targets": [
-      "build",
-      "build-deps",
-      "lint",
-      "test",
-      "typecheck",
-      "vitest:test",
-      "watch-deps"
-    ]
-  },
-  {
-    "name": "services-discharge",
-    "type": "lib",
-    "scope": "services",
-    "platform": "node",
-    "sourceRoot": "libs/services-discharge/src",
-    "targets": [
-      "build",
       "build-deps",
       "lint",
       "test",
       "test-ci",
-      "test-ci--src/__tests__/discharge-batch-stagger.test.ts",
+      "test-ci--src/__tests__/business-hours.test.ts",
+      "test-ci--src/__tests__/cn.test.ts",
+      "test-ci--src/__tests__/phone-formatting.test.ts",
+      "test-ci--src/__tests__/phone.test.ts",
+      "test-ci--src/__tests__/schedule-time.test.ts",
       "typecheck",
       "vitest:test",
       "watch-deps"
     ]
   },
   {
-    "name": "services-shared",
-    "type": "lib",
-    "scope": "services",
-    "platform": "node",
-    "sourceRoot": "libs/services-shared/src",
-    "targets": [
-      "build",
-      "build-deps",
-      "lint",
-      "test",
-      "typecheck",
-      "vitest:test",
-      "watch-deps"
-    ]
-  },
-  {
-    "name": "styles",
-    "type": "lib",
-    "scope": "styles",
+    "name": "shared-validators",
+    "type": "util",
+    "scope": "shared",
     "platform": "neutral",
-    "sourceRoot": "libs/styles/src",
-    "targets": ["lint"]
-  },
-  {
-    "name": "testing",
-    "type": "lib",
-    "scope": "testing",
-    "platform": "node",
-    "sourceRoot": "libs/testing/src",
-    "targets": ["typecheck"]
-  },
-  {
-    "name": "types",
-    "type": "lib",
-    "scope": "types",
-    "platform": "neutral",
-    "sourceRoot": "libs/types/src",
-    "targets": ["lint", "typecheck"]
-  },
-  {
-    "name": "ui",
-    "type": "lib",
-    "scope": "ui",
-    "platform": "browser",
-    "sourceRoot": "libs/ui/src",
-    "targets": ["lint", "typecheck"]
-  },
-  {
-    "name": "utils",
-    "type": "lib",
-    "scope": "utils",
-    "platform": "neutral",
-    "sourceRoot": "libs/utils/src",
-    "targets": ["lint", "typecheck"]
-  },
-  {
-    "name": "validators",
-    "type": "lib",
-    "scope": "validators",
-    "platform": "neutral",
-    "sourceRoot": "libs/validators/src",
+    "sourceRoot": "libs/shared/validators/src",
     "targets": [
       "build-deps",
       "lint",
@@ -297,21 +546,6 @@
     ]
   },
   {
-    "name": "vapi",
-    "type": "lib",
-    "scope": "vapi",
-    "platform": "node",
-    "sourceRoot": "libs/vapi/src",
-    "targets": [
-      "build-deps",
-      "lint",
-      "test",
-      "typecheck",
-      "vitest:test",
-      "watch-deps"
-    ]
-  },
-  {
     "name": "web",
     "type": "app",
     "scope": "web",
@@ -325,6 +559,10 @@
       "serve-static",
       "start",
       "test",
+      "test-ci",
+      "test-ci--src/app/api/calls/schedule/__tests__/route.test.ts",
+      "test-ci--src/app/api/webhooks/vapi/__tests__/route.test.ts",
+      "test-ci--src/server/actions/__tests__/auth.test.ts",
       "typecheck",
       "vitest:test",
       "watch-deps"
