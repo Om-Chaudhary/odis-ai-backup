@@ -446,6 +446,7 @@ export type ToolHandler = (
   context: {
     callId: string;
     toolCallId: string;
+    assistantId?: string;
   },
 ) => Promise<Record<string, unknown>>;
 

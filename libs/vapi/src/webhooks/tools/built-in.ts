@@ -134,26 +134,130 @@ export function registerBuiltInTools(): void {
     name: "check_availability",
     description: "Check appointment availability for a specific date",
     handler: async (params, context) => {
-      const { date, appointmentType } = params as {
+      const { date, provider_name } = params as {
         date?: string;
-        appointmentType?: string;
+        provider_name?: string;
       };
 
       logger.info("Check availability called", {
         callId: context.callId,
         date,
-        appointmentType,
+        provider_name,
       });
 
-      // TODO: Implement actual availability check
-      return {
-        date: date ?? "not specified",
-        appointmentType: appointmentType ?? "general",
-        available: true,
-        slots: ["9:00 AM", "11:00 AM", "2:00 PM", "4:00 PM"],
-        message:
-          "These are example slots. Actual availability check not implemented.",
-      };
+      if (!date) {
+        return {
+          error: "Date is required",
+          message: "Please provide a date to check availability.",
+        };
+      }
+
+      try {
+        // Validate assistant ID is available
+        if (!context.assistantId) {
+          return {
+            error: "Assistant ID not available",
+            message:
+              "Unable to check availability. Assistant context not found.",
+          };
+        }
+
+        // Get clinic_id from assistant_id
+        const { createServiceClient } = await import("@odis-ai/db/server");
+        const supabase = await createServiceClient();
+
+        const { data: clinic } = await supabase
+          .from("clinics")
+          .select("id, name")
+          .or(
+            `inbound_assistant_id.eq.${context.assistantId},outbound_assistant_id.eq.${context.assistantId}`,
+          )
+          .single();
+
+        if (!clinic) {
+          return {
+            error: "Clinic not found",
+            message:
+              "Unable to check availability. Clinic configuration not found.",
+          };
+        }
+
+        // Build query params
+        const params = new URLSearchParams({
+          clinic_id: clinic.id,
+          date,
+          slot_duration_minutes: "30",
+        });
+
+        // If provider_name specified, look up provider_id
+        if (provider_name) {
+          const { data: provider } = await supabase
+            .from("providers")
+            .select("id, name")
+            .eq("clinic_id", clinic.id)
+            .ilike("name", `%${provider_name}%`)
+            .maybeSingle();
+
+          if (provider) {
+            params.append("provider_id", provider.id);
+            logger.info("Provider filter applied", {
+              provider_name,
+              provider_id: provider.id,
+            });
+          }
+        }
+
+        // Call availability API
+        const baseUrl =
+          process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+        const response = await fetch(
+          `${baseUrl}/api/appointments/availability?${params}`,
+        );
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            (data as { error?: string }).error ?? "Availability check failed",
+          );
+        }
+
+        interface AvailabilityResponse {
+          available_slots: Array<{ start: string }>;
+        }
+
+        // Format response for VAPI agent
+        const availableTimes = (
+          data as AvailabilityResponse
+        ).available_slots.map((s) => s.start);
+
+        logger.info("Availability check successful", {
+          date,
+          available_count: availableTimes.length,
+          clinic_id: clinic.id,
+        });
+
+        return {
+          date: data.date,
+          available_times: availableTimes,
+          total_available: data.available_slots.length,
+          last_synced: data.sync_freshness,
+          message:
+            data.available_slots.length > 0
+              ? `We have ${data.available_slots.length} available slots on ${date}`
+              : `No available slots on ${date}. The schedule was last updated ${data.sync_freshness}.`,
+        };
+      } catch (error) {
+        logger.error("Availability check failed", {
+          error: error instanceof Error ? error.message : String(error),
+          date,
+        });
+
+        return {
+          error: "Failed to check availability",
+          message:
+            "I'm having trouble checking our schedule right now. Let me take your information and have someone call you back to schedule.",
+        };
+      }
     },
   });
 

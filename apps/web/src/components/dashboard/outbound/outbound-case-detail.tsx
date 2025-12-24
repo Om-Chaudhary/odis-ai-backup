@@ -8,18 +8,17 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@odis-ai/ui/collapsible";
-import { ExternalLink, Phone, Mail, ChevronDown } from "lucide-react";
+import { ExternalLink, ChevronDown } from "lucide-react";
 import { api } from "~/trpc/client";
 import type { DeliveryToggles, DischargeCaseStatus, SoapNote } from "./types";
 import type { StructuredDischargeSummary } from "@odis-ai/validators/discharge-summary";
 import { EmptyDetailState, AttentionSection } from "./detail";
 import { PatientOwnerCard } from "./detail/patient-owner-card";
-import { DeliveryStatusHero } from "./detail/delivery-status-hero";
-import { QuickActionPanel } from "./detail/quick-action-panel";
-import { ScheduleInfoCard } from "./detail/schedule-info-card";
+import { StatusOverviewCard } from "./detail/status-overview-card";
+import { CommunicationsIntelligenceCard } from "./detail/communications-intelligence-card";
+import { SmartActionSection } from "./detail/smart-action-section";
+import { CommunicationPreview } from "./detail/communication-preview";
 import { WorkflowCanvas, type CaseDataForWorkflow } from "./detail/workflow";
-import { CallTabContent } from "./detail/communication-tabs/call-tab-content";
-import { EmailTabContent } from "./detail/communication-tabs/email-tab-content";
 
 // Scheduled call data with structured output support
 interface ScheduledCallData {
@@ -99,13 +98,12 @@ interface OutboundCaseDetailProps {
 /**
  * Case Detail Panel Component (Redesigned)
  *
- * Optimized for veterinarians with emphasis on:
- * 1. Clear delivery status at the top
- * 2. Streamlined action panel with delivery options
- * 3. Clinical context in collapsible sections
- * 4. Communication previews accessible but not intrusive
- *
- * No skip button - cases remain in queue until explicitly sent
+ * Glanceable design with:
+ * 1. Patient/Owner card at top
+ * 2. Status overview with inline channel statuses
+ * 3. Context-aware action section
+ * 4. Communication previews (inline, expandable)
+ * 5. Workflow timeline (collapsible)
  */
 export function OutboundCaseDetail({
   caseData,
@@ -119,9 +117,7 @@ export function OutboundCaseDetail({
   testModeEnabled = false,
   onDelete,
 }: OutboundCaseDetailProps) {
-  // Collapsible section states
-  const [callScriptOpen, setCallScriptOpen] = useState(false);
-  const [emailPreviewOpen, setEmailPreviewOpen] = useState(false);
+  // Workflow timeline collapsible state
   const [workflowOpen, setWorkflowOpen] = useState(false);
 
   // Mutation for scheduling remaining outreach (for partial delivery cases)
@@ -170,37 +166,23 @@ export function OutboundCaseDetail({
     };
   }, [caseData]);
 
-  // Suppress unused - keeping for future partial delivery feature
-  void scheduleRemainingMutation;
-
   // Early return after all hooks are called
   if (!caseData || !workflowCaseData) {
     return <EmptyDetailState />;
   }
 
   // Determine case states
-  const isEditable =
-    caseData.status === "pending_review" || caseData.status === "ready";
-  const showRetry = caseData.status === "failed";
   const isSentCase =
     caseData.status === "completed" || caseData.status === "failed";
   const isScheduled = caseData.status === "scheduled";
-
-  // Check for partial delivery (one sent, one not)
-  const phoneSent = caseData.phoneSent === "sent";
-  const emailSent = caseData.emailSent === "sent";
-  const isPartialDelivery =
-    (phoneSent && !emailSent && !!caseData.owner.email) ||
-    (!phoneSent && emailSent && !!caseData.owner.phone);
-
-  // Show action panel for editable, partial, or failed cases
-  const showActionPanel = isEditable || showRetry || isPartialDelivery;
 
   // Check if discharge summary needs to be generated
   const hasStructuredContent = Boolean(caseData.structuredContent?.patientName);
   const hasDischargeSummary =
     hasStructuredContent || Boolean(caseData.dischargeSummary?.trim());
-  const needsGeneration = !hasDischargeSummary && isEditable;
+  const needsGeneration =
+    !hasDischargeSummary &&
+    (caseData.status === "pending_review" || caseData.status === "ready");
 
   // Get call script from dynamic variables
   const callScript =
@@ -209,15 +191,49 @@ export function OutboundCaseDetail({
           .call_script as string) ?? "")
       : caseData.dischargeSummary;
 
-  // Determine what to show for communication previews
+  // Determine contact availability
   const hasOwnerPhone = Boolean(caseData.owner.phone);
   const hasOwnerEmail = Boolean(caseData.owner.email);
-  const phoneCanBeSent = hasOwnerPhone && !phoneSent;
-  const emailCanBeSent = hasOwnerEmail && !emailSent;
+  const phoneSent = caseData.phoneSent === "sent";
+  const emailSent = caseData.emailSent === "sent";
+
+  // Handler for canceling scheduled items
+  const handleCancelCall = () => {
+    if (onCancelScheduled) {
+      onCancelScheduled({ cancelCall: true, cancelEmail: false });
+    }
+  };
+
+  const handleCancelEmail = () => {
+    if (onCancelScheduled) {
+      onCancelScheduled({ cancelCall: false, cancelEmail: true });
+    }
+  };
+
+  // Handler for scheduling remaining
+  const handleScheduleRemaining = () => {
+    if (caseData) {
+      scheduleRemainingMutation.mutate({ caseId: caseData.caseId });
+    }
+  };
+
+  // Determine if we should show action section
+  // Show for: ready, pending_review, scheduled, failed, or partial delivery
+  const showActionSection =
+    caseData.status === "ready" ||
+    caseData.status === "pending_review" ||
+    caseData.status === "scheduled" ||
+    caseData.status === "failed" ||
+    (phoneSent && !emailSent && hasOwnerEmail) ||
+    (!phoneSent && emailSent && hasOwnerPhone);
+
+  // Only show scheduled card if there's scheduled info to display (not completed/failed)
+  const showScheduledCard =
+    caseData.scheduledCallFor ?? caseData.scheduledEmailFor;
 
   return (
     <div className="flex h-full flex-col">
-      {/* Patient/Owner Card */}
+      {/* Patient/Owner Card with integrated status badge and delivery indicators */}
       <div className="p-4 pb-0">
         <PatientOwnerCard
           caseData={{
@@ -228,144 +244,83 @@ export function OutboundCaseDetail({
             caseType: caseData.caseType,
             status: caseData.status,
           }}
+          phoneStatus={caseData.phoneSent}
+          emailStatus={caseData.emailSent}
           onDelete={onDelete}
         />
       </div>
 
       {/* Scrollable Content */}
       <div className="flex-1 space-y-4 overflow-auto p-4">
-        {/* Delivery Status Hero - Always visible at top */}
-        <DeliveryStatusHero
-          status={caseData.status}
-          emailStatus={caseData.emailSent}
-          phoneStatus={caseData.phoneSent}
-          scheduledEmailFor={caseData.scheduledEmailFor}
-          scheduledCallFor={caseData.scheduledCallFor}
-          scheduledCall={
-            caseData.scheduledCall
-              ? {
-                  id: caseData.scheduledCall.id,
-                  status: caseData.scheduledCall.status,
-                  durationSeconds: caseData.scheduledCall.durationSeconds,
-                  endedReason: caseData.scheduledCall.endedReason,
-                  transcript: caseData.scheduledCall.transcript,
-                  summary: caseData.scheduledCall.summary,
-                }
-              : null
-          }
-          hasOwnerEmail={hasOwnerEmail}
-          hasOwnerPhone={hasOwnerPhone}
-          ownerPhone={caseData.owner.phone}
-          ownerEmail={caseData.owner.email}
-        />
-
-        {/* Schedule Info Card - For scheduled cases */}
-        {isScheduled &&
-          (caseData.scheduledEmailFor ?? caseData.scheduledCallFor) && (
-            <ScheduleInfoCard
-              emailScheduledFor={caseData.scheduledEmailFor}
-              callScheduledFor={caseData.scheduledCallFor}
-              onCancelScheduled={onCancelScheduled}
-              isCancelling={isCancelling}
-            />
-          )}
-
-        {/* Quick Action Panel - For actionable cases */}
-        {showActionPanel && (
-          <QuickActionPanel
+        {/* Scheduled Info Card - only show when there's scheduled delivery */}
+        {showScheduledCard && (
+          <StatusOverviewCard
             status={caseData.status}
-            needsGeneration={needsGeneration}
-            deliveryToggles={deliveryToggles}
-            onToggleChange={onToggleChange}
-            onApprove={onApprove}
-            onRetry={onRetry}
-            isSubmitting={isSubmitting}
-            testModeEnabled={testModeEnabled}
+            phoneStatus={caseData.phoneSent}
+            emailStatus={caseData.emailSent}
+            scheduledCallFor={caseData.scheduledCallFor}
+            scheduledEmailFor={caseData.scheduledEmailFor}
             hasOwnerPhone={hasOwnerPhone}
             hasOwnerEmail={hasOwnerEmail}
             ownerPhone={caseData.owner.phone}
             ownerEmail={caseData.owner.email}
-            failureReason={caseData.scheduledCall?.endedReason}
+            onCancelCall={handleCancelCall}
+            onCancelEmail={handleCancelEmail}
+            isCancelling={isCancelling}
+          />
+        )}
+
+        {/* Communications Intelligence - AI-powered call insights */}
+        <CommunicationsIntelligenceCard
+          scheduledCall={caseData.scheduledCall}
+          urgentReasonSummary={caseData.scheduledCall?.urgentReasonSummary}
+          needsAttention={caseData.needsAttention}
+          attentionTypes={caseData.attentionTypes}
+          attentionSeverity={caseData.attentionSeverity}
+          attentionSummary={caseData.attentionSummary}
+        />
+
+        {/* Smart Action Section - Context-aware actions */}
+        {showActionSection && (
+          <SmartActionSection
+            status={caseData.status}
             phoneStatus={caseData.phoneSent}
             emailStatus={caseData.emailSent}
+            scheduledCallFor={caseData.scheduledCallFor}
+            scheduledEmailFor={caseData.scheduledEmailFor}
+            hasOwnerPhone={hasOwnerPhone}
+            hasOwnerEmail={hasOwnerEmail}
+            ownerPhone={caseData.owner.phone}
+            ownerEmail={caseData.owner.email}
+            deliveryToggles={deliveryToggles}
+            onToggleChange={onToggleChange}
+            onApprove={onApprove}
+            onRetry={onRetry}
+            onCancelScheduled={onCancelScheduled}
+            onScheduleRemaining={handleScheduleRemaining}
+            isSubmitting={isSubmitting}
+            isCancelling={isCancelling}
+            needsGeneration={needsGeneration}
+            testModeEnabled={testModeEnabled}
+            failureReason={caseData.scheduledCall?.endedReason}
           />
         )}
 
         {/* Needs Attention Section */}
         {caseData.needsAttention && <AttentionSection caseData={caseData} />}
 
-        {/* Call Script Preview - Collapsible */}
-        <Collapsible open={callScriptOpen} onOpenChange={setCallScriptOpen}>
-          <CollapsibleTrigger asChild>
-            <Button
-              variant="ghost"
-              className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white/50 px-4 py-3 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/50 dark:hover:bg-slate-800/50"
-            >
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-slate-500" />
-                <span className="text-sm font-medium">
-                  {phoneSent && caseData.scheduledCall?.transcript
-                    ? "Call Transcript"
-                    : "Call Script"}
-                </span>
-              </div>
-              <ChevronDown
-                className={`h-4 w-4 text-slate-500 transition-transform ${
-                  callScriptOpen ? "rotate-180" : ""
-                }`}
-              />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-2">
-            <div className="rounded-lg border border-slate-200 bg-white/50 p-4 dark:border-slate-700 dark:bg-slate-900/50">
-              <CallTabContent
-                caseData={{
-                  scheduledCall: caseData.scheduledCall,
-                }}
-                callScript={callScript}
-                phoneWasSent={phoneSent}
-                phoneCanBeSent={phoneCanBeSent}
-                hasOwnerPhone={hasOwnerPhone}
-              />
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
-
-        {/* Email Preview - Collapsible */}
-        <Collapsible open={emailPreviewOpen} onOpenChange={setEmailPreviewOpen}>
-          <CollapsibleTrigger asChild>
-            <Button
-              variant="ghost"
-              className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white/50 px-4 py-3 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/50 dark:hover:bg-slate-800/50"
-            >
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-slate-500" />
-                <span className="text-sm font-medium">
-                  {emailSent ? "Email Sent" : "Email Preview"}
-                </span>
-              </div>
-              <ChevronDown
-                className={`h-4 w-4 text-slate-500 transition-transform ${
-                  emailPreviewOpen ? "rotate-180" : ""
-                }`}
-              />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-2">
-            <div className="rounded-lg border border-slate-200 bg-white/50 p-4 dark:border-slate-700 dark:bg-slate-900/50">
-              <EmailTabContent
-                caseData={{
-                  dischargeSummary: caseData.dischargeSummary,
-                  structuredContent: caseData.structuredContent,
-                  emailContent: caseData.emailContent,
-                }}
-                emailWasSent={emailSent}
-                emailCanBeSent={emailCanBeSent}
-                hasOwnerEmail={hasOwnerEmail}
-              />
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+        {/* Communication Preview - Inline with expand/collapse */}
+        <CommunicationPreview
+          callScript={callScript}
+          emailContent={caseData.emailContent}
+          dischargeSummary={caseData.dischargeSummary}
+          structuredContent={caseData.structuredContent}
+          scheduledCall={caseData.scheduledCall}
+          phoneSent={phoneSent}
+          emailSent={emailSent}
+          hasOwnerPhone={hasOwnerPhone}
+          hasOwnerEmail={hasOwnerEmail}
+        />
 
         {/* Workflow Timeline - Collapsible, shown for sent/scheduled cases */}
         {(isSentCase || isScheduled) && (

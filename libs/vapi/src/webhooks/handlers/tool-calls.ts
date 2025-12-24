@@ -34,9 +34,11 @@ export async function handleToolCalls(
 ): Promise<ToolCallsResponse> {
   const toolCallList = message.toolCallList ?? [];
   const callId = message.call?.id ?? "unknown";
+  const assistantId = message.call?.assistantId;
 
   logger.info("Processing tool calls", {
     callId,
+    assistantId,
     toolCount: toolCallList.length,
     toolNames: toolCallList.map((t) => t.name),
   });
@@ -55,6 +57,7 @@ export async function handleToolCalls(
         const result = await executeTool(toolCall.name, toolCall.parameters, {
           callId,
           toolCallId: toolCall.id,
+          assistantId,
         });
 
         return {

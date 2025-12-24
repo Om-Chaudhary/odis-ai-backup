@@ -40,41 +40,59 @@ import { cleanTranscript } from "@odis-ai/ai";
 const logger = loggers.webhook.child("end-of-call-report");
 
 /**
- * Clean transcript using AI and handle errors gracefully
- * Returns null if cleaning fails or transcript is empty
+ * Clean transcript using AI and update the database (fire-and-forget)
+ * This runs in the background so it doesn't block the webhook response
  */
-async function cleanTranscriptSafely(
+function cleanTranscriptInBackground(
   transcript: string | null | undefined,
   clinicName: string | null | undefined,
-): Promise<string | null> {
+  callId: string,
+  tableName: string,
+  supabase: SupabaseClient,
+): void {
   if (!transcript || transcript.trim().length === 0) {
-    return null;
+    return;
   }
 
-  try {
-    const result = await cleanTranscript({
-      transcript,
-      clinicName,
-    });
-
-    if (result.wasModified) {
-      logger.debug("Transcript cleaned successfully", {
-        originalLength: transcript.length,
-        cleanedLength: result.cleanedTranscript.length,
+  // Fire and forget - don't await
+  void (async () => {
+    try {
+      const result = await cleanTranscript({
+        transcript,
+        clinicName,
       });
-      return result.cleanedTranscript;
-    }
 
-    // If no modifications needed, return original
-    return transcript;
-  } catch (error) {
-    logger.error("Failed to clean transcript", {
-      error: error instanceof Error ? error.message : String(error),
-      transcriptLength: transcript.length,
-    });
-    // Return null on error - UI will fall back to raw transcript
-    return null;
-  }
+      if (result.wasModified) {
+        logger.debug("Transcript cleaned successfully", {
+          callId,
+          originalLength: transcript.length,
+          cleanedLength: result.cleanedTranscript.length,
+        });
+
+        // Update database with cleaned transcript
+        const { error: updateError } = await supabase
+          .from(tableName)
+          .update({ cleaned_transcript: result.cleanedTranscript })
+          .eq("vapi_call_id", callId);
+
+        if (updateError) {
+          logger.error("Failed to update cleaned transcript", {
+            callId,
+            error: updateError.message,
+          });
+        } else {
+          logger.debug("Cleaned transcript saved to database", { callId });
+        }
+      }
+    } catch (error) {
+      logger.error("Failed to clean transcript in background", {
+        callId,
+        error: error instanceof Error ? error.message : String(error),
+        transcriptLength: transcript.length,
+      });
+      // Silent failure - UI will fall back to raw transcript
+    }
+  })();
 }
 
 /**
@@ -234,10 +252,8 @@ async function handleInboundCallEnd(
         : "none",
   });
 
-  // Clean transcript using AI (async, but don't block webhook response)
-  const cleanedTranscript = await cleanTranscriptSafely(transcript, clinicName);
-
-  // Prepare update data - extract all fields like outbound handler does
+  // Prepare update data - save immediately WITHOUT cleaned transcript
+  // Cleaned transcript will be added in background to avoid blocking webhook
   const updateData: Record<string, unknown> = {
     vapi_call_id: call.id,
     assistant_id: call.assistantId ?? null,
@@ -251,7 +267,6 @@ async function handleInboundCallEnd(
     recording_url: recordingUrl,
     stereo_recording_url: stereoRecordingUrl,
     transcript: transcript,
-    cleaned_transcript: cleanedTranscript,
     transcript_messages: transcriptMessages,
     call_analysis: analysis,
     summary: analysis.summary ?? null,
@@ -274,12 +289,12 @@ async function handleInboundCallEnd(
     hasRecording: !!recordingUrl,
     hasStereoRecording: !!stereoRecordingUrl,
     hasTranscript: !!transcript,
-    hasCleanedTranscript: !!cleanedTranscript,
     hasMessages: !!transcriptMessages,
     hasSummary: !!analysis.summary,
     userSentiment,
   });
 
+  // Save to database FIRST - don't let transcript cleaning block this
   const { error: updateError } = await supabase
     .from("inbound_vapi_calls")
     .update(updateData)
@@ -291,7 +306,17 @@ async function handleInboundCallEnd(
       error: updateError.message,
       errorCode: updateError.code,
     });
+    return; // Don't proceed with transcript cleaning if main update failed
   }
+
+  // Clean transcript in background (fire-and-forget) - won't block webhook response
+  cleanTranscriptInBackground(
+    transcript,
+    clinicName,
+    call.id,
+    "inbound_vapi_calls",
+    supabase,
+  );
 }
 
 /**
@@ -329,10 +354,8 @@ async function handleOutboundCallEnd(
   const clinicName = (metadata.clinic_name as string) ?? null;
   const transcript = call.transcript ?? null;
 
-  // Clean transcript using AI
-  const cleanedTranscript = await cleanTranscriptSafely(transcript, clinicName);
-
-  // Prepare update data
+  // Prepare update data - save immediately WITHOUT cleaned transcript
+  // Cleaned transcript will be added in background to avoid blocking webhook
   const updateData: Record<string, unknown> = {
     status: finalStatus,
     ended_reason: call.endedReason,
@@ -342,7 +365,6 @@ async function handleOutboundCallEnd(
     recording_url: call.recordingUrl ?? artifact.recordingUrl,
     stereo_recording_url: artifact.stereoRecordingUrl,
     transcript: transcript,
-    cleaned_transcript: cleanedTranscript,
     transcript_messages: call.messages ?? null,
     call_analysis: analysis,
     summary: analysis.summary,
@@ -362,7 +384,6 @@ async function handleOutboundCallEnd(
     hasRecording: !!call.recordingUrl,
     hasStereoRecording: !!artifact.stereoRecordingUrl,
     hasTranscript: !!transcript,
-    hasCleanedTranscript: !!cleanedTranscript,
     hasSummary: !!analysis.summary,
     userSentiment,
   });
@@ -381,6 +402,7 @@ async function handleOutboundCallEnd(
     await handleRetryLogic(call, existingCall, updateData, metadata, supabase);
   }
 
+  // Save to database FIRST - don't let transcript cleaning block this
   const { error: updateError } = await supabase
     .from("scheduled_discharge_calls")
     .update(updateData)
@@ -391,7 +413,17 @@ async function handleOutboundCallEnd(
       callId: call.id,
       error: updateError,
     });
+    return; // Don't proceed with transcript cleaning if main update failed
   }
+
+  // Clean transcript in background (fire-and-forget) - won't block webhook response
+  cleanTranscriptInBackground(
+    transcript,
+    clinicName,
+    call.id,
+    "scheduled_discharge_calls",
+    supabase,
+  );
 }
 
 /**

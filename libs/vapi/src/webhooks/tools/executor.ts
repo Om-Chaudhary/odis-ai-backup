@@ -19,6 +19,8 @@ export interface ToolExecutionContext {
   callId: string;
   /** Tool call ID from VAPI */
   toolCallId: string;
+  /** Assistant ID (optional, from call data) */
+  assistantId?: string;
 }
 
 /**
