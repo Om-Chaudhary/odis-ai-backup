@@ -18,7 +18,11 @@ const sizeClasses = {
  * Extension-compatible Logo component
  * Uses standard <img> tag instead of Next.js Image
  */
-export function Logo({ className, size = "md", src = "/icon-128.png" }: LogoProps) {
+export function Logo({
+  className,
+  size = "md",
+  src = "/icon-128.png",
+}: LogoProps) {
   return (
     <img
       src={src}

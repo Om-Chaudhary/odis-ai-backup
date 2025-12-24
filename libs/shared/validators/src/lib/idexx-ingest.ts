@@ -19,41 +19,43 @@ import { z } from "zod";
  * Schema for IDEXX appointment/case data
  * This represents the data collected by the Chrome extension from IDEXX Neo
  */
-export const IdexxAppointmentDataSchema = z.object({
-  // Appointment identifiers
-  appointmentId: z.string().optional(),
-  consultationId: z.string().optional(),
+export const IdexxAppointmentDataSchema = z
+  .object({
+    // Appointment identifiers
+    appointmentId: z.string().optional(),
+    consultationId: z.string().optional(),
 
-  // Patient information
-  pet_name: z.string().min(1, "Pet name is required"),
-  species: z.string().optional(),
-  breed: z.string().optional(),
-  age: z.string().optional(),
-  sex: z.string().optional(),
-  weight: z.string().optional(),
+    // Patient information
+    pet_name: z.string().min(1, "Pet name is required"),
+    species: z.string().optional(),
+    breed: z.string().optional(),
+    age: z.string().optional(),
+    sex: z.string().optional(),
+    weight: z.string().optional(),
 
-  // Owner/Client information
-  owner_name: z.string().optional(),
-  client_first_name: z.string().optional(),
-  client_last_name: z.string().optional(),
-  phone_number: z.string().optional(),
-  mobile_number: z.string().optional(),
-  email: z.string().email().optional().or(z.literal("")),
+    // Owner/Client information
+    owner_name: z.string().optional(),
+    client_first_name: z.string().optional(),
+    client_last_name: z.string().optional(),
+    phone_number: z.string().optional(),
+    mobile_number: z.string().optional(),
+    email: z.string().email().optional().or(z.literal("")),
 
-  // Clinical data (critical for generation)
-  consultation_notes: z.string().optional(),
-  products_services: z.string().optional(),
-  declined_products_services: z.string().optional(),
+    // Clinical data (critical for generation)
+    consultation_notes: z.string().optional(),
+    products_services: z.string().optional(),
+    declined_products_services: z.string().optional(),
 
-  // Appointment details
-  appointment_type: z.string().optional(),
-  appointment_date: z.string().optional(),
-  appointment_time: z.string().optional(),
-  provider_name: z.string().optional(),
-  provider_id: z.string().optional(),
+    // Appointment details
+    appointment_type: z.string().optional(),
+    appointment_date: z.string().optional(),
+    appointment_time: z.string().optional(),
+    provider_name: z.string().optional(),
+    provider_id: z.string().optional(),
 
-  // Additional metadata (allow any extra fields)
-}).passthrough();
+    // Additional metadata (allow any extra fields)
+  })
+  .passthrough();
 
 export type IdexxAppointmentData = z.infer<typeof IdexxAppointmentDataSchema>;
 

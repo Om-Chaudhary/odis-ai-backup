@@ -74,7 +74,9 @@ export interface MockClinicUser {
   updated_at: string;
 }
 
-export function createMockClinicUser(overrides?: Partial<MockClinicUser>): MockClinicUser {
+export function createMockClinicUser(
+  overrides?: Partial<MockClinicUser>,
+): MockClinicUser {
   return {
     id: `clinic-user-${Date.now()}`,
     user_id: `user-${Date.now()}`,

@@ -29,7 +29,9 @@ export interface MockCallRecord {
   updated_at: string;
 }
 
-export function createMockCallRecord(overrides?: Partial<MockCallRecord>): MockCallRecord {
+export function createMockCallRecord(
+  overrides?: Partial<MockCallRecord>,
+): MockCallRecord {
   const id = overrides?.id ?? `call-record-${Date.now()}`;
   const now = new Date();
 
@@ -46,7 +48,8 @@ export function createMockCallRecord(overrides?: Partial<MockCallRecord>): MockC
     ended_at: new Date(now.getTime() + 5 * 60 * 1000).toISOString(), // 5 minutes later
     duration_seconds: 300,
     transcript: "Hello, this is ODIS calling from Test Veterinary Clinic...",
-    summary: "Follow-up call completed successfully. Patient is recovering well.",
+    summary:
+      "Follow-up call completed successfully. Patient is recovering well.",
     recording_url: "https://example.com/recordings/test.mp3",
     customer_phone: "+15551234567",
     customer_name: "John Smith",
@@ -77,11 +80,12 @@ export interface MockScheduledCall {
 }
 
 export function createMockScheduledCall(
-  overrides?: Partial<MockScheduledCall>
+  overrides?: Partial<MockScheduledCall>,
 ): MockScheduledCall {
   const id = overrides?.id ?? `scheduled-call-${Date.now()}`;
   const scheduledTime =
-    overrides?.scheduled_time ?? new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour from now
+    overrides?.scheduled_time ??
+    new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour from now
 
   return {
     id,
@@ -127,7 +131,9 @@ export interface MockInboundCall {
   updated_at: string;
 }
 
-export function createMockInboundCall(overrides?: Partial<MockInboundCall>): MockInboundCall {
+export function createMockInboundCall(
+  overrides?: Partial<MockInboundCall>,
+): MockInboundCall {
   const id = overrides?.id ?? `inbound-call-${Date.now()}`;
   const now = new Date();
 
@@ -161,9 +167,14 @@ export function createMockCallList(
     clinicId?: string;
     types?: MockCallRecord["type"][];
     statuses?: MockCallRecord["status"][];
-  }
+  },
 ): MockCallRecord[] {
-  const types = options?.types ?? ["follow_up", "reminder", "inbound", "outbound"];
+  const types = options?.types ?? [
+    "follow_up",
+    "reminder",
+    "inbound",
+    "outbound",
+  ];
   const statuses = options?.statuses ?? ["completed", "failed", "no_answer"];
 
   return Array.from({ length: count }, (_, i) => {

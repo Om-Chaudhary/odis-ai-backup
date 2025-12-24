@@ -38,7 +38,9 @@ export interface MockVapiCall {
 /**
  * Create a mock VAPI call
  */
-export function createMockVapiCall(overrides?: Partial<MockVapiCall>): MockVapiCall {
+export function createMockVapiCall(
+  overrides?: Partial<MockVapiCall>,
+): MockVapiCall {
   return {
     id: `call-${Date.now()}`,
     orgId: "test-org-id",
@@ -86,8 +88,14 @@ export type VapiWebhookType =
  */
 export function createMockVapiWebhook(
   type: VapiWebhookType,
-  overrides?: Record<string, unknown>
-): { message: { type: VapiWebhookType; call?: MockVapiCall; [key: string]: unknown } } {
+  overrides?: Record<string, unknown>,
+): {
+  message: {
+    type: VapiWebhookType;
+    call?: MockVapiCall;
+    [key: string]: unknown;
+  };
+} {
   const basePayload = {
     type,
     call: createMockVapiCall(),
@@ -172,7 +180,9 @@ export function createMockVapiClient() {
     },
     assistants: {
       create: vi.fn().mockResolvedValue({ id: "assistant-id" }),
-      get: vi.fn().mockResolvedValue({ id: "assistant-id", name: "Test Assistant" }),
+      get: vi
+        .fn()
+        .mockResolvedValue({ id: "assistant-id", name: "Test Assistant" }),
       list: vi.fn().mockResolvedValue({ data: [] }),
       update: vi.fn().mockResolvedValue({ id: "assistant-id" }),
       delete: vi.fn().mockResolvedValue(undefined),
@@ -181,7 +191,9 @@ export function createMockVapiClient() {
       list: vi.fn().mockResolvedValue({
         data: [{ id: "phone-id", number: "+15559876543" }],
       }),
-      get: vi.fn().mockResolvedValue({ id: "phone-id", number: "+15559876543" }),
+      get: vi
+        .fn()
+        .mockResolvedValue({ id: "phone-id", number: "+15559876543" }),
     },
   };
 }
@@ -190,7 +202,7 @@ export function createMockVapiClient() {
  * Create mock VAPI assistant variable values
  */
 export function createMockVariableValues(
-  overrides?: Record<string, unknown>
+  overrides?: Record<string, unknown>,
 ): Record<string, unknown> {
   return {
     patientName: "Buddy",

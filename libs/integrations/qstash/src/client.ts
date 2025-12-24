@@ -141,8 +141,7 @@ export async function cancelScheduledExecution(
     return true;
   } catch (error) {
     // Handle case where message is already delivered or doesn't exist
-    const errorMessage =
-      error instanceof Error ? error.message : String(error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
 
     // QStash returns 404 if message not found (already delivered or expired)
     if (errorMessage.includes("404") || errorMessage.includes("not found")) {
