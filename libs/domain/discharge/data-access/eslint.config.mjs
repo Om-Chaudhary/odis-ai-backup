@@ -1,4 +1,4 @@
-import baseConfig from "../../eslint.config.js";
+import baseConfig from "../../../../eslint.config.js";
 import nxPlugin from "@nx/eslint-plugin";
 
 export default [
