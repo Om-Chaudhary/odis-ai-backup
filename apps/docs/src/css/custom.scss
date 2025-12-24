@@ -8,10 +8,6 @@
  * - Foreground: Near-black #171717
  */
 
-// Import Tailwind with Docusaurus dark mode support
-@import "tailwindcss";
-@custom-variant dark (&:is([data-theme="dark"] *));
-
 // ============================================
 // ODIS Design Token Definitions
 // Source: libs/shared/styles/src/tokens.css
@@ -235,7 +231,7 @@ html {
   color: #{$odis-foreground};
 
   &:hover {
-    background-color: darken($odis-secondary, 3%);
+    background-color: #eeeeee; // darken($odis-secondary, 3%)
   }
 }
 
@@ -525,7 +521,7 @@ details {
   background: linear-gradient(
     90deg,
     #{$odis-secondary} 25%,
-    #{darken($odis-secondary, 2%)} 50%,
+    #f0f0f0 50%,
     #{$odis-secondary} 75%
   );
   background-size: 200% 100%;
