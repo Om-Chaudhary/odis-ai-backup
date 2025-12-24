@@ -1,41 +1,70 @@
-# Website
+# ODIS AI Documentation
 
-This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
+Documentation site built with [Docusaurus](https://docusaurus.io/) for the ODIS AI veterinary platform.
 
-## Installation
-
-```bash
-yarn
-```
-
-## Local Development
+## Development
 
 ```bash
-yarn start
+# Start development server
+nx start docs
+
+# Or from workspace root
+pnpm nx start docs
 ```
 
-This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
+The development server runs at `http://localhost:3000` with hot reloading.
 
 ## Build
 
 ```bash
-yarn build
+# Build for production
+nx build docs
+
+# Output is in apps/docs/build/
 ```
 
-This command generates static content into the `build` directory and can be served using any static contents hosting service.
+## Available Commands
 
-## Deployment
+| Command             | Description                    |
+| ------------------- | ------------------------------ |
+| `nx start docs`     | Start development server       |
+| `nx build docs`     | Build for production           |
+| `nx serve docs`     | Serve production build locally |
+| `nx typecheck docs` | TypeScript type checking       |
+| `nx clear docs`     | Clear Docusaurus cache         |
 
-Using SSH:
+## Documentation Structure
 
-```bash
-USE_SSH=true yarn deploy
+```
+docs/
+├── getting-started/      # Setup and quickstart guides
+├── guides/               # Feature-specific guides
+├── api/                  # API reference documentation
+├── integrations/         # Third-party integration docs
+└── intro.md              # Landing page (/)
 ```
 
-Not using SSH:
+## Adding Documentation
 
-```bash
-GIT_USER=<Your GitHub username> yarn deploy
+1. Create `.md` files in the appropriate `docs/` subdirectory
+2. Add frontmatter with `sidebar_position` for ordering
+3. Category configuration is in `_category_.json` files
+
+```md
+---
+sidebar_position: 1
+title: My Page Title
+description: Brief description for SEO
+---
+
+# My Page
+
+Content goes here...
 ```
 
-If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.
+## Styling
+
+Custom ODIS branding is applied via:
+
+- `src/css/custom.scss` - ODIS design tokens mapped to Infima variables
+- `plugins/tailwind-plugin.js` - Tailwind CSS v4 integration
