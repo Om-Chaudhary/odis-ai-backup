@@ -1,113 +1,60 @@
 # Cursor Rules for ODIS AI Web
 
-Project-specific rules for the Nx monorepo.
+> See `AGENTS.md` for comprehensive project documentation.
 
 ## Quick Reference
-- Docs index: `docs/README.md`
-- Nx inventory (generated): `docs/reference/NX_PROJECTS.md` (`pnpm docs:nx`)
-- Project guide for AI assistants: `CLAUDE.md`
+
+- Primary doc: `AGENTS.md`
+- Nx inventory: `docs/reference/NX_PROJECTS.md`
 - Testing strategy: `docs/testing/TESTING_STRATEGY.md`
 
 ## Workspace Overview
-- Framework: Next.js 15 (App Router), React Server Components by default
-- Language: TypeScript (strict)
-- Styling: Tailwind CSS 4 + shadcn/ui (Radix)
-- Data: Supabase (PostgreSQL) with repository pattern + DI interfaces
-- Nx layout: `apps/web` + 28 libraries in `libs/*`
-  - **Services** (split): `services-cases`, `services-discharge`, `services-shared`
-  - **Data**: `db` (with interfaces/ and repositories/), `types`, `validators`
-  - **Integrations**: `vapi`, `idexx`, `qstash`, `resend`, `retell`
-  - **Infrastructure**: `api`, `auth`, `logger`, `utils`, `constants`, `crypto`
-  - **UI**: `ui`, `styles`, `hooks`, `email`
-  - **Dev**: `testing`, `env`, `ai`
-- Tags: use `type:*`, `scope:*`, `platform:*` in `project.json` for new projects
-- See generated inventory: `docs/reference/NX_PROJECTS.md`
 
-## Key Patterns
+- **Framework**: Next.js 15 (App Router), React Server Components by default
+- **Language**: TypeScript (strict)
+- **Styling**: Tailwind CSS 4 + shadcn/ui (Radix)
+- **Data**: Supabase (PostgreSQL) with repository pattern + DI
+- **Monorepo**: Nx with domain-grouped libraries
 
-### tRPC Router Structure
-- Routers split into modular directories (dashboard/, cases/)
-- Each router: 6 focused files (was 2,000+ line monoliths)
-- Schemas separated in dedicated files
-- Import from `apps/web/src/server/api/routers/[router]/`
+## Import Pattern
 
-### Server Actions vs API Routes
-- Prefer Server Actions for internal flows
-- Use API Routes only for webhooks/external integrations
-- Server Actions in `apps/web/src/server/actions/`
-
-### Repository Pattern & Dependency Injection
-- Use repository interfaces from `@odis-ai/db/interfaces`
-  - `ICasesRepository`, `IUserRepository`, `ICallRepository`, `IEmailRepository`
-- Concrete implementations in `@odis-ai/db/repositories`
-- External API interfaces: `IScheduler`, `ICallClient`, `IEmailClient`
-- Enables testable services with DI
-
-### Service Layer
-- Services split into focused libraries:
-  - `@odis-ai/services-cases` - Case management
-  - `@odis-ai/services-discharge` - Discharge workflows + batch processing
-  - `@odis-ai/services-shared` - Shared execution logic
-- Services accept repository interfaces for testability
-
-### Supabase Clients
-- Standard client: `createServerClient()` / `createBrowserClient()` (RLS, cookies)
-- Service client: `createServiceClient()` (bypasses RLS, admin only)
-- Repository layer abstracts DB access
-
-### React Hooks
-- Use ref pattern for polling/interval stability
-- Minimize `"use client"`; default to Server Components
-
-### Import Patterns
 ```typescript
-// Types (consolidated to libs)
-import type { DashboardCase } from '@odis-ai/types';
-
-// Validators (236+ tests, 95%+ coverage)
-import { dischargeSchema } from '@odis-ai/validators';
-
-// Utilities (moved from web app)
-import { transformBackendCase } from '@odis-ai/utils';
-
-// Repository interfaces
-import type { ICasesRepository } from '@odis-ai/db/interfaces';
-
-// Services
-import { CasesService } from '@odis-ai/services-cases';
-import { DischargeOrchestrator } from '@odis-ai/services-discharge';
+// Domain-grouped imports
+import type { DashboardCase } from "@odis-ai/shared/types";
+import { dischargeSchema } from "@odis-ai/shared/validators";
+import { CasesService } from "@odis-ai/domain/cases";
+import { createServerClient } from "@odis-ai/data-access/db";
+import { createPhoneCall } from "@odis-ai/integrations/vapi";
 ```
 
-## Nx & Documentation
-- Keep docs inside `docs/` following `docs/README.md`
-- Update section READMEs when adding docs; match scope to Nx tags
-- Regenerate Nx inventories with `pnpm docs:nx` (do not hand-edit generated files)
+## Cursor-Specific Behaviors
 
-## Visual Testing
-- Use Playwright MCP when possible
-- Navigate: `browser_navigate("http://localhost:3000/dashboard")`
-- Screenshot: `browser_take_screenshot("name.png")`
-- Snapshot: `browser_snapshot()` for accessibility tree
-- See `docs/cursor-commands/browser-testing/visual-test-commands.md`
+### Visual Testing (Playwright MCP)
 
-## Common Workflows
-- Component development: `npx shadcn@latest add [component]`; test visually
-- API testing: `browser_network_requests()`; `browser_console_messages()`
-- Debugging: filter console errors and inspect network; see `docs/cursor-commands/debugging/debug-commands.md`
+```javascript
+browser_navigate("http://localhost:3000/dashboard")
+browser_take_screenshot("name.png")
+browser_snapshot()  // Accessibility tree
+browser_network_requests()
+browser_console_messages()
+```
 
-## Code Style
-- TypeScript strict; prefer interfaces over types
-- Formatting: Prettier (Tailwind plugin) runs on commit
+### Code Style
+
+- TypeScript strict mode; prefer interfaces over types
+- Formatting: Prettier with Tailwind plugin (runs on commit)
 - Naming: lowercase-with-dashes for folders, PascalCase for components
 
-## Important Notes
-1. Supabase service client bypasses RLS—use only where required
-2. Use refs to avoid unstable hook dependencies
-3. Default to Server Components; opt into `"use client"` only when needed
-4. `NEXT_PUBLIC_*` variables are public—never store secrets there
+### Key Warnings
 
-## Links
-- Docs index: `./docs/README.md`
-- AI assistant guide: `./CLAUDE.md`
-- Cursor commands: `./docs/cursor-commands/README.md`
-- Testing strategy: `./docs/testing/TESTING_STRATEGY.md`
+1. `createServiceClient()` bypasses RLS — use only in admin/webhook paths
+2. Use refs for polling/interval stability in hooks
+3. Default to Server Components; minimize `"use client"`
+4. `NEXT_PUBLIC_*` variables are public — never store secrets
+
+## Common Workflows
+
+- Add component: `npx shadcn@latest add <component>`
+- Run affected: `nx affected -t lint,test`
+- View graph: `pnpm graph`
+- Regenerate docs: `pnpm docs:nx`

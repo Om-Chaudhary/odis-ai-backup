@@ -1,98 +1,270 @@
-# Core Libraries (Nx)
+# Core Libraries (Domain-Grouped Architecture)
 
-Inventory of priority shared libraries in the Nx workspace. Use this as a quick map for ownership, entry points, and dependencies.
+> Inventory of libraries in the Nx workspace organized by domain. See `AGENTS.md` for import conventions.
 
-## @odis-ai/api (`libs/api`)
+**Last Updated**: December 2024  
+**Total Libraries**: 28  
+**Architecture**: Domain-grouped (`shared/`, `data-access/`, `domain/`, `integrations/`, `extension/`)
 
-- Purpose: API helpers for web/server actions (auth headers, CORS, error and response helpers).
-- Entry points: `libs/api/src/auth.ts`, `libs/api/src/cors.ts`, `libs/api/src/response.ts`, `libs/api/src/errors.ts`.
-- Consumers: `apps/web` server actions, API routes, and tRPC handlers.
-- Notes: Keep shared HTTP helpers here; avoid duplicating response formatting inside apps.
+---
 
-## @odis-ai/db (`libs/db`)
+## Shared Libraries (`libs/shared/`)
 
-- Purpose: Supabase clients, repository interfaces, and repository implementations for calls, emails, users, and cases.
-- Entry points: `createBrowserClient`, `createServerClient`, `createServiceClient`, middleware helper (`libs/db/src/middleware.ts`).
-- Repository interfaces: `interfaces/*` (ICasesRepository, IUserRepository, ICallRepository, IEmailRepository) for dependency injection and testing.
-- Repository implementations: `repositories/*` (call, email, user, base, types).
-- Database entities: `lib/entities/*` (scribe-transactions).
-- Consumers: `apps/web` server actions, API routes, `libs/services-*`, `libs/vapi`.
-- Notes: Use service client only for admin/webhook paths; default to RLS client elsewhere. Repository interfaces enable testable service layer with DI.
+Cross-cutting concerns used across the entire monorepo.
 
-## @odis-ai/vapi (`libs/vapi`)
+### @odis-ai/shared/types
 
-- Purpose: VAPI call orchestration, knowledge base, prompts, webhooks, and tooling.
-- Entry points: `client.ts`, `call-manager.ts`, `warm-transfer.ts`, `validators.ts`, `extract-variables.ts`, `webhooks/` handlers, `tools/`.
-- Knowledge base: `knowledge-base/*` by specialty; prompts in `prompts/`.
-- Consumers: `apps/web` VAPI API routes/webhooks, `libs/services`, dashboard call flows.
-- Notes: Dynamic variable injection happens in `extract-variables.ts`; keep prompts/KB consistent with variable names.
+- **Purpose**: Shared TypeScript types and interfaces
+- **Key exports**: `Database`, `DashboardCase`, `DashboardStats`, `CaseData`, `PatientInfo`, `OrchestrationStep`
+- **Platform**: neutral
 
-## @odis-ai/idexx (`libs/idexx`)
+### @odis-ai/shared/validators
 
-- Purpose: IDEXX Neo integration (credential management, validation, variable transforms).
-- Entry points: `credential-manager.ts`, `transformer.ts`, `validation.ts`, `types.ts`.
-- Consumers: `libs/vapi` variable extraction, `apps/web` onboarding/IDEXX flows.
-- Notes: Keep data-shape changes here; avoid coupling IDEXX specifics inside app components.
+- **Purpose**: Zod validation schemas for API requests, webhooks, data integrity
+- **Key exports**: `dischargeSchema`, `dischargeSummarySchema`, `assessmentQuestionsSchema`, `orchestrationSchema`, `scheduleSchema`, `scribeSchema`
+- **Test coverage**: 236+ tests, 95%+ coverage
+- **Platform**: neutral
 
-## @odis-ai/logger (`libs/logger`)
+### @odis-ai/shared/util
 
-- Purpose: Structured logging with namespacing and JSON-friendly output.
-- Entry points: `createLogger` (namespace-scoped), `Logger` class, types.
-- Consumers: Webhooks, services, repositories, background tasks.
-- Notes: Use namespaces per domain (e.g., `vapi-webhook`, `db-repo`, `qstash-runner`) and include contextual fields for searchability.
+- **Purpose**: Shared utility functions
+- **Key exports**: `transformBackendCaseToDashboardCase`, `isWithinBusinessHours`, `getNextBusinessHourSlot`, `formatPhoneNumber`, `cn`
+- **Platform**: neutral
 
-## @odis-ai/services-cases (`libs/services-cases`)
+### @odis-ai/shared/ui
 
-- Purpose: Case management service layer with dependency injection support.
-- Entry points: `cases-service.ts` (main service), `interfaces.ts` (DI interfaces).
-- Consumers: `apps/web` API routes, tRPC routers.
-- Notes: Accepts repository interfaces for testability; use factory pattern for instantiation.
+- **Purpose**: shadcn/ui React components
+- **Components**: 59 components (Button, Card, DataTable, Dialog, etc.)
+- **Platform**: browser
 
-## @odis-ai/services-discharge (`libs/services-discharge`)
+### @odis-ai/shared/hooks
 
-- Purpose: Discharge workflow orchestration including batch processing and staggered scheduling.
-- Entry points: `discharge-orchestrator.ts`, `discharge-batch-processor.ts`.
-- Tests: Comprehensive staggered batch scheduling tests in `__tests__/`.
-- Consumers: `apps/web` discharge flow endpoints.
-- Notes: Handles multi-step discharge workflows with error recovery.
+- **Purpose**: Shared React hooks
+- **Key exports**: `useCallPolling`, `useToast`, `useMediaQuery`, `useOnClickOutside`
+- **Platform**: browser
 
-## @odis-ai/services-shared (`libs/services-shared`)
+### @odis-ai/shared/logger
 
-- Purpose: Shared service utilities and execution plan logic used across domain services.
-- Entry points: `execution-plan.ts`.
-- Consumers: `libs/services-cases`, `libs/services-discharge`.
-- Notes: Cross-cutting service concerns; keep domain-agnostic.
+- **Purpose**: Structured logging with namespaces
+- **Key exports**: `loggers`, `createLogger`, `Logger`
+- **Usage**: Use namespaces per domain (e.g., `vapi-webhook`, `db-repo`, `qstash-runner`)
+- **Platform**: neutral
 
-## @odis-ai/types (`libs/types`)
+### @odis-ai/shared/crypto
 
-- Purpose: Shared TypeScript types and interfaces used across the monorepo.
-- Entry points: `dashboard.ts`, `case.ts`, `services.ts`, `patient.ts`, `orchestration.ts`, `database.types.ts`, `supabase.ts`.
-- Consumers: All apps and libs.
-- Notes: Consolidates types previously scattered in web app; single source of truth for domain types.
+- **Purpose**: AES encryption helpers
+- **Key exports**: `encrypt`, `decrypt`
+- **Platform**: neutral
 
-## @odis-ai/utils (`libs/utils`)
+### @odis-ai/shared/constants
 
-- Purpose: Shared utility functions for transformations, formatting, and business logic.
-- Entry points: `case-transforms.ts` (case data transformations), `business-hours.ts` (scheduling logic), `phone-formatting.ts`, `date-ranges.ts`, `discharge-readiness.ts`.
-- Consumers: `apps/web`, `libs/services-*`, `libs/vapi`.
-- Notes: Pure functions with no side effects; thoroughly testable.
+- **Purpose**: Shared constants and configuration values
+- **Platform**: neutral
 
-## @odis-ai/validators (`libs/validators`)
+### @odis-ai/shared/env
 
-- Purpose: Zod validation schemas for API requests, webhooks, and data integrity.
-- Entry points: `discharge.ts`, `discharge-summary.ts`, `assessment-questions.ts`, `orchestration.ts`, `schedule.ts`, `scribe.ts`.
-- Test coverage: 236+ tests across 6 test files with comprehensive validation coverage.
-- Consumers: API routes, server actions, webhook handlers.
-- Notes: See `TEST_COVERAGE.md` for detailed test documentation; all validators have 95%+ coverage.
+- **Purpose**: Environment variable validation (t3-env)
+- **Platform**: neutral
 
-## Related supporting libs
+### @odis-ai/shared/styles
 
-- `libs/qstash` – QStash scheduling helpers with IScheduler interface for delayed execution.
-- `libs/resend` – Email client with IEmailClient interface for testability.
-- `libs/constants` – Shared constants and configuration values.
+- **Purpose**: Global CSS and Tailwind configuration
+- **Platform**: browser
 
-## Documentation flow
+### @odis-ai/shared/testing
 
-- Update this file when adding/modifying core libraries.
-- Reflect new projects in `docs/reference/NX_PROJECTS.md` via `pnpm docs:nx`.
-- Mirror naming to Nx tags: type, scope, and platform.
+- **Purpose**: Test utilities, mocks, fixtures
+- **Key exports**: `createMockSupabaseClient`, test fixtures, custom matchers
+- **Platform**: neutral
+
+### @odis-ai/shared/email
+
+- **Purpose**: Email template rendering (React Email)
+- **Platform**: node
+
+---
+
+## Data Access Libraries (`libs/data-access/`)
+
+Database layer with repository pattern implementation.
+
+### @odis-ai/data-access/db
+
+- **Purpose**: Main re-export of Supabase clients and repositories
+- **Key exports**: `createServerClient`, `createBrowserClient`, `createServiceClient`, repository interfaces and implementations
+- **Note**: Convenience re-export; prefer specific imports for clarity
+- **Platform**: node
+
+### @odis-ai/data-access/supabase-client
+
+- **Purpose**: Supabase client initialization
+- **Key exports**: `createServerClient`, `createBrowserClient`, `createServiceClient`, `createProxyClient`
+- **Platform**: node + browser
+
+### @odis-ai/data-access/repository-interfaces
+
+- **Purpose**: Repository contracts for dependency injection
+- **Key exports**: `ICasesRepository`, `IUserRepository`, `ICallRepository`, `IEmailRepository`
+- **Usage**: Services accept these interfaces for testability
+- **Platform**: node
+
+### @odis-ai/data-access/repository-impl
+
+- **Purpose**: Concrete Supabase implementations
+- **Key exports**: `CasesRepository`, `UserRepository`, `CallRepository`, `EmailRepository`, `BaseRepository`
+- **Platform**: node
+
+### @odis-ai/data-access/api
+
+- **Purpose**: API helpers for server actions and routes
+- **Key exports**: `getAuthHeaders`, `corsHeaders`, `createApiResponse`, `ApiError`
+- **Platform**: node
+
+### @odis-ai/data-access/entities
+
+- **Purpose**: Domain entity helpers
+- **Key exports**: Scribe transaction entities
+- **Platform**: node
+
+---
+
+## Domain Libraries (`libs/domain/`)
+
+Business logic and feature-specific services.
+
+### @odis-ai/domain/cases
+
+- **Purpose**: Case management service layer
+- **Key exports**: `CasesService`
+- **Features**: Case CRUD, ingestion, status management, scheduling
+- **Dependencies**: Repository interfaces, VAPI, QStash
+- **Platform**: node
+
+### @odis-ai/domain/discharge
+
+- **Purpose**: Discharge workflow orchestration
+- **Key exports**: `DischargeOrchestrator`, `DischargeBatchProcessor`
+- **Features**: Batch processing, staggered scheduling, retry logic, call/email execution
+- **Test coverage**: Comprehensive batch stagger tests
+- **Platform**: node
+
+### @odis-ai/domain/shared
+
+- **Purpose**: Shared service utilities
+- **Key exports**: `ExecutionPlan`, service interfaces
+- **Platform**: node
+
+### @odis-ai/domain/clinics
+
+- **Purpose**: Clinic configuration and VAPI config helpers
+- **Key exports**: `getClinicByUserId`, `getVapiConfig`, `getClinicConfig`
+- **Platform**: neutral
+
+### @odis-ai/domain/auth
+
+- **Purpose**: Authentication utilities
+- **Platform**: neutral
+
+---
+
+## Integration Libraries (`libs/integrations/`)
+
+External service integrations.
+
+### @odis-ai/integrations/vapi
+
+- **Purpose**: VAPI voice AI integration (main library)
+- **Key exports**: `createPhoneCall`, `validateVariables`, `extractVariables`, webhook handlers, tool registry
+- **Sub-modules**:
+  - `webhooks/` - Webhook handlers (end-of-call, status-update, etc.)
+  - `tools/` - Tool registry and executor
+  - `knowledge-base/` - Medical specialty knowledge bases
+- **Interface**: `ICallClient` for testing
+- **Platform**: node
+
+### @odis-ai/integrations/idexx
+
+- **Purpose**: IDEXX Neo integration
+- **Key exports**: `transformIdexxData`, `CredentialManager`, `validateIdexxData`
+- **Platform**: node
+
+### @odis-ai/integrations/qstash
+
+- **Purpose**: QStash scheduling for delayed execution
+- **Key exports**: `scheduleCallExecution`, `QStashClient`
+- **Interface**: `IScheduler` for testing
+- **Platform**: node
+
+### @odis-ai/integrations/resend
+
+- **Purpose**: Email sending via Resend
+- **Key exports**: `sendEmail`, `ResendClient`
+- **Interface**: `IEmailClient` for testing
+- **Platform**: node
+
+### @odis-ai/integrations/slack
+
+- **Purpose**: Slack notifications and OAuth
+- **Key exports**: Slack client, message formatters
+- **Platform**: node
+
+### @odis-ai/integrations/ai
+
+- **Purpose**: AI/LLM utilities (LlamaIndex, Anthropic)
+- **Platform**: node
+
+### @odis-ai/integrations/retell
+
+- **Purpose**: Legacy Retell integration
+- **Status**: Deprecated - use VAPI
+- **Platform**: node
+
+---
+
+## Extension Libraries (`libs/extension/`)
+
+Chrome extension specific libraries.
+
+### @odis-ai/extension/shared
+
+- **Purpose**: Shared extension utilities
+- **Key exports**: Extension hooks, utilities
+- **Platform**: browser
+
+### @odis-ai/extension/storage
+
+- **Purpose**: Storage abstractions for Chrome extension
+- **Key exports**: `StorageArea`, storage hooks
+- **Platform**: browser
+
+### @odis-ai/extension/env
+
+- **Purpose**: Extension environment configuration
+- **Platform**: browser
+
+---
+
+## Dependency Tiers
+
+```
+Tier 0 (Foundation):     env, constants, crypto, logger, styles
+Tier 1 (Utilities):      types, validators, util, hooks
+Tier 2 (Data):           db, api, supabase-client, repository-*
+Tier 3 (Domain):         clinics, email, auth
+Tier 4 (Integration):    vapi, idexx, qstash, resend, slack, ai
+Tier 5 (Orchestration):  domain/cases, domain/discharge
+Tier 6 (Application):    apps/web, apps/chrome-extension
+```
+
+---
+
+## Related Documentation
+
+- [AGENTS.md](../../AGENTS.md) - Import conventions and patterns
+- [NX_BEST_PRACTICES.md](./NX_BEST_PRACTICES.md) - Nx workspace conventions
+- [NX_PROJECTS.md](../reference/NX_PROJECTS.md) - Generated project inventory
+- [TESTING_STRATEGY.md](../testing/TESTING_STRATEGY.md) - Testing approach
+
+---
+
+_Regenerate Nx inventory with `pnpm docs:nx`_
