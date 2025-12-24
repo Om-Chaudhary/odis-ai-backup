@@ -350,6 +350,10 @@ async function handleOutboundCallEnd(
   // Get structured data from analysis or artifact
   const structuredData = analysis.structuredData ?? artifact.structuredOutputs;
 
+  // Parse all structured outputs (new comprehensive intelligence)
+  const structuredOutputs =
+    parseAllStructuredOutputs(artifact.structuredOutputs) ?? {};
+
   // Get clinic name from metadata for transcript cleaning
   const clinicName = (metadata.clinic_name as string) ?? null;
   const transcript = call.transcript ?? null;
@@ -372,6 +376,13 @@ async function handleOutboundCallEnd(
     structured_data: structuredData,
     user_sentiment: userSentiment,
     cost,
+    // New structured output columns for comprehensive call intelligence
+    call_outcome_data: structuredOutputs.callOutcome,
+    pet_health_data: structuredOutputs.petHealth,
+    medication_compliance_data: structuredOutputs.medicationCompliance,
+    owner_sentiment_data: structuredOutputs.ownerSentiment,
+    escalation_data: structuredOutputs.escalation,
+    follow_up_data: structuredOutputs.followUp,
   };
 
   logger.info("Call ended - extracted data", {
@@ -386,6 +397,15 @@ async function handleOutboundCallEnd(
     hasTranscript: !!transcript,
     hasSummary: !!analysis.summary,
     userSentiment,
+    // New structured output availability
+    structuredOutputs: {
+      hasCallOutcome: !!structuredOutputs.callOutcome,
+      hasPetHealth: !!structuredOutputs.petHealth,
+      hasMedicationCompliance: !!structuredOutputs.medicationCompliance,
+      hasOwnerSentiment: !!structuredOutputs.ownerSentiment,
+      hasEscalation: !!structuredOutputs.escalation,
+      hasFollowUp: !!structuredOutputs.followUp,
+    },
   });
 
   // Handle attention case detection (new structured outputs)
@@ -475,6 +495,133 @@ function parseVapiStructuredOutput(
     }
   }
   return parsed;
+}
+
+/**
+ * Extract a specific structured output by name from VAPI's structuredOutputs
+ * VAPI returns multiple structured outputs keyed by UUID or name
+ * This finds the output matching the given schema name
+ */
+function extractStructuredOutputByName(
+  structuredOutputs: Record<string, unknown> | undefined,
+  schemaName: string,
+): Record<string, unknown> | null {
+  if (!structuredOutputs) return null;
+
+  // Look through all outputs to find one matching the schema name
+  for (const [key, value] of Object.entries(structuredOutputs)) {
+    if (!value || typeof value !== "object") continue;
+
+    const output = value as Record<string, unknown>;
+
+    // Check if the key matches the schema name directly
+    if (key === schemaName || key.includes(schemaName)) {
+      // If it has a 'result' property, extract that
+      if (
+        "result" in output &&
+        output.result &&
+        typeof output.result === "object"
+      ) {
+        return output.result as Record<string, unknown>;
+      }
+      return output;
+    }
+
+    // Check if there's a 'name' property that matches
+    if (output.name === schemaName) {
+      if (
+        "result" in output &&
+        output.result &&
+        typeof output.result === "object"
+      ) {
+        return output.result as Record<string, unknown>;
+      }
+      // Return the output without the 'name' field wrapper
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { name: _name, ...rest } = output;
+      return rest;
+    }
+
+    // Check if the output itself contains the schema's expected fields
+    // This handles cases where VAPI nests the data differently
+    if (schemaName === "call_outcome" && "call_outcome" in output) {
+      return output;
+    }
+    if (schemaName === "pet_health_status" && "pet_recovery_status" in output) {
+      return output;
+    }
+    if (
+      schemaName === "medication_compliance" &&
+      "medication_compliance" in output
+    ) {
+      return output;
+    }
+    if (schemaName === "owner_sentiment" && "owner_sentiment" in output) {
+      return output;
+    }
+    if (
+      schemaName === "escalation_tracking" &&
+      "escalation_triggered" in output
+    ) {
+      return output;
+    }
+    if (
+      schemaName === "follow_up_status" &&
+      ("recheck_reminder_delivered" in output ||
+        "follow_up_call_needed" in output)
+    ) {
+      return output;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Parse all structured outputs from VAPI's artifact
+ * Returns an object with each structured output category
+ */
+function parseAllStructuredOutputs(
+  structuredOutputs: Record<string, unknown> | undefined,
+): {
+  attentionClassification: Record<string, unknown>;
+  callOutcome: Record<string, unknown> | null;
+  petHealth: Record<string, unknown> | null;
+  medicationCompliance: Record<string, unknown> | null;
+  ownerSentiment: Record<string, unknown> | null;
+  escalation: Record<string, unknown> | null;
+  followUp: Record<string, unknown> | null;
+} {
+  // Parse the legacy attention classification (for backwards compatibility)
+  const attentionClassification = parseVapiStructuredOutput(structuredOutputs);
+
+  return {
+    attentionClassification,
+    callOutcome: extractStructuredOutputByName(
+      structuredOutputs,
+      "call_outcome",
+    ),
+    petHealth: extractStructuredOutputByName(
+      structuredOutputs,
+      "pet_health_status",
+    ),
+    medicationCompliance: extractStructuredOutputByName(
+      structuredOutputs,
+      "medication_compliance",
+    ),
+    ownerSentiment: extractStructuredOutputByName(
+      structuredOutputs,
+      "owner_sentiment",
+    ),
+    escalation: extractStructuredOutputByName(
+      structuredOutputs,
+      "escalation_tracking",
+    ),
+    followUp: extractStructuredOutputByName(
+      structuredOutputs,
+      "follow_up_status",
+    ),
+  };
 }
 
 async function handleAttentionCase(

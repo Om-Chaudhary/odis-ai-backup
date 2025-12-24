@@ -1,6 +1,6 @@
 /**
  * VAPI Client Library
- * 
+ *
  * SDK wrapper for VAPI with variable validation and knowledge base.
  */
 
