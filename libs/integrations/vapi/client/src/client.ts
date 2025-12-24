@@ -509,12 +509,8 @@ export async function listCalls(options?: {
   }
 }
 
-// Re-export status mapping utilities from webhooks/utils for backward compatibility
-export {
-  type CallStatus,
-  mapVapiStatus,
-  shouldMarkAsFailed,
-} from "./webhooks/utils";
+// Note: Status mapping utilities are available from @odis-ai/integrations/vapi/webhooks/utils
+// Consumers should import mapVapiStatus, shouldMarkAsFailed from there directly
 
 /**
  * Calculates total cost from VAPI costs array

@@ -9,6 +9,7 @@
 
 import { registerTool } from "./registry";
 import { loggers } from "@odis-ai/shared/logger";
+import { createServiceClient } from "@odis-ai/data-access/db/server";
 
 const logger = loggers.webhook.child("built-in-tools");
 
@@ -163,7 +164,6 @@ export function registerBuiltInTools(): void {
         }
 
         // Get clinic_id from assistant_id
-        const { createServiceClient } = await import("@odis-ai/data-access/db/server");
         const supabase = await createServiceClient();
 
         const { data: clinic } = await supabase

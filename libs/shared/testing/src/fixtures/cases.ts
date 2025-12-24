@@ -24,7 +24,9 @@ export interface MockPatient {
   updated_at: string;
 }
 
-export function createMockPatient(overrides?: Partial<MockPatient>): MockPatient {
+export function createMockPatient(
+  overrides?: Partial<MockPatient>,
+): MockPatient {
   const id = overrides?.id ?? `patient-${Date.now()}`;
   return {
     id,
@@ -74,7 +76,9 @@ export interface MockMedication {
   instructions?: string;
 }
 
-export function createMockMedication(overrides?: Partial<MockMedication>): MockMedication {
+export function createMockMedication(
+  overrides?: Partial<MockMedication>,
+): MockMedication {
   return {
     name: "Carprofen",
     dosage: "50mg",
@@ -87,31 +91,38 @@ export function createMockMedication(overrides?: Partial<MockMedication>): MockM
 
 export function createMockCase(overrides?: Partial<MockCase>): MockCase {
   const id = overrides?.id ?? `case-${Date.now()}`;
-  const procedureDate = overrides?.procedure_date ?? new Date().toISOString().split("T")[0];
+  const defaultDate =
+    new Date().toISOString().split("T")[0] ??
+    new Date().toISOString().slice(0, 10);
+  const procedureDate = overrides?.procedure_date ?? defaultDate;
 
-  return {
+  const base: MockCase = {
     id,
-    clinic_id: `clinic-${Date.now()}`,
-    patient_id: `patient-${Date.now()}`,
-    procedure_type: "Dental cleaning",
+    clinic_id: overrides?.clinic_id ?? `clinic-${Date.now()}`,
+    patient_id: overrides?.patient_id ?? `patient-${Date.now()}`,
+    procedure_type: overrides?.procedure_type ?? "Dental cleaning",
     procedure_date: procedureDate,
-    discharge_date: procedureDate,
-    status: "completed",
-    veterinarian_name: "Dr. Smith",
-    notes: "Routine dental procedure completed without complications.",
+    discharge_date: overrides?.discharge_date ?? procedureDate,
+    status: overrides?.status ?? "completed",
+    veterinarian_name: overrides?.veterinarian_name ?? "Dr. Smith",
+    notes:
+      overrides?.notes ??
+      "Routine dental procedure completed without complications.",
     discharge_instructions:
+      overrides?.discharge_instructions ??
       "Keep patient calm for 24 hours. Soft food only for 48 hours.",
-    medications: [createMockMedication()],
-    warning_signs: [
+    medications: overrides?.medications ?? [createMockMedication()],
+    warning_signs: overrides?.warning_signs ?? [
       "Excessive bleeding from gums",
       "Difficulty eating after 48 hours",
       "Signs of infection (swelling, discharge)",
     ],
-    follow_up_date: undefined,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    ...overrides,
+    follow_up_date: overrides?.follow_up_date,
+    created_at: overrides?.created_at ?? new Date().toISOString(),
+    updated_at: overrides?.updated_at ?? new Date().toISOString(),
   };
+
+  return base;
 }
 
 /**
@@ -142,9 +153,14 @@ export function createMockCaseList(
   options?: {
     clinicId?: string;
     statuses?: MockCase["status"][];
-  }
+  },
 ): MockCase[] {
-  const statuses = options?.statuses ?? ["scheduled", "in_progress", "completed", "discharged"];
+  const statuses = options?.statuses ?? [
+    "scheduled",
+    "in_progress",
+    "completed",
+    "discharged",
+  ];
 
   return Array.from({ length: count }, (_, i) => {
     const date = new Date();

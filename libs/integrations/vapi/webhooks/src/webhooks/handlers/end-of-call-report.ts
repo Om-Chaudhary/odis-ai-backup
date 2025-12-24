@@ -32,8 +32,8 @@ import {
   fetchExistingCall,
   type ExistingCallRecord,
 } from "./inbound-call-helpers";
-import type { VapiCallResponse } from "../../client";
-import { mapInboundCallToUser } from "../../inbound-calls";
+import type { VapiCallResponse } from "@odis-ai/integrations/vapi";
+import { mapInboundCallToUser } from "@odis-ai/integrations/vapi/inbound-calls";
 import { scheduleCallExecution } from "@odis-ai/integrations/qstash/client";
 import { cleanTranscript } from "@odis-ai/integrations/ai";
 

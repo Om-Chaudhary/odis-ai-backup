@@ -9,11 +9,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { loggers } from "@odis-ai/shared/logger";
 import type { VapiWebhookCall } from "../types";
-import type { VapiCallResponse } from "../../client";
+import type { VapiCallResponse } from "@odis-ai/integrations/vapi";
 import {
   formatInboundCallData,
   mapInboundCallToUser,
-} from "../../inbound-calls";
+} from "@odis-ai/integrations/vapi/inbound-calls";
 
 const logger = loggers.webhook.child("inbound-helpers");
 

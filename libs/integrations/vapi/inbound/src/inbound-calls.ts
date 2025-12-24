@@ -6,7 +6,7 @@
  */
 
 import { createServiceClient } from "@odis-ai/data-access/db";
-import type { VapiCallResponse } from "./client";
+import type { VapiCallResponse } from "@odis-ai/integrations/vapi";
 import { loggers } from "@odis-ai/shared/logger";
 import { getClinicByName } from "@odis-ai/domain/clinics/utils";
 import { getClinicByInboundAssistantId } from "@odis-ai/domain/clinics/vapi-config";
@@ -16,7 +16,7 @@ import {
   extractSentiment,
   mapVapiStatus,
   shouldMarkInboundCallAsFailed as shouldMarkInboundFailed,
-} from "./webhooks/utils";
+} from "@odis-ai/integrations/vapi/webhooks/utils";
 
 const logger = loggers.vapi.child("inbound-calls");
 

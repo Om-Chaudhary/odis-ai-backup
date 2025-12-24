@@ -16,7 +16,33 @@
  * ```
  */
 
-import type { ScheduledCall, CallStatus } from "../repositories/types";
+/**
+ * Call status types
+ */
+export type CallStatus =
+  | "queued"
+  | "in-progress"
+  | "completed"
+  | "failed"
+  | "canceled";
+
+/**
+ * Scheduled call entity
+ */
+export interface ScheduledCall extends Record<string, unknown> {
+  id: string;
+  user_id: string;
+  assistant_id: string;
+  phone_number_id: string;
+  customer_phone: string;
+  scheduled_for: string;
+  status: CallStatus;
+  vapi_call_id?: string | null;
+  dynamic_variables: Record<string, unknown>;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
 
 /**
  * Options for querying calls

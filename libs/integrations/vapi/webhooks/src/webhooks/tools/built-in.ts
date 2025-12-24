@@ -9,8 +9,62 @@
 
 import { registerTool } from "./registry";
 import { loggers } from "@odis-ai/shared/logger";
+import { createServiceClient } from "@odis-ai/data-access/db/server";
 
 const logger = loggers.webhook.child("built-in-tools");
+
+/**
+ * Get clinic hours based on day of week
+ * Currently configured for Alum Rock Animal Hospital
+ *
+ * @param date - Date string in YYYY-MM-DD format
+ * @returns Object with start_time and end_time in HH:MM format
+ */
+function getClinicHoursForDate(date: string): {
+  start_time: string;
+  end_time: string;
+  day_name: string;
+} {
+  const dateObj = new Date(date + "T00:00:00");
+  const dayOfWeek = dateObj.getDay(); // 0 = Sunday, 6 = Saturday
+
+  const dayNames = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+
+  // Alum Rock Animal Hospital Schedule:
+  // Monday-Friday: 8:00 AM - 7:00 PM
+  // Saturday: 8:00 AM - 6:00 PM
+  // Sunday: 9:00 AM - 5:00 PM
+  let start_time: string;
+  let end_time: string;
+
+  if (dayOfWeek === 0) {
+    // Sunday
+    start_time = "09:00";
+    end_time = "17:00";
+  } else if (dayOfWeek === 6) {
+    // Saturday
+    start_time = "08:00";
+    end_time = "18:00";
+  } else {
+    // Monday-Friday
+    start_time = "08:00";
+    end_time = "19:00";
+  }
+
+  return {
+    start_time,
+    end_time,
+    day_name: dayNames[dayOfWeek]!,
+  };
+}
 
 /**
  * Register all built-in tools
@@ -111,17 +165,17 @@ export function registerBuiltInTools(): void {
         callId: context.callId,
       });
 
-      // TODO: Fetch actual clinic hours from database
+      // Alum Rock Animal Hospital hours
       return {
         success: true,
         hours: {
-          monday: "8:00 AM - 6:00 PM",
-          tuesday: "8:00 AM - 6:00 PM",
-          wednesday: "8:00 AM - 6:00 PM",
-          thursday: "8:00 AM - 6:00 PM",
-          friday: "8:00 AM - 5:00 PM",
-          saturday: "9:00 AM - 2:00 PM",
-          sunday: "Closed",
+          monday: "8:00 AM - 7:00 PM",
+          tuesday: "8:00 AM - 7:00 PM",
+          wednesday: "8:00 AM - 7:00 PM",
+          thursday: "8:00 AM - 7:00 PM",
+          friday: "8:00 AM - 7:00 PM",
+          saturday: "8:00 AM - 6:00 PM",
+          sunday: "9:00 AM - 5:00 PM",
         },
         emergencyInfo:
           "For after-hours emergencies, please call our emergency line.",
@@ -163,7 +217,6 @@ export function registerBuiltInTools(): void {
         }
 
         // Get clinic_id from assistant_id
-        const { createServiceClient } = await import("@odis-ai/data-access/db/server");
         const supabase = await createServiceClient();
 
         const { data: clinic } = await supabase
@@ -182,11 +235,23 @@ export function registerBuiltInTools(): void {
           };
         }
 
-        // Build query params
+        // Get clinic hours for this specific day
+        const hours = getClinicHoursForDate(date);
+
+        logger.info("Using clinic hours", {
+          date,
+          day: hours.day_name,
+          start: hours.start_time,
+          end: hours.end_time,
+        });
+
+        // Build query params with day-specific hours
         const params = new URLSearchParams({
           clinic_id: clinic.id,
           date,
-          slot_duration_minutes: "30",
+          slot_duration_minutes: "15", // 15-minute intervals as configured
+          start_time: hours.start_time,
+          end_time: hours.end_time,
         });
 
         // If provider_name specified, look up provider_id

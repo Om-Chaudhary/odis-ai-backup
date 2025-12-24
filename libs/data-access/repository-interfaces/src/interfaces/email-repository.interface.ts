@@ -16,7 +16,30 @@
  * ```
  */
 
-import type { ScheduledEmail, EmailStatus } from "../repositories/types";
+/**
+ * Email status types
+ */
+export type EmailStatus = "queued" | "sent" | "failed" | "canceled";
+
+/**
+ * Scheduled email entity
+ */
+export interface ScheduledEmail extends Record<string, unknown> {
+  id: string;
+  user_id: string;
+  recipient_email: string;
+  recipient_name?: string | null;
+  subject: string;
+  html_content: string;
+  plain_content?: string | null;
+  scheduled_for: string;
+  status: EmailStatus;
+  metadata: Record<string, unknown>;
+  sent_at?: string | null;
+  error_message?: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 /**
  * Options for querying emails

@@ -43,7 +43,7 @@ export function createMockQueryBuilder(
   resolveWith: { data: unknown; error: null } | { data: null; error: Error } = {
     data: [],
     error: null,
-  }
+  },
 ): MockQueryBuilder {
   const builder: MockQueryBuilder = {} as MockQueryBuilder;
 
@@ -78,7 +78,9 @@ export function createMockQueryBuilder(
   // Terminal methods resolve the promise
   builder.single = vi.fn().mockResolvedValue(resolveWith);
   builder.maybeSingle = vi.fn().mockResolvedValue(resolveWith);
-  builder.then = vi.fn((resolve) => resolve(resolveWith));
+  builder.then = vi.fn((resolve: (value: typeof resolveWith) => void) =>
+    resolve(resolveWith),
+  );
 
   return builder;
 }
@@ -101,7 +103,10 @@ export interface MockSupabaseAuth {
 /**
  * Create a mock Supabase auth object
  */
-export function createMockSupabaseAuth(user?: User, session?: Session): MockSupabaseAuth {
+export function createMockSupabaseAuth(
+  user?: User,
+  session?: Session,
+): MockSupabaseAuth {
   return {
     getUser: vi.fn().mockResolvedValue({ data: { user }, error: null }),
     getSession: vi.fn().mockResolvedValue({ data: { session }, error: null }),
@@ -109,7 +114,9 @@ export function createMockSupabaseAuth(user?: User, session?: Session): MockSupa
       data: { user, session },
       error: null,
     }),
-    signInWithOAuth: vi.fn().mockResolvedValue({ data: { url: "" }, error: null }),
+    signInWithOAuth: vi
+      .fn()
+      .mockResolvedValue({ data: { url: "" }, error: null }),
     signUp: vi.fn().mockResolvedValue({ data: { user, session }, error: null }),
     signOut: vi.fn().mockResolvedValue({ error: null }),
     resetPasswordForEmail: vi.fn().mockResolvedValue({ error: null }),
@@ -146,10 +153,14 @@ export function createMockSupabaseClient(options?: {
 
   const storage = {
     from: vi.fn().mockReturnValue({
-      upload: vi.fn().mockResolvedValue({ data: { path: "test-path" }, error: null }),
+      upload: vi
+        .fn()
+        .mockResolvedValue({ data: { path: "test-path" }, error: null }),
       download: vi.fn().mockResolvedValue({ data: new Blob(), error: null }),
       remove: vi.fn().mockResolvedValue({ data: [], error: null }),
-      getPublicUrl: vi.fn().mockReturnValue({ data: { publicUrl: "https://test.com/file" } }),
+      getPublicUrl: vi
+        .fn()
+        .mockReturnValue({ data: { publicUrl: "https://test.com/file" } }),
       list: vi.fn().mockResolvedValue({ data: [], error: null }),
     }),
   };
@@ -159,7 +170,7 @@ export function createMockSupabaseClient(options?: {
     from,
     rpc,
     storage,
-  } as Partial<SupabaseClient>;
+  } as unknown as Partial<SupabaseClient>;
 
   return { client, auth, from, rpc, storage };
 }

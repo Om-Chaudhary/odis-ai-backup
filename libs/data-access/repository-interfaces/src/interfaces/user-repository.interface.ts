@@ -16,7 +16,15 @@
  * ```
  */
 
-import type { User } from "../repositories/types";
+/**
+ * User entity
+ */
+export interface User extends Record<string, unknown> {
+  id: string;
+  email: string;
+  created_at: string;
+  updated_at: string;
+}
 
 /**
  * User settings/preferences type

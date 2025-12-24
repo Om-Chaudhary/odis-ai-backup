@@ -55,7 +55,11 @@ export function createNodeTestSetup(options?: {
  * Mock console methods to suppress output during tests
  */
 export function suppressConsole(
-  methods: ("log" | "warn" | "error" | "info" | "debug")[] = ["log", "warn", "error"]
+  methods: ("log" | "warn" | "error" | "info" | "debug")[] = [
+    "log",
+    "warn",
+    "error",
+  ],
 ): { restore: () => void } {
   const originalMethods: Record<string, typeof console.log> = {};
 
@@ -77,11 +81,11 @@ export function suppressConsole(
  * Mock fetch globally
  */
 export function mockFetch(
-  handler: (url: string, init?: RequestInit) => Promise<Response>
+  handler: (url: string, init?: RequestInit) => Promise<Response>,
 ): { restore: () => void } {
   const originalFetch = global.fetch;
 
-  global.fetch = vi.fn(handler);
+  global.fetch = vi.fn(handler) as typeof global.fetch;
 
   return {
     restore: () => {
@@ -95,7 +99,7 @@ export function mockFetch(
  */
 export function createJsonFetchMock<T>(
   data: T,
-  options?: { status?: number; headers?: Record<string, string> }
+  options?: { status?: number; headers?: Record<string, string> },
 ): ReturnType<typeof vi.fn> {
   return vi.fn().mockResolvedValue(
     new Response(JSON.stringify(data), {
@@ -104,7 +108,7 @@ export function createJsonFetchMock<T>(
         "Content-Type": "application/json",
         ...options?.headers,
       },
-    })
+    }),
   );
 }
 
@@ -121,7 +125,7 @@ export async function flushPromises(): Promise<void> {
 export async function withTimeout<T>(
   promise: Promise<T>,
   ms: number,
-  message = "Operation timed out"
+  message = "Operation timed out",
 ): Promise<T> {
   const timeout = new Promise<never>((_, reject) => {
     setTimeout(() => reject(new Error(message)), ms);

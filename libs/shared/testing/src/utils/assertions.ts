@@ -1,7 +1,7 @@
 /**
  * Common test assertions and helpers
  */
-import { vi, type Mock } from "vitest";
+import { vi, expect, type Mock } from "vitest";
 
 /**
  * Assert that a mock was called with specific arguments
@@ -16,7 +16,10 @@ export function expectCalledWith<T extends Mock>(
 /**
  * Assert that a mock was called exactly n times
  */
-export function expectCalledTimes<T extends Mock>(mock: T, times: number): void {
+export function expectCalledTimes<T extends Mock>(
+  mock: T,
+  times: number,
+): void {
   expect(mock).toHaveBeenCalledTimes(times);
 }
 
@@ -32,7 +35,7 @@ export function expectNotCalled<T extends Mock>(mock: T): void {
  */
 export async function expectAsyncError(
   fn: () => Promise<unknown>,
-  errorMatch?: string | RegExp
+  errorMatch?: string | RegExp,
 ): Promise<void> {
   await expect(fn()).rejects.toThrow(errorMatch);
 }
@@ -42,7 +45,7 @@ export async function expectAsyncError(
  */
 export function expectToHaveProperties<T extends object>(
   obj: T,
-  properties: (keyof T)[]
+  properties: (keyof T)[],
 ): void {
   properties.forEach((prop) => {
     expect(obj).toHaveProperty(prop as string);
@@ -61,7 +64,12 @@ export function expectArrayLength<T>(arr: T[], length: number): void {
  */
 export function expectMatchesSchema<T>(
   value: unknown,
-  schema: { safeParse: (v: unknown) => { success: boolean; error?: { message: string } } }
+  schema: {
+    safeParse: (v: unknown) => {
+      success: boolean;
+      error?: { message: string };
+    };
+  },
 ): asserts value is T {
   const result = schema.safeParse(value);
   if (!result.success) {
@@ -72,7 +80,9 @@ export function expectMatchesSchema<T>(
 /**
  * Create a spy that tracks all calls and can be asserted against
  */
-export function createCallTracker<T extends (...args: unknown[]) => unknown>(): {
+export function createCallTracker<
+  T extends (...args: unknown[]) => unknown,
+>(): {
   fn: T;
   calls: Parameters<T>[];
   results: ReturnType<T>[];
@@ -95,7 +105,7 @@ export function createCallTracker<T extends (...args: unknown[]) => unknown>(): 
     reset: () => {
       calls.length = 0;
       results.length = 0;
-      (fn as Mock).mockClear();
+      (fn as unknown as Mock).mockClear();
     },
   };
 }
@@ -105,7 +115,7 @@ export function createCallTracker<T extends (...args: unknown[]) => unknown>(): 
  */
 export async function waitForCondition(
   condition: () => boolean | Promise<boolean>,
-  options: { timeout?: number; interval?: number } = {}
+  options: { timeout?: number; interval?: number } = {},
 ): Promise<void> {
   const { timeout = 5000, interval = 100 } = options;
   const start = Date.now();
