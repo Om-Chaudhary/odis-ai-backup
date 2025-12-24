@@ -1,47 +1,34 @@
 ---
+slug: /
 sidebar_position: 1
+title: Welcome to ODIS AI
+description: AI Voice Agents for Veterinary Clinics
 ---
 
-# Tutorial Intro
+# Welcome to ODIS AI Documentation
 
-Let's discover **Docusaurus in less than 5 minutes**.
+ODIS AI provides intelligent voice agents specifically designed for veterinary clinics. Our AI-powered system handles inbound and outbound calls, appointment scheduling, and patient follow-ups with natural, conversational interactions.
 
-## Getting Started
+## What is ODIS AI?
 
-Get started by **creating a new site**.
+ODIS AI is an AI voice agent platform that helps veterinary clinics:
 
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
+- **Handle Inbound Calls** - Never miss a client call with 24/7 AI-powered phone support
+- **Automate Discharge Calls** - Follow up with pet owners after visits automatically
+- **Schedule Appointments** - Book and manage appointments through natural conversation
+- **Integrate with Your Systems** - Connect seamlessly with IDEXX Neo and other practice management software
 
-### What you'll need
+## Quick Links
 
-- [Node.js](https://nodejs.org/en/download/) version 20.0 or above:
-  - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
+| Section                             | Description                            |
+| ----------------------------------- | -------------------------------------- |
+| [Getting Started](/getting-started) | Set up your first AI voice agent       |
+| [Guides](/guides)                   | Learn how to configure and customize   |
+| [API Reference](/api)               | Technical documentation for developers |
+| [Integrations](/integrations)       | Connect with your existing tools       |
+| [FAQ](/faq)                         | Common questions answered              |
 
-## Generate a new site
+## Need Help?
 
-Generate a new Docusaurus site using the **classic template**.
-
-The classic template will automatically be added to your project after you run the command:
-
-```bash
-npm init docusaurus@latest my-website classic
-```
-
-You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
-
-The command also installs all necessary dependencies you need to run Docusaurus.
-
-## Start your site
-
-Run the development server:
-
-```bash
-cd my-website
-npm run start
-```
-
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
-
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
-
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
+- **Email:** support@odis.ai
+- **Dashboard:** [odis.ai/dashboard](https://odis.ai/dashboard)
