@@ -13,7 +13,7 @@
 
 import type { SupabaseClientType } from "@odis-ai/types/supabase";
 import type { Database } from "@odis-ai/types";
-import type { CallExecutionResult } from "../types";
+import type { CallExecutionResult } from "@odis-ai/types/services";
 import { isWithinBusinessHours } from "@odis-ai/utils/business-hours";
 
 /* ========================================

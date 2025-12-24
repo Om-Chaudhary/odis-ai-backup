@@ -56,8 +56,5 @@ export { executeScheduledEmail } from "./lib/email-executor";
 export { generateDischargeEmailContent } from "./lib/email-content-generator";
 
 // Export types
-export type {
-  CallExecutionResult,
-  EmailExecutionResult,
-  ExecutorDependencies,
-} from "./types";
+export type { CallExecutionResult } from "@odis-ai/types/services";
+export type { EmailExecutionResult, ExecutorDependencies } from "./types";

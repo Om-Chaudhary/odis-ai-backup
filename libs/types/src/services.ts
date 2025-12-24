@@ -109,3 +109,30 @@ export interface ScheduledDischargeCall {
   created_at: string;
   updated_at: string;
 }
+
+/* ========================================
+   Call Execution Types
+   ======================================== */
+
+/**
+ * Result of executing a scheduled call
+ */
+export interface CallExecutionResult {
+  /** Whether the execution was successful */
+  success: boolean;
+
+  /** The scheduled call ID from the database */
+  callId: string;
+
+  /** VAPI call ID (if call was initiated) */
+  vapiCallId?: string;
+
+  /** Current status of the call */
+  status?: string;
+
+  /** Error message if execution failed */
+  error?: string;
+
+  /** Whether the call was already processed (prevents double execution) */
+  alreadyProcessed?: boolean;
+}

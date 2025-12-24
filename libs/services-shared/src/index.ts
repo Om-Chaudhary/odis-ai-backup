@@ -5,3 +5,4 @@
  */
 
 export * from "./lib/execution-plan";
+export * from "./lib/interfaces";
