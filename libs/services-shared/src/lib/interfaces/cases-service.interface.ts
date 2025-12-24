@@ -1,4 +1,5 @@
 import type { SupabaseClientType } from "@odis-ai/types/supabase";
+import type { Database } from "@odis-ai/types";
 import type {
   IngestPayload,
   CaseScheduleOptions,
@@ -6,11 +7,17 @@ import type {
 } from "@odis-ai/types/services";
 import type { NormalizedEntities } from "@odis-ai/validators";
 
+type CaseRow = Database["public"]["Tables"]["cases"]["Row"];
+type PatientRow = Database["public"]["Tables"]["patients"]["Row"];
+
 /**
- * Interface for case management operations
+ * Interface for case management operations needed by DischargeOrchestrator
  *
  * Breaks circular dependency by allowing services-discharge to depend on
  * this interface instead of concrete CasesService implementation.
+ *
+ * Note: CasesService implements these methods (and more), but this interface
+ * only exposes what DischargeOrchestrator needs.
  *
  * Implemented by: CasesService in @odis-ai/services-cases
  * Used by: DischargeOrchestrator in @odis-ai/services-discharge
@@ -18,11 +25,6 @@ import type { NormalizedEntities } from "@odis-ai/validators";
 export interface ICasesService {
   /**
    * Ingest case data from various sources (text, IDEXX, structured data)
-   *
-   * @param supabase - Supabase client for database operations
-   * @param userId - ID of user creating the case
-   * @param payload - Ingest payload with mode, data, and options
-   * @returns Case ID, extracted entities, and optional scheduled call
    */
   ingest(
     supabase: SupabaseClientType,
@@ -35,31 +37,34 @@ export interface ICasesService {
   }>;
 
   /**
-   * Schedule a discharge call for an existing case
-   *
-   * @param supabase - Supabase client for database operations
-   * @param userId - ID of user scheduling the call
-   * @param caseId - ID of case to schedule call for
-   * @param options - Scheduling options (time, variables, etc.)
-   * @returns Scheduled discharge call details
+   * Enrich entities with patient data from database
    */
-  scheduleCall(
+  enrichEntitiesWithPatient(
+    entities: NormalizedEntities | undefined,
+    patient: PatientRow | PatientRow[] | null,
+  ): void;
+
+  /**
+   * Get case with entities (returns subset of properties used by DischargeOrchestrator)
+   */
+  getCaseWithEntities(
+    supabase: SupabaseClientType,
+    caseId: string,
+  ): Promise<{
+    case: CaseRow;
+    entities?: NormalizedEntities;
+    patient?: PatientRow | PatientRow[] | null;
+    dischargeSummaries?: unknown;
+    metadata?: unknown;
+  } | null>;
+
+  /**
+   * Schedule a discharge call for an existing case
+   */
+  scheduleDischargeCall(
     supabase: SupabaseClientType,
     userId: string,
     caseId: string,
     options: CaseScheduleOptions,
   ): Promise<ScheduledDischargeCall>;
-
-  /**
-   * Update case status
-   *
-   * @param supabase - Supabase client for database operations
-   * @param caseId - ID of case to update
-   * @param status - New status value
-   */
-  updateStatus(
-    supabase: SupabaseClientType,
-    caseId: string,
-    status: string,
-  ): Promise<void>;
 }
