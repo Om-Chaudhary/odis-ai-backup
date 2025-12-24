@@ -1,6 +1,6 @@
 import { Input } from "@odis-ai/shared/ui/input";
 import { Label } from "@odis-ai/shared/ui/label";
-import { Info } from "lucide-react";
+import { Palette, Info, Image, Type } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -25,16 +25,31 @@ export function BrandingSection({
   watch,
   setValue,
 }: BrandingSectionProps) {
+  const primaryColor = watch("primaryColor") ?? "#2563EB";
+
   return (
-    <div className="space-y-4">
-      <div className="grid gap-5">
+    <div className="space-y-8">
+      {/* Brand Colors */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-pink-100/80 text-pink-600">
+            <Palette className="h-3.5 w-3.5" />
+          </div>
+          <h4 className="text-sm font-medium text-slate-700">Brand Colors</h4>
+        </div>
+
         <div className="grid gap-2">
           <div className="flex items-center gap-2">
-            <Label htmlFor="primaryColor">Primary Brand Color</Label>
+            <Label
+              htmlFor="primaryColor"
+              className="text-sm font-medium text-slate-700"
+            >
+              Primary Brand Color
+            </Label>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                  <Info className="h-4 w-4 cursor-help text-slate-400 transition-colors hover:text-slate-600" />
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs">
                   <p className="text-sm">
@@ -49,14 +64,14 @@ export function BrandingSection({
             <Input
               id="primaryColor"
               type="color"
-              className="h-10 w-16 cursor-pointer p-1"
+              className="h-10 w-14 cursor-pointer overflow-hidden rounded-md border border-slate-200 p-1"
               {...register("primaryColor")}
             />
             <Input
               type="text"
               placeholder="#2563EB"
-              className="flex-1 font-mono"
-              value={watch("primaryColor") ?? "#2563EB"}
+              className="max-w-32 border-slate-200 font-mono text-sm focus:border-teal-400 focus:ring-teal-400/20"
+              value={primaryColor}
               onChange={(e) => {
                 const value = e.target.value;
                 if (/^#[0-9A-Fa-f]{0,6}$/.test(value) || value === "") {
@@ -66,19 +81,41 @@ export function BrandingSection({
                 }
               }}
             />
+            <div
+              className="h-10 w-10 shrink-0 rounded-md border border-slate-200"
+              style={{ backgroundColor: primaryColor }}
+            />
           </div>
-          <p className="text-muted-foreground text-xs">
+          <p className="text-xs text-slate-500">
             Used for headers, buttons, and accents in discharge emails.
           </p>
+        </div>
+      </div>
+
+      {/* Logo */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-cyan-100/80 text-cyan-600">
+            <Image className="h-3.5 w-3.5" />
+          </div>
+          <h4 className="text-sm font-medium text-slate-700">Logo</h4>
         </div>
 
         <div className="grid gap-2">
           <div className="flex items-center gap-2">
-            <Label htmlFor="logoUrl">Logo URL</Label>
+            <Label
+              htmlFor="logoUrl"
+              className="text-sm font-medium text-slate-700"
+            >
+              Logo URL
+            </Label>
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+              Optional
+            </span>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                  <Info className="h-4 w-4 cursor-help text-slate-400 transition-colors hover:text-slate-600" />
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs">
                   <p className="text-sm">
@@ -93,35 +130,67 @@ export function BrandingSection({
             id="logoUrl"
             type="url"
             placeholder="https://example.com/logo.png"
+            className="max-w-lg border-slate-200 focus:border-teal-400 focus:ring-teal-400/20"
             {...register("logoUrl")}
           />
-          <p className="text-muted-foreground text-xs">
-            Optional: Display your clinic logo in email headers.
-          </p>
+        </div>
+      </div>
+
+      {/* Custom Text */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-orange-100/80 text-orange-600">
+            <Type className="h-3.5 w-3.5" />
+          </div>
+          <h4 className="text-sm font-medium text-slate-700">Custom Text</h4>
         </div>
 
-        <div className="grid gap-2">
-          <Label htmlFor="emailHeaderText">Custom Header Text</Label>
-          <Input
-            id="emailHeaderText"
-            placeholder="Thank you for trusting us with your pet's care!"
-            {...register("emailHeaderText")}
-          />
-          <p className="text-muted-foreground text-xs">
-            Optional: Custom welcome message for discharge emails.
-          </p>
-        </div>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-2">
+            <div className="flex items-center gap-2">
+              <Label
+                htmlFor="emailHeaderText"
+                className="text-sm font-medium text-slate-700"
+              >
+                Header Text
+              </Label>
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+                Optional
+              </span>
+            </div>
+            <Input
+              id="emailHeaderText"
+              placeholder="Thank you for trusting us..."
+              className="border-slate-200 focus:border-teal-400 focus:ring-teal-400/20"
+              {...register("emailHeaderText")}
+            />
+            <p className="text-xs text-slate-500">
+              Custom welcome message for discharge emails.
+            </p>
+          </div>
 
-        <div className="grid gap-2">
-          <Label htmlFor="emailFooterText">Custom Footer Text</Label>
-          <Input
-            id="emailFooterText"
-            placeholder="Questions? Call us at (555) 123-4567"
-            {...register("emailFooterText")}
-          />
-          <p className="text-muted-foreground text-xs">
-            Optional: Custom footer message for discharge emails.
-          </p>
+          <div className="grid gap-2">
+            <div className="flex items-center gap-2">
+              <Label
+                htmlFor="emailFooterText"
+                className="text-sm font-medium text-slate-700"
+              >
+                Footer Text
+              </Label>
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+                Optional
+              </span>
+            </div>
+            <Input
+              id="emailFooterText"
+              placeholder="Questions? Call us at..."
+              className="border-slate-200 focus:border-teal-400 focus:ring-teal-400/20"
+              {...register("emailFooterText")}
+            />
+            <p className="text-xs text-slate-500">
+              Custom footer message for discharge emails.
+            </p>
+          </div>
         </div>
       </div>
     </div>

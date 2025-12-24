@@ -13,7 +13,12 @@ import {
   Mail,
 } from "lucide-react";
 import { Badge } from "@odis-ai/shared/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/shared/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@odis-ai/shared/ui/tabs";
 import { EmptyState } from "@odis-ai/shared/ui";
 import { DischargeListItem } from "./discharge-list-item";
 import { type CallEndReasonFilter } from "../filters/consolidated-filter-bar";

@@ -1,7 +1,12 @@
 "use client";
 
 import { api } from "~/trpc/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@odis-ai/shared/ui/card";
 import { Skeleton } from "@odis-ai/shared/ui/skeleton";
 import { NumberTicker } from "@odis-ai/shared/ui/number-ticker";
 import {

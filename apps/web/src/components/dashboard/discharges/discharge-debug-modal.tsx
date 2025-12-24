@@ -9,7 +9,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@odis-ai/shared/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@odis-ai/shared/ui/card";
 import { Badge } from "@odis-ai/shared/ui/badge";
 import type { DashboardCase, DischargeSettings } from "@odis-ai/shared/types";
 

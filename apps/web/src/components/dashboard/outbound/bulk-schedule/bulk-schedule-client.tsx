@@ -23,8 +23,17 @@ import { cn } from "@odis-ai/shared/util";
 import { Button } from "@odis-ai/shared/ui/button";
 import { Checkbox } from "@odis-ai/shared/ui/checkbox";
 import { Calendar } from "@odis-ai/shared/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
-import { Popover, PopoverContent, PopoverTrigger } from "@odis-ai/shared/ui/popover";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@odis-ai/shared/ui/card";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@odis-ai/shared/ui/popover";
 import {
   Select,
   SelectContent,
@@ -831,7 +840,7 @@ function ProcessingStep({
 
 // Step 4: Complete
 function CompleteStep({
-  total,
+  total: _total,
   successCount,
   failedCount,
 }: {

@@ -12,7 +12,12 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@odis-ai/shared/ui/card";
 import { AudioPlayer } from "@odis-ai/shared/ui/audio-player";
 import { Badge } from "@odis-ai/shared/ui/badge";
 import { Button } from "@odis-ai/shared/ui/button";

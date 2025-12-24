@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { format, addHours, setHours, setMinutes, startOfHour } from "date-fns";
+import { format, setHours, setMinutes } from "date-fns";
 import {
   Phone,
   Mail,
@@ -26,7 +26,11 @@ import {
 import { Button } from "@odis-ai/shared/ui/button";
 import { Checkbox } from "@odis-ai/shared/ui/checkbox";
 import { Calendar } from "@odis-ai/shared/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@odis-ai/shared/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@odis-ai/shared/ui/popover";
 import {
   Select,
   SelectContent,

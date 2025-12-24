@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { Button } from "@odis-ai/shared/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@odis-ai/shared/ui/card";
 import {
   Phone,
   Clock,

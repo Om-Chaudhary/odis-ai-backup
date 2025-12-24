@@ -1,4 +1,9 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/shared/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@odis-ai/shared/ui/tabs";
 import { Mail, Phone } from "lucide-react";
 import { CallTabContent } from "./call-tab-content";
 import { EmailTabContent } from "./email-tab-content";

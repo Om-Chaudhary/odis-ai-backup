@@ -30,6 +30,9 @@ export { OutboundPagination } from "./outbound-pagination";
 export { OutboundCaseDetail } from "./outbound-case-detail";
 export * from "./detail";
 
+// Analytics widgets
+export * from "./analytics";
+
 // Error handling
 export { OutboundErrorBoundary } from "./outbound-error-boundary";
 

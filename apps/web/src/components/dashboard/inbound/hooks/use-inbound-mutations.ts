@@ -16,11 +16,7 @@ interface UseInboundMutationsOptions {
  * Hook for managing inbound mutations (updates, deletes)
  */
 export function useInboundMutations(options: UseInboundMutationsOptions = {}) {
-  const {
-    onAppointmentSuccess,
-    onMessageSuccess,
-    onCallSuccess,
-  } = options;
+  const { onAppointmentSuccess, onMessageSuccess, onCallSuccess } = options;
 
   // Mutations
   const updateAppointment = api.inbound.updateAppointmentRequest.useMutation({

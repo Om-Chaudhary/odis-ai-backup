@@ -17,3 +17,6 @@ export * from "./communications-intelligence-card";
 export * from "./smart-action-section";
 export * from "./communication-preview";
 export * from "./preview-text";
+
+// Call intelligence structured outputs
+export * from "./call-intelligence";

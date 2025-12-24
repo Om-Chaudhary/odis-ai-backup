@@ -1,14 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import {
-  AlertTriangle,
-  Check,
-  X,
-  Phone,
-  Mail,
-  Pencil,
-} from "lucide-react";
+import { AlertTriangle, Check, X, Phone, Mail, Pencil } from "lucide-react";
 import {
   Table,
   TableBody,

@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@odis-ai/shared/ui/card";
 import { Button } from "@odis-ai/shared/ui/button";
 import { Phone, Mail, ChevronDown, ChevronUp } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";

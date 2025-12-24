@@ -1,6 +1,11 @@
 "use client";
 import { Phone, FileText, AlertCircle } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@odis-ai/shared/ui/card";
 import { AudioPlayer } from "@odis-ai/shared/ui/audio-player";
 import { cn } from "@odis-ai/shared/util";
 

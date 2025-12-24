@@ -1,6 +1,11 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@odis-ai/shared/ui/card";
 import { Activity } from "lucide-react";
 import type { DailyActivityAggregate } from "@odis-ai/shared/types";
 import { cn } from "@odis-ai/shared/util";

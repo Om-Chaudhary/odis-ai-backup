@@ -2,7 +2,11 @@
 
 import { useCallback } from "react";
 import { Button } from "@odis-ai/shared/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@odis-ai/shared/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@odis-ai/shared/ui/tooltip";
 import {
   AlertCircle,
   FileText,

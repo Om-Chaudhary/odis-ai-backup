@@ -5,9 +5,9 @@ import type { ComplianceSection } from "~/components/legal/compliance-document";
  */
 
 export const COMPANY_NAME = "OdisAI, Inc.";
-export const CONTACT_EMAIL = "admin@odisai.net"; 
-export const COMPANY_ADDRESS = "N/A"; 
-export const LAST_UPDATED = "December 1, 2025"; 
+export const CONTACT_EMAIL = "admin@odisai.net";
+export const COMPANY_ADDRESS = "N/A";
+export const LAST_UPDATED = "December 1, 2025";
 export const EFFECTIVE_DATE = "June 9, 2025";
 
 export const privacyPolicySections: ComplianceSection[] = [

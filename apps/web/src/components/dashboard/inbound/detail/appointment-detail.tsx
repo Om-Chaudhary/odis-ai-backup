@@ -5,7 +5,12 @@ import { Button } from "@odis-ai/shared/ui/button";
 import { Badge } from "@odis-ai/shared/ui/badge";
 import { Textarea } from "@odis-ai/shared/ui/textarea";
 import { Separator } from "@odis-ai/shared/ui/separator";
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@odis-ai/shared/ui/card";
 import {
   Calendar,
   CalendarCheck,

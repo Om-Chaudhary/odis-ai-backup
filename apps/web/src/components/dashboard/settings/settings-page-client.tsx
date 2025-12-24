@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
   Building2,
   Palette,
@@ -9,56 +8,66 @@ import {
   Send,
   PhoneIncoming,
   Loader2,
+  ChevronRight,
+  Save,
 } from "lucide-react";
-import { DischargeSettingsForm } from "./discharge-settings";
 import { api } from "~/trpc/client";
 import type { DischargeSettings } from "@odis-ai/shared/types";
 import { toast } from "sonner";
 import { cn } from "@odis-ai/shared/util";
+import { useForm } from "react-hook-form";
+import { Button } from "@odis-ai/shared/ui/button";
 import {
-  PageContainer,
-  PageHeader,
-  PageContent,
-} from "../layout/page-container";
+  ClinicInfoSection,
+  EmailSchedulingSection,
+  CallSchedulingSection,
+  BatchPreferencesSection,
+  VapiConfigSection,
+  BrandingSection,
+  SystemSettingsSection,
+} from "./discharge-settings/sections";
 
-const TABS = [
+const NAV_ITEMS = [
   {
     id: "clinic",
-    label: "Clinic Info",
+    label: "Clinic Profile",
     icon: Building2,
-    description: "Basic clinic details and contact information",
   },
   {
     id: "outbound",
-    label: "Outbound",
+    label: "Outbound Scheduling",
     icon: Send,
-    description: "Discharge scheduling and follow-up preferences",
   },
   {
     id: "branding",
-    label: "Branding",
+    label: "Email Branding",
     icon: Palette,
-    description: "Email appearance and custom messaging",
   },
   {
     id: "inbound",
-    label: "Inbound",
+    label: "Inbound Calls",
     icon: PhoneIncoming,
-    description: "VAPI configuration for incoming calls",
   },
   {
     id: "system",
-    label: "System",
+    label: "System & Testing",
     icon: SettingsIcon,
-    description: "Advanced settings and test mode",
   },
 ] as const;
 
-type TabId = (typeof TABS)[number]["id"];
+type SectionId = (typeof NAV_ITEMS)[number]["id"];
 
 export function SettingsPageClient() {
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabId>("clinic");
+  const [activeSection, setActiveSection] = useState<SectionId>("clinic");
+  const [isScrolled, setIsScrolled] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const sectionRefs = useRef<Record<SectionId, HTMLElement | null>>({
+    clinic: null,
+    outbound: null,
+    branding: null,
+    inbound: null,
+    system: null,
+  });
 
   const { data: settingsData, refetch: refetchSettings } =
     api.cases.getDischargeSettings.useQuery();
@@ -73,7 +82,7 @@ export function SettingsPageClient() {
     },
   });
 
-  const settings: DischargeSettings = settingsData ?? {
+  const defaultSettings: DischargeSettings = {
     clinicName: "",
     clinicPhone: "",
     clinicEmail: "",
@@ -100,133 +109,327 @@ export function SettingsPageClient() {
     batchIncludeManualTranscriptions: true,
   };
 
-  const handleSave = (newSettings: DischargeSettings) => {
+  const settings = useMemo(
+    () => settingsData ?? defaultSettings,
+    [settingsData],
+  );
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { isDirty, errors },
+  } = useForm<DischargeSettings>({
+    defaultValues: settings,
+  });
+
+  useEffect(() => {
+    if (settingsData) {
+      reset(settingsData);
+    }
+  }, [settingsData, reset]);
+
+  const handleSave = (data: DischargeSettings) => {
     updateSettingsMutation.mutate({
-      clinicName: newSettings.clinicName || undefined,
-      clinicPhone: newSettings.clinicPhone || undefined,
-      clinicEmail: newSettings.clinicEmail || undefined,
-      emergencyPhone: newSettings.emergencyPhone || undefined,
-      testModeEnabled: newSettings.testModeEnabled,
-      testContactName: newSettings.testContactName ?? undefined,
-      testContactEmail: newSettings.testContactEmail ?? undefined,
-      testContactPhone: newSettings.testContactPhone ?? undefined,
-      voicemailDetectionEnabled: newSettings.voicemailDetectionEnabled,
-      defaultScheduleDelayMinutes:
-        newSettings.defaultScheduleDelayMinutes ?? null,
-      primaryColor: newSettings.primaryColor ?? undefined,
-      logoUrl: newSettings.logoUrl ?? null,
-      emailHeaderText: newSettings.emailHeaderText ?? null,
-      emailFooterText: newSettings.emailFooterText ?? null,
-      preferredEmailStartTime: newSettings.preferredEmailStartTime ?? null,
-      preferredEmailEndTime: newSettings.preferredEmailEndTime ?? null,
-      preferredCallStartTime: newSettings.preferredCallStartTime ?? null,
-      preferredCallEndTime: newSettings.preferredCallEndTime ?? null,
-      emailDelayDays: newSettings.emailDelayDays ?? null,
-      callDelayDays: newSettings.callDelayDays ?? null,
-      maxCallRetries: newSettings.maxCallRetries ?? null,
-      batchIncludeIdexxNotes: newSettings.batchIncludeIdexxNotes,
-      batchIncludeManualTranscriptions:
-        newSettings.batchIncludeManualTranscriptions,
+      clinicName: data.clinicName || undefined,
+      clinicPhone: data.clinicPhone || undefined,
+      clinicEmail: data.clinicEmail || undefined,
+      emergencyPhone: data.emergencyPhone || undefined,
+      testModeEnabled: data.testModeEnabled,
+      testContactName: data.testContactName ?? undefined,
+      testContactEmail: data.testContactEmail ?? undefined,
+      testContactPhone: data.testContactPhone ?? undefined,
+      voicemailDetectionEnabled: data.voicemailDetectionEnabled,
+      defaultScheduleDelayMinutes: data.defaultScheduleDelayMinutes ?? null,
+      primaryColor: data.primaryColor ?? undefined,
+      logoUrl: data.logoUrl ?? null,
+      emailHeaderText: data.emailHeaderText ?? null,
+      emailFooterText: data.emailFooterText ?? null,
+      preferredEmailStartTime: data.preferredEmailStartTime ?? null,
+      preferredEmailEndTime: data.preferredEmailEndTime ?? null,
+      preferredCallStartTime: data.preferredCallStartTime ?? null,
+      preferredCallEndTime: data.preferredCallEndTime ?? null,
+      emailDelayDays: data.emailDelayDays ?? null,
+      callDelayDays: data.callDelayDays ?? null,
+      maxCallRetries: data.maxCallRetries ?? null,
+      batchIncludeIdexxNotes: data.batchIncludeIdexxNotes,
+      batchIncludeManualTranscriptions: data.batchIncludeManualTranscriptions,
     });
   };
 
-  const handleCancel = () => {
-    router.back();
+  const scrollToSection = (sectionId: SectionId) => {
+    setActiveSection(sectionId);
+    const element = sectionRefs.current[sectionId];
+    if (element && contentRef.current) {
+      const container = contentRef.current;
+      const elementTop = element.offsetTop - container.offsetTop;
+      container.scrollTo({
+        top: elementTop - 24,
+        behavior: "smooth",
+      });
+    }
   };
 
-  const activeTabData = TABS.find((tab) => tab.id === activeTab);
+  // Track scroll position to update active section and show/hide save bar
+  useEffect(() => {
+    const container = contentRef.current;
+    if (!container) return;
+
+    const handleScroll = () => {
+      const scrollTop = container.scrollTop;
+      setIsScrolled(scrollTop > 50);
+
+      const scrollPosition = scrollTop + 100;
+      for (const item of NAV_ITEMS) {
+        const element = sectionRefs.current[item.id];
+        if (element) {
+          const elementTop = element.offsetTop - container.offsetTop;
+          const elementBottom = elementTop + element.offsetHeight;
+
+          if (scrollPosition >= elementTop && scrollPosition < elementBottom) {
+            setActiveSection(item.id);
+            break;
+          }
+        }
+      }
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const showSaveBar = isDirty || isScrolled;
 
   return (
-    <PageContainer>
-      {/* Header */}
-      <PageHeader className="flex-col items-start gap-1 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-lg font-semibold text-slate-800">Settings</h1>
-          <p className="text-sm text-slate-500">
-            Manage your clinic profile and discharge preferences
-          </p>
-        </div>
-        {updateSettingsMutation.isPending && (
-          <div className="flex items-center gap-2 text-sm text-teal-600">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Saving...</span>
-          </div>
-        )}
-      </PageHeader>
-
-      {/* Tab Navigation */}
-      <div className="shrink-0 border-b border-teal-100/50 bg-white/30 backdrop-blur-sm">
-        <div className="flex overflow-x-auto px-4">
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={cn(
-                  "group relative flex shrink-0 items-center gap-2 px-4 py-3 text-sm font-medium transition-all",
-                  "hover:text-teal-700",
-                  isActive
-                    ? "text-teal-700"
-                    : "text-slate-500 hover:text-slate-700",
-                )}
-              >
-                <Icon
-                  className={cn(
-                    "h-4 w-4 transition-colors",
-                    isActive
-                      ? "text-teal-600"
-                      : "text-slate-400 group-hover:text-slate-500",
-                  )}
-                />
-                <span className="hidden sm:inline">{tab.label}</span>
-                {/* Active indicator */}
-                {isActive && (
-                  <span className="absolute right-0 bottom-0 left-0 h-0.5 bg-gradient-to-r from-teal-500 to-emerald-500" />
-                )}
-              </button>
-            );
-          })}
-        </div>
+    <div className="flex h-full">
+      {/* Minimal Sidebar Navigation */}
+      <div className="flex w-52 shrink-0 flex-col border-r border-slate-200/40">
+        <nav className="flex-1 overflow-y-auto px-3 py-6">
+          <ul className="space-y-0.5">
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeSection === item.id;
+              return (
+                <li key={item.id}>
+                  <button
+                    onClick={() => scrollToSection(item.id)}
+                    className={cn(
+                      "group flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-[13px] transition-all",
+                      isActive
+                        ? "bg-teal-50/80 text-teal-700"
+                        : "text-slate-500 hover:bg-slate-50 hover:text-slate-700",
+                    )}
+                  >
+                    <Icon
+                      className={cn(
+                        "h-4 w-4 shrink-0",
+                        isActive
+                          ? "text-teal-600"
+                          : "text-slate-400 group-hover:text-slate-500",
+                      )}
+                    />
+                    <span className="font-medium">{item.label}</span>
+                    <ChevronRight
+                      className={cn(
+                        "ml-auto h-3.5 w-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100",
+                        isActive && "text-teal-500 opacity-100",
+                      )}
+                    />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
       </div>
 
-      {/* Content Area */}
-      <PageContent className="bg-gradient-to-b from-white/20 to-teal-50/10">
-        <div className="mx-auto max-w-3xl p-6">
-          {/* Tab Description Card */}
-          <div className="mb-6 rounded-xl border border-teal-100/60 bg-gradient-to-br from-white/80 via-teal-50/30 to-white/80 p-4 shadow-sm backdrop-blur-sm">
-            <div className="flex items-center gap-3">
-              {activeTabData && (
-                <>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-emerald-500 text-white shadow-md shadow-teal-500/20">
-                    <activeTabData.icon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h2 className="font-semibold text-slate-800">
-                      {activeTabData.label}
-                    </h2>
-                    <p className="text-sm text-slate-500">
-                      {activeTabData.description}
-                    </p>
-                  </div>
-                </>
-              )}
+      {/* Main Content Area */}
+      <div ref={contentRef} className="flex-1 overflow-y-auto">
+        <form onSubmit={handleSubmit(handleSave)}>
+          {/* Clinic Profile Section */}
+          <section
+            ref={(el) => {
+              sectionRefs.current.clinic = el;
+            }}
+            id="clinic"
+            className="border-b border-slate-100 px-8 py-6"
+          >
+            <div className="mb-5">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-teal-100/80 text-teal-600">
+                  <Building2 className="h-4 w-4" />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">
+                    Clinic Profile
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Basic clinic details and contact information
+                  </p>
+                </div>
+              </div>
+            </div>
+            <ClinicInfoSection
+              register={register}
+              errors={errors}
+              settings={settings}
+              showSeparator={false}
+            />
+          </section>
+
+          {/* Outbound Scheduling Section */}
+          <section
+            ref={(el) => {
+              sectionRefs.current.outbound = el;
+            }}
+            id="outbound"
+            className="border-b border-slate-100 px-8 py-6"
+          >
+            <div className="mb-5">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-blue-100/80 text-blue-600">
+                  <Send className="h-4 w-4" />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">
+                    Outbound Scheduling
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Configure when discharge emails and follow-up calls are sent
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-8">
+              <EmailSchedulingSection watch={watch} setValue={setValue} />
+              <CallSchedulingSection watch={watch} setValue={setValue} />
+              <BatchPreferencesSection watch={watch} setValue={setValue} />
+            </div>
+          </section>
+
+          {/* Branding Section */}
+          <section
+            ref={(el) => {
+              sectionRefs.current.branding = el;
+            }}
+            id="branding"
+            className="border-b border-slate-100 px-8 py-6"
+          >
+            <div className="mb-5">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-pink-100/80 text-pink-600">
+                  <Palette className="h-4 w-4" />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">
+                    Email Branding
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Customize the appearance of your discharge emails
+                  </p>
+                </div>
+              </div>
+            </div>
+            <BrandingSection
+              register={register}
+              watch={watch}
+              setValue={setValue}
+            />
+          </section>
+
+          {/* Inbound Calls Section */}
+          <section
+            ref={(el) => {
+              sectionRefs.current.inbound = el;
+            }}
+            id="inbound"
+            className="border-b border-slate-100 px-8 py-6"
+          >
+            <div className="mb-5">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-green-100/80 text-green-600">
+                  <PhoneIncoming className="h-4 w-4" />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">
+                    Inbound Calls
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    VAPI configuration for handling incoming calls
+                  </p>
+                </div>
+              </div>
+            </div>
+            <VapiConfigSection register={register} />
+          </section>
+
+          {/* System & Testing Section */}
+          <section
+            ref={(el) => {
+              sectionRefs.current.system = el;
+            }}
+            id="system"
+            className="px-8 py-6 pb-20"
+          >
+            <div className="mb-5">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-amber-100/80 text-amber-600">
+                  <SettingsIcon className="h-4 w-4" />
+                </div>
+                <div>
+                  <h2 className="text-base font-semibold text-slate-900">
+                    System & Testing
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Advanced settings, voicemail detection, and test mode
+                  </p>
+                </div>
+              </div>
+            </div>
+            <SystemSettingsSection
+              register={register}
+              watch={watch}
+              setValue={setValue}
+              errors={errors}
+            />
+          </section>
+
+          {/* Floating Save Bar - appears on scroll or when dirty */}
+          <div
+            className={cn(
+              "fixed bottom-4 left-1/2 z-10 -translate-x-1/2 transition-all duration-300",
+              showSaveBar
+                ? "translate-y-0 opacity-100"
+                : "pointer-events-none translate-y-4 opacity-0",
+            )}
+          >
+            <div className="flex items-center gap-4 rounded-full border border-slate-200/60 bg-white/80 px-4 py-2.5 shadow-lg backdrop-blur-md">
+              <span className="text-sm text-slate-500">
+                {isDirty ? (
+                  <span className="text-amber-600">Unsaved changes</span>
+                ) : (
+                  "All changes saved"
+                )}
+              </span>
+              <Button
+                type="submit"
+                disabled={!isDirty || updateSettingsMutation.isPending}
+                size="sm"
+                className="rounded-full bg-teal-600 px-4 hover:bg-teal-700"
+              >
+                {updateSettingsMutation.isPending ? (
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Save className="mr-1.5 h-3.5 w-3.5" />
+                )}
+                Save
+              </Button>
             </div>
           </div>
-
-          {/* Form Content */}
-          <div className="rounded-xl border border-teal-100/60 bg-gradient-to-br from-white/90 via-white/80 to-teal-50/40 p-6 shadow-lg shadow-teal-500/5 backdrop-blur-md">
-            <DischargeSettingsForm
-              settings={settings}
-              onSave={handleSave}
-              onCancel={handleCancel}
-              isLoading={updateSettingsMutation.isPending}
-              view={activeTab}
-            />
-          </div>
-        </div>
-      </PageContent>
-    </PageContainer>
+        </form>
+      </div>
+    </div>
   );
 }

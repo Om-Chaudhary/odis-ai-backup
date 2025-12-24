@@ -1,8 +1,6 @@
 import { Input } from "@odis-ai/shared/ui/input";
 import { Label } from "@odis-ai/shared/ui/label";
-import { Alert, AlertDescription } from "@odis-ai/shared/ui/alert";
-import { Separator } from "@odis-ai/shared/ui/separator";
-import { Phone, Info } from "lucide-react";
+import { PhoneIncoming, PhoneOutgoing, Info, ExternalLink } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -18,45 +16,58 @@ interface VapiConfigSectionProps {
 
 export function VapiConfigSection({ register }: VapiConfigSectionProps) {
   return (
-    <div className="space-y-6">
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          Configure your VAPI phone numbers and assistants for handling inbound
-          and outbound calls. These IDs can be found in your{" "}
-          <a
-            href="https://dashboard.vapi.ai"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline"
-          >
-            VAPI Dashboard
-          </a>
-          .
-        </AlertDescription>
-      </Alert>
+    <div className="space-y-8">
+      {/* Info Banner */}
+      <div className="rounded-lg border border-slate-200/60 bg-slate-50/50 p-4">
+        <div className="flex items-start gap-3">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-teal-100/80 text-teal-600">
+            <Info className="h-3.5 w-3.5" />
+          </div>
+          <div className="space-y-1">
+            <h5 className="text-sm font-medium text-slate-700">
+              VAPI Configuration
+            </h5>
+            <p className="text-xs text-slate-500">
+              Configure your VAPI phone numbers and assistants. IDs can be found
+              in your{" "}
+              <a
+                href="https://dashboard.vapi.ai"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 font-medium text-teal-600 underline decoration-teal-400/50 underline-offset-2 hover:text-teal-700"
+              >
+                VAPI Dashboard
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
 
-      {/* Inbound Call Configuration */}
+      {/* Inbound Configuration */}
       <div className="space-y-4">
-        <h3 className="flex items-center gap-2 font-medium">
-          <Phone className="h-4 w-4" />
-          Inbound Call Configuration
-        </h3>
-        <p className="text-muted-foreground text-sm">
-          Configure how incoming calls to your clinic are routed and handled by
-          the AI assistant.
-        </p>
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-green-100/80 text-green-600">
+            <PhoneIncoming className="h-3.5 w-3.5" />
+          </div>
+          <h4 className="text-sm font-medium text-slate-700">
+            Inbound Call Configuration
+          </h4>
+        </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-2">
           <div className="grid gap-2">
             <div className="flex items-center gap-2">
-              <Label htmlFor="inboundPhoneNumberId">
-                Inbound Phone Number ID
+              <Label
+                htmlFor="inboundPhoneNumberId"
+                className="text-sm font-medium text-slate-700"
+              >
+                Phone Number ID
               </Label>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                    <Info className="h-4 w-4 cursor-help text-slate-400 transition-colors hover:text-slate-600" />
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs">
                     <p className="text-sm">
@@ -70,17 +81,23 @@ export function VapiConfigSection({ register }: VapiConfigSectionProps) {
             <Input
               id="inboundPhoneNumberId"
               placeholder="e.g. pn_abc123..."
+              className="border-slate-200 font-mono text-sm focus:border-teal-400 focus:ring-teal-400/20"
               {...register("inboundPhoneNumberId")}
             />
           </div>
 
           <div className="grid gap-2">
             <div className="flex items-center gap-2">
-              <Label htmlFor="inboundAssistantId">Inbound Assistant ID</Label>
+              <Label
+                htmlFor="inboundAssistantId"
+                className="text-sm font-medium text-slate-700"
+              >
+                Assistant ID
+              </Label>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                    <Info className="h-4 w-4 cursor-help text-slate-400 transition-colors hover:text-slate-600" />
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs">
                     <p className="text-sm">
@@ -94,35 +111,40 @@ export function VapiConfigSection({ register }: VapiConfigSectionProps) {
             <Input
               id="inboundAssistantId"
               placeholder="e.g. ast_abc123..."
+              className="border-slate-200 font-mono text-sm focus:border-teal-400 focus:ring-teal-400/20"
               {...register("inboundAssistantId")}
             />
           </div>
         </div>
       </div>
 
-      <Separator />
-
-      {/* Outbound Call Configuration */}
+      {/* Outbound Configuration */}
       <div className="space-y-4">
-        <h3 className="flex items-center gap-2 font-medium">
-          <Phone className="h-4 w-4" />
-          Outbound Call Configuration
-        </h3>
-        <p className="text-muted-foreground text-sm">
-          Configure the phone number and assistant used for outbound discharge
-          follow-up calls. Leave blank to use system defaults.
-        </p>
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-100/80 text-blue-600">
+            <PhoneOutgoing className="h-3.5 w-3.5" />
+          </div>
+          <h4 className="text-sm font-medium text-slate-700">
+            Outbound Call Configuration
+          </h4>
+        </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-2">
           <div className="grid gap-2">
             <div className="flex items-center gap-2">
-              <Label htmlFor="outboundPhoneNumberId">
-                Outbound Phone Number ID
+              <Label
+                htmlFor="outboundPhoneNumberId"
+                className="text-sm font-medium text-slate-700"
+              >
+                Phone Number ID
               </Label>
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+                Optional
+              </span>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                    <Info className="h-4 w-4 cursor-help text-slate-400 transition-colors hover:text-slate-600" />
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs">
                     <p className="text-sm">
@@ -136,17 +158,26 @@ export function VapiConfigSection({ register }: VapiConfigSectionProps) {
             <Input
               id="outboundPhoneNumberId"
               placeholder="e.g. pn_xyz789..."
+              className="border-slate-200 font-mono text-sm focus:border-teal-400 focus:ring-teal-400/20"
               {...register("outboundPhoneNumberId")}
             />
           </div>
 
           <div className="grid gap-2">
             <div className="flex items-center gap-2">
-              <Label htmlFor="outboundAssistantId">Outbound Assistant ID</Label>
+              <Label
+                htmlFor="outboundAssistantId"
+                className="text-sm font-medium text-slate-700"
+              >
+                Assistant ID
+              </Label>
+              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+                Optional
+              </span>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Info className="text-muted-foreground h-4 w-4 cursor-help" />
+                    <Info className="h-4 w-4 cursor-help text-slate-400 transition-colors hover:text-slate-600" />
                   </TooltipTrigger>
                   <TooltipContent className="max-w-xs">
                     <p className="text-sm">
@@ -160,10 +191,14 @@ export function VapiConfigSection({ register }: VapiConfigSectionProps) {
             <Input
               id="outboundAssistantId"
               placeholder="e.g. ast_xyz789..."
+              className="border-slate-200 font-mono text-sm focus:border-teal-400 focus:ring-teal-400/20"
               {...register("outboundAssistantId")}
             />
           </div>
         </div>
+        <p className="text-xs text-slate-500">
+          Leave blank to use system defaults for discharge follow-up calls.
+        </p>
       </div>
     </div>
   );

@@ -1,4 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@odis-ai/shared/ui/card";
 import type { ReactNode } from "react";
 
 interface InfoCardProps {

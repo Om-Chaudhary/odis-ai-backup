@@ -1,4 +1,9 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@odis-ai/shared/ui/card";
 import { Button } from "@odis-ai/shared/ui/button";
 import { Mail, CheckCircle2 } from "lucide-react";
 import { EmailStructuredPreview } from "../structured-preview";

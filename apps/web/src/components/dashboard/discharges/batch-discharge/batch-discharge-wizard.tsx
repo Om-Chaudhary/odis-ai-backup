@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { Button } from "@odis-ai/shared/ui/button";
 import { Badge } from "@odis-ai/shared/ui/badge";
 import { Separator } from "@odis-ai/shared/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/shared/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@odis-ai/shared/ui/tabs";
 import {
   ArrowLeft,
   TestTube,

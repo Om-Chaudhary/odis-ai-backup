@@ -1,6 +1,11 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@odis-ai/shared/ui/card";
 import { Button } from "@odis-ai/shared/ui/button";
 import {
   Plus,
@@ -10,7 +15,10 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
-import { buildClinicUrl, useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
+import {
+  buildClinicUrl,
+  useOptionalClinic,
+} from "@odis-ai/shared/ui/clinic-context";
 
 export function QuickActionsPanel() {
   const clinicContext = useOptionalClinic();

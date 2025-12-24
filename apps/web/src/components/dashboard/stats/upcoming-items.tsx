@@ -1,6 +1,11 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@odis-ai/shared/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@odis-ai/shared/ui/card";
 import { Badge } from "@odis-ai/shared/ui/badge";
 import { Clock, PhoneCall, Mail } from "lucide-react";
 import { format, parseISO } from "date-fns";
