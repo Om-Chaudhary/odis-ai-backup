@@ -33,7 +33,11 @@ export function useOutboundData(params: UseOutboundDataParams) {
 
   const casesRef = useRef<Array<{ status: string }>>([]);
 
+  // For needs_attention mode, we skip date filtering to show ALL needs attention cases
+  const isNeedsAttentionMode = viewMode === "needs_attention";
+
   // Fetch cases
+  // When in needs_attention mode, don't pass dates - server returns all needs attention cases
   const {
     data: casesData,
     isLoading,
@@ -43,8 +47,10 @@ export function useOutboundData(params: UseOutboundDataParams) {
       page,
       pageSize,
       search: searchTerm || undefined,
-      startDate,
-      endDate,
+      // Only pass dates if NOT in needs_attention mode
+      ...(isNeedsAttentionMode
+        ? { viewMode: "needs_attention" }
+        : { startDate, endDate }),
     },
     {
       refetchInterval: () => {
@@ -57,6 +63,7 @@ export function useOutboundData(params: UseOutboundDataParams) {
   );
 
   // Fetch stats
+  // For needs_attention, we still want date-filtered stats for other counts
   const { data: statsData } = api.outbound.getDischargeCaseStats.useQuery({
     startDate,
     endDate,
@@ -75,15 +82,10 @@ export function useOutboundData(params: UseOutboundDataParams) {
       },
     );
 
-  // Find previous date with needs attention cases (only when in needs_attention view)
-  const { data: previousAttentionData, isLoading: isPreviousAttentionLoading } =
-    api.outbound.findPreviousAttentionDate.useQuery(
-      { currentDate: startDate },
-      {
-        enabled: viewMode === "needs_attention",
-        staleTime: 60000, // Cache for 1 minute
-      },
-    );
+  // Previous attention date navigation is no longer needed since we show all attention cases
+  // Keep the query disabled but retain the return values for backwards compatibility
+  const previousAttentionData = null;
+  const isPreviousAttentionLoading = false;
 
   // Update ref when data changes
   useEffect(() => {
@@ -110,10 +112,11 @@ export function useOutboundData(params: UseOutboundDataParams) {
       pageSize: 25,
       total: 0,
     },
-    // Previous attention date (for "go back" navigation in needs_attention view)
-    previousAttentionDate: previousAttentionData?.date ?? null,
-    previousAttentionCount: previousAttentionData?.casesCount ?? 0,
-    hasPreviousAttention: previousAttentionData?.found ?? false,
+    // Previous attention date navigation is deprecated - we now show all attention cases
+    // Keeping these for backwards compatibility with any components that may reference them
+    previousAttentionDate: previousAttentionData,
+    previousAttentionCount: 0,
+    hasPreviousAttention: false,
     isPreviousAttentionLoading,
   };
 }

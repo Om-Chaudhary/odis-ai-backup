@@ -12,6 +12,8 @@ interface OutboundFilterTabsProps {
   currentDate: Date;
   onDateChange: (date: Date) => void;
   isLoading?: boolean;
+  /** Whether to show the date navigator (default: true) */
+  showDateNav?: boolean;
 }
 
 /**
@@ -24,17 +26,20 @@ export function OutboundFilterTabs({
   currentDate,
   onDateChange,
   isLoading = false,
+  showDateNav = true,
 }: OutboundFilterTabsProps) {
   return (
     <div className="flex items-center justify-between gap-6">
-      {/* Left: Date Navigator */}
-      <div className="flex items-center gap-3">
-        <OutboundDateNav
-          currentDate={currentDate}
-          onDateChange={onDateChange}
-          isLoading={isLoading}
-        />
-      </div>
+      {/* Left: Date Navigator (optional) */}
+      {showDateNav && (
+        <div className="flex items-center gap-3">
+          <OutboundDateNav
+            currentDate={currentDate}
+            onDateChange={onDateChange}
+            isLoading={isLoading}
+          />
+        </div>
+      )}
 
       {/* Right: Search */}
       {onSearchChange && (

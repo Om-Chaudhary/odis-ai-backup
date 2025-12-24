@@ -191,9 +191,6 @@ function OutboundDischargesClientInner() {
     isDeepLinkLoading,
     isLoading,
     refetch,
-    previousAttentionDate,
-    previousAttentionCount,
-    hasPreviousAttention,
   } = useOutboundData({
     page,
     pageSize,
@@ -363,14 +360,6 @@ function OutboundDischargesClientInner() {
     },
     [setDateStr, setPage],
   );
-
-  // Handler for navigating to previous attention date
-  const handleGoToPreviousAttention = useCallback(() => {
-    if (previousAttentionDate) {
-      void setDateStr(previousAttentionDate);
-      void setPage(1);
-    }
-  }, [previousAttentionDate, setDateStr, setPage]);
 
   // Suppress unused setViewMode (view mode now controlled by sidebar navigation)
   void setViewMode;
@@ -607,7 +596,7 @@ function OutboundDischargesClientInner() {
             </PageFooter>
           </PageContainer>
         ) : viewMode === "needs_attention" ? (
-          // Needs Attention View - Cases flagged by AI, sorted by severity
+          // Needs Attention View - ALL cases flagged by AI (no date filter), sorted by severity
           <OutboundSplitLayout
             showRightPanel={selectedCase !== null}
             onCloseRightPanel={handleClosePanel}
@@ -620,6 +609,7 @@ function OutboundDischargesClientInner() {
                     currentDate={currentDate}
                     onDateChange={handleDateChange}
                     isLoading={isLoading}
+                    showDateNav={false} // Hide date picker for needs_attention - shows ALL attention cases
                   />
                 </PageToolbar>
                 <PageContent>
@@ -628,17 +618,13 @@ function OutboundDischargesClientInner() {
                     selectedCaseId={selectedCase?.id ?? null}
                     onSelectCase={handleSelectCase}
                     isLoading={isLoading}
-                    hasPreviousAttention={hasPreviousAttention}
-                    previousAttentionDate={previousAttentionDate}
-                    previousAttentionCount={previousAttentionCount}
-                    onGoToPreviousAttention={handleGoToPreviousAttention}
                   />
                 </PageContent>
                 <PageFooter>
                   <OutboundPagination
                     page={page}
                     pageSize={pageSize}
-                    total={needsAttentionCases.length}
+                    total={totalCases} // Use server-provided total for proper pagination
                     onPageChange={handlePageChange}
                     onPageSizeChange={handlePageSizeChange}
                   />

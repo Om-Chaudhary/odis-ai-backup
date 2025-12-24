@@ -12,7 +12,12 @@ import { Input } from "@odis-ai/shared/ui/input";
 import { Label } from "@odis-ai/shared/ui/label";
 import { Separator } from "@odis-ai/shared/ui/separator";
 import { Switch } from "@odis-ai/shared/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/shared/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@odis-ai/shared/ui/tabs";
 import { Textarea } from "@odis-ai/shared/ui/textarea";
 import { Badge } from "@odis-ai/shared/ui/badge";
 

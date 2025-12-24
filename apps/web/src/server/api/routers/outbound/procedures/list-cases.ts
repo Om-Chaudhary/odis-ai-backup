@@ -315,11 +315,11 @@ export const listCasesRouter = createTRPCRouter({
       // Get all user IDs in the same clinic for shared view
       const clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
 
-      // Build base query with all related data
-      let query = ctx.supabase
-        .from("cases")
-        .select(
-          `
+      // Check if this is a needs_attention query (different query strategy)
+      const isNeedsAttentionMode = input.viewMode === "needs_attention";
+
+      // Build base select columns
+      const selectColumns = `
           id,
           type,
           status,
@@ -347,7 +347,7 @@ export const listCasesRouter = createTRPCRouter({
             structured_content,
             created_at
           ),
-          scheduled_discharge_calls (
+          scheduled_discharge_calls${isNeedsAttentionMode ? "!inner" : ""} (
             id,
             status,
             scheduled_for,
@@ -393,41 +393,70 @@ export const listCasesRouter = createTRPCRouter({
             client_instructions,
             created_at
           )
-        `,
-          { count: "exact" },
-        )
-        .in("user_id", clinicUserIds)
-        .order("scheduled_at", { ascending: false, nullsFirst: false });
+        `;
 
-      // Apply date filters with proper timezone-aware boundaries
-      // Use scheduled_at (appointment time) instead of created_at (sync time)
-      // This matches how the extension groups cases by appointment date
-      // Falls back to created_at when scheduled_at is null (COALESCE pattern)
-      if (input.startDate && input.endDate) {
-        // Both dates provided - use timezone-aware range with fallback
-        const startRange = getLocalDayRange(input.startDate, DEFAULT_TIMEZONE);
-        const endRange = getLocalDayRange(input.endDate, DEFAULT_TIMEZONE);
-        // Use .or() to implement COALESCE(scheduled_at, created_at) logic:
-        // 1. Cases where scheduled_at is in range, OR
-        // 2. Cases where scheduled_at is null AND created_at is in range
-        query = query.or(
-          `and(scheduled_at.gte.${startRange.startISO},scheduled_at.lte.${endRange.endISO}),and(scheduled_at.is.null,created_at.gte.${startRange.startISO},created_at.lte.${endRange.endISO})`,
+      // Build base query with all related data
+      let query = ctx.supabase
+        .from("cases")
+        .select(selectColumns, { count: "exact" })
+        .in("user_id", clinicUserIds);
+
+      // For needs_attention mode:
+      // - Skip date filtering (show ALL needs attention cases)
+      // - Filter at DB level where attention_types is not null/empty
+      // - Order by attention_flagged_at (most recent first)
+      if (isNeedsAttentionMode) {
+        // Filter for cases with non-empty attention_types (server-side)
+        query = query.not(
+          "scheduled_discharge_calls.attention_types",
+          "is",
+          null,
         );
-      } else if (input.startDate) {
-        // Only start date - get timezone-aware start of day with fallback
-        const { startISO } = getLocalDayRange(
-          input.startDate,
-          DEFAULT_TIMEZONE,
-        );
-        query = query.or(
-          `scheduled_at.gte.${startISO},and(scheduled_at.is.null,created_at.gte.${startISO})`,
-        );
-      } else if (input.endDate) {
-        // Only end date - get timezone-aware end of day with fallback
-        const { endISO } = getLocalDayRange(input.endDate, DEFAULT_TIMEZONE);
-        query = query.or(
-          `scheduled_at.lte.${endISO},and(scheduled_at.is.null,created_at.lte.${endISO})`,
-        );
+        // Order by attention_flagged_at (most recent flagged first)
+        query = query.order("scheduled_discharge_calls(attention_flagged_at)", {
+          ascending: false,
+          nullsFirst: false,
+        });
+      } else {
+        // Default ordering for non-attention views
+        query = query.order("scheduled_at", {
+          ascending: false,
+          nullsFirst: false,
+        });
+
+        // Apply date filters with proper timezone-aware boundaries
+        // Use scheduled_at (appointment time) instead of created_at (sync time)
+        // This matches how the extension groups cases by appointment date
+        // Falls back to created_at when scheduled_at is null (COALESCE pattern)
+        if (input.startDate && input.endDate) {
+          // Both dates provided - use timezone-aware range with fallback
+          const startRange = getLocalDayRange(
+            input.startDate,
+            DEFAULT_TIMEZONE,
+          );
+          const endRange = getLocalDayRange(input.endDate, DEFAULT_TIMEZONE);
+          // Use .or() to implement COALESCE(scheduled_at, created_at) logic:
+          // 1. Cases where scheduled_at is in range, OR
+          // 2. Cases where scheduled_at is null AND created_at is in range
+          query = query.or(
+            `and(scheduled_at.gte.${startRange.startISO},scheduled_at.lte.${endRange.endISO}),and(scheduled_at.is.null,created_at.gte.${startRange.startISO},created_at.lte.${endRange.endISO})`,
+          );
+        } else if (input.startDate) {
+          // Only start date - get timezone-aware start of day with fallback
+          const { startISO } = getLocalDayRange(
+            input.startDate,
+            DEFAULT_TIMEZONE,
+          );
+          query = query.or(
+            `scheduled_at.gte.${startISO},and(scheduled_at.is.null,created_at.gte.${startISO})`,
+          );
+        } else if (input.endDate) {
+          // Only end date - get timezone-aware end of day with fallback
+          const { endISO } = getLocalDayRange(input.endDate, DEFAULT_TIMEZONE);
+          query = query.or(
+            `scheduled_at.lte.${endISO},and(scheduled_at.is.null,created_at.lte.${endISO})`,
+          );
+        }
       }
 
       const { data: cases, error } = await query;
@@ -611,9 +640,23 @@ export const listCasesRouter = createTRPCRouter({
         }
       }
 
-      // Apply view mode filter for needs_attention
+      // Apply view mode filter for needs_attention (post-fetch filtering for edge cases)
+      // Note: For needs_attention, server-side filtering is primary, this is a safety check
       if (input.viewMode === "needs_attention") {
+        // Filter to ensure only cases with attention_types are included
         filteredCases = filteredCases.filter((c) => c.needsAttention);
+
+        // Sort by severity: critical > urgent > routine
+        const severityOrder: Record<string, number> = {
+          critical: 0,
+          urgent: 1,
+          routine: 2,
+        };
+        filteredCases = [...filteredCases].sort((a, b) => {
+          const aOrder = severityOrder[a.attentionSeverity ?? ""] ?? 3;
+          const bOrder = severityOrder[b.attentionSeverity ?? ""] ?? 3;
+          return aOrder - bOrder;
+        });
       }
 
       // Apply search filter
