@@ -200,13 +200,23 @@ export class PlaywrightBrowser {
     selectorSet: SelectorSet,
     value: string,
   ): Promise<boolean> {
+    const selectors = getSelectorVariants(selectorSet);
+    console.log(
+      `[BROWSER] Trying to fill field with value: ${value.substring(0, 3)}***`,
+    );
+    console.log(`[BROWSER] Selectors to try:`, selectors);
+
     const element = await this.findElement(page, selectorSet);
 
     if (element) {
+      console.log(`[BROWSER] Found element, filling...`);
+      await element.click(); // Focus the field first
       await element.fill(value);
+      console.log(`[BROWSER] Field filled successfully`);
       return true;
     }
 
+    console.log(`[BROWSER] Could not find element with any selector`);
     return false;
   }
 
