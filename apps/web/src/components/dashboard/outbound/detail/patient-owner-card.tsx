@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
+  MinusCircle,
 } from "lucide-react";
 import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
 import { DeleteCaseDialog } from "../../cases/delete-case-dialog";
@@ -156,6 +157,7 @@ function getStatusConfig(status: DischargeCaseStatus) {
 }
 
 // Delivery status indicator component
+// Matches the table's DeliveryIcon for consistency
 function DeliveryIndicator({ status }: { status: DeliveryStatus }) {
   if (status === "sent") {
     return <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />;
@@ -166,6 +168,10 @@ function DeliveryIndicator({ status }: { status: DeliveryStatus }) {
   if (status === "pending") {
     return <Clock className="h-3.5 w-3.5 text-amber-500" />;
   }
+  if (status === "not_applicable") {
+    return <MinusCircle className="h-3.5 w-3.5 text-slate-400" />;
+  }
+  // null = not scheduled yet, no indicator needed
   return null;
 }
 

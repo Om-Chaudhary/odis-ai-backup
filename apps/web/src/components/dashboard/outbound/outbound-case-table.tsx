@@ -2,22 +2,16 @@
 
 import { useEffect, useRef } from "react";
 import { format, formatDistanceToNow, parseISO, isPast } from "date-fns";
-import {
-  Phone,
-  Mail,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  MinusCircle,
-  Loader2,
-  Send,
-  Star,
-} from "lucide-react";
+import { CheckCircle2, Loader2, Mail, Phone, Send, Star } from "lucide-react";
 import { Button } from "@odis-ai/shared/ui/button";
 import { Checkbox } from "@odis-ai/shared/ui/checkbox";
 import { cn } from "@odis-ai/shared/util";
 import type { DischargeCaseStatus } from "./types";
 import { AttentionBadgeGroup, CriticalPulsingDot } from "../shared";
+import {
+  getDeliveryStatusDisplay,
+  type DeliveryStatus,
+} from "./detail/utils/status-display";
 
 // Minimum required fields for table display
 interface TableCaseBase {
@@ -629,61 +623,28 @@ function formatTime(timestamp: string): string {
 
 /**
  * Delivery status icon for phone/email columns
+ * Uses shared status-display utility for consistent styling
  */
 function DeliveryIcon({
   status,
   type,
 }: {
-  status: "sent" | "pending" | "failed" | "not_applicable" | null;
+  status: DeliveryStatus;
   type: "phone" | "email";
 }) {
-  const Icon = type === "phone" ? Phone : Mail;
+  const displayConfig = getDeliveryStatusDisplay(status, type);
+  const Icon = displayConfig.icon;
 
-  if (status === "sent") {
-    return (
-      <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100">
-        <CheckCircle2
-          className="h-3.5 w-3.5 text-emerald-600"
-          aria-label={`${type} sent`}
-        />
-      </div>
-    );
-  }
-  if (status === "pending") {
-    return (
-      <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-amber-100">
-        <Clock
-          className="h-3.5 w-3.5 text-amber-600"
-          aria-label={`${type} pending`}
-        />
-      </div>
-    );
-  }
-  if (status === "failed") {
-    return (
-      <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-100">
-        <AlertCircle
-          className="h-3.5 w-3.5 text-red-600"
-          aria-label={`${type} failed`}
-        />
-      </div>
-    );
-  }
-  if (status === "not_applicable") {
-    return (
-      <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100">
-        <MinusCircle
-          className="h-3.5 w-3.5 text-slate-400"
-          aria-label={`No ${type}`}
-        />
-      </div>
-    );
-  }
   return (
-    <div className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-slate-100">
+    <div
+      className={cn(
+        "inline-flex h-6 w-6 items-center justify-center rounded-full",
+        displayConfig.bgClass,
+      )}
+    >
       <Icon
-        className="h-3.5 w-3.5 text-slate-400"
-        aria-label={`${type} not scheduled`}
+        className={cn("h-3.5 w-3.5", displayConfig.colorClass)}
+        aria-label={displayConfig.label}
       />
     </div>
   );

@@ -12,6 +12,10 @@ import {
 import type { LucideIcon } from "lucide-react";
 import type { DischargeCaseStatus } from "../types";
 import { cn } from "@odis-ai/shared/util";
+import {
+  deriveChannelState,
+  type DeliveryStatus,
+} from "./utils/status-display";
 
 interface StatusOverviewCardProps {
   status: DischargeCaseStatus;
@@ -59,27 +63,55 @@ function DeliveryItem({
     minute: "2-digit",
   });
 
-  // Determine actual status
+  // Use centralized status derivation - trust actual deliveryStatus, NOT isPast
+  const channelState = deriveChannelState(
+    deliveryStatus as DeliveryStatus,
+    scheduledFor,
+    true, // hasContactInfo is always true here since we have scheduledFor
+  );
+
+  // Map channelState to display values
   let status: DeliveryItemStatus = "scheduled";
   let statusText = `${label} scheduled`;
   let statusColor: "purple" | "green" | "red" | "amber" = "purple";
   let StatusIcon = Clock;
 
-  if (isPast || deliveryStatus === "sent") {
-    status = "sent";
-    statusText = `${label} delivered`;
-    statusColor = "green";
-    StatusIcon = CheckCircle2;
-  } else if (deliveryStatus === "failed") {
-    status = "failed";
-    statusText = `${label} failed`;
-    statusColor = "red";
-    StatusIcon = XCircle;
-  } else if (deliveryStatus === "pending") {
-    status = "pending";
-    statusText = `${label} pending`;
-    statusColor = "amber";
-    StatusIcon = AlertCircle;
+  switch (channelState) {
+    case "sent":
+      status = "sent";
+      statusText = `${label} delivered`;
+      statusColor = "green";
+      StatusIcon = CheckCircle2;
+      break;
+    case "failed":
+      status = "failed";
+      statusText = `${label} failed`;
+      statusColor = "red";
+      StatusIcon = XCircle;
+      break;
+    case "pending":
+      // Past scheduled time but not yet delivered
+      status = "pending";
+      statusText = `${label} pending`;
+      statusColor = "amber";
+      StatusIcon = AlertCircle;
+      break;
+    case "scheduled":
+      // Future scheduled time
+      status = "scheduled";
+      statusText = `${label} scheduled`;
+      statusColor = "purple";
+      StatusIcon = Clock;
+      break;
+    case "in_progress":
+      status = "pending";
+      statusText = `${label} in progress`;
+      statusColor = "amber";
+      StatusIcon = AlertCircle;
+      break;
+    default:
+      // Keep defaults
+      break;
   }
 
   const colorClasses = {
