@@ -318,8 +318,11 @@ export const listCasesRouter = createTRPCRouter({
       // Check if this is a needs_attention query (different query strategy)
       const isNeedsAttentionMode = input.viewMode === "needs_attention";
 
-      // Build base select columns
-      const selectColumns = `
+      // Build base query with all related data
+      let query = ctx.supabase
+        .from("cases")
+        .select(
+          `
           id,
           type,
           status,
@@ -347,7 +350,7 @@ export const listCasesRouter = createTRPCRouter({
             structured_content,
             created_at
           ),
-          scheduled_discharge_calls${isNeedsAttentionMode ? "!inner" : ""} (
+          scheduled_discharge_calls (
             id,
             status,
             scheduled_for,
@@ -393,27 +396,18 @@ export const listCasesRouter = createTRPCRouter({
             client_instructions,
             created_at
           )
-        `;
-
-      // Build base query with all related data
-      let query = ctx.supabase
-        .from("cases")
-        .select(selectColumns, { count: "exact" })
+        `,
+          { count: "exact" },
+        )
         .in("user_id", clinicUserIds);
 
       // For needs_attention mode:
       // - Skip date filtering (show ALL needs attention cases)
-      // - Filter at DB level where attention_types is not null/empty
-      // - Order by attention_flagged_at (most recent first)
+      // - Filtering by needsAttention happens post-transform (see below)
+      // - Sorting by severity happens post-transform (see below)
       if (isNeedsAttentionMode) {
-        // Filter for cases with non-empty attention_types (server-side)
-        query = query.not(
-          "scheduled_discharge_calls.attention_types",
-          "is",
-          null,
-        );
-        // Order by attention_flagged_at (most recent flagged first)
-        query = query.order("scheduled_discharge_calls(attention_flagged_at)", {
+        // Order by created_at for initial fetch, will be re-sorted by severity after transform
+        query = query.order("created_at", {
           ascending: false,
           nullsFirst: false,
         });

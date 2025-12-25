@@ -1,14 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { formatDistanceToNow, parseISO, format } from "date-fns";
-import {
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Loader2,
-  ChevronLeft,
-} from "lucide-react";
+import { formatDistanceToNow, parseISO } from "date-fns";
+import { CheckCircle2, XCircle, Clock, Loader2 } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
 import {
   AttentionBadgeGroup,
@@ -21,7 +15,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@odis-ai/shared/ui/tooltip";
-import { Button } from "@odis-ai/shared/ui/button";
 
 /**
  * Case interface for needs attention table
@@ -47,14 +40,6 @@ interface OutboundNeedsAttentionTableProps {
   selectedCaseId: string | null;
   onSelectCase: (caseItem: NeedsAttentionCase) => void;
   isLoading: boolean;
-  /** Whether there's a previous date with attention cases */
-  hasPreviousAttention?: boolean;
-  /** The previous date with attention cases (YYYY-MM-DD) */
-  previousAttentionDate?: string | null;
-  /** Count of attention cases on the previous date */
-  previousAttentionCount?: number;
-  /** Handler to navigate to the previous attention date */
-  onGoToPreviousAttention?: () => void;
 }
 
 /**
@@ -66,16 +51,13 @@ interface OutboundNeedsAttentionTableProps {
  * - Summary preview with tooltip
  * - Call status column
  * - Sorted by severity (critical first)
+ * - Shows ALL attention cases across all dates (no date filtering)
  */
 export function OutboundNeedsAttentionTable({
   cases,
   selectedCaseId,
   onSelectCase,
   isLoading,
-  hasPreviousAttention,
-  previousAttentionDate,
-  previousAttentionCount,
-  onGoToPreviousAttention,
 }: OutboundNeedsAttentionTableProps) {
   const tableRef = useRef<HTMLDivElement>(null);
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
@@ -95,14 +77,7 @@ export function OutboundNeedsAttentionTable({
   }
 
   if (cases.length === 0) {
-    return (
-      <NeedsAttentionEmpty
-        hasPreviousAttention={hasPreviousAttention}
-        previousAttentionDate={previousAttentionDate}
-        previousAttentionCount={previousAttentionCount}
-        onGoToPreviousAttention={onGoToPreviousAttention}
-      />
-    );
+    return <NeedsAttentionEmpty />;
   }
 
   return (
@@ -331,24 +306,9 @@ function NeedsAttentionSkeleton() {
 }
 
 /**
- * Empty state with optional navigation to previous date with attention cases
+ * Empty state when no attention cases exist
  */
-function NeedsAttentionEmpty({
-  hasPreviousAttention,
-  previousAttentionDate,
-  previousAttentionCount,
-  onGoToPreviousAttention,
-}: {
-  hasPreviousAttention?: boolean;
-  previousAttentionDate?: string | null;
-  previousAttentionCount?: number;
-  onGoToPreviousAttention?: () => void;
-}) {
-  // Format the previous date for display
-  const formattedDate = previousAttentionDate
-    ? format(parseISO(previousAttentionDate), "EEE, MMM d")
-    : null;
-
+function NeedsAttentionEmpty() {
   return (
     <div className="flex h-full flex-col items-center justify-center py-20 text-center">
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-teal-100">
@@ -358,27 +318,8 @@ function NeedsAttentionEmpty({
         No cases need attention
       </p>
       <p className="mt-1 text-sm text-slate-500">
-        All flagged concerns have been addressed for this date.
+        All flagged concerns have been addressed.
       </p>
-
-      {/* Show button to navigate to previous date with attention cases */}
-      {hasPreviousAttention &&
-        previousAttentionDate &&
-        onGoToPreviousAttention && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onGoToPreviousAttention}
-            className="mt-6 gap-2 border-orange-200 text-orange-700 hover:bg-orange-50 hover:text-orange-800"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Go to {formattedDate}
-            <span className="ml-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
-              {previousAttentionCount}{" "}
-              {previousAttentionCount === 1 ? "case" : "cases"}
-            </span>
-          </Button>
-        )}
     </div>
   );
 }
