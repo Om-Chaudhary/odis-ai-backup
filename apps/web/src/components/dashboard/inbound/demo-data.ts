@@ -3,10 +3,20 @@
  * Used for testing and demonstration purposes
  */
 
+import { isValid } from "date-fns";
 import type { Database } from "@odis-ai/shared/types";
 import type { AppointmentRequest } from "./types";
 
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
+
+/**
+ * Safely parse a date string, returning a fallback date if invalid
+ */
+function safeParseDate(dateStr: string | null | undefined): Date {
+  if (!dateStr) return new Date();
+  const date = new Date(dateStr);
+  return isValid(date) ? date : new Date();
+}
 
 /**
  * Static mapping for known demo phone numbers to caller names
@@ -81,7 +91,7 @@ export function getCallModifications(call: InboundCall): {
 } {
   const phone = call.customer_phone ?? "";
   // Use started_at (actual VAPI call time) with fallback to created_at
-  const callDate = new Date(call.started_at ?? call.created_at);
+  const callDate = safeParseDate(call.started_at ?? call.created_at);
 
   // Calls to filter out completely
   if (phoneMatches(phone, ["4082346798"])) {
@@ -271,7 +281,7 @@ function getMelissa540CallData(call: InboundCall) {
   if (!isMelissaCall) return null;
 
   // Check for the 5:40 AM call specifically
-  const callDate = new Date(call.started_at ?? call.created_at);
+  const callDate = safeParseDate(call.started_at ?? call.created_at);
   const hours = callDate.getHours();
   const minutes = callDate.getMinutes();
   if (hours !== 5 || minutes !== 40) return null;

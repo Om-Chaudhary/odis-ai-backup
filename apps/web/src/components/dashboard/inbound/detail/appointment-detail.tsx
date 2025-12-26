@@ -1,6 +1,6 @@
 "use client";
 import { useState, useMemo } from "react";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { Button } from "@odis-ai/shared/ui/button";
 import { Badge } from "@odis-ai/shared/ui/badge";
 import { Textarea } from "@odis-ai/shared/ui/textarea";
@@ -59,6 +59,15 @@ interface AppointmentRequest {
   notes?: string | null;
   status: string;
   createdAt: string;
+}
+
+/**
+ * Safely parse a date string, returning a fallback date if invalid
+ */
+function safeParseDate(dateStr: string | null | undefined): Date {
+  if (!dateStr) return new Date();
+  const date = new Date(dateStr);
+  return isValid(date) ? date : new Date();
 }
 
 /**
@@ -167,7 +176,8 @@ export function AppointmentDetail({
   const [confirmDate, setConfirmDate] = useState<Date | undefined>(() => {
     // Pre-fill with requested date if available
     if (appointment.requestedDate) {
-      return new Date(appointment.requestedDate + "T00:00:00");
+      const date = new Date(appointment.requestedDate + "T00:00:00");
+      return isValid(date) ? date : undefined;
     }
     return undefined;
   });
@@ -247,7 +257,7 @@ export function AppointmentDetail({
                   <p className="text-2xl font-bold text-teal-900 dark:text-teal-100">
                     {appointment.confirmedDate
                       ? format(
-                          new Date(appointment.confirmedDate + "T00:00:00"),
+                          safeParseDate(appointment.confirmedDate + "T00:00:00"),
                           "EEEE, MMMM d",
                         )
                       : "Date TBD"}
@@ -298,7 +308,7 @@ export function AppointmentDetail({
                     <p className="font-medium text-slate-800">
                       {appointment.requestedDate
                         ? format(
-                            new Date(appointment.requestedDate + "T00:00:00"),
+                            safeParseDate(appointment.requestedDate + "T00:00:00"),
                             "EEEE, MMMM d, yyyy",
                           )
                         : "No preference"}
@@ -341,7 +351,7 @@ export function AppointmentDetail({
               Request received{" "}
               <span className="font-medium text-slate-700">
                 {format(
-                  new Date(appointment.createdAt),
+                  safeParseDate(appointment.createdAt),
                   "MMMM d, yyyy 'at' h:mm a",
                 )}
               </span>
@@ -491,11 +501,11 @@ export function AppointmentDetail({
                     onClick={() => {
                       setShowConfirmForm(false);
                       // Reset to requested values
-                      setConfirmDate(
-                        appointment.requestedDate
-                          ? new Date(appointment.requestedDate + "T00:00:00")
-                          : undefined,
-                      );
+                      setConfirmDate(() => {
+                        if (!appointment.requestedDate) return undefined;
+                        const date = new Date(appointment.requestedDate + "T00:00:00");
+                        return isValid(date) ? date : undefined;
+                      });
                       setConfirmTime(
                         appointment.requestedStartTime
                           ? appointment.requestedStartTime.slice(0, 5)

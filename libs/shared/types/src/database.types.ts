@@ -1262,8 +1262,14 @@ export type Database = {
       };
       inbound_vapi_calls: {
         Row: {
+          actions_taken: Json | null;
           assistant_id: string;
+          attention_flagged_at: string | null;
+          attention_severity: string | null;
+          attention_summary: string | null;
+          attention_types: string[] | null;
           call_analysis: Json | null;
+          call_outcome_data: Json | null;
           cleaned_transcript: string | null;
           clinic_name: string | null;
           cost: number | null;
@@ -1274,8 +1280,14 @@ export type Database = {
           duration_seconds: number | null;
           ended_at: string | null;
           ended_reason: string | null;
+          escalation_data: Json | null;
+          follow_up_data: Json | null;
           id: string;
+          medication_compliance_data: Json | null;
           metadata: Json | null;
+          outcome: string | null;
+          owner_sentiment_data: Json | null;
+          pet_health_data: Json | null;
           phone_number_id: string | null;
           recording_url: string | null;
           started_at: string | null;
@@ -1294,8 +1306,14 @@ export type Database = {
           vapi_call_id: string;
         };
         Insert: {
+          actions_taken?: Json | null;
           assistant_id: string;
+          attention_flagged_at?: string | null;
+          attention_severity?: string | null;
+          attention_summary?: string | null;
+          attention_types?: string[] | null;
           call_analysis?: Json | null;
+          call_outcome_data?: Json | null;
           cleaned_transcript?: string | null;
           clinic_name?: string | null;
           cost?: number | null;
@@ -1306,8 +1324,14 @@ export type Database = {
           duration_seconds?: number | null;
           ended_at?: string | null;
           ended_reason?: string | null;
+          escalation_data?: Json | null;
+          follow_up_data?: Json | null;
           id?: string;
+          medication_compliance_data?: Json | null;
           metadata?: Json | null;
+          outcome?: string | null;
+          owner_sentiment_data?: Json | null;
+          pet_health_data?: Json | null;
           phone_number_id?: string | null;
           recording_url?: string | null;
           started_at?: string | null;
@@ -1326,8 +1350,14 @@ export type Database = {
           vapi_call_id: string;
         };
         Update: {
+          actions_taken?: Json | null;
           assistant_id?: string;
+          attention_flagged_at?: string | null;
+          attention_severity?: string | null;
+          attention_summary?: string | null;
+          attention_types?: string[] | null;
           call_analysis?: Json | null;
+          call_outcome_data?: Json | null;
           cleaned_transcript?: string | null;
           clinic_name?: string | null;
           cost?: number | null;
@@ -1338,8 +1368,14 @@ export type Database = {
           duration_seconds?: number | null;
           ended_at?: string | null;
           ended_reason?: string | null;
+          escalation_data?: Json | null;
+          follow_up_data?: Json | null;
           id?: string;
+          medication_compliance_data?: Json | null;
           metadata?: Json | null;
+          outcome?: string | null;
+          owner_sentiment_data?: Json | null;
+          pet_health_data?: Json | null;
           phone_number_id?: string | null;
           recording_url?: string | null;
           started_at?: string | null;
