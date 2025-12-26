@@ -282,7 +282,7 @@ export function AppointmentDetail({
         {/* Pet Header Card - Top priority info */}
         <div
           className={cn(
-            "rounded-xl border p-4",
+            "rounded-xl border p-4 pr-12",
             "bg-gradient-to-br from-white/80 via-teal-50/30 to-white/80",
             "dark:from-slate-900/80 dark:via-teal-950/30 dark:to-slate-900/80",
             "shadow-sm backdrop-blur-md",

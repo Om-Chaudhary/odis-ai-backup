@@ -60,9 +60,7 @@ function formatDuration(seconds: number | null | undefined): string {
 /**
  * Check if call needs attention based on outcome
  */
-function getAttentionType(
-  call: InboundCall,
-): {
+function getAttentionType(call: InboundCall): {
   type: "urgent" | "callback" | "escalation";
   title: string;
   description?: string;
@@ -156,7 +154,7 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
   return (
     <div className="flex h-full flex-col">
       {/* Header with clinic, duration, and end reason */}
-      <div className="flex items-center justify-between border-b border-teal-100/50 bg-gradient-to-r from-white/50 to-teal-50/30 px-4 py-3 dark:from-slate-900/50 dark:to-teal-950/30">
+      <div className="flex items-center justify-between border-b border-teal-100/50 bg-gradient-to-r from-white/50 to-teal-50/30 px-4 py-3 pr-12 dark:from-slate-900/50 dark:to-teal-950/30">
         <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
           <div className="flex items-center gap-2">
             <Building2 className="h-4 w-4" />
