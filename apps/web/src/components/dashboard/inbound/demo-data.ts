@@ -93,11 +93,6 @@ export function getCallModifications(call: InboundCall): {
     }
   }
 
-  // Andrea call - hide from calls, show in appointments tab instead
-  if (phoneMatches(phone, ["4088910469"])) {
-    return { shouldHide: true, isSilent: false, adjustedDate: callDate };
-  }
-
   // Silent calls - blank duration
   const silentPhones = ["727576003", "2532278892", "5103207704"];
   const isSilent = phoneMatches(phone, silentPhones);
@@ -320,34 +315,10 @@ AI: You're welcome, Melissa. Have a good night!`,
 // =============================================================================
 
 /**
- * Demo appointment for Andrea
- * This appears in the Appointments tab instead of the Calls tab
+ * Demo appointments array - currently empty
+ * Real appointment data comes from the database
  */
-export const DEMO_APPOINTMENTS: AppointmentRequest[] = [
-  {
-    id: "demo-andrea-appointment",
-    clinicId: "demo-clinic",
-    providerId: null,
-    clientName: "Andrea",
-    clientPhone: "+14088910469",
-    patientName: "Max",
-    species: "Dog",
-    breed: "Golden Retriever",
-    reason: "Annual wellness exam and vaccinations",
-    requestedDate: new Date().toISOString().split("T")[0] ?? null, // Today
-    requestedStartTime: "10:00:00",
-    requestedEndTime: "10:30:00",
-    status: "pending",
-    isNewClient: false,
-    isOutlier: false,
-    notes: null,
-    vapiCallId: null,
-    confirmedAppointmentId: null,
-    metadata: null,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
+export const DEMO_APPOINTMENTS: AppointmentRequest[] = [];
 
 /**
  * Get demo appointments to inject into the appointments list

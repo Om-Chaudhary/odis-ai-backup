@@ -80,6 +80,7 @@ async function findClinicByAssistantId(
 /**
  * Parse date string to Date object
  * Handles various formats: "tomorrow", "next monday", "2024-01-15", etc.
+ * Also validates and corrects the year if it's in the past (AI sometimes sends wrong years)
  */
 function parsePreferredDate(dateStr?: string): Date | null {
   if (!dateStr) return null;
@@ -89,6 +90,7 @@ function parsePreferredDate(dateStr?: string): Date | null {
   // Handle relative dates
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const currentYear = today.getFullYear();
 
   if (normalized === "today") {
     return today;
@@ -103,6 +105,18 @@ function parsePreferredDate(dateStr?: string): Date | null {
   // Try parsing as ISO date or common formats
   const parsed = new Date(dateStr);
   if (!isNaN(parsed.getTime())) {
+    // Validate year - AI sometimes sends dates with wrong years (e.g., 2023 instead of 2025)
+    // If the year is more than 1 year in the past, correct it to the current year
+    const parsedYear = parsed.getFullYear();
+    if (parsedYear < currentYear - 1) {
+      logger.warn("Correcting date with old year", {
+        original: dateStr,
+        parsedYear,
+        currentYear,
+      });
+      // Preserve the month and day, update the year to current year
+      parsed.setFullYear(currentYear);
+    }
     return parsed;
   }
 
