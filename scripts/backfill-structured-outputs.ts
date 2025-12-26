@@ -8,6 +8,7 @@
  * - Fetch completed outbound calls with transcripts but missing attention data
  * - Use Claude AI to analyze each transcript
  * - Generate structured outputs: needs_attention, attention_types, attention_severity, attention_summary
+ * - Optionally generate comprehensive call intelligence (6 categories)
  * - Update the database with the generated data
  *
  * Usage:
@@ -19,7 +20,8 @@
  *   --limit=N           Limit to N records (default: no limit)
  *   --force-update      Re-analyze calls that already have attention data (default: skip already processed)
  *   --clinic=NAME       Filter by clinic name
- *   --include-inbound   Also process inbound calls (requires attention columns in inbound_vapi_calls)
+ *   --include-inbound   Also process inbound calls
+ *   --comprehensive     Generate all 6 call intelligence categories (call_outcome, pet_health, etc.)
  *
  * Examples:
  *   # Dry run to see what would be analyzed
@@ -34,12 +36,8 @@
  *   # Re-analyze everything including existing attention data
  *   pnpm tsx scripts/backfill-structured-outputs.ts --force-update --days=90
  *
- * Note: Inbound calls (inbound_vapi_calls) require attention columns to be added.
- * Run this migration first if you want to include inbound calls:
- *   ALTER TABLE inbound_vapi_calls ADD COLUMN attention_types text[] DEFAULT '{}';
- *   ALTER TABLE inbound_vapi_calls ADD COLUMN attention_severity text;
- *   ALTER TABLE inbound_vapi_calls ADD COLUMN attention_summary text;
- *   ALTER TABLE inbound_vapi_calls ADD COLUMN attention_flagged_at timestamptz;
+ *   # Generate comprehensive call intelligence for inbound calls
+ *   pnpm tsx scripts/backfill-structured-outputs.ts --include-inbound --comprehensive --days=30
  */
 
 import { config } from "dotenv";
@@ -73,6 +71,51 @@ interface StructuredOutput {
   attention_types: string[];
   attention_severity: "routine" | "urgent" | "critical";
   attention_summary: string | null;
+}
+
+// Comprehensive call intelligence output (6 categories) - descriptive for clinical staff
+interface CallIntelligenceOutput {
+  // Attention classification
+  needs_attention: boolean;
+  attention_types: string[];
+  attention_severity: "routine" | "urgent" | "critical";
+  attention_summary: string | null;
+  // 6 intelligence categories with descriptive summaries
+  call_outcome_data: {
+    call_outcome?: string;
+    outcome_summary?: string;
+    conversation_stage_reached?: string;
+    key_topics_discussed?: string[];
+  } | null;
+  pet_health_data: {
+    pet_recovery_status?: string;
+    health_summary?: string;
+    symptoms_reported?: string[];
+    owner_observations?: string;
+  } | null;
+  medication_compliance_data: {
+    medication_compliance?: string;
+    compliance_summary?: string;
+    medications_mentioned?: string[];
+    medication_concerns?: string | null;
+  } | null;
+  owner_sentiment_data: {
+    owner_sentiment?: string;
+    sentiment_summary?: string;
+    notable_comments?: string | null;
+  } | null;
+  escalation_data: {
+    escalation_triggered?: boolean;
+    escalation_summary?: string | null;
+    escalation_type?: string | null;
+    staff_action_needed?: string | null;
+  } | null;
+  follow_up_data: {
+    follow_up_needed?: boolean;
+    follow_up_summary?: string;
+    appointment_status?: string;
+    next_steps?: string | null;
+  } | null;
 }
 
 interface BackfillStats {
@@ -152,6 +195,172 @@ Respond with ONLY a valid JSON object (no markdown, no explanation):
 }
 
 If needs_attention is false, attention_types should be [], attention_severity should be "routine", and attention_summary should be null.`;
+
+// Comprehensive call intelligence prompt (generates all 6 categories)
+const COMPREHENSIVE_INTELLIGENCE_PROMPT = `You are an expert veterinary call analyst helping clinic staff quickly understand call outcomes. Analyze veterinary call transcripts and extract actionable intelligence that veterinarians and staff can scan and act on.
+
+## Your Goal
+Create DESCRIPTIVE, CLINICALLY USEFUL summaries - not just boolean values. Each field should contain meaningful text that helps staff understand what happened without reading the full transcript.
+
+## Output Format
+Respond with ONLY a valid JSON object:
+{
+  "needs_attention": boolean,
+  "attention_types": string[],
+  "attention_severity": "routine" | "urgent" | "critical",
+  "attention_summary": "Concise 1-2 sentence explanation of why this needs attention, or null if no attention needed",
+  
+  "call_outcome_data": {
+    "call_outcome": "successful" | "unsuccessful" | "partial" | "voicemail",
+    "outcome_summary": "Brief description of how the call went (e.g., 'Owner confirmed pet is recovering well, no concerns raised')",
+    "conversation_stage_reached": "greeting" | "health_check" | "medication_review" | "questions" | "closing",
+    "key_topics_discussed": ["array of main topics covered in the call"]
+  },
+  
+  "pet_health_data": {
+    "pet_recovery_status": "improving" | "stable" | "declining" | "concerning",
+    "health_summary": "1-2 sentence summary of pet's current condition as reported by owner (e.g., 'Bella is eating normally and energy levels are returning. Incision site looks clean per owner.')",
+    "symptoms_reported": ["specific symptoms mentioned, e.g., 'mild lethargy', 'decreased appetite'"],
+    "owner_observations": "What the owner specifically noticed or mentioned about the pet"
+  },
+  
+  "medication_compliance_data": {
+    "medication_compliance": "full" | "partial" | "none" | "not_discussed",
+    "compliance_summary": "Summary of medication status (e.g., 'Owner giving all medications as prescribed, no issues with administration')",
+    "medications_mentioned": ["names of medications discussed if any"],
+    "medication_concerns": "Any questions or issues the owner raised about medications, or null"
+  },
+  
+  "owner_sentiment_data": {
+    "owner_sentiment": "positive" | "neutral" | "negative" | "anxious" | "grateful",
+    "sentiment_summary": "Brief description of owner's emotional state and engagement (e.g., 'Owner seemed relieved and grateful for the follow-up call')",
+    "notable_comments": "Any significant quotes or concerns expressed by owner, or null"
+  },
+  
+  "escalation_data": {
+    "escalation_triggered": boolean,
+    "escalation_summary": "Description of any escalation that occurred or was needed (e.g., 'Owner requested callback from Dr. Smith about wound care'), or null if none",
+    "escalation_type": "transfer" | "callback_requested" | "urgent_concern" | null,
+    "staff_action_needed": "Specific action staff should take, if any"
+  },
+  
+  "follow_up_data": {
+    "follow_up_needed": boolean,
+    "follow_up_summary": "What follow-up is needed and why (e.g., 'Recheck appointment in 5 days for suture removal confirmed')",
+    "appointment_status": "Description of any appointments discussed or scheduled",
+    "next_steps": "Clear action items for clinic staff, if any"
+  }
+}
+
+## Writing Guidelines:
+1. Write summaries as if briefing a busy veterinarian - concise but complete
+2. Use clinical terminology appropriately
+3. Include specific details from the call (pet name, symptoms, medications)
+4. Make action items clear and specific
+5. If a category wasn't discussed, set it to null rather than making assumptions
+6. attention_summary should clearly explain WHY attention is needed
+7. Be conservative with "needs_attention" - only true for genuine concerns
+
+## Attention Types (for attention_types array):
+- health_concern: Pet showing concerning symptoms or not improving
+- callback_request: Owner explicitly asked for callback from staff
+- medication_question: Unresolved medication questions
+- appointment_needed: Follow-up appointment should be scheduled
+- dissatisfaction: Owner expressed concerns about care
+- billing_question: Billing/cost questions need addressing
+- emergency_signs: Symptoms requiring immediate attention
+
+Return ONLY the JSON, no markdown or explanation.`;
+
+function createComprehensivePrompt(transcript: string): string {
+  return `Analyze this veterinary call transcript and extract comprehensive call intelligence:
+
+<transcript>
+${transcript}
+</transcript>
+
+Return ONLY the JSON object.`;
+}
+
+async function analyzeTranscriptComprehensive(
+  transcript: string,
+  anthropic: Anthropic,
+): Promise<CallIntelligenceOutput> {
+  const response = await anthropic.messages.create({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 1024,
+    messages: [
+      {
+        role: "user",
+        content: createComprehensivePrompt(transcript),
+      },
+    ],
+    system: COMPREHENSIVE_INTELLIGENCE_PROMPT,
+  });
+
+  const textBlock = response.content.find((block) => block.type === "text");
+  if (textBlock?.type !== "text") {
+    throw new Error("No text response from AI");
+  }
+
+  const jsonText = textBlock.text.trim();
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch {
+    const jsonMatch = /```(?:json)?\s*([\s\S]*?)\s*```/.exec(jsonText);
+    if (jsonMatch?.[1]) {
+      parsed = JSON.parse(jsonMatch[1]);
+    } else {
+      throw new Error(`Failed to parse AI response as JSON: ${jsonText}`);
+    }
+  }
+
+  const result = parsed as Record<string, unknown>;
+
+  // Validate and normalize attention fields
+  const needsAttention = result.needs_attention === true;
+  const attentionTypes = Array.isArray(result.attention_types)
+    ? (result.attention_types as string[]).filter((t) =>
+        ATTENTION_TYPES.includes(t as (typeof ATTENTION_TYPES)[number]),
+      )
+    : [];
+  const attentionSeverity = SEVERITY_LEVELS.includes(
+    result.attention_severity as (typeof SEVERITY_LEVELS)[number],
+  )
+    ? (result.attention_severity as (typeof SEVERITY_LEVELS)[number])
+    : "routine";
+  const attentionSummary =
+    typeof result.attention_summary === "string"
+      ? result.attention_summary
+      : null;
+
+  return {
+    needs_attention: needsAttention,
+    attention_types: needsAttention ? attentionTypes : [],
+    attention_severity: needsAttention ? attentionSeverity : "routine",
+    attention_summary: needsAttention ? attentionSummary : null,
+    call_outcome_data:
+      (result.call_outcome_data as CallIntelligenceOutput["call_outcome_data"]) ??
+      null,
+    pet_health_data:
+      (result.pet_health_data as CallIntelligenceOutput["pet_health_data"]) ??
+      null,
+    medication_compliance_data:
+      (result.medication_compliance_data as CallIntelligenceOutput["medication_compliance_data"]) ??
+      null,
+    owner_sentiment_data:
+      (result.owner_sentiment_data as CallIntelligenceOutput["owner_sentiment_data"]) ??
+      null,
+    escalation_data:
+      (result.escalation_data as CallIntelligenceOutput["escalation_data"]) ??
+      null,
+    follow_up_data:
+      (result.follow_up_data as CallIntelligenceOutput["follow_up_data"]) ??
+      null,
+  };
+}
 
 function createUserPrompt(transcript: string): string {
   return `Analyze this veterinary discharge follow-up call transcript and determine if clinic attention is needed:
@@ -369,6 +578,74 @@ async function updateCallWithStructuredOutput(
   }
 }
 
+/**
+ * Update call with comprehensive call intelligence (all 6 categories)
+ */
+async function updateCallWithComprehensiveIntelligence(
+  supabase: SupabaseClient,
+  table: "scheduled_discharge_calls" | "inbound_vapi_calls",
+  callId: string,
+  output: CallIntelligenceOutput,
+): Promise<void> {
+  const updateData: Record<string, unknown> = {
+    // Attention fields
+    attention_types: output.attention_types,
+    attention_severity: output.attention_severity,
+    attention_summary: output.attention_summary,
+    // 6 intelligence categories
+    call_outcome_data: output.call_outcome_data,
+    pet_health_data: output.pet_health_data,
+    medication_compliance_data: output.medication_compliance_data,
+    owner_sentiment_data: output.owner_sentiment_data,
+    escalation_data: output.escalation_data,
+    follow_up_data: output.follow_up_data,
+  };
+
+  // Only set flagged_at if needs attention
+  if (output.needs_attention) {
+    updateData.attention_flagged_at = new Date().toISOString();
+  }
+
+  // Store comprehensive backfill metadata in structured_data
+  updateData.structured_data = {
+    needs_attention: output.needs_attention,
+    attention_types: output.attention_types,
+    attention_severity: output.attention_severity,
+    attention_summary: output.attention_summary,
+    backfilled: true,
+    backfilled_at: new Date().toISOString(),
+    backfill_version: "comprehensive_v1",
+  };
+
+  // Update parent case is_urgent flag for critical cases (outbound only)
+  if (
+    output.attention_severity === "critical" &&
+    table === "scheduled_discharge_calls"
+  ) {
+    const { data: callData } = await supabase
+      .from(table)
+      .select("case_id")
+      .eq("id", callId)
+      .single();
+
+    if (callData?.case_id) {
+      await supabase
+        .from("cases")
+        .update({ is_urgent: true })
+        .eq("id", callData.case_id);
+    }
+  }
+
+  const { error } = await supabase
+    .from(table)
+    .update(updateData)
+    .eq("id", callId);
+
+  if (error) {
+    throw new Error(`Failed to update call: ${error.message}`);
+  }
+}
+
 // ============================================================================
 // MAIN BACKFILL FUNCTION
 // ============================================================================
@@ -380,6 +657,7 @@ async function backfillStructuredOutputs(options: {
   forceUpdate?: boolean;
   clinicName?: string;
   includeInbound?: boolean;
+  comprehensive?: boolean; // Generate all 6 intelligence categories
 }): Promise<BackfillStats> {
   const {
     dryRun = false,
@@ -388,6 +666,7 @@ async function backfillStructuredOutputs(options: {
     forceUpdate = false,
     clinicName,
     includeInbound = false,
+    comprehensive = false,
   } = options;
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -422,6 +701,9 @@ async function backfillStructuredOutputs(options: {
   console.log("BACKFILL STRUCTURED OUTPUTS FOR CALL TRANSCRIPTS");
   console.log("=".repeat(60));
   console.log(`Mode: ${dryRun ? "DRY RUN" : "LIVE"}`);
+  console.log(
+    `Analysis type: ${comprehensive ? "COMPREHENSIVE (6 categories)" : "ATTENTION ONLY"}`,
+  );
   console.log(`Days to look back: ${days}`);
   console.log(`Limit: ${limit} records`);
   console.log(`Force update existing: ${forceUpdate}`);
@@ -463,39 +745,86 @@ async function backfillStructuredOutputs(options: {
       console.log(`  Transcript length: ${call.transcript.length} chars`);
 
       if (!dryRun) {
-        const output = await analyzeTranscript(call.transcript, anthropic);
-
-        console.log(`  Needs attention: ${output.needs_attention}`);
-        if (output.needs_attention) {
-          console.log(`  Types: ${output.attention_types.join(", ")}`);
-          console.log(`  Severity: ${output.attention_severity}`);
-          console.log(
-            `  Summary: ${output.attention_summary?.slice(0, 80)}...`,
+        if (comprehensive) {
+          // Comprehensive analysis - all 6 intelligence categories
+          const output = await analyzeTranscriptComprehensive(
+            call.transcript,
+            anthropic,
           );
-        }
 
-        await updateCallWithStructuredOutput(
-          supabase,
-          "scheduled_discharge_calls",
-          call.id,
-          output,
-        );
+          console.log(`  Needs attention: ${output.needs_attention}`);
+          if (output.needs_attention) {
+            console.log(`  Types: ${output.attention_types.join(", ")}`);
+            console.log(`  Severity: ${output.attention_severity}`);
+          }
+          console.log(`  Has call outcome: ${!!output.call_outcome_data}`);
+          console.log(`  Has pet health: ${!!output.pet_health_data}`);
+          console.log(
+            `  Has medication: ${!!output.medication_compliance_data}`,
+          );
+          console.log(`  Has sentiment: ${!!output.owner_sentiment_data}`);
+          console.log(`  Has escalation: ${!!output.escalation_data}`);
+          console.log(`  Has follow-up: ${!!output.follow_up_data}`);
 
-        console.log(`  ✅ Updated successfully`);
+          await updateCallWithComprehensiveIntelligence(
+            supabase,
+            "scheduled_discharge_calls",
+            call.id,
+            output,
+          );
 
-        stats.analyzed++;
-        stats.details.push({
-          callId: call.id,
-          action: "analyzed",
-          needsAttention: output.needs_attention,
-          attentionTypes: output.attention_types,
-          severity: output.attention_severity,
-        });
+          console.log(`  ✅ Updated successfully (comprehensive)`);
 
-        if (output.needs_attention) {
-          stats.needsAttention++;
+          stats.analyzed++;
+          stats.details.push({
+            callId: call.id,
+            action: "analyzed",
+            needsAttention: output.needs_attention,
+            attentionTypes: output.attention_types,
+            severity: output.attention_severity,
+          });
+
+          if (output.needs_attention) {
+            stats.needsAttention++;
+          } else {
+            stats.noAttention++;
+          }
         } else {
-          stats.noAttention++;
+          // Basic analysis - attention only
+          const output = await analyzeTranscript(call.transcript, anthropic);
+
+          console.log(`  Needs attention: ${output.needs_attention}`);
+          if (output.needs_attention) {
+            console.log(`  Types: ${output.attention_types.join(", ")}`);
+            console.log(`  Severity: ${output.attention_severity}`);
+            console.log(
+              `  Summary: ${output.attention_summary?.slice(0, 80)}...`,
+            );
+          }
+
+          await updateCallWithStructuredOutput(
+            supabase,
+            "scheduled_discharge_calls",
+            call.id,
+            output,
+          );
+
+          console.log(`  ✅ Updated successfully`);
+
+          stats.analyzed++;
+          stats.details.push({
+            callId: call.id,
+            action: "analyzed",
+            needsAttention: output.needs_attention,
+            attentionTypes: output.attention_types,
+            severity: output.attention_severity,
+          });
+
+          if (output.needs_attention) {
+            stats.needsAttention++;
+          } else {
+            stats.noAttention++;
+          }
         }
       } else {
         console.log(`  (DRY RUN - no changes made)`);
@@ -576,36 +905,83 @@ async function backfillStructuredOutputs(options: {
         console.log(`  Transcript length: ${call.transcript.length} chars`);
 
         if (!dryRun) {
-          const output = await analyzeTranscript(call.transcript, anthropic);
+          if (comprehensive) {
+            // Comprehensive analysis - all 6 intelligence categories
+            const output = await analyzeTranscriptComprehensive(
+              call.transcript,
+              anthropic,
+            );
 
-          console.log(`  Needs attention: ${output.needs_attention}`);
-          if (output.needs_attention) {
-            console.log(`  Types: ${output.attention_types.join(", ")}`);
-            console.log(`  Severity: ${output.attention_severity}`);
-          }
+            console.log(`  Needs attention: ${output.needs_attention}`);
+            if (output.needs_attention) {
+              console.log(`  Types: ${output.attention_types.join(", ")}`);
+              console.log(`  Severity: ${output.attention_severity}`);
+            }
+            console.log(`  Has call outcome: ${!!output.call_outcome_data}`);
+            console.log(`  Has pet health: ${!!output.pet_health_data}`);
+            console.log(
+              `  Has medication: ${!!output.medication_compliance_data}`,
+            );
+            console.log(`  Has sentiment: ${!!output.owner_sentiment_data}`);
+            console.log(`  Has escalation: ${!!output.escalation_data}`);
+            console.log(`  Has follow-up: ${!!output.follow_up_data}`);
 
-          await updateCallWithStructuredOutput(
-            supabase,
-            "inbound_vapi_calls",
-            call.id,
-            output,
-          );
+            await updateCallWithComprehensiveIntelligence(
+              supabase,
+              "inbound_vapi_calls",
+              call.id,
+              output,
+            );
 
-          console.log(`  ✅ Updated successfully`);
+            console.log(`  ✅ Updated successfully (comprehensive)`);
 
-          stats.analyzed++;
-          stats.details.push({
-            callId: call.id,
-            action: "analyzed",
-            needsAttention: output.needs_attention,
-            attentionTypes: output.attention_types,
-            severity: output.attention_severity,
-          });
+            stats.analyzed++;
+            stats.details.push({
+              callId: call.id,
+              action: "analyzed",
+              needsAttention: output.needs_attention,
+              attentionTypes: output.attention_types,
+              severity: output.attention_severity,
+            });
 
-          if (output.needs_attention) {
-            stats.needsAttention++;
+            if (output.needs_attention) {
+              stats.needsAttention++;
+            } else {
+              stats.noAttention++;
+            }
           } else {
-            stats.noAttention++;
+            // Basic analysis - attention only
+            const output = await analyzeTranscript(call.transcript, anthropic);
+
+            console.log(`  Needs attention: ${output.needs_attention}`);
+            if (output.needs_attention) {
+              console.log(`  Types: ${output.attention_types.join(", ")}`);
+              console.log(`  Severity: ${output.attention_severity}`);
+            }
+
+            await updateCallWithStructuredOutput(
+              supabase,
+              "inbound_vapi_calls",
+              call.id,
+              output,
+            );
+
+            console.log(`  ✅ Updated successfully`);
+
+            stats.analyzed++;
+            stats.details.push({
+              callId: call.id,
+              action: "analyzed",
+              needsAttention: output.needs_attention,
+              attentionTypes: output.attention_types,
+              severity: output.attention_severity,
+            });
+
+            if (output.needs_attention) {
+              stats.needsAttention++;
+            } else {
+              stats.noAttention++;
+            }
           }
         } else {
           console.log(`  (DRY RUN - no changes made)`);
@@ -637,6 +1013,7 @@ async function main() {
   const dryRun = args.includes("--dry-run");
   const forceUpdate = args.includes("--force-update");
   const includeInbound = args.includes("--include-inbound");
+  const comprehensive = args.includes("--comprehensive");
 
   const daysArg = args.find((arg) => arg.startsWith("--days="));
   const days = daysArg ? parseInt(daysArg.split("=")[1] ?? "90") : 90;
@@ -655,6 +1032,7 @@ async function main() {
       forceUpdate,
       clinicName,
       includeInbound,
+      comprehensive,
     });
 
     console.log("\n" + "=".repeat(60));
