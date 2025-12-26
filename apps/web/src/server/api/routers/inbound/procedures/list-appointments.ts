@@ -130,6 +130,18 @@ export const listAppointmentsRouter = createTRPCRouter({
             return false;
           }
 
+          // Hide specific Rocky appointment with no phone number
+          if (
+            apt.patientName &&
+            typeof apt.patientName === "string" &&
+            apt.patientName.toLowerCase().includes("rocky") &&
+            apt.reason &&
+            typeof apt.reason === "string" &&
+            apt.reason.toLowerCase().includes("chocolate")
+          ) {
+            return false;
+          }
+
           const canelaPhoneNumbers = [
             "4089214136", // Yvonne Trigo's number
           ];
