@@ -184,8 +184,53 @@ export function useInboundData(params: UseInboundDataParams) {
     }
   }, [messagesData?.messages]);
 
-  // Derived data
-  const calls = useMemo(() => callsData?.calls ?? [], [callsData?.calls]);
+  // Derived data with custom Andrea placement for calls
+  const calls = useMemo(() => {
+    const rawCalls = callsData?.calls ?? [];
+
+    // Find Andrea call for custom placement between Adriana and Sylvia
+    const andreaCallIndex = rawCalls.findIndex(
+      (call) =>
+        call.customer_phone === "4088910469" ||
+        call.customer_phone === "408-891-0469" ||
+        call.customer_phone === "(408) 891-0469"
+    );
+
+    // Remove Andrea for custom placement
+    let andreaCall = null;
+    const remainingCalls = [...rawCalls];
+    if (andreaCallIndex !== -1) {
+      const removedAndrea = remainingCalls.splice(andreaCallIndex, 1);
+      andreaCall = removedAndrea[0];
+    }
+
+    // Insert Andrea between Adriana Skandarian and Sylvia Rosella
+    const finalCalls = [];
+    let andreaInserted = false;
+
+    for (let i = 0; i < remainingCalls.length; i++) {
+      const call = remainingCalls[i];
+
+      // Add current call
+      finalCalls.push(call);
+
+      // If this is Adriana Skandarian and we haven't inserted Andrea yet, insert Andrea next
+      if (andreaCall && !andreaInserted &&
+          (call.customer_phone === "4087619777" ||
+           call.customer_phone === "408-761-9777" ||
+           call.customer_phone === "(408) 761-9777")) {
+        finalCalls.push(andreaCall);
+        andreaInserted = true;
+      }
+    }
+
+    // If Andrea wasn't inserted, add her at the end
+    if (andreaCall && !andreaInserted) {
+      finalCalls.push(andreaCall);
+    }
+
+    return finalCalls;
+  }, [callsData?.calls]);
 
   // Merge real appointments with demo appointments and hardcode specific placements
   const appointments = useMemo(() => {
@@ -195,13 +240,7 @@ export function useInboundData(params: UseInboundDataParams) {
     // Combine all appointments
     const allAppointments = [...demoAppointments, ...realAppointments];
 
-    // Find special appointments for custom placement
-    const specialAppointmentIndex334 = allAppointments.findIndex(
-      (appointment) =>
-        appointment.clientPhone === "(408) 334-3500" ||
-        appointment.id === "demo-334-3500-appointment",
-    );
-
+    // Find Andrea appointment for custom placement between Adriana and Sylvia
     const andreaAppointmentIndex = allAppointments.findIndex(
       (appointment) =>
         appointment.clientName === "Andrea Watkins" ||
@@ -209,31 +248,11 @@ export function useInboundData(params: UseInboundDataParams) {
         appointment.id === "demo-cancelled-appointment",
     );
 
-    // Remove special appointments for custom placement
-    const specialAppointments = [];
-
-    // Remove (408) 334-3500 appointment
-    if (specialAppointmentIndex334 !== -1) {
-      const removed334 = allAppointments.splice(specialAppointmentIndex334, 1);
-      if (removed334[0]) {
-        specialAppointments.push({ type: '334', appointment: removed334[0] });
-      }
-    }
-
-    // Update Andrea index after potential removal of 334 appointment
-    const updatedAndreaIndex = allAppointments.findIndex(
-      (appointment) =>
-        appointment.clientName === "Andrea Watkins" ||
-        appointment.clientPhone === "408-891-0469" ||
-        appointment.id === "demo-cancelled-appointment",
-    );
-
-    // Handle Andrea appointment if present
-    if (updatedAndreaIndex !== -1) {
-      const removedAndrea = allAppointments.splice(updatedAndreaIndex, 1);
-      if (removedAndrea[0]) {
-        specialAppointments.push({ type: 'andrea', appointment: removedAndrea[0] });
-      }
+    // Remove Andrea for custom placement
+    let andreaAppointment = null;
+    if (andreaAppointmentIndex !== -1) {
+      const removedAndrea = allAppointments.splice(andreaAppointmentIndex, 1);
+      andreaAppointment = removedAndrea[0];
     }
 
     // Sort remaining appointments by creation date (newest first)
@@ -242,48 +261,29 @@ export function useInboundData(params: UseInboundDataParams) {
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
 
-    // Build final appointment list with special ordering:
-    // 1. (408) 334-3500 at the top (Dec 26, 7:51 AM)
-    // 2. Regular sorted appointments
-    // 3. Andrea at her specific position (Dec 25, 10:08 AM)
+    // Insert Andrea between Adriana Skandarian and Sylvia Rosella
     const finalAppointments = [];
-
-    // Add (408) 334-3500 at the very top
-    const appointment334 = specialAppointments.find(s => s.type === '334');
-    if (appointment334) {
-      finalAppointments.push(appointment334.appointment);
-    }
-
-    // Add remaining appointments, but insert Andrea in the right chronological position
-    const andreaAppt = specialAppointments.find(s => s.type === 'andrea');
     let andreaInserted = false;
 
     for (let i = 0; i < allAppointments.length; i++) {
       const appointment = allAppointments[i];
 
-      // If we have Andrea and haven't inserted her yet, check if this is the right position
-      if (andreaAppt && !andreaInserted) {
-        const appointmentDate = new Date(appointment.createdAt);
-        const appointmentHour = appointmentDate.getHours();
-        const appointmentMinute = appointmentDate.getMinutes();
-        const appointmentDay = appointmentDate.getDate();
-
-        // If this appointment is after Dec 25 10:08 AM, insert Andrea before it
-        if (
-          appointmentDay < 25 || // Before Dec 25
-          (appointmentDay === 25 && (appointmentHour > 10 || (appointmentHour === 10 && appointmentMinute > 8)))
-        ) {
-          finalAppointments.push(andreaAppt.appointment);
-          andreaInserted = true;
-        }
-      }
-
+      // Add current appointment
       finalAppointments.push(appointment);
+
+      // If this is Adriana Skandarian and we haven't inserted Andrea yet, insert Andrea next
+      if (andreaAppointment && !andreaInserted &&
+          (appointment.clientName === "Adriana Skandarian" ||
+           appointment.clientPhone === "408-761-9777" ||
+           appointment.clientPhone === "(408) 761-9777")) {
+        finalAppointments.push(andreaAppointment);
+        andreaInserted = true;
+      }
     }
 
-    // If Andrea wasn't inserted yet, add her at the end
-    if (andreaAppt && !andreaInserted) {
-      finalAppointments.push(andreaAppt.appointment);
+    // If Andrea wasn't inserted (e.g., Adriana not found), add her at the end
+    if (andreaAppointment && !andreaInserted) {
+      finalAppointments.push(andreaAppointment);
     }
 
     return finalAppointments;

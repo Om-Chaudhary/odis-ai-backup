@@ -73,11 +73,6 @@ export const DEMO_PHONE_NAMES: Record<string, string> = {
   "4082346798": "Rocky Panicun",
   "14082346798": "Rocky Panicun",
   "+14082346798": "Rocky Panicun",
-  // (408) 334-3500 - Dec 26, 7:51 AM call back
-  "4083343500": "Client",
-  "14083343500": "Client",
-  "+14083343500": "Client",
-  "(408) 334-3500": "Client",
 };
 
 /**
@@ -425,34 +420,6 @@ export const DEMO_APPOINTMENTS: AppointmentRequest[] = [
     },
     // Set createdAt to Dec 25, 2024 at 9:00am
     createdAt: "2024-12-25T17:00:00.000Z", // 9:00 AM PST
-    updatedAt: new Date().toISOString(),
-  },
-  // (408) 334-3500 appointment - 7:51am (Call Back)
-  {
-    id: "demo-334-3500-appointment",
-    clinicId: "demo-clinic",
-    providerId: null,
-    clientName: "Client",
-    clientPhone: "(408) 334-3500",
-    patientName: "Pet",
-    species: "unknown",
-    breed: null,
-    reason: "General care inquiry - callback requested",
-    requestedDate: "2024-12-26",
-    requestedStartTime: null,
-    requestedEndTime: null,
-    status: "pending" as const,
-    isNewClient: null,
-    isOutlier: null,
-    notes: "Client called requesting callback from clinic during business hours about pet care.",
-    vapiCallId: "demo-vapi-call-334-3500",
-    confirmedAppointmentId: null,
-    metadata: {
-      callbackRequested: true,
-      demoData: true,
-    },
-    // Set createdAt to Dec 26, 2024 at 7:51am
-    createdAt: "2024-12-26T15:51:00.000Z", // 7:51 AM PST
     updatedAt: new Date().toISOString(),
   },
 ];

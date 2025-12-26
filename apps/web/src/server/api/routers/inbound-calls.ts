@@ -216,6 +216,26 @@ export const inboundCallsRouter = createTRPCRouter({
           return false; // Filter out all Andrea database calls
         }
 
+        // Hide (408) 334-3500 calls completely
+        if (
+          call.customer_phone === "4083343500" ||
+          call.customer_phone === "408-334-3500" ||
+          call.customer_phone === "(408) 334-3500" ||
+          call.customer_phone === "+1 (408) 334-3500" ||
+          call.customer_phone === "+14083343500"
+        ) {
+          return false; // Filter out all (408) 334-3500 calls
+        }
+
+        // Hide calls with no phone number provided
+        if (
+          !call.customer_phone ||
+          call.customer_phone === "" ||
+          call.customer_phone === null
+        ) {
+          return false; // Filter out calls with no phone number
+        }
+
         return true;
       });
 
