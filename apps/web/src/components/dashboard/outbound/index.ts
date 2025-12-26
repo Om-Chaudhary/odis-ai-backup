@@ -16,7 +16,6 @@ export { OutboundSplitLayout } from "./outbound-split-layout";
 
 // Filters & Navigation
 export { OutboundFilterTabs } from "./outbound-filter-tabs";
-export { OutboundDateNav } from "./outbound-date-nav";
 
 // Table components
 export { OutboundCaseTable } from "./outbound-case-table";

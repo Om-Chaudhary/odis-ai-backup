@@ -2,7 +2,7 @@
 
 import { Search } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
-import { OutboundDateNav } from "./outbound-date-nav";
+import { DatePickerNav } from "../shared";
 
 interface OutboundFilterTabsProps {
   // Search
@@ -33,7 +33,7 @@ export function OutboundFilterTabs({
       {/* Left: Date Navigator (optional) */}
       {showDateNav && (
         <div className="flex items-center gap-3">
-          <OutboundDateNav
+          <DatePickerNav
             currentDate={currentDate}
             onDateChange={onDateChange}
             isLoading={isLoading}
