@@ -23,7 +23,6 @@ config({ path: ".env" });
 // Inbound assistant IDs that need webhook configuration
 const INBOUND_ASSISTANT_IDS = [
   "ae3e6a54-17a3-4915-9c3e-48779b5dbf09", // OdisAI - Alum Rock After-Hours Inbound
-  "1a9e1517-696e-4293-a5ea-1a59c2bcf0d9", // odis_inbound_receptionist_v1
 ];
 
 // Production webhook URL
@@ -34,6 +33,24 @@ interface ServerConfig {
   secret?: string;
   timeoutSeconds?: number;
 }
+
+// Server messages that VAPI should send to our webhook
+// Valid values: assistant.started, conversation-update, end-of-call-report, function-call,
+// hang, language-changed, language-change-detected, model-output, phone-call-control,
+// speech-update, status-update, transcript, tool-calls, transfer-destination-request,
+// handoff-destination-request, transfer-update, user-interrupted, voice-input
+const SERVER_MESSAGES = [
+  "status-update",
+  "end-of-call-report",
+  "hang",
+  "tool-calls",
+  "transcript",
+  "speech-update",
+  "transfer-destination-request",
+  "conversation-update",
+  "transfer-update",
+  "function-call",
+];
 
 async function updateAssistantServer(
   assistantId: string,
@@ -47,6 +64,7 @@ async function updateAssistantServer(
 
   console.log(`\nUpdating assistant ${assistantId}...`);
   console.log(`  Server URL: ${serverConfig.url}`);
+  console.log(`  Server Messages: ${SERVER_MESSAGES.length} event types`);
 
   const response = await fetch(`https://api.vapi.ai/assistant/${assistantId}`, {
     method: "PATCH",
@@ -56,6 +74,7 @@ async function updateAssistantServer(
     },
     body: JSON.stringify({
       server: serverConfig,
+      serverMessages: SERVER_MESSAGES,
     }),
   });
 
