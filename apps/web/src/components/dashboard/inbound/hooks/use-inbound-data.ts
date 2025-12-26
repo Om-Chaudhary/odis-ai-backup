@@ -211,6 +211,9 @@ export function useInboundData(params: UseInboundDataParams) {
     for (let i = 0; i < remainingCalls.length; i++) {
       const call = remainingCalls[i];
 
+      // Skip if call is undefined/null
+      if (!call) continue;
+
       // Add current call
       finalCalls.push(call);
 
@@ -267,6 +270,9 @@ export function useInboundData(params: UseInboundDataParams) {
 
     for (let i = 0; i < allAppointments.length; i++) {
       const appointment = allAppointments[i];
+
+      // Skip if appointment is undefined/null
+      if (!appointment) continue;
 
       // Add current appointment
       finalAppointments.push(appointment);
