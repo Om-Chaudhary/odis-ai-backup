@@ -363,7 +363,7 @@ function OutboundDischargesClientInner() {
       value: "needs_review",
       label: "Missing Info",
       icon: UserX,
-      count: statsData?.needsReview ?? 0,
+      count: statsData?.pendingReview ?? 0,
     },
     {
       value: "needs_attention",
