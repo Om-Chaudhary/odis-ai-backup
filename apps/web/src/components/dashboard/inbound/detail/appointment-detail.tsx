@@ -44,6 +44,7 @@ import { api } from "~/trpc/client";
 import { AttentionBanner } from "./shared/attention-banner";
 import { TimestampBadge } from "./shared/timestamp-badge";
 import { getCallDataOverride } from "./demo-data/call-overrides";
+import type { Database } from "@odis-ai/shared/types";
 
 interface AppointmentRequest {
   id: string;
@@ -266,7 +267,8 @@ export function AppointmentDetail({
         customer_phone: appointment.clientPhone,
         id: "demo-call-andrea-cancellation",
         created_at: appointment.createdAt,
-      } as Partial<Database["public"]["Tables"]["inbound_vapi_calls"]["Row"]>)
+        vapi_call_id: appointment.vapiCallId || "demo-vapi-call-andrea",
+      } as Database["public"]["Tables"]["inbound_vapi_calls"]["Row"])
     : null;
 
   // Fetch call recording from VAPI if appointment has an associated call (but not for demo)

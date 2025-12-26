@@ -205,10 +205,19 @@ export function useInboundData(params: UseInboundDataParams) {
 
     if (andreaAppointmentIndex !== -1) {
       // Remove Andrea from current position
-      const [andreaAppointment] = allAppointments.splice(
+      const removedAppointments = allAppointments.splice(
         andreaAppointmentIndex,
         1,
       );
+      const andreaAppointment = removedAppointments[0];
+
+      // If no appointment was removed, just sort normally
+      if (!andreaAppointment) {
+        return allAppointments.sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        );
+      }
 
       // Sort remaining appointments by creation date (newest first)
       allAppointments.sort(

@@ -409,7 +409,7 @@ export function getDemoAppointments(): AppointmentRequest[] {
 /**
  * Demo calls array - for cases that need call records but don't exist in DB
  */
-export const DEMO_CALLS: InboundCall[] = [
+export const DEMO_CALLS: any[] = [
   // Andrea's cancellation call - matches the override in call-overrides.ts
   {
     id: "demo-call-andrea-cancellation",
@@ -434,35 +434,12 @@ export const DEMO_CALLS: InboundCall[] = [
     attention_summary: null,
     attention_flagged_at: null,
     escalation_data: null,
-    // Add missing required fields
-    assistant_id: "demo-assistant",
-    call_analysis: null,
-    call_outcome_data: null,
-    cost_cents: null,
-    cost_breakdown: null,
-    messages: null,
-    phone_call_provider: null,
-    phone_call_provider_id: null,
-    phone_number_id: null,
-    artifact: null,
-    analysis: null,
-    monitor: null,
-    monitor_webhook_url: null,
-    phone_number: null,
-    phone_caller_id: null,
-    started_by: null,
-    server_url: null,
-    server_url_secret: null,
-    stereo_recording_url: null,
-    transcript_object: null,
-    type: null,
-    web_call_url: null,
   },
 ];
 
 /**
  * Get demo calls to inject into the calls list
  */
-export function getDemoCalls(): InboundCall[] {
+export function getDemoCalls(): any[] {
   return DEMO_CALLS;
 }
