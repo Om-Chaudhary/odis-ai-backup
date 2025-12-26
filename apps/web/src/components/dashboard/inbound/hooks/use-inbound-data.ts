@@ -187,7 +187,7 @@ export function useInboundData(params: UseInboundDataParams) {
   // Derived data
   const calls = useMemo(() => callsData?.calls ?? [], [callsData?.calls]);
 
-  // Merge real appointments with demo appointments and hardcode Andrea's placement
+  // Merge real appointments with demo appointments and hardcode specific placements
   const appointments = useMemo(() => {
     const realAppointments = appointmentsData?.appointments ?? [];
     const demoAppointments = getDemoAppointments();
@@ -195,7 +195,13 @@ export function useInboundData(params: UseInboundDataParams) {
     // Combine all appointments
     const allAppointments = [...demoAppointments, ...realAppointments];
 
-    // Hardcode Andrea's placement - find Andrea appointment
+    // Find special appointments for custom placement
+    const specialAppointmentIndex334 = allAppointments.findIndex(
+      (appointment) =>
+        appointment.clientPhone === "(408) 334-3500" ||
+        appointment.id === "demo-334-3500-appointment",
+    );
+
     const andreaAppointmentIndex = allAppointments.findIndex(
       (appointment) =>
         appointment.clientName === "Andrea Watkins" ||
@@ -203,59 +209,84 @@ export function useInboundData(params: UseInboundDataParams) {
         appointment.id === "demo-cancelled-appointment",
     );
 
-    if (andreaAppointmentIndex !== -1) {
-      // Remove Andrea from current position
-      const removedAppointments = allAppointments.splice(
-        andreaAppointmentIndex,
-        1,
-      );
-      const andreaAppointment = removedAppointments[0];
+    // Remove special appointments for custom placement
+    const specialAppointments = [];
 
-      // If no appointment was removed, just sort normally
-      if (!andreaAppointment) {
-        return allAppointments.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-        );
+    // Remove (408) 334-3500 appointment
+    if (specialAppointmentIndex334 !== -1) {
+      const removed334 = allAppointments.splice(specialAppointmentIndex334, 1);
+      if (removed334[0]) {
+        specialAppointments.push({ type: '334', appointment: removed334[0] });
       }
+    }
 
-      // Sort remaining appointments by creation date (newest first)
-      allAppointments.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
+    // Update Andrea index after potential removal of 334 appointment
+    const updatedAndreaIndex = allAppointments.findIndex(
+      (appointment) =>
+        appointment.clientName === "Andrea Watkins" ||
+        appointment.clientPhone === "408-891-0469" ||
+        appointment.id === "demo-cancelled-appointment",
+    );
 
-      // Find position for Andrea's 10:08 AM appointment
-      let insertIndex = 0;
-      for (let i = 0; i < allAppointments.length; i++) {
-        const appointment = allAppointments[i];
-        if (!appointment) continue; // Safety check
+    // Handle Andrea appointment if present
+    if (updatedAndreaIndex !== -1) {
+      const removedAndrea = allAppointments.splice(updatedAndreaIndex, 1);
+      if (removedAndrea[0]) {
+        specialAppointments.push({ type: 'andrea', appointment: removedAndrea[0] });
+      }
+    }
+
+    // Sort remaining appointments by creation date (newest first)
+    allAppointments.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+
+    // Build final appointment list with special ordering:
+    // 1. (408) 334-3500 at the top (Dec 26, 7:51 AM)
+    // 2. Regular sorted appointments
+    // 3. Andrea at her specific position (Dec 25, 10:08 AM)
+    const finalAppointments = [];
+
+    // Add (408) 334-3500 at the very top
+    const appointment334 = specialAppointments.find(s => s.type === '334');
+    if (appointment334) {
+      finalAppointments.push(appointment334.appointment);
+    }
+
+    // Add remaining appointments, but insert Andrea in the right chronological position
+    const andreaAppt = specialAppointments.find(s => s.type === 'andrea');
+    let andreaInserted = false;
+
+    for (let i = 0; i < allAppointments.length; i++) {
+      const appointment = allAppointments[i];
+
+      // If we have Andrea and haven't inserted her yet, check if this is the right position
+      if (andreaAppt && !andreaInserted) {
         const appointmentDate = new Date(appointment.createdAt);
         const appointmentHour = appointmentDate.getHours();
         const appointmentMinute = appointmentDate.getMinutes();
+        const appointmentDay = appointmentDate.getDate();
 
-        // If this appointment is after 10:08 AM (Andrea's time), insert Andrea before it
+        // If this appointment is after Dec 25 10:08 AM, insert Andrea before it
         if (
-          appointmentHour > 10 ||
-          (appointmentHour === 10 && appointmentMinute > 8)
+          appointmentDay < 25 || // Before Dec 25
+          (appointmentDay === 25 && (appointmentHour > 10 || (appointmentHour === 10 && appointmentMinute > 8)))
         ) {
-          insertIndex = i;
-          break;
+          finalAppointments.push(andreaAppt.appointment);
+          andreaInserted = true;
         }
-        // If we're at the end, insert at the end
-        insertIndex = i + 1;
       }
 
-      // Insert Andrea at the calculated position
-      allAppointments.splice(insertIndex, 0, andreaAppointment);
-      return allAppointments;
-    } else {
-      // No Andrea appointment found, just sort normally
-      return allAppointments.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
+      finalAppointments.push(appointment);
     }
+
+    // If Andrea wasn't inserted yet, add her at the end
+    if (andreaAppt && !andreaInserted) {
+      finalAppointments.push(andreaAppt.appointment);
+    }
+
+    return finalAppointments;
   }, [appointmentsData?.appointments]);
 
   const messages = useMemo(
