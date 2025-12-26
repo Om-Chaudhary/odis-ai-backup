@@ -433,7 +433,6 @@ export const DEMO_CALLS: InboundCall[] = [
     attention_severity: null,
     attention_summary: null,
     escalation_data: null,
-    analysis_metadata: null,
   },
 ];
 
