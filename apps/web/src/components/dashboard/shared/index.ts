@@ -7,6 +7,10 @@ export * from "./forms";
 // Card components
 export * from "./cards";
 
+// Layout components
+export * from "./dashboard-page-header";
+export * from "./dashboard-toolbar";
+
 // Feature components
 export * from "./call-recording-player";
 export * from "./completion-indicator";
