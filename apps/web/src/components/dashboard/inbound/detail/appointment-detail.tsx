@@ -2,7 +2,6 @@
 import { useState, useMemo } from "react";
 import { format, isValid } from "date-fns";
 import { Button } from "@odis-ai/shared/ui/button";
-import { Badge } from "@odis-ai/shared/ui/badge";
 import { Textarea } from "@odis-ai/shared/ui/textarea";
 import { Separator } from "@odis-ai/shared/ui/separator";
 import { Label } from "@odis-ai/shared/ui/label";
@@ -40,6 +39,8 @@ import {
 import { cn } from "@odis-ai/shared/util";
 import { CallRecordingPlayer } from "../../shared/call-recording-player";
 import { api } from "~/trpc/client";
+import { InboundCallerCard } from "./caller-card";
+import type { AppointmentStatus } from "../types";
 
 interface AppointmentRequest {
   id: string;
@@ -212,22 +213,19 @@ export function AppointmentDetail({
 
   return (
     <div className="flex h-full flex-col">
-      {/* Minimal Header - Only badges not shown in table */}
-      <div className="flex items-center justify-between border-b border-teal-100/50 bg-gradient-to-r from-white/50 to-teal-50/30 px-4 py-3">
-        <div className="flex items-center gap-2">
-          {appointment.isNewClient && (
-            <Badge variant="secondary" className="bg-blue-500/10 text-blue-700">
-              New Client
-            </Badge>
-          )}
-          {!appointment.isNewClient && (
-            <span className="text-sm text-slate-500">Appointment Request</span>
-          )}
-        </div>
-      </div>
-
       {/* Scrollable Content */}
       <div className="flex-1 space-y-4 overflow-auto p-4">
+        {/* Caller/Patient Card */}
+        <InboundCallerCard
+          variant="appointment"
+          phone={appointment.clientPhone}
+          callerName={appointment.clientName}
+          petName={appointment.patientName}
+          species={appointment.species}
+          breed={appointment.breed}
+          appointmentStatus={appointment.status as AppointmentStatus}
+          isNewClient={appointment.isNewClient}
+        />
         {/* Sensitive Case Alert */}
         {isSensitive && (
           <Card className="border-purple-200 bg-purple-50 dark:border-purple-800 dark:bg-purple-950/30">

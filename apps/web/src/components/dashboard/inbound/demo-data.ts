@@ -249,7 +249,7 @@ function getMariaSerpaCallData(call: InboundCall) {
   return {
     ...call,
     recording_url: "/audio/cancelAppt.MP3",
-    transcript: `Assistant: Hello, You have reached the After Hours Assistant at Alam Rock Animal Hospital. How can I help you today?
+    transcript: `AI: Hello, you have reached the after-hours assistant at Alum Rock Animal Hospital. How can I help you today?
 
 User: I need to cancel my dog's appointment.
 

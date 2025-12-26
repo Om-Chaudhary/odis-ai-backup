@@ -21,6 +21,8 @@ import { CallIntelligenceSection } from "../../outbound/detail/call-intelligence
 import { api } from "~/trpc/client";
 import { getCallDataOverride } from "./demo-data";
 import { ActionsTakenCard } from "./actions-taken-card";
+import { InboundCallerCard } from "./caller-card";
+import { getDemoCallerName } from "../demo-data";
 
 // Import InboundCall type from shared types
 import type { InboundCall } from "../types";
@@ -45,6 +47,23 @@ function formatEndReason(endedReason: string | null): string {
 
 export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Check static demo mapping first for caller name
+  const demoCallerName = getDemoCallerName(call.customer_phone);
+
+  // Query for caller info by phone number (skip if we found demo name)
+  const { data: callerInfo } = api.inbound.getCallerNameByPhone.useQuery(
+    { phone: call.customer_phone ?? "" },
+    {
+      enabled: !!call.customer_phone && !demoCallerName,
+      staleTime: 5 * 60 * 1000, // 5 minutes cache
+      retry: false,
+    },
+  );
+
+  // Get caller name and pet name
+  const callerName = demoCallerName ?? callerInfo?.name ?? null;
+  const petName = callerInfo?.petName ?? null;
 
   // Fetch call data from VAPI if database data is missing critical fields
   const shouldFetchFromVAPI = !call.recording_url && !!call.vapi_call_id;
@@ -93,6 +112,15 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
 
       {/* Scrollable Content */}
       <div className="flex-1 space-y-4 overflow-auto p-4">
+        {/* Caller Card */}
+        <InboundCallerCard
+          variant="call"
+          phone={call.customer_phone}
+          callerName={callerName}
+          petName={petName}
+          callOutcome={call.outcome}
+        />
+
         {call.outcome && call.actions_taken && (
           <ActionsTakenCard
             outcome={call.outcome}

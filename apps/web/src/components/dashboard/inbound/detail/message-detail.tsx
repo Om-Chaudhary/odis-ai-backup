@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Button } from "@odis-ai/shared/ui/button";
-import { Badge } from "@odis-ai/shared/ui/badge";
 import {
   Card,
   CardContent,
@@ -20,6 +19,8 @@ import {
 import { cn } from "@odis-ai/shared/util";
 import { CallRecordingPlayer } from "../../shared/call-recording-player";
 import { api } from "~/trpc/client";
+import { InboundCallerCard } from "./caller-card";
+import type { MessageStatus, MessagePriority } from "../types";
 
 interface ClinicMessage {
   id: string;
@@ -98,18 +99,17 @@ export function MessageDetail({
 
   return (
     <div className="flex h-full flex-col">
-      {/* Minimal Header - Just visual context for urgent messages */}
-      {isUrgent && (
-        <div className="flex items-center gap-2 border-b border-red-200/50 bg-gradient-to-r from-red-50/50 to-white/50 px-4 py-3">
-          <Badge variant="destructive" className="flex items-center gap-1">
-            <AlertTriangle className="h-3 w-3" />
-            Urgent Message
-          </Badge>
-        </div>
-      )}
-
       {/* Scrollable Content */}
       <div className="flex-1 space-y-4 overflow-auto p-4">
+        {/* Caller Card */}
+        <InboundCallerCard
+          variant="message"
+          phone={message.callerPhone}
+          callerName={message.callerName}
+          messageStatus={message.status as MessageStatus}
+          priority={message.priority as MessagePriority | null}
+        />
+
         {/* Message Content */}
         <Card className={isUrgent ? "border-destructive/20" : ""}>
           <CardHeader className="pb-2">
