@@ -114,6 +114,22 @@ export const listAppointmentsRouter = createTRPCRouter({
           const normalizePhone = (phone: string | null) =>
             (phone ?? "").replace(/\D/g, "");
 
+          // Hide (408) 334-3500 appointments completely
+          if (
+            apt.clientPhone === "4083343500" ||
+            apt.clientPhone === "408-334-3500" ||
+            apt.clientPhone === "(408) 334-3500" ||
+            apt.clientPhone === "+1 (408) 334-3500" ||
+            apt.clientPhone === "+14083343500"
+          ) {
+            return false;
+          }
+
+          // Hide appointments with no phone number provided
+          if (!apt.clientPhone || apt.clientPhone === "" || apt.clientPhone === null) {
+            return false;
+          }
+
           const canelaPhoneNumbers = [
             "4089214136", // Yvonne Trigo's number
           ];
