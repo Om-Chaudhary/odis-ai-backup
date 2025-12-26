@@ -65,8 +65,8 @@ export const callAssociationsRouter = createTRPCRouter({
 
   /**
    * Get caller info by phone number from appointments or messages
-   * Returns caller name, pet name (if from appointment), and source
-   * Used to display caller info in the Calls tab
+   * Returns caller name, pet name, species, breed, lastVisit (if from appointment), and source
+   * Used to display caller info in the Calls tab and Pet Context in Messages tab
    */
   getCallerNameByPhone: protectedProcedure
     .input(
@@ -86,10 +86,10 @@ export const callAssociationsRouter = createTRPCRouter({
       const supabase = await createClient();
 
       // Try to find in appointment_requests first (by client_phone)
-      // Select both client_name and patient_name (pet name)
+      // Select client_name, patient_name, species, breed, and created_at for context
       const { data: appointment } = await supabase
         .from("appointment_requests")
-        .select("client_name, patient_name")
+        .select("client_name, patient_name, species, breed, created_at")
         .or(
           `client_phone.eq.${normalizedPhone},client_phone.eq.+1${normalizedPhone},client_phone.ilike.%${normalizedPhone.slice(-10)}%`,
         )
@@ -101,6 +101,9 @@ export const callAssociationsRouter = createTRPCRouter({
         return {
           name: appointment.client_name ?? null,
           petName: appointment.patient_name ?? null,
+          species: appointment.species ?? null,
+          breed: appointment.breed ?? null,
+          lastVisit: appointment.created_at ?? null,
           source: "appointment" as const,
         };
       }
@@ -120,6 +123,9 @@ export const callAssociationsRouter = createTRPCRouter({
         return {
           name: message.caller_name,
           petName: null,
+          species: null,
+          breed: null,
+          lastVisit: null,
           source: "message" as const,
         };
       }

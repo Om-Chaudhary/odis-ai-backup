@@ -281,9 +281,13 @@ export function InboundCallerCard({
             ) : (
               <>
                 <div className="flex items-center gap-2">
-                  <h2 className="truncate text-lg font-bold text-slate-800 dark:text-white">
+                  {/* Make phone clickable in header when it's the primary display */}
+                  <a
+                    href={`tel:${phone}`}
+                    className="truncate text-lg font-bold text-slate-800 hover:text-teal-600 dark:text-white dark:hover:text-teal-400"
+                  >
                     {formattedPhone}
-                  </h2>
+                  </a>
                   {renderStatusBadge()}
                 </div>
                 {callerName && (
@@ -346,23 +350,7 @@ export function InboundCallerCard({
         </>
       )}
 
-      {/* For non-pet views, show clickable phone below caller name */}
-      {!hasPetInfo && callerName && phone && (
-        <>
-          <Separator className="my-3 bg-teal-200/30 dark:bg-teal-800/30" />
-          <a
-            href={`tel:${phone}`}
-            className={cn(
-              "flex items-center gap-2 text-sm",
-              "text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300",
-              "transition-colors",
-            )}
-          >
-            <Phone className="h-4 w-4" />
-            <span>{formattedPhone}</span>
-          </a>
-        </>
-      )}
+      {/* Note: Phone is already clickable in header when no pet info, so no duplicate needed */}
     </div>
   );
 }
