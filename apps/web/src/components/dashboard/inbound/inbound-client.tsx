@@ -180,18 +180,23 @@ export function InboundClient() {
 
   // Build view options with counts from stats
   const viewOptions = [
-    { value: "calls", label: "Calls", icon: Phone, count: stats?.calls ?? 0 },
+    {
+      value: "calls",
+      label: "Calls",
+      icon: Phone,
+      count: stats?.totals?.calls ?? 0,
+    },
     {
       value: "appointments",
       label: "Appointments",
       icon: Calendar,
-      count: stats?.appointments ?? 0,
+      count: stats?.totals?.appointments ?? 0,
     },
     {
       value: "messages",
       label: "Messages",
       icon: MessageSquare,
-      count: stats?.messages ?? 0,
+      count: stats?.totals?.messages ?? 0,
     },
   ];
 
