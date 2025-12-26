@@ -628,5 +628,25 @@ User: No.`,
     };
   }
 
+  // (408) 334-3500 - Dec 26, 7:51 AM - Call Back
+  if (
+    matchesPhone(call.customer_phone, [
+      "4083343500",
+      "408-334-3500",
+      "+14083343500",
+      "(408) 334-3500",
+      "+1 (408) 334-3500",
+    ])
+  ) {
+    return {
+      ...call,
+      outcome: "Call Back",
+      actions_taken: ["Message left for clinic staff"],
+      summary: "Caller requested callback from clinic during business hours.",
+      transcript: "AI: Thank you for calling Alum Rock Animal Hospital. You've reached the after hours assistant. How can I help you today?\n\nUser: Hi, I need to speak with someone about my pet's care.\n\nAI: I'd be happy to help. Can I get your name and phone number so the clinic can call you back?\n\nUser: Sure, it's (408) 334-3500.\n\nAI: Thank you. The clinic will call you back during business hours. Is there anything else I can help you with?\n\nUser: No, that's all. Thank you.",
+      duration_seconds: 45,
+    };
+  }
+
   return null;
 }
