@@ -3,6 +3,8 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useQueryState, parseAsInteger } from "nuqs";
 import { format, parseISO, startOfDay } from "date-fns";
+import { Search } from "lucide-react";
+import { cn } from "@odis-ai/shared/util";
 
 import type { ViewMode, InboundItem } from "./types";
 import { PageToolbar, PageContent, PageFooter } from "../layout";
@@ -126,6 +128,21 @@ export function InboundClient() {
     return () => document.removeEventListener("keydown", handleEscape);
   }, [selectedItem]);
 
+  // Cmd+K for search
+  useEffect(() => {
+    const handleCmdK = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        const searchInput = document.querySelector<HTMLInputElement>(
+          'input[placeholder="Search..."]',
+        );
+        searchInput?.focus();
+      }
+    };
+    document.addEventListener("keydown", handleCmdK);
+    return () => document.removeEventListener("keydown", handleCmdK);
+  }, []);
+
   // Suppress unused setViewMode (view mode now controlled by sidebar navigation)
   void setViewMode;
 
@@ -164,6 +181,10 @@ export function InboundClient() {
     setSelectedItem(null);
   }, []);
 
+  const handleSearchChange = useCallback((term: string) => {
+    setSearchTerm(term);
+  }, []);
+
   const handleKeyNavigation = useCallback(
     (direction: "up" | "down") => {
       if (currentItems.length === 0) return;
@@ -190,8 +211,6 @@ export function InboundClient() {
   );
 
   // Suppress unused variable warnings
-  void searchTerm;
-  void setSearchTerm;
   void stats;
 
   return (
@@ -204,11 +223,35 @@ export function InboundClient() {
           leftPanel={
             <>
               <PageToolbar className="border-none bg-transparent px-4 pt-2 shadow-none backdrop-blur-none">
-                <DatePickerNav
-                  currentDate={currentDate}
-                  onDateChange={handleDateChange}
-                  isLoading={isLoading}
-                />
+                <div className="flex items-center justify-between gap-6">
+                  {/* Left: Date Navigator */}
+                  <DatePickerNav
+                    currentDate={currentDate}
+                    onDateChange={handleDateChange}
+                    isLoading={isLoading}
+                  />
+
+                  {/* Right: Search */}
+                  <div className="relative w-64">
+                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      value={searchTerm}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      className={cn(
+                        "h-8 w-full rounded-md border border-teal-200/50 bg-white/60 pr-12 pl-9 text-sm",
+                        "placeholder:text-slate-400",
+                        "transition-all duration-200",
+                        "hover:border-teal-300/60 hover:bg-white/80",
+                        "focus:border-teal-400 focus:bg-white focus:ring-2 focus:ring-teal-500/20 focus:outline-none",
+                      )}
+                    />
+                    <kbd className="pointer-events-none absolute top-1/2 right-2 hidden -translate-y-1/2 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-xs font-medium text-slate-400 sm:inline-block">
+                      ⌘K
+                    </kbd>
+                  </div>
+                </div>
               </PageToolbar>
               <PageContent>
                 <InboundTable
