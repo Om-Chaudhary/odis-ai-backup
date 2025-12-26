@@ -168,6 +168,17 @@ export interface FollowUpData {
 }
 
 /**
+ * Call outcome category for badge display
+ */
+export type CallOutcome =
+  | "Scheduled"
+  | "Cancellation"
+  | "Info"
+  | "Emergency"
+  | "Call Back"
+  | "Completed";
+
+/**
  * Inbound call from inbound_vapi_calls table
  * Uses snake_case to match database schema
  */
@@ -188,6 +199,11 @@ export interface InboundCall {
   ended_reason: string | null;
   created_at: string;
   updated_at: string;
+  // Call outcome classification
+  /** Call outcome category for badge display */
+  outcome?: CallOutcome | null;
+  /** Array of action items extracted from the call */
+  actions_taken?: string[] | null;
   // Call intelligence columns
   attention_types?: string[] | null;
   attention_severity?: string | null;

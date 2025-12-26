@@ -5,27 +5,35 @@
  */
 
 /**
- * Formats a phone number from E.164 format to readable format
+ * Formats a phone number to readable format
+ * Handles various input formats including E.164, 10-digit, and formatted numbers
  *
- * @param phone - Phone number in E.164 format (e.g., +14155551234) or null
- * @returns Formatted phone number or "N/A" if null
+ * @param phone - Phone number in any format (e.g., +14155551234, 4155551234, (415) 555-1234)
+ * @returns Formatted phone number or "N/A" if null/invalid
  *
  * @example
- * formatPhoneNumber("+14155551234") // Returns "+1 (415) 555-1234"
+ * formatPhoneNumber("+14155551234") // Returns "(415) 555-1234"
+ * formatPhoneNumber("4155551234") // Returns "(415) 555-1234"
+ * formatPhoneNumber("(415) 555-1234") // Returns "(415) 555-1234"
  * formatPhoneNumber(null) // Returns "N/A"
  */
 export function formatPhoneNumber(phone: string | null): string {
   if (!phone) return "N/A";
 
-  // Format E.164 to readable format
-  const cleaned = phone.replace(/^\+/, "");
+  // Extract only digits
+  const digits = phone.replace(/\D/g, "");
 
-  // US/Canada format: +1 (XXX) XXX-XXXX
-  if (cleaned.length === 11 && cleaned.startsWith("1")) {
-    return `+1 (${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7)}`;
+  // Handle 10-digit US numbers (no country code)
+  if (digits.length === 10) {
+    return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
   }
 
-  // Return as-is if not US/Canada format
+  // Handle 11-digit US/Canada numbers (with country code)
+  if (digits.length === 11 && digits.startsWith("1")) {
+    return `(${digits.slice(1, 4)}) ${digits.slice(4, 7)}-${digits.slice(7)}`;
+  }
+
+  // Return original if not US/Canada format
   return phone;
 }
 

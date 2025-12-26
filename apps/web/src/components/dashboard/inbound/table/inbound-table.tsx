@@ -49,7 +49,7 @@ export function InboundTable({
   onSelectItem,
   onKeyNavigation,
   isLoading,
-  onQuickAction,
+  onQuickAction: _onQuickAction,
   isCompact = false,
 }: InboundTableProps) {
   const tableRef = useRef<HTMLDivElement>(null);
@@ -158,14 +158,12 @@ export function InboundTable({
                   {viewMode === "appointments" && (
                     <AppointmentRow
                       appointment={item as AppointmentRequest}
-                      onQuickAction={onQuickAction}
                       isCompact={isCompact}
                     />
                   )}
                   {viewMode === "messages" && (
                     <MessageRow
                       message={item as ClinicMessage}
-                      onQuickAction={onQuickAction}
                       isCompact={isCompact}
                     />
                   )}

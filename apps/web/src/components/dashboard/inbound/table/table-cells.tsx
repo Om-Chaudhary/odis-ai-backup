@@ -2,7 +2,7 @@
  * Shared table cell components
  */
 
-import { Calendar, MessageSquare, Loader2 } from "lucide-react";
+import { Calendar, MessageSquare, Loader2, PawPrint } from "lucide-react";
 import { api } from "~/trpc/client";
 import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
 import { formatDuration } from "../../shared/utils";
@@ -12,22 +12,21 @@ import type { Database } from "@odis-ai/shared/types";
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
 /**
- * Displays caller name if available, otherwise falls back to phone number
- * Looks up caller name from static mapping and database
+ * Displays phone number as primary, with pet name · caller name below if available
+ * Consistent format with appointments tab: phone (semibold), then 🐾 Pet · Client (muted)
  */
 export function CallerDisplay({
   phone,
-  clinicName,
 }: {
   phone: string | null;
-  clinicName: string | null;
+  clinicName?: string | null; // Kept for backwards compatibility but not displayed
 }) {
   const formattedPhone = formatPhoneNumber(phone ?? "") || "Unknown";
 
   // Check static demo mapping first
   const demoName = getDemoCallerName(phone);
 
-  // Query for caller name by phone number (skip if we found demo name)
+  // Query for caller info by phone number (skip if we found demo name)
   const { data: callerInfo, isLoading } =
     api.inbound.getCallerNameByPhone.useQuery(
       { phone: phone ?? "" },
@@ -38,26 +37,35 @@ export function CallerDisplay({
       },
     );
 
-  // Display caller name: demo name > API result > phone number
-  const displayName = demoName ?? callerInfo?.name ?? formattedPhone;
-  const hasName = !!(demoName ?? callerInfo?.name);
+  // Get caller name: demo name > API result > null
+  const callerName = demoName ?? callerInfo?.name ?? null;
+  const petName = callerInfo?.petName ?? null;
+
+  // Determine if we have any secondary info to show
+  const hasSecondaryInfo = callerName ?? petName;
 
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-sm font-medium">
+      {/* Phone number is always primary */}
+      <span className="text-sm font-semibold">
         {isLoading && !demoName ? (
           <span className="text-muted-foreground">{formattedPhone}</span>
         ) : (
-          displayName
+          formattedPhone
         )}
       </span>
-      {/* Show phone number below name if we found a name, otherwise show clinic */}
-      {hasName ? (
-        <span className="text-muted-foreground text-xs">{formattedPhone}</span>
-      ) : (
-        clinicName && (
-          <span className="text-muted-foreground text-xs">{clinicName}</span>
-        )
+      {/* Show pet name · caller name if available - consistent with appointments tab */}
+      {hasSecondaryInfo && (
+        <div className="text-muted-foreground flex items-center gap-1 text-xs">
+          {petName && (
+            <>
+              <PawPrint className="h-3 w-3" />
+              <span>{petName}</span>
+              {callerName && <span>·</span>}
+            </>
+          )}
+          {callerName && <span>{callerName}</span>}
+        </div>
       )}
     </div>
   );

@@ -15,17 +15,12 @@ export function CallsHeader({ isCompact = false }: HeaderProps) {
         Caller
       </th>
       <th
-        className={`h-10 text-center font-medium ${isCompact ? "w-[20%]" : "w-[14%]"}`}
+        className={`h-10 text-center font-medium ${isCompact ? "w-[25%]" : "w-[20%]"}`}
       >
-        Status
+        Outcome
       </th>
       <th
-        className={`h-10 text-center font-medium ${isCompact ? "w-[18%]" : "w-[12%]"}`}
-      >
-        Alerts
-      </th>
-      <th
-        className={`h-10 text-center font-medium ${isCompact ? "w-[22%]" : "w-[14%]"}`}
+        className={`h-10 text-center font-medium ${isCompact ? "w-[18%]" : "w-[14%]"}`}
       >
         Duration
       </th>
@@ -40,30 +35,17 @@ export function AppointmentsHeader({ isCompact = false }: HeaderProps) {
   return (
     <tr className="text-xs text-slate-500">
       <th
-        className={`h-10 pl-3 text-left font-medium ${isCompact ? "w-[38%]" : "w-[26%]"}`}
+        className={`h-10 pl-3 text-left font-medium ${isCompact ? "w-[50%]" : "w-[40%]"}`}
       >
-        Patient / Client
+        Caller
       </th>
       <th
-        className={`h-10 text-left font-medium ${isCompact ? "w-[20%]" : "w-[14%]"}`}
-      >
-        Species
-      </th>
-      <th
-        className={`h-10 text-left font-medium ${isCompact ? "w-[22%]" : "w-[18%]"}`}
-      >
-        Reason
-      </th>
-      <th
-        className={`h-10 text-center font-medium ${isCompact ? "w-[20%]" : "w-[12%]"}`}
+        className={`h-10 text-center font-medium ${isCompact ? "w-[50%]" : "w-[30%]"}`}
       >
         Status
       </th>
       {!isCompact && (
-        <th className="h-10 w-[14%] text-center font-medium">Actions</th>
-      )}
-      {!isCompact && (
-        <th className="h-10 w-[14%] pr-3 text-right font-medium">Appt Date</th>
+        <th className="h-10 w-[30%] pr-3 text-right font-medium">Date/Time</th>
       )}
     </tr>
   );
@@ -73,30 +55,17 @@ export function MessagesHeader({ isCompact = false }: HeaderProps) {
   return (
     <tr className="text-xs text-slate-500">
       <th
-        className={`h-10 pl-3 text-left font-medium ${isCompact ? "w-[28%]" : "w-[18%]"}`}
+        className={`h-10 pl-3 text-left font-medium ${isCompact ? "w-[50%]" : "w-[40%]"}`}
       >
         Caller
       </th>
       <th
-        className={`h-10 text-left font-medium ${isCompact ? "w-[38%]" : "w-[34%]"}`}
-      >
-        Message
-      </th>
-      <th
-        className={`h-10 text-center font-medium ${isCompact ? "w-[16%]" : "w-[12%]"}`}
+        className={`h-10 text-center font-medium ${isCompact ? "w-[50%]" : "w-[30%]"}`}
       >
         Priority
       </th>
-      <th
-        className={`h-10 text-center font-medium ${isCompact ? "w-[18%]" : "w-[12%]"}`}
-      >
-        Status
-      </th>
       {!isCompact && (
-        <th className="h-10 w-[12%] text-center font-medium">Actions</th>
-      )}
-      {!isCompact && (
-        <th className="h-10 w-[12%] pr-3 text-right font-medium">Date/Time</th>
+        <th className="h-10 w-[30%] pr-3 text-right font-medium">Date/Time</th>
       )}
     </tr>
   );

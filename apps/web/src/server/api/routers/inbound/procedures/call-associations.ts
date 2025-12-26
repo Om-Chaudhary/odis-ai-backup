@@ -64,8 +64,9 @@ export const callAssociationsRouter = createTRPCRouter({
     }),
 
   /**
-   * Get caller name by phone number from appointments or messages
-   * Used to display caller names instead of phone numbers in the Calls tab
+   * Get caller info by phone number from appointments or messages
+   * Returns caller name, pet name (if from appointment), and source
+   * Used to display caller info in the Calls tab
    */
   getCallerNameByPhone: protectedProcedure
     .input(
@@ -85,18 +86,21 @@ export const callAssociationsRouter = createTRPCRouter({
       const supabase = await createClient();
 
       // Try to find in appointment_requests first (by client_phone)
+      // Select both client_name and patient_name (pet name)
       const { data: appointment } = await supabase
         .from("appointment_requests")
-        .select("client_name")
+        .select("client_name, patient_name")
         .or(
           `client_phone.eq.${normalizedPhone},client_phone.eq.+1${normalizedPhone},client_phone.ilike.%${normalizedPhone.slice(-10)}%`,
         )
+        .order("created_at", { ascending: false })
         .limit(1)
         .single();
 
-      if (appointment?.client_name) {
+      if (appointment?.client_name || appointment?.patient_name) {
         return {
-          name: appointment.client_name,
+          name: appointment.client_name ?? null,
+          petName: appointment.patient_name ?? null,
           source: "appointment" as const,
         };
       }
@@ -108,11 +112,16 @@ export const callAssociationsRouter = createTRPCRouter({
         .or(
           `caller_phone.eq.${normalizedPhone},caller_phone.eq.+1${normalizedPhone},caller_phone.ilike.%${normalizedPhone.slice(-10)}%`,
         )
+        .order("created_at", { ascending: false })
         .limit(1)
         .single();
 
       if (message?.caller_name) {
-        return { name: message.caller_name, source: "message" as const };
+        return {
+          name: message.caller_name,
+          petName: null,
+          source: "message" as const,
+        };
       }
 
       return null;

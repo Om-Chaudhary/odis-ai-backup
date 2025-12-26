@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQueryState, parseAsInteger } from "nuqs";
-import { format, parseISO, startOfDay } from "date-fns";
 import { Search } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
 
@@ -12,14 +11,12 @@ import { InboundTable } from "./table";
 import { InboundDetail } from "./inbound-detail-refactored";
 import { InboundSplitLayout } from "./inbound-split-layout";
 import { InboundPagination } from "./inbound-pagination";
-import { DatePickerNav } from "../shared";
 import { useInboundData, useInboundMutations } from "./hooks";
 
 /**
  * Inbound Dashboard Client
  *
  * Features:
- * - Date navigation with clickable calendar picker
  * - View mode controlled via URL query param (?view=calls|appointments|messages)
  * - View mode switching now in sidebar navigation
  * - Full-screen split layout with pagination
@@ -28,10 +25,6 @@ import { useInboundData, useInboundMutations } from "./hooks";
  */
 export function InboundClient() {
   // URL-synced state
-  const [dateStr, setDateStr] = useQueryState("date", {
-    defaultValue: format(startOfDay(new Date()), "yyyy-MM-dd"),
-  });
-
   const [viewMode, setViewMode] = useQueryState("view", {
     defaultValue: "appointments" as ViewMode,
     parse: (v) =>
@@ -45,27 +38,6 @@ export function InboundClient() {
   const [pageSize, setPageSize] = useQueryState(
     "size",
     parseAsInteger.withDefault(25),
-  );
-
-  // Parse current date
-  const currentDate = useMemo(() => {
-    if (dateStr) {
-      try {
-        return parseISO(dateStr);
-      } catch {
-        return startOfDay(new Date());
-      }
-    }
-    return startOfDay(new Date());
-  }, [dateStr]);
-
-  // Date range for API - send YYYY-MM-DD strings
-  const { startDate, endDate } = useMemo(
-    () => ({
-      startDate: dateStr ?? format(startOfDay(new Date()), "yyyy-MM-dd"),
-      endDate: dateStr ?? format(startOfDay(new Date()), "yyyy-MM-dd"),
-    }),
-    [dateStr],
   );
 
   // Local state
@@ -89,8 +61,6 @@ export function InboundClient() {
     appointmentStatus: "all",
     messageStatus: "all",
     searchTerm,
-    startDate,
-    endDate,
   });
 
   const {
@@ -147,15 +117,6 @@ export function InboundClient() {
   void setViewMode;
 
   // Handlers
-  const handleDateChange = useCallback(
-    (newDate: Date) => {
-      void setDateStr(format(startOfDay(newDate), "yyyy-MM-dd"));
-      void setPage(1);
-      setSelectedItem(null);
-    },
-    [setDateStr, setPage],
-  );
-
   const handlePageChange = useCallback(
     (newPage: number) => {
       void setPage(newPage);
@@ -214,7 +175,7 @@ export function InboundClient() {
   void stats;
 
   return (
-    <div className="flex h-[calc(100vh-64px)] flex-col gap-2">
+    <div className="flex h-full flex-col gap-2">
       {/* Main Content Area - Full height split layout with toolbar inside left panel */}
       <div className="min-h-0 flex-1">
         <InboundSplitLayout
@@ -223,15 +184,8 @@ export function InboundClient() {
           leftPanel={
             <>
               <PageToolbar className="border-none bg-transparent px-4 pt-2 shadow-none backdrop-blur-none">
-                <div className="flex items-center justify-between gap-6">
-                  {/* Left: Date Navigator */}
-                  <DatePickerNav
-                    currentDate={currentDate}
-                    onDateChange={handleDateChange}
-                    isLoading={isLoading}
-                  />
-
-                  {/* Right: Search */}
+                <div className="flex items-center justify-end gap-6">
+                  {/* Search */}
                   <div className="relative w-64">
                     <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input

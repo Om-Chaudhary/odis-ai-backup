@@ -14,7 +14,6 @@ import {
 import {
   Calendar,
   CalendarCheck,
-  User,
   Loader2,
   AlertTriangle,
   CheckCircle2,
@@ -23,10 +22,8 @@ import {
   Clock,
   Heart,
 } from "lucide-react";
-import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
 import { CallRecordingPlayer } from "../../shared/call-recording-player";
 import { api } from "~/trpc/client";
-import { AppointmentStatusBadge } from "./badges";
 
 interface AppointmentRequest {
   id: string;
@@ -115,33 +112,18 @@ export function AppointmentDetail({
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header - Styled to match outbound PatientOwnerCard */}
-      <div className="flex items-start justify-between border-b border-teal-100/50 bg-gradient-to-r from-white/50 to-teal-50/30 p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-teal-100 to-emerald-100">
-            <Calendar className="h-5 w-5 text-teal-600" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold text-slate-800">
-                {appointment.patientName}
-              </h3>
-              {appointment.isNewClient && (
-                <Badge
-                  variant="secondary"
-                  className="bg-blue-500/10 text-blue-700"
-                >
-                  New Client
-                </Badge>
-              )}
-            </div>
-            <p className="text-sm text-slate-500">
-              {appointment.species}
-              {appointment.breed && ` · ${appointment.breed}`}
-            </p>
-          </div>
+      {/* Minimal Header - Only badges not shown in table */}
+      <div className="flex items-center justify-between border-b border-teal-100/50 bg-gradient-to-r from-white/50 to-teal-50/30 px-4 py-3">
+        <div className="flex items-center gap-2">
+          {appointment.isNewClient && (
+            <Badge variant="secondary" className="bg-blue-500/10 text-blue-700">
+              New Client
+            </Badge>
+          )}
+          {!appointment.isNewClient && (
+            <span className="text-sm text-slate-500">Appointment Request</span>
+          )}
         </div>
-        <AppointmentStatusBadge status={appointment.status} />
       </div>
 
       {/* Scrollable Content */}
@@ -195,37 +177,6 @@ export function AppointmentDetail({
           </Card>
         )}
 
-        {/* Client Info */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
-              <User className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-              Client Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-slate-500">Name</p>
-                <p className="font-medium text-slate-800">
-                  {appointment.clientName}
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-500">Phone</p>
-                <p className="font-medium">
-                  <a
-                    href={`tel:${appointment.clientPhone}`}
-                    className="text-teal-600 hover:text-teal-700 hover:underline"
-                  >
-                    {formatPhoneNumber(appointment.clientPhone)}
-                  </a>
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Appointment Details */}
         <Card>
           <CardHeader className="pb-2">
@@ -247,38 +198,36 @@ export function AppointmentDetail({
               {/* Only show preferences if different from confirmed or no confirmed time */}
               {(appointment.requestedDate != null ||
                 appointment.requestedStartTime != null) && (
-                <>
-                  <Separator />
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-slate-500">
+                      {hasConfirmedTime
+                        ? "Originally Requested"
+                        : "Preferred Date"}
+                    </p>
+                    <p className="font-medium text-slate-800">
+                      {appointment.requestedDate
+                        ? format(
+                            new Date(appointment.requestedDate + "T00:00:00"),
+                            "EEEE, MMMM d, yyyy",
+                          )
+                        : "No preference"}
+                    </p>
+                  </div>
+                  {appointment.requestedStartTime && (
                     <div>
                       <p className="text-slate-500">
                         {hasConfirmedTime
-                          ? "Originally Requested"
-                          : "Preferred Date"}
-                      </p>
-                      <p className="font-medium text-slate-800">
-                        {appointment.requestedDate
-                          ? format(
-                              new Date(appointment.requestedDate + "T00:00:00"),
-                              "EEEE, MMMM d, yyyy",
-                            )
-                          : "No preference"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-slate-500">
-                        {hasConfirmedTime
-                          ? "Originally Requested"
+                          ? "Originally Requested Time"
                           : "Preferred Time"}
                       </p>
-                      <p className="font-medium text-slate-800">
-                        {appointment.requestedStartTime
-                          ? formatTime(appointment.requestedStartTime)
-                          : "No preference"}
+                      <p className="flex items-center gap-1 font-medium text-slate-800">
+                        <Clock className="h-3.5 w-3.5 text-slate-400" />
+                        {formatTime(appointment.requestedStartTime)}
                       </p>
                     </div>
-                  </div>
-                </>
+                  )}
+                </div>
               )}
               {appointment.notes && (
                 <>

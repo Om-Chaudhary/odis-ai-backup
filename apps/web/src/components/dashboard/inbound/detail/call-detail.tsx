@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { format } from "date-fns";
 import { Button } from "@odis-ai/shared/ui/button";
 import {
   Card,
@@ -10,22 +9,18 @@ import {
   CardTitle,
 } from "@odis-ai/shared/ui/card";
 import {
-  Phone,
-  Clock,
+  Building2,
   Loader2,
   AlertTriangle,
   Trash2,
   FileText,
 } from "lucide-react";
 import { Badge } from "@odis-ai/shared/ui/badge";
-import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
 import { CallRecordingPlayer } from "../../shared/call-recording-player";
 import { CallIntelligenceSection } from "../../outbound/detail/call-intelligence";
-import { CommunicationsIntelligenceCard } from "../../outbound/detail/communications-intelligence-card";
 import { api } from "~/trpc/client";
-import { CallStatusBadge, SentimentBadge } from "./badges";
-import { formatDuration } from "./utils";
 import { getCallDataOverride } from "./demo-data";
+import { ActionsTakenCard } from "./actions-taken-card";
 
 // Import InboundCall type from shared types
 import type { InboundCall } from "../types";
@@ -34,6 +29,18 @@ interface CallDetailProps {
   call: InboundCall;
   onDelete?: (id: string) => Promise<void>;
   isSubmitting: boolean;
+}
+
+/**
+ * Formats the end reason for display
+ */
+function formatEndReason(endedReason: string | null): string {
+  if (!endedReason) return "Unknown";
+  // Convert snake_case to Title Case
+  return endedReason
+    .split(/[-_]/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 }
 
 export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
@@ -68,77 +75,30 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header - Styled to match outbound PatientOwnerCard */}
-      <div className="flex items-start justify-between border-b border-teal-100/50 bg-gradient-to-r from-white/50 to-teal-50/30 p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-teal-100 to-emerald-100">
-            <Phone className="h-5 w-5 text-teal-600" />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-slate-800">
-              {formatPhoneNumber(call.customer_phone ?? "") || "Unknown Caller"}
-            </h3>
-            <p className="text-sm text-slate-500">
-              {format(new Date(call.created_at), "EEEE, MMMM d 'at' h:mm a")}
-            </p>
-          </div>
+      {/* Minimal Header - Only context not shown in table row */}
+      <div className="flex items-center justify-between border-b border-teal-100/50 bg-gradient-to-r from-white/50 to-teal-50/30 px-4 py-3">
+        <div className="flex items-center gap-2 text-sm text-slate-600">
+          <Building2 className="h-4 w-4" />
+          <span>{call.clinic_name ?? "Unknown Clinic"}</span>
         </div>
-        <div className="flex items-center gap-2">
-          <CallStatusBadge status={call.status} />
-          {call.user_sentiment && (
-            <SentimentBadge sentiment={call.user_sentiment} />
-          )}
-        </div>
+        {call.ended_reason && (
+          <Badge
+            variant="outline"
+            className="border-slate-200 bg-slate-50 text-xs text-slate-600"
+          >
+            {formatEndReason(call.ended_reason)}
+          </Badge>
+        )}
       </div>
 
       {/* Scrollable Content */}
       <div className="flex-1 space-y-4 overflow-auto p-4">
-        {/* Call Info */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium">
-              <Clock className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-              Call Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-slate-500">Duration</p>
-                <p className="font-medium text-slate-800">
-                  {callData.duration_seconds ? (
-                    formatDuration(callData.duration_seconds)
-                  ) : vapiQuery.isLoading ? (
-                    <span className="flex items-center gap-1 text-slate-500">
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      Loading...
-                    </span>
-                  ) : (
-                    "N/A"
-                  )}
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-500">Cost</p>
-                <p className="font-medium text-slate-800">
-                  {call.cost ? `$${call.cost.toFixed(2)}` : "N/A"}
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-500">Clinic</p>
-                <p className="font-medium text-slate-800">
-                  {call.clinic_name ?? "Unknown"}
-                </p>
-              </div>
-              <div>
-                <p className="text-slate-500">End Reason</p>
-                <p className="font-medium text-slate-800">
-                  {call.ended_reason ?? "N/A"}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {call.outcome && call.actions_taken && (
+          <ActionsTakenCard
+            outcome={call.outcome}
+            actionsTaken={call.actions_taken}
+          />
+        )}
 
         {/* Call Recording and Transcript */}
         {vapiQuery.isLoading && shouldFetchFromVAPI ? (
@@ -169,7 +129,17 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
           </Card>
         ) : null}
 
-        {/* Call Summary */}
+        {/* Call Intelligence Section - 6 Categories */}
+        <CallIntelligenceSection
+          callOutcomeData={call.call_outcome_data ?? null}
+          petHealthData={call.pet_health_data ?? null}
+          medicationComplianceData={call.medication_compliance_data ?? null}
+          ownerSentimentData={call.owner_sentiment_data ?? null}
+          escalationData={call.escalation_data ?? null}
+          followUpData={call.follow_up_data ?? null}
+        />
+
+        {/* Call Summary - First position (primary content) */}
         {callData.summary && (
           <Card>
             <CardHeader className="pb-2">
@@ -190,34 +160,6 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
             </CardContent>
           </Card>
         )}
-
-        {/* Communications Intelligence Card - Attention Summary */}
-        <CommunicationsIntelligenceCard
-          scheduledCall={{
-            id: call.id,
-            status: call.status,
-            durationSeconds: callData.duration_seconds ?? null,
-            endedReason: call.ended_reason,
-            transcript: callData.transcript ?? null,
-            summary: callData.summary ?? null,
-          }}
-          needsAttention={
-            !!(call.attention_types && call.attention_types.length > 0)
-          }
-          attentionTypes={call.attention_types ?? null}
-          attentionSeverity={call.attention_severity ?? null}
-          attentionSummary={call.attention_summary ?? null}
-        />
-
-        {/* Call Intelligence Section - 6 Categories */}
-        <CallIntelligenceSection
-          callOutcomeData={call.call_outcome_data ?? null}
-          petHealthData={call.pet_health_data ?? null}
-          medicationComplianceData={call.medication_compliance_data ?? null}
-          ownerSentimentData={call.owner_sentiment_data ?? null}
-          escalationData={call.escalation_data ?? null}
-          followUpData={call.follow_up_data ?? null}
-        />
       </div>
 
       {/* Delete Footer */}

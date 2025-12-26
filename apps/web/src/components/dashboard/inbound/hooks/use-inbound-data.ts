@@ -24,13 +24,12 @@ interface UseInboundDataParams {
   appointmentStatus: AppointmentStatusFilter;
   messageStatus: MessageStatusFilter;
   searchTerm: string;
-  startDate?: string;
-  endDate?: string;
 }
 
 /**
  * Hook for managing inbound data queries
  * Handles calls, appointments, messages, and stats
+ * Fetches all data with pagination only (no date filtering)
  */
 export function useInboundData(params: UseInboundDataParams) {
   const {
@@ -41,8 +40,6 @@ export function useInboundData(params: UseInboundDataParams) {
     appointmentStatus,
     messageStatus,
     searchTerm,
-    startDate,
-    endDate,
   } = params;
 
   // Refs for polling stability
@@ -77,7 +74,7 @@ export function useInboundData(params: UseInboundDataParams) {
     return undefined;
   };
 
-  // Fetch calls
+  // Fetch calls (no date filtering - all calls with pagination)
   const {
     data: callsData,
     isLoading: callsLoading,
@@ -95,8 +92,6 @@ export function useInboundData(params: UseInboundDataParams) {
         | "cancelled"
         | undefined,
       search: searchTerm || undefined,
-      startDate,
-      endDate,
     },
     {
       enabled: viewMode === "calls",
@@ -112,7 +107,7 @@ export function useInboundData(params: UseInboundDataParams) {
     },
   );
 
-  // Fetch appointments
+  // Fetch appointments (no date filtering - all appointments with pagination)
   const {
     data: appointmentsData,
     isLoading: appointmentsLoading,
@@ -128,8 +123,6 @@ export function useInboundData(params: UseInboundDataParams) {
         | "cancelled"
         | undefined,
       search: searchTerm || undefined,
-      startDate,
-      endDate,
     },
     {
       enabled: viewMode === "appointments",
@@ -137,7 +130,7 @@ export function useInboundData(params: UseInboundDataParams) {
     },
   );
 
-  // Fetch messages
+  // Fetch messages (no date filtering - all messages with pagination)
   const {
     data: messagesData,
     isLoading: messagesLoading,
@@ -156,8 +149,6 @@ export function useInboundData(params: UseInboundDataParams) {
         | "normal"
         | undefined,
       search: searchTerm || undefined,
-      startDate,
-      endDate,
     },
     {
       enabled: viewMode === "messages",
@@ -165,11 +156,8 @@ export function useInboundData(params: UseInboundDataParams) {
     },
   );
 
-  // Fetch stats
-  const { data: statsData } = api.inbound.getInboundStats.useQuery({
-    startDate,
-    endDate,
-  });
+  // Fetch stats (global stats without date filtering)
+  const { data: statsData } = api.inbound.getInboundStats.useQuery({});
 
   // Update refs when data changes
   useEffect(() => {

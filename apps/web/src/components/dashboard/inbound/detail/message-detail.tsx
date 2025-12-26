@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { format } from "date-fns";
 import { Button } from "@odis-ai/shared/ui/button";
 import { Badge } from "@odis-ai/shared/ui/badge";
 import {
@@ -11,7 +10,6 @@ import {
   CardTitle,
 } from "@odis-ai/shared/ui/card";
 import {
-  MessageSquare,
   Mail,
   Loader2,
   AlertTriangle,
@@ -20,10 +18,8 @@ import {
   FileText,
 } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
-import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
 import { CallRecordingPlayer } from "../../shared/call-recording-player";
 import { api } from "~/trpc/client";
-import { MessageStatusBadge } from "./badges";
 
 interface ClinicMessage {
   id: string;
@@ -102,53 +98,15 @@ export function MessageDetail({
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header - Styled to match outbound PatientOwnerCard */}
-      <div
-        className={cn(
-          "flex items-start justify-between border-b p-4",
-          isUrgent
-            ? "border-red-200/50 bg-gradient-to-r from-red-50/50 to-white/50"
-            : "border-teal-100/50 bg-gradient-to-r from-white/50 to-teal-50/30",
-        )}
-      >
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              "flex h-10 w-10 items-center justify-center rounded-full",
-              isUrgent
-                ? "bg-gradient-to-br from-red-100 to-red-200"
-                : "bg-gradient-to-br from-teal-100 to-emerald-100",
-            )}
-          >
-            <MessageSquare
-              className={cn(
-                "h-5 w-5",
-                isUrgent ? "text-red-600" : "text-teal-600",
-              )}
-            />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold text-slate-800">
-                {message.callerName ?? "Unknown Caller"}
-              </h3>
-              {isUrgent && (
-                <Badge
-                  variant="destructive"
-                  className="flex items-center gap-1"
-                >
-                  <AlertTriangle className="h-3 w-3" />
-                  Urgent
-                </Badge>
-              )}
-            </div>
-            <p className="text-sm text-slate-500">
-              {formatPhoneNumber(message.callerPhone)}
-            </p>
-          </div>
+      {/* Minimal Header - Just visual context for urgent messages */}
+      {isUrgent && (
+        <div className="flex items-center gap-2 border-b border-red-200/50 bg-gradient-to-r from-red-50/50 to-white/50 px-4 py-3">
+          <Badge variant="destructive" className="flex items-center gap-1">
+            <AlertTriangle className="h-3 w-3" />
+            Urgent Message
+          </Badge>
         </div>
-        <MessageStatusBadge status={message.status} />
-      </div>
+      )}
 
       {/* Scrollable Content */}
       <div className="flex-1 space-y-4 overflow-auto p-4">
@@ -214,31 +172,6 @@ export function MessageDetail({
             </CardContent>
           </Card>
         )}
-
-        {/* Message Info */}
-        <Card>
-          <CardContent className="py-3">
-            <div className="flex items-center justify-between text-xs text-slate-500">
-              <span>
-                Received{" "}
-                <span className="font-medium text-slate-700">
-                  {format(
-                    new Date(message.createdAt),
-                    "MMMM d, yyyy 'at' h:mm a",
-                  )}
-                </span>
-              </span>
-              {message.readAt && (
-                <span>
-                  Read{" "}
-                  <span className="font-medium text-slate-700">
-                    {format(new Date(message.readAt), "h:mm a")}
-                  </span>
-                </span>
-              )}
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Action Footer */}
