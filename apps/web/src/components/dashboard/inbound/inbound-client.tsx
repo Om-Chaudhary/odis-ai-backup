@@ -2,11 +2,11 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useQueryState, parseAsInteger } from "nuqs";
-import { Search } from "lucide-react";
-import { cn } from "@odis-ai/shared/util";
+import { PhoneIncoming, Phone, Calendar, MessageSquare } from "lucide-react";
 
 import type { ViewMode, InboundItem } from "./types";
-import { PageToolbar, PageContent, PageFooter } from "../layout";
+import { PageContent, PageFooter } from "../layout";
+import { DashboardPageHeader, DashboardToolbar } from "../shared";
 import { InboundTable } from "./table";
 import { InboundDetail } from "./inbound-detail-refactored";
 import { InboundSplitLayout } from "./inbound-split-layout";
@@ -18,7 +18,7 @@ import { useInboundData, useInboundMutations } from "./hooks";
  *
  * Features:
  * - View mode controlled via URL query param (?view=calls|appointments|messages)
- * - View mode switching now in sidebar navigation
+ * - View mode switching via inline pills in the toolbar
  * - Full-screen split layout with pagination
  * - Compact table rows
  * - Detail panel for selected items
@@ -113,8 +113,15 @@ export function InboundClient() {
     return () => document.removeEventListener("keydown", handleCmdK);
   }, []);
 
-  // Suppress unused setViewMode (view mode now controlled by sidebar navigation)
-  void setViewMode;
+  // Handle view mode change
+  const handleViewChange = useCallback(
+    (view: string) => {
+      void setViewMode(view as ViewMode);
+      void setPage(1);
+      setSelectedItem(null);
+    },
+    [setViewMode, setPage],
+  );
 
   // Handlers
   const handlePageChange = useCallback(
@@ -171,42 +178,47 @@ export function InboundClient() {
     [currentItems, selectedItem, handleSelectItem],
   );
 
-  // Suppress unused variable warnings
-  void stats;
+  // Build view options with counts from stats
+  const viewOptions = [
+    { value: "calls", label: "Calls", icon: Phone, count: stats?.calls ?? 0 },
+    {
+      value: "appointments",
+      label: "Appointments",
+      icon: Calendar,
+      count: stats?.appointments ?? 0,
+    },
+    {
+      value: "messages",
+      label: "Messages",
+      icon: MessageSquare,
+      count: stats?.messages ?? 0,
+    },
+  ];
 
   return (
-    <div className="flex h-full flex-col gap-2">
-      {/* Main Content Area - Full height split layout with toolbar inside left panel */}
+    <div className="flex h-full flex-col">
+      {/* Main Content Area - Full height split layout with header inside left panel */}
       <div className="min-h-0 flex-1">
         <InboundSplitLayout
           showRightPanel={selectedItem !== null}
           onCloseRightPanel={handleClosePanel}
           leftPanel={
             <>
-              <PageToolbar className="border-none bg-transparent px-4 pt-2 shadow-none backdrop-blur-none">
-                <div className="flex items-center justify-end gap-6">
-                  {/* Search */}
-                  <div className="relative w-64">
-                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input
-                      type="text"
-                      placeholder="Search..."
-                      value={searchTerm}
-                      onChange={(e) => handleSearchChange(e.target.value)}
-                      className={cn(
-                        "h-8 w-full rounded-md border border-teal-200/50 bg-white/60 pr-12 pl-9 text-sm",
-                        "placeholder:text-slate-400",
-                        "transition-all duration-200",
-                        "hover:border-teal-300/60 hover:bg-white/80",
-                        "focus:border-teal-400 focus:bg-white focus:ring-2 focus:ring-teal-500/20 focus:outline-none",
-                      )}
-                    />
-                    <kbd className="pointer-events-none absolute top-1/2 right-2 hidden -translate-y-1/2 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-xs font-medium text-slate-400 sm:inline-block">
-                      ⌘K
-                    </kbd>
-                  </div>
-                </div>
-              </PageToolbar>
+              <DashboardPageHeader
+                title="Inbound Communications"
+                subtitle="Manage incoming calls, appointment requests, and messages"
+                icon={PhoneIncoming}
+              >
+                <DashboardToolbar
+                  viewOptions={viewOptions}
+                  currentView={viewMode}
+                  onViewChange={handleViewChange}
+                  searchTerm={searchTerm}
+                  onSearchChange={handleSearchChange}
+                  searchPlaceholder="Search..."
+                  isLoading={isLoading}
+                />
+              </DashboardPageHeader>
               <PageContent>
                 <InboundTable
                   items={currentItems}
