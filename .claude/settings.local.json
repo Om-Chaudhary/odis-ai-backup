@@ -152,7 +152,8 @@
       "Read(//Users/om/Desktop/Alum Rock/**)",
       "Bash(ffprobe:*)",
       "Read(//Users/om/**)",
-      "Read(//Users/**)"
+      "Read(//Users/**)",
+      "Bash(vercel promote:*)"
     ],
     "deny": [],
     "ask": []
