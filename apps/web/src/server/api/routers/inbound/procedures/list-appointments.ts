@@ -8,6 +8,7 @@
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { getClinicByUserId } from "@odis-ai/domain/clinics";
+import { createServiceClient } from "@odis-ai/data-access/db";
 import { listAppointmentRequestsInput } from "../schemas";
 
 export const listAppointmentsRouter = createTRPCRouter({
@@ -19,11 +20,14 @@ export const listAppointmentsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
 
-      // Get current user's clinic (gracefully handles missing user record)
-      const clinic = await getClinicByUserId(userId, ctx.supabase);
+      // Use service client to bypass RLS for reliable data access
+      const serviceClient = await createServiceClient();
+
+      // Get current user's clinic using service client
+      const clinic = await getClinicByUserId(userId, serviceClient);
 
       // Build query
-      let query = ctx.supabase
+      let query = serviceClient
         .from("appointment_requests")
         .select("*", { count: "exact" })
         .order("created_at", { ascending: false });
@@ -49,8 +53,9 @@ export const listAppointmentsRouter = createTRPCRouter({
       }
 
       if (input.endDate) {
+        // Use UTC hours to ensure end of day in UTC timezone
         const endDate = new Date(input.endDate);
-        endDate.setHours(23, 59, 59, 999);
+        endDate.setUTCHours(23, 59, 59, 999);
         query = query.lte("created_at", endDate.toISOString());
       }
 

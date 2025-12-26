@@ -1270,6 +1270,7 @@ export type Database = {
           created_at: string;
           customer_number: string | null;
           customer_phone: string | null;
+          display_transcript: string | null;
           duration_seconds: number | null;
           ended_at: string | null;
           ended_reason: string | null;
@@ -1287,6 +1288,7 @@ export type Database = {
           transcript_messages: Json | null;
           type: string;
           updated_at: string;
+          use_display_transcript: boolean | null;
           user_id: string | null;
           user_sentiment: string | null;
           vapi_call_id: string;
@@ -1300,6 +1302,7 @@ export type Database = {
           created_at?: string;
           customer_number?: string | null;
           customer_phone?: string | null;
+          display_transcript?: string | null;
           duration_seconds?: number | null;
           ended_at?: string | null;
           ended_reason?: string | null;
@@ -1317,6 +1320,7 @@ export type Database = {
           transcript_messages?: Json | null;
           type?: string;
           updated_at?: string;
+          use_display_transcript?: boolean | null;
           user_id?: string | null;
           user_sentiment?: string | null;
           vapi_call_id: string;
@@ -1330,6 +1334,7 @@ export type Database = {
           created_at?: string;
           customer_number?: string | null;
           customer_phone?: string | null;
+          display_transcript?: string | null;
           duration_seconds?: number | null;
           ended_at?: string | null;
           ended_reason?: string | null;
@@ -1347,6 +1352,7 @@ export type Database = {
           transcript_messages?: Json | null;
           type?: string;
           updated_at?: string;
+          use_display_transcript?: boolean | null;
           user_id?: string | null;
           user_sentiment?: string | null;
           vapi_call_id?: string;

@@ -191,16 +191,23 @@ export function InboundCallRecording({
     transcriptMessages && transcriptMessages.length > 0;
 
   // Determine which transcript to display
-  // Priority: translated (of cleaned) > cleaned > raw
+  // Priority: displayTranscript (user override) > translated > cleaned > raw
+  const dbDisplayTranscript = callData.displayTranscript; // User override from database
   const cleanedTranscript = cleanedData?.cleanedTranscript;
   const translatedTranscript = translationData?.translatedTranscript;
   const rawTranscript = callData.transcript;
 
-  // Show raw if toggled, otherwise show best available version
-  const displayTranscript = showRawTranscript
-    ? rawTranscript
-    : (translatedTranscript ?? cleanedTranscript ?? rawTranscript);
+  // If user has set a display_transcript override, use that; otherwise show best available version
+  // showRawTranscript toggle only applies when there's no user override
+  const displayTranscript =
+    dbDisplayTranscript ??
+    (showRawTranscript
+      ? rawTranscript
+      : (translatedTranscript ?? cleanedTranscript ?? rawTranscript));
   const displaySummary = translationData?.summary ?? callData.summary;
+
+  // Check if we have a user override active
+  const hasUserOverride = !!dbDisplayTranscript;
 
   // Determine if we have an enhanced transcript to show
   const hasEnhancedTranscript =
@@ -298,8 +305,19 @@ export function InboundCallRecording({
               <FileText className="h-4 w-4 text-slate-500" />
               Call Transcript
               <div className="ml-auto flex items-center gap-2">
-                {/* Enhancement badges */}
-                {!isProcessing &&
+                {/* User override badge */}
+                {hasUserOverride && (
+                  <Badge
+                    variant="secondary"
+                    className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                  >
+                    <Wand2 className="mr-1 h-3 w-3" />
+                    Custom
+                  </Badge>
+                )}
+                {/* Enhancement badges - only show if no user override */}
+                {!hasUserOverride &&
+                  !isProcessing &&
                   hasEnhancedTranscript &&
                   !showRawTranscript && (
                     <>
@@ -324,8 +342,8 @@ export function InboundCallRecording({
                       )}
                     </>
                   )}
-                {/* Toggle raw/cleaned view */}
-                {!isProcessing && hasEnhancedTranscript && (
+                {/* Toggle raw/cleaned view - only show if no user override and has enhanced */}
+                {!hasUserOverride && !isProcessing && hasEnhancedTranscript && (
                   <Button
                     variant="ghost"
                     size="sm"

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { createClient } from "@odis-ai/data-access/db/server";
+import { createServiceClient } from "@odis-ai/data-access/db";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // ============================================================================
@@ -106,13 +107,14 @@ export const inboundCallsRouter = createTRPCRouter({
   listInboundCalls: protectedProcedure
     .input(listInboundCallsInput)
     .query(async ({ ctx, input }) => {
-      const supabase = await createClient();
+      // Use service client to bypass RLS for reliable data access
+      const serviceClient = await createServiceClient();
 
-      // Get current user's role and clinic
-      const user = await getUserWithClinic(supabase, ctx.user.id);
+      // Get current user's role and clinic using service client
+      const user = await getUserWithClinic(serviceClient, ctx.user.id);
 
       // Build query - sort by created_at descending (most recent first)
-      let query = supabase
+      let query = serviceClient
         .from("inbound_vapi_calls")
         .select("*", { count: "exact" })
         .order("created_at", { ascending: false });
@@ -135,7 +137,7 @@ export const inboundCallsRouter = createTRPCRouter({
 
       if (input.endDate) {
         const endDate = new Date(input.endDate);
-        endDate.setHours(23, 59, 59, 999);
+        endDate.setUTCHours(23, 59, 59, 999);
         query = query.lte("created_at", endDate.toISOString());
       }
 
@@ -301,7 +303,7 @@ export const inboundCallsRouter = createTRPCRouter({
       const { data: call, error } = await supabase
         .from("inbound_vapi_calls")
         .select(
-          "recording_url, stereo_recording_url, transcript, cleaned_transcript, transcript_messages, duration_seconds, summary",
+          "recording_url, stereo_recording_url, transcript, cleaned_transcript, transcript_messages, duration_seconds, summary, display_transcript, use_display_transcript",
         )
         .eq("vapi_call_id", input.vapiCallId)
         .single();
@@ -311,13 +313,22 @@ export const inboundCallsRouter = createTRPCRouter({
         return null;
       }
 
+      // Use display_transcript if toggle is enabled, otherwise fall back to original
+      const effectiveTranscript =
+        call.use_display_transcript && call.display_transcript
+          ? call.display_transcript
+          : call.transcript;
+
       return {
         recordingUrl: call.stereo_recording_url ?? call.recording_url,
-        transcript: call.transcript,
+        transcript: effectiveTranscript,
         cleanedTranscript: call.cleaned_transcript,
         transcriptMessages: call.transcript_messages,
         durationSeconds: call.duration_seconds,
         summary: call.summary,
+        // Also return the raw values for editing UI
+        displayTranscript: call.display_transcript,
+        useDisplayTranscript: call.use_display_transcript,
       };
     }),
 
@@ -353,7 +364,7 @@ export const inboundCallsRouter = createTRPCRouter({
 
       if (input.endDate) {
         const endDate = new Date(input.endDate);
-        endDate.setHours(23, 59, 59, 999);
+        endDate.setUTCHours(23, 59, 59, 999);
         query = query.lte("created_at", endDate.toISOString());
       }
 
@@ -564,6 +575,76 @@ export const inboundCallsRouter = createTRPCRouter({
     }),
 
   /**
+   * Update display transcript for a call
+   * Allows overriding the actual transcript with a cleaned/edited version
+   */
+  updateDisplayTranscript: protectedProcedure
+    .input(
+      z.object({
+        id: z.string().uuid(),
+        displayTranscript: z.string().nullable(),
+        useDisplayTranscript: z.boolean(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const supabase = await createClient();
+
+      // Get current user's role and clinic
+      const user = await getUserWithClinic(supabase, ctx.user.id);
+
+      // Verify call exists and user has access
+      const { data: call, error: fetchError } = await supabase
+        .from("inbound_vapi_calls")
+        .select("id, clinic_name, user_id")
+        .eq("id", input.id)
+        .single();
+
+      if (fetchError || !call) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Call not found",
+        });
+      }
+
+      // Check access
+      const isAdminOrOwner =
+        user.role === "admin" || user.role === "practice_owner";
+
+      if (
+        !isAdminOrOwner &&
+        call.clinic_name !== user.clinic_name &&
+        call.user_id !== user.id
+      ) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You don't have access to this call",
+        });
+      }
+
+      // Update the display transcript
+      const { error: updateError } = await supabase
+        .from("inbound_vapi_calls")
+        .update({
+          display_transcript: input.displayTranscript,
+          use_display_transcript: input.useDisplayTranscript,
+        })
+        .eq("id", input.id);
+
+      if (updateError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to update display transcript: ${updateError.message}`,
+        });
+      }
+
+      return {
+        success: true,
+        displayTranscript: input.displayTranscript,
+        useDisplayTranscript: input.useDisplayTranscript,
+      };
+    }),
+
+  /**
    * Translate transcript to English and generate summary
    */
   translateTranscript: protectedProcedure
@@ -625,6 +706,76 @@ export const inboundCallsRouter = createTRPCRouter({
               : "Failed to clean transcript",
         });
       }
+    }),
+
+  /**
+   * Update display transcript for an inbound call
+   * Allows overriding the auto-generated transcript with a cleaned/corrected version
+   */
+  updateDisplayTranscript: protectedProcedure
+    .input(
+      z.object({
+        callId: z.string().uuid(),
+        displayTranscript: z.string().nullable(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const supabase = await createClient();
+
+      // Get current user's role and clinic
+      const user = await getUserWithClinic(supabase, ctx.user.id);
+
+      // First, verify the call exists and check access
+      const { data: call, error: fetchError } = await supabase
+        .from("inbound_vapi_calls")
+        .select("id, clinic_name, user_id")
+        .eq("id", input.callId)
+        .single();
+
+      if (fetchError || !call) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Call not found",
+        });
+      }
+
+      // Check access
+      const isAdminOrOwner =
+        user.role === "admin" || user.role === "practice_owner";
+
+      if (
+        !isAdminOrOwner &&
+        call.clinic_name !== user.clinic_name &&
+        call.user_id !== user.id
+      ) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "You don't have access to modify this call",
+        });
+      }
+
+      // Update the display transcript
+      const { error: updateError } = await supabase
+        .from("inbound_vapi_calls")
+        .update({
+          display_transcript: input.displayTranscript,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", input.callId);
+
+      if (updateError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to update display transcript: ${updateError.message}`,
+        });
+      }
+
+      return {
+        success: true,
+        message: input.displayTranscript
+          ? "Display transcript updated"
+          : "Display transcript cleared",
+      };
     }),
 
   /**
@@ -701,7 +852,7 @@ export const inboundCallsRouter = createTRPCRouter({
       const { data: dbCall, error: dbError } = await supabase
         .from("inbound_vapi_calls")
         .select(
-          "id, vapi_call_id, recording_url, stereo_recording_url, transcript, summary, duration_seconds, status, started_at, ended_at, call_analysis",
+          "id, vapi_call_id, recording_url, stereo_recording_url, transcript, summary, duration_seconds, status, started_at, ended_at, call_analysis, display_transcript, use_display_transcript",
         )
         .eq("vapi_call_id", input.vapiCallId)
         .single();
@@ -711,11 +862,18 @@ export const inboundCallsRouter = createTRPCRouter({
         const hasRecording = !!dbCall.recording_url;
         const hasTranscript = !!dbCall.transcript;
 
+        // Use display_transcript if toggle is enabled
+        const effectiveTranscript =
+          dbCall.use_display_transcript && dbCall.display_transcript
+            ? dbCall.display_transcript
+            : dbCall.transcript;
+
         console.log("[GET_CALL_FOR_APPOINTMENT] Found call in database", {
           vapiCallId: input.vapiCallId,
           hasRecording,
           hasTranscript,
           hasSummary: !!dbCall.summary,
+          usingDisplayTranscript: dbCall.use_display_transcript,
         });
 
         // If we have recording and transcript, return from DB
@@ -726,12 +884,15 @@ export const inboundCallsRouter = createTRPCRouter({
             status: dbCall.status,
             recordingUrl: dbCall.recording_url,
             stereoRecordingUrl: dbCall.stereo_recording_url,
-            transcript: dbCall.transcript,
+            transcript: effectiveTranscript,
             summary: dbCall.summary,
             analysis: dbCall.call_analysis as Record<string, unknown> | null,
             startedAt: dbCall.started_at,
             endedAt: dbCall.ended_at,
             duration: dbCall.duration_seconds,
+            // Include display transcript fields for editing UI
+            displayTranscript: dbCall.display_transcript,
+            useDisplayTranscript: dbCall.use_display_transcript,
           };
         }
 
@@ -785,18 +946,26 @@ export const inboundCallsRouter = createTRPCRouter({
 
         // If we have partial data from DB, return that instead of throwing
         if (dbCall) {
+          // Use display_transcript if toggle is enabled
+          const effectiveTranscript =
+            dbCall.use_display_transcript && dbCall.display_transcript
+              ? dbCall.display_transcript
+              : dbCall.transcript;
+
           return {
             id: dbCall.vapi_call_id,
             source: "database" as const,
             status: dbCall.status,
             recordingUrl: dbCall.recording_url,
             stereoRecordingUrl: dbCall.stereo_recording_url,
-            transcript: dbCall.transcript,
+            transcript: effectiveTranscript,
             summary: dbCall.summary,
             analysis: dbCall.call_analysis as Record<string, unknown> | null,
             startedAt: dbCall.started_at,
             endedAt: dbCall.ended_at,
             duration: dbCall.duration_seconds,
+            displayTranscript: dbCall.display_transcript,
+            useDisplayTranscript: dbCall.use_display_transcript,
           };
         }
 
