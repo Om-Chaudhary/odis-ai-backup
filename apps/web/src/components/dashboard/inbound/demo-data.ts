@@ -4,6 +4,7 @@
  */
 
 import type { Database } from "@odis-ai/shared/types";
+import type { AppointmentRequest } from "./types";
 
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
@@ -23,6 +24,10 @@ export const DEMO_PHONE_NAMES: Record<string, string> = {
   "4848455065": "Melissa",
   "14848455065": "Melissa",
   "+14848455065": "Melissa",
+  // Andrea
+  "4088910469": "Andrea",
+  "14088910469": "Andrea",
+  "+14088910469": "Andrea",
 };
 
 /**
@@ -86,6 +91,11 @@ export function getCallModifications(call: InboundCall): {
     if (hours === 6 && minutes === 22) {
       return { shouldHide: true, isSilent: false, adjustedDate: callDate };
     }
+  }
+
+  // Andrea call - hide from calls, show in appointments tab instead
+  if (phoneMatches(phone, ["4088910469"])) {
+    return { shouldHide: true, isSilent: false, adjustedDate: callDate };
   }
 
   // Silent calls - blank duration
@@ -303,4 +313,45 @@ AI: You're welcome, Melissa. Have a good night!`,
     summary:
       "Melissa called to check on her cat Whiskers who is being boarded at the hospital. The assistant took a message for the staff to call her back in the morning with an update.",
   };
+}
+
+// =============================================================================
+// Demo Appointments
+// =============================================================================
+
+/**
+ * Demo appointment for Andrea
+ * This appears in the Appointments tab instead of the Calls tab
+ */
+export const DEMO_APPOINTMENTS: AppointmentRequest[] = [
+  {
+    id: "demo-andrea-appointment",
+    clinicId: "demo-clinic",
+    providerId: null,
+    clientName: "Andrea",
+    clientPhone: "+14088910469",
+    patientName: "Max",
+    species: "Dog",
+    breed: "Golden Retriever",
+    reason: "Annual wellness exam and vaccinations",
+    requestedDate: new Date().toISOString().split("T")[0] ?? null, // Today
+    requestedStartTime: "10:00:00",
+    requestedEndTime: "10:30:00",
+    status: "pending",
+    isNewClient: false,
+    isOutlier: false,
+    notes: null,
+    vapiCallId: null,
+    confirmedAppointmentId: null,
+    metadata: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
+/**
+ * Get demo appointments to inject into the appointments list
+ */
+export function getDemoAppointments(): AppointmentRequest[] {
+  return DEMO_APPOINTMENTS;
 }

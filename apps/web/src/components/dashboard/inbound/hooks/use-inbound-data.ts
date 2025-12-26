@@ -13,6 +13,7 @@ import type {
   ClinicMessage,
 } from "../types";
 import type { Database } from "@odis-ai/shared/types";
+import { getDemoAppointments } from "../demo-data";
 
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
@@ -168,7 +169,12 @@ export function useInboundData(params: UseInboundDataParams) {
 
   useEffect(() => {
     if (appointmentsData?.appointments) {
-      appointmentsRef.current = appointmentsData.appointments;
+      // Include demo appointments in ref for polling stability
+      const demoAppointments = getDemoAppointments();
+      appointmentsRef.current = [
+        ...demoAppointments,
+        ...appointmentsData.appointments,
+      ];
     }
   }, [appointmentsData?.appointments]);
 
@@ -180,10 +186,15 @@ export function useInboundData(params: UseInboundDataParams) {
 
   // Derived data
   const calls = useMemo(() => callsData?.calls ?? [], [callsData?.calls]);
-  const appointments = useMemo(
-    () => appointmentsData?.appointments ?? [],
-    [appointmentsData?.appointments],
-  );
+
+  // Merge real appointments with demo appointments
+  const appointments = useMemo(() => {
+    const realAppointments = appointmentsData?.appointments ?? [];
+    const demoAppointments = getDemoAppointments();
+    // Put demo appointments at the top, then real appointments
+    return [...demoAppointments, ...realAppointments];
+  }, [appointmentsData?.appointments]);
+
   const messages = useMemo(
     () => messagesData?.messages ?? [],
     [messagesData?.messages],
