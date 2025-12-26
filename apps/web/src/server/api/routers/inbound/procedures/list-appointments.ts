@@ -71,7 +71,7 @@ export const listAppointmentsRouter = createTRPCRouter({
       const to = from + input.pageSize - 1;
       query = query.range(from, to);
 
-      const { data: appointments, error, count } = await query;
+      const { data: appointments, error } = await query;
 
       if (error) {
         throw new TRPCError({
@@ -81,40 +81,83 @@ export const listAppointmentsRouter = createTRPCRouter({
       }
 
       // Transform to camelCase for frontend
-      const transformedAppointments = (appointments ?? []).map((apt) => ({
-        id: apt.id,
-        clinicId: apt.clinic_id,
-        providerId: apt.provider_id,
-        clientName: apt.client_name,
-        clientPhone: apt.client_phone,
-        patientName: apt.patient_name,
-        species: apt.species,
-        breed: apt.breed,
-        reason: apt.reason,
-        requestedDate: apt.requested_date,
-        requestedStartTime: apt.requested_start_time,
-        requestedEndTime: apt.requested_end_time,
-        // Confirmed appointment time (what AI booked)
-        confirmedDate: apt.confirmed_date,
-        confirmedTime: apt.confirmed_time,
-        status: apt.status,
-        isNewClient: apt.is_new_client,
-        isOutlier: apt.is_outlier,
-        notes: apt.notes,
-        vapiCallId: apt.vapi_call_id,
-        confirmedAppointmentId: apt.confirmed_appointment_id,
-        metadata: apt.metadata,
-        createdAt: apt.created_at,
-        updatedAt: apt.updated_at,
-      }));
+      const transformedAppointments = (appointments ?? [])
+        .map((apt) => ({
+          id: apt.id,
+          clinicId: apt.clinic_id,
+          providerId: apt.provider_id,
+          clientName: apt.client_name,
+          clientPhone: apt.client_phone,
+          patientName: apt.patient_name,
+          species: apt.species,
+          breed: apt.breed,
+          reason: apt.reason,
+          requestedDate: apt.requested_date,
+          requestedStartTime: apt.requested_start_time,
+          requestedEndTime: apt.requested_end_time,
+          // Confirmed appointment time (what AI booked)
+          confirmedDate: apt.confirmed_date,
+          confirmedTime: apt.confirmed_time,
+          status: apt.status,
+          isNewClient: apt.is_new_client,
+          isOutlier: apt.is_outlier,
+          notes: apt.notes,
+          vapiCallId: apt.vapi_call_id,
+          confirmedAppointmentId: apt.confirmed_appointment_id,
+          metadata: apt.metadata,
+          createdAt: apt.created_at,
+          updatedAt: apt.updated_at,
+        }))
+        .filter((apt) => {
+          // Filter out demo appointments for demo purposes
+          // Check if this is an appointment that should be filtered
+          const normalizePhone = (phone: string | null) =>
+            (phone ?? "").replace(/\D/g, "");
+
+          const canelaPhoneNumbers = [
+            "4089214136", // Yvonne Trigo's number
+          ];
+
+          const andreaPhoneNumbers = [
+            "4088910469", // Andrea Watkins' number
+          ];
+
+          // Hide Canela's scheduled appointment completely
+          if (
+            apt.patientName &&
+            typeof apt.patientName === "string" &&
+            apt.patientName.toLowerCase().includes("canela") &&
+            canelaPhoneNumbers.some((phone) =>
+              normalizePhone(apt.clientPhone).includes(phone),
+            )
+          ) {
+            return false;
+          }
+
+          // Hide Andrea's real appointments (demo version will be injected)
+          if (
+            apt.clientName &&
+            typeof apt.clientName === "string" &&
+            apt.clientName.toLowerCase().includes("andrea") &&
+            andreaPhoneNumbers.some((phone) =>
+              normalizePhone(apt.clientPhone).includes(phone),
+            )
+          ) {
+            return false;
+          }
+
+          return true;
+        });
 
       return {
         appointments: transformedAppointments,
         pagination: {
           page: input.page,
           pageSize: input.pageSize,
-          total: count ?? 0,
-          totalPages: Math.ceil((count ?? 0) / input.pageSize),
+          total: transformedAppointments.length, // Use filtered count
+          totalPages: Math.ceil(
+            transformedAppointments.length / input.pageSize,
+          ),
         },
       };
     }),

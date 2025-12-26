@@ -4,6 +4,8 @@ import { TRPCError } from "@trpc/server";
 import { createClient } from "@odis-ai/data-access/db/server";
 import { createServiceClient } from "@odis-ai/data-access/db";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getCallDataOverride } from "~/components/dashboard/inbound/detail/demo-data/call-overrides";
+import { getDemoCalls } from "~/components/dashboard/inbound/demo-data";
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -175,6 +177,7 @@ export const inboundCallsRouter = createTRPCRouter({
       const demoPhones = [
         "4084260512", // Eric Silva
         "4085612356", // Maria Serpa
+        "4088910469", // Andrea Watkins - will be replaced by demo call
       ];
 
       // Helper to normalize phone to last 10 digits
@@ -200,6 +203,17 @@ export const inboundCallsRouter = createTRPCRouter({
           if (hour === 13 && minute === 39) {
             return false;
           }
+        }
+
+        // Hide ALL Andrea calls from database - we'll inject our demo call instead
+        if (
+          call.customer_phone === "4088910469" ||
+          call.customer_phone === "408-891-0469" ||
+          call.customer_phone === "(408) 891-0469" ||
+          call.customer_phone === "+1 (408) 891-0469" ||
+          call.customer_phone === "+14088910469"
+        ) {
+          return false; // Filter out all Andrea database calls
         }
 
         return true;
@@ -228,13 +242,75 @@ export const inboundCallsRouter = createTRPCRouter({
         }
       }
 
+      // Apply demo call overrides to each call
+      const callsWithOverrides = filteredCalls.map((call) => {
+        const override = getCallDataOverride(call);
+        return override ?? call;
+      });
+
+      // Inject demo calls (like Andrea's cancellation call)
+      const demoCalls = getDemoCalls();
+      const demoCallsWithOverrides = demoCalls.map((call) => {
+        const override = getCallDataOverride(call);
+        return override ?? call;
+      });
+
+      // Combine real calls with demo calls
+      const allCalls = [...demoCallsWithOverrides, ...callsWithOverrides];
+
+      // Hardcode Andrea's placement - find Andrea call and other relevant calls
+      const andreaCallIndex = allCalls.findIndex(
+        (call) =>
+          call.customer_phone === "408-891-0469" ||
+          call.customer_phone === "4088910469" ||
+          call.id === "demo-call-andrea-cancellation",
+      );
+
+      if (andreaCallIndex !== -1) {
+        // Remove Andrea from current position
+        const [andreaCall] = allCalls.splice(andreaCallIndex, 1);
+
+        // Sort remaining calls by date (newest first)
+        allCalls.sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        );
+
+        // Find position between 9:00 AM (Yvonne) and 11:04 AM (Amy Marino) calls
+        // Look for calls that should come before and after Andrea (10:08 AM)
+        let insertIndex = 0;
+        for (let i = 0; i < allCalls.length; i++) {
+          const call = allCalls[i];
+          const callDate = new Date(call.created_at);
+          const callHour = callDate.getHours();
+          const callMinute = callDate.getMinutes();
+
+          // If this call is after 10:08 AM (Andrea's time), insert Andrea before it
+          if (callHour > 10 || (callHour === 10 && callMinute > 8)) {
+            insertIndex = i;
+            break;
+          }
+          // If we're at the end, insert at the end
+          insertIndex = i + 1;
+        }
+
+        // Insert Andrea at the calculated position
+        allCalls.splice(insertIndex, 0, andreaCall);
+      } else {
+        // No Andrea call found, just sort normally
+        allCalls.sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        );
+      }
+
       return {
-        calls: filteredCalls,
+        calls: allCalls,
         pagination: {
           page: input.page,
           pageSize: input.pageSize,
-          total: filteredCalls.length,
-          totalPages: Math.ceil(filteredCalls.length / input.pageSize),
+          total: allCalls.length,
+          totalPages: Math.ceil(allCalls.length / input.pageSize),
         },
       };
     }),

@@ -148,7 +148,9 @@
       "Bash(nx build:*)",
       "Bash(node --version)",
       "Bash(NODE_OPTIONS='--trace-deprecation' timeout 10 pnpm dev:*)",
-      "Bash(pnpm nx:*)"
+      "Bash(pnpm nx:*)",
+      "Read(//Users/om/Desktop/Alum Rock/**)",
+      "Bash(ffprobe:*)"
     ],
     "deny": [],
     "ask": []

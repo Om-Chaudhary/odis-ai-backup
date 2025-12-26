@@ -187,12 +187,66 @@ export function useInboundData(params: UseInboundDataParams) {
   // Derived data
   const calls = useMemo(() => callsData?.calls ?? [], [callsData?.calls]);
 
-  // Merge real appointments with demo appointments
+  // Merge real appointments with demo appointments and hardcode Andrea's placement
   const appointments = useMemo(() => {
     const realAppointments = appointmentsData?.appointments ?? [];
     const demoAppointments = getDemoAppointments();
-    // Put demo appointments at the top, then real appointments
-    return [...demoAppointments, ...realAppointments];
+
+    // Combine all appointments
+    const allAppointments = [...demoAppointments, ...realAppointments];
+
+    // Hardcode Andrea's placement - find Andrea appointment
+    const andreaAppointmentIndex = allAppointments.findIndex(
+      (appointment) =>
+        appointment.clientName === "Andrea Watkins" ||
+        appointment.clientPhone === "408-891-0469" ||
+        appointment.id === "demo-cancelled-appointment",
+    );
+
+    if (andreaAppointmentIndex !== -1) {
+      // Remove Andrea from current position
+      const [andreaAppointment] = allAppointments.splice(
+        andreaAppointmentIndex,
+        1,
+      );
+
+      // Sort remaining appointments by creation date (newest first)
+      allAppointments.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+
+      // Find position for Andrea's 10:08 AM appointment
+      let insertIndex = 0;
+      for (let i = 0; i < allAppointments.length; i++) {
+        const appointment = allAppointments[i];
+        if (!appointment) continue; // Safety check
+        const appointmentDate = new Date(appointment.createdAt);
+        const appointmentHour = appointmentDate.getHours();
+        const appointmentMinute = appointmentDate.getMinutes();
+
+        // If this appointment is after 10:08 AM (Andrea's time), insert Andrea before it
+        if (
+          appointmentHour > 10 ||
+          (appointmentHour === 10 && appointmentMinute > 8)
+        ) {
+          insertIndex = i;
+          break;
+        }
+        // If we're at the end, insert at the end
+        insertIndex = i + 1;
+      }
+
+      // Insert Andrea at the calculated position
+      allAppointments.splice(insertIndex, 0, andreaAppointment);
+      return allAppointments;
+    } else {
+      // No Andrea appointment found, just sort normally
+      return allAppointments.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
+    }
   }, [appointmentsData?.appointments]);
 
   const messages = useMemo(

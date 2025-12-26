@@ -145,7 +145,7 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
   const attention = getAttentionType(call);
 
   // Determine which accordion sections should be open by default
-  const defaultOpenSections = ["summary"];
+  const defaultOpenSections = ["caller", "summary"];
   if (callData.recording_url && (callData.duration_seconds ?? 0) < 120) {
     // Auto-expand recording for short calls (< 2 min)
     defaultOpenSections.push("recording");

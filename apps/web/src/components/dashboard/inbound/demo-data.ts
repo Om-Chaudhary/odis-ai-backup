@@ -34,10 +34,45 @@ export const DEMO_PHONE_NAMES: Record<string, string> = {
   "4848455065": "Melissa",
   "14848455065": "Melissa",
   "+14848455065": "Melissa",
-  // Andrea
-  "4088910469": "Andrea",
-  "14088910469": "Andrea",
-  "+14088910469": "Andrea",
+  // Demo calls for specific pets/cases
+  // Mooney - Khoa Phan (669) 799-6580 at 3:22 PM
+  "6697996580": "KHOA PHAN",
+  "16697996580": "KHOA PHAN",
+  "+16697996580": "KHOA PHAN",
+  // Baby - Sylvia Rosella (408) 509-8661 at 8:01 AM
+  "4085098661": "Sylvia Rosella",
+  "14085098661": "Sylvia Rosella",
+  "+14085098661": "Sylvia Rosella",
+  // Bubba - Adriana Skandarian (408) 761-9777 at 10:59 AM
+  "4087619777": "Adriana Skandarian",
+  "14087619777": "Adriana Skandarian",
+  "+14087619777": "Adriana Skandarian",
+  // Canela - Yvonne Trigo (408) 921-4136 at 9:00 AM
+  "4089214136": "Yvonne Trigo",
+  "14089214136": "Yvonne Trigo",
+  "+14089214136": "Yvonne Trigo",
+  // Emma - Armando Mercado (408) 472-8774 at 2:47 PM
+  "4084728774": "Armando Mercado",
+  "14084728774": "Armando Mercado",
+  "+14084728774": "Armando Mercado",
+  // Andrea Watkins (Lucy) - Cancellation (408) 891-0469
+  "4088910469": "Andrea Watkins",
+  "14088910469": "Andrea Watkins",
+  "+14088910469": "Andrea Watkins",
+  // Yeimy - Amy Marino (562) 662-2330 at 11:02 AM
+  "5626622330": "Amy Marino",
+  "15626622330": "Amy Marino",
+  "+15626622330": "Amy Marino",
+  // Rocky Panicun - for urgent case consistency
+  "6692977276": "Rocky Panicun",
+  "16692977276": "Rocky Panicun",
+  "+16692977276": "Rocky Panicun",
+  "4088924795": "Rocky Panicun",
+  "14088924795": "Rocky Panicun",
+  "+14088924795": "Rocky Panicun",
+  "4082346798": "Rocky Panicun",
+  "14082346798": "Rocky Panicun",
+  "+14082346798": "Rocky Panicun",
 };
 
 /**
@@ -325,14 +360,88 @@ AI: You're welcome, Melissa. Have a good night!`,
 // =============================================================================
 
 /**
- * Demo appointments array - currently empty
+ * Demo appointments array - includes cancellation status demo
  * Real appointment data comes from the database
  */
-export const DEMO_APPOINTMENTS: AppointmentRequest[] = [];
+export const DEMO_APPOINTMENTS: AppointmentRequest[] = [
+  // Andrea's cancelled appointment for Lucy - 10:08am
+  {
+    id: "demo-cancelled-appointment",
+    clinicId: "demo-clinic",
+    providerId: null,
+    clientName: "Andrea Watkins",
+    clientPhone: "408-891-0469",
+    patientName: "Lucy",
+    species: "dog",
+    breed: null,
+    reason: "Cancelled appointment",
+    requestedDate: "2024-12-25",
+    requestedStartTime: null,
+    requestedEndTime: null,
+    // Add the missing confirmed appointment fields
+    confirmedTime: null,
+    status: "cancelled" as const,
+    isNewClient: false,
+    isOutlier: null,
+    notes: "Appointment cancelled for December 25th per client request",
+    vapiCallId: "demo-vapi-call-andrea",
+    confirmedAppointmentId: null,
+    metadata: {
+      cancellationReason: "Client requested cancellation",
+      originalDate: "December 25th",
+      demoData: true,
+    },
+    // Set createdAt to Dec 25, 2024 at 10:08am
+    createdAt: "2024-12-25T18:08:00.000Z", // 10:08 AM PST
+    updatedAt: new Date().toISOString(),
+  },
+];
 
 /**
  * Get demo appointments to inject into the appointments list
  */
 export function getDemoAppointments(): AppointmentRequest[] {
   return DEMO_APPOINTMENTS;
+}
+
+// =============================================================================
+// Demo Calls
+// =============================================================================
+
+/**
+ * Demo calls array - for cases that need call records but don't exist in DB
+ */
+export const DEMO_CALLS: InboundCall[] = [
+  // Andrea's cancellation call - matches the override in call-overrides.ts
+  {
+    id: "demo-call-andrea-cancellation",
+    created_at: "2024-12-25T18:08:00.000Z", // Dec 25, 10:08 AM PST
+    updated_at: new Date().toISOString(),
+    user_id: "demo-user-id",
+    clinic_name: "Alum Rock Animal Hospital",
+    customer_phone: "408-891-0469",
+    vapi_call_id: "demo-vapi-call-andrea",
+    status: "completed",
+    started_at: "2024-12-25T18:08:00.000Z", // Dec 25, 10:08 AM PST
+    ended_at: "2024-12-25T18:09:05.000Z", // Dec 25, 10:09:05 AM PST (65 seconds later)
+    ended_reason: "completed",
+    duration_seconds: 65,
+    recording_url: "/audio/Lucy(Andrea).MP3",
+    transcript: null, // Will be overridden by call-overrides.ts
+    summary: null, // Will be overridden by call-overrides.ts
+    outcome: null, // Will be overridden by call-overrides.ts
+    actions_taken: null, // Will be overridden by call-overrides.ts
+    attention_types: null,
+    attention_severity: null,
+    attention_summary: null,
+    escalation_data: null,
+    analysis_metadata: null,
+  },
+];
+
+/**
+ * Get demo calls to inject into the calls list
+ */
+export function getDemoCalls(): InboundCall[] {
+  return DEMO_CALLS;
 }

@@ -43,6 +43,7 @@ import { CallRecordingPlayer } from "../../shared/call-recording-player";
 import { api } from "~/trpc/client";
 import { AttentionBanner } from "./shared/attention-banner";
 import { TimestampBadge } from "./shared/timestamp-badge";
+import { getCallDataOverride } from "./demo-data/call-overrides";
 
 interface AppointmentRequest {
   id: string;
@@ -256,11 +257,23 @@ export function AppointmentDetail({
     return generateTimeSlots(confirmDate);
   }, [confirmDate]);
 
-  // Fetch call recording from VAPI if appointment has an associated call
+  // Check if this is a demo appointment with hardcoded data
+  const isDemoAppointment = appointment.vapiCallId === "demo-vapi-call-andrea";
+
+  // Get demo call data for demo appointments
+  const demoCallData = isDemoAppointment
+    ? getCallDataOverride({
+        customer_phone: appointment.clientPhone,
+        id: "demo-call-andrea-cancellation",
+        created_at: appointment.createdAt,
+      } as Partial<Database["public"]["Tables"]["inbound_vapi_calls"]["Row"]>)
+    : null;
+
+  // Fetch call recording from VAPI if appointment has an associated call (but not for demo)
   const vapiQuery = api.inboundCalls.fetchCallFromVAPI.useQuery(
     { vapiCallId: appointment.vapiCallId! },
     {
-      enabled: !!appointment.vapiCallId,
+      enabled: !!appointment.vapiCallId && !isDemoAppointment,
       staleTime: 5 * 60 * 1000,
       retry: false,
     },
@@ -536,7 +549,13 @@ export function AppointmentDetail({
                 </div>
               </AccordionTrigger>
               <AccordionContent className="px-4 pb-4">
-                {vapiQuery.isLoading ? (
+                {isDemoAppointment && demoCallData ? (
+                  <CallRecordingPlayer
+                    recordingUrl={demoCallData.recording_url ?? null}
+                    transcript={demoCallData.transcript ?? null}
+                    durationSeconds={demoCallData.duration_seconds ?? null}
+                  />
+                ) : vapiQuery.isLoading ? (
                   <div className="flex items-center justify-center gap-2 py-6 text-slate-500">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Loading call recording...
