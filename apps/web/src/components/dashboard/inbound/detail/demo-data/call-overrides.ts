@@ -3,6 +3,8 @@
  * This is used for demonstration purposes with pre-recorded audio
  */
 
+import { isValid } from "date-fns";
+
 interface InboundCall {
   id: string;
   customer_phone: string | null;
@@ -11,6 +13,15 @@ interface InboundCall {
   transcript?: string | null;
   duration_seconds?: number | null;
   summary?: string | null;
+}
+
+/**
+ * Safely parse a date string, returning null if invalid
+ */
+function safeParseDate(dateStr: string | null | undefined): Date | null {
+  if (!dateStr) return null;
+  const date = new Date(dateStr);
+  return isValid(date) ? date : null;
 }
 
 interface CallDataOverride {
@@ -156,7 +167,8 @@ User: No.`,
     ]) &&
     call.created_at
   ) {
-    const callTime = new Date(call.created_at);
+    const callTime = safeParseDate(call.created_at);
+    if (!callTime) return null;
     const hour = callTime.getUTCHours();
     const minute = callTime.getUTCMinutes();
     // Only apply to the 5:40 AM call (13:40 UTC = 5:40 AM PST)

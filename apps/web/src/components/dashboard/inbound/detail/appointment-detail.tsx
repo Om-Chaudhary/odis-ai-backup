@@ -257,7 +257,9 @@ export function AppointmentDetail({
                   <p className="text-2xl font-bold text-teal-900 dark:text-teal-100">
                     {appointment.confirmedDate
                       ? format(
-                          safeParseDate(appointment.confirmedDate + "T00:00:00"),
+                          safeParseDate(
+                            appointment.confirmedDate + "T00:00:00",
+                          ),
                           "EEEE, MMMM d",
                         )
                       : "Date TBD"}
@@ -308,7 +310,9 @@ export function AppointmentDetail({
                     <p className="font-medium text-slate-800">
                       {appointment.requestedDate
                         ? format(
-                            safeParseDate(appointment.requestedDate + "T00:00:00"),
+                            safeParseDate(
+                              appointment.requestedDate + "T00:00:00",
+                            ),
                             "EEEE, MMMM d, yyyy",
                           )
                         : "No preference"}
@@ -503,7 +507,9 @@ export function AppointmentDetail({
                       // Reset to requested values
                       setConfirmDate(() => {
                         if (!appointment.requestedDate) return undefined;
-                        const date = new Date(appointment.requestedDate + "T00:00:00");
+                        const date = new Date(
+                          appointment.requestedDate + "T00:00:00",
+                        );
                         return isValid(date) ? date : undefined;
                       });
                       setConfirmTime(
