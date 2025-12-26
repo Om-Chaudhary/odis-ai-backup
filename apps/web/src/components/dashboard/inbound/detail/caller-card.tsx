@@ -148,8 +148,8 @@ function getCallOutcomeConfig(outcome: CallOutcome | null) {
       className:
         "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
     },
-    Emergency: {
-      label: "Emergency",
+    Urgent: {
+      label: "Urgent",
       className: "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300",
     },
     "Call Back": {

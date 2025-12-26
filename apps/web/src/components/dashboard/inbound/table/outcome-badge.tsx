@@ -41,7 +41,7 @@ function getOutcomeStyle(outcome: string | null | undefined): {
         variant: "secondary",
         className: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
       };
-    case "Emergency":
+    case "Urgent":
       return {
         variant: "destructive",
         className: "bg-red-500/15 text-red-700 dark:text-red-400",

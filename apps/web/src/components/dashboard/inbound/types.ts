@@ -174,7 +174,7 @@ export type CallOutcome =
   | "Scheduled"
   | "Cancellation"
   | "Info"
-  | "Emergency"
+  | "Urgent"
   | "Call Back"
   | "Completed";
 
