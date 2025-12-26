@@ -1,10 +1,24 @@
 "use client";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { format } from "date-fns";
 import { Button } from "@odis-ai/shared/ui/button";
 import { Badge } from "@odis-ai/shared/ui/badge";
 import { Textarea } from "@odis-ai/shared/ui/textarea";
 import { Separator } from "@odis-ai/shared/ui/separator";
+import { Label } from "@odis-ai/shared/ui/label";
+import { Calendar as CalendarComponent } from "@odis-ai/shared/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@odis-ai/shared/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@odis-ai/shared/ui/select";
 import {
   Card,
   CardContent,
@@ -21,7 +35,9 @@ import {
   Trash2,
   Clock,
   Heart,
+  CalendarIcon,
 } from "lucide-react";
+import { cn } from "@odis-ai/shared/util";
 import { CallRecordingPlayer } from "../../shared/call-recording-player";
 import { api } from "~/trpc/client";
 
@@ -76,9 +92,62 @@ function isSensitiveCase(reason: string | null | undefined): boolean {
   return sensitiveKeywords.some((keyword) => lowerReason.includes(keyword));
 }
 
+/**
+ * Get clinic hours based on day of week
+ * Monday-Friday: 8:00 AM - 7:00 PM
+ * Saturday: 8:00 AM - 6:00 PM
+ * Sunday: 9:00 AM - 5:00 PM
+ */
+function getClinicHoursForDate(date: Date): {
+  startHour: number;
+  endHour: number;
+} {
+  const dayOfWeek = date.getDay(); // 0 = Sunday, 6 = Saturday
+
+  if (dayOfWeek === 0) {
+    // Sunday
+    return { startHour: 9, endHour: 17 };
+  } else if (dayOfWeek === 6) {
+    // Saturday
+    return { startHour: 8, endHour: 18 };
+  } else {
+    // Monday-Friday
+    return { startHour: 8, endHour: 19 };
+  }
+}
+
+/**
+ * Generate time slots in 15-minute increments for clinic hours
+ */
+function generateTimeSlots(date: Date): { value: string; label: string }[] {
+  const { startHour, endHour } = getClinicHoursForDate(date);
+  const slots: { value: string; label: string }[] = [];
+
+  for (let hour = startHour; hour < endHour; hour++) {
+    for (let minute = 0; minute < 60; minute += 15) {
+      const hourStr = hour.toString().padStart(2, "0");
+      const minuteStr = minute.toString().padStart(2, "0");
+      const value = `${hourStr}:${minuteStr}`;
+
+      // Format label as "8:00 AM", "2:30 PM", etc.
+      const isPM = hour >= 12;
+      const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+      const label = `${hour12}:${minuteStr} ${isPM ? "PM" : "AM"}`;
+
+      slots.push({ value, label });
+    }
+  }
+
+  return slots;
+}
+
 interface AppointmentDetailProps {
   appointment: AppointmentRequest;
-  onConfirm: (id: string) => Promise<void>;
+  onConfirm: (
+    id: string,
+    confirmedDate?: string,
+    confirmedTime?: string,
+  ) => Promise<void>;
   onReject: (id: string, notes?: string) => Promise<void>;
   onDelete?: (id: string) => Promise<void>;
   isSubmitting: boolean;
@@ -93,8 +162,29 @@ export function AppointmentDetail({
 }: AppointmentDetailProps) {
   const [rejectNotes, setRejectNotes] = useState("");
   const [showRejectForm, setShowRejectForm] = useState(false);
+  const [showConfirmForm, setShowConfirmForm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [confirmDate, setConfirmDate] = useState<Date | undefined>(() => {
+    // Pre-fill with requested date if available
+    if (appointment.requestedDate) {
+      return new Date(appointment.requestedDate + "T00:00:00");
+    }
+    return undefined;
+  });
+  const [confirmTime, setConfirmTime] = useState<string>(() => {
+    // Pre-fill with requested time if available (convert HH:MM:SS to HH:MM)
+    if (appointment.requestedStartTime) {
+      return appointment.requestedStartTime.slice(0, 5);
+    }
+    return "";
+  });
   const isPending = appointment.status === "pending";
+
+  // Generate time slots based on selected date
+  const timeSlots = useMemo(() => {
+    if (!confirmDate) return [];
+    return generateTimeSlots(confirmDate);
+  }, [confirmDate]);
 
   // Fetch call recording from VAPI if appointment has an associated call
   const vapiQuery = api.inboundCalls.fetchCallFromVAPI.useQuery(
@@ -332,6 +422,113 @@ export function AppointmentDetail({
                   </Button>
                 </div>
               </div>
+            ) : showConfirmForm ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Date Picker */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-slate-600">Date</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !confirmDate && "text-muted-foreground",
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {confirmDate
+                            ? format(confirmDate, "MMM d, yyyy")
+                            : "Select date"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarComponent
+                          mode="single"
+                          selected={confirmDate}
+                          onSelect={(date) => {
+                            setConfirmDate(date);
+                            // Reset time when date changes to ensure valid slot
+                            setConfirmTime("");
+                          }}
+                          disabled={(date) =>
+                            date < new Date(new Date().setHours(0, 0, 0, 0))
+                          }
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  {/* Time Picker */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-slate-600">Time</Label>
+                    <Select
+                      value={confirmTime}
+                      onValueChange={setConfirmTime}
+                      disabled={!confirmDate}
+                    >
+                      <SelectTrigger className="w-full">
+                        <Clock className="mr-2 h-4 w-4 text-slate-400" />
+                        <SelectValue placeholder="Select time" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {timeSlots.map((slot) => (
+                          <SelectItem key={slot.value} value={slot.value}>
+                            {slot.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      setShowConfirmForm(false);
+                      // Reset to requested values
+                      setConfirmDate(
+                        appointment.requestedDate
+                          ? new Date(appointment.requestedDate + "T00:00:00")
+                          : undefined,
+                      );
+                      setConfirmTime(
+                        appointment.requestedStartTime
+                          ? appointment.requestedStartTime.slice(0, 5)
+                          : "",
+                      );
+                    }}
+                    disabled={isSubmitting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="flex-1 bg-teal-600 hover:bg-teal-700"
+                    onClick={() => {
+                      const dateStr = confirmDate
+                        ? format(confirmDate, "yyyy-MM-dd")
+                        : undefined;
+                      void onConfirm(
+                        appointment.id,
+                        dateStr,
+                        confirmTime || undefined,
+                      );
+                    }}
+                    disabled={isSubmitting || !confirmDate || !confirmTime}
+                  >
+                    {isSubmitting ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                    )}
+                    Confirm
+                  </Button>
+                </div>
+              </div>
             ) : (
               <div className="flex gap-2">
                 <Button
@@ -345,14 +542,10 @@ export function AppointmentDetail({
                 </Button>
                 <Button
                   className="flex-1 bg-teal-600 hover:bg-teal-700"
-                  onClick={() => onConfirm(appointment.id)}
+                  onClick={() => setShowConfirmForm(true)}
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                  )}
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
                   Confirm Appointment
                 </Button>
               </div>

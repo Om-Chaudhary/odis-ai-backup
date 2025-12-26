@@ -48,6 +48,8 @@ export const updateAppointmentRouter = createTRPCRouter({
         status: string;
         notes?: string;
         confirmed_appointment_id?: string;
+        confirmed_date?: string;
+        confirmed_time?: string;
         updated_at: string;
       } = {
         status: input.status,
@@ -60,6 +62,14 @@ export const updateAppointmentRouter = createTRPCRouter({
 
       if (input.confirmedAppointmentId) {
         updateData.confirmed_appointment_id = input.confirmedAppointmentId;
+      }
+
+      if (input.confirmedDate) {
+        updateData.confirmed_date = input.confirmedDate;
+      }
+
+      if (input.confirmedTime) {
+        updateData.confirmed_time = input.confirmedTime;
       }
 
       // Update the appointment
@@ -84,6 +94,8 @@ export const updateAppointmentRouter = createTRPCRouter({
           status: updated.status,
           notes: updated.notes,
           confirmedAppointmentId: updated.confirmed_appointment_id,
+          confirmedDate: updated.confirmed_date,
+          confirmedTime: updated.confirmed_time,
           updatedAt: updated.updated_at,
         },
       };

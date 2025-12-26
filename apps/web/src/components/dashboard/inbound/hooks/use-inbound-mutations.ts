@@ -85,10 +85,12 @@ export function useInboundMutations(options: UseInboundMutationsOptions = {}) {
 
   // Action handlers
   const handleConfirmAppointment = useCallback(
-    async (id: string) => {
+    async (id: string, confirmedDate?: string, confirmedTime?: string) => {
       await updateAppointment.mutateAsync({
         id,
         status: "confirmed",
+        confirmedDate,
+        confirmedTime,
       });
     },
     [updateAppointment],

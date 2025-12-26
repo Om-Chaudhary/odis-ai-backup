@@ -17,7 +17,11 @@ import type {
 interface InboundDetailProps {
   item: InboundItem | null;
   viewMode: ViewMode;
-  onConfirmAppointment: (id: string) => Promise<void>;
+  onConfirmAppointment: (
+    id: string,
+    confirmedDate?: string,
+    confirmedTime?: string,
+  ) => Promise<void>;
   onRejectAppointment: (id: string, notes?: string) => Promise<void>;
   onMarkMessageRead: (id: string) => Promise<void>;
   onResolveMessage: (id: string) => Promise<void>;

@@ -60,6 +60,8 @@ export const updateAppointmentRequestInput = z.object({
   status: appointmentStatusEnum,
   notes: z.string().optional(),
   confirmedAppointmentId: z.string().uuid().optional(),
+  confirmedDate: z.string().optional(), // "YYYY-MM-DD" format
+  confirmedTime: z.string().optional(), // "HH:MM" format
 });
 
 // =============================================================================
