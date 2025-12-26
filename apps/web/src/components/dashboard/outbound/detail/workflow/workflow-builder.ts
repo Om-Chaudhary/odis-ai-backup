@@ -24,6 +24,7 @@ export interface CaseDataForWorkflow {
     id: string;
     durationSeconds: number | null;
     transcript: string | null;
+    cleanedTranscript?: string | null;
     recordingUrl: string | null;
     summary: string | null;
     endedReason: string | null;

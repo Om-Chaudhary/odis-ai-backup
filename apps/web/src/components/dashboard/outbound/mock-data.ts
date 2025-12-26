@@ -318,6 +318,7 @@ export function generateMockCases(count = 12): DischargeCase[] {
                   : null,
               recordingUrl: null,
               transcript: null,
+              cleanedTranscript: null,
               summary: null,
               successEvaluation: null,
               userSentiment: null,

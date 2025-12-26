@@ -30,6 +30,7 @@ interface ScheduledCallData {
   durationSeconds: number | null;
   endedReason: string | null;
   transcript: string | null;
+  cleanedTranscript?: string | null;
   summary: string | null;
   customerPhone: string | null;
   structuredData?: { urgent_case?: boolean; [key: string]: unknown } | null;
@@ -150,6 +151,7 @@ export function OutboundCaseDetail({
             id: caseData.scheduledCall.id,
             durationSeconds: caseData.scheduledCall.durationSeconds,
             transcript: caseData.scheduledCall.transcript,
+            cleanedTranscript: caseData.scheduledCall.cleanedTranscript,
             recordingUrl: caseData.scheduledCall.recordingUrl ?? null,
             summary: caseData.scheduledCall.summary,
             endedReason: caseData.scheduledCall.endedReason,

@@ -74,6 +74,7 @@ interface ScheduledCallData {
   duration_seconds: number | null;
   ended_reason: string | null;
   transcript: string | null;
+  cleaned_transcript: string | null;
   summary: string | null;
   recording_url: string | null;
   attention_types: string[] | null;
@@ -137,6 +138,7 @@ export const getCaseByIdRouter = createTRPCRouter({
             duration_seconds,
             ended_reason,
             transcript,
+            cleaned_transcript,
             summary,
             recording_url,
             attention_types,
@@ -241,6 +243,7 @@ export const getCaseByIdRouter = createTRPCRouter({
               id: call.id,
               durationSeconds: call.duration_seconds,
               transcript: call.transcript,
+              cleanedTranscript: call.cleaned_transcript,
               recordingUrl: call.recording_url,
               summary: call.summary,
               endedReason: call.ended_reason,
