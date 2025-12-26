@@ -20,7 +20,7 @@ config({ path: ".env" });
 // Get env vars directly (avoid @odis-ai/env validation)
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const VAPI_API_KEY = process.env.VAPI_API_KEY;
+const VAPI_API_KEY = process.env.VAPI_PRIVATE_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.error(
@@ -30,7 +30,7 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 }
 
 if (!VAPI_API_KEY) {
-  console.error("Missing VAPI_API_KEY");
+  console.error("Missing VAPI_PRIVATE_KEY");
   process.exit(1);
 }
 
