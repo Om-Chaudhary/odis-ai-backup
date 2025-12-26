@@ -115,27 +115,27 @@ export function AppointmentDetail({
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header */}
-      <div className="bg-muted/20 flex items-start justify-between border-b p-4">
+      {/* Header - Styled to match outbound PatientOwnerCard */}
+      <div className="flex items-start justify-between border-b border-teal-100/50 bg-gradient-to-r from-white/50 to-teal-50/30 p-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-500/10">
-            <Calendar className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-teal-100 to-emerald-100">
+            <Calendar className="h-5 w-5 text-teal-600" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold">
+              <h3 className="text-lg font-semibold text-slate-800">
                 {appointment.patientName}
               </h3>
               {appointment.isNewClient && (
                 <Badge
                   variant="secondary"
-                  className="bg-blue-500/10 text-blue-700 dark:text-blue-400"
+                  className="bg-blue-500/10 text-blue-700"
                 >
                   New Client
                 </Badge>
               )}
             </div>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-sm text-slate-500">
               {appointment.species}
               {appointment.breed && ` · ${appointment.breed}`}
             </p>
@@ -206,15 +206,17 @@ export function AppointmentDetail({
           <CardContent>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-muted-foreground">Name</p>
-                <p className="font-medium">{appointment.clientName}</p>
+                <p className="text-slate-500">Name</p>
+                <p className="font-medium text-slate-800">
+                  {appointment.clientName}
+                </p>
               </div>
               <div>
-                <p className="text-muted-foreground">Phone</p>
+                <p className="text-slate-500">Phone</p>
                 <p className="font-medium">
                   <a
                     href={`tel:${appointment.clientPhone}`}
-                    className="text-teal-600 hover:text-teal-700 hover:underline dark:text-teal-400"
+                    className="text-teal-600 hover:text-teal-700 hover:underline"
                   >
                     {formatPhoneNumber(appointment.clientPhone)}
                   </a>
@@ -235,9 +237,9 @@ export function AppointmentDetail({
           <CardContent>
             <div className="space-y-3 text-sm">
               <div>
-                <p className="text-muted-foreground">Reason for Visit</p>
+                <p className="text-slate-500">Reason for Visit</p>
                 <p
-                  className={`font-medium ${isSensitive ? "text-purple-700 dark:text-purple-300" : ""}`}
+                  className={`font-medium ${isSensitive ? "text-purple-700" : "text-slate-800"}`}
                 >
                   {appointment.reason ?? "Not specified"}
                 </p>
@@ -249,12 +251,12 @@ export function AppointmentDetail({
                   <Separator />
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <p className="text-muted-foreground">
+                      <p className="text-slate-500">
                         {hasConfirmedTime
                           ? "Originally Requested"
                           : "Preferred Date"}
                       </p>
-                      <p className="font-medium">
+                      <p className="font-medium text-slate-800">
                         {appointment.requestedDate
                           ? format(
                               new Date(appointment.requestedDate + "T00:00:00"),
@@ -264,12 +266,12 @@ export function AppointmentDetail({
                       </p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">
+                      <p className="text-slate-500">
                         {hasConfirmedTime
                           ? "Originally Requested"
                           : "Preferred Time"}
                       </p>
-                      <p className="font-medium">
+                      <p className="font-medium text-slate-800">
                         {appointment.requestedStartTime
                           ? formatTime(appointment.requestedStartTime)
                           : "No preference"}
@@ -282,8 +284,10 @@ export function AppointmentDetail({
                 <>
                   <Separator />
                   <div>
-                    <p className="text-muted-foreground">Notes</p>
-                    <p className="font-medium">{appointment.notes}</p>
+                    <p className="text-slate-500">Notes</p>
+                    <p className="font-medium text-slate-800">
+                      {appointment.notes}
+                    </p>
                   </div>
                 </>
               )}
@@ -294,9 +298,9 @@ export function AppointmentDetail({
         {/* Request Timestamp */}
         <Card>
           <CardContent className="py-3">
-            <p className="text-muted-foreground text-xs">
+            <p className="text-xs text-slate-500">
               Request received{" "}
-              <span className="font-medium">
+              <span className="font-medium text-slate-700">
                 {format(
                   new Date(appointment.createdAt),
                   "MMMM d, yyyy 'at' h:mm a",
@@ -312,7 +316,7 @@ export function AppointmentDetail({
             {vapiQuery.isLoading ? (
               <Card>
                 <CardContent className="p-6">
-                  <div className="text-muted-foreground flex items-center justify-center gap-2">
+                  <div className="flex items-center justify-center gap-2 text-slate-500">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Loading call recording...
                   </div>
@@ -327,7 +331,7 @@ export function AppointmentDetail({
             ) : vapiQuery.error ? (
               <Card>
                 <CardContent className="p-6">
-                  <div className="text-muted-foreground flex items-center justify-center gap-2 text-sm">
+                  <div className="flex items-center justify-center gap-2 text-sm text-slate-500">
                     <AlertTriangle className="h-4 w-4" />
                     Unable to load call recording
                   </div>
@@ -339,7 +343,7 @@ export function AppointmentDetail({
       </div>
 
       {/* Action Footer */}
-      <div className="bg-muted/10 border-t p-4">
+      <div className="border-t border-teal-100/50 bg-gradient-to-r from-teal-50/30 to-white/50 p-4">
         {isPending ? (
           <>
             {showRejectForm ? (
@@ -409,7 +413,7 @@ export function AppointmentDetail({
           <>
             {showDeleteConfirm ? (
               <div className="space-y-3">
-                <p className="text-muted-foreground text-sm">
+                <p className="text-sm text-slate-500">
                   Are you sure you want to delete this appointment request? This
                   action cannot be undone.
                 </p>

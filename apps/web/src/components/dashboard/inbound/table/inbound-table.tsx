@@ -108,14 +108,14 @@ export function InboundTable({
   return (
     <div ref={tableRef} className="h-full overflow-auto">
       <table className="w-full">
-        <thead className="bg-muted/40 sticky top-0 z-10 border-b backdrop-blur-sm">
+        <thead className="sticky top-0 z-10 border-b border-teal-100/50 bg-gradient-to-r from-teal-50/40 to-white/60 backdrop-blur-sm">
           {viewMode === "calls" && <CallsHeader isCompact={isCompact} />}
           {viewMode === "appointments" && (
             <AppointmentsHeader isCompact={isCompact} />
           )}
           {viewMode === "messages" && <MessagesHeader isCompact={isCompact} />}
         </thead>
-        <tbody className="divide-border/50 divide-y">
+        <tbody className="divide-y divide-teal-50">
           {items
             .filter((item) => {
               // Apply call filtering for hardcoded modifications
@@ -137,8 +137,8 @@ export function InboundTable({
                   className={cn(
                     "group cursor-pointer transition-all duration-150",
                     isSelected
-                      ? "bg-accent border-l-2 border-l-teal-500"
-                      : "hover:bg-muted/50",
+                      ? "border-l-2 border-l-teal-500 bg-teal-50/70"
+                      : "hover:bg-teal-50/30",
                   )}
                   onClick={() => onSelectItem(item)}
                   tabIndex={0}

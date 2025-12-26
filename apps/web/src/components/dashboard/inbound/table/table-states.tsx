@@ -3,35 +3,41 @@ import type { ViewMode } from "../types";
 
 /**
  * Loading skeleton for table
+ * Styled to match outbound dashboard with teal-based colors
  */
 export function TableSkeleton({ viewMode: _viewMode }: { viewMode: ViewMode }) {
   return (
-    <div className="p-2">
-      <div className="mb-3 flex gap-2 border-b pb-2.5">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="bg-muted h-3 flex-1 animate-pulse rounded" />
-        ))}
+    <div className="w-full overflow-hidden p-2">
+      {/* Header skeleton */}
+      <div className="mb-3 flex gap-2 border-b border-teal-100/50 pb-2.5">
+        <div className="h-3 w-[32%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[14%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[12%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[14%] animate-pulse rounded bg-teal-100/50" />
+        <div className="h-3 w-[22%] animate-pulse rounded bg-teal-100/50" />
       </div>
+      {/* Row skeletons */}
       {Array.from({ length: 10 }).map((_, i) => (
         <div
           key={i}
-          className="border-border/50 flex items-center gap-2 border-b py-3"
+          className="flex items-center gap-2 border-b border-teal-50 py-3"
         >
-          <div className="w-[30%] space-y-1">
-            <div className="bg-muted/60 h-4 w-24 animate-pulse rounded" />
-            <div className="bg-muted/40 h-3 w-32 animate-pulse rounded" />
-          </div>
-          <div className="bg-muted/40 h-5 w-18 animate-pulse rounded-md" />
-          <div className="flex w-[14%] justify-center">
-            <div className="bg-muted/40 h-5 w-14 animate-pulse rounded-full" />
+          <div className="w-[32%] space-y-1">
+            <div className="h-4 w-24 animate-pulse rounded bg-teal-100/40" />
+            <div className="h-3 w-32 animate-pulse rounded bg-teal-50" />
           </div>
           <div className="flex w-[14%] justify-center">
-            <div className="bg-muted/40 h-5 w-12 animate-pulse rounded-full" />
+            <div className="h-5 w-14 animate-pulse rounded-full bg-teal-50" />
           </div>
           <div className="flex w-[12%] justify-center">
-            <div className="bg-muted/40 h-7 w-16 animate-pulse rounded-md" />
+            <div className="h-5 w-12 animate-pulse rounded-full bg-teal-50" />
           </div>
-          <div className="bg-muted/40 h-3 w-16 animate-pulse rounded" />
+          <div className="flex w-[14%] justify-center">
+            <div className="h-5 w-12 animate-pulse rounded-md bg-teal-50" />
+          </div>
+          <div className="flex w-[22%] justify-end pr-3">
+            <div className="h-3 w-16 animate-pulse rounded bg-teal-50" />
+          </div>
         </div>
       ))}
     </div>
@@ -40,6 +46,7 @@ export function TableSkeleton({ viewMode: _viewMode }: { viewMode: ViewMode }) {
 
 /**
  * Empty state when no items
+ * Styled to match outbound dashboard with gradient icon background
  */
 export function TableEmpty({ viewMode }: { viewMode: ViewMode }) {
   const config = {
@@ -65,11 +72,11 @@ export function TableEmpty({ viewMode }: { viewMode: ViewMode }) {
 
   return (
     <div className="flex h-full flex-col items-center justify-center py-16 text-center">
-      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-teal-500/10">
-        <Icon className="h-6 w-6 text-teal-600 dark:text-teal-400" />
+      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-teal-100 to-emerald-100">
+        <Icon className="h-6 w-6 text-teal-600" />
       </div>
-      <p className="text-sm font-semibold">{title}</p>
-      <p className="text-muted-foreground mt-1 text-xs">{description}</p>
+      <p className="text-sm font-semibold text-slate-800">{title}</p>
+      <p className="mt-0.5 text-xs text-slate-500">{description}</p>
     </div>
   );
 }

@@ -102,32 +102,34 @@ export function MessageDetail({
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header */}
+      {/* Header - Styled to match outbound PatientOwnerCard */}
       <div
         className={cn(
           "flex items-start justify-between border-b p-4",
-          isUrgent ? "bg-destructive/5" : "bg-muted/20",
+          isUrgent
+            ? "border-red-200/50 bg-gradient-to-r from-red-50/50 to-white/50"
+            : "border-teal-100/50 bg-gradient-to-r from-white/50 to-teal-50/30",
         )}
       >
         <div className="flex items-center gap-3">
           <div
             className={cn(
               "flex h-10 w-10 items-center justify-center rounded-full",
-              isUrgent ? "bg-destructive/10" : "bg-teal-500/10",
+              isUrgent
+                ? "bg-gradient-to-br from-red-100 to-red-200"
+                : "bg-gradient-to-br from-teal-100 to-emerald-100",
             )}
           >
             <MessageSquare
               className={cn(
                 "h-5 w-5",
-                isUrgent
-                  ? "text-destructive"
-                  : "text-teal-600 dark:text-teal-400",
+                isUrgent ? "text-red-600" : "text-teal-600",
               )}
             />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold">
+              <h3 className="text-lg font-semibold text-slate-800">
                 {message.callerName ?? "Unknown Caller"}
               </h3>
               {isUrgent && (
@@ -140,7 +142,7 @@ export function MessageDetail({
                 </Badge>
               )}
             </div>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-sm text-slate-500">
               {formatPhoneNumber(message.callerPhone)}
             </p>
           </div>
@@ -159,7 +161,7 @@ export function MessageDetail({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-wrap">
+            <p className="text-sm leading-relaxed whitespace-pre-wrap text-slate-700">
               {message.messageContent}
             </p>
           </CardContent>
@@ -171,7 +173,7 @@ export function MessageDetail({
             {isLoadingCallData ? (
               <Card>
                 <CardContent className="p-6">
-                  <div className="text-muted-foreground flex items-center justify-center gap-2">
+                  <div className="flex items-center justify-center gap-2 text-slate-500">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Loading call recording...
                   </div>
@@ -186,7 +188,7 @@ export function MessageDetail({
             ) : callDataQuery.error ? (
               <Card>
                 <CardContent className="p-6">
-                  <div className="text-muted-foreground flex items-center justify-center gap-2 text-sm">
+                  <div className="flex items-center justify-center gap-2 text-sm text-slate-500">
                     <AlertTriangle className="h-4 w-4" />
                     Unable to load call recording
                   </div>
@@ -201,12 +203,12 @@ export function MessageDetail({
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm font-medium">
-                <FileText className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+                <FileText className="h-4 w-4 text-teal-600" />
                 Call Summary
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground text-sm leading-relaxed">
+              <p className="text-sm leading-relaxed text-slate-700">
                 {callData.summary}
               </p>
             </CardContent>
@@ -216,10 +218,10 @@ export function MessageDetail({
         {/* Message Info */}
         <Card>
           <CardContent className="py-3">
-            <div className="text-muted-foreground flex items-center justify-between text-xs">
+            <div className="flex items-center justify-between text-xs text-slate-500">
               <span>
                 Received{" "}
-                <span className="font-medium">
+                <span className="font-medium text-slate-700">
                   {format(
                     new Date(message.createdAt),
                     "MMMM d, yyyy 'at' h:mm a",
@@ -229,7 +231,7 @@ export function MessageDetail({
               {message.readAt && (
                 <span>
                   Read{" "}
-                  <span className="font-medium">
+                  <span className="font-medium text-slate-700">
                     {format(new Date(message.readAt), "h:mm a")}
                   </span>
                 </span>
@@ -243,7 +245,9 @@ export function MessageDetail({
       <div
         className={cn(
           "border-t p-4",
-          isUrgent ? "bg-destructive/5" : "bg-muted/10",
+          isUrgent
+            ? "border-red-200/50 bg-gradient-to-r from-red-50/30 to-white/50"
+            : "border-teal-100/50 bg-gradient-to-r from-teal-50/30 to-white/50",
         )}
       >
         {isNew || isRead ? (
@@ -285,7 +289,7 @@ export function MessageDetail({
           <>
             {showDeleteConfirm ? (
               <div className="space-y-3">
-                <p className="text-muted-foreground text-sm">
+                <p className="text-sm text-slate-500">
                   Are you sure you want to delete this message? This action
                   cannot be undone.
                 </p>

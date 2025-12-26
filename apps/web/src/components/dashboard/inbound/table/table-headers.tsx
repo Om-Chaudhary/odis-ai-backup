@@ -8,7 +8,7 @@ interface HeaderProps {
 
 export function CallsHeader({ isCompact = false }: HeaderProps) {
   return (
-    <tr className="text-muted-foreground text-xs">
+    <tr className="text-xs text-slate-500">
       <th
         className={`h-10 pl-3 text-left font-medium ${isCompact ? "w-[40%]" : "w-[32%]"}`}
       >
@@ -38,7 +38,7 @@ export function CallsHeader({ isCompact = false }: HeaderProps) {
 
 export function AppointmentsHeader({ isCompact = false }: HeaderProps) {
   return (
-    <tr className="text-muted-foreground text-xs">
+    <tr className="text-xs text-slate-500">
       <th
         className={`h-10 pl-3 text-left font-medium ${isCompact ? "w-[38%]" : "w-[26%]"}`}
       >
@@ -71,7 +71,7 @@ export function AppointmentsHeader({ isCompact = false }: HeaderProps) {
 
 export function MessagesHeader({ isCompact = false }: HeaderProps) {
   return (
-    <tr className="text-muted-foreground text-xs">
+    <tr className="text-xs text-slate-500">
       <th
         className={`h-10 pl-3 text-left font-medium ${isCompact ? "w-[28%]" : "w-[18%]"}`}
       >
