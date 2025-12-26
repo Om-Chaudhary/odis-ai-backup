@@ -378,8 +378,6 @@ export const DEMO_APPOINTMENTS: AppointmentRequest[] = [
     requestedDate: "2024-12-25",
     requestedStartTime: null,
     requestedEndTime: null,
-    // Add the missing confirmed appointment fields
-    confirmedTime: null,
     status: "cancelled" as const,
     isNewClient: false,
     isOutlier: null,

@@ -150,7 +150,9 @@
       "Bash(NODE_OPTIONS='--trace-deprecation' timeout 10 pnpm dev:*)",
       "Bash(pnpm nx:*)",
       "Read(//Users/om/Desktop/Alum Rock/**)",
-      "Bash(ffprobe:*)"
+      "Bash(ffprobe:*)",
+      "Read(//Users/om/**)",
+      "Read(//Users/**)"
     ],
     "deny": [],
     "ask": []
