@@ -227,9 +227,14 @@ export function OutboundCaseDetail({
     (phoneSent && !emailSent && hasOwnerEmail) ||
     (!phoneSent && emailSent && hasOwnerPhone);
 
-  // Only show scheduled card if there's scheduled info to display (not completed/failed)
+  // Only show scheduled card if there are PENDING items to display
+  // Don't show for completed/failed items (scheduledFor timestamps persist after delivery)
+  const hasActuallyScheduledCall =
+    caseData.phoneSent === "pending" && Boolean(caseData.scheduledCallFor);
+  const hasActuallyScheduledEmail =
+    caseData.emailSent === "pending" && Boolean(caseData.scheduledEmailFor);
   const showScheduledCard =
-    caseData.scheduledCallFor ?? caseData.scheduledEmailFor;
+    hasActuallyScheduledCall || hasActuallyScheduledEmail;
 
   return (
     <div className="flex h-full flex-col">

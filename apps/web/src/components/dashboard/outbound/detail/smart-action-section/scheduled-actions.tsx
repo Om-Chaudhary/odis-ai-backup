@@ -4,12 +4,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@odis-ai/shared/ui/card";
-import { Button } from "@odis-ai/shared/ui/button";
-import { AlertCircle } from "lucide-react";
+import { Clock } from "lucide-react";
 
 interface ScheduledActionsProps {
   scheduledCallFor: string | null;
   scheduledEmailFor: string | null;
+  // Cancel handlers removed - use StatusOverviewCard for cancel actions
   onCancelScheduled?: (options: {
     cancelCall: boolean;
     cancelEmail: boolean;
@@ -17,11 +17,16 @@ interface ScheduledActionsProps {
   isCancelling?: boolean;
 }
 
+/**
+ * ScheduledActions - Informational card for fully scheduled cases
+ *
+ * NOTE: Cancel buttons have been removed from this component to avoid duplication.
+ * Cancel actions are handled by StatusOverviewCard which provides inline cancel
+ * buttons next to each scheduled item.
+ */
 export function ScheduledActions({
   scheduledCallFor,
   scheduledEmailFor,
-  onCancelScheduled,
-  isCancelling,
 }: ScheduledActionsProps) {
   const hasScheduledCall = Boolean(scheduledCallFor);
   const hasScheduledEmail = Boolean(scheduledEmailFor);
@@ -31,85 +36,22 @@ export function ScheduledActions({
     return null;
   }
 
-  const handleCancelAll = () => {
-    if (onCancelScheduled) {
-      onCancelScheduled({
-        cancelCall: hasScheduledCall,
-        cancelEmail: hasScheduledEmail,
-      });
-    }
-  };
-
-  const handleCancelCall = () => {
-    if (onCancelScheduled && hasScheduledCall) {
-      onCancelScheduled({
-        cancelCall: true,
-        cancelEmail: false,
-      });
-    }
-  };
-
-  const handleCancelEmail = () => {
-    if (onCancelScheduled && hasScheduledEmail) {
-      onCancelScheduled({
-        cancelCall: false,
-        cancelEmail: true,
-      });
-    }
-  };
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <AlertCircle className="h-4 w-4 text-purple-600" />
-          Scheduled Communications
+    <Card className="border-purple-200/50 bg-purple-50/30 dark:border-purple-800/50 dark:bg-purple-950/20">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <Clock className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+          Awaiting Delivery
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent>
         <p className="text-sm text-slate-600 dark:text-slate-400">
           {hasBothScheduled
-            ? "Both phone call and email are scheduled. You can cancel individual channels or all at once."
+            ? "Both phone call and email are scheduled for delivery. Use the status cards above to cancel if needed."
             : hasScheduledCall
-              ? "Phone call is scheduled. Cancel to prevent delivery."
-              : "Email is scheduled. Cancel to prevent delivery."}
+              ? "Phone call is scheduled for delivery."
+              : "Email is scheduled for delivery."}
         </p>
-
-        <div className="flex flex-col gap-2">
-          {hasBothScheduled && (
-            <Button
-              variant="destructive"
-              onClick={handleCancelAll}
-              disabled={isCancelling}
-              className="w-full"
-            >
-              {isCancelling ? "Cancelling..." : "Cancel All"}
-            </Button>
-          )}
-
-          <div className="flex gap-2">
-            {hasScheduledCall && (
-              <Button
-                variant="outline"
-                onClick={handleCancelCall}
-                disabled={isCancelling}
-                className="flex-1"
-              >
-                {isCancelling ? "Cancelling..." : "Cancel Phone"}
-              </Button>
-            )}
-            {hasScheduledEmail && (
-              <Button
-                variant="outline"
-                onClick={handleCancelEmail}
-                disabled={isCancelling}
-                className="flex-1"
-              >
-                {isCancelling ? "Cancelling..." : "Cancel Email"}
-              </Button>
-            )}
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
