@@ -11,6 +11,7 @@ interface ScheduledCallData {
   id: string;
   recordingUrl?: string | null;
   transcript: string | null;
+  cleanedTranscript?: string | null;
   durationSeconds: number | null;
 }
 
@@ -40,6 +41,7 @@ export function CallTabContent({
       <CallRecordingPlayer
         recordingUrl={caseData.scheduledCall.recordingUrl ?? null}
         transcript={caseData.scheduledCall.transcript}
+        cleanedTranscript={caseData.scheduledCall.cleanedTranscript}
         durationSeconds={caseData.scheduledCall.durationSeconds}
       />
     );

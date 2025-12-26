@@ -95,6 +95,7 @@ function ContentPanel({ type, caseData, onClose }: ContentPanelProps) {
               <CallRecordingPlayer
                 recordingUrl={caseData.scheduledCall.recordingUrl}
                 transcript={caseData.scheduledCall.transcript}
+                cleanedTranscript={caseData.scheduledCall.cleanedTranscript}
                 durationSeconds={caseData.scheduledCall.durationSeconds}
               />
             ) : (

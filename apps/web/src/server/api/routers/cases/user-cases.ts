@@ -134,6 +134,7 @@ export const userCasesRouter = createTRPCRouter({
             ended_reason,
             vapi_call_id,
             transcript,
+            cleaned_transcript,
             recording_url,
             duration_seconds,
             created_at

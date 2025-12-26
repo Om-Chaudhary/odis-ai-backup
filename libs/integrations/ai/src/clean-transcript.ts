@@ -85,9 +85,34 @@ const COMMON_CORRECTIONS = `
 - "[inaudible]" → keep as-is (indicates unclear audio)
 - "[crosstalk]" → keep as-is (indicates overlapping speech)
 - Remove isolated single-word fragments that don't contribute meaning
+
+### Agent Mistakes & Corrections (CRITICAL - REMOVE THESE)
+- If AI provides wrong information then corrects itself, keep ONLY the correction
+  Example: "AI: The appointment is on Monday. Actually, I apologize, it's on Tuesday."
+  → "AI: The appointment is on Tuesday."
+- Remove ALL AI apologies and self-corrections ("I apologize", "Let me correct that", "Sorry, I meant", "My mistake")
+- Remove technical issues/system hiccups ("Can you hear me?", "Sorry, I lost you there", "Are you still there?")
+- Remove uncertain AI statements later clarified ("I think...", "I'm not sure, but...", "Let me see...")
+- If AI asks the same question twice, keep only the first instance
+- Remove AI acknowledgments of confusion ("I didn't catch that", "Could you repeat?", "What was that?")
+- Remove any "hold on" or "one moment" - present information as if immediately available
+
+### Professional Polish (Make AI Sound Expert)
+- Remove AI hesitations: "let me see", "one moment", "hold on", "give me a second"
+- Remove meta-commentary: "Let me check that", "I'm looking at your record", "Let me pull that up"
+- Remove qualifying language from AI: "I believe", "I think", "probably", "maybe"
+- If AI repeats information, consolidate to single clear statement
+- Remove indicators AI had to "figure something out" - present info confidently and directly
+- Transform uncertain language to confident: "I think it's Tuesday" → "It's Tuesday"
+
+### Conversation Flow Improvements
+- If AI asks same question multiple times due to misunderstanding, keep only final successful exchange
+- Remove false starts where AI begins sentence then restarts differently
+- Remove redundant acknowledgments ("Okay", "Alright", "Sure" used excessively)
+- Consolidate multiple attempts to explain same thing into clearest single version
 `;
 
-const SYSTEM_PROMPT = `You are an expert transcript editor specializing in veterinary clinic phone calls transcribed by Vapi/Deepgram. Your task is to clean up speech-to-text transcription errors while preserving the exact meaning and flow of the conversation.
+const SYSTEM_PROMPT = `You are an expert transcript editor specializing in veterinary clinic phone calls transcribed by Vapi/Deepgram. Your task is to clean up speech-to-text transcription errors AND remove any agent mistakes or hiccups to make the transcript look spotless and professional for veterinarians to review.
 
 ${COMMON_CORRECTIONS}
 
@@ -103,6 +128,8 @@ ${COMMON_CORRECTIONS}
 7. Keep "[inaudible]" and "[crosstalk]" markers as-is
 8. If a clinic name is provided, correct any phonetic misspellings of that name
 9. Preserve the COMPLETE transcript - every meaningful exchange
+10. Remove AI mistakes, self-corrections, and uncertainties to present professional, confident communication
+11. If AI said something wrong then corrected it, show ONLY the correct information
 
 ### DO NOT:
 1. Change the meaning or intent of what was said
@@ -111,11 +138,18 @@ ${COMMON_CORRECTIONS}
 4. Remove meaningful pauses indicated by "..." 
 5. Change speaker attribution
 6. Over-correct casual speech that's grammatically correct
-7. Remove emotional expressions or emphasis ("Oh!", "Wow", "Great!")
+7. Remove emotional expressions or emphasis ("Oh!", "Wow", "Great!") unless they're part of an error/correction
+
+### What to KEEP
+- Natural empathetic responses ("I'm sorry to hear that", "I understand your concern")
+- Appropriate thank yous and acknowledgments that show attentiveness
+- Clarifying questions that were part of proper conversation flow
+- Context that aids understanding (only remove actual mistakes, not helpful context)
 
 ### Output Format
 Output ONLY the cleaned transcript text. No explanations, headers, or JSON wrapping.
-Each speaker turn should start on a new line with the speaker label (e.g., "AI:", "User:").`;
+Each speaker turn should start on a new line with the speaker label (e.g., "AI:", "User:").
+The transcript should read as if the AI agent was completely professional and error-free from the start.`;
 
 function createUserPrompt(
   transcript: string,

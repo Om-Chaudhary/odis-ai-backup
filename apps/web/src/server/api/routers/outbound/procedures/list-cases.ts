@@ -99,6 +99,7 @@ interface ScheduledCallData {
   duration_seconds: number | null;
   ended_reason: string | null;
   transcript: string | null;
+  cleaned_transcript: string | null;
   summary: string | null;
   customer_phone: string | null;
   dynamic_variables: unknown;
@@ -565,6 +566,7 @@ export const listCasesRouter = createTRPCRouter({
                 durationSeconds: scheduledCall.duration_seconds,
                 endedReason: scheduledCall.ended_reason,
                 transcript: scheduledCall.transcript,
+                cleanedTranscript: scheduledCall.cleaned_transcript,
                 summary: scheduledCall.summary,
                 customerPhone: scheduledCall.customer_phone,
                 structuredData: scheduledCall.structured_data,

@@ -393,6 +393,7 @@ export const listingsRouter = createTRPCRouter({
           duration_seconds,
           recording_url,
           transcript,
+          cleaned_transcript,
           cost,
           customer_phone,
           vapi_call_id,

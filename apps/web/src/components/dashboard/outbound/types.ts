@@ -183,6 +183,7 @@ export interface ScheduledCall {
   durationSeconds: number | null;
   recordingUrl: string | null;
   transcript: string | null;
+  cleanedTranscript: string | null;
   summary: string | null;
   successEvaluation: string | null;
   userSentiment: "positive" | "neutral" | "negative" | null;
