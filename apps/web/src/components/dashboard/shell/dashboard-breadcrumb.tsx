@@ -29,6 +29,10 @@ export function DashboardBreadcrumb() {
     switch (segment) {
       case "dashboard":
         return "Dashboard";
+      case "inbound":
+        return "Inbound Communications";
+      case "outbound":
+        return "Discharge Communications";
       case "cases":
         return "Discharge Management";
       case "patients":
