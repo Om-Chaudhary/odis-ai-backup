@@ -12,36 +12,42 @@ import { OwnerSentimentCard } from "./owner-sentiment-card";
 import { EscalationCard } from "./escalation-card";
 import { FollowUpCard } from "./follow-up-card";
 
-// Types for structured output data
-interface CallOutcomeData {
+// Types for structured output data - exported for reuse
+// Using index signatures for compatibility with various data shapes
+export interface CallOutcomeData {
+  [key: string]: unknown;
   call_outcome?: string;
   conversation_stage_reached?: string;
   owner_available?: boolean;
   call_duration_appropriate?: boolean;
 }
 
-interface PetHealthData {
+export interface PetHealthData {
+  [key: string]: unknown;
   pet_recovery_status?: string;
   symptoms_reported?: string[];
   new_concerns_raised?: boolean;
   condition_resolved?: boolean;
 }
 
-interface MedicationComplianceData {
+export interface MedicationComplianceData {
+  [key: string]: unknown;
   medication_discussed?: boolean;
   medication_compliance?: string;
   medication_issues?: string[];
   medication_guidance_provided?: boolean;
 }
 
-interface OwnerSentimentData {
+export interface OwnerSentimentData {
+  [key: string]: unknown;
   owner_sentiment?: string;
   owner_engagement_level?: string;
   expressed_gratitude?: boolean;
   expressed_concern_about_care?: boolean;
 }
 
-interface EscalationData {
+export interface EscalationData {
+  [key: string]: unknown;
   escalation_triggered?: boolean;
   escalation_type?: string;
   transfer_attempted?: boolean;
@@ -49,7 +55,8 @@ interface EscalationData {
   escalation_reason?: string;
 }
 
-interface FollowUpData {
+export interface FollowUpData {
+  [key: string]: unknown;
   recheck_reminder_delivered?: boolean;
   recheck_confirmed?: boolean;
   appointment_requested?: boolean;
@@ -57,6 +64,7 @@ interface FollowUpData {
   follow_up_reason?: string;
 }
 
+// Accept flexible types for compatibility with various data sources
 interface CallIntelligenceSectionProps {
   callOutcomeData: CallOutcomeData | null;
   petHealthData: PetHealthData | null;

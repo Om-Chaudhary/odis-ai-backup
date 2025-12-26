@@ -97,6 +97,76 @@ export interface ClinicMessage {
   updatedAt: string;
 }
 
+// =============================================================================
+// Call Intelligence Types (Descriptive for Clinical Staff)
+// =============================================================================
+// Using index signatures for compatibility with CallIntelligenceSection component
+
+/**
+ * Call outcome structured data - describes how the call went
+ */
+export interface CallOutcomeData {
+  [key: string]: unknown;
+  call_outcome?: string;
+  outcome_summary?: string;
+  conversation_stage_reached?: string;
+  key_topics_discussed?: string[];
+}
+
+/**
+ * Pet health status - describes pet's current condition
+ */
+export interface PetHealthData {
+  [key: string]: unknown;
+  pet_recovery_status?: string;
+  health_summary?: string;
+  symptoms_reported?: string[];
+  owner_observations?: string;
+}
+
+/**
+ * Medication compliance - describes medication adherence
+ */
+export interface MedicationComplianceData {
+  [key: string]: unknown;
+  medication_compliance?: string;
+  compliance_summary?: string;
+  medications_mentioned?: string[];
+  medication_concerns?: string;
+}
+
+/**
+ * Owner sentiment - describes owner's emotional state
+ */
+export interface OwnerSentimentData {
+  [key: string]: unknown;
+  owner_sentiment?: string;
+  sentiment_summary?: string;
+  notable_comments?: string;
+}
+
+/**
+ * Escalation tracking - describes any escalations needed
+ */
+export interface EscalationData {
+  [key: string]: unknown;
+  escalation_triggered?: boolean;
+  escalation_summary?: string;
+  escalation_type?: string;
+  staff_action_needed?: string;
+}
+
+/**
+ * Follow-up status - describes follow-up needs
+ */
+export interface FollowUpData {
+  [key: string]: unknown;
+  follow_up_needed?: boolean;
+  follow_up_summary?: string;
+  appointment_status?: string;
+  next_steps?: string;
+}
+
 /**
  * Inbound call from inbound_vapi_calls table
  * Uses snake_case to match database schema
@@ -118,6 +188,17 @@ export interface InboundCall {
   ended_reason: string | null;
   created_at: string;
   updated_at: string;
+  // Call intelligence columns
+  attention_types?: string[] | null;
+  attention_severity?: string | null;
+  attention_summary?: string | null;
+  attention_flagged_at?: string | null;
+  call_outcome_data?: CallOutcomeData | null;
+  pet_health_data?: PetHealthData | null;
+  medication_compliance_data?: MedicationComplianceData | null;
+  owner_sentiment_data?: OwnerSentimentData | null;
+  escalation_data?: EscalationData | null;
+  follow_up_data?: FollowUpData | null;
 }
 
 // =============================================================================

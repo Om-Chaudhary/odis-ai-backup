@@ -35,7 +35,11 @@ import {
 import type { VapiCallResponse } from "@odis-ai/integrations/vapi";
 import { mapInboundCallToUser } from "@odis-ai/integrations/vapi/inbound-calls";
 import { scheduleCallExecution } from "@odis-ai/integrations/qstash/client";
-import { cleanTranscript } from "@odis-ai/integrations/ai";
+import {
+  cleanTranscript,
+  extractAppointmentDate,
+  timeOfDayToTime,
+} from "@odis-ai/integrations/ai";
 
 const logger = loggers.webhook.child("end-of-call-report");
 
@@ -208,9 +212,14 @@ async function handleInboundCallEnd(
   const userSentiment = extractSentiment(analysis);
 
   // Get structured data from analysis or artifact
-  const structuredData =
-    (analysis as { structuredData?: unknown }).structuredData ??
-    artifact.structuredOutputs;
+  const structuredData = ((analysis as { structuredData?: unknown })
+    .structuredData ?? artifact.structuredOutputs) as
+    | Record<string, unknown>
+    | undefined;
+
+  // Parse all structured outputs (comprehensive intelligence - same as outbound)
+  const structuredOutputs =
+    parseAllStructuredOutputs(artifact.structuredOutputs) ?? {};
 
   // COMPREHENSIVE DATA EXTRACTION with multiple fallback sources
   // Recording URL: call.recordingUrl -> artifact.recordingUrl -> message.recordingUrl
@@ -275,6 +284,13 @@ async function handleInboundCallEnd(
     user_sentiment: userSentiment,
     cost,
     ended_reason: call.endedReason ?? message.endedReason ?? null,
+    // Call intelligence columns (same as outbound)
+    call_outcome_data: structuredOutputs.callOutcome,
+    pet_health_data: structuredOutputs.petHealth,
+    medication_compliance_data: structuredOutputs.medicationCompliance,
+    owner_sentiment_data: structuredOutputs.ownerSentiment,
+    escalation_data: structuredOutputs.escalation,
+    follow_up_data: structuredOutputs.followUp,
   };
 
   logger.info("Inbound call ended - extracted data", {
@@ -292,7 +308,24 @@ async function handleInboundCallEnd(
     hasMessages: !!transcriptMessages,
     hasSummary: !!analysis.summary,
     userSentiment,
+    // Call intelligence availability
+    structuredOutputs: {
+      hasCallOutcome: !!structuredOutputs.callOutcome,
+      hasPetHealth: !!structuredOutputs.petHealth,
+      hasMedicationCompliance: !!structuredOutputs.medicationCompliance,
+      hasOwnerSentiment: !!structuredOutputs.ownerSentiment,
+      hasEscalation: !!structuredOutputs.escalation,
+      hasFollowUp: !!structuredOutputs.followUp,
+    },
   });
+
+  // Handle attention case detection for inbound calls
+  await handleInboundAttentionCase(
+    call,
+    existingCall,
+    structuredData,
+    updateData,
+  );
 
   // Save to database FIRST - don't let transcript cleaning block this
   const { error: updateError } = await supabase
@@ -317,6 +350,135 @@ async function handleInboundCallEnd(
     "inbound_vapi_calls",
     supabase,
   );
+
+  // Extract appointment date from transcript and update appointment request (background)
+  extractAndUpdateAppointmentDate(call.id, transcript, supabase);
+}
+
+/**
+ * Extract appointment date from transcript and update appointment request (fire-and-forget)
+ *
+ * When a caller schedules an appointment but VAPI doesn't capture the date in
+ * structured output, we can extract it from the transcript and update the
+ * appointment request so the UI shows the date instead of "No preference".
+ */
+function extractAndUpdateAppointmentDate(
+  vapiCallId: string,
+  transcript: string | null,
+  supabase: SupabaseClient,
+): void {
+  if (!transcript || transcript.trim().length === 0) {
+    return;
+  }
+
+  // Fire and forget - don't await
+  void (async () => {
+    try {
+      // Check if there's an associated appointment request that has no requested_date
+      const { data: appointmentRequest, error: fetchError } = await supabase
+        .from("appointment_requests")
+        .select("id, requested_date, requested_start_time")
+        .eq("vapi_call_id", vapiCallId)
+        .limit(1)
+        .single();
+
+      if (fetchError) {
+        // No appointment request found - this is fine, not all calls have appointments
+        if (fetchError.code !== "PGRST116") {
+          logger.debug("No appointment request found for call", {
+            vapiCallId,
+            error: fetchError.message,
+          });
+        }
+        return;
+      }
+
+      // If appointment already has a date, no need to extract
+      if (appointmentRequest.requested_date) {
+        logger.debug("Appointment request already has date", {
+          vapiCallId,
+          appointmentId: appointmentRequest.id,
+          existingDate: appointmentRequest.requested_date,
+        });
+        return;
+      }
+
+      logger.info("Extracting appointment date from transcript", {
+        vapiCallId,
+        appointmentId: appointmentRequest.id,
+        transcriptLength: transcript.length,
+      });
+
+      // Extract date from transcript using AI
+      const extracted = await extractAppointmentDate(transcript);
+
+      if (!extracted.hasPreference) {
+        logger.debug("No appointment date preference found in transcript", {
+          vapiCallId,
+          appointmentId: appointmentRequest.id,
+        });
+        return;
+      }
+
+      // Prepare update data
+      const updateData: Record<string, unknown> = {};
+
+      if (extracted.date) {
+        updateData.requested_date = extracted.date;
+      }
+
+      // Use extracted time, or convert timeOfDay to time
+      if (extracted.time) {
+        updateData.requested_start_time = extracted.time + ":00"; // Add seconds
+      } else if (
+        extracted.timeOfDay &&
+        !appointmentRequest.requested_start_time
+      ) {
+        const defaultTime = timeOfDayToTime(extracted.timeOfDay);
+        if (defaultTime) {
+          updateData.requested_start_time = defaultTime + ":00";
+        }
+      }
+
+      // Only update if we have something to update
+      if (Object.keys(updateData).length === 0) {
+        return;
+      }
+
+      // Update appointment request
+      const { error: updateError } = await supabase
+        .from("appointment_requests")
+        .update(updateData)
+        .eq("id", appointmentRequest.id);
+
+      if (updateError) {
+        logger.error(
+          "Failed to update appointment request with extracted date",
+          {
+            vapiCallId,
+            appointmentId: appointmentRequest.id,
+            error: updateError.message,
+          },
+        );
+        return;
+      }
+
+      logger.info("Updated appointment request with extracted date", {
+        vapiCallId,
+        appointmentId: appointmentRequest.id,
+        extractedDate: extracted.date,
+        extractedTime: extracted.time,
+        timeOfDay: extracted.timeOfDay,
+        rawMention: extracted.rawMention,
+      });
+    } catch (error) {
+      logger.error("Failed to extract/update appointment date", {
+        vapiCallId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      // Silent failure - don't break the webhook
+    }
+  })();
 }
 
 /**
@@ -684,6 +846,59 @@ async function handleAttentionCase(
       });
     }
   }
+}
+
+/**
+ * Handle attention case detection for inbound calls
+ *
+ * Similar to handleAttentionCase but without case_id logic
+ * since inbound calls don't have associated cases.
+ */
+async function handleInboundAttentionCase(
+  call: VapiWebhookCall,
+  existingCall: ExistingCallRecord,
+  structuredData: Record<string, unknown> | undefined,
+  updateData: Record<string, unknown>,
+): Promise<void> {
+  // Parse VAPI's structured output format
+  const parsed = parseVapiStructuredOutput(structuredData);
+  const needsAttention = parsed?.needs_attention === true;
+
+  if (!needsAttention) {
+    return;
+  }
+
+  logger.info("Inbound attention case detected", {
+    callId: call.id,
+    dbId: existingCall.id,
+    attentionTypes: parsed?.attention_types,
+    severity: parsed?.attention_severity,
+  });
+
+  // Set attention fields
+  // Handle array, JSON string, or comma-separated string formats from VAPI
+  const rawTypes = parsed?.attention_types;
+  let attentionTypes: string[] = [];
+  if (Array.isArray(rawTypes)) {
+    attentionTypes = rawTypes;
+  } else if (typeof rawTypes === "string") {
+    // Try parsing as JSON array first (e.g., '["health_concern","emergency_signs"]')
+    try {
+      const parsedTypes = JSON.parse(rawTypes);
+      attentionTypes = Array.isArray(parsedTypes) ? parsedTypes : [rawTypes];
+    } catch {
+      // Fall back to comma-separated split
+      attentionTypes = rawTypes
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+    }
+  }
+  updateData.attention_types = attentionTypes;
+  updateData.attention_severity =
+    (parsed?.attention_severity as string) ?? "routine";
+  updateData.attention_flagged_at = new Date().toISOString();
+  updateData.attention_summary = (parsed?.attention_summary as string) ?? null;
 }
 
 /**

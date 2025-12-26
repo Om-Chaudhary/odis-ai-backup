@@ -1,4 +1,5 @@
 export * from "./clean-transcript";
+export * from "./extract-appointment-date";
 export * from "./generate-assessment-questions";
 export * from "./generate-discharge";
 export * from "./generate-structured-discharge";

@@ -20,26 +20,15 @@ import {
 import { Badge } from "@odis-ai/shared/ui/badge";
 import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
 import { CallRecordingPlayer } from "../../shared/call-recording-player";
+import { CallIntelligenceSection } from "../../outbound/detail/call-intelligence";
+import { CommunicationsIntelligenceCard } from "../../outbound/detail/communications-intelligence-card";
 import { api } from "~/trpc/client";
 import { CallStatusBadge, SentimentBadge } from "./badges";
 import { formatDuration } from "./utils";
 import { getCallDataOverride } from "./demo-data";
 
-interface InboundCall {
-  id: string;
-  vapi_call_id: string;
-  customer_phone: string | null;
-  created_at: string;
-  status: string;
-  user_sentiment: string | null;
-  cost: number | null;
-  clinic_name: string | null;
-  ended_reason: string | null;
-  recording_url?: string | null;
-  transcript?: string | null;
-  duration_seconds?: number | null;
-  summary?: string | null;
-}
+// Import InboundCall type from shared types
+import type { InboundCall } from "../types";
 
 interface CallDetailProps {
   call: InboundCall;
@@ -79,17 +68,17 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Header */}
-      <div className="bg-muted/20 flex items-start justify-between border-b p-4">
+      {/* Header - Styled to match outbound PatientOwnerCard */}
+      <div className="flex items-start justify-between border-b border-teal-100/50 bg-gradient-to-r from-white/50 to-teal-50/30 p-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-500/10">
-            <Phone className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-teal-100 to-emerald-100">
+            <Phone className="h-5 w-5 text-teal-600" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold">
+            <h3 className="text-lg font-semibold text-slate-800">
               {formatPhoneNumber(call.customer_phone ?? "") || "Unknown Caller"}
             </h3>
-            <p className="text-muted-foreground text-sm">
+            <p className="text-sm text-slate-500">
               {format(new Date(call.created_at), "EEEE, MMMM d 'at' h:mm a")}
             </p>
           </div>
@@ -115,12 +104,12 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
           <CardContent>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-muted-foreground">Duration</p>
-                <p className="font-medium">
+                <p className="text-slate-500">Duration</p>
+                <p className="font-medium text-slate-800">
                   {callData.duration_seconds ? (
                     formatDuration(callData.duration_seconds)
                   ) : vapiQuery.isLoading ? (
-                    <span className="text-muted-foreground flex items-center gap-1">
+                    <span className="flex items-center gap-1 text-slate-500">
                       <Loader2 className="h-3 w-3 animate-spin" />
                       Loading...
                     </span>
@@ -130,18 +119,22 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground">Cost</p>
-                <p className="font-medium">
+                <p className="text-slate-500">Cost</p>
+                <p className="font-medium text-slate-800">
                   {call.cost ? `$${call.cost.toFixed(2)}` : "N/A"}
                 </p>
               </div>
               <div>
-                <p className="text-muted-foreground">Clinic</p>
-                <p className="font-medium">{call.clinic_name ?? "Unknown"}</p>
+                <p className="text-slate-500">Clinic</p>
+                <p className="font-medium text-slate-800">
+                  {call.clinic_name ?? "Unknown"}
+                </p>
               </div>
               <div>
-                <p className="text-muted-foreground">End Reason</p>
-                <p className="font-medium">{call.ended_reason ?? "N/A"}</p>
+                <p className="text-slate-500">End Reason</p>
+                <p className="font-medium text-slate-800">
+                  {call.ended_reason ?? "N/A"}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -151,7 +144,7 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
         {vapiQuery.isLoading && shouldFetchFromVAPI ? (
           <Card>
             <CardContent className="p-6">
-              <div className="text-muted-foreground flex items-center justify-center gap-2">
+              <div className="flex items-center justify-center gap-2 text-slate-500">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Loading call recording...
               </div>
@@ -197,14 +190,42 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
             </CardContent>
           </Card>
         )}
+
+        {/* Communications Intelligence Card - Attention Summary */}
+        <CommunicationsIntelligenceCard
+          scheduledCall={{
+            id: call.id,
+            status: call.status,
+            durationSeconds: callData.duration_seconds ?? null,
+            endedReason: call.ended_reason,
+            transcript: callData.transcript ?? null,
+            summary: callData.summary ?? null,
+          }}
+          needsAttention={
+            !!(call.attention_types && call.attention_types.length > 0)
+          }
+          attentionTypes={call.attention_types ?? null}
+          attentionSeverity={call.attention_severity ?? null}
+          attentionSummary={call.attention_summary ?? null}
+        />
+
+        {/* Call Intelligence Section - 6 Categories */}
+        <CallIntelligenceSection
+          callOutcomeData={call.call_outcome_data ?? null}
+          petHealthData={call.pet_health_data ?? null}
+          medicationComplianceData={call.medication_compliance_data ?? null}
+          ownerSentimentData={call.owner_sentiment_data ?? null}
+          escalationData={call.escalation_data ?? null}
+          followUpData={call.follow_up_data ?? null}
+        />
       </div>
 
       {/* Delete Footer */}
       {onDelete && (
-        <div className="bg-muted/10 border-t p-4">
+        <div className="border-t border-teal-100/50 bg-gradient-to-r from-teal-50/30 to-white/50 p-4">
           {showDeleteConfirm ? (
             <div className="space-y-3">
-              <p className="text-muted-foreground text-sm">
+              <p className="text-sm text-slate-500">
                 Are you sure you want to delete this call? This action cannot be
                 undone.
               </p>

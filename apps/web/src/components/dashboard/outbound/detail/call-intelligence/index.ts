@@ -11,3 +11,13 @@ export { OwnerSentimentCard } from "./owner-sentiment-card";
 export { EscalationCard } from "./escalation-card";
 export { FollowUpCard } from "./follow-up-card";
 export { CallIntelligenceSection } from "./call-intelligence-section";
+
+// Re-export types for reuse
+export type {
+  CallOutcomeData,
+  PetHealthData,
+  MedicationComplianceData,
+  OwnerSentimentData,
+  EscalationData,
+  FollowUpData,
+} from "./call-intelligence-section";
