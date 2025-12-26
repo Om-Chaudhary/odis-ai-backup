@@ -14,9 +14,6 @@ export { OutboundDischargesClient } from "./outbound-discharges-client";
 // Layout components
 export { OutboundSplitLayout } from "./outbound-split-layout";
 
-// Filters & Navigation
-export { OutboundFilterTabs } from "./outbound-filter-tabs";
-
 // Table components
 export { OutboundCaseTable } from "./outbound-case-table";
 export { OutboundNeedsReviewTable } from "./outbound-needs-review-table";

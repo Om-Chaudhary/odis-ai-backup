@@ -4,7 +4,14 @@ import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
 import { format, parseISO, startOfDay } from "date-fns";
-import { TestTube, Settings } from "lucide-react";
+import {
+  TestTube,
+  Settings,
+  PhoneOutgoing,
+  List,
+  AlertCircle,
+  UserX,
+} from "lucide-react";
 import Link from "next/link";
 
 import type {
@@ -14,8 +21,8 @@ import type {
   SoapNote,
 } from "./types";
 import type { StructuredDischargeSummary } from "@odis-ai/shared/validators/discharge-summary";
-import { PageContainer, PageToolbar, PageContent, PageFooter } from "../layout";
-import { OutboundFilterTabs } from "./outbound-filter-tabs";
+import { PageContainer, PageContent, PageFooter } from "../layout";
+import { DashboardPageHeader, DashboardToolbar } from "../shared";
 import { OutboundCaseTable } from "./outbound-case-table";
 import { OutboundCaseDetail } from "./outbound-case-detail";
 import { OutboundSplitLayout } from "./outbound-split-layout";
@@ -349,8 +356,22 @@ function OutboundDischargesClientInner() {
     });
   }, [cases]);
 
-  // Suppress unused statsData (counts were displayed in filter tabs, now in sidebar)
-  void statsData;
+  // Build view options with counts from stats
+  const viewOptions = [
+    { value: "all", label: "All", icon: List, count: statsData?.total ?? 0 },
+    {
+      value: "needs_review",
+      label: "Missing Info",
+      icon: UserX,
+      count: statsData?.needsReview ?? 0,
+    },
+    {
+      value: "needs_attention",
+      label: "Needs Attention",
+      icon: AlertCircle,
+      count: statsData?.needsAttention ?? 0,
+    },
+  ];
 
   // Handlers
   const handleDateChange = useCallback(
@@ -361,8 +382,15 @@ function OutboundDischargesClientInner() {
     [setDateStr, setPage],
   );
 
-  // Suppress unused setViewMode (view mode now controlled by sidebar navigation)
-  void setViewMode;
+  // Handle view mode change
+  const handleViewChange = useCallback(
+    (view: string) => {
+      void setViewMode(view as ViewMode);
+      void setPage(1);
+      setSelectedCase(null);
+    },
+    [setViewMode, setPage],
+  );
 
   const handleSearchChange = useCallback((term: string) => {
     setSearchTerm(term);
@@ -569,15 +597,25 @@ function OutboundDischargesClientInner() {
         {viewMode === "needs_review" ? (
           // Needs Review View
           <PageContainer className="h-full">
-            <PageToolbar className="border-none bg-transparent shadow-none backdrop-blur-none">
-              <OutboundFilterTabs
-                searchTerm={searchTerm}
-                onSearchChange={handleSearchChange}
+            <DashboardPageHeader
+              title="Discharge Communications"
+              subtitle="Manage discharge calls and email communications"
+              icon={PhoneOutgoing}
+            >
+              <DashboardToolbar
+                showDateNav
                 currentDate={currentDate}
                 onDateChange={handleDateChange}
+                isDateLoading={isLoading}
+                viewOptions={viewOptions}
+                currentView={viewMode}
+                onViewChange={handleViewChange}
+                searchTerm={searchTerm}
+                onSearchChange={handleSearchChange}
+                searchPlaceholder="Search..."
                 isLoading={isLoading}
               />
-            </PageToolbar>
+            </DashboardPageHeader>
             <PageContent>
               <OutboundNeedsReviewTable
                 cases={needsReviewCases}
@@ -602,16 +640,22 @@ function OutboundDischargesClientInner() {
             onCloseRightPanel={handleClosePanel}
             leftPanel={
               <>
-                <PageToolbar className="border-none bg-transparent px-4 pt-2 shadow-none backdrop-blur-none">
-                  <OutboundFilterTabs
+                <DashboardPageHeader
+                  title="Discharge Communications"
+                  subtitle="Manage discharge calls and email communications"
+                  icon={PhoneOutgoing}
+                >
+                  <DashboardToolbar
+                    showDateNav={false}
+                    viewOptions={viewOptions}
+                    currentView={viewMode}
+                    onViewChange={handleViewChange}
                     searchTerm={searchTerm}
                     onSearchChange={handleSearchChange}
-                    currentDate={currentDate}
-                    onDateChange={handleDateChange}
+                    searchPlaceholder="Search..."
                     isLoading={isLoading}
-                    showDateNav={false} // Hide date picker for needs_attention - shows ALL attention cases
                   />
-                </PageToolbar>
+                </DashboardPageHeader>
                 <PageContent>
                   <OutboundNeedsAttentionTable
                     cases={needsAttentionCases}
@@ -624,7 +668,7 @@ function OutboundDischargesClientInner() {
                   <OutboundPagination
                     page={page}
                     pageSize={pageSize}
-                    total={totalCases} // Use server-provided total for proper pagination
+                    total={totalCases}
                     onPageChange={handlePageChange}
                     onPageSizeChange={handlePageSizeChange}
                   />
@@ -653,15 +697,25 @@ function OutboundDischargesClientInner() {
             onCloseRightPanel={handleClosePanel}
             leftPanel={
               <>
-                <PageToolbar className="border-none bg-transparent px-4 pt-2 shadow-none backdrop-blur-none">
-                  <OutboundFilterTabs
-                    searchTerm={searchTerm}
-                    onSearchChange={handleSearchChange}
+                <DashboardPageHeader
+                  title="Discharge Communications"
+                  subtitle="Manage discharge calls and email communications"
+                  icon={PhoneOutgoing}
+                >
+                  <DashboardToolbar
+                    showDateNav
                     currentDate={currentDate}
                     onDateChange={handleDateChange}
+                    isDateLoading={isLoading}
+                    viewOptions={viewOptions}
+                    currentView={viewMode}
+                    onViewChange={handleViewChange}
+                    searchTerm={searchTerm}
+                    onSearchChange={handleSearchChange}
+                    searchPlaceholder="Search..."
                     isLoading={isLoading}
                   />
-                </PageToolbar>
+                </DashboardPageHeader>
                 <PageContent>
                   <OutboundCaseTable
                     cases={cases}
