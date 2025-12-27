@@ -26,6 +26,3 @@ export * from "./lib/call-scheduling";
 
 // IDEXX ingest schemas
 export * from "./lib/idexx-ingest";
-
-// Schedule call schemas
-export * from "./schedule-call";
