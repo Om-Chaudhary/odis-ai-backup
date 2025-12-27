@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@odis-ai/data-access/db/server";
-import { scheduleCallSchema } from "@odis-ai/integrations/retell/validators";
+import { scheduleCallSchema } from "@odis-ai/shared/validators";
 import { isFutureTime } from "@odis-ai/shared/util/business-hours";
 import { scheduleCallExecution } from "@odis-ai/integrations/qstash/client";
 import { getUser } from "~/server/actions/auth";

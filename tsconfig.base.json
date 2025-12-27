@@ -65,8 +65,6 @@
       "@odis-ai/integrations/slack/*": ["libs/integrations/slack/src/*"],
       "@odis-ai/integrations/ai": ["libs/integrations/ai/src/index.ts"],
       "@odis-ai/integrations/ai/*": ["libs/integrations/ai/src/*"],
-      "@odis-ai/integrations/retell": ["libs/integrations/retell/src/index.ts"],
-      "@odis-ai/integrations/retell/*": ["libs/integrations/retell/src/*"],
       "@odis-ai/domain/cases": ["libs/domain/cases/data-access/src/index.ts"],
       "@odis-ai/domain/cases/*": ["libs/domain/cases/data-access/src/*"],
       "@odis-ai/domain/discharge": [
