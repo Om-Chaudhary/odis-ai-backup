@@ -21,6 +21,9 @@ export * from "./orchestration";
 // Schedule sync schemas
 export * from "./lib/schedule";
 
+// Call scheduling schemas
+export * from "./lib/call-scheduling";
+
 // IDEXX ingest schemas
 export * from "./lib/idexx-ingest";
 

@@ -46,7 +46,7 @@ export async function executeScheduledCall(
 
   // Dynamic import vapi modules to avoid circular dependencies
   const { createPhoneCall, mapVapiStatus } =
-    await import("@odis-ai/integrations/vapi/client");
+    await import("@odis-ai/integrations/vapi");
   const { normalizeVariablesToSnakeCase } =
     await import("@odis-ai/integrations/vapi/utils");
 
