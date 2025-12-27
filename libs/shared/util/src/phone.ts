@@ -125,24 +125,6 @@ export function normalizeToE164(
   return null;
 }
 
-/**
- * Normalizes an email address to lowercase and trims whitespace
- *
- * @param email - Email address in any format
- * @returns Normalized email address or null if invalid
- */
-export function normalizeEmail(
-  email: string | null | undefined,
-): string | null {
-  if (!email) return null;
-
-  const normalized = email.trim().toLowerCase();
-
-  // Basic email validation
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(normalized)) {
-    return null;
-  }
-
-  return normalized;
-}
+// Re-export normalizeEmail from contact.ts for backwards compatibility
+// @deprecated Import from "@odis-ai/shared/util/contact" instead
+export { normalizeEmail } from "./contact";

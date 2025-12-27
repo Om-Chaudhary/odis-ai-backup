@@ -10,7 +10,23 @@ export * from "./cn";
 
 // Phone utilities
 export * from "./phone";
-export { formatPhoneNumberDisplay } from "./phone-formatting";
+export {
+  formatPhoneNumberDisplay,
+  formatPhoneCompact,
+  formatPhoneShort,
+  isValidE164,
+  toE164,
+  getCountryCode,
+  isUSNumber,
+  extractPhoneNumber,
+  parsePhoneFromText,
+  hasValidPhone,
+  extractPhoneWithDetails,
+  type PhoneExtractionResult,
+} from "./phone-formatting";
+
+// Contact utilities (email, etc.)
+export * from "./contact";
 
 // Date utilities
 export * from "./business-hours";
