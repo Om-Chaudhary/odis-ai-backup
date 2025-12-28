@@ -1,8 +1,0 @@
-      "@odis-ai/data-access/supabase-client": ["libs/data-access/supabase-client/src/index.ts"],
-      "@odis-ai/data-access/supabase-client/*": ["libs/data-access/supabase-client/src/*"],
-      "@odis-ai/data-access/repository-interfaces": ["libs/data-access/repository-interfaces/src/index.ts"],
-      "@odis-ai/data-access/repository-interfaces/*": ["libs/data-access/repository-interfaces/src/*"],
-      "@odis-ai/data-access/repository-impl": ["libs/data-access/repository-impl/src/index.ts"],
-      "@odis-ai/data-access/repository-impl/*": ["libs/data-access/repository-impl/src/*"],
-      "@odis-ai/data-access/entities": ["libs/data-access/entities/src/index.ts"],
-      "@odis-ai/data-access/entities/*": ["libs/data-access/entities/src/*"]

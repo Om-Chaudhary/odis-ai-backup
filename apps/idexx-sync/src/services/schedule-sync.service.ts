@@ -147,24 +147,36 @@ export class ScheduleSyncService {
 
       // Step 9: Fetch and reconcile appointments for each date (parallel processing)
       const dates = this.generateDateArray(dateRange.start, dateRange.end);
+      const totalDates = dates.length;
       logger.info(
-        `Processing ${dates.length} dates with concurrency limit of ${config.SYNC_CONCURRENCY}`,
+        `Processing ${totalDates} dates with concurrency limit of ${config.SYNC_CONCURRENCY}`,
       );
+
+      let completedDates = 0;
 
       // Process dates in parallel with concurrency limit
       const limit = pLimit(config.SYNC_CONCURRENCY);
       const dateResults = await Promise.allSettled(
         dates.map((dateStr) =>
-          limit(() =>
-            this.processSingleDate(
+          limit(async () => {
+            const result = await this.processSingleDate(
               page,
               options.clinicId,
               dateStr,
               slotMap,
               clinicConfig?.slot_duration_minutes ?? 15,
               syncId,
-            ),
-          ),
+            );
+
+            // Update progress
+            completedDates++;
+            const progressPercentage = Math.round(
+              (completedDates / totalDates) * 100,
+            );
+            await this.updateSyncProgress(syncId, progressPercentage, dateStr);
+
+            return result;
+          }),
         ),
       );
 
@@ -195,13 +207,30 @@ export class ScheduleSyncService {
         }
       }
 
+      // Update failed dates in sync record
       if (failedDates.length > 0) {
         logger.warn(
           `Sync completed with ${failedDates.length} failed dates: ${failedDates.join(", ")}`,
         );
+        const supabase = await this.getClient();
+        await supabase
+          .from("schedule_syncs")
+          .update({
+            failed_dates: failedDates,
+            partial_success: dateResults.some((r) => r.status === "fulfilled"),
+          })
+          .eq("id", syncId);
       }
 
-      // Step 10: Detect and resolve conflicts with VAPI bookings
+      // Step 10: Update all slot booked counts in bulk (single query)
+      logger.debug("Updating slot booked counts in bulk...");
+      await this.updateSlotBookedCountsBulk(
+        options.clinicId,
+        dateRange.start,
+        dateRange.end,
+      );
+
+      // Step 11: Detect and resolve conflicts with VAPI bookings
       const conflictStats = await this.resolveConflicts(
         options.clinicId,
         dateRange,
@@ -324,8 +353,7 @@ export class ScheduleSyncService {
       updated = apptStats.updated;
       removed = apptStats.removed;
 
-      // Update slot booked counts for this date
-      await this.updateSlotBookedCounts(clinicId, dateStr);
+      // Note: Slot booked counts updated in bulk after all dates processed
 
       logger.debug(`Completed processing date: ${dateStr}`);
     } catch (dateError) {
@@ -562,7 +590,7 @@ export class ScheduleSyncService {
   }
 
   /**
-   * Execute reconciliation plan
+   * Execute reconciliation plan (batched operations)
    */
   private async executeReconciliation(
     clinicId: string,
@@ -577,7 +605,64 @@ export class ScheduleSyncService {
     let updated = 0;
     let removed = 0;
 
-    for (const plan of plans) {
+    // Separate plans by action type
+    const toInsert = plans.filter((p) => p.action === "add");
+    const toUpdate = plans.filter((p) => p.action === "update");
+    const toRemove = plans.filter((p) => p.action === "remove");
+
+    // Batch inserts
+    if (toInsert.length > 0) {
+      const insertRecords = toInsert.map((plan) => {
+        const slotId = this.reconciliation.findMatchingSlot(
+          _date,
+          plan.appointment.start_time,
+          slotDurationMinutes,
+          slotMap,
+        );
+
+        return {
+          clinic_id: clinicId,
+          slot_id: slotId,
+          neo_appointment_id: plan.neo_appointment_id,
+          date: plan.appointment.date,
+          start_time: this.normalizeTime24(plan.appointment.start_time),
+          end_time: plan.appointment.end_time
+            ? this.normalizeTime24(plan.appointment.end_time)
+            : null,
+          patient_name: plan.appointment.patient_name,
+          client_name: plan.appointment.client_name,
+          client_phone: plan.appointment.client_phone,
+          provider_name: plan.appointment.provider_name,
+          appointment_type: plan.appointment.appointment_type,
+          status: plan.appointment.status,
+          sync_hash: plan.newHash,
+          last_synced_at: new Date().toISOString(),
+        };
+      });
+
+      // Insert in batches of 100
+      const batchSize = 100;
+      for (let i = 0; i < insertRecords.length; i += batchSize) {
+        const batch = insertRecords.slice(i, i + batchSize);
+        try {
+          const { error } = await supabase
+            .from("schedule_appointments")
+            .insert(batch);
+
+          if (!error) {
+            added += batch.length;
+          } else {
+            logger.error(`Failed to insert batch: ${error.message}`);
+          }
+        } catch (error) {
+          const msg = error instanceof Error ? error.message : "Unknown error";
+          logger.error(`Failed to insert batch: ${msg}`);
+        }
+      }
+    }
+
+    // Batch updates (updates need to be individual due to WHERE clause)
+    for (const plan of toUpdate) {
       try {
         const slotId = this.reconciliation.findMatchingSlot(
           _date,
@@ -586,73 +671,64 @@ export class ScheduleSyncService {
           slotMap,
         );
 
-        switch (plan.action) {
-          case "add": {
-            await supabase.from("schedule_appointments").insert({
-              clinic_id: clinicId,
-              slot_id: slotId,
-              neo_appointment_id: plan.neo_appointment_id,
-              date: plan.appointment.date,
-              start_time: this.normalizeTime24(plan.appointment.start_time),
-              end_time: plan.appointment.end_time
-                ? this.normalizeTime24(plan.appointment.end_time)
-                : null,
-              patient_name: plan.appointment.patient_name,
-              client_name: plan.appointment.client_name,
-              client_phone: plan.appointment.client_phone,
-              provider_name: plan.appointment.provider_name,
-              appointment_type: plan.appointment.appointment_type,
-              status: plan.appointment.status,
-              sync_hash: plan.newHash,
-              last_synced_at: new Date().toISOString(),
-            });
-            added++;
-            break;
-          }
-          case "update": {
-            await supabase
-              .from("schedule_appointments")
-              .update({
-                slot_id: slotId,
-                date: plan.appointment.date,
-                start_time: this.normalizeTime24(plan.appointment.start_time),
-                end_time: plan.appointment.end_time
-                  ? this.normalizeTime24(plan.appointment.end_time)
-                  : null,
-                patient_name: plan.appointment.patient_name,
-                client_name: plan.appointment.client_name,
-                client_phone: plan.appointment.client_phone,
-                provider_name: plan.appointment.provider_name,
-                appointment_type: plan.appointment.appointment_type,
-                status: plan.appointment.status,
-                sync_hash: plan.newHash,
-                last_synced_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              })
-              .eq("clinic_id", clinicId)
-              .eq("neo_appointment_id", plan.neo_appointment_id);
-            updated++;
-            break;
-          }
-          case "remove": {
-            // Soft delete
-            await supabase
-              .from("schedule_appointments")
-              .update({
-                deleted_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              })
-              .eq("clinic_id", clinicId)
-              .eq("neo_appointment_id", plan.neo_appointment_id);
-            removed++;
-            break;
-          }
-        }
+        await supabase
+          .from("schedule_appointments")
+          .update({
+            slot_id: slotId,
+            date: plan.appointment.date,
+            start_time: this.normalizeTime24(plan.appointment.start_time),
+            end_time: plan.appointment.end_time
+              ? this.normalizeTime24(plan.appointment.end_time)
+              : null,
+            patient_name: plan.appointment.patient_name,
+            client_name: plan.appointment.client_name,
+            client_phone: plan.appointment.client_phone,
+            provider_name: plan.appointment.provider_name,
+            appointment_type: plan.appointment.appointment_type,
+            status: plan.appointment.status,
+            sync_hash: plan.newHash,
+            last_synced_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("clinic_id", clinicId)
+          .eq("neo_appointment_id", plan.neo_appointment_id);
+        updated++;
       } catch (error) {
         const msg = error instanceof Error ? error.message : "Unknown error";
         logger.error(
-          `Failed to execute reconciliation for ${plan.neo_appointment_id}: ${msg}`,
+          `Failed to update appointment ${plan.neo_appointment_id}: ${msg}`,
         );
+      }
+    }
+
+    // Batch soft deletes
+    if (toRemove.length > 0) {
+      const neoIds = toRemove.map((p) => p.neo_appointment_id);
+      const now = new Date().toISOString();
+
+      // Delete in batches of 100
+      const batchSize = 100;
+      for (let i = 0; i < neoIds.length; i += batchSize) {
+        const batch = neoIds.slice(i, i + batchSize);
+        try {
+          const { error } = await supabase
+            .from("schedule_appointments")
+            .update({
+              deleted_at: now,
+              updated_at: now,
+            })
+            .eq("clinic_id", clinicId)
+            .in("neo_appointment_id", batch);
+
+          if (!error) {
+            removed += batch.length;
+          } else {
+            logger.error(`Failed to soft delete batch: ${error.message}`);
+          }
+        } catch (error) {
+          const msg = error instanceof Error ? error.message : "Unknown error";
+          logger.error(`Failed to soft delete batch: ${msg}`);
+        }
       }
     }
 
@@ -660,44 +736,34 @@ export class ScheduleSyncService {
   }
 
   /**
-   * Update booked counts for all slots on a date
+   * Update booked counts for all slots in bulk (single query)
    */
-  private async updateSlotBookedCounts(
+  private async updateSlotBookedCountsBulk(
     clinicId: string,
-    date: string,
+    startDate: Date,
+    endDate: Date,
   ): Promise<void> {
     const supabase = await this.getClient();
 
-    // Get all slots for this date
-    const { data: slots } = await supabase
-      .from("schedule_slots")
-      .select("id, start_time, end_time")
-      .eq("clinic_id", clinicId)
-      .eq("date", date);
+    const startDateStr = startDate.toISOString().split("T")[0];
+    const endDateStr = endDate.toISOString().split("T")[0];
 
-    if (!slots || slots.length === 0) return;
+    try {
+      const { data, error } = await supabase.rpc("update_slot_counts_bulk", {
+        p_clinic_id: clinicId,
+        p_start_date: startDateStr,
+        p_end_date: endDateStr,
+      });
 
-    // For each slot, count overlapping non-cancelled appointments
-    for (const slot of slots) {
-      const { count, error } = await supabase
-        .from("schedule_appointments")
-        .select("id", { count: "exact", head: true })
-        .eq("clinic_id", clinicId)
-        .eq("date", date)
-        .is("deleted_at", null)
-        .not("status", "in", '("cancelled","no_show")')
-        .lt("start_time", slot.end_time)
-        .gt("end_time", slot.start_time);
-
-      if (!error) {
-        await supabase
-          .from("schedule_slots")
-          .update({
-            booked_count: count ?? 0,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", slot.id);
+      if (error) {
+        logger.error(`Failed to update slot counts in bulk: ${error.message}`);
+      } else {
+        const updatedCount = data?.[0]?.updated_count ?? 0;
+        logger.info(`Updated booked counts for ${updatedCount} slots`);
       }
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Unknown error";
+      logger.error(`Failed to update slot counts in bulk: ${msg}`);
     }
   }
 
@@ -742,6 +808,32 @@ export class ScheduleSyncService {
     }
 
     return { detected, resolved };
+  }
+
+  /**
+   * Update sync progress during execution
+   */
+  private async updateSyncProgress(
+    syncId: string,
+    progressPercentage: number,
+    currentDate: string,
+  ): Promise<void> {
+    const supabase = await this.getClient();
+
+    try {
+      await supabase
+        .from("schedule_syncs")
+        .update({
+          progress_percentage: progressPercentage,
+          current_date: currentDate,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", syncId);
+    } catch (error) {
+      // Non-critical error, log but don't throw
+      const msg = error instanceof Error ? error.message : "Unknown error";
+      logger.debug(`Failed to update sync progress: ${msg}`);
+    }
   }
 
   /**

@@ -14,11 +14,14 @@
 
 import { Router } from "express";
 import type { Request, Response } from "express";
+import { randomUUID } from "crypto";
 import { scheduleLogger as logger } from "../lib/logger";
 import { BrowserService } from "../services/browser.service";
 import { AuthService } from "../services/auth.service";
 import { PersistenceService } from "../services/persistence.service";
 import { ScheduleSyncService } from "../services/schedule-sync.service";
+import { syncQueue } from "../services/sync-queue.service";
+import { config } from "../config";
 
 export const scheduleSyncRouter: ReturnType<typeof Router> = Router();
 
@@ -212,12 +215,50 @@ async function handleScheduleSync(req: Request, res: Response): Promise<void> {
     `Starting schedule sync for clinic ${clinicId}, ${daysAhead} days ahead`,
   );
 
-  const browser = new BrowserService();
-  const auth = new AuthService(browser);
-  const persistence = new PersistenceService();
-  const scheduleSync = new ScheduleSyncService(browser);
+  const requestId = randomUUID();
+  let browser: BrowserService | null = null;
+
+  // Check queue and request sync permission
+  try {
+    await syncQueue.requestSync(clinicId, requestId);
+  } catch (queueError) {
+    const msg =
+      queueError instanceof Error ? queueError.message : "Queue error";
+    logger.warn(`Sync request rejected: ${msg}`);
+    res.status(429).json({
+      success: false,
+      errors: [msg],
+      durationMs: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    } as ScheduleSyncResponse);
+    return;
+  }
+
+  let timeoutId: NodeJS.Timeout | null = null;
 
   try {
+    browser = new BrowserService();
+    const auth = new AuthService(browser);
+    const persistence = new PersistenceService();
+    const scheduleSync = new ScheduleSyncService(browser);
+
+    // Setup timeout and abort controller
+    const abortController = new AbortController();
+    timeoutId = setTimeout(() => {
+      logger.warn(
+        `Sync timeout reached (${config.SYNC_TIMEOUT_MS}ms), aborting...`,
+      );
+      abortController.abort();
+    }, config.SYNC_TIMEOUT_MS);
+
+    // Handle client disconnect
+    req.on("close", () => {
+      if (!res.headersSent) {
+        logger.warn("Client disconnected, aborting sync...");
+        abortController.abort();
+      }
+    });
+
     // 1. Validate clinic exists
     const clinic = await persistence.getClinic(clinicId);
     if (!clinic) {
@@ -254,73 +295,93 @@ async function handleScheduleSync(req: Request, res: Response): Promise<void> {
     endDate.setDate(endDate.getDate() + daysAhead);
     endDate.setHours(23, 59, 59, 999);
 
-    try {
-      // 4. Launch browser and login
-      await browser.launch();
-      const page = await browser.newPage();
+    // 4. Launch browser and login
+    await browser.launch();
+    const page = await browser.newPage();
 
-      const loginSuccess = await auth.login(page, credentials);
-      if (!loginSuccess) {
-        res.status(401).json({
-          success: false,
-          errors: [`Login failed for clinic: ${clinic.name}`],
-          durationMs: Date.now() - startTime,
-          timestamp: new Date().toISOString(),
-        } as ScheduleSyncResponse);
-        return;
-      }
-
-      // 5. Run schedule sync
-      const result = await scheduleSync.syncSchedule(page, {
-        clinicId,
-        dateRange: { start: startDate, end: endDate },
-      });
-
-      // 6. Build response with sync freshness info
-      const syncedAt = new Date();
-      const staleThresholdMinutes = 60; // Default, matches clinic_schedule_config
-      const nextStaleAt = new Date(
-        syncedAt.getTime() + staleThresholdMinutes * 60 * 1000,
-      );
-
-      const response: ScheduleSyncResponse = {
-        success: result.success,
-        syncId: result.syncId,
-        stats: result.stats,
-        dateRange: {
-          start: startDate.toISOString().split("T")[0] ?? "",
-          end: endDate.toISOString().split("T")[0] ?? "",
-        },
-        syncedAt: syncedAt.toISOString(),
-        nextStaleAt: nextStaleAt.toISOString(),
-        errors: result.errors,
+    const loginSuccess = await auth.login(page, credentials);
+    if (!loginSuccess) {
+      res.status(401).json({
+        success: false,
+        errors: [`Login failed for clinic: ${clinic.name}`],
         durationMs: Date.now() - startTime,
         timestamp: new Date().toISOString(),
-      };
-
-      logger.info(
-        `Schedule sync completed for ${clinic.name}: ` +
-          `${result.stats.slotsCreated} slots created, ` +
-          `${result.stats.appointmentsAdded} added, ` +
-          `${result.stats.appointmentsUpdated} updated, ` +
-          `${result.stats.appointmentsRemoved} removed (reconciled)`,
-      );
-
-      res.status(result.success ? 200 : 500).json(response);
-    } finally {
-      await browser.close();
+      } as ScheduleSyncResponse);
+      return;
     }
+
+    // 5. Run schedule sync
+    const result = await scheduleSync.syncSchedule(page, {
+      clinicId,
+      dateRange: { start: startDate, end: endDate },
+    });
+
+    // 6. Build response with sync freshness info
+    const syncedAt = new Date();
+    const staleThresholdMinutes = 60; // Default, matches clinic_schedule_config
+    const nextStaleAt = new Date(
+      syncedAt.getTime() + staleThresholdMinutes * 60 * 1000,
+    );
+
+    const response: ScheduleSyncResponse = {
+      success: result.success,
+      syncId: result.syncId,
+      stats: result.stats,
+      dateRange: {
+        start: startDate.toISOString().split("T")[0] ?? "",
+        end: endDate.toISOString().split("T")[0] ?? "",
+      },
+      syncedAt: syncedAt.toISOString(),
+      nextStaleAt: nextStaleAt.toISOString(),
+      errors: result.errors,
+      durationMs: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    };
+
+    logger.info(
+      `Schedule sync completed for ${clinic.name}: ` +
+        `${result.stats.slotsCreated} slots created, ` +
+        `${result.stats.appointmentsAdded} added, ` +
+        `${result.stats.appointmentsUpdated} updated, ` +
+        `${result.stats.appointmentsRemoved} removed (reconciled)`,
+    );
+
+    res.status(result.success ? 200 : 500).json(response);
   } catch (error) {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+
+    // Check if error is due to abort
+    if (error instanceof Error && error.name === "AbortError") {
+      logger.error("Schedule sync aborted due to timeout or client disconnect");
+      res.status(408).json({
+        success: false,
+        errors: ["Sync operation timed out or was cancelled"],
+        durationMs: Date.now() - startTime,
+        timestamp: new Date().toISOString(),
+      } as ScheduleSyncResponse);
+      return;
+    }
+
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error occurred";
 
     logger.error(`Schedule sync failed: ${errorMessage}`);
 
-    res.status(500).json({
-      success: false,
-      errors: [errorMessage],
-      durationMs: Date.now() - startTime,
-      timestamp: new Date().toISOString(),
-    } as ScheduleSyncResponse);
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        errors: [errorMessage],
+        durationMs: Date.now() - startTime,
+        timestamp: new Date().toISOString(),
+      } as ScheduleSyncResponse);
+    }
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
+    // Always complete the sync to release queue slot
+    syncQueue.completeSync(clinicId, requestId);
   }
 }

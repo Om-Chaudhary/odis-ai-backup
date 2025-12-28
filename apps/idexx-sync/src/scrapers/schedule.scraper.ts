@@ -6,9 +6,10 @@
 
 import type { Page } from "playwright";
 import { scheduleLogger as logger } from "../lib/logger";
-import { IDEXX_URLS } from "../config";
+import { IDEXX_URLS, config } from "../config";
 import { DASHBOARD_SELECTORS } from "../selectors";
 import { normalizePhone } from "../utils/phone";
+import { getRateLimiter } from "../utils/rate-limiter";
 import type { BrowserService } from "../services/browser.service";
 import type { ScrapedAppointment, ScheduleScraperResult } from "../types";
 
@@ -74,6 +75,8 @@ interface FreeSlot {
  * - Free/available slots calculation
  */
 export class ScheduleScraper {
+  private rateLimiter = getRateLimiter("idexx-api", config.IDEXX_RATE_LIMIT);
+
   constructor(private browser: BrowserService) {}
 
   /**
@@ -86,6 +89,8 @@ export class ScheduleScraper {
 
       logger.debug(`Fetching schedule config from: ${configUrl}`);
 
+      // Apply rate limiting
+      await this.rateLimiter.acquire();
       const response = await page.request.get(configUrl);
 
       if (!response.ok()) {
@@ -266,6 +271,9 @@ export class ScheduleScraper {
       const apiUrl = `${baseUrl}/appointments/getCalendarEventData?start=${encodeURIComponent(startDateTime)}&end=${encodeURIComponent(endDateTime)}`;
 
       logger.debug(`Fetching appointments from API: ${apiUrl}`);
+
+      // Apply rate limiting
+      await this.rateLimiter.acquire();
 
       // Make authenticated API request using page context
       const response = await page.request.get(apiUrl);

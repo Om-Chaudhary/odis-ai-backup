@@ -132,7 +132,7 @@ export interface BrowserConfig {
  */
 export interface HealthCheck {
   name: string;
-  status: "pass" | "fail";
+  status: "pass" | "fail" | "warn";
   message?: string;
 }
 
