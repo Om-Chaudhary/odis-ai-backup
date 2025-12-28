@@ -7,7 +7,7 @@
 import type { Page } from "playwright";
 import { authLogger as logger } from "../lib/logger";
 import { IDEXX_URLS } from "../config";
-import { LOGIN_SELECTORS, DASHBOARD_SELECTORS } from "../selectors";
+import { LOGIN_SELECTORS } from "../selectors";
 import type { BrowserService } from "./browser.service";
 import type { IdexxCredentials } from "../types";
 
@@ -79,7 +79,7 @@ export class AuthService {
       // Click submit
       await this.browser.clickElement(page, LOGIN_SELECTORS.submitButton);
 
-      // Wait for navigation to dashboard
+      // Wait for navigation to dashboard (URL-based verification)
       const navigated = await this.browser.waitForNavigation(
         page,
         /dashboard|home|schedule/i,
@@ -91,10 +91,10 @@ export class AuthService {
         return false;
       }
 
-      // Verify login succeeded
+      // Verify login by checking URL and cookies
       const verified = await this.verifyLogin(page);
       if (!verified) {
-        logger.error("Login verification failed - user menu not found");
+        logger.error("Login verification failed - not on dashboard");
         return false;
       }
 
@@ -108,16 +108,38 @@ export class AuthService {
   }
 
   /**
-   * Verify login by checking for dashboard elements
+   * Verify login by checking URL and authentication cookies
    */
   async verifyLogin(page: Page): Promise<boolean> {
-    const userMenu = await this.browser.findElement(
-      page,
-      DASHBOARD_SELECTORS.userMenu,
-      { timeout: 5000 },
+    const url = page.url();
+
+    // Check if we're on a dashboard/authenticated page
+    const isOnDashboard = /dashboard|schedule|home|patients|clients/i.test(url);
+
+    if (isOnDashboard) {
+      logger.debug(`Verified login via URL: ${url}`);
+      return true;
+    }
+
+    // Fallback: check for authentication cookies
+    const context = page.context();
+    const cookies = await context.cookies();
+    const hasAuthCookie = cookies.some(
+      (c) =>
+        c.name.toLowerCase().includes("auth") ||
+        c.name.toLowerCase().includes("session") ||
+        c.name.toLowerCase().includes("token"),
     );
 
-    return userMenu !== null;
+    if (hasAuthCookie) {
+      logger.debug("Verified login via authentication cookie");
+      return true;
+    }
+
+    logger.debug(
+      `Current URL: ${url}, Cookies: ${cookies.map((c) => c.name).join(", ")}`,
+    );
+    return false;
   }
 
   /**
