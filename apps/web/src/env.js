@@ -35,6 +35,8 @@ export const env = createEnv({
     RESEND_API_KEY: z.string().min(1),
     // IDEXX Credential Encryption
     IDEXX_ENCRYPTION_KEY: z.string().min(32), // Minimum 32 bytes (256 bits) for AES-256
+    // IDEXX Sync Service URL (for cron-triggered schedule syncs)
+    IDEXX_SYNC_SERVICE_URL: z.string().url().optional(),
     // Environment identifier
     APP_ENV: z
       .enum(["development", "staging", "production"])
@@ -75,6 +77,7 @@ export const env = createEnv({
       process.env.VAPI_DEFAULT_INBOUND_ASSISTANT_ID,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     IDEXX_ENCRYPTION_KEY: process.env.IDEXX_ENCRYPTION_KEY,
+    IDEXX_SYNC_SERVICE_URL: process.env.IDEXX_SYNC_SERVICE_URL,
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
