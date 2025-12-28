@@ -2,7 +2,7 @@
  * Inbound Router Schemas
  *
  * Zod validation schemas for inbound data procedures:
- * - appointment_requests (from VAPI schedule-appointment tool)
+ * - vapi_bookings (from VAPI schedule-appointment tool)
  * - clinic_messages (from VAPI leave-message tool)
  */
 

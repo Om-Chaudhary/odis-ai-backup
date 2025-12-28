@@ -10,7 +10,7 @@ import { createClient } from "@odis-ai/data-access/db/server";
 
 export const callAssociationsRouter = createTRPCRouter({
   /**
-   * Check if a call has associated appointment requests
+   * Check if a call has associated VAPI bookings
    */
   checkCallAppointmentAssociation: protectedProcedure
     .input(
@@ -22,7 +22,7 @@ export const callAssociationsRouter = createTRPCRouter({
       const supabase = await createClient();
 
       const { data, error } = await supabase
-        .from("appointment_requests")
+        .from("vapi_bookings")
         .select("id")
         .eq("vapi_call_id", input.callId)
         .limit(1)
@@ -85,10 +85,10 @@ export const callAssociationsRouter = createTRPCRouter({
 
       const supabase = await createClient();
 
-      // Try to find in appointment_requests first (by client_phone)
+      // Try to find in vapi_bookings first (by client_phone)
       // Select client_name, patient_name, species, breed, and created_at for context
       const { data: appointment } = await supabase
-        .from("appointment_requests")
+        .from("vapi_bookings")
         .select("client_name, patient_name, species, breed, created_at")
         .or(
           `client_phone.eq.${normalizedPhone},client_phone.eq.+1${normalizedPhone},client_phone.ilike.%${normalizedPhone.slice(-10)}%`,
