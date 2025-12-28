@@ -153,7 +153,8 @@
       "Bash(ffprobe:*)",
       "Read(//Users/om/**)",
       "Read(//Users/**)",
-      "Bash(vercel promote:*)"
+      "Bash(vercel promote:*)",
+      "mcp__github__get_pull_request"
     ],
     "deny": [],
     "ask": []
