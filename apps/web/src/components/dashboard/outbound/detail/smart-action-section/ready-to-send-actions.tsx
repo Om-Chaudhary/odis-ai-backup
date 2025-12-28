@@ -74,13 +74,10 @@ export function ReadyToSendActions({
       </CardHeader>
       <CardContent className="space-y-4">
         {needsGeneration && (
-          <Alert
-            variant="destructive"
-            className="border-red-200 dark:border-red-800"
-          >
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Please generate discharge summary before scheduling
+          <Alert className="border-blue-200 bg-blue-50/50 dark:border-blue-800 dark:bg-blue-950/30">
+            <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            <AlertDescription className="text-blue-800 dark:text-blue-300">
+              Discharge summary will be auto-generated when you schedule
             </AlertDescription>
           </Alert>
         )}
@@ -179,7 +176,7 @@ export function ReadyToSendActions({
         <div className="grid grid-cols-2 gap-2 pt-2">
           <Button
             onClick={() => onApprove(false)}
-            disabled={!canSchedule || isSubmitting || needsGeneration}
+            disabled={!canSchedule || isSubmitting}
             className={cn(
               "h-10 gap-2 font-semibold transition-all",
               "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700",
@@ -201,7 +198,7 @@ export function ReadyToSendActions({
           </Button>
           <Button
             onClick={() => onApprove(true)}
-            disabled={!canSchedule || isSubmitting || needsGeneration}
+            disabled={!canSchedule || isSubmitting}
             className={cn(
               "h-10 gap-2 font-semibold transition-all",
               "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700",
