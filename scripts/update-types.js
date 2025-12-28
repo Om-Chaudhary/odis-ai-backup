@@ -3,7 +3,7 @@
  * Script to update database types from Supabase
  *
  * Generates TypeScript types from Supabase database schema to:
- *   libs/types/src/database.types.ts
+ *   libs/shared/types/src/database.types.ts
  *
  * Usage:
  *   pnpm update-types
@@ -109,10 +109,11 @@ if (!projectRef) {
 console.log(`📦 Generating types for project: ${projectRef}`);
 
 try {
-  // Generate to libs/types for the Nx monorepo structure
+  // Generate to libs/shared/types for the Nx monorepo structure
   const outputPath = path.join(
     process.cwd(),
     "libs",
+    "shared",
     "types",
     "src",
     "database.types.ts",
