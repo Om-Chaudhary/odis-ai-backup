@@ -193,7 +193,7 @@ export function useInboundData(params: UseInboundDataParams) {
       (call) =>
         call.customer_phone === "4088910469" ||
         call.customer_phone === "408-891-0469" ||
-        call.customer_phone === "(408) 891-0469"
+        call.customer_phone === "(408) 891-0469",
     );
 
     // Remove Andrea for custom placement
@@ -208,9 +208,7 @@ export function useInboundData(params: UseInboundDataParams) {
     const finalCalls = [];
     let andreaInserted = false;
 
-    for (let i = 0; i < remainingCalls.length; i++) {
-      const call = remainingCalls[i];
-
+    for (const call of remainingCalls) {
       // Skip if call is undefined/null
       if (!call) continue;
 
@@ -218,10 +216,13 @@ export function useInboundData(params: UseInboundDataParams) {
       finalCalls.push(call);
 
       // If this is Adriana Skandarian and we haven't inserted Andrea yet, insert Andrea next
-      if (andreaCall && !andreaInserted &&
-          (call.customer_phone === "4087619777" ||
-           call.customer_phone === "408-761-9777" ||
-           call.customer_phone === "(408) 761-9777")) {
+      if (
+        andreaCall &&
+        !andreaInserted &&
+        (call.customer_phone === "4087619777" ||
+          call.customer_phone === "408-761-9777" ||
+          call.customer_phone === "(408) 761-9777")
+      ) {
         finalCalls.push(andreaCall);
         andreaInserted = true;
       }
@@ -268,9 +269,7 @@ export function useInboundData(params: UseInboundDataParams) {
     const finalAppointments = [];
     let andreaInserted = false;
 
-    for (let i = 0; i < allAppointments.length; i++) {
-      const appointment = allAppointments[i];
-
+    for (const appointment of allAppointments) {
       // Skip if appointment is undefined/null
       if (!appointment) continue;
 
@@ -278,10 +277,13 @@ export function useInboundData(params: UseInboundDataParams) {
       finalAppointments.push(appointment);
 
       // If this is Adriana Skandarian and we haven't inserted Andrea yet, insert Andrea next
-      if (andreaAppointment && !andreaInserted &&
-          (appointment.clientName === "Adriana Skandarian" ||
-           appointment.clientPhone === "408-761-9777" ||
-           appointment.clientPhone === "(408) 761-9777")) {
+      if (
+        andreaAppointment &&
+        !andreaInserted &&
+        (appointment.clientName === "Adriana Skandarian" ||
+          appointment.clientPhone === "408-761-9777" ||
+          appointment.clientPhone === "(408) 761-9777")
+      ) {
         finalAppointments.push(andreaAppointment);
         andreaInserted = true;
       }

@@ -267,7 +267,7 @@ export function AppointmentDetail({
         customer_phone: appointment.clientPhone,
         id: "demo-call-andrea-cancellation",
         created_at: appointment.createdAt,
-        vapi_call_id: appointment.vapiCallId || "demo-vapi-call-andrea",
+        vapi_call_id: appointment.vapiCallId ?? "demo-vapi-call-andrea",
       } as Database["public"]["Tables"]["inbound_vapi_calls"]["Row"])
     : null;
 
