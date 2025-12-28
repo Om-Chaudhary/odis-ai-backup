@@ -157,6 +157,132 @@ export interface ScrapeRequest {
   date?: string;
 }
 
+// ============================================================================
+// Schedule Sync Types
+// ============================================================================
+
+/**
+ * IDEXX schedule configuration from /schedule/getScheduleConfigs API
+ */
+export interface IdexxScheduleConfig {
+  businessHours?: {
+    start?: string; // e.g., "08:00"
+    end?: string; // e.g., "18:00"
+    daysOfWeek?: number[]; // 0-6 (Sunday-Saturday)
+  };
+  slotDuration?: number; // in minutes
+  providers?: Array<{
+    id?: string | number;
+    name?: string;
+    color?: string;
+  }>;
+  rooms?: Array<{
+    id?: string | number;
+    name?: string;
+  }>;
+  [key: string]: unknown;
+}
+
+/**
+ * Clinic schedule configuration from database
+ */
+export interface ClinicScheduleConfig {
+  id: string;
+  clinic_id: string;
+  open_time: string; // HH:MM:SS
+  close_time: string; // HH:MM:SS
+  days_of_week: number[]; // 0-6
+  slot_duration_minutes: number;
+  default_capacity: number;
+  sync_horizon_days: number;
+  stale_threshold_minutes: number;
+  timezone: string;
+  idexx_config_snapshot: IdexxScheduleConfig | null;
+}
+
+/**
+ * Blocked period (lunch breaks, meetings)
+ */
+export interface BlockedPeriod {
+  id: string;
+  clinic_id: string;
+  name: string;
+  start_time: string; // HH:MM:SS
+  end_time: string; // HH:MM:SS
+  days_of_week: number[];
+  is_active: boolean;
+}
+
+/**
+ * Generated slot (before persistence)
+ */
+export interface GeneratedSlot {
+  clinic_id: string;
+  date: string; // YYYY-MM-DD
+  start_time: string; // HH:MM:SS
+  end_time: string; // HH:MM:SS
+  capacity: number;
+}
+
+/**
+ * Schedule sync session for audit logging
+ */
+export interface ScheduleSyncSession {
+  id: string;
+  clinic_id: string;
+  sync_start_date: string;
+  sync_end_date: string;
+  status: "in_progress" | "completed" | "failed";
+  slots_created: number;
+  slots_updated: number;
+  appointments_added: number;
+  appointments_updated: number;
+  appointments_removed: number;
+  conflicts_detected: number;
+  conflicts_resolved: number;
+  idexx_config: IdexxScheduleConfig | null;
+  error_message: string | null;
+  error_details: Record<string, unknown> | null;
+  started_at: string;
+  completed_at: string | null;
+  duration_ms: number | null;
+}
+
+/**
+ * Result from schedule sync operation
+ */
+export interface ScheduleSyncResult {
+  success: boolean;
+  syncId: string;
+  stats: {
+    slotsCreated: number;
+    slotsUpdated: number;
+    appointmentsAdded: number;
+    appointmentsUpdated: number;
+    appointmentsRemoved: number;
+    conflictsDetected: number;
+    conflictsResolved: number;
+  };
+  durationMs: number;
+  errors: string[];
+}
+
+/**
+ * Appointment reconciliation action
+ */
+export type ReconciliationAction = "add" | "update" | "remove" | "unchanged";
+
+/**
+ * Reconciliation plan for an appointment
+ */
+export interface ReconciliationPlan {
+  neo_appointment_id: string;
+  action: ReconciliationAction;
+  appointment: ScrapedAppointment;
+  existingHash: string | null;
+  newHash: string;
+}
+
 /**
  * Scrape API response
  */

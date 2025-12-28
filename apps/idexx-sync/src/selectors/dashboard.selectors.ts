@@ -6,11 +6,12 @@
 
 import type { SelectorSet } from "../types";
 
-/** User menu (indicates successful login) */
+/** Dashboard shell (indicates successful login) */
 export const USER_MENU: SelectorSet = {
-  primary: '[data-testid="user-menu"]',
-  fallback1: ".user-menu",
-  fallback2: '[class*="avatar"]',
+  primary: "#dashboard_shell",
+  fallback1: '[data-testid="user-menu"]',
+  fallback2: ".user-menu",
+  fallback3: '[class*="avatar"]',
 };
 
 /** Navigation to schedule page */
