@@ -417,7 +417,7 @@ export class ScheduleSyncService {
         open_time: idexxConfig?.businessHours?.start ?? "08:00",
         close_time: idexxConfig?.businessHours?.end ?? "18:00",
         days_of_week: idexxConfig?.businessHours?.daysOfWeek ?? [
-          1, 2, 3, 4, 5, 6,
+          0, 1, 2, 3, 4, 5, 6,
         ],
         slot_duration_minutes: idexxConfig?.slotDuration ?? 15,
         default_capacity: capacity,
