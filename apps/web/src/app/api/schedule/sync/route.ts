@@ -200,9 +200,8 @@ async function processAppointment(
 }> {
   try {
     // Find or create provider if provider info provided
-    let _providerId: string | null = null;
     if (appointment.provider_id && appointment.provider_name) {
-      _providerId = await getOrCreateProvider(
+      await getOrCreateProvider(
         clinicId,
         appointment.provider_id,
         appointment.provider_name,
