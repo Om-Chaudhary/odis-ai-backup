@@ -9,6 +9,8 @@ import { Router } from "express";
 import type { Request, Response } from "express";
 import { config, SERVICE_INFO, HEALTH_THRESHOLDS } from "../config";
 import type { HealthResponse, HealthCheck } from "../types";
+import { syncQueue } from "../services/sync-queue.service";
+import { browserPool } from "../services/browser-pool.service";
 
 export const healthRouter: ReturnType<typeof Router> = Router();
 
@@ -58,7 +60,29 @@ healthRouter.get("/health", (req: Request, res: Response) => {
       : `Missing: ${missingEnvVars.join(", ")}`,
   });
 
-  const allHealthy = checks.every((check) => check.status === "pass");
+  // Check 4: Sync queue status
+  const queueStats = syncQueue.getQueueStats();
+  const queueHealthy = queueStats.totalActive < 10; // Alert if too many active syncs
+
+  checks.push({
+    name: "sync_queue",
+    status: queueHealthy ? "pass" : "warn",
+    message: `Active: ${queueStats.totalActive}, Queued: ${queueStats.totalQueued}`,
+  });
+
+  // Check 5: Browser pool status
+  const browserStats = browserPool.getStats();
+  const browserHealthy = browserStats.total <= browserStats.maxSize;
+
+  checks.push({
+    name: "browser_pool",
+    status: browserHealthy ? "pass" : "warn",
+    message: `Available: ${browserStats.available}/${browserStats.total} (max: ${browserStats.maxSize})`,
+  });
+
+  const allHealthy = checks.every(
+    (check) => check.status === "pass" || check.status === "warn",
+  );
 
   const response: HealthResponse = {
     status: allHealthy ? "healthy" : "unhealthy",

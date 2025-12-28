@@ -15,6 +15,8 @@ import express from "express";
 import { config, SERVICE_INFO } from "./config";
 import { logger } from "./lib/logger";
 import { setupRoutes } from "./routes";
+import { syncQueue } from "./services/sync-queue.service";
+import { browserPool } from "./services/browser-pool.service";
 
 const app = express();
 
@@ -77,8 +79,70 @@ app.use(
 );
 
 // Start server
-app.listen(config.PORT, config.HOST, () => {
+const server = app.listen(config.PORT, config.HOST, () => {
   logger.info(
     `${SERVICE_INFO.NAME} started at http://${config.HOST}:${config.PORT} (${config.NODE_ENV})`,
   );
+});
+
+// Graceful shutdown handler
+let isShuttingDown = false;
+
+async function gracefulShutdown(signal: string): Promise<void> {
+  if (isShuttingDown) {
+    logger.warn("Shutdown already in progress, forcing exit...");
+    process.exit(1);
+  }
+
+  isShuttingDown = true;
+  logger.info(`${signal} received, starting graceful shutdown...`);
+
+  // Stop accepting new connections
+  server.close(() => {
+    logger.info("HTTP server closed");
+  });
+
+  try {
+    // Cancel all queued syncs
+    syncQueue.cancelAllQueued();
+    logger.info("Cancelled all queued syncs");
+
+    // Wait for active syncs to complete (max 30 seconds)
+    logger.info("Waiting for active syncs to complete (max 30s)...");
+    await syncQueue.waitForActiveSyncs(30000);
+    logger.info("All active syncs completed or timed out");
+
+    // Close all browser instances
+    logger.info("Closing browser pool...");
+    await browserPool.closeAll();
+    logger.info("Browser pool closed");
+
+    logger.info("Graceful shutdown complete");
+    process.exit(0);
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    logger.error(`Error during graceful shutdown: ${msg}`);
+    process.exit(1);
+  }
+}
+
+// Register shutdown handlers
+process.on("SIGTERM", () => {
+  void gracefulShutdown("SIGTERM");
+});
+
+process.on("SIGINT", () => {
+  void gracefulShutdown("SIGINT");
+});
+
+// Handle uncaught errors
+process.on("uncaughtException", (error: Error) => {
+  logger.error(`Uncaught exception: ${error.message}`, { stack: error.stack });
+  void gracefulShutdown("uncaughtException");
+});
+
+process.on("unhandledRejection", (reason: unknown) => {
+  const msg = reason instanceof Error ? reason.message : String(reason);
+  logger.error(`Unhandled rejection: ${msg}`);
+  void gracefulShutdown("unhandledRejection");
 });
