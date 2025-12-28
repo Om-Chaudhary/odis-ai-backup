@@ -261,6 +261,129 @@ export function registerBuiltInTools(): void {
     },
   });
 
+  // Check availability range tool (for multi-day scheduling)
+  registerTool({
+    name: "check_availability_range",
+    description:
+      "Check appointment availability for the next 1-14 days. Returns which days have openings and the first available times.",
+    handler: async (params, context) => {
+      const { days_ahead = 14 } = params as {
+        days_ahead?: number;
+      };
+
+      logger.info("Check availability range called", {
+        callId: context.callId,
+        days_ahead,
+      });
+
+      if (!context.assistantId) {
+        return {
+          error: "Assistant ID not available",
+          message: "Unable to check availability. Assistant context not found.",
+        };
+      }
+
+      try {
+        // Get clinic_id from assistant_id
+        const supabase = await createServiceClient();
+
+        const { data: clinic } = await supabase
+          .from("clinics")
+          .select("id, name")
+          .or(
+            `inbound_assistant_id.eq.${context.assistantId},outbound_assistant_id.eq.${context.assistantId}`,
+          )
+          .single();
+
+        if (!clinic) {
+          return {
+            error: "Clinic not found",
+            message:
+              "Unable to check availability. Clinic configuration not found.",
+          };
+        }
+
+        // Call availability range API
+        const baseUrl =
+          process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+        const response = await fetch(
+          `${baseUrl}/api/vapi/tools/check-availability-range`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              assistant_id: context.assistantId,
+              days_ahead: Math.min(Math.max(1, days_ahead), 14),
+              vapi_call_id: context.callId,
+            }),
+          },
+        );
+
+        const data = (await response.json()) as {
+          available: boolean;
+          summary?: {
+            days_with_availability: number;
+            total_available_slots: number;
+          };
+          first_available?: {
+            formatted_date: string;
+            day_of_week: string;
+            times: Array<{ time: string }>;
+          };
+          availability?: Array<{
+            date: string;
+            formatted_date: string;
+            day_of_week: string;
+            available_slots: number;
+          }>;
+          message: string;
+          error?: string;
+        };
+
+        if (!response.ok) {
+          throw new Error(data.error ?? "Availability check failed");
+        }
+
+        logger.info("Availability range check successful", {
+          days_ahead,
+          days_with_availability: data.summary?.days_with_availability ?? 0,
+          clinic_id: clinic.id,
+        });
+
+        return {
+          available: data.available,
+          days_checked: days_ahead,
+          days_with_availability: data.summary?.days_with_availability ?? 0,
+          total_slots: data.summary?.total_available_slots ?? 0,
+          first_available: data.first_available
+            ? {
+                date: data.first_available.formatted_date,
+                day: data.first_available.day_of_week,
+                times: data.first_available.times
+                  .slice(0, 5)
+                  .map((t) => t.time),
+              }
+            : null,
+          availability: data.availability
+            ?.filter((d) => d.available_slots > 0)
+            .slice(0, 7),
+          message: data.message,
+        };
+      } catch (error) {
+        logger.error("Availability range check failed", {
+          error: error instanceof Error ? error.message : String(error),
+          days_ahead,
+        });
+
+        return {
+          error: "Failed to check availability",
+          message:
+            "I'm having trouble checking our schedule right now. Let me take your information and have someone call you back to schedule.",
+        };
+      }
+    },
+  });
+
   logger.info("Built-in tools registered", {
     tools: [
       "book_appointment",
@@ -268,6 +391,7 @@ export function registerBuiltInTools(): void {
       "send_sms_notification",
       "get_clinic_hours",
       "check_availability",
+      "check_availability_range",
     ],
   });
 }
