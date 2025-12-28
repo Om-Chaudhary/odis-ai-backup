@@ -1,7 +1,7 @@
 /**
  * Get Inbound Stats Procedure
  *
- * Fetches combined statistics for appointment requests, clinic messages, and calls.
+ * Fetches combined statistics for VAPI bookings, clinic messages, and calls.
  */
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
@@ -50,9 +50,9 @@ export const getStatsRouter = createTRPCRouter({
         return filtered;
       };
 
-      // Fetch appointment stats
+      // Fetch appointment stats from vapi_bookings
       let appointmentQuery = ctx.supabase
-        .from("appointment_requests")
+        .from("vapi_bookings")
         .select("status", { count: "exact" });
 
       if (clinic?.id) {

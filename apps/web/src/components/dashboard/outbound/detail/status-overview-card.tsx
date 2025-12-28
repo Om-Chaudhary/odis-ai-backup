@@ -52,7 +52,6 @@ function DeliveryItem({
   isCancelling,
 }: DeliveryItemProps) {
   const date = new Date(scheduledFor);
-  const isPast = date < new Date();
   const formattedDate = date.toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",

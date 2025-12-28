@@ -19,9 +19,9 @@ export const EmailEditor = ({
   const [body, setBody] = useState("");
   const [isSending, setIsSending] = useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const patientName =
-    (dischargeSummary as any)?.cases?.patients?.[0]?.name || "Unknown Patient";
+    (dischargeSummary as { cases?: { patients?: Array<{ name?: string }> } })
+      ?.cases?.patients?.[0]?.name || "Unknown Patient";
 
   // Populate email when discharge summary is loaded
   useEffect(() => {

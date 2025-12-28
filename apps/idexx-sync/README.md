@@ -1,204 +1,240 @@
-# IDEXX Neo Sync Service
+# IDEXX Sync Service
 
-Automated IDEXX Neo synchronization service using Playwright browser automation, triggered via QStash HTTP endpoints.
+> On-demand IDEXX Neo data synchronization service using internal API endpoints.
+
+**Version**: 3.0.0  
+**Full Documentation**: [`docs/integrations/IDEXX_SYNC_SERVICE.md`](../../docs/integrations/IDEXX_SYNC_SERVICE.md)
 
 ## Overview
 
-This service automates the synchronization of appointment schedules and consultation data from IDEXX Neo to Supabase. It runs as a Docker container on Railway and is triggered by QStash cron schedules.
+`idexx-sync` is a standalone Node.js microservice that fetches veterinary appointment schedules and consultation data from IDEXX Neo's internal APIs and syncs them to Supabase. Uses Playwright for authentication, then makes direct API calls for reliable, fast data extraction.
 
-## Architecture
+### Key Features
 
-```
-QStash Cron Schedules
-        │
-        ▼
-┌─────────────────────┐
-│  Express HTTP API   │
-│  POST /api/idexx/sync │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│   Sync Engine       │
-│   - Pre-open sync   │
-│   - EOD sync        │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│   Playwright        │
-│   Browser Automation│
-└──────────┬──────────┘
-           │
-    ┌──────┴──────┐
-    ▼             ▼
-IDEXX Neo     Supabase
+- **API-Based Data Fetching** - Uses IDEXX Neo's internal REST APIs (not DOM scraping)
+- **Schedule Sync** - Appointments with business hours and free slot calculation
+- **Consultation Sync** - Clinical data including notes, vitals, and diagnoses
+- **Single-Clinic Focus** - Syncs one clinic per request
+- **Flexible Date Support** - Fetch any date (defaults to today)
+- **Secure Credentials** - AES-256-GCM encrypted storage
+- **Deep Data Fetching** - Automatically fetches detailed consultation notes when needed
+
+## Quick Start
+
+### Build & Run
+
+```bash
+# Build
+nx build idexx-sync
+
+# Run (headless)
+pnpm --filter idexx-sync start
+
+# Run (visible browser for debugging)
+pnpm --filter idexx-sync start:visible
 ```
 
-## Sync Types
+### Make a Request
 
-### Pre-Open Sync (6:00 AM)
+```bash
+# Schedule sync (includes appointments, business hours, and free slots)
+curl -X POST http://localhost:5050/api/idexx/scrape \
+  -H "Content-Type: application/json" \
+  -d '{"type": "schedule", "clinicId": "your-clinic-uuid"}'
 
-- Fetches today's appointment schedule
-- Creates appointment records in Supabase
-- Ensures vets have appointments to record against
+# Consultation sync with date (includes clinical notes, vitals, diagnoses)
+curl -X POST http://localhost:5050/api/idexx/scrape \
+  -H "Content-Type: application/json" \
+  -d '{"type": "consultation", "clinicId": "your-clinic-uuid", "date": "2025-12-27"}'
+```
 
-### End-of-Day Sync (6:30 PM)
+**Response:**
 
-- Pulls consultation data from completed appointments
-- Extracts clinical notes, vitals, and diagnoses
-- Updates case records with IDEXX data
-- Runs before 7:30 PM discharge batch
+```json
+{
+  "success": true,
+  "sessionId": "uuid",
+  "data": {
+    "recordsScraped": 15,
+    "recordsCreated": 12,
+    "recordsUpdated": 3,
+    "scrapedAt": "2025-12-27T12:00:00.000Z"
+  }
+}
+```
 
-## Endpoints
+## API Endpoints
 
-| Endpoint                        | Method | Description                      |
-| ------------------------------- | ------ | -------------------------------- |
-| `/api/idexx/sync?type=pre-open` | POST   | Run pre-open schedule sync       |
-| `/api/idexx/sync?type=eod`      | POST   | Run end-of-day consultation sync |
-| `/api/idexx/sync-status`        | GET    | Get last sync status             |
-| `/health`                       | GET    | Health check for Railway         |
-| `/ready`                        | GET    | Readiness probe                  |
+| Endpoint            | Method | Description                        |
+| ------------------- | ------ | ---------------------------------- |
+| `/api/idexx/scrape` | POST   | Sync schedule or consultation data |
+| `/api/idexx/status` | GET    | Last sync status by clinic         |
+| `/health`           | GET    | Health check (uptime, memory)      |
+| `/ready`            | GET    | Readiness probe (DB connection)    |
+
+### IDEXX Neo API Endpoints Used
+
+See [`docs/IDEXX_API_ENDPOINTS.md`](./docs/IDEXX_API_ENDPOINTS.md) for complete documentation.
+
+**Schedule APIs:**
+
+- `/appointments/getCalendarEventData` - Appointment data
+- `/schedule/getScheduleConfigs` - Business hours, slot settings
+
+**Consultation APIs:**
+
+- `/consultations/search` - Search consultations by date
+- `/consultations/view/{id}` - Detailed clinical notes
 
 ## Environment Variables
 
-```env
-# Supabase
-SUPABASE_URL=https://xxx.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=xxx
+| Variable                    | Required | Default   | Description                     |
+| --------------------------- | -------- | --------- | ------------------------------- |
+| `SUPABASE_URL`              | ✅       | -         | Supabase project URL            |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅       | -         | Service role key                |
+| `ENCRYPTION_KEY`            | ✅       | -         | AES encryption key (32+ chars)  |
+| `PORT`                      | ❌       | `3001`    | Server port                     |
+| `HOST`                      | ❌       | `0.0.0.0` | Server host                     |
+| `HEADLESS`                  | ❌       | `true`    | Set `false` for visible browser |
 
-# Encryption
-ENCRYPTION_KEY=xxx
+## Project Structure
 
-# QStash
-QSTASH_CURRENT_SIGNING_KEY=xxx
-
-# Monitoring (optional)
-POSTHOG_API_KEY=xxx
-
-# Server
-PORT=3001
-HOST=0.0.0.0
-NODE_ENV=production
+```
+src/
+├── main.ts                    # Express entry point
+├── config/                    # Zod env validation + constants
+├── types/                     # TypeScript interfaces
+├── lib/                       # Logger setup
+├── routes/                    # HTTP endpoints
+│   ├── scrape.route.ts        # POST /api/idexx/scrape
+│   ├── status.route.ts        # GET /api/idexx/status
+│   └── health.route.ts        # GET /health, /ready
+├── services/                  # Business logic
+│   ├── scrape.service.ts      # Orchestration layer
+│   ├── auth.service.ts        # IDEXX Neo authentication
+│   ├── browser.service.ts     # Playwright wrapper + API client
+│   └── persistence.service.ts # Supabase write operations
+├── scrapers/                  # API data fetchers
+│   ├── schedule.scraper.ts    # Appointments + free slots
+│   └── consultation.scraper.ts# Clinical data + notes
+├── selectors/                 # DOM selectors (auth only)
+│   └── login.selectors.ts     # Login form fields
+├── utils/                     # Utilities
+│   └── phone.ts               # Phone normalization
+└── docs/                      # Documentation
+    └── IDEXX_API_ENDPOINTS.md # API reference
 ```
 
-## Development
+### Architecture Flow
 
-### Local Development
+1. **Authentication** - Playwright navigates to IDEXX Neo and logs in via web UI
+2. **Session Capture** - Authenticated cookies are captured from browser context
+3. **API Calls** - Direct HTTP requests to IDEXX internal APIs using session cookies
+4. **Transformation** - API responses transformed to Supabase schema
+5. **Persistence** - Data saved to `idexx_scrapes` and `idexx_scrape_data` tables
 
-```bash
-# Build the application
-nx build idexx-sync
-
-# Run in development mode
-nx serve idexx-sync
-
-# Run with watch mode
-nx serve idexx-sync --configuration=development
-```
-
-### Testing
+## Nx Commands
 
 ```bash
-# Run tests
-nx test idexx-sync
-
-# Run with coverage
-nx test idexx-sync --coverage
-```
-
-### Type Checking
-
-```bash
-nx typecheck idexx-sync
-```
-
-### Linting
-
-```bash
-nx lint idexx-sync
+nx build idexx-sync       # Build
+nx serve idexx-sync       # Dev server
+nx lint idexx-sync        # Lint
+nx typecheck idexx-sync   # Type check
+nx test idexx-sync        # Test
 ```
 
 ## Docker
 
-### Build
-
 ```bash
-# Build the application first
+# Build
 nx build idexx-sync
+docker build -t idexx-sync -f Dockerfile ../..
 
-# Build Docker image
-nx docker:build idexx-sync
-
-# Or manually
-docker build -t idexx-sync -f apps/idexx-sync/Dockerfile .
-```
-
-### Run Locally
-
-```bash
-docker run -p 3001:3001 \
+# Run
+docker run -p 5050:3001 \
   -e SUPABASE_URL=xxx \
   -e SUPABASE_SERVICE_ROLE_KEY=xxx \
   -e ENCRYPTION_KEY=xxx \
-  -e QSTASH_CURRENT_SIGNING_KEY=xxx \
   idexx-sync
 ```
 
-## QStash Configuration
+## Architecture
 
-Create two QStash schedules:
+```
+┌─────────────┐     ┌──────────────────────────────────────────────────┐
+│   Caller    │────▶│          IDEXX Sync Service (API-Based)          │
+└─────────────┘     │                                                  │
+                    │  ┌─────────┐  ┌──────────────────────────┐      │
+                    │  │ Routes  │──▶│    ScrapeService         │      │
+                    │  └─────────┘  │   (orchestration)         │      │
+                    │               └─────────┬────────────────┘      │
+                    │      ┌─────────────┬────┴────────┬──────────┐   │
+                    │      ▼             ▼             ▼          ▼   │
+                    │  AuthService  BrowserService  Scrapers  Persistence│
+                    │   (login)     (API client)   (API fetch)   (DB)  │
+                    │      │              │             │          │   │
+                    └──────┼──────────────┼─────────────┼──────────┼───┘
+                           │              │             │          │
+                           ▼              ▼             ▼          ▼
+                    ┌──────────────────────────┐  ┌──────────────────┐
+                    │      IDEXX Neo           │  │    Supabase      │
+                    │  ┌────────────────────┐  │  │                  │
+                    │  │  Web UI (auth)     │◀─┘  │  ┌─────────────┐ │
+                    │  └────────────────────┘     │  │ idexx_scrapes│ │
+                    │  ┌────────────────────┐     │  │ (sessions)   │ │
+                    │  │  Internal APIs:    │─────┼─▶│              │ │
+                    │  │  - /appointments/  │     │  │ idexx_scrape_│ │
+                    │  │  - /consultations/ │     │  │ _data        │ │
+                    │  │  - /schedule/      │     │  │ (records)    │ │
+                    │  └────────────────────┘     │  └─────────────┘ │
+                    └──────────────────────────┘  └──────────────────┘
 
-### Pre-Open Sync
+Flow:
+1. Playwright authenticates via IDEXX Neo web UI
+2. Session cookies captured from browser context
+3. Authenticated API requests made to internal endpoints
+4. JSON responses transformed to Supabase schema
+5. Data persisted to database tables
+```
 
-- **Cron**: `0 6 * * *` (6:00 AM daily)
-- **URL**: `https://your-railway-url/api/idexx/sync?type=pre-open`
-- **Retries**: 3 with exponential backoff
+## Why API-Based vs DOM Scraping?
 
-### EOD Sync
+**Previous Approach (v2.x):**
 
-- **Cron**: `30 18 * * *` (6:30 PM daily)
-- **URL**: `https://your-railway-url/api/idexx/sync?type=eod`
-- **Retries**: 3 with exponential backoff
+- ❌ DOM scraping with complex CSS selectors
+- ❌ Breaks when IDEXX updates their UI
+- ❌ Slower (waits for page loads, JS execution)
+- ❌ Timeout issues with date pickers and modals
 
-### Failure Callback
+**Current Approach (v3.x):**
 
-- **URL**: `https://your-railway-url/api/idexx/sync-failed`
+- ✅ Direct API calls to IDEXX internal endpoints
+- ✅ Stable JSON contracts (less likely to change)
+- ✅ 10x faster (no page loads, no UI interaction)
+- ✅ Reliable data extraction with typed responses
+- ✅ Supports pagination and detailed data fetching
 
-## Railway Deployment
+## Data Capabilities
 
-1. Connect your GitHub repository to Railway
-2. Set the root directory to the workspace root
-3. Set build command: `pnpm nx build idexx-sync`
-4. Set start command: `node dist/apps/idexx-sync/main.js`
-5. Configure environment variables
-6. Deploy
+### Schedule Sync
 
-## Monitoring
+- **Appointments**: Patient name, client name/phone, provider, type, status, times
+- **Business Hours**: Clinic open/close times, days of week
+- **Free Slots**: Calculated available appointment slots
+- **Providers**: List of veterinarians
+- **Rooms**: Exam room assignments
 
-The service logs to stdout and includes:
+### Consultation Sync
 
-- Request/response logging
-- Sync progress updates
-- Error tracking with stack traces
+- **Basic Info**: Patient, appointment link, consultation date
+- **Clinical Notes**: Full SOAP notes and clinical observations
+- **Vitals**: Temperature, pulse, respiration, weight, blood pressure
+- **Diagnoses**: Structured diagnosis list
+- **Deep Fetch**: Automatically retrieves detailed notes via `/consultations/view/{id}`
 
-For production monitoring, configure PostHog events.
+## Related
 
-## Troubleshooting
-
-### Login Failures
-
-- Verify IDEXX credentials are correct
-- Check for 2FA requirements (not supported)
-- Review screenshots in `/tmp/idexx-sync-*.png`
-
-### Selector Errors
-
-- IDEXX UI may have changed
-- Check selector fallbacks in `src/utils/selectors.ts`
-- Take screenshots to debug
-
-### Memory Issues
-
-- Ensure container has at least 1GB RAM
-- Browser automation is memory-intensive
+- [IDEXX API Endpoints Reference](./docs/IDEXX_API_ENDPOINTS.md) - Complete API documentation
+- [Full Service Documentation](../../docs/integrations/IDEXX_SYNC_SERVICE.md)
+- [IDEXX Integration Library](../../libs/integrations/idexx/README.md)
+- [Database Schema](../../docs/architecture/DATABASE_CONTEXT.md)

@@ -410,7 +410,8 @@ export const DEMO_APPOINTMENTS: AppointmentRequest[] = [
     status: "pending" as const,
     isNewClient: false,
     isOutlier: null,
-    notes: "Client concerned about possible parvo diagnosis. Requested appointment for today afternoon.",
+    notes:
+      "Client concerned about possible parvo diagnosis. Requested appointment for today afternoon.",
     vapiCallId: "demo-vapi-call-yvonne",
     confirmedAppointmentId: null,
     metadata: {
@@ -438,7 +439,7 @@ export function getDemoAppointments(): AppointmentRequest[] {
 /**
  * Demo calls array - for cases that need call records but don't exist in DB
  */
-export const DEMO_CALLS: any[] = [
+export const DEMO_CALLS = [
   // Andrea's cancellation call - matches the override in call-overrides.ts
   {
     id: "demo-call-andrea-cancellation",
@@ -463,12 +464,12 @@ export const DEMO_CALLS: any[] = [
     attention_summary: null,
     attention_flagged_at: null,
     escalation_data: null,
-  },
+  } as InboundCall,
 ];
 
 /**
  * Get demo calls to inject into the calls list
  */
-export function getDemoCalls(): any[] {
+export function getDemoCalls(): InboundCall[] {
   return DEMO_CALLS;
 }

@@ -1,3 +1,18 @@
+/**
+ * Schedule Sync API Route
+ *
+ * POST /api/schedule/sync
+ *
+ * Syncs appointment schedule data from IDEXX Neo extension.
+ * Creates/updates appointments in the database and tracks sync operations.
+ *
+ * This endpoint is designed to accept requests from:
+ * - Browser extension (IDEXX Neo integration) - uses Bearer token
+ * - Admin dashboard - uses cookies
+ *
+ * NOTE: This endpoint uses the new schedule_appointments table and schedule_syncs schema.
+ */
+
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@odis-ai/data-access/db/server";
@@ -16,7 +31,7 @@ import {
   getClinicByUserId,
   getOrCreateProvider,
 } from "@odis-ai/domain/clinics";
-import type { Database, Json } from "@odis-ai/shared/types/database.types";
+import type { Database } from "@odis-ai/shared/types/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 type SupabaseClientType = SupabaseClient<Database>;
@@ -74,6 +89,35 @@ async function authenticateRequest(request: NextRequest) {
 }
 
 /**
+ * Normalize time to HH:MM:SS format
+ */
+function normalizeTime(timeStr: string | null | undefined): string | null {
+  if (!timeStr) return null;
+
+  const match = /(\d{1,2}):(\d{2})\s*(am|pm)?/i.exec(timeStr);
+
+  if (!match) {
+    const parts = timeStr.split(":");
+    if (parts.length === 2) {
+      return `${timeStr}:00`;
+    }
+    return timeStr;
+  }
+
+  let hours = parseInt(match[1] ?? "0", 10);
+  const minutes = match[2] ?? "00";
+  const meridiem = match[3]?.toLowerCase();
+
+  if (meridiem === "pm" && hours !== 12) {
+    hours += 12;
+  } else if (meridiem === "am" && hours === 12) {
+    hours = 0;
+  }
+
+  return `${hours.toString().padStart(2, "0")}:${minutes}:00`;
+}
+
+/**
  * Check if appointment already exists
  * Returns the appointment ID if found, null otherwise
  */
@@ -85,14 +129,14 @@ async function findExistingAppointment(
   // First try: by neo_appointment_id + clinic_id + date
   if (appointment.neo_appointment_id) {
     const { data: existing, error } = await supabase
-      .from("appointments")
+      .from("schedule_appointments")
       .select("id")
       .eq("clinic_id", clinicId)
       .eq("neo_appointment_id", appointment.neo_appointment_id)
       .eq("date", appointment.date)
-      .maybeSingle(); // Use maybeSingle() to handle not found gracefully
+      .is("deleted_at", null)
+      .maybeSingle();
 
-    // If error is not "no rows" error, log it
     if (error && error.code !== "PGRST116") {
       console.error(
         "[findExistingAppointment] Error querying by neo_appointment_id",
@@ -101,7 +145,6 @@ async function findExistingAppointment(
           neoAppointmentId: appointment.neo_appointment_id,
         },
       );
-      // Continue to fallback method
     } else if (existing) {
       return existing.id;
     }
@@ -109,16 +152,19 @@ async function findExistingAppointment(
 
   // Second try: by date + start_time + patient_name + clinic_id
   if (appointment.patient_name && appointment.start_time) {
+    const normalizedTime = normalizeTime(appointment.start_time);
+    if (!normalizedTime) return null;
+
     const { data: existing, error } = await supabase
-      .from("appointments")
+      .from("schedule_appointments")
       .select("id")
       .eq("clinic_id", clinicId)
       .eq("date", appointment.date)
-      .eq("start_time", appointment.start_time)
+      .eq("start_time", normalizedTime)
       .eq("patient_name", appointment.patient_name)
-      .maybeSingle(); // Use maybeSingle() to handle not found gracefully
+      .is("deleted_at", null)
+      .maybeSingle();
 
-    // If error is not "no rows" error, log it
     if (error && error.code !== "PGRST116") {
       console.error(
         "[findExistingAppointment] Error querying by date/time/patient",
@@ -144,7 +190,7 @@ async function processAppointment(
   supabase: SupabaseClientType,
   appointment: AppointmentInput,
   clinicId: string,
-  syncId: string,
+  _syncId: string,
   appointmentIndex: number,
 ): Promise<{
   success: boolean;
@@ -154,9 +200,8 @@ async function processAppointment(
 }> {
   try {
     // Find or create provider if provider info provided
-    let providerId: string | null = null;
     if (appointment.provider_id && appointment.provider_name) {
-      providerId = await getOrCreateProvider(
+      await getOrCreateProvider(
         clinicId,
         appointment.provider_id,
         appointment.provider_name,
@@ -171,36 +216,41 @@ async function processAppointment(
       clinicId,
     );
 
-    const appointmentData: Database["public"]["Tables"]["appointments"]["Insert"] =
+    // Normalize times
+    const startTime = normalizeTime(appointment.start_time) ?? "09:00:00";
+    const endTime = normalizeTime(appointment.end_time) ?? startTime;
+
+    // Generate neo_appointment_id if not provided (for extension-sourced data)
+    const neoAppointmentId =
+      appointment.neo_appointment_id ??
+      `ext-${appointment.date}-${startTime}-${appointment.patient_name ?? "unknown"}`;
+
+    const appointmentData: Database["public"]["Tables"]["schedule_appointments"]["Insert"] =
       {
         clinic_id: clinicId,
-        sync_id: syncId,
-        neo_appointment_id: appointment.neo_appointment_id ?? null,
+        neo_appointment_id: neoAppointmentId,
         date: appointment.date,
-        start_time: appointment.start_time,
-        end_time: appointment.end_time,
+        start_time: startTime,
+        end_time: endTime,
         patient_name: appointment.patient_name ?? null,
         client_name: appointment.client_name ?? null,
         client_phone: appointment.client_phone ?? null,
         appointment_type: appointment.appointment_type ?? null,
         status: appointment.status ?? "scheduled",
-        notes: appointment.notes ?? null,
-        provider_id: providerId,
-        source: "neo", // IDEXX Neo
-        metadata: (appointment.metadata ?? {}) as Json,
+        provider_name: appointment.provider_name ?? null,
+        last_synced_at: new Date().toISOString(),
       };
 
     if (existingAppointmentId) {
       // Update existing appointment
       const { data: updated, error: updateError } = await supabase
-        .from("appointments")
+        .from("schedule_appointments")
         .update(appointmentData)
         .eq("id", existingAppointmentId)
         .select("id")
         .single();
 
       if (updateError) {
-        // Don't expose internal database error details
         const errorMessage =
           updateError.code === "PGRST116"
             ? "Appointment not found for update"
@@ -230,13 +280,12 @@ async function processAppointment(
     } else {
       // Insert new appointment
       const { data: inserted, error: insertError } = await supabase
-        .from("appointments")
+        .from("schedule_appointments")
         .insert(appointmentData)
         .select("id")
         .single();
 
       if (insertError) {
-        // Don't expose internal database error details
         const errorMessage =
           insertError.code === "23505"
             ? "Appointment already exists (duplicate)"
@@ -281,13 +330,6 @@ async function processAppointment(
  * Schedule Sync API Route
  *
  * POST /api/schedule/sync
- *
- * Syncs appointment schedule data from IDEXX Neo extension.
- * Creates/updates appointments in the database and tracks sync operations.
- *
- * This endpoint is designed to accept requests from:
- * - Browser extension (IDEXX Neo integration) - uses Bearer token
- * - Admin dashboard - uses cookies
  */
 export async function POST(request: NextRequest) {
   try {
@@ -362,10 +404,10 @@ export async function POST(request: NextRequest) {
       .from("schedule_syncs")
       .insert({
         clinic_id: clinic.id,
-        sync_date: syncDate,
+        sync_start_date: syncDate,
+        sync_end_date: syncDate,
         status: "in_progress",
-        appointment_count: null,
-        metadata: metadata ?? {},
+        idexx_config: metadata ?? null,
       })
       .select("id")
       .single();
@@ -422,7 +464,6 @@ export async function POST(request: NextRequest) {
       hasErrors && totalProcessed === 0 ? "failed" : "completed";
 
     // Update schedule_syncs record
-    // Truncate error message if too long (database constraint)
     const errorMessage =
       errors.length > 0
         ? `Failed to process ${errors.length} appointment(s). First error: ${
@@ -430,12 +471,16 @@ export async function POST(request: NextRequest) {
           }${errors.length > 1 ? ` (+${errors.length - 1} more)` : ""}`
         : null;
 
+    const startTime = Date.now();
     const { error: updateError } = await supabase
       .from("schedule_syncs")
       .update({
         status: finalStatus,
-        appointment_count: totalProcessed,
+        appointments_added: createdCount,
+        appointments_updated: updatedCount,
         error_message: errorMessage,
+        completed_at: new Date().toISOString(),
+        duration_ms: Date.now() - startTime,
       })
       .eq("id", syncId);
 

@@ -374,18 +374,18 @@ function extractAndUpdateAppointmentDate(
   // Fire and forget - don't await
   void (async () => {
     try {
-      // Check if there's an associated appointment request that has no requested_date
-      const { data: appointmentRequest, error: fetchError } = await supabase
-        .from("appointment_requests")
-        .select("id, requested_date, requested_start_time")
+      // Check if there's an associated VAPI booking that we can enrich with date
+      const { data: vapiBooking, error: fetchError } = await supabase
+        .from("vapi_bookings")
+        .select("id, date, start_time")
         .eq("vapi_call_id", vapiCallId)
         .limit(1)
         .single();
 
       if (fetchError) {
-        // No appointment request found - this is fine, not all calls have appointments
+        // No VAPI booking found - this is fine, not all calls have appointments
         if (fetchError.code !== "PGRST116") {
-          logger.debug("No appointment request found for call", {
+          logger.debug("No VAPI booking found for call", {
             vapiCallId,
             error: fetchError.message,
           });
@@ -393,19 +393,21 @@ function extractAndUpdateAppointmentDate(
         return;
       }
 
-      // If appointment already has a date, no need to extract
-      if (appointmentRequest.requested_date) {
-        logger.debug("Appointment request already has date", {
+      // If booking already has a valid date (not a placeholder), no need to extract
+      // Bookings created with placeholder date will have today's date
+      const today = new Date().toISOString().split("T")[0];
+      if (vapiBooking.date && vapiBooking.date !== today) {
+        logger.debug("VAPI booking already has date", {
           vapiCallId,
-          appointmentId: appointmentRequest.id,
-          existingDate: appointmentRequest.requested_date,
+          bookingId: vapiBooking.id,
+          existingDate: vapiBooking.date,
         });
         return;
       }
 
       logger.info("Extracting appointment date from transcript", {
         vapiCallId,
-        appointmentId: appointmentRequest.id,
+        bookingId: vapiBooking.id,
         transcriptLength: transcript.length,
       });
 
@@ -415,28 +417,25 @@ function extractAndUpdateAppointmentDate(
       if (!extracted.hasPreference) {
         logger.debug("No appointment date preference found in transcript", {
           vapiCallId,
-          appointmentId: appointmentRequest.id,
+          bookingId: vapiBooking.id,
         });
         return;
       }
 
-      // Prepare update data
+      // Prepare update data for vapi_bookings
       const updateData: Record<string, unknown> = {};
 
       if (extracted.date) {
-        updateData.requested_date = extracted.date;
+        updateData.date = extracted.date;
       }
 
       // Use extracted time, or convert timeOfDay to time
       if (extracted.time) {
-        updateData.requested_start_time = extracted.time + ":00"; // Add seconds
-      } else if (
-        extracted.timeOfDay &&
-        !appointmentRequest.requested_start_time
-      ) {
+        updateData.start_time = extracted.time + ":00"; // Add seconds
+      } else if (extracted.timeOfDay && !vapiBooking.start_time) {
         const defaultTime = timeOfDayToTime(extracted.timeOfDay);
         if (defaultTime) {
-          updateData.requested_start_time = defaultTime + ":00";
+          updateData.start_time = defaultTime + ":00";
         }
       }
 
@@ -445,27 +444,24 @@ function extractAndUpdateAppointmentDate(
         return;
       }
 
-      // Update appointment request
+      // Update vapi booking
       const { error: updateError } = await supabase
-        .from("appointment_requests")
+        .from("vapi_bookings")
         .update(updateData)
-        .eq("id", appointmentRequest.id);
+        .eq("id", vapiBooking.id);
 
       if (updateError) {
-        logger.error(
-          "Failed to update appointment request with extracted date",
-          {
-            vapiCallId,
-            appointmentId: appointmentRequest.id,
-            error: updateError.message,
-          },
-        );
+        logger.error("Failed to update vapi booking with extracted date", {
+          vapiCallId,
+          bookingId: vapiBooking.id,
+          error: updateError.message,
+        });
         return;
       }
 
-      logger.info("Updated appointment request with extracted date", {
+      logger.info("Updated vapi booking with extracted date", {
         vapiCallId,
-        appointmentId: appointmentRequest.id,
+        bookingId: vapiBooking.id,
         extractedDate: extracted.date,
         extractedTime: extracted.time,
         timeOfDay: extracted.timeOfDay,

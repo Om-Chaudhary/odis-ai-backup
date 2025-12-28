@@ -1,9 +1,0 @@
-/* Base content script styles */
-:host {
-  all: initial;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-* {
-  box-sizing: border-box;
-}

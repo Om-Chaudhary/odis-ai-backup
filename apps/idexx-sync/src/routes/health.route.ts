@@ -1,28 +1,16 @@
 /**
- * Health Check Route
+ * Health Route
  *
  * GET /health - Railway health check endpoint
- *
- * Returns service health status for container orchestration.
+ * GET /ready - Readiness probe endpoint
  */
 
 import { Router } from "express";
 import type { Request, Response } from "express";
+import { config, SERVICE_INFO, HEALTH_THRESHOLDS } from "../config";
+import type { HealthResponse, HealthCheck } from "../types";
 
 export const healthRouter: ReturnType<typeof Router> = Router();
-
-interface HealthResponse {
-  status: "healthy" | "unhealthy";
-  service: string;
-  version: string;
-  timestamp: string;
-  uptime_seconds: number;
-  checks: {
-    name: string;
-    status: "pass" | "fail";
-    message?: string;
-  }[];
-}
 
 const startTime = Date.now();
 
@@ -30,12 +18,11 @@ const startTime = Date.now();
  * GET /health
  *
  * Returns health status for Railway container monitoring.
- * Used by Railway HEALTHCHECK in Dockerfile.
  */
 healthRouter.get("/health", (req: Request, res: Response) => {
-  const checks: HealthResponse["checks"] = [];
+  const checks: HealthCheck[] = [];
 
-  // Check 1: Process is running (always passes if we get here)
+  // Check 1: Process is running
   checks.push({
     name: "process",
     status: "pass",
@@ -46,7 +33,7 @@ healthRouter.get("/health", (req: Request, res: Response) => {
   const memoryUsage = process.memoryUsage();
   const heapUsedMB = Math.round(memoryUsage.heapUsed / 1024 / 1024);
   const heapTotalMB = Math.round(memoryUsage.heapTotal / 1024 / 1024);
-  const memoryHealthy = heapUsedMB < 900; // Less than 900MB
+  const memoryHealthy = heapUsedMB < HEALTH_THRESHOLDS.MAX_HEAP_MB;
 
   checks.push({
     name: "memory",
@@ -75,8 +62,8 @@ healthRouter.get("/health", (req: Request, res: Response) => {
 
   const response: HealthResponse = {
     status: allHealthy ? "healthy" : "unhealthy",
-    service: "idexx-sync",
-    version: "1.0.0",
+    service: SERVICE_INFO.NAME,
+    version: SERVICE_INFO.VERSION,
     timestamp: new Date().toISOString(),
     uptime_seconds: Math.floor((Date.now() - startTime) / 1000),
     checks,
@@ -91,9 +78,7 @@ healthRouter.get("/health", (req: Request, res: Response) => {
  * Readiness probe - indicates if the service is ready to accept traffic.
  */
 healthRouter.get("/ready", (req: Request, res: Response) => {
-  // Check if essential environment variables are present
-  const isReady =
-    !!process.env.SUPABASE_URL && !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const isReady = !!config.SUPABASE_URL && !!config.SUPABASE_SERVICE_ROLE_KEY;
 
   if (isReady) {
     res.status(200).json({

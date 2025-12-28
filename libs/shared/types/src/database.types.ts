@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/consistent-indexed-object-style */
+/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
+
 export type Json =
   | string
   | number
@@ -14,191 +17,6 @@ export type Database = {
   };
   public: {
     Tables: {
-      appointment_requests: {
-        Row: {
-          breed: string | null;
-          client_name: string;
-          client_phone: string;
-          clinic_id: string;
-          confirmed_appointment_id: string | null;
-          confirmed_date: string | null;
-          confirmed_time: string | null;
-          created_at: string;
-          id: string;
-          is_new_client: boolean | null;
-          is_outlier: boolean | null;
-          metadata: Json | null;
-          notes: string | null;
-          patient_name: string;
-          provider_id: string | null;
-          reason: string | null;
-          requested_date: string | null;
-          requested_end_time: string | null;
-          requested_start_time: string | null;
-          species: string | null;
-          status: string;
-          updated_at: string;
-          vapi_call_id: string | null;
-        };
-        Insert: {
-          breed?: string | null;
-          client_name: string;
-          client_phone: string;
-          clinic_id: string;
-          confirmed_appointment_id?: string | null;
-          confirmed_date?: string | null;
-          confirmed_time?: string | null;
-          created_at?: string;
-          id?: string;
-          is_new_client?: boolean | null;
-          is_outlier?: boolean | null;
-          metadata?: Json | null;
-          notes?: string | null;
-          patient_name: string;
-          provider_id?: string | null;
-          reason?: string | null;
-          requested_date?: string | null;
-          requested_end_time?: string | null;
-          requested_start_time?: string | null;
-          species?: string | null;
-          status?: string;
-          updated_at?: string;
-          vapi_call_id?: string | null;
-        };
-        Update: {
-          breed?: string | null;
-          client_name?: string;
-          client_phone?: string;
-          clinic_id?: string;
-          confirmed_appointment_id?: string | null;
-          confirmed_date?: string | null;
-          confirmed_time?: string | null;
-          created_at?: string;
-          id?: string;
-          is_new_client?: boolean | null;
-          is_outlier?: boolean | null;
-          metadata?: Json | null;
-          notes?: string | null;
-          patient_name?: string;
-          provider_id?: string | null;
-          reason?: string | null;
-          requested_date?: string | null;
-          requested_end_time?: string | null;
-          requested_start_time?: string | null;
-          species?: string | null;
-          status?: string;
-          updated_at?: string;
-          vapi_call_id?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "appointment_requests_clinic_id_fkey";
-            columns: ["clinic_id"];
-            isOneToOne: false;
-            referencedRelation: "clinics";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "appointment_requests_confirmed_appointment_id_fkey";
-            columns: ["confirmed_appointment_id"];
-            isOneToOne: false;
-            referencedRelation: "appointments";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "appointment_requests_provider_id_fkey";
-            columns: ["provider_id"];
-            isOneToOne: false;
-            referencedRelation: "providers";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      appointments: {
-        Row: {
-          appointment_type: string | null;
-          client_name: string | null;
-          client_phone: string | null;
-          clinic_id: string;
-          created_at: string;
-          date: string;
-          end_time: string;
-          id: string;
-          metadata: Json | null;
-          neo_appointment_id: string | null;
-          notes: string | null;
-          patient_name: string | null;
-          provider_id: string | null;
-          source: string;
-          start_time: string;
-          status: string;
-          sync_id: string | null;
-          updated_at: string;
-        };
-        Insert: {
-          appointment_type?: string | null;
-          client_name?: string | null;
-          client_phone?: string | null;
-          clinic_id: string;
-          created_at?: string;
-          date: string;
-          end_time: string;
-          id?: string;
-          metadata?: Json | null;
-          neo_appointment_id?: string | null;
-          notes?: string | null;
-          patient_name?: string | null;
-          provider_id?: string | null;
-          source?: string;
-          start_time: string;
-          status?: string;
-          sync_id?: string | null;
-          updated_at?: string;
-        };
-        Update: {
-          appointment_type?: string | null;
-          client_name?: string | null;
-          client_phone?: string | null;
-          clinic_id?: string;
-          created_at?: string;
-          date?: string;
-          end_time?: string;
-          id?: string;
-          metadata?: Json | null;
-          neo_appointment_id?: string | null;
-          notes?: string | null;
-          patient_name?: string | null;
-          provider_id?: string | null;
-          source?: string;
-          start_time?: string;
-          status?: string;
-          sync_id?: string | null;
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "appointments_clinic_id_fkey";
-            columns: ["clinic_id"];
-            isOneToOne: false;
-            referencedRelation: "clinics";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "appointments_provider_id_fkey";
-            columns: ["provider_id"];
-            isOneToOne: false;
-            referencedRelation: "providers";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "appointments_sync_id_fkey";
-            columns: ["sync_id"];
-            isOneToOne: false;
-            referencedRelation: "schedule_syncs";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
       audio_files: {
         Row: {
           bit_rate: number | null;
@@ -421,6 +239,50 @@ export type Database = {
         };
         Relationships: [];
       };
+      clinic_blocked_periods: {
+        Row: {
+          clinic_id: string;
+          created_at: string;
+          days_of_week: number[];
+          end_time: string;
+          id: string;
+          is_active: boolean;
+          name: string;
+          start_time: string;
+          updated_at: string;
+        };
+        Insert: {
+          clinic_id: string;
+          created_at?: string;
+          days_of_week?: number[];
+          end_time: string;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          start_time: string;
+          updated_at?: string;
+        };
+        Update: {
+          clinic_id?: string;
+          created_at?: string;
+          days_of_week?: number[];
+          end_time?: string;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          start_time?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "clinic_blocked_periods_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       clinic_messages: {
         Row: {
           assigned_to_user_id: string | null;
@@ -482,6 +344,62 @@ export type Database = {
             foreignKeyName: "clinic_messages_clinic_id_fkey";
             columns: ["clinic_id"];
             isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      clinic_schedule_config: {
+        Row: {
+          clinic_id: string;
+          close_time: string;
+          created_at: string;
+          days_of_week: number[];
+          default_capacity: number;
+          id: string;
+          idexx_config_snapshot: Json | null;
+          open_time: string;
+          slot_duration_minutes: number;
+          stale_threshold_minutes: number;
+          sync_horizon_days: number;
+          timezone: string;
+          updated_at: string;
+        };
+        Insert: {
+          clinic_id: string;
+          close_time?: string;
+          created_at?: string;
+          days_of_week?: number[];
+          default_capacity?: number;
+          id?: string;
+          idexx_config_snapshot?: Json | null;
+          open_time?: string;
+          slot_duration_minutes?: number;
+          stale_threshold_minutes?: number;
+          sync_horizon_days?: number;
+          timezone?: string;
+          updated_at?: string;
+        };
+        Update: {
+          clinic_id?: string;
+          close_time?: string;
+          created_at?: string;
+          days_of_week?: number[];
+          default_capacity?: number;
+          id?: string;
+          idexx_config_snapshot?: Json | null;
+          open_time?: string;
+          slot_duration_minutes?: number;
+          stale_threshold_minutes?: number;
+          sync_horizon_days?: number;
+          timezone?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "clinic_schedule_config_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: true;
             referencedRelation: "clinics";
             referencedColumns: ["id"];
           },
@@ -1600,69 +1518,200 @@ export type Database = {
           },
         ];
       };
-      schedule_syncs: {
+      schedule_appointments: {
         Row: {
-          appointment_count: number | null;
-          clinic_id: string | null;
-          completed_at: string | null;
+          appointment_type: string | null;
+          client_name: string | null;
+          client_phone: string | null;
+          clinic_id: string;
           created_at: string;
-          error_details: Json | null;
-          error_message: string | null;
-          failed_count: number | null;
+          date: string;
+          deleted_at: string | null;
+          end_time: string;
           id: string;
-          metadata: Json | null;
-          skipped_count: number | null;
-          started_at: string | null;
+          last_synced_at: string;
+          neo_appointment_id: string;
+          patient_name: string | null;
+          provider_name: string | null;
+          room_id: string | null;
+          slot_id: string | null;
+          start_time: string;
           status: string;
-          sync_date: string;
-          sync_type: string | null;
-          synced_at: string;
-          synced_count: number | null;
-          total_items: number | null;
+          sync_hash: string | null;
           updated_at: string;
-          user_id: string | null;
         };
         Insert: {
-          appointment_count?: number | null;
-          clinic_id?: string | null;
-          completed_at?: string | null;
+          appointment_type?: string | null;
+          client_name?: string | null;
+          client_phone?: string | null;
+          clinic_id: string;
           created_at?: string;
-          error_details?: Json | null;
-          error_message?: string | null;
-          failed_count?: number | null;
+          date: string;
+          deleted_at?: string | null;
+          end_time: string;
           id?: string;
-          metadata?: Json | null;
-          skipped_count?: number | null;
-          started_at?: string | null;
-          status?: string;
-          sync_date: string;
-          sync_type?: string | null;
-          synced_at?: string;
-          synced_count?: number | null;
-          total_items?: number | null;
+          last_synced_at?: string;
+          neo_appointment_id: string;
+          patient_name?: string | null;
+          provider_name?: string | null;
+          room_id?: string | null;
+          slot_id?: string | null;
+          start_time: string;
+          status: string;
+          sync_hash?: string | null;
           updated_at?: string;
-          user_id?: string | null;
         };
         Update: {
-          appointment_count?: number | null;
-          clinic_id?: string | null;
-          completed_at?: string | null;
+          appointment_type?: string | null;
+          client_name?: string | null;
+          client_phone?: string | null;
+          clinic_id?: string;
           created_at?: string;
+          date?: string;
+          deleted_at?: string | null;
+          end_time?: string;
+          id?: string;
+          last_synced_at?: string;
+          neo_appointment_id?: string;
+          patient_name?: string | null;
+          provider_name?: string | null;
+          room_id?: string | null;
+          slot_id?: string | null;
+          start_time?: string;
+          status?: string;
+          sync_hash?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "schedule_appointments_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "schedule_appointments_slot_id_fkey";
+            columns: ["slot_id"];
+            isOneToOne: false;
+            referencedRelation: "schedule_slots";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      schedule_slots: {
+        Row: {
+          booked_count: number;
+          capacity: number;
+          clinic_id: string;
+          created_at: string;
+          date: string;
+          end_time: string;
+          id: string;
+          last_synced_at: string | null;
+          start_time: string;
+          sync_id: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          booked_count?: number;
+          capacity?: number;
+          clinic_id: string;
+          created_at?: string;
+          date: string;
+          end_time: string;
+          id?: string;
+          last_synced_at?: string | null;
+          start_time: string;
+          sync_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          booked_count?: number;
+          capacity?: number;
+          clinic_id?: string;
+          created_at?: string;
+          date?: string;
+          end_time?: string;
+          id?: string;
+          last_synced_at?: string | null;
+          start_time?: string;
+          sync_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "schedule_slots_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      schedule_syncs: {
+        Row: {
+          appointments_added: number | null;
+          appointments_removed: number | null;
+          appointments_updated: number | null;
+          clinic_id: string;
+          completed_at: string | null;
+          conflicts_detected: number | null;
+          conflicts_resolved: number | null;
+          created_at: string;
+          duration_ms: number | null;
+          error_details: Json | null;
+          error_message: string | null;
+          id: string;
+          idexx_config: Json | null;
+          slots_created: number | null;
+          slots_updated: number | null;
+          started_at: string;
+          status: string;
+          sync_end_date: string;
+          sync_start_date: string;
+        };
+        Insert: {
+          appointments_added?: number | null;
+          appointments_removed?: number | null;
+          appointments_updated?: number | null;
+          clinic_id: string;
+          completed_at?: string | null;
+          conflicts_detected?: number | null;
+          conflicts_resolved?: number | null;
+          created_at?: string;
+          duration_ms?: number | null;
           error_details?: Json | null;
           error_message?: string | null;
-          failed_count?: number | null;
           id?: string;
-          metadata?: Json | null;
-          skipped_count?: number | null;
-          started_at?: string | null;
+          idexx_config?: Json | null;
+          slots_created?: number | null;
+          slots_updated?: number | null;
+          started_at?: string;
           status?: string;
-          sync_date?: string;
-          sync_type?: string | null;
-          synced_at?: string;
-          synced_count?: number | null;
-          total_items?: number | null;
-          updated_at?: string;
-          user_id?: string | null;
+          sync_end_date: string;
+          sync_start_date: string;
+        };
+        Update: {
+          appointments_added?: number | null;
+          appointments_removed?: number | null;
+          appointments_updated?: number | null;
+          clinic_id?: string;
+          completed_at?: string | null;
+          conflicts_detected?: number | null;
+          conflicts_resolved?: number | null;
+          created_at?: string;
+          duration_ms?: number | null;
+          error_details?: Json | null;
+          error_message?: string | null;
+          id?: string;
+          idexx_config?: Json | null;
+          slots_created?: number | null;
+          slots_updated?: number | null;
+          started_at?: string;
+          status?: string;
+          sync_end_date?: string;
+          sync_start_date?: string;
         };
         Relationships: [
           {
@@ -2646,6 +2695,108 @@ export type Database = {
           },
         ];
       };
+      vapi_bookings: {
+        Row: {
+          booked_at_sync_id: string | null;
+          breed: string | null;
+          client_name: string;
+          client_phone: string;
+          clinic_id: string;
+          confirmation_number: string | null;
+          created_at: string;
+          date: string;
+          has_conflict: boolean;
+          hold_expires_at: string | null;
+          id: string;
+          is_new_client: boolean | null;
+          metadata: Json | null;
+          original_date: string | null;
+          original_time: string | null;
+          patient_name: string;
+          reason: string | null;
+          rescheduled_at: string | null;
+          rescheduled_reason: string | null;
+          slot_id: string | null;
+          species: string | null;
+          start_time: string;
+          status: string;
+          sync_freshness_at_booking: string | null;
+          updated_at: string;
+          vapi_call_id: string | null;
+        };
+        Insert: {
+          booked_at_sync_id?: string | null;
+          breed?: string | null;
+          client_name: string;
+          client_phone: string;
+          clinic_id: string;
+          confirmation_number?: string | null;
+          created_at?: string;
+          date: string;
+          has_conflict?: boolean;
+          hold_expires_at?: string | null;
+          id?: string;
+          is_new_client?: boolean | null;
+          metadata?: Json | null;
+          original_date?: string | null;
+          original_time?: string | null;
+          patient_name: string;
+          reason?: string | null;
+          rescheduled_at?: string | null;
+          rescheduled_reason?: string | null;
+          slot_id?: string | null;
+          species?: string | null;
+          start_time: string;
+          status?: string;
+          sync_freshness_at_booking?: string | null;
+          updated_at?: string;
+          vapi_call_id?: string | null;
+        };
+        Update: {
+          booked_at_sync_id?: string | null;
+          breed?: string | null;
+          client_name?: string;
+          client_phone?: string;
+          clinic_id?: string;
+          confirmation_number?: string | null;
+          created_at?: string;
+          date?: string;
+          has_conflict?: boolean;
+          hold_expires_at?: string | null;
+          id?: string;
+          is_new_client?: boolean | null;
+          metadata?: Json | null;
+          original_date?: string | null;
+          original_time?: string | null;
+          patient_name?: string;
+          reason?: string | null;
+          rescheduled_at?: string | null;
+          rescheduled_reason?: string | null;
+          slot_id?: string | null;
+          species?: string | null;
+          start_time?: string;
+          status?: string;
+          sync_freshness_at_booking?: string | null;
+          updated_at?: string;
+          vapi_call_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "vapi_bookings_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "vapi_bookings_slot_id_fkey";
+            columns: ["slot_id"];
+            isOneToOne: false;
+            referencedRelation: "schedule_slots";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       vital_signs: {
         Row: {
           case_id: string | null;
@@ -2900,25 +3051,46 @@ export type Database = {
       };
     };
     Functions: {
+      auto_reschedule_conflicts: {
+        Args: { p_clinic_id: string; p_date: string };
+        Returns: {
+          booking_id: string;
+          client_name: string;
+          new_time: string;
+          old_time: string;
+          patient_name: string;
+        }[];
+      };
+      book_slot_with_hold: {
+        Args: {
+          p_client_name: string;
+          p_client_phone: string;
+          p_clinic_id: string;
+          p_date: string;
+          p_is_new_client: boolean;
+          p_patient_name: string;
+          p_reason: string;
+          p_species: string;
+          p_time: string;
+          p_vapi_call_id: string;
+        };
+        Returns: Json;
+      };
       check_usage_limit: {
         Args: { resource: string; user_uuid: string };
         Returns: boolean;
       };
+      generate_confirmation_number: { Args: never; Returns: string };
       get_available_slots: {
-        Args: {
-          p_clinic_id: string;
-          p_date: string;
-          p_end_time?: string;
-          p_provider_id?: string;
-          p_slot_duration_minutes?: number;
-          p_start_time?: string;
-        };
+        Args: { p_clinic_id: string; p_date: string };
         Returns: {
-          clinic_id: string;
-          conflicting_appointment_id: string;
-          date: string;
-          is_available: boolean;
-          provider_id: string;
+          available_count: number;
+          block_reason: string;
+          booked_count: number;
+          capacity: number;
+          is_blocked: boolean;
+          is_stale: boolean;
+          last_synced_at: string;
           slot_end: string;
           slot_start: string;
         }[];
@@ -2958,6 +3130,10 @@ export type Database = {
         Args: { template_uuid: string; user_uuid: string };
         Returns: boolean;
       };
+      update_slot_booked_count: {
+        Args: { p_clinic_id: string; p_date: string; p_start_time: string };
+        Returns: undefined;
+      };
     };
     Enums: {
       CaseStatus: "reviewed" | "ongoing" | "completed" | "draft";
@@ -2972,7 +3148,9 @@ export type Database = {
         | "client";
       waitlist_status: "waiting" | "invited" | "joined" | "declined";
     };
-    CompositeTypes: Record<never, never>;
+    CompositeTypes: {
+      [_ in never]: never;
+    };
   };
 };
 
@@ -3081,19 +3259,13 @@ export type Enums<
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-      | keyof DefaultSchema["CompositeTypes"]
-      | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : keyof DefaultSchema["CompositeTypes"] =
-    PublicCompositeTypeNameOrOptions extends {
-      schema: keyof DatabaseWithoutInternals;
-    }
-      ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-      : keyof DefaultSchema["CompositeTypes"],
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals;
 }

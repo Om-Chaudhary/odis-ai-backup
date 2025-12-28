@@ -204,23 +204,20 @@ async function classifyCall(
     };
   }
 
-  // Fast path 2: Check for associated appointment_request
-  const { data: appointment } = await supabase
-    .from("appointment_requests")
+  // Fast path 2: Check for associated vapi_booking
+  const { data: booking } = await supabase
+    .from("vapi_bookings")
     .select("status")
     .eq("vapi_call_id", call.vapi_call_id)
     .maybeSingle();
 
-  if (appointment?.status === "confirmed") {
+  if (booking?.status === "confirmed") {
     return {
       outcome: "Scheduled",
       actions_taken: ["Appointment scheduled via AI"],
     };
   }
-  if (
-    appointment?.status === "cancelled" ||
-    appointment?.status === "rejected"
-  ) {
+  if (booking?.status === "cancelled" || booking?.status === "rejected") {
     return {
       outcome: "Cancellation",
       actions_taken: ["Appointment cancelled"],

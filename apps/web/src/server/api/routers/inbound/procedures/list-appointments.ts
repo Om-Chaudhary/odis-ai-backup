@@ -1,7 +1,7 @@
 /**
  * List Appointment Requests Procedure
  *
- * Fetches appointment requests from the appointment_requests table
+ * Fetches VAPI bookings from the vapi_bookings table
  * with filtering, pagination, and role-based access control.
  */
 
@@ -26,9 +26,9 @@ export const listAppointmentsRouter = createTRPCRouter({
       // Get current user's clinic using service client
       const clinic = await getClinicByUserId(userId, serviceClient);
 
-      // Build query
+      // Build query - using vapi_bookings table
       let query = serviceClient
-        .from("appointment_requests")
+        .from("vapi_bookings")
         .select("*", { count: "exact" })
         .order("created_at", { ascending: false });
 
@@ -81,33 +81,42 @@ export const listAppointmentsRouter = createTRPCRouter({
       }
 
       // Transform to camelCase for frontend
+      // Map vapi_bookings columns to expected frontend format
       const transformedAppointments = (appointments ?? [])
-        .map((apt) => ({
-          id: apt.id,
-          clinicId: apt.clinic_id,
-          providerId: apt.provider_id,
-          clientName: apt.client_name,
-          clientPhone: apt.client_phone,
-          patientName: apt.patient_name,
-          species: apt.species,
-          breed: apt.breed,
-          reason: apt.reason,
-          requestedDate: apt.requested_date,
-          requestedStartTime: apt.requested_start_time,
-          requestedEndTime: apt.requested_end_time,
-          // Confirmed appointment time (what AI booked)
-          confirmedDate: apt.confirmed_date,
-          confirmedTime: apt.confirmed_time,
-          status: apt.status,
-          isNewClient: apt.is_new_client,
-          isOutlier: apt.is_outlier,
-          notes: apt.notes,
-          vapiCallId: apt.vapi_call_id,
-          confirmedAppointmentId: apt.confirmed_appointment_id,
-          metadata: apt.metadata,
-          createdAt: apt.created_at,
-          updatedAt: apt.updated_at,
-        }))
+        .map((apt) => {
+          // Extract is_outlier from metadata if present
+          const metadata = apt.metadata as Record<string, unknown> | null;
+          const isOutlier = metadata?.is_outlier === true;
+
+          return {
+            id: apt.id,
+            clinicId: apt.clinic_id,
+            providerId: null, // vapi_bookings doesn't have provider_id
+            clientName: apt.client_name,
+            clientPhone: apt.client_phone,
+            patientName: apt.patient_name,
+            species: apt.species,
+            breed: apt.breed,
+            reason: apt.reason,
+            // For pending bookings, date/time is the requested time
+            // For confirmed bookings, it's the confirmed time
+            requestedDate: apt.date,
+            requestedStartTime: apt.start_time,
+            requestedEndTime: null, // vapi_bookings doesn't store end time separately
+            // Confirmed appointment time (same as date/start_time for confirmed status)
+            confirmedDate: apt.status === "confirmed" ? apt.date : null,
+            confirmedTime: apt.status === "confirmed" ? apt.start_time : null,
+            status: apt.status,
+            isNewClient: apt.is_new_client,
+            isOutlier: isOutlier,
+            notes: typeof metadata?.notes === "string" ? metadata.notes : null,
+            vapiCallId: apt.vapi_call_id,
+            confirmedAppointmentId: apt.confirmation_number,
+            metadata: apt.metadata,
+            createdAt: apt.created_at,
+            updatedAt: apt.updated_at,
+          };
+        })
         .filter((apt) => {
           // Filter out demo appointments for demo purposes
           // Check if this is an appointment that should be filtered
@@ -126,7 +135,11 @@ export const listAppointmentsRouter = createTRPCRouter({
           }
 
           // Hide appointments with no phone number provided
-          if (!apt.clientPhone || apt.clientPhone === "" || apt.clientPhone === null) {
+          if (
+            !apt.clientPhone ||
+            apt.clientPhone === "" ||
+            apt.clientPhone === null
+          ) {
             return false;
           }
 

@@ -3,7 +3,7 @@
  *
  * Handles three data sources:
  * - inbound_vapi_calls (existing calls data)
- * - appointment_requests (from VAPI schedule-appointment tool)
+ * - vapi_bookings (from VAPI schedule-appointment tool)
  * - clinic_messages (from VAPI leave-message tool)
  */
 

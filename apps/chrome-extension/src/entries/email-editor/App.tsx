@@ -33,9 +33,9 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const patientName =
-    (dischargeSummary as any)?.cases?.patients?.[0]?.name || "Unknown Patient";
+    (dischargeSummary as { cases?: { patients?: Array<{ name?: string }> } })
+      ?.cases?.patients?.[0]?.name || "Unknown Patient";
 
   useEffect(() => {
     const loadData = async () => {

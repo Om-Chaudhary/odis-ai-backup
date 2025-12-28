@@ -1,7 +1,7 @@
 /**
  * Delete Appointment Request Procedure
  *
- * Allows deleting appointment requests.
+ * Allows deleting VAPI bookings.
  */
 
 import { TRPCError } from "@trpc/server";
@@ -21,31 +21,31 @@ export const deleteAppointmentRouter = createTRPCRouter({
       // Get current user's clinic (gracefully handles missing user record)
       const clinic = await getClinicByUserId(userId, ctx.supabase);
 
-      // First, verify the appointment belongs to the user's clinic
-      const { data: appointment, error: fetchError } = await ctx.supabase
-        .from("appointment_requests")
+      // First, verify the booking belongs to the user's clinic
+      const { data: booking, error: fetchError } = await ctx.supabase
+        .from("vapi_bookings")
         .select("id, clinic_id")
         .eq("id", input.id)
         .single();
 
-      if (fetchError || !appointment) {
+      if (fetchError || !booking) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Appointment request not found",
         });
       }
 
-      // Check authorization - only allow deletion of appointments in user's clinic
-      if (clinic?.id && appointment.clinic_id !== clinic.id) {
+      // Check authorization - only allow deletion of bookings in user's clinic
+      if (clinic?.id && booking.clinic_id !== clinic.id) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You don't have access to this appointment request",
         });
       }
 
-      // Delete the appointment
+      // Delete the booking
       const { error: deleteError } = await ctx.supabase
-        .from("appointment_requests")
+        .from("vapi_bookings")
         .delete()
         .eq("id", input.id);
 
