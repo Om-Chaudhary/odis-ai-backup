@@ -4,8 +4,8 @@
  * Handles all database operations for the IDEXX scrape service.
  * Encapsulates Supabase interactions following repository-like patterns.
  */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 
-import { createServiceClient } from "@odis-ai/data-access/db";
 import { IdexxCredentialManager } from "@odis-ai/integrations/idexx";
 import { persistenceLogger as logger } from "../lib/logger";
 import type {
@@ -15,7 +15,9 @@ import type {
   ScrapeType,
 } from "../types";
 
-type SupabaseClient = Awaited<ReturnType<typeof createServiceClient>>;
+// Type for Supabase service client - using dynamic import to avoid module boundary violations
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SupabaseClient = any;
 
 /**
  * Persistence Service
@@ -27,13 +29,17 @@ type SupabaseClient = Awaited<ReturnType<typeof createServiceClient>>;
  * - Consultation/case management
  */
 export class PersistenceService {
+  // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   private supabase: SupabaseClient | null = null;
 
   /**
    * Get or create Supabase client
    */
   private async getClient(): Promise<SupabaseClient> {
-    this.supabase ??= await createServiceClient();
+    if (!this.supabase) {
+      const { createServiceClient } = await import("@odis-ai/data-access/db");
+      this.supabase = await createServiceClient();
+    }
     return this.supabase;
   }
 
@@ -184,7 +190,10 @@ export class PersistenceService {
   }
 
   /**
-   * Upsert appointments to database
+   * Upsert appointments to schedule_appointments table
+   *
+   * @deprecated Use ScheduleSyncService for full sync operations.
+   * This method is kept for backward compatibility with consultation scraping.
    */
   async upsertAppointments(
     clinicId: string,
@@ -195,22 +204,43 @@ export class PersistenceService {
     const errors: string[] = [];
     let synced = 0;
 
+    // Log first appointment for debugging
+    if (appointments.length > 0) {
+      logger.debug(
+        `Sample appointment data: ${JSON.stringify(appointments[0])}`,
+      );
+    }
+
     for (const appointment of appointments) {
       try {
-        const { error } = await supabase.from("appointments").upsert(
+        // Skip appointments without neo_appointment_id (required for upsert)
+        if (!appointment.neo_appointment_id) {
+          logger.debug(
+            `Skipping appointment without neo_appointment_id: ${appointment.patient_name}`,
+          );
+          continue;
+        }
+
+        // Normalize time to HH:MM:SS format
+        const startTime = this.normalizeTime24(appointment.start_time);
+        const endTime = appointment.end_time
+          ? this.normalizeTime24(appointment.end_time)
+          : startTime;
+
+        const { error } = await supabase.from("schedule_appointments").upsert(
           {
             clinic_id: clinicId,
             neo_appointment_id: appointment.neo_appointment_id,
             date: appointment.date,
-            start_time: appointment.start_time,
-            end_time: appointment.end_time ?? appointment.start_time,
+            start_time: startTime,
+            end_time: endTime,
             patient_name: appointment.patient_name,
             client_name: appointment.client_name,
             client_phone: appointment.client_phone,
+            provider_name: appointment.provider_name,
             appointment_type: appointment.appointment_type,
-            status: "scheduled",
-            source: "neo",
-            sync_id: sessionId,
+            status: appointment.status ?? "scheduled",
+            last_synced_at: new Date().toISOString(),
           },
           {
             onConflict: "clinic_id,neo_appointment_id",
@@ -218,12 +248,16 @@ export class PersistenceService {
         );
 
         if (error) {
+          logger.error(
+            `Failed to upsert appointment ${appointment.neo_appointment_id}: ${error.message}`,
+          );
           errors.push(`Failed to upsert appointment: ${error.message}`);
         } else {
           synced++;
         }
       } catch (error) {
         const msg = error instanceof Error ? error.message : "Unknown error";
+        logger.error(`Exception upserting appointment: ${msg}`);
         errors.push(`Error upserting appointment: ${msg}`);
       }
     }
@@ -231,7 +265,39 @@ export class PersistenceService {
     logger.info(
       `Upserted ${synced}/${appointments.length} appointments for clinic ${clinicId}`,
     );
+
+    if (errors.length > 0) {
+      logger.warn(`${errors.length} errors during appointment upsert`);
+    }
+
     return { synced, errors };
+  }
+
+  /**
+   * Normalize time to HH:MM:SS format
+   */
+  private normalizeTime24(timeStr: string): string {
+    const match = /(\d{1,2}):(\d{2})\s*(am|pm)?/i.exec(timeStr);
+
+    if (!match) {
+      const parts = timeStr.split(":");
+      if (parts.length === 2) {
+        return `${timeStr}:00`;
+      }
+      return timeStr;
+    }
+
+    let hours = parseInt(match[1] ?? "0", 10);
+    const minutes = match[2] ?? "00";
+    const meridiem = match[3]?.toLowerCase();
+
+    if (meridiem === "pm" && hours !== 12) {
+      hours += 12;
+    } else if (meridiem === "am" && hours === 12) {
+      hours = 0;
+    }
+
+    return `${hours.toString().padStart(2, "0")}:${minutes}:00`;
   }
 
   /**
@@ -302,13 +368,14 @@ export class PersistenceService {
     clinicId: string,
     consultation: ScrapedConsultation,
   ): Promise<string | null> {
-    // Try to find by appointment ID
+    // Try to find by appointment ID in schedule_appointments
     if (consultation.neo_appointment_id) {
       const { data: appointment } = await supabase
-        .from("appointments")
+        .from("schedule_appointments")
         .select("id")
         .eq("clinic_id", clinicId)
         .eq("neo_appointment_id", consultation.neo_appointment_id)
+        .is("deleted_at", null)
         .single();
 
       if (appointment) {

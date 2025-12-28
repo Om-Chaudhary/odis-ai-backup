@@ -210,7 +210,7 @@ export class ConsultationScraper {
             : vitals;
           diagnoses = detailData.diagnoses ?? diagnoses;
         }
-      } catch (_error) {
+      } catch {
         logger.debug(
           `Could not fetch detailed data for consultation ${apiConsult.id}`,
         );

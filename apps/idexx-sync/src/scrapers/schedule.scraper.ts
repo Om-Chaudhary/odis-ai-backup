@@ -117,10 +117,6 @@ export class ScheduleScraper {
     const endHour = config?.businessHours?.end ?? "18:00";
     const slotDuration = config?.slotDuration ?? 15; // default 15 minutes
 
-    // Parse business hours
-    const [_startH, _startM] = startHour.split(":").map(Number);
-    const [_endH, _endM] = endHour.split(":").map(Number);
-
     const dayStart = new Date(`${targetDate}T${startHour}:00`);
     const dayEnd = new Date(`${targetDate}T${endHour}:00`);
 
