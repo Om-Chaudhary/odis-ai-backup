@@ -34,6 +34,13 @@ const envSchema = z.object({
     .string()
     .transform((val) => val !== "false")
     .default("true"),
+
+  // Performance & concurrency configuration
+  SYNC_CONCURRENCY: z.coerce.number().default(3), // Parallel dates
+  MAX_CONCURRENT_SYNCS: z.coerce.number().default(2), // Per clinic
+  SYNC_TIMEOUT_MS: z.coerce.number().default(300000), // 5 minutes
+  IDEXX_RATE_LIMIT: z.coerce.number().default(10), // requests per second
+  BROWSER_POOL_SIZE: z.coerce.number().default(2),
 });
 
 /**

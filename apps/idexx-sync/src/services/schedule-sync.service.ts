@@ -13,11 +13,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any */
 
 import type { Page } from "playwright";
+import pLimit from "p-limit";
 import { scheduleLogger as logger } from "../lib/logger";
 import { SlotGeneratorService } from "./slot-generator.service";
 import { ReconciliationService } from "./reconciliation.service";
 import { ScheduleScraper } from "../scrapers/schedule.scraper";
 import type { BrowserService } from "./browser.service";
+import { config } from "../config";
 import type {
   ClinicScheduleConfig,
   BlockedPeriod,
@@ -143,58 +145,58 @@ export class ScheduleSyncService {
       // Step 8: Build slot map for appointment linking
       const slotMap = await this.buildSlotMap(options.clinicId, dateRange);
 
-      // Step 9: Fetch and reconcile appointments for each date
-      const currentDate = new Date(dateRange.start);
-      while (currentDate <= dateRange.end) {
-        const dateStr = currentDate.toISOString().split("T")[0] ?? "";
+      // Step 9: Fetch and reconcile appointments for each date (parallel processing)
+      const dates = this.generateDateArray(dateRange.start, dateRange.end);
+      logger.info(
+        `Processing ${dates.length} dates with concurrency limit of ${config.SYNC_CONCURRENCY}`,
+      );
 
-        try {
-          // Scrape appointments for this date
-          const scrapeResult = await this.scraper.scrape(page, dateStr);
+      // Process dates in parallel with concurrency limit
+      const limit = pLimit(config.SYNC_CONCURRENCY);
+      const dateResults = await Promise.allSettled(
+        dates.map((dateStr) =>
+          limit(() =>
+            this.processSingleDate(
+              page,
+              options.clinicId,
+              dateStr,
+              slotMap,
+              clinicConfig?.slot_duration_minutes ?? 15,
+              syncId,
+            ),
+          ),
+        ),
+      );
 
-          if (scrapeResult.errors.length > 0) {
-            errors.push(...scrapeResult.errors);
+      // Aggregate results from all dates
+      const failedDates: string[] = [];
+      for (let i = 0; i < dateResults.length; i++) {
+        const result = dateResults[i];
+        const dateStr = dates[i] ?? "";
+
+        if (result.status === "fulfilled") {
+          const dateStats = result.value;
+          stats.appointmentsAdded += dateStats.added;
+          stats.appointmentsUpdated += dateStats.updated;
+          stats.appointmentsRemoved += dateStats.removed;
+          if (dateStats.errors.length > 0) {
+            errors.push(...dateStats.errors);
           }
-
-          // Get existing appointments for this date
-          const existing = await this.getExistingAppointments(
-            options.clinicId,
-            dateStr,
-          );
-
-          // Build reconciliation plan
-          const plans = this.reconciliation.buildReconciliationPlan(
-            scrapeResult.appointments,
-            existing,
-          );
-
-          const planStats = this.reconciliation.calculateStats(plans);
-          this.reconciliation.logSummary(planStats);
-
-          // Execute reconciliation
-          const apptStats = await this.executeReconciliation(
-            options.clinicId,
-            dateStr,
-            plans,
-            slotMap,
-            clinicConfig?.slot_duration_minutes ?? 15,
-            syncId,
-          );
-
-          stats.appointmentsAdded += apptStats.added;
-          stats.appointmentsUpdated += apptStats.updated;
-          stats.appointmentsRemoved += apptStats.removed;
-
-          // Update slot booked counts for this date
-          await this.updateSlotBookedCounts(options.clinicId, dateStr);
-        } catch (dateError) {
+        } else {
           const msg =
-            dateError instanceof Error ? dateError.message : "Unknown error";
-          errors.push(`Error syncing date ${dateStr}: ${msg}`);
-          logger.error(`Error syncing date ${dateStr}: ${msg}`);
+            result.reason instanceof Error
+              ? result.reason.message
+              : "Unknown error";
+          errors.push(`Failed to sync date ${dateStr}: ${msg}`);
+          failedDates.push(dateStr);
+          logger.error(`Failed to sync date ${dateStr}: ${msg}`);
         }
+      }
 
-        currentDate.setDate(currentDate.getDate() + 1);
+      if (failedDates.length > 0) {
+        logger.warn(
+          `Sync completed with ${failedDates.length} failed dates: ${failedDates.join(", ")}`,
+        );
       }
 
       // Step 10: Detect and resolve conflicts with VAPI bookings
@@ -240,6 +242,99 @@ export class ScheduleSyncService {
         errors,
       };
     }
+  }
+
+  /**
+   * Generate array of date strings for a date range
+   */
+  private generateDateArray(start: Date, end: Date): string[] {
+    const dates: string[] = [];
+    const current = new Date(start);
+    current.setHours(0, 0, 0, 0);
+
+    const endDate = new Date(end);
+    endDate.setHours(23, 59, 59, 999);
+
+    while (current <= endDate) {
+      dates.push(current.toISOString().split("T")[0] ?? "");
+      current.setDate(current.getDate() + 1);
+    }
+
+    return dates;
+  }
+
+  /**
+   * Process a single date's appointments (parallel-safe)
+   */
+  private async processSingleDate(
+    page: Page,
+    clinicId: string,
+    dateStr: string,
+    slotMap: Map<string, string>,
+    slotDurationMinutes: number,
+    syncId: string,
+  ): Promise<{
+    added: number;
+    updated: number;
+    removed: number;
+    errors: string[];
+  }> {
+    const errors: string[] = [];
+    let added = 0;
+    let updated = 0;
+    let removed = 0;
+
+    try {
+      logger.debug(`Processing date: ${dateStr}`);
+
+      // Scrape appointments for this date
+      const scrapeResult = await this.scraper.scrape(page, dateStr);
+
+      if (scrapeResult.errors.length > 0) {
+        errors.push(...scrapeResult.errors);
+      }
+
+      // Get existing appointments for this date
+      const existing = await this.getExistingAppointments(clinicId, dateStr);
+
+      // Build reconciliation plan
+      const plans = this.reconciliation.buildReconciliationPlan(
+        scrapeResult.appointments,
+        existing,
+      );
+
+      const planStats = this.reconciliation.calculateStats(plans);
+      logger.debug(
+        `Date ${dateStr}: ${planStats.added} add, ${planStats.updated} update, ${planStats.removed} remove`,
+      );
+
+      // Execute reconciliation
+      const apptStats = await this.executeReconciliation(
+        clinicId,
+        dateStr,
+        plans,
+        slotMap,
+        slotDurationMinutes,
+        syncId,
+      );
+
+      added = apptStats.added;
+      updated = apptStats.updated;
+      removed = apptStats.removed;
+
+      // Update slot booked counts for this date
+      await this.updateSlotBookedCounts(clinicId, dateStr);
+
+      logger.debug(`Completed processing date: ${dateStr}`);
+    } catch (dateError) {
+      const msg =
+        dateError instanceof Error ? dateError.message : "Unknown error";
+      errors.push(`Error processing date ${dateStr}: ${msg}`);
+      logger.error(`Error processing date ${dateStr}: ${msg}`);
+      throw dateError; // Re-throw to be caught by Promise.allSettled
+    }
+
+    return { added, updated, removed, errors };
   }
 
   /**
