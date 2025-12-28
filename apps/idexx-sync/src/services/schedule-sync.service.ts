@@ -172,7 +172,9 @@ export class ScheduleSyncService {
       const failedDates: string[] = [];
       for (let i = 0; i < dateResults.length; i++) {
         const result = dateResults[i];
-        const dateStr = dates[i] ?? "";
+        const dateStr = dates[i];
+
+        if (!result || !dateStr) continue;
 
         if (result.status === "fulfilled") {
           const dateStats = result.value;
