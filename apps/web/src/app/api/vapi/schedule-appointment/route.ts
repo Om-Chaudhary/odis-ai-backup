@@ -1,10 +1,12 @@
 /**
- * VAPI Schedule Appointment Tool Endpoint
+ * VAPI Schedule Appointment Tool Endpoint (Legacy)
  *
  * POST /api/vapi/schedule-appointment
  *
  * Unauthenticated endpoint for VAPI tool calls to submit appointment requests.
- * Stores requests in the `appointment_requests` table for clinic staff review.
+ * Stores requests in the `vapi_bookings` table for clinic staff review.
+ *
+ * NOTE: This is the legacy endpoint. New integrations should use /api/vapi/tools/book-appointment.
  *
  * Clinic is identified via the VAPI assistant_id → clinics.inbound_assistant_id lookup.
  */
@@ -446,41 +448,34 @@ export async function POST(request: NextRequest) {
     const confirmedDate = parsePreferredDate(input.confirmed_date);
     const confirmedTime = parsePreferredTime(input.confirmed_time);
 
-    // Build appointment request record (simplified - uses proper columns instead of metadata)
-    const appointmentRequest = {
+    // Determine the date and time to use (prefer confirmed, fall back to requested, then today)
+    const bookingDate =
+      confirmedDate?.toISOString().split("T")[0] ??
+      requestedDate?.toISOString().split("T")[0] ??
+      new Date().toISOString().split("T")[0];
+    const bookingTime = confirmedTime ?? requestedTime ?? "09:00:00";
+
+    // Build vapi_bookings record
+    const vapiBooking = {
       clinic_id: clinic.id,
       client_name: `${input.client_first_name} ${input.client_last_name}`,
       client_phone: input.client_phone,
       patient_name: input.patient_name,
       reason: input.reason_for_visit,
-      // Caller's preferred time (nullable)
-      requested_date: requestedDate?.toISOString().split("T")[0] ?? null,
-      requested_start_time: requestedTime ?? null,
-      requested_end_time: requestedTime
-        ? // Add 30 minutes for end time
-          (() => {
-            const [hourStr, minuteStr] = requestedTime.split(":");
-            const hour = parseInt(hourStr ?? "9", 10);
-            const minute = parseInt(minuteStr ?? "0", 10);
-            const endHour = hour + (minute >= 30 ? 1 : 0);
-            const endMinute = (minute + 30) % 60;
-            return `${endHour.toString().padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}:00`;
-          })()
-        : null,
-      // Confirmed appointment time (what AI booked)
-      confirmed_date: confirmedDate?.toISOString().split("T")[0] ?? null,
-      confirmed_time: confirmedTime ?? null,
+      // Use the determined date and time
+      date: bookingDate,
+      start_time: bookingTime,
       status: "pending",
       vapi_call_id: input.vapi_call_id ?? null,
-      // These are now proper columns instead of metadata
+      // Patient details
       species: input.species,
       breed: input.breed ?? null,
       is_new_client: input.is_new_client,
-      is_outlier: input.is_outlier,
-      notes: input.notes ?? null,
       // Keep metadata for any additional context
       metadata: {
         source: "vapi",
+        is_outlier: input.is_outlier,
+        notes: input.notes ?? null,
         preferred_date_raw: input.preferred_date ?? null,
         preferred_time_raw: input.preferred_time ?? null,
         confirmed_date_raw: input.confirmed_date ?? null,
@@ -488,10 +483,10 @@ export async function POST(request: NextRequest) {
       },
     };
 
-    // Insert into appointment_requests
+    // Insert into vapi_bookings
     const { data: inserted, error: insertError } = await supabase
-      .from("appointment_requests")
-      .insert(appointmentRequest)
+      .from("vapi_bookings")
+      .insert(vapiBooking)
       .select("id")
       .single();
 
