@@ -1,40 +1,37 @@
 /**
- * Playwright Browser Service
+ * Browser Service
  *
- * Manages browser lifecycle and provides utilities for IDEXX Neo automation.
- * Handles headless Chromium with anti-detection measures.
+ * Manages Playwright browser lifecycle and provides utilities for web automation.
+ * Includes anti-detection measures for scraping.
  */
 
 import { chromium } from "playwright";
 import type { Browser, Page, BrowserContext } from "playwright";
-import { getSelectorVariants, SESSION_SELECTORS } from "../utils/selectors";
-import type { SelectorSet } from "../utils/selectors";
-
-export interface BrowserConfig {
-  headless: boolean;
-  timeout: number;
-  viewport: { width: number; height: number };
-}
-
-const DEFAULT_CONFIG: BrowserConfig = {
-  headless:
-    process.env.NODE_ENV === "production" || process.env.HEADLESS !== "false",
-  timeout: 30000,
-  viewport: { width: 1920, height: 1080 },
-};
+import { browserLogger as logger } from "../lib/logger";
+import { config, BROWSER_DEFAULTS } from "../config";
+import { getSelectorVariants, SESSION_SELECTORS } from "../selectors";
+import type { SelectorSet, BrowserConfig } from "../types";
 
 /**
- * Playwright Browser Service
+ * Browser Service
  *
- * Singleton-like service for managing Playwright browser instances.
+ * Manages Playwright browser instances with:
+ * - Stealth configuration to avoid detection
+ * - Multi-fallback selector strategies
+ * - Screenshot capture for debugging
  */
-export class PlaywrightBrowser {
+export class BrowserService {
   private browser: Browser | null = null;
   private context: BrowserContext | null = null;
-  private config: BrowserConfig;
+  private browserConfig: BrowserConfig;
 
-  constructor(config: Partial<BrowserConfig> = {}) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
+  constructor(overrides: Partial<BrowserConfig> = {}) {
+    this.browserConfig = {
+      headless: config.HEADLESS,
+      timeout: BROWSER_DEFAULTS.TIMEOUT_MS,
+      viewport: BROWSER_DEFAULTS.VIEWPORT,
+      ...overrides,
+    };
   }
 
   /**
@@ -45,14 +42,15 @@ export class PlaywrightBrowser {
       await this.close();
     }
 
-    console.log("[BROWSER] Launching Chromium...");
+    logger.info(
+      `Launching Chromium (headless: ${this.browserConfig.headless})...`,
+    );
 
     this.browser = await chromium.launch({
-      headless: this.config.headless,
+      headless: this.browserConfig.headless,
     });
 
-    console.log("[BROWSER] Chromium launched successfully");
-
+    logger.info("Chromium launched successfully");
     return this.browser;
   }
 
@@ -65,25 +63,23 @@ export class PlaywrightBrowser {
     }
 
     this.context = await this.browser!.newContext({
-      viewport: this.config.viewport,
-      userAgent:
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      locale: "en-US",
-      timezoneId: "America/Los_Angeles",
+      viewport: this.browserConfig.viewport,
+      userAgent: BROWSER_DEFAULTS.USER_AGENT,
+      locale: BROWSER_DEFAULTS.LOCALE,
+      timezoneId: BROWSER_DEFAULTS.TIMEZONE,
       permissions: [],
       extraHTTPHeaders: {
         "Accept-Language": "en-US,en;q=0.9",
       },
     });
 
-    // Set default timeout
-    this.context.setDefaultTimeout(this.config.timeout);
+    this.context.setDefaultTimeout(this.browserConfig.timeout);
 
     return this.context;
   }
 
   /**
-   * Create a new page in the current context
+   * Create a new page with stealth settings
    */
   async newPage(): Promise<Page> {
     if (!this.context) {
@@ -92,7 +88,7 @@ export class PlaywrightBrowser {
 
     const page = await this.context!.newPage();
 
-    // Add stealth settings - runs in browser context
+    // Add stealth settings to avoid detection
     await page.addInitScript(`
       // Override webdriver detection
       Object.defineProperty(navigator, "webdriver", {
@@ -127,11 +123,11 @@ export class PlaywrightBrowser {
       this.browser = null;
     }
 
-    console.log("[BROWSER] Browser closed");
+    logger.info("Browser closed");
   }
 
   /**
-   * Try multiple selectors and return the first match
+   * Find element using multi-fallback selector strategy
    */
   async findElement(
     page: Page,
@@ -156,14 +152,14 @@ export class PlaywrightBrowser {
   }
 
   /**
-   * Wait for navigation with retry logic
+   * Wait for navigation with URL pattern matching
    */
   async waitForNavigation(
     page: Page,
     urlPattern: string | RegExp,
     options: { timeout?: number } = {},
   ): Promise<boolean> {
-    const timeout = options.timeout ?? this.config.timeout;
+    const timeout = options.timeout ?? this.browserConfig.timeout;
 
     try {
       await page.waitForURL(urlPattern, { timeout });
@@ -193,35 +189,30 @@ export class PlaywrightBrowser {
   }
 
   /**
-   * Fill a form field using multiple selector strategies
+   * Fill a form field using multi-fallback selector strategy
    */
   async fillField(
     page: Page,
     selectorSet: SelectorSet,
     value: string,
   ): Promise<boolean> {
-    const selectors = getSelectorVariants(selectorSet);
-    console.log(
-      `[BROWSER] Trying to fill field with value: ${value.substring(0, 3)}***`,
-    );
-    console.log(`[BROWSER] Selectors to try:`, selectors);
+    logger.debug(`Filling field with value: ${value.substring(0, 3)}***`);
 
     const element = await this.findElement(page, selectorSet);
 
     if (element) {
-      console.log(`[BROWSER] Found element, filling...`);
       await element.click(); // Focus the field first
       await element.fill(value);
-      console.log(`[BROWSER] Field filled successfully`);
+      logger.debug("Field filled successfully");
       return true;
     }
 
-    console.log(`[BROWSER] Could not find element with any selector`);
+    logger.warn("Could not find element with any selector");
     return false;
   }
 
   /**
-   * Click an element using multiple selector strategies
+   * Click an element using multi-fallback selector strategy
    */
   async clickElement(page: Page, selectorSet: SelectorSet): Promise<boolean> {
     const element = await this.findElement(page, selectorSet);
@@ -239,13 +230,14 @@ export class PlaywrightBrowser {
    */
   async takeScreenshot(page: Page, name: string): Promise<Buffer> {
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const path = `/tmp/idexx-scrape-${name}-${timestamp}.png`;
+
     const buffer = await page.screenshot({
-      path: `/tmp/idexx-sync-${name}-${timestamp}.png`,
+      path,
       fullPage: true,
     });
 
-    console.log(`[BROWSER] Screenshot saved: ${name}-${timestamp}.png`);
-
+    logger.info(`Screenshot saved: ${path}`);
     return buffer;
   }
 

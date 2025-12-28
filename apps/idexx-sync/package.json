@@ -1,17 +1,16 @@
 {
   "name": "idexx-sync",
-  "version": "0.0.1",
+  "version": "2.0.0",
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "start": "dotenv -e ../../.env.local -e .env -- env PORT=5050 SKIP_QSTASH_VERIFY=true node ../../dist/apps/idexx-sync/main.js",
-    "start:visible": "dotenv -e ../../.env.local -e .env -- env PORT=5050 SKIP_QSTASH_VERIFY=true HEADLESS=false node ../../dist/apps/idexx-sync/main.js",
-    "sync:pre-open": "curl -X POST http://localhost:5050/api/idexx/sync?type=pre-open",
-    "sync:eod": "curl -X POST http://localhost:5050/api/idexx/sync?type=eod"
+    "start": "dotenv -e ../../.env.local -e .env.local -- env PORT=5050 node ../../dist/apps/idexx-sync/main.js",
+    "start:visible": "dotenv -e ../../.env.local -e .env.local -- env PORT=5050 HEADLESS=false node ../../dist/apps/idexx-sync/main.js"
   },
   "dependencies": {
     "express": "^4.22.1",
-    "playwright": "^1.57.0"
+    "playwright": "^1.57.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "dotenv-cli": "^8.0.0"

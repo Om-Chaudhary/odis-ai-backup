@@ -1,58 +1,42 @@
 /**
- * Schedule Scraper Service
+ * Schedule Scraper
  *
- * Handles pre-open sync: scrapes today's appointment schedule from IDEXX Neo.
- * Used to fetch appointments before clinic opens so vets can record against them.
+ * Scrapes appointment schedule from IDEXX Neo for a given date.
  */
 
 import type { Page } from "playwright";
-import { type PlaywrightBrowser } from "./playwright-browser";
+import { scheduleLogger as logger } from "../lib/logger";
+import { IDEXX_URLS } from "../config";
 import {
-  SCHEDULE_SELECTORS,
   DASHBOARD_SELECTORS,
+  SCHEDULE_SELECTORS,
   getSelectorVariants,
-} from "../utils/selectors";
-
-export interface ScrapedAppointment {
-  neo_appointment_id: string | null;
-  date: string;
-  start_time: string;
-  end_time: string | null;
-  patient_name: string | null;
-  client_name: string | null;
-  client_phone: string | null;
-  provider_name: string | null;
-  appointment_type: string | null;
-  status: string;
-}
-
-export interface ScheduleScraperResult {
-  appointments: ScrapedAppointment[];
-  scrapedAt: Date;
-  errors: string[];
-}
+} from "../selectors";
+import { normalizePhone } from "../utils/phone";
+import type { BrowserService } from "../services/browser.service";
+import type { ScrapedAppointment, ScheduleScraperResult } from "../types";
 
 /**
- * Schedule Scraper Service
+ * Schedule Scraper
  *
- * Navigates to IDEXX Neo schedule and extracts today's appointments.
+ * Navigates to IDEXX Neo schedule and extracts appointments.
  */
 export class ScheduleScraper {
-  private browser: PlaywrightBrowser;
-
-  constructor(browser: PlaywrightBrowser) {
-    this.browser = browser;
-  }
+  constructor(private browser: BrowserService) {}
 
   /**
-   * Scrape today's schedule from IDEXX Neo
+   * Scrape schedule from IDEXX Neo
+   *
+   * @param page - Playwright page instance
+   * @param date - Optional date in YYYY-MM-DD format (defaults to today)
    */
-  async scrapeSchedule(page: Page): Promise<ScheduleScraperResult> {
+  async scrape(page: Page, date?: string): Promise<ScheduleScraperResult> {
     const errors: string[] = [];
     const appointments: ScrapedAppointment[] = [];
+    const targetDate = date ?? new Date().toISOString().split("T")[0] ?? "";
 
     try {
-      console.log("[SCHEDULE] Navigating to schedule page...");
+      logger.info(`Navigating to schedule page for date: ${targetDate}...`);
 
       // Navigate to schedule
       const navClicked = await this.browser.clickElement(
@@ -61,37 +45,32 @@ export class ScheduleScraper {
       );
 
       if (!navClicked) {
-        // Try direct navigation
-        await page.goto("https://us.idexxneo.com/schedule", {
+        await page.goto(IDEXX_URLS.SCHEDULE, {
           waitUntil: "networkidle",
         });
       }
 
-      // Wait for page to load
       await page.waitForLoadState("networkidle");
 
-      // Set date filter to today
-      const today = new Date().toISOString().split("T")[0] ?? "";
+      // Set date filter
       const datePickerFilled = await this.browser.fillField(
         page,
         SCHEDULE_SELECTORS.datePicker,
-        today,
+        targetDate,
       );
 
       if (datePickerFilled) {
-        console.log(`[SCHEDULE] Date filter set to ${today}`);
-        // Wait for schedule to reload
+        logger.debug(`Date filter set to ${targetDate}`);
         await page.waitForTimeout(2000);
       }
 
       // Extract appointments
-      console.log("[SCHEDULE] Extracting appointments...");
+      logger.debug("Extracting appointments...");
 
       const appointmentSelectors = getSelectorVariants(
         SCHEDULE_SELECTORS.appointmentRow,
       );
 
-      // Try each selector to find appointment rows
       let appointmentRows: ReturnType<Page["locator"]> | null = null;
 
       for (const selector of appointmentSelectors) {
@@ -100,8 +79,8 @@ export class ScheduleScraper {
 
         if (count > 0) {
           appointmentRows = locator;
-          console.log(
-            `[SCHEDULE] Found ${count} appointments using: ${selector}`,
+          logger.debug(
+            `Found ${count} appointments using selector: ${selector}`,
           );
           break;
         }
@@ -112,13 +91,16 @@ export class ScheduleScraper {
         return { appointments, scrapedAt: new Date(), errors };
       }
 
-      // Extract data from each appointment row
+      // Extract data from each row
       const rowCount = await appointmentRows.count();
 
       for (let i = 0; i < rowCount; i++) {
         try {
           const row = appointmentRows.nth(i);
-          const appointment = await this.extractAppointmentData(row);
+          const appointment = await this.extractAppointmentData(
+            row,
+            targetDate,
+          );
           appointments.push(appointment);
         } catch (error) {
           const msg = error instanceof Error ? error.message : "Unknown error";
@@ -126,11 +108,11 @@ export class ScheduleScraper {
         }
       }
 
-      console.log(`[SCHEDULE] Extracted ${appointments.length} appointments`);
+      logger.info(`Extracted ${appointments.length} appointments`);
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Unknown error";
       errors.push(`Schedule scraping failed: ${msg}`);
-      console.error("[SCHEDULE] Error:", msg);
+      logger.error(`Scraping failed: ${msg}`);
     }
 
     return {
@@ -145,6 +127,7 @@ export class ScheduleScraper {
    */
   private async extractAppointmentData(
     row: ReturnType<Page["locator"]>,
+    date: string,
   ): Promise<ScrapedAppointment> {
     // Extract appointment ID from data attribute
     const appointmentId = await row.getAttribute("data-appointment-id");
@@ -213,41 +196,17 @@ export class ScheduleScraper {
       .textContent()
       .catch(() => null);
 
-    const dateStr = new Date().toISOString().split("T")[0];
-
     return {
       neo_appointment_id: appointmentId,
-      date: dateStr ?? new Date().toISOString().substring(0, 10),
+      date,
       start_time: startTime,
       end_time: endTime,
       patient_name: patientName?.trim() ?? null,
       client_name: clientName?.trim() ?? null,
-      client_phone: this.normalizePhone(clientPhone),
+      client_phone: normalizePhone(clientPhone),
       provider_name: providerName?.trim() ?? null,
       appointment_type: appointmentType?.trim() ?? null,
       status: "scheduled",
     };
-  }
-
-  /**
-   * Normalize phone number to E.164 format
-   */
-  private normalizePhone(phone: string | null): string | null {
-    if (!phone) return null;
-
-    // Remove all non-numeric characters
-    const digits = phone.replace(/\D/g, "");
-
-    // Assume US number if 10 digits
-    if (digits.length === 10) {
-      return `+1${digits}`;
-    }
-
-    // If already has country code
-    if (digits.length === 11 && digits.startsWith("1")) {
-      return `+${digits}`;
-    }
-
-    return phone; // Return original if we can't normalize
   }
 }
