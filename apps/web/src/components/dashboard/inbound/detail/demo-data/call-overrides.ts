@@ -628,6 +628,64 @@ User: No.`,
     };
   }
 
+  // (408) 769-8988 - Most recent call with custom audio and transcript
+  if (
+    matchesPhone(call.customer_phone, [
+      "4087698988",
+      "408-769-8988",
+      "+14087698988",
+      "(408) 769-8988",
+      "+1 (408) 769-8988",
+    ])
+  ) {
+    return {
+      ...call,
+      recording_url: "/audio/1226.MP3",
+      transcript: `AI: Hello. You have reached the after hours assistant at Alum Rock Animal Hospital. How can I help you today?
+
+User: I was trying to schedule an appointment for Rhino Torres.
+
+AI: I'd be happy to help you schedule an appointment for Rhino. Are you a current client, or is this your first time visiting us?
+
+User: Correct.
+
+AI: Great. Thank you for confirming. What your first and last name?
+
+User: Leonardo Torres.
+
+AI: Thank you, Leonardo. What's the best phone number to reach you?
+
+User: 4 0 8 7 6 9 8 9 8 8.
+
+AI: Got it. 4 0 8 7 6 9 8 9 8 8. Is that correct?
+
+User: Yes.
+
+AI: Thank you. What's the reason for the visit?
+
+User: It is kidney treatment hospitalization for 3 days.
+
+AI: Understood. Rhino is Thank you for sharing that, Leonardo. When would you like to bring Rhino in for his kidney treatment hospitalization?
+
+User: Tomorrow morning,
+
+AI: Let me check availability for tomorrow morning. Let me take your information, and I'll have the clinic call you back first thing the morning to confirm the appointment for Rhino's hospitalization. Does that work for you?
+
+User: Yes.
+
+AI: I'll make sure the clinic contacts you first thing in the morning. Is there anything else I can assist you with tonight?
+
+User: No.
+
+AI: Thank you for calling Alum Rock Animal Hospital, Leonardo. Have a good night, and take care of rhino.
+
+User: Thank you.`,
+      duration_seconds: 120,
+      summary: "Leonardo Torres called to schedule an appointment for Rhino. Client requests to bring Rhino in the morning for a 3-day hospitalization for kidney treatment. Clinic will call back to confirm appointment details.",
+      outcome: "Call Back",
+      actions_taken: ["Message taken for appointment request"],
+    };
+  }
 
   return null;
 }
