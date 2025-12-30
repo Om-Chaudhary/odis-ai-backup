@@ -32,6 +32,9 @@ const CheckAvailabilitySchema = z.object({
   // VAPI context (for clinic lookup)
   assistant_id: z.string().optional().default(DEFAULT_ASSISTANT_ID),
 
+  // Direct clinic ID (for dev/testing - bypasses assistant lookup)
+  clinic_id: z.string().uuid().optional(),
+
   // Date to check (YYYY-MM-DD or natural language)
   date: z.string().min(1, "date is required"),
 
@@ -60,12 +63,42 @@ interface AvailableSlot {
 }
 
 /**
- * Look up clinic by inbound assistant ID
+ * Look up clinic by assistant ID using the mappings table
+ * Falls back to checking clinics.inbound_assistant_id for legacy support
  */
 async function findClinicByAssistantId(
   supabase: Awaited<ReturnType<typeof createServiceClient>>,
   assistantId: string,
 ) {
+  // First, try the new mappings table (supports squads, dev/prod separation)
+  const { data: mapping, error: mappingError } = await supabase
+    .from("vapi_assistant_mappings")
+    .select("clinic_id, assistant_name, environment")
+    .eq("assistant_id", assistantId)
+    .eq("is_active", true)
+    .single();
+
+  if (mapping && !mappingError) {
+    // Found in mappings - get clinic details
+    const { data: clinic, error: clinicError } = await supabase
+      .from("clinics")
+      .select("id, name")
+      .eq("id", mapping.clinic_id)
+      .single();
+
+    if (clinic && !clinicError) {
+      logger.info("Clinic found via assistant mapping", {
+        assistantId,
+        assistantName: mapping.assistant_name,
+        environment: mapping.environment,
+        clinicId: clinic.id,
+        clinicName: clinic.name,
+      });
+      return clinic;
+    }
+  }
+
+  // Fallback: check legacy inbound_assistant_id column
   const { data: clinic, error } = await supabase
     .from("clinics")
     .select("id, name")
@@ -82,7 +115,7 @@ async function findClinicByAssistantId(
 
 /**
  * Parse date string to YYYY-MM-DD format
- * Handles: "tomorrow", "next monday", "2024-01-15", "January 15", etc.
+ * Handles: "tomorrow", "next monday", "2024-01-15", "January 15", "December 29th", etc.
  */
 function parseDateToISO(dateStr: string): string | null {
   const normalized = dateStr.toLowerCase().trim();
@@ -124,14 +157,33 @@ function parseDateToISO(dateStr: string): string | null {
     return targetDate.toISOString().split("T")[0] ?? null;
   }
 
+  // Strip ordinal suffixes (1st, 2nd, 3rd, 4th, etc.) before parsing
+  // "December 29th" -> "December 29", "January 1st" -> "January 1"
+  const cleanedDateStr = dateStr.replace(/(\d+)(st|nd|rd|th)/gi, "$1");
+
   // Try parsing as ISO date or common formats
-  const parsed = new Date(dateStr);
-  if (!isNaN(parsed.getTime())) {
-    // Validate year - correct if too far in the past
+  let parsed = new Date(cleanedDateStr);
+
+  // If still invalid, try with current year appended
+  if (isNaN(parsed.getTime())) {
     const currentYear = today.getFullYear();
+    parsed = new Date(`${cleanedDateStr} ${currentYear}`);
+  }
+
+  if (!isNaN(parsed.getTime())) {
+    // Validate year - if date is in the past, assume next year
+    const currentYear = today.getFullYear();
+
+    // If parsed year is way off, use current year
     if (parsed.getFullYear() < currentYear - 1) {
       parsed.setFullYear(currentYear);
     }
+
+    // If the date has passed this year, assume next year
+    if (parsed < today) {
+      parsed.setFullYear(currentYear + 1);
+    }
+
     return parsed.toISOString().split("T")[0] ?? null;
   }
 
@@ -399,8 +451,29 @@ export async function POST(request: NextRequest) {
     // Get service client
     const supabase = await createServiceClient();
 
-    // Look up clinic
-    const clinic = await findClinicByAssistantId(supabase, input.assistant_id);
+    // Look up clinic - use clinic_id if provided (dev/testing), otherwise lookup by assistant
+    let clinic: { id: string; name: string } | null = null;
+
+    if (input.clinic_id) {
+      // Direct clinic_id lookup (for dev/squad testing)
+      const { data, error } = await supabase
+        .from("clinics")
+        .select("id, name")
+        .eq("id", input.clinic_id)
+        .single();
+
+      if (!error && data) {
+        clinic = data;
+        logger.info("Using direct clinic_id lookup", {
+          clinicId: input.clinic_id,
+          clinicName: data.name,
+        });
+      }
+    }
+
+    // Fallback to assistant lookup
+    clinic ??= await findClinicByAssistantId(supabase, input.assistant_id);
+
     if (!clinic) {
       return buildVapiResponse(
         request,
@@ -561,8 +634,17 @@ export async function GET() {
     endpoint: "/api/vapi/tools/check-availability",
     method: "POST",
     required_fields: ["date"],
-    optional_fields: ["assistant_id", "include_blocked", "vapi_call_id"],
+    optional_fields: [
+      "assistant_id",
+      "clinic_id",
+      "include_blocked",
+      "vapi_call_id",
+    ],
     example_dates: ["today", "tomorrow", "next monday", "2025-01-15"],
     default_assistant_id: DEFAULT_ASSISTANT_ID,
+    notes: {
+      clinic_id:
+        "For dev/squad testing - bypasses assistant lookup. Use clinic UUID directly.",
+    },
   });
 }
