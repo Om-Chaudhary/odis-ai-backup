@@ -27,12 +27,26 @@
 # Build
 nx build idexx-sync
 
-# Run (headless)
+# Run API server (headless)
 pnpm --filter idexx-sync start
 
-# Run (visible browser for debugging)
+# Run API server (visible browser for debugging)
 pnpm --filter idexx-sync start:visible
+
+# Run interactive CLI with progress indicators
+pnpm --filter idexx-sync cli
 ```
+
+### Interactive CLI
+
+The CLI provides comprehensive progress tracking and monitoring:
+
+- **Multi-phase progress bars** - Visual progress across all sync phases
+- **Live status monitoring** - Real-time sync status with auto-updates
+- **Enhanced sync history** - Detailed history with statistics and success rates
+- **Live health monitoring** - Real-time server metrics and memory tracking
+
+See [`CLI_FEATURES.md`](./CLI_FEATURES.md) for detailed documentation.
 
 ### Make a Request
 

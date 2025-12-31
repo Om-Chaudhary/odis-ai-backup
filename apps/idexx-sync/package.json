@@ -11,15 +11,19 @@
   "dependencies": {
     "@inquirer/prompts": "^7.5.1",
     "chalk": "^4.1.2",
+    "cli-progress": "^3.12.0",
     "cli-table3": "^0.6.5",
+    "eventsource": "^2.0.2",
     "express": "^4.22.1",
     "figlet": "^1.8.0",
+    "log-update": "^4.0.0",
     "ora": "^5.4.1",
     "p-limit": "^6.1.0",
     "playwright": "^1.57.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/cli-progress": "^3.11.6",
     "@types/figlet": "^1.7.0",
     "dotenv-cli": "^8.0.0",
     "tsx": "^4.19.0"

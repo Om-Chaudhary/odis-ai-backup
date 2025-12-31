@@ -154,7 +154,16 @@
       "Read(//Users/om/**)",
       "Read(//Users/**)",
       "Bash(vercel promote:*)",
-      "mcp__github__get_pull_request"
+      "mcp__github__get_pull_request",
+      "mcp__vapi-mcp__get_tool",
+      "mcp__vapi-mcp__update_assistant",
+      "Bash(env)",
+      "mcp__firecrawl__firecrawl_scrape",
+      "mcp__firecrawl__firecrawl_map",
+      "mcp__firecrawl__firecrawl_search",
+      "Bash(VAPI_API_KEY=eb6d0702-e660-46a7-9fe4-71c4a5264e23 npx tsx:*)",
+      "mcp__vapi-mcp__create_tool",
+      "Bash(/bin/bash -c '\nEVAL_IDS=$\\(curl -s -X GET \"\"https://api.vapi.ai/eval\"\" -H \"\"Authorization: Bearer eb6d0702-e660-46a7-9fe4-71c4a5264e23\"\" | jq -r \"\".results[].id\"\"\\)\nfor id in $EVAL_IDS; do\n  echo \"\"Deleting $id\"\"\n  curl -s -X DELETE \"\"https://api.vapi.ai/eval/$id\"\" -H \"\"Authorization: Bearer eb6d0702-e660-46a7-9fe4-71c4a5264e23\"\" > /dev/null\ndone\necho \"\"Done\"\"\n')"
     ],
     "deny": [],
     "ask": []

@@ -21,6 +21,7 @@ import { AuthService } from "../services/auth.service";
 import { PersistenceService } from "../services/persistence.service";
 import { ScheduleSyncService } from "../services/schedule-sync.service";
 import { syncQueue } from "../services/sync-queue.service";
+import { registerSyncForStreaming } from "./stream.route";
 import { config } from "../config";
 
 export const scheduleSyncRouter: ReturnType<typeof Router> = Router();
@@ -110,7 +111,7 @@ async function handleSyncStatus(req: Request, res: Response): Promise<void> {
 
     const { data: latestSync } = await supabase
       .from("schedule_syncs")
-      .select("*")
+      .select("*, progress_percentage, current_date")
       .eq("clinic_id", clinicId)
       .eq("status", "completed")
       .order("completed_at", { ascending: false })
@@ -155,7 +156,11 @@ async function handleSyncStatus(req: Request, res: Response): Promise<void> {
       isStale,
       lastSync: {
         id: latestSync.id,
+        syncId: latestSync.id,
+        status: latestSync.status,
         completedAt: latestSync.completed_at,
+        progressPercentage: latestSync.progress_percentage ?? 100,
+        currentDate: latestSync.current_date,
         dateRange: {
           start: latestSync.sync_start_date,
           end: latestSync.sync_end_date,
@@ -353,13 +358,27 @@ async function handleScheduleSync(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    // 5. Run schedule sync
-    const result = await scheduleSync.syncSchedule(page, {
+    // 5. Set up event listener to register sync for streaming as soon as syncId is available
+    const syncStartedPromise = new Promise<string>((resolve) => {
+      scheduleSync.once("sync_started", (data: { syncId: string }) => {
+        registerSyncForStreaming(data.syncId, scheduleSync);
+        resolve(data.syncId);
+      });
+    });
+
+    // 6. Run schedule sync (will emit sync_started event with syncId)
+    const syncPromise = scheduleSync.syncSchedule(page, {
       clinicId,
       dateRange: { start: startDate, end: endDate },
     });
 
-    // 6. Build response with sync freshness info
+    // Wait for sync to start and get syncId
+    await syncStartedPromise;
+
+    // Now wait for sync to complete
+    const result = await syncPromise;
+
+    // 7. Build response with sync freshness info
     const syncedAt = new Date();
     const staleThresholdMinutes = 60; // Default, matches clinic_schedule_config
     const nextStaleAt = new Date(

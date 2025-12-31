@@ -14,6 +14,7 @@
 
 import type { Page } from "playwright";
 import pLimit from "p-limit";
+import { EventEmitter } from "events";
 import { scheduleLogger as logger } from "../lib/logger";
 import { SlotGeneratorService } from "./slot-generator.service";
 import { ReconciliationService } from "./reconciliation.service";
@@ -45,8 +46,9 @@ interface SyncOptions {
  * Schedule Sync Service
  *
  * Main orchestrator for syncing IDEXX schedule data to the database.
+ * Extends EventEmitter to emit real-time progress events.
  */
-export class ScheduleSyncService {
+export class ScheduleSyncService extends EventEmitter {
   // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
   private supabase: SupabaseClient | null = null;
   private slotGenerator: SlotGeneratorService;
@@ -54,6 +56,7 @@ export class ScheduleSyncService {
   private scraper: ScheduleScraper;
 
   constructor(browser: BrowserService) {
+    super();
     this.slotGenerator = new SlotGeneratorService();
     this.reconciliation = new ReconciliationService();
     this.scraper = new ScheduleScraper(browser);
@@ -108,6 +111,12 @@ export class ScheduleSyncService {
         idexxConfig,
       );
 
+      this.emit("phase", {
+        syncId,
+        phase: "config_loaded",
+        message: "Configuration loaded",
+      });
+
       // Step 3: Get blocked periods
       const blockedPeriods = await this.getBlockedPeriods(options.clinicId);
 
@@ -121,6 +130,16 @@ export class ScheduleSyncService {
         dateRange,
         idexxConfig,
       );
+
+      // Emit syncId immediately so CLI can connect to stream
+      this.emit("sync_started", {
+        syncId,
+        clinicId: options.clinicId,
+        dateRange: {
+          start: dateRange.start.toISOString().split("T")[0],
+          end: dateRange.end.toISOString().split("T")[0],
+        },
+      });
 
       // Step 6: Generate slots for date range
       logger.debug(
@@ -141,6 +160,13 @@ export class ScheduleSyncService {
       );
       stats.slotsCreated = slotStats.created;
       stats.slotsUpdated = slotStats.updated;
+
+      this.emit("phase", {
+        syncId,
+        phase: "slots_generated",
+        message: `Generated ${stats.slotsCreated} slots`,
+        slotsCreated: stats.slotsCreated,
+      });
 
       // Step 8: Build slot map for appointment linking
       const slotMap = await this.buildSlotMap(options.clinicId, dateRange);
@@ -224,6 +250,12 @@ export class ScheduleSyncService {
 
       // Step 10: Update all slot booked counts in bulk (single query)
       logger.debug("Updating slot booked counts in bulk...");
+      this.emit("phase", {
+        syncId,
+        phase: "reconciling",
+        message: "Reconciling appointment data",
+      });
+
       await this.updateSlotBookedCountsBulk(
         options.clinicId,
         dateRange.start,
@@ -231,6 +263,11 @@ export class ScheduleSyncService {
       );
 
       // Step 11: Detect and resolve conflicts with VAPI bookings
+      this.emit("phase", {
+        syncId,
+        phase: "resolving_conflicts",
+        message: "Detecting and resolving conflicts",
+      });
       const conflictStats = await this.resolveConflicts(
         options.clinicId,
         dateRange,
@@ -241,6 +278,14 @@ export class ScheduleSyncService {
       // Step 11: Complete sync session
       const durationMs = Date.now() - startTime;
       await this.completeSyncSession(syncId, stats, durationMs);
+
+      this.emit("completed", {
+        syncId,
+        success: errors.length === 0,
+        stats,
+        durationMs,
+        errors,
+      });
 
       logger.info(
         `Schedule sync completed in ${durationMs}ms: ` +
@@ -352,6 +397,17 @@ export class ScheduleSyncService {
       added = apptStats.added;
       updated = apptStats.updated;
       removed = apptStats.removed;
+
+      // Emit date completed event
+      this.emit("date_completed", {
+        syncId,
+        date: dateStr,
+        appointmentsFound: scrapeResult.appointments.length,
+        added,
+        updated,
+        removed,
+        errors: errors.length,
+      });
 
       // Note: Slot booked counts updated in bulk after all dates processed
 
@@ -829,6 +885,14 @@ export class ScheduleSyncService {
           updated_at: new Date().toISOString(),
         })
         .eq("id", syncId);
+
+      // Emit progress event
+      this.emit("progress", {
+        syncId,
+        percentage: progressPercentage,
+        currentDate,
+        timestamp: new Date().toISOString(),
+      });
     } catch (error) {
       // Non-critical error, log but don't throw
       const msg = error instanceof Error ? error.message : "Unknown error";
