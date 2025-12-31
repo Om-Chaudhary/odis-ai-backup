@@ -4,7 +4,12 @@
   "sourceRoot": "apps/idexx-sync/src",
   "projectType": "application",
   "tags": ["type:app", "scope:server", "platform:node"],
-  "implicitDependencies": ["integrations-idexx", "data-access-db", "shared-crypto", "integrations-qstash"],
+  "implicitDependencies": [
+    "integrations-idexx",
+    "data-access-db",
+    "shared-crypto",
+    "integrations-qstash"
+  ],
   "targets": {
     "build": {
       "executor": "@nx/esbuild:esbuild",
@@ -103,6 +108,13 @@
       "executor": "@nx/vite:test",
       "options": {
         "configFile": "apps/idexx-sync/vitest.config.ts"
+      }
+    },
+    "cli": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --filter idexx-sync cli",
+        "cwd": "{workspaceRoot}"
       }
     },
     "docker:build": {

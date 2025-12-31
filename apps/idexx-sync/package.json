@@ -5,15 +5,23 @@
   "type": "commonjs",
   "scripts": {
     "start": "dotenv -e ../../.env.local -e .env.local -- env PORT=5050 node ../../dist/apps/idexx-sync/main.js",
-    "start:visible": "dotenv -e ../../.env.local -e .env.local -- env PORT=5050 HEADLESS=false node ../../dist/apps/idexx-sync/main.js"
+    "start:visible": "dotenv -e ../../.env.local -e .env.local -- env PORT=5050 HEADLESS=false node ../../dist/apps/idexx-sync/main.js",
+    "cli": "dotenv -e ../../.env.local -e .env.local -- tsx src/cli-runner.mjs"
   },
   "dependencies": {
+    "@inquirer/prompts": "^7.5.1",
+    "chalk": "^4.1.2",
+    "cli-table3": "^0.6.5",
     "express": "^4.22.1",
+    "figlet": "^1.8.0",
+    "ora": "^5.4.1",
     "p-limit": "^6.1.0",
     "playwright": "^1.57.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "dotenv-cli": "^8.0.0"
+    "@types/figlet": "^1.7.0",
+    "dotenv-cli": "^8.0.0",
+    "tsx": "^4.19.0"
   }
 }

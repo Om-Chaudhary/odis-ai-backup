@@ -232,6 +232,33 @@ export class ScheduleScraper {
   }
 
   /**
+   * Parse "PATIENT; CLIENT, NAME" from title field
+   *
+   * IDEXX calendar API returns appointment title in format:
+   * "PATIENT_NAME; CLIENT_LASTNAME, CLIENT_FIRSTNAME"
+   */
+  private parseTitle(title: string | undefined): {
+    patientName: string | null;
+    clientName: string | null;
+  } {
+    if (!title) return { patientName: null, clientName: null };
+
+    // Format: "PATIENT_NAME; CLIENT_LASTNAME, CLIENT_FIRSTNAME"
+    const semicolonIndex = title.indexOf(";");
+    if (semicolonIndex === -1) {
+      return { patientName: title.trim() || null, clientName: null };
+    }
+
+    const patientName = title.substring(0, semicolonIndex).trim();
+    const clientName = title.substring(semicolonIndex + 1).trim();
+
+    return {
+      patientName: patientName || null,
+      clientName: clientName || null,
+    };
+  }
+
+  /**
    * Fetch schedule from IDEXX Neo API
    *
    * @param page - Playwright page instance (used for auth cookies)
@@ -390,35 +417,49 @@ export class ScheduleScraper {
       });
     }
 
-    // Determine status from API data
+    // Determine status from className (primary) or status field (fallback)
+    // IDEXX uses className for calendar event styling which indicates status
     let status = "scheduled";
-    if (apiAppt.status) {
-      const statusLower = apiAppt.status.toString().toLowerCase();
-      if (
-        statusLower.includes("finalized") ||
-        statusLower.includes("complete")
-      ) {
-        status = "completed";
-      } else if (
-        statusLower.includes("cancelled") ||
-        statusLower.includes("cancel")
-      ) {
-        status = "cancelled";
-      } else if (
-        statusLower.includes("in progress") ||
-        statusLower.includes("in_progress")
-      ) {
-        status = "in_progress";
-      }
+    const statusSource = apiAppt.className ?? apiAppt.status ?? "";
+    const statusLower = statusSource.toString().toLowerCase();
+
+    if (statusLower.includes("finalized") || statusLower.includes("complete")) {
+      status = "completed";
+    } else if (statusLower.includes("arrived")) {
+      status = "arrived";
+    } else if (
+      statusLower.includes("no-show") ||
+      statusLower.includes("noshow") ||
+      statusLower.includes("no_show")
+    ) {
+      status = "no_show";
+    } else if (statusLower.includes("late")) {
+      status = "late";
+    } else if (
+      statusLower.includes("cancelled") ||
+      statusLower.includes("cancel")
+    ) {
+      status = "cancelled";
+    } else if (
+      statusLower.includes("in-progress") ||
+      statusLower.includes("in_progress") ||
+      statusLower.includes("progress")
+    ) {
+      status = "in_progress";
     }
+
+    // Parse patient/client from title field as fallback
+    // IDEXX calendar API returns "PATIENT; CLIENT" format in title
+    const { patientName: parsedPatient, clientName: parsedClient } =
+      this.parseTitle(apiAppt.title);
 
     return {
       neo_appointment_id: apiAppt.id?.toString() ?? null,
       date,
       start_time: startTime,
       end_time: endTime,
-      patient_name: apiAppt.patientName?.trim() ?? null,
-      client_name: apiAppt.clientName?.trim() ?? null,
+      patient_name: apiAppt.patientName?.trim() ?? parsedPatient,
+      client_name: apiAppt.clientName?.trim() ?? parsedClient,
       client_phone: normalizePhone(apiAppt.clientPhone?.toString() ?? null),
       provider_name: apiAppt.providerName?.trim() ?? null,
       appointment_type: apiAppt.appointmentType?.trim() ?? null,

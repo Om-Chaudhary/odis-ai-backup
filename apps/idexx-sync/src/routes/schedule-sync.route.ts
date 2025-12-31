@@ -30,7 +30,9 @@ export const scheduleSyncRouter: ReturnType<typeof Router> = Router();
  */
 interface ScheduleSyncRequest {
   clinicId: string;
-  daysAhead?: number; // Number of days to sync (default: 14)
+  daysAhead?: number; // Number of days forward from startDate (default: 14)
+  startDate?: string; // YYYY-MM-DD format (default: today)
+  endDate?: string; // YYYY-MM-DD format (overrides daysAhead if provided)
 }
 
 /**
@@ -211,8 +213,42 @@ async function handleScheduleSync(req: Request, res: Response): Promise<void> {
     return;
   }
 
+  // Validate date formats if provided
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (body.startDate && !dateRegex.test(body.startDate)) {
+    res.status(400).json({
+      success: false,
+      errors: ["Invalid 'startDate' format. Must be YYYY-MM-DD."],
+      durationMs: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    } as ScheduleSyncResponse);
+    return;
+  }
+  if (body.endDate && !dateRegex.test(body.endDate)) {
+    res.status(400).json({
+      success: false,
+      errors: ["Invalid 'endDate' format. Must be YYYY-MM-DD."],
+      durationMs: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    } as ScheduleSyncResponse);
+    return;
+  }
+
+  // Validate endDate >= startDate if both provided
+  if (body.startDate && body.endDate && body.endDate < body.startDate) {
+    res.status(400).json({
+      success: false,
+      errors: ["'endDate' must be on or after 'startDate'."],
+      durationMs: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    } as ScheduleSyncResponse);
+    return;
+  }
+
   logger.info(
-    `Starting schedule sync for clinic ${clinicId}, ${daysAhead} days ahead`,
+    `Starting schedule sync for clinic ${clinicId}` +
+      (body.startDate ? `, from ${body.startDate}` : "") +
+      (body.endDate ? ` to ${body.endDate}` : `, ${daysAhead} days ahead`),
   );
 
   const requestId = randomUUID();
@@ -287,12 +323,19 @@ async function handleScheduleSync(req: Request, res: Response): Promise<void> {
 
     const { credentials } = credentialResult;
 
-    // 3. Calculate date range
-    const startDate = new Date();
+    // 3. Calculate date range with custom start/end support
+    const startDate = body.startDate
+      ? new Date(body.startDate + "T00:00:00")
+      : new Date();
     startDate.setHours(0, 0, 0, 0);
 
-    const endDate = new Date();
-    endDate.setDate(endDate.getDate() + daysAhead);
+    const endDate = body.endDate
+      ? new Date(body.endDate + "T23:59:59")
+      : (() => {
+          const d = new Date(startDate);
+          d.setDate(d.getDate() + daysAhead);
+          return d;
+        })();
     endDate.setHours(23, 59, 59, 999);
 
     // 4. Launch browser and login
