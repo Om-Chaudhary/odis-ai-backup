@@ -851,10 +851,27 @@ export const inboundCallsRouter = createTRPCRouter({
               : null,
         };
       } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        const isRateLimit =
+          errorMessage.includes("Rate limit exceeded") ||
+          errorMessage.includes("rate limit") ||
+          errorMessage.includes("429");
+
         console.error("[FETCH_CALL_FROM_VAPI] Error fetching call data:", {
           callId: input.vapiCallId,
-          error: error instanceof Error ? error.message : String(error),
+          error: errorMessage,
+          isRateLimit,
         });
+
+        // Return a more user-friendly error for rate limits
+        if (isRateLimit) {
+          throw new TRPCError({
+            code: "TOO_MANY_REQUESTS",
+            message:
+              "VAPI rate limit exceeded. Please try again in a few moments.",
+          });
+        }
 
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
