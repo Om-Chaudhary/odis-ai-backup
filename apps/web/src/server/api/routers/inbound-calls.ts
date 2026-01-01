@@ -164,7 +164,7 @@ export const inboundCallsRouter = createTRPCRouter({
       const to = from + input.pageSize - 1;
       query = query.range(from, to);
 
-      const { data: calls, error } = await query;
+      const { data: calls, count: totalCount, error } = await query;
 
       if (error) {
         throw new TRPCError({
@@ -324,13 +324,18 @@ export const inboundCallsRouter = createTRPCRouter({
         );
       }
 
+      // Use database count for pagination total (matches stats endpoint)
+      // Note: allCalls.length may be different due to filtering/deduplication,
+      // but we use the database count to match the tab count
+      const dbTotal = totalCount ?? 0;
+
       return {
         calls: allCalls,
         pagination: {
           page: input.page,
           pageSize: input.pageSize,
-          total: allCalls.length,
-          totalPages: Math.ceil(allCalls.length / input.pageSize),
+          total: dbTotal,
+          totalPages: Math.ceil(dbTotal / input.pageSize),
         },
       };
     }),
