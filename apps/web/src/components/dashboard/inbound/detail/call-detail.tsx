@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -114,14 +115,29 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
   const callerName = demoCallerName ?? callerInfo?.name ?? null;
   const petName = callerInfo?.petName ?? null;
 
-  // Fetch call data from VAPI if database data is missing critical fields
+  // Lazy loading: Only fetch VAPI data when needed (when detail panel is opened)
+  // Use a small delay to ensure component is mounted and user is viewing it
+  const [shouldFetchVAPI, setShouldFetchVAPI] = useState(false);
   const shouldFetchFromVAPI = !call.recording_url && !!call.vapi_call_id;
+
+  // Enable fetching after component mounts (lazy load)
+  useEffect(() => {
+    if (shouldFetchFromVAPI) {
+      // Small delay to ensure component is fully rendered
+      const timer = setTimeout(() => {
+        setShouldFetchVAPI(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [shouldFetchFromVAPI]);
+
   const vapiQuery = api.inboundCalls.fetchCallFromVAPI.useQuery(
     { vapiCallId: call.vapi_call_id },
     {
-      enabled: () => shouldFetchFromVAPI,
+      enabled: shouldFetchVAPI && shouldFetchFromVAPI,
       staleTime: 5 * 60 * 1000, // 5 minutes cache
-      retry: false, // Don't retry on error
+      retry: 3, // Retry up to 3 times
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff: 1s, 2s, 4s, max 30s
     },
   );
 

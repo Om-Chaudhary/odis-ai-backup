@@ -16,3 +16,6 @@ export * from "./utils";
 
 // Variable building utilities
 export * from "./knowledge-base";
+
+// Request queue for rate limiting
+export * from "./request-queue";

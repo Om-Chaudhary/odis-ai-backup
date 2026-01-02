@@ -84,13 +84,15 @@ export function CallDuration({ call }: { call: InboundCall }) {
   }
 
   // Use existing duration if available, otherwise show loading or dash
+  // Note: This will be throttled by the request queue to prevent rate limits
   const shouldFetchFromVAPI = !call.duration_seconds && !!call.vapi_call_id;
   const vapiQuery = api.inboundCalls.fetchCallFromVAPI.useQuery(
     { vapiCallId: call.vapi_call_id },
     {
       enabled: () => shouldFetchFromVAPI,
       staleTime: 5 * 60 * 1000, // 5 minutes cache
-      retry: false,
+      retry: 2, // Retry up to 2 times (fewer retries for table cells)
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff: 1s, 2s, max 30s
     },
   );
 

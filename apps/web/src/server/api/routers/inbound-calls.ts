@@ -821,8 +821,12 @@ export const inboundCallsRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       try {
-        const { getCall } = await import("@odis-ai/integrations/vapi");
-        const callData = await getCall(input.vapiCallId);
+        const { getCall, vapiRequestQueue } =
+          await import("@odis-ai/integrations/vapi");
+        // Use request queue to throttle VAPI requests and prevent rate limiting
+        const callData = await vapiRequestQueue.enqueue(() =>
+          getCall(input.vapiCallId),
+        );
 
         console.log("[FETCH_CALL_FROM_VAPI] Successfully fetched call data", {
           callId: input.vapiCallId,

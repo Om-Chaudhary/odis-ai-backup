@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { format, isValid } from "date-fns";
 import { Button } from "@odis-ai/shared/ui/button";
 import { Textarea } from "@odis-ai/shared/ui/textarea";
@@ -271,13 +271,29 @@ export function AppointmentDetail({
       } as Database["public"]["Tables"]["inbound_vapi_calls"]["Row"])
     : null;
 
+  // Lazy loading: Only fetch VAPI data when detail panel is opened
+  const [shouldFetchVAPI, setShouldFetchVAPI] = useState(false);
+  const shouldFetchFromVAPI = !!appointment.vapiCallId && !isDemoAppointment;
+
+  // Enable fetching after component mounts (lazy load)
+  useEffect(() => {
+    if (shouldFetchFromVAPI) {
+      // Small delay to ensure component is fully rendered
+      const timer = setTimeout(() => {
+        setShouldFetchVAPI(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [shouldFetchFromVAPI]);
+
   // Fetch call recording from VAPI if appointment has an associated call (but not for demo)
   const vapiQuery = api.inboundCalls.fetchCallFromVAPI.useQuery(
     { vapiCallId: appointment.vapiCallId! },
     {
-      enabled: !!appointment.vapiCallId && !isDemoAppointment,
+      enabled: shouldFetchVAPI && shouldFetchFromVAPI,
       staleTime: 5 * 60 * 1000,
-      retry: false,
+      retry: 3, // Retry up to 3 times
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff: 1s, 2s, 4s, max 30s
     },
   );
 
