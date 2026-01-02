@@ -84,9 +84,34 @@ export async function fetchExistingCall(
   tableName: string,
   supabase: SupabaseClient,
 ): Promise<ExistingCallRecord | null> {
+  // Only select case_id for outbound calls (scheduled_discharge_calls has it, inbound_vapi_calls doesn't)
+  const isOutbound = tableName === "scheduled_discharge_calls";
+
+  if (isOutbound) {
+    const { data, error } = await supabase
+      .from(tableName)
+      .select("id, metadata, case_id")
+      .eq("vapi_call_id", vapiCallId)
+      .single();
+
+    if (error) {
+      if (error.code !== "PGRST116") {
+        logger.warn("Error fetching call", {
+          callId: vapiCallId,
+          table: tableName,
+          error: error.message,
+        });
+      }
+      return null;
+    }
+
+    return data as ExistingCallRecord;
+  }
+
+  // Inbound calls - no case_id column
   const { data, error } = await supabase
     .from(tableName)
-    .select("id, metadata, case_id")
+    .select("id, metadata")
     .eq("vapi_call_id", vapiCallId)
     .single();
 
@@ -101,5 +126,5 @@ export async function fetchExistingCall(
     return null;
   }
 
-  return data;
+  return data as ExistingCallRecord;
 }

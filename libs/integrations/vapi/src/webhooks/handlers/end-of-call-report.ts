@@ -180,6 +180,8 @@ async function handleInboundCallEnd(
   const { clinicName, userId } = await mapInboundCallToUser(callResponse);
 
   // Determine final status
+  // Note: `call` parameter IS the enrichedCall (passed from handleEndOfCallReport line 161)
+  // It has message-level endedReason merged, so this check works correctly
   let finalStatus = mapVapiStatus(call.status);
   if (call.endedReason) {
     if (shouldMarkInboundCallAsFailed(call.endedReason)) {
@@ -194,7 +196,7 @@ async function handleInboundCallEnd(
     }
   }
 
-  // Detect incomplete webhook: if status is still ringing and no endedReason,
+  // Detect incomplete webhook: if enriched data is still missing key fields,
   // VAPI likely sent the webhook prematurely (before analysis completed).
   // Store minimal data and flag for later retry.
   const isIncompleteWebhook =
