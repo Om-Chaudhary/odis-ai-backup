@@ -89,7 +89,7 @@ export function CallDuration({ call }: { call: InboundCall }) {
   const vapiQuery = api.inboundCalls.fetchCallFromVAPI.useQuery(
     { vapiCallId: call.vapi_call_id },
     {
-      enabled: () => shouldFetchFromVAPI,
+      enabled: shouldFetchFromVAPI,
       staleTime: 5 * 60 * 1000, // 5 minutes cache
       retry: 2, // Retry up to 2 times (fewer retries for table cells)
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff: 1s, 2s, max 30s
