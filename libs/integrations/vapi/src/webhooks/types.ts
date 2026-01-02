@@ -195,7 +195,8 @@ export interface EndOfCallReportMessage {
   recordingUrl?: string;
   stereoRecordingUrl?: string;
   cost?: number;
-  status?: string;
+  // Status at message level - VAPI sends "ended" here even when call.status is "ringing"
+  status?: "queued" | "ringing" | "in-progress" | "forwarding" | "ended";
 }
 
 /**

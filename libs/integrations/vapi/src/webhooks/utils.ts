@@ -366,6 +366,7 @@ export function getCallTableName(isInbound: boolean): string {
 export function enrichCallFromMessage(
   call: VapiWebhookCall,
   message: {
+    status?: "queued" | "ringing" | "in-progress" | "forwarding" | "ended";
     startedAt?: string;
     endedAt?: string;
     transcript?: string;
@@ -379,6 +380,8 @@ export function enrichCallFromMessage(
   return {
     ...call,
     // Prefer message-level fields (VAPI's primary location for end-of-call-report)
+    // Status is critical - VAPI sends "ended" at message level but "ringing" at call level
+    status: message.status ?? call.status,
     startedAt: message.startedAt ?? call.startedAt,
     endedAt: message.endedAt ?? call.endedAt,
     transcript: message.transcript ?? call.transcript,

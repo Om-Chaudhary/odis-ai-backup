@@ -1049,11 +1049,29 @@ function logCallDetails(
   enrichedCall: VapiWebhookCall,
   isInbound: boolean,
 ): void {
-  logger.debug("End-of-call-report received", {
+  // Log critical status/endedReason differences between message and call level
+  // This is KEY for debugging - VAPI sends "ended" at message level but may send "ringing" at call level
+  logger.info("End-of-call-report webhook status check", {
     callId: call.id,
     isInbound,
+    // Status comparison (the root cause of "stuck at ringing" bugs)
+    messageStatus: (message as { status?: string }).status,
     callStatus: call.status,
+    enrichedStatus: enrichedCall.status,
+    // EndedReason comparison
+    messageEndedReason: message.endedReason,
+    callEndedReason: call.endedReason,
+    enrichedEndedReason: enrichedCall.endedReason,
+    // Data availability
+    hasArtifact: !!message.artifact,
+    hasStructuredOutputs: !!message.artifact?.structuredOutputs,
+  });
+
+  logger.debug("End-of-call-report full details", {
+    callId: call.id,
+    isInbound,
     messageLevel: {
+      status: (message as { status?: string }).status,
       hasStartedAt: !!message.startedAt,
       hasEndedAt: !!message.endedAt,
       hasTranscript: !!message.transcript,
@@ -1061,8 +1079,10 @@ function logCallDetails(
       hasCost: !!message.cost,
       hasAnalysis: !!message.analysis,
       hasEndedReason: !!message.endedReason,
+      endedReason: message.endedReason,
     },
     callLevel: {
+      status: call.status,
       hasStartedAt: !!call.startedAt,
       hasEndedAt: !!call.endedAt,
       hasTranscript: !!call.transcript,
@@ -1072,13 +1092,16 @@ function logCallDetails(
       hasCosts: !!call.costs,
       costsCount: call.costs?.length ?? 0,
       hasAnalysis: !!call.analysis,
+      endedReason: call.endedReason,
     },
     enrichedCall: {
+      status: enrichedCall.status,
       hasStartedAt: !!enrichedCall.startedAt,
       hasEndedAt: !!enrichedCall.endedAt,
       hasTranscript: !!enrichedCall.transcript,
       hasRecordingUrl: !!enrichedCall.recordingUrl,
       hasCosts: !!enrichedCall.costs,
+      endedReason: enrichedCall.endedReason,
     },
     hasArtifact: !!message.artifact,
   });
