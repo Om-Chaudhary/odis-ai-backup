@@ -285,6 +285,10 @@ async function handleInboundCallEnd(
     cost,
     ended_reason: call.endedReason ?? message.endedReason ?? null,
     // Call intelligence columns (same as outbound)
+    // Set the simple outcome field for frontend display
+    outcome:
+      (structuredOutputs.callOutcome as { call_outcome?: string } | null)
+        ?.call_outcome ?? null,
     call_outcome_data: structuredOutputs.callOutcome,
     pet_health_data: structuredOutputs.petHealth,
     medication_compliance_data: structuredOutputs.medicationCompliance,
