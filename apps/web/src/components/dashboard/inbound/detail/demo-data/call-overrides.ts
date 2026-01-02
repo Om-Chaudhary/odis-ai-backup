@@ -645,7 +645,6 @@ User: No.`,
       attention_types: null,
       attention_severity: null,
       attention_summary: null,
-      escalation_data: null,
       actions_taken: ["Appointment scheduled via AI"],
     };
   }
