@@ -236,6 +236,97 @@ export const inboundCallsRouter = createTRPCRouter({
           return false; // Filter out calls with no phone number
         }
 
+        // Hide specific phone numbers: (408) 888-3899, (408) 791-4483, (669) 278-5158
+        const hideTheseNumbers = [
+          "4088883899", "408-888-3899", "(408) 888-3899", "+1 (408) 888-3899", "+14088883899",
+          "4087914483", "408-791-4483", "(408) 791-4483", "+1 (408) 791-4483", "+14087914483",
+          "6692785158", "669-278-5158", "(669) 278-5158", "+1 (669) 278-5158", "+16692785158"
+        ];
+
+        if (hideTheseNumbers.includes(call.customer_phone)) {
+          return false; // Filter out these specific numbers
+        }
+
+        // Hide specific (408) 886-8900 call from Jan 1, 11:35 AM with ~2m 12s duration
+        if (
+          (call.customer_phone === "4088868900" ||
+            call.customer_phone === "408-886-8900" ||
+            call.customer_phone === "(408) 886-8900" ||
+            call.customer_phone === "+1 (408) 886-8900" ||
+            call.customer_phone === "+14088868900") &&
+          call.created_at
+        ) {
+          const callTime = new Date(call.created_at);
+          const hour = callTime.getHours();
+          const minute = callTime.getMinutes();
+          const duration = call.duration_seconds;
+
+          // Hide if it's around 11:35 AM with duration around 132 seconds (2m 12s)
+          if ((hour === 11 || hour === 19) && minute >= 34 && minute <= 36 && duration && duration >= 130 && duration <= 135) {
+            return false;
+          }
+        }
+
+        // Hide specific (408) 964-8340 call from Dec 30, 7:03 PM with 1m 0s duration
+        if (
+          (call.customer_phone === "4089648340" ||
+            call.customer_phone === "408-964-8340" ||
+            call.customer_phone === "(408) 964-8340" ||
+            call.customer_phone === "+1 (408) 964-8340" ||
+            call.customer_phone === "+14089648340") &&
+          call.created_at
+        ) {
+          const callTime = new Date(call.created_at);
+          const hour = callTime.getHours();
+          const minute = callTime.getMinutes();
+          const duration = call.duration_seconds;
+
+          // Hide if it's around 7:03 PM with duration around 60 seconds (1m 0s)
+          if ((hour === 19 || hour === 7) && minute >= 2 && minute <= 4 && duration && duration >= 58 && duration <= 62) {
+            return false;
+          }
+        }
+
+        // Hide specific (510) 391-5909 call from Dec 30, 4:22 PM with 1m 42s duration
+        if (
+          (call.customer_phone === "5103915909" ||
+            call.customer_phone === "510-391-5909" ||
+            call.customer_phone === "(510) 391-5909" ||
+            call.customer_phone === "+1 (510) 391-5909" ||
+            call.customer_phone === "+15103915909") &&
+          call.created_at
+        ) {
+          const callTime = new Date(call.created_at);
+          const hour = callTime.getHours();
+          const minute = callTime.getMinutes();
+          const duration = call.duration_seconds;
+
+          // Hide if it's around 4:22 PM with duration around 102 seconds (1m 42s)
+          if ((hour === 16 || hour === 4) && minute >= 21 && minute <= 23 && duration && duration >= 100 && duration <= 104) {
+            return false;
+          }
+        }
+
+        // Hide specific (408) 891-0469 call from Andrea Watkins on Dec 25, 10:08 AM with 1m 5s duration
+        if (
+          (call.customer_phone === "4088910469" ||
+            call.customer_phone === "408-891-0469" ||
+            call.customer_phone === "(408) 891-0469" ||
+            call.customer_phone === "+1 (408) 891-0469" ||
+            call.customer_phone === "+14088910469") &&
+          call.created_at
+        ) {
+          const callTime = new Date(call.created_at);
+          const hour = callTime.getHours();
+          const minute = callTime.getMinutes();
+          const duration = call.duration_seconds;
+
+          // Hide if it's around 10:08 AM with duration around 65 seconds (1m 5s)
+          if ((hour === 10 || hour === 18) && minute >= 7 && minute <= 9 && duration && duration >= 63 && duration <= 67) {
+            return false;
+          }
+        }
+
         return true;
       });
 

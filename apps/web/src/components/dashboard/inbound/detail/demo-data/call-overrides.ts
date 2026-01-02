@@ -628,6 +628,22 @@ User: No.`,
     };
   }
 
+  // (650) 544-4003 - Lily Melissa call - set to Appt Scheduled
+  if (
+    matchesPhone(call.customer_phone, [
+      "6505444003",
+      "650-544-4003",
+      "+16505444003",
+      "(650) 544-4003",
+      "+1 (650) 544-4003",
+    ])
+  ) {
+    return {
+      ...call,
+      outcome: "Scheduled",
+    };
+  }
+
   // (408) 769-8988 - Most recent call with custom audio and transcript
   if (
     matchesPhone(call.customer_phone, [
