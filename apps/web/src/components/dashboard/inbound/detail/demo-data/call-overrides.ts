@@ -729,5 +729,26 @@ User: Thank you.`,
     };
   }
 
+  // (408) 661-7333 - 12:52 PM call - set to Info
+  if (
+    matchesPhone(call.customer_phone, [
+      "4086617333",
+      "408-661-7333",
+      "+14086617333",
+      "(408) 661-7333",
+      "+1 (408) 661-7333",
+    ])
+  ) {
+    return {
+      ...call,
+      outcome: "Info",
+      // Clear any escalation data
+      attention_types: null,
+      attention_severity: null,
+      attention_summary: null,
+      actions_taken: ["Information provided to caller"],
+    };
+  }
+
   return null;
 }
