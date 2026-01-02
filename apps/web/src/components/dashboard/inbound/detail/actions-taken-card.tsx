@@ -3,6 +3,8 @@
  *
  * Displays the call outcome badge and list of actions taken during the call.
  * Used in the inbound call detail panel.
+ *
+ * NOTE: This component is currently unused but kept for future reference.
  */
 
 import {
@@ -13,18 +15,22 @@ import {
 } from "@odis-ai/shared/ui/card";
 import { CheckCircle2 } from "lucide-react";
 import { OutcomeBadge } from "../table/outcome-badge";
+import type { Database } from "@odis-ai/shared/types";
+
+// Use Database type for compatibility
+type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
 interface ActionsTakenCardProps {
-  outcome: string | null | undefined;
+  call: InboundCall;
   actionsTaken: string[] | null | undefined;
 }
 
 export function ActionsTakenCard({
-  outcome,
+  call,
   actionsTaken,
 }: ActionsTakenCardProps) {
   // Don't render if no outcome and no actions
-  if (!outcome && (!actionsTaken || actionsTaken.length === 0)) {
+  if (!call.outcome && (!actionsTaken || actionsTaken.length === 0)) {
     return null;
   }
 
@@ -38,9 +44,9 @@ export function ActionsTakenCard({
       </CardHeader>
       <CardContent className="space-y-3">
         {/* Outcome Badge */}
-        {outcome && (
+        {call.outcome && (
           <div>
-            <OutcomeBadge outcome={outcome} />
+            <OutcomeBadge call={call} />
           </div>
         )}
 
@@ -57,7 +63,7 @@ export function ActionsTakenCard({
         )}
 
         {/* Empty state if outcome but no actions */}
-        {outcome && (!actionsTaken || actionsTaken.length === 0) && (
+        {call.outcome && (!actionsTaken || actionsTaken.length === 0) && (
           <p className="text-muted-foreground text-sm italic">
             No specific actions recorded
           </p>

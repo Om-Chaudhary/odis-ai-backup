@@ -4,6 +4,7 @@ import { CallerDisplay, CallDuration } from "../table-cells";
 import { OutcomeBadge } from "../outcome-badge";
 import { getCallModifications } from "../../demo-data";
 
+// Use Database type for compatibility with table data and demo functions
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
 interface CallRowProps {
@@ -25,9 +26,6 @@ export function CallRow({ call, isCompact = false }: CallRowProps) {
   // Use created_at for consistent sorting with backend
   const displayDate = callMods.adjustedDate ?? safeParseDate(call.created_at);
 
-  // Use outcome column directly from the database
-  const outcome = call.outcome ?? null;
-
   return (
     <>
       <td className="py-3 pl-3">
@@ -39,7 +37,7 @@ export function CallRow({ call, isCompact = false }: CallRowProps) {
         </div>
       </td>
       <td className="py-3 text-center">
-        <OutcomeBadge outcome={outcome} />
+        <OutcomeBadge call={call} />
       </td>
       <td className="py-3 text-center">
         <CallDuration call={call} />

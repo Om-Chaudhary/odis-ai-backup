@@ -25,9 +25,11 @@ import { OutcomeBadge } from "../table/outcome-badge";
 import { AttentionBanner } from "./shared/attention-banner";
 import { QuickActionsFooter } from "./shared/quick-actions-footer";
 import { TimestampBadge } from "./shared/timestamp-badge";
+import type { Database } from "@odis-ai/shared/types";
+import type { CallOutcome } from "../types";
 
-// Import InboundCall type from shared types
-import type { InboundCall } from "../types";
+// Use Database type for compatibility with table data
+type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
 interface CallDetailProps {
   call: InboundCall;
@@ -81,16 +83,27 @@ function getAttentionType(call: InboundCall): {
     };
   }
   // Check attention types from intelligence data
-  if (
-    call.attention_types?.includes("escalation") ||
-    call.escalation_data?.escalation_triggered
-  ) {
+  // IMPORTANT: Use strict boolean check for escalation_triggered
+  // VAPI may return string "false" which is truthy in JS
+  const escalationData = call.escalation_data as Record<string, unknown> | null;
+  const escalationTriggered =
+    escalationData && typeof escalationData === "object"
+      ? escalationData.escalation_triggered === true
+      : false;
+  const escalationSummary =
+    escalationData &&
+    typeof escalationData === "object" &&
+    typeof escalationData.escalation_summary === "string"
+      ? escalationData.escalation_summary
+      : undefined;
+
+  if (call.attention_types?.includes("escalation") || escalationTriggered) {
     return {
       type: "escalation",
       title: "Escalation Required",
       description:
         call.attention_summary ??
-        call.escalation_data?.escalation_summary ??
+        escalationSummary ??
         "This call requires staff attention",
     };
   }
@@ -234,7 +247,7 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
                   phone={call.customer_phone}
                   callerName={callerName}
                   petName={petName}
-                  callOutcome={call.outcome}
+                  callOutcome={call.outcome as CallOutcome | null}
                 />
               </AccordionContent>
             </AccordionItem>
@@ -259,15 +272,13 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
                     size="sm"
                   />
 
-                  {/* Outcome Badge */}
-                  {call.outcome && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-slate-500 dark:text-slate-400">
-                        Outcome:
-                      </span>
-                      <OutcomeBadge outcome={call.outcome} />
-                    </div>
-                  )}
+                  {/* Outcome Badge - Show descriptive outcome */}
+                  <div className="flex flex-col gap-2">
+                    <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
+                      Outcome
+                    </span>
+                    <OutcomeBadge call={call} showDescription={true} />
+                  </div>
 
                   {/* Summary Text */}
                   {callData.summary ? (
@@ -281,21 +292,31 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
                   )}
 
                   {/* Actions Taken */}
-                  {call.actions_taken && call.actions_taken.length > 0 && (
-                    <div className="mt-3 rounded-lg border border-slate-200/50 bg-slate-50/50 p-3 dark:border-slate-700/50 dark:bg-slate-800/30">
-                      <p className="mb-2 text-xs font-medium text-slate-600 dark:text-slate-400">
-                        Actions Taken
-                      </p>
-                      <ul className="space-y-1 text-sm text-slate-700 dark:text-slate-300">
-                        {call.actions_taken.map((action, index) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <span className="text-teal-500">•</span>
-                            <span>{action}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  {Array.isArray(call.actions_taken) &&
+                    call.actions_taken.length > 0 && (
+                      <div className="mt-3 rounded-lg border border-slate-200/50 bg-slate-50/50 p-3 dark:border-slate-700/50 dark:bg-slate-800/30">
+                        <p className="mb-2 text-xs font-medium text-slate-600 dark:text-slate-400">
+                          Actions Taken
+                        </p>
+                        <ul className="space-y-1 text-sm text-slate-700 dark:text-slate-300">
+                          {call.actions_taken.map(
+                            (action: unknown, index: number) => (
+                              <li
+                                key={index}
+                                className="flex items-start gap-2"
+                              >
+                                <span className="text-teal-500">•</span>
+                                <span>
+                                  {typeof action === "string"
+                                    ? action
+                                    : JSON.stringify(action)}
+                                </span>
+                              </li>
+                            ),
+                          )}
+                        </ul>
+                      </div>
+                    )}
                 </div>
               </AccordionContent>
             </AccordionItem>

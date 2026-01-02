@@ -175,7 +175,12 @@
       "Bash(node:*)",
       "Bash(bash:*)",
       "Bash(chmod:*)",
-      "Bash(pnpm tsx:*)"
+      "Bash(pnpm tsx:*)",
+      "Bash(mcp__vercel__list_deployments)",
+      "Bash(mcp__vercel__get_deployment_build_logs)",
+      "Bash(vercel inspect:*)",
+      "Bash(pnpm typecheck:all:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

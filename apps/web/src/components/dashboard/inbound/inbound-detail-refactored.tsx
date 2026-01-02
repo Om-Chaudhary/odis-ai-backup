@@ -6,13 +6,16 @@ import {
   MessageDetail,
   EmptyDetailState,
 } from "./detail";
+import type { Database } from "@odis-ai/shared/types";
 import type {
   ViewMode,
   AppointmentRequest,
   ClinicMessage,
   InboundItem,
-  InboundCall,
 } from "./types";
+
+// Use Database type for InboundCall
+type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
 interface InboundDetailProps {
   item: InboundItem | null;
