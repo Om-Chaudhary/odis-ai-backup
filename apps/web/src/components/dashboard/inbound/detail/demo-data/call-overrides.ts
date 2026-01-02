@@ -641,6 +641,12 @@ User: No.`,
     return {
       ...call,
       outcome: "Scheduled",
+      // Clear any escalation data that might be causing "Staff Review"
+      attention_types: null,
+      attention_severity: null,
+      attention_summary: null,
+      escalation_data: null,
+      actions_taken: ["Appointment scheduled via AI"],
     };
   }
 

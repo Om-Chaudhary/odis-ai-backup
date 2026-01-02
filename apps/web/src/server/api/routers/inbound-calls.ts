@@ -236,11 +236,12 @@ export const inboundCallsRouter = createTRPCRouter({
           return false; // Filter out calls with no phone number
         }
 
-        // Hide specific phone numbers: (408) 888-3899, (408) 791-4483, (669) 278-5158
+        // Hide specific phone numbers: (408) 888-3899, (408) 791-4483, (669) 278-5158, (408) 609-7439
         const hideTheseNumbers = [
           "4088883899", "408-888-3899", "(408) 888-3899", "+1 (408) 888-3899", "+14088883899",
           "4087914483", "408-791-4483", "(408) 791-4483", "+1 (408) 791-4483", "+14087914483",
-          "6692785158", "669-278-5158", "(669) 278-5158", "+1 (669) 278-5158", "+16692785158"
+          "6692785158", "669-278-5158", "(669) 278-5158", "+1 (669) 278-5158", "+16692785158",
+          "4086097439", "408-609-7439", "(408) 609-7439", "+1 (408) 609-7439", "+14086097439"
         ];
 
         if (hideTheseNumbers.includes(call.customer_phone)) {
@@ -323,6 +324,108 @@ export const inboundCallsRouter = createTRPCRouter({
 
           // Hide if it's around 10:08 AM with duration around 65 seconds (1m 5s)
           if ((hour === 10 || hour === 18) && minute >= 7 && minute <= 9 && duration && duration >= 63 && duration <= 67) {
+            return false;
+          }
+        }
+
+        // Hide specific (650) 544-4003 call - identify by unique characteristics
+        if (
+          (call.customer_phone === "6505444003" ||
+            call.customer_phone === "650-544-4003" ||
+            call.customer_phone === "(650) 544-4003" ||
+            call.customer_phone === "+1 (650) 544-4003" ||
+            call.customer_phone === "+16505444003") &&
+          call.created_at
+        ) {
+          const callTime = new Date(call.created_at);
+          const hour = callTime.getHours();
+          const minute = callTime.getMinutes();
+          const duration = call.duration_seconds;
+
+          // Hide specific call with identifying time/duration characteristics
+          // Adjust these parameters based on the actual call data
+          if (duration && duration >= 45 && duration <= 120) {
+            return false; // Hide this specific call based on duration range
+          }
+        }
+
+        // Hide specific (669) 261-4520 call - identify by unique characteristics
+        if (
+          (call.customer_phone === "6692614520" ||
+            call.customer_phone === "669-261-4520" ||
+            call.customer_phone === "(669) 261-4520" ||
+            call.customer_phone === "+1 (669) 261-4520" ||
+            call.customer_phone === "+16692614520") &&
+          call.created_at
+        ) {
+          const callTime = new Date(call.created_at);
+          const hour = callTime.getHours();
+          const minute = callTime.getMinutes();
+          const duration = call.duration_seconds;
+
+          // Hide specific call with identifying time/duration characteristics
+          // Adjust these parameters based on the actual call data
+          if (duration && duration >= 30 && duration <= 150) {
+            return false; // Hide this specific call based on duration range
+          }
+        }
+
+        // Hide specific (408) 644-4446 call at 10:55 AM (1m 1s duration)
+        if (
+          (call.customer_phone === "4086444446" ||
+            call.customer_phone === "408-644-4446" ||
+            call.customer_phone === "(408) 644-4446" ||
+            call.customer_phone === "+1 (408) 644-4446" ||
+            call.customer_phone === "+14086444446") &&
+          call.created_at
+        ) {
+          const callTime = new Date(call.created_at);
+          const hour = callTime.getHours();
+          const minute = callTime.getMinutes();
+          const duration = call.duration_seconds;
+
+          // Hide if it's around 10:55 AM with ~1 minute duration
+          if ((hour === 10 || hour === 18) && minute >= 54 && minute <= 56 && duration && duration >= 59 && duration <= 63) {
+            return false;
+          }
+        }
+
+        // Hide specific (408) 612-1141 call at 10:05 AM (Spring/Solma Martinez, 2m 35s duration)
+        if (
+          (call.customer_phone === "4086121141" ||
+            call.customer_phone === "408-612-1141" ||
+            call.customer_phone === "(408) 612-1141" ||
+            call.customer_phone === "+1 (408) 612-1141" ||
+            call.customer_phone === "+14086121141") &&
+          call.created_at
+        ) {
+          const callTime = new Date(call.created_at);
+          const hour = callTime.getHours();
+          const minute = callTime.getMinutes();
+          const duration = call.duration_seconds;
+
+          // Hide if it's around 10:05 AM with ~2m 35s duration
+          if ((hour === 10 || hour === 18) && minute >= 4 && minute <= 6 && duration && duration >= 153 && duration <= 157) {
+            return false;
+          }
+        }
+
+        // Hide specific (408) 482-5357 call at 7:46 AM (24s duration)
+        if (
+          (call.customer_phone === "4084825357" ||
+            call.customer_phone === "408-482-5357" ||
+            call.customer_phone === "(408) 482-5357" ||
+            call.customer_phone === "+1 (408) 482-5357" ||
+            call.customer_phone === "+14084825357") &&
+          call.created_at
+        ) {
+          const callTime = new Date(call.created_at);
+          const hour = callTime.getHours();
+          const minute = callTime.getMinutes();
+          const duration = call.duration_seconds;
+
+          // Hide if it's around 7:46 AM with ~24s duration
+          if ((hour === 7 || hour === 15) && minute >= 45 && minute <= 47 && duration && duration >= 22 && duration <= 26) {
             return false;
           }
         }

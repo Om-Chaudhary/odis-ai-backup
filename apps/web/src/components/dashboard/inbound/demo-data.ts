@@ -364,35 +364,7 @@ AI: You're welcome, Melissa. Have a good night!`,
  * Real appointment data comes from the database
  */
 export const DEMO_APPOINTMENTS: AppointmentRequest[] = [
-  // Andrea's cancelled appointment for Lucy - 10:08am
-  {
-    id: "demo-cancelled-appointment",
-    clinicId: "demo-clinic",
-    providerId: null,
-    clientName: "Andrea Watkins",
-    clientPhone: "408-891-0469",
-    patientName: "Lucy",
-    species: "dog",
-    breed: null,
-    reason: "Cancelled appointment",
-    requestedDate: "2024-12-25",
-    requestedStartTime: null,
-    requestedEndTime: null,
-    status: "cancelled" as const,
-    isNewClient: false,
-    isOutlier: null,
-    notes: "Appointment cancelled for December 25th per client request",
-    vapiCallId: "demo-vapi-call-andrea",
-    confirmedAppointmentId: null,
-    metadata: {
-      cancellationReason: "Client requested cancellation",
-      originalDate: "December 25th",
-      demoData: true,
-    },
-    // Set createdAt to Dec 25, 2024 at 10:08am
-    createdAt: "2024-12-25T18:08:00.000Z", // 10:08 AM PST
-    updatedAt: new Date().toISOString(),
-  },
+  // Andrea's cancelled appointment has been hidden - keeping only Yvonne's appointment
   // Yvonne's appointment for Canela - 9:00am (Call Back)
   {
     id: "demo-yvonne-canela-appointment",
@@ -440,31 +412,7 @@ export function getDemoAppointments(): AppointmentRequest[] {
  * Demo calls array - for cases that need call records but don't exist in DB
  */
 export const DEMO_CALLS = [
-  // Andrea's cancellation call - matches the override in call-overrides.ts
-  {
-    id: "demo-call-andrea-cancellation",
-    created_at: "2024-12-25T18:08:00.000Z", // Dec 25, 10:08 AM PST
-    updated_at: new Date().toISOString(),
-    user_id: "demo-user-id",
-    clinic_name: "Alum Rock Animal Hospital",
-    customer_phone: "408-891-0469",
-    vapi_call_id: "demo-vapi-call-andrea",
-    status: "completed",
-    started_at: "2024-12-25T18:08:00.000Z", // Dec 25, 10:08 AM PST
-    ended_at: "2024-12-25T18:09:05.000Z", // Dec 25, 10:09:05 AM PST (65 seconds later)
-    ended_reason: "completed",
-    duration_seconds: 65,
-    recording_url: "/audio/Lucy(Andrea).MP3",
-    transcript: null, // Will be overridden by call-overrides.ts
-    summary: null, // Will be overridden by call-overrides.ts
-    outcome: null, // Will be overridden by call-overrides.ts
-    actions_taken: null, // Will be overridden by call-overrides.ts
-    attention_types: null,
-    attention_severity: null,
-    attention_summary: null,
-    attention_flagged_at: null,
-    escalation_data: null,
-  } as InboundCall,
+  // Andrea's cancellation call has been hidden - no demo calls currently active
 ];
 
 /**
