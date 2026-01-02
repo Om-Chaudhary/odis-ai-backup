@@ -5,19 +5,14 @@ import { Badge } from "@odis-ai/shared/ui/badge";
 import { Separator } from "@odis-ai/shared/ui/separator";
 import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
 import { cn } from "@odis-ai/shared/util";
-import type {
-  AppointmentStatus,
-  MessageStatus,
-  MessagePriority,
-  CallOutcome,
-} from "../types";
+import type { AppointmentStatus, CallOutcome } from "../types";
 
 // =============================================================================
 // Types
 // =============================================================================
 
 interface CallerCardProps {
-  variant: "appointment" | "call" | "message";
+  variant: "appointment" | "call";
   // Common
   phone: string | null;
   callerName: string | null;
@@ -29,9 +24,6 @@ interface CallerCardProps {
   isNewClient?: boolean | null;
   // Call-specific
   callOutcome?: CallOutcome | null;
-  // Message-specific
-  messageStatus?: MessageStatus;
-  priority?: MessagePriority | null;
 }
 
 // =============================================================================
@@ -103,30 +95,6 @@ function getAppointmentStatusConfig(status: AppointmentStatus) {
 }
 
 /**
- * Get message status badge config
- */
-function getMessageStatusConfig(status: MessageStatus) {
-  const config: Record<MessageStatus, { label: string; className: string }> = {
-    new: {
-      label: "New",
-      className:
-        "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
-    },
-    read: {
-      label: "Read",
-      className:
-        "bg-slate-100 text-slate-700 dark:bg-slate-800/50 dark:text-slate-300",
-    },
-    resolved: {
-      label: "Resolved",
-      className:
-        "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300",
-    },
-  };
-  return config[status] ?? { label: status, className: "bg-slate-100" };
-}
-
-/**
  * Get call outcome badge config
  */
 function getCallOutcomeConfig(outcome: CallOutcome | null) {
@@ -172,7 +140,7 @@ function getCallOutcomeConfig(outcome: CallOutcome | null) {
 
 /**
  * Inbound Caller Card - Glassmorphism styled card showing caller/patient info.
- * Adapts display based on variant (appointment, call, message).
+ * Adapts display based on variant (appointment or call).
  */
 export function InboundCallerCard({
   variant,
@@ -184,8 +152,6 @@ export function InboundCallerCard({
   appointmentStatus,
   isNewClient,
   callOutcome,
-  messageStatus,
-  priority,
 }: CallerCardProps) {
   const formattedPhone = formatPhoneNumber(phone ?? "") ?? "Unknown";
   const hasPetInfo = petName ?? species;
@@ -222,14 +188,6 @@ export function InboundCallerCard({
         );
       }
     }
-    if (variant === "message" && messageStatus) {
-      const config = getMessageStatusConfig(messageStatus);
-      return (
-        <Badge className={cn("shrink-0 text-xs font-medium", config.className)}>
-          {config.label}
-        </Badge>
-      );
-    }
     return null;
   };
 
@@ -241,7 +199,6 @@ export function InboundCallerCard({
         "dark:from-slate-900/80 dark:via-teal-950/30 dark:to-slate-900/80",
         "shadow-sm backdrop-blur-md",
         "p-4",
-        priority === "urgent" && "border-red-200/50 dark:border-red-800/50",
       )}
     >
       {/* Top row: Avatar + Primary Info + Status */}
@@ -255,8 +212,6 @@ export function InboundCallerCard({
               "bg-gradient-to-br from-teal-100 to-emerald-100",
               "dark:from-teal-900/50 dark:to-emerald-900/50",
               "text-2xl shadow-inner",
-              priority === "urgent" &&
-                "from-red-100 to-orange-100 dark:from-red-900/50 dark:to-orange-900/50",
             )}
           >
             {avatarContent}
@@ -308,11 +263,6 @@ export function InboundCallerCard({
               className="bg-blue-500/10 text-xs text-blue-700 dark:text-blue-300"
             >
               New Client
-            </Badge>
-          )}
-          {priority === "urgent" && (
-            <Badge variant="destructive" className="text-xs">
-              Urgent
             </Badge>
           )}
         </div>

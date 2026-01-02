@@ -8,7 +8,6 @@ import { api } from "~/trpc/client";
 
 interface UseInboundMutationsOptions {
   onAppointmentSuccess?: () => void;
-  onMessageSuccess?: () => void;
   onCallSuccess?: () => void;
 }
 
@@ -16,7 +15,7 @@ interface UseInboundMutationsOptions {
  * Hook for managing inbound mutations (updates, deletes)
  */
 export function useInboundMutations(options: UseInboundMutationsOptions = {}) {
-  const { onAppointmentSuccess, onMessageSuccess, onCallSuccess } = options;
+  const { onAppointmentSuccess, onCallSuccess } = options;
 
   // Mutations
   const updateAppointment = api.inbound.updateAppointmentRequest.useMutation({
@@ -28,26 +27,6 @@ export function useInboundMutations(options: UseInboundMutationsOptions = {}) {
       toast.error("Failed to update appointment", {
         description: error.message,
       });
-    },
-  });
-
-  const updateMessage = api.inbound.updateClinicMessage.useMutation({
-    onSuccess: () => {
-      toast.success("Message updated");
-      onMessageSuccess?.();
-    },
-    onError: (error) => {
-      toast.error("Failed to update message", { description: error.message });
-    },
-  });
-
-  const markRead = api.inbound.markMessageRead.useMutation({
-    onSuccess: () => {
-      toast.success("Marked as read");
-      onMessageSuccess?.();
-    },
-    onError: (error) => {
-      toast.error("Failed to mark as read", { description: error.message });
     },
   });
 
@@ -70,16 +49,6 @@ export function useInboundMutations(options: UseInboundMutationsOptions = {}) {
       toast.error("Failed to delete appointment", {
         description: error.message,
       });
-    },
-  });
-
-  const deleteMessage = api.inbound.deleteClinicMessage.useMutation({
-    onSuccess: () => {
-      toast.success("Message deleted");
-      onMessageSuccess?.();
-    },
-    onError: (error) => {
-      toast.error("Failed to delete message", { description: error.message });
     },
   });
 
@@ -107,23 +76,6 @@ export function useInboundMutations(options: UseInboundMutationsOptions = {}) {
     [updateAppointment],
   );
 
-  const handleMarkMessageRead = useCallback(
-    async (id: string) => {
-      await markRead.mutateAsync({ id });
-    },
-    [markRead],
-  );
-
-  const handleResolveMessage = useCallback(
-    async (id: string) => {
-      await updateMessage.mutateAsync({
-        id,
-        status: "resolved",
-      });
-    },
-    [updateMessage],
-  );
-
   const handleDeleteCall = useCallback(
     async (id: string) => {
       await deleteCall.mutateAsync({ id });
@@ -138,37 +90,21 @@ export function useInboundMutations(options: UseInboundMutationsOptions = {}) {
     [deleteAppointment],
   );
 
-  const handleDeleteMessage = useCallback(
-    async (id: string) => {
-      await deleteMessage.mutateAsync({ id });
-    },
-    [deleteMessage],
-  );
-
   const isSubmitting =
     updateAppointment.isPending ||
-    updateMessage.isPending ||
-    markRead.isPending ||
     deleteCall.isPending ||
-    deleteAppointment.isPending ||
-    deleteMessage.isPending;
+    deleteAppointment.isPending;
 
   return {
     // Mutations
     updateAppointment,
-    updateMessage,
-    markRead,
     deleteCall,
     deleteAppointment,
-    deleteMessage,
     // Action handlers
     handleConfirmAppointment,
     handleRejectAppointment,
-    handleMarkMessageRead,
-    handleResolveMessage,
     handleDeleteCall,
     handleDeleteAppointment,
-    handleDeleteMessage,
     // State
     isSubmitting,
   };

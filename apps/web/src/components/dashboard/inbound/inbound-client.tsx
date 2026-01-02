@@ -1,23 +1,27 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useQueryState, parseAsInteger } from "nuqs";
-import { PhoneIncoming, Phone, Calendar, MessageSquare } from "lucide-react";
+import { PhoneIncoming, Phone, Calendar } from "lucide-react";
 
-import type { ViewMode, InboundItem } from "./types";
+import type { ViewMode, InboundItem, CallActionFilter } from "./types";
+import type { Database } from "@odis-ai/shared/types";
 import { PageContent, PageFooter } from "../layout";
 import { DashboardPageHeader, DashboardToolbar } from "../shared";
 import { InboundTable } from "./table";
 import { InboundDetail } from "./inbound-detail-refactored";
 import { InboundSplitLayout } from "./inbound-split-layout";
 import { InboundPagination } from "./inbound-pagination";
+import { CallActionFilters } from "./call-action-filters";
 import { useInboundData, useInboundMutations } from "./hooks";
+
+type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
 /**
  * Inbound Dashboard Client
  *
  * Features:
- * - View mode controlled via URL query param (?view=calls|appointments|messages)
+ * - View mode controlled via URL query param (?view=calls|appointments)
  * - View mode switching via inline pills in the toolbar
  * - Full-screen split layout with pagination
  * - Compact table rows
@@ -26,11 +30,9 @@ import { useInboundData, useInboundMutations } from "./hooks";
 export function InboundClient() {
   // URL-synced state
   const [viewMode, setViewMode] = useQueryState("view", {
-    defaultValue: "appointments" as ViewMode,
+    defaultValue: "calls" as ViewMode,
     parse: (v) =>
-      (["calls", "appointments", "messages"].includes(v)
-        ? v
-        : "appointments") as ViewMode,
+      (["calls", "appointments"].includes(v) ? v : "calls") as ViewMode,
   });
 
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
@@ -43,6 +45,8 @@ export function InboundClient() {
   // Local state
   const [selectedItem, setSelectedItem] = useState<InboundItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [callActionFilter, setCallActionFilter] =
+    useState<CallActionFilter>("all");
 
   // Use custom hooks for data and mutations
   const {
@@ -52,40 +56,56 @@ export function InboundClient() {
     isLoading,
     refetchCalls,
     refetchAppointments,
-    refetchMessages,
   } = useInboundData({
     viewMode,
     page,
     pageSize,
     callStatus: "all",
     appointmentStatus: "all",
-    messageStatus: "all",
     searchTerm,
   });
 
   const {
     handleConfirmAppointment,
     handleRejectAppointment,
-    handleMarkMessageRead,
-    handleResolveMessage,
     handleDeleteCall,
     handleDeleteAppointment,
-    handleDeleteMessage,
     isSubmitting,
   } = useInboundMutations({
     onAppointmentSuccess: () => {
       setSelectedItem(null);
       void refetchAppointments();
     },
-    onMessageSuccess: () => {
-      setSelectedItem(null);
-      void refetchMessages();
-    },
     onCallSuccess: () => {
       setSelectedItem(null);
       void refetchCalls();
     },
   });
+
+  // Apply call action filter when in calls view mode
+  const filteredItems = useMemo(() => {
+    if (viewMode !== "calls") {
+      return currentItems;
+    }
+
+    // Filter calls based on call action filter
+    return currentItems.filter((item) => {
+      const call = item as InboundCall;
+      const outcome = call.outcome;
+
+      switch (callActionFilter) {
+        case "needs_attention":
+          return outcome === "Urgent" || outcome === "Call Back";
+        case "urgent_only":
+          return outcome === "Urgent";
+        case "info_only":
+          return outcome === "Info";
+        case "all":
+        default:
+          return true;
+      }
+    });
+  }, [currentItems, callActionFilter, viewMode]);
 
   // Escape to close panel
   useEffect(() => {
@@ -155,27 +175,27 @@ export function InboundClient() {
 
   const handleKeyNavigation = useCallback(
     (direction: "up" | "down") => {
-      if (currentItems.length === 0) return;
+      if (filteredItems.length === 0) return;
 
       const currentIndex = selectedItem
-        ? currentItems.findIndex((c) => c.id === selectedItem.id)
+        ? filteredItems.findIndex((c) => c.id === selectedItem.id)
         : -1;
 
       let newIndex: number;
       if (direction === "up") {
         newIndex =
-          currentIndex <= 0 ? currentItems.length - 1 : currentIndex - 1;
+          currentIndex <= 0 ? filteredItems.length - 1 : currentIndex - 1;
       } else {
         newIndex =
-          currentIndex >= currentItems.length - 1 ? 0 : currentIndex + 1;
+          currentIndex >= filteredItems.length - 1 ? 0 : currentIndex + 1;
       }
 
-      const newItem = currentItems[newIndex];
+      const newItem = filteredItems[newIndex];
       if (newItem) {
         handleSelectItem(newItem);
       }
     },
-    [currentItems, selectedItem, handleSelectItem],
+    [filteredItems, selectedItem, handleSelectItem],
   );
 
   // Build view options with counts from stats
@@ -192,12 +212,6 @@ export function InboundClient() {
       icon: Calendar,
       count: stats?.totals?.appointments ?? 0,
     },
-    {
-      value: "messages",
-      label: "Messages",
-      icon: MessageSquare,
-      count: stats?.totals?.messages ?? 0,
-    },
   ];
 
   return (
@@ -211,7 +225,7 @@ export function InboundClient() {
             <>
               <DashboardPageHeader
                 title="Inbound Communications"
-                subtitle="Manage incoming calls, appointment requests, and messages"
+                subtitle="Manage incoming calls and appointment requests"
                 icon={PhoneIncoming}
               >
                 <DashboardToolbar
@@ -224,9 +238,17 @@ export function InboundClient() {
                   isLoading={isLoading}
                 />
               </DashboardPageHeader>
+              {/* Call action filters - only show for calls view */}
+              {viewMode === "calls" && (
+                <CallActionFilters
+                  currentFilter={callActionFilter}
+                  onFilterChange={setCallActionFilter}
+                  isLoading={isLoading}
+                />
+              )}
               <PageContent>
                 <InboundTable
-                  items={currentItems}
+                  items={filteredItems}
                   viewMode={viewMode}
                   selectedItemId={selectedItem?.id ?? null}
                   onSelectItem={handleSelectItem}
@@ -235,9 +257,7 @@ export function InboundClient() {
                   onQuickAction={
                     viewMode === "appointments"
                       ? handleConfirmAppointment
-                      : viewMode === "messages"
-                        ? handleMarkMessageRead
-                        : undefined
+                      : undefined
                   }
                   isCompact={selectedItem !== null}
                 />
@@ -259,11 +279,8 @@ export function InboundClient() {
               viewMode={viewMode}
               onConfirmAppointment={handleConfirmAppointment}
               onRejectAppointment={handleRejectAppointment}
-              onMarkMessageRead={handleMarkMessageRead}
-              onResolveMessage={handleResolveMessage}
               onDeleteCall={handleDeleteCall}
               onDeleteAppointment={handleDeleteAppointment}
-              onDeleteMessage={handleDeleteMessage}
               isSubmitting={isSubmitting}
             />
           }

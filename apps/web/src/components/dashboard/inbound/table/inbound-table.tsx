@@ -2,21 +2,11 @@
 
 import { useEffect, useRef } from "react";
 import { cn } from "@odis-ai/shared/util";
-import type {
-  ViewMode,
-  InboundItem,
-  AppointmentRequest,
-  ClinicMessage,
-} from "../types";
+import type { ViewMode, InboundItem, AppointmentRequest } from "../types";
 import type { Database } from "@odis-ai/shared/types";
-import {
-  CallsHeader,
-  AppointmentsHeader,
-  MessagesHeader,
-} from "./table-headers";
+import { CallsHeader, AppointmentsHeader } from "./table-headers";
 import { CallRow } from "./rows/call-row";
 import { AppointmentRow } from "./rows/appointment-row";
-import { MessageRow } from "./rows/message-row";
 import { TableSkeleton, TableEmpty } from "./table-states";
 import { getCallModifications } from "../demo-data";
 
@@ -40,7 +30,6 @@ interface InboundTableProps {
  * Renders different columns based on view mode:
  * - Calls: Phone, Duration, Status, Sentiment, Time
  * - Appointments: Patient/Client, Species, Reason, Status, Date/Time
- * - Messages: Caller, Message Preview, Priority, Status, Time
  */
 export function InboundTable({
   items,
@@ -113,7 +102,6 @@ export function InboundTable({
           {viewMode === "appointments" && (
             <AppointmentsHeader isCompact={isCompact} />
           )}
-          {viewMode === "messages" && <MessagesHeader isCompact={isCompact} />}
         </thead>
         <tbody className="divide-y divide-teal-50">
           {items
@@ -158,12 +146,6 @@ export function InboundTable({
                   {viewMode === "appointments" && (
                     <AppointmentRow
                       appointment={item as AppointmentRequest}
-                      isCompact={isCompact}
-                    />
-                  )}
-                  {viewMode === "messages" && (
-                    <MessageRow
-                      message={item as ClinicMessage}
                       isCompact={isCompact}
                     />
                   )}

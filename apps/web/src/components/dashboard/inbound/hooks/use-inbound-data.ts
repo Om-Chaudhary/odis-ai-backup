@@ -1,5 +1,5 @@
 /**
- * Custom hook for fetching inbound data (calls, appointments, messages, stats)
+ * Custom hook for fetching inbound data (calls, appointments, stats)
  */
 
 import { useRef, useEffect, useMemo } from "react";
@@ -8,9 +8,7 @@ import type {
   ViewMode,
   CallStatusFilter,
   AppointmentStatusFilter,
-  MessageStatusFilter,
   AppointmentRequest,
-  ClinicMessage,
 } from "../types";
 import type { Database } from "@odis-ai/shared/types";
 import { getDemoAppointments } from "../demo-data";
@@ -23,13 +21,12 @@ interface UseInboundDataParams {
   pageSize: number;
   callStatus: CallStatusFilter;
   appointmentStatus: AppointmentStatusFilter;
-  messageStatus: MessageStatusFilter;
   searchTerm: string;
 }
 
 /**
  * Hook for managing inbound data queries
- * Handles calls, appointments, messages, and stats
+ * Handles calls, appointments, and stats
  * Fetches all data with pagination only (no date filtering)
  */
 export function useInboundData(params: UseInboundDataParams) {
@@ -39,14 +36,12 @@ export function useInboundData(params: UseInboundDataParams) {
     pageSize,
     callStatus,
     appointmentStatus,
-    messageStatus,
     searchTerm,
   } = params;
 
   // Refs for polling stability
   const callsRef = useRef<InboundCall[]>([]);
   const appointmentsRef = useRef<AppointmentRequest[]>([]);
-  const messagesRef = useRef<ClinicMessage[]>([]);
 
   // Map filter to API status
   const getCallApiStatus = (filter: CallStatusFilter): string | undefined => {
@@ -59,20 +54,6 @@ export function useInboundData(params: UseInboundDataParams) {
   ): string | undefined => {
     if (filter === "all") return undefined;
     return filter;
-  };
-
-  const getMessageApiStatus = (
-    filter: MessageStatusFilter,
-  ): string | undefined => {
-    if (filter === "all" || filter === "urgent") return undefined;
-    return filter;
-  };
-
-  const getMessageApiPriority = (
-    filter: MessageStatusFilter,
-  ): string | undefined => {
-    if (filter === "urgent") return "urgent";
-    return undefined;
   };
 
   // Fetch calls (no date filtering - all calls with pagination)
@@ -131,32 +112,6 @@ export function useInboundData(params: UseInboundDataParams) {
     },
   );
 
-  // Fetch messages (no date filtering - all messages with pagination)
-  const {
-    data: messagesData,
-    isLoading: messagesLoading,
-    refetch: refetchMessages,
-  } = api.inbound.listClinicMessages.useQuery(
-    {
-      page,
-      pageSize,
-      status: getMessageApiStatus(messageStatus) as
-        | "new"
-        | "read"
-        | "resolved"
-        | undefined,
-      priority: getMessageApiPriority(messageStatus) as
-        | "urgent"
-        | "normal"
-        | undefined,
-      search: searchTerm || undefined,
-    },
-    {
-      enabled: viewMode === "messages",
-      refetchInterval: 30000,
-    },
-  );
-
   // Fetch stats (global stats without date filtering)
   const { data: statsData } = api.inbound.getInboundStats.useQuery({});
 
@@ -177,12 +132,6 @@ export function useInboundData(params: UseInboundDataParams) {
       ];
     }
   }, [appointmentsData?.appointments]);
-
-  useEffect(() => {
-    if (messagesData?.messages) {
-      messagesRef.current = messagesData.messages;
-    }
-  }, [messagesData?.messages]);
 
   // Derived data with custom Andrea placement for calls
   const calls = useMemo(() => {
@@ -297,11 +246,6 @@ export function useInboundData(params: UseInboundDataParams) {
     return finalAppointments;
   }, [appointmentsData?.appointments]);
 
-  const messages = useMemo(
-    () => messagesData?.messages ?? [],
-    [messagesData?.messages],
-  );
-
   // Get current items based on view mode
   const currentItems = useMemo(() => {
     switch (viewMode) {
@@ -309,12 +253,10 @@ export function useInboundData(params: UseInboundDataParams) {
         return calls;
       case "appointments":
         return appointments;
-      case "messages":
-        return messages;
       default:
         return [];
     }
-  }, [viewMode, calls, appointments, messages]);
+  }, [viewMode, calls, appointments]);
 
   const currentPagination = useMemo(() => {
     switch (viewMode) {
@@ -328,12 +270,10 @@ export function useInboundData(params: UseInboundDataParams) {
             total: 0,
           }
         );
-      case "messages":
-        return messagesData?.pagination ?? { page: 1, pageSize: 25, total: 0 };
       default:
         return { page: 1, pageSize: 25, total: 0 };
     }
-  }, [viewMode, callsData, appointmentsData, messagesData]);
+  }, [viewMode, callsData, appointmentsData]);
 
   const isLoading = useMemo(() => {
     switch (viewMode) {
@@ -341,12 +281,10 @@ export function useInboundData(params: UseInboundDataParams) {
         return callsLoading;
       case "appointments":
         return appointmentsLoading;
-      case "messages":
-        return messagesLoading;
       default:
         return false;
     }
-  }, [viewMode, callsLoading, appointmentsLoading, messagesLoading]);
+  }, [viewMode, callsLoading, appointmentsLoading]);
 
   // Stats for filter tabs
   const stats = useMemo(() => {
@@ -359,15 +297,15 @@ export function useInboundData(params: UseInboundDataParams) {
           rejected: 0,
           cancelled: 0,
         },
-        messages: { total: 0, new: 0, read: 0, resolved: 0, urgent: 0 },
         calls: {
           total: 0,
           completed: 0,
           inProgress: 0,
           failed: 0,
           cancelled: 0,
+          needsAttention: 0,
         },
-        totals: { appointments: 0, messages: 0, calls: 0, needsAttention: 0 },
+        totals: { appointments: 0, calls: 0, needsAttention: 0 },
       }
     );
   }, [statsData]);
@@ -375,13 +313,11 @@ export function useInboundData(params: UseInboundDataParams) {
   return {
     calls,
     appointments,
-    messages,
     currentItems,
     currentPagination,
     stats,
     isLoading,
     refetchCalls,
     refetchAppointments,
-    refetchMessages,
   };
 }

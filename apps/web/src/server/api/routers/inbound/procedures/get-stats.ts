@@ -1,7 +1,7 @@
 /**
  * Get Inbound Stats Procedure
  *
- * Fetches combined statistics for VAPI bookings, clinic messages, and calls.
+ * Fetches combined statistics for VAPI bookings and inbound calls.
  */
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
@@ -81,37 +81,11 @@ export const getStatsRouter = createTRPCRouter({
           .length,
       };
 
-      // Fetch message stats
-      let messageQuery = ctx.supabase
-        .from("clinic_messages")
-        .select("status, priority", { count: "exact" });
-
-      if (clinic?.id) {
-        messageQuery = messageQuery.eq("clinic_id", clinic.id);
-      }
-
-      messageQuery = buildDateFilter(
-        messageQuery,
-        input.startDate,
-        input.endDate,
-      );
-
-      const { data: messages, count: messageCount } = await messageQuery;
-
-      // Count message statuses and priorities
-      const messageStats = {
-        total: messageCount ?? 0,
-        new: (messages ?? []).filter((m) => m.status === "new").length,
-        read: (messages ?? []).filter((m) => m.status === "read").length,
-        resolved: (messages ?? []).filter((m) => m.status === "resolved")
-          .length,
-        urgent: (messages ?? []).filter((m) => m.priority === "urgent").length,
-      };
-
-      // Fetch call stats (from existing inbound_vapi_calls table)
+      // Fetch call stats (from inbound_vapi_calls table)
+      // Include outcome field to calculate needsAttention
       let callQuery = ctx.supabase
         .from("inbound_vapi_calls")
-        .select("status, user_sentiment", { count: "exact" });
+        .select("status, user_sentiment, outcome", { count: "exact" });
 
       // Apply clinic filtering for calls (uses clinic_name field)
       if (userRecord?.clinic_name) {
@@ -131,18 +105,20 @@ export const getStatsRouter = createTRPCRouter({
         ).length,
         failed: (calls ?? []).filter((c) => c.status === "failed").length,
         cancelled: (calls ?? []).filter((c) => c.status === "cancelled").length,
+        // Count calls that need attention (Urgent, Call Back outcomes)
+        // Will be refined with descriptive outcome logic later
+        needsAttention: (calls ?? []).filter(
+          (c) => c.outcome === "Urgent" || c.outcome === "Call Back",
+        ).length,
       };
 
       return {
         appointments: appointmentStats,
-        messages: messageStats,
         calls: callStats,
         totals: {
           appointments: appointmentStats.total,
-          messages: messageStats.total,
           calls: callStats.total,
-          needsAttention:
-            appointmentStats.pending + messageStats.new + messageStats.urgent,
+          needsAttention: appointmentStats.pending + callStats.needsAttention,
         },
       };
     }),

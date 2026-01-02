@@ -2,7 +2,7 @@
  * Shared table cell components
  */
 
-import { Calendar, MessageSquare, Loader2, PawPrint } from "lucide-react";
+import { Calendar, Loader2, PawPrint } from "lucide-react";
 import { api } from "~/trpc/client";
 import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
 import { formatDuration } from "../../shared/utils";
@@ -120,22 +120,12 @@ export function CallDuration({ call }: { call: InboundCall }) {
 }
 
 /**
- * Icons showing if call is associated with appointments or messages
+ * Icons showing if call is associated with appointments
  */
 export function CallAlertsIcons({ vapiCallId }: { vapiCallId: string | null }) {
-  // Check if this call is associated with appointments or messages via vapiCallId
+  // Check if this call is associated with appointments via vapiCallId
   const { data: appointmentExists } =
     api.inbound.checkCallAppointmentAssociation.useQuery(
-      { callId: vapiCallId! },
-      {
-        enabled: !!vapiCallId,
-        staleTime: 5 * 60 * 1000, // 5 minutes cache
-        retry: false,
-      },
-    );
-
-  const { data: messageExists } =
-    api.inbound.checkCallMessageAssociation.useQuery(
       { callId: vapiCallId! },
       {
         enabled: !!vapiCallId,
@@ -148,9 +138,6 @@ export function CallAlertsIcons({ vapiCallId }: { vapiCallId: string | null }) {
     <div className="flex items-center justify-center gap-1">
       {appointmentExists && (
         <Calendar className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-      )}
-      {messageExists && (
-        <MessageSquare className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
       )}
     </div>
   );

@@ -6,4 +6,3 @@ export * from "./status-badges";
 export { CallStatusBadge } from "../../inbound/detail/badges/call-status-badge";
 export { SentimentBadge } from "../../inbound/detail/badges/sentiment-badge";
 export { AppointmentStatusBadge } from "../../inbound/detail/badges/appointment-status-badge";
-export { MessageStatusBadge } from "../../inbound/detail/badges/message-status-badge";
