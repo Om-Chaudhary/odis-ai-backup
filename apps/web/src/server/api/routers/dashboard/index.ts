@@ -12,8 +12,13 @@ import { performanceRouter } from "./performance";
 import { scheduledRouter } from "./scheduled";
 import { listingsRouter } from "./listings";
 import { widgetsRouter } from "./widgets";
+import { overviewRouter } from "./overview";
 
 export const dashboardRouter = createTRPCRouter({
+  // Overview procedures (new dashboard overview)
+  getOverview: overviewRouter.getOverview,
+  getLastActivity: overviewRouter.getLastActivity,
+
   // Stats procedures
   getStats: statsRouter.getStats,
   getCaseStats: statsRouter.getCaseStats,
