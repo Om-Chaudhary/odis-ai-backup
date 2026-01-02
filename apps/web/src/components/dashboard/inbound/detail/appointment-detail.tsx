@@ -617,7 +617,7 @@ export function AppointmentDetail({
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    className="flex-1"
+                    className="min-w-0 flex-1"
                     onClick={() => {
                       setShowRejectForm(false);
                       setRejectNotes("");
@@ -628,7 +628,7 @@ export function AppointmentDetail({
                   </Button>
                   <Button
                     variant="destructive"
-                    className="flex-1"
+                    className="min-w-0 flex-1"
                     onClick={() =>
                       onReject(appointment.id, rejectNotes || undefined)
                     }
@@ -707,7 +707,7 @@ export function AppointmentDetail({
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    className="flex-1"
+                    className="min-w-0 flex-1"
                     onClick={() => {
                       setShowConfirmForm(false);
                       setConfirmDate(() => {
@@ -728,7 +728,7 @@ export function AppointmentDetail({
                     Cancel
                   </Button>
                   <Button
-                    className="flex-1 bg-teal-600 hover:bg-teal-700"
+                    className="min-w-0 flex-1 bg-teal-600 hover:bg-teal-700"
                     onClick={() => {
                       const dateStr = confirmDate
                         ? format(confirmDate, "yyyy-MM-dd")
@@ -754,7 +754,7 @@ export function AppointmentDetail({
               <div className="flex gap-2">
                 <Button
                   variant="outline"
-                  className="flex-1 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+                  className="min-w-0 flex-1 border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
                   onClick={() => setShowRejectForm(true)}
                   disabled={isSubmitting}
                 >
@@ -762,7 +762,7 @@ export function AppointmentDetail({
                   Reject
                 </Button>
                 <Button
-                  className="flex-1 bg-teal-600 hover:bg-teal-700"
+                  className="min-w-0 flex-1 bg-teal-600 hover:bg-teal-700"
                   onClick={() => setShowConfirmForm(true)}
                   disabled={isSubmitting}
                 >
@@ -783,7 +783,7 @@ export function AppointmentDetail({
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    className="flex-1"
+                    className="min-w-0 flex-1"
                     onClick={() => setShowDeleteConfirm(false)}
                     disabled={isSubmitting}
                   >
@@ -791,7 +791,7 @@ export function AppointmentDetail({
                   </Button>
                   <Button
                     variant="destructive"
-                    className="flex-1 bg-red-600 text-white hover:bg-red-700"
+                    className="min-w-0 flex-1 bg-red-600 text-white hover:bg-red-700"
                     onClick={() => onDelete(appointment.id)}
                     disabled={isSubmitting}
                   >

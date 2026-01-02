@@ -46,7 +46,7 @@ export function QuickActionsFooter({
         <div className="flex gap-2">
           <Button
             variant="outline"
-            className="flex-1"
+            className="min-w-0 flex-1"
             onClick={() => setShowDeleteConfirm(false)}
             disabled={isSubmitting}
           >
@@ -54,7 +54,7 @@ export function QuickActionsFooter({
           </Button>
           <Button
             variant="destructive"
-            className="flex-1"
+            className="min-w-0 flex-1"
             onClick={onDelete}
             disabled={isSubmitting}
           >
