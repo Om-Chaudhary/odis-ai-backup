@@ -163,7 +163,19 @@
       "mcp__firecrawl__firecrawl_search",
       "Bash(VAPI_API_KEY=eb6d0702-e660-46a7-9fe4-71c4a5264e23 npx tsx:*)",
       "mcp__vapi-mcp__create_tool",
-      "Bash(/bin/bash -c '\nEVAL_IDS=$\\(curl -s -X GET \"\"https://api.vapi.ai/eval\"\" -H \"\"Authorization: Bearer eb6d0702-e660-46a7-9fe4-71c4a5264e23\"\" | jq -r \"\".results[].id\"\"\\)\nfor id in $EVAL_IDS; do\n  echo \"\"Deleting $id\"\"\n  curl -s -X DELETE \"\"https://api.vapi.ai/eval/$id\"\" -H \"\"Authorization: Bearer eb6d0702-e660-46a7-9fe4-71c4a5264e23\"\" > /dev/null\ndone\necho \"\"Done\"\"\n')"
+      "Bash(/bin/bash -c '\nEVAL_IDS=$\\(curl -s -X GET \"\"https://api.vapi.ai/eval\"\" -H \"\"Authorization: Bearer eb6d0702-e660-46a7-9fe4-71c4a5264e23\"\" | jq -r \"\".results[].id\"\"\\)\nfor id in $EVAL_IDS; do\n  echo \"\"Deleting $id\"\"\n  curl -s -X DELETE \"\"https://api.vapi.ai/eval/$id\"\" -H \"\"Authorization: Bearer eb6d0702-e660-46a7-9fe4-71c4a5264e23\"\" > /dev/null\ndone\necho \"\"Done\"\"\n')",
+      "mcp__playwright__browser_run_code",
+      "mcp__playwright__browser_tabs",
+      "WebFetch(domain:www.chdartmaker.com)",
+      "mcp__playwright__browser_fill_form",
+      "mcp__vapi-mcp__get_call",
+      "Bash(pnpm backfill:inbound-outcomes:*)",
+      "Bash(npx vapi:*)",
+      "Bash(PGPASSWORD='dj1993tallenwenowns!!' psql:*)",
+      "Bash(node:*)",
+      "Bash(bash:*)",
+      "Bash(chmod:*)",
+      "Bash(pnpm tsx:*)"
     ],
     "deny": [],
     "ask": []

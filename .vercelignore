@@ -8,6 +8,10 @@ docs/
 .vscode/
 .idea/
 
+# Development scripts (not for production)
+scripts/
+apps/*/src/scripts/
+
 # Testing
 **/*.test.ts
 **/*.test.tsx

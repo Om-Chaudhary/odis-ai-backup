@@ -318,7 +318,7 @@ async function backfillInboundOutcomes() {
 
   // Process each call
   for (let i = 0; i < calls.length; i++) {
-    const call = calls[i];
+    const call = calls[i]!;
     const progress = `[${i + 1}/${calls.length}]`;
 
     console.log(`\n${progress} Processing call: ${call.vapi_call_id}`);
