@@ -5,7 +5,7 @@ import { Badge } from "@odis-ai/shared/ui/badge";
 import { Separator } from "@odis-ai/shared/ui/separator";
 import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
 import { cn } from "@odis-ai/shared/util";
-import type { AppointmentStatus, CallOutcome } from "../types";
+import type { AppointmentStatus } from "../types";
 
 // =============================================================================
 // Types
@@ -22,8 +22,6 @@ interface CallerCardProps {
   breed?: string | null;
   appointmentStatus?: AppointmentStatus;
   isNewClient?: boolean | null;
-  // Call-specific
-  callOutcome?: CallOutcome | null;
 }
 
 // =============================================================================
@@ -94,46 +92,6 @@ function getAppointmentStatusConfig(status: AppointmentStatus) {
   return config[status] ?? { label: status, className: "bg-slate-100" };
 }
 
-/**
- * Get call outcome badge config
- */
-function getCallOutcomeConfig(outcome: CallOutcome | null) {
-  if (!outcome) return null;
-
-  const config: Record<CallOutcome, { label: string; className: string }> = {
-    Scheduled: {
-      label: "Scheduled",
-      className:
-        "bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300",
-    },
-    Cancellation: {
-      label: "Cancellation",
-      className:
-        "bg-orange-100 text-orange-700 dark:bg-orange-900/50 dark:text-orange-300",
-    },
-    Info: {
-      label: "Info",
-      className:
-        "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
-    },
-    Urgent: {
-      label: "Urgent",
-      className: "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300",
-    },
-    "Call Back": {
-      label: "Call Back",
-      className:
-        "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300",
-    },
-    Completed: {
-      label: "Completed",
-      className:
-        "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300",
-    },
-  };
-  return config[outcome] ?? { label: outcome, className: "bg-slate-100" };
-}
-
 // =============================================================================
 // Component
 // =============================================================================
@@ -151,7 +109,6 @@ export function InboundCallerCard({
   breed,
   appointmentStatus,
   isNewClient,
-  callOutcome,
 }: CallerCardProps) {
   const formattedPhone = formatPhoneNumber(phone ?? "") ?? "Unknown";
   const hasPetInfo = petName ?? species;
@@ -167,6 +124,8 @@ export function InboundCallerCard({
   );
 
   // Determine status badge
+  // Note: For calls, the outcome badge is shown in the Call Summary section,
+  // so we don't duplicate it here
   const renderStatusBadge = () => {
     if (variant === "appointment" && appointmentStatus) {
       const config = getAppointmentStatusConfig(appointmentStatus);
@@ -176,18 +135,7 @@ export function InboundCallerCard({
         </Badge>
       );
     }
-    if (variant === "call" && callOutcome) {
-      const config = getCallOutcomeConfig(callOutcome);
-      if (config) {
-        return (
-          <Badge
-            className={cn("shrink-0 text-xs font-medium", config.className)}
-          >
-            {config.label}
-          </Badge>
-        );
-      }
-    }
+    // Call outcome badge removed - it's shown in the Call Summary accordion section
     return null;
   };
 

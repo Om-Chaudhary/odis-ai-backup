@@ -9,11 +9,11 @@ import {
 import {
   Building2,
   Loader2,
-  AlertTriangle,
   FileText,
   User,
   Mic,
   Clock,
+  AlertTriangle,
 } from "lucide-react";
 import { Badge } from "@odis-ai/shared/ui/badge";
 import { CallRecordingPlayer } from "../../shared/call-recording-player";
@@ -22,11 +22,9 @@ import { getCallDataOverride } from "./demo-data";
 import { InboundCallerCard } from "./caller-card";
 import { getDemoCallerName } from "../demo-data";
 import { OutcomeBadge } from "../table/outcome-badge";
-import { AttentionBanner } from "./shared/attention-banner";
 import { QuickActionsFooter } from "./shared/quick-actions-footer";
 import { TimestampBadge } from "./shared/timestamp-badge";
 import type { Database } from "@odis-ai/shared/types";
-import type { CallOutcome } from "../types";
 
 // Use Database type for compatibility with table data
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
@@ -58,56 +56,6 @@ function formatDuration(seconds: number | null | undefined): string {
   const secs = seconds % 60;
   if (mins === 0) return `${secs}s`;
   return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
-}
-
-/**
- * Check if call needs attention based on outcome
- */
-function getAttentionType(call: InboundCall): {
-  type: "urgent" | "callback" | "escalation";
-  title: string;
-  description?: string;
-} | null {
-  if (call.outcome === "Urgent") {
-    return {
-      type: "urgent",
-      title: "Urgent Attention Required",
-      description: call.summary ?? "This call was flagged as urgent",
-    };
-  }
-  if (call.outcome === "Call Back") {
-    return {
-      type: "callback",
-      title: "Callback Requested",
-      description: call.summary ?? "The caller requested a callback",
-    };
-  }
-  // Check attention types from intelligence data
-  // IMPORTANT: Use strict boolean check for escalation_triggered
-  // VAPI may return string "false" which is truthy in JS
-  const escalationData = call.escalation_data as Record<string, unknown> | null;
-  const escalationTriggered =
-    escalationData && typeof escalationData === "object"
-      ? escalationData.escalation_triggered === true
-      : false;
-  const escalationSummary =
-    escalationData &&
-    typeof escalationData === "object" &&
-    typeof escalationData.escalation_summary === "string"
-      ? escalationData.escalation_summary
-      : undefined;
-
-  if (call.attention_types?.includes("escalation") || escalationTriggered) {
-    return {
-      type: "escalation",
-      title: "Escalation Required",
-      description:
-        call.attention_summary ??
-        escalationSummary ??
-        "This call requires staff attention",
-    };
-  }
-  return null;
 }
 
 export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
@@ -170,9 +118,6 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
         }
       : call);
 
-  // Check if this call needs attention
-  const attention = getAttentionType(call);
-
   // Determine which accordion sections should be open by default
   const defaultOpenSections = ["caller", "summary"];
   if (callData.recording_url && (callData.duration_seconds ?? 0) < 120) {
@@ -215,15 +160,6 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
       {/* Scrollable Content */}
       <div className="flex-1 overflow-auto p-4">
         <div className="space-y-4">
-          {/* Attention Banner - Top priority */}
-          {attention && (
-            <AttentionBanner
-              type={attention.type}
-              title={attention.title}
-              description={attention.description}
-            />
-          )}
-
           {/* Accordion Sections */}
           <Accordion
             type="multiple"
@@ -247,7 +183,6 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
                   phone={call.customer_phone}
                   callerName={callerName}
                   petName={petName}
-                  callOutcome={call.outcome as CallOutcome | null}
                 />
               </AccordionContent>
             </AccordionItem>

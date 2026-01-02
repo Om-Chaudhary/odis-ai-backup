@@ -11,9 +11,10 @@ type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
  * Determines if a call should have a blank outcome (no badge)
  *
  * Detection criteria:
- * - Very short duration (< 30 seconds)
+ * - Very short duration (< 60 seconds)
  * - Ended due to no answer/timeout reasons
- * - Very minimal transcript content (< 50 characters)
+ * - Empty or minimal transcript content (< 50 characters)
+ * - No user speech detected in transcript (only AI spoke)
  */
 export function isNoResponseCall(call: InboundCall): boolean {
   // Check ended reason for explicit no-answer indicators
@@ -34,15 +35,29 @@ export function isNoResponseCall(call: InboundCall): boolean {
     }
   }
 
-  // Check for very short calls (< 30 seconds)
-  if (call.duration_seconds && call.duration_seconds < 30) {
+  // Check for short calls (< 60 seconds)
+  if (call.duration_seconds && call.duration_seconds < 60) {
     return true;
   }
 
-  // Check for minimal transcript content (< 50 characters)
-  // This catches cases where someone said a word or two and hung up
-  const transcriptLength = (call.transcript ?? "").trim().length;
-  if (transcriptLength > 0 && transcriptLength < 50) {
+  // Check for empty or minimal transcript content
+  const transcript = (call.transcript ?? "").trim();
+  const transcriptLength = transcript.length;
+
+  // Empty transcript = no response
+  if (transcriptLength === 0) {
+    return true;
+  }
+
+  // Minimal transcript (< 50 chars) = no response
+  if (transcriptLength < 50) {
+    return true;
+  }
+
+  // Check if user actually spoke (transcript has user turns)
+  // If only the AI spoke, treat as no-response
+  const hasUserSpeech = /\b(User|Customer|Client):/i.test(transcript);
+  if (!hasUserSpeech) {
     return true;
   }
 

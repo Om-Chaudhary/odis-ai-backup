@@ -28,6 +28,7 @@ interface OutcomeBadgeProps {
 function getVariantStyle(
   variant:
     | "urgent"
+    | "emergency"
     | "callback"
     | "scheduled"
     | "info"
@@ -39,6 +40,12 @@ function getVariantStyle(
   className: string;
 } {
   switch (variant) {
+    case "emergency":
+      return {
+        variant: "destructive",
+        className:
+          "bg-orange-500/20 text-orange-700 dark:text-orange-400 font-semibold",
+      };
     case "urgent":
       return {
         variant: "destructive",

@@ -16,6 +16,7 @@ export interface DescriptiveOutcome {
   /** Semantic color variant */
   variant:
     | "urgent"
+    | "emergency"
     | "callback"
     | "scheduled"
     | "info"
@@ -34,6 +35,7 @@ export interface DescriptiveOutcome {
 export function getDescriptiveOutcome(call: InboundCall): DescriptiveOutcome {
   // Use summary as the base description - it contains the clinical context
   const clinicalSummary = call.summary ?? "No details available";
+  const summaryLower = clinicalSummary.toLowerCase();
 
   // Helper to safely access Json object properties
   const getJsonProp = <T>(obj: unknown, key: string): T | undefined => {
@@ -43,6 +45,48 @@ export function getDescriptiveOutcome(call: InboundCall): DescriptiveOutcome {
     return undefined;
   };
 
+  // Priority 0: Emergency Triage - ER referral
+  // Detect calls that ended with the AI recommending an emergency hospital/ER
+  const erKeywords = [
+    "emergency hospital",
+    "emergency vet",
+    "emergency clinic",
+    "emergency room",
+    "er referral",
+    "referred to er",
+    "go to er",
+    "nearest er",
+    "emergency care",
+    "emergency facility",
+    "emergency veterinary",
+  ];
+
+  const hasErReferral = erKeywords.some((kw) => summaryLower.includes(kw));
+  const escalationType = getJsonProp<string>(
+    call.escalation_data,
+    "escalation_type",
+  );
+  const isErEscalation =
+    escalationType?.toLowerCase().includes("emergency") ?? false;
+
+  // Check actions_taken for ER referral
+  const hasErAction =
+    Array.isArray(call.actions_taken) &&
+    call.actions_taken.some((action: unknown) => {
+      if (typeof action === "string") {
+        return erKeywords.some((kw) => action.toLowerCase().includes(kw));
+      }
+      return false;
+    });
+
+  if (hasErReferral || isErEscalation || hasErAction) {
+    return {
+      label: "Emergency Triage",
+      description: clinicalSummary,
+      variant: "emergency",
+    };
+  }
+
   // Priority 1: Check for actual urgent medical situations vs administrative escalations
   const escalationTriggered = getJsonProp<boolean>(
     call.escalation_data,
@@ -50,9 +94,8 @@ export function getDescriptiveOutcome(call: InboundCall): DescriptiveOutcome {
   );
   const isUrgentOutcome = call.outcome === "Urgent";
   const hasUrgentAttention = call.attention_types?.includes("urgent");
-  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
   const hasEscalation =
-    call.attention_types?.includes("escalation") ||
+    (call.attention_types?.includes("escalation") ?? false) ||
     escalationTriggered === true;
 
   // True urgent medical situations
@@ -66,8 +109,6 @@ export function getDescriptiveOutcome(call: InboundCall): DescriptiveOutcome {
 
   // Administrative escalations (AI limitations, access issues, etc.)
   if (hasEscalation) {
-    const summaryLower = clinicalSummary.toLowerCase();
-
     // Check if it's a records/administrative request
     if (
       summaryLower.includes("record") ||
@@ -178,17 +219,61 @@ export function getDescriptiveOutcome(call: InboundCall): DescriptiveOutcome {
     };
   }
 
-  // Priority 5: INFORMATION PROVIDED - No action needed, FYI only
+  // Priority 5: INFO - Call that actually provided information
+  // Check transcript for user speech first
+  const transcript = (call.transcript ?? "").trim();
+  const hasUserSpeech = /\b(User|Customer|Client):/i.test(transcript);
+
+  // If outcome is explicitly Info/Completed and user spoke, show Info
   if (
-    call.outcome === "Info" ||
-    call.outcome === "Completed" ||
-    call.status === "completed"
+    (call.outcome === "Info" || call.outcome === "Completed") &&
+    hasUserSpeech
   ) {
     return {
-      label: "Info Provided",
+      label: "Info",
       description: clinicalSummary,
       variant: "info",
     };
+  }
+
+  // Priority 5b: Detect info-providing calls even without explicit outcome
+  // These are calls where user asked a question and got informational response
+  if (hasUserSpeech && !call.outcome) {
+    const infoKeywords = [
+      "closed",
+      "open",
+      "hours",
+      "available",
+      "tomorrow",
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday",
+      "holiday",
+      "new year",
+      "christmas",
+      "thanksgiving",
+      "location",
+      "address",
+      "directions",
+      "pricing",
+      "cost",
+      "services",
+      "offer",
+    ];
+
+    const hasInfoContent = infoKeywords.some((kw) => summaryLower.includes(kw));
+
+    if (hasInfoContent) {
+      return {
+        label: "Info",
+        description: clinicalSummary,
+        variant: "info",
+      };
+    }
   }
 
   // Priority 6: CHECK MESSAGES - Call generated appointment or message record

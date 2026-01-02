@@ -41,7 +41,6 @@ import { cn } from "@odis-ai/shared/util";
 import { Badge } from "@odis-ai/shared/ui/badge";
 import { CallRecordingPlayer } from "../../shared/call-recording-player";
 import { api } from "~/trpc/client";
-import { AttentionBanner } from "./shared/attention-banner";
 import { TimestampBadge } from "./shared/timestamp-badge";
 import { getCallDataOverride } from "./demo-data/call-overrides";
 import type { Database } from "@odis-ai/shared/types";
@@ -369,24 +368,6 @@ export function AppointmentDetail({
             </div>
           </div>
         </div>
-
-        {/* Sensitive Case Alert */}
-        {isSensitive && (
-          <AttentionBanner
-            type="escalation"
-            title="Sensitive Case"
-            description="Please handle with extra care and compassion"
-          />
-        )}
-
-        {/* Urgent Case Alert */}
-        {isUrgent && !isSensitive && (
-          <AttentionBanner
-            type="urgent"
-            title="Urgent Appointment"
-            description="This appointment has been flagged as urgent"
-          />
-        )}
 
         {/* PROMINENT: Confirmed Appointment Time */}
         {hasConfirmedTime && (
