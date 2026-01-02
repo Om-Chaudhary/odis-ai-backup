@@ -34,7 +34,6 @@ import {
 } from "./inbound-call-helpers";
 import type { VapiCallResponse } from "../../client";
 import { mapInboundCallToUser } from "../../inbound-calls";
-import { scheduleCallExecution } from "@odis-ai/integrations/qstash/client";
 import {
   cleanTranscript,
   extractAppointmentDate,
@@ -195,6 +194,25 @@ async function handleInboundCallEnd(
     }
   }
 
+  // Detect incomplete webhook: if status is still ringing and no endedReason,
+  // VAPI likely sent the webhook prematurely (before analysis completed).
+  // Store minimal data and flag for later retry.
+  const isIncompleteWebhook =
+    call.status === "ringing" &&
+    !call.endedReason &&
+    !message.artifact?.structuredOutputs;
+
+  if (isIncompleteWebhook) {
+    logger.warn("Incomplete end-of-call-report webhook detected", {
+      callId: call.id,
+      dbId: existingCall.id,
+      reason: "missing endedReason and structuredOutputs",
+      status: call.status,
+      suggestion:
+        "Call will be retried when status-update webhook arrives with ended status",
+    });
+  }
+
   // Extract artifact and analysis data from message (same as outbound handler)
   const artifact = message.artifact ?? {};
   // Analysis can be at call level OR message level
@@ -216,6 +234,21 @@ async function handleInboundCallEnd(
     .structuredData ?? artifact.structuredOutputs) as
     | Record<string, unknown>
     | undefined;
+
+  // Log raw artifact to debug structured outputs
+  logger.debug("Raw artifact data", {
+    callId: call.id,
+    hasArtifact: !!artifact,
+    artifactKeys: artifact ? Object.keys(artifact) : [],
+    structuredOutputsPresent: !!artifact.structuredOutputs,
+    structuredOutputsType: artifact.structuredOutputs
+      ? typeof artifact.structuredOutputs
+      : "undefined",
+    structuredOutputsLength: Array.isArray(artifact.structuredOutputs)
+      ? artifact.structuredOutputs.length
+      : undefined,
+    rawStructuredOutputs: artifact.structuredOutputs,
+  });
 
   // Parse all structured outputs (comprehensive intelligence - same as outbound)
   const structuredOutputs =
@@ -948,6 +981,10 @@ async function handleRetryLogic(
     updateData.status = "queued";
 
     try {
+      // Dynamic import due to module boundary (lazy-loaded library)
+      const { scheduleCallExecution } =
+        await import("@odis-ai/integrations/qstash/client");
+
       const messageId = await scheduleCallExecution(
         existingCall.id,
         nextRetryAt,
