@@ -739,33 +739,17 @@ User: Thank you.`,
       "+1 (408) 661-7333",
     ])
   ) {
-    // Debug logging
-    console.log(`DEBUG 661-7333: started_at=${call.started_at}, created_at=${call.created_at}`);
-
-    // Check if this is specifically the 12:52 PM call
-    const callTime = safeParseDate(call.started_at ?? call.created_at);
-    if (callTime) {
-      const hour = callTime.getHours();
-      const minute = callTime.getMinutes();
-      console.log(`DEBUG 661-7333: parsed time=${hour}:${minute} (${callTime.toISOString()})`);
-
-      // Target the 12:52 PM call specifically
-      if ((hour === 12 && minute === 52) || (hour === 20 && minute === 52)) {
-        console.log(`DEBUG 661-7333: TIME MATCH! Applying Info override`);
-        return {
-          ...call,
-          outcome: "Info",
-          // Clear any escalation data
-          attention_types: null,
-          attention_severity: null,
-          attention_summary: null,
-          actions_taken: ["Information provided to caller"],
-        };
-      } else {
-        console.log(`DEBUG 661-7333: No time match for ${hour}:${minute}`);
-      }
-    } else {
-      console.log(`DEBUG 661-7333: Failed to parse call time`);
+    // Target the specific call with ID 9a9cbe53-2f0d-4654-bd92-6a01b9b44250 (12:52 PM PST call)
+    if (call.id === "9a9cbe53-2f0d-4654-bd92-6a01b9b44250") {
+      return {
+        ...call,
+        outcome: "Info",
+        // Clear any escalation data
+        attention_types: null,
+        attention_severity: null,
+        attention_summary: null,
+        actions_taken: ["Information provided to caller"],
+      };
     }
   }
 
