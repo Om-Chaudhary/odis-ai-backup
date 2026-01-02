@@ -739,15 +739,24 @@ User: Thank you.`,
       "+1 (408) 661-7333",
     ])
   ) {
-    return {
-      ...call,
-      outcome: "Info",
-      // Clear any escalation data
-      attention_types: null,
-      attention_severity: null,
-      attention_summary: null,
-      actions_taken: ["Information provided to caller"],
-    };
+    // Check if this is specifically the 12:52 PM call
+    const callTime = safeParseDate(call.started_at ?? call.created_at);
+    if (callTime) {
+      const hour = callTime.getHours();
+      const minute = callTime.getMinutes();
+      // Target the 12:52 PM call specifically
+      if ((hour === 12 && minute === 52) || (hour === 20 && minute === 52)) {
+        return {
+          ...call,
+          outcome: "Info",
+          // Clear any escalation data
+          attention_types: null,
+          attention_severity: null,
+          attention_summary: null,
+          actions_taken: ["Information provided to caller"],
+        };
+      }
+    }
   }
 
   return null;
