@@ -328,6 +328,12 @@ async function handleInboundCallEnd(
     owner_sentiment_data: structuredOutputs.ownerSentiment,
     escalation_data: structuredOutputs.escalation,
     follow_up_data: structuredOutputs.followUp,
+    // Store raw webhook artifact for debugging and recovery
+    metadata: {
+      artifact: artifact,
+      webhook_received_at: new Date().toISOString(),
+      has_structured_outputs: !!artifact.structuredOutputs,
+    },
   };
 
   logger.info("Inbound call ended - extracted data", {
@@ -581,6 +587,13 @@ async function handleOutboundCallEnd(
     owner_sentiment_data: structuredOutputs.ownerSentiment,
     escalation_data: structuredOutputs.escalation,
     follow_up_data: structuredOutputs.followUp,
+    // Store raw webhook artifact for debugging and recovery
+    metadata: {
+      ...metadata,
+      artifact: artifact,
+      webhook_received_at: new Date().toISOString(),
+      has_structured_outputs: !!artifact.structuredOutputs,
+    },
   };
 
   logger.info("Call ended - extracted data", {
