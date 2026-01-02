@@ -181,7 +181,14 @@
       "Bash(vercel inspect:*)",
       "Bash(pnpm typecheck:all:*)",
       "Bash(rm:*)",
-      "Bash(nx typecheck:*)"
+      "Bash(nx typecheck:*)",
+      "Bash(kill:*)",
+      "Bash(export:*)",
+      "Bash(export RESEND_API_KEY=\"re_da9EcnHQ_DbwhYBq4yoGRKsCzyGdtRAjA\")",
+      "Bash(export IDEXX_ENCRYPTION_KEY=\"EFxjYCAidZqnksE+8lelLhfLflBcjXpAfJ228zte/FQ=\")",
+      "Bash(export NEXT_PUBLIC_POSTHOG_KEY=\"phc_Y70cB5rLrVkFrxTNDvcUfeXmcUGgzrI9mGlYzWId7ul\")",
+      "Bash(SKIP_ESLINT=true pnpm build)",
+      "Bash(nx reset:*)"
     ],
     "deny": [],
     "ask": []

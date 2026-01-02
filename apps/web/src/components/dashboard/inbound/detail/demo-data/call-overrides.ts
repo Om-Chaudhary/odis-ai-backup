@@ -708,5 +708,26 @@ User: Thank you.`,
     };
   }
 
+  // (408) 500-6714 - Darla Michelle Castaneda call - set to Appt Scheduled
+  if (
+    matchesPhone(call.customer_phone, [
+      "4085006714",
+      "408-500-6714",
+      "+14085006714",
+      "(408) 500-6714",
+      "+1 (408) 500-6714",
+    ])
+  ) {
+    return {
+      ...call,
+      outcome: "Scheduled",
+      // Clear any escalation data that might be causing "Staff Review"
+      attention_types: null,
+      attention_severity: null,
+      attention_summary: null,
+      actions_taken: ["Appointment scheduled via AI"],
+    };
+  }
+
   return null;
 }
