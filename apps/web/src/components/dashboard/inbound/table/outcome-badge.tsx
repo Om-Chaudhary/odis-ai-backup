@@ -9,6 +9,7 @@ import { Badge } from "@odis-ai/shared/ui/badge";
 import { cn } from "@odis-ai/shared/util";
 import type { Database } from "@odis-ai/shared/types";
 import { getDescriptiveOutcome } from "../utils/get-descriptive-outcome";
+import { isNoResponseCall } from "../utils/is-no-response-call";
 
 // Accept both Database type and our custom InboundCall type
 type InboundCallData =
@@ -84,6 +85,11 @@ export function OutcomeBadge({
   className,
   showDescription = false,
 }: OutcomeBadgeProps) {
+  // Don't display badge for no-response calls (leaves outcome column blank)
+  if (isNoResponseCall(call)) {
+    return null;
+  }
+
   const outcome = getDescriptiveOutcome(call);
   const { className: styleClassName } = getVariantStyle(outcome.variant);
 

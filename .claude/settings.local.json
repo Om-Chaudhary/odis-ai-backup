@@ -180,7 +180,8 @@
       "Bash(mcp__vercel__get_deployment_build_logs)",
       "Bash(vercel inspect:*)",
       "Bash(pnpm typecheck:all:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(nx typecheck:*)"
     ],
     "deny": [],
     "ask": []
