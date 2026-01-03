@@ -126,23 +126,34 @@ async function findClinicByAssistantId(
 
 /**
  * Parse date string to YYYY-MM-DD format
+ * Handles natural language dates like:
+ * - "today", "tomorrow"
+ * - "next monday", "this friday", "monday"
+ * - "January 3rd", "Jan 3", "March 15th"
+ * - "3rd of January", "15 March"
+ * - "the 3rd", "the 15th"
+ * - "1/3", "01/03", "1/3/2025"
+ * - "2025-01-03" (ISO format)
  */
 function parseDateToISO(dateStr: string): string | null {
   const normalized = dateStr.toLowerCase().trim();
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const currentYear = today.getFullYear();
 
+  // Handle "today"
   if (normalized === "today") {
     return today.toISOString().split("T")[0] ?? null;
   }
 
+  // Handle "tomorrow"
   if (normalized === "tomorrow") {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     return tomorrow.toISOString().split("T")[0] ?? null;
   }
 
-  // Handle "next monday", etc.
+  // Day name handling
   const dayNames = [
     "sunday",
     "monday",
@@ -152,8 +163,10 @@ function parseDateToISO(dateStr: string): string | null {
     "friday",
     "saturday",
   ];
+
+  // Handle "next monday", "this friday", etc.
   const nextDayMatch =
-    /^next\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/i.exec(
+    /^(?:next|this)\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/i.exec(
       normalized,
     );
   if (nextDayMatch?.[1]) {
@@ -166,11 +179,140 @@ function parseDateToISO(dateStr: string): string | null {
     return targetDate.toISOString().split("T")[0] ?? null;
   }
 
-  const parsed = new Date(dateStr);
+  // Handle just day name like "monday", "tuesday"
+  const justDayMatch =
+    /^(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/i.exec(
+      normalized,
+    );
+  if (justDayMatch?.[1]) {
+    const targetDay = dayNames.indexOf(justDayMatch[1].toLowerCase());
+    const currentDay = today.getDay();
+    let daysUntil = targetDay - currentDay;
+    if (daysUntil <= 0) daysUntil += 7;
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + daysUntil);
+    return targetDate.toISOString().split("T")[0] ?? null;
+  }
+
+  // Month name mapping
+  const monthNames: Record<string, number> = {
+    january: 0,
+    jan: 0,
+    february: 1,
+    feb: 1,
+    march: 2,
+    mar: 2,
+    april: 3,
+    apr: 3,
+    may: 4,
+    june: 5,
+    jun: 5,
+    july: 6,
+    jul: 6,
+    august: 7,
+    aug: 7,
+    september: 8,
+    sep: 8,
+    sept: 8,
+    october: 9,
+    oct: 9,
+    november: 10,
+    nov: 10,
+    december: 11,
+    dec: 11,
+  };
+
+  // Handle "January 3rd", "Jan 3", "March 15th", "December 25"
+  const monthDayMatch =
+    /^(january|jan|february|feb|march|mar|april|apr|may|june|jun|july|jul|august|aug|september|sep|sept|october|oct|november|nov|december|dec)\s+(\d{1,2})(?:st|nd|rd|th)?(?:,?\s*(\d{4}))?$/i.exec(
+      normalized,
+    );
+  if (monthDayMatch?.[1] && monthDayMatch[2]) {
+    const month = monthNames[monthDayMatch[1].toLowerCase()];
+    const day = parseInt(monthDayMatch[2], 10);
+    const year = monthDayMatch[3]
+      ? parseInt(monthDayMatch[3], 10)
+      : currentYear;
+
+    if (month !== undefined && day >= 1 && day <= 31) {
+      const targetDate = new Date(year, month, day);
+      // If no year specified and date is in the past, use next year
+      if (!monthDayMatch[3] && targetDate < today) {
+        targetDate.setFullYear(currentYear + 1);
+      }
+      return targetDate.toISOString().split("T")[0] ?? null;
+    }
+  }
+
+  // Handle "3rd of January", "15th of March", "15 March"
+  const dayOfMonthMatch =
+    /^(\d{1,2})(?:st|nd|rd|th)?\s+(?:of\s+)?(january|jan|february|feb|march|mar|april|apr|may|june|jun|july|jul|august|aug|september|sep|sept|october|oct|november|nov|december|dec)(?:,?\s*(\d{4}))?$/i.exec(
+      normalized,
+    );
+  if (dayOfMonthMatch?.[1] && dayOfMonthMatch[2]) {
+    const day = parseInt(dayOfMonthMatch[1], 10);
+    const month = monthNames[dayOfMonthMatch[2].toLowerCase()];
+    const year = dayOfMonthMatch[3]
+      ? parseInt(dayOfMonthMatch[3], 10)
+      : currentYear;
+
+    if (month !== undefined && day >= 1 && day <= 31) {
+      const targetDate = new Date(year, month, day);
+      if (!dayOfMonthMatch[3] && targetDate < today) {
+        targetDate.setFullYear(currentYear + 1);
+      }
+      return targetDate.toISOString().split("T")[0] ?? null;
+    }
+  }
+
+  // Handle "the 3rd", "the 15th" (assumes current or next month)
+  const theDayMatch = /^the\s+(\d{1,2})(?:st|nd|rd|th)?$/i.exec(normalized);
+  if (theDayMatch?.[1]) {
+    const day = parseInt(theDayMatch[1], 10);
+    if (day >= 1 && day <= 31) {
+      const targetDate = new Date(today);
+      targetDate.setDate(day);
+      if (targetDate < today) {
+        targetDate.setMonth(targetDate.getMonth() + 1);
+      }
+      return targetDate.toISOString().split("T")[0] ?? null;
+    }
+  }
+
+  // Handle MM/DD or M/D format (US format)
+  const slashMatch = /^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/.exec(normalized);
+  if (slashMatch?.[1] && slashMatch[2]) {
+    const month = parseInt(slashMatch[1], 10) - 1;
+    const day = parseInt(slashMatch[2], 10);
+    let year = slashMatch[3] ? parseInt(slashMatch[3], 10) : currentYear;
+    if (year < 100) year += 2000;
+
+    if (month >= 0 && month <= 11 && day >= 1 && day <= 31) {
+      const targetDate = new Date(year, month, day);
+      if (!slashMatch[3] && targetDate < today) {
+        targetDate.setFullYear(currentYear + 1);
+      }
+      return targetDate.toISOString().split("T")[0] ?? null;
+    }
+  }
+
+  // Fallback: try native Date parsing (handles ISO format, etc.)
+  // Strip ordinal suffixes that might confuse the parser
+  const cleanedDateStr = dateStr.replace(/(\d+)(st|nd|rd|th)/gi, "$1");
+  const parsed = new Date(cleanedDateStr);
+
   if (!isNaN(parsed.getTime())) {
-    const currentYear = today.getFullYear();
     if (parsed.getFullYear() < currentYear - 1) {
       parsed.setFullYear(currentYear);
+    }
+    // If date is in the past and no explicit year, use next year
+    const hadExplicitYear = /\d{4}/.test(dateStr);
+    if (!hadExplicitYear) {
+      const parsedNoTime = new Date(parsed);
+      parsedNoTime.setHours(0, 0, 0, 0);
+      if (parsedNoTime < today) {
+        parsed.setFullYear(currentYear + 1);
+      }
     }
     return parsed.toISOString().split("T")[0] ?? null;
   }
