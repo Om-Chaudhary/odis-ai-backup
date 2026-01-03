@@ -223,10 +223,6 @@ export function getDescriptiveOutcome(call: InboundCall): DescriptiveOutcome {
     "instruction",
   ];
 
-  // Check transcript for user speech
-  const transcript = (call.transcript ?? "").trim();
-  const hasUserSpeech = /\b(User|Customer|Client|Owner):/i.test(transcript);
-
   // Explicit Info outcome
   if (call.outcome === "Info") {
     // Determine subtype
@@ -248,29 +244,28 @@ export function getDescriptiveOutcome(call: InboundCall): DescriptiveOutcome {
   }
 
   // Detect info calls even without explicit outcome
-  if (hasUserSpeech || summaryLower.length > 50) {
-    const hasClinicInfoContent = clinicInfoKeywords.some((kw) =>
-      summaryLower.includes(kw),
-    );
-    const hasClinicalGuidanceContent = clinicalGuidanceKeywords.some((kw) =>
-      summaryLower.includes(kw),
-    );
+  // Check for info keywords regardless of length - even short summaries can be info
+  const hasClinicInfoContent = clinicInfoKeywords.some((kw) =>
+    summaryLower.includes(kw),
+  );
+  const hasClinicalGuidanceContent = clinicalGuidanceKeywords.some((kw) =>
+    summaryLower.includes(kw),
+  );
 
-    if (hasClinicInfoContent) {
-      return {
-        label: "Clinic Info",
-        description: clinicalSummary,
-        variant: "info",
-      };
-    }
+  if (hasClinicInfoContent) {
+    return {
+      label: "Clinic Info",
+      description: clinicalSummary,
+      variant: "info",
+    };
+  }
 
-    if (hasClinicalGuidanceContent) {
-      return {
-        label: "Clinical Guidance",
-        description: clinicalSummary,
-        variant: "info",
-      };
-    }
+  if (hasClinicalGuidanceContent) {
+    return {
+      label: "Clinical Guidance",
+      description: clinicalSummary,
+      variant: "info",
+    };
   }
 
   // ============================================================================

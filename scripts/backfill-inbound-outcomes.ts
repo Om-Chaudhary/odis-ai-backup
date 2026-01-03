@@ -7,10 +7,9 @@
  * Outcome Categories:
  * - "Scheduled" - Appointment was successfully scheduled
  * - "Cancellation" - Appointment was cancelled or rescheduled
- * - "Info" - Caller was seeking information only
- * - "Emergency" - Urgent/emergency situation
- * - "Call Back" - Caller requested a callback
- * - "Completed" - General completed call (fallback)
+ * - "Info" - Caller was seeking information (clinic info, clinical guidance)
+ * - "Emergency" - Urgent/emergency situation or ER referral
+ * - "Call Back" - Caller requested a callback or left a message
  *
  * Usage:
  *   pnpm tsx scripts/backfill-inbound-outcomes.ts [options]
@@ -19,15 +18,19 @@
  *   --dry-run           Show what would be updated without making changes
  *   --days=N            Look back N days (default: 365)
  *   --limit=N           Limit to N records (default: no limit)
- *   --force-update      Re-analyze calls that already have outcome (default: skip)
+ *   --force-update      Re-analyze ALL calls regardless of current outcome
+ *   --reclassify        Re-analyze calls with "Completed" or "Blank" outcomes
  *   --clinic=NAME       Filter by clinic name
  *
  * Examples:
  *   # Dry run to see what would be analyzed
  *   pnpm tsx scripts/backfill-inbound-outcomes.ts --dry-run --limit=10
  *
- *   # Process all calls
+ *   # Process calls with null outcomes
  *   pnpm tsx scripts/backfill-inbound-outcomes.ts
+ *
+ *   # Reclassify "Completed" and "Blank" outcomes to proper categories
+ *   pnpm tsx scripts/backfill-inbound-outcomes.ts --reclassify
  *
  *   # Process specific clinic
  *   pnpm tsx scripts/backfill-inbound-outcomes.ts --clinic="Alum Rock"
@@ -339,6 +342,7 @@ async function backfillInboundOutcomes(options: {
   days?: number;
   limit?: number;
   forceUpdate?: boolean;
+  reclassify?: boolean;
   clinicName?: string;
 }): Promise<BackfillStats> {
   const {
@@ -346,6 +350,7 @@ async function backfillInboundOutcomes(options: {
     days = 365,
     limit = 10000,
     forceUpdate = false,
+    reclassify = false,
     clinicName,
   } = options;
 
@@ -382,6 +387,7 @@ async function backfillInboundOutcomes(options: {
   console.log(`Days to look back: ${days}`);
   console.log(`Limit: ${limit} records`);
   console.log(`Force update existing: ${forceUpdate}`);
+  console.log(`Reclassify Completed/Blank: ${reclassify}`);
   console.log(`Clinic filter: ${clinicName ?? "all"}`);
   console.log("");
 
@@ -389,6 +395,7 @@ async function backfillInboundOutcomes(options: {
     days,
     limit,
     forceUpdate,
+    reclassify,
     clinicName,
   });
 
@@ -444,6 +451,7 @@ async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes("--dry-run");
   const forceUpdate = args.includes("--force-update");
+  const reclassify = args.includes("--reclassify");
 
   const daysArg = args.find((arg) => arg.startsWith("--days="));
   const days = daysArg ? parseInt(daysArg.split("=")[1] ?? "365") : 365;
@@ -460,6 +468,7 @@ async function main() {
       days,
       limit,
       forceUpdate,
+      reclassify,
       clinicName,
     });
 
