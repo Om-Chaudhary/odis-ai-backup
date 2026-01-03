@@ -22,11 +22,21 @@ const callStatusEnum = z.enum([
 
 const userSentimentEnum = z.enum(["positive", "neutral", "negative"]);
 
+const callOutcomeEnum = z.enum([
+  "Scheduled",
+  "Cancellation",
+  "Info",
+  "Urgent",
+  "Call Back",
+  "Completed",
+]);
+
 const listInboundCallsInput = z.object({
   page: z.number().min(1).default(1),
   pageSize: z.number().min(5).max(100).default(20),
   status: callStatusEnum.optional(),
   sentiment: userSentimentEnum.optional(),
+  outcome: callOutcomeEnum.optional(), // Filter by call outcome
   startDate: z.string().optional(), // ISO date string
   endDate: z.string().optional(), // ISO date string
   clinicName: z.string().optional(),
@@ -131,6 +141,10 @@ export const inboundCallsRouter = createTRPCRouter({
 
       if (input.sentiment) {
         query = query.eq("user_sentiment", input.sentiment);
+      }
+
+      if (input.outcome) {
+        query = query.eq("outcome", input.outcome);
       }
 
       if (input.startDate) {

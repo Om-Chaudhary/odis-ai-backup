@@ -82,7 +82,6 @@ const OUTCOME_CATEGORIES = [
   "Info",
   "Emergency",
   "Call Back",
-  "Completed",
 ] as const;
 
 type OutcomeCategory = (typeof OUTCOME_CATEGORIES)[number];
@@ -94,21 +93,34 @@ type OutcomeCategory = (typeof OUTCOME_CATEGORIES)[number];
 const CLASSIFICATION_PROMPT = `You are classifying veterinary clinic inbound phone calls.
 
 Given the call summary and/or transcript, classify the call outcome into exactly ONE of these categories:
+
+APPOINTMENT OUTCOMES:
 - "Scheduled" - An appointment was successfully scheduled during the call
 - "Cancellation" - An appointment was cancelled or rescheduled
-- "Info" - Caller was seeking information only (hours, pricing, directions, general questions, status checks)
-- "Emergency" - Urgent/emergency situation requiring immediate attention
-- "Call Back" - Caller requested a callback or follow-up call from staff
-- "Completed" - General completed call that doesn't fit other categories
+
+INFORMATION OUTCOMES:
+- "Info" - Caller was seeking or received information. This includes:
+  * Clinic info: hours, pricing, directions, services, location, availability
+  * General clinical guidance: advice, recommendations, monitoring instructions, care questions
+  * Status checks, general inquiries, questions about procedures or costs
+
+URGENT OUTCOMES:
+- "Emergency" - Urgent/emergency situation requiring immediate attention or ER referral
+
+CALLBACK OUTCOMES:
+- "Call Back" - Caller specifically requested a callback, left a message, or needs staff follow-up
 
 Also extract 1-3 brief action items that summarize what happened on the call. These should be clear, actionable statements from the clinic's perspective.
 
 Rules:
-1. Choose the MOST specific category that applies
+1. "Emergency" takes priority if there's any urgent health concern or ER referral
 2. "Scheduled" takes priority if an appointment was actually booked
-3. "Emergency" takes priority if there's any urgent health concern
-4. Action items should be concise (under 10 words each)
-5. If the call is short or unclear, default to "Completed"
+3. "Cancellation" if an appointment was cancelled or rescheduled
+4. "Info" should be used liberally - if the caller asked questions and received answers, it's Info
+5. "Call Back" only if a specific callback was requested or message was left for staff
+6. Action items should be concise (under 10 words each)
+
+IMPORTANT: Many calls that might seem generic are actually "Info" - if the owner asked about ANYTHING (hours, symptoms, advice, costs, etc.) and received an answer, classify as "Info".
 
 Respond with ONLY a valid JSON object (no markdown, no explanation):
 {
@@ -164,10 +176,10 @@ Call Transcript (excerpt): ${transcript?.slice(0, 3000) ?? "N/A"}`;
 
   const result = parsed as Record<string, unknown>;
 
-  // Validate outcome
+  // Validate outcome - default to "Info" if unknown (most generic info call)
   const outcome = OUTCOME_CATEGORIES.includes(result.outcome as OutcomeCategory)
     ? (result.outcome as OutcomeCategory)
-    : "Completed";
+    : "Info";
 
   // Validate actions_taken
   const actionsTaken = Array.isArray(result.actions_taken)
@@ -257,9 +269,10 @@ async function fetchCallsToProcess(
     limit: number;
     forceUpdate: boolean;
     clinicName?: string;
+    reclassify: boolean;
   },
 ): Promise<InboundCallRecord[]> {
-  const { days, limit, forceUpdate, clinicName } = options;
+  const { days, limit, forceUpdate, clinicName, reclassify } = options;
 
   const startDate = new Date();
   startDate.setDate(startDate.getDate() - days);
@@ -274,8 +287,14 @@ async function fetchCallsToProcess(
     .order("created_at", { ascending: false })
     .limit(limit);
 
-  // Filter out calls that already have outcome (unless force update)
-  if (!forceUpdate) {
+  // Filter based on mode
+  if (forceUpdate) {
+    // Re-process all calls
+  } else if (reclassify) {
+    // Reclassify "Completed" and "Blank" outcomes (deprecated categories)
+    query = query.in("outcome", ["Completed", "Blank", ""]);
+  } else {
+    // Only process calls with null outcome
     query = query.is("outcome", null);
   }
 

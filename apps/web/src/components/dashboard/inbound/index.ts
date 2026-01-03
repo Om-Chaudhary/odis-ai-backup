@@ -1,9 +1,7 @@
 /**
  * Inbound Dashboard Components
  *
- * Exports for the redesigned inbound dashboard with tab-based views
- * for calls, appointment requests, and messages.
- * View mode switching is now in the sidebar navigation.
+ * Unified table view for all inbound calls with outcome filtering.
  */
 
 // Main components
@@ -16,7 +14,6 @@ export { InboundTable } from "./table";
 export * from "./table";
 
 // Detail module
-export { InboundDetail } from "./inbound-detail-refactored";
 export * from "./detail";
 
 // Demo data

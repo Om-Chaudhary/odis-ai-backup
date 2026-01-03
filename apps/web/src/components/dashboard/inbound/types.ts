@@ -138,14 +138,15 @@ export interface FollowUpData {
 
 /**
  * Call outcome category for badge display
+ * Maps to VAPI structured output enum: Scheduled, Cancellation, Info, Emergency, Call Back, Blank
  */
 export type CallOutcome =
   | "Scheduled"
   | "Cancellation"
   | "Info"
-  | "Urgent"
+  | "Emergency"
   | "Call Back"
-  | "Completed";
+  | "Blank";
 
 /**
  * Inbound call from inbound_vapi_calls table
@@ -191,12 +192,19 @@ export interface InboundCall {
 // =============================================================================
 
 /**
- * View mode tabs for the inbound dashboard
+ * Outcome filter for the unified calls table
+ * Filters calls by their outcome classification
  */
-export type ViewMode = "calls" | "appointments";
+export type OutcomeFilter =
+  | "all"
+  | "Scheduled" // Appointments - calls that resulted in scheduled appointments
+  | "Urgent" // Priority calls
+  | "Call Back" // Callback needed
+  | "Info" // Informational calls
+  | "Cancellation"; // Cancellation calls
 
 /**
- * Action filter for calls tab
+ * Action filter for calls
  * - needs_attention: Priority, callbacks, records, Rx, appointment requests, follow-ups
  * - all: All calls
  * - urgent_only: Only urgent/priority calls
@@ -209,7 +217,7 @@ export type CallActionFilter =
   | "info_only";
 
 /**
- * Status filter for calls tab (legacy - for backward compatibility)
+ * Status filter for calls (by call status)
  */
 export type CallStatusFilter =
   | "all"
@@ -217,15 +225,6 @@ export type CallStatusFilter =
   | "in_progress"
   | "failed"
   | "cancelled";
-
-/**
- * Status filter for appointments tab
- */
-export type AppointmentStatusFilter =
-  | "all"
-  | "pending"
-  | "confirmed"
-  | "rejected";
 
 // =============================================================================
 // Stats Types
@@ -268,31 +267,6 @@ export interface InboundStats {
 }
 
 // =============================================================================
-// Table Item Union Type
-// =============================================================================
-
-/**
- * Union type for table items (used in generic table component)
- */
-export type InboundItem = AppointmentRequest | InboundCall;
-
-/**
- * Type guard for AppointmentRequest
- */
-export function isAppointmentRequest(
-  item: InboundItem,
-): item is AppointmentRequest {
-  return "patientName" in item && "species" in item;
-}
-
-/**
- * Type guard for InboundCall
- */
-export function isInboundCall(item: InboundItem): item is InboundCall {
-  return "vapi_call_id" in item && "customer_phone" in item;
-}
-
-// =============================================================================
 // Pagination
 // =============================================================================
 
@@ -304,19 +278,4 @@ export interface PaginationState {
   pageSize: number;
   total: number;
   totalPages: number;
-}
-
-// =============================================================================
-// Summary Stats for Tabs
-// =============================================================================
-
-/**
- * Summary stats displayed in filter tabs
- */
-export interface InboundSummaryStats {
-  calls: number;
-  appointments: number;
-  // Sub-counts for badges
-  callsNeedingAttention: number;
-  pendingAppointments: number;
 }

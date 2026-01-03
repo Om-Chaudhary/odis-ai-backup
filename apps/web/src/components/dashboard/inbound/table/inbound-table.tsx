@@ -2,24 +2,20 @@
 
 import { useEffect, useRef } from "react";
 import { cn } from "@odis-ai/shared/util";
-import type { ViewMode, InboundItem, AppointmentRequest } from "../types";
 import type { Database } from "@odis-ai/shared/types";
-import { CallsHeader, AppointmentsHeader } from "./table-headers";
+import { CallsHeader } from "./table-headers";
 import { CallRow } from "./rows/call-row";
-import { AppointmentRow } from "./rows/appointment-row";
 import { TableSkeleton, TableEmpty } from "./table-states";
 import { getCallModifications } from "../demo-data";
 
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
 interface InboundTableProps {
-  items: InboundItem[];
-  viewMode: ViewMode;
+  items: InboundCall[];
   selectedItemId: string | null;
-  onSelectItem: (item: InboundItem) => void;
+  onSelectItem: (item: InboundCall) => void;
   onKeyNavigation: (direction: "up" | "down") => void;
   isLoading: boolean;
-  onQuickAction?: (id: string) => Promise<void>;
   // Compact mode (when detail sidebar is open)
   isCompact?: boolean;
 }
@@ -27,18 +23,15 @@ interface InboundTableProps {
 /**
  * Inbound Table Component
  *
- * Renders different columns based on view mode:
- * - Calls: Phone, Duration, Status, Sentiment, Time
- * - Appointments: Patient/Client, Species, Reason, Status, Date/Time
+ * Unified table for all inbound calls with columns:
+ * Caller | Outcome | Duration | Date/Time
  */
 export function InboundTable({
   items,
-  viewMode,
   selectedItemId,
   onSelectItem,
   onKeyNavigation,
   isLoading,
-  onQuickAction: _onQuickAction,
   isCompact = false,
 }: InboundTableProps) {
   const tableRef = useRef<HTMLDivElement>(null);
@@ -87,34 +80,25 @@ export function InboundTable({
   }, [selectedItemId]);
 
   if (isLoading) {
-    return <TableSkeleton viewMode={viewMode} />;
+    return <TableSkeleton />;
   }
 
   if (items.length === 0) {
-    return <TableEmpty viewMode={viewMode} />;
+    return <TableEmpty />;
   }
 
   return (
     <div ref={tableRef} className="h-full overflow-auto">
       <table className="w-full">
         <thead className="sticky top-0 z-10 border-b border-teal-100/50 bg-gradient-to-r from-teal-50/40 to-white/60 backdrop-blur-sm">
-          {viewMode === "calls" && <CallsHeader isCompact={isCompact} />}
-          {viewMode === "appointments" && (
-            <AppointmentsHeader isCompact={isCompact} />
-          )}
+          <CallsHeader isCompact={isCompact} />
         </thead>
         <tbody className="divide-y divide-teal-50">
           {items
             .filter((item) => {
               // Apply call filtering for hardcoded modifications
-              if (viewMode === "calls") {
-                // Cast through unknown since InboundItem's InboundCall is a subset of DB row type
-                const callMods = getCallModifications(
-                  item as unknown as InboundCall,
-                );
-                return !callMods.shouldHide;
-              }
-              return true;
+              const callMods = getCallModifications(item);
+              return !callMods.shouldHide;
             })
             .map((item) => {
               const isSelected = selectedItemId === item.id;
@@ -137,18 +121,7 @@ export function InboundTable({
                     }
                   }}
                 >
-                  {viewMode === "calls" && (
-                    <CallRow
-                      call={item as unknown as InboundCall}
-                      isCompact={isCompact}
-                    />
-                  )}
-                  {viewMode === "appointments" && (
-                    <AppointmentRow
-                      appointment={item as AppointmentRequest}
-                      isCompact={isCompact}
-                    />
-                  )}
+                  <CallRow call={item} isCompact={isCompact} />
                 </tr>
               );
             })}

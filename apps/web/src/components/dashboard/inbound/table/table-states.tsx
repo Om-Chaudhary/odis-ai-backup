@@ -1,11 +1,10 @@
-import { Phone, Calendar, MessageSquare } from "lucide-react";
-import type { ViewMode } from "../types";
+import { Phone } from "lucide-react";
 
 /**
  * Loading skeleton for table
  * Styled to match outbound dashboard with teal-based colors
  */
-export function TableSkeleton({ viewMode: _viewMode }: { viewMode: ViewMode }) {
+export function TableSkeleton() {
   return (
     <div className="w-full overflow-hidden p-2">
       {/* Header skeleton */}
@@ -48,35 +47,16 @@ export function TableSkeleton({ viewMode: _viewMode }: { viewMode: ViewMode }) {
  * Empty state when no items
  * Styled to match outbound dashboard with gradient icon background
  */
-export function TableEmpty({ viewMode }: { viewMode: ViewMode }) {
-  const config = {
-    calls: {
-      icon: Phone,
-      title: "No calls yet",
-      description: "Inbound calls will appear here when customers call in.",
-    },
-    appointments: {
-      icon: Calendar,
-      title: "No appointment requests",
-      description:
-        "Appointment requests from the AI assistant will appear here.",
-    },
-    messages: {
-      icon: MessageSquare,
-      title: "No messages",
-      description: "Messages and callback requests will appear here.",
-    },
-  };
-
-  const { icon: Icon, title, description } = config[viewMode];
-
+export function TableEmpty() {
   return (
     <div className="flex h-full flex-col items-center justify-center py-16 text-center">
       <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-teal-100 to-emerald-100">
-        <Icon className="h-6 w-6 text-teal-600" />
+        <Phone className="h-6 w-6 text-teal-600" />
       </div>
-      <p className="text-sm font-semibold text-slate-800">{title}</p>
-      <p className="mt-0.5 text-xs text-slate-500">{description}</p>
+      <p className="text-sm font-semibold text-slate-800">No calls yet</p>
+      <p className="mt-0.5 text-xs text-slate-500">
+        Inbound calls will appear here when customers call in.
+      </p>
     </div>
   );
 }

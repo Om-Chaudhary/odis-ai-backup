@@ -2,33 +2,51 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useQueryState, parseAsInteger } from "nuqs";
-import { PhoneIncoming, Phone, Calendar } from "lucide-react";
+import { PhoneIncoming, Filter } from "lucide-react";
 
-import type { ViewMode, InboundItem } from "./types";
+import type { OutcomeFilter } from "./types";
+import type { Database } from "@odis-ai/shared/types";
 import { PageContent, PageFooter } from "../layout";
 import { DashboardPageHeader, DashboardToolbar } from "../shared";
 import { InboundTable } from "./table";
-import { InboundDetail } from "./inbound-detail-refactored";
+import { CallDetail } from "./detail/call-detail";
 import { InboundSplitLayout } from "./inbound-split-layout";
 import { InboundPagination } from "./inbound-pagination";
 import { useInboundData, useInboundMutations } from "./hooks";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@odis-ai/shared/ui/select";
+
+type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
 /**
  * Inbound Dashboard Client
  *
  * Features:
- * - View mode controlled via URL query param (?view=calls|appointments)
- * - View mode switching via inline pills in the toolbar
+ * - Unified table showing all inbound calls
+ * - Outcome filter dropdown (All, Appointments, Urgent, etc.)
  * - Full-screen split layout with pagination
- * - Compact table rows
- * - Detail panel for selected items
+ * - Detail panel for selected calls
  */
 export function InboundClient() {
   // URL-synced state
-  const [viewMode, setViewMode] = useQueryState("view", {
-    defaultValue: "calls" as ViewMode,
+  const [outcomeFilter, setOutcomeFilter] = useQueryState("outcome", {
+    defaultValue: "all" as OutcomeFilter,
     parse: (v) =>
-      (["calls", "appointments"].includes(v) ? v : "calls") as ViewMode,
+      ([
+        "all",
+        "Scheduled",
+        "Urgent",
+        "Call Back",
+        "Info",
+        "Cancellation",
+      ].includes(v)
+        ? v
+        : "all") as OutcomeFilter,
   });
 
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
@@ -39,39 +57,21 @@ export function InboundClient() {
   );
 
   // Local state
-  const [selectedItem, setSelectedItem] = useState<InboundItem | null>(null);
+  const [selectedCall, setSelectedCall] = useState<InboundCall | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   // Use custom hooks for data and mutations
-  const {
-    currentItems,
-    currentPagination,
-    stats,
-    isLoading,
-    refetchCalls,
-    refetchAppointments,
-  } = useInboundData({
-    viewMode,
+  const { calls, pagination, stats, isLoading, refetchCalls } = useInboundData({
     page,
     pageSize,
     callStatus: "all",
-    appointmentStatus: "all",
+    outcomeFilter,
     searchTerm,
   });
 
-  const {
-    handleConfirmAppointment,
-    handleRejectAppointment,
-    handleDeleteCall,
-    handleDeleteAppointment,
-    isSubmitting,
-  } = useInboundMutations({
-    onAppointmentSuccess: () => {
-      setSelectedItem(null);
-      void refetchAppointments();
-    },
+  const { handleDeleteCall, isSubmitting } = useInboundMutations({
     onCallSuccess: () => {
-      setSelectedItem(null);
+      setSelectedCall(null);
       void refetchCalls();
     },
   });
@@ -79,13 +79,13 @@ export function InboundClient() {
   // Escape to close panel
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && selectedItem) {
-        setSelectedItem(null);
+      if (e.key === "Escape" && selectedCall) {
+        setSelectedCall(null);
       }
     };
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
-  }, [selectedItem]);
+  }, [selectedCall]);
 
   // Cmd+K for search
   useEffect(() => {
@@ -102,21 +102,21 @@ export function InboundClient() {
     return () => document.removeEventListener("keydown", handleCmdK);
   }, []);
 
-  // Handle view mode change
-  const handleViewChange = useCallback(
-    (view: string) => {
-      void setViewMode(view as ViewMode);
+  // Handle outcome filter change
+  const handleOutcomeFilterChange = useCallback(
+    (filter: string) => {
+      void setOutcomeFilter(filter as OutcomeFilter);
       void setPage(1);
-      setSelectedItem(null);
+      setSelectedCall(null);
     },
-    [setViewMode, setPage],
+    [setOutcomeFilter, setPage],
   );
 
   // Handlers
   const handlePageChange = useCallback(
     (newPage: number) => {
       void setPage(newPage);
-      setSelectedItem(null);
+      setSelectedCall(null);
     },
     [setPage],
   );
@@ -125,17 +125,17 @@ export function InboundClient() {
     (newSize: number) => {
       void setPageSize(newSize);
       void setPage(1);
-      setSelectedItem(null);
+      setSelectedCall(null);
     },
     [setPageSize, setPage],
   );
 
-  const handleSelectItem = useCallback((item: InboundItem) => {
-    setSelectedItem(item);
+  const handleSelectCall = useCallback((call: InboundCall) => {
+    setSelectedCall(call);
   }, []);
 
   const handleClosePanel = useCallback(() => {
-    setSelectedItem(null);
+    setSelectedCall(null);
   }, []);
 
   const handleSearchChange = useCallback((term: string) => {
@@ -144,43 +144,35 @@ export function InboundClient() {
 
   const handleKeyNavigation = useCallback(
     (direction: "up" | "down") => {
-      if (currentItems.length === 0) return;
+      if (calls.length === 0) return;
 
-      const currentIndex = selectedItem
-        ? currentItems.findIndex((c) => c.id === selectedItem.id)
+      const currentIndex = selectedCall
+        ? calls.findIndex((c) => c.id === selectedCall.id)
         : -1;
 
       let newIndex: number;
       if (direction === "up") {
-        newIndex =
-          currentIndex <= 0 ? currentItems.length - 1 : currentIndex - 1;
+        newIndex = currentIndex <= 0 ? calls.length - 1 : currentIndex - 1;
       } else {
-        newIndex =
-          currentIndex >= currentItems.length - 1 ? 0 : currentIndex + 1;
+        newIndex = currentIndex >= calls.length - 1 ? 0 : currentIndex + 1;
       }
 
-      const newItem = currentItems[newIndex];
-      if (newItem) {
-        handleSelectItem(newItem);
+      const newCall = calls[newIndex];
+      if (newCall) {
+        handleSelectCall(newCall);
       }
     },
-    [currentItems, selectedItem, handleSelectItem],
+    [calls, selectedCall, handleSelectCall],
   );
 
-  // Build view options with counts from stats
-  const viewOptions = [
-    {
-      value: "calls",
-      label: "Calls",
-      icon: Phone,
-      count: stats?.totals?.calls ?? 0,
-    },
-    {
-      value: "appointments",
-      label: "Appointments",
-      icon: Calendar,
-      count: stats?.totals?.appointments ?? 0,
-    },
+  // Outcome filter options
+  const outcomeFilterOptions = [
+    { value: "all", label: "All Calls" },
+    { value: "Scheduled", label: "Appointments" },
+    { value: "Urgent", label: "Urgent" },
+    { value: "Call Back", label: "Call Back" },
+    { value: "Info", label: "Info" },
+    { value: "Cancellation", label: "Cancellation" },
   ];
 
   return (
@@ -188,46 +180,57 @@ export function InboundClient() {
       {/* Main Content Area - Full height split layout with header inside left panel */}
       <div className="min-h-0 flex-1">
         <InboundSplitLayout
-          showRightPanel={selectedItem !== null}
+          showRightPanel={selectedCall !== null}
           onCloseRightPanel={handleClosePanel}
           leftPanel={
             <>
               <DashboardPageHeader
                 title="Inbound Communications"
-                subtitle="Manage incoming calls and appointment requests"
+                subtitle={`${stats?.totals?.calls ?? 0} total calls`}
                 icon={PhoneIncoming}
               >
                 <DashboardToolbar
-                  viewOptions={viewOptions}
-                  currentView={viewMode}
-                  onViewChange={handleViewChange}
                   searchTerm={searchTerm}
                   onSearchChange={handleSearchChange}
                   searchPlaceholder="Search..."
                   isLoading={isLoading}
+                  leftContent={
+                    <div className="flex items-center gap-2">
+                      <Filter className="h-4 w-4 text-slate-400" />
+                      <Select
+                        value={outcomeFilter}
+                        onValueChange={handleOutcomeFilterChange}
+                      >
+                        <SelectTrigger className="h-8 w-[160px] border-teal-200/50 bg-white/60 text-sm">
+                          <SelectValue placeholder="Filter by outcome" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {outcomeFilterOptions.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  }
                 />
               </DashboardPageHeader>
               <PageContent>
                 <InboundTable
-                  items={currentItems}
-                  viewMode={viewMode}
-                  selectedItemId={selectedItem?.id ?? null}
-                  onSelectItem={handleSelectItem}
+                  items={calls}
+                  selectedItemId={selectedCall?.id ?? null}
+                  onSelectItem={handleSelectCall}
                   onKeyNavigation={handleKeyNavigation}
                   isLoading={isLoading}
-                  onQuickAction={
-                    viewMode === "appointments"
-                      ? handleConfirmAppointment
-                      : undefined
-                  }
-                  isCompact={selectedItem !== null}
+                  isCompact={selectedCall !== null}
                 />
               </PageContent>
               <PageFooter>
                 <InboundPagination
-                  page={currentPagination.page}
-                  pageSize={currentPagination.pageSize}
-                  total={currentPagination.total}
+                  page={pagination.page}
+                  pageSize={pagination.pageSize}
+                  total={pagination.total}
                   onPageChange={handlePageChange}
                   onPageSizeChange={handlePageSizeChange}
                 />
@@ -235,15 +238,13 @@ export function InboundClient() {
             </>
           }
           rightPanel={
-            <InboundDetail
-              item={selectedItem}
-              viewMode={viewMode}
-              onConfirmAppointment={handleConfirmAppointment}
-              onRejectAppointment={handleRejectAppointment}
-              onDeleteCall={handleDeleteCall}
-              onDeleteAppointment={handleDeleteAppointment}
-              isSubmitting={isSubmitting}
-            />
+            selectedCall && (
+              <CallDetail
+                call={selectedCall}
+                onDelete={handleDeleteCall}
+                isSubmitting={isSubmitting}
+              />
+            )
           }
         />
       </div>

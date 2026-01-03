@@ -3,8 +3,7 @@
  */
 
 export { InboundTable } from "./inbound-table";
-export { CallsHeader, AppointmentsHeader } from "./table-headers";
+export { CallsHeader } from "./table-headers";
 export { TableSkeleton, TableEmpty } from "./table-states";
 export { CallerDisplay, CallDuration, CallAlertsIcons } from "./table-cells";
 export { CallRow } from "./rows/call-row";
-export { AppointmentRow } from "./rows/appointment-row";

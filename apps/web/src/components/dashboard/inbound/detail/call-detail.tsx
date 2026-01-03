@@ -21,7 +21,6 @@ import { api } from "~/trpc/client";
 import { getCallDataOverride } from "./demo-data";
 import { InboundCallerCard } from "./caller-card";
 import { getDemoCallerName } from "../demo-data";
-import { OutcomeBadge } from "../table/outcome-badge";
 import { QuickActionsFooter } from "./shared/quick-actions-footer";
 import { TimestampBadge } from "./shared/timestamp-badge";
 import type { Database } from "@odis-ai/shared/types";
@@ -206,14 +205,6 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
                     duration={callData.duration_seconds}
                     size="sm"
                   />
-
-                  {/* Outcome Badge - Show descriptive outcome */}
-                  <div className="flex flex-col gap-2">
-                    <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                      Outcome
-                    </span>
-                    <OutcomeBadge call={call} showDescription={true} />
-                  </div>
 
                   {/* Summary Text */}
                   {callData.summary ? (
