@@ -24,19 +24,6 @@ const ROTATING_WORDS = [
   "Books More Appointments",
 ];
 
-// Feature bullets - quantified benefits
-const FEATURES = [
-  {
-    text: "Save 10+ hours per week on discharge calls",
-    highlight: "10+ hours",
-  },
-  { text: "94% first-attempt connection rate", highlight: "94%" },
-  {
-    text: "Recover $2,400+/month in missed appointments",
-    highlight: "$2,400+",
-  },
-];
-
 // Animation variants - slower, more noticeable
 // Increased durations and stagger for better visual impact
 const containerVariants = {
@@ -98,17 +85,6 @@ export function HeroSection() {
       ref={sectionRef}
       className="relative flex min-h-screen w-full flex-col overflow-hidden bg-[#f8fafb]"
     >
-      {/* Minimal Background - Single subtle gradient */}
-      <div className="pointer-events-none absolute inset-0">
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(ellipse 100% 70% at 70% 20%, rgba(15, 118, 110, 0.06) 0%, transparent 60%)",
-          }}
-        />
-      </div>
-
       {/* Navbar */}
       <motion.nav
         initial={{ opacity: 0, y: -16 }}
@@ -182,36 +158,6 @@ export function HeroSection() {
               free your team to focus on in-clinic care.
             </AnimatedGradientText>
           </motion.p>
-
-          {/* Feature Bullets - Centered */}
-          {/* <motion.ul
-            variants={itemVariants}
-            className="mt-7 inline-flex flex-col items-start space-y-3 text-left"
-          >
-            {FEATURES.map((feature, i) => (
-              <li
-                key={i}
-                className="flex items-start gap-3 text-[0.9375rem] text-slate-700"
-              >
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-teal-500" />
-                <span>
-                  {feature.text
-                    .split(feature.highlight)
-                    .map((part, j, arr) => (
-                      <span key={j}>
-                        {part}
-                        {j < arr.length - 1 && (
-                          <span className="font-semibold text-teal-600">
-                            {feature.highlight}
-                          </span>
-                        )}
-                      </span>
-                    ))}
-                </span>
-              </li>
-            ))}
-          </motion.ul> */}
-
           {/* CTA Buttons - Centered */}
           <motion.div
             variants={itemVariants}

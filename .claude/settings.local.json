@@ -193,7 +193,13 @@
       "Bash(nx lint:*)",
       "WebFetch(domain:magicui.design)",
       "WebFetch(domain:21st.dev)",
-      "mcp__github__get_file_contents"
+      "mcp__github__get_file_contents",
+      "mcp__context7__query-docs",
+      "mcp__posthog__projects-get",
+      "mcp__posthog__event-definitions-list",
+      "mcp__posthog__query-run",
+      "mcp__posthog__dashboards-get-all",
+      "mcp__posthog__insights-get-all"
     ],
     "deny": [],
     "ask": []

@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
-import { PhoneOff, Clock, TrendingDown, ArrowDown } from "lucide-react";
+import { PhoneMissed, PhoneOutgoing, ArrowDown } from "lucide-react";
 import { SectionBackground } from "../ui/section-background";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
 
@@ -12,46 +12,10 @@ const fadeUpVariant = {
   visible: { opacity: 1, y: 0, filter: "blur(0px)" },
 };
 
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.12,
-      delayChildren: 0.1,
-    },
-  },
+const scaleInVariant = {
+  hidden: { opacity: 0, scale: 0.9 },
+  visible: { opacity: 1, scale: 1 },
 };
-
-const cardVariant = {
-  hidden: { opacity: 0, y: 20, scale: 0.95 },
-  visible: { opacity: 1, y: 0, scale: 1 },
-};
-
-// Pain points data
-const PAIN_POINTS = [
-  {
-    icon: Clock,
-    stat: "3+ hours",
-    title: "Lost to Phone Tag",
-    description:
-      "Staff spend hours on hold, leaving voicemails that go unanswered. Every missed connection is time away from pets in the clinic.",
-  },
-  {
-    icon: PhoneOff,
-    stat: "30%",
-    title: "Calls Never Happen",
-    description:
-      "Post-discharge follow-ups fall through the cracks when the clinic gets busy. Compliance suffers, and pet parents feel forgotten.",
-  },
-  {
-    icon: TrendingDown,
-    stat: "$2,400+",
-    title: "Revenue Left on the Table",
-    description:
-      "Missed follow-ups mean missed appointments. Every unreached pet parent is a potential recheck, medication refill, or wellness visit lost.",
-  },
-];
 
 export function ProblemSection() {
   const sectionVisibilityRef = useSectionVisibility<HTMLElement>("problem");
@@ -59,7 +23,6 @@ export function ProblemSection() {
   const isInView = useInView(localRef, { once: true, margin: "-100px" });
   const shouldReduceMotion = useReducedMotion();
 
-  // Combine refs for both visibility tracking and animation
   const sectionRef = (el: HTMLElement | null) => {
     (localRef as React.MutableRefObject<HTMLElement | null>).current = el;
     (
@@ -68,7 +31,7 @@ export function ProblemSection() {
   };
 
   const transition = {
-    duration: shouldReduceMotion ? 0 : 0.6,
+    duration: shouldReduceMotion ? 0 : 0.7,
     ease: [0.22, 1, 0.36, 1] as const,
   };
 
@@ -78,7 +41,6 @@ export function ProblemSection() {
       id="problem"
       className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >
-      {/* Subtle warm background */}
       <SectionBackground variant="subtle-warm" />
 
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -88,64 +50,190 @@ export function ProblemSection() {
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
           transition={{ ...transition, delay: 0.1 }}
-          className="mb-12 text-center lg:mb-16"
+          className="mb-14 text-center lg:mb-20"
         >
           <span className="font-display mb-4 inline-flex items-center gap-2 text-xs font-medium tracking-widest text-amber-600 uppercase">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
             The Challenge
           </span>
-          <h2 className="font-display mb-4 text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl md:text-4xl lg:text-5xl">
-            Discharge Follow-Up is{" "}
-            <span className="text-amber-600">Broken</span>
+          <h2 className="font-display text-3xl font-medium tracking-tight text-slate-900 sm:text-4xl md:text-5xl">
+            Your Phone Lines Are{" "}
+            <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+              Leaking Revenue
+            </span>
           </h2>
-          <p className="mx-auto max-w-2xl text-base text-slate-600 sm:text-lg">
-            Every veterinary practice knows the struggle. When the clinic gets
-            busy, follow-up calls are the first thing to slip.
-          </p>
         </motion.div>
 
-        {/* Pain Points Grid */}
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-          className="grid gap-6 md:grid-cols-3 lg:gap-8"
-        >
-          {PAIN_POINTS.map((point) => (
+        {/* Main Visual - Side by Side with Unique Styling */}
+        <div className="relative">
+          <div className="grid gap-8 md:grid-cols-2 lg:gap-12">
+            {/* Inbound - Left Side */}
             <motion.div
-              key={point.title}
-              variants={cardVariant}
-              transition={{
-                duration: shouldReduceMotion ? 0 : 0.5,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-              className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white/80 p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-amber-200 hover:shadow-lg hover:shadow-amber-500/10"
+              variants={scaleInVariant}
+              initial="hidden"
+              animate={isInView ? "visible" : "hidden"}
+              transition={{ ...transition, delay: 0.2 }}
+              className="relative"
             >
-              {/* Icon */}
-              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-600 transition-transform duration-300 group-hover:scale-110">
-                <point.icon className="h-6 w-6" />
+              {/* Gradient glow behind */}
+              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-amber-200/40 via-orange-100/20 to-transparent blur-2xl" />
+
+              {/* Content */}
+              <div className="relative rounded-2xl bg-gradient-to-br from-white via-amber-50/50 to-orange-50/30 p-8 ring-1 ring-amber-200/50 backdrop-blur-sm">
+                {/* Icon with animated ring */}
+                <div className="relative mb-6 inline-flex">
+                  <div
+                    className="absolute inset-0 animate-ping rounded-full bg-amber-400/20"
+                    style={{ animationDuration: "3s" }}
+                  />
+                  <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/25">
+                    <PhoneMissed className="h-7 w-7 text-white" />
+                  </div>
+                </div>
+
+                <h3 className="font-display mb-2 text-xl font-semibold text-slate-900">
+                  Missed Inbound
+                </h3>
+                <p className="mb-6 text-sm text-slate-500">
+                  After-hours, hold times, busy staff
+                </p>
+
+                {/* Stats with visual bars */}
+                <div className="space-y-4">
+                  <div>
+                    <div className="mb-1 flex items-baseline justify-between">
+                      <span className="text-sm text-slate-600">
+                        Calls that never connect
+                      </span>
+                      <span className="font-display text-2xl font-bold text-amber-600">
+                        30%
+                      </span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                      <motion.div
+                        className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500"
+                        initial={{ width: 0 }}
+                        animate={isInView ? { width: "30%" } : { width: 0 }}
+                        transition={{ duration: 1, delay: 0.5 }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mb-1 flex items-baseline justify-between">
+                      <span className="text-sm text-slate-600">
+                        Daily phone tag
+                      </span>
+                      <span className="font-display text-xl font-bold text-slate-700">
+                        3+ hrs
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
-
-              {/* Stat */}
-              <div className="font-display mb-2 text-3xl font-bold text-slate-900">
-                {point.stat}
-              </div>
-
-              {/* Title */}
-              <h3 className="font-display mb-2 text-lg font-semibold text-slate-800">
-                {point.title}
-              </h3>
-
-              {/* Description */}
-              <p className="text-sm leading-relaxed text-slate-600">
-                {point.description}
-              </p>
-
-              {/* Decorative gradient */}
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-amber-50/50 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
             </motion.div>
-          ))}
-        </motion.div>
+
+            {/* Outbound - Right Side */}
+            <motion.div
+              variants={scaleInVariant}
+              initial="hidden"
+              animate={isInView ? "visible" : "hidden"}
+              transition={{ ...transition, delay: 0.35 }}
+              className="relative"
+            >
+              {/* Gradient glow behind */}
+              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-bl from-amber-200/40 via-orange-100/20 to-transparent blur-2xl" />
+
+              {/* Content */}
+              <div className="relative rounded-2xl bg-gradient-to-bl from-white via-amber-50/50 to-orange-50/30 p-8 ring-1 ring-amber-200/50 backdrop-blur-sm">
+                {/* Icon with animated ring */}
+                <div className="relative mb-6 inline-flex">
+                  <div
+                    className="absolute inset-0 animate-ping rounded-full bg-amber-400/20"
+                    style={{ animationDuration: "3s", animationDelay: "1.5s" }}
+                  />
+                  <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/25">
+                    <PhoneOutgoing className="h-7 w-7 text-white" />
+                  </div>
+                </div>
+
+                <h3 className="font-display mb-2 text-xl font-semibold text-slate-900">
+                  Missed Follow-Ups
+                </h3>
+                <p className="mb-6 text-sm text-slate-500">
+                  Discharge calls that never happen
+                </p>
+
+                {/* Stats */}
+                <div className="space-y-4">
+                  <div>
+                    <div className="mb-1 flex items-baseline justify-between">
+                      <span className="text-sm text-slate-600">
+                        Revenue lost monthly
+                      </span>
+                      <span className="font-display text-2xl font-bold text-amber-600">
+                        $2,400+
+                      </span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                      <motion.div
+                        className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500"
+                        initial={{ width: 0 }}
+                        animate={isInView ? { width: "65%" } : { width: 0 }}
+                        transition={{ duration: 1, delay: 0.7 }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="mb-1 flex items-baseline justify-between">
+                      <span className="text-sm text-slate-600">
+                        Lost to competitors
+                      </span>
+                      <span className="font-display text-xl font-bold text-slate-700">
+                        15-20%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Connecting Visual - Leak Funnel */}
+          <motion.div
+            variants={fadeUpVariant}
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
+            transition={{ ...transition, delay: 0.5 }}
+            className="relative mx-auto mt-10 flex flex-col items-center"
+          >
+            {/* Converging lines with drip effect */}
+            <div className="relative flex w-full max-w-lg items-center justify-center">
+              {/* Left line */}
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-300 to-amber-400" />
+
+              {/* Center drip indicator */}
+              <div className="relative mx-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-b from-amber-100 to-amber-200 ring-4 ring-amber-100/50">
+                  <ArrowDown className="h-5 w-5 text-amber-600" />
+                </div>
+              </div>
+
+              {/* Right line */}
+              <div className="h-px flex-1 bg-gradient-to-l from-transparent via-amber-300 to-amber-400" />
+            </div>
+
+            {/* Impact Statement */}
+            <div className="mt-20 max-w-2xl text-center">
+              <p className="text-lg leading-relaxed font-medium text-slate-700">
+                Every unreached pet parent is a{" "}
+                <span className="text-amber-600">missed recheck</span>,{" "}
+                <span className="text-amber-600">unfilled prescription</span>,
+                and <span className="text-amber-600">wellness visit</span> that
+                goes to your competitor.
+              </p>
+            </div>
+          </motion.div>
+        </div>
 
         {/* Transition to Solution */}
         <motion.div
@@ -153,11 +241,8 @@ export function ProblemSection() {
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
           transition={{ ...transition, delay: 0.6 }}
-          className="mt-12 text-center lg:mt-16"
+          className="mt-30 text-center lg:mt-36"
         >
-          <p className="mb-4 text-lg font-medium text-slate-700">
-            There&apos;s a better way.
-          </p>
           <a
             href="#sample-calls"
             className="inline-flex items-center gap-2 text-teal-600 transition-colors hover:text-teal-700"
