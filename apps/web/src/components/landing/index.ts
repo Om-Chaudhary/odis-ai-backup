@@ -12,6 +12,9 @@
 // Hero Section
 export { HeroSection } from "./sections/hero-section";
 
+// Problem Section (Pain Points)
+export { ProblemSection } from "./sections/problem-section";
+
 // Sample Calls / Audio Demo Section
 export { AudioDemoSection as SampleCallsSection } from "./sections/audio-demo-section";
 
@@ -45,6 +48,9 @@ export { LandingNavbar } from "./shared/landing-navbar";
 
 // Scroll Effects
 export { ScrollProgress } from "./shared/scroll-progress";
+
+// Sticky Mobile CTA
+export { StickyMobileCTA } from "./shared/sticky-mobile-cta";
 
 // Analytics
 export {

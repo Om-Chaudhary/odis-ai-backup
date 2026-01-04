@@ -2,16 +2,39 @@
 
 import { useRef } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
-import {
-  Phone,
-  Calendar,
-  CheckCircle2,
-  Star,
-  type LucideIcon,
-} from "lucide-react";
+import { Phone, X, Check, type LucideIcon } from "lucide-react";
+import { cn } from "@odis-ai/shared/util";
 import { NumberTicker } from "../ui/number-ticker";
 import { SectionBackground } from "../ui/section-background";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
+
+// Before/After comparison data
+const COMPARISON_ROWS = [
+  {
+    metric: "Discharge calls/day",
+    before: "12 attempted",
+    after: "47 completed",
+    improvement: "+292%",
+  },
+  {
+    metric: "Staff time on calls",
+    before: "3+ hours",
+    after: "15 minutes",
+    improvement: "-92%",
+  },
+  {
+    metric: "Connection rate",
+    before: "32%",
+    after: "94%",
+    improvement: "+194%",
+  },
+  {
+    metric: "Pet parent satisfaction",
+    before: "Unknown",
+    after: "4.9/5",
+    improvement: "Measured",
+  },
+];
 
 // Animation variants
 const fadeUpVariant = {
@@ -35,49 +58,10 @@ const statVariant = {
   visible: { opacity: 1, y: 0 },
 };
 
-interface LiveStatProps {
-  icon: LucideIcon;
-  value: number;
-  suffix?: string;
-  label: string;
-  decimals?: number;
-  isInView: boolean;
-  shouldReduceMotion: boolean | null;
-}
-
-function LiveStat({
-  icon: Icon,
-  value,
-  suffix = "",
-  label,
-  decimals = 0,
-  isInView,
-  shouldReduceMotion,
-}: LiveStatProps) {
-  return (
-    <motion.div
-      variants={statVariant}
-      transition={{
-        duration: shouldReduceMotion ? 0 : 0.4,
-        ease: [0.22, 1, 0.36, 1],
-      }}
-      className="group flex flex-col items-center text-center"
-    >
-      <Icon className="mb-3 h-6 w-6 text-teal-600 transition-transform duration-300 group-hover:scale-110" />
-      <div className="font-display text-2xl font-bold text-slate-900 tabular-nums sm:text-3xl">
-        {isInView && (
-          <NumberTicker
-            value={value}
-            decimalPlaces={decimals}
-            className="text-slate-900"
-          />
-        )}
-        <span className="text-teal-600">{suffix}</span>
-      </div>
-      <div className="mt-1 text-xs text-slate-600 sm:text-sm">{label}</div>
-    </motion.div>
-  );
-}
+const tableRowVariant = {
+  hidden: { opacity: 0, x: -20 },
+  visible: { opacity: 1, x: 0 },
+};
 
 export const CompareSection = () => {
   const sectionVisibilityRef = useSectionVisibility<HTMLElement>("stats");
@@ -92,19 +76,6 @@ export const CompareSection = () => {
       sectionVisibilityRef as React.MutableRefObject<HTMLElement | null>
     ).current = el;
   };
-
-  const liveStats = [
-    { icon: Phone, value: 947, label: "Calls handled", suffix: "" },
-    { icon: Calendar, value: 126, label: "Appointments", suffix: "" },
-    { icon: CheckCircle2, value: 94, label: "Answer rate", suffix: "%" },
-    {
-      icon: Star,
-      value: 4.9,
-      label: "Satisfaction",
-      suffix: "/5",
-      decimals: 1,
-    },
-  ];
 
   const transition = {
     duration: shouldReduceMotion ? 0 : 0.6,
@@ -143,25 +114,81 @@ export const CompareSection = () => {
           </motion.h2>
         </motion.div>
 
-        {/* Stats Grid */}
+        {/* Before/After Comparison Table */}
         <motion.div
-          variants={staggerContainer}
+          variants={fadeUpVariant}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
-          className="grid grid-cols-2 gap-6 sm:grid-cols-4 sm:gap-8"
+          transition={{ ...transition, delay: 0.4 }}
+          className="mt-16 lg:mt-20"
         >
-          {liveStats.map((stat) => (
-            <LiveStat
-              key={stat.label}
-              icon={stat.icon}
-              value={stat.value}
-              suffix={stat.suffix}
-              label={stat.label}
-              decimals={stat.decimals}
-              isInView={isInView}
-              shouldReduceMotion={shouldReduceMotion}
-            />
-          ))}
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white/80 shadow-sm backdrop-blur-sm">
+            {/* Table Header */}
+            <div className="grid grid-cols-4 gap-4 border-b border-slate-200 bg-slate-50/80 px-4 py-3 text-xs font-semibold tracking-wider text-slate-600 uppercase sm:px-6">
+              <div className="col-span-1">Metric</div>
+              <div className="col-span-1 text-center">
+                <span className="inline-flex items-center gap-1 text-slate-500">
+                  <X className="h-3 w-3 text-red-400" />
+                  Without
+                </span>
+              </div>
+              <div className="col-span-1 text-center">
+                <span className="inline-flex items-center gap-1 text-teal-600">
+                  <Check className="h-3 w-3" />
+                  With OdisAI
+                </span>
+              </div>
+              <div className="col-span-1 text-right">Impact</div>
+            </div>
+
+            {/* Table Rows */}
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              animate={isInView ? "visible" : "hidden"}
+            >
+              {COMPARISON_ROWS.map((row, i) => (
+                <motion.div
+                  key={row.metric}
+                  variants={tableRowVariant}
+                  transition={{
+                    duration: shouldReduceMotion ? 0 : 0.4,
+                    ease: [0.22, 1, 0.36, 1],
+                    delay: i * 0.08,
+                  }}
+                  className={cn(
+                    "grid grid-cols-4 items-center gap-4 px-4 py-4 sm:px-6",
+                    i < COMPARISON_ROWS.length - 1 &&
+                      "border-b border-slate-100",
+                  )}
+                >
+                  <div className="col-span-1 text-sm font-medium text-slate-700">
+                    {row.metric}
+                  </div>
+                  <div className="col-span-1 text-center text-sm text-slate-500">
+                    {row.before}
+                  </div>
+                  <div className="col-span-1 text-center text-sm font-semibold text-teal-600">
+                    {row.after}
+                  </div>
+                  <div className="col-span-1 text-right">
+                    <span
+                      className={cn(
+                        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold",
+                        row.improvement.startsWith("+")
+                          ? "bg-emerald-100 text-emerald-700"
+                          : row.improvement.startsWith("-")
+                            ? "bg-teal-100 text-teal-700"
+                            : "bg-teal-100 text-teal-700",
+                      )}
+                    >
+                      {row.improvement}
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
         </motion.div>
 
         {/* Social Proof */}
@@ -169,8 +196,8 @@ export const CompareSection = () => {
           variants={fadeUpVariant}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
-          transition={{ ...transition, delay: 0.6 }}
-          className="mt-16 text-center lg:mt-20"
+          transition={{ ...transition, delay: 0.7 }}
+          className="mt-12 text-center lg:mt-16"
         >
           <p className="text-sm text-slate-500 sm:text-base">
             Trusted by{" "}

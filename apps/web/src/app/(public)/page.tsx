@@ -1,6 +1,7 @@
 import {
   LandingNavbar,
   HeroSection,
+  ProblemSection,
   SampleCallsSection,
   CompareSection,
   HowItWorksSection,
@@ -11,6 +12,7 @@ import {
   LandingFooter,
   ScrollProgress,
   LandingAnalytics,
+  StickyMobileCTA,
 } from "~/components/landing";
 
 export default function Page() {
@@ -20,6 +22,7 @@ export default function Page() {
       <ScrollProgress />
       <LandingNavbar />
       <HeroSection />
+      <ProblemSection />
       <SampleCallsSection />
       <CompareSection />
       <HowItWorksSection />
@@ -28,6 +31,7 @@ export default function Page() {
       <CTASection />
       <FAQSection />
       <LandingFooter />
+      <StickyMobileCTA />
     </>
   );
 }

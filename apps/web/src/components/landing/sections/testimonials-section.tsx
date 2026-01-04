@@ -22,6 +22,8 @@ const testimonials = [
     author: "Dr. Deepti Pal",
     role: "Veterinarian",
     clinic: "Willow Creek Animal Hospital",
+    location: "San Jose, CA",
+    metric: "3+ hours saved daily",
     rating: 5,
     img: "/images/testimonials/dr-deepti-pal.png",
     profileUrl: "#",
@@ -32,6 +34,8 @@ const testimonials = [
     author: "Dr. Tais Perpetuo",
     role: "Practice Owner",
     clinic: "Coastal Paws Veterinary",
+    location: "Miami, FL",
+    metric: "94% connection rate",
     rating: 5,
     img: "/images/testimonials/dr-tais-perpetuo.png",
     profileUrl: "#",
@@ -42,6 +46,8 @@ const testimonials = [
     author: "Jenn",
     role: "Practice Manager",
     clinic: "Riverbend Pet Clinic",
+    location: "Austin, TX",
+    metric: "$2,400/mo recovered",
     rating: 5,
     img: "/images/testimonials/jenn.png",
     profileUrl: "#",
@@ -55,6 +61,8 @@ const ReviewCard = ({
   author,
   role,
   clinic,
+  location,
+  metric,
   quote,
   rating,
   featured = false,
@@ -63,6 +71,8 @@ const ReviewCard = ({
   author: string;
   role: string;
   clinic: string;
+  location?: string;
+  metric?: string;
   quote: string;
   rating: number;
   featured?: boolean;
@@ -82,11 +92,18 @@ const ReviewCard = ({
         &ldquo;
       </div>
 
-      {/* Rating stars - top */}
-      <div className="mb-4 flex gap-0.5">
-        {[...Array(rating)].map((_, i) => (
-          <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
-        ))}
+      {/* Rating stars + Metric badge - top */}
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex gap-0.5">
+          {[...Array(rating)].map((_, i) => (
+            <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
+          ))}
+        </div>
+        {metric && (
+          <span className="rounded-full bg-teal-100 px-2 py-0.5 text-xs font-semibold text-teal-700">
+            {metric}
+          </span>
+        )}
       </div>
 
       <blockquote className="relative z-10 mb-5 text-sm leading-relaxed text-slate-700">
@@ -114,6 +131,9 @@ const ReviewCard = ({
           <p className="text-muted-foreground text-xs">
             {role} · <span className="text-teal-600">{clinic}</span>
           </p>
+          {location && (
+            <p className="text-muted-foreground text-xs">{location}</p>
+          )}
         </div>
       </div>
     </figure>
