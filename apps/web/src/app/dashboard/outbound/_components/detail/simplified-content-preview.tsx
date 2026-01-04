@@ -6,17 +6,17 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@odis-ai/shared/ui/collapsible";
-import {
-  ChevronDown,
-  ChevronUp,
-  Phone,
-  Mail,
-  CheckCircle2,
-} from "lucide-react";
+import { ChevronDown, ChevronUp, Mail, CheckCircle2 } from "lucide-react";
 import { Card } from "@odis-ai/shared/ui/card";
-import type { StructuredDischargeContent } from "../types";
+import type {
+  StructuredDischargeContent,
+  OwnerSentimentData,
+  PetHealthData,
+  FollowUpData,
+} from "../types";
 import { CallTabContent } from "./communication-tabs/call-tab-content";
 import { EmailTabContent } from "./communication-tabs/email-tab-content";
+import { CallIntelligenceIndicators } from "./call-intelligence-indicators";
 
 interface ScheduledCallData {
   id: string;
@@ -44,6 +44,9 @@ interface SimplifiedContentPreviewProps {
   emailSent: boolean;
   hasOwnerPhone: boolean;
   hasOwnerEmail: boolean;
+  ownerSentimentData?: OwnerSentimentData | null;
+  petHealthData?: PetHealthData | null;
+  followUpData?: FollowUpData | null;
 }
 
 export function SimplifiedContentPreview({
@@ -56,8 +59,10 @@ export function SimplifiedContentPreview({
   emailSent,
   hasOwnerPhone,
   hasOwnerEmail,
+  ownerSentimentData,
+  petHealthData,
+  followUpData,
 }: SimplifiedContentPreviewProps) {
-  const [callOpen, setCallOpen] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
 
   // Determine if call was successful (completed with a transcript/summary)
@@ -72,13 +77,19 @@ export function SimplifiedContentPreview({
             <div className="rounded-full bg-green-50 p-2">
               <CheckCircle2 className="h-4 w-4 text-green-600" />
             </div>
-            <div className="flex-1 space-y-1">
+            <div className="flex-1 space-y-2">
               <h3 className="text-foreground text-sm font-semibold">
                 Call Summary
               </h3>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 {scheduledCall.summary}
               </p>
+              {/* Intelligence Indicators */}
+              <CallIntelligenceIndicators
+                ownerSentimentData={ownerSentimentData}
+                petHealthData={petHealthData}
+                followUpData={followUpData}
+              />
             </div>
           </div>
         </Card>
@@ -86,30 +97,13 @@ export function SimplifiedContentPreview({
 
       {/* Call Transcript Section */}
       {phoneSent && (
-        <Collapsible open={callOpen} onOpenChange={setCallOpen}>
-          <CollapsibleTrigger className="border-border bg-card hover:bg-accent flex w-full items-center justify-between rounded-lg border px-4 py-3 text-sm font-medium transition-colors">
-            <div className="flex items-center gap-2">
-              <Phone className="text-muted-foreground h-4 w-4" />
-              <span>View Call Transcript</span>
-            </div>
-            {callOpen ? (
-              <ChevronUp className="text-muted-foreground h-4 w-4" />
-            ) : (
-              <ChevronDown className="text-muted-foreground h-4 w-4" />
-            )}
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-2">
-            <div className="border-border bg-card rounded-lg border">
-              <CallTabContent
-                caseData={{ scheduledCall }}
-                callScript={callScript}
-                phoneWasSent={phoneSent}
-                phoneCanBeSent={!phoneSent}
-                hasOwnerPhone={hasOwnerPhone}
-              />
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+        <CallTabContent
+          caseData={{ scheduledCall }}
+          callScript={callScript}
+          phoneWasSent={phoneSent}
+          phoneCanBeSent={!phoneSent}
+          hasOwnerPhone={hasOwnerPhone}
+        />
       )}
 
       {/* Email Content Section */}

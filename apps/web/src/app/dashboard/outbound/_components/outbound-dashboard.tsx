@@ -266,6 +266,17 @@ function OutboundDashboardInner() {
     setConsultationId,
   ]);
 
+  // Sync selectedCase with fetched data to show updated timeline
+  useEffect(() => {
+    if (!selectedCase || cases.length === 0) return;
+
+    const updatedCase = cases.find((c) => c.id === selectedCase.id);
+    if (updatedCase) {
+      // Update selectedCase with the latest data from the server
+      setSelectedCase(updatedCase);
+    }
+  }, [cases, selectedCase?.id]);
+
   // Cases needing review
   const needsReviewCases = useMemo(
     () => cases.filter((c) => !c.owner.phone || !c.owner.email),

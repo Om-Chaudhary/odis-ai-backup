@@ -1,5 +1,4 @@
 import type { DischargeCaseStatus, DeliveryToggles } from "../types";
-import { ReadyToSendActions } from "./smart-action-section/ready-to-send-actions";
 import { ScheduledActions } from "./smart-action-section/scheduled-actions";
 import { CompletedSummary } from "./smart-action-section/completed-summary";
 
@@ -21,7 +20,11 @@ interface SmartActionSectionProps {
     cancelCall: boolean;
     cancelEmail: boolean;
   }) => void;
-  onScheduleRemaining?: () => void;
+  onScheduleRemaining?: (options: {
+    scheduleCall: boolean;
+    scheduleEmail: boolean;
+    immediate?: boolean;
+  }) => void;
   isSubmitting: boolean;
   isCancelling?: boolean;
   needsGeneration?: boolean;
@@ -33,10 +36,10 @@ interface SmartActionSectionProps {
  * Smart Action Section - Context-aware component that shows different UI based on case state
  *
  * Routes to appropriate sub-component:
- * - ReadyToSendActions: For unsent cases (ready/pending_review)
  * - ScheduledActions: For fully scheduled cases
- * - PartialDeliveryActions: For partial sent/scheduled states
  * - CompletedSummary: For completed/failed cases
+ *
+ * Note: Ready/pending_review states are now handled inline in ActivityTimeline component
  */
 export function SmartActionSection({
   status,
@@ -59,22 +62,9 @@ export function SmartActionSection({
   testModeEnabled,
   failureReason,
 }: SmartActionSectionProps) {
-  // State: Ready to Send
+  // State: Ready to Send - now handled inline in ActivityTimeline
   if (status === "ready" || status === "pending_review") {
-    return (
-      <ReadyToSendActions
-        deliveryToggles={deliveryToggles}
-        onToggleChange={onToggleChange}
-        onApprove={onApprove}
-        isSubmitting={isSubmitting}
-        hasOwnerPhone={hasOwnerPhone}
-        hasOwnerEmail={hasOwnerEmail}
-        ownerPhone={ownerPhone}
-        ownerEmail={ownerEmail}
-        needsGeneration={needsGeneration}
-        testModeEnabled={testModeEnabled}
-      />
-    );
+    return null;
   }
 
   // State: Fully Scheduled

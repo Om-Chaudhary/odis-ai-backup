@@ -20,3 +20,4 @@ export * from "./preview-text";
 
 // Call intelligence structured outputs
 export * from "./call-intelligence";
+export * from "./call-intelligence-indicators";

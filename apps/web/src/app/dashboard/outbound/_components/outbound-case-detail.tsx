@@ -19,7 +19,7 @@ import type {
 import type { StructuredDischargeSummary } from "@odis-ai/shared/validators/discharge-summary";
 import { EmptyDetailState } from "./detail";
 import { CompactPatientHeader } from "./detail/compact-patient-header";
-import { DeliveryTimeline } from "./detail/delivery-timeline";
+import { ActivityTimeline } from "./detail/activity-timeline";
 import { SmartActionSection } from "./detail/smart-action-section";
 import { SimplifiedContentPreview } from "./detail/simplified-content-preview";
 import { WorkflowCanvas, type CaseDataForWorkflow } from "./detail/workflow";
@@ -176,9 +176,18 @@ export function OutboundCaseDetail({
   };
 
   // Handler for scheduling remaining
-  const handleScheduleRemaining = () => {
+  const handleScheduleRemaining = (options: {
+    scheduleCall: boolean;
+    scheduleEmail: boolean;
+    immediate?: boolean;
+  }) => {
     if (caseData) {
-      scheduleRemainingMutation.mutate({ caseId: caseData.caseId });
+      scheduleRemainingMutation.mutate({
+        caseId: caseData.caseId,
+        scheduleCall: options.scheduleCall,
+        scheduleEmail: options.scheduleEmail,
+        immediateDelivery: options.immediate ?? false,
+      });
     }
   };
 
@@ -215,8 +224,8 @@ export function OutboundCaseDetail({
 
       {/* Scrollable Content */}
       <div className="flex-1 space-y-4 overflow-auto p-4">
-        {/* Delivery Timeline */}
-        <DeliveryTimeline
+        {/* Activity Timeline */}
+        <ActivityTimeline
           callStatus={caseData.phoneSent}
           emailStatus={caseData.emailSent}
           scheduledCallFor={caseData.scheduledCallFor}
@@ -226,19 +235,14 @@ export function OutboundCaseDetail({
           callCompletedAt={caseData.scheduledCall?.endedAt}
           emailSentAt={null}
           attentionSeverity={caseData.attentionSeverity}
+          hasOwnerPhone={hasOwnerPhone}
+          hasOwnerEmail={hasOwnerEmail}
+          ownerPhone={caseData.owner.phone}
+          ownerEmail={caseData.owner.email}
           onRetryCall={onRetry}
           onCancelCall={handleCancelCall}
           onCancelEmail={handleCancelEmail}
-          onScheduleRemainingCall={
-            !phoneSent && !caseData.scheduledCallFor && hasOwnerPhone
-              ? handleScheduleRemaining
-              : undefined
-          }
-          onScheduleRemainingEmail={
-            !emailSent && !caseData.scheduledEmailFor && hasOwnerEmail
-              ? handleScheduleRemaining
-              : undefined
-          }
+          onScheduleRemaining={handleScheduleRemaining}
           showScheduleRemainingCall={
             !phoneSent && !caseData.scheduledCallFor && hasOwnerPhone
           }
@@ -246,6 +250,7 @@ export function OutboundCaseDetail({
             !emailSent && !caseData.scheduledEmailFor && hasOwnerEmail
           }
           isSubmitting={isSubmitting || isCancelling}
+          testModeEnabled={testModeEnabled}
         />
 
         {/* Smart Action Section - Context-aware actions */}
@@ -285,6 +290,9 @@ export function OutboundCaseDetail({
           emailSent={emailSent}
           hasOwnerPhone={hasOwnerPhone}
           hasOwnerEmail={hasOwnerEmail}
+          ownerSentimentData={caseData.ownerSentimentData}
+          petHealthData={caseData.petHealthData}
+          followUpData={caseData.followUpData}
         />
 
         {/* Workflow Timeline - Collapsible, shown for sent/scheduled cases */}

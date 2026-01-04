@@ -1,9 +1,6 @@
 "use client";
 
-import { Badge } from "@odis-ai/shared/ui/badge";
-import { Button } from "@odis-ai/shared/ui/button";
-import { X } from "lucide-react";
-import { cn } from "@odis-ai/shared/util";
+import { AttentionBadgeGroup } from "~/components/dashboard/shared";
 
 interface CompactPatientHeaderProps {
   patient: {
@@ -77,22 +74,14 @@ function calculateAge(dateOfBirth: string | null): string | null {
   }
 }
 
-function getAttentionBadgeVariant(
-  severity: string | null | undefined,
-): "destructive" | "default" | "secondary" {
-  if (severity === "critical") return "destructive";
-  if (severity === "urgent") return "default";
-  return "secondary";
-}
-
 export function CompactPatientHeader({
   patient,
   owner,
   ownerPhone,
   ownerEmail,
   attentionTypes = [],
-  attentionSeverity,
-  onClose,
+  attentionSeverity: _attentionSeverity,
+  onClose: _onClose,
 }: CompactPatientHeaderProps) {
   const emoji = getSpeciesEmoji(patient.species);
   const age = calculateAge(patient.dateOfBirth);
@@ -149,38 +138,15 @@ export function CompactPatientHeader({
             {/* Attention type badges */}
             {hasAttentionTypes && (
               <div className="flex flex-wrap gap-1.5 pt-1">
-                {attentionTypes.map((type, index) => (
-                  <Badge
-                    key={index}
-                    variant={getAttentionBadgeVariant(attentionSeverity)}
-                    className={cn(
-                      "text-xs",
-                      attentionSeverity === "critical" &&
-                        "border-red-500 bg-red-50 text-red-700",
-                      attentionSeverity === "urgent" &&
-                        "border-amber-500 bg-amber-50 text-amber-700",
-                    )}
-                  >
-                    {type}
-                  </Badge>
-                ))}
+                <AttentionBadgeGroup
+                  types={attentionTypes}
+                  maxVisible={3}
+                  size="sm"
+                />
               </div>
             )}
           </div>
         </div>
-
-        {/* Close button */}
-        {onClose && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="h-8 w-8 flex-shrink-0"
-            aria-label="Close detail panel"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
       </div>
     </div>
   );
