@@ -635,50 +635,9 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
                           <h3 className="font-medium text-slate-900">
                             Call Transcript
                           </h3>
-                          <div className="flex items-center gap-2">
-                            {latestCall.cleaned_transcript &&
-                              latestCall.cleaned_transcript !==
-                                latestCall.transcript && (
-                                <Badge
-                                  variant="secondary"
-                                  className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-                                >
-                                  <Wand2 className="mr-1 h-3 w-3" />
-                                  Enhanced
-                                </Badge>
-                              )}
-                          </div>
                         </div>
                       </AccordionTrigger>
                       <AccordionContent className="p-0">
-                        {/* Toggle for raw/cleaned transcript */}
-                        {latestCall.cleaned_transcript &&
-                          latestCall.cleaned_transcript !==
-                            latestCall.transcript && (
-                            <div className="flex justify-end border-b border-slate-200 bg-slate-50 px-4 py-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 gap-1.5 px-2 text-xs"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setShowRawTranscript(!showRawTranscript);
-                                }}
-                              >
-                                {showRawTranscript ? (
-                                  <>
-                                    <Eye className="h-3.5 w-3.5" />
-                                    Show Enhanced
-                                  </>
-                                ) : (
-                                  <>
-                                    <EyeOff className="h-3.5 w-3.5" />
-                                    Show Original
-                                  </>
-                                )}
-                              </Button>
-                            </div>
-                          )}
                         {/* Synced transcript for timed messages */}
                         {(latestCall.transcript_messages as TranscriptMessage[])
                           ?.length > 0 ? (

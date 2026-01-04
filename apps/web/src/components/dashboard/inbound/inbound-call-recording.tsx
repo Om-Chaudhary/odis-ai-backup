@@ -321,16 +321,6 @@ export function InboundCallRecording({
                   hasEnhancedTranscript &&
                   !showRawTranscript && (
                     <>
-                      {cleanedData?.wasModified &&
-                        !translationData?.wasTranslated && (
-                          <Badge
-                            variant="secondary"
-                            className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-                          >
-                            <Wand2 className="mr-1 h-3 w-3" />
-                            Enhanced
-                          </Badge>
-                        )}
                       {translationData?.wasTranslated && (
                         <Badge
                           variant="secondary"
@@ -342,27 +332,6 @@ export function InboundCallRecording({
                       )}
                     </>
                   )}
-                {/* Toggle raw/cleaned view - only show if no user override and has enhanced */}
-                {!hasUserOverride && !isProcessing && hasEnhancedTranscript && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 gap-1.5 px-2 text-xs"
-                    onClick={() => setShowRawTranscript(!showRawTranscript)}
-                  >
-                    {showRawTranscript ? (
-                      <>
-                        <Eye className="h-3.5 w-3.5" />
-                        Show Enhanced
-                      </>
-                    ) : (
-                      <>
-                        <EyeOff className="h-3.5 w-3.5" />
-                        Show Original
-                      </>
-                    )}
-                  </Button>
-                )}
               </div>
             </CardTitle>
           </CardHeader>

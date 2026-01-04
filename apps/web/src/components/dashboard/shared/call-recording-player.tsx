@@ -80,39 +80,6 @@ export function CallRecordingPlayer({
             <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <FileText className="h-4 w-4 text-slate-500" />
               Call Transcript
-              <div className="ml-auto flex items-center gap-2">
-                {/* Enhanced badge - only show if we have cleaned version and showing it */}
-                {hasEnhancedTranscript && !showRawTranscript && (
-                  <Badge
-                    variant="secondary"
-                    className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-                  >
-                    <Wand2 className="mr-1 h-3 w-3" />
-                    Enhanced
-                  </Badge>
-                )}
-                {/* Toggle raw/cleaned view - only show if we have enhanced version */}
-                {hasEnhancedTranscript && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 gap-1.5 px-2 text-xs"
-                    onClick={() => setShowRawTranscript(!showRawTranscript)}
-                  >
-                    {showRawTranscript ? (
-                      <>
-                        <Eye className="h-3.5 w-3.5" />
-                        Show Enhanced
-                      </>
-                    ) : (
-                      <>
-                        <EyeOff className="h-3.5 w-3.5" />
-                        Show Original
-                      </>
-                    )}
-                  </Button>
-                )}
-              </div>
             </CardTitle>
           </CardHeader>
           <CardContent>
