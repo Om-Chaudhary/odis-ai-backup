@@ -372,11 +372,27 @@ export function generateMockCases(count = 12): DischargeCase[] {
       createdAt: timestamp,
       updatedAt: timestamp,
       failureReason,
+      // Attention fields
+      attentionTypes: null,
+      attentionSeverity: null,
+      attentionFlaggedAt: null,
+      attentionSummary: null,
+      needsAttention: false,
     });
   }
 
   // Sort by timestamp descending (most recent first)
-  return cases.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  return cases.sort((a, b) => {
+    const timeA =
+      a.timestamp instanceof Date
+        ? a.timestamp.getTime()
+        : new Date(a.timestamp).getTime();
+    const timeB =
+      b.timestamp instanceof Date
+        ? b.timestamp.getTime()
+        : new Date(b.timestamp).getTime();
+    return timeB - timeA;
+  });
 }
 
 /**

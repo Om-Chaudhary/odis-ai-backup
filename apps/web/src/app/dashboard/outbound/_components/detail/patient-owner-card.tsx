@@ -17,7 +17,7 @@ import {
   MinusCircle,
 } from "lucide-react";
 import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
-import { DeleteCaseDialog } from "../../cases/delete-case-dialog";
+import { DeleteCaseDialog } from "~/components/dashboard/cases/delete-case-dialog";
 import { cn } from "@odis-ai/shared/util";
 import type { DischargeCaseStatus } from "../types";
 

@@ -210,11 +210,11 @@ export const inboundCallsRouter = createTRPCRouter({
           call.created_at
         ) {
           const callTime = new Date(call.created_at);
-          const hour = callTime.getUTCHours();
-          const minute = callTime.getUTCMinutes();
-
           // Hide if it's the 5:39 AM call (13:39 UTC = 5:39 AM PST)
-          if (hour === 13 && minute === 39) {
+          if (
+            callTime.getUTCHours() === 13 &&
+            callTime.getUTCMinutes() === 39
+          ) {
             return false;
           }
         }
@@ -252,10 +252,26 @@ export const inboundCallsRouter = createTRPCRouter({
 
         // Hide specific phone numbers: (408) 888-3899, (408) 791-4483, (669) 278-5158, (408) 609-7439
         const hideTheseNumbers = [
-          "4088883899", "408-888-3899", "(408) 888-3899", "+1 (408) 888-3899", "+14088883899",
-          "4087914483", "408-791-4483", "(408) 791-4483", "+1 (408) 791-4483", "+14087914483",
-          "6692785158", "669-278-5158", "(669) 278-5158", "+1 (669) 278-5158", "+16692785158",
-          "4086097439", "408-609-7439", "(408) 609-7439", "+1 (408) 609-7439", "+14086097439"
+          "4088883899",
+          "408-888-3899",
+          "(408) 888-3899",
+          "+1 (408) 888-3899",
+          "+14088883899",
+          "4087914483",
+          "408-791-4483",
+          "(408) 791-4483",
+          "+1 (408) 791-4483",
+          "+14087914483",
+          "6692785158",
+          "669-278-5158",
+          "(669) 278-5158",
+          "+1 (669) 278-5158",
+          "+16692785158",
+          "4086097439",
+          "408-609-7439",
+          "(408) 609-7439",
+          "+1 (408) 609-7439",
+          "+14086097439",
         ];
 
         if (hideTheseNumbers.includes(call.customer_phone)) {
@@ -277,7 +293,14 @@ export const inboundCallsRouter = createTRPCRouter({
           const duration = call.duration_seconds;
 
           // Hide if it's around 11:35 AM with duration around 132 seconds (2m 12s)
-          if ((hour === 11 || hour === 19) && minute >= 34 && minute <= 36 && duration && duration >= 130 && duration <= 135) {
+          if (
+            (hour === 11 || hour === 19) &&
+            minute >= 34 &&
+            minute <= 36 &&
+            duration &&
+            duration >= 130 &&
+            duration <= 135
+          ) {
             return false;
           }
         }
@@ -297,7 +320,14 @@ export const inboundCallsRouter = createTRPCRouter({
           const duration = call.duration_seconds;
 
           // Hide if it's around 7:03 PM with duration around 60 seconds (1m 0s)
-          if ((hour === 19 || hour === 7) && minute >= 2 && minute <= 4 && duration && duration >= 58 && duration <= 62) {
+          if (
+            (hour === 19 || hour === 7) &&
+            minute >= 2 &&
+            minute <= 4 &&
+            duration &&
+            duration >= 58 &&
+            duration <= 62
+          ) {
             return false;
           }
         }
@@ -317,7 +347,14 @@ export const inboundCallsRouter = createTRPCRouter({
           const duration = call.duration_seconds;
 
           // Hide if it's around 4:22 PM with duration around 102 seconds (1m 42s)
-          if ((hour === 16 || hour === 4) && minute >= 21 && minute <= 23 && duration && duration >= 100 && duration <= 104) {
+          if (
+            (hour === 16 || hour === 4) &&
+            minute >= 21 &&
+            minute <= 23 &&
+            duration &&
+            duration >= 100 &&
+            duration <= 104
+          ) {
             return false;
           }
         }
@@ -337,7 +374,14 @@ export const inboundCallsRouter = createTRPCRouter({
           const duration = call.duration_seconds;
 
           // Hide if it's around 10:08 AM with duration around 65 seconds (1m 5s)
-          if ((hour === 10 || hour === 18) && minute >= 7 && minute <= 9 && duration && duration >= 63 && duration <= 67) {
+          if (
+            (hour === 10 || hour === 18) &&
+            minute >= 7 &&
+            minute <= 9 &&
+            duration &&
+            duration >= 63 &&
+            duration <= 67
+          ) {
             return false;
           }
         }
@@ -351,9 +395,6 @@ export const inboundCallsRouter = createTRPCRouter({
             call.customer_phone === "+16505444003") &&
           call.created_at
         ) {
-          const callTime = new Date(call.created_at);
-          const hour = callTime.getHours();
-          const minute = callTime.getMinutes();
           const duration = call.duration_seconds;
 
           // Hide specific call with identifying time/duration characteristics
@@ -372,9 +413,6 @@ export const inboundCallsRouter = createTRPCRouter({
             call.customer_phone === "+16692614520") &&
           call.created_at
         ) {
-          const callTime = new Date(call.created_at);
-          const hour = callTime.getHours();
-          const minute = callTime.getMinutes();
           const duration = call.duration_seconds;
 
           // Hide specific call with identifying time/duration characteristics
@@ -393,13 +431,20 @@ export const inboundCallsRouter = createTRPCRouter({
             call.customer_phone === "+14086444446") &&
           call.created_at
         ) {
-          const callTime = new Date(call.created_at);
-          const hour = callTime.getHours();
-          const minute = callTime.getMinutes();
           const duration = call.duration_seconds;
 
           // Hide if it's around 10:55 AM with ~1 minute duration
-          if ((hour === 10 || hour === 18) && minute >= 54 && minute <= 56 && duration && duration >= 59 && duration <= 63) {
+          const logDate = new Date(call.created_at);
+          const hour = logDate.getHours();
+          const minute = logDate.getMinutes();
+          if (
+            (hour === 10 || hour === 18) &&
+            minute >= 54 &&
+            minute <= 56 &&
+            duration &&
+            duration >= 59 &&
+            duration <= 63
+          ) {
             return false;
           }
         }
@@ -413,13 +458,20 @@ export const inboundCallsRouter = createTRPCRouter({
             call.customer_phone === "+14086121141") &&
           call.created_at
         ) {
-          const callTime = new Date(call.created_at);
-          const hour = callTime.getHours();
-          const minute = callTime.getMinutes();
           const duration = call.duration_seconds;
 
           // Hide if it's around 10:05 AM with ~2m 35s duration
-          if ((hour === 10 || hour === 18) && minute >= 4 && minute <= 6 && duration && duration >= 153 && duration <= 157) {
+          const logDate = new Date(call.created_at);
+          const hour = logDate.getHours();
+          const minute = logDate.getMinutes();
+          if (
+            (hour === 10 || hour === 18) &&
+            minute >= 4 &&
+            minute <= 6 &&
+            duration &&
+            duration >= 153 &&
+            duration <= 157
+          ) {
             return false;
           }
         }
@@ -433,13 +485,20 @@ export const inboundCallsRouter = createTRPCRouter({
             call.customer_phone === "+14084825357") &&
           call.created_at
         ) {
-          const callTime = new Date(call.created_at);
-          const hour = callTime.getHours();
-          const minute = callTime.getMinutes();
           const duration = call.duration_seconds;
 
           // Hide if it's around 7:46 AM with ~24s duration
-          if ((hour === 7 || hour === 15) && minute >= 45 && minute <= 47 && duration && duration >= 22 && duration <= 26) {
+          const logDate = new Date(call.created_at);
+          const hour = logDate.getHours();
+          const minute = logDate.getMinutes();
+          if (
+            (hour === 7 || hour === 15) &&
+            minute >= 45 &&
+            minute <= 47 &&
+            duration &&
+            duration >= 22 &&
+            duration <= 26
+          ) {
             return false;
           }
         }

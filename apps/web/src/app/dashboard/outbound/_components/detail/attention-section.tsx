@@ -7,7 +7,10 @@ import {
 import { AlertTriangle } from "lucide-react";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { cn } from "@odis-ai/shared/util";
-import { AttentionTypeBadge, AttentionSeverityBadge } from "../../shared";
+import {
+  AttentionTypeBadge,
+  AttentionSeverityBadge,
+} from "~/components/dashboard/shared";
 
 interface AttentionSectionProps {
   caseData: {

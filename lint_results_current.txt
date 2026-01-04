@@ -1,0 +1,54 @@
+(node:92968) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+> nx run web:lint
+
+> eslint .
+
+[0m[0m
+[0m[4m/Users/taylorallen/Development/odis-ai-web/apps/web/src/app/dashboard/outbound/_components/outbound-dashboard.tsx[24m[0m
+[0m  [2m45:11[22m  [31merror[39m  Unexpected any. Specify a different type            [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m49:22[22m  [31merror[39m  Unexpected any. Specify a different type            [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m49:22[22m  [31merror[39m  'any' overrides all other types in this union type  [2m@typescript-eslint/no-redundant-type-constituents[22m[0m
+[0m  [2m72:14[22m  [31merror[39m  Unexpected any. Specify a different type            [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/Users/taylorallen/Development/odis-ai-web/apps/web/src/app/dashboard/outbound/_components/views/all-discharges-view.tsx[24m[0m
+[0m  [2m11:10[22m  [31merror[39m  Unexpected any. Specify a different type            [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m19:17[22m  [31merror[39m  Unexpected any. Specify a different type            [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m19:17[22m  [31merror[39m  'any' overrides all other types in this union type  [2m@typescript-eslint/no-redundant-type-constituents[22m[0m
+[0m  [2m20:28[22m  [31merror[39m  Unexpected any. Specify a different type            [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m25:31[22m  [31merror[39m  Unexpected any. Specify a different type            [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/Users/taylorallen/Development/odis-ai-web/apps/web/src/app/dashboard/outbound/_components/views/needs-attention-view.tsx[24m[0m
+[0m  [2m11:10[22m  [31merror[39m  Unexpected any. Specify a different type            [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m19:17[22m  [31merror[39m  Unexpected any. Specify a different type            [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m  [2m19:17[22m  [31merror[39m  'any' overrides all other types in this union type  [2m@typescript-eslint/no-redundant-type-constituents[22m[0m
+[0m  [2m20:28[22m  [31merror[39m  Unexpected any. Specify a different type            [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/Users/taylorallen/Development/odis-ai-web/apps/web/src/app/dashboard/outbound/_components/views/needs-review-view.tsx[24m[0m
+[0m  [2m12:10[22m  [31merror[39m  Unexpected any. Specify a different type  [2m@typescript-eslint/no-explicit-any[22m[0m
+[0m[0m
+[0m[4m/Users/taylorallen/Development/odis-ai-web/apps/web/src/components/dashboard/overview/overview-skeleton.tsx[24m[0m
+[0m  [2m3:10[22m  [33mwarning[39m  'cn' is defined but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[4m/Users/taylorallen/Development/odis-ai-web/apps/web/src/server/api/routers/inbound-calls.ts[24m[0m
+[0m  [2m355:17[22m  [33mwarning[39m  'hour' is assigned a value but never used    [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m356:17[22m  [33mwarning[39m  'minute' is assigned a value but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m376:17[22m  [33mwarning[39m  'hour' is assigned a value but never used    [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m  [2m377:17[22m  [33mwarning[39m  'minute' is assigned a value but never used  [2m@typescript-eslint/no-unused-vars[22m[0m
+[0m[0m
+[0m[31m[1m✖ 19 problems (14 errors, 5 warnings)[22m[39m[0m
+[0m[31m[1m[22m[39m[0m
+Warning: command "eslint ." exited with non-zero status code
+
+
+ NX   Running target lint for project web failed
+
+Failed tasks:
+
+- web:lint
+
+Hint: run the command with --verbose for more details.
+
+View structured, searchable error logs at https://cloud.nx.app/runs/0fzidCboMj
+

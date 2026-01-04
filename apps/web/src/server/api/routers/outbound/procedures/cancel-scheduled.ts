@@ -7,9 +7,12 @@
 
 import { TRPCError } from "@trpc/server";
 import { getClinicUserIds } from "@odis-ai/domain/clinics";
-import { cancelScheduledExecution } from "@odis-ai/integrations/qstash";
+
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { cancelScheduledDeliveryInput } from "../schemas";
+
+// Dynamic import for lazy-loaded qstash
+const getQStash = () => import("@odis-ai/integrations/qstash");
 
 // Type for call metadata that may contain qstash_message_id
 interface ScheduledCallMetadata {
@@ -72,6 +75,7 @@ export const cancelScheduledRouter = createTRPCRouter({
             scheduledCall.qstash_message_id ?? metadata?.qstash_message_id;
 
           if (qstashMessageId) {
+            const { cancelScheduledExecution } = await getQStash();
             const qstashCancelled =
               await cancelScheduledExecution(qstashMessageId);
             results.qstashCallCancelled = qstashCancelled;
@@ -138,6 +142,7 @@ export const cancelScheduledRouter = createTRPCRouter({
         } else {
           // First, cancel the QStash job to prevent execution
           if (scheduledEmail.qstash_message_id) {
+            const { cancelScheduledExecution } = await getQStash();
             const qstashCancelled = await cancelScheduledExecution(
               scheduledEmail.qstash_message_id,
             );

@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@odis-ai/data-access/db/server";
 import { sendEmailSchema } from "@odis-ai/shared/validators/discharge";
 import { isFutureTime } from "@odis-ai/shared/util/business-hours";
-import { scheduleEmailExecution } from "@odis-ai/integrations/qstash/client";
+
 import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
@@ -63,6 +63,12 @@ async function authenticateRequest(request: NextRequest) {
 
   const supabase = await createClient();
   return { user, supabase };
+}
+
+async function getQStash() {
+  const { scheduleEmailExecution } =
+    await import("@odis-ai/integrations/qstash/client");
+  return { scheduleEmailExecution };
 }
 
 /**
@@ -183,6 +189,7 @@ export async function POST(request: NextRequest) {
     // Enqueue job in QStash
     let qstashMessageId: string;
     try {
+      const { scheduleEmailExecution } = await getQStash();
       qstashMessageId = await scheduleEmailExecution(
         scheduledEmail.id,
         validated.scheduledFor,

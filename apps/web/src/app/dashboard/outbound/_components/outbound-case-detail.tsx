@@ -341,15 +341,10 @@ export function OutboundCaseDetail({
                   <Link
                     href={`/dashboard/outbound/workflow/${caseData.caseId}`}
                     onClick={(e) => e.stopPropagation()}
+                    className="inline-flex h-6 items-center gap-1 rounded-md px-2 text-xs text-slate-500 hover:bg-slate-100 hover:text-teal-700 dark:hover:bg-slate-800"
                   >
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 gap-1 px-2 text-slate-500 hover:text-teal-700"
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                      <span className="text-xs">Open</span>
-                    </Button>
+                    <ExternalLink className="h-3 w-3" />
+                    <span>Open</span>
                   </Link>
                   <ChevronDown
                     className={`h-4 w-4 text-slate-500 transition-transform ${

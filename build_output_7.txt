@@ -1,0 +1,107 @@
+
+> odis-ai@0.1.1 build /Users/taylorallen/Development/odis-ai-web
+> NX_ISOLATE_PLUGINS=false NODE_ENV=production nx build web
+
+(node:87530) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+> nx run web:build
+
+> next build
+
+   [1m[38;2;173;127;168m▲ Next.js 16.0.10[39m[22m (Turbopack)
+   - Experiments (use with caution):
+     · optimizePackageImports
+
+ [37m[1m [22m[39m Creating an optimized production build ...
+ [32m[1m✓[22m[39m Compiled successfully in 8.4s
+ [37m[1m [22m[39m Running TypeScript ...
+ [37m[1m [22m[39m Collecting page data using 11 workers ...
+ [37m[1m [22m[39m Generating static pages using 11 workers (0/58) ...
+ [37m[1m [22m[39m Generating static pages using 11 workers (14/58) 
+ [37m[1m [22m[39m Generating static pages using 11 workers (28/58) 
+ [37m[1m [22m[39m Generating static pages using 11 workers (43/58) 
+ [32m[1m✓[22m[39m Generating static pages using 11 workers (58/58) in 563.5ms
+ [37m[1m [22m[39m Finalizing page optimization ...
+
+[4mRoute (app)[24m
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /admin
+├ ƒ /admin/scheduled
+├ ƒ /api/appointments/availability
+├ ƒ /api/appointments/sync
+├ ƒ /api/calls/schedule
+├ ƒ /api/cases/find-by-patient
+├ ƒ /api/cases/ingest
+├ ƒ /api/cron/sync-schedules
+├ ƒ /api/discharge/batch
+├ ƒ /api/discharge/orchestrate
+├ ƒ /api/generate-soap
+├ ƒ /api/generate/discharge-email
+├ ƒ /api/generate/discharge-summary
+├ ƒ /api/idexx/configure-credentials
+├ ƒ /api/idexx/validate-credentials
+├ ƒ /api/normalize
+├ ƒ /api/schedule/sync
+├ ƒ /api/send/discharge-email
+├ ƒ /api/slack/cron/daily-reminders
+├ ƒ /api/slack/oauth/callback
+├ ƒ /api/slack/oauth/install
+├ ƒ /api/slack/webhooks/commands
+├ ƒ /api/slack/webhooks/interactions
+├ ƒ /api/trpc/[trpc]
+├ ƒ /api/vapi/inbound/tools/create-refill-request
+├ ƒ /api/vapi/inbound/tools/leave-message
+├ ƒ /api/vapi/inbound/tools/log-emergency-triage
+├ ƒ /api/vapi/leave-message
+├ ƒ /api/vapi/schedule-appointment
+├ ƒ /api/vapi/tools/book-appointment
+├ ƒ /api/vapi/tools/check-availability
+├ ƒ /api/vapi/tools/check-availability-range
+├ ƒ /api/webhooks/execute-call
+├ ƒ /api/webhooks/execute-discharge-email
+├ ƒ /api/webhooks/vapi
+├ ƒ /api/webhooks/vapi/backfill-outcome
+├ ○ /apple-icon.png
+├ ƒ /auth/callback
+├ ƒ /calls/[id]
+├ ○ /contact
+├ ○ /cookie-policy
+├ ƒ /dashboard
+├ ƒ /dashboard/[clinicSlug]
+├ ƒ /dashboard/[clinicSlug]/settings
+├ ƒ /dashboard/inbound
+├ ƒ /dashboard/outbound
+├ ƒ /dashboard/outbound/bulk-schedule
+├ ƒ /dashboard/outbound/schedule-all
+├ ƒ /dashboard/outbound/workflow/[caseId]
+├ ƒ /dashboard/settings
+├ ○ /demo
+├ ƒ /discharges/[id]
+├ ○ /features
+├ ○ /icon.png
+├ ○ /login
+├ ○ /pricing
+├ ○ /privacy-policy
+├ ○ /robots.txt
+├ ○ /security
+├ ○ /signup
+├ ○ /sitemap.xml
+├ ○ /support
+└ ○ /terms-of-service
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+
+
+ NX   Successfully ran target build for project web
+
+
+View logs and investigate cache misses at https://cloud.nx.app/runs/LJmUIUS6C8
+

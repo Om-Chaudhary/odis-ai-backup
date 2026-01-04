@@ -17,7 +17,7 @@ import { calculateScheduleTime } from "@odis-ai/shared/util/timezone";
 import { isBlockedExtremeCase } from "@odis-ai/shared/util/discharge-readiness";
 import type { NormalizedEntities } from "@odis-ai/shared/validators";
 import type { Json } from "@odis-ai/shared/types";
-import { scheduleEmailExecution } from "@odis-ai/integrations/qstash";
+
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { approveAndScheduleInput } from "../schemas";
 
@@ -28,6 +28,7 @@ const getGenerateStructuredDischargeSummaryWithRetry = () =>
   import("@odis-ai/integrations/ai/generate-structured-discharge").then(
     (m) => m.generateStructuredDischargeSummaryWithRetry,
   );
+const getQStash = () => import("@odis-ai/integrations/qstash");
 
 /**
  * IDEXX metadata structure for entity extraction
@@ -619,6 +620,7 @@ export const approveRouter = createTRPCRouter({
         } else {
           // Schedule via QStash (both immediate and normal modes use the queue)
           try {
+            const { scheduleEmailExecution } = await getQStash();
             const qstashMessageId = await scheduleEmailExecution(
               emailData.id,
               emailScheduledFor,

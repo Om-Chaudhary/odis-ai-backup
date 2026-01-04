@@ -78,66 +78,9 @@ export async function createOrUpdateCase(
     }
   }
 
-  // 2. Fallback: Try to find by patient name and owner
-  if (!caseId) {
-    const ninetyDaysAgo = new Date();
-    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-    ninetyDaysAgo.setHours(0, 0, 0, 0);
-
-    const { data: matchingPatients, error: patientSearchError } = await supabase
-      .from("patients")
-      .select("case_id")
-      .eq("user_id", userId)
-      .ilike("name", entities.patient.name)
-      .ilike("owner_name", entities.patient.owner.name ?? "")
-      .not("case_id", "is", null);
-
-    if (patientSearchError) {
-      console.error(
-        "[CaseCRUD] Error searching for patients:",
-        patientSearchError,
-      );
-    }
-
-    if (matchingPatients && matchingPatients.length > 0) {
-      const caseIds = matchingPatients
-        .map((p) => p.case_id)
-        .filter((id): id is string => id !== null);
-
-      if (caseIds.length > 0) {
-        const { data: existingCases, error: caseSearchError } = await supabase
-          .from("cases")
-          .select("id, status, created_at")
-          .in("id", caseIds)
-          .in("status", ["ongoing", "completed"])
-          .gte("created_at", ninetyDaysAgo.toISOString())
-          .order("created_at", { ascending: false })
-          .limit(1);
-
-        if (caseSearchError) {
-          console.error(
-            "[CaseCRUD] Error searching for cases:",
-            caseSearchError,
-          );
-        }
-
-        if (existingCases && existingCases.length > 0) {
-          const match = existingCases[0];
-          if (match) {
-            console.log(
-              "[CaseCRUD] Found existing case by patient/owner name",
-              {
-                patientName: entities.patient.name,
-                ownerName: entities.patient.owner.name,
-                caseId: match.id,
-              },
-            );
-            caseId = match.id;
-          }
-        }
-      }
-    }
-  }
+  // NOTE: Removed patient name/owner case matching.
+  // Each appointment should create a new case, even for returning patients.
+  // Only external_id matching (above) is kept for idempotent ingestion of the same appointment.
 
   if (caseId) {
     // Update existing case
@@ -236,10 +179,13 @@ export async function createOrUpdateCase(
       source: context.source,
     });
 
-    // Handle patient deduplication
+    // Look up existing patient to copy contact info (phone, email) if not provided
+    // Always create a new patient record per case to avoid linking to old case data
     const { data: existingPatient, error: patientSearchError } = await supabase
       .from("patients")
-      .select("id, name, owner_name")
+      .select(
+        "id, name, owner_name, owner_phone, owner_email, species, breed, sex, weight_kg",
+      )
       .eq("user_id", userId)
       .ilike("name", entities.patient.name)
       .ilike("owner_name", entities.patient.owner.name ?? "")
@@ -254,62 +200,42 @@ export async function createOrUpdateCase(
       );
     }
 
-    if (existingPatient) {
-      const { error: updatePatientError } = await supabase
-        .from("patients")
-        .update({
-          case_id: caseId,
-          species: entities.patient.species ?? undefined,
-          breed: entities.patient.breed ?? undefined,
-          sex: entities.patient.sex ?? undefined,
-          weight_kg: parseWeight(entities.patient.weight) ?? undefined,
-          owner_phone: entities.patient.owner.phone ?? undefined,
-          owner_email: entities.patient.owner.email ?? undefined,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", existingPatient.id);
+    // Create new patient record, using existing patient data as fallback for missing fields
+    const patientInsert: PatientInsert = {
+      user_id: userId,
+      case_id: caseId,
+      name: entities.patient.name,
+      species: entities.patient.species ?? existingPatient?.species ?? null,
+      breed: entities.patient.breed ?? existingPatient?.breed ?? null,
+      sex: entities.patient.sex ?? existingPatient?.sex ?? null,
+      weight_kg:
+        parseWeight(entities.patient.weight) ??
+        existingPatient?.weight_kg ??
+        null,
+      owner_name:
+        entities.patient.owner.name ?? existingPatient?.owner_name ?? null,
+      // Copy phone/email from existing patient if not provided in new data
+      owner_phone:
+        entities.patient.owner.phone ?? existingPatient?.owner_phone ?? null,
+      owner_email:
+        entities.patient.owner.email ?? existingPatient?.owner_email ?? null,
+    };
 
-      if (updatePatientError) {
-        console.error(
-          "[CaseCRUD] Error updating existing patient:",
-          updatePatientError,
-        );
-      } else {
-        console.log("[CaseCRUD] Reused existing patient", {
-          patientId: existingPatient.id,
-          patientName: existingPatient.name,
-          caseId,
-        });
-      }
-    } else {
-      const patientInsert: PatientInsert = {
-        user_id: userId,
-        case_id: caseId,
-        name: entities.patient.name,
-        species: entities.patient.species ?? null,
-        breed: entities.patient.breed ?? null,
-        sex: entities.patient.sex ?? null,
-        weight_kg: parseWeight(entities.patient.weight),
-        owner_name: entities.patient.owner.name ?? null,
-        owner_phone: entities.patient.owner.phone ?? null,
-        owner_email: entities.patient.owner.email ?? null,
-      };
+    const { data: newPatient, error: patientError } = await supabase
+      .from("patients")
+      .insert(patientInsert)
+      .select()
+      .single();
 
-      const { data: newPatient, error: patientError } = await supabase
-        .from("patients")
-        .insert(patientInsert)
-        .select()
-        .single();
-
-      if (patientError) {
-        console.error("[CaseCRUD] Error creating patient:", patientError);
-      } else if (newPatient) {
-        console.log("[CaseCRUD] Created new patient", {
-          patientId: newPatient.id,
-          patientName: newPatient.name,
-          caseId,
-        });
-      }
+    if (patientError) {
+      console.error("[CaseCRUD] Error creating patient:", patientError);
+    } else if (newPatient) {
+      console.log("[CaseCRUD] Created new patient", {
+        patientId: newPatient.id,
+        patientName: newPatient.name,
+        caseId,
+        copiedFromExisting: !!existingPatient,
+      });
     }
   }
 

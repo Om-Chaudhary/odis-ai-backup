@@ -5,7 +5,7 @@ import {
   CardTitle,
 } from "@odis-ai/shared/ui/card";
 import { Phone } from "lucide-react";
-import { CallRecordingPlayer } from "../../../shared";
+import { CallRecordingPlayer } from "~/components/dashboard";
 
 interface ScheduledCallData {
   id: string;

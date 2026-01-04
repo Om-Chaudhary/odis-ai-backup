@@ -1,0 +1,30 @@
+(node:99926) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+> nx run web:lint
+
+> eslint .
+
+[0m[0m
+[0m[4m/Users/taylorallen/Development/odis-ai-web/apps/web/src/app/dashboard/outbound/_components/types.ts[24m[0m
+[0m  [2m336:7[22m  [31merror[39m  'unknown' overrides all other types in this union type  [2m@typescript-eslint/no-redundant-type-constituents[22m[0m
+[0m[0m
+[0m[4m/Users/taylorallen/Development/odis-ai-web/apps/web/src/server/api/routers/inbound-calls.ts[24m[0m
+[0m  [2m214:13[22m  [31merror[39m  Unsafe call of a(n) `error` type typed value  [2m@typescript-eslint/no-unsafe-call[22m[0m
+[0m  [2m215:13[22m  [31merror[39m  Unsafe call of a(n) `error` type typed value  [2m@typescript-eslint/no-unsafe-call[22m[0m
+[0m[0m
+[0m[31m[1m✖ 3 problems (3 errors, 0 warnings)[22m[39m[0m
+[0m[31m[1m[22m[39m[0m
+Warning: command "eslint ." exited with non-zero status code
+
+
+ NX   Running target lint for project web failed
+
+Failed tasks:
+
+- web:lint
+
+Hint: run the command with --verbose for more details.
+
+View structured, searchable error logs at https://cloud.nx.app/runs/HBmpPArLD3
+

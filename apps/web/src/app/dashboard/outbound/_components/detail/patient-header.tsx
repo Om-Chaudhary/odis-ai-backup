@@ -13,7 +13,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
-import { DeleteCaseDialog } from "../../cases/delete-case-dialog";
+import { DeleteCaseDialog } from "~/components/dashboard/cases/delete-case-dialog";
 import { calculateAge, formatCaseType } from "./utils";
 
 interface Patient {

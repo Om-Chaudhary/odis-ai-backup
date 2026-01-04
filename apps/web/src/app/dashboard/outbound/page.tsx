@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
-import { OutboundDischargesClient } from "~/components/dashboard/outbound/outbound-discharges-client";
-import { OutboundErrorBoundary } from "~/components/dashboard/outbound/outbound-error-boundary";
+import { OutboundDashboard } from "./_components/outbound-dashboard";
+import { OutboundErrorBoundary } from "./_components/outbound-error-boundary";
 
 export const metadata: Metadata = {
   title: "Outbound Discharges | Dashboard",
@@ -31,7 +31,7 @@ export default function OutboundDischargePage() {
             </div>
           }
         >
-          <OutboundDischargesClient />
+          <OutboundDashboard />
         </Suspense>
       </OutboundErrorBoundary>
     </div>

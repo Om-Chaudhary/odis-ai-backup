@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@odis-ai/data-access/db/server";
 import { scheduleCallSchema } from "@odis-ai/shared/validators";
 import { isFutureTime } from "@odis-ai/shared/util/business-hours";
-import { scheduleCallExecution } from "@odis-ai/integrations/qstash/client";
+
 import { getUser } from "~/server/actions/auth";
 import { createServerClient } from "@supabase/ssr";
 import { env } from "~/env";
@@ -18,6 +18,12 @@ import { getClinicVapiConfigByUserId } from "@odis-ai/domain/clinics";
 async function getVapiUtils() {
   const { extractFirstName } = await import("@odis-ai/integrations/vapi/utils");
   return { extractFirstName };
+}
+
+async function getQStash() {
+  const { scheduleCallExecution } =
+    await import("@odis-ai/integrations/qstash/client");
+  return { scheduleCallExecution };
 }
 
 /**
@@ -294,6 +300,7 @@ export async function POST(request: NextRequest) {
     // Enqueue job in QStash
     let qstashMessageId: string;
     try {
+      const { scheduleCallExecution } = await getQStash();
       qstashMessageId = await scheduleCallExecution(
         scheduledCall.id,
         finalScheduledTime,

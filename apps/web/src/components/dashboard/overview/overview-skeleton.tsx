@@ -1,7 +1,5 @@
 "use client";
 
-import { cn } from "@odis-ai/shared/util";
-
 export function OverviewSkeleton() {
   return (
     <div className="animate-pulse space-y-8">

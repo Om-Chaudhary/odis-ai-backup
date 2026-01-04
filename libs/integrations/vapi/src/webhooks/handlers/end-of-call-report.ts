@@ -693,15 +693,20 @@ function parseVapiStructuredOutput(
       "result" in value
     ) {
       const entry = value as { name: string; result: unknown };
-      // Handle nested result objects (e.g., {"attention_types": "[]"})
+      const result = entry.result as Record<string, unknown> | null;
+
+      // For attention_classification schema, spread the result fields directly
+      // so needs_attention, attention_types, etc. are at the top level
       if (
-        entry.result &&
-        typeof entry.result === "object" &&
-        entry.name in (entry.result as Record<string, unknown>)
+        entry.name === "attention_classification" &&
+        result &&
+        typeof result === "object"
       ) {
-        parsed[entry.name] = (entry.result as Record<string, unknown>)[
-          entry.name
-        ];
+        Object.assign(parsed, result);
+      }
+      // Handle nested result objects (e.g., {"attention_types": "[]"})
+      else if (result && typeof result === "object" && entry.name in result) {
+        parsed[entry.name] = result[entry.name];
       } else {
         parsed[entry.name] = entry.result;
       }

@@ -1,0 +1,46 @@
+
+> odis-ai@0.1.1 build /Users/taylorallen/Development/odis-ai-web
+> NX_ISOLATE_PLUGINS=false NODE_ENV=production nx build web
+
+(node:87194) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+> nx run web:build
+
+> next build
+
+   [1m[38;2;173;127;168m▲ Next.js 16.0.10[39m[22m (Turbopack)
+   - Experiments (use with caution):
+     · optimizePackageImports
+
+ [37m[1m [22m[39m Creating an optimized production build ...
+ [32m[1m✓[22m[39m Compiled successfully in 8.2s
+ [37m[1m [22m[39m Running TypeScript ...
+[31mFailed to compile.
+[39m
+[36m./src/app/dashboard/outbound/_components/views/needs-review-view.tsx[39m:[33m42[39m:[33m11[39m
+[31m[1mType error[22m[39m: Type '(caseId: string, field: "email" | "phone", value: string) => void' is not assignable to type '(caseId: string, field: "email" | "phone", value: string) => Promise<void>'.
+  Type 'void' is not assignable to type 'Promise<void>'.
+
+[0m [90m 40 |[39m           cases[33m=[39m{cases}
+ [90m 41 |[39m           isLoading[33m=[39m{headerProps[33m.[39misLoading}
+[31m[1m>[22m[39m[90m 42 |[39m           onUpdateContact[33m=[39m{onUpdateContact}
+ [90m    |[39m           [31m[1m^[22m[39m
+ [90m 43 |[39m         [33m/[39m[33m>[39m
+ [90m 44 |[39m       [33m<[39m[33m/[39m[33mPageContent[39m[33m>[39m
+ [90m 45 |[39m       [33m<[39m[33mPageFooter[39m[33m>[39m[0m
+Next.js build worker exited with code: 1 and signal: null
+Warning: command "next build" exited with non-zero status code
+
+
+ NX   Running target build for project web failed
+
+Failed tasks:
+
+- web:build
+
+Hint: run the command with --verbose for more details.
+
+View structured, searchable error logs at https://cloud.nx.app/runs/dT75aw4vQm
+
+ ELIFECYCLE  Command failed with exit code 1.

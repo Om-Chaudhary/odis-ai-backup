@@ -188,7 +188,8 @@
       "Bash(export IDEXX_ENCRYPTION_KEY=\"EFxjYCAidZqnksE+8lelLhfLflBcjXpAfJ228zte/FQ=\")",
       "Bash(export NEXT_PUBLIC_POSTHOG_KEY=\"phc_Y70cB5rLrVkFrxTNDvcUfeXmcUGgzrI9mGlYzWId7ul\")",
       "Bash(SKIP_ESLINT=true pnpm build)",
-      "Bash(nx reset:*)"
+      "Bash(nx reset:*)",
+      "mcp__vapi-mcp__list_tools"
     ],
     "deny": [],
     "ask": []

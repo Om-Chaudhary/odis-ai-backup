@@ -35,7 +35,7 @@ type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 export function InboundClient() {
   // URL-synced state
   const [outcomeFilter, setOutcomeFilter] = useQueryState("outcome", {
-    defaultValue: "all" as OutcomeFilter,
+    defaultValue: "Scheduled" as OutcomeFilter,
     parse: (v) =>
       ([
         "all",

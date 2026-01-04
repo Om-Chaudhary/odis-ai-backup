@@ -1,0 +1,120 @@
+
+ NX   Running target typecheck for project web and 20 tasks it depends on:
+
+
+
+> nx run shared-types:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run shared-validators:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run shared-env:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run shared-util:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run shared-logger:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run shared-constants:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run data-access-db:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run integrations-ai:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run data-access-api:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run domain-clinics-util:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run integrations-qstash:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run integrations-vapi:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run shared-crypto:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run integrations-resend:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run domain-discharge-data-access:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run domain-cases-data-access:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run shared-ui:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run integrations-idexx:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run integrations-slack:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run shared-hooks:typecheck  [existing outputs match the cache, left as is]
+
+(node:1198) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+> nx run web:typecheck
+
+> tsc --noEmit -p apps/web/tsconfig.json
+
+apps/web/src/app/dashboard/outbound/_components/mock-data.ts(251,16): error TS2345: Argument of type '{ id: string; caseId: string; patient: { id: string; name: string; species: "Canine" | "Feline" | "Avian" | "Exotic"; breed: string; dateOfBirth: Date; sex: string; weightKg: number; }; owner: { ...; }; ... 19 more ...; failureReason: string | undefined; }' is not assignable to parameter of type 'DischargeCase'.
+  Type '{ id: string; caseId: string; patient: { id: string; name: string; species: "Canine" | "Feline" | "Avian" | "Exotic"; breed: string; dateOfBirth: Date; sex: string; weightKg: number; }; owner: { ...; }; ... 19 more ...; failureReason: string | undefined; }' is missing the following properties from type 'DischargeCase': attentionTypes, attentionSeverity, attentionFlaggedAt, attentionSummary, needsAttention
+apps/web/src/app/dashboard/outbound/_components/outbound-dashboard.tsx(272,8): error TS2352: Conversion of type '{ status: "in_progress" | "completed" | "failed" | "pending_review" | "scheduled" | "ready"; id: string; timestamp: string; caseId: string; attentionTypes: string[] | null; createdAt: string; ... 31 more ...; extremeCaseCheck?: unknown; }[]' to type 'TransformedCase[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Property 'updatedAt' is missing in type '{ status: "in_progress" | "completed" | "failed" | "pending_review" | "scheduled" | "ready"; id: string; timestamp: string; caseId: string; attentionTypes: string[] | null; createdAt: string; ... 31 more ...; extremeCaseCheck?: unknown; }' but required in type 'TransformedCase'.
+apps/web/src/app/dashboard/outbound/_components/outbound-dashboard.tsx(280,23): error TS2352: Conversion of type '{ status: "in_progress" | "completed" | "failed" | "pending_review" | "scheduled" | "ready"; id: string; timestamp: string; caseId: string; attentionTypes: string[] | null; createdAt: string; ... 31 more ...; extremeCaseCheck?: unknown; }[]' to type 'TransformedCase[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Property 'updatedAt' is missing in type '{ status: "in_progress" | "completed" | "failed" | "pending_review" | "scheduled" | "ready"; id: string; timestamp: string; caseId: string; attentionTypes: string[] | null; createdAt: string; ... 31 more ...; extremeCaseCheck?: unknown; }' but required in type 'TransformedCase'.
+apps/web/src/app/dashboard/outbound/_components/outbound-dashboard.tsx(340,26): error TS2352: Conversion of type '{ status: "in_progress" | "completed" | "failed" | "pending_review" | "scheduled" | "ready"; id: string; timestamp: string; caseId: string; attentionTypes: string[] | null; createdAt: string; ... 31 more ...; extremeCaseCheck?: unknown; }[]' to type 'TransformedCase[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Property 'updatedAt' is missing in type '{ status: "in_progress" | "completed" | "failed" | "pending_review" | "scheduled" | "ready"; id: string; timestamp: string; caseId: string; attentionTypes: string[] | null; createdAt: string; ... 31 more ...; extremeCaseCheck?: unknown; }' but required in type 'TransformedCase'.
+apps/web/src/app/dashboard/outbound/_components/outbound-dashboard.tsx(385,24): error TS2352: Conversion of type '{ status: "in_progress" | "completed" | "failed" | "pending_review" | "scheduled" | "ready"; id: string; timestamp: string; caseId: string; attentionTypes: string[] | null; createdAt: string; ... 31 more ...; extremeCaseCheck?: unknown; }[]' to type 'TransformedCase[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Property 'updatedAt' is missing in type '{ status: "in_progress" | "completed" | "failed" | "pending_review" | "scheduled" | "ready"; id: string; timestamp: string; caseId: string; attentionTypes: string[] | null; createdAt: string; ... 31 more ...; extremeCaseCheck?: unknown; }' but required in type 'TransformedCase'.
+apps/web/src/app/dashboard/outbound/_components/outbound-dashboard.tsx(415,24): error TS2352: Conversion of type '{ status: "in_progress" | "completed" | "failed" | "pending_review" | "scheduled" | "ready"; id: string; timestamp: string; caseId: string; attentionTypes: string[] | null; createdAt: string; ... 31 more ...; extremeCaseCheck?: unknown; }[]' to type 'TransformedCase[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Property 'updatedAt' is missing in type '{ status: "in_progress" | "completed" | "failed" | "pending_review" | "scheduled" | "ready"; id: string; timestamp: string; caseId: string; attentionTypes: string[] | null; createdAt: string; ... 31 more ...; extremeCaseCheck?: unknown; }' but required in type 'TransformedCase'.
+apps/web/src/app/dashboard/outbound/_components/outbound-dashboard.tsx(509,13): error TS2322: Type '{ status: "in_progress" | "completed" | "failed" | "pending_review" | "scheduled" | "ready"; id: string; timestamp: string; caseId: string; attentionTypes: string[] | null; createdAt: string; ... 31 more ...; extremeCaseCheck?: unknown; }[]' is not assignable to type 'TransformedCase[]'.
+  Property 'updatedAt' is missing in type '{ status: "in_progress" | "completed" | "failed" | "pending_review" | "scheduled" | "ready"; id: string; timestamp: string; caseId: string; attentionTypes: string[] | null; createdAt: string; ... 31 more ...; extremeCaseCheck?: unknown; }' but required in type 'TransformedCase'.
+apps/web/src/app/dashboard/outbound/_components/views/all-discharges-view.tsx(115,11): error TS2322: Type 'TransformedCase | null' is not assignable to type 'CaseData | null'.
+  Type 'TransformedCase' is not assignable to type 'CaseData'.
+    Types of property 'structuredContent' are incompatible.
+      Type 'StructuredDischargeContent | null' is not assignable to type '{ patientName: string; caseType?: "emergency" | "surgery" | "other" | "dental" | "vaccination" | "dermatology" | "wellness" | "gastrointestinal" | "orthopedic" | undefined; appointmentSummary?: string | undefined; ... 8 more ...; notes?: string | undefined; } | null'.
+        Type 'StructuredDischargeContent' is not assignable to type '{ patientName: string; caseType?: "emergency" | "surgery" | "other" | "dental" | "vaccination" | "dermatology" | "wellness" | "gastrointestinal" | "orthopedic" | undefined; appointmentSummary?: string | undefined; ... 8 more ...; notes?: string | undefined; }'.
+          Types of property 'patientName' are incompatible.
+            Type 'string | undefined' is not assignable to type 'string'.
+              Type 'undefined' is not assignable to type 'string'.
+apps/web/src/app/dashboard/outbound/_components/views/needs-attention-view.tsx(70,15): error TS2322: Type '(caseItem: TransformedCase) => void' is not assignable to type '(caseItem: NeedsAttentionCase) => void'.
+  Types of parameters 'caseItem' and 'caseItem' are incompatible.
+    Type 'NeedsAttentionCase' is missing the following properties from type 'TransformedCase': createdAt, updatedAt, scheduledCallFor, scheduledEmailFor, and 15 more.
+apps/web/src/app/dashboard/outbound/_components/views/needs-attention-view.tsx(87,11): error TS2322: Type 'TransformedCase | null' is not assignable to type 'CaseData | null'.
+  Type 'TransformedCase' is not assignable to type 'CaseData'.
+    Types of property 'structuredContent' are incompatible.
+      Type 'StructuredDischargeContent | null' is not assignable to type '{ patientName: string; caseType?: "emergency" | "surgery" | "other" | "dental" | "vaccination" | "dermatology" | "wellness" | "gastrointestinal" | "orthopedic" | undefined; appointmentSummary?: string | undefined; ... 8 more ...; notes?: string | undefined; } | null'.
+        Type 'StructuredDischargeContent' is not assignable to type '{ patientName: string; caseType?: "emergency" | "surgery" | "other" | "dental" | "vaccination" | "dermatology" | "wellness" | "gastrointestinal" | "orthopedic" | undefined; appointmentSummary?: string | undefined; ... 8 more ...; notes?: string | undefined; }'.
+          Types of property 'patientName' are incompatible.
+            Type 'string | undefined' is not assignable to type 'string'.
+              Type 'undefined' is not assignable to type 'string'.
+apps/web/src/app/dashboard/outbound/_components/views/needs-review-view.tsx(11,40): error TS2304: Cannot find name 'OutboundHeaderProps'.
+apps/web/src/app/dashboard/outbound/_components/views/needs-review-view.tsx(38,8): error TS2740: Type '{ showDateNav: true; }' is missing the following properties from type 'OutboundHeaderProps': viewMode, onViewChange, currentDate, onDateChange, and 3 more.
+apps/web/src/app/dashboard/outbound/_components/views/needs-review-view.tsx(42,34): error TS2339: Property 'isLoading' does not exist on type '{}'.
+Warning: command "tsc --noEmit -p apps/web/tsconfig.json" exited with non-zero status code
+
+
+ NX   Running target typecheck for project web and 20 tasks it depends on failed
+
+Failed tasks:
+
+- web:typecheck
+
+Hint: run the command with --verbose for more details.
+
+View structured, searchable error logs at https://cloud.nx.app/runs/kIf1yIihX6
+

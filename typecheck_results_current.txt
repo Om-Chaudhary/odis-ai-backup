@@ -1,0 +1,80 @@
+
+ NX   Running target typecheck for project web and 20 tasks it depends on:
+
+
+
+> nx run shared-types:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run shared-validators:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run shared-env:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run shared-util:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run shared-logger:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run shared-constants:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run data-access-db:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run integrations-ai:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run data-access-api:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run domain-clinics-util:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run integrations-qstash:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run integrations-vapi:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run shared-crypto:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run integrations-resend:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run domain-discharge-data-access:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run domain-cases-data-access:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run shared-ui:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run integrations-idexx:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run integrations-slack:typecheck  [existing outputs match the cache, left as is]
+
+
+> nx run shared-hooks:typecheck  [existing outputs match the cache, left as is]
+
+(node:93433) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+> nx run web:typecheck
+
+> tsc --noEmit -p apps/web/tsconfig.json
+
+
+
+
+ NX   Successfully ran target typecheck for project web and 20 tasks it depends on
+
+Nx read the output from the cache instead of running the command for 20 out of 21 tasks.
+
+View logs and investigate cache misses at https://cloud.nx.app/runs/h7gDO9HPFC
+

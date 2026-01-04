@@ -120,7 +120,8 @@ export interface Owner {
  * Maps to: discharge_summaries.structured_content JSONB
  */
 export interface StructuredDischargeContent {
-  patientName?: string;
+  patientName: string;
+
   visitSummary?: string;
   diagnosis?: string;
   treatmentsToday?: string;
@@ -160,6 +161,54 @@ export interface SoapNote {
   plan: string | null;
   clientInstructions: string | null;
   createdAt: string;
+}
+
+// =============================================================================
+// Structured Intel Data (from AI analysis)
+// =============================================================================
+
+export interface CallOutcomeData {
+  call_outcome?: string;
+  conversation_stage_reached?: string;
+  owner_available?: boolean;
+  call_duration_appropriate?: boolean;
+}
+
+export interface PetHealthData {
+  pet_recovery_status?: string;
+  symptoms_reported?: string[];
+  new_concerns_raised?: boolean;
+  condition_resolved?: boolean;
+}
+
+export interface MedicationComplianceData {
+  medication_discussed?: boolean;
+  medication_compliance?: string;
+  medication_issues?: string[];
+  medication_guidance_provided?: boolean;
+}
+
+export interface OwnerSentimentData {
+  owner_sentiment?: string;
+  owner_engagement_level?: string;
+  expressed_gratitude?: boolean;
+  expressed_concern_about_care?: boolean;
+}
+
+export interface EscalationData {
+  escalation_triggered?: boolean;
+  escalation_type?: string;
+  transfer_attempted?: boolean;
+  transfer_successful?: boolean;
+  escalation_reason?: string;
+}
+
+export interface FollowUpData {
+  recheck_reminder_delivered?: boolean;
+  recheck_confirmed?: boolean;
+  appointment_requested?: boolean;
+  follow_up_call_needed?: boolean;
+  follow_up_reason?: string;
 }
 
 // =============================================================================
@@ -242,7 +291,7 @@ export interface DischargeCase {
 
   // Case details
   caseType: CaseType | null;
-  caseStatus: CaseStatus | null;
+  caseStatus: string | null; // Changed from CaseStatus | null to support raw string
   veterinarian: string; // From entity_extraction or user
 
   // Derived status for UI
@@ -265,13 +314,13 @@ export interface DischargeCase {
   // Scheduling
   scheduledCall: ScheduledCall | null;
   scheduledEmail: ScheduledEmail | null;
-  scheduledEmailFor: Date | null; // When email will be sent
-  scheduledCallFor: Date | null; // When call will be made
+  scheduledEmailFor: Date | string | null; // Support string ISO
+  scheduledCallFor: Date | string | null; // Support string ISO
 
   // Timestamps
-  timestamp: Date; // cases.created_at or cases.scheduled_at
-  createdAt: Date;
-  updatedAt: Date;
+  timestamp: Date | string; // cases.created_at or cases.scheduled_at
+  createdAt: Date | string;
+  updatedAt: Date | string;
 
   // Failure info
   failureReason?: string;
@@ -284,6 +333,44 @@ export interface DischargeCase {
     checkedAt: string;
     category: string;
   };
+
+  // Star status
+  isStarred?: boolean;
+
+  // Attention fields
+  attentionTypes: string[] | null;
+  attentionSeverity: string | null;
+  attentionFlaggedAt: string | null;
+  attentionSummary: string | null;
+  needsAttention: boolean;
+
+  // Intel fields
+  callOutcomeData?: CallOutcomeData | null;
+  petHealthData?: PetHealthData | null;
+  medicationComplianceData?: MedicationComplianceData | null;
+  ownerSentimentData?: OwnerSentimentData | null;
+  escalationData?: EscalationData | null;
+  followUpData?: FollowUpData | null;
+}
+
+/**
+ * Interface for Transformed Case data from TRPC (with string dates)
+ */
+export interface TransformedCase extends Omit<
+  DischargeCase,
+  | "timestamp"
+  | "createdAt"
+  | "updatedAt"
+  | "scheduledCallFor"
+  | "scheduledEmailFor"
+  | "patient"
+> {
+  timestamp: string;
+  createdAt: string;
+  updatedAt: string;
+  scheduledCallFor: string | null;
+  scheduledEmailFor: string | null;
+  patient: Omit<Patient, "dateOfBirth"> & { dateOfBirth: string | null };
 }
 
 // =============================================================================

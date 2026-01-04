@@ -9,7 +9,7 @@
  */
 
 // Main client component
-export { OutboundDischargesClient } from "./outbound-discharges-client";
+export { OutboundDashboard } from "./outbound-dashboard";
 
 // Layout components
 export { OutboundSplitLayout } from "./outbound-split-layout";

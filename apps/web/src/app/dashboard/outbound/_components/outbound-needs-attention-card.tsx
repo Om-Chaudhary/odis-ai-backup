@@ -19,7 +19,7 @@ import {
   AttentionBadgeGroup,
   AttentionSeverityBadge,
   CriticalPulsingDot,
-} from "../shared";
+} from "~/components/dashboard/shared";
 
 /**
  * OutboundNeedsAttentionCard - Dashboard card showing outbound calls flagged for attention

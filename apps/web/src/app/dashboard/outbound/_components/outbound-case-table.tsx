@@ -7,7 +7,10 @@ import { Button } from "@odis-ai/shared/ui/button";
 import { Checkbox } from "@odis-ai/shared/ui/checkbox";
 import { cn } from "@odis-ai/shared/util";
 import type { DischargeCaseStatus } from "./types";
-import { AttentionBadgeGroup, CriticalPulsingDot } from "../shared";
+import {
+  AttentionBadgeGroup,
+  CriticalPulsingDot,
+} from "~/components/dashboard/shared";
 import {
   getDeliveryStatusDisplay,
   type DeliveryStatus,

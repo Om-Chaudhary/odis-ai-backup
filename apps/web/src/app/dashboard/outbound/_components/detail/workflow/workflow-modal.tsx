@@ -46,7 +46,7 @@ import { AnimatedEdge } from "./edges";
 import { buildWorkflow, type CaseDataForWorkflow } from "./workflow-builder";
 
 // Import content components
-import { CallRecordingPlayer } from "../../../shared";
+import { CallRecordingPlayer } from "~/components/dashboard/shared";
 
 // Define node types
 const nodeTypes: NodeTypes = {

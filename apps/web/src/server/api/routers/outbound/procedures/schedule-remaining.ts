@@ -10,13 +10,14 @@ import { TRPCError } from "@trpc/server";
 import { getClinicUserIds, getClinicByUserId } from "@odis-ai/domain/clinics";
 import { normalizeToE164, normalizeEmail } from "@odis-ai/shared/util/phone";
 import { calculateScheduleTime } from "@odis-ai/shared/util/timezone";
-import { scheduleEmailExecution } from "@odis-ai/integrations/qstash";
+
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { scheduleRemainingOutreachInput } from "../schemas";
 
 // Dynamic imports for lazy-loaded libraries
 const getCasesService = () =>
   import("@odis-ai/domain/cases").then((m) => m.CasesService);
+const getQStash = () => import("@odis-ai/integrations/qstash");
 
 export const scheduleRemainingRouter = createTRPCRouter({
   scheduleRemainingOutreach: protectedProcedure
@@ -265,6 +266,7 @@ export const scheduleRemainingRouter = createTRPCRouter({
 
         // Schedule via QStash
         try {
+          const { scheduleEmailExecution } = await getQStash();
           const qstashMessageId = await scheduleEmailExecution(
             emailData.id,
             emailScheduledFor,

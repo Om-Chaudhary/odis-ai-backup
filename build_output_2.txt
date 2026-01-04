@@ -1,0 +1,45 @@
+
+> odis-ai@0.1.1 build /Users/taylorallen/Development/odis-ai-web
+> NX_ISOLATE_PLUGINS=false NODE_ENV=production nx build web
+
+(node:85292) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+> nx run web:build
+
+> next build
+
+   [1m[38;2;173;127;168m▲ Next.js 16.0.10[39m[22m (Turbopack)
+   - Experiments (use with caution):
+     · optimizePackageImports
+
+ [37m[1m [22m[39m Creating an optimized production build ...
+ [32m[1m✓[22m[39m Compiled successfully in 10.1s
+ [37m[1m [22m[39m Running TypeScript ...
+[31mFailed to compile.
+[39m
+[36m./src/app/dashboard/outbound/_components/index.ts[39m:[33m12[39m:[33m42[39m
+[31m[1mType error[22m[39m: Cannot find module './outbound-discharges-client' or its corresponding type declarations.
+
+[0m [90m 10 |[39m
+ [90m 11 |[39m [90m// Main client component[39m
+[31m[1m>[22m[39m[90m 12 |[39m [36mexport[39m { [33mOutboundDischargesClient[39m } [36mfrom[39m [32m"./outbound-discharges-client"[39m[33m;[39m
+ [90m    |[39m                                          [31m[1m^[22m[39m
+ [90m 13 |[39m
+ [90m 14 |[39m [90m// Layout components[39m
+ [90m 15 |[39m [36mexport[39m { [33mOutboundSplitLayout[39m } [36mfrom[39m [32m"./outbound-split-layout"[39m[33m;[39m[0m
+Next.js build worker exited with code: 1 and signal: null
+Warning: command "next build" exited with non-zero status code
+
+
+ NX   Running target build for project web failed
+
+Failed tasks:
+
+- web:build
+
+Hint: run the command with --verbose for more details.
+
+View structured, searchable error logs at https://cloud.nx.app/runs/hB7vZ1rEnE
+
+ ELIFECYCLE  Command failed with exit code 1.
