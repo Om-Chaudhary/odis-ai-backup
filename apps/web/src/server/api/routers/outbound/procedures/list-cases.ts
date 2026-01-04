@@ -414,43 +414,36 @@ export const listCasesRouter = createTRPCRouter({
         });
       } else {
         // Default ordering for non-attention views
-        query = query.order("scheduled_at", {
+        // Order by created_at (discharge date) to show most recent discharges first
+        query = query.order("created_at", {
           ascending: false,
           nullsFirst: false,
         });
 
         // Apply date filters with proper timezone-aware boundaries
-        // Use scheduled_at (appointment time) instead of created_at (sync time)
-        // This matches how the extension groups cases by appointment date
-        // Falls back to created_at when scheduled_at is null (COALESCE pattern)
+        // Use created_at (discharge/sync time) to show cases that were discharged on the selected date
+        // This ensures the dashboard shows TODAY's discharges, not old discharges for today's appointments
         if (input.startDate && input.endDate) {
-          // Both dates provided - use timezone-aware range with fallback
+          // Both dates provided - use timezone-aware range
           const startRange = getLocalDayRange(
             input.startDate,
             DEFAULT_TIMEZONE,
           );
           const endRange = getLocalDayRange(input.endDate, DEFAULT_TIMEZONE);
-          // Use .or() to implement COALESCE(scheduled_at, created_at) logic:
-          // 1. Cases where scheduled_at is in range, OR
-          // 2. Cases where scheduled_at is null AND created_at is in range
-          query = query.or(
-            `and(scheduled_at.gte.${startRange.startISO},scheduled_at.lte.${endRange.endISO}),and(scheduled_at.is.null,created_at.gte.${startRange.startISO},created_at.lte.${endRange.endISO})`,
-          );
+          query = query
+            .gte("created_at", startRange.startISO)
+            .lte("created_at", endRange.endISO);
         } else if (input.startDate) {
-          // Only start date - get timezone-aware start of day with fallback
+          // Only start date - get timezone-aware start of day
           const { startISO } = getLocalDayRange(
             input.startDate,
             DEFAULT_TIMEZONE,
           );
-          query = query.or(
-            `scheduled_at.gte.${startISO},and(scheduled_at.is.null,created_at.gte.${startISO})`,
-          );
+          query = query.gte("created_at", startISO);
         } else if (input.endDate) {
-          // Only end date - get timezone-aware end of day with fallback
+          // Only end date - get timezone-aware end of day
           const { endISO } = getLocalDayRange(input.endDate, DEFAULT_TIMEZONE);
-          query = query.or(
-            `scheduled_at.lte.${endISO},and(scheduled_at.is.null,created_at.lte.${endISO})`,
-          );
+          query = query.lte("created_at", endISO);
         }
       }
 
@@ -585,7 +578,7 @@ export const listCasesRouter = createTRPCRouter({
                 subject: scheduledEmail.subject,
               }
             : null,
-          timestamp: c.scheduled_at ?? c.created_at,
+          timestamp: c.created_at, // Use discharge date (when case was created/synced)
           createdAt: c.created_at,
           extremeCaseCheck: c.extreme_case_check,
           idexxNotes,
