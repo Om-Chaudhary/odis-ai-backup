@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit, Inter, Lora, Plus_Jakarta_Sans } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
+import { Analytics } from "@vercel/analytics/next";
 import "~/styles/globals.css";
 import { ClientProviders } from "~/components/providers/client-providers";
 import { env } from "~/env.js";
@@ -176,6 +177,7 @@ export default function RootLayout({
         className={`font-sans antialiased ${outfit.variable} ${inter.variable} ${lora.variable} ${plusJakarta.variable} ${geistMono.variable}`}
       >
         <ClientProviders>{children}</ClientProviders>
+        <Analytics />
       </body>
     </html>
   );
