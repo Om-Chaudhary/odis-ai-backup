@@ -72,3 +72,6 @@ export * from "./calendar";
 
 // Context providers
 export * from "./lib/clinic-context";
+
+// MagicUI components
+export * from "./components/magicui/dot-pattern";

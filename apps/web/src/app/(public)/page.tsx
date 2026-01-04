@@ -3,7 +3,7 @@ import {
   HeroSection,
   ProblemSection,
   SampleCallsSection,
-  CompareSection,
+  FeaturesSection,
   HowItWorksSection,
   TestimonialsSection,
   IntegrationsSection,
@@ -24,7 +24,7 @@ export default function Page() {
       <HeroSection />
       <ProblemSection />
       <SampleCallsSection />
-      <CompareSection />
+      <FeaturesSection />
       <HowItWorksSection />
       <TestimonialsSection />
       <IntegrationsSection />

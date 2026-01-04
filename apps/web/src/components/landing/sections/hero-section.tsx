@@ -11,7 +11,7 @@ import { PhoneRingIcon } from "../ui/phone-ring-icon";
 import { Logo } from "@odis-ai/shared/ui/Logo";
 import { WordRotate } from "../ui/word-rotate";
 import { AnimatedGradientText } from "../ui/animated-gradient-text";
-import { HeroVideoDialog } from "~/components/ui/hero-video-dialog";
+import { DotPattern } from "@odis-ai/shared/ui";
 
 const DEMO_PHONE_NUMBER = "(925) 678-5640";
 const DEMO_PHONE_TEL = "tel:+19256785640";
@@ -85,6 +85,19 @@ export function HeroSection() {
       ref={sectionRef}
       className="relative flex min-h-screen w-full flex-col overflow-hidden bg-[#f8fafb]"
     >
+      {/* Subtle Dot Pattern Background */}
+      <DotPattern
+        width={30}
+        height={30}
+        cx={1}
+        cy={1}
+        cr={0.8}
+        className={cn(
+          "[mask-image:linear-gradient(to_bottom,white,transparent_60%)]",
+          "fill-blue-300/50",
+        )}
+      />
+
       {/* Navbar */}
       <motion.nav
         initial={{ opacity: 0, y: -16 }}
@@ -146,8 +159,8 @@ export function HeroSection() {
             variants={itemVariants}
             className="mt-8 max-w-3xl text-lg leading-relaxed text-slate-600 sm:text-xl sm:leading-8"
           >
-            AI voice assistance that picks up every call, follows-up with every
-            client, and{" "}
+            Enterprise Veterinary AI voice assistance that picks up every call,
+            follows-up with every client, and{" "}
             <AnimatedGradientText
               speed={2}
               colorFrom="#0d9488"
@@ -216,39 +229,6 @@ export function HeroSection() {
               </span>
             </a>
           </motion.div>
-        </motion.div>
-
-        {/* Video Demo - Below Content */}
-        <motion.div
-          className="relative mt-16 w-full max-w-6xl lg:mt-20"
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={
-            shouldAnimate
-              ? { opacity: 1, scale: 1 }
-              : { opacity: 0, scale: 0.96 }
-          }
-          transition={{ ...transition, delay: 0.4 }}
-        >
-          {/* Glassmorphic Background Container */}
-          <div className="relative rounded-3xl bg-gradient-to-br from-teal-100 via-slate-200/90 to-cyan-100 p-6 shadow-2xl ring-1 shadow-slate-500/15 ring-slate-300/80 backdrop-blur-md sm:p-8 lg:p-12">
-            {/* Glow Effects - Darker Accent */}
-            <div className="pointer-events-none absolute -inset-2 rounded-3xl opacity-50 blur-3xl">
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-tr from-teal-500/50 via-slate-400/40 to-cyan-500/50" />
-            </div>
-
-            {/* Inner Shadow for Depth */}
-            <div className="absolute inset-0 rounded-3xl shadow-inner shadow-slate-900/5" />
-
-            {/* Video Container */}
-            <div className="relative rounded-2xl bg-white/60 shadow-2xl ring-1 shadow-slate-900/15 ring-slate-200/90 backdrop-blur-md">
-              <HeroVideoDialog
-                animationStyle="from-center"
-                videoSrc="https://www.youtube-nocookie.com/embed/_EGLsdwlde8?rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&color=white&autoplay=1"
-                thumbnailSrc="https://img.youtube.com/vi/_EGLsdwlde8/maxresdefault.jpg"
-                thumbnailAlt="OdisAI Demo - AI Voice Assistant for Veterinary Practices"
-              />
-            </div>
-          </div>
         </motion.div>
       </div>
     </section>

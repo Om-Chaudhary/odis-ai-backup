@@ -18,8 +18,8 @@ export { ProblemSection } from "./sections/problem-section";
 // Sample Calls / Audio Demo Section
 export { AudioDemoSection as SampleCallsSection } from "./sections/audio-demo-section";
 
-// Compare Section (Before/After)
-export { CompareSection } from "./sections/compare-section";
+// Features Section (Bento Grid)
+export { FeaturesSection } from "./sections/features-section";
 
 // How It Works Section
 export { HowItWorksSection } from "./sections/how-it-works-section";
