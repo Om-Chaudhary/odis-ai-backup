@@ -4,10 +4,10 @@
  */
 
 import { PawPrint, CalendarCheck } from "lucide-react";
-import type { StructuredDischargeSummary } from "@odis-ai/shared/validators/discharge-summary";
+import type { StructuredDischargeContent } from "../../types";
 
 interface EmailStructuredPreviewProps {
-  content: StructuredDischargeSummary;
+  content: StructuredDischargeContent;
 }
 
 export function EmailStructuredPreview({

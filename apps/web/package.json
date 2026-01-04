@@ -5,6 +5,7 @@
   "type": "module",
   "dependencies": {
     "@calcom/embed-react": "^1.5.3",
-    "@xyflow/react": "^12.10.0"
+    "@xyflow/react": "^12.10.0",
+    "motion": "^12.23.26"
   }
 }

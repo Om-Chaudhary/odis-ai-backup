@@ -10,14 +10,18 @@ import {
 } from "@odis-ai/shared/ui/collapsible";
 import { ExternalLink, ChevronDown } from "lucide-react";
 import { api } from "~/trpc/client";
-import type { DeliveryToggles, DischargeCaseStatus, SoapNote } from "./types";
+import type {
+  DeliveryToggles,
+  DischargeCaseStatus,
+  SoapNote,
+  TransformedCase,
+} from "./types";
 import type { StructuredDischargeSummary } from "@odis-ai/shared/validators/discharge-summary";
 import { EmptyDetailState } from "./detail";
-import { PatientOwnerCard } from "./detail/patient-owner-card";
-import { StatusOverviewCard } from "./detail/status-overview-card";
-import { CommunicationsIntelligenceCard } from "./detail/communications-intelligence-card";
+import { CompactPatientHeader } from "./detail/compact-patient-header";
+import { DeliveryTimeline } from "./detail/delivery-timeline";
 import { SmartActionSection } from "./detail/smart-action-section";
-import { CommunicationPreview } from "./detail/communication-preview";
+import { SimplifiedContentPreview } from "./detail/simplified-content-preview";
 import { WorkflowCanvas, type CaseDataForWorkflow } from "./detail/workflow";
 
 // Scheduled call data with structured output support
@@ -39,49 +43,8 @@ interface ScheduledCallData {
   stereoRecordingUrl?: string | null;
 }
 
-// Case data interface for the detail panel
-interface CaseData {
-  id: string;
-  caseId: string;
-  patient: {
-    id: string;
-    name: string;
-    species: string | null;
-    breed: string | null;
-    dateOfBirth: string | null;
-    sex: string | null;
-    weightKg: number | null;
-  };
-  owner: {
-    name: string | null;
-    phone: string | null;
-    email: string | null;
-  };
-  caseType: string | null;
-  status: DischargeCaseStatus;
-  phoneSent: "sent" | "pending" | "failed" | "not_applicable" | null;
-  emailSent: "sent" | "pending" | "failed" | "not_applicable" | null;
-  dischargeSummary: string;
-  structuredContent: StructuredDischargeSummary | null;
-  callScript: unknown;
-  emailContent: string;
-  scheduledCall: ScheduledCallData | null;
-  scheduledEmail: unknown;
-  idexxNotes: string | null;
-  soapNotes: SoapNote[];
-  scheduledEmailFor: string | null;
-  scheduledCallFor: string | null;
-  isUrgentCase?: boolean;
-  // Attention fields
-  attentionTypes?: string[] | null;
-  attentionSeverity?: string | null;
-  attentionSummary?: string | null;
-  attentionFlaggedAt?: string | null;
-  needsAttention?: boolean;
-}
-
 interface OutboundCaseDetailProps {
-  caseData: CaseData | null;
+  caseData: TransformedCase | null;
   deliveryToggles: DeliveryToggles;
   onToggleChange: (toggles: DeliveryToggles) => void;
   onApprove: (immediate?: boolean) => void;
@@ -220,71 +183,69 @@ export function OutboundCaseDetail({
   };
 
   // Determine if we should show action section
-  // Show for: ready, pending_review, scheduled, failed, or partial delivery
+  // Show for: ready, pending_review, scheduled, failed
+  // Partial delivery is now handled in timeline
   const showActionSection =
     caseData.status === "ready" ||
     caseData.status === "pending_review" ||
     caseData.status === "scheduled" ||
-    caseData.status === "failed" ||
-    (phoneSent && !emailSent && hasOwnerEmail) ||
-    (!phoneSent && emailSent && hasOwnerPhone);
-
-  // Only show scheduled card if there are PENDING items to display
-  // Don't show for completed/failed items (scheduledFor timestamps persist after delivery)
-  const hasActuallyScheduledCall =
-    caseData.phoneSent === "pending" && Boolean(caseData.scheduledCallFor);
-  const hasActuallyScheduledEmail =
-    caseData.emailSent === "pending" && Boolean(caseData.scheduledEmailFor);
-  const showScheduledCard =
-    hasActuallyScheduledCall || hasActuallyScheduledEmail;
+    caseData.status === "failed";
 
   return (
     <div className="flex h-full flex-col">
-      {/* Patient/Owner Card with integrated status badge and delivery indicators */}
-      <div className="p-4 pb-0">
-        <PatientOwnerCard
-          caseData={{
-            id: caseData.id,
-            caseId: caseData.caseId,
-            patient: caseData.patient,
-            owner: caseData.owner,
-            caseType: caseData.caseType,
-            status: caseData.status,
+      {/* Compact Patient Header */}
+      <div className="border-b">
+        <CompactPatientHeader
+          patient={{
+            name: caseData.patient.name,
+            species: caseData.patient.species,
+            breed: caseData.patient.breed,
+            dateOfBirth: caseData.patient.dateOfBirth,
           }}
-          phoneStatus={caseData.phoneSent}
-          emailStatus={caseData.emailSent}
-          onDelete={onDelete}
+          owner={{
+            name: caseData.owner.name,
+          }}
+          ownerPhone={caseData.owner.phone}
+          ownerEmail={caseData.owner.email}
+          attentionTypes={caseData.attentionTypes ?? []}
+          attentionSeverity={caseData.attentionSeverity}
+          onClose={onDelete}
         />
       </div>
 
       {/* Scrollable Content */}
       <div className="flex-1 space-y-4 overflow-auto p-4">
-        {/* Scheduled Info Card - only show when there's scheduled delivery */}
-        {showScheduledCard && (
-          <StatusOverviewCard
-            status={caseData.status}
-            phoneStatus={caseData.phoneSent}
-            emailStatus={caseData.emailSent}
-            scheduledCallFor={caseData.scheduledCallFor}
-            scheduledEmailFor={caseData.scheduledEmailFor}
-            hasOwnerPhone={hasOwnerPhone}
-            hasOwnerEmail={hasOwnerEmail}
-            ownerPhone={caseData.owner.phone}
-            ownerEmail={caseData.owner.email}
-            onCancelCall={handleCancelCall}
-            onCancelEmail={handleCancelEmail}
-            isCancelling={isCancelling}
-          />
-        )}
-
-        {/* Communications Intelligence - AI-powered call insights */}
-        <CommunicationsIntelligenceCard
-          scheduledCall={caseData.scheduledCall}
-          urgentReasonSummary={caseData.scheduledCall?.urgentReasonSummary}
-          needsAttention={caseData.needsAttention}
-          attentionTypes={caseData.attentionTypes}
+        {/* Delivery Timeline */}
+        <DeliveryTimeline
+          callStatus={caseData.phoneSent}
+          emailStatus={caseData.emailSent}
+          scheduledCallFor={caseData.scheduledCallFor}
+          scheduledEmailFor={caseData.scheduledEmailFor}
+          callEndedReason={caseData.scheduledCall?.endedReason}
+          callDuration={caseData.scheduledCall?.durationSeconds}
+          callCompletedAt={caseData.scheduledCall?.endedAt}
+          emailSentAt={null}
           attentionSeverity={caseData.attentionSeverity}
-          attentionSummary={caseData.attentionSummary}
+          onRetryCall={onRetry}
+          onCancelCall={handleCancelCall}
+          onCancelEmail={handleCancelEmail}
+          onScheduleRemainingCall={
+            !phoneSent && !caseData.scheduledCallFor && hasOwnerPhone
+              ? handleScheduleRemaining
+              : undefined
+          }
+          onScheduleRemainingEmail={
+            !emailSent && !caseData.scheduledEmailFor && hasOwnerEmail
+              ? handleScheduleRemaining
+              : undefined
+          }
+          showScheduleRemainingCall={
+            !phoneSent && !caseData.scheduledCallFor && hasOwnerPhone
+          }
+          showScheduleRemainingEmail={
+            !emailSent && !caseData.scheduledEmailFor && hasOwnerEmail
+          }
+          isSubmitting={isSubmitting || isCancelling}
         />
 
         {/* Smart Action Section - Context-aware actions */}
@@ -313,8 +274,8 @@ export function OutboundCaseDetail({
           />
         )}
 
-        {/* Communication Preview - Inline with expand/collapse */}
-        <CommunicationPreview
+        {/* Simplified Content Preview - No previews, expandable only */}
+        <SimplifiedContentPreview
           callScript={callScript}
           emailContent={caseData.emailContent}
           dischargeSummary={caseData.dischargeSummary}

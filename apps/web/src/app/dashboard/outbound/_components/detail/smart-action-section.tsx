@@ -1,7 +1,6 @@
 import type { DischargeCaseStatus, DeliveryToggles } from "../types";
 import { ReadyToSendActions } from "./smart-action-section/ready-to-send-actions";
 import { ScheduledActions } from "./smart-action-section/scheduled-actions";
-import { PartialDeliveryActions } from "./smart-action-section/partial-delivery-actions";
 import { CompletedSummary } from "./smart-action-section/completed-summary";
 
 interface SmartActionSectionProps {
@@ -54,7 +53,6 @@ export function SmartActionSection({
   onApprove,
   onRetry,
   onCancelScheduled,
-  onScheduleRemaining,
   isSubmitting,
   isCancelling,
   needsGeneration,
@@ -81,42 +79,6 @@ export function SmartActionSection({
 
   // State: Fully Scheduled
   if (status === "scheduled") {
-    // Check if it's actually a partial scheduled state
-    const phoneSent = phoneStatus === "sent";
-    const emailSent = emailStatus === "sent";
-    const phoneScheduled = Boolean(scheduledCallFor);
-    const emailScheduled = Boolean(scheduledEmailFor);
-
-    // If one is sent/scheduled and one is not, show partial actions
-    const isPartialScheduled =
-      ((phoneSent || phoneScheduled) &&
-        !(emailSent || emailScheduled) &&
-        hasOwnerEmail) ||
-      ((emailSent || emailScheduled) &&
-        !(phoneSent || phoneScheduled) &&
-        hasOwnerPhone);
-
-    if (isPartialScheduled) {
-      return (
-        <PartialDeliveryActions
-          phoneStatus={phoneStatus}
-          emailStatus={emailStatus}
-          scheduledCallFor={scheduledCallFor}
-          scheduledEmailFor={scheduledEmailFor}
-          hasOwnerPhone={hasOwnerPhone}
-          hasOwnerEmail={hasOwnerEmail}
-          ownerPhone={ownerPhone}
-          ownerEmail={ownerEmail}
-          deliveryToggles={deliveryToggles}
-          onToggleChange={onToggleChange}
-          onScheduleRemaining={onScheduleRemaining}
-          onCancelScheduled={onCancelScheduled}
-          isSubmitting={isSubmitting}
-          isCancelling={isCancelling}
-        />
-      );
-    }
-
     // Fully scheduled - show cancel options
     return (
       <ScheduledActions
@@ -130,34 +92,6 @@ export function SmartActionSection({
 
   // State: Completed or Failed
   if (status === "completed" || status === "failed") {
-    // Check for partial delivery (one sent, one not)
-    const phoneSent = phoneStatus === "sent";
-    const emailSent = emailStatus === "sent";
-    const isPartialDelivery =
-      (phoneSent && !emailSent && hasOwnerEmail) ||
-      (!phoneSent && emailSent && hasOwnerPhone);
-
-    if (isPartialDelivery) {
-      return (
-        <PartialDeliveryActions
-          phoneStatus={phoneStatus}
-          emailStatus={emailStatus}
-          scheduledCallFor={scheduledCallFor}
-          scheduledEmailFor={scheduledEmailFor}
-          hasOwnerPhone={hasOwnerPhone}
-          hasOwnerEmail={hasOwnerEmail}
-          ownerPhone={ownerPhone}
-          ownerEmail={ownerEmail}
-          deliveryToggles={deliveryToggles}
-          onToggleChange={onToggleChange}
-          onScheduleRemaining={onScheduleRemaining}
-          onCancelScheduled={onCancelScheduled}
-          isSubmitting={isSubmitting}
-          isCancelling={isCancelling}
-        />
-      );
-    }
-
     return (
       <CompletedSummary
         status={status}

@@ -62,7 +62,7 @@ export function NeedsAttentionView({
       onCloseRightPanel={onClosePanel}
       leftPanel={
         <>
-          <OutboundHeader {...headerProps} showDateNav={false} />
+          <OutboundHeader {...headerProps} showDateNav={true} />
           <PageContent>
             <OutboundNeedsAttentionTable
               cases={cases}
@@ -84,7 +84,7 @@ export function NeedsAttentionView({
       }
       rightPanel={
         <OutboundCaseDetail
-          caseData={selectedCase ?? undefined}
+          caseData={selectedCase ?? null}
           deliveryToggles={deliveryToggles}
           onToggleChange={setDeliveryToggles}
           onApprove={onApprove}

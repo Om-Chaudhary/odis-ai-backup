@@ -1,14 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useMemo } from "react";
-import { format, parseISO, startOfDay } from "date-fns";
-import {
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Loader2,
-  CalendarDays,
-} from "lucide-react";
+import { useEffect, useRef } from "react";
+import { format, parseISO } from "date-fns";
+import { CheckCircle2, XCircle, Clock, Loader2 } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
 import {
   AttentionBadgeGroup,
@@ -56,7 +50,7 @@ interface OutboundNeedsAttentionTableProps<T extends NeedsAttentionCaseBase> {
  * - Summary preview with tooltip
  * - Call status column
  * - Sorted by severity (critical first)
- * - Shows ALL attention cases across all dates (no date filtering)
+ * - Shows attention cases for the selected date
  */
 export function OutboundNeedsAttentionTable<T extends NeedsAttentionCaseBase>({
   cases,
@@ -66,27 +60,6 @@ export function OutboundNeedsAttentionTable<T extends NeedsAttentionCaseBase>({
 }: OutboundNeedsAttentionTableProps<T>) {
   const tableRef = useRef<HTMLDivElement>(null);
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
-
-  // Group cases by day
-  const casesByDay = useMemo(() => {
-    const groups = new Map<string, T[]>();
-
-    for (const caseItem of cases) {
-      const dayKey = caseItem.timestamp
-        ? format(startOfDay(parseISO(caseItem.timestamp)), "yyyy-MM-dd")
-        : "unknown";
-
-      if (!groups.has(dayKey)) {
-        groups.set(dayKey, []);
-      }
-      groups.get(dayKey)!.push(caseItem);
-    }
-
-    // Sort by date descending (most recent first)
-    return Array.from(groups.entries()).sort((a, b) =>
-      b[0].localeCompare(a[0]),
-    );
-  }, [cases]);
 
   // Scroll selected row into view
   useEffect(() => {
@@ -124,173 +97,104 @@ export function OutboundNeedsAttentionTable<T extends NeedsAttentionCaseBase>({
           </tr>
         </thead>
         <tbody>
-          {casesByDay.map(([dayKey, dayCases]) => (
-            <DayGroup
-              key={dayKey}
-              dayKey={dayKey}
-              cases={dayCases}
-              selectedCaseId={selectedCaseId}
-              selectedRowRef={selectedRowRef}
-              onSelectCase={onSelectCase}
-            />
-          ))}
+          {cases.map((caseItem) => {
+            const isSelected = selectedCaseId === caseItem.id;
+            const severity = caseItem.attentionSeverity ?? "routine";
+
+            return (
+              <tr
+                key={caseItem.id}
+                ref={isSelected ? selectedRowRef : null}
+                className={cn(
+                  "group cursor-pointer border-b border-orange-50 transition-all duration-150",
+                  isSelected
+                    ? "border-l-2 border-l-orange-500 bg-orange-50/70"
+                    : "hover:bg-orange-50/30",
+                  // Severity-based styling
+                  !isSelected &&
+                    severity === "critical" &&
+                    "border-l-2 border-l-red-500 bg-red-50/40 hover:bg-red-50/60",
+                  !isSelected &&
+                    severity === "urgent" &&
+                    "bg-orange-50/30 hover:bg-orange-50/50",
+                )}
+                onClick={() => onSelectCase(caseItem)}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    onSelectCase(caseItem);
+                  }
+                }}
+              >
+                {/* Severity */}
+                <td className="py-4 pl-4">
+                  <div className="flex items-center gap-2">
+                    {severity === "critical" && <CriticalPulsingDot />}
+                    <AttentionSeverityBadge severity={severity} size="sm" />
+                  </div>
+                </td>
+
+                {/* Patient */}
+                <td className="py-4">
+                  <div className="flex flex-col gap-0.5 overflow-hidden">
+                    <span className="truncate text-sm font-semibold text-slate-800">
+                      {caseItem.patient.name}
+                    </span>
+                    <span className="truncate text-xs text-slate-500">
+                      {caseItem.owner.name ?? "Unknown Owner"}
+                    </span>
+                  </div>
+                </td>
+
+                {/* Concerns */}
+                <td className="py-4">
+                  <AttentionBadgeGroup
+                    types={caseItem.attentionTypes ?? []}
+                    maxVisible={3}
+                    size="sm"
+                  />
+                </td>
+
+                {/* Summary */}
+                <td className="py-4 pr-2">
+                  {caseItem.attentionSummary ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <p className="line-clamp-2 text-xs text-slate-600">
+                            {caseItem.attentionSummary}
+                          </p>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="max-w-md p-3">
+                          <p className="text-sm">{caseItem.attentionSummary}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <span className="text-xs text-slate-400">No summary</span>
+                  )}
+                </td>
+
+                {/* Call Status */}
+                <td className="py-4 text-center">
+                  <CallStatusBadge call={caseItem.scheduledCall} />
+                </td>
+
+                {/* Time */}
+                <td className="py-4 pr-4 text-right">
+                  <span className="text-xs text-slate-500">
+                    {caseItem.timestamp
+                      ? format(parseISO(caseItem.timestamp), "h:mm a")
+                      : "-"}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
-  );
-}
-
-/**
- * Day group with header row and case rows
- */
-function DayGroup<T extends NeedsAttentionCaseBase>({
-  dayKey,
-  cases,
-  selectedCaseId,
-  selectedRowRef,
-  onSelectCase,
-}: {
-  dayKey: string;
-  cases: T[];
-  selectedCaseId: string | null;
-  selectedRowRef: React.RefObject<HTMLTableRowElement | null>;
-  onSelectCase: (caseItem: T) => void;
-}) {
-  // Format the day header
-  const dayLabel = useMemo(() => {
-    if (dayKey === "unknown") return "Unknown Date";
-    try {
-      const date = parseISO(dayKey);
-      const today = startOfDay(new Date());
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-
-      if (format(date, "yyyy-MM-dd") === format(today, "yyyy-MM-dd")) {
-        return "Today";
-      }
-      if (format(date, "yyyy-MM-dd") === format(yesterday, "yyyy-MM-dd")) {
-        return "Yesterday";
-      }
-      return format(date, "EEEE, MMMM d");
-    } catch {
-      return dayKey;
-    }
-  }, [dayKey]);
-
-  return (
-    <>
-      {/* Day Header Row */}
-      <tr className="bg-gradient-to-r from-orange-50/60 to-slate-50/40">
-        <td colSpan={6} className="py-2 pl-4">
-          <div className="flex items-center gap-2">
-            <CalendarDays className="h-3.5 w-3.5 text-orange-500" />
-            <span className="text-xs font-semibold text-slate-700">
-              {dayLabel}
-            </span>
-            <span className="text-xs text-slate-400">
-              ({cases.length} case{cases.length !== 1 ? "s" : ""})
-            </span>
-          </div>
-        </td>
-      </tr>
-
-      {/* Case Rows */}
-      {cases.map((caseItem) => {
-        const isSelected = selectedCaseId === caseItem.id;
-        const severity = caseItem.attentionSeverity ?? "routine";
-
-        return (
-          <tr
-            key={caseItem.id}
-            ref={isSelected ? selectedRowRef : null}
-            className={cn(
-              "group cursor-pointer border-b border-orange-50 transition-all duration-150",
-              isSelected
-                ? "border-l-2 border-l-orange-500 bg-orange-50/70"
-                : "hover:bg-orange-50/30",
-              // Severity-based styling
-              !isSelected &&
-                severity === "critical" &&
-                "border-l-2 border-l-red-500 bg-red-50/40 hover:bg-red-50/60",
-              !isSelected &&
-                severity === "urgent" &&
-                "bg-orange-50/30 hover:bg-orange-50/50",
-            )}
-            onClick={() => onSelectCase(caseItem)}
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                onSelectCase(caseItem);
-              }
-            }}
-          >
-            {/* Severity */}
-            <td className="py-4 pl-4">
-              <div className="flex items-center gap-2">
-                {severity === "critical" && <CriticalPulsingDot />}
-                <AttentionSeverityBadge severity={severity} size="sm" />
-              </div>
-            </td>
-
-            {/* Patient */}
-            <td className="py-4">
-              <div className="flex flex-col gap-0.5 overflow-hidden">
-                <span className="truncate text-sm font-semibold text-slate-800">
-                  {caseItem.patient.name}
-                </span>
-                <span className="truncate text-xs text-slate-500">
-                  {caseItem.owner.name ?? "Unknown Owner"}
-                </span>
-              </div>
-            </td>
-
-            {/* Concerns */}
-            <td className="py-4">
-              <AttentionBadgeGroup
-                types={caseItem.attentionTypes ?? []}
-                maxVisible={3}
-                size="sm"
-              />
-            </td>
-
-            {/* Summary */}
-            <td className="py-4 pr-2">
-              {caseItem.attentionSummary ? (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <p className="line-clamp-2 text-xs text-slate-600">
-                        {caseItem.attentionSummary}
-                      </p>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="max-w-md p-3">
-                      <p className="text-sm">{caseItem.attentionSummary}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              ) : (
-                <span className="text-xs text-slate-400">No summary</span>
-              )}
-            </td>
-
-            {/* Call Status */}
-            <td className="py-4 text-center">
-              <CallStatusBadge call={caseItem.scheduledCall} />
-            </td>
-
-            {/* Time */}
-            <td className="py-4 pr-4 text-right">
-              <span className="text-xs text-slate-500">
-                {caseItem.timestamp
-                  ? format(parseISO(caseItem.timestamp), "h:mm a")
-                  : "-"}
-              </span>
-            </td>
-          </tr>
-        );
-      })}
-    </>
   );
 }
 

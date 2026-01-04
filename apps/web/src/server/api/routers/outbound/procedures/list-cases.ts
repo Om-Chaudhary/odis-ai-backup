@@ -17,6 +17,7 @@ import {
   type DischargeCaseStatus,
   type FailureCategory,
 } from "../schemas";
+import type { StructuredDischargeContent } from "~/app/dashboard/outbound/_components/types";
 
 interface PatientData {
   id: string;
@@ -536,7 +537,12 @@ export const listCasesRouter = createTRPCRouter({
             phone: patient?.owner_phone ?? null,
             email: patient?.owner_email ?? null,
           },
-          caseType: c.type,
+          caseType: c.type as
+            | "checkup"
+            | "emergency"
+            | "surgery"
+            | "follow_up"
+            | null,
           caseStatus: c.status,
           veterinarian: "Dr. Staff", // TODO: Get from user/case
           status: compositeStatus,
@@ -544,43 +550,95 @@ export const listCasesRouter = createTRPCRouter({
           phoneSent: deriveDeliveryStatus(callStatus, hasPhone),
           emailSent: deriveDeliveryStatus(emailStatus, hasEmail),
           dischargeSummary: dischargeSummary?.content ?? "",
-          structuredContent: dischargeSummary?.structured_content ?? null,
+          structuredContent: (dischargeSummary?.structured_content ??
+            null) as StructuredDischargeContent | null,
           callScript:
-            (scheduledCall?.dynamic_variables as Record<string, unknown>)
-              ?.call_script ?? "",
+            ((
+              scheduledCall?.dynamic_variables as
+                | Record<string, unknown>
+                | null
+                | undefined
+            )?.call_script as string | undefined) ?? "",
           emailContent: scheduledEmail?.html_content ?? "",
           scheduledCall: scheduledCall
             ? {
                 id: scheduledCall.id,
-                status: scheduledCall.status,
+                userId: c.user_id,
+                caseId: c.id,
+                vapiCallId: null, // Not included in current query
+                customerPhone: scheduledCall.customer_phone,
                 scheduledFor: scheduledCall.scheduled_for,
+                status: scheduledCall.status as
+                  | "queued"
+                  | "ringing"
+                  | "in_progress"
+                  | "completed"
+                  | "failed"
+                  | "cancelled",
                 startedAt: scheduledCall.started_at,
                 endedAt: scheduledCall.ended_at,
                 durationSeconds: scheduledCall.duration_seconds,
-                endedReason: scheduledCall.ended_reason,
+                recordingUrl: scheduledCall.recording_url,
                 transcript: scheduledCall.transcript,
                 cleanedTranscript: scheduledCall.cleaned_transcript,
                 summary: scheduledCall.summary,
-                customerPhone: scheduledCall.customer_phone,
-                structuredData: scheduledCall.structured_data,
-                recordingUrl: scheduledCall.recording_url,
-                stereoRecordingUrl: scheduledCall.stereo_recording_url,
+                successEvaluation: null, // Not included in current query
+                userSentiment: null, // Not included in current query
+                reviewCategory: "to_review" as const, // Default value
+                endedReason: scheduledCall.ended_reason,
+                cost: null, // Not included in current query
+                dynamicVariables:
+                  (scheduledCall.dynamic_variables as Record<
+                    string,
+                    unknown
+                  >) ?? {},
+                metadata:
+                  (scheduledCall.metadata as {
+                    retry_count?: number;
+                    max_retries?: number;
+                    timezone?: string;
+                    notes?: string;
+                  }) ?? {},
+                createdAt: c.created_at, // Use case created_at as proxy
+                updatedAt: c.created_at, // Use case created_at as proxy
               }
             : null,
           isUrgentCase: scheduledCall?.attention_severity === "critical",
           scheduledEmail: scheduledEmail
             ? {
                 id: scheduledEmail.id,
-                status: scheduledEmail.status,
-                scheduledFor: scheduledEmail.scheduled_for,
-                sentAt: scheduledEmail.sent_at,
+                userId: c.user_id,
+                caseId: c.id,
                 recipientEmail: scheduledEmail.recipient_email,
+                recipientName: null, // Not included in current query
                 subject: scheduledEmail.subject,
+                htmlContent: scheduledEmail.html_content,
+                textContent: null, // Not included in current query
+                scheduledFor: scheduledEmail.scheduled_for,
+                status: scheduledEmail.status as
+                  | "queued"
+                  | "sent"
+                  | "failed"
+                  | "cancelled",
+                sentAt: scheduledEmail.sent_at,
+                resendEmailId: null, // Not included in current query
+                metadata: {},
+                createdAt: c.created_at, // Use case created_at as proxy
+                updatedAt: c.created_at, // Use case created_at as proxy
               }
             : null,
           timestamp: c.created_at, // Use discharge date (when case was created/synced)
           createdAt: c.created_at,
-          extremeCaseCheck: c.extreme_case_check,
+          updatedAt: c.created_at, // Use created_at as updatedAt for now
+          extremeCaseCheck: c.extreme_case_check as
+            | {
+                isBlocked: boolean;
+                reason: string;
+                confidence: number;
+                checkedAt: string;
+                category: string;
+              }
+            | undefined,
           idexxNotes,
           soapNotes,
           scheduledEmailFor: emailScheduledFor,

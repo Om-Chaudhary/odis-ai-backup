@@ -49,6 +49,8 @@ export default tseslint.config(
     rules: {
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs["core-web-vitals"].rules,
+      // Disable no-html-link-for-pages for App Router (not applicable)
+      "@next/next/no-html-link-for-pages": "off",
     },
   },
   {

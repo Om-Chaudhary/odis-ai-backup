@@ -278,15 +278,30 @@ export function generateMockCases(count = 12): DischargeCase[] {
         patientName: petName,
         visitSummary: `${caseTypeInfo.description} performed successfully`,
         diagnosis: caseTypeInfo.description,
-        treatmentsToday: `Completed ${caseTypeInfo.description.toLowerCase()}`,
+        treatmentsToday: [
+          `Completed ${caseTypeInfo.description.toLowerCase()}`,
+        ],
         medications:
           caseTypeInfo.type === "surgery"
-            ? "Pain medication prescribed for 5-7 days"
-            : "None required",
-        homeCare: "Rest and limited activity for 24-48 hours",
-        followUp: "Recheck appointment in 10-14 days",
-        warningSigns:
-          "Contact us immediately if you notice excessive bleeding, swelling, or lethargy",
+            ? [
+                {
+                  name: "Carprofen",
+                  dosage: "75mg",
+                  frequency: "twice daily",
+                  duration: "5-7 days",
+                  purpose: "pain relief",
+                },
+              ]
+            : [],
+        homeCare: {
+          activity: "Rest and limited activity for 24-48 hours",
+        },
+        followUp: {
+          required: true,
+          date: "in 10-14 days",
+          reason: "post-procedure checkup",
+        },
+        warningSigns: ["Excessive bleeding", "Swelling", "Lethargy"],
       },
       callScript: `Hi ${ownerName}, this is calling from the veterinary clinic regarding ${petName}'s visit today. ${petName} did great during the ${caseTypeInfo.description.toLowerCase()} and is recovering well. I wanted to go over the home care instructions with you...`,
       emailContent: `Dear ${ownerName},\n\nThank you for bringing ${petName} in today for ${caseTypeInfo.description.toLowerCase()}. We're pleased to report that everything went smoothly.\n\nPlease review the attached discharge instructions and don't hesitate to contact us if you have any questions.\n\nBest regards,\n${vet}`,

@@ -112,7 +112,7 @@ export function AllDischargesView({
       }
       rightPanel={
         <OutboundCaseDetail
-          caseData={selectedCase ?? undefined}
+          caseData={selectedCase ?? null}
           deliveryToggles={deliveryToggles}
           onToggleChange={setDeliveryToggles}
           onApprove={onApprove}

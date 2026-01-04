@@ -118,17 +118,37 @@ export interface Owner {
 /**
  * Structured discharge content sections
  * Maps to: discharge_summaries.structured_content JSONB
+ * Mirrors StructuredDischargeSummary from validators for compatibility
  */
 export interface StructuredDischargeContent {
-  patientName: string;
-
+  patientName?: string;
+  caseType?: string;
+  appointmentSummary?: string;
   visitSummary?: string;
   diagnosis?: string;
-  treatmentsToday?: string;
-  medications?: string;
-  homeCare?: string;
-  followUp?: string;
-  warningSigns?: string;
+  treatmentsToday?: string[];
+  vaccinationsGiven?: string[];
+  medications?: Array<{
+    name: string;
+    dosage?: string;
+    frequency?: string;
+    duration?: string;
+    totalQuantity?: string;
+    purpose?: string;
+    instructions?: string;
+  }>;
+  homeCare?: {
+    activity?: string;
+    diet?: string;
+    monitoring?: string[];
+    woundCare?: string;
+  };
+  followUp?: {
+    required: boolean;
+    date?: string;
+    reason?: string;
+  };
+  warningSigns?: string[];
   notes?: string;
 }
 
@@ -231,9 +251,11 @@ export interface ScheduledCall {
   endedAt: Date | null;
   durationSeconds: number | null;
   recordingUrl: string | null;
+  stereoRecordingUrl?: string | null;
   transcript: string | null;
   cleanedTranscript: string | null;
   summary: string | null;
+  structuredData?: Record<string, unknown> | null;
   successEvaluation: string | null;
   userSentiment: "positive" | "neutral" | "negative" | null;
   reviewCategory: ReviewCategory;
@@ -354,6 +376,33 @@ export interface DischargeCase {
 }
 
 /**
+ * Transformed Scheduled Call (with string dates for tRPC serialization)
+ */
+export type TransformedScheduledCall = Omit<
+  ScheduledCall,
+  "scheduledFor" | "startedAt" | "endedAt" | "createdAt" | "updatedAt"
+> & {
+  scheduledFor: string | null;
+  startedAt: string | null;
+  endedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/**
+ * Transformed Scheduled Email (with string dates for tRPC serialization)
+ */
+export type TransformedScheduledEmail = Omit<
+  ScheduledEmail,
+  "scheduledFor" | "sentAt" | "createdAt" | "updatedAt"
+> & {
+  scheduledFor: string;
+  sentAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/**
  * Interface for Transformed Case data from TRPC (with string dates)
  */
 export interface TransformedCase extends Omit<
@@ -364,6 +413,8 @@ export interface TransformedCase extends Omit<
   | "scheduledCallFor"
   | "scheduledEmailFor"
   | "patient"
+  | "scheduledCall"
+  | "scheduledEmail"
 > {
   timestamp: string;
   createdAt: string;
@@ -371,6 +422,8 @@ export interface TransformedCase extends Omit<
   scheduledCallFor: string | null;
   scheduledEmailFor: string | null;
   patient: Omit<Patient, "dateOfBirth"> & { dateOfBirth: string | null };
+  scheduledCall: TransformedScheduledCall | null;
+  scheduledEmail: TransformedScheduledEmail | null;
 }
 
 // =============================================================================
