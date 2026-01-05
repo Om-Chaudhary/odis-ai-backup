@@ -32,7 +32,6 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // During SSR/SSG, render children without the PostHog provider
-  // This prevents useRef errors during static generation
   if (!isClient) {
     return <>{children}</>;
   }
