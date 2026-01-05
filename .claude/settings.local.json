@@ -208,7 +208,11 @@
       "Bash(do if [ -n \"$PID\" ])",
       "Bash(then echo \"Killing process $PID on port $port\" kill -9 $PID)",
       "Bash(echo \"Process $PID already terminated\" fi done done echo \"Done!\")",
-      "mcp__github__search_code"
+      "mcp__github__search_code",
+      "Bash(NODE_ENV=production nx build:*)",
+      "mcp__vapi-mcp__update_tool",
+      "WebFetch(domain:vapi.ai)",
+      "Bash(nx run:*)"
     ],
     "deny": [],
     "ask": []
