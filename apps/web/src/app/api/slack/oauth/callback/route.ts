@@ -6,7 +6,6 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
-import { handleOAuthCallback } from "@odis-ai/integrations/slack";
 import { createServiceClient } from "@odis-ai/data-access/db/server";
 import { encrypt } from "@odis-ai/shared/crypto";
 
@@ -59,6 +58,9 @@ export async function GET(request: NextRequest) {
     errorUrl.searchParams.set("error", "missing_code");
     return NextResponse.redirect(errorUrl);
   }
+
+  // Dynamically import Slack OAuth handler
+  const { handleOAuthCallback } = await import("@odis-ai/integrations/slack");
 
   // Exchange code for token
   const result = await handleOAuthCallback(code);

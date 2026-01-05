@@ -398,6 +398,134 @@ async function handleInboundCallEnd(
 
   // Extract appointment date from transcript and update appointment request (background)
   extractAndUpdateAppointmentDate(call.id, transcript, supabase);
+
+  // Send Slack notification if appointment was booked for Alum Rock
+  notifyAlumRockAppointmentBooked(call.id, call.assistantId, supabase);
+}
+
+/**
+ * Send Slack notification when an appointment is booked for Alum Rock (fire-and-forget)
+ *
+ * Checks if a vapi_booking exists for this call and sends a notification to the
+ * #alum-rock Slack channel with appointment details.
+ */
+function notifyAlumRockAppointmentBooked(
+  vapiCallId: string,
+  assistantId: string | undefined,
+  supabase: SupabaseClient,
+): void {
+  // Fire and forget - don't await
+  void (async () => {
+    try {
+      // Only send notifications for Alum Rock assistant
+      const ALUM_ROCK_ASSISTANT_ID = "ae3e6a54-17a3-4915-9c3e-48779b5dbf09";
+      if (assistantId !== ALUM_ROCK_ASSISTANT_ID) {
+        return;
+      }
+
+      // Check if there's a vapi_booking for this call
+      const { data: booking, error: fetchError } = await supabase
+        .from("vapi_bookings")
+        .select("*")
+        .eq("vapi_call_id", vapiCallId)
+        .limit(1)
+        .single();
+
+      if (fetchError) {
+        // No booking found - this is fine, not all calls result in appointments
+        if (fetchError.code !== "PGRST116") {
+          logger.debug("No vapi booking found for call", {
+            vapiCallId,
+            error: fetchError.message,
+          });
+        }
+        return;
+      }
+
+      if (!booking) {
+        return;
+      }
+
+      logger.info("Appointment booked - sending Slack notification", {
+        vapiCallId,
+        bookingId: booking.id,
+        clientName: booking.client_name,
+        petName: booking.patient_name,
+        date: booking.date,
+        time: booking.start_time,
+      });
+
+      // Dynamic import to avoid circular dependencies
+      const { slackClient } =
+        await import("@odis-ai/integrations/slack/client");
+
+      // Get Slack workspace info for Alum Rock
+      // TODO: This should be fetched from database based on clinic configuration
+      // For now, we'll need to configure this in environment variables or database
+      const ALUM_ROCK_SLACK_TEAM_ID = process.env.ALUM_ROCK_SLACK_TEAM_ID;
+      const ALUM_ROCK_SLACK_CHANNEL =
+        process.env.ALUM_ROCK_SLACK_CHANNEL ?? "alum-rock";
+
+      if (!ALUM_ROCK_SLACK_TEAM_ID) {
+        logger.warn("Alum Rock Slack team ID not configured", {
+          vapiCallId,
+          bookingId: booking.id,
+        });
+        return;
+      }
+
+      // Format the notification message
+      const message = `🎉 *New Appointment Booked*
+
+*Client Name:* ${booking.client_name}
+*Pet Name:* ${booking.patient_name}
+*Date:* ${booking.date}
+*Time:* ${booking.start_time}
+*Phone:* ${booking.client_phone}
+*Reason:* ${booking.reason ?? "Not specified"}
+${booking.species ? `*Species:* ${booking.species}` : ""}
+${booking.breed ? `*Breed:* ${booking.breed}` : ""}
+${booking.is_new_client ? "*New Client* ✨" : ""}
+
+_Booking ID: ${booking.id}_`;
+
+      // Send the Slack notification
+      const result = await slackClient.postMessage(ALUM_ROCK_SLACK_TEAM_ID, {
+        channel: ALUM_ROCK_SLACK_CHANNEL,
+        text: "New appointment booked",
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: message,
+            },
+          },
+        ],
+      });
+
+      if (result.ok) {
+        logger.info("Slack notification sent successfully", {
+          vapiCallId,
+          bookingId: booking.id,
+          channel: ALUM_ROCK_SLACK_CHANNEL,
+          messageTs: result.ts,
+        });
+      } else {
+        logger.error("Failed to send Slack notification", {
+          vapiCallId,
+          bookingId: booking.id,
+          error: result.error,
+        });
+      }
+    } catch (error) {
+      logger.error("Failed to send appointment booking notification", {
+        vapiCallId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      // Silent failure - don't break the webhook
+    }
+  })();
 }
 
 /**

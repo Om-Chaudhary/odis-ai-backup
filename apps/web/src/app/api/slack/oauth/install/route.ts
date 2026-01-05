@@ -6,13 +6,13 @@
  */
 
 import { NextResponse } from "next/server";
-import {
-  generateInstallUrl,
-  generateStateToken,
-} from "@odis-ai/integrations/slack";
 
 export async function GET() {
   try {
+    // Dynamically import Slack OAuth functions
+    const { generateInstallUrl, generateStateToken } =
+      await import("@odis-ai/integrations/slack");
+
     // Generate state token for CSRF protection
     const state = generateStateToken();
 

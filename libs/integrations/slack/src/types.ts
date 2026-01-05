@@ -1,13 +1,13 @@
 /**
  * Slack Types
  *
- * Core type definitions for the Slack checklist bot.
+ * Core type definitions for the Slack integration.
  */
 
 import type { KnownBlock } from "@slack/types";
 
 // ============================================================================
-// Workspace & Channel Types
+// Workspace Types
 // ============================================================================
 
 export interface SlackWorkspace {
@@ -31,68 +31,6 @@ export interface SlackWorkspaceInsert {
   appId: string;
   scope: string;
   authedUserId?: string;
-}
-
-export interface SlackReminderChannel {
-  id: string;
-  workspaceId: string;
-  channelId: string;
-  channelName: string;
-  reminderTime: string; // TIME as string "HH:MM:SS"
-  timezone: string;
-  isActive: boolean;
-  addedByUserId: string;
-  createdAt: Date;
-}
-
-export interface SlackReminderChannelInsert {
-  workspaceId: string;
-  channelId: string;
-  channelName: string;
-  reminderTime?: string;
-  timezone?: string;
-  addedByUserId: string;
-}
-
-// ============================================================================
-// Task Types
-// ============================================================================
-
-export interface SlackTask {
-  id: string;
-  channelId: string;
-  title: string;
-  description: string | null;
-  reminderTime: string; // TIME as string "HH:MM:SS"
-  isActive: boolean;
-  createdByUserId: string;
-  createdAt: Date;
-}
-
-export interface SlackTaskInsert {
-  channelId: string;
-  title: string;
-  description?: string;
-  reminderTime: string;
-  createdByUserId: string;
-}
-
-export interface SlackTaskCompletion {
-  id: string;
-  taskId: string;
-  completionDate: string; // DATE as string "YYYY-MM-DD"
-  completedByUserId: string;
-  completedByUsername: string | null;
-  completedAt: Date;
-  messageTs: string | null;
-}
-
-export interface SlackTaskCompletionInsert {
-  taskId: string;
-  completionDate: string;
-  completedByUserId: string;
-  completedByUsername?: string;
-  messageTs?: string;
 }
 
 // ============================================================================
@@ -133,92 +71,4 @@ export interface SlackChannelInfo {
   name: string;
   isChannel: boolean;
   isPrivate: boolean;
-}
-
-// ============================================================================
-// Webhook Payload Types
-// ============================================================================
-
-export interface SlackSlashCommandPayload {
-  command: string;
-  text: string;
-  responseUrl: string;
-  triggerId: string;
-  userId: string;
-  userName: string;
-  teamId: string;
-  teamDomain: string;
-  channelId: string;
-  channelName: string;
-}
-
-export interface SlackInteractionPayload {
-  type: "block_actions" | "view_submission" | "view_closed";
-  user: {
-    id: string;
-    username: string;
-    name?: string;
-    teamId: string;
-  };
-  team: {
-    id: string;
-    domain: string;
-  };
-  channel?: {
-    id: string;
-    name: string;
-  };
-  triggerId: string;
-  responseUrl?: string;
-  actions?: SlackBlockAction[];
-  view?: SlackViewPayload;
-  message?: {
-    ts: string;
-    blocks: KnownBlock[];
-  };
-}
-
-export interface SlackBlockAction {
-  type: string;
-  actionId: string;
-  blockId: string;
-  value?: string;
-  selectedOption?: { value: string };
-}
-
-export interface SlackViewPayload {
-  id: string;
-  callbackId: string;
-  privateMetadata: string;
-  state: {
-    values: Record<string, Record<string, SlackInputValue>>;
-  };
-}
-
-export interface SlackInputValue {
-  type: string;
-  value?: string;
-  selectedOption?: { value: string };
-}
-
-// ============================================================================
-// Command Types
-// ============================================================================
-
-export type ChecklistCommand = "add" | "list" | "status" | "delete" | "help";
-
-export interface CommandContext {
-  teamId: string;
-  channelId: string;
-  channelName: string;
-  userId: string;
-  userName: string;
-  triggerId: string;
-  responseUrl: string;
-}
-
-export interface CommandResponse {
-  responseType?: "in_channel" | "ephemeral";
-  text?: string;
-  blocks?: KnownBlock[];
 }
