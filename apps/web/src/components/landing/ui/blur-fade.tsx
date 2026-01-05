@@ -37,7 +37,8 @@ export function BlurFade({
   const ref = useRef(null);
   const inViewResult = useInView(ref, {
     once: true,
-    margin: inViewMargin,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    margin: inViewMargin as any,
   });
   const isInView = !inView || inViewResult;
   const shouldReduceMotion = useReducedMotion();
