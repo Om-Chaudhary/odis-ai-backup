@@ -125,6 +125,17 @@ function formatTime12Hour(time24: string): string {
 }
 
 /**
+ * VAPI tool call structure
+ */
+interface VapiToolCall {
+  id?: string;
+  function?: {
+    arguments?: string | Record<string, unknown>;
+  };
+  parameters?: Record<string, unknown>;
+}
+
+/**
  * Extract tool arguments from VAPI request payload
  */
 function extractToolArguments(body: Record<string, unknown>): {
@@ -141,9 +152,7 @@ function extractToolArguments(body: Record<string, unknown>): {
     const assistantId = call?.assistantId as string | undefined;
 
     // Check for toolCallList format
-    const toolCallList = message.toolCallList as
-      | Array<Record<string, unknown>>
-      | undefined;
+    const toolCallList = message.toolCallList as VapiToolCall[] | undefined;
     if (toolCallList && toolCallList.length > 0) {
       const firstTool = toolCallList[0];
       return {
