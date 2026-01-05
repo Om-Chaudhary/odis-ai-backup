@@ -275,9 +275,9 @@ const FeatureCard = ({
 
 const FeatureTitle = ({ children }: { children?: React.ReactNode }) => {
   return (
-    <p className="font-display mb-2 text-left text-xl font-medium tracking-tight text-slate-900 md:text-2xl">
+    <h3 className="font-display mb-2 text-left text-xl font-medium tracking-tight text-slate-900 md:text-2xl">
       {children}
-    </p>
+    </h3>
   );
 };
 

@@ -81,3 +81,4 @@ export { AvatarCircles } from "./ui/avatar-circles";
 export { NumberTicker } from "./ui/number-ticker";
 export { NeonGradientCard } from "./ui/neon-gradient-card";
 export { ShimmerButton } from "./ui/shimmer-button";
+export { BlurFade } from "./ui/blur-fade";

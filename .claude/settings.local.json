@@ -212,7 +212,8 @@
       "Bash(NODE_ENV=production nx build:*)",
       "mcp__vapi-mcp__update_tool",
       "WebFetch(domain:vapi.ai)",
-      "Bash(nx run:*)"
+      "Bash(nx run:*)",
+      "Bash(npx magicui-cli@latest add:*)"
     ],
     "deny": [],
     "ask": []
