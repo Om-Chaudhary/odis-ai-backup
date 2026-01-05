@@ -359,7 +359,7 @@ export function FeaturesSection() {
       className="relative z-20 w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >
       {/* Background */}
-      <SectionBackground variant="gradient-teal" />
+      <SectionBackground variant="hero-glow" />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
