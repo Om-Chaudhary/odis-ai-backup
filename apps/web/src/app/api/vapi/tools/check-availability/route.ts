@@ -3,13 +3,10 @@
  *
  * POST /api/vapi/tools/check-availability
  *
- * Returns available time slots for a specific date.
- * Uses the get_available_slots PostgreSQL function.
- *
- * Response includes:
- * - Available times with remaining capacity
- * - Staleness indicator (if data is older than threshold)
- * - Alternative dates if requested date has no availability
+ * STABILITY UPDATE:
+ * - Inputs must be strictly ISO 8601 (YYYY-MM-DD).
+ * - Natural language parsing has been removed to force LLM temporal reasoning.
+ * - Timezone logic is now clinic-relative, not server-relative.
  */
 
 import type { NextRequest } from "next/server";
@@ -26,6 +23,7 @@ const logger = loggers.api.child("vapi-check-availability");
 
 // Default VAPI assistant ID for clinic lookup
 const DEFAULT_ASSISTANT_ID = "ae3e6a54-17a3-4915-9c3e-48779b5dbf09";
+const DEFAULT_TIMEZONE = "America/Los_Angeles";
 
 // --- Request Schema ---
 const CheckAvailabilitySchema = z.object({
@@ -35,8 +33,13 @@ const CheckAvailabilitySchema = z.object({
   // Direct clinic ID (for dev/testing - bypasses assistant lookup)
   clinic_id: z.string().uuid().optional(),
 
-  // Date to check (YYYY-MM-DD or natural language)
-  date: z.string().min(1, "date is required"),
+  // STRICT Date: YYYY-MM-DD only. No "tomorrow", "next tuesday", etc.
+  date: z
+    .string()
+    .regex(
+      /^\d{4}-\d{2}-\d{2}$/,
+      "Date must be in YYYY-MM-DD format (e.g. 2024-05-21)",
+    ),
 
   // Optional: include blocked times in response
   include_blocked: z.boolean().optional().default(false),
@@ -64,13 +67,12 @@ interface AvailableSlot {
 
 /**
  * Look up clinic by assistant ID using the mappings table
- * Falls back to checking clinics.inbound_assistant_id for legacy support
  */
 async function findClinicByAssistantId(
   supabase: Awaited<ReturnType<typeof createServiceClient>>,
   assistantId: string,
 ) {
-  // First, try the new mappings table (supports squads, dev/prod separation)
+  // First, try the new mappings table
   const { data: mapping, error: mappingError } = await supabase
     .from("vapi_assistant_mappings")
     .select("clinic_id, assistant_name, environment")
@@ -79,20 +81,16 @@ async function findClinicByAssistantId(
     .single();
 
   if (mapping && !mappingError) {
-    // Found in mappings - get clinic details
     const { data: clinic, error: clinicError } = await supabase
       .from("clinics")
-      .select("id, name")
+      .select("id, name, timezone") // Added timezone selection
       .eq("id", mapping.clinic_id)
       .single();
 
     if (clinic && !clinicError) {
       logger.info("Clinic found via assistant mapping", {
         assistantId,
-        assistantName: mapping.assistant_name,
-        environment: mapping.environment,
         clinicId: clinic.id,
-        clinicName: clinic.name,
       });
       return clinic;
     }
@@ -101,7 +99,7 @@ async function findClinicByAssistantId(
   // Fallback: check legacy inbound_assistant_id column
   const { data: clinic, error } = await supabase
     .from("clinics")
-    .select("id, name")
+    .select("id, name, timezone")
     .eq("inbound_assistant_id", assistantId)
     .single();
 
@@ -111,83 +109,6 @@ async function findClinicByAssistantId(
   }
 
   return clinic;
-}
-
-/**
- * Parse date string to YYYY-MM-DD format
- * Handles: "tomorrow", "next monday", "2024-01-15", "January 15", "December 29th", etc.
- */
-function parseDateToISO(dateStr: string): string | null {
-  const normalized = dateStr.toLowerCase().trim();
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  // Handle relative dates
-  if (normalized === "today") {
-    return today.toISOString().split("T")[0] ?? null;
-  }
-
-  if (normalized === "tomorrow") {
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split("T")[0] ?? null;
-  }
-
-  // Handle "next monday", "next tuesday", etc.
-  const dayNames = [
-    "sunday",
-    "monday",
-    "tuesday",
-    "wednesday",
-    "thursday",
-    "friday",
-    "saturday",
-  ];
-  const nextDayMatch =
-    /^next\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/i.exec(
-      normalized,
-    );
-  if (nextDayMatch?.[1]) {
-    const targetDay = dayNames.indexOf(nextDayMatch[1].toLowerCase());
-    const currentDay = today.getDay();
-    let daysUntil = targetDay - currentDay;
-    if (daysUntil <= 0) daysUntil += 7;
-    const targetDate = new Date(today);
-    targetDate.setDate(today.getDate() + daysUntil);
-    return targetDate.toISOString().split("T")[0] ?? null;
-  }
-
-  // Strip ordinal suffixes (1st, 2nd, 3rd, 4th, etc.) before parsing
-  // "December 29th" -> "December 29", "January 1st" -> "January 1"
-  const cleanedDateStr = dateStr.replace(/(\d+)(st|nd|rd|th)/gi, "$1");
-
-  // Try parsing as ISO date or common formats
-  let parsed = new Date(cleanedDateStr);
-
-  // If still invalid, try with current year appended
-  if (isNaN(parsed.getTime())) {
-    const currentYear = today.getFullYear();
-    parsed = new Date(`${cleanedDateStr} ${currentYear}`);
-  }
-
-  if (!isNaN(parsed.getTime())) {
-    // Validate year - if date is in the past, assume next year
-    const currentYear = today.getFullYear();
-
-    // If parsed year is way off, use current year
-    if (parsed.getFullYear() < currentYear - 1) {
-      parsed.setFullYear(currentYear);
-    }
-
-    // If the date has passed this year, assume next year
-    if (parsed < today) {
-      parsed.setFullYear(currentYear + 1);
-    }
-
-    return parsed.toISOString().split("T")[0] ?? null;
-  }
-
-  return null;
 }
 
 /**
@@ -221,126 +142,22 @@ function extractToolArguments(body: Record<string, unknown>): {
 
     // Check for toolCallList format
     const toolCallList = message.toolCallList as
-      | Array<{
-          id?: string;
-          parameters?: Record<string, unknown>;
-          function?: {
-            name?: string;
-            arguments?: string | Record<string, unknown>;
-          };
-        }>
+      | Array<Record<string, unknown>>
       | undefined;
-
     if (toolCallList && toolCallList.length > 0) {
       const firstTool = toolCallList[0];
-
-      if (
-        firstTool?.parameters &&
-        Object.keys(firstTool.parameters).length > 0
-      ) {
-        return {
-          arguments: firstTool.parameters,
-          toolCallId: firstTool?.id,
-          callId,
-          assistantId,
-        };
-      }
-
-      if (firstTool?.function?.arguments) {
-        const args = firstTool.function.arguments;
-        if (typeof args === "object" && args !== null) {
-          return {
-            arguments: args,
-            toolCallId: firstTool?.id,
-            callId,
-            assistantId,
-          };
-        }
-        if (typeof args === "string") {
-          try {
-            const parsedArgs = JSON.parse(args) as Record<string, unknown>;
-            return {
-              arguments: parsedArgs,
-              toolCallId: firstTool?.id,
-              callId,
-              assistantId,
-            };
-          } catch {
-            // Continue to fallback
-          }
-        }
-      }
-
       return {
-        arguments: firstTool?.parameters ?? {},
-        toolCallId: firstTool?.id,
-        callId,
-        assistantId,
-      };
-    }
-
-    // Check for toolWithToolCallList format
-    const toolWithToolCallList = message.toolWithToolCallList as
-      | Array<{
-          toolCall?: {
-            id?: string;
-            parameters?: Record<string, unknown>;
-            function?: {
-              arguments?: string | Record<string, unknown>;
-            };
-          };
-        }>
-      | undefined;
-
-    if (toolWithToolCallList && toolWithToolCallList.length > 0) {
-      const firstTool = toolWithToolCallList[0]?.toolCall;
-
-      if (
-        firstTool?.parameters &&
-        Object.keys(firstTool.parameters).length > 0
-      ) {
-        return {
-          arguments: firstTool.parameters,
-          toolCallId: firstTool?.id,
-          callId,
-          assistantId,
-        };
-      }
-
-      if (firstTool?.function?.arguments) {
-        const args = firstTool.function.arguments;
-        if (typeof args === "object" && args !== null) {
-          return {
-            arguments: args,
-            toolCallId: firstTool?.id,
-            callId,
-            assistantId,
-          };
-        }
-        if (typeof args === "string") {
-          try {
-            const parsedArgs = JSON.parse(args) as Record<string, unknown>;
-            return {
-              arguments: parsedArgs,
-              toolCallId: firstTool?.id,
-              callId,
-              assistantId,
-            };
-          } catch {
-            // Continue to fallback
-          }
-        }
-      }
-
-      return {
-        arguments: firstTool?.parameters ?? {},
+        arguments: firstTool?.function?.arguments
+          ? typeof firstTool.function.arguments === "string"
+            ? JSON.parse(firstTool.function.arguments)
+            : firstTool.function.arguments
+          : (firstTool?.parameters ?? {}),
         toolCallId: firstTool?.id,
         callId,
         assistantId,
       };
     }
   }
-
   return { arguments: body };
 }
 
@@ -366,7 +183,6 @@ function buildVapiResponse(
       }),
     );
   }
-
   return withCorsHeaders(request, NextResponse.json(result, { status }));
 }
 
@@ -376,7 +192,6 @@ function buildVapiResponse(
 export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.json();
-
     logger.info("Check availability request received", { body: rawBody });
 
     const {
@@ -402,76 +217,36 @@ export async function POST(request: NextRequest) {
         errors: validation.error.format(),
         receivedBody: body,
       });
+
+      // Return a natural language error so the bot can self-correct immediately
       return buildVapiResponse(
         request,
         {
           available: false,
-          error: "Invalid request",
-          message: "Please provide a valid date to check availability.",
+          error: "Invalid Date Format",
+          message:
+            "I need the date in YYYY-MM-DD format to check the calendar. For example, 2024-05-21.",
         },
         toolCallId,
-        400,
+        200, // Return 200 so Vapi speaks the message instead of crashing
       );
     }
 
     const input: CheckAvailabilityInput = validation.data;
-
-    // Parse date
-    const parsedDate = parseDateToISO(input.date);
-    if (!parsedDate) {
-      return buildVapiResponse(
-        request,
-        {
-          available: false,
-          error: "Invalid date",
-          message: `I couldn't understand the date "${input.date}". Please try again with a date like "tomorrow" or "January 15th".`,
-        },
-        toolCallId,
-        400,
-      );
-    }
-
-    // Check if date is in the past
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const requestedDate = new Date(parsedDate);
-    if (requestedDate < today) {
-      return buildVapiResponse(
-        request,
-        {
-          available: false,
-          error: "Past date",
-          message: "I can only check availability for today or future dates.",
-        },
-        toolCallId,
-        400,
-      );
-    }
-
-    // Get service client
     const supabase = await createServiceClient();
 
-    // Look up clinic - use clinic_id if provided (dev/testing), otherwise lookup by assistant
-    let clinic: { id: string; name: string } | null = null;
+    // Look up clinic
+    let clinic: { id: string; name: string; timezone?: string } | null = null;
 
     if (input.clinic_id) {
-      // Direct clinic_id lookup (for dev/squad testing)
       const { data, error } = await supabase
         .from("clinics")
-        .select("id, name")
+        .select("id, name, timezone")
         .eq("id", input.clinic_id)
         .single();
-
-      if (!error && data) {
-        clinic = data;
-        logger.info("Using direct clinic_id lookup", {
-          clinicId: input.clinic_id,
-          clinicName: data.name,
-        });
-      }
+      if (!error && data) clinic = data;
     }
 
-    // Fallback to assistant lookup
     clinic ??= await findClinicByAssistantId(supabase, input.assistant_id);
 
     if (!clinic) {
@@ -480,17 +255,47 @@ export async function POST(request: NextRequest) {
         {
           available: false,
           error: "Clinic not found",
-          message: "I couldn't identify the clinic. Please try again later.",
+          message:
+            "I'm having trouble accessing the clinic schedule. Please try again later.",
         },
         toolCallId,
         404,
       );
     }
 
-    // Call the get_available_slots function
+    // --- TIMEZONE SAFETY FIX ---
+    // Prevent "Today" becoming "Tomorrow" due to UTC shift.
+    // 1. Get 'now' in the clinic's timezone.
+    const clinicTimezone = clinic.timezone ?? DEFAULT_TIMEZONE;
+    const nowInClinic = new Date().toLocaleString("en-US", {
+      timeZone: clinicTimezone,
+    });
+
+    // 2. Create 'today' object at 00:00:00 clinic time
+    const todayClinic = new Date(nowInClinic);
+    todayClinic.setHours(0, 0, 0, 0);
+
+    // 3. Parse requested date as local time (YYYY-MM-DD -> Local Midnight)
+    const [y, m, d] = input.date.split("-").map(Number);
+    const requestedDate = new Date(y!, m! - 1, d); // Month is 0-indexed
+
+    // 4. Compare
+    if (requestedDate < todayClinic) {
+      return buildVapiResponse(
+        request,
+        {
+          available: false,
+          error: "Past date",
+          message: "I can only check availability for today or future dates.",
+        },
+        toolCallId,
+      );
+    }
+
+    // Call the database function
     const { data: slots, error } = await supabase.rpc("get_available_slots", {
       p_clinic_id: clinic.id,
-      p_date: parsedDate,
+      p_date: input.date, // Pass strict ISO string directly
     });
 
     if (error) {
@@ -502,9 +307,7 @@ export async function POST(request: NextRequest) {
         request,
         {
           available: false,
-          error: "Database error",
-          message:
-            "I'm having trouble checking availability right now. Please try again in a moment.",
+          message: "I'm having trouble seeing the calendar right now.",
         },
         toolCallId,
         500,
@@ -512,94 +315,62 @@ export async function POST(request: NextRequest) {
     }
 
     const availableSlots = (slots as AvailableSlot[]) ?? [];
-
-    // Filter to only available (non-blocked, has capacity) slots
     const openSlots = availableSlots.filter(
       (slot) => !slot.is_blocked && slot.available_count > 0,
     );
 
-    // Check staleness
-    const isStale = availableSlots.some((slot) => slot.is_stale);
-    const lastSynced = availableSlots.find(
-      (s) => s.last_synced_at,
-    )?.last_synced_at;
-
-    // Format response for VAPI
-    if (openSlots.length === 0) {
-      // No availability - suggest alternative dates
-      const formattedDate = new Date(parsedDate).toLocaleDateString("en-US", {
-        weekday: "long",
-        month: "long",
-        day: "numeric",
-      });
-
-      return buildVapiResponse(
-        request,
-        {
-          available: false,
-          date: parsedDate,
-          formatted_date: formattedDate,
-          times: [],
-          message: `I'm sorry, there are no available appointments on ${formattedDate}. Would you like me to check another day?`,
-          staleness: {
-            last_synced: lastSynced,
-            is_stale: isStale,
-          },
-        },
-        toolCallId,
-      );
-    }
-
-    // Format available times
-    const times = openSlots.map((slot) => ({
-      time: formatTime12Hour(slot.slot_start),
-      time_24h: slot.slot_start,
-      slots_remaining: slot.available_count,
-    }));
-
-    const formattedDate = new Date(parsedDate).toLocaleDateString("en-US", {
+    // Format Date for Voice Response
+    const dateForVoice = requestedDate.toLocaleDateString("en-US", {
       weekday: "long",
       month: "long",
       day: "numeric",
     });
 
-    // Build human-readable time list for VAPI
-    const timeList = times
-      .slice(0, 5)
-      .map((t) => t.time)
-      .join(", ");
-    const moreCount = times.length > 5 ? times.length - 5 : 0;
-    const moreText = moreCount > 0 ? ` and ${moreCount} more times` : "";
+    // Case 1: No slots found
+    if (openSlots.length === 0) {
+      return buildVapiResponse(
+        request,
+        {
+          available: false,
+          date: input.date,
+          formatted_date: dateForVoice,
+          times: [],
+          message: `I don't have any appointments available on ${dateForVoice}. Would you like me to check the next day?`,
+        },
+        toolCallId,
+      );
+    }
 
-    logger.info("Availability check completed", {
-      clinicId: clinic.id,
-      date: parsedDate,
-      availableSlots: times.length,
-      toolCallId,
-    });
+    // Case 2: Slots found
+    // Structure response for both "Booking Tool" (ISO) and "Voice" (Natural)
+    const times = openSlots.map((slot) => ({
+      time_12h: formatTime12Hour(slot.slot_start), // "2:00 PM"
+      time_24h: slot.slot_start, // "14:00:00"
+      value: slot.slot_start, // Strict value for next tool call
+      slots_remaining: slot.available_count,
+    }));
+
+    const timeList = times
+      .slice(0, 4)
+      .map((t) => t.time_12h)
+      .join(", ");
 
     return buildVapiResponse(
       request,
       {
         available: true,
-        date: parsedDate,
-        formatted_date: formattedDate,
-        times,
-        message: `I have availability on ${formattedDate}. Available times include: ${timeList}${moreText}. Which time works best for you?`,
-        staleness: {
-          last_synced: lastSynced,
-          is_stale: isStale,
-          warning: isStale
-            ? "Schedule data may be slightly outdated. Please confirm your appointment."
-            : undefined,
-        },
+        date: input.date,
+        formatted_date: dateForVoice,
+        count: times.length,
+        times, // Pass full array so LLM can choose
+        // Pre-calculated message reduces latency/hallucination
+        message: `I have availability on ${dateForVoice}. Times include ${timeList}. Which works best?`,
       },
       toolCallId,
     );
   } catch (error) {
     logger.error("Unexpected error in check-availability", {
       error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
     });
 
     return withCorsHeaders(
@@ -608,8 +379,7 @@ export async function POST(request: NextRequest) {
         {
           available: false,
           error: "Internal server error",
-          message:
-            "Something went wrong while checking availability. Please try again.",
+          message: "Something went wrong. Please try again.",
         },
         { status: 500 },
       ),
@@ -629,22 +399,11 @@ export function OPTIONS(request: NextRequest) {
  */
 export async function GET() {
   return NextResponse.json({
-    status: "ok",
-    message: "VAPI check-availability endpoint is active",
-    endpoint: "/api/vapi/tools/check-availability",
-    method: "POST",
-    required_fields: ["date"],
-    optional_fields: [
-      "assistant_id",
-      "clinic_id",
-      "include_blocked",
-      "vapi_call_id",
-    ],
-    example_dates: ["today", "tomorrow", "next monday", "2025-01-15"],
-    default_assistant_id: DEFAULT_ASSISTANT_ID,
-    notes: {
-      clinic_id:
-        "For dev/squad testing - bypasses assistant lookup. Use clinic UUID directly.",
+    status: "active",
+    tool: "check-availability",
+    schema: "strict-iso-8601",
+    example: {
+      date: "2024-12-25",
     },
   });
 }
