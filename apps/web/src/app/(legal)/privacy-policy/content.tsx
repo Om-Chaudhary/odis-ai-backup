@@ -198,10 +198,9 @@ export const privacyPolicySections: ComplianceSection[] = [
         content: (
           <>
             <p>
-              Your data is stored on secure servers located in [TODO: SPECIFY
-              REGION/COUNTRY]. We use industry-standard cloud infrastructure
-              providers with SOC 2 Type II certification and ISO 27001
-              compliance.
+              Your data is stored on secure servers located in the US. We use
+              industry-standard cloud infrastructure providers with SOC 2 Type
+              II certification and ISO 27001 compliance.
             </p>
           </>
         ),
@@ -304,10 +303,7 @@ export const privacyPolicySections: ComplianceSection[] = [
                 authentication services
               </li>
             </ul>
-            <p className="mt-4">
-              [TODO: Update this list to reflect your actual third-party
-              services]
-            </p>
+            <p className="mt-4">Supabase</p>
           </>
         ),
       },
@@ -449,10 +445,6 @@ export const privacyPolicySections: ComplianceSection[] = [
                 data securely
               </li>
             </ul>
-            <p className="mt-4">
-              [TODO: Update this list based on your actual extension permissions
-              in manifest.json]
-            </p>
           </>
         ),
       },
@@ -617,9 +609,9 @@ export const privacyPolicySections: ComplianceSection[] = [
           those in your jurisdiction.
         </p>
         <p>
-          If you are located outside [TODO: YOUR COUNTRY] and choose to provide
+          If you are located outside the United States and choose to provide
           information to us, please note that we transfer the data, including
-          personal data, to [TODO: YOUR COUNTRY] and process it there.
+          personal data, to the United States and process it there.
         </p>
         <p>
           For EU/EEA users, we ensure that appropriate safeguards are in place,
