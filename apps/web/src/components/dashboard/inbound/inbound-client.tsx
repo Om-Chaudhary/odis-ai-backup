@@ -214,11 +214,12 @@ export function InboundClient() {
           leftPanel={
             <>
               <DashboardPageHeader
-                title="Inbound Communications"
+                title="After-Hours Communications"
                 subtitle={`${stats?.totals?.calls ?? 0} total calls`}
                 icon={PhoneIncoming}
               >
                 <DashboardToolbar
+                  className="w-full"
                   searchTerm={searchTerm}
                   onSearchChange={handleSearchChange}
                   searchPlaceholder="Search..."

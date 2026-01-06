@@ -30,7 +30,7 @@ export function DashboardBreadcrumb() {
       case "dashboard":
         return "Dashboard";
       case "inbound":
-        return "Inbound Communications";
+        return "After-Hours Communications";
       case "outbound":
         return "Discharge Communications";
       case "cases":

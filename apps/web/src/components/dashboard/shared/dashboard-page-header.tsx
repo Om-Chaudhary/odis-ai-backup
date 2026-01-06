@@ -24,7 +24,7 @@ interface DashboardPageHeaderProps {
  * Usage:
  * ```tsx
  * <DashboardPageHeader
- *   title="Inbound Communications"
+ *   title="After-Hours Communications"
  *   subtitle="Manage incoming calls, appointments, and messages"
  *   icon={PhoneIncoming}
  *   actions={<Button>Schedule All</Button>}

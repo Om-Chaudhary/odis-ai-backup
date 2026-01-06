@@ -53,19 +53,16 @@ export function OutboundSplitLayout({
     >
       {/* Left Panel - Table */}
       <Panel defaultSize={100} minSize={35} className="min-w-0 overflow-hidden">
-        <div className="flex h-full w-full flex-col overflow-hidden">
-          {/* Header above gradient container */}
+        <div
+          className={cn(
+            "flex h-full flex-col overflow-hidden",
+            "rounded-xl border border-teal-200/40",
+            "bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70",
+            "shadow-lg shadow-teal-500/5 backdrop-blur-md",
+          )}
+        >
           {header}
-          {/* Gradient container for content */}
-          <div
-            className={cn(
-              "flex h-full w-full flex-col overflow-hidden",
-              "bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70",
-              "shadow-lg shadow-teal-500/5 backdrop-blur-md",
-            )}
-          >
-            {leftPanel}
-          </div>
+          {leftPanel}
         </div>
       </Panel>
 

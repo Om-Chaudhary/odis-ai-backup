@@ -274,6 +274,19 @@ export const getStatsRouter = createTRPCRouter({
         return (callData?.attention_types?.length ?? 0) > 0;
       }).length;
 
+      // Query for all-time total (no date filtering) - counts all discharge cases for the clinic
+      const { count: allTimeTotal, error: allTimeError } = await ctx.supabase
+        .from("cases")
+        .select("id", { count: "exact", head: true })
+        .in("user_id", clinicUserIds);
+
+      if (allTimeError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to fetch all-time total: ${allTimeError.message}`,
+        });
+      }
+
       const now = new Date();
 
       // Count by derived status
@@ -460,6 +473,7 @@ export const getStatsRouter = createTRPCRouter({
         needsAttention: needsAttentionCount,
         total:
           pendingReview + scheduled + ready + inProgress + completed + failed,
+        allTimeTotal: allTimeTotal ?? 0,
         // Call intelligence analytics
         callIntelligence: {
           callOutcomes,

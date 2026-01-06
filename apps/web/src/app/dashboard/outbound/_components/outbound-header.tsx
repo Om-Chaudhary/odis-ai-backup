@@ -20,6 +20,7 @@ export interface OutboundHeaderProps {
     total: number;
     pendingReview: number;
     needsAttention: number;
+    allTimeTotal?: number;
   } | null;
   showDateNav?: boolean;
 }
@@ -46,9 +47,13 @@ export function OutboundHeader({
   ];
 
   return (
-    <>
-      {/* Tabs above header */}
-      <div className="px-4 pt-2 pb-1">
+    <DashboardPageHeader
+      title="Discharge Communications"
+      subtitle={`${stats?.allTimeTotal ?? 0} total discharges`}
+      icon={PhoneOutgoing}
+    >
+      {/* Tabs above toolbar */}
+      <div className="flex w-full flex-col gap-3">
         <Tabs value={viewMode} onValueChange={onViewChange} className="w-fit">
           <TabsList className="h-10 gap-2 border-0 bg-transparent p-0">
             {tabOptions.map((option) => {
@@ -83,14 +88,6 @@ export function OutboundHeader({
             })}
           </TabsList>
         </Tabs>
-      </div>
-
-      {/* Header */}
-      <DashboardPageHeader
-        title="Discharge Communications"
-        subtitle="Manage discharge calls and email communications"
-        icon={PhoneOutgoing}
-      >
         <DashboardToolbar
           showDateNav={showDateNav}
           currentDate={currentDate}
@@ -101,7 +98,7 @@ export function OutboundHeader({
           searchPlaceholder="Search..."
           isLoading={isLoading}
         />
-      </DashboardPageHeader>
-    </>
+      </div>
+    </DashboardPageHeader>
   );
 }
