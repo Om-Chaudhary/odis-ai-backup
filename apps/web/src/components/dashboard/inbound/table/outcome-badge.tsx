@@ -26,15 +26,7 @@ interface OutcomeBadgeProps {
  * Maps outcome variant to badge styling
  */
 function getVariantStyle(
-  variant:
-    | "urgent"
-    | "emergency"
-    | "callback"
-    | "scheduled"
-    | "info"
-    | "completed"
-    | "cancelled"
-    | "default",
+  variant: "emergency" | "appointment" | "callback" | "info" | "blank",
 ): {
   variant: "default" | "secondary" | "destructive" | "outline";
   className: string;
@@ -46,37 +38,22 @@ function getVariantStyle(
         className:
           "bg-orange-500/20 text-orange-700 dark:text-orange-400 font-semibold",
       };
-    case "urgent":
+    case "appointment":
       return {
-        variant: "destructive",
-        className: "bg-red-500/15 text-red-700 dark:text-red-400",
+        variant: "default",
+        className: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
       };
     case "callback":
       return {
         variant: "secondary",
         className: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
       };
-    case "scheduled":
-      return {
-        variant: "default",
-        className: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
-      };
-    case "completed":
-      return {
-        variant: "default",
-        className: "bg-teal-500/15 text-teal-700 dark:text-teal-400",
-      };
-    case "cancelled":
-      return {
-        variant: "outline",
-        className: "bg-slate-500/10 text-slate-600 dark:text-slate-400",
-      };
     case "info":
       return {
         variant: "secondary",
         className: "bg-blue-500/15 text-blue-700 dark:text-blue-400",
       };
-    default:
+    case "blank":
       return {
         variant: "outline",
         className: "bg-slate-500/10 text-slate-500 dark:text-slate-400",
@@ -98,6 +75,12 @@ export function OutcomeBadge({
   }
 
   const outcome = getDescriptiveOutcome(call);
+
+  // Don't display badge if outcome is null (doesn't match any category)
+  if (!outcome) {
+    return null;
+  }
+
   const { className: styleClassName } = getVariantStyle(outcome.variant);
 
   // Text to display - use description for detail views, label for table

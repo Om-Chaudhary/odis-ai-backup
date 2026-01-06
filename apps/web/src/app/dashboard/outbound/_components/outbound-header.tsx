@@ -5,6 +5,7 @@ import {
 } from "~/components/dashboard/shared";
 import { cn } from "@odis-ai/shared/util";
 import { Badge } from "@odis-ai/shared/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@odis-ai/shared/ui/tabs";
 import type { ViewMode } from "~/server/api/routers/outbound";
 
 export interface OutboundHeaderProps {
@@ -47,39 +48,41 @@ export function OutboundHeader({
   return (
     <>
       {/* Tabs above header */}
-      <div className="flex items-center gap-2 bg-white px-4">
-        {tabOptions.map((option) => {
-          const isActive = viewMode === option.value;
-          const Icon = option.icon;
-          return (
-            <button
-              key={option.value}
-              onClick={() => onViewChange(option.value)}
-              disabled={isLoading}
-              className={cn(
-                "relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-all duration-200",
-                isActive
-                  ? "text-teal-700 after:absolute after:right-0 after:bottom-0 after:left-0 after:h-0.5 after:bg-teal-500"
-                  : "text-slate-600 hover:bg-teal-50/50 hover:text-slate-800",
-                isLoading && "cursor-not-allowed opacity-50",
-              )}
-            >
-              {Icon && <Icon className="h-4 w-4" />}
-              <span>{option.label}</span>
-              {option.count !== undefined && (
-                <Badge
-                  variant={isActive ? "default" : "secondary"}
+      <div className="px-4 pt-2 pb-1">
+        <Tabs value={viewMode} onValueChange={onViewChange} className="w-fit">
+          <TabsList className="h-10 gap-2 border-0 bg-transparent p-0">
+            {tabOptions.map((option) => {
+              const isActive = viewMode === option.value;
+              const Icon = option.icon;
+              return (
+                <TabsTrigger
+                  key={option.value}
+                  value={option.value}
+                  disabled={isLoading}
                   className={cn(
-                    "ml-1 px-1.5 py-0 text-xs",
-                    isActive && "bg-teal-500 text-white",
+                    "gap-2",
+                    "data-[state=active]:bg-teal-50 data-[state=active]:text-teal-700",
+                    "data-[state=active]:border data-[state=active]:border-teal-200",
                   )}
                 >
-                  {option.count}
-                </Badge>
-              )}
-            </button>
-          );
-        })}
+                  {Icon && <Icon className="h-4 w-4" />}
+                  <span>{option.label}</span>
+                  {option.count !== undefined && (
+                    <Badge
+                      variant={isActive ? "default" : "secondary"}
+                      className={cn(
+                        "ml-1 px-1.5 py-0 text-xs",
+                        isActive && "bg-teal-500 text-white hover:bg-teal-600",
+                      )}
+                    >
+                      {option.count}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+        </Tabs>
       </div>
 
       {/* Header */}

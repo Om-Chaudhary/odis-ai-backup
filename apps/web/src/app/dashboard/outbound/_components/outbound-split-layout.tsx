@@ -11,6 +11,7 @@ import {
 import { cn } from "@odis-ai/shared/util";
 
 interface OutboundSplitLayoutProps {
+  header?: ReactNode;
   leftPanel: ReactNode;
   rightPanel: ReactNode;
   showRightPanel: boolean;
@@ -25,6 +26,7 @@ interface OutboundSplitLayoutProps {
  * - Right: Detail panel (70% when open, collapses to 0)
  */
 export function OutboundSplitLayout({
+  header,
   leftPanel,
   rightPanel,
   showRightPanel,
@@ -51,14 +53,19 @@ export function OutboundSplitLayout({
     >
       {/* Left Panel - Table */}
       <Panel defaultSize={100} minSize={35} className="min-w-0 overflow-hidden">
-        <div
-          className={cn(
-            "flex h-full w-full flex-col overflow-hidden",
-            "bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70",
-            "shadow-lg shadow-teal-500/5 backdrop-blur-md",
-          )}
-        >
-          {leftPanel}
+        <div className="flex h-full w-full flex-col overflow-hidden">
+          {/* Header above gradient container */}
+          {header}
+          {/* Gradient container for content */}
+          <div
+            className={cn(
+              "flex h-full w-full flex-col overflow-hidden",
+              "bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70",
+              "shadow-lg shadow-teal-500/5 backdrop-blur-md",
+            )}
+          >
+            {leftPanel}
+          </div>
         </div>
       </Panel>
 

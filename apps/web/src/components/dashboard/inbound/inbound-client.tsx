@@ -2,9 +2,9 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useQueryState, parseAsInteger } from "nuqs";
-import { PhoneIncoming, Filter } from "lucide-react";
+import { PhoneIncoming, Filter, ChevronDown } from "lucide-react";
 
-import type { OutcomeFilter } from "./types";
+import type { OutcomeFilter, OutcomeFilterCategory } from "./types";
 import type { Database } from "@odis-ai/shared/types";
 import { PageContent, PageFooter } from "../layout";
 import { DashboardPageHeader, DashboardToolbar } from "../shared";
@@ -14,12 +14,13 @@ import { InboundSplitLayout } from "./inbound-split-layout";
 import { InboundPagination } from "./inbound-pagination";
 import { useInboundData, useInboundMutations } from "./hooks";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@odis-ai/shared/ui/select";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@odis-ai/shared/ui/popover";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Checkbox } from "@odis-ai/shared/ui/checkbox";
+import { cn } from "@odis-ai/shared/util";
 
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
@@ -35,18 +36,21 @@ type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 export function InboundClient() {
   // URL-synced state
   const [outcomeFilter, setOutcomeFilter] = useQueryState("outcome", {
-    defaultValue: "Scheduled" as OutcomeFilter,
-    parse: (v) =>
-      ([
-        "all",
-        "Scheduled",
-        "Urgent",
-        "Call Back",
-        "Info",
-        "Cancellation",
-      ].includes(v)
-        ? v
-        : "all") as OutcomeFilter,
+    defaultValue: "all" as OutcomeFilter,
+    parse: (v) => {
+      if (v === "all") return "all";
+      // Parse comma-separated categories
+      const categories = v
+        .split(",")
+        .filter((cat): cat is OutcomeFilterCategory =>
+          ["emergency", "appointment", "callback", "info"].includes(cat),
+        );
+      return categories.length > 0 ? categories : "all";
+    },
+    serialize: (value) => {
+      if (value === "all") return "all";
+      return value.join(",");
+    },
   });
 
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
@@ -104,13 +108,27 @@ export function InboundClient() {
 
   // Handle outcome filter change
   const handleOutcomeFilterChange = useCallback(
-    (filter: string) => {
-      void setOutcomeFilter(filter as OutcomeFilter);
+    (category: OutcomeFilterCategory) => {
+      void setOutcomeFilter((prev) => {
+        if (prev === "all") {
+          return [category];
+        }
+        const categories = prev.includes(category)
+          ? prev.filter((c) => c !== category)
+          : [...prev, category];
+        return categories.length > 0 ? categories : "all";
+      });
       void setPage(1);
       setSelectedCall(null);
     },
     [setOutcomeFilter, setPage],
   );
+
+  const handleClearFilters = useCallback(() => {
+    void setOutcomeFilter("all");
+    void setPage(1);
+    setSelectedCall(null);
+  }, [setOutcomeFilter, setPage]);
 
   // Handlers
   const handlePageChange = useCallback(
@@ -166,14 +184,25 @@ export function InboundClient() {
   );
 
   // Outcome filter options
-  const outcomeFilterOptions = [
-    { value: "all", label: "All Calls" },
-    { value: "Scheduled", label: "Appointments" },
-    { value: "Urgent", label: "Urgent" },
-    { value: "Call Back", label: "Call Back" },
-    { value: "Info", label: "Info" },
-    { value: "Cancellation", label: "Cancellation" },
+  const outcomeFilterOptions: Array<{
+    value: OutcomeFilterCategory;
+    label: string;
+  }> = [
+    { value: "emergency", label: "Emergency" },
+    { value: "appointment", label: "Appointments" },
+    { value: "callback", label: "Callback" },
+    { value: "info", label: "Info" },
   ];
+
+  // Get selected count for display
+  const selectedCount = outcomeFilter === "all" ? 0 : outcomeFilter.length;
+  const filterLabel =
+    selectedCount === 0
+      ? "Filter by outcome"
+      : selectedCount === 1
+        ? (outcomeFilterOptions.find((opt) => outcomeFilter.includes(opt.value))
+            ?.label ?? "1 selected")
+        : `${selectedCount} selected`;
 
   return (
     <div className="flex h-full flex-col">
@@ -197,21 +226,64 @@ export function InboundClient() {
                   leftContent={
                     <div className="flex items-center gap-2">
                       <Filter className="h-4 w-4 text-slate-400" />
-                      <Select
-                        value={outcomeFilter}
-                        onValueChange={handleOutcomeFilterChange}
-                      >
-                        <SelectTrigger className="h-8 w-[160px] border-teal-200/50 bg-white/60 text-sm">
-                          <SelectValue placeholder="Filter by outcome" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {outcomeFilterOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "h-8 w-[180px] justify-between border-teal-200/50 bg-white/60 text-sm font-normal",
+                              selectedCount > 0 &&
+                                "border-teal-400 bg-teal-50/50",
+                            )}
+                          >
+                            <span className="truncate">{filterLabel}</span>
+                            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[200px] p-0" align="start">
+                          <div className="flex flex-col">
+                            <div className="border-b px-3 py-2">
+                              <p className="text-sm font-medium">
+                                Filter by Outcome
+                              </p>
+                            </div>
+                            <div className="flex flex-col gap-0.5 p-2">
+                              {outcomeFilterOptions.map((option) => {
+                                const isSelected =
+                                  outcomeFilter !== "all" &&
+                                  outcomeFilter.includes(option.value);
+                                return (
+                                  <button
+                                    key={option.value}
+                                    onClick={() =>
+                                      handleOutcomeFilterChange(option.value)
+                                    }
+                                    className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-slate-100"
+                                  >
+                                    <Checkbox
+                                      checked={isSelected}
+                                      className="h-4 w-4"
+                                    />
+                                    <span>{option.label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            {selectedCount > 0 && (
+                              <div className="border-t p-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={handleClearFilters}
+                                  className="h-7 w-full text-xs"
+                                >
+                                  Clear filters
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   }
                 />

@@ -1,5 +1,4 @@
 import { AppSidebar } from "~/components/dashboard/shell/app-sidebar";
-import { DashboardBreadcrumb } from "~/components/dashboard/shell/dashboard-breadcrumb";
 import { getUser } from "~/server/actions/auth";
 import { createClient } from "@odis-ai/data-access/db/server";
 import { redirect } from "next/navigation";
@@ -126,11 +125,6 @@ export default async function DashboardLayout({
 
       {/* Main Content Area */}
       <main className="relative z-10 flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-transparent">
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-slate-200/40 bg-white/40 backdrop-blur-sm">
-          <div className="animate-fade-in-down flex items-center gap-2 px-6">
-            <DashboardBreadcrumb />
-          </div>
-        </header>
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
           {children}
         </div>

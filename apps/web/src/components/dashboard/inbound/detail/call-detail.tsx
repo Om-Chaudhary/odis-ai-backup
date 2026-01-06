@@ -1,16 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@odis-ai/shared/ui/accordion";
+import { Card } from "@odis-ai/shared/ui/card";
 import {
   Building2,
   Loader2,
   FileText,
-  User,
   Mic,
   Clock,
   AlertTriangle,
@@ -19,7 +13,6 @@ import { Badge } from "@odis-ai/shared/ui/badge";
 import { CallRecordingPlayer } from "../../shared/call-recording-player";
 import { api } from "~/trpc/client";
 import { getCallDataOverride } from "./demo-data";
-import { InboundCallerCard } from "./caller-card";
 import { getDemoCallerName } from "../demo-data";
 import { QuickActionsFooter } from "./shared/quick-actions-footer";
 import { TimestampBadge } from "./shared/timestamp-badge";
@@ -117,178 +110,163 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
         }
       : call);
 
-  // Determine which accordion sections should be open by default
-  const defaultOpenSections = ["caller", "summary"];
-  if (callData.recording_url && (callData.duration_seconds ?? 0) < 120) {
-    // Auto-expand recording for short calls (< 2 min)
-    defaultOpenSections.push("recording");
-  }
-
   return (
     <div className="flex h-full flex-col">
-      {/* Header with clinic, duration, and end reason */}
-      <div className="flex items-center justify-between border-b border-teal-100/50 bg-gradient-to-r from-white/50 to-teal-50/30 px-4 py-3 pr-12 dark:from-slate-900/50 dark:to-teal-950/30">
-        <div className="flex items-center gap-3 text-sm text-slate-600 dark:text-slate-400">
-          <div className="flex items-center gap-2">
-            <Building2 className="h-4 w-4" />
-            <span className="font-medium">
-              {call.clinic_name ?? "Unknown Clinic"}
-            </span>
-          </div>
-          {callData.duration_seconds != null &&
-            callData.duration_seconds > 0 && (
-              <>
-                <span className="text-slate-300 dark:text-slate-600">|</span>
-                <div className="flex items-center gap-1">
-                  <Clock className="h-3.5 w-3.5" />
-                  <span>{formatDuration(callData.duration_seconds)}</span>
-                </div>
-              </>
-            )}
-        </div>
-        {call.ended_reason && (
-          <Badge
-            variant="outline"
-            className="border-slate-200 bg-slate-50 text-xs text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"
-          >
-            {formatEndReason(call.ended_reason)}
-          </Badge>
-        )}
-      </div>
+      {/* Compact Caller Header - matches outbound patient header style */}
+      <div className="bg-muted/30 relative border-b px-6 py-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-4">
+            {/* Caller icon avatar */}
+            <div className="bg-background flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-2xl shadow-sm">
+              📞
+            </div>
 
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-auto p-4">
-        <div className="space-y-4">
-          {/* Accordion Sections */}
-          <Accordion
-            type="multiple"
-            defaultValue={defaultOpenSections}
-            className="space-y-3"
-          >
-            {/* Caller Information */}
-            <AccordionItem
-              value="caller"
-              className="rounded-lg border border-slate-200/50 bg-white/50 backdrop-blur-sm dark:border-slate-700/50 dark:bg-slate-900/50"
-            >
-              <AccordionTrigger className="px-4 py-3 hover:no-underline [&[data-state=open]>svg]:rotate-180">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <User className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-                  Caller Information
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="px-4 pb-4">
-                <InboundCallerCard
-                  variant="call"
-                  phone={call.customer_phone}
-                  callerName={callerName}
-                  petName={petName}
-                />
-              </AccordionContent>
-            </AccordionItem>
+            {/* Caller info */}
+            <div className="min-w-0 flex-1 space-y-1">
+              <div className="flex flex-wrap items-baseline gap-2">
+                <h2 className="truncate text-lg font-semibold">
+                  {callerName ?? "Unknown Caller"}
+                </h2>
+                {petName && (
+                  <span className="text-muted-foreground text-sm">
+                    {petName}'s owner
+                  </span>
+                )}
+              </div>
 
-            {/* Call Summary */}
-            <AccordionItem
-              value="summary"
-              className="rounded-lg border border-slate-200/50 bg-white/50 backdrop-blur-sm dark:border-slate-700/50 dark:bg-slate-900/50"
-            >
-              <AccordionTrigger className="px-4 py-3 hover:no-underline [&[data-state=open]>svg]:rotate-180">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <FileText className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-                  Call Summary
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="px-4 pb-4">
-                <div className="space-y-4">
-                  {/* Timestamp */}
-                  <TimestampBadge
-                    timestamp={call.created_at}
-                    duration={callData.duration_seconds}
-                    size="sm"
-                  />
-
-                  {/* Summary Text */}
-                  {callData.summary ? (
-                    <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-                      {callData.summary}
-                    </p>
-                  ) : (
-                    <p className="text-sm text-slate-400 italic dark:text-slate-500">
-                      No summary available
-                    </p>
+              {/* Call metadata */}
+              {(call.clinic_name ?? callData.duration_seconds) && (
+                <div className="flex flex-wrap gap-3 pt-0.5">
+                  {call.clinic_name && (
+                    <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
+                      <Building2 className="h-3.5 w-3.5" />
+                      <span>{call.clinic_name}</span>
+                    </div>
                   )}
-
-                  {/* Actions Taken */}
-                  {Array.isArray(call.actions_taken) &&
-                    call.actions_taken.length > 0 && (
-                      <div className="mt-3 rounded-lg border border-slate-200/50 bg-slate-50/50 p-3 dark:border-slate-700/50 dark:bg-slate-800/30">
-                        <p className="mb-2 text-xs font-medium text-slate-600 dark:text-slate-400">
-                          Actions Taken
-                        </p>
-                        <ul className="space-y-1 text-sm text-slate-700 dark:text-slate-300">
-                          {call.actions_taken.map(
-                            (action: unknown, index: number) => (
-                              <li
-                                key={index}
-                                className="flex items-start gap-2"
-                              >
-                                <span className="text-teal-500">•</span>
-                                <span>
-                                  {typeof action === "string"
-                                    ? action
-                                    : JSON.stringify(action)}
-                                </span>
-                              </li>
-                            ),
-                          )}
-                        </ul>
+                  {callData.duration_seconds != null &&
+                    callData.duration_seconds > 0 && (
+                      <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
+                        <Clock className="h-3.5 w-3.5" />
+                        <span>{formatDuration(callData.duration_seconds)}</span>
                       </div>
                     )}
                 </div>
-              </AccordionContent>
-            </AccordionItem>
+              )}
 
-            {/* Call Recording */}
-            <AccordionItem
-              value="recording"
-              className="rounded-lg border border-slate-200/50 bg-white/50 backdrop-blur-sm dark:border-slate-700/50 dark:bg-slate-900/50"
-            >
-              <AccordionTrigger className="px-4 py-3 hover:no-underline [&[data-state=open]>svg]:rotate-180">
-                <div className="flex items-center gap-2 text-sm font-medium">
-                  <Mic className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-                  Recording & Transcript
-                  {vapiQuery.isLoading && shouldFetchFromVAPI && (
-                    <Loader2 className="ml-2 h-3 w-3 animate-spin text-slate-400" />
-                  )}
+              {/* Contact information */}
+              {call.customer_phone && (
+                <div className="flex flex-wrap gap-3 pt-0.5">
+                  <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
+                    <span>📞</span>
+                    <span className="font-medium">{call.customer_phone}</span>
+                  </div>
                 </div>
-              </AccordionTrigger>
-              <AccordionContent className="px-4 pb-4">
-                {vapiQuery.isLoading && shouldFetchFromVAPI ? (
-                  <div className="flex items-center justify-center gap-2 py-6 text-slate-500">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Loading call recording...
-                  </div>
-                ) : callData.recording_url ? (
-                  <CallRecordingPlayer
-                    recordingUrl={callData.recording_url}
-                    transcript={callData.transcript ?? null}
-                    durationSeconds={callData.duration_seconds}
-                  />
-                ) : vapiQuery.error && shouldFetchFromVAPI ? (
-                  <div className="flex items-center justify-center gap-2 py-4 text-amber-600">
-                    <AlertTriangle className="h-4 w-4" />
-                    <span className="text-sm">
-                      Unable to load call recording
-                    </span>
-                  </div>
-                ) : (
-                  <div className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">
-                    No recording available for this call
+              )}
+            </div>
+          </div>
+
+          {/* End reason badge */}
+          {call.ended_reason && (
+            <Badge
+              variant="outline"
+              className="border-border/40 text-muted-foreground text-xs"
+            >
+              {formatEndReason(call.ended_reason)}
+            </Badge>
+          )}
+        </div>
+      </div>
+
+      {/* Scrollable Content */}
+      <div className="flex-1 space-y-4 overflow-auto p-4">
+        {/* Call Summary Card */}
+        <Card className="border-border/40">
+          <div className="space-y-3 p-4">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <FileText className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+              Call Summary
+            </div>
+
+            <div className="space-y-4">
+              {/* Timestamp */}
+              <TimestampBadge
+                timestamp={call.created_at}
+                duration={callData.duration_seconds}
+                size="sm"
+              />
+
+              {/* Summary Text */}
+              {callData.summary ? (
+                <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                  {callData.summary}
+                </p>
+              ) : (
+                <p className="text-sm text-slate-400 italic dark:text-slate-500">
+                  No summary available
+                </p>
+              )}
+
+              {/* Actions Taken */}
+              {Array.isArray(call.actions_taken) &&
+                call.actions_taken.length > 0 && (
+                  <div className="mt-3 rounded-lg border border-slate-200/50 bg-slate-50/50 p-3 dark:border-slate-700/50 dark:bg-slate-800/30">
+                    <p className="mb-2 text-xs font-medium text-slate-600 dark:text-slate-400">
+                      Actions Taken
+                    </p>
+                    <ul className="space-y-1 text-sm text-slate-700 dark:text-slate-300">
+                      {call.actions_taken.map(
+                        (action: unknown, index: number) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <span className="text-teal-500">•</span>
+                            <span>
+                              {typeof action === "string"
+                                ? action
+                                : JSON.stringify(action)}
+                            </span>
+                          </li>
+                        ),
+                      )}
+                    </ul>
                   </div>
                 )}
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Recording & Transcript Card */}
+        <Card className="border-border/40">
+          <div className="space-y-3 p-4">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Mic className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+              Recording & Transcript
+              {vapiQuery.isLoading && shouldFetchFromVAPI && (
+                <Loader2 className="ml-2 h-3 w-3 animate-spin text-slate-400" />
+              )}
+            </div>
+
+            {vapiQuery.isLoading && shouldFetchFromVAPI ? (
+              <div className="flex items-center justify-center gap-2 py-6 text-slate-500">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading call recording...
+              </div>
+            ) : callData.recording_url ? (
+              <CallRecordingPlayer
+                recordingUrl={callData.recording_url}
+                transcript={callData.transcript ?? null}
+                durationSeconds={callData.duration_seconds}
+              />
+            ) : vapiQuery.error && shouldFetchFromVAPI ? (
+              <div className="flex items-center justify-center gap-2 py-4 text-amber-600">
+                <AlertTriangle className="h-4 w-4" />
+                <span className="text-sm">Unable to load call recording</span>
+              </div>
+            ) : (
+              <div className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">
+                No recording available for this call
+              </div>
+            )}
+          </div>
+        </Card>
       </div>
 
       {/* Quick Actions Footer */}

@@ -79,9 +79,9 @@ export function AllDischargesView({
     <OutboundSplitLayout
       showRightPanel={selectedCase !== null}
       onCloseRightPanel={onClosePanel}
+      header={<OutboundHeader {...headerProps} showDateNav={true} />}
       leftPanel={
         <>
-          <OutboundHeader {...headerProps} showDateNav={true} />
           <PageContent>
             <OutboundCaseTable
               cases={cases}

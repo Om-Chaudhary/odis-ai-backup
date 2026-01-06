@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import SupportContent from "~/app/(public)/support/support-content";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Support Hub | Get Help with OdisAI",
   description:

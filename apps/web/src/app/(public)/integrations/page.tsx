@@ -7,6 +7,8 @@ import {
 } from "~/components/marketing";
 import { cn } from "@odis-ai/shared/util";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Integrations | Connect OdisAI with Your Practice Software",
   description:

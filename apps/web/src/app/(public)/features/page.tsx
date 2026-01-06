@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { FeaturesContent } from "./features-content";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "AI Voice Features for Veterinarians | 24/7 Call Handling",
   description:

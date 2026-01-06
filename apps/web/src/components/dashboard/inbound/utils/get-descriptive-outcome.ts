@@ -3,9 +3,12 @@
  * Uses structured data from VAPI to create clinically relevant outcome descriptions
  *
  * Main Outcome Categories:
- * 1. Appointment - scheduled, canceled, rescheduled
- * 2. Info Provided - clinic info, general clinical guidance
- * 3. Emergency Triage - emergency info, routed to ER
+ * 1. Appointment - schedule appointment, reschedule appointment, cancel appointment
+ * 2. Emergency - emergency triage
+ * 3. Callback - client requests callback
+ * 4. Info - client gets information about the clinic
+ *
+ * Any call that doesn't explicitly fall into these categories shows as blank (null)
  */
 
 import type { Database } from "@odis-ai/shared/types";
@@ -19,85 +22,70 @@ export interface DescriptiveOutcome {
   /** Full descriptive text for detail views */
   description: string | null;
   /** Semantic color variant */
-  variant:
-    | "emergency"
-    | "scheduled"
-    | "cancelled"
-    | "info"
-    | "callback"
-    | "default";
+  variant: "emergency" | "appointment" | "callback" | "info" | "blank";
 }
 
 /**
  * Generates a descriptive outcome from structured call data
  *
- * For veterinarians reviewing after-hours calls, the outcome should clearly show:
- * - Label: The action required (what the vet/staff needs to do)
- * - Description: The clinical context (what happened, what's needed)
+ * Only categorizes calls into 4 specific outcomes:
+ * 1. Appointment (schedule, reschedule, cancel)
+ * 2. Emergency (emergency triage)
+ * 3. Callback (client requests callback)
+ * 4. Info (client gets clinic information)
+ *
+ * Any call that doesn't explicitly match returns blank/null
  */
-export function getDescriptiveOutcome(call: InboundCall): DescriptiveOutcome {
-  // Use summary as the base description - it contains the clinical context
+export function getDescriptiveOutcome(
+  call: InboundCall,
+): DescriptiveOutcome | null {
+  // Use summary as the base description
   const clinicalSummary = call.summary ?? "No details available";
   const summaryLower = clinicalSummary.toLowerCase();
-
-  // Helper to safely access Json object properties
-  const getJsonProp = <T>(obj: unknown, key: string): T | undefined => {
-    if (obj && typeof obj === "object" && key in obj) {
-      return (obj as Record<string, unknown>)[key] as T;
-    }
-    return undefined;
-  };
+  const outcome = call.outcome?.toLowerCase() ?? "";
 
   // ============================================================================
-  // CATEGORY 1: EMERGENCY TRIAGE
+  // CATEGORY 1: APPOINTMENT
   // ============================================================================
 
-  // Detect calls that ended with ER referral or emergency handling
-  const erKeywords = [
-    "emergency hospital",
-    "emergency vet",
-    "emergency clinic",
-    "emergency room",
-    "er referral",
-    "referred to er",
-    "go to er",
-    "nearest er",
-    "emergency care",
-    "emergency facility",
-    "emergency veterinary",
-  ];
-
-  const hasErReferral = erKeywords.some((kw) => summaryLower.includes(kw));
-  const escalationType = getJsonProp<string>(
-    call.escalation_data,
-    "escalation_type",
-  );
-  const isErEscalation =
-    escalationType?.toLowerCase().includes("emergency") ?? false;
-
-  // Check actions_taken for ER referral
-  const hasErAction =
-    Array.isArray(call.actions_taken) &&
-    call.actions_taken.some((action: unknown) => {
-      if (typeof action === "string") {
-        return erKeywords.some((kw) => action.toLowerCase().includes(kw));
-      }
-      return false;
-    });
-
-  if (hasErReferral || isErEscalation || hasErAction) {
+  // Schedule appointment
+  if (outcome === "scheduled" || outcome === "schedule appointment") {
     return {
-      label: "Emergency Triage",
+      label: "Scheduled Appointment",
       description: clinicalSummary,
-      variant: "emergency",
+      variant: "appointment",
     };
   }
 
-  // Check for urgent/emergency outcome or attention flags
-  const isEmergencyOutcome = call.outcome === "Emergency";
-  const hasUrgentAttention = call.attention_types?.includes("urgent");
+  // Reschedule appointment
+  if (
+    outcome === "rescheduled" ||
+    outcome === "reschedule appointment" ||
+    (outcome === "cancellation" &&
+      (summaryLower.includes("reschedule") ||
+        summaryLower.includes("re-schedule")))
+  ) {
+    return {
+      label: "Rescheduled Appointment",
+      description: clinicalSummary,
+      variant: "appointment",
+    };
+  }
 
-  if (isEmergencyOutcome || hasUrgentAttention) {
+  // Cancel appointment
+  if (outcome === "cancellation" || outcome === "cancel appointment") {
+    return {
+      label: "Cancelled Appointment",
+      description: clinicalSummary,
+      variant: "appointment",
+    };
+  }
+
+  // ============================================================================
+  // CATEGORY 2: EMERGENCY
+  // ============================================================================
+
+  if (outcome === "emergency" || outcome === "emergency triage") {
     return {
       label: "Emergency Triage",
       description: clinicalSummary,
@@ -106,153 +94,26 @@ export function getDescriptiveOutcome(call: InboundCall): DescriptiveOutcome {
   }
 
   // ============================================================================
-  // CATEGORY 2: APPOINTMENT
+  // CATEGORY 3: CALLBACK
   // ============================================================================
 
-  // Scheduled
-  if (call.outcome === "Scheduled") {
+  if (
+    outcome === "callback" ||
+    outcome === "call back" ||
+    outcome === "client requests callback"
+  ) {
     return {
-      label: "Appt. Scheduled",
-      description: clinicalSummary,
-      variant: "scheduled",
-    };
-  }
-
-  // Canceled
-  if (call.outcome === "Cancellation") {
-    // Check if it's a reschedule
-    if (
-      summaryLower.includes("reschedule") ||
-      summaryLower.includes("re-schedule")
-    ) {
-      return {
-        label: "Appt. Rescheduled",
-        description: clinicalSummary,
-        variant: "scheduled",
-      };
-    }
-    return {
-      label: "Appt. Canceled",
-      description: clinicalSummary,
-      variant: "cancelled",
-    };
-  }
-
-  // Check for appointment-related content in summary
-  const appointmentKeywords = [
-    "appointment",
-    "schedule",
-    "book",
-    "visit",
-    "check-up",
-    "checkup",
-  ];
-  const hasAppointmentContent = appointmentKeywords.some((kw) =>
-    summaryLower.includes(kw),
-  );
-
-  // If follow-up needed and appointment-related
-  const followUpNeeded =
-    getJsonProp<boolean>(call.follow_up_data, "follow_up_needed") === true;
-  const hasCallBack = call.outcome === "Call Back";
-
-  if ((followUpNeeded || hasCallBack) && hasAppointmentContent) {
-    return {
-      label: "Appt. Request",
+      label: "Callback Request",
       description: clinicalSummary,
       variant: "callback",
     };
   }
 
   // ============================================================================
-  // CATEGORY 3: INFO PROVIDED
+  // CATEGORY 4: INFO
   // ============================================================================
 
-  // Keywords for clinic info requests
-  const clinicInfoKeywords = [
-    "hours",
-    "open",
-    "closed",
-    "location",
-    "address",
-    "directions",
-    "pricing",
-    "cost",
-    "price",
-    "services",
-    "offer",
-    "available",
-    "phone",
-    "number",
-    "fax",
-    "email",
-    "website",
-    "parking",
-    "holiday",
-    "new year",
-    "christmas",
-    "thanksgiving",
-    "weekend",
-  ];
-
-  // Keywords for general clinical guidance
-  const clinicalGuidanceKeywords = [
-    "advice",
-    "recommend",
-    "guidance",
-    "question",
-    "information",
-    "inquir",
-    "general",
-    "symptom",
-    "monitor",
-    "watch for",
-    "normal",
-    "concern",
-    "worried",
-    "eating",
-    "drinking",
-    "behavior",
-    "recovery",
-    "healing",
-    "medication",
-    "diet",
-    "exercise",
-    "activity",
-    "care",
-    "instruction",
-  ];
-
-  // Explicit Info outcome
-  if (call.outcome === "Info") {
-    // Determine subtype
-    const isClinicInfo = clinicInfoKeywords.some((kw) =>
-      summaryLower.includes(kw),
-    );
-    if (isClinicInfo) {
-      return {
-        label: "Clinic Info",
-        description: clinicalSummary,
-        variant: "info",
-      };
-    }
-    return {
-      label: "Clinical Guidance",
-      description: clinicalSummary,
-      variant: "info",
-    };
-  }
-
-  // Detect info calls even without explicit outcome
-  // Check for info keywords regardless of length - even short summaries can be info
-  const hasClinicInfoContent = clinicInfoKeywords.some((kw) =>
-    summaryLower.includes(kw),
-  );
-  const hasClinicalGuidanceContent = clinicalGuidanceKeywords.some((kw) =>
-    summaryLower.includes(kw),
-  );
-
-  if (hasClinicInfoContent) {
+  if (outcome === "info" || outcome === "clinic info") {
     return {
       label: "Clinic Info",
       description: clinicalSummary,
@@ -260,142 +121,11 @@ export function getDescriptiveOutcome(call: InboundCall): DescriptiveOutcome {
     };
   }
 
-  if (hasClinicalGuidanceContent) {
-    return {
-      label: "Clinical Guidance",
-      description: clinicalSummary,
-      variant: "info",
-    };
-  }
-
   // ============================================================================
-  // FALLBACK: Other callbacks and follow-ups
+  // DEFAULT: Blank (no badge shown)
   // ============================================================================
 
-  // Check for escalation that needs follow-up
-  const escalationTriggered = getJsonProp<boolean>(
-    call.escalation_data,
-    "escalation_triggered",
-  );
-  const hasEscalation =
-    (call.attention_types?.includes("escalation") ?? false) ||
-    escalationTriggered === true;
-
-  if (hasEscalation) {
-    // Records request
-    if (
-      summaryLower.includes("record") ||
-      summaryLower.includes("vaccination") ||
-      summaryLower.includes("insurance")
-    ) {
-      return {
-        label: "Records Request",
-        description: clinicalSummary,
-        variant: "callback",
-      };
-    }
-
-    // Generic follow-up
-    return {
-      label: "Follow-up Needed",
-      description: clinicalSummary,
-      variant: "callback",
-    };
-  }
-
-  // Callback needed
-  if (followUpNeeded || hasCallBack) {
-    // Medication/Rx request
-    if (
-      summaryLower.includes("medication") ||
-      summaryLower.includes("prescription") ||
-      summaryLower.includes("refill")
-    ) {
-      return {
-        label: "Rx Request",
-        description: clinicalSummary,
-        variant: "callback",
-      };
-    }
-
-    // Message/callback
-    if (
-      summaryLower.includes("message") ||
-      summaryLower.includes("call back") ||
-      summaryLower.includes("callback")
-    ) {
-      return {
-        label: "Message Left",
-        description: clinicalSummary,
-        variant: "callback",
-      };
-    }
-
-    return {
-      label: "Follow-up Needed",
-      description: clinicalSummary,
-      variant: "callback",
-    };
-  }
-
-  // Check actions_taken for any context
-  if (
-    Array.isArray(call.actions_taken) &&
-    call.actions_taken.some((action: unknown) => {
-      if (typeof action === "string") {
-        return (
-          action.toLowerCase().includes("appointment") ||
-          action.toLowerCase().includes("message")
-        );
-      }
-      return false;
-    })
-  ) {
-    return {
-      label: "See Details",
-      description: clinicalSummary,
-      variant: "info",
-    };
-  }
-
-  // Fall back to simple outcome if available
-  if (call.outcome) {
-    return {
-      label: call.outcome,
-      description: clinicalSummary,
-      variant: mapSimpleOutcomeToVariant(call.outcome),
-    };
-  }
-
-  // Default: Unknown outcome - needs review
-  return {
-    label: "Review Needed",
-    description: clinicalSummary,
-    variant: "default",
-  };
-}
-
-/**
- * Map simple outcome field to semantic variant
- * VAPI enum values: Scheduled, Cancellation, Info, Emergency, Call Back, Blank
- */
-function mapSimpleOutcomeToVariant(
-  outcome: string,
-): DescriptiveOutcome["variant"] {
-  switch (outcome) {
-    case "Emergency":
-      return "emergency";
-    case "Call Back":
-      return "callback";
-    case "Scheduled":
-      return "scheduled";
-    case "Cancellation":
-      return "cancelled";
-    case "Info":
-      return "info";
-    case "Blank":
-      return "default";
-    default:
-      return "default";
-  }
+  // Return null for any call that doesn't match the above categories
+  // This will cause no badge to be displayed
+  return null;
 }

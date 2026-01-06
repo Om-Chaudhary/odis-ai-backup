@@ -1,8 +1,6 @@
 "use client";
 
-import { Phone, User } from "lucide-react";
 import { Badge } from "@odis-ai/shared/ui/badge";
-import { Separator } from "@odis-ai/shared/ui/separator";
 import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
 import { cn } from "@odis-ai/shared/util";
 import type { AppointmentStatus } from "../types";
@@ -97,7 +95,8 @@ function getAppointmentStatusConfig(status: AppointmentStatus) {
 // =============================================================================
 
 /**
- * Inbound Caller Card - Glassmorphism styled card showing caller/patient info.
+ * Inbound Caller Card - Compact header showing caller/patient info.
+ * Matches the styling of outbound's CompactPatientHeader.
  * Adapts display based on variant (appointment or call).
  */
 export function InboundCallerCard({
@@ -110,22 +109,16 @@ export function InboundCallerCard({
   appointmentStatus,
   isNewClient,
 }: CallerCardProps) {
-  const formattedPhone = formatPhoneNumber(phone ?? "") ?? "Unknown";
+  const formattedPhone = formatPhoneNumber(phone ?? "") ?? phone ?? "Unknown";
   const hasPetInfo = petName ?? species;
 
   // Build pet metadata string
   const petMetadata = [species, breed].filter(Boolean).join(" · ");
 
-  // Determine avatar content
-  const avatarContent = hasPetInfo ? (
-    getSpeciesEmoji(species ?? null)
-  ) : (
-    <Phone className="h-6 w-6 text-teal-600 dark:text-teal-400" />
-  );
+  // Determine avatar emoji
+  const avatarEmoji = hasPetInfo ? getSpeciesEmoji(species ?? null) : "🐾";
 
   // Determine status badge
-  // Note: For calls, the outcome badge is shown in the Call Summary section,
-  // so we don't duplicate it here
   const renderStatusBadge = () => {
     if (variant === "appointment" && appointmentStatus) {
       const config = getAppointmentStatusConfig(appointmentStatus);
@@ -135,120 +128,81 @@ export function InboundCallerCard({
         </Badge>
       );
     }
-    // Call outcome badge removed - it's shown in the Call Summary accordion section
     return null;
   };
 
   return (
-    <div
-      className={cn(
-        "rounded-xl border border-teal-200/50 dark:border-teal-800/50",
-        "bg-gradient-to-br from-white/80 via-teal-50/30 to-white/80",
-        "dark:from-slate-900/80 dark:via-teal-950/30 dark:to-slate-900/80",
-        "shadow-sm backdrop-blur-md",
-        "p-4",
-      )}
-    >
-      {/* Top row: Avatar + Primary Info + Status */}
-      <div className="flex items-start justify-between gap-3">
-        {/* Avatar + Info */}
-        <div className="flex min-w-0 items-center gap-3">
-          {/* Avatar */}
-          <div
-            className={cn(
-              "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl",
-              "bg-gradient-to-br from-teal-100 to-emerald-100",
-              "dark:from-teal-900/50 dark:to-emerald-900/50",
-              "text-2xl shadow-inner",
-            )}
-          >
-            {avatarContent}
-          </div>
+    <div className="space-y-2">
+      {/* Top row: Avatar + Primary Info */}
+      <div className="flex items-start gap-3">
+        {/* Species emoji avatar - matches outbound style */}
+        <div className="bg-background flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-2xl shadow-sm">
+          {avatarEmoji}
+        </div>
 
-          {/* Primary Info */}
-          <div className="min-w-0">
+        {/* Patient/Caller info */}
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex flex-wrap items-baseline gap-2">
             {hasPetInfo ? (
               <>
-                <div className="flex items-center gap-2">
-                  <h2 className="truncate text-lg font-bold text-slate-800 dark:text-white">
-                    {(petName ?? "Unknown Pet").toUpperCase()}
-                  </h2>
-                  {renderStatusBadge()}
-                </div>
+                <h2 className="truncate text-lg font-semibold">
+                  {petName ?? "Unknown Pet"}
+                </h2>
                 {petMetadata && (
-                  <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                  <span className="text-muted-foreground text-sm">
                     {petMetadata}
-                  </p>
+                  </span>
                 )}
+                {renderStatusBadge()}
               </>
             ) : (
               <>
-                <div className="flex items-center gap-2">
-                  {/* Make phone clickable in header when it's the primary display */}
-                  <a
-                    href={`tel:${phone}`}
-                    className="truncate text-lg font-bold text-slate-800 hover:text-teal-600 dark:text-white dark:hover:text-teal-400"
-                  >
-                    {formattedPhone}
-                  </a>
-                  {renderStatusBadge()}
-                </div>
-                {callerName && (
-                  <p className="truncate text-xs text-slate-500 dark:text-slate-400">
-                    {callerName}
-                  </p>
-                )}
+                <a
+                  href={`tel:${phone}`}
+                  className="truncate text-lg font-semibold hover:text-teal-600 dark:hover:text-teal-400"
+                >
+                  {formattedPhone}
+                </a>
+                {renderStatusBadge()}
               </>
             )}
           </div>
-        </div>
 
-        {/* Extra badges */}
-        <div className="flex shrink-0 items-center gap-1.5">
+          {/* Owner/Caller name (secondary line) */}
+          {callerName && (
+            <p className="text-muted-foreground text-sm">
+              {hasPetInfo ? `Owner: ${callerName}` : callerName}
+            </p>
+          )}
+
+          {/* Contact information - only show if we have pet info */}
+          {hasPetInfo && phone && (
+            <div className="flex flex-wrap gap-3 pt-0.5">
+              <div className="text-muted-foreground flex items-center gap-1.5 text-sm">
+                <span>📞</span>
+                <a
+                  href={`tel:${phone}`}
+                  className="font-medium hover:text-teal-600 dark:hover:text-teal-400"
+                >
+                  {formattedPhone}
+                </a>
+              </div>
+            </div>
+          )}
+
+          {/* New client badge */}
           {isNewClient && (
-            <Badge
-              variant="secondary"
-              className="bg-blue-500/10 text-xs text-blue-700 dark:text-blue-300"
-            >
-              New Client
-            </Badge>
+            <div className="pt-1">
+              <Badge
+                variant="secondary"
+                className="bg-blue-500/10 text-xs text-blue-700 dark:text-blue-300"
+              >
+                New Client
+              </Badge>
+            </div>
           )}
         </div>
       </div>
-
-      {/* Show caller section only if we have pet info (otherwise phone is already shown above) */}
-      {hasPetInfo && (callerName ?? phone) && (
-        <>
-          <Separator className="my-3 bg-teal-200/30 dark:bg-teal-800/30" />
-
-          {/* Caller Section */}
-          <div className="space-y-1.5">
-            {callerName && (
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-slate-400" />
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
-                  {callerName.toUpperCase()}
-                </span>
-              </div>
-            )}
-            {phone && (
-              <a
-                href={`tel:${phone}`}
-                className={cn(
-                  "flex items-center gap-2 text-sm",
-                  "text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300",
-                  "transition-colors",
-                )}
-              >
-                <Phone className="h-4 w-4" />
-                <span>{formattedPhone}</span>
-              </a>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* Note: Phone is already clickable in header when no pet info, so no duplicate needed */}
     </div>
   );
 }

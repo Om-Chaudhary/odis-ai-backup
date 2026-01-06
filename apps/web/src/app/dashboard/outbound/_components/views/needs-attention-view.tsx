@@ -60,9 +60,9 @@ export function NeedsAttentionView({
     <OutboundSplitLayout
       showRightPanel={selectedCase !== null}
       onCloseRightPanel={onClosePanel}
+      header={<OutboundHeader {...headerProps} showDateNav={false} />}
       leftPanel={
         <>
-          <OutboundHeader {...headerProps} showDateNav={false} />
           <PageContent>
             <OutboundNeedsAttentionTable
               cases={cases}

@@ -138,15 +138,20 @@ export interface FollowUpData {
 
 /**
  * Call outcome category for badge display
- * Maps to VAPI structured output enum: Scheduled, Cancellation, Info, Emergency, Call Back, Blank
+ * Maps to VAPI outcome values from get-descriptive-outcome.ts:
+ * - scheduled, rescheduled, cancellation -> Appointment
+ * - emergency -> Emergency
+ * - callback -> Callback
+ * - info -> Info
  */
 export type CallOutcome =
-  | "Scheduled"
-  | "Cancellation"
-  | "Info"
-  | "Emergency"
-  | "Call Back"
-  | "Blank";
+  | "scheduled"
+  | "rescheduled"
+  | "cancellation"
+  | "emergency"
+  | "callback"
+  | "info"
+  | null;
 
 /**
  * Inbound call from inbound_vapi_calls table
@@ -192,16 +197,20 @@ export interface InboundCall {
 // =============================================================================
 
 /**
- * Outcome filter for the unified calls table
- * Filters calls by their outcome classification
+ * Outcome filter category for the unified calls table
+ * Maps to display categories in the filter dropdown
  */
-export type OutcomeFilter =
-  | "all"
-  | "Scheduled" // Appointments - calls that resulted in scheduled appointments
-  | "Urgent" // Priority calls
-  | "Call Back" // Callback needed
-  | "Info" // Informational calls
-  | "Cancellation"; // Cancellation calls
+export type OutcomeFilterCategory =
+  | "emergency" // Emergency triage calls
+  | "appointment" // All appointment-related calls (scheduled, rescheduled, cancellation)
+  | "callback" // Callback request calls
+  | "info"; // Informational calls
+
+/**
+ * Outcome filter type
+ * Can be "all" or an array of specific outcome categories
+ */
+export type OutcomeFilter = "all" | OutcomeFilterCategory[];
 
 /**
  * Action filter for calls

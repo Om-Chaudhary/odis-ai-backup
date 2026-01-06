@@ -261,6 +261,63 @@ async function handleInboundCallEnd(
         : "none",
   });
 
+  // Determine outcome based on tool calls
+  // Check which tools were invoked during the call to categorize the outcome
+  type MessageWithTools = {
+    role: string;
+    toolCalls?: Array<{ function?: { name?: string } }>;
+  };
+
+  const toolCalls = (
+    (message.artifact?.messages ?? []) as MessageWithTools[]
+  ).filter(
+    (msg) =>
+      msg.role === "assistant" && msg.toolCalls && msg.toolCalls.length > 0,
+  );
+
+  let outcome: string | null = null;
+
+  // Priority order: appointment > emergency > callback > info
+  const hasAppointmentTool = toolCalls.some((msg) =>
+    msg.toolCalls?.some(
+      (tc) => tc.function?.name === "alum_rock_book_appointment",
+    ),
+  );
+
+  const hasEmergencyTool = toolCalls.some((msg) =>
+    msg.toolCalls?.some((tc) => tc.function?.name === "log_emergency_triage"),
+  );
+
+  const hasCallbackTool = toolCalls.some((msg) =>
+    msg.toolCalls?.some((tc) => tc.function?.name === "leave_message"),
+  );
+
+  // Set outcome based on tools used
+  if (hasAppointmentTool) {
+    outcome = "scheduled"; // Will map to "Schedule Appointment" in frontend
+  } else if (hasEmergencyTool) {
+    outcome = "emergency"; // Will map to "Emergency Triage" in frontend
+  } else if (hasCallbackTool) {
+    outcome = "callback"; // Will map to "Client Requests Callback" in frontend
+  } else if (
+    finalStatus === "completed" &&
+    durationSeconds &&
+    durationSeconds > 30
+  ) {
+    // Call completed without specific tools - likely just info request
+    outcome = "info"; // Will map to "Clinic Info" in frontend
+  }
+  // If no outcome set, it will remain null and show no badge in dashboard
+
+  logger.debug("Determined inbound call outcome", {
+    callId: call.id,
+    outcome,
+    hasAppointmentTool,
+    hasEmergencyTool,
+    hasCallbackTool,
+    toolCallsCount: toolCalls.length,
+  });
+
   // Prepare update data - save immediately WITHOUT cleaned transcript
   // Cleaned transcript will be added in background to avoid blocking webhook
   const updateData: Record<string, unknown> = {
@@ -284,6 +341,7 @@ async function handleInboundCallEnd(
     user_sentiment: userSentiment,
     cost,
     ended_reason: call.endedReason ?? message.endedReason ?? null,
+    outcome, // Add the determined outcome
     // Call intelligence columns (same as outbound)
     call_outcome_data: structuredOutputs.callOutcome,
     pet_health_data: structuredOutputs.petHealth,

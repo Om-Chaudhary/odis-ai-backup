@@ -34,6 +34,43 @@ export function useInboundData(params: UseInboundDataParams) {
     return filter;
   };
 
+  // Map outcome filter categories to actual outcome values
+  const getOutcomesForFilter = (
+    filter: OutcomeFilter,
+  ):
+    | Array<
+        | "scheduled"
+        | "rescheduled"
+        | "cancellation"
+        | "emergency"
+        | "callback"
+        | "info"
+      >
+    | undefined => {
+    if (filter === "all") return undefined;
+
+    // Map filter categories to database outcome values
+    const outcomeMap: Record<
+      string,
+      Array<
+        | "scheduled"
+        | "rescheduled"
+        | "cancellation"
+        | "emergency"
+        | "callback"
+        | "info"
+      >
+    > = {
+      appointment: ["scheduled", "rescheduled", "cancellation"],
+      emergency: ["emergency"],
+      callback: ["callback"],
+      info: ["info"],
+    };
+
+    // Flatten the array of categories into their outcome values
+    return filter.flatMap((category) => outcomeMap[category] ?? []);
+  };
+
   // Fetch calls with optional outcome filtering
   const {
     data: callsData,
@@ -52,7 +89,7 @@ export function useInboundData(params: UseInboundDataParams) {
         | "cancelled"
         | undefined,
       search: searchTerm || undefined,
-      outcome: outcomeFilter === "all" ? undefined : outcomeFilter,
+      outcomes: getOutcomesForFilter(outcomeFilter),
     },
     {
       refetchInterval: () => {

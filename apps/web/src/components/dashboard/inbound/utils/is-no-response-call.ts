@@ -10,13 +10,23 @@ type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 /**
  * Determines if a call should have a blank outcome (no badge)
  *
- * Detection criteria:
- * - Very short duration (< 60 seconds)
+ * IMPORTANT: If a call has an explicit outcome set (not null), always show the badge.
+ * This function only applies to calls WITHOUT an outcome to determine if they should
+ * be hidden based on no-response heuristics.
+ *
+ * Detection criteria (only when outcome is null):
+ * - Very short duration (< 30 seconds)
  * - Ended due to no answer/timeout reasons
  * - Empty or minimal transcript content (< 50 characters)
  * - No user speech detected in transcript (only AI spoke)
  */
 export function isNoResponseCall(call: InboundCall): boolean {
+  // ALWAYS show badge if call has an explicit outcome set
+  // This ensures backfilled outcomes and real-time outcomes are always displayed
+  if (call.outcome) {
+    return false;
+  }
+
   // Check ended reason for explicit no-answer indicators
   if (call.ended_reason) {
     const noAnswerReasons = [
@@ -35,8 +45,8 @@ export function isNoResponseCall(call: InboundCall): boolean {
     }
   }
 
-  // Check for short calls (< 60 seconds)
-  if (call.duration_seconds && call.duration_seconds < 60) {
+  // Check for very short calls (< 30 seconds) - reduced threshold since we now rely on outcome
+  if (call.duration_seconds && call.duration_seconds < 30) {
     return true;
   }
 
