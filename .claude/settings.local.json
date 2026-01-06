@@ -214,7 +214,8 @@
       "WebFetch(domain:vapi.ai)",
       "Bash(nx run:*)",
       "Bash(npx magicui-cli@latest add:*)",
-      "Bash(psql:*)"
+      "Bash(psql:*)",
+      "Bash(git -C /Users/taylorallen/Development/odis-ai-web status)"
     ],
     "deny": [],
     "ask": []

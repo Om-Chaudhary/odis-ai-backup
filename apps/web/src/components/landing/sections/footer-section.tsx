@@ -200,7 +200,7 @@ export const FooterSection = ({
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-muted-foreground text-sm">{copyright}</p>
             <a
-              href="#top"
+              href="#home"
               className="group text-muted-foreground inline-flex items-center gap-1.5 text-sm transition-colors duration-200 hover:text-slate-700"
             >
               Back to top

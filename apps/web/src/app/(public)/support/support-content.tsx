@@ -2,8 +2,13 @@
 
 import { useEffect } from "react";
 import { usePostHog } from "posthog-js/react";
-import Navigation from "~/components/layout/navigation";
-import Footer from "~/components/layout/footer";
+import {
+  MarketingLayout,
+  PageHero,
+  SectionContainer,
+  SectionHeader,
+  CTASection,
+} from "~/components/marketing";
 import FAQ from "~/components/marketing/faq";
 import { useDeviceDetection } from "~/hooks/useDeviceDetection";
 import {
@@ -11,12 +16,12 @@ import {
   MessageCircle,
   Video,
   FileText,
-  HelpCircle,
   Mail,
   Phone,
   Settings,
   Shield,
   Zap,
+  ExternalLink,
 } from "lucide-react";
 import {
   Card,
@@ -26,6 +31,7 @@ import {
   CardTitle,
 } from "@odis-ai/shared/ui/card";
 import Link from "next/link";
+import { Button } from "@odis-ai/shared/ui/button";
 
 const supportCategories = [
   {
@@ -41,6 +47,7 @@ const supportCategories = [
     ],
     color: "text-blue-600",
     bgColor: "bg-blue-50",
+    href: "/demo",
   },
   {
     icon: Settings,
@@ -55,6 +62,7 @@ const supportCategories = [
     ],
     color: "text-purple-600",
     bgColor: "bg-purple-50",
+    href: "/integrations",
   },
   {
     icon: Zap,
@@ -69,6 +77,7 @@ const supportCategories = [
     ],
     color: "text-teal-600",
     bgColor: "bg-teal-50",
+    href: "/features",
   },
   {
     icon: Shield,
@@ -83,6 +92,7 @@ const supportCategories = [
     ],
     color: "text-green-600",
     bgColor: "bg-green-50",
+    href: "/security",
   },
   {
     icon: FileText,
@@ -97,6 +107,7 @@ const supportCategories = [
     ],
     color: "text-orange-600",
     bgColor: "bg-orange-50",
+    href: "/contact",
   },
   {
     icon: Video,
@@ -111,6 +122,7 @@ const supportCategories = [
     ],
     color: "text-red-600",
     bgColor: "bg-red-50",
+    href: "/demo",
   },
 ];
 
@@ -122,6 +134,8 @@ const contactOptions = [
     action: "Start Chat",
     color: "text-teal-600",
     bgColor: "bg-teal-50",
+    hoverBg: "hover:bg-teal-100",
+    href: "mailto:support@odis.ai?subject=Support%20Chat%20Request",
   },
   {
     icon: Mail,
@@ -130,14 +144,18 @@ const contactOptions = [
     action: "Send Email",
     color: "text-blue-600",
     bgColor: "bg-blue-50",
+    hoverBg: "hover:bg-blue-100",
+    href: "mailto:support@odis.ai",
   },
   {
     icon: Phone,
     title: "Phone Support",
-    description: "Call us at 1-800-ODIS-AI for immediate assistance",
+    description: "Call us at (925) 678-5640 for immediate assistance",
     action: "Call Now",
     color: "text-green-600",
     bgColor: "bg-green-50",
+    hoverBg: "hover:bg-green-100",
+    href: "tel:+19256785640",
   },
 ];
 
@@ -155,62 +173,44 @@ export default function SupportContent() {
   }, [posthog, deviceInfo]);
 
   return (
-    <main className="relative">
-      <div className="dotted-background" />
-      <Navigation />
-
+    <MarketingLayout navbar={{ variant: "transparent" }}>
       {/* Hero Section */}
-      <section className="relative px-4 pt-32 pb-16 sm:px-6 sm:pt-40">
-        <div className="mx-auto max-w-7xl text-center">
-          <div className="mb-6 inline-flex items-center justify-center rounded-full bg-[#31aba3]/10 px-4 py-2">
-            <HelpCircle className="mr-2 h-5 w-5 text-[#31aba3]" />
-            <span className="text-sm font-semibold text-[#31aba3]">
-              Support Hub
-            </span>
-          </div>
-          <h1 className="font-display mb-6 text-4xl font-bold text-gray-900 sm:text-5xl md:text-6xl lg:text-7xl">
-            How can we help you today?
-          </h1>
-          <p className="mx-auto max-w-3xl font-serif text-lg leading-relaxed text-gray-700 sm:text-xl">
-            Find answers, learn best practices, and get the support you need to
-            make the most of OdisAI for your veterinary practice.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        badge="Support Hub"
+        title="How can we help you today?"
+        subtitle="Find answers, learn best practices, and get the support you need to make the most of OdisAI for your veterinary practice."
+        backgroundVariant="hero-glow"
+        breadcrumbs={[
+          { label: "Home", href: "/" },
+          { label: "Support", href: "/support" },
+        ]}
+      />
 
       {/* Support Categories */}
-      <section
-        className="mt-8 px-4 sm:mt-12 sm:px-6 md:mt-16"
-        aria-label="Support categories"
-      >
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-12 text-center">
-            <h2 className="font-display mb-4 text-3xl font-bold text-gray-900 sm:text-4xl">
-              Browse by Category
-            </h2>
-            <p className="mx-auto max-w-2xl font-serif text-gray-600">
-              Explore our comprehensive resources organized by topic
-            </p>
-          </div>
+      <SectionContainer backgroundVariant="cool-blue" padding="default">
+        <SectionHeader
+          title="Browse by Category"
+          subtitle="Explore our comprehensive resources organized by topic"
+          align="center"
+        />
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {supportCategories.map((category, index) => {
-              const Icon = category.icon;
-              return (
-                <Card
-                  key={index}
-                  className="group cursor-pointer border-gray-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-                >
+        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {supportCategories.map((category, index) => {
+            const Icon = category.icon;
+            return (
+              <Link key={index} href={category.href}>
+                <Card className="group h-full border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
                   <CardHeader>
                     <div
                       className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg ${category.bgColor}`}
                     >
                       <Icon className={`h-6 w-6 ${category.color}`} />
                     </div>
-                    <CardTitle className="text-xl text-gray-900">
+                    <CardTitle className="flex items-center gap-2 text-xl text-slate-900">
                       {category.title}
+                      <ExternalLink className="h-4 w-4 opacity-0 transition-opacity group-hover:opacity-50" />
                     </CardTitle>
-                    <CardDescription className="text-gray-600">
+                    <CardDescription className="text-slate-600">
                       {category.description}
                     </CardDescription>
                   </CardHeader>
@@ -219,10 +219,10 @@ export default function SupportContent() {
                       {category.topics.map((topic, topicIndex) => (
                         <li
                           key={topicIndex}
-                          className="flex items-start text-sm text-gray-600"
+                          className="flex items-start text-sm text-slate-600"
                         >
-                          <span className="mt-1.5 mr-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#31aba3]" />
-                          <span className="transition-colors group-hover:text-[#31aba3]">
+                          <span className="mt-1.5 mr-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-teal-500" />
+                          <span className="transition-colors group-hover:text-teal-600">
                             {topic}
                           </span>
                         </li>
@@ -230,109 +230,71 @@ export default function SupportContent() {
                     </ul>
                   </CardContent>
                 </Card>
-              );
-            })}
-          </div>
+              </Link>
+            );
+          })}
         </div>
-      </section>
+      </SectionContainer>
 
       {/* Contact Support Section */}
-      <section
-        className="mt-8 px-4 sm:mt-12 sm:px-6 md:mt-16"
-        aria-label="Contact support"
-      >
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-12 text-center">
-            <div className="mb-6 inline-flex items-center justify-center rounded-full bg-[#31aba3]/10 px-4 py-2">
-              <MessageCircle className="mr-2 h-5 w-5 text-[#31aba3]" />
-              <span className="text-sm font-semibold text-[#31aba3]">
-                Get in Touch
-              </span>
-            </div>
-            <h2 className="font-display mb-4 text-3xl font-bold text-gray-900 sm:text-4xl">
-              Need Direct Support?
-            </h2>
-            <p className="mx-auto max-w-2xl font-serif text-gray-600">
-              Our team is available 24/7 to help you with any questions or
-              issues
-            </p>
-          </div>
+      <SectionContainer backgroundVariant="subtle-warm" padding="default">
+        <SectionHeader
+          badge="Get in Touch"
+          title="Need Direct Support?"
+          subtitle="Our team is available to help you with any questions or issues"
+          align="center"
+        />
 
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {contactOptions.map((option, index) => {
-              const Icon = option.icon;
-              return (
-                <Card
-                  key={index}
-                  className="border-gray-200 text-center transition-all duration-300 hover:shadow-lg"
-                >
-                  <CardHeader className="items-center">
-                    <div
-                      className={`mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full ${option.bgColor}`}
-                    >
-                      <Icon className={`h-8 w-8 ${option.color}`} />
-                    </div>
-                    <CardTitle className="text-xl text-gray-900">
-                      {option.title}
-                    </CardTitle>
-                    <CardDescription className="text-gray-600">
-                      {option.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <button
-                      className={`w-full rounded-lg ${option.bgColor} px-4 py-2 font-medium ${option.color} transition-all hover:scale-105`}
-                    >
-                      {option.action}
-                    </button>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {contactOptions.map((option, index) => {
+            const Icon = option.icon;
+            return (
+              <Card
+                key={index}
+                className="border-slate-200 text-center transition-all duration-300 hover:shadow-lg"
+              >
+                <CardHeader className="items-center">
+                  <div
+                    className={`mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full ${option.bgColor}`}
+                  >
+                    <Icon className={`h-8 w-8 ${option.color}`} />
+                  </div>
+                  <CardTitle className="text-xl text-slate-900">
+                    {option.title}
+                  </CardTitle>
+                  <CardDescription className="text-slate-600">
+                    {option.description}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    asChild
+                    variant="ghost"
+                    className={`w-full rounded-lg ${option.bgColor} ${option.hoverBg} font-medium ${option.color} transition-all`}
+                  >
+                    <a href={option.href}>{option.action}</a>
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
-      </section>
+      </SectionContainer>
 
       {/* FAQ Section */}
-      <section className="mt-8 sm:mt-12 md:mt-16" aria-label="FAQ">
+      <SectionContainer backgroundVariant="cool-blue" padding="default">
         <FAQ />
-      </section>
+      </SectionContainer>
 
-      {/* Additional Resources */}
-      <section
-        className="mt-8 px-4 sm:mt-12 sm:px-6 md:mt-16"
-        aria-label="Additional resources"
-      >
-        <div className="mx-auto max-w-7xl">
-          <div className="rounded-2xl bg-gradient-to-br from-[#31aba3]/10 to-[#31aba3]/5 p-8 text-center sm:p-12">
-            <h2 className="font-display mb-4 text-3xl font-bold text-gray-900 sm:text-4xl">
-              Still have questions?
-            </h2>
-            <p className="mx-auto mb-8 max-w-2xl font-serif text-gray-600">
-              Can&apos;t find what you&apos;re looking for? Our support team is
-              ready to help you get the answers you need.
-            </p>
-            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link
-                href="/contact"
-                className="inline-flex items-center rounded-lg bg-[#31aba3] px-6 py-3 font-semibold text-white transition-all hover:scale-105 hover:bg-[#2a9589]"
-              >
-                Contact Support
-              </Link>
-              <Link
-                href="/blog"
-                className="inline-flex items-center rounded-lg border-2 border-[#31aba3] px-6 py-3 font-semibold text-[#31aba3] transition-all hover:scale-105 hover:bg-[#31aba3]/5"
-              >
-                Visit Blog
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <footer className="mt-8 sm:mt-12 md:mt-16">
-        <Footer />
-      </footer>
-    </main>
+      {/* CTA Section */}
+      <CTASection
+        title="Still have questions?"
+        subtitle="Can't find what you're looking for? Our support team is ready to help you get the answers you need."
+        primaryCTAText="Contact Support"
+        primaryCTAHref="/contact"
+        secondaryCTAText="Visit Blog"
+        secondaryCTAHref="/blog"
+      />
+    </MarketingLayout>
   );
 }
