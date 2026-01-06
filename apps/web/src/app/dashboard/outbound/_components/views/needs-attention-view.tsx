@@ -62,7 +62,7 @@ export function NeedsAttentionView({
       onCloseRightPanel={onClosePanel}
       leftPanel={
         <>
-          <OutboundHeader {...headerProps} showDateNav={true} />
+          <OutboundHeader {...headerProps} showDateNav={false} />
           <PageContent>
             <OutboundNeedsAttentionTable
               cases={cases}

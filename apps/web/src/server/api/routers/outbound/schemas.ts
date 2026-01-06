@@ -67,7 +67,7 @@ export const attentionTypeEnum = z.enum([
 
 export const attentionSeverityEnum = z.enum(["routine", "urgent", "critical"]);
 
-export const viewModeEnum = z.enum(["all", "needs_review", "needs_attention"]);
+export const viewModeEnum = z.enum(["all", "needs_attention"]);
 
 // =============================================================================
 // Input Schemas

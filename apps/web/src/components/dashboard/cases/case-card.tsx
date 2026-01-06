@@ -432,7 +432,6 @@ export function CaseCard({
                     "h-2 w-2 shrink-0 rounded-full",
                     getStatusColor(workflowStatus),
                   )}
-                  title={`Status: ${workflowStatus.replace("_", " ")}`}
                 />
               </div>
               <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
@@ -708,7 +707,6 @@ export function CaseCard({
                 className="transition-smooth shrink-0 text-slate-400 hover:bg-[#31aba3]/5 hover:text-[#31aba3]"
                 onClick={handleEmailClick}
                 disabled={isLoadingEmail || !hasValidContact(effectiveEmail)}
-                title="Send Discharge Email"
               >
                 {isLoadingEmail ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

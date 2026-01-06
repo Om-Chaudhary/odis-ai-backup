@@ -233,6 +233,47 @@ export const getStatsRouter = createTRPCRouter({
         });
       }
 
+      // Separate query for needs_attention count (no date filtering)
+      // This matches the behavior of the needs_attention view which shows all flagged cases
+      const { data: allAttentionCases, error: attentionError } =
+        await ctx.supabase
+          .from("cases")
+          .select(
+            `
+            id,
+            scheduled_discharge_calls!inner (
+              attention_types,
+              metadata
+            )
+          `,
+          )
+          .in("user_id", clinicUserIds)
+          .not("scheduled_discharge_calls.attention_types", "is", null);
+
+      if (attentionError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to fetch attention stats: ${attentionError.message}`,
+        });
+      }
+
+      // Count needs_attention cases (excluding test calls if test mode disabled)
+      const needsAttentionCount = (allAttentionCases ?? []).filter((c) => {
+        const callData = (
+          c as unknown as {
+            scheduled_discharge_calls: Array<{
+              attention_types: string[] | null;
+              metadata: ScheduledCallMetadata | null;
+            }>;
+          }
+        ).scheduled_discharge_calls?.[0];
+        const isTestCall = callData?.metadata?.test_call === true;
+        if (!testModeEnabled && isTestCall) {
+          return false;
+        }
+        return (callData?.attention_types?.length ?? 0) > 0;
+      }).length;
+
       const now = new Date();
 
       // Count by derived status
@@ -242,7 +283,6 @@ export const getStatsRouter = createTRPCRouter({
       let inProgress = 0;
       let completed = 0;
       let failed = 0;
-      let needsAttention = 0;
 
       // Failure category counts
       const failureCategories = {
@@ -273,13 +313,6 @@ export const getStatsRouter = createTRPCRouter({
         const isTestCall = callData?.metadata?.test_call === true;
         if (!testModeEnabled && isTestCall) {
           continue;
-        }
-
-        // Check if flagged by AI (attention types present)
-        const hasAttentionTypes = (callData?.attention_types?.length ?? 0) > 0;
-        if (hasAttentionTypes) {
-          needsAttention++;
-          // Note: Severity breakdown tracking can be added here in the future if needed
         }
 
         // Aggregate call intelligence metrics from completed calls
@@ -424,7 +457,7 @@ export const getStatsRouter = createTRPCRouter({
         completed,
         failed,
         failureCategories,
-        needsAttention,
+        needsAttention: needsAttentionCount,
         total:
           pendingReview + scheduled + ready + inProgress + completed + failed,
         // Call intelligence analytics

@@ -91,7 +91,6 @@ export function PatientHeader({ caseData, onDelete }: PatientHeaderProps) {
             size="sm"
             className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 gap-1.5"
             onClick={() => setDeleteDialogOpen(true)}
-            title="Delete this case"
           >
             <Trash2 className="h-3.5 w-3.5" />
             Delete

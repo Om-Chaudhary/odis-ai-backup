@@ -132,7 +132,6 @@ export function CaseListItemCompact({
                   "transition-smooth mt-0.5 shrink-0 rounded p-0.5 hover:bg-slate-100",
                   toggleStarMutation.isPending && "opacity-50",
                 )}
-                title={caseData.is_starred ? "Remove star" : "Star this case"}
               >
                 <Star
                   className={cn(

@@ -291,11 +291,6 @@ export function SelectCasesStep({
                                 ? "bg-blue-500"
                                 : "bg-blue-100",
                             )}
-                            title={
-                              caseData.emailSent
-                                ? "Email sent"
-                                : "Email pending"
-                            }
                           >
                             {caseData.emailSent ? (
                               <CheckCircle className="h-3 w-3 text-white" />
@@ -312,9 +307,6 @@ export function SelectCasesStep({
                                 ? "bg-green-500"
                                 : "bg-green-100",
                             )}
-                            title={
-                              caseData.callSent ? "Call made" : "Call pending"
-                            }
                           >
                             {caseData.callSent ? (
                               <CheckCircle className="h-3 w-3 text-white" />

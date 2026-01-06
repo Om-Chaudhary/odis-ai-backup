@@ -474,10 +474,9 @@ export interface DischargeSummaryStats {
 /**
  * View mode for the outbound dashboard
  * - all: Default view showing all discharges
- * - needs_review: Cases missing phone or email contact info
  * - needs_attention: Cases flagged by AI with attention types
  */
-export type ViewMode = "all" | "needs_review" | "needs_attention";
+export type ViewMode = "all" | "needs_attention";
 
 /**
  * Failure category for filtering failed cases by specific reason

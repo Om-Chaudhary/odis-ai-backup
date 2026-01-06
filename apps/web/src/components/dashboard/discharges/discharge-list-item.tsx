@@ -411,7 +411,6 @@ export function DischargeListItem({
               ? "cursor-not-allowed opacity-50"
               : "cursor-pointer hover:shadow-sm",
           )}
-          title={callTooltip}
         >
           {/* Status section */}
           <div
@@ -453,7 +452,6 @@ export function DischargeListItem({
               ? "cursor-not-allowed opacity-50"
               : "cursor-pointer hover:shadow-sm",
           )}
-          title={emailTooltip}
         >
           {/* Status section */}
           <div
@@ -631,10 +629,7 @@ export function DischargeListItem({
 
             {/* Not Ready Warning - Only show when NOT ready */}
             {!caseData.is_ready_for_discharge && (
-              <div
-                className="flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2 py-1"
-                title={`Missing: ${caseData.missing_requirements.join(", ")}`}
-              >
+              <div className="flex items-center gap-1.5 rounded-md border border-amber-200 bg-amber-50 px-2 py-1">
                 <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
                 <span className="text-xs font-medium text-amber-700">
                   Not Ready

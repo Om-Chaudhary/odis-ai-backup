@@ -155,9 +155,6 @@ export function CaseListCard({
                       "transition-smooth mt-0.5 shrink-0 rounded p-1 hover:bg-slate-100",
                       toggleStarMutation.isPending && "opacity-50",
                     )}
-                    title={
-                      caseData.is_starred ? "Remove star" : "Star this case"
-                    }
                   >
                     <Star
                       className={cn(

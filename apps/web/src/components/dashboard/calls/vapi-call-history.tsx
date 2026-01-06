@@ -347,7 +347,6 @@ export function VapiCallHistory() {
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7"
-                              title="View transcript"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 if (call.caseId) {
@@ -365,7 +364,6 @@ export function VapiCallHistory() {
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7"
-                              title="Play recording"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 window.open(call.recordingUrl, "_blank");
@@ -379,7 +377,6 @@ export function VapiCallHistory() {
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7"
-                              title="View case"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 router.push(

@@ -228,14 +228,7 @@ export function DischargeStatusIndicator({
         : "";
 
       return (
-        <div
-          className="flex items-center gap-1.5 text-xs"
-          title={
-            completionTime
-              ? `${endReasonLabel || "Completed"} ${format(new Date(completionTime), "MMM d, yyyy 'at' h:mm a")}`
-              : undefined
-          }
-        >
+        <div className="flex items-center gap-1.5 text-xs">
           <EndReasonIcon className={`h-3.5 w-3.5 shrink-0 ${iconColor}`} />
           <span className={textColor}>
             {endReasonLabel || "Call completed"}
@@ -256,14 +249,7 @@ export function DischargeStatusIndicator({
 
     // For emails, keep the original display
     return (
-      <div
-        className="flex items-center gap-1.5 text-xs"
-        title={
-          completionTime
-            ? `Sent ${format(new Date(completionTime), "MMM d, yyyy 'at' h:mm a")}`
-            : undefined
-        }
-      >
+      <div className="flex items-center gap-1.5 text-xs">
         <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600" />
         <span className="text-slate-700">
           Email sent
@@ -281,14 +267,7 @@ export function DischargeStatusIndicator({
     const scheduledTime = formatScheduledTime(latest.scheduled_for);
 
     return (
-      <div
-        className="flex items-center gap-1.5 text-xs"
-        title={
-          latest.scheduled_for
-            ? `Scheduled for ${format(new Date(latest.scheduled_for), "MMM d, yyyy 'at' h:mm a")}`
-            : undefined
-        }
-      >
+      <div className="flex items-center gap-1.5 text-xs">
         {isQueued ? (
           <Clock className="h-3.5 w-3.5 shrink-0 text-amber-500" />
         ) : (

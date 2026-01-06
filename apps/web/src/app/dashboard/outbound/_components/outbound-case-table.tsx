@@ -365,9 +365,6 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                         "rounded p-1 transition-all hover:bg-slate-100",
                         togglingStarCaseIds?.has(caseItem.id) && "opacity-50",
                       )}
-                      title={
-                        caseItem.isStarred ? "Remove star" : "Star this case"
-                      }
                     >
                       <Star
                         className={cn(

@@ -17,7 +17,6 @@ import {
 } from "./bulk-operation-context";
 import { useOutboundData, useOutboundMutations } from "../_hooks";
 
-import { NeedsReviewView } from "./views/needs-review-view";
 import { NeedsAttentionView } from "./views/needs-attention-view";
 import { AllDischargesView } from "./views/all-discharges-view";
 
@@ -39,9 +38,7 @@ function OutboundDashboardInner() {
   const [viewMode, setViewMode] = useQueryState("view", {
     defaultValue: "all" as ViewMode,
     parse: (v) =>
-      (["all", "needs_review", "needs_attention"].includes(v)
-        ? v
-        : "all") as ViewMode,
+      (["all", "needs_attention"].includes(v) ? v : "all") as ViewMode,
   });
 
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
@@ -277,12 +274,6 @@ function OutboundDashboardInner() {
     }
   }, [cases, selectedCase?.id]);
 
-  // Cases needing review
-  const needsReviewCases = useMemo(
-    () => cases.filter((c) => !c.owner.phone || !c.owner.email),
-    [cases],
-  );
-
   // Cases needing attention
   const needsAttentionCases = useMemo(() => {
     const filtered = cases.filter((c) => c.needsAttention === true);
@@ -362,15 +353,6 @@ function OutboundDashboardInner() {
       }
     },
     [cases, selectedCase, handleSelectCase],
-  );
-
-  const handleUpdateContact = useCallback(
-    async (_caseId: string, field: "phone" | "email", _value: string) => {
-      // TODO: Implement API call to update contact
-      toast.success(`Updated ${field} for case`);
-      void refetch();
-    },
-    [refetch],
   );
 
   // Bulk selection handlers
@@ -474,18 +456,7 @@ function OutboundDashboardInner() {
 
       {/* Main Content Area */}
       <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
-        {viewMode === "needs_review" ? (
-          <NeedsReviewView
-            {...headerProps}
-            cases={needsReviewCases}
-            page={page}
-            pageSize={pageSize}
-            total={needsReviewCases.length}
-            onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
-            onUpdateContact={handleUpdateContact}
-          />
-        ) : viewMode === "needs_attention" ? (
+        {viewMode === "needs_attention" ? (
           <NeedsAttentionView
             {...headerProps}
             cases={needsAttentionCases}

@@ -240,7 +240,6 @@ export function EmailHistory() {
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7"
-                              title="View case"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 router.push(
