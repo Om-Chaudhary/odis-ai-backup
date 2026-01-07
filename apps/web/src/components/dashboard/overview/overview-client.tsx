@@ -7,6 +7,7 @@ import { ValueSummary } from "./value-summary";
 import { AttentionItems } from "./attention-items";
 import { QuickLinks } from "./quick-links";
 import { OverviewSkeleton } from "./overview-skeleton";
+import { AfterhourAgentStats } from "./afterhours-agent-stats";
 import type { DateRangeOption } from "./types";
 
 export function OverviewClient() {
@@ -46,6 +47,9 @@ export function OverviewClient() {
         period={overview.period}
         callsAnswered={overview.value.callsAnswered}
       />
+
+      {/* After-hours Agent Stats */}
+      <AfterhourAgentStats />
 
       {/* Attention Items - Only show if there are flagged items */}
       {overview.flaggedItems.length > 0 && (
