@@ -250,6 +250,25 @@ function deriveDeliveryStatus(
 }
 
 /**
+ * Check if attention types contain actionable items that warrant being shown in needs attention
+ * Only show cases with pill (medication_question), phone (callback_request), or calendar (appointment_needed) icons
+ * Exclude cases with only triangle (health_concern) or octagon (emergency_signs) icons
+ */
+function hasActionableAttentionTypes(attentionTypes: string[] | null): boolean {
+  if (!attentionTypes || attentionTypes.length === 0) {
+    return false;
+  }
+
+  const actionableTypes = [
+    "medication_question",    // Pill icon
+    "callback_request",       // Phone icon
+    "appointment_needed",     // Calendar icon
+  ];
+
+  return attentionTypes.some(type => actionableTypes.includes(type));
+}
+
+/**
  * Categorize a failure based on ended_reason and statuses
  */
 function categorizeFailure(
@@ -650,7 +669,7 @@ export const listCasesRouter = createTRPCRouter({
           attentionSeverity: scheduledCall?.attention_severity ?? null,
           attentionFlaggedAt: scheduledCall?.attention_flagged_at ?? null,
           attentionSummary: scheduledCall?.attention_summary ?? null,
-          needsAttention: (scheduledCall?.attention_types?.length ?? 0) > 0,
+          needsAttention: hasActionableAttentionTypes(scheduledCall?.attention_types ?? null),
           // New structured output intelligence fields
           callOutcomeData: scheduledCall?.call_outcome_data ?? null,
           petHealthData: scheduledCall?.pet_health_data ?? null,
