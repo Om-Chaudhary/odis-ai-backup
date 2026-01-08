@@ -7,6 +7,7 @@ import {
   LogOut,
   PhoneIncoming,
   PhoneOutgoing,
+  CreditCard,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@odis-ai/shared/ui/avatar";
 import {
@@ -223,6 +224,16 @@ export function AppSidebar({ user, profile, clinicSlug }: AppSidebarProps) {
                       <Settings className="mr-2 h-4 w-4" />
                       Settings
                     </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a
+                      href="https://billing.stripe.com/p/login/eVqbJ0ctPemHbrq7w25sA00"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Manage Billing
+                    </a>
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />

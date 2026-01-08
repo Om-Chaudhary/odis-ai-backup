@@ -120,7 +120,15 @@ export default function ProfileContent() {
                   Pro Plan - $29/month
                 </p>
               </div>
-              <Button variant="outline">Manage Subscription</Button>
+              <Button variant="outline" asChild>
+                <a
+                  href="https://billing.stripe.com/p/login/eVqbJ0ctPemHbrq7w25sA00"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Manage Subscription
+                </a>
+              </Button>
             </div>
             <Separator />
             <div className="flex items-center justify-between">
