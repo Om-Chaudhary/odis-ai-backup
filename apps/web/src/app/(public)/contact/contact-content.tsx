@@ -2,7 +2,7 @@
 
 import { useRef, useActionState } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
-import { Mail, Phone, MapPin, Clock, CheckCircle, Loader2 } from "lucide-react";
+import { Mail, MapPin, Clock, CheckCircle, Loader2 } from "lucide-react";
 import {
   MarketingLayout,
   PageHero,
@@ -23,12 +23,6 @@ const contactInfo = [
     label: "Email",
     value: "hello@odis.ai",
     href: "mailto:hello@odis.ai",
-  },
-  {
-    icon: Phone,
-    label: "Phone",
-    value: "(925) 678-5640",
-    href: "tel:+19256785640",
   },
   {
     icon: MapPin,

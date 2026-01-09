@@ -3,12 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, Phone, X } from "lucide-react";
+import { Calendar, X } from "lucide-react";
 import { usePostHog } from "posthog-js/react";
 import { cn } from "@odis-ai/shared/util";
-
-const DEMO_PHONE_NUMBER = "(925) 678-5640";
-const DEMO_PHONE_TEL = "tel:+19256785640";
 
 export function StickyMobileCTA() {
   const posthog = usePostHog();
@@ -29,13 +26,6 @@ export function StickyMobileCTA() {
   const handleDemoClick = () => {
     posthog?.capture("schedule_demo_clicked", {
       location: "sticky_mobile_cta",
-    });
-  };
-
-  const handlePhoneClick = () => {
-    posthog?.capture("demo_phone_clicked", {
-      location: "sticky_mobile_cta",
-      phone_number: DEMO_PHONE_NUMBER,
     });
   };
 
@@ -70,13 +60,12 @@ export function StickyMobileCTA() {
               <X className="h-3.5 w-3.5" />
             </button>
 
-            <div className="flex items-center gap-3">
-              {/* Primary CTA - Schedule Demo */}
+            <div className="flex justify-center">
               <Link
                 href="/demo"
                 onClick={handleDemoClick}
                 className={cn(
-                  "flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-3",
+                  "flex items-center justify-center gap-2 rounded-full px-6 py-3",
                   "bg-teal-600 text-white",
                   "text-sm font-medium",
                   "transition-all duration-200",
@@ -86,22 +75,6 @@ export function StickyMobileCTA() {
                 <Calendar className="h-4 w-4" />
                 <span>Schedule Demo</span>
               </Link>
-
-              {/* Secondary CTA - Call */}
-              <a
-                href={DEMO_PHONE_TEL}
-                onClick={handlePhoneClick}
-                className={cn(
-                  "flex items-center justify-center gap-2 rounded-full px-4 py-3",
-                  "bg-slate-100 text-slate-700",
-                  "text-sm font-medium",
-                  "transition-all duration-200",
-                  "active:scale-[0.98]",
-                )}
-              >
-                <Phone className="h-4 w-4" />
-                <span>Call</span>
-              </a>
             </div>
 
             {/* Trust message */}

@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
+import { Calendar } from "lucide-react";
 import { LightRays } from "@odis-ai/shared/ui/light-rays";
 import { ProcessAnimation } from "./process-animation";
-import { DemoPhoneCTA } from "./demo-phone-cta";
 
 export default function HeroTwoColumn() {
   return (
@@ -54,8 +55,14 @@ export default function HeroTwoColumn() {
               and retain clients without the paperwork.
             </p>
 
-            {/* Primary CTA - Demo Phone */}
-            <DemoPhoneCTA />
+            {/* Primary CTA - Schedule Demo */}
+            <Link
+              href="/demo"
+              className="inline-flex items-center gap-3 rounded-full bg-gradient-to-r from-teal-600 to-emerald-600 px-8 py-4 text-lg font-semibold text-white shadow-lg shadow-teal-500/25 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-teal-500/30"
+            >
+              <Calendar className="h-5 w-5" />
+              Schedule a Demo
+            </Link>
 
             {/* Social Proof / Trust */}
             <p className="text-sm text-slate-500">

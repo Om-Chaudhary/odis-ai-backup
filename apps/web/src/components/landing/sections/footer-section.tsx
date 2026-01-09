@@ -50,7 +50,6 @@ const defaultSections: FooterSection[] = [
       { label: "Book a Demo", href: "/demo" },
       { label: "Contact Us", href: "/contact" },
       { label: "hello@odis.ai", href: "mailto:hello@odis.ai" },
-      { label: "(925) 678-5640", href: "tel:+19256785640" },
     ],
   },
   {

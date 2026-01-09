@@ -42,12 +42,11 @@ export interface CTASectionProps {
   secondaryCTAHref?: string;
   /**
    * Whether to show the phone CTA
-   * @default true
+   * @default false
    */
   showPhoneCTA?: boolean;
   /**
    * Phone number for the phone CTA
-   * @default "(925) 678-5640"
    */
   phoneNumber?: string;
   /**
@@ -100,8 +99,8 @@ export function CTASection({
   primaryCTAHref = "/demo",
   secondaryCTAText,
   secondaryCTAHref,
-  showPhoneCTA = true,
-  phoneNumber = "(925) 678-5640",
+  showPhoneCTA = false,
+  phoneNumber,
   backgroundVariant = "accent-cta",
   className,
   id,
@@ -117,7 +116,9 @@ export function CTASection({
   };
 
   // Format phone number for tel: link
-  const phoneHref = `tel:+1${phoneNumber.replace(/\D/g, "")}`;
+  const phoneHref = phoneNumber
+    ? `tel:+1${phoneNumber.replace(/\D/g, "")}`
+    : "";
 
   return (
     <section

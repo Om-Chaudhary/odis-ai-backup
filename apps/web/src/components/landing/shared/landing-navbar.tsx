@@ -25,8 +25,6 @@ const navigationLinks = [
   { name: "Testimonials", link: "#testimonials" },
 ];
 
-const SCROLL_THRESHOLD = 100;
-
 export const LandingNavbar = () => {
   const posthog = usePostHog();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -73,7 +71,8 @@ export const LandingNavbar = () => {
   useEffect(() => {
     const handleScroll = () => {
       scrollYRef.current = window.scrollY;
-      setIsVisible(scrollYRef.current > SCROLL_THRESHOLD);
+      // Show navbar only after scrolling past the full viewport height (100vh)
+      setIsVisible(scrollYRef.current > window.innerHeight);
     };
 
     // Check initial scroll position

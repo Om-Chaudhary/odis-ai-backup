@@ -49,7 +49,6 @@ export function StructuredData() {
         ],
         contactPoint: {
           "@type": "ContactPoint",
-          telephone: "+1-925-678-5640",
           contactType: "sales",
           email: "hello@odis.ai",
           availableLanguage: "English",

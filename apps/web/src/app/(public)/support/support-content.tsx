@@ -17,7 +17,6 @@ import {
   Video,
   FileText,
   Mail,
-  Phone,
   Settings,
   Shield,
   Zap,
@@ -146,16 +145,6 @@ const contactOptions = [
     bgColor: "bg-blue-50",
     hoverBg: "hover:bg-blue-100",
     href: "mailto:support@odis.ai",
-  },
-  {
-    icon: Phone,
-    title: "Phone Support",
-    description: "Call us at (925) 678-5640 for immediate assistance",
-    action: "Call Now",
-    color: "text-green-600",
-    bgColor: "bg-green-50",
-    hoverBg: "hover:bg-green-100",
-    href: "tel:+19256785640",
   },
 ];
 

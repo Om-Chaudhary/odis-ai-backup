@@ -9,13 +9,7 @@ import { Calendar, Phone } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
 import { SectionBackground } from "../ui/section-background";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
-import {
-  trackDemoPhoneClick,
-  trackScheduleDemoClick,
-} from "../shared/landing-analytics";
-
-const DEMO_PHONE_NUMBER = "(925) 678-5640";
-const DEMO_PHONE_TEL = "tel:+19256785640";
+import { trackScheduleDemoClick } from "../shared/landing-analytics";
 
 // Animation variants - consistent with hero
 const fadeUpVariant = {
@@ -36,10 +30,6 @@ export function PricingSection() {
     (
       sectionVisibilityRef as React.MutableRefObject<HTMLElement | null>
     ).current = el;
-  };
-
-  const handleDemoPhoneClick = () => {
-    trackDemoPhoneClick(posthog, "cta-section", DEMO_PHONE_NUMBER);
   };
 
   const handleScheduleDemoClick = () => {
@@ -104,14 +94,12 @@ export function PricingSection() {
                   Experience OdisAI
                 </h3>
                 <p className="text-base text-slate-600">
-                  Schedule a personalized demo or call our demo line to hear
-                  Odis in action right now.
+                  Schedule a personalized demo to see Odis in action.
                 </p>
               </div>
 
-              {/* CTA Buttons */}
-              <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
-                {/* Primary CTA - Schedule Demo */}
+              {/* CTA Button */}
+              <div className="flex justify-center">
                 <Link
                   href="/demo"
                   onClick={handleScheduleDemoClick}
@@ -126,22 +114,6 @@ export function PricingSection() {
                   <Calendar className="h-5 w-5" />
                   <span>Schedule a Demo</span>
                 </Link>
-
-                {/* Secondary CTA - Call Now */}
-                <a
-                  href={DEMO_PHONE_TEL}
-                  onClick={handleDemoPhoneClick}
-                  className={cn(
-                    "group inline-flex items-center justify-center gap-3 rounded-full px-8 py-4",
-                    "bg-white text-slate-700 ring-1 ring-slate-200",
-                    "text-lg font-semibold shadow-lg",
-                    "transition-all duration-300",
-                    "hover:scale-[1.02] hover:bg-slate-50",
-                  )}
-                >
-                  <Phone className="h-5 w-5" />
-                  <span>Call: {DEMO_PHONE_NUMBER}</span>
-                </a>
               </div>
             </div>
           </NeonGradientCard>

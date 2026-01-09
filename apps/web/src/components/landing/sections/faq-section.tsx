@@ -7,22 +7,10 @@ import {
   useInView,
   useReducedMotion,
 } from "framer-motion";
-import { usePostHog } from "posthog-js/react";
-import {
-  Plus,
-  Minus,
-  Phone,
-  MessageCircle,
-  HelpCircle,
-  Sparkles,
-} from "lucide-react";
+import { Plus, Minus, MessageCircle, HelpCircle } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
 import { SectionBackground } from "../ui/section-background";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
-import { trackDemoPhoneClick } from "../shared/landing-analytics";
-
-const DEMO_PHONE_NUMBER = "(925) 678-5640";
-const DEMO_PHONE_TEL = "tel:+19256785640";
 
 // Animation variants - consistent with hero
 const fadeUpVariant = {
@@ -100,7 +88,6 @@ export const FAQSection = ({
   title = "Frequently asked questions",
   faqs = defaultFAQs,
 }: FAQSectionProps) => {
-  const posthog = usePostHog();
   const sectionVisibilityRef = useSectionVisibility<HTMLElement>("faq");
   const localRef = useRef<HTMLElement>(null);
   const isInView = useInView(localRef, { once: true, margin: "-100px" });
@@ -113,10 +100,6 @@ export const FAQSection = ({
     (
       sectionVisibilityRef as React.MutableRefObject<HTMLElement | null>
     ).current = el;
-  };
-
-  const handleDemoPhoneClick = () => {
-    trackDemoPhoneClick(posthog, "faq-sidebar", DEMO_PHONE_NUMBER);
   };
 
   const transition = {
@@ -170,51 +153,11 @@ export const FAQSection = ({
                 initial="hidden"
                 animate={isInView ? "visible" : "hidden"}
                 transition={{ ...transition, delay: 0.45 }}
-                className="mb-6 flex items-center gap-3"
+                className="flex items-center gap-3"
               >
                 <div className="flex items-center gap-2 rounded-full bg-teal-50 px-3 py-1.5 text-xs font-medium text-teal-700">
                   <HelpCircle className="h-3.5 w-3.5" />
                   <span>{faqs.length} common questions</span>
-                </div>
-              </motion.div>
-
-              {/* Demo CTA Card */}
-              <motion.div
-                variants={fadeUpVariant}
-                initial="hidden"
-                animate={isInView ? "visible" : "hidden"}
-                transition={{ ...transition, delay: 0.5 }}
-                className="glass-card group relative overflow-hidden rounded-2xl p-5"
-              >
-                {/* Decorative gradient */}
-                <div className="absolute -top-10 -right-10 h-24 w-24 rounded-full bg-teal-500/10 blur-2xl transition-all duration-500 group-hover:scale-150 group-hover:bg-teal-500/20" />
-
-                <div className="relative">
-                  <div className="mb-3 flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-100">
-                      <Sparkles className="h-4 w-4 text-teal-600" />
-                    </div>
-                    <span className="text-sm font-medium text-slate-700">
-                      Try it yourself
-                    </span>
-                  </div>
-                  <p className="text-muted-foreground mb-4 text-sm">
-                    Call our demo line to experience OdisAI firsthand
-                  </p>
-                  <a
-                    href={DEMO_PHONE_TEL}
-                    onClick={handleDemoPhoneClick}
-                    className={cn(
-                      "inline-flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3",
-                      "bg-gradient-to-r from-teal-600 to-emerald-600",
-                      "text-sm font-semibold text-white shadow-lg shadow-teal-500/25",
-                      "transition-all duration-300",
-                      "hover:scale-[1.02] hover:shadow-xl hover:shadow-teal-500/30",
-                    )}
-                  >
-                    <Phone className="h-4 w-4" />
-                    {DEMO_PHONE_NUMBER}
-                  </a>
                 </div>
               </motion.div>
             </motion.div>

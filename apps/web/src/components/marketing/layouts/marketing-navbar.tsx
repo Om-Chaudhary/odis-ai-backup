@@ -157,14 +157,18 @@ export function MarketingNavbar({
   useEffect(() => {
     const handleScroll = () => {
       scrollYRef.current = window.scrollY;
-      setIsScrolled(scrollYRef.current > scrollThreshold);
+      // For transparent variant, use viewport height as threshold
+      // For other variants, use the configured scrollThreshold
+      const threshold =
+        variant === "transparent" ? window.innerHeight : scrollThreshold;
+      setIsScrolled(scrollYRef.current > threshold);
     };
 
     handleScroll();
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [scrollThreshold]);
+  }, [scrollThreshold, variant]);
 
   const handleLinkClick = (href: string, isAnchor?: boolean) => {
     setIsMobileMenuOpen(false);

@@ -577,6 +577,9 @@ export async function generateMetadata({
   };
 }
 
+// Disable static generation to avoid PostHog context issues during build
+export const dynamic = "force-dynamic";
+
 export default async function IntegrationPage({
   params,
 }: {
