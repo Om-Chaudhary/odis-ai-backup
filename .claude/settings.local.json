@@ -215,7 +215,11 @@
       "Bash(nx run:*)",
       "Bash(npx magicui-cli@latest add:*)",
       "Bash(psql:*)",
-      "Bash(git -C /Users/taylorallen/Development/odis-ai-web status)"
+      "Bash(git -C /Users/taylorallen/Development/odis-ai-web status)",
+      "mcp__nx-mcp__nx_docs",
+      "Bash(nx test:*)",
+      "Bash(nx run-many:*)",
+      "Bash(pnpm exec vitest:*)"
     ],
     "deny": [],
     "ask": []
