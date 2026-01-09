@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { usePostHog } from "posthog-js/react";
@@ -50,9 +50,18 @@ export function HeroSection() {
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
   const isPageLoaded = usePageLoaded(150); // Wait for page load + 150ms
   const shouldReduceMotion = useReducedMotion();
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
 
-  // Only start animations once page is loaded AND section is in view
-  const shouldAnimate = isPageLoaded && isInView;
+  // Fallback timeout - don't wait forever if image fails to load
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setIsImageLoaded(true);
+    }, 3000); // 3 second max wait
+    return () => clearTimeout(timeout);
+  }, []);
+
+  // Only start animations once page is loaded, section is in view, AND image is ready
+  const shouldAnimate = isPageLoaded && isInView && isImageLoaded;
 
   const handleScheduleDemoClick = () => {
     posthog?.capture("schedule_demo_clicked", {
@@ -70,7 +79,11 @@ export function HeroSection() {
       <img
         alt=""
         src="/images/hero/bg.png"
-        className="absolute inset-0 -z-20 size-full object-cover object-center opacity-70"
+        onLoad={() => setIsImageLoaded(true)}
+        className={cn(
+          "absolute inset-0 -z-20 size-full object-cover object-center transition-opacity duration-700",
+          isImageLoaded ? "opacity-70" : "opacity-0",
+        )}
       />
 
       {/* Primary gradient overlay - stronger on left for text area */}
