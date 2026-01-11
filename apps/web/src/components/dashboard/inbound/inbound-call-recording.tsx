@@ -9,8 +9,6 @@ import {
   Globe,
   Sparkles,
   Wand2,
-  Eye,
-  EyeOff,
 } from "lucide-react";
 import {
   Card,
@@ -20,7 +18,6 @@ import {
 } from "@odis-ai/shared/ui/card";
 import { AudioPlayer } from "@odis-ai/shared/ui/audio-player";
 import { Badge } from "@odis-ai/shared/ui/badge";
-import { Button } from "@odis-ai/shared/ui/button";
 import { cn } from "@odis-ai/shared/util";
 import { api } from "~/trpc/client";
 import { SyncedTranscript } from "../calls/synced-transcript";
@@ -69,7 +66,7 @@ export function InboundCallRecording({
   );
   const [hasAttemptedTranslation, setHasAttemptedTranslation] = useState(false);
   const [hasAttemptedCleanup, setHasAttemptedCleanup] = useState(false);
-  const [showRawTranscript, setShowRawTranscript] = useState(false);
+  const showRawTranscript = true; // Default to showing original VAPI transcript
 
   const { data: callData, isLoading } =
     api.inboundCalls.getInboundCallByVapiId.useQuery(

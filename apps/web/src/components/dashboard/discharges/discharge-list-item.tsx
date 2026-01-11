@@ -380,23 +380,6 @@ export function DischargeListItem({
     const callColors = getActionStatusColors(callStatus);
     const emailColors = getActionStatusColors(emailStatus);
 
-    // Determine tooltip messages
-    const callTooltip = !isReady
-      ? `Missing: ${caseData.missing_requirements.join(", ")}`
-      : !canCall
-        ? "Valid phone number required"
-        : testModeEnabled
-          ? `Test call to ${testContactPhone}`
-          : "Start discharge call";
-
-    const emailTooltip = !isReady
-      ? `Missing: ${caseData.missing_requirements.join(", ")}`
-      : !canEmail
-        ? "Valid email address required"
-        : testModeEnabled
-          ? `Test email to ${testContactEmail}`
-          : "Send discharge email";
-
     return (
       <div className="flex flex-col gap-1.5">
         {/* Call Button */}

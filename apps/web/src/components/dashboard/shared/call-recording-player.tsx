@@ -1,6 +1,5 @@
 "use client";
-import { useState } from "react";
-import { Phone, FileText, AlertCircle, Wand2, Eye, EyeOff } from "lucide-react";
+import { Phone, FileText, AlertCircle } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -8,8 +7,6 @@ import {
   CardTitle,
 } from "@odis-ai/shared/ui/card";
 import { AudioPlayer } from "@odis-ai/shared/ui/audio-player";
-import { Badge } from "@odis-ai/shared/ui/badge";
-import { Button } from "@odis-ai/shared/ui/button";
 import { cn } from "@odis-ai/shared/util";
 
 interface CallRecordingPlayerProps {
@@ -39,8 +36,6 @@ export function CallRecordingPlayer({
   durationSeconds,
   className,
 }: CallRecordingPlayerProps) {
-  const [showRawTranscript, setShowRawTranscript] = useState(false);
-
   // If no recording URL, show a message
   if (!recordingUrl) {
     return (
@@ -61,12 +56,8 @@ export function CallRecordingPlayer({
     );
   }
 
-  // Determine which transcript to display
-  const displayTranscript = showRawTranscript
-    ? transcript
-    : (cleanedTranscript ?? transcript);
-  const hasEnhancedTranscript =
-    !!cleanedTranscript && cleanedTranscript !== transcript;
+  // Determine which transcript to display (prefer cleaned version)
+  const displayTranscript = cleanedTranscript ?? transcript;
 
   return (
     <div className={cn("space-y-4", className)}>

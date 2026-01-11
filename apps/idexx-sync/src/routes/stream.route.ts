@@ -9,6 +9,51 @@ import { Router } from "express";
 import { scheduleLogger as logger } from "../lib/logger";
 import type { ScheduleSyncService } from "../services/schedule-sync.service";
 
+/**
+ * Check database for sync status when not found in active syncs
+ */
+async function getSyncStatusFromDb(
+  syncId: string,
+): Promise<{
+  found: boolean;
+  status?: string;
+  result?: Record<string, unknown>;
+}> {
+  try {
+    const { createServiceClient } = await import("@odis-ai/data-access/db");
+    const supabase = await createServiceClient();
+
+    const { data: sync } = await supabase
+      .from("schedule_syncs")
+      .select("id, status, stats, duration_ms, error_message, completed_at")
+      .eq("id", syncId)
+      .maybeSingle();
+
+    if (!sync) {
+      return { found: false };
+    }
+
+    return {
+      found: true,
+      status: sync.status,
+      result: {
+        syncId: sync.id,
+        success: sync.status === "completed",
+        stats: sync.stats,
+        durationMs: sync.duration_ms,
+        errors: sync.error_message ? [sync.error_message] : undefined,
+        completedAt: sync.completed_at,
+      },
+    };
+  } catch (error) {
+    logger.error("Failed to check sync status from database", {
+      syncId,
+      error,
+    });
+    return { found: false };
+  }
+}
+
 // Global registry to track active sync services by syncId
 const activeSyncs = new Map<string, ScheduleSyncService>();
 
@@ -39,7 +84,8 @@ export function createStreamRouter(): Router {
    * GET /stream/:syncId
    * Stream real-time sync progress events
    */
-  router.get("/stream/:syncId", (req: Request, res: Response) => {
+  // eslint-disable-next-line
+  router.get("/stream/:syncId", async (req: Request, res: Response) => {
     const { syncId } = req.params;
 
     if (!syncId) {
@@ -62,9 +108,77 @@ export function createStreamRouter(): Router {
     const syncService = activeSyncs.get(syncId);
 
     if (!syncService) {
-      logger.warn(`No active sync found for ${syncId}`);
+      logger.warn(`No active sync found for ${syncId}, checking database...`);
+
+      // Check database to see if sync completed before we connected
+      const dbStatus = await getSyncStatusFromDb(syncId);
+
+      if (dbStatus.found && dbStatus.status === "completed") {
+        // Sync already completed successfully - send completed event
+        logger.info(
+          `Sync ${syncId} already completed, sending result from database`,
+        );
+        res.write(
+          `data: ${JSON.stringify({ type: "completed", ...dbStatus.result })}\n\n`,
+        );
+        res.end();
+        return;
+      }
+
+      if (dbStatus.found && dbStatus.status === "failed") {
+        // Sync failed - send error with details
+        logger.warn(`Sync ${syncId} failed, sending error from database`);
+        const errors = dbStatus.result?.errors as string[] | undefined;
+        res.write(
+          `data: ${JSON.stringify({ type: "error", message: errors?.[0] ?? "Sync failed" })}\n\n`,
+        );
+        res.end();
+        return;
+      }
+
+      if (dbStatus.found && dbStatus.status === "in_progress") {
+        // Sync is in progress but not in activeSyncs - this is a transient state
+        // Wait briefly and retry
+        logger.info(
+          `Sync ${syncId} is in_progress in DB but not in memory, waiting...`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        const retryService = activeSyncs.get(syncId);
+        if (!retryService) {
+          // Still not available, check DB again
+          const retryStatus = await getSyncStatusFromDb(syncId);
+          if (retryStatus.found && retryStatus.status === "completed") {
+            res.write(
+              `data: ${JSON.stringify({ type: "completed", ...retryStatus.result })}\n\n`,
+            );
+            res.end();
+            return;
+          }
+
+          // Give up and report as completed check
+          res.write(
+            `data: ${JSON.stringify({ type: "error", message: "Sync completed before stream connected. Check dashboard for results." })}\n\n`,
+          );
+          res.end();
+          return;
+        }
+        // Fall through to use retryService
+      } else {
+        // Sync not found at all
+        res.write(
+          `data: ${JSON.stringify({ type: "error", message: "Sync not found" })}\n\n`,
+        );
+        res.end();
+        return;
+      }
+    }
+
+    // Use the sync service (original or from retry)
+    const service = activeSyncs.get(syncId) ?? syncService;
+    if (!service) {
       res.write(
-        `data: ${JSON.stringify({ type: "error", message: "Sync not found or already completed" })}\n\n`,
+        `data: ${JSON.stringify({ type: "error", message: "Sync service unavailable" })}\n\n`,
       );
       res.end();
       return;
@@ -99,20 +213,20 @@ export function createStreamRouter(): Router {
     };
 
     // Attach listeners
-    syncService.on("phase", onPhase);
-    syncService.on("progress", onProgress);
-    syncService.on("date_completed", onDateCompleted);
-    syncService.on("completed", onCompleted);
+    service.on("phase", onPhase);
+    service.on("progress", onProgress);
+    service.on("date_completed", onDateCompleted);
+    service.on("completed", onCompleted);
 
     // Handle client disconnect
     req.on("close", () => {
       logger.info(`SSE stream closed for sync ${syncId}`);
 
       // Remove listeners
-      syncService.off("phase", onPhase);
-      syncService.off("progress", onProgress);
-      syncService.off("date_completed", onDateCompleted);
-      syncService.off("completed", onCompleted);
+      service.off("phase", onPhase);
+      service.off("progress", onProgress);
+      service.off("date_completed", onDateCompleted);
+      service.off("completed", onCompleted);
     });
 
     // Keep alive ping every 30 seconds

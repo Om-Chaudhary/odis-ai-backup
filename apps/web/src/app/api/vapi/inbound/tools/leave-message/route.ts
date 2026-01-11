@@ -393,8 +393,7 @@ export async function POST(request: NextRequest) {
         clinic_id: clinic.id,
         caller_name: input.client_name,
         caller_phone: input.client_phone,
-        pet_name: input.pet_name ?? null,
-        message: fullMessage,
+        message_content: fullMessage,
         message_type: input.message_type ?? "general",
         priority: input.is_urgent ? "urgent" : "normal",
         status: "unread",
@@ -403,6 +402,7 @@ export async function POST(request: NextRequest) {
           source: "vapi_inbound_squad",
           agent: "admin",
           is_urgent: input.is_urgent,
+          pet_name: input.pet_name ?? null,
           best_callback_time: input.best_callback_time ?? null,
         },
       })

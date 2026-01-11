@@ -4,7 +4,7 @@
  * Helper utilities for the discharge orchestrator.
  */
 
-import type { Database, Json } from "@odis-ai/shared/types";
+import type { Database } from "@odis-ai/shared/types";
 import type { SupabaseClientType } from "@odis-ai/shared/types/supabase";
 import type { StructuredDischargeSummary } from "@odis-ai/shared/validators/discharge-summary";
 import type { StepResult, StepName } from "@odis-ai/shared/types/orchestration";
@@ -158,5 +158,7 @@ export function getTypedResult<T>(
   step: StepName,
 ): T | undefined {
   const result = results.get(step);
-  return result?.data as T | undefined;
+  if (!result?.data) return undefined;
+  // Explicitly cast through unknown to satisfy strict type checking
+  return result.data as unknown as T;
 }

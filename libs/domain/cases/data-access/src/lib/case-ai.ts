@@ -4,7 +4,7 @@
  * AI-powered entity extraction and content generation for cases.
  */
 
-import type { Database, Json } from "@odis-ai/shared/types";
+import type { Json } from "@odis-ai/shared/types";
 import type { SupabaseClientType } from "@odis-ai/shared/types/supabase";
 import type { NormalizedEntities } from "@odis-ai/shared/validators";
 import type { AIGeneratedCallIntelligence } from "@odis-ai/integrations/vapi/types";

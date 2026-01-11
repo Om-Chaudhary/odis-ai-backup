@@ -4,7 +4,7 @@
  * Utility functions for case data transformation and mapping.
  */
 
-import type { Database, Json } from "@odis-ai/shared/types";
+import type { Database } from "@odis-ai/shared/types";
 import type { NormalizedEntities } from "@odis-ai/shared/validators";
 import { parseBillingString } from "@odis-ai/shared/types/idexx";
 

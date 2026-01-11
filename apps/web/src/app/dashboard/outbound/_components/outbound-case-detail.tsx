@@ -10,38 +10,13 @@ import {
 } from "@odis-ai/shared/ui/collapsible";
 import { ExternalLink, ChevronDown } from "lucide-react";
 import { api } from "~/trpc/client";
-import type {
-  DeliveryToggles,
-  DischargeCaseStatus,
-  SoapNote,
-  TransformedCase,
-} from "./types";
-import type { StructuredDischargeSummary } from "@odis-ai/shared/validators/discharge-summary";
+import type { DeliveryToggles, TransformedCase } from "./types";
 import { EmptyDetailState } from "./detail";
 import { CompactPatientHeader } from "./detail/compact-patient-header";
 import { ActivityTimeline } from "./detail/activity-timeline";
 import { SmartActionSection } from "./detail/smart-action-section";
 import { SimplifiedContentPreview } from "./detail/simplified-content-preview";
 import { WorkflowCanvas, type CaseDataForWorkflow } from "./detail/workflow";
-
-// Scheduled call data with structured output support
-interface ScheduledCallData {
-  id: string;
-  status: string;
-  scheduledFor: string | null;
-  startedAt: string | null;
-  endedAt: string | null;
-  durationSeconds: number | null;
-  endedReason: string | null;
-  transcript: string | null;
-  cleanedTranscript?: string | null;
-  summary: string | null;
-  customerPhone: string | null;
-  structuredData?: { urgent_case?: boolean; [key: string]: unknown } | null;
-  urgentReasonSummary?: string | null;
-  recordingUrl?: string | null;
-  stereoRecordingUrl?: string | null;
-}
 
 interface OutboundCaseDetailProps {
   caseData: TransformedCase | null;

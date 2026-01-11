@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { motion, useInView, useReducedMotion } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { usePostHog } from "posthog-js/react";
 import { Calendar, Play } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
@@ -49,7 +50,6 @@ export function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
   const isPageLoaded = usePageLoaded(150); // Wait for page load + 150ms
-  const shouldReduceMotion = useReducedMotion();
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
   // Fallback timeout - don't wait forever if image fails to load
@@ -76,12 +76,14 @@ export function HeroSection() {
       className="relative isolate flex min-h-screen w-full flex-col overflow-hidden bg-teal-950"
     >
       {/* Background: Hero image - base layer */}
-      <img
+      <Image
         alt=""
         src="/images/hero/bg.png"
+        fill
+        priority
         onLoad={() => setIsImageLoaded(true)}
         className={cn(
-          "absolute inset-0 -z-20 size-full object-cover object-center transition-opacity duration-700",
+          "-z-20 object-cover object-center transition-opacity duration-700",
           isImageLoaded ? "opacity-70" : "opacity-0",
         )}
       />

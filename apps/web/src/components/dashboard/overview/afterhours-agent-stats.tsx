@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Calendar, DollarSign, Moon } from "lucide-react";
-import { cn } from "@odis-ai/shared/util";
 
 interface CounterAnimationProps {
   target: number;
@@ -17,7 +16,7 @@ function AnimatedCounter({
   duration = 2000,
   prefix = "",
   suffix = "",
-  className
+  className,
 }: CounterAnimationProps) {
   const [current, setCurrent] = useState(0);
 
@@ -47,7 +46,9 @@ function AnimatedCounter({
 
   return (
     <span className={className}>
-      {prefix}{current.toLocaleString()}{suffix}
+      {prefix}
+      {current.toLocaleString()}
+      {suffix}
     </span>
   );
 }

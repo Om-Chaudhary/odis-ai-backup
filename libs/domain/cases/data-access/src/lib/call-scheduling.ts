@@ -6,7 +6,6 @@
 
 import type { Database, Json } from "@odis-ai/shared/types";
 import type { SupabaseClientType } from "@odis-ai/shared/types/supabase";
-import type { NormalizedEntities } from "@odis-ai/shared/validators";
 import type { AIGeneratedCallIntelligence } from "@odis-ai/integrations/vapi/types";
 import type { CaseMetadata } from "@odis-ai/shared/types/case";
 import type {
@@ -18,7 +17,6 @@ import type { ICallExecutor } from "@odis-ai/domain/shared";
 
 import { normalizeToE164 } from "@odis-ai/shared/util/phone";
 import { getClinicVapiConfigByUserId } from "@odis-ai/domain/clinics/vapi-config";
-import { scheduleCallExecution } from "@odis-ai/integrations/qstash/client";
 
 import { getCaseWithEntities, type CaseWithEntities } from "./case-crud";
 import { generateSummaryFromEntities } from "./case-helpers";
@@ -574,6 +572,9 @@ export async function scheduleDischargeCall(
           );
         }
       } else {
+        // Dynamic import to avoid lazy-load constraint
+        const { scheduleCallExecution } =
+          await import("@odis-ai/integrations/qstash/client");
         const qstashMessageId = await scheduleCallExecution(
           scheduledCall.id,
           scheduledAt,
@@ -664,6 +665,9 @@ export async function scheduleDischargeCall(
         );
       }
     } else {
+      // Dynamic import to avoid lazy-load constraint
+      const { scheduleCallExecution } =
+        await import("@odis-ai/integrations/qstash/client");
       const qstashMessageId = await scheduleCallExecution(
         scheduledCall.id,
         scheduledAt,

@@ -17,9 +17,6 @@ import {
   AlertCircle,
   Play,
   Calendar,
-  Eye,
-  EyeOff,
-  Wand2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { api } from "~/trpc/client";
@@ -54,7 +51,7 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
   const router = useRouter();
   const isProcessingRef = useRef(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [showRawTranscript, setShowRawTranscript] = useState(false);
+  const showRawTranscript = true; // Default to showing original VAPI transcript
 
   // Fetch case detail
   const {
