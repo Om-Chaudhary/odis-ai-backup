@@ -110,23 +110,112 @@ export function registerBuiltInTools(): void {
     handler: async (params, context) => {
       logger.info("Get clinic hours called", {
         callId: context.callId,
+        assistantId: context.assistantId,
       });
 
-      // TODO: Fetch actual clinic hours from database
-      return {
-        success: true,
-        hours: {
-          monday: "8:00 AM - 6:00 PM",
-          tuesday: "8:00 AM - 6:00 PM",
-          wednesday: "8:00 AM - 6:00 PM",
-          thursday: "8:00 AM - 6:00 PM",
-          friday: "8:00 AM - 5:00 PM",
-          saturday: "9:00 AM - 2:00 PM",
-          sunday: "Closed",
-        },
-        emergencyInfo:
-          "For after-hours emergencies, please call our emergency line.",
-      };
+      if (!context.assistantId) {
+        return {
+          success: false,
+          error: "Assistant ID not available",
+          message: "Unable to retrieve clinic hours.",
+        };
+      }
+
+      try {
+        const supabase = await createServiceClient();
+
+        // Get clinic from assistant_id
+        const { data: clinic, error } = await supabase
+          .from("clinics")
+          .select("id, name, business_hours")
+          .or(
+            `inbound_assistant_id.eq.${context.assistantId},outbound_assistant_id.eq.${context.assistantId}`,
+          )
+          .single();
+
+        if (error || !clinic) {
+          logger.warn("Clinic not found for assistant", {
+            assistantId: context.assistantId,
+            error: error?.message,
+          });
+          return {
+            success: false,
+            error: "Clinic not found",
+            message: "Unable to retrieve clinic hours.",
+          };
+        }
+
+        // Format business hours for display
+        interface DayHours {
+          open: string;
+          close: string;
+          closed?: boolean;
+        }
+
+        type BusinessHours = Record<string, DayHours | undefined>;
+
+        const businessHours = clinic.business_hours as BusinessHours | null;
+
+        if (!businessHours) {
+          logger.warn("No business hours configured for clinic", {
+            clinicId: clinic.id,
+            clinicName: clinic.name,
+          });
+          return {
+            success: false,
+            error: "Hours not configured",
+            message:
+              "Business hours are not yet configured. Please contact the clinic directly.",
+          };
+        }
+
+        // Convert 24h format to 12h AM/PM format for display
+        const formatTime = (time24: string): string => {
+          const [hours, minutes] = time24.split(":").map(Number);
+          const period = hours >= 12 ? "PM" : "AM";
+          const hours12 = hours % 12 || 12;
+          return `${hours12}:${minutes.toString().padStart(2, "0")} ${period}`;
+        };
+
+        const formatDayHours = (day: DayHours | undefined): string => {
+          if (!day || day.closed) return "Closed";
+          return `${formatTime(day.open)} - ${formatTime(day.close)}`;
+        };
+
+        const formattedHours = {
+          monday: formatDayHours(businessHours.monday),
+          tuesday: formatDayHours(businessHours.tuesday),
+          wednesday: formatDayHours(businessHours.wednesday),
+          thursday: formatDayHours(businessHours.thursday),
+          friday: formatDayHours(businessHours.friday),
+          saturday: formatDayHours(businessHours.saturday),
+          sunday: formatDayHours(businessHours.sunday),
+        };
+
+        logger.info("Clinic hours retrieved", {
+          clinicId: clinic.id,
+          clinicName: clinic.name,
+        });
+
+        return {
+          success: true,
+          clinic_name: clinic.name,
+          hours: formattedHours,
+          emergencyInfo:
+            "For after-hours emergencies, please call our emergency line.",
+        };
+      } catch (error) {
+        logger.error("Failed to get clinic hours", {
+          error: error instanceof Error ? error.message : String(error),
+          assistantId: context.assistantId,
+        });
+
+        return {
+          success: false,
+          error: "Failed to retrieve hours",
+          message: "I'm having trouble accessing our hours right now.",
+        };
+      }
     },
   });
 

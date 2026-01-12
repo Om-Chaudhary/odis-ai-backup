@@ -17,14 +17,10 @@ import type { SupabaseClientType } from "@odis-ai/shared/types/supabase";
 import type { User } from "@supabase/supabase-js";
 import type { IngestPayload } from "@odis-ai/shared/types/services";
 import type { Database, Json } from "@odis-ai/shared/types";
-import {
-  type ClinicBranding,
-  createClinicBranding,
-} from "@odis-ai/shared/types/clinic-branding";
+import { createClinicBranding } from "@odis-ai/shared/types/clinic-branding";
 
 import { CallExecutor } from "./call-executor";
 import { generateEmailContent } from "./email-generator";
-import { scheduleEmailExecution } from "@odis-ai/integrations/qstash/client";
 import { isValidEmail } from "@odis-ai/integrations/resend/utils";
 import { getClinicByUserId } from "@odis-ai/domain/clinics/utils";
 import {
@@ -607,6 +603,9 @@ export async function executeEmailScheduling(
       throw new Error(result.error ?? "Immediate email execution failed");
     }
   } else {
+    // Dynamic import to avoid lazy-load constraint
+    const { scheduleEmailExecution } =
+      await import("@odis-ai/integrations/qstash/client");
     qstashMessageId = await scheduleEmailExecution(
       scheduledEmail.id,
       scheduledFor,

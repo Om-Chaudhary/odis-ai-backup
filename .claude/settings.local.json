@@ -219,7 +219,9 @@
       "mcp__nx-mcp__nx_docs",
       "Bash(nx test:*)",
       "Bash(nx run-many:*)",
-      "Bash(pnpm exec vitest:*)"
+      "Bash(pnpm exec vitest:*)",
+      "Bash(pnpm exec lint-staged:*)",
+      "Bash(pnpm check:*)"
     ],
     "deny": [],
     "ask": []
