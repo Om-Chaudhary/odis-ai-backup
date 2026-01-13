@@ -44,3 +44,23 @@ export type {
   IUserRepository,
   UserSettings,
 } from "./user-repository.interface";
+
+// Client repository (pet owners)
+export type {
+  IClientRepository,
+  ClientRow,
+  ClientInsert,
+  ClientUpdate,
+  FindOrCreateClientInput,
+  FindClientsOptions,
+} from "./client-repository.interface";
+
+// Canonical patient repository (unique pets per clinic)
+export type {
+  ICanonicalPatientRepository,
+  CanonicalPatientRow,
+  CanonicalPatientInsert,
+  CanonicalPatientUpdate,
+  FindOrCreateCanonicalPatientInput,
+  FindCanonicalPatientsOptions,
+} from "./canonical-patient-repository.interface";

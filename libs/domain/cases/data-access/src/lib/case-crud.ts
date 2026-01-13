@@ -14,6 +14,7 @@ import type {
 import { buildIdexxConsultationData } from "@odis-ai/shared/types/idexx";
 import { mergeEntities } from "./entity-utils";
 import { mapCaseTypeToDb, parseWeight, parseScheduledAt } from "./case-helpers";
+import { resolveClientIdentity } from "./client-identity";
 
 type CaseRow = Database["public"]["Tables"]["cases"]["Row"];
 type CaseInsert = Database["public"]["Tables"]["cases"]["Insert"];
@@ -82,6 +83,23 @@ export async function createOrUpdateCase(
   // Each appointment should create a new case, even for returning patients.
   // Only external_id matching (above) is kept for idempotent ingestion of the same appointment.
 
+  // Resolve client identity (clinic, client, canonical patient)
+  const clientIdentity = await resolveClientIdentity(
+    supabase,
+    userId,
+    entities,
+  );
+
+  if (clientIdentity) {
+    console.log("[CaseCRUD] Resolved client identity", {
+      clinicId: clientIdentity.clinicId,
+      clientId: clientIdentity.clientId,
+      canonicalPatientId: clientIdentity.canonicalPatientId,
+      isNewClient: clientIdentity.isNewClient,
+      isNewPatient: clientIdentity.isNewPatient,
+    });
+  }
+
   if (caseId) {
     // Update existing case
     const { data: currentCase, error: fetchError } = await supabase
@@ -148,6 +166,8 @@ export async function createOrUpdateCase(
 
     const caseInsert: CaseInsert = {
       user_id: userId,
+      clinic_id: clientIdentity?.clinicId ?? null,
+      created_by: userId,
       status: "ongoing",
       type: mapCaseTypeToDb(entities.caseType),
       source: context.source,
@@ -203,6 +223,9 @@ export async function createOrUpdateCase(
     // Create new patient record, using existing patient data as fallback for missing fields
     const patientInsert: PatientInsert = {
       user_id: userId,
+      clinic_id: clientIdentity?.clinicId ?? null,
+      canonical_patient_id: clientIdentity?.canonicalPatientId ?? null,
+      created_by: userId,
       case_id: caseId,
       name: entities.patient.name,
       species: entities.patient.species ?? existingPatient?.species ?? null,
