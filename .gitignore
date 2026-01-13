@@ -68,3 +68,7 @@ vitest.config.*.timestamp*
 # Next.js
 .next
 out
+
+# Nx generated files
+graph.html
+static/
