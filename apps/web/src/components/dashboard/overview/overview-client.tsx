@@ -2,12 +2,10 @@
 
 import { useState } from "react";
 import { api } from "~/trpc/client";
-import { HeroSection } from "./hero-section";
 import { ValueSummary } from "./value-summary";
 import { AttentionItems } from "./attention-items";
 import { QuickLinks } from "./quick-links";
 import { OverviewSkeleton } from "./overview-skeleton";
-import { AfterhourAgentStats } from "./afterhours-agent-stats";
 import type { DateRangeOption } from "./types";
 
 interface OverviewClientProps {
@@ -45,16 +43,6 @@ export function OverviewClient({ clinicSlug }: OverviewClientProps) {
 
   return (
     <div className="space-y-8">
-      {/* Hero - Status at a glance */}
-      <HeroSection
-        status={overview.status}
-        period={overview.period}
-        callsAnswered={overview.value.callsAnswered}
-      />
-
-      {/* After-hours Agent Stats */}
-      <AfterhourAgentStats />
-
       {/* Attention Items - Only show if there are flagged items */}
       {overview.flaggedItems.length > 0 && (
         <AttentionItems
