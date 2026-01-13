@@ -39,6 +39,22 @@ import type { User } from "@supabase/supabase-js";
 import { ClinicSelector } from "../clinic-selector";
 
 /**
+ * Extract clinic slug from pathname
+ * Matches /dashboard/[clinicSlug] or /dashboard/[clinicSlug]/...
+ */
+function getClinicSlugFromPathname(pathname: string): string | null {
+  const match = /^\/dashboard\/([^/]+)/.exec(pathname);
+  if (match) {
+    const slug = match[1];
+    // Exclude non-clinic paths like /dashboard/inbound, /dashboard/outbound
+    if (slug && !["inbound", "outbound"].includes(slug)) {
+      return slug;
+    }
+  }
+  return null;
+}
+
+/**
  * Build a clinic-scoped URL
  */
 function buildUrl(clinicSlug: string | null, path: string): string {
@@ -69,7 +85,7 @@ interface AppSidebarProps {
 export function AppSidebar({
   user,
   profile,
-  clinicSlug,
+  clinicSlug: initialClinicSlug,
   allClinics,
   currentClinicName: _currentClinicName,
 }: AppSidebarProps) {
@@ -79,9 +95,14 @@ export function AppSidebar({
   const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   const fullName = `${firstName} ${lastName}`.trim() ?? user.email ?? "User";
 
-  // Build clinic-scoped URLs
-  const dashboardUrl = buildUrl(clinicSlug, "/dashboard");
-  const settingsUrl = buildUrl(clinicSlug, "/dashboard/settings");
+  // Derive active clinic slug from URL (handles client-side navigation)
+  // Falls back to prop value if not found in pathname
+  const activeClinicSlug =
+    getClinicSlugFromPathname(pathname) ?? initialClinicSlug;
+
+  // Build clinic-scoped URLs using the active clinic
+  const dashboardUrl = buildUrl(activeClinicSlug, "/dashboard");
+  const settingsUrl = buildUrl(activeClinicSlug, "/dashboard/settings");
 
   // Check if on inbound or outbound pages
   const isOnInbound = pathname === "/dashboard/inbound";
@@ -109,11 +130,11 @@ export function AppSidebar({
             </span>
           </Link>
         </div>
-        {allClinics && allClinics.length > 0 && clinicSlug && (
+        {allClinics && allClinics.length > 0 && activeClinicSlug && (
           <div className="px-2 pb-2 group-data-[collapsible=icon]:hidden">
             <ClinicSelector
               clinics={allClinics}
-              currentClinicSlug={clinicSlug}
+              currentClinicSlug={activeClinicSlug}
             />
           </div>
         )}
