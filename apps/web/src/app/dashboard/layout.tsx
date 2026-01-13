@@ -1,4 +1,5 @@
 import { AppSidebar } from "~/components/dashboard/shell/app-sidebar";
+import { DashboardHeader } from "~/components/dashboard/shell/dashboard-header";
 import { getUser } from "~/server/actions/auth";
 import { createClient } from "@odis-ai/data-access/db/server";
 import { redirect } from "next/navigation";
@@ -138,12 +139,7 @@ export default async function DashboardLayout({
 
       {/* Main Content Area */}
       <SidebarInset className="relative z-10 bg-gradient-to-b from-emerald-50 via-emerald-100/40 to-emerald-50/30">
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-white/50 backdrop-blur-sm">
-          <div className="flex flex-1 items-center gap-2 px-3">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-          </div>
-        </header>
+        <DashboardHeader />
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
           {children}
         </div>

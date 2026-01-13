@@ -17,7 +17,7 @@ import {
   useOutboundMutations,
 } from "~/app/dashboard/outbound/_hooks";
 import { api } from "~/trpc/client";
-import { CompactTestModeBanner } from "~/components/dashboard/discharges/test-mode-banner";
+
 import type { DischargeSettings } from "@odis-ai/shared/types";
 import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
 
@@ -469,16 +469,7 @@ function OutboundDashboardInner() {
 
   return (
     <div className="flex h-[calc(100vh-64px)] w-full flex-col gap-2 overflow-hidden">
-      {/* Test Mode Banner */}
-      {settingsData && (
-        <div className="mx-auto w-full max-w-[1800px] px-4 pt-4">
-          <CompactTestModeBanner
-            settings={settingsData}
-            onUpdate={handleUpdateSettings}
-            isLoading={updateSettingsMutation.isPending}
-          />
-        </div>
-      )}
+      {/* Test Mode Banner - Moved to Header */}
 
       {/* Main Content Area */}
       <div className="min-h-0 min-w-0 flex-1 overflow-hidden">

@@ -14,7 +14,7 @@ import { CallDetail } from "./detail/call-detail";
 import { InboundSplitLayout } from "./inbound-split-layout";
 import { InboundPagination } from "./inbound-pagination";
 import { useInboundData, useInboundMutations } from "./hooks";
-import { CompactTestModeBanner } from "~/components/dashboard/discharges/test-mode-banner";
+
 import { toast } from "sonner";
 import {
   Popover,
@@ -255,15 +255,7 @@ export function InboundClient() {
 
   return (
     <div className="flex h-full flex-col">
-      {settingsData?.testModeEnabled && (
-        <div className="px-6 pt-4">
-          <CompactTestModeBanner
-            settings={settingsData}
-            onUpdate={handleUpdateSettings}
-            isLoading={updateSettingsMutation.isPending}
-          />
-        </div>
-      )}
+      {/* Test Mode Banner - Moved to Header */}
       {/* Main Content Area - Full height split layout with header inside left panel */}
       <div className="min-h-0 flex-1">
         <InboundSplitLayout

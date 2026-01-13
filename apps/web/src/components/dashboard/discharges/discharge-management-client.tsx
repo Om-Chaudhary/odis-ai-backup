@@ -14,7 +14,7 @@ import {
 } from "@odis-ai/shared/ui/tabs";
 import { EmptyState } from "@odis-ai/shared/ui";
 import { DischargeListItem } from "./discharge-list-item";
-import { CompactTestModeBanner } from "~/components/dashboard/discharges/test-mode-banner";
+
 import { type CallEndReasonFilter } from "../filters/consolidated-filter-bar";
 import { BatchDischargeDialog } from "./batch-discharge-dialog";
 import { BatchProgressMonitor } from "./batch-progress-monitor";
@@ -679,16 +679,7 @@ export function DischargeManagementClient() {
       >
         {/* Cases Tab */}
         <TabsContent value="cases" className="space-y-4">
-          {/* Test Mode Banner - Centered */}
-          {settings.testModeEnabled && (
-            <div className="mb-4 flex justify-center">
-              <CompactTestModeBanner
-                settings={settings}
-                onUpdate={handleUpdateSettings}
-                isLoading={updateSettingsMutation.isPending}
-              />
-            </div>
-          )}
+          {/* Test Mode Banner - Moved to Header */}
 
           {/* Search Bar with Refresh Button */}
           <div className="mb-6 flex items-center justify-center gap-4">
