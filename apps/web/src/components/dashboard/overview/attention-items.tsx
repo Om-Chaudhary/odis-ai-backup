@@ -2,6 +2,7 @@
 
 import { AlertCircle, Play } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
+import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
 import type { FlaggedItem } from "./types";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
@@ -12,6 +13,18 @@ interface AttentionItemsProps {
 }
 
 export function AttentionItems({ items, totalCount }: AttentionItemsProps) {
+  // Get clinic context to build clinic-scoped URLs
+  const clinicContext = useOptionalClinic();
+  const clinicSlug = clinicContext?.clinicSlug;
+
+  // Build clinic-scoped URL or fallback to legacy route
+  const buildUrl = (path: string) => {
+    if (clinicSlug) {
+      return `/dashboard/${clinicSlug}${path}`;
+    }
+    return `/dashboard${path}`;
+  };
+
   if (items.length === 0) return null;
 
   return (
@@ -29,7 +42,7 @@ export function AttentionItems({ items, totalCount }: AttentionItemsProps) {
         </div>
         {totalCount > items.length && (
           <Link
-            href="/dashboard/inbound?filter=flagged"
+            href={buildUrl("/inbound?filter=flagged")}
             className="text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
           >
             View all
@@ -39,14 +52,23 @@ export function AttentionItems({ items, totalCount }: AttentionItemsProps) {
 
       <div className="divide-y divide-stone-100">
         {items.map((item) => (
-          <FlaggedItemCard key={item.id} item={item} />
+          <FlaggedItemCard
+            key={item.id}
+            item={item}
+            href={buildUrl(`/inbound/${item.id}`)}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function FlaggedItemCard({ item }: { item: FlaggedItem }) {
+interface FlaggedItemCardProps {
+  item: FlaggedItem;
+  href: string;
+}
+
+function FlaggedItemCard({ item, href }: FlaggedItemCardProps) {
   const severityStyles = {
     critical: {
       badge: "bg-red-100 text-red-700",
@@ -71,7 +93,7 @@ function FlaggedItemCard({ item }: { item: FlaggedItem }) {
 
   return (
     <Link
-      href={`/dashboard/inbound/${item.id}`}
+      href={href}
       className={cn(
         "group flex items-start gap-4 border-l-4 px-6 py-4 transition-colors hover:bg-stone-50",
         styles.border,

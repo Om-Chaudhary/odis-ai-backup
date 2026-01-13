@@ -11,6 +11,8 @@ export default tseslint.config(
       "apps/web/.next/**",
       "out/**",
       "build/**",
+      // Coverage reports (generated output)
+      "**/coverage/**",
       "next-env.d.ts",
       "**/next-env.d.ts",
       "src/test/**",

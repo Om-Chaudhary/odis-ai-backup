@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Check, ChevronsUpDown } from "lucide-react";
 import {
   DropdownMenu,
@@ -15,16 +15,30 @@ interface ClinicSelectorProps {
   currentClinicSlug: string;
 }
 
+/**
+ * Extract sub-path from clinic-scoped URL
+ * e.g., /dashboard/alum-rock/inbound -> /inbound
+ * e.g., /dashboard/alum-rock/outbound/123 -> /outbound/123
+ * e.g., /dashboard/alum-rock -> ""
+ */
+function getSubPathFromPathname(pathname: string): string {
+  const match = /^\/dashboard\/[^/]+(\/.*)?$/.exec(pathname);
+  return match?.[1] ?? "";
+}
+
 export function ClinicSelector({
   clinics,
   currentClinicSlug,
 }: ClinicSelectorProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const currentClinic = clinics.find((c) => c.slug === currentClinicSlug);
 
   const handleClinicChange = (slug: string) => {
-    // Navigate to the new clinic's dashboard
-    router.push(`/dashboard/${slug}`);
+    // Preserve the current sub-path when switching clinics
+    // e.g., /dashboard/clinic-a/inbound -> /dashboard/clinic-b/inbound
+    const subPath = getSubPathFromPathname(pathname);
+    router.push(`/dashboard/${slug}${subPath}`);
   };
 
   return (

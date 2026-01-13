@@ -41,13 +41,15 @@ import { ClinicSelector } from "../clinic-selector";
 /**
  * Extract clinic slug from pathname
  * Matches /dashboard/[clinicSlug] or /dashboard/[clinicSlug]/...
+ *
+ * With clinic-scoped routing, all segments after /dashboard/ are clinic slugs
+ * (inbound/outbound are now nested under [clinicSlug])
  */
 function getClinicSlugFromPathname(pathname: string): string | null {
   const match = /^\/dashboard\/([^/]+)/.exec(pathname);
   if (match) {
     const slug = match[1];
-    // Exclude non-clinic paths like /dashboard/inbound, /dashboard/outbound
-    if (slug && !["inbound", "outbound"].includes(slug)) {
+    if (slug) {
       return slug;
     }
   }
@@ -64,6 +66,8 @@ function buildUrl(clinicSlug: string | null, path: string): string {
   const pathMap: Record<string, string> = {
     "/dashboard": `/dashboard/${clinicSlug}`,
     "/dashboard/settings": `/dashboard/${clinicSlug}/settings`,
+    "/dashboard/inbound": `/dashboard/${clinicSlug}/inbound`,
+    "/dashboard/outbound": `/dashboard/${clinicSlug}/outbound`,
   };
   return pathMap[path] ?? path;
 }
@@ -103,27 +107,32 @@ export function AppSidebar({
   // Build clinic-scoped URLs using the active clinic
   const dashboardUrl = buildUrl(activeClinicSlug, "/dashboard");
   const settingsUrl = buildUrl(activeClinicSlug, "/dashboard/settings");
+  const inboundUrl = buildUrl(activeClinicSlug, "/dashboard/inbound");
+  const outboundUrl = buildUrl(activeClinicSlug, "/dashboard/outbound");
 
-  // Check if on inbound or outbound pages
-  const isOnInbound = pathname === "/dashboard/inbound";
+  // Check active states based on current pathname
+  const isOnInbound =
+    pathname === inboundUrl || pathname.startsWith(inboundUrl + "/");
   const isOnOutbound =
-    pathname === "/dashboard/outbound" ||
-    pathname.startsWith("/dashboard/outbound/");
-  const isOnDashboard =
-    pathname === dashboardUrl || pathname.startsWith(dashboardUrl + "/");
+    pathname === outboundUrl || pathname.startsWith(outboundUrl + "/");
   const isOnSettings = pathname.includes("/settings");
+  const isOnDashboard =
+    (pathname === dashboardUrl || pathname.startsWith(dashboardUrl + "/")) &&
+    !isOnInbound &&
+    !isOnOutbound &&
+    !isOnSettings;
 
   return (
     <Sidebar collapsible="icon" className="border-r">
       <SidebarHeader className="border-b">
-        <div className="flex items-center gap-2 px-2 py-2">
+        <div className="flex items-center gap-2 p-2 group-data-[collapsible=icon]:justify-center">
           <Link href={dashboardUrl} className="flex items-center gap-2">
             <Image
               src="/icon-128.png"
               alt="Odis AI"
               width={32}
               height={32}
-              className="h-8 w-8 rounded-lg transition-transform hover:scale-105"
+              className="h-8 w-8 shrink-0 rounded-lg transition-transform hover:scale-105"
             />
             <span className="text-lg font-semibold group-data-[collapsible=icon]:hidden">
               Odis AI
@@ -147,12 +156,7 @@ export function AppSidebar({
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
-                isActive={
-                  isOnDashboard &&
-                  !isOnInbound &&
-                  !isOnOutbound &&
-                  !isOnSettings
-                }
+                isActive={isOnDashboard}
                 tooltip="Dashboard"
               >
                 <Link href={dashboardUrl}>
@@ -177,7 +181,7 @@ export function AppSidebar({
                 isActive={isOnInbound}
                 tooltip="Inbound"
               >
-                <Link href="/dashboard/inbound">
+                <Link href={inboundUrl}>
                   <PhoneIncoming />
                   <span className="group-data-[collapsible=icon]:hidden">
                     Inbound
@@ -191,7 +195,7 @@ export function AppSidebar({
                 isActive={isOnOutbound}
                 tooltip="Outbound"
               >
-                <Link href="/dashboard/outbound">
+                <Link href={outboundUrl}>
                   <PhoneOutgoing />
                   <span className="group-data-[collapsible=icon]:hidden">
                     Outbound

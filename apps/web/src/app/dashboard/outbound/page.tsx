@@ -1,39 +1,35 @@
-import type { Metadata } from "next";
-import { Suspense } from "react";
-import { Loader2 } from "lucide-react";
-import { OutboundDashboard } from "./_components/outbound-dashboard";
-import { OutboundErrorBoundary } from "./_components/outbound-error-boundary";
-
-export const metadata: Metadata = {
-  title: "Outbound Discharges | Dashboard",
-  description: "View and manage outbound discharge calls and communications",
-};
+import { redirect } from "next/navigation";
+import { createClient } from "@odis-ai/data-access/db/server";
+import { getUserClinics } from "@odis-ai/domain/clinics";
 
 /**
- * Outbound Discharge Page
+ * Legacy Outbound Page - Redirects to clinic-scoped route
  *
- * Manages outgoing discharge-related calls and communications.
- * This page displays outbound discharge calls and emails initiated by the clinic.
+ * This page handles backwards compatibility for bookmarks and direct links
+ * to /dashboard/outbound. It redirects to /dashboard/[clinicSlug]/outbound
+ * using the user's primary clinic.
  */
-export default function OutboundDischargePage() {
-  return (
-    <div className="flex h-full flex-col">
-      <OutboundErrorBoundary>
-        <Suspense
-          fallback={
-            <div className="flex h-[50vh] items-center justify-center">
-              <div className="flex flex-col items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-100">
-                  <Loader2 className="h-6 w-6 animate-spin text-teal-600" />
-                </div>
-                <p className="text-sm text-slate-500">Loading discharges...</p>
-              </div>
-            </div>
-          }
-        >
-          <OutboundDashboard />
-        </Suspense>
-      </OutboundErrorBoundary>
-    </div>
-  );
+export default async function LegacyOutboundPage() {
+  const supabase = await createClient();
+
+  // Get current user
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
+    redirect("/login");
+  }
+
+  // Get user's clinics and redirect to primary clinic's outbound page
+  const userClinics = await getUserClinics(user.id, supabase);
+  const primaryClinic = userClinics[0];
+
+  if (primaryClinic) {
+    redirect(`/dashboard/${primaryClinic.slug}/outbound`);
+  }
+
+  // If user has no clinics, redirect to main dashboard
+  redirect("/dashboard");
 }

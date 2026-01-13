@@ -181,3 +181,159 @@ export function TestModeBanner({
     </>
   );
 }
+
+export function CompactTestModeBanner({
+  settings,
+  onUpdate,
+  isLoading = false,
+}: TestModeBannerProps) {
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [testContactName, setTestContactName] = useState(
+    settings.testContactName ?? "",
+  );
+  const [testContactPhone, setTestContactPhone] = useState(
+    settings.testContactPhone ?? "",
+  );
+  const [testContactEmail, setTestContactEmail] = useState(
+    settings.testContactEmail ?? "",
+  );
+
+  // Sync local state when settings change
+  useEffect(() => {
+    setTestContactName(settings.testContactName ?? "");
+    setTestContactPhone(settings.testContactPhone ?? "");
+    setTestContactEmail(settings.testContactEmail ?? "");
+  }, [
+    settings.testContactName,
+    settings.testContactPhone,
+    settings.testContactEmail,
+  ]);
+
+  if (!settings.testModeEnabled) {
+    return null;
+  }
+
+  const handleSave = () => {
+    onUpdate({
+      ...settings,
+      testContactName,
+      testContactPhone,
+      testContactEmail,
+    });
+    setIsEditOpen(false);
+  };
+
+  const handleDisable = () => {
+    onUpdate({
+      ...settings,
+      testModeEnabled: false,
+    });
+  };
+
+  return (
+    <>
+      <div className="flex items-center justify-between gap-4 rounded-md border border-amber-500/30 bg-amber-50/50 px-3 py-1.5 shadow-sm backdrop-blur-sm">
+        <div className="flex items-center gap-2">
+          <TestTube className="h-3.5 w-3.5 text-amber-600" />
+          <span className="text-xs font-medium text-amber-900">
+            Test Mode Active
+          </span>
+          <span className="hidden text-xs text-amber-700 sm:inline-block">
+            • Sends to:{" "}
+            {settings.testContactEmail ??
+              settings.testContactPhone ??
+              "test contact"}
+          </span>
+        </div>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-amber-700 hover:bg-amber-100/50 hover:text-amber-900"
+            onClick={() => setIsEditOpen(true)}
+            title="Configure Test Contact"
+          >
+            <Settings2 className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 text-amber-700 hover:bg-amber-100/50 hover:text-amber-900"
+            onClick={handleDisable}
+            title="Disable Test Mode"
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
+
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <TestTube className="h-5 w-5 text-amber-600" />
+              Test Mode Configuration
+            </DialogTitle>
+            <DialogDescription>
+              Configure test contact information. All discharge communications
+              will be sent to these details instead of actual pet owners.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="test-name">Test Contact Name</Label>
+              <Input
+                id="test-name"
+                placeholder="e.g. John Doe"
+                value={testContactName}
+                onChange={(e) => setTestContactName(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="test-phone">Test Phone Number</Label>
+              <Input
+                id="test-phone"
+                placeholder="e.g. +1 (555) 123-4567"
+                value={testContactPhone}
+                onChange={(e) => setTestContactPhone(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="test-email">Test Email Address</Label>
+              <Input
+                id="test-email"
+                type="email"
+                placeholder="e.g. test@example.com"
+                value={testContactEmail}
+                onChange={(e) => setTestContactEmail(e.target.value)}
+              />
+            </div>
+
+            <div className="rounded-md bg-amber-50 p-3">
+              <p className="text-sm text-amber-800">
+                <strong>Note:</strong> Test mode is currently enabled. Disable
+                it from this banner to send discharges to actual pet owners.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsEditOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={isLoading}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}

@@ -8,6 +8,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
+import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
 import Link from "next/link";
 import type { OverviewStats } from "./types";
 
@@ -16,9 +17,21 @@ interface QuickLinksProps {
 }
 
 export function QuickLinks({ stats }: QuickLinksProps) {
+  // Get clinic context to build clinic-scoped URLs
+  const clinicContext = useOptionalClinic();
+  const clinicSlug = clinicContext?.clinicSlug;
+
+  // Build clinic-scoped URL or fallback to legacy route
+  const buildUrl = (path: string) => {
+    if (clinicSlug) {
+      return `/dashboard/${clinicSlug}${path}`;
+    }
+    return `/dashboard${path}`;
+  };
+
   const links = [
     {
-      href: "/dashboard/inbound",
+      href: buildUrl("/inbound"),
       icon: PhoneIncoming,
       label: "Inbound Calls",
       count: stats.calls.total,
@@ -26,7 +39,7 @@ export function QuickLinks({ stats }: QuickLinksProps) {
       color: "blue",
     },
     {
-      href: "/dashboard/outbound",
+      href: buildUrl("/outbound"),
       icon: PhoneOutgoing,
       label: "Outbound Calls",
       count: null,
@@ -34,7 +47,7 @@ export function QuickLinks({ stats }: QuickLinksProps) {
       color: "indigo",
     },
     {
-      href: "/dashboard/inbound?view=appointments",
+      href: buildUrl("/inbound?view=appointments"),
       icon: Calendar,
       label: "Appointments",
       count: stats.appointments.pending > 0 ? stats.appointments.pending : null,
@@ -43,7 +56,7 @@ export function QuickLinks({ stats }: QuickLinksProps) {
       badge: stats.appointments.pending > 0 ? "pending" : undefined,
     },
     {
-      href: "/dashboard/inbound?view=messages",
+      href: buildUrl("/inbound?view=messages"),
       icon: MessageSquare,
       label: "Messages",
       count: stats.messages.new > 0 ? stats.messages.new : null,

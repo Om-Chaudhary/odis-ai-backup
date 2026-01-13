@@ -3,9 +3,10 @@
 import { useState, useCallback, useEffect } from "react";
 import { useQueryState, parseAsInteger } from "nuqs";
 import { PhoneIncoming, Filter, ChevronDown } from "lucide-react";
+import { api } from "~/trpc/client";
 
 import type { OutcomeFilter, OutcomeFilterCategory } from "./types";
-import type { Database } from "@odis-ai/shared/types";
+import type { Database, DischargeSettings } from "@odis-ai/shared/types";
 import { PageContent, PageFooter } from "../layout";
 import { DashboardPageHeader, DashboardToolbar } from "../shared";
 import { InboundTable } from "./table";
@@ -13,6 +14,8 @@ import { CallDetail } from "./detail/call-detail";
 import { InboundSplitLayout } from "./inbound-split-layout";
 import { InboundPagination } from "./inbound-pagination";
 import { useInboundData, useInboundMutations } from "./hooks";
+import { CompactTestModeBanner } from "~/components/dashboard/discharges/test-mode-banner";
+import { toast } from "sonner";
 import {
   Popover,
   PopoverContent,
@@ -79,6 +82,52 @@ export function InboundClient() {
       void refetchCalls();
     },
   });
+
+  const { data: settingsData, refetch: refetchSettings } =
+    api.cases.getDischargeSettings.useQuery();
+
+  const updateSettingsMutation = api.cases.updateDischargeSettings.useMutation({
+    onSuccess: () => {
+      toast.success("Settings updated");
+      void refetchSettings();
+    },
+    onError: (error) => {
+      toast.error(error.message ?? "Failed to update settings");
+    },
+  });
+
+  const handleUpdateSettings = useCallback(
+    (newSettings: DischargeSettings) => {
+      updateSettingsMutation.mutate({
+        clinicName: newSettings.clinicName || undefined,
+        clinicPhone: newSettings.clinicPhone || undefined,
+        clinicEmail: newSettings.clinicEmail || undefined,
+        emergencyPhone: newSettings.emergencyPhone || undefined,
+        testModeEnabled: newSettings.testModeEnabled,
+        testContactName: newSettings.testContactName ?? undefined,
+        testContactEmail: newSettings.testContactEmail ?? undefined,
+        testContactPhone: newSettings.testContactPhone ?? undefined,
+        voicemailDetectionEnabled: newSettings.voicemailDetectionEnabled,
+        defaultScheduleDelayMinutes:
+          newSettings.defaultScheduleDelayMinutes ?? null,
+        primaryColor: newSettings.primaryColor ?? undefined,
+        logoUrl: newSettings.logoUrl ?? null,
+        emailHeaderText: newSettings.emailHeaderText ?? null,
+        emailFooterText: newSettings.emailFooterText ?? null,
+        preferredEmailStartTime: newSettings.preferredEmailStartTime ?? null,
+        preferredEmailEndTime: newSettings.preferredEmailEndTime ?? null,
+        preferredCallStartTime: newSettings.preferredCallStartTime ?? null,
+        preferredCallEndTime: newSettings.preferredCallEndTime ?? null,
+        emailDelayDays: newSettings.emailDelayDays ?? null,
+        callDelayDays: newSettings.callDelayDays ?? null,
+        maxCallRetries: newSettings.maxCallRetries ?? null,
+        batchIncludeIdexxNotes: newSettings.batchIncludeIdexxNotes,
+        batchIncludeManualTranscriptions:
+          newSettings.batchIncludeManualTranscriptions,
+      });
+    },
+    [updateSettingsMutation],
+  );
 
   // Escape to close panel
   useEffect(() => {
@@ -206,6 +255,15 @@ export function InboundClient() {
 
   return (
     <div className="flex h-full flex-col">
+      {settingsData?.testModeEnabled && (
+        <div className="px-6 pt-4">
+          <CompactTestModeBanner
+            settings={settingsData}
+            onUpdate={handleUpdateSettings}
+            isLoading={updateSettingsMutation.isPending}
+          />
+        </div>
+      )}
       {/* Main Content Area - Full height split layout with header inside left panel */}
       <div className="min-h-0 flex-1">
         <InboundSplitLayout

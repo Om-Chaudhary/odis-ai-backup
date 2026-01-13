@@ -7,6 +7,7 @@ import { format, parseISO, startOfDay } from "date-fns";
 import { TestTube, Settings } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@odis-ai/shared/ui/button";
+import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
 
 import type { ViewMode, DeliveryToggles, TransformedCase } from "./types";
 import { BulkOperationProgress } from "./bulk-operation-progress";
@@ -16,6 +17,9 @@ import {
   useBulkOperation,
 } from "./bulk-operation-context";
 import { useOutboundData, useOutboundMutations } from "../_hooks";
+import { api } from "~/trpc/client";
+import { CompactTestModeBanner } from "~/components/dashboard/discharges/test-mode-banner";
+import type { DischargeSettings } from "@odis-ai/shared/types";
 
 import { NeedsAttentionView } from "./views/needs-attention-view";
 import { AllDischargesView } from "./views/all-discharges-view";
@@ -30,6 +34,12 @@ export function OutboundDashboard() {
 }
 
 function OutboundDashboardInner() {
+  // Get clinic context (optional - works both with and without ClinicProvider)
+  const clinicContext = useOptionalClinic();
+  const settingsUrl = clinicContext
+    ? `/dashboard/${clinicContext.clinicSlug}/settings`
+    : "/dashboard/settings";
+
   // URL-synced state
   const [dateStr, setDateStr] = useQueryState("date", {
     defaultValue: format(startOfDay(new Date()), "yyyy-MM-dd"),
@@ -144,6 +154,49 @@ function OutboundDashboardInner() {
       void refetch();
     },
   });
+
+  const updateSettingsMutation = api.cases.updateDischargeSettings.useMutation({
+    onSuccess: () => {
+      toast.success("Settings updated");
+      void refetch();
+    },
+    onError: (error) => {
+      toast.error(error.message ?? "Failed to update settings");
+    },
+  });
+
+  const handleUpdateSettings = useCallback(
+    (newSettings: DischargeSettings) => {
+      updateSettingsMutation.mutate({
+        clinicName: newSettings.clinicName || undefined,
+        clinicPhone: newSettings.clinicPhone || undefined,
+        clinicEmail: newSettings.clinicEmail || undefined,
+        emergencyPhone: newSettings.emergencyPhone || undefined,
+        testModeEnabled: newSettings.testModeEnabled,
+        testContactName: newSettings.testContactName ?? undefined,
+        testContactEmail: newSettings.testContactEmail ?? undefined,
+        testContactPhone: newSettings.testContactPhone ?? undefined,
+        voicemailDetectionEnabled: newSettings.voicemailDetectionEnabled,
+        defaultScheduleDelayMinutes:
+          newSettings.defaultScheduleDelayMinutes ?? null,
+        primaryColor: newSettings.primaryColor ?? undefined,
+        logoUrl: newSettings.logoUrl ?? null,
+        emailHeaderText: newSettings.emailHeaderText ?? null,
+        emailFooterText: newSettings.emailFooterText ?? null,
+        preferredEmailStartTime: newSettings.preferredEmailStartTime ?? null,
+        preferredEmailEndTime: newSettings.preferredEmailEndTime ?? null,
+        preferredCallStartTime: newSettings.preferredCallStartTime ?? null,
+        preferredCallEndTime: newSettings.preferredCallEndTime ?? null,
+        emailDelayDays: newSettings.emailDelayDays ?? null,
+        callDelayDays: newSettings.callDelayDays ?? null,
+        maxCallRetries: newSettings.maxCallRetries ?? null,
+        batchIncludeIdexxNotes: newSettings.batchIncludeIdexxNotes,
+        batchIncludeManualTranscriptions:
+          newSettings.batchIncludeManualTranscriptions,
+      });
+    },
+    [updateSettingsMutation],
+  );
 
   // Wrapper handlers for use in component
   const handleApproveAndSend = useCallback(
@@ -418,39 +471,13 @@ function OutboundDashboardInner() {
   return (
     <div className="flex h-[calc(100vh-64px)] w-full flex-col gap-2 overflow-hidden">
       {/* Test Mode Banner */}
-      {settingsData?.testModeEnabled && (
-        <div className="mx-auto w-full max-w-[1800px] px-4">
-          <div className="flex items-center justify-between rounded-lg border-2 border-amber-500/50 bg-amber-50/80 px-4 py-3 shadow-sm backdrop-blur-sm">
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/20">
-                <TestTube className="h-4 w-4 text-amber-700" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-amber-900">
-                  Test Mode Active
-                </h3>
-                <p className="text-xs text-amber-700">
-                  All calls/emails will be sent to:{" "}
-                  <span className="font-medium">
-                    {settingsData.testContactEmail ??
-                      settingsData.testContactPhone ??
-                      "test contact"}
-                  </span>
-                </p>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              asChild
-              className="border-amber-600/30 text-amber-800 hover:bg-amber-100/50"
-            >
-              <Link href="/dashboard/settings">
-                <Settings className="mr-2 h-3.5 w-3.5" />
-                Settings
-              </Link>
-            </Button>
-          </div>
+      {settingsData && (
+        <div className="mx-auto w-full max-w-[1800px] px-4 pt-4">
+          <CompactTestModeBanner
+            settings={settingsData}
+            onUpdate={handleUpdateSettings}
+            isLoading={updateSettingsMutation.isPending}
+          />
         </div>
       )}
 
