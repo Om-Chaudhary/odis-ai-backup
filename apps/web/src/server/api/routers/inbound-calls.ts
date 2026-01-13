@@ -6,6 +6,7 @@ import { createServiceClient } from "@odis-ai/data-access/db";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getCallDataOverride } from "~/components/dashboard/inbound/detail/demo-data/call-overrides";
 import { getDemoCalls } from "~/components/dashboard/inbound/demo-data";
+import { getClinicByUserId } from "@odis-ai/domain/clinics";
 
 // ============================================================================
 // VALIDATION SCHEMAS
@@ -74,34 +75,31 @@ async function getUserWithClinic(
 
 /**
  * Apply role-based filtering to query
- * Prevents SQL injection by using parameterized queries (Supabase handles escaping)
+ * Multi-clinic aware: filters by clinic_id for clinic-wide access
  */
 function applyRoleBasedFilter(
   query: ReturnType<SupabaseClient<unknown>["from"]>,
   user: { id: string; role: string | null; clinic_name: string | null },
+  clinicId: string | null,
 ) {
   const isAdminOrOwner =
     user.role === "admin" || user.role === "practice_owner";
 
   if (!isAdminOrOwner) {
     // Regular users: see calls for their clinic OR calls assigned to them
-    // Use .or() with proper parameterized values (Supabase escapes these)
-    if (user.clinic_name) {
-      // Both clinic_name and user_id are parameterized by Supabase
+    if (clinicId) {
+      // Use clinic_id for multi-clinic support
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-      query = query.or(
-        `clinic_name.eq."${user.clinic_name}",user_id.eq.${user.id}`,
-      );
+      query = query.or(`clinic_id.eq.${clinicId},user_id.eq.${user.id}`);
     } else {
-      // Only filter by user_id if no clinic_name
+      // Only filter by user_id if no clinic
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       query = query.eq("user_id", user.id);
     }
-  } else if (user.clinic_name) {
+  } else if (clinicId) {
     // Admins/practice owners see all calls for their clinic
-    // clinic_name is parameterized by Supabase
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    query = query.eq("clinic_name", user.clinic_name);
+    query = query.eq("clinic_id", clinicId);
   }
 
   return query;
@@ -124,6 +122,7 @@ export const inboundCallsRouter = createTRPCRouter({
 
       // Get current user's role and clinic using service client
       const user = await getUserWithClinic(serviceClient, ctx.user.id);
+      const clinic = await getClinicByUserId(ctx.user.id, serviceClient);
 
       // Build query - sort by created_at descending (most recent first)
       let query = serviceClient
@@ -131,8 +130,8 @@ export const inboundCallsRouter = createTRPCRouter({
         .select("*", { count: "exact" })
         .order("created_at", { ascending: false });
 
-      // Apply role-based filtering (prevents SQL injection)
-      query = applyRoleBasedFilter(query, user);
+      // Apply role-based filtering (multi-clinic aware)
+      query = applyRoleBasedFilter(query, user, clinic?.id ?? null);
 
       // Apply filters
       if (input.status) {
@@ -144,7 +143,18 @@ export const inboundCallsRouter = createTRPCRouter({
       }
 
       if (input.outcomes && input.outcomes.length > 0) {
-        query = query.in("outcome", input.outcomes);
+        // Build case-insensitive filter for outcomes
+        // Database has inconsistent casing: "Scheduled" vs "scheduled", "Call Back" vs "callback"
+        // Use ilike for case-insensitive matching
+        const outcomeFilters = input.outcomes.flatMap((outcome) => {
+          // Handle special case: "callback" should also match "Call Back"
+          if (outcome === "callback") {
+            return [`outcome.ilike.callback`, `outcome.ilike.Call Back`];
+          }
+          // For other outcomes, just use ilike for case-insensitive matching
+          return [`outcome.ilike.${outcome}`];
+        });
+        query = query.or(outcomeFilters.join(","));
       }
 
       if (input.startDate) {
@@ -716,14 +726,15 @@ export const inboundCallsRouter = createTRPCRouter({
 
       // Get current user's role and clinic
       const user = await getUserWithClinic(supabase, ctx.user.id);
+      const clinic = await getClinicByUserId(ctx.user.id, supabase);
 
       // Build optimized query - only select fields needed for stats
       let query = supabase
         .from("inbound_vapi_calls")
         .select("status, user_sentiment, duration_seconds, cost, created_at");
 
-      // Apply role-based filtering (prevents SQL injection)
-      query = applyRoleBasedFilter(query, user);
+      // Apply role-based filtering (multi-clinic aware)
+      query = applyRoleBasedFilter(query, user, clinic?.id ?? null);
 
       // Apply date filters
       if (input.startDate) {
