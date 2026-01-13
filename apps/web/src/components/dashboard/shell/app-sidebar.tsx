@@ -20,17 +20,23 @@ import {
   DropdownMenuTrigger,
 } from "@odis-ai/shared/ui/dropdown-menu";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@odis-ai/shared/ui/tooltip";
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarSeparator,
+} from "@odis-ai/shared/ui/sidebar";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { signOut } from "~/server/actions/auth";
 import type { User } from "@supabase/supabase-js";
-import { cn } from "@odis-ai/shared/util";
+import { ClinicSelector } from "../clinic-selector";
 
 /**
  * Build a clinic-scoped URL
@@ -56,9 +62,17 @@ interface AppSidebarProps {
     avatar_url: string | null;
   } | null;
   clinicSlug: string | null;
+  allClinics?: Array<{ id: string; name: string; slug: string }>;
+  currentClinicName?: string;
 }
 
-export function AppSidebar({ user, profile, clinicSlug }: AppSidebarProps) {
+export function AppSidebar({
+  user,
+  profile,
+  clinicSlug,
+  allClinics,
+  currentClinicName: _currentClinicName,
+}: AppSidebarProps) {
   const pathname = usePathname();
   const firstName = profile?.first_name ?? "User";
   const lastName = profile?.last_name ?? "";
@@ -79,119 +93,133 @@ export function AppSidebar({ user, profile, clinicSlug }: AppSidebarProps) {
   const isOnSettings = pathname.includes("/settings");
 
   return (
-    <TooltipProvider delayDuration={0}>
-      <div className="flex h-screen">
-        {/* Icon Rail - Always visible, very thin */}
-        <div className="flex w-16 flex-col border-r border-slate-200/60 bg-white/80 backdrop-blur-sm">
-          {/* Logo */}
-          <div className="flex h-16 items-center justify-center border-b border-slate-200/60">
-            <Link href={dashboardUrl}>
-              <Image
-                src="/icon-128.png"
-                alt="Odis AI"
-                width={32}
-                height={32}
-                className="h-8 w-8 rounded-lg transition-transform hover:scale-105"
-              />
-            </Link>
+    <Sidebar collapsible="icon" className="border-r">
+      <SidebarHeader className="border-b">
+        <div className="flex items-center gap-2 px-2 py-2">
+          <Link href={dashboardUrl} className="flex items-center gap-2">
+            <Image
+              src="/icon-128.png"
+              alt="Odis AI"
+              width={32}
+              height={32}
+              className="h-8 w-8 rounded-lg transition-transform hover:scale-105"
+            />
+            <span className="text-lg font-semibold group-data-[collapsible=icon]:hidden">
+              Odis AI
+            </span>
+          </Link>
+        </div>
+        {allClinics && allClinics.length > 0 && clinicSlug && (
+          <div className="px-2 pb-2 group-data-[collapsible=icon]:hidden">
+            <ClinicSelector
+              clinics={allClinics}
+              currentClinicSlug={clinicSlug}
+            />
           </div>
+        )}
+      </SidebarHeader>
 
-          {/* Main Navigation Icons */}
-          <nav className="flex flex-1 flex-col items-center gap-1 py-4">
-            {/* Dashboard */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link
-                  href={dashboardUrl}
-                  className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-200",
-                    isOnDashboard &&
-                      !isOnInbound &&
-                      !isOnOutbound &&
-                      !isOnSettings
-                      ? "bg-teal-100 text-teal-700"
-                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-700",
-                  )}
-                >
-                  <Home className="h-5 w-5" />
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Overview</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={
+                  isOnDashboard &&
+                  !isOnInbound &&
+                  !isOnOutbound &&
+                  !isOnSettings
+                }
+                tooltip="Dashboard"
+              >
+                <Link href={dashboardUrl}>
+                  <Home />
+                  <span>Dashboard</span>
                 </Link>
-              </TooltipTrigger>
-              <TooltipContent side="right">Dashboard</TooltipContent>
-            </Tooltip>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
 
-            <div className="my-2 h-px w-8 bg-slate-200" />
+        <SidebarSeparator />
 
-            {/* Inbound */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link
-                  href="/dashboard/inbound"
-                  className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-200",
-                    isOnInbound
-                      ? "bg-teal-100 text-teal-700"
-                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-700",
-                  )}
-                >
-                  <PhoneIncoming className="h-5 w-5" />
+        <SidebarGroup>
+          <SidebarGroupLabel>Calls</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isOnInbound}
+                tooltip="Inbound"
+              >
+                <Link href="/dashboard/inbound">
+                  <PhoneIncoming />
+                  <span>Inbound</span>
                 </Link>
-              </TooltipTrigger>
-              <TooltipContent side="right">Inbound</TooltipContent>
-            </Tooltip>
-
-            {/* Outbound */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link
-                  href="/dashboard/outbound"
-                  className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-200",
-                    isOnOutbound
-                      ? "bg-teal-100 text-teal-700"
-                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-700",
-                  )}
-                >
-                  <PhoneOutgoing className="h-5 w-5" />
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isOnOutbound}
+                tooltip="Outbound"
+              >
+                <Link href="/dashboard/outbound">
+                  <PhoneOutgoing />
+                  <span>Outbound</span>
                 </Link>
-              </TooltipTrigger>
-              <TooltipContent side="right">Outbound</TooltipContent>
-            </Tooltip>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
 
-            <div className="my-2 h-px w-8 bg-slate-200" />
+        <SidebarSeparator />
 
-            {/* Settings */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Link
-                  href={settingsUrl}
-                  className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-200",
-                    isOnSettings
-                      ? "bg-teal-100 text-teal-700"
-                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-700",
-                  )}
-                >
-                  <Settings className="h-5 w-5" />
+        <SidebarGroup>
+          <SidebarGroupLabel>Settings</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={isOnSettings}
+                tooltip="Settings"
+              >
+                <Link href={settingsUrl}>
+                  <Settings />
+                  <span>Settings</span>
                 </Link>
-              </TooltipTrigger>
-              <TooltipContent side="right">Settings</TooltipContent>
-            </Tooltip>
-          </nav>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+      </SidebarContent>
 
-          {/* User Avatar at Bottom */}
-          <div className="flex items-center justify-center border-t border-slate-200/60 py-4">
+      <SidebarFooter className="border-t">
+        <SidebarMenu>
+          <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="rounded-lg transition-transform hover:scale-105 focus:ring-2 focus:ring-teal-500/20 focus:outline-none">
-                  <Avatar className="h-9 w-9 rounded-lg">
+                <SidebarMenuButton
+                  size="lg"
+                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                >
+                  <Avatar className="h-8 w-8 rounded-lg">
                     {profile?.avatar_url && (
                       <AvatarImage src={profile.avatar_url} alt={fullName} />
                     )}
-                    <AvatarFallback className="rounded-lg bg-teal-100 text-sm font-medium text-teal-700">
+                    <AvatarFallback className="rounded-lg bg-teal-100 text-teal-700">
                       {initials}
                     </AvatarFallback>
                   </Avatar>
-                </button>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold">{fullName}</span>
+                    <span className="text-muted-foreground truncate text-xs">
+                      {user.email}
+                    </span>
+                  </div>
+                </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 className="w-56 rounded-lg"
@@ -238,24 +266,19 @@ export function AppSidebar({ user, profile, clinicSlug }: AppSidebarProps) {
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  asChild
                   className="text-red-600 focus:bg-red-50 focus:text-red-600"
+                  onClick={async () => {
+                    await signOut();
+                  }}
                 >
-                  <form action={signOut} className="w-full">
-                    <button
-                      type="submit"
-                      className="flex w-full items-center gap-2"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Log out
-                    </button>
-                  </form>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
-        </div>
-      </div>
-    </TooltipProvider>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
   );
 }
