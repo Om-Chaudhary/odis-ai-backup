@@ -136,7 +136,9 @@ export function AppSidebar({
               >
                 <Link href={dashboardUrl}>
                   <Home />
-                  <span>Dashboard</span>
+                  <span className="group-data-[collapsible=icon]:hidden">
+                    Dashboard
+                  </span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -156,7 +158,9 @@ export function AppSidebar({
               >
                 <Link href="/dashboard/inbound">
                   <PhoneIncoming />
-                  <span>Inbound</span>
+                  <span className="group-data-[collapsible=icon]:hidden">
+                    Inbound
+                  </span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -168,7 +172,9 @@ export function AppSidebar({
               >
                 <Link href="/dashboard/outbound">
                   <PhoneOutgoing />
-                  <span>Outbound</span>
+                  <span className="group-data-[collapsible=icon]:hidden">
+                    Outbound
+                  </span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -188,7 +194,9 @@ export function AppSidebar({
               >
                 <Link href={settingsUrl}>
                   <Settings />
-                  <span>Settings</span>
+                  <span className="group-data-[collapsible=icon]:hidden">
+                    Settings
+                  </span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
