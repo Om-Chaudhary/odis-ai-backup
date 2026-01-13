@@ -17,120 +17,163 @@ import {
   hasSoapNote,
   calculatePercentage,
 } from "./types";
+import {
+  getClinicUserIds,
+  getClinicBySlug,
+  getClinicByUserId,
+  userHasClinicAccess,
+  getClinicUserIdsEnhanced,
+} from "@odis-ai/domain/clinics";
+import { TRPCError } from "@trpc/server";
 
 export const statsRouter = createTRPCRouter({
   /**
    * Get quick stats overview
    */
-  getStats: protectedProcedure.query(async ({ ctx }) => {
-    const userId = ctx.user.id;
+  getStats: protectedProcedure
+    .input(z.object({ clinicSlug: z.string().optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.user.id;
 
-    // Get user's test mode setting
-    const { data: user } = await ctx.supabase
-      .from("users")
-      .select("test_mode_enabled")
-      .eq("id", userId)
-      .single();
+      // Get clinic - either from slug or user's primary clinic
+      let clinic;
+      if (input?.clinicSlug) {
+        clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
+        if (!clinic) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Clinic not found",
+          });
+        }
+        const hasAccess = await userHasClinicAccess(
+          userId,
+          clinic.id,
+          ctx.supabase,
+        );
+        if (!hasAccess) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have access to this clinic",
+          });
+        }
+      } else {
+        clinic = await getClinicByUserId(userId, ctx.supabase);
+      }
 
-    const testModeEnabled = user?.test_mode_enabled ?? false;
+      // Get all users in the clinic for multi-clinic support
+      const clinicUserIds = clinic?.id
+        ? await getClinicUserIdsEnhanced(clinic.id, ctx.supabase)
+        : await getClinicUserIds(userId, ctx.supabase);
 
-    // Get case counts by status
-    const { data: cases } = await ctx.supabase
-      .from("cases")
-      .select("status")
-      .eq("user_id", userId);
+      // Get user's test mode setting
+      const { data: user } = await ctx.supabase
+        .from("users")
+        .select("test_mode_enabled")
+        .eq("id", userId)
+        .single();
 
-    const activeCases =
-      cases?.filter((c) => c.status === "ongoing" || c.status === "draft")
-        .length ?? 0;
+      const testModeEnabled = user?.test_mode_enabled ?? false;
 
-    // Get call stats (exclude test mode calls if test mode is disabled)
-    const { data: allCalls } = await ctx.supabase
-      .from("scheduled_discharge_calls")
-      .select("status, created_at, metadata")
-      .eq("user_id", userId);
+      // Get case counts by status (clinic-scoped)
+      const { data: cases } = await ctx.supabase
+        .from("cases")
+        .select("status")
+        .in("user_id", clinicUserIds);
 
-    // Filter out test calls when test mode is disabled
-    const calls = testModeEnabled
-      ? allCalls
-      : allCalls?.filter((call) => {
-          const metadata = call.metadata as { test_call?: boolean } | null;
-          return metadata?.test_call !== true;
-        });
+      const activeCases =
+        cases?.filter((c) => c.status === "ongoing" || c.status === "draft")
+          .length ?? 0;
 
-    const totalCalls = calls?.length ?? 0;
-    const completedCalls =
-      calls?.filter((c) => c.status === "completed").length ?? 0;
-    const pendingCalls =
-      calls?.filter((c) => c.status === "queued" || c.status === "ringing")
-        .length ?? 0;
+      // Get call stats (exclude test mode calls if test mode is disabled, clinic-scoped)
+      const { data: allCalls } = await ctx.supabase
+        .from("scheduled_discharge_calls")
+        .select("status, created_at, metadata")
+        .in("user_id", clinicUserIds);
 
-    // Calculate call success rate
-    const callSuccessRate =
-      completedCalls > 0 ? Math.round((completedCalls / totalCalls) * 100) : 0;
+      // Filter out test calls when test mode is disabled
+      const calls = testModeEnabled
+        ? allCalls
+        : allCalls?.filter((call) => {
+            const metadata = call.metadata as { test_call?: boolean } | null;
+            return metadata?.test_call !== true;
+          });
 
-    // Get email stats
-    const { data: emails } = await ctx.supabase
-      .from("scheduled_discharge_emails")
-      .select("status, created_at")
-      .eq("user_id", userId);
+      const totalCalls = calls?.length ?? 0;
+      const completedCalls =
+        calls?.filter((c) => c.status === "completed").length ?? 0;
+      const pendingCalls =
+        calls?.filter((c) => c.status === "queued" || c.status === "ringing")
+          .length ?? 0;
 
-    const totalEmails = emails?.length ?? 0;
-    const sentEmails = emails?.filter((e) => e.status === "sent").length ?? 0;
-    const queuedEmails =
-      emails?.filter((e) => e.status === "queued").length ?? 0;
-    const failedEmails =
-      emails?.filter((e) => e.status === "failed").length ?? 0;
+      // Calculate call success rate
+      const callSuccessRate =
+        completedCalls > 0
+          ? Math.round((completedCalls / totalCalls) * 100)
+          : 0;
 
-    // Calculate email success rate (sent / (sent + failed))
-    const completedEmailAttempts = sentEmails + failedEmails;
-    const emailSuccessRate =
-      completedEmailAttempts > 0
-        ? Math.round((sentEmails / completedEmailAttempts) * 100)
-        : 0;
+      // Get email stats (clinic-scoped)
+      const { data: emails } = await ctx.supabase
+        .from("scheduled_discharge_emails")
+        .select("status, created_at")
+        .in("user_id", clinicUserIds);
 
-    // Get previous week's completed calls for trend
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    const previousWeekCalls =
-      calls?.filter(
-        (c) => c.status === "completed" && new Date(c.created_at) < oneWeekAgo,
-      ).length ?? 0;
+      const totalEmails = emails?.length ?? 0;
+      const sentEmails = emails?.filter((e) => e.status === "sent").length ?? 0;
+      const queuedEmails =
+        emails?.filter((e) => e.status === "queued").length ?? 0;
+      const failedEmails =
+        emails?.filter((e) => e.status === "failed").length ?? 0;
 
-    // Get previous week's sent emails for trend
-    const previousWeekEmails =
-      emails?.filter(
-        (e) => e.status === "sent" && new Date(e.created_at) < oneWeekAgo,
-      ).length ?? 0;
+      // Calculate email success rate (sent / (sent + failed))
+      const completedEmailAttempts = sentEmails + failedEmails;
+      const emailSuccessRate =
+        completedEmailAttempts > 0
+          ? Math.round((sentEmails / completedEmailAttempts) * 100)
+          : 0;
 
-    const casesTrend: "up" | "down" | "stable" =
-      activeCases > 0 ? "up" : "stable";
-    const callsTrend: "up" | "down" | "stable" =
-      completedCalls > previousWeekCalls ? "up" : "down";
-    const emailsTrend: "up" | "down" | "stable" =
-      sentEmails > previousWeekEmails ? "up" : "down";
+      // Get previous week's completed calls for trend
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      const previousWeekCalls =
+        calls?.filter(
+          (c) =>
+            c.status === "completed" && new Date(c.created_at) < oneWeekAgo,
+        ).length ?? 0;
 
-    return {
-      activeCases,
-      // Call stats
-      completedCalls,
-      pendingCalls,
-      successRate: callSuccessRate, // Keep for backward compatibility
-      callSuccessRate,
-      // Email stats
-      totalEmails,
-      sentEmails,
-      queuedEmails,
-      failedEmails,
-      emailSuccessRate,
-      // Trends
-      trends: {
-        cases: casesTrend,
-        calls: callsTrend,
-        emails: emailsTrend,
-      },
-    };
-  }),
+      // Get previous week's sent emails for trend
+      const previousWeekEmails =
+        emails?.filter(
+          (e) => e.status === "sent" && new Date(e.created_at) < oneWeekAgo,
+        ).length ?? 0;
+
+      const casesTrend: "up" | "down" | "stable" =
+        activeCases > 0 ? "up" : "stable";
+      const callsTrend: "up" | "down" | "stable" =
+        completedCalls > previousWeekCalls ? "up" : "down";
+      const emailsTrend: "up" | "down" | "stable" =
+        sentEmails > previousWeekEmails ? "up" : "down";
+
+      return {
+        activeCases,
+        // Call stats
+        completedCalls,
+        pendingCalls,
+        successRate: callSuccessRate, // Keep for backward compatibility
+        callSuccessRate,
+        // Email stats
+        totalEmails,
+        sentEmails,
+        queuedEmails,
+        failedEmails,
+        emailSuccessRate,
+        // Trends
+        trends: {
+          cases: casesTrend,
+          calls: callsTrend,
+          emails: emailsTrend,
+        },
+      };
+    }),
 
   /**
    * Get comprehensive case statistics including coverage metrics and completion rates
@@ -140,10 +183,41 @@ export const statsRouter = createTRPCRouter({
       z.object({
         startDate: z.string().nullable().optional(),
         endDate: z.string().nullable().optional(),
+        clinicSlug: z.string().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
+
+      // Get clinic - either from slug or user's primary clinic
+      let clinic;
+      if (input.clinicSlug) {
+        clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
+        if (!clinic) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Clinic not found",
+          });
+        }
+        const hasAccess = await userHasClinicAccess(
+          userId,
+          clinic.id,
+          ctx.supabase,
+        );
+        if (!hasAccess) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have access to this clinic",
+          });
+        }
+      } else {
+        clinic = await getClinicByUserId(userId, ctx.supabase);
+      }
+
+      // Get all users in the clinic for multi-clinic support
+      const clinicUserIds = clinic?.id
+        ? await getClinicUserIdsEnhanced(clinic.id, ctx.supabase)
+        : await getClinicUserIds(userId, ctx.supabase);
 
       // Get timezone-aware date boundaries for filtering
       let startIso: string | undefined;
@@ -170,7 +244,7 @@ export const statsRouter = createTRPCRouter({
         };
       };
 
-      // Single query to get all cases with relations for efficient calculation
+      // Single query to get all cases with relations for efficient calculation (clinic-scoped)
       let casesQuery = ctx.supabase
         .from("cases")
         .select(
@@ -184,7 +258,7 @@ export const statsRouter = createTRPCRouter({
           soap_notes(id)
         `,
         )
-        .eq("user_id", userId);
+        .in("user_id", clinicUserIds);
 
       if (startIso) {
         casesQuery = casesQuery.gte("created_at", startIso);
@@ -225,14 +299,14 @@ export const statsRouter = createTRPCRouter({
       });
       const bySource = Object.fromEntries(sourceMap);
 
-      // SOAP notes count (linked through cases)
+      // SOAP notes count (linked through cases, clinic-scoped)
       let soapNotesQuery = ctx.supabase
         .from("soap_notes")
         .select("id, cases!inner(user_id)", {
           count: "exact",
           head: true,
         })
-        .eq("cases.user_id", userId);
+        .in("cases.user_id", clinicUserIds);
 
       if (startIso) {
         soapNotesQuery = soapNotesQuery.gte("created_at", startIso);
@@ -243,11 +317,11 @@ export const statsRouter = createTRPCRouter({
 
       const { count: soapNotesCount } = await soapNotesQuery;
 
-      // Discharge summaries count
+      // Discharge summaries count (clinic-scoped)
       let dischargeSummariesQuery = ctx.supabase
         .from("discharge_summaries")
         .select("id", { count: "exact", head: true })
-        .eq("user_id", userId);
+        .in("user_id", clinicUserIds);
 
       if (startIso) {
         dischargeSummariesQuery = dischargeSummariesQuery.gte(
@@ -264,11 +338,11 @@ export const statsRouter = createTRPCRouter({
 
       const { count: dischargeSummariesCount } = await dischargeSummariesQuery;
 
-      // Calls completed
+      // Calls completed (clinic-scoped)
       let callsQuery = ctx.supabase
         .from("scheduled_discharge_calls")
         .select("id", { count: "exact", head: true })
-        .eq("user_id", userId)
+        .in("user_id", clinicUserIds)
         .eq("status", "completed");
 
       if (startIso) {
@@ -280,11 +354,11 @@ export const statsRouter = createTRPCRouter({
 
       const { count: callsCompletedCount } = await callsQuery;
 
-      // Emails sent
+      // Emails sent (clinic-scoped)
       let emailsQuery = ctx.supabase
         .from("scheduled_discharge_emails")
         .select("id", { count: "exact", head: true })
-        .eq("user_id", userId)
+        .in("user_id", clinicUserIds)
         .eq("status", "sent");
 
       if (startIso) {

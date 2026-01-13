@@ -7,6 +7,14 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { type SupabasePatientsResponse, type DynamicVariables } from "./types";
+import {
+  getClinicUserIds,
+  getClinicBySlug,
+  getClinicByUserId,
+  userHasClinicAccess,
+  getClinicUserIdsEnhanced,
+} from "@odis-ai/domain/clinics";
+import { TRPCError } from "@trpc/server";
 
 export const activityRouter = createTRPCRouter({
   /**
@@ -17,14 +25,47 @@ export const activityRouter = createTRPCRouter({
       z.object({
         startDate: z.string().nullable().optional(),
         endDate: z.string().nullable().optional(),
+        clinicSlug: z.string().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
+
+      // Get clinic - either from slug or user's primary clinic
+      let clinic;
+      if (input.clinicSlug) {
+        clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
+        if (!clinic) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Clinic not found",
+          });
+        }
+        // Verify user has access to this clinic
+        const hasAccess = await userHasClinicAccess(
+          userId,
+          clinic.id,
+          ctx.supabase,
+        );
+        if (!hasAccess) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have access to this clinic",
+          });
+        }
+      } else {
+        clinic = await getClinicByUserId(userId, ctx.supabase);
+      }
+
+      // Get all users in the clinic for multi-clinic support
+      const clinicUserIds = clinic?.id
+        ? await getClinicUserIdsEnhanced(clinic.id, ctx.supabase)
+        : await getClinicUserIds(userId, ctx.supabase);
+
       const startDate = input.startDate ? new Date(input.startDate) : undefined;
       const endDate = input.endDate ? new Date(input.endDate) : undefined;
 
-      // Get recent cases
+      // Get recent cases (clinic-scoped)
       let casesQuery = ctx.supabase
         .from("cases")
         .select(
@@ -38,7 +79,7 @@ export const activityRouter = createTRPCRouter({
         )
       `,
         )
-        .eq("user_id", userId);
+        .in("user_id", clinicUserIds);
 
       if (startDate) {
         casesQuery = casesQuery.gte("created_at", startDate.toISOString());
@@ -54,7 +95,7 @@ export const activityRouter = createTRPCRouter({
         .order("created_at", { ascending: false })
         .limit(5);
 
-      // Get recent calls
+      // Get recent calls (clinic-scoped)
       let callsQuery = ctx.supabase
         .from("scheduled_discharge_calls")
         .select(
@@ -66,7 +107,7 @@ export const activityRouter = createTRPCRouter({
         dynamic_variables
       `,
         )
-        .eq("user_id", userId);
+        .in("user_id", clinicUserIds);
 
       if (startDate) {
         callsQuery = callsQuery.gte("created_at", startDate.toISOString());
@@ -81,7 +122,7 @@ export const activityRouter = createTRPCRouter({
         .order("created_at", { ascending: false })
         .limit(5);
 
-      // Get recent discharge summaries
+      // Get recent discharge summaries (clinic-scoped)
       let summariesQuery = ctx.supabase
         .from("discharge_summaries")
         .select(
@@ -96,7 +137,7 @@ export const activityRouter = createTRPCRouter({
         )
       `,
         )
-        .eq("user_id", userId);
+        .in("user_id", clinicUserIds);
 
       if (startDate) {
         summariesQuery = summariesQuery.gte(
@@ -200,10 +241,43 @@ export const activityRouter = createTRPCRouter({
         startDate: z.string().nullable().optional(),
         endDate: z.string().nullable().optional(),
         days: z.number().min(1).max(30).default(7),
+        clinicSlug: z.string().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
+
+      // Get clinic - either from slug or user's primary clinic
+      let clinic;
+      if (input.clinicSlug) {
+        clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
+        if (!clinic) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Clinic not found",
+          });
+        }
+        // Verify user has access to this clinic
+        const hasAccess = await userHasClinicAccess(
+          userId,
+          clinic.id,
+          ctx.supabase,
+        );
+        if (!hasAccess) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have access to this clinic",
+          });
+        }
+      } else {
+        clinic = await getClinicByUserId(userId, ctx.supabase);
+      }
+
+      // Get all users in the clinic for multi-clinic support
+      const clinicUserIds = clinic?.id
+        ? await getClinicUserIdsEnhanced(clinic.id, ctx.supabase)
+        : await getClinicUserIds(userId, ctx.supabase);
+
       const days = input.days ?? 7;
 
       // Calculate date range
@@ -249,7 +323,7 @@ export const activityRouter = createTRPCRouter({
         }
       }
 
-      // Fetch all data in parallel
+      // Fetch all data in parallel (clinic-scoped)
       const [
         { data: cases },
         { data: dischargeSummaries },
@@ -260,31 +334,31 @@ export const activityRouter = createTRPCRouter({
         ctx.supabase
           .from("cases")
           .select("created_at")
-          .eq("user_id", userId)
+          .in("user_id", clinicUserIds)
           .gte("created_at", startDate.toISOString())
           .lte("created_at", endDate.toISOString()),
         ctx.supabase
           .from("discharge_summaries")
           .select("created_at")
-          .eq("user_id", userId)
+          .in("user_id", clinicUserIds)
           .gte("created_at", startDate.toISOString())
           .lte("created_at", endDate.toISOString()),
         ctx.supabase
           .from("scheduled_discharge_calls")
           .select("created_at, status, ended_at")
-          .eq("user_id", userId)
+          .in("user_id", clinicUserIds)
           .gte("created_at", startDate.toISOString())
           .lte("created_at", endDate.toISOString()),
         ctx.supabase
           .from("scheduled_discharge_emails")
           .select("created_at, status, sent_at")
-          .eq("user_id", userId)
+          .in("user_id", clinicUserIds)
           .gte("created_at", startDate.toISOString())
           .lte("created_at", endDate.toISOString()),
         ctx.supabase
           .from("soap_notes")
           .select("created_at, cases!inner(user_id)")
-          .eq("cases.user_id", userId)
+          .in("cases.user_id", clinicUserIds)
           .gte("created_at", startDate.toISOString())
           .lte("created_at", endDate.toISOString()),
       ]);
@@ -395,10 +469,42 @@ export const activityRouter = createTRPCRouter({
       z.object({
         startDate: z.string().nullable().optional(),
         endDate: z.string().nullable().optional(),
+        clinicSlug: z.string().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
+
+      // Get clinic - either from slug or user's primary clinic
+      let clinic;
+      if (input.clinicSlug) {
+        clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
+        if (!clinic) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Clinic not found",
+          });
+        }
+        // Verify user has access to this clinic
+        const hasAccess = await userHasClinicAccess(
+          userId,
+          clinic.id,
+          ctx.supabase,
+        );
+        if (!hasAccess) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have access to this clinic",
+          });
+        }
+      } else {
+        clinic = await getClinicByUserId(userId, ctx.supabase);
+      }
+
+      // Get all users in the clinic for multi-clinic support
+      const clinicUserIds = clinic?.id
+        ? await getClinicUserIdsEnhanced(clinic.id, ctx.supabase)
+        : await getClinicUserIds(userId, ctx.supabase);
 
       // Determine date range
       let dateStart: Date;
@@ -418,14 +524,14 @@ export const activityRouter = createTRPCRouter({
       const { data: cases } = await ctx.supabase
         .from("cases")
         .select("created_at")
-        .eq("user_id", userId)
+        .in("user_id", clinicUserIds)
         .gte("created_at", dateStart.toISOString())
         .lte("created_at", dateEnd.toISOString());
 
       const { data: calls } = await ctx.supabase
         .from("scheduled_discharge_calls")
         .select("created_at, status, ended_at")
-        .eq("user_id", userId)
+        .in("user_id", clinicUserIds)
         .gte("created_at", dateStart.toISOString())
         .lte("created_at", dateEnd.toISOString());
 

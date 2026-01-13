@@ -13,6 +13,13 @@ import {
   DEFAULT_TIMEZONE,
 } from "@odis-ai/shared/util/timezone";
 import { type CaseWithPatients, type DynamicVariables } from "./types";
+import {
+  getClinicUserIds,
+  getClinicBySlug,
+  getClinicByUserId,
+  userHasClinicAccess,
+  getClinicUserIdsEnhanced,
+} from "@odis-ai/domain/clinics";
 
 export const listingsRouter = createTRPCRouter({
   /**
@@ -33,10 +40,41 @@ export const listingsRouter = createTRPCRouter({
         missingDischarge: z.boolean().optional(),
         missingSoap: z.boolean().optional(),
         starred: z.boolean().optional(),
+        clinicSlug: z.string().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
+
+      // Get clinic - either from slug or user's primary clinic
+      let clinic;
+      if (input.clinicSlug) {
+        clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
+        if (!clinic) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Clinic not found",
+          });
+        }
+        const hasAccess = await userHasClinicAccess(
+          userId,
+          clinic.id,
+          ctx.supabase,
+        );
+        if (!hasAccess) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have access to this clinic",
+          });
+        }
+      } else {
+        clinic = await getClinicByUserId(userId, ctx.supabase);
+      }
+
+      // Get all users in the clinic for multi-clinic support
+      const clinicUserIds = clinic?.id
+        ? await getClinicUserIdsEnhanced(clinic.id, ctx.supabase)
+        : await getClinicUserIds(userId, ctx.supabase);
 
       // Validate and parse dates with timezone-aware boundaries
       let startIso: string | undefined;
@@ -73,7 +111,7 @@ export const listingsRouter = createTRPCRouter({
         endIso = endISO;
       }
 
-      // Build base query
+      // Build base query with clinic-scoped filtering
       let query = ctx.supabase
         .from("cases")
         .select(
@@ -94,7 +132,7 @@ export const listingsRouter = createTRPCRouter({
         `,
           { count: "exact" },
         )
-        .eq("user_id", userId);
+        .in("user_id", clinicUserIds);
 
       // Apply filters
       if (input.status) {
@@ -374,12 +412,43 @@ export const listingsRouter = createTRPCRouter({
           .enum(["all", "completed", "queued", "in_progress", "failed"])
           .optional()
           .default("all"),
+        clinicSlug: z.string().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
 
-      // Build query
+      // Get clinic - either from slug or user's primary clinic
+      let clinic;
+      if (input.clinicSlug) {
+        clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
+        if (!clinic) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Clinic not found",
+          });
+        }
+        const hasAccess = await userHasClinicAccess(
+          userId,
+          clinic.id,
+          ctx.supabase,
+        );
+        if (!hasAccess) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have access to this clinic",
+          });
+        }
+      } else {
+        clinic = await getClinicByUserId(userId, ctx.supabase);
+      }
+
+      // Get all users in the clinic for multi-clinic support
+      const clinicUserIds = clinic?.id
+        ? await getClinicUserIdsEnhanced(clinic.id, ctx.supabase)
+        : await getClinicUserIds(userId, ctx.supabase);
+
+      // Build query with clinic-scoped filtering
       let query = ctx.supabase
         .from("scheduled_discharge_calls")
         .select(
@@ -403,7 +472,7 @@ export const listingsRouter = createTRPCRouter({
         `,
           { count: "exact" },
         )
-        .eq("user_id", userId)
+        .in("user_id", clinicUserIds)
         .order("scheduled_for", { ascending: false, nullsFirst: false });
 
       // Apply status filter
@@ -552,12 +621,43 @@ export const listingsRouter = createTRPCRouter({
           .enum(["all", "queued", "sent", "failed", "cancelled"])
           .optional()
           .default("all"),
+        clinicSlug: z.string().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
 
-      // Build query
+      // Get clinic - either from slug or user's primary clinic
+      let clinic;
+      if (input.clinicSlug) {
+        clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
+        if (!clinic) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Clinic not found",
+          });
+        }
+        const hasAccess = await userHasClinicAccess(
+          userId,
+          clinic.id,
+          ctx.supabase,
+        );
+        if (!hasAccess) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have access to this clinic",
+          });
+        }
+      } else {
+        clinic = await getClinicByUserId(userId, ctx.supabase);
+      }
+
+      // Get all users in the clinic for multi-clinic support
+      const clinicUserIds = clinic?.id
+        ? await getClinicUserIdsEnhanced(clinic.id, ctx.supabase)
+        : await getClinicUserIds(userId, ctx.supabase);
+
+      // Build query with clinic-scoped filtering
       let query = ctx.supabase
         .from("scheduled_discharge_emails")
         .select(
@@ -576,7 +676,7 @@ export const listingsRouter = createTRPCRouter({
         `,
           { count: "exact" },
         )
-        .eq("user_id", userId)
+        .in("user_id", clinicUserIds)
         .order("scheduled_for", { ascending: false, nullsFirst: false });
 
       // Apply status filter
@@ -683,17 +783,48 @@ export const listingsRouter = createTRPCRouter({
       z.object({
         caseId: z.string().uuid(),
         starred: z.boolean(),
+        clinicSlug: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user.id;
 
-      // Verify the case belongs to the user
+      // Get clinic - either from slug or user's primary clinic
+      let clinic;
+      if (input.clinicSlug) {
+        clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
+        if (!clinic) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Clinic not found",
+          });
+        }
+        const hasAccess = await userHasClinicAccess(
+          userId,
+          clinic.id,
+          ctx.supabase,
+        );
+        if (!hasAccess) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have access to this clinic",
+          });
+        }
+      } else {
+        clinic = await getClinicByUserId(userId, ctx.supabase);
+      }
+
+      // Get all users in the clinic for multi-clinic support
+      const clinicUserIds = clinic?.id
+        ? await getClinicUserIdsEnhanced(clinic.id, ctx.supabase)
+        : await getClinicUserIds(userId, ctx.supabase);
+
+      // Verify the case belongs to the clinic
       const { data: existingCase, error: fetchError } = await ctx.supabase
         .from("cases")
         .select("id, user_id")
         .eq("id", input.caseId)
-        .eq("user_id", userId)
+        .in("user_id", clinicUserIds)
         .single();
 
       if (fetchError || !existingCase) {
@@ -708,7 +839,7 @@ export const listingsRouter = createTRPCRouter({
         .from("cases")
         .update({ is_starred: input.starred })
         .eq("id", input.caseId)
-        .eq("user_id", userId);
+        .in("user_id", clinicUserIds);
 
       if (updateError) {
         throw new TRPCError({

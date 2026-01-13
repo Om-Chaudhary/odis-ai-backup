@@ -7,8 +7,13 @@
 
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { getClinicByUserId } from "@odis-ai/domain/clinics";
+import {
+  getClinicByUserId,
+  getClinicBySlug,
+  userHasClinicAccess,
+} from "@odis-ai/domain/clinics";
 import { subDays, format, startOfDay, endOfDay } from "date-fns";
+import { TRPCError } from "@trpc/server";
 
 export const overviewRouter = createTRPCRouter({
   /**
@@ -24,20 +29,37 @@ export const overviewRouter = createTRPCRouter({
     .input(
       z.object({
         days: z.number().min(1).max(30).default(7),
+        clinicSlug: z.string().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
 
-      // Get user's clinic
-      const clinic = await getClinicByUserId(userId, ctx.supabase);
-      const { data: userRecord } = await ctx.supabase
-        .from("users")
-        .select("clinic_name")
-        .eq("id", userId)
-        .maybeSingle();
-
-      const clinicName = userRecord?.clinic_name ?? null;
+      // Get clinic - either from slug or user's primary clinic
+      let clinic;
+      if (input.clinicSlug) {
+        clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
+        if (!clinic) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Clinic not found",
+          });
+        }
+        // Verify user has access to this clinic
+        const hasAccess = await userHasClinicAccess(
+          userId,
+          clinic.id,
+          ctx.supabase,
+        );
+        if (!hasAccess) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have access to this clinic",
+          });
+        }
+      } else {
+        clinic = await getClinicByUserId(userId, ctx.supabase);
+      }
 
       // Calculate date range
       const endDate = endOfDay(new Date());
@@ -56,8 +78,8 @@ export const overviewRouter = createTRPCRouter({
         .gte("created_at", startDateStr)
         .lte("created_at", endDateStr);
 
-      if (clinicName) {
-        callQuery = callQuery.eq("clinic_name", clinicName);
+      if (clinic?.name) {
+        callQuery = callQuery.eq("clinic_name", clinic.name);
       }
 
       const { data: calls } = await callQuery;
@@ -239,32 +261,58 @@ export const overviewRouter = createTRPCRouter({
   /**
    * Get last activity timestamp for "last checked" indicator
    */
-  getLastActivity: protectedProcedure.query(async ({ ctx }) => {
-    const userId = ctx.user.id;
+  getLastActivity: protectedProcedure
+    .input(
+      z
+        .object({
+          clinicSlug: z.string().optional(),
+        })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.user.id;
 
-    const { data: userRecord } = await ctx.supabase
-      .from("users")
-      .select("clinic_name")
-      .eq("id", userId)
-      .maybeSingle();
+      // Get clinic - either from slug or user's primary clinic
+      let clinic;
+      if (input?.clinicSlug) {
+        clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
+        if (!clinic) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Clinic not found",
+          });
+        }
+        // Verify user has access to this clinic
+        const hasAccess = await userHasClinicAccess(
+          userId,
+          clinic.id,
+          ctx.supabase,
+        );
+        if (!hasAccess) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "You do not have access to this clinic",
+          });
+        }
+      } else {
+        clinic = await getClinicByUserId(userId, ctx.supabase);
+      }
 
-    const clinicName = userRecord?.clinic_name ?? null;
+      // Get most recent activity across all sources
+      let callQuery = ctx.supabase
+        .from("inbound_vapi_calls")
+        .select("created_at")
+        .order("created_at", { ascending: false })
+        .limit(1);
 
-    // Get most recent activity across all sources
-    let callQuery = ctx.supabase
-      .from("inbound_vapi_calls")
-      .select("created_at")
-      .order("created_at", { ascending: false })
-      .limit(1);
+      if (clinic?.name) {
+        callQuery = callQuery.eq("clinic_name", clinic.name);
+      }
 
-    if (clinicName) {
-      callQuery = callQuery.eq("clinic_name", clinicName);
-    }
+      const { data: lastCall } = await callQuery;
 
-    const { data: lastCall } = await callQuery;
-
-    return {
-      lastActivity: lastCall?.[0]?.created_at ?? null,
-    };
-  }),
+      return {
+        lastActivity: lastCall?.[0]?.created_at ?? null,
+      };
+    }),
 });
