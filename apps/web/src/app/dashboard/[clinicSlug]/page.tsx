@@ -17,7 +17,10 @@ export default async function ClinicDashboardPage({
   params,
   searchParams,
 }: ClinicDashboardPageProps) {
-  const [, queryParams] = await Promise.all([params, searchParams]);
+  const [resolvedParams, queryParams] = await Promise.all([
+    params,
+    searchParams,
+  ]);
   const hasAuthToken = Boolean(queryParams[AUTH_PARAMS.AUTH_TOKEN]);
 
   const user = await getUser();
@@ -47,7 +50,7 @@ export default async function ClinicDashboardPage({
 
   return (
     <ExtensionAuthHandler>
-      <DashboardContent />
+      <DashboardContent clinicSlug={resolvedParams.clinicSlug} />
     </ExtensionAuthHandler>
   );
 }

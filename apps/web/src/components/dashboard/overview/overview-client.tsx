@@ -10,7 +10,11 @@ import { OverviewSkeleton } from "./overview-skeleton";
 import { AfterhourAgentStats } from "./afterhours-agent-stats";
 import type { DateRangeOption } from "./types";
 
-export function OverviewClient() {
+interface OverviewClientProps {
+  clinicSlug?: string;
+}
+
+export function OverviewClient({ clinicSlug }: OverviewClientProps) {
   const [days, setDays] = useState<DateRangeOption>(7);
 
   const {
@@ -18,7 +22,7 @@ export function OverviewClient() {
     isLoading,
     isError,
   } = api.dashboard.getOverview.useQuery(
-    { days },
+    { days, clinicSlug },
     {
       refetchInterval: 30000, // Refresh every 30 seconds
       staleTime: 10000,

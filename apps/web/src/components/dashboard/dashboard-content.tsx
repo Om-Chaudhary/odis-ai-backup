@@ -2,6 +2,10 @@
 
 import { OverviewClient } from "./overview";
 
-export function DashboardContent() {
-  return <OverviewClient />;
+interface DashboardContentProps {
+  clinicSlug?: string;
+}
+
+export function DashboardContent({ clinicSlug }: DashboardContentProps) {
+  return <OverviewClient clinicSlug={clinicSlug} />;
 }
