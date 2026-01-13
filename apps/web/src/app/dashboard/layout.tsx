@@ -5,8 +5,14 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { AUTH_PARAMS } from "@odis-ai/shared/constants/auth";
-import { getClinicByUserId } from "@odis-ai/domain/clinics";
+import { getClinicByUserId, getUserClinics } from "@odis-ai/domain/clinics";
 import { Toaster } from "sonner";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@odis-ai/shared/ui/sidebar";
+import { Separator } from "@odis-ai/shared/ui/separator";
 
 export const metadata: Metadata = {
   title: "Dashboard | Odis AI",
@@ -60,19 +66,20 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  // Get full user profile and clinic from database for the sidebar
+  // Get full user profile, primary clinic, and all accessible clinics from database for the sidebar
   const supabase = await createClient();
-  const [{ data: profile }, clinic] = await Promise.all([
+  const [{ data: profile }, clinic, allClinics] = await Promise.all([
     supabase
       .from("users")
       .select("first_name, last_name, role, clinic_name, avatar_url")
       .eq("id", user.id)
       .single(),
     getClinicByUserId(user.id, supabase),
+    getUserClinics(user.id, supabase),
   ]);
 
   return (
-    <div className="flex h-screen max-h-screen w-full overflow-hidden bg-gradient-to-b from-emerald-50 via-emerald-100/40 to-emerald-50/30">
+    <SidebarProvider>
       {/* Background Effects */}
       <div className="pointer-events-none fixed inset-0 z-0">
         {/* Animated gradient overlays */}
@@ -116,21 +123,33 @@ export default async function DashboardLayout({
         className="pointer-events-none fixed inset-0 z-0 opacity-10"
       />
 
-      {/* Sidebar - Icon Rail + Secondary Panel */}
+      {/* Sidebar */}
       <AppSidebar
         user={user}
         profile={profile}
         clinicSlug={clinic?.slug ?? null}
+        allClinics={allClinics.map((c) => ({
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+        }))}
+        currentClinicName={clinic?.name}
       />
 
       {/* Main Content Area */}
-      <main className="relative z-10 flex h-full min-w-0 flex-1 flex-col overflow-hidden bg-transparent">
+      <SidebarInset className="relative z-10 bg-gradient-to-b from-emerald-50 via-emerald-100/40 to-emerald-50/30">
+        <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-white/50 backdrop-blur-sm">
+          <div className="flex flex-1 items-center gap-2 px-3">
+            <SidebarTrigger className="-ml-1" />
+            <Separator orientation="vertical" className="mr-2 h-4" />
+          </div>
+        </header>
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
           {children}
         </div>
-      </main>
+      </SidebarInset>
 
       <Toaster richColors />
-    </div>
+    </SidebarProvider>
   );
 }
