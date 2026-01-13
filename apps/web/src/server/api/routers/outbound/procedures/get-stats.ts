@@ -5,7 +5,11 @@
  */
 
 import { TRPCError } from "@trpc/server";
-import { getClinicUserIds } from "@odis-ai/domain/clinics";
+import {
+  getClinicUserIds,
+  getClinicBySlug,
+  getUserIdsByClinicName,
+} from "@odis-ai/domain/clinics";
 import {
   getLocalDayRange,
   DEFAULT_TIMEZONE,
@@ -162,8 +166,24 @@ export const getStatsRouter = createTRPCRouter({
 
       const testModeEnabled = userSettings?.test_mode_enabled ?? false;
 
-      // Get all user IDs in the same clinic for shared view
-      const clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
+      // Get all user IDs in the target clinic for shared view
+      // If clinicSlug is provided (admin viewing another clinic), use that clinic's users
+      // Otherwise fall back to the authenticated user's clinic
+      let clinicUserIds: string[];
+      if (input.clinicSlug) {
+        const clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
+        if (clinic) {
+          clinicUserIds = await getUserIdsByClinicName(
+            clinic.name,
+            ctx.supabase,
+          );
+        } else {
+          // Clinic not found, fall back to user's own clinic
+          clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
+        }
+      } else {
+        clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
+      }
 
       // Fetch all completed cases with minimal data for counting
       let query = ctx.supabase

@@ -6,7 +6,11 @@
  */
 
 import { TRPCError } from "@trpc/server";
-import { getClinicUserIds } from "@odis-ai/domain/clinics";
+import {
+  getClinicUserIds,
+  getClinicBySlug,
+  getUserIdsByClinicName,
+} from "@odis-ai/domain/clinics";
 import {
   getLocalDayRange,
   DEFAULT_TIMEZONE,
@@ -333,8 +337,24 @@ export const listCasesRouter = createTRPCRouter({
 
       const testModeEnabled = userSettings?.test_mode_enabled ?? false;
 
-      // Get all user IDs in the same clinic for shared view
-      const clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
+      // Get all user IDs in the target clinic for shared view
+      // If clinicSlug is provided (admin viewing another clinic), use that clinic's users
+      // Otherwise fall back to the authenticated user's clinic
+      let clinicUserIds: string[];
+      if (input.clinicSlug) {
+        const clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
+        if (clinic) {
+          clinicUserIds = await getUserIdsByClinicName(
+            clinic.name,
+            ctx.supabase,
+          );
+        } else {
+          // Clinic not found, fall back to user's own clinic
+          clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
+        }
+      } else {
+        clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
+      }
 
       // Check if this is a needs_attention query (different query strategy)
       const isNeedsAttentionMode = input.viewMode === "needs_attention";

@@ -19,6 +19,7 @@ import {
 import { api } from "~/trpc/client";
 import { CompactTestModeBanner } from "~/components/dashboard/discharges/test-mode-banner";
 import type { DischargeSettings } from "@odis-ai/shared/types";
+import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
 
 import { NeedsAttentionView } from "./views/needs-attention-view";
 import { AllDischargesView } from "./views/all-discharges-view";
@@ -33,6 +34,10 @@ export function OutboundDashboard() {
 }
 
 function OutboundDashboardInner() {
+  // Get clinic context for admin users viewing a specific clinic
+  const clinicContext = useOptionalClinic();
+  const clinicSlug = clinicContext?.clinicSlug;
+
   // URL-synced state
   const [dateStr, setDateStr] = useQueryState("date", {
     defaultValue: format(startOfDay(new Date()), "yyyy-MM-dd"),
@@ -123,6 +128,7 @@ function OutboundDashboardInner() {
     endDate,
     consultationId,
     viewMode: viewMode,
+    clinicSlug,
   });
 
   // Bulk operation context for background processing

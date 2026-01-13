@@ -14,6 +14,8 @@ interface UseOutboundDataParams {
   consultationId?: string | null;
   /** Current view mode - needed to fetch previous attention date when in needs_attention view */
   viewMode?: "all" | "needs_review" | "needs_attention";
+  /** Clinic slug for admin users viewing a specific clinic's data */
+  clinicSlug?: string;
 }
 
 /**
@@ -29,6 +31,7 @@ export function useOutboundData(params: UseOutboundDataParams) {
     endDate,
     consultationId,
     viewMode,
+    clinicSlug,
   } = params;
 
   const casesRef = useRef<Array<{ status: string }>>([]);
@@ -47,6 +50,7 @@ export function useOutboundData(params: UseOutboundDataParams) {
       page,
       pageSize,
       search: searchTerm || undefined,
+      clinicSlug,
       // Only pass dates if NOT in needs_attention mode
       ...(isNeedsAttentionMode
         ? { viewMode: "needs_attention" }
@@ -67,6 +71,7 @@ export function useOutboundData(params: UseOutboundDataParams) {
   const { data: statsData } = api.outbound.getDischargeCaseStats.useQuery({
     startDate,
     endDate,
+    clinicSlug,
   });
 
   // Fetch discharge settings (for test mode indicator)

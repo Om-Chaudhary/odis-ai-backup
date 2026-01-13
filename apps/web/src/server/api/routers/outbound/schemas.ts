@@ -85,11 +85,15 @@ export const listDischargeCasesInput = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   veterinarianId: z.string().uuid().optional(),
+  /** Clinic slug for admin users viewing a specific clinic's data */
+  clinicSlug: z.string().optional(),
 });
 
 export const getDischargeCaseStatsInput = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
+  /** Clinic slug for admin users viewing a specific clinic's data */
+  clinicSlug: z.string().optional(),
 });
 
 export const getDischargeCaseDetailInput = z.object({
