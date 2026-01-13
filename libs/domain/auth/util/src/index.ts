@@ -21,7 +21,6 @@ export {
 // Storage adapters
 export {
   localStorageAdapter,
-  chromeStorageAdapter,
   createMemoryStorageAdapter,
   detectStorageAdapter,
 } from "./storage";

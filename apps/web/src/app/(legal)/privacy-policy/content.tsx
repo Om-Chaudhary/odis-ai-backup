@@ -20,8 +20,8 @@ export const privacyPolicySections: ComplianceSection[] = [
           Welcome to {COMPANY_NAME}. We are committed to protecting your privacy
           and ensuring the security of your personal information. This Privacy
           Policy explains how we collect, use, disclose, and safeguard your
-          information when you use our services, including our website, Chrome
-          extension, and related applications.
+          information when you use our services, including our website and
+          related applications.
         </p>
         <p>
           By using our services, you agree to the collection and use of
@@ -97,38 +97,6 @@ export const privacyPolicySections: ComplianceSection[] = [
                 and performance metrics
               </li>
             </ul>
-          </>
-        ),
-      },
-      {
-        id: "extension-data",
-        title: "Chrome Extension Data",
-        content: (
-          <>
-            <p>
-              Our Chrome extension may collect specific information to provide
-              its functionality:
-            </p>
-            <ul>
-              <li>
-                <strong>Browser Activity:</strong> URLs visited, tab
-                information, and browsing patterns (only as necessary for
-                extension functionality)
-              </li>
-              <li>
-                <strong>Extension Settings:</strong> User preferences and
-                configuration
-              </li>
-              <li>
-                <strong>Synchronization Data:</strong> Data synced across your
-                devices through our services
-              </li>
-            </ul>
-            <p>
-              <strong>Note:</strong> We only collect browser data necessary for
-              the extension to function. We do not track your general browsing
-              history beyond what is required for our service.
-            </p>
           </>
         ),
       },
@@ -404,72 +372,6 @@ export const privacyPolicySections: ComplianceSection[] = [
               >
                 www.allaboutcookies.org
               </a>
-            </p>
-          </>
-        ),
-      },
-    ],
-  },
-  {
-    id: "chrome-extension-permissions",
-    title: "Chrome Extension Specific Permissions",
-    content: (
-      <>
-        <p>
-          Our Chrome extension requires specific permissions to function. Here
-          is what we access and why:
-        </p>
-      </>
-    ),
-    subsections: [
-      {
-        id: "required-permissions",
-        title: "Required Permissions",
-        content: (
-          <>
-            <ul>
-              <li>
-                <strong>Storage:</strong> To save your preferences and settings
-                locally and sync them across devices
-              </li>
-              <li>
-                <strong>Active Tab:</strong> To interact with the current tab
-                and provide context-specific features
-              </li>
-              <li>
-                <strong>Host Permissions:</strong> To access specific websites
-                where our extension provides functionality
-              </li>
-              <li>
-                <strong>Identity:</strong> To authenticate your account and sync
-                data securely
-              </li>
-            </ul>
-          </>
-        ),
-      },
-      {
-        id: "optional-permissions",
-        title: "Optional Permissions",
-        content: (
-          <>
-            <p>
-              Some features require additional permissions that you can grant or
-              revoke at any time:
-            </p>
-            <ul>
-              <li>
-                <strong>Notifications:</strong> To send you alerts and updates
-                about important events
-              </li>
-              <li>
-                <strong>Clipboard:</strong> To enable copy-paste functionality
-                for specific features
-              </li>
-            </ul>
-            <p className="mt-4">
-              You can review and revoke permissions at any time through
-              Chrome&apos;s extension settings (chrome://extensions/).
             </p>
           </>
         ),

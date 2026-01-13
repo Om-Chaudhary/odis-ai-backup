@@ -79,12 +79,6 @@
       "@odis-ai/domain/clinics/*": ["libs/domain/clinics/util/src/*"],
       "@odis-ai/domain/auth": ["libs/domain/auth/util/src/index.ts"],
       "@odis-ai/domain/auth/*": ["libs/domain/auth/util/src/*"],
-      "@odis-ai/extension/shared": ["libs/extension/shared/src/index.ts"],
-      "@odis-ai/extension/shared/*": ["libs/extension/shared/src/*"],
-      "@odis-ai/extension/storage": ["libs/extension/storage/src/index.ts"],
-      "@odis-ai/extension/storage/*": ["libs/extension/storage/src/*"],
-      "@odis-ai/extension/env": ["libs/extension/env/src/index.ts"],
-      "@odis-ai/extension/env/*": ["libs/extension/env/src/*"],
 
       // Data Access - DB Split
       "@odis-ai/data-access/supabase-client": [
