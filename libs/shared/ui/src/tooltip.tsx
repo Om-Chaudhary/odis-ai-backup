@@ -3,8 +3,6 @@
 import * as React from "react";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
-import { cn } from "@odis-ai/shared/util";
-
 function TooltipProvider({
   delayDuration = 0,
   ...props
@@ -34,12 +32,9 @@ function TooltipTrigger({
   return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props} />;
 }
 
-function TooltipContent({
-  className,
-  sideOffset = 0,
-  children,
-  ...props
-}: React.ComponentProps<typeof TooltipPrimitive.Content>) {
+function TooltipContent(
+  _props: React.ComponentProps<typeof TooltipPrimitive.Content>,
+) {
   // Tooltips globally disabled - return null to prevent rendering
   return null;
 }

@@ -110,7 +110,6 @@ export class DischargeOrchestrator {
     // Handle existing case: mark ingest as completed if not explicitly enabled
     if (this.request.input && "existingCase" in this.request.input) {
       if (!this.results.has("ingest")) {
-        const stepStart = Date.now();
         const result = await this.executeStep("ingest");
         this.results.set("ingest", result);
         if (result.status === "completed") {

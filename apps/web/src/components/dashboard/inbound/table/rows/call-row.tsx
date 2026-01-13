@@ -39,8 +39,14 @@ export function CallRow({ call, isCompact = false }: CallRowProps) {
       <td className="py-3 text-center">
         <OutcomeBadge call={call} />
       </td>
-      <td className="py-3 text-center">
-        <CallDuration call={call} />
+      <td className={`py-3 ${isCompact ? "pr-3 text-right" : "text-center"}`}>
+        {isCompact ? (
+          <span className="text-xs font-medium text-slate-800">
+            {format(displayDate, "MMM d, h:mm a")}
+          </span>
+        ) : (
+          <CallDuration call={call} />
+        )}
       </td>
       {!isCompact && (
         <td className="py-3 pr-3 text-right">

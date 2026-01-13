@@ -18,7 +18,7 @@ import type { ICallExecutor } from "@odis-ai/domain/shared";
 import { normalizeToE164 } from "@odis-ai/shared/util/phone";
 import { getClinicVapiConfigByUserId } from "@odis-ai/domain/clinics/vapi-config";
 
-import { getCaseWithEntities, type CaseWithEntities } from "./case-crud";
+import { getCaseWithEntities } from "./case-crud";
 import { generateSummaryFromEntities } from "./case-helpers";
 import {
   isEntitiesIncomplete,

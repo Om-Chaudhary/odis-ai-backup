@@ -20,9 +20,9 @@ export function CallsHeader({ isCompact = false }: HeaderProps) {
         Outcome
       </th>
       <th
-        className={`h-10 text-center font-medium ${isCompact ? "w-[18%]" : "w-[14%]"}`}
+        className={`h-10 ${isCompact ? "pr-3 text-right" : "text-center"} font-medium ${isCompact ? "w-[35%]" : "w-[14%]"}`}
       >
-        Duration
+        {isCompact ? "Date/Time" : "Duration"}
       </th>
       {!isCompact && (
         <th className="h-10 w-[22%] pr-3 text-right font-medium">Date/Time</th>

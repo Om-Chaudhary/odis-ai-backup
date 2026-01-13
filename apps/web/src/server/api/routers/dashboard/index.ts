@@ -13,6 +13,7 @@ import { scheduledRouter } from "./scheduled";
 import { listingsRouter } from "./listings";
 import { widgetsRouter } from "./widgets";
 import { overviewRouter } from "./overview";
+import { clinicsRouter } from "./clinics";
 
 export const dashboardRouter = createTRPCRouter({
   // Overview procedures (new dashboard overview)
@@ -47,6 +48,9 @@ export const dashboardRouter = createTRPCRouter({
   getTodayOutboundSuccess: widgetsRouter.getTodayOutboundSuccess,
   getFailedCalls: widgetsRouter.getFailedCalls,
   getVoicemailQueue: widgetsRouter.getVoicemailQueue,
+
+  // Clinic procedures (multi-clinic support)
+  getUserClinics: clinicsRouter.getUserClinics,
 });
 
 // Re-export types for convenience

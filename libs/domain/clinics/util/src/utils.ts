@@ -633,6 +633,174 @@ export async function getOrCreateProvider(
  * );
  * ```
  */
+/* ========================================
+   Multi-Clinic Access Functions
+   ======================================== */
+
+/**
+ * Get all clinics a user has access to
+ *
+ * Uses the user_clinic_access junction table for multi-clinic support.
+ * Falls back to clinic_name lookup if no junction records exist.
+ *
+ * @param userId - User ID
+ * @param supabase - Supabase client
+ * @returns Array of clinic records the user has access to
+ */
+export async function getUserClinics(
+  userId: string,
+  supabase: SupabaseClientType,
+): Promise<Database["public"]["Tables"]["clinics"]["Row"][]> {
+  if (!userId || typeof userId !== "string") {
+    logger.error("Invalid user ID provided for getUserClinics", { userId });
+    return [];
+  }
+
+  // First, try the new junction table
+  const { data: clinicAccess, error: accessError } = await supabase
+    .from("user_clinic_access")
+    .select(
+      `
+      clinic_id,
+      is_primary,
+      clinics (*)
+    `,
+    )
+    .eq("user_id", userId);
+
+  if (!accessError && clinicAccess && clinicAccess.length > 0) {
+    // Sort with primary clinic first
+    const sorted = [...clinicAccess].sort((a, b) => {
+      if (a.is_primary && !b.is_primary) return -1;
+      if (!a.is_primary && b.is_primary) return 1;
+      return 0;
+    });
+
+    return sorted
+      .map(
+        (access) =>
+          access.clinics as Database["public"]["Tables"]["clinics"]["Row"],
+      )
+      .filter(
+        (clinic): clinic is NonNullable<typeof clinic> => clinic !== null,
+      );
+  }
+
+  // Fallback to legacy clinic_name lookup
+  const clinic = await getClinicByUserId(userId, supabase);
+  return clinic ? [clinic] : [];
+}
+
+/**
+ * Get user's primary clinic
+ *
+ * Returns the clinic marked as is_primary, or falls back to clinic_name.
+ *
+ * @param userId - User ID
+ * @param supabase - Supabase client
+ * @returns Primary clinic or null
+ */
+export async function getUserPrimaryClinic(
+  userId: string,
+  supabase: SupabaseClientType,
+): Promise<Database["public"]["Tables"]["clinics"]["Row"] | null> {
+  if (!userId || typeof userId !== "string") {
+    logger.error("Invalid user ID provided for getUserPrimaryClinic", {
+      userId,
+    });
+    return null;
+  }
+
+  // Try junction table first
+  const { data: primaryAccess } = await supabase
+    .from("user_clinic_access")
+    .select("clinics (*)")
+    .eq("user_id", userId)
+    .eq("is_primary", true)
+    .maybeSingle();
+
+  if (primaryAccess?.clinics) {
+    return primaryAccess.clinics as Database["public"]["Tables"]["clinics"]["Row"];
+  }
+
+  // Fallback to legacy
+  return getClinicByUserId(userId, supabase);
+}
+
+/**
+ * Check if user has access to a specific clinic
+ *
+ * @param userId - User ID
+ * @param clinicId - Clinic ID to check access for
+ * @param supabase - Supabase client
+ * @returns true if user has access
+ */
+export async function userHasClinicAccess(
+  userId: string,
+  clinicId: string,
+  supabase: SupabaseClientType,
+): Promise<boolean> {
+  if (!userId || !clinicId) {
+    return false;
+  }
+
+  // Check junction table
+  const { data } = await supabase
+    .from("user_clinic_access")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("clinic_id", clinicId)
+    .maybeSingle();
+
+  if (data) return true;
+
+  // Fallback: check if clinic matches user's clinic_name
+  const userClinic = await getClinicByUserId(userId, supabase);
+  return userClinic?.id === clinicId;
+}
+
+/**
+ * Get all user IDs with access to a clinic (including via junction table)
+ *
+ * Enhanced version of getClinicUserIds that also checks the junction table.
+ *
+ * @param clinicId - Clinic ID
+ * @param supabase - Supabase client
+ * @returns Array of user IDs with access to the clinic
+ */
+export async function getClinicUserIdsEnhanced(
+  clinicId: string,
+  supabase: SupabaseClientType,
+): Promise<string[]> {
+  // Get users from junction table
+  const { data: junctionUsers } = await supabase
+    .from("user_clinic_access")
+    .select("user_id")
+    .eq("clinic_id", clinicId);
+
+  // Get clinic name for legacy lookup
+  const { data: clinic } = await supabase
+    .from("clinics")
+    .select("name")
+    .eq("id", clinicId)
+    .maybeSingle();
+
+  const junctionUserIds = junctionUsers?.map((u) => u.user_id) ?? [];
+
+  if (clinic?.name) {
+    // Also include users via legacy clinic_name
+    const legacyUserIds = await getUserIdsByClinicName(clinic.name, supabase);
+    // Merge and deduplicate
+    return [...new Set([...junctionUserIds, ...legacyUserIds])];
+  }
+
+  return junctionUserIds;
+}
+
+/* ========================================
+   Clinic Creation
+   ======================================== */
+
 export async function getOrCreateClinic(
   clinicName: string,
   supabase: SupabaseClientType,

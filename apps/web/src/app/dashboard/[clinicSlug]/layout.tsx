@@ -1,6 +1,10 @@
 import { redirect, notFound } from "next/navigation";
 import { createClient } from "@odis-ai/data-access/db/server";
-import { getClinicBySlug, getClinicByUserId } from "@odis-ai/domain/clinics";
+import {
+  getClinicBySlug,
+  getUserClinics,
+  userHasClinicAccess,
+} from "@odis-ai/domain/clinics";
 import { ClinicProvider } from "@odis-ai/shared/ui/clinic-context";
 
 interface ClinicLayoutProps {
@@ -41,17 +45,16 @@ export default async function ClinicLayout({
     notFound();
   }
 
-  // Get user's clinic to verify access
-  const userClinic = await getClinicByUserId(user.id, supabase);
+  // Check if user has access to this clinic (supports multi-clinic access)
+  const hasAccess = await userHasClinicAccess(user.id, clinic.id, supabase);
 
-  // Check if user has access to this clinic
-  // For now, we only allow access to the user's own clinic
-  // TODO: In the future, support multiple clinics per user via clinic_users table
-  if (!userClinic || userClinic.id !== clinic.id) {
+  if (!hasAccess) {
     // User doesn't have access to this clinic
-    // Redirect to their own clinic if they have one, otherwise 404
-    if (userClinic) {
-      redirect(`/dashboard/${userClinic.slug}`);
+    // Redirect to a clinic they do have access to, otherwise 404
+    const userClinics = await getUserClinics(user.id, supabase);
+    const firstClinic = userClinics[0];
+    if (firstClinic) {
+      redirect(`/dashboard/${firstClinic.slug}`);
     }
     notFound();
   }

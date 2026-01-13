@@ -171,7 +171,9 @@ export function registerBuiltInTools(): void {
 
         // Convert 24h format to 12h AM/PM format for display
         const formatTime = (time24: string): string => {
-          const [hours, minutes] = time24.split(":").map(Number);
+          const parts = time24.split(":");
+          const hours = Number(parts[0] ?? 0);
+          const minutes = Number(parts[1] ?? 0);
           const period = hours >= 12 ? "PM" : "AM";
           const hours12 = hours % 12 || 12;
           return `${hours12}:${minutes.toString().padStart(2, "0")} ${period}`;

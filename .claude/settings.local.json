@@ -221,7 +221,12 @@
       "Bash(nx run-many:*)",
       "Bash(pnpm exec vitest:*)",
       "Bash(pnpm exec lint-staged:*)",
-      "Bash(pnpm check:*)"
+      "Bash(pnpm check:*)",
+      "mcp__vapi-mcp__list_phone_numbers",
+      "Bash(git -C /Users/taylorallen/Development/odis-ai-web diff --stat)",
+      "Bash(nx graph:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=4096\" nx build:*)",
+      "Bash(nx affected:*)"
     ],
     "deny": [],
     "ask": []
