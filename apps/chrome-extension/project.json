@@ -59,10 +59,11 @@
       }
     },
     "test": {
-      "executor": "@nx/vite:test",
+      "executor": "@nx/vitest:test",
       "outputs": ["{workspaceRoot}/coverage/apps/chrome-extension"],
       "options": {
-        "config": "apps/chrome-extension/vitest.config.ts"
+        "configFile": "apps/chrome-extension/vitest.config.ts",
+        "passWithNoTests": true
       }
     },
     "zip": {

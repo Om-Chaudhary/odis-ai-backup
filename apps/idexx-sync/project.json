@@ -105,9 +105,11 @@
       "dependsOn": ["^typecheck"]
     },
     "test": {
-      "executor": "@nx/vite:test",
+      "executor": "@nx/vitest:test",
+      "outputs": ["{workspaceRoot}/coverage/apps/idexx-sync"],
       "options": {
-        "configFile": "apps/idexx-sync/vitest.config.ts"
+        "configFile": "apps/idexx-sync/vitest.config.ts",
+        "passWithNoTests": true
       }
     },
     "cli": {
