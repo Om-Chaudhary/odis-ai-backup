@@ -643,6 +643,8 @@ export async function getOrCreateProvider(
  * Uses the user_clinic_access junction table for multi-clinic support.
  * Falls back to clinic_name lookup if no junction records exist.
  *
+ * **Admin Access**: Users with role="admin" automatically have access to ALL clinics.
+ *
  * @param userId - User ID
  * @param supabase - Supabase client
  * @returns Array of clinic records the user has access to
@@ -656,7 +658,31 @@ export async function getUserClinics(
     return [];
   }
 
-  // First, try the new junction table
+  // Check if user is an admin
+  const { data: user } = await supabase
+    .from("users")
+    .select("role, clinic_name")
+    .eq("id", userId)
+    .single();
+
+  // Admins get access to ALL clinics
+  if (user?.role === "admin") {
+    const { data: allClinics, error: allClinicsError } = await supabase
+      .from("clinics")
+      .select("*")
+      .eq("is_active", true)
+      .order("name", { ascending: true });
+
+    if (!allClinicsError && allClinics) {
+      logger.debug("Admin user - returning all clinics", {
+        userId,
+        clinicCount: allClinics.length,
+      });
+      return allClinics;
+    }
+  }
+
+  // Non-admin users: try the new junction table
   const { data: clinicAccess, error: accessError } = await supabase
     .from("user_clinic_access")
     .select(
@@ -730,6 +756,11 @@ export async function getUserPrimaryClinic(
 /**
  * Check if user has access to a specific clinic
  *
+ * Access is granted if:
+ * - User has admin role (admins can access all clinics)
+ * - User has explicit access via user_clinic_access junction table
+ * - Clinic matches user's primary clinic_name field
+ *
  * @param userId - User ID
  * @param clinicId - Clinic ID to check access for
  * @param supabase - Supabase client
@@ -742,6 +773,17 @@ export async function userHasClinicAccess(
 ): Promise<boolean> {
   if (!userId || !clinicId) {
     return false;
+  }
+
+  // Check if user is an admin - admins have access to all clinics
+  const { data: user } = await supabase
+    .from("users")
+    .select("role")
+    .eq("id", userId)
+    .single();
+
+  if (user?.role === "admin") {
+    return true;
   }
 
   // Check junction table
