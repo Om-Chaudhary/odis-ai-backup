@@ -27,16 +27,16 @@ import {
   SentimentNode,
   AttentionNode,
   StatusNode,
-} from "../../_components/detail/workflow/nodes";
+} from "~/components/dashboard/outbound/detail/workflow/nodes";
 
 // Import custom edges
-import { AnimatedEdge } from "../../_components/detail/workflow/edges";
+import { AnimatedEdge } from "~/components/dashboard/outbound/detail/workflow/edges";
 
 // Import workflow builder
 import {
   buildWorkflow,
   type CaseDataForWorkflow,
-} from "../../_components/detail/workflow/workflow-builder";
+} from "~/components/dashboard/outbound/detail/workflow/workflow-builder";
 
 // Node types registry
 const nodeTypes: NodeTypes = {

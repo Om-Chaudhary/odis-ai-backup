@@ -4,10 +4,6 @@ import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
 import { format, parseISO, startOfDay } from "date-fns";
-import { TestTube, Settings } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@odis-ai/shared/ui/button";
-import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
 
 import type { ViewMode, DeliveryToggles, TransformedCase } from "./types";
 import { BulkOperationProgress } from "./bulk-operation-progress";
@@ -16,7 +12,10 @@ import {
   BulkOperationProvider,
   useBulkOperation,
 } from "./bulk-operation-context";
-import { useOutboundData, useOutboundMutations } from "../_hooks";
+import {
+  useOutboundData,
+  useOutboundMutations,
+} from "~/app/dashboard/outbound/_hooks";
 import { api } from "~/trpc/client";
 import { CompactTestModeBanner } from "~/components/dashboard/discharges/test-mode-banner";
 import type { DischargeSettings } from "@odis-ai/shared/types";
@@ -34,12 +33,6 @@ export function OutboundDashboard() {
 }
 
 function OutboundDashboardInner() {
-  // Get clinic context (optional - works both with and without ClinicProvider)
-  const clinicContext = useOptionalClinic();
-  const settingsUrl = clinicContext
-    ? `/dashboard/${clinicContext.clinicSlug}/settings`
-    : "/dashboard/settings";
-
   // URL-synced state
   const [dateStr, setDateStr] = useQueryState("date", {
     defaultValue: format(startOfDay(new Date()), "yyyy-MM-dd"),

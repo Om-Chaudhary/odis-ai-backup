@@ -10,4 +10,4 @@ export { OutboundDashboard } from "./outbound-dashboard";
 export { OutboundErrorBoundary } from "./outbound-error-boundary";
 
 // Re-export additional types and components from shared location
-export * from "~/app/dashboard/outbound/_components";
+export * from "~/components/dashboard/outbound";

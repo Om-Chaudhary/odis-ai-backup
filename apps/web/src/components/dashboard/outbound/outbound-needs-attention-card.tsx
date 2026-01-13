@@ -11,6 +11,7 @@ import { Button } from "@odis-ai/shared/ui/button";
 import { Badge } from "@odis-ai/shared/ui/badge";
 import { Phone, CheckCircle2, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
 import Link from "next/link";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { api } from "~/trpc/client";
@@ -29,6 +30,13 @@ import {
  */
 export function OutboundNeedsAttentionCard() {
   const router = useRouter();
+  const clinicContext = useOptionalClinic();
+  const clinicSlug = clinicContext?.clinicSlug ?? null;
+
+  // Build clinic-scoped URL
+  const outboundUrl = clinicSlug
+    ? `/dashboard/${clinicSlug}/outbound?viewMode=needs_attention`
+    : "/dashboard/outbound?viewMode=needs_attention";
 
   // Fetch outbound cases that need attention (limited for dashboard preview)
   const { data: casesData, isLoading } =
@@ -184,7 +192,7 @@ export function OutboundNeedsAttentionCard() {
               size="sm"
               className="h-8 w-full gap-2 border-orange-400 text-xs font-medium text-orange-700 hover:bg-orange-50 hover:shadow-sm"
               onClick={() => {
-                router.push("/dashboard/outbound?viewMode=needs_attention");
+                router.push(outboundUrl);
               }}
               aria-label="View all cases needing attention"
             >

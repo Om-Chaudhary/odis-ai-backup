@@ -4,4 +4,4 @@
  * This allows the clinic-scoped route to use the same component
  * that is used by the legacy route while gradually migrating.
  */
-export { OutboundDashboard } from "~/app/dashboard/outbound/_components/outbound-dashboard";
+export { OutboundDashboard } from "~/components/dashboard/outbound";

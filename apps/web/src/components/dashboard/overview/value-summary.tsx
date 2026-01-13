@@ -2,6 +2,7 @@
 
 import { Phone, Calendar, MessageSquare, Clock } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
+import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
 import type { OverviewValue, OverviewPeriod, DateRangeOption } from "./types";
 import Link from "next/link";
 
@@ -18,12 +19,19 @@ export function ValueSummary({
   selectedDays,
   onDaysChange,
 }: ValueSummaryProps) {
+  const clinicContext = useOptionalClinic();
+  const clinicSlug = clinicContext?.clinicSlug ?? null;
+
   const formatDuration = (seconds: number) => {
     if (seconds < 60) return `${seconds}s`;
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
   };
+
+  const inboundUrl = clinicSlug
+    ? `/dashboard/${clinicSlug}/inbound`
+    : "/dashboard/inbound";
 
   return (
     <div className="rounded-xl border border-stone-200/60 bg-white p-6">
@@ -85,7 +93,7 @@ export function ValueSummary({
       </div>
 
       <Link
-        href="/dashboard/inbound"
+        href={inboundUrl}
         className="mt-6 inline-flex items-center gap-1 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900"
       >
         View detailed activity

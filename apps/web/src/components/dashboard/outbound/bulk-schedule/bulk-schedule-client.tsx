@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
 import { format, setHours, setMinutes } from "date-fns";
 import {
   Phone,
@@ -81,6 +82,13 @@ const TIME_OPTIONS = generateTimeOptions();
 export function BulkScheduleClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const clinicContext = useOptionalClinic();
+  const clinicSlug = clinicContext?.clinicSlug ?? null;
+
+  // Build clinic-scoped URL
+  const outboundUrl = clinicSlug
+    ? `/dashboard/${clinicSlug}/outbound`
+    : "/dashboard/outbound";
 
   // Get case IDs from URL
   const caseIdsParam = searchParams.get("cases");
@@ -153,18 +161,18 @@ export function BulkScheduleClient() {
   useEffect(() => {
     if (!isCasesLoading && caseIds.length === 0) {
       toast.error("No cases selected");
-      router.push("/dashboard/outbound");
+      router.push(outboundUrl);
     }
-  }, [isCasesLoading, caseIds.length, router]);
+  }, [isCasesLoading, caseIds.length, router, outboundUrl]);
 
   // Handlers
   const handleBack = useCallback(() => {
     if (step === "review") {
       setStep("options");
     } else if (step === "options") {
-      router.push("/dashboard/outbound");
+      router.push(outboundUrl);
     }
-  }, [step, router]);
+  }, [step, router, outboundUrl]);
 
   const handleNext = useCallback(async () => {
     if (step === "options") {
@@ -227,8 +235,8 @@ export function BulkScheduleClient() {
   ]);
 
   const handleFinish = useCallback(() => {
-    router.push("/dashboard/outbound");
-  }, [router]);
+    router.push(outboundUrl);
+  }, [router, outboundUrl]);
 
   // Loading state
   if (isCasesLoading) {
@@ -255,7 +263,7 @@ export function BulkScheduleClient() {
             <p className="text-muted-foreground mb-4 text-sm">
               The selected cases could not be found or are no longer available.
             </p>
-            <Button onClick={() => router.push("/dashboard/outbound")}>
+            <Button onClick={() => router.push(outboundUrl)}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Outbound
             </Button>

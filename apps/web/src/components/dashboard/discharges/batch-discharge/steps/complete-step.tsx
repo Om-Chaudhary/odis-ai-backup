@@ -23,6 +23,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
+import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
 import type { ProcessingResult } from "../types";
 
 interface CompleteStepProps {
@@ -35,6 +36,8 @@ export function CompleteStep({
   onStartNewBatch,
 }: CompleteStepProps) {
   const router = useRouter();
+  const clinicContext = useOptionalClinic();
+  const clinicSlug = clinicContext?.clinicSlug ?? null;
 
   const successCount = finalResults.filter(
     (r) => r.status === "success",
@@ -43,6 +46,10 @@ export function CompleteStep({
   const skippedCount = finalResults.filter(
     (r) => r.status === "skipped",
   ).length;
+
+  const outboundUrl = clinicSlug
+    ? `/dashboard/${clinicSlug}/outbound`
+    : "/dashboard/outbound";
 
   return (
     <Card>
@@ -183,7 +190,7 @@ export function CompleteStep({
       <CardFooter className="flex justify-between border-t bg-slate-50/30 p-4">
         <Button
           variant="outline"
-          onClick={() => router.push("/dashboard/outbound")}
+          onClick={() => router.push(outboundUrl)}
           className="gap-2"
         >
           <ArrowLeft className="h-4 w-4" />

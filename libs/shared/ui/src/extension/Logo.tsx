@@ -24,6 +24,7 @@ export function Logo({
   src = "/icon-128.png",
 }: LogoProps) {
   return (
+    // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
       alt="Odis AI Logo"

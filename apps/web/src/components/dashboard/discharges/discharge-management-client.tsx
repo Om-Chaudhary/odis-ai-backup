@@ -3,16 +3,9 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
+import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
 import { Button } from "@odis-ai/shared/ui/button";
-import {
-  RefreshCw,
-  TestTube,
-  Send,
-  Phone,
-  ClipboardList,
-  Mail,
-} from "lucide-react";
-import { Badge } from "@odis-ai/shared/ui/badge";
+import { RefreshCw, Send, Phone, ClipboardList, Mail } from "lucide-react";
 import {
   Tabs,
   TabsContent,
@@ -86,6 +79,8 @@ interface LoadingState {
  */
 export function DischargeManagementClient() {
   const router = useRouter();
+  const clinicContext = useOptionalClinic();
+  const clinicSlug = clinicContext?.clinicSlug ?? null;
 
   // Date state - persisted in URL query parameter for refresh persistence
   const [dateStr, setDateStr] = useQueryState("date", {
@@ -103,6 +98,11 @@ export function DischargeManagementClient() {
     }
     return startOfDay(new Date());
   }, [dateStr]);
+
+  // Build clinic-scoped URL
+  const outboundBatchUrl = clinicSlug
+    ? `/dashboard/${clinicSlug}/outbound/batch`
+    : "/dashboard/outbound/batch";
 
   // State
   const [searchTerm, setSearchTerm] = useState("");
@@ -661,7 +661,7 @@ export function DischargeManagementClient() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => router.push("/dashboard/outbound/batch")}
+            onClick={() => router.push(outboundBatchUrl)}
             disabled={isLoading}
             className="transition-smooth"
           >

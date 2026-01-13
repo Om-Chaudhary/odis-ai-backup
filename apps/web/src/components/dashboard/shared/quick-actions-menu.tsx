@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -34,14 +35,21 @@ export function QuickActionsMenu({
   onDelete,
 }: QuickActionsMenuProps) {
   const router = useRouter();
+  const clinicContext = useOptionalClinic();
+  const clinicSlug = clinicContext?.clinicSlug ?? null;
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  // Build clinic-scoped URLs
+  const caseBaseUrl = clinicSlug
+    ? `/dashboard/${clinicSlug}/outbound/${caseId}`
+    : `/dashboard/outbound/${caseId}`;
 
   const handleGenerateSoap = () => {
     if (onGenerateSoap) {
       onGenerateSoap();
     } else {
       // Navigate to case detail page where SOAP generation can be initiated
-      router.push(`/dashboard/outbound/${caseId}?action=generate-soap`);
+      router.push(`${caseBaseUrl}?action=generate-soap`);
     }
   };
 
@@ -50,7 +58,7 @@ export function QuickActionsMenu({
       onGenerateDischarge();
     } else {
       // Navigate to case detail page where discharge generation can be initiated
-      router.push(`/dashboard/outbound/${caseId}?action=generate-discharge`);
+      router.push(`${caseBaseUrl}?action=generate-discharge`);
     }
   };
 
@@ -95,7 +103,7 @@ export function QuickActionsMenu({
               : "Generate Discharge Summary"}
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href={`/dashboard/outbound/${caseId}`} className="gap-2">
+            <Link href={caseBaseUrl} className="gap-2">
               <Eye className="h-4 w-4" />
               View Details
             </Link>

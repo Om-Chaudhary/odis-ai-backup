@@ -17,7 +17,7 @@ import {
   type DischargeCaseStatus,
   type FailureCategory,
 } from "../schemas";
-import type { StructuredDischargeContent } from "~/app/dashboard/outbound/_components/types";
+import type { StructuredDischargeContent } from "~/components/dashboard/outbound";
 
 interface PatientData {
   id: string;

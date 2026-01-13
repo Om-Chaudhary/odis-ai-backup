@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
-import { BulkScheduleClient } from "../_components/bulk-schedule/bulk-schedule-client";
+import { BulkScheduleClient } from "~/components/dashboard/outbound";
 
 export const metadata: Metadata = {
   title: "Schedule Multiple Discharges | Dashboard",

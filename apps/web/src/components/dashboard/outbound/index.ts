@@ -13,10 +13,12 @@ export { OutboundDashboard } from "./outbound-dashboard";
 
 // Layout components
 export { OutboundSplitLayout } from "./outbound-split-layout";
+export { OutboundHeader } from "./outbound-header";
 
 // Table components
 export { OutboundCaseTable } from "./outbound-case-table";
 export { OutboundNeedsReviewTable } from "./outbound-needs-review-table";
+export { OutboundNeedsAttentionTable } from "./outbound-needs-attention-table";
 export { OutboundBulkActionBar } from "./outbound-bulk-action-bar";
 
 // Pagination
@@ -37,6 +39,24 @@ export { OutboundEmptyState } from "./outbound-empty-state";
 
 // Alert banner
 export { OutboundMissingContactsBanner } from "./outbound-missing-contacts-banner";
+
+// Dashboard widgets
+export { OutboundNeedsAttentionCard } from "./outbound-needs-attention-card";
+
+// Bulk operations
+export {
+  BulkOperationProvider,
+  useBulkOperation,
+} from "./bulk-operation-context";
+export { BulkOperationProgress } from "./bulk-operation-progress";
+export { BulkSendWizardModal } from "./bulk-send-wizard-modal";
+export { ScheduleAllModal } from "./schedule-all-modal";
+export { BulkScheduleClient } from "./bulk-schedule/bulk-schedule-client";
+
+// Views
+export { AllDischargesView } from "./views/all-discharges-view";
+export { NeedsReviewView } from "./views/needs-review-view";
+export { NeedsAttentionView } from "./views/needs-attention-view";
 
 // Skeletons
 export {
