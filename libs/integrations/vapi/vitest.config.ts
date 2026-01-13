@@ -1,13 +1,9 @@
 import { defineConfig } from "vitest/config";
-import tsconfigPaths from "vite-tsconfig-paths";
+import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
 import path from "path";
 
 export default defineConfig({
-  plugins: [
-    tsconfigPaths({
-      root: path.resolve(__dirname, "../.."),
-    }),
-  ],
+  plugins: [nxViteTsPaths()],
   test: {
     name: "vapi",
     globals: true,

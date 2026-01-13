@@ -1,17 +1,10 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
-import tsconfigPaths from "vite-tsconfig-paths";
+import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
 import path from "path";
 
 export default defineConfig({
-  plugins: [
-    react(),
-    tsconfigPaths({
-      root: "../..",
-      projects: ["tsconfig.base.json"],
-      ignoreConfigErrors: true,
-    }),
-  ],
+  plugins: [react(), nxViteTsPaths()],
   test: {
     globals: true,
     environment: "happy-dom",

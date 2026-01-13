@@ -43,7 +43,6 @@
     {
       "plugin": "@nx/vite/plugin",
       "options": {
-        "testTargetName": "test",
         "buildTargetName": "vite:build",
         "serveTargetName": "vite:serve",
         "previewTargetName": "vite:preview"
@@ -58,7 +57,7 @@
     {
       "plugin": "@nx/vitest",
       "options": {
-        "testTargetName": "vitest:test",
+        "testTargetName": "test",
         "ciTargetName": "test-ci"
       }
     }
