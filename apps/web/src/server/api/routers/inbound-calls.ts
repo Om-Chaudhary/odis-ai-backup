@@ -75,31 +75,31 @@ async function getUserWithClinic(
 
 /**
  * Apply role-based filtering to query
- * Multi-clinic aware: filters by clinic_id for clinic-wide access
+ * Multi-clinic aware: filters by clinic_name for clinic-wide access
  */
 function applyRoleBasedFilter(
   query: ReturnType<SupabaseClient<unknown>["from"]>,
   user: { id: string; role: string | null; clinic_name: string | null },
-  clinicId: string | null,
+  clinicName: string | null,
 ) {
   const isAdminOrOwner =
     user.role === "admin" || user.role === "practice_owner";
 
   if (!isAdminOrOwner) {
     // Regular users: see calls for their clinic OR calls assigned to them
-    if (clinicId) {
-      // Use clinic_id for multi-clinic support
+    if (clinicName) {
+      // Use clinic_name for filtering
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-      query = query.or(`clinic_id.eq.${clinicId},user_id.eq.${user.id}`);
+      query = query.or(`clinic_name.eq.${clinicName},user_id.eq.${user.id}`);
     } else {
       // Only filter by user_id if no clinic
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       query = query.eq("user_id", user.id);
     }
-  } else if (clinicId) {
+  } else if (clinicName) {
     // Admins/practice owners see all calls for their clinic
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    query = query.eq("clinic_id", clinicId);
+    query = query.eq("clinic_name", clinicName);
   }
 
   return query;
@@ -131,7 +131,7 @@ export const inboundCallsRouter = createTRPCRouter({
         .order("created_at", { ascending: false });
 
       // Apply role-based filtering (multi-clinic aware)
-      query = applyRoleBasedFilter(query, user, clinic?.id ?? null);
+      query = applyRoleBasedFilter(query, user, clinic?.name ?? null);
 
       // Apply filters
       if (input.status) {
@@ -734,7 +734,7 @@ export const inboundCallsRouter = createTRPCRouter({
         .select("status, user_sentiment, duration_seconds, cost, created_at");
 
       // Apply role-based filtering (multi-clinic aware)
-      query = applyRoleBasedFilter(query, user, clinic?.id ?? null);
+      query = applyRoleBasedFilter(query, user, clinic?.name ?? null);
 
       // Apply date filters
       if (input.startDate) {
