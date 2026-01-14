@@ -1,5 +1,13 @@
 "use client";
-import { Github, Twitter, Linkedin, Mail, ArrowUpRight } from "lucide-react";
+import {
+  Github,
+  Twitter,
+  Linkedin,
+  Mail,
+  ArrowUpRight,
+  Shield,
+  Lock,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
@@ -196,15 +204,33 @@ export const FooterSection = ({
           transition={{ duration: 0.5, delay: 0.6 }}
           className="border-border border-t pt-8"
         >
-          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-            <p className="text-muted-foreground text-sm">{copyright}</p>
-            <a
-              href="#home"
-              className="group text-muted-foreground inline-flex items-center gap-1.5 text-sm transition-colors duration-200 hover:text-slate-700"
-            >
-              Back to top
-              <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </a>
+          <div className="flex flex-col items-center gap-6">
+            {/* Compliance badges */}
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/60 px-3 py-1.5 text-xs font-medium text-slate-600 backdrop-blur-sm">
+                <Shield className="h-3 w-3 text-teal-600" />
+                HIPAA Compliant
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/60 px-3 py-1.5 text-xs font-medium text-slate-600 backdrop-blur-sm">
+                <Lock className="h-3 w-3 text-teal-600" />
+                256-bit Encryption
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/60 px-3 py-1.5 text-xs font-medium text-slate-600 backdrop-blur-sm">
+                <Shield className="h-3 w-3 text-teal-600" />
+                SOC 2 Type II
+              </span>
+            </div>
+
+            <div className="flex w-full flex-col items-center justify-between gap-4 md:flex-row">
+              <p className="text-muted-foreground text-sm">{copyright}</p>
+              <a
+                href="#home"
+                className="group text-muted-foreground inline-flex items-center gap-1.5 text-sm transition-colors duration-200 hover:text-slate-700"
+              >
+                Back to top
+                <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </a>
+            </div>
           </div>
         </motion.div>
       </div>

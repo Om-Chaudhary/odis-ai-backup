@@ -65,21 +65,24 @@ export function StickyMobileCTA() {
                 href="/demo"
                 onClick={handleDemoClick}
                 className={cn(
-                  "flex items-center justify-center gap-2 rounded-full px-6 py-3",
-                  "bg-teal-600 text-white",
-                  "text-sm font-medium",
+                  "relative flex items-center justify-center gap-2 overflow-hidden rounded-full px-6 py-3",
+                  "bg-gradient-to-r from-teal-600 to-emerald-600 text-white",
+                  "text-sm font-semibold shadow-lg shadow-teal-500/25",
                   "transition-all duration-200",
                   "active:scale-[0.98]",
                 )}
               >
-                <Calendar className="h-4 w-4" />
-                <span>Schedule Demo</span>
+                {/* Shimmer effect */}
+                <span className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                <Calendar className="relative h-4 w-4" />
+                <span className="relative">Schedule Demo</span>
               </Link>
             </div>
 
-            {/* Trust message */}
+            {/* Trust message with urgency */}
             <p className="mt-2 text-center text-xs text-slate-500">
-              No commitment required · See results in 48 hours
+              <span className="font-medium text-teal-600">Free demo</span> · No
+              commitment · Results in 48 hours
             </p>
           </div>
         </motion.div>

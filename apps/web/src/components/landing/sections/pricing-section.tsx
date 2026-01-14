@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { usePostHog } from "posthog-js/react";
 import { NeonGradientCard } from "../ui/neon-gradient-card";
-import { Calendar, Phone } from "lucide-react";
+import { Calendar, Phone, Sparkles, CheckCircle2, Shield } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
 import { SectionBackground } from "../ui/section-background";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
@@ -58,12 +58,15 @@ export function PricingSection() {
           transition={{ ...transition, delay: 0.35 }}
           className="mb-12 text-center lg:mb-16"
         >
-          <span className="font-display text-primary mb-4 inline-flex items-center gap-2 text-xs font-medium tracking-widest uppercase">
-            <span className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
+          <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-teal-200/60 bg-teal-50/80 px-4 py-1.5 text-xs font-semibold tracking-widest text-teal-700 uppercase backdrop-blur-sm">
+            <Sparkles className="h-3.5 w-3.5" />
             Get Started
           </span>
           <h2 className="font-display mb-4 text-2xl font-medium tracking-tight text-slate-800 sm:text-3xl md:text-4xl lg:text-5xl">
-            Let&apos;s Talk About Your Practice
+            Let&apos;s Talk About{" "}
+            <span className="bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
+              Your Practice
+            </span>
           </h2>
           <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
             Every clinic is different. We&apos;ll create a custom plan that fits
@@ -98,22 +101,36 @@ export function PricingSection() {
                 </p>
               </div>
 
-              {/* CTA Button */}
+              {/* CTA Button with shimmer */}
               <div className="flex justify-center">
                 <Link
                   href="/demo"
                   onClick={handleScheduleDemoClick}
                   className={cn(
-                    "group inline-flex items-center justify-center gap-3 rounded-full px-8 py-4",
+                    "group relative inline-flex items-center justify-center gap-3 overflow-hidden rounded-full px-8 py-4",
                     "bg-gradient-to-r from-teal-600 to-emerald-600",
                     "text-lg font-semibold text-white shadow-lg shadow-teal-500/25",
                     "transition-all duration-300",
                     "hover:scale-[1.02] hover:shadow-xl hover:shadow-teal-500/30",
                   )}
                 >
-                  <Calendar className="h-5 w-5" />
-                  <span>Schedule a Demo</span>
+                  {/* Shimmer effect */}
+                  <span className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                  <Calendar className="relative h-5 w-5" />
+                  <span className="relative">Schedule a Demo</span>
                 </Link>
+              </div>
+
+              {/* Trust indicators */}
+              <div className="flex flex-wrap items-center justify-center gap-4 pt-2 text-sm text-slate-500">
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 className="h-4 w-4 text-teal-500" />
+                  No credit card required
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Shield className="h-4 w-4 text-teal-500" />
+                  HIPAA Compliant
+                </span>
               </div>
             </div>
           </NeonGradientCard>

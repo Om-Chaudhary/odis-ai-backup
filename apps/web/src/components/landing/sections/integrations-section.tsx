@@ -137,12 +137,21 @@ export const IntegrationsSection = ({
           transition={{ ...transition, delay: 0.3 }}
           className="mb-12 flex flex-col items-center text-center lg:mb-16"
         >
-          <span className="font-display text-primary mb-4 inline-flex items-center gap-2 text-xs font-medium tracking-widest uppercase">
-            <span className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
-            Integrations
-          </span>
+          <div className="mb-5 flex flex-wrap items-center justify-center gap-2">
+            <span className="inline-flex items-center gap-2 rounded-full border border-teal-200/60 bg-teal-50/80 px-4 py-1.5 text-xs font-semibold tracking-widest text-teal-700 uppercase backdrop-blur-sm">
+              <Link2 className="h-3.5 w-3.5" />
+              Integrations
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/60 bg-emerald-50/80 px-3 py-1.5 text-xs font-medium text-emerald-700">
+              <CheckCircle2 className="h-3 w-3" />3 Active · 4 Coming Soon
+            </span>
+          </div>
           <h2 className="font-display mb-4 max-w-2xl text-2xl font-medium tracking-tight text-slate-800 sm:text-3xl md:text-4xl lg:text-5xl">
-            {title}
+            Connects with your{" "}
+            <span className="bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
+              practice management
+            </span>{" "}
+            system
           </h2>
           <p className="text-muted-foreground max-w-xl text-lg">{subtitle}</p>
         </motion.div>

@@ -7,7 +7,8 @@ import {
   useInView,
   useReducedMotion,
 } from "framer-motion";
-import { Plus, Minus, MessageCircle, HelpCircle } from "lucide-react";
+import { Plus, Minus, MessageCircle, HelpCircle, Calendar } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@odis-ai/shared/util";
 import { SectionBackground } from "../ui/section-background";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
@@ -271,24 +272,44 @@ export const FAQSection = ({
               })}
             </motion.div>
 
-            {/* Bottom help text */}
+            {/* Bottom CTA section */}
             <motion.div
               variants={fadeUpVariant}
               initial="hidden"
               animate={isInView ? "visible" : "hidden"}
               transition={{ ...transition, delay: 0.8 }}
-              className="mt-8 text-center"
+              className="mt-10"
             >
-              <p className="text-muted-foreground text-sm">
-                Still have questions?{" "}
-                <a
-                  href="mailto:hello@odis.ai"
-                  className="text-primary font-medium hover:underline"
+              <div className="rounded-2xl border border-teal-200/50 bg-gradient-to-br from-white/90 to-teal-50/60 p-6 text-center backdrop-blur-sm sm:p-8">
+                <p className="mb-4 text-sm font-medium text-slate-700">
+                  Ready to see how OdisAI can transform your practice?
+                </p>
+                <Link
+                  href="/demo"
+                  className={cn(
+                    "group relative inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-full px-6 py-3",
+                    "bg-gradient-to-r from-teal-600 to-emerald-600",
+                    "text-sm font-semibold text-white shadow-lg shadow-teal-500/25",
+                    "transition-all duration-300",
+                    "hover:scale-[1.02] hover:shadow-xl hover:shadow-teal-500/30",
+                  )}
                 >
-                  Contact our team
-                </a>{" "}
-                for personalized support.
-              </p>
+                  {/* Shimmer effect */}
+                  <span className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                  <Calendar className="relative h-4 w-4" />
+                  <span className="relative">Schedule a Demo</span>
+                </Link>
+                <p className="text-muted-foreground mt-4 text-sm">
+                  Still have questions?{" "}
+                  <a
+                    href="mailto:hello@odis.ai"
+                    className="text-primary font-medium hover:underline"
+                  >
+                    Contact our team
+                  </a>{" "}
+                  for personalized support.
+                </p>
+              </div>
             </motion.div>
           </div>
         </div>

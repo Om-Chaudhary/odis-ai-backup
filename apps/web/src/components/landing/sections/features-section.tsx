@@ -1,16 +1,40 @@
 "use client";
 
-import React, { useRef } from "react";
-import { motion, useInView, useReducedMotion } from "framer-motion";
-import { Phone, Share2, Zap, ArrowRight, Shield } from "lucide-react";
+import React, { useRef, useState, useEffect } from "react";
+import {
+  motion,
+  useInView,
+  useReducedMotion,
+  AnimatePresence,
+} from "framer-motion";
+import {
+  Phone,
+  Share2,
+  Zap,
+  ArrowRight,
+  Shield,
+  Calendar as CalendarIcon,
+  Clock,
+  Check,
+  TrendingUp,
+  Star,
+  Mic,
+  Activity,
+  Database,
+  RefreshCw,
+  ChevronRight,
+  Sparkles,
+  Bot,
+  Volume2,
+} from "lucide-react";
 import Link from "next/link";
 
 import { cn } from "@odis-ai/shared/util";
 import { Calendar } from "@odis-ai/shared/ui";
 import { SectionBackground } from "../ui/section-background";
-import { Marquee } from "../ui/marquee";
 import { NumberTicker } from "../ui/number-ticker";
 import { BlurFade } from "../ui/blur-fade";
+import { DischargeCallAnimation } from "../ui/discharge-call-animation";
 
 // =============================================================================
 // Animation Variants
@@ -22,217 +46,849 @@ const fadeUpVariant = {
 };
 
 // =============================================================================
-// Skeleton Components
+// Enhanced Skeleton Components
 // =============================================================================
 
-// Voice Wave Animation - Pulsing concentric circles
+// Voice Wave Animation - AI-Powered Voice with Audio Waveforms
 const VoiceWaveSkeleton = () => {
-  return (
-    <div className="relative flex h-full w-full items-center justify-center overflow-hidden">
-      <div className="absolute inset-0 flex items-center justify-center">
-        {[...Array(4)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute h-32 w-32 rounded-full border-2 border-teal-400/40 shadow-lg shadow-teal-500/10"
-            style={{
-              animation: `pulse ${2 + i * 0.5}s cubic-bezier(0.4, 0, 0.6, 1) infinite`,
-              animationDelay: `${i * 0.2}s`,
-              scale: 1 + i * 0.3,
-            }}
-          />
-        ))}
-        <div className="relative z-10 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-teal-400 to-emerald-500 shadow-xl shadow-teal-500/30">
-          <Phone className="h-8 w-8 text-white" />
-        </div>
-      </div>
-    </div>
-  );
-};
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [currentPhrase, setCurrentPhrase] = useState(0);
 
-// Call Activity List - Live notifications
-const CallActivitySkeleton = () => {
-  const notifications = [
-    {
-      name: "Discharge call completed",
-      description: "Max (Golden Retriever)",
-      time: "2m ago",
-      icon: "✅",
-      color: "#10b981",
-    },
-    {
-      name: "Appointment booked",
-      description: "Luna - Follow-up checkup",
-      time: "4m ago",
-      icon: "📅",
-      color: "#14b8a6",
-    },
-    {
-      name: "Owner sentiment: Grateful",
-      description: "Bella's post-op call",
-      time: "6m ago",
-      icon: "💚",
-      color: "#8b5cf6",
-    },
-    {
-      name: "Follow-up reminder sent",
-      description: "Charlie - Medication refill",
-      time: "8m ago",
-      icon: "🔔",
-      color: "#0ea5e9",
-    },
+  const phrases = [
+    "How can I help you today?",
+    "Let me check that for you...",
+    "Your appointment is confirmed!",
+    "Is there anything else?",
   ];
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsProcessing(true);
+      setTimeout(() => {
+        setIsProcessing(false);
+        setCurrentPhrase((prev) => (prev + 1) % phrases.length);
+      }, 1500);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div className="relative flex h-full w-full flex-col gap-3 p-6">
-      {notifications.map((notif, idx) => (
+    <div className="relative flex h-full w-full flex-col items-center justify-center gap-4 overflow-hidden p-4">
+      {/* AI Brain Indicator */}
+      <motion.div
+        className="absolute top-4 right-4 flex items-center gap-1.5"
+        animate={{ opacity: isProcessing ? 1 : 0.5 }}
+      >
         <motion.div
-          key={idx}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: idx * 0.2 }}
-          className="group flex items-start gap-3 rounded-lg border border-teal-100/50 bg-gradient-to-br from-white/95 to-teal-50/30 p-3 shadow-sm backdrop-blur-sm transition-all duration-300 hover:border-teal-200 hover:shadow-md hover:shadow-teal-500/10"
+          animate={isProcessing ? { rotate: 360 } : { rotate: 0 }}
+          transition={{
+            duration: 1,
+            repeat: isProcessing ? Infinity : 0,
+            ease: "linear",
+          }}
         >
-          <div
-            className="flex h-10 w-10 items-center justify-center rounded-full text-xl shadow-sm transition-transform duration-300 group-hover:scale-110"
-            style={{ backgroundColor: `${notif.color}20` }}
-          >
-            {notif.icon}
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-slate-800">{notif.name}</p>
-            <p className="text-xs text-slate-500">{notif.description}</p>
-          </div>
-          <span className="text-xs text-slate-400">{notif.time}</span>
+          <Bot className="h-4 w-4 text-teal-500" />
         </motion.div>
-      ))}
-    </div>
-  );
-};
+        <span className="text-[10px] font-medium text-teal-600">
+          {isProcessing ? "Processing..." : "AI Ready"}
+        </span>
+      </motion.div>
 
-// PIMS Integration - Animated connection beams
-const PimsIntegrationSkeleton = () => {
-  return (
-    <div className="relative flex h-full w-full items-center justify-center gap-8 p-8">
-      <div className="flex flex-col items-center gap-4">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 to-teal-600 text-white shadow-lg">
-          <Share2 className="h-8 w-8" />
-        </div>
-        <div className="text-center">
-          <p className="text-xs font-medium text-slate-700">IDEXX Neo</p>
-          <p className="text-[10px] text-slate-500">ezyVet · Cornerstone</p>
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        {[...Array(3)].map((_, i) => (
+      {/* Main Voice Interface */}
+      <div className="relative flex items-center justify-center">
+        {/* Outer Pulse Rings */}
+        {[...Array(4)].map((_, i) => (
           <motion.div
             key={i}
-            className="h-0.5 w-16 rounded-full bg-gradient-to-r from-teal-400 to-emerald-400"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{
-              duration: 1.5,
-              delay: i * 0.3,
-              repeat: Infinity,
-              repeatType: "reverse",
+            className="absolute rounded-full border border-teal-400/30"
+            style={{
+              width: 80 + i * 40,
+              height: 80 + i * 40,
             }}
-            style={{ transformOrigin: "left" }}
+            animate={{
+              scale: [1, 1.1, 1],
+              opacity: [0.3 - i * 0.05, 0.5 - i * 0.05, 0.3 - i * 0.05],
+            }}
+            transition={{
+              duration: 2 + i * 0.3,
+              repeat: Infinity,
+              delay: i * 0.2,
+              ease: "easeInOut",
+            }}
+          />
+        ))}
+
+        {/* Center Voice Button */}
+        <motion.div
+          className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-teal-400 via-teal-500 to-emerald-600 shadow-xl shadow-teal-500/40"
+          animate={{
+            scale: isProcessing ? [1, 1.05, 1] : 1,
+          }}
+          transition={{
+            duration: 0.5,
+            repeat: isProcessing ? Infinity : 0,
+          }}
+        >
+          <motion.div
+            animate={isProcessing ? { scale: [1, 1.2, 1] } : {}}
+            transition={{ duration: 0.3, repeat: isProcessing ? Infinity : 0 }}
+          >
+            {isProcessing ? (
+              <Sparkles className="h-8 w-8 text-white" />
+            ) : (
+              <Mic className="h-8 w-8 text-white" />
+            )}
+          </motion.div>
+
+          {/* Active Indicator */}
+          <motion.div
+            className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-emerald-400"
+            animate={{
+              scale: [1, 1.2, 1],
+              boxShadow: [
+                "0 0 0 0 rgba(52, 211, 153, 0.7)",
+                "0 0 0 8px rgba(52, 211, 153, 0)",
+                "0 0 0 0 rgba(52, 211, 153, 0)",
+              ],
+            }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          />
+        </motion.div>
+      </div>
+
+      {/* Audio Waveform Visualization */}
+      <div className="flex h-10 items-center justify-center gap-1">
+        {[...Array(12)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="w-1 rounded-full bg-gradient-to-t from-teal-400 to-emerald-400"
+            animate={{
+              height: isProcessing
+                ? [8, 20 + Math.random() * 20, 12, 28 + Math.random() * 12, 8]
+                : [8, 12, 8],
+            }}
+            transition={{
+              duration: isProcessing ? 0.4 : 1,
+              repeat: Infinity,
+              delay: i * 0.05,
+              ease: "easeInOut",
+            }}
           />
         ))}
       </div>
 
-      <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 text-white shadow-xl">
-        <svg className="h-10 w-10" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" />
-        </svg>
+      {/* AI Response Text */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentPhrase}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          className="flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 shadow-sm backdrop-blur-sm"
+        >
+          <Volume2 className="h-3 w-3 text-teal-500" />
+          <span className="text-xs font-medium text-slate-700">
+            {phrases[currentPhrase]}
+          </span>
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Status Badge */}
+      <div className="absolute bottom-4 left-4 flex items-center gap-2">
+        <div className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1">
+          <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+          <span className="text-[10px] font-medium text-emerald-700">
+            24/7 Active
+          </span>
+        </div>
       </div>
     </div>
   );
 };
 
-// Analytics Preview - Metrics dashboard
-const AnalyticsSkeleton = () => {
+// Call Activity List - Live Real-Time Notifications
+const CallActivitySkeleton = () => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      name: "Discharge call completed",
+      description: "Max (Golden Retriever)",
+      time: "Just now",
+      icon: "checkmark",
+      color: "#10b981",
+      isNew: true,
+    },
+    {
+      id: 2,
+      name: "Appointment booked",
+      description: "Luna - Follow-up checkup",
+      time: "2m ago",
+      icon: "calendar",
+      color: "#14b8a6",
+      isNew: false,
+    },
+    {
+      id: 3,
+      name: "Owner sentiment: Grateful",
+      description: "Bella's post-op call",
+      time: "4m ago",
+      icon: "heart",
+      color: "#8b5cf6",
+      isNew: false,
+    },
+    {
+      id: 4,
+      name: "Follow-up reminder sent",
+      description: "Charlie - Medication refill",
+      time: "6m ago",
+      icon: "bell",
+      color: "#0ea5e9",
+      isNew: false,
+    },
+  ]);
+
+  const getIconSymbol = (icon: string) => {
+    switch (icon) {
+      case "checkmark":
+        return "\u2713";
+      case "calendar":
+        return "\u{1F4C5}";
+      case "heart":
+        return "\u2665";
+      case "bell":
+        return "\u{1F514}";
+      case "note":
+        return "\u{1F4DD}";
+      case "refresh":
+        return "\u{1F504}";
+      case "clock":
+        return "\u23F0";
+      default:
+        return "\u2022";
+    }
+  };
+
+  // Cycle through highlighting different notifications
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % notifications.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [notifications.length]);
+
+  // Occasionally add a new notification at the top
+  useEffect(() => {
+    const newNotifs = [
+      {
+        name: "Voicemail transcribed",
+        description: "Daisy's owner",
+        icon: "note",
+        color: "#f59e0b",
+      },
+      {
+        name: "Call transferred",
+        description: "Emergency line",
+        icon: "refresh",
+        color: "#ef4444",
+      },
+      {
+        name: "Callback scheduled",
+        description: "Rocky - 3:00 PM",
+        icon: "clock",
+        color: "#6366f1",
+      },
+    ];
+
+    const interval = setInterval(() => {
+      const newNotif = newNotifs[Math.floor(Math.random() * newNotifs.length)];
+      if (!newNotif) return;
+      setNotifications((prev) => [
+        {
+          id: Date.now(),
+          name: newNotif.name,
+          description: newNotif.description,
+          icon: newNotif.icon,
+          color: newNotif.color,
+          time: "Just now",
+          isNew: true,
+        },
+        ...prev.slice(0, 3).map((n) => ({ ...n, isNew: false })),
+      ]);
+    }, 6000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div className="relative flex h-full w-full items-center justify-around p-8">
-      <div className="flex flex-col items-center gap-2">
-        <div className="text-4xl font-bold text-teal-600">
-          <NumberTicker value={47} />
+    <div className="relative flex h-full w-full flex-col gap-2 p-4">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-2">
+        <div className="flex items-center gap-2">
+          <Activity className="h-4 w-4 text-teal-500" />
+          <span className="text-xs font-semibold text-slate-700">
+            Live Activity
+          </span>
         </div>
-        <p className="text-xs font-medium text-slate-600">Calls Today</p>
+        <motion.div
+          className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5"
+          animate={{ opacity: [1, 0.5, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          <span className="text-[10px] font-medium text-emerald-700">Live</span>
+        </motion.div>
       </div>
 
-      <div className="flex flex-col items-center gap-2">
-        <div className="text-4xl font-bold text-emerald-600">
-          <NumberTicker value={94} />%
-        </div>
-        <p className="text-xs font-medium text-slate-600">Connected</p>
-      </div>
+      {/* Notifications List */}
+      <div className="flex flex-1 flex-col gap-2 overflow-hidden">
+        <AnimatePresence mode="popLayout">
+          {notifications.map((notif, idx) => (
+            <motion.div
+              key={notif.id}
+              layout
+              initial={{ opacity: 0, x: -20, scale: 0.95 }}
+              animate={{
+                opacity: 1,
+                x: 0,
+                scale: activeIndex === idx ? 1.02 : 1,
+              }}
+              exit={{ opacity: 0, x: 20, scale: 0.95 }}
+              transition={{
+                layout: { type: "spring", stiffness: 500, damping: 30 },
+                opacity: { duration: 0.2 },
+              }}
+              className={cn(
+                "group relative flex items-start gap-3 rounded-xl border p-3 transition-all duration-300",
+                activeIndex === idx
+                  ? "border-teal-200 bg-gradient-to-r from-teal-50/80 to-emerald-50/60 shadow-md shadow-teal-500/10"
+                  : "border-slate-100 bg-white/80 hover:border-teal-100 hover:bg-white",
+              )}
+            >
+              {/* New indicator */}
+              {notif.isNew && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -top-1 -left-1 h-3 w-3 rounded-full bg-teal-500"
+                />
+              )}
 
-      <div className="flex flex-col items-center gap-2">
-        <div className="flex items-center gap-1 text-4xl font-bold text-violet-600">
-          <NumberTicker value={4.9} decimalPlaces={1} />
-          <span className="text-2xl text-slate-400">/5</span>
-        </div>
-        <p className="text-xs font-medium text-slate-600">Satisfaction</p>
+              {/* Icon */}
+              <motion.div
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg shadow-sm transition-transform duration-300"
+                style={{ backgroundColor: `${notif.color}15` }}
+                animate={activeIndex === idx ? { scale: [1, 1.1, 1] } : {}}
+                transition={{
+                  duration: 0.5,
+                  repeat: activeIndex === idx ? Infinity : 0,
+                  repeatDelay: 2,
+                }}
+              >
+                {getIconSymbol(notif.icon)}
+              </motion.div>
+
+              {/* Content */}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-slate-800">
+                  {notif.name}
+                </p>
+                <p className="truncate text-xs text-slate-500">
+                  {notif.description}
+                </p>
+              </div>
+
+              {/* Time */}
+              <div className="flex flex-col items-end gap-1">
+                <span className="text-[10px] whitespace-nowrap text-slate-400">
+                  {notif.time}
+                </span>
+                {activeIndex === idx && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center gap-0.5"
+                  >
+                    <ChevronRight className="h-3 w-3 text-teal-500" />
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
     </div>
   );
 };
 
-// Discharge Cards Marquee
-const dischargeCases = [
-  { name: "Max", breed: "Golden Retriever", procedure: "Post-surgery" },
-  { name: "Luna", breed: "Siamese Cat", procedure: "Dental cleaning" },
-  { name: "Bella", breed: "Labrador", procedure: "Vaccination" },
-  { name: "Charlie", breed: "Beagle", procedure: "Neuter recovery" },
-  { name: "Daisy", breed: "Poodle", procedure: "Allergy treatment" },
-];
+// PIMS Integration - Animated Data Flow
+const PimsIntegrationSkeleton = () => {
+  const [syncPhase, setSyncPhase] = useState(0);
+  const [dataPackets, setDataPackets] = useState<number[]>([]);
 
-function DischargeCard({ pet }: { pet: (typeof dischargeCases)[0] }) {
-  return (
-    <figure
-      className={cn(
-        "relative w-36 cursor-pointer overflow-hidden rounded-xl border p-3",
-        "border-slate-100 bg-white/90 hover:bg-white",
-        "transform-gpu transition-all duration-300 ease-out hover:scale-105",
-      )}
-    >
-      <div className="flex flex-col gap-1">
-        <figcaption className="text-sm font-medium text-slate-800">
-          {pet.name}
-        </figcaption>
-        <p className="text-xs text-slate-500">{pet.breed}</p>
-        <span className="mt-1 inline-flex w-fit rounded-full bg-teal-50 px-2 py-0.5 text-[10px] font-medium text-teal-700">
-          {pet.procedure}
-        </span>
-      </div>
-    </figure>
-  );
-}
+  const pimsSystems = [
+    { name: "IDEXX Neo", color: "from-blue-400 to-blue-600" },
+    { name: "ezyVet", color: "from-purple-400 to-purple-600" },
+    { name: "Cornerstone", color: "from-orange-400 to-orange-600" },
+  ];
 
-const DischargeMarqueeSkeleton = () => {
+  // Cycle through sync phases
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSyncPhase((prev) => (prev + 1) % 4);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Generate data packets
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDataPackets((prev) => {
+        const newPackets = [...prev, Date.now()];
+        return newPackets.slice(-5);
+      });
+    }, 600);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div className="relative flex h-full w-full items-center py-8">
-      <Marquee pauseOnHover className="[--duration:25s]">
-        {dischargeCases.map((pet, idx) => (
-          <DischargeCard key={idx} pet={pet} />
+    <div className="relative flex h-full w-full items-center justify-center gap-4 overflow-hidden p-6">
+      {/* Left Side - PIMS Systems */}
+      <div className="flex flex-col gap-3">
+        {pimsSystems.map((pims, idx) => (
+          <motion.div
+            key={pims.name}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: idx * 0.1 }}
+            className={cn(
+              "relative flex items-center gap-2 rounded-xl border border-slate-100 bg-white/90 px-3 py-2 shadow-sm transition-all",
+              syncPhase === idx + 1 &&
+                "border-teal-300 shadow-md shadow-teal-500/10",
+            )}
+          >
+            <div
+              className={cn(
+                "flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br",
+                pims.color,
+              )}
+            >
+              <Database className="h-4 w-4 text-white" />
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-700">
+                {pims.name}
+              </p>
+              <p className="text-[10px] text-slate-400">Connected</p>
+            </div>
+            {syncPhase === idx + 1 && (
+              <motion.div
+                className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-teal-500"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 0.5, repeat: Infinity }}
+              />
+            )}
+          </motion.div>
         ))}
-      </Marquee>
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-[100] h-full w-20 bg-gradient-to-r from-white to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-[100] h-full w-20 bg-gradient-to-l from-white to-transparent" />
+      </div>
+
+      {/* Center - Data Flow Animation */}
+      <div className="relative flex h-full w-24 items-center justify-center">
+        {/* Connection Lines */}
+        <div className="absolute h-full w-0.5 bg-gradient-to-b from-teal-200 via-teal-400 to-teal-200" />
+
+        {/* Data Packets */}
+        <AnimatePresence>
+          {dataPackets.map((id, idx) => (
+            <motion.div
+              key={id}
+              className="absolute h-2 w-2 rounded-full bg-teal-500 shadow-lg shadow-teal-500/50"
+              initial={{ left: "0%", opacity: 0, scale: 0 }}
+              animate={{
+                left: "100%",
+                opacity: [0, 1, 1, 0],
+                scale: [0.5, 1, 1, 0.5],
+              }}
+              exit={{ opacity: 0 }}
+              transition={{
+                duration: 1.5,
+                ease: "easeInOut",
+              }}
+              style={{
+                top: `${20 + (idx % 3) * 30}%`,
+              }}
+            />
+          ))}
+        </AnimatePresence>
+
+        {/* Sync Arrows */}
+        <div className="flex flex-col gap-2">
+          {[...Array(3)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="h-0.5 w-16 rounded-full bg-gradient-to-r from-teal-300 to-emerald-400"
+              animate={{
+                scaleX: [0, 1, 0],
+                opacity: [0, 1, 0],
+              }}
+              transition={{
+                duration: 1.5,
+                delay: i * 0.3,
+                repeat: Infinity,
+                repeatDelay: 0.5,
+              }}
+              style={{ transformOrigin: "left" }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Right Side - ODIS AI Hub */}
+      <motion.div
+        className="relative flex flex-col items-center gap-2"
+        animate={{
+          scale: syncPhase === 0 ? [1, 1.05, 1] : 1,
+        }}
+        transition={{ duration: 0.5, repeat: syncPhase === 0 ? Infinity : 0 }}
+      >
+        <div className="relative">
+          {/* Outer glow */}
+          <motion.div
+            className="absolute inset-0 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-500 blur-xl"
+            animate={{ opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          />
+
+          {/* Main hub */}
+          <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 via-teal-500 to-emerald-600 shadow-xl shadow-teal-500/30">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+            >
+              <Shield className="h-10 w-10 text-white" />
+            </motion.div>
+          </div>
+
+          {/* Sync indicator */}
+          <motion.div
+            className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-lg"
+            animate={{ rotate: syncPhase > 0 ? 360 : 0 }}
+            transition={{ duration: 1, ease: "linear" }}
+          >
+            <RefreshCw
+              className={cn(
+                "h-3 w-3",
+                syncPhase > 0 ? "text-teal-500" : "text-slate-400",
+              )}
+            />
+          </motion.div>
+        </div>
+
+        <div className="text-center">
+          <p className="text-xs font-semibold text-slate-700">ODIS AI</p>
+          <motion.p
+            className="text-[10px] text-teal-600"
+            animate={{ opacity: [1, 0.5, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            {syncPhase === 0
+              ? "All synced"
+              : `Syncing ${pimsSystems[syncPhase - 1]?.name}...`}
+          </motion.p>
+        </div>
+      </motion.div>
     </div>
   );
 };
 
-// Smart Scheduling Calendar
-const SchedulingSkeleton = () => {
+// Analytics Preview - Animated Metrics Dashboard
+const AnalyticsSkeleton = () => {
+  const [callsToday, setCallsToday] = useState(47);
+  const [connectedRate, setConnectedRate] = useState(94);
+  const [satisfaction, setSatisfaction] = useState(4.9);
+
+  // Animate numbers changing periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCallsToday((prev) => prev + Math.floor(Math.random() * 3));
+      setConnectedRate((prev) =>
+        Math.min(99, Math.max(90, prev + (Math.random() > 0.5 ? 1 : -1))),
+      );
+      setSatisfaction((prev) => {
+        const newVal = prev + (Math.random() > 0.5 ? 0.1 : -0.1);
+        return Math.round(Math.min(5, Math.max(4.7, newVal)) * 10) / 10;
+      });
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Mini sparkline data
+  const sparklineData = [40, 45, 42, 48, 44, 50, 47, 52, 49, 55, 51, 58];
+
   return (
-    <div className="relative flex h-full w-full items-center justify-center p-4">
-      <Calendar
-        mode="single"
-        selected={new Date()}
-        className="rounded-md border border-slate-200 bg-white shadow-sm"
-      />
+    <div className="relative flex h-full w-full flex-col gap-4 p-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-teal-500" />
+          <span className="text-xs font-semibold text-slate-700">
+            Today's Performance
+          </span>
+        </div>
+        <div className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5">
+          <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+          <span className="text-[10px] font-medium text-emerald-700">
+            Real-time
+          </span>
+        </div>
+      </div>
+
+      {/* Metrics Grid */}
+      <div className="grid flex-1 grid-cols-3 gap-4">
+        {/* Calls Today */}
+        <motion.div
+          className="flex flex-col items-center justify-center rounded-xl bg-gradient-to-br from-teal-50 to-teal-100/50 p-3"
+          whileHover={{ scale: 1.02 }}
+        >
+          <motion.div
+            className="flex items-center gap-1"
+            key={callsToday}
+            initial={{ scale: 1.2, color: "#14b8a6" }}
+            animate={{ scale: 1, color: "#0f766e" }}
+            transition={{ duration: 0.3 }}
+          >
+            <Phone className="h-4 w-4 text-teal-600" />
+            <span className="text-3xl font-bold text-teal-700">
+              <NumberTicker value={callsToday} />
+            </span>
+          </motion.div>
+          <p className="mt-1 text-xs font-medium text-teal-600">Calls Today</p>
+
+          {/* Mini Sparkline */}
+          <div className="mt-2 flex h-6 items-end gap-0.5">
+            {sparklineData.map((val, i) => (
+              <motion.div
+                key={i}
+                className="w-1 rounded-full bg-teal-400"
+                initial={{ height: 0 }}
+                animate={{ height: (val / 60) * 24 }}
+                transition={{ delay: i * 0.05, duration: 0.3 }}
+              />
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Connected Rate */}
+        <motion.div
+          className="flex flex-col items-center justify-center rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-3"
+          whileHover={{ scale: 1.02 }}
+        >
+          <div className="relative flex items-center justify-center">
+            {/* Circular Progress */}
+            <svg className="h-16 w-16 -rotate-90">
+              <circle
+                cx="32"
+                cy="32"
+                r="28"
+                fill="none"
+                stroke="#d1fae5"
+                strokeWidth="4"
+              />
+              <motion.circle
+                cx="32"
+                cy="32"
+                r="28"
+                fill="none"
+                stroke="#10b981"
+                strokeWidth="4"
+                strokeLinecap="round"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: connectedRate / 100 }}
+                transition={{ duration: 1, ease: "easeOut" }}
+                style={{
+                  strokeDasharray: "176",
+                  strokeDashoffset: "0",
+                }}
+              />
+            </svg>
+            <div className="absolute flex flex-col items-center">
+              <span className="text-lg font-bold text-emerald-700">
+                <NumberTicker value={connectedRate} />%
+              </span>
+            </div>
+          </div>
+          <p className="mt-1 text-xs font-medium text-emerald-600">Connected</p>
+        </motion.div>
+
+        {/* Satisfaction */}
+        <motion.div
+          className="flex flex-col items-center justify-center rounded-xl bg-gradient-to-br from-violet-50 to-violet-100/50 p-3"
+          whileHover={{ scale: 1.02 }}
+        >
+          <div className="flex items-center gap-1">
+            <Star className="h-5 w-5 fill-violet-400 text-violet-400" />
+            <span className="text-3xl font-bold text-violet-700">
+              <NumberTicker value={satisfaction} decimalPlaces={1} />
+            </span>
+            <span className="text-lg text-slate-400">/5</span>
+          </div>
+          <p className="mt-1 text-xs font-medium text-violet-600">
+            Satisfaction
+          </p>
+
+          {/* Star Rating */}
+          <div className="mt-2 flex gap-0.5">
+            {[...Array(5)].map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: i * 0.1 }}
+              >
+                <Star
+                  className={cn(
+                    "h-3 w-3",
+                    i < Math.floor(satisfaction)
+                      ? "fill-violet-400 text-violet-400"
+                      : "fill-slate-200 text-slate-200",
+                  )}
+                />
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
+// Smart Scheduling - Interactive Booking Flow
+const SchedulingSkeleton = () => {
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    new Date(),
+  );
+  const [bookingStep, setBookingStep] = useState(0);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+
+  const timeSlots = ["9:00 AM", "10:30 AM", "2:00 PM", "3:30 PM"];
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+
+  // Simulate booking flow
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBookingStep((prev) => {
+        if (prev === 0) {
+          const randomSlot =
+            timeSlots[Math.floor(Math.random() * timeSlots.length)];
+          setSelectedSlot(randomSlot ?? null);
+          return 1;
+        } else if (prev === 1) {
+          setShowConfirmation(true);
+          return 2;
+        } else {
+          setShowConfirmation(false);
+          setSelectedSlot(null);
+          return 0;
+        }
+      });
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="relative flex h-full w-full items-center justify-center gap-4 overflow-hidden p-4">
+      {/* Calendar */}
+      <motion.div
+        animate={{
+          scale: bookingStep === 0 ? 1.02 : 1,
+          opacity: showConfirmation ? 0.5 : 1,
+        }}
+        transition={{ duration: 0.3 }}
+      >
+        <Calendar
+          mode="single"
+          selected={selectedDate}
+          onSelect={setSelectedDate}
+          className="rounded-xl border border-slate-200 bg-white shadow-sm"
+        />
+      </motion.div>
+
+      {/* Time Slots Panel */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2 pb-1">
+          <Clock className="h-4 w-4 text-teal-500" />
+          <span className="text-xs font-semibold text-slate-700">
+            Available Times
+          </span>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          {timeSlots.map((slot, idx) => (
+            <motion.button
+              key={slot}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{
+                opacity: 1,
+                x: 0,
+                scale: selectedSlot === slot ? 1.05 : 1,
+              }}
+              transition={{ delay: idx * 0.1 }}
+              className={cn(
+                "flex items-center justify-between rounded-lg border px-3 py-2 text-xs font-medium transition-all",
+                selectedSlot === slot
+                  ? "border-teal-300 bg-teal-50 text-teal-700 shadow-md shadow-teal-500/10"
+                  : "border-slate-100 bg-white text-slate-600 hover:border-teal-200",
+              )}
+            >
+              <span>{slot}</span>
+              {selectedSlot === slot && (
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                  <Check className="h-3 w-3 text-teal-600" />
+                </motion.div>
+              )}
+            </motion.button>
+          ))}
+        </div>
+      </div>
+
+      {/* Confirmation Overlay */}
+      <AnimatePresence>
+        {showConfirmation && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="absolute inset-4 flex items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 backdrop-blur-sm"
+          >
+            <div className="flex flex-col items-center gap-3 text-center">
+              <motion.div
+                className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/30"
+                initial={{ scale: 0 }}
+                animate={{ scale: [0, 1.2, 1] }}
+                transition={{ duration: 0.5 }}
+              >
+                <Check className="h-7 w-7 text-white" />
+              </motion.div>
+              <div>
+                <p className="text-sm font-semibold text-slate-800">
+                  Appointment Booked!
+                </p>
+                <p className="text-xs text-slate-500">
+                  {selectedSlot} confirmed
+                </p>
+              </div>
+              <motion.div
+                className="flex items-center gap-1 text-[10px] text-emerald-600"
+                animate={{ opacity: [1, 0.5, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              >
+                <CalendarIcon className="h-3 w-3" />
+                <span>Synced to calendar</span>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -291,15 +947,15 @@ const FeatureDescription = ({ children }: { children?: React.ReactNode }) => {
 };
 
 // =============================================================================
-// Features Data
+// Features Data (SWAPPED: Discharge Calls now first, Voice Assistant now last)
 // =============================================================================
 
 const features = [
   {
-    title: "24/7 AI Voice Assistant",
+    title: "Automated Discharge Calls",
     description:
-      "Never miss a call. Our AI handles every inquiry with natural conversation.",
-    skeleton: <VoiceWaveSkeleton />,
+      "Batch schedule and execute follow-up calls with intelligent retry logic.",
+    skeleton: <DischargeCallAnimation />,
     className: "col-span-1 border-b lg:col-span-4 lg:border-r",
   },
   {
@@ -331,10 +987,10 @@ const features = [
     className: "col-span-1 lg:col-span-2 lg:border-r",
   },
   {
-    title: "Automated Discharge Calls",
+    title: "24/7 AI Voice Assistant",
     description:
-      "Batch schedule and execute follow-up calls with intelligent retry logic.",
-    skeleton: <DischargeMarqueeSkeleton />,
+      "Never miss a call. Our AI handles every inquiry with natural conversation.",
+    skeleton: <VoiceWaveSkeleton />,
     className: "col-span-1 lg:col-span-4",
   },
 ];
