@@ -75,12 +75,8 @@ export function OutboundNeedsAttentionTable<T extends NeedsAttentionCaseBase>({
     return <NeedsAttentionSkeleton />;
   }
 
-  if (cases.length === 0) {
-    return <NeedsAttentionEmpty />;
-  }
-
   return (
-    <div ref={tableRef} className="h-full w-full overflow-auto">
+    <div ref={tableRef} className="h-full min-h-[600px] w-full overflow-auto">
       <table className="w-full min-w-0 table-fixed">
         <thead className="sticky top-0 z-10 border-b border-orange-100/50 bg-gradient-to-r from-orange-50/40 to-white/60 backdrop-blur-sm">
           <tr className="text-xs text-slate-500">
@@ -257,9 +253,9 @@ function CallStatusBadge({
  */
 function NeedsAttentionSkeleton() {
   return (
-    <div className="w-full overflow-hidden p-3">
+    <div className="flex min-h-[600px] flex-col overflow-hidden p-3">
       {/* Header skeleton */}
-      <div className="mb-4 flex gap-3 border-b border-orange-100/50 pb-3">
+      <div className="mb-4 flex shrink-0 gap-3 border-b border-orange-100/50 pb-3">
         <div className="h-3 w-[80px] animate-pulse rounded bg-orange-100/50" />
         <div className="h-3 w-[20%] animate-pulse rounded bg-orange-100/50" />
         <div className="h-3 w-[25%] animate-pulse rounded bg-orange-100/50" />
@@ -268,52 +264,35 @@ function NeedsAttentionSkeleton() {
         <div className="h-3 w-[80px] animate-pulse rounded bg-orange-100/50" />
       </div>
       {/* Row skeletons */}
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div
-          key={i}
-          className="flex items-center gap-3 border-b border-orange-50 py-4"
-        >
-          <div className="w-[80px]">
-            <div className="h-5 w-16 animate-pulse rounded-full bg-orange-50" />
+      <div className="flex-1 space-y-1">
+        {Array.from({ length: 15 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-3 border-b border-orange-50 py-4"
+          >
+            <div className="w-[80px]">
+              <div className="h-5 w-16 animate-pulse rounded-full bg-orange-50" />
+            </div>
+            <div className="w-[20%] space-y-1">
+              <div className="h-4 w-20 animate-pulse rounded bg-orange-100/40" />
+              <div className="h-3 w-24 animate-pulse rounded bg-orange-50" />
+            </div>
+            <div className="flex w-[25%] gap-1">
+              <div className="h-5 w-16 animate-pulse rounded-full bg-orange-50" />
+              <div className="h-5 w-16 animate-pulse rounded-full bg-orange-50" />
+            </div>
+            <div className="w-[30%]">
+              <div className="h-8 w-full animate-pulse rounded bg-orange-50" />
+            </div>
+            <div className="w-[100px] text-center">
+              <div className="mx-auto h-4 w-16 animate-pulse rounded bg-orange-50" />
+            </div>
+            <div className="w-[80px] text-right">
+              <div className="ml-auto h-3 w-12 animate-pulse rounded bg-orange-50" />
+            </div>
           </div>
-          <div className="w-[20%] space-y-1">
-            <div className="h-4 w-20 animate-pulse rounded bg-orange-100/40" />
-            <div className="h-3 w-24 animate-pulse rounded bg-orange-50" />
-          </div>
-          <div className="flex w-[25%] gap-1">
-            <div className="h-5 w-16 animate-pulse rounded-full bg-orange-50" />
-            <div className="h-5 w-16 animate-pulse rounded-full bg-orange-50" />
-          </div>
-          <div className="w-[30%]">
-            <div className="h-8 w-full animate-pulse rounded bg-orange-50" />
-          </div>
-          <div className="w-[100px] text-center">
-            <div className="mx-auto h-4 w-16 animate-pulse rounded bg-orange-50" />
-          </div>
-          <div className="w-[80px] text-right">
-            <div className="ml-auto h-3 w-12 animate-pulse rounded bg-orange-50" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/**
- * Empty state when no attention cases exist
- */
-function NeedsAttentionEmpty() {
-  return (
-    <div className="flex h-full flex-col items-center justify-center py-20 text-center">
-      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-teal-100">
-        <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+        ))}
       </div>
-      <p className="text-lg font-semibold text-slate-800">
-        No cases need attention
-      </p>
-      <p className="mt-1 text-sm text-slate-500">
-        All flagged concerns have been addressed.
-      </p>
     </div>
   );
 }

@@ -24,9 +24,9 @@ export function FilterTabsSkeleton() {
  */
 export function CaseTableSkeleton() {
   return (
-    <div className="space-y-2 p-4">
+    <div className="flex min-h-[600px] flex-col overflow-hidden p-4">
       {/* Header */}
-      <div className="flex gap-4 border-b pb-3">
+      <div className="mb-2 flex shrink-0 gap-4 border-b pb-3">
         <Skeleton className="h-4 w-[180px]" />
         <Skeleton className="h-4 w-[120px]" />
         <Skeleton className="h-4 w-[100px]" />
@@ -35,19 +35,24 @@ export function CaseTableSkeleton() {
         <Skeleton className="h-4 w-[70px]" />
       </div>
       {/* Rows */}
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-4 py-3">
-          <div className="w-[180px] space-y-1.5">
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-3 w-28" />
+      <div className="flex-1 space-y-2">
+        {Array.from({ length: 15 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-4 border-b border-slate-50 py-3"
+          >
+            <div className="w-[180px] space-y-1.5">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-3 w-28" />
+            </div>
+            <Skeleton className="h-4 w-[120px]" />
+            <Skeleton className="h-6 w-[80px] rounded-full" />
+            <Skeleton className="mx-auto h-4 w-4 rounded-full" />
+            <Skeleton className="mx-auto h-4 w-4 rounded-full" />
+            <Skeleton className="h-4 w-[60px]" />
           </div>
-          <Skeleton className="h-4 w-[120px]" />
-          <Skeleton className="h-6 w-[80px] rounded-full" />
-          <Skeleton className="mx-auto h-4 w-4 rounded-full" />
-          <Skeleton className="mx-auto h-4 w-4 rounded-full" />
-          <Skeleton className="h-4 w-[60px]" />
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

@@ -189,6 +189,10 @@ export function useInboundData(params: UseInboundDataParams) {
           failed: 0,
           cancelled: 0,
           needsAttention: 0,
+          emergency: 0,
+          appointment: 0,
+          callback: 0,
+          info: 0,
         },
         totals: { appointments: 0, calls: 0, needsAttention: 0 },
       }

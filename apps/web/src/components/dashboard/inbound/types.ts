@@ -260,6 +260,10 @@ export interface CallStats {
   failed: number;
   cancelled: number;
   needsAttention: number; // Calls requiring staff action
+  emergency: number;
+  appointment: number;
+  callback: number;
+  info: number;
 }
 
 /**

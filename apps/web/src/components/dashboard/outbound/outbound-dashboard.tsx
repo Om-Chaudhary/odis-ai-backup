@@ -16,9 +16,7 @@ import {
   useOutboundData,
   useOutboundMutations,
 } from "~/app/dashboard/outbound/_hooks";
-import { api } from "~/trpc/client";
 
-import type { DischargeSettings } from "@odis-ai/shared/types";
 import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
 
 import { NeedsAttentionView } from "./views/needs-attention-view";
@@ -83,11 +81,14 @@ function OutboundDashboardInner() {
     [dateStr],
   );
 
+  // Get search term from URL
+  const [searchQuery] = useQueryState("search", { defaultValue: "" });
+  const searchTerm = searchQuery ?? "";
+
   // Local state
   const [selectedCase, setSelectedCase] = useState<TransformedCase | null>(
     null,
   );
-  const [searchTerm, setSearchTerm] = useState("");
   const [deliveryToggles, setDeliveryToggles] = useState<DeliveryToggles>({
     phoneEnabled: true,
     emailEnabled: true,
@@ -154,49 +155,6 @@ function OutboundDashboardInner() {
     },
   });
 
-  const updateSettingsMutation = api.cases.updateDischargeSettings.useMutation({
-    onSuccess: () => {
-      toast.success("Settings updated");
-      void refetch();
-    },
-    onError: (error) => {
-      toast.error(error.message ?? "Failed to update settings");
-    },
-  });
-
-  const handleUpdateSettings = useCallback(
-    (newSettings: DischargeSettings) => {
-      updateSettingsMutation.mutate({
-        clinicName: newSettings.clinicName || undefined,
-        clinicPhone: newSettings.clinicPhone || undefined,
-        clinicEmail: newSettings.clinicEmail || undefined,
-        emergencyPhone: newSettings.emergencyPhone || undefined,
-        testModeEnabled: newSettings.testModeEnabled,
-        testContactName: newSettings.testContactName ?? undefined,
-        testContactEmail: newSettings.testContactEmail ?? undefined,
-        testContactPhone: newSettings.testContactPhone ?? undefined,
-        voicemailDetectionEnabled: newSettings.voicemailDetectionEnabled,
-        defaultScheduleDelayMinutes:
-          newSettings.defaultScheduleDelayMinutes ?? null,
-        primaryColor: newSettings.primaryColor ?? undefined,
-        logoUrl: newSettings.logoUrl ?? null,
-        emailHeaderText: newSettings.emailHeaderText ?? null,
-        emailFooterText: newSettings.emailFooterText ?? null,
-        preferredEmailStartTime: newSettings.preferredEmailStartTime ?? null,
-        preferredEmailEndTime: newSettings.preferredEmailEndTime ?? null,
-        preferredCallStartTime: newSettings.preferredCallStartTime ?? null,
-        preferredCallEndTime: newSettings.preferredCallEndTime ?? null,
-        emailDelayDays: newSettings.emailDelayDays ?? null,
-        callDelayDays: newSettings.callDelayDays ?? null,
-        maxCallRetries: newSettings.maxCallRetries ?? null,
-        batchIncludeIdexxNotes: newSettings.batchIncludeIdexxNotes,
-        batchIncludeManualTranscriptions:
-          newSettings.batchIncludeManualTranscriptions,
-      });
-    },
-    [updateSettingsMutation],
-  );
-
   // Wrapper handlers for use in component
   const handleApproveAndSend = useCallback(
     async (immediate?: boolean) => {
@@ -237,21 +195,6 @@ function OutboundDashboardInner() {
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, [selectedCase]);
-
-  // Cmd+K for search
-  useEffect(() => {
-    const handleCmdK = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        const searchInput = document.querySelector<HTMLInputElement>(
-          'input[placeholder="Search..."]',
-        );
-        searchInput?.focus();
-      }
-    };
-    document.addEventListener("keydown", handleCmdK);
-    return () => document.removeEventListener("keydown", handleCmdK);
-  }, []);
 
   // Deep link handling
   useEffect(() => {
@@ -359,10 +302,6 @@ function OutboundDashboardInner() {
     [setViewMode, setPage],
   );
 
-  const handleSearchChange = useCallback((term: string) => {
-    setSearchTerm(term);
-  }, []);
-
   const handlePageChange = useCallback(
     (newPage: number) => {
       void setPage(newPage);
@@ -457,18 +396,13 @@ function OutboundDashboardInner() {
 
   // Common Header Props
   const headerProps = {
-    viewMode,
-    onViewChange: handleViewChange,
     currentDate,
     onDateChange: handleDateChange,
     isLoading,
-    searchTerm,
-    onSearchChange: handleSearchChange,
-    stats: statsData,
   };
 
   return (
-    <div className="flex h-[calc(100vh-64px)] w-full flex-col gap-2 overflow-hidden">
+    <div className="flex h-full w-full flex-col gap-2 overflow-hidden">
       {/* Test Mode Banner - Moved to Header */}
 
       {/* Main Content Area */}

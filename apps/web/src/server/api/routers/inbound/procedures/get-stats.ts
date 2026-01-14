@@ -110,6 +110,23 @@ export const getStatsRouter = createTRPCRouter({
         needsAttention: (calls ?? []).filter(
           (c) => c.outcome === "Urgent" || c.outcome === "Call Back",
         ).length,
+        // Detailed outcome categories
+        appointment: (calls ?? []).filter(
+          (c) =>
+            c.outcome === "scheduled" ||
+            c.outcome === "rescheduled" ||
+            c.outcome === "cancellation" ||
+            c.outcome === "Appointment",
+        ).length,
+        emergency: (calls ?? []).filter(
+          (c) => c.outcome === "emergency" || c.outcome === "Urgent",
+        ).length,
+        callback: (calls ?? []).filter(
+          (c) => c.outcome === "callback" || c.outcome === "Call Back",
+        ).length,
+        info: (calls ?? []).filter(
+          (c) => c.outcome === "info" || c.outcome === "Info Only",
+        ).length,
       };
 
       return {

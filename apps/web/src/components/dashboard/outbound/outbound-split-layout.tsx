@@ -11,7 +11,6 @@ import {
 import { cn } from "@odis-ai/shared/util";
 
 interface OutboundSplitLayoutProps {
-  header?: ReactNode;
   leftPanel: ReactNode;
   rightPanel: ReactNode;
   showRightPanel: boolean;
@@ -26,7 +25,6 @@ interface OutboundSplitLayoutProps {
  * - Right: Detail panel (70% when open, collapses to 0)
  */
 export function OutboundSplitLayout({
-  header,
   leftPanel,
   rightPanel,
   showRightPanel,
@@ -36,7 +34,7 @@ export function OutboundSplitLayout({
 
   useEffect(() => {
     if (showRightPanel) {
-      rightPanelRef.current?.resize(70);
+      rightPanelRef.current?.resize(55);
     } else {
       rightPanelRef.current?.collapse();
     }
@@ -49,19 +47,18 @@ export function OutboundSplitLayout({
   return (
     <PanelGroup
       direction="horizontal"
-      className="h-full w-full gap-3 overflow-hidden"
+      className="h-full w-full gap-4 overflow-hidden px-6 py-4"
     >
       {/* Left Panel - Table */}
-      <Panel defaultSize={100} minSize={35} className="min-w-0 overflow-hidden">
+      <Panel defaultSize={100} minSize={40} className="min-w-0 overflow-hidden">
         <div
           className={cn(
-            "flex h-full flex-col overflow-hidden",
-            "rounded-xl border border-teal-200/40",
+            "flex h-full flex-col overflow-hidden rounded-xl",
+            "border border-teal-200/40",
             "bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70",
             "shadow-lg shadow-teal-500/5 backdrop-blur-md",
           )}
         >
-          {header}
           {leftPanel}
         </div>
       </Panel>
@@ -87,8 +84,8 @@ export function OutboundSplitLayout({
       <Panel
         ref={rightPanelRef}
         defaultSize={0}
-        minSize={25}
-        maxSize={75}
+        minSize={30}
+        maxSize={60}
         collapsible
         collapsedSize={0}
         onCollapse={handlePanelCollapse}
@@ -96,8 +93,8 @@ export function OutboundSplitLayout({
       >
         <div
           className={cn(
-            "relative flex h-full flex-col overflow-hidden",
-            "rounded-xl border border-teal-200/40",
+            "relative flex h-full flex-col overflow-hidden rounded-xl",
+            "border border-teal-200/40",
             "bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70",
             "shadow-lg shadow-teal-500/5 backdrop-blur-md",
           )}
@@ -106,10 +103,10 @@ export function OutboundSplitLayout({
           <button
             onClick={onCloseRightPanel}
             className={cn(
-              "absolute top-3 right-3 z-10",
-              "flex h-7 w-7 items-center justify-center rounded-lg",
-              "text-slate-400 transition-all duration-200",
-              "hover:bg-slate-100 hover:text-slate-600",
+              "absolute top-4 right-4 z-10",
+              "flex h-8 w-8 items-center justify-center rounded-lg",
+              "bg-white/60 text-slate-400 backdrop-blur-sm transition-all duration-200",
+              "hover:bg-white/80 hover:text-slate-600 hover:shadow-md",
             )}
             aria-label="Close"
           >

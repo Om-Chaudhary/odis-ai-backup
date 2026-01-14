@@ -1,5 +1,3 @@
-"use client";
-
 import { type ReactNode } from "react";
 import { type LucideIcon } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
@@ -49,7 +47,7 @@ export function DashboardPageHeader({
           "flex items-start justify-between gap-4",
           "border-b border-teal-100/50",
           "bg-gradient-to-r from-white/50 to-teal-50/30",
-          "px-4 py-4",
+          "px-6 py-4",
         )}
       >
         {/* Left: Icon + Title Area */}
@@ -78,7 +76,7 @@ export function DashboardPageHeader({
             "flex shrink-0 items-center justify-between gap-4",
             "border-b border-teal-100/30",
             "bg-white/40 backdrop-blur-sm",
-            "px-4 py-3",
+            "px-6 py-3",
           )}
         >
           {children}

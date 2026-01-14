@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { SidebarTrigger } from "@odis-ai/shared/ui/sidebar";
-import { Separator } from "@odis-ai/shared/ui/separator";
+import { Menu, TestTube, Settings2, X } from "lucide-react";
 import { DashboardBreadcrumb } from "./dashboard-breadcrumb";
+import { DashboardHeaderSearch } from "./dashboard-header-search";
 import { api } from "~/trpc/client";
-import { TestTube, Settings2, X } from "lucide-react";
 import { Button } from "@odis-ai/shared/ui/button";
 import {
   Dialog,
@@ -70,24 +69,41 @@ export function DashboardHeader() {
     <>
       <header
         className={cn(
-          "flex h-14 shrink-0 items-center gap-2 border-b bg-white/50 backdrop-blur-sm transition-colors duration-300",
-          isTestMode && "border-amber-500/30 bg-amber-50/50",
+          "relative flex h-16 shrink-0 items-center gap-2 border-b transition-all duration-300",
+          isTestMode
+            ? "border-amber-200/60 bg-gradient-to-r from-amber-50/90 via-amber-50/70 to-amber-50/90"
+            : "border-teal-200/40 bg-gradient-to-r from-teal-50/30 via-white/90 to-teal-50/30 backdrop-blur-sm",
         )}
       >
-        <div className="flex flex-1 items-center justify-between px-3">
-          <div className="flex items-center gap-2">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
+        {/* Subtle gradient overlay */}
+        {!isTestMode && (
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-teal-500/[0.03] to-transparent" />
+        )}
+
+        <div className="relative z-10 flex flex-1 items-center justify-between px-6">
+          <div className="flex items-center gap-3">
+            {/* Mobile menu button (hidden on md+ screens) */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="-ml-2 h-9 w-9 rounded-xl md:hidden"
+              aria-label="Open menu"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
             <DashboardBreadcrumb />
           </div>
 
-          {isTestMode && settings && (
-            <TestModeControls
-              settings={settings}
-              onUpdate={handleUpdate}
-              isLoading={updateSettingsMutation.isPending}
-            />
-          )}
+          <div className="flex items-center gap-4">
+            <DashboardHeaderSearch />
+            {isTestMode && settings && (
+              <TestModeControls
+                settings={settings}
+                onUpdate={handleUpdate}
+                isLoading={updateSettingsMutation.isPending}
+              />
+            )}
+          </div>
         </div>
       </header>
     </>
@@ -146,13 +162,13 @@ function TestModeControls({
 
   return (
     <>
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 text-xs text-amber-900">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 rounded-full bg-amber-100/80 px-3 py-1.5 text-xs shadow-sm ring-1 ring-amber-200/50">
           <TestTube className="h-3.5 w-3.5 text-amber-600" />
-          <span className="font-medium">Test Mode Active</span>
-          <span className="hidden text-amber-700 sm:inline-block">
-            • Sends to:{" "}
-            <span className="ml-1 font-medium">
+          <span className="font-semibold text-amber-800">Test Mode</span>
+          <span className="hidden text-amber-700/80 sm:inline-block">
+            •{" "}
+            <span className="font-medium">
               {settings.testContactEmail ??
                 settings.testContactPhone ??
                 "test contact"}
@@ -163,7 +179,7 @@ function TestModeControls({
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-amber-700 hover:bg-amber-100/50 hover:text-amber-900"
+            className="h-8 w-8 rounded-lg text-amber-700 hover:bg-amber-100 hover:text-amber-900"
             onClick={() => setIsEditOpen(true)}
             title="Configure Test Contact"
           >
@@ -172,7 +188,7 @@ function TestModeControls({
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-amber-700 hover:bg-amber-100/50 hover:text-amber-900"
+            className="h-8 w-8 rounded-lg text-amber-700 hover:bg-amber-100 hover:text-amber-900"
             onClick={handleDisable}
             title="Disable Test Mode"
           >
@@ -226,7 +242,7 @@ function TestModeControls({
               />
             </div>
 
-            <div className="rounded-md bg-amber-50 p-3">
+            <div className="rounded-xl bg-amber-50 p-3 ring-1 ring-amber-100">
               <p className="text-sm text-amber-800">
                 <strong>Note:</strong> Test mode is currently enabled. Disable
                 it from this banner to send discharges to actual pet owners.

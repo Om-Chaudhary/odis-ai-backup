@@ -43,11 +43,11 @@ export function ClinicSelector({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex w-full items-center justify-between gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-xs hover:bg-slate-50 focus:ring-2 focus:ring-teal-500/20 focus:outline-none">
-        <span className="truncate text-slate-700">
+      <DropdownMenuTrigger className="flex w-full items-center justify-between gap-1 rounded-md border border-teal-600/50 bg-teal-900/50 px-2 py-1.5 text-xs transition-colors hover:border-teal-500/60 hover:bg-teal-800/60 focus:ring-2 focus:ring-teal-400/30 focus:outline-none">
+        <span className="truncate font-medium text-teal-100">
           {currentClinic?.name ?? "Select clinic"}
         </span>
-        <ChevronsUpDown className="h-3 w-3 shrink-0 text-slate-400" />
+        <ChevronsUpDown className="h-3 w-3 shrink-0 text-teal-400" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
         {clinics.map((clinic) => (

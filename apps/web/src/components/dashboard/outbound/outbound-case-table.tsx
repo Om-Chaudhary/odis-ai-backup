@@ -15,6 +15,7 @@ import {
   getDeliveryStatusDisplay,
   type DeliveryStatus,
 } from "./detail/utils/status-display";
+import { DataTableEmptyState } from "~/components/dashboard/shared/data-table";
 
 // Minimum required fields for table display
 interface TableCaseBase {
@@ -236,16 +237,22 @@ export function OutboundCaseTable<T extends TableCaseBase>({
   }
 
   if (cases.length === 0) {
-    return <CaseTableEmpty />;
+    return (
+      <DataTableEmptyState
+        title="All caught up!"
+        description="No discharge cases require attention right now."
+        icon={CheckCircle2}
+      />
+    );
   }
 
   return (
-    <div ref={tableRef} className="h-full w-full overflow-auto">
+    <div ref={tableRef} className="h-full min-h-0 w-full overflow-auto">
       <table className="w-full min-w-0 table-fixed">
         <thead className="sticky top-0 z-10 border-b border-teal-100/50 bg-gradient-to-r from-teal-50/40 to-white/60 backdrop-blur-sm">
           <tr className="text-xs text-slate-500">
             {onToggleBulkSelect && !isCompact && (
-              <th className="h-10 w-[5%] pl-3 text-center font-medium">
+              <th className="h-10 w-[5%] pl-6 text-center font-medium">
                 <Checkbox
                   checked={
                     cases.length > 0 && selectedForBulk.size === cases.length
@@ -257,7 +264,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
               </th>
             )}
             {!isCompact && (
-              <th className="h-10 w-[5%] pl-3 text-center font-medium">
+              <th className="h-10 w-[5%] text-center font-medium">
                 <Star className="mx-auto h-4 w-4" />
               </th>
             )}
@@ -265,10 +272,10 @@ export function OutboundCaseTable<T extends TableCaseBase>({
               className={cn(
                 "h-10 text-left font-medium",
                 isCompact
-                  ? "w-[60%] pl-4"
+                  ? "w-[66%] pl-6"
                   : onToggleBulkSelect
                     ? "w-[32%]"
-                    : "w-[36%]",
+                    : "w-[36%] pl-6",
               )}
             >
               Patient
@@ -276,7 +283,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
             <th
               className={cn(
                 "h-10 text-center font-medium",
-                isCompact ? "w-[20%]" : "w-[10%]",
+                isCompact ? "w-[17%]" : "w-[10%]",
               )}
             >
               Phone
@@ -284,7 +291,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
             <th
               className={cn(
                 "h-10 text-center font-medium",
-                isCompact ? "w-[20%]" : "w-[10%]",
+                isCompact ? "w-[17%]" : "w-[10%]",
               )}
             >
               Email
@@ -293,7 +300,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
               <th className="h-10 w-[18%] text-center font-medium">Status</th>
             )}
             {!isCompact && (
-              <th className="h-10 w-[14%] pr-3 text-right font-medium">Time</th>
+              <th className="h-10 w-[14%] pr-6 text-right font-medium">Time</th>
             )}
           </tr>
         </thead>
@@ -341,7 +348,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
               >
                 {/* Checkbox - hidden when sidebar is open */}
                 {onToggleBulkSelect && !isCompact && (
-                  <td className="py-3 pl-3 text-center">
+                  <td className="py-3 pl-6 text-center">
                     <Checkbox
                       checked={selectedForBulk.has(caseItem.id)}
                       onCheckedChange={() => onToggleBulkSelect(caseItem.id)}
@@ -354,7 +361,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
 
                 {/* Star */}
                 {!isCompact && (
-                  <td className="py-3 pl-3 text-center">
+                  <td className="py-3 text-center">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -379,7 +386,12 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                 )}
 
                 {/* Patient */}
-                <td className={cn("py-3", isCompact && "pl-4")}>
+                <td
+                  className={cn(
+                    "py-3",
+                    isCompact ? "pl-6" : onToggleBulkSelect ? "" : "pl-6",
+                  )}
+                >
                   <div className="flex flex-col gap-0.5 overflow-hidden">
                     <span className="truncate text-sm font-semibold text-slate-800">
                       {caseItem.patient.name}
@@ -428,7 +440,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
 
                 {/* Time / Schedule */}
                 {!isCompact && (
-                  <td className="py-3 pr-3 text-right text-xs">
+                  <td className="py-3 pr-6 text-right text-xs">
                     <ScheduleTimeDisplay
                       status={caseItem.status}
                       timestamp={caseItem.timestamp}
@@ -655,9 +667,9 @@ function DeliveryIcon({
  */
 function CaseTableSkeleton() {
   return (
-    <div className="w-full overflow-hidden p-2">
+    <div className="w-full overflow-hidden">
       {/* Header skeleton */}
-      <div className="mb-3 flex gap-2 border-b border-teal-100/50 pb-2.5">
+      <div className="mb-0 flex gap-2 border-b border-teal-100/50 px-6 py-3">
         <div className="h-3 w-[5%] animate-pulse rounded bg-teal-100/50" />
         <div className="h-3 w-[5%] animate-pulse rounded bg-teal-100/50" />
         <div className="h-3 w-[32%] animate-pulse rounded bg-teal-100/50" />
@@ -670,7 +682,7 @@ function CaseTableSkeleton() {
       {Array.from({ length: 10 }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-2 border-b border-teal-50 py-3"
+          className="flex items-center gap-2 border-b border-teal-50 px-6 py-3"
         >
           <div className="flex w-[5%] justify-center">
             <div className="h-4 w-4 animate-pulse rounded bg-teal-50" />
@@ -691,28 +703,11 @@ function CaseTableSkeleton() {
           <div className="flex w-[18%] justify-center">
             <div className="h-7 w-18 animate-pulse rounded-md bg-teal-50" />
           </div>
-          <div className="flex w-[14%] justify-end pr-3">
+          <div className="flex w-[14%] justify-end">
             <div className="h-3 w-14 animate-pulse rounded bg-teal-50" />
           </div>
         </div>
       ))}
-    </div>
-  );
-}
-
-/**
- * Empty state when no cases
- */
-function CaseTableEmpty() {
-  return (
-    <div className="flex h-full flex-col items-center justify-center py-16 text-center">
-      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-teal-100 to-emerald-100">
-        <CheckCircle2 className="h-6 w-6 text-teal-600" />
-      </div>
-      <p className="text-sm font-semibold text-slate-800">All caught up!</p>
-      <p className="mt-0.5 text-xs text-slate-500">
-        No discharge cases require attention right now.
-      </p>
     </div>
   );
 }

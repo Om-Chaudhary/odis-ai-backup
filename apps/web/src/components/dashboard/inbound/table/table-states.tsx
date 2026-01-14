@@ -1,14 +1,12 @@
-import { Phone } from "lucide-react";
-
 /**
  * Loading skeleton for table
  * Styled to match outbound dashboard with teal-based colors
  */
 export function TableSkeleton() {
   return (
-    <div className="w-full overflow-hidden p-2">
+    <div className="flex min-h-[600px] w-full flex-col overflow-hidden">
       {/* Header skeleton */}
-      <div className="mb-3 flex gap-2 border-b border-teal-100/50 pb-2.5">
+      <div className="mb-0 flex shrink-0 gap-2 border-b border-teal-100/50 px-6 py-3">
         <div className="h-3 w-[32%] animate-pulse rounded bg-teal-100/50" />
         <div className="h-3 w-[14%] animate-pulse rounded bg-teal-100/50" />
         <div className="h-3 w-[12%] animate-pulse rounded bg-teal-100/50" />
@@ -16,47 +14,31 @@ export function TableSkeleton() {
         <div className="h-3 w-[22%] animate-pulse rounded bg-teal-100/50" />
       </div>
       {/* Row skeletons */}
-      {Array.from({ length: 10 }).map((_, i) => (
-        <div
-          key={i}
-          className="flex items-center gap-2 border-b border-teal-50 py-3"
-        >
-          <div className="w-[32%] space-y-1">
-            <div className="h-4 w-24 animate-pulse rounded bg-teal-100/40" />
-            <div className="h-3 w-32 animate-pulse rounded bg-teal-50" />
+      <div className="flex-1 space-y-0">
+        {Array.from({ length: 15 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-2 border-b border-teal-50 px-6 py-3"
+          >
+            <div className="w-[32%] space-y-1">
+              <div className="h-4 w-24 animate-pulse rounded bg-teal-100/40" />
+              <div className="h-3 w-32 animate-pulse rounded bg-teal-50" />
+            </div>
+            <div className="flex w-[14%] justify-center">
+              <div className="h-5 w-14 animate-pulse rounded-full bg-teal-50" />
+            </div>
+            <div className="flex w-[12%] justify-center">
+              <div className="h-5 w-12 animate-pulse rounded-full bg-teal-50" />
+            </div>
+            <div className="flex w-[14%] justify-center">
+              <div className="h-5 w-12 animate-pulse rounded-md bg-teal-50" />
+            </div>
+            <div className="flex w-[22%] justify-end">
+              <div className="h-3 w-16 animate-pulse rounded bg-teal-50" />
+            </div>
           </div>
-          <div className="flex w-[14%] justify-center">
-            <div className="h-5 w-14 animate-pulse rounded-full bg-teal-50" />
-          </div>
-          <div className="flex w-[12%] justify-center">
-            <div className="h-5 w-12 animate-pulse rounded-full bg-teal-50" />
-          </div>
-          <div className="flex w-[14%] justify-center">
-            <div className="h-5 w-12 animate-pulse rounded-md bg-teal-50" />
-          </div>
-          <div className="flex w-[22%] justify-end pr-3">
-            <div className="h-3 w-16 animate-pulse rounded bg-teal-50" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/**
- * Empty state when no items
- * Styled to match outbound dashboard with gradient icon background
- */
-export function TableEmpty() {
-  return (
-    <div className="flex h-full flex-col items-center justify-center py-16 text-center">
-      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-teal-100 to-emerald-100">
-        <Phone className="h-6 w-6 text-teal-600" />
+        ))}
       </div>
-      <p className="text-sm font-semibold text-slate-800">No calls yet</p>
-      <p className="mt-0.5 text-xs text-slate-500">
-        Inbound calls will appear here when customers call in.
-      </p>
     </div>
   );
 }

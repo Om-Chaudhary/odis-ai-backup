@@ -1,4 +1,5 @@
-import { AppSidebar } from "~/components/dashboard/shell/app-sidebar";
+import { IconSidebar } from "~/components/dashboard/shell/icon-sidebar";
+import { NavigationPanel } from "~/components/dashboard/shell/navigation-panel";
 import { DashboardHeader } from "~/components/dashboard/shell/dashboard-header";
 import { getUser } from "~/server/actions/auth";
 import { createClient } from "@odis-ai/data-access/db/server";
@@ -8,12 +9,6 @@ import type { Metadata } from "next";
 import { AUTH_PARAMS } from "@odis-ai/shared/constants/auth";
 import { getClinicByUserId, getUserClinics } from "@odis-ai/domain/clinics";
 import { Toaster } from "sonner";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@odis-ai/shared/ui/sidebar";
-import { Separator } from "@odis-ai/shared/ui/separator";
 
 export const metadata: Metadata = {
   title: "Dashboard | Odis AI",
@@ -80,7 +75,7 @@ export default async function DashboardLayout({
   ]);
 
   return (
-    <SidebarProvider>
+    <div className="flex h-screen overflow-hidden">
       {/* Background Effects */}
       <div className="pointer-events-none fixed inset-0 z-0">
         {/* Animated gradient overlays */}
@@ -124,8 +119,8 @@ export default async function DashboardLayout({
         className="pointer-events-none fixed inset-0 z-0 opacity-10"
       />
 
-      {/* Sidebar */}
-      <AppSidebar
+      {/* Icon Sidebar */}
+      <IconSidebar
         user={user}
         profile={profile}
         clinicSlug={clinic?.slug ?? null}
@@ -137,15 +132,16 @@ export default async function DashboardLayout({
         currentClinicName={clinic?.name}
       />
 
+      {/* Navigation Panel - rendered by child routes */}
+      <NavigationPanel clinicSlug={clinic?.slug ?? null} />
+
       {/* Main Content Area */}
-      <SidebarInset className="relative z-10 bg-gradient-to-b from-emerald-50 via-emerald-100/40 to-emerald-50/30">
+      <div className="relative z-10 flex min-w-0 flex-1 flex-col bg-gray-50">
         <DashboardHeader />
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
-          {children}
-        </div>
-      </SidebarInset>
+        <div className="flex h-full min-h-0 flex-1 flex-col">{children}</div>
+      </div>
 
       <Toaster richColors />
-    </SidebarProvider>
+    </div>
   );
 }

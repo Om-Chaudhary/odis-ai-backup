@@ -34,7 +34,7 @@ export function InboundSplitLayout({
 
   useEffect(() => {
     if (showRightPanel) {
-      rightPanelRef.current?.resize(65);
+      rightPanelRef.current?.resize(55);
     } else {
       rightPanelRef.current?.collapse();
     }
@@ -45,13 +45,13 @@ export function InboundSplitLayout({
   }, [onCloseRightPanel]);
 
   return (
-    <PanelGroup direction="horizontal" className="h-full gap-3">
+    <PanelGroup direction="horizontal" className="h-full gap-4 px-6 py-4">
       {/* Left Panel - Table */}
-      <Panel defaultSize={100} minSize={30} className="overflow-hidden">
+      <Panel defaultSize={100} minSize={40} className="overflow-hidden">
         <div
           className={cn(
-            "flex h-full flex-col overflow-hidden",
-            "rounded-xl border border-teal-200/40",
+            "flex h-full flex-col overflow-hidden rounded-xl",
+            "border border-teal-200/40",
             "bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70",
             "shadow-lg shadow-teal-500/5 backdrop-blur-md",
           )}
@@ -81,8 +81,8 @@ export function InboundSplitLayout({
       <Panel
         ref={rightPanelRef}
         defaultSize={0}
-        minSize={25}
-        maxSize={75}
+        minSize={30}
+        maxSize={60}
         collapsible
         collapsedSize={0}
         onCollapse={handlePanelCollapse}
@@ -90,8 +90,8 @@ export function InboundSplitLayout({
       >
         <div
           className={cn(
-            "relative flex h-full flex-col overflow-hidden",
-            "rounded-xl border border-teal-200/40",
+            "relative flex h-full flex-col overflow-hidden rounded-xl",
+            "border border-teal-200/40",
             "bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70",
             "shadow-lg shadow-teal-500/5 backdrop-blur-md",
           )}
@@ -100,10 +100,10 @@ export function InboundSplitLayout({
           <button
             onClick={onCloseRightPanel}
             className={cn(
-              "absolute top-3 right-3 z-10",
-              "flex h-7 w-7 items-center justify-center rounded-lg",
-              "text-slate-400 transition-all duration-200",
-              "hover:bg-slate-100 hover:text-slate-600",
+              "absolute top-4 right-4 z-10",
+              "flex h-8 w-8 items-center justify-center rounded-lg",
+              "bg-white/60 text-slate-400 backdrop-blur-sm transition-all duration-200",
+              "hover:bg-white/80 hover:text-slate-600 hover:shadow-md",
             )}
             aria-label="Close"
           >

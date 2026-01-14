@@ -169,7 +169,7 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
           {call.ended_reason && (
             <Badge
               variant="outline"
-              className="border-border/40 text-muted-foreground text-xs"
+              className="border-border/40 text-muted-foreground mt-1 mr-12 text-xs"
             >
               {formatEndReason(call.ended_reason)}
             </Badge>

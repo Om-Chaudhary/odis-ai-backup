@@ -3,9 +3,11 @@
 import { useEffect, useRef } from "react";
 import { cn } from "@odis-ai/shared/util";
 import type { Database } from "@odis-ai/shared/types";
+import { DataTableEmptyState } from "../../shared/data-table/data-table-empty-state";
+import { Phone } from "lucide-react";
 import { CallsHeader } from "./table-headers";
 import { CallRow } from "./rows/call-row";
-import { TableSkeleton, TableEmpty } from "./table-states";
+import { TableSkeleton } from "./table-states";
 import { getCallModifications } from "../demo-data";
 
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
@@ -84,11 +86,17 @@ export function InboundTable({
   }
 
   if (items.length === 0) {
-    return <TableEmpty />;
+    return (
+      <DataTableEmptyState
+        title="No calls yet"
+        description="Inbound calls will appear here when customers call in."
+        icon={Phone}
+      />
+    );
   }
 
   return (
-    <div ref={tableRef} className="h-full overflow-auto">
+    <div ref={tableRef} className="h-full min-h-0 overflow-auto">
       <table className="w-full">
         <thead className="sticky top-0 z-10 border-b border-teal-100/50 bg-gradient-to-r from-teal-50/40 to-white/60 backdrop-blur-sm">
           <CallsHeader isCompact={isCompact} />

@@ -1,9 +1,8 @@
 import { PageContent, PageFooter } from "~/components/dashboard/layout";
 import { OutboundNeedsAttentionTable } from "../outbound-needs-attention-table";
-import { OutboundPagination } from "../outbound-pagination";
+import { DataTablePagination } from "../../shared/data-table/data-table-pagination";
 import { OutboundSplitLayout } from "../outbound-split-layout";
 import { OutboundCaseDetail } from "../outbound-case-detail";
-import { OutboundHeader } from "../outbound-header";
 import type { OutboundHeaderProps } from "../outbound-header";
 import type { TransformedCase, DeliveryToggles } from "../types";
 
@@ -60,7 +59,6 @@ export function NeedsAttentionView({
     <OutboundSplitLayout
       showRightPanel={selectedCase !== null}
       onCloseRightPanel={onClosePanel}
-      header={<OutboundHeader {...headerProps} showDateNav={false} />}
       leftPanel={
         <>
           <PageContent>
@@ -72,7 +70,7 @@ export function NeedsAttentionView({
             />
           </PageContent>
           <PageFooter>
-            <OutboundPagination
+            <DataTablePagination
               page={page}
               pageSize={pageSize}
               total={total}

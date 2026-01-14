@@ -26,7 +26,7 @@ interface DashboardToolbarProps {
   /** Current date for date navigation */
   currentDate?: Date;
   /** Callback when date changes */
-  onDateChange?: (date: Date) => void;
+  onDateChange?: (date: Date) => void | null;
   /** Whether date nav is loading */
   isDateLoading?: boolean;
 
@@ -107,7 +107,7 @@ export function DashboardToolbar({
           viewOptions.length > 0 &&
           currentView &&
           onViewChange && (
-            <div className="flex items-center rounded-lg border border-teal-200/50 bg-white/60 p-1">
+            <div className="flex items-center gap-2">
               {viewOptions.map((option) => {
                 const isActive = currentView === option.value;
                 const Icon = option.icon;
@@ -119,19 +119,28 @@ export function DashboardToolbar({
                     className={cn(
                       "flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-200",
                       isActive
-                        ? "bg-teal-500 text-white shadow-sm"
-                        : "text-slate-600 hover:bg-teal-50 hover:text-slate-800",
+                        ? "border border-teal-200 bg-teal-50 text-teal-700 shadow-sm"
+                        : "border border-transparent text-slate-600 hover:bg-teal-50 hover:text-slate-800",
                       isLoading && "cursor-not-allowed opacity-50",
                     )}
                   >
-                    {Icon && <Icon className="h-4 w-4" />}
+                    {Icon && (
+                      <Icon
+                        className={cn(
+                          "h-4 w-4",
+                          isActive ? "text-teal-600" : "text-slate-400",
+                        )}
+                      />
+                    )}
                     <span>{option.label}</span>
                     {option.count !== undefined && (
                       <Badge
-                        variant={isActive ? "outline" : "secondary"}
+                        variant={isActive ? "default" : "secondary"}
                         className={cn(
                           "ml-1 px-1.5 py-0 text-xs",
-                          isActive && "border-white/40 bg-white/20 text-white",
+                          isActive
+                            ? "bg-teal-500 text-white hover:bg-teal-600"
+                            : "bg-slate-100 text-slate-600",
                         )}
                       >
                         {option.count}

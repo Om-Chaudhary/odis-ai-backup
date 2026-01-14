@@ -29,12 +29,13 @@ interface PageFooterProps {
 }
 
 /**
- * Page Container - Glassmorphism Layout Component
+ * Page Container - Layout Component
  *
  * Provides a consistent layout structure for dashboard pages with:
- * - Glassmorphism card styling matching the dashboard theme
  * - Proper flex layout for header, toolbar, content, and footer
  * - Overflow handling for scrollable content areas
+ *
+ * Note: Glassmorphism styling is now applied at the split layout level
  *
  * Usage:
  * ```tsx
@@ -48,16 +49,7 @@ interface PageFooterProps {
  */
 export function PageContainer({ children, className }: PageContainerProps) {
   return (
-    <div
-      className={cn(
-        "flex h-full flex-col overflow-hidden",
-        "rounded-xl border border-teal-200/40",
-        "bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70",
-        "shadow-lg shadow-teal-500/5 backdrop-blur-md",
-        "transition-all duration-200",
-        className,
-      )}
-    >
+    <div className={cn("flex h-full flex-col overflow-hidden", className)}>
       {children}
     </div>
   );
@@ -73,7 +65,7 @@ export function PageHeader({ children, className }: PageHeaderProps) {
         "flex shrink-0 items-center justify-between",
         "border-b border-teal-100/50",
         "bg-gradient-to-r from-white/50 to-teal-50/30",
-        "px-4 py-3",
+        "px-6 py-3",
         className,
       )}
     >
@@ -92,7 +84,7 @@ export function PageToolbar({ children, className }: PageToolbarProps) {
         "flex shrink-0 flex-col gap-3",
         "border-b border-teal-100/30",
         "bg-white/40 backdrop-blur-sm",
-        "px-4 py-3",
+        "px-6 py-3",
         className,
       )}
     >
@@ -122,7 +114,7 @@ export function PageFooter({ children, className }: PageFooterProps) {
         "flex shrink-0 items-center justify-between",
         "border-t border-teal-100/50",
         "bg-gradient-to-r from-teal-50/30 to-white/50",
-        "px-4 py-2",
+        "px-6 py-2",
         className,
       )}
     >

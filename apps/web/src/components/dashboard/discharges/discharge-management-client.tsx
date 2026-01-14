@@ -232,49 +232,6 @@ export function DischargeManagementClient() {
     },
   });
 
-  const updateSettingsMutation = api.cases.updateDischargeSettings.useMutation({
-    onSuccess: () => {
-      toast.success("Settings updated");
-      void refetchSettings();
-    },
-    onError: (error) => {
-      toast.error(error.message ?? "Failed to update settings");
-    },
-  });
-
-  const handleUpdateSettings = useCallback(
-    (newSettings: DischargeSettings) => {
-      updateSettingsMutation.mutate({
-        clinicName: newSettings.clinicName || undefined,
-        clinicPhone: newSettings.clinicPhone || undefined,
-        clinicEmail: newSettings.clinicEmail || undefined,
-        emergencyPhone: newSettings.emergencyPhone || undefined,
-        testModeEnabled: newSettings.testModeEnabled,
-        testContactName: newSettings.testContactName ?? undefined,
-        testContactEmail: newSettings.testContactEmail ?? undefined,
-        testContactPhone: newSettings.testContactPhone ?? undefined,
-        voicemailDetectionEnabled: newSettings.voicemailDetectionEnabled,
-        defaultScheduleDelayMinutes:
-          newSettings.defaultScheduleDelayMinutes ?? null,
-        primaryColor: newSettings.primaryColor ?? undefined,
-        logoUrl: newSettings.logoUrl ?? null,
-        emailHeaderText: newSettings.emailHeaderText ?? null,
-        emailFooterText: newSettings.emailFooterText ?? null,
-        preferredEmailStartTime: newSettings.preferredEmailStartTime ?? null,
-        preferredEmailEndTime: newSettings.preferredEmailEndTime ?? null,
-        preferredCallStartTime: newSettings.preferredCallStartTime ?? null,
-        preferredCallEndTime: newSettings.preferredCallEndTime ?? null,
-        emailDelayDays: newSettings.emailDelayDays ?? null,
-        callDelayDays: newSettings.callDelayDays ?? null,
-        maxCallRetries: newSettings.maxCallRetries ?? null,
-        batchIncludeIdexxNotes: newSettings.batchIncludeIdexxNotes,
-        batchIncludeManualTranscriptions:
-          newSettings.batchIncludeManualTranscriptions,
-      });
-    },
-    [updateSettingsMutation],
-  );
-
   // Store schedule times
   let emailScheduleTime: Date;
   let callScheduleTime: Date;

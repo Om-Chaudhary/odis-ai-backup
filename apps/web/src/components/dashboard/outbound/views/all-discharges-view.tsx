@@ -1,6 +1,6 @@
 import { PageContent, PageFooter } from "~/components/dashboard/layout";
 import { OutboundCaseTable } from "../outbound-case-table";
-import { OutboundPagination } from "../outbound-pagination";
+import { DataTablePagination } from "../../shared/data-table/data-table-pagination";
 import { OutboundSplitLayout } from "../outbound-split-layout";
 import { OutboundCaseDetail } from "../outbound-case-detail";
 import { OutboundHeader } from "../outbound-header";
@@ -79,9 +79,9 @@ export function AllDischargesView({
     <OutboundSplitLayout
       showRightPanel={selectedCase !== null}
       onCloseRightPanel={onClosePanel}
-      header={<OutboundHeader {...headerProps} showDateNav={true} />}
       leftPanel={
         <>
+          <OutboundHeader {...headerProps} showDateNav={true} />
           <PageContent>
             <OutboundCaseTable
               cases={cases}
@@ -100,7 +100,7 @@ export function AllDischargesView({
             />
           </PageContent>
           <PageFooter>
-            <OutboundPagination
+            <DataTablePagination
               page={page}
               pageSize={pageSize}
               total={total}
