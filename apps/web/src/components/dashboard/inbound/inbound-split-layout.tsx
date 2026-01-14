@@ -45,15 +45,25 @@ export function InboundSplitLayout({
   }, [onCloseRightPanel]);
 
   return (
-    <PanelGroup direction="horizontal" className="h-full gap-4 px-6 py-4">
+    <PanelGroup
+      direction="horizontal"
+      className={cn(
+        "h-full px-6 py-4",
+        showRightPanel ? "gap-0" : "gap-4",
+      )}
+    >
       {/* Left Panel - Table */}
       <Panel defaultSize={100} minSize={40} className="overflow-hidden">
         <div
           className={cn(
-            "flex h-full flex-col overflow-hidden rounded-xl",
+            "flex h-full flex-col overflow-hidden",
             "border border-teal-200/40",
             "bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70",
             "shadow-lg shadow-teal-500/5 backdrop-blur-md",
+            // When right panel is open, remove right border-radius to connect
+            showRightPanel
+              ? "rounded-l-xl rounded-r-none border-r-0"
+              : "rounded-xl",
           )}
         >
           {leftPanel}
@@ -70,14 +80,14 @@ export function InboundSplitLayout({
         <div
           className={cn(
             "absolute inset-y-4 left-1/2 w-1 -translate-x-1/2 rounded-full",
-            "bg-teal-200/50 transition-all duration-200",
-            "group-hover:bg-teal-400/60 group-hover:shadow-sm",
-            "group-active:bg-teal-500/70",
+            "bg-teal-300/60 transition-all duration-200",
+            "group-hover:bg-teal-400/70 group-hover:shadow-sm",
+            "group-active:bg-teal-500/80",
           )}
         />
       </PanelResizeHandle>
 
-      {/* Right Panel - Detail */}
+      {/* Right Panel - Detail (connected to active row with matching teal background) */}
       <Panel
         ref={rightPanelRef}
         defaultSize={0}
@@ -90,9 +100,12 @@ export function InboundSplitLayout({
       >
         <div
           className={cn(
-            "relative flex h-full flex-col overflow-hidden rounded-xl",
-            "border border-teal-200/40",
-            "bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70",
+            "relative flex h-full flex-col overflow-hidden",
+            // Match the active row teal background color
+            "bg-teal-50/70",
+            // Border on all sides except left (connects to table)
+            "border-y border-r border-teal-200/40",
+            "rounded-l-none rounded-r-xl",
             "shadow-lg shadow-teal-500/5 backdrop-blur-md",
           )}
         >
