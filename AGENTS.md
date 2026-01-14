@@ -6,12 +6,12 @@
 
 **ODIS AI** is a veterinary technology platform that automates patient discharge calls and case management. Core capabilities:
 
-- **Voice AI**: Automated discharge calls via VAPI (voice AI platform)
+- **Voice AI**: Automated discharge and inbound calls via VAPI (voice AI platform)
 - **Case Management**: Veterinary case tracking and workflow automation
-- **IDEXX Integration**: Chrome extension + sync service for IDEXX Neo veterinary software
+- **IDEXX Integration**: Headless sync service for IDEXX Neo veterinary software
 - **Discharge Orchestration**: Batch scheduling, staggered calls, retry logic
 
-**Tech Stack**: Next.js 15 (App Router) · TypeScript (strict) · Supabase (PostgreSQL) · tRPC · Tailwind CSS 4 · shadcn/ui · Nx monorepo
+**Tech Stack**: Next.js 16 (App Router) · React 19 · TypeScript (strict) · Supabase (PostgreSQL) · tRPC · Tailwind CSS 4 · shadcn/ui · Nx monorepo
 
 ---
 
@@ -45,16 +45,16 @@ pnpm docs:nx                # Regenerate Nx inventory docs
 
 ```
 apps/
-  web/                      # Next.js 15 application (dashboard, API routes, tRPC)
-  chrome-extension/         # IDEXX Neo browser extension (Vite + React)
-  idexx-sync/               # Headless sync service (Express + Playwright)
+  web/                      # Next.js 16 application (dashboard, API routes, tRPC)
+  docs/                     # Docusaurus documentation site
+  idexx-sync/               # Headless IDEXX Neo sync service (Express + Playwright)
 
 libs/
   shared/                   # Cross-cutting concerns
     types/                  # TypeScript types (Database, Case, Patient, etc.)
-    validators/             # Zod schemas (236+ tests, 95%+ coverage)
+    validators/             # Zod schemas (95%+ test coverage)
     util/                   # Utilities (transforms, business-hours, phone, dates)
-    ui/                     # shadcn/ui components (59 components)
+    ui/                     # shadcn/ui components (59+ components)
     hooks/                  # React hooks
     logger/                 # Structured logging with namespaces
     crypto/                 # AES encryption helpers
@@ -86,12 +86,6 @@ libs/
     resend/                 # Email sending (IEmailClient)
     slack/                  # Slack notifications
     ai/                     # LlamaIndex/Anthropic utilities
-    retell/                 # Legacy (deprecated)
-
-  extension/                # Chrome extension libs
-    shared/                 # Shared extension utilities
-    storage/                # Storage abstractions
-    env/                    # Extension environment config
 ```
 
 ---
@@ -136,10 +130,6 @@ import { createPhoneCall, validateVariables } from "@odis-ai/integrations/vapi";
 import { scheduleCallExecution } from "@odis-ai/integrations/qstash";
 import { sendEmail } from "@odis-ai/integrations/resend";
 import { transformIdexxData } from "@odis-ai/integrations/idexx";
-
-// Extension
-import { useStorage } from "@odis-ai/extension/shared";
-import { StorageArea } from "@odis-ai/extension/storage";
 
 // Web app internal (use sparingly)
 import { something } from "~/lib/something";
@@ -209,6 +199,12 @@ apps/web/src/server/api/routers/
       approve.ts
       schedule-remaining.ts
       ...
+  inbound/
+    index.ts
+    procedures/     # Inbound call handling
+      ...
+  admin/
+    index.ts        # Admin-only procedures
 ```
 
 ### Server Actions vs API Routes
@@ -258,9 +254,8 @@ const hasActive = useCallback(() => dataRef.current.some((x) => x.active), []);
 
 ## Testing
 
-**Framework**: Vitest + Testing Library  
-**Coverage Target**: 70% lines/functions/branches  
-**Current**: 290+ tests, validators at 95%+ coverage
+**Framework**: Vitest + Testing Library
+**Coverage Target**: 70% lines/functions/branches
 
 ### Commands
 

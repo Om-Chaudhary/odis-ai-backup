@@ -1,38 +1,36 @@
 # ODIS AI Web - Comprehensive Testing Strategy
 
-**Generated**: 2025-11-14  
-**Updated**: 2025-12-10 (Nx Monorepo Refactoring)  
-**Current Status**: 290+ tests passing (Validators + Discharge + Hooks)  
+**Last Updated**: January 2026
+**Current Status**: Tests passing across validator and domain libraries
 **Coverage Target**: 70% lines/functions/branches/statements
 
-## Recent Updates (December 2025)
+## Test Infrastructure
 
-### ✅ Major Test Coverage Additions
+### Test Coverage Summary
 
-1. **Validator Library Tests** - 236+ tests, 95%+ coverage
-   - `assessment-questions.test.ts` - 40+ tests
-   - `discharge-summary.test.ts` - 35+ tests
-   - `discharge.test.ts` - 50+ tests
-   - `orchestration.test.ts` - 45+ tests
-   - `schedule.test.ts` - 38+ tests
-   - `scribe.test.ts` - 28+ tests
+1. **Validator Library Tests** (`libs/shared/validators`) - 95%+ coverage
+   - `assessment-questions.test.ts` - Assessment validation
+   - `discharge-summary.test.ts` - Summary structure
+   - `discharge.test.ts` - Discharge workflow validation
+   - `orchestration.test.ts` - Multi-step orchestration
+   - `schedule.test.ts` - Schedule & timing validation
+   - `scribe.test.ts` - Clinical data validation
 
-2. **Service Layer Tests** - 12+ tests
+2. **Domain Layer Tests** (`libs/domain/discharge`)
    - `discharge-batch-stagger.test.ts` - Batch processing tests
 
 3. **Infrastructure Ready for Testing**
-   - Repository interfaces defined (`ICasesRepository`, `IUserRepository`, `ICallRepository`, `IEmailRepository`)
+   - Repository interfaces defined in `@odis-ai/data-access/repository-interfaces`
    - External API interfaces (`IScheduler`, `ICallClient`, `IEmailClient`)
-   - Services split for testability (`services-cases`, `services-discharge`, `services-shared`)
+   - Domain services split for testability (`domain/cases`, `domain/discharge`, `domain/shared`)
 
 ### Current Coverage
 
-| Library              | Tests | Coverage   | Status         |
-| -------------------- | ----- | ---------- | -------------- |
-| `validators`         | 236+  | 95%+       | ✅ Complete    |
-| `services-discharge` | 12+   | Core paths | ✅ Partial     |
-| `hooks`              | 3+    | Partial    | 🔄 In progress |
-| Overall              | 290+  | ~35%       | 🔄 Growing     |
+| Library                    | Coverage   | Status         |
+| -------------------------- | ---------- | -------------- |
+| `shared/validators`        | 95%+       | ✅ Complete    |
+| `domain/discharge`         | Core paths | ✅ Partial     |
+| `shared/hooks`             | Partial    | 🔄 In progress |
 
 ---
 
@@ -351,11 +349,10 @@ describe("IDEXX Data Transformer", () => {
 
 ---
 
-### 2.2 Zod Validators ✅ **COMPLETED** (`libs/validators`)
+### 2.2 Zod Validators ✅ **COMPLETED** (`libs/shared/validators`)
 
-**Status**: ✅ **236+ tests implemented, 95%+ coverage**  
-**Location**: `libs/validators/src/__tests__/`  
-**Documentation**: `libs/validators/TEST_COVERAGE.md`
+**Status**: ✅ **95%+ coverage**
+**Location**: `libs/shared/validators/src/__tests__/`
 
 **Test Coverage Summary**:
 
@@ -690,8 +687,8 @@ vi.mock("@upstash/qstash", () => ({
 }));
 
 // Mock Supabase
-vi.mock("~/lib/supabase/server", () => ({
-  createClient: vi.fn(),
+vi.mock("@odis-ai/data-access/db", () => ({
+  createServerClient: vi.fn(),
   createServiceClient: vi.fn(),
 }));
 ```
@@ -729,48 +726,29 @@ export function createMockSupabaseClient(responses: Record<string, any>) {
 
 ### Directory Structure
 
+Tests are colocated within each library:
+
 ```
-src/
-├── test/
-│   ├── setup.ts (✓ exists)
-│   ├── utils/
-│   │   ├── test-utils.tsx (✓ exists)
-│   │   ├── supabase-mocks.ts (new)
-│   │   ├── vapi-mocks.ts (new)
-│   │   └── qstash-mocks.ts (new)
-│   └── fixtures/
-│       ├── idexx-data.ts (new)
-│       ├── vapi-responses.ts (new)
-│       └── call-data.ts (new)
-├── app/
-│   └── api/
-│       ├── webhooks/
-│       │   └── vapi/
-│       │       └── route.test.ts (new - P0)
-│       └── calls/
-│           └── schedule/
-│               └── route.test.ts (new - P0)
+libs/
+├── shared/
+│   ├── validators/src/__tests__/     # Validator tests (95%+ coverage)
+│   ├── util/src/__tests__/           # Utility function tests
+│   └── testing/src/                  # Shared test utilities & mocks
+│       ├── mocks/
+│       ├── fixtures/
+│       └── setup/
+├── domain/
+│   └── discharge/data-access/src/__tests__/  # Service layer tests
+├── integrations/
+│   ├── vapi/src/__tests__/           # VAPI client tests
+│   └── qstash/src/__tests__/         # QStash client tests
+└── data-access/
+    └── api/src/__tests__/            # API helper tests
+
+apps/web/src/
 ├── server/
-│   ├── actions/
-│   │   └── auth.test.ts (new - P0)
-│   └── api/
-│       └── routers/
-│           └── cases.test.ts (new - P1)
-├── lib/
-│   ├── vapi/
-│   │   ├── client.test.ts (new - P1)
-│   │   └── validators.test.ts (new - P1)
-│   ├── idexx/
-│   │   └── transformer.test.ts (new - P1)
-│   ├── retell/
-│   │   └── validators.test.ts (new - P1)
-│   ├── qstash/
-│   │   └── client.test.ts (new - P2)
-│   └── utils/
-│       └── business-hours.test.ts (new - P1)
-└── components/
-    └── dashboard/
-        └── quick-call-dialog.test.tsx (new - P2)
+│   ├── actions/__tests__/            # Server action tests
+│   └── api/routers/                  # tRPC router tests (colocated)
 ```
 
 ---
@@ -796,10 +774,10 @@ src/
 - [ ] Authentication flows: 0% → **Priority P0**
 - [ ] Retry logic: 0% → **Priority P0**
 - [ ] Data transformers: 0% → **Priority P1**
-- [x] **Validators: 95%+ ✅ COMPLETE (236+ tests)**
-- [x] **Discharge batch processing: 90%+ ✅ COMPLETE (12+ tests)**
+- [x] **Validators (`libs/shared/validators`): 95%+ ✅ COMPLETE**
+- [x] **Discharge batch processing (`libs/domain/discharge`): ✅ COMPLETE**
 
-**Next Priority**: VAPI webhook handler tests (Phase 1, Test 1.1 from original strategy)
+**Next Priority**: VAPI webhook handler tests and authentication flow tests
 
 ---
 
@@ -883,32 +861,26 @@ jobs:
 
 ---
 
-## Estimated Timeline
+## Testing Priorities
 
-### Phase 1 (Critical) - Week 1-2
+### Phase 1 (Critical)
 
-- VAPI webhook handler: 6 hours
-- Authentication: 4 hours
-- Call scheduling: 7 hours
-- **Total**: ~17 hours (~2 days)
+- VAPI webhook handler tests
+- Authentication flow tests
+- Call scheduling integration tests
 
-### Phase 2 (High Priority) - Week 3-4
+### Phase 2 (High Priority)
 
-- IDEXX transformer: 4 hours
-- Validators: 9 hours
-- tRPC routers: 8 hours
-- VAPI client: 4 hours
-- Business hours: 3 hours
-- **Total**: ~28 hours (~3.5 days)
+- IDEXX transformer tests
+- tRPC router tests
+- VAPI client tests
+- Business hours utility tests
 
-### Phase 3 (Medium Priority) - Week 5-6
+### Phase 3 (Medium Priority)
 
-- Remaining hooks: 6 hours
-- UI components: 10 hours
-- Utilities: 3 hours
-- **Total**: ~19 hours (~2.5 days)
-
-### **Grand Total**: ~64 hours (~8 days of focused work)
+- React hook tests
+- UI component tests
+- Utility function tests
 
 ---
 

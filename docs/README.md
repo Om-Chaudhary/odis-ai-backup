@@ -73,16 +73,15 @@ docs/
 
 ```
 apps/
-  web/                    # Next.js 15 application
-  chrome-extension/       # IDEXX Neo browser extension
-  idexx-sync/            # Headless sync service
+  web/                    # Next.js 16 application (dashboard, API routes, tRPC)
+  docs/                   # Docusaurus documentation site
+  idexx-sync/             # Headless IDEXX Neo sync service (Express + Playwright)
 
 libs/
-  shared/                # Cross-cutting (types, validators, util, ui, hooks, logger, ...)
-  data-access/           # Database layer (db, supabase-client, repository-*, api)
-  domain/                # Business logic (cases, discharge, clinics, auth, shared)
-  integrations/          # External services (vapi, idexx, qstash, resend, slack, ai)
-  extension/             # Chrome extension (shared, storage, env)
+  shared/                 # Cross-cutting (types, validators, util, ui, hooks, logger, ...)
+  data-access/            # Database layer (db, supabase-client, repository-*, api)
+  domain/                 # Business logic (cases, discharge, clinics, auth, shared)
+  integrations/           # External services (vapi, idexx, qstash, resend, slack, ai)
 ```
 
 ---
@@ -119,4 +118,4 @@ import { ... } from "@odis-ai/integrations/vapi";
 
 ---
 
-_Last updated: December 2024_
+_Last updated: January 2026_

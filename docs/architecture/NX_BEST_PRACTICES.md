@@ -2,8 +2,8 @@
 
 > Purpose: Document Nx workspace conventions, identified improvements, and implementation guidelines for maintaining a scalable monorepo.
 
-**Generated**: 2024-12-09
-**Status**: Audit Complete - Improvements Identified
+**Last Updated**: January 2026
+**Status**: Domain-grouped architecture implemented
 
 ---
 
@@ -11,15 +11,14 @@
 
 ### Compliance Summary
 
-| Practice               | Status            | Notes                                   |
-| ---------------------- | ----------------- | --------------------------------------- |
-| Library Tagging        | Compliant         | All 24 libs properly tagged             |
-| Module Resolution      | Compliant         | `@odis-ai/*` namespace configured       |
-| Circular Dependencies  | Compliant         | Zero circular deps detected             |
-| Platform Separation    | Compliant         | browser/node/neutral tags applied       |
-| Dependency Constraints | **Non-Compliant** | Missing `@nx/enforce-module-boundaries` |
-| Library Documentation  | **Non-Compliant** | Missing README.md in libs               |
-| Test Colocation        | **Non-Compliant** | Tests not colocated with source         |
+| Practice               | Status            | Notes                                        |
+| ---------------------- | ----------------- | -------------------------------------------- |
+| Library Tagging        | Compliant         | All libs properly tagged                     |
+| Module Resolution      | Compliant         | `@odis-ai/*` namespace with domain grouping  |
+| Circular Dependencies  | Compliant         | Zero circular deps detected                  |
+| Platform Separation    | Compliant         | browser/node/neutral tags applied            |
+| Domain Grouping        | Compliant         | shared/, data-access/, domain/, integrations/|
+| Dependency Constraints | **Non-Compliant** | Missing `@nx/enforce-module-boundaries`      |
 
 ---
 
@@ -47,13 +46,13 @@ All libraries use three tag dimensions:
 
 | Platform  | Libraries | Examples                                    |
 | --------- | --------- | ------------------------------------------- |
-| `node`    | 15        | db, services, vapi, api, logger             |
-| `browser` | 4         | ui, hooks, auth, api-client                 |
-| `neutral` | 5         | types, validators, constants, utils, crypto |
+| `node`    | Many      | db, vapi, api, logger, qstash               |
+| `browser` | Some      | ui, hooks                                   |
+| `neutral` | Some      | types, validators, constants, util, crypto  |
 
 ---
 
-## 2. Dependency Constraint Rules (MISSING)
+## 2. Dependency Constraint Rules (RECOMMENDED)
 
 ### Problem
 
@@ -61,52 +60,48 @@ No enforcement of module boundaries. Browser libraries could accidentally import
 
 ### Solution
 
-Add to root `.eslintrc.json`:
+Add to root `eslint.config.js`:
 
-```json
+```javascript
+// Add @nx/enforce-module-boundaries rule
 {
-  "overrides": [
-    {
-      "files": ["*.ts", "*.tsx"],
-      "rules": {
-        "@nx/enforce-module-boundaries": [
-          "error",
+  rules: {
+    "@nx/enforce-module-boundaries": [
+      "error",
+      {
+        enforceBuildableLibDependency: true,
+        allow: [],
+        depConstraints: [
           {
-            "enforceBuildableLibDependency": true,
-            "allow": [],
-            "depConstraints": [
-              {
-                "sourceTag": "platform:browser",
-                "onlyDependOnLibsWithTags": [
-                  "platform:browser",
-                  "platform:neutral"
-                ]
-              },
-              {
-                "sourceTag": "platform:node",
-                "onlyDependOnLibsWithTags": [
-                  "platform:node",
-                  "platform:neutral"
-                ]
-              },
-              {
-                "sourceTag": "platform:neutral",
-                "onlyDependOnLibsWithTags": ["platform:neutral"]
-              },
-              {
-                "sourceTag": "type:lib",
-                "onlyDependOnLibsWithTags": ["type:lib"]
-              },
-              {
-                "sourceTag": "scope:ui",
-                "onlyDependOnLibsWithTags": ["scope:ui", "scope:shared"]
-              }
+            sourceTag: "platform:browser",
+            onlyDependOnLibsWithTags: [
+              "platform:browser",
+              "platform:neutral"
             ]
+          },
+          {
+            sourceTag: "platform:node",
+            onlyDependOnLibsWithTags: [
+              "platform:node",
+              "platform:neutral"
+            ]
+          },
+          {
+            sourceTag: "platform:neutral",
+            onlyDependOnLibsWithTags: ["platform:neutral"]
+          },
+          {
+            sourceTag: "type:lib",
+            onlyDependOnLibsWithTags: ["type:lib"]
+          },
+          {
+            sourceTag: "scope:ui",
+            onlyDependOnLibsWithTags: ["scope:ui", "scope:shared"]
           }
         ]
       }
-    }
-  ]
+    ]
+  }
 }
 ```
 
@@ -123,7 +118,7 @@ Add to root `.eslintrc.json`:
 ### Recommended Structure
 
 ```
-libs/{lib-name}/
+libs/{domain}/{lib-name}/
 ├── src/
 │   ├── lib/                    # Main source code
 │   │   ├── {feature}/          # Feature modules (if complex)
@@ -135,18 +130,47 @@ libs/{lib-name}/
 ├── tsconfig.json               # TypeScript config
 ├── tsconfig.lib.json           # Library-specific TS config
 ├── vitest.config.ts            # Test configuration
-└── README.md                   # Library documentation
+└── README.md                   # Library documentation (optional)
 ```
 
-### Current vs. Recommended
+### Domain Grouping
 
-| Library    | Current Structure | Recommended Changes         |
-| ---------- | ----------------- | --------------------------- |
-| services   | Flat files        | Split into subdirectories   |
-| vapi       | Has subdirs       | Good structure              |
-| db         | Has repositories/ | Good structure              |
-| ui         | Has components    | Good structure              |
-| validators | Flat files        | Consider grouping by domain |
+Libraries are organized by domain:
+
+```
+libs/
+  shared/           # Cross-cutting concerns
+    types/
+    validators/
+    util/
+    ui/
+    hooks/
+    logger/
+    ...
+
+  data-access/      # Database layer
+    db/
+    supabase-client/
+    repository-interfaces/
+    repository-impl/
+    api/
+    entities/
+
+  domain/           # Business logic
+    cases/data-access/
+    discharge/data-access/
+    shared/util/
+    clinics/util/
+    auth/util/
+
+  integrations/     # External services
+    vapi/
+    idexx/
+    qstash/
+    resend/
+    slack/
+    ai/
+```
 
 ---
 
@@ -161,36 +185,12 @@ libs/{lib-name}/
 | Large     | 1500-5000 | Review for split opportunities |
 | Oversized | > 5000    | Split into sub-libraries       |
 
-### Current Large Libraries
+### Handling Large Libraries
 
-| Library      | Lines | Recommendation                                |
-| ------------ | ----- | --------------------------------------------- |
-| vapi         | 9,971 | Acceptable (integration lib)                  |
-| ui           | 7,136 | Acceptable (component lib)                    |
-| **services** | 4,037 | **Split into cases/, discharge/, execution/** |
-| db           | 1,685 | Acceptable                                    |
-
-### Services Split Plan
-
-```
-libs/services/           →    libs/services/
-├── cases-service.ts          ├── cases/
-├── discharge-orchestrator.ts │   ├── src/
-├── discharge-batch-processor │   │   ├── cases-service.ts
-└── execution-plan.ts         │   │   └── index.ts
-                              │   └── project.json
-                              ├── discharge/
-                              │   ├── src/
-                              │   │   ├── orchestrator.ts
-                              │   │   ├── batch-processor.ts
-                              │   │   └── index.ts
-                              │   └── project.json
-                              └── shared/
-                                  ├── src/
-                                  │   ├── execution-plan.ts
-                                  │   └── index.ts
-                                  └── project.json
-```
+Large integration libraries (like `vapi`) are acceptable when they:
+- Have clear sub-module organization
+- Export focused public APIs
+- Maintain internal cohesion
 
 ---
 
@@ -198,22 +198,33 @@ libs/services/           →    libs/services/
 
 ### Current Configuration
 
-Path aliases defined in `tsconfig.base.json`:
+Path aliases defined in `tsconfig.base.json` use domain-grouped imports:
 
 ```json
 {
   "compilerOptions": {
     "paths": {
-      "@odis-ai/api": ["libs/api/src/index.ts"],
-      "@odis-ai/api/*": ["libs/api/src/*"],
-      "@odis-ai/db": ["libs/db/src/index.ts"],
-      "@odis-ai/db/*": ["libs/db/src/*"],
-      // ... 24 libraries total
+      // Shared
+      "@odis-ai/shared/types": ["libs/shared/types/src/index.ts"],
+      "@odis-ai/shared/validators": ["libs/shared/validators/src/index.ts"],
+      "@odis-ai/shared/util": ["libs/shared/util/src/index.ts"],
+      "@odis-ai/shared/ui": ["libs/shared/ui/src/index.ts"],
+      // ...
 
-      // Legacy aliases (backward compatibility)
-      "~/lib/api": ["libs/api/src/index.ts"],
-      "~/lib/api/*": ["libs/api/src/*"]
-      // ... mirrors above
+      // Data Access
+      "@odis-ai/data-access/db": ["libs/data-access/db/src/index.ts"],
+      "@odis-ai/data-access/repository-interfaces": ["libs/data-access/repository-interfaces/src/index.ts"],
+      // ...
+
+      // Domain
+      "@odis-ai/domain/cases": ["libs/domain/cases/data-access/src/index.ts"],
+      "@odis-ai/domain/discharge": ["libs/domain/discharge/data-access/src/index.ts"],
+      // ...
+
+      // Integrations
+      "@odis-ai/integrations/vapi": ["libs/integrations/vapi/src/index.ts"],
+      "@odis-ai/integrations/qstash": ["libs/integrations/qstash/src/index.ts"],
+      // ...
     }
   }
 }
@@ -222,19 +233,18 @@ Path aliases defined in `tsconfig.base.json`:
 ### Import Standards
 
 ```typescript
-// ✅ Preferred: Namespace imports
-import { createServerClient } from "@odis-ai/db";
-import { CasesService } from "@odis-ai/services";
+// ✅ Preferred: Domain-grouped imports
+import { createServerClient } from "@odis-ai/data-access/db";
+import { CasesService } from "@odis-ai/domain/cases";
+import { createPhoneCall } from "@odis-ai/integrations/vapi";
+import type { Database } from "@odis-ai/shared/types";
+import { Button } from "@odis-ai/shared/ui";
 
 // ✅ Allowed: Subpath imports for specific modules
-import { BaseRepository } from "@odis-ai/db/repositories";
-import { vapiWebhookHandler } from "@odis-ai/vapi/webhooks";
-
-// ❌ Avoid: Legacy aliases (deprecated)
-import { createClient } from "~/lib/db";
+import { vapiWebhookHandler } from "@odis-ai/integrations/vapi/webhooks";
 
 // ❌ Never: Relative cross-library imports
-import { something } from "../../../libs/db/src/client";
+import { something } from "../../../libs/data-access/db/src/client";
 ```
 
 ---
@@ -288,7 +298,7 @@ Plugins automatically infer targets:
     },
     "lint": {
       "cache": true,
-      "inputs": ["default", "{workspaceRoot}/.eslintrc.json"]
+      "inputs": ["default", "{workspaceRoot}/eslint.config.js"]
     },
     "test": {
       "cache": true,
@@ -300,78 +310,38 @@ Plugins automatically infer targets:
 
 ---
 
-## 7. Library Documentation Requirements
-
-### README Template
-
-Each library should have a `README.md`:
-
-````markdown
-# @odis-ai/{lib-name}
-
-> Brief description of the library's purpose
-
-## Installation
-
-This library is internal to the monorepo. Import via:
-
-```typescript
-import { ... } from "@odis-ai/{lib-name}";
-```
-````
-
-## API
-
-### Exports
-
-- `functionName` - Brief description
-- `ClassName` - Brief description
-
-## Dependencies
-
-- `@odis-ai/types` - Shared types
-- `@odis-ai/utils` - Utility functions
-
-## Platform
-
-- **Runtime**: node | browser | neutral
-- **Tags**: type:lib, scope:shared, platform:node
-
-## Related
-
-- [Architecture Docs](../../docs/architecture/CORE_LIBS.md)
-- [Testing Guide](../../docs/testing/TESTING_STRATEGY.md)
-
-````
-
----
-
-## 8. Generator Templates
+## 7. Generator Templates
 
 ### Creating New Libraries
 
 Use Nx generators with proper configuration:
 
 ```bash
-# Create a new library
+# Create a new shared library
 nx g @nx/js:lib my-lib \
-  --directory=libs/my-lib \
-  --importPath=@odis-ai/my-lib \
+  --directory=libs/shared/my-lib \
+  --importPath=@odis-ai/shared/my-lib \
   --tags="type:lib,scope:shared,platform:node" \
   --unitTestRunner=vitest \
   --bundler=esbuild
 
 # Create a React library (for browser)
 nx g @nx/react:lib my-ui-lib \
-  --directory=libs/my-ui-lib \
-  --importPath=@odis-ai/my-ui-lib \
+  --directory=libs/shared/my-ui-lib \
+  --importPath=@odis-ai/shared/my-ui-lib \
   --tags="type:lib,scope:ui,platform:browser" \
   --unitTestRunner=vitest
-````
+
+# Create an integration library
+nx g @nx/js:lib my-integration \
+  --directory=libs/integrations/my-integration \
+  --importPath=@odis-ai/integrations/my-integration \
+  --tags="type:lib,scope:feature,platform:node" \
+  --unitTestRunner=vitest
+```
 
 ### Post-Generation Checklist
 
-- [ ] Add README.md with library documentation
 - [ ] Configure vitest.config.ts
 - [ ] Add to tsconfig.base.json paths (if not auto-added)
 - [ ] Update docs/reference/NX_PROJECTS.md via `pnpm docs:nx`
@@ -379,40 +349,26 @@ nx g @nx/react:lib my-ui-lib \
 
 ---
 
-## 9. Dependency Graph Health
+## 8. Dependency Graph Health
 
 ### Current Status
 
 ```
-Total Libraries: 24
-Total Apps: 2 (web, odis-ai root)
+Apps: 3 (web, docs, idexx-sync)
+Libraries: ~25 (domain-grouped)
 Circular Dependencies: 0
-Max Dependency Depth: 4 (services → vapi → db → env)
 ```
 
 ### Dependency Tiers
 
 ```
-Tier 0 (Foundation):
-  env, constants, crypto, logger, styles
-
-Tier 1 (Utilities):
-  types, validators, utils, hooks
-
-Tier 2 (Data):
-  db, api, auth, api-client
-
-Tier 3 (Domain):
-  clinics, email, qstash, retell, resend, ai
-
-Tier 4 (Integration):
-  vapi, idexx
-
-Tier 5 (Orchestration):
-  services
-
-Tier 6 (Application):
-  web (app)
+Tier 0 (Foundation):     env, constants, crypto, logger, styles
+Tier 1 (Utilities):      types, validators, util, hooks
+Tier 2 (Data):           db, api, supabase-client, repository-*
+Tier 3 (Domain):         clinics, email, auth
+Tier 4 (Integration):    vapi, idexx, qstash, resend, slack, ai
+Tier 5 (Orchestration):  domain/cases, domain/discharge
+Tier 6 (Application):    apps/web, apps/docs, apps/idexx-sync
 ```
 
 ### Visualization
@@ -425,45 +381,30 @@ nx graph
 
 ---
 
-## 10. Implementation Priorities
+## 9. Implementation Priorities
 
-### Phase 1: Immediate (This Sprint)
+### Immediate
 
 1. **Add dependency constraint rules**
    - Configure `@nx/enforce-module-boundaries`
    - Run lint to identify any violations
    - Fix violations before merging
 
-2. **Add README.md to each library**
-   - Start with core libs: db, vapi, services
-   - Use template above
+### Short-term
 
-### Phase 2: Short-term (Next 2 Sprints)
+2. **Maintain colocated tests**
+   - Keep tests in `__tests__/` directories within each lib
+   - Update vitest configs as needed
 
-3. **Split services library**
-   - Create libs/services/cases
-   - Create libs/services/discharge
-   - Update imports across codebase
-
-4. **Colocate tests with source**
-   - Move tests to `__tests__/` in each lib
-   - Update vitest configs
-
-### Phase 3: Long-term
-
-5. **Create library generators**
-   - Custom workspace generator for consistent lib creation
-   - Include README template
-
-6. **Add graph diagnostics**
-   - Configure @nx/graph-diagnostics
-   - Add to CI pipeline
+3. **Document new libraries**
+   - Add to CORE_LIBS.md when adding significant libraries
+   - Regenerate NX_PROJECTS.md with `pnpm docs:nx`
 
 ---
 
 ## Related Documentation
 
 - [Core Libraries Overview](./CORE_LIBS.md)
-- [Testability Patterns](./TESTABILITY_PATTERNS.md)
-- [Refactoring Roadmap](../reference/REFACTORING_ROADMAP.md)
+- [Testing Strategy](../testing/TESTING_STRATEGY.md)
 - [Nx Projects Inventory](../reference/NX_PROJECTS.md)
+- [AGENTS.md](../../AGENTS.md) - AI assistant guide

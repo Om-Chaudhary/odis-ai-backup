@@ -2,9 +2,8 @@
 
 > Inventory of libraries in the Nx workspace organized by domain. See `AGENTS.md` for import conventions.
 
-**Last Updated**: December 2024  
-**Total Libraries**: 28  
-**Architecture**: Domain-grouped (`shared/`, `data-access/`, `domain/`, `integrations/`, `extension/`)
+**Last Updated**: January 2026
+**Architecture**: Domain-grouped (`shared/`, `data-access/`, `domain/`, `integrations/`)
 
 ---
 
@@ -22,7 +21,7 @@ Cross-cutting concerns used across the entire monorepo.
 
 - **Purpose**: Zod validation schemas for API requests, webhooks, data integrity
 - **Key exports**: `dischargeSchema`, `dischargeSummarySchema`, `assessmentQuestionsSchema`, `orchestrationSchema`, `scheduleSchema`, `scribeSchema`
-- **Test coverage**: 236+ tests, 95%+ coverage
+- **Test coverage**: 95%+ coverage
 - **Platform**: neutral
 
 ### @odis-ai/shared/util
@@ -34,7 +33,7 @@ Cross-cutting concerns used across the entire monorepo.
 ### @odis-ai/shared/ui
 
 - **Purpose**: shadcn/ui React components
-- **Components**: 59 components (Button, Card, DataTable, Dialog, etc.)
+- **Components**: 59+ components (Button, Card, DataTable, Dialog, etc.)
 - **Platform**: browser
 
 ### @odis-ai/shared/hooks
@@ -178,7 +177,8 @@ External service integrations.
 - **Sub-modules**:
   - `webhooks/` - Webhook handlers (end-of-call, status-update, etc.)
   - `tools/` - Tool registry and executor
-  - `knowledge-base/` - Medical specialty knowledge bases
+  - `inbound/` - Inbound call handling
+  - `handlers/` - Event handlers
 - **Interface**: `ICallClient` for testing
 - **Platform**: node
 
@@ -213,35 +213,6 @@ External service integrations.
 - **Purpose**: AI/LLM utilities (LlamaIndex, Anthropic)
 - **Platform**: node
 
-### @odis-ai/integrations/retell
-
-- **Purpose**: Legacy Retell integration
-- **Status**: Deprecated - use VAPI
-- **Platform**: node
-
----
-
-## Extension Libraries (`libs/extension/`)
-
-Chrome extension specific libraries.
-
-### @odis-ai/extension/shared
-
-- **Purpose**: Shared extension utilities
-- **Key exports**: Extension hooks, utilities
-- **Platform**: browser
-
-### @odis-ai/extension/storage
-
-- **Purpose**: Storage abstractions for Chrome extension
-- **Key exports**: `StorageArea`, storage hooks
-- **Platform**: browser
-
-### @odis-ai/extension/env
-
-- **Purpose**: Extension environment configuration
-- **Platform**: browser
-
 ---
 
 ## Dependency Tiers
@@ -253,7 +224,7 @@ Tier 2 (Data):           db, api, supabase-client, repository-*
 Tier 3 (Domain):         clinics, email, auth
 Tier 4 (Integration):    vapi, idexx, qstash, resend, slack, ai
 Tier 5 (Orchestration):  domain/cases, domain/discharge
-Tier 6 (Application):    apps/web, apps/chrome-extension
+Tier 6 (Application):    apps/web, apps/docs, apps/idexx-sync
 ```
 
 ---

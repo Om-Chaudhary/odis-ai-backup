@@ -2,20 +2,23 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **Note**: For comprehensive guidance, see the main [AGENTS.md](../AGENTS.md) file.
+
 ## Development Commands
 
 ```bash
 # Development
-pnpm dev              # Start Next.js dev server with Turbopack
-pnpm build            # Create production build
-pnpm start            # Run production server
-pnpm preview          # Build and start production server
+pnpm dev              # Start Next.js dev server (nx dev web)
+pnpm build            # Create production build (nx build web)
 
 # Code Quality
-pnpm check            # Run linting and type checking
-pnpm lint             # Run ESLint
-pnpm lint:fix         # Fix ESLint issues automatically
-pnpm typecheck        # Run TypeScript compiler check
+pnpm check            # Run linting and type checking (all projects)
+pnpm lint:all         # Lint all projects
+pnpm typecheck:all    # TypeScript check all projects
+
+# Testing
+pnpm test:all         # Run all tests
+nx test <project>     # Test specific project
 
 # Formatting
 pnpm format:check     # Check code formatting
@@ -23,301 +26,183 @@ pnpm format:write     # Auto-format code with Prettier
 
 # Supabase
 pnpm update-types     # Generate TypeScript types from Supabase schema
-                      # Requires PROJECT_REF environment variable
 ```
 
 ## Architecture Overview
 
 ### Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript (strict mode)
+- **Runtime**: React 19
 - **Database**: Supabase (PostgreSQL)
 - **Auth**: Supabase Auth
 - **API**: tRPC + Next.js Server Actions
 - **Styling**: Tailwind CSS 4
 - **UI Components**: shadcn/ui (Radix UI primitives)
 - **Analytics**: PostHog
-- **AI Integration**: VAPI (voice calls)
+- **Voice AI**: VAPI
+- **Monorepo**: Nx
 
-### Project Structure
+### Workspace Structure
 
 ```
-src/
-├── app/                    # Next.js App Router pages
-│   ├── (auth)/            # Auth-protected routes
-│   ├── admin/             # Admin dashboard
-│   ├── api/               # API routes (webhooks, tRPC)
-│   ├── dashboard/         # User dashboard
-│   │   └── calls/         # VAPI call management
-├── components/            # React components
-│   ├── ui/               # shadcn/ui components
-│   ├── admin/            # Admin-specific components
-│   ├── dashboard/        # Dashboard components
-│   └── blocks/           # Content blocks
-├── server/               # Server-side code
-│   ├── actions/          # Next.js Server Actions
-│   │   └── auth.ts       # Authentication actions
-│   └── api/              # tRPC setup
-│       ├── trpc.ts       # tRPC context & procedures
-│       ├── root.ts       # App router
-│       └── routers/      # tRPC routers (domain-specific)
-├── lib/                  # Shared utilities
-│   ├── supabase/         # Supabase clients
-│   │   ├── server.ts     # Server-side client (with auth)
-│   │   └── client.ts     # Client-side client
-│   ├── vapi/             # VAPI AI SDK wrapper
-│   │   ├── client.ts     # VAPI client utilities
-│   │   ├── validators.ts # Input validation
-│   │   ├── types.ts      # TypeScript types
-│   │   └── knowledge-base/ # Domain-specific veterinary knowledge
-│   ├── idexx/            # IDEXX data transformation
-│   ├── qstash/           # QStash scheduling client
-│   └── utils.ts          # Utility functions
-├── hooks/                # Custom React hooks
-│   └── use-call-polling.ts  # Polling hook with adaptive intervals
+apps/
+  web/                      # Next.js 16 application
+  docs/                     # Docusaurus documentation site
+  idexx-sync/               # Headless IDEXX sync service
+
+libs/
+  shared/                   # Cross-cutting concerns
+    types/                  # TypeScript types
+    validators/             # Zod schemas (95%+ coverage)
+    util/                   # Utilities
+    ui/                     # shadcn/ui components
+    hooks/                  # React hooks
+    logger/                 # Structured logging
+    testing/                # Test utilities
+
+  data-access/              # Database layer
+    db/                     # Supabase clients + repos
+    repository-interfaces/  # Repository contracts
+    repository-impl/        # Concrete implementations
+    api/                    # API helpers
+
+  domain/                   # Business logic
+    cases/data-access/      # CasesService
+    discharge/data-access/  # DischargeOrchestrator
+    clinics/util/           # Clinic configuration
+    auth/util/              # Auth utilities
+
+  integrations/             # External services
+    vapi/                   # VAPI voice AI
+    idexx/                  # IDEXX transforms
+    qstash/                 # QStash scheduling
+    resend/                 # Email sending
+    slack/                  # Slack notifications
 ```
 
 ## Key Architectural Patterns
 
-### Dual API Architecture
+### Import Conventions
 
-The application uses **two parallel API systems**:
+All imports use the `@odis-ai/` namespace with domain grouping:
 
-1. **tRPC** (`src/server/api/`)
-   - Type-safe RPC calls
-   - Used for real-time queries and mutations
-   - Protected procedures require authentication
-   - Routers organized by domain (cases, templates, users, etc.)
+```typescript
+// Shared
+import type { Database, DashboardCase } from "@odis-ai/shared/types";
+import { dischargeSchema } from "@odis-ai/shared/validators";
+import { Button, Card } from "@odis-ai/shared/ui";
+import { loggers } from "@odis-ai/shared/logger";
 
-2. **Next.js Server Actions** (`src/server/actions/`)
-   - Server-side form handling
-   - Direct Supabase operations
-   - Used for Retell AI integration
-   - Simpler than tRPC for straightforward operations
+// Data Access
+import { createServerClient, createServiceClient } from "@odis-ai/data-access/db";
+import type { ICasesRepository } from "@odis-ai/data-access/repository-interfaces";
+import { CasesRepository } from "@odis-ai/data-access/repository-impl";
 
-**When to use which:**
+// Domain
+import { CasesService } from "@odis-ai/domain/cases";
+import { DischargeOrchestrator } from "@odis-ai/domain/discharge";
+import { getClinicByUserId } from "@odis-ai/domain/clinics";
 
-- Use **tRPC** for complex queries, real-time features, or when you need client-side invalidation
-- Use **Server Actions** for form submissions, simple CRUD, or webhook handlers
+// Integrations
+import { createPhoneCall } from "@odis-ai/integrations/vapi";
+import { scheduleCallExecution } from "@odis-ai/integrations/qstash";
+
+// Web app internal (use sparingly)
+import { something } from "~/lib/something";
+```
 
 ### Supabase Client Pattern
 
-Two distinct Supabase clients exist:
-
 ```typescript
 // Standard client (respects RLS, uses cookies)
-import { createClient } from "~/lib/supabase/server";
-const supabase = await createClient();
+import { createServerClient } from "@odis-ai/data-access/db";
+const supabase = await createServerClient();
 
-// Service client (bypasses RLS, admin operations)
-import { createServiceClient } from "~/lib/supabase/server";
+// Service client (bypasses RLS - admin/webhook only)
+import { createServiceClient } from "@odis-ai/data-access/db";
 const supabase = await createServiceClient();
 ```
 
-**Critical:** Service client bypasses Row Level Security. Only use for admin operations or when RLS would block legitimate access (e.g., webhook handlers).
+**Critical:** Service client bypasses Row Level Security. Only use for admin operations or webhook handlers.
+
+### Dual API Architecture
+
+1. **tRPC** (`apps/web/src/server/api/routers/`)
+   - Type-safe RPC calls
+   - Routers: dashboard, cases, outbound, inbound, admin
+   - Protected procedures require authentication
+
+2. **Server Actions** (`apps/web/src/server/actions/`)
+   - Server-side form handling
+   - Simpler than tRPC for straightforward operations
+
+**When to use which:**
+- Use **tRPC** for complex queries, real-time features
+- Use **Server Actions** for form submissions, simple CRUD
 
 ### React Hook Patterns for Polling
 
-When implementing polling with React hooks, use the **ref pattern** to avoid unstable callback references:
+Use the **ref pattern** to avoid unstable callback references:
 
 ```typescript
-// ❌ WRONG - Creates unstable references
-const loadData = useCallback(async () => {
-  // ...
-}, [data.length]); // data.length causes recreation
-
-const hasActiveItems = useCallback(() => {
-  return data.some((item) => item.active);
-}, [data]); // data causes recreation
-
 // ✅ CORRECT - Stable references with refs
 const dataRef = useRef(data);
 useEffect(() => {
   dataRef.current = data;
 }, [data]);
 
-const loadData = useCallback(async () => {
-  const isInitial = isInitialRef.current;
-  // ...
-}, [selectedFilter]); // Only external dependencies
-
 const hasActiveItems = useCallback(() => {
   return dataRef.current.some((item) => item.active);
 }, []); // Empty dependencies - stable reference
 ```
 
-**Why this matters:** Unstable callback references cause polling intervals to reset constantly, breaking the steady polling cadence.
+## VAPI Voice AI Integration
 
-## VAPI AI Integration
+Voice call management system using VAPI SDK for automated calls.
 
-Voice call management system using VAPI SDK for automated post-appointment follow-ups.
+### Key Locations
 
-### Architecture Overview
+**Libraries** (`libs/integrations/vapi/`):
+- `src/` - VAPI client, validators, types
+- `webhooks/` - Webhook handlers
+- `tools/` - Tool registry
+- `inbound/` - Inbound call handling
 
-The VAPI integration consists of:
-
-1. **Scheduling System**: Schedule calls for future execution using QStash
-2. **Execution System**: Make outbound calls via VAPI
-3. **Webhook System**: Receive real-time call status updates
-4. **Knowledge Base**: Domain-specific veterinary knowledge for natural conversations
-5. **IDEXX Integration**: Transform IDEXX Neo data into call variables
-
-### Setup Required
-
-1. Add environment variables to `.env.local`:
-
-   ```bash
-   # VAPI Configuration
-   VAPI_PRIVATE_KEY=your_private_key     # For server-side operations
-   VAPI_ASSISTANT_ID=assistant_id        # Default assistant to use
-   VAPI_PHONE_NUMBER_ID=phone_id         # Outbound caller ID
-   NEXT_PUBLIC_VAPI_PUBLIC_KEY=pub_key   # For browser-based calls (optional)
-   VAPI_WEBHOOK_SECRET=webhook_secret    # For webhook signature verification
-
-   # QStash (for scheduled calls)
-   QSTASH_TOKEN=qstash_token
-   QSTASH_CURRENT_SIGNING_KEY=signing_key
-   QSTASH_NEXT_SIGNING_KEY=next_key
-
-   # Site URL (for webhook callbacks)
-   NEXT_PUBLIC_SITE_URL=https://yourdomain.com
-   ```
-
-2. Configure webhook in VAPI dashboard:
-   - URL: `https://yourdomain.com/api/webhooks/vapi`
-   - Events: All events (status-update, end-of-call-report, hang)
-   - Set webhook secret for signature verification
-
-3. Database table `vapi_calls` stores call history
-
-### Key Files
-
-**API Routes**:
-
-- `src/app/api/calls/schedule/route.ts` - Schedule new calls with QStash
-- `src/app/api/calls/execute/route.ts` - Execute scheduled calls via VAPI
-- `src/app/api/webhooks/vapi/route.ts` - Receive VAPI webhook events
-- `src/app/api/webhooks/execute-call/route.ts` - QStash webhook for execution
-
-**Core Libraries**:
-
-- `src/lib/vapi/client.ts` - VAPI client wrapper with type safety
-- `src/lib/vapi/validators.ts` - Zod schemas for input validation
-- `src/lib/vapi/types.ts` - TypeScript type definitions
-- `src/lib/vapi/knowledge-base/` - Domain-specific veterinary knowledge
-- `src/lib/qstash/client.ts` - QStash scheduling client
-- `src/lib/idexx/transformer.ts` - IDEXX data transformation
-
-**UI Components**:
-
-- `src/components/dashboard/quick-call-dialog.tsx` - Quick call interface
+**API Routes** (`apps/web/src/app/api/`):
+- `calls/schedule/` - Schedule new calls
+- `webhooks/vapi/` - VAPI webhook events
+- `webhooks/execute-call/` - QStash execution webhook
+- `vapi/tools/` - VAPI tool endpoints
 
 ### Call Flow
 
 1. **Schedule Call** → POST `/api/calls/schedule`
-   - Validates input data (phone, pet name, owner name, etc.)
-   - Stores in `vapi_calls` table with status="queued"
-   - Schedules execution via QStash for future time
-
-2. **Execute Call** → POST `/api/calls/execute` (via QStash)
-   - Retrieves call from database
-   - Transforms data into dynamic variables
-   - Creates VAPI call with assistant overrides
-   - Updates status to "in-progress"
-
+2. **Execute Call** → QStash triggers execution via VAPI
 3. **Track Progress** → Webhook at `/api/webhooks/vapi`
-   - Receives status updates (queued, ringing, in-progress, ended)
-   - Updates database in real-time
-   - Handles automatic retries for failed calls (busy, no-answer, voicemail)
-   - Stores transcript, recording, and cost data
 
-### Dynamic Variables System
+### Dynamic Variables
 
-VAPI uses dynamic variables to personalize each call. Variables are passed via `assistantOverrides.variableValues`:
+Variables passed via `assistantOverrides.variableValues`:
 
 ```typescript
 {
-  // Core identification
   pet_name: "Max",
   owner_name: "John Smith",
-  vet_name: "Dr. Sarah Johnson",
-
-  // Clinic information
   clinic_name: "Happy Paws Veterinary",
   clinic_phone: "555-123-4567",
-  emergency_phone: "555-999-8888",
-
-  // Call context
-  appointment_date: "January 15th",
   call_type: "discharge" | "follow-up",
-
-  // Clinical details
   discharge_summary_content: "...",
-  medications: "...",
-  next_steps: "...",
-
-  // Conditional fields
-  sub_type: "wellness" | "vaccination",  // For discharge
-  condition: "ear infection",            // For follow-up
-  recheck_date: "January 30th",
 }
 ```
-
-Variables are referenced in assistant prompts using `{{variable_name}}` syntax.
-
-### Knowledge Base Structure
-
-Domain-specific knowledge organized by specialty in `src/lib/vapi/knowledge-base/`:
-
-- `behavioral.ts` - Behavioral issues and training
-- `cardiac.ts` - Heart conditions
-- `dental.ts` - Dental procedures and care
-- `dermatological.ts` - Skin conditions
-- `endocrine.ts` - Diabetes, thyroid, etc.
-- `gastrointestinal.ts` - Digestive issues
-- `neurological.ts` - Seizures, neurological conditions
-- `ophthalmic.ts` - Eye conditions
-- `orthopedic.ts` - Bone and joint issues
-- `pain-management.ts` - Pain medication protocols
-- `post-surgical.ts` - Post-operative care
-- `respiratory.ts` - Breathing issues
-- `urinary.ts` - Urinary tract issues
-- `wound-care.ts` - Wound management
-
-Each file exports FAQs and instructions for that domain. The assistant can reference this knowledge during calls.
-
-### IDEXX Integration
-
-Transform IDEXX Neo discharge summary data into VAPI call variables:
-
-```typescript
-import { transformIdexxToCallVariables } from "~/lib/idexx/transformer";
-
-const variables = transformIdexxToCallVariables(idexxData);
-// Returns properly formatted variables for VAPI
-```
-
-Handles date formatting, phone number formatting, and field mapping from IDEXX structure.
 
 ### Retry Logic
 
 Failed calls automatically retry with exponential backoff:
-
 - **Retry conditions**: dial-busy, dial-no-answer, voicemail
 - **Max retries**: 3 attempts
 - **Backoff**: 5, 10, 20 minutes
-- **Tracking**: Retry count stored in call metadata
-
-### Auto-refresh Pattern
-
-The calls dashboard uses adaptive polling:
-
-- 5s interval when calls are in progress
-- 30s interval when all calls completed/failed
-- Pauses when browser tab hidden (Page Visibility API)
-
-See `src/hooks/use-call-polling.ts` for the implementation pattern.
 
 ## Environment Variables
 
@@ -325,215 +210,62 @@ Required variables (see `.env.example`):
 
 ```bash
 # Supabase
-NEXT_PUBLIC_SUPABASE_URL=        # Project URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY=   # Anon/public key
-SUPABASE_SERVICE_ROLE_KEY=       # Service role key (admin)
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
 
-# PostHog Analytics
-NEXT_PUBLIC_POSTHOG_KEY=         # PostHog project key
-NEXT_PUBLIC_POSTHOG_HOST=        # Usually "https://us.i.posthog.com"
+# VAPI AI
+VAPI_PRIVATE_KEY=
+VAPI_ASSISTANT_ID=
+VAPI_PHONE_NUMBER_ID=
+VAPI_WEBHOOK_SECRET=
 
-# VAPI AI (voice calls)
-VAPI_PRIVATE_KEY=                # VAPI private API key
-VAPI_ASSISTANT_ID=               # Default assistant ID
-VAPI_PHONE_NUMBER_ID=            # Outbound phone number ID
-NEXT_PUBLIC_VAPI_PUBLIC_KEY=     # Public key for browser calls
-VAPI_WEBHOOK_SECRET=             # Webhook signature secret
-
-# QStash (scheduled calls)
-QSTASH_TOKEN=                    # QStash API token
-QSTASH_CURRENT_SIGNING_KEY=      # Current signing key
-QSTASH_NEXT_SIGNING_KEY=         # Next signing key
+# QStash
+QSTASH_TOKEN=
+QSTASH_CURRENT_SIGNING_KEY=
+QSTASH_NEXT_SIGNING_KEY=
 
 # Site Configuration
-NEXT_PUBLIC_SITE_URL=            # Site URL for webhooks
+NEXT_PUBLIC_SITE_URL=
 ```
 
-## Code Style & Pre-commit Hooks
+**Important**: Variables starting with `NEXT_PUBLIC_` are exposed to the browser. Never put secrets in public env vars.
 
-This project uses **husky** and **lint-staged** for automatic code quality:
+## Testing
 
-- **On commit**: Runs ESLint and Prettier on staged files
-- **TypeScript**: Strict mode enabled
-- **Formatting**: Prettier with Tailwind CSS plugin
+Tests are colocated within each library in `__tests__/` directories:
 
-Changes are auto-formatted on commit, so focus on logic - formatting is handled automatically.
-
-## Important Implementation Notes
-
-### Server Actions vs. API Routes
-
-Server Actions are the preferred pattern for most server-side operations:
-
-```typescript
-// ✅ Preferred: Server Action
-"use server";
-
-export async function createCall(data: CreateCallInput) {
-  const supabase = await createClient();
-  // ... implementation
-}
-
-// ❌ Avoid: API Route (unless needed for webhooks)
-export async function POST(request: Request) {
-  // Only use for external webhooks or non-Next.js clients
-}
+```
+libs/shared/validators/src/__tests__/
+libs/domain/discharge/data-access/src/__tests__/
+apps/web/src/server/actions/__tests__/
 ```
 
-### Authentication Checks
-
-Use tRPC's `protectedProcedure` or manual checks in Server Actions:
-
-```typescript
-// tRPC
-export const userRouter = createTRPCRouter({
-  getProfile: protectedProcedure // Automatic auth check
-    .query(({ ctx }) => {
-      // ctx.user is guaranteed non-null
-    }),
-});
-
-// Server Action
-export async function updateProfile(data: ProfileData) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw new Error("Unauthorized");
-  }
-  // ... implementation
-}
+Run tests:
+```bash
+pnpm test:all                  # All projects
+nx test <project>              # Specific project
+nx test <project> -t "name"    # Specific test
 ```
-
-### Webhook Security
-
-Webhook handlers must verify signatures:
-
-```typescript
-// src/app/api/webhooks/retell/route.ts
-function verifySignature(request: NextRequest): boolean {
-  const signature = request.headers.get("x-retell-signature");
-  const apiKey = process.env.RETELL_API_KEY;
-  return signature === apiKey;
-}
-
-export async function POST(request: NextRequest) {
-  if (!verifySignature(request)) {
-    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-  }
-  // ... handle webhook
-}
-```
-
-## Testing Strategy
-
-Currently no test suite exists. When adding tests:
-
-- Use React Testing Library for component tests
-- Use Vitest or Jest as test runner
-- Mock Supabase calls in tests
-- Test Server Actions with actual Supabase test instance
 
 ## Common Gotchas
 
-1. **Supabase RLS**: Service client bypasses RLS. Use regular client unless you specifically need admin access.
+1. **Supabase RLS**: Service client bypasses RLS. Use regular client unless you need admin access.
 
-2. **React Hook Dependencies**: When using `useCallback` or `useEffect` with data-dependent logic, use refs to avoid creating unstable references that break polling/intervals.
+2. **React Hook Dependencies**: Use refs to avoid unstable references that break polling/intervals.
 
-3. **Server vs Client Components**: Remember that Server Components can't use hooks or browser APIs. Mark components with `"use client"` when needed.
+3. **Server vs Client Components**: Server Components can't use hooks. Mark with `"use client"` when needed.
 
-4. **tRPC Context**: The context is created per-request with the authenticated user. Don't store mutable state in context.
+4. **Import Paths**: Always use `@odis-ai/` namespace imports, not relative paths across libraries.
 
-5. **Environment Variables**: Variables starting with `NEXT_PUBLIC_` are exposed to the browser. Never put secrets in public env vars.
+5. **Domain Grouping**: Libraries are organized by domain (shared, data-access, domain, integrations).
 
-## Documentation Structure
+## Key Documentation
 
-**IMPORTANT**: All documentation MUST follow this structure. Never create documentation files in the root directory.
-
-```
-docs/
-├── api/                      # API documentation and guides
-│   ├── README.md            # API overview
-│   └── *.md                 # Specific API docs
-├── architecture/            # System architecture documentation
-│   └── *.md                # Architecture decision records, patterns
-├── compliance/              # Compliance and legal documentation
-│   └── *.md                # HIPAA, data privacy, etc.
-├── cursor-commands/         # Cursor commands and rules
-│   ├── browser-testing/     # Visual testing workflows
-│   ├── component-development/ # Component dev workflows
-│   ├── api-testing/         # API testing workflows
-│   ├── debugging/           # Debugging workflows
-│   ├── templates/          # Command templates
-│   └── README.md           # Commands overview
-├── dashboard/               # Dashboard-specific documentation
-│   ├── 01-GENERAL/         # General dashboard concepts
-│   ├── 02-TABS/            # Tab-specific documentation
-│   ├── 03-COMPONENTS/      # Component documentation
-│   ├── 04-PATTERNS/        # Design patterns
-│   ├── 05-FEATURES/        # Feature documentation
-│   ├── 06-DATA-VIEWS/      # Data view patterns
-│   ├── 07-TESTING/         # Dashboard testing guides
-│   ├── 08-REPORTS/         # Status and progress reports
-│   ├── 09-AGENTS/          # Agent/worker documentation
-│   └── README.md           # Dashboard docs overview
-├── deployment/              # Deployment guides
-│   └── *.md                # Deployment procedures
-├── development/             # Development guides
-│   └── *.md                # Development workflows
-├── implementation/          # Implementation guides
-│   ├── features/           # Feature-specific guides
-│   ├── projects/           # Project-specific guides
-│   └── *.md               # General implementation docs
-├── integrations/            # Third-party integrations
-│   └── *.md                # Integration guides
-├── reference/               # Reference documentation
-│   └── *.md                # API references, migrations
-├── testing/                 # Testing documentation
-│   └── *.md                # Test strategies, guides, reports
-├── vapi/                    # VAPI-specific documentation
-│   ├── prompts/            # VAPI prompt templates
-│   └── *.md               # VAPI guides and setup
-├── CLAUDE.md               # This file (AI assistant guide)
-├── README.md               # Documentation index
-└── QUICK_REFERENCE.md      # Quick reference guide
-```
-
-### Documentation Guidelines
-
-1. **Never create docs in root**: All `.md` files belong in `/docs` following the structure above
-2. **Choose the right category**:
-   - API docs → `/docs/api/`
-   - Testing/verification → `/docs/testing/`
-   - Features → `/docs/implementation/features/`
-   - Architecture → `/docs/architecture/`
-   - Integration guides → `/docs/integrations/`
-   - Cursor commands → `/docs/cursor-commands/`
-3. **Use descriptive names**: Files should be UPPER_SNAKE_CASE for guides, kebab-case for feature docs
-4. **Update README.md**: Add new docs to the relevant README.md file in their directory
-
-### Key Documentation Files
-
-- **Cursor Commands**: `/docs/cursor-commands/README.md` - Cursor commands and workflows
-- **Visual Testing**: `/docs/cursor-commands/browser-testing/` - Browser testing workflows
-- **VAPI Integration**: `/docs/vapi/VAPI_VARIABLES_IMPLEMENTATION.md`
-- **VAPI Prompt**: `/docs/vapi/prompts/VAPI_SYSTEM_PROMPT.txt`
-- **VAPI Variables**: `/docs/vapi/VAPI_AI_EXTRACTION_VARIABLES.md`
-- **Testing Strategy**: `/docs/testing/TESTING_STRATEGY.md`
-- **Dashboard Guide**: `/docs/dashboard/README.md`
-- **API Reference**: `/docs/api/API_REFERENCE.md`
-
-### Cursor Commands & Rules
-
-For project-specific Cursor commands and workflows, see:
-
-- **`.cursorrules`** (project root) - Quick reference rules
-- **`docs/cursor-commands/`** - Detailed command documentation
-  - Browser testing workflows
-  - Component development commands
-  - API testing commands
-  - Debugging workflows
-  - Command templates
+| Document | Purpose |
+|----------|---------|
+| [AGENTS.md](../AGENTS.md) | **Primary AI assistant guide** |
+| [CORE_LIBS.md](architecture/CORE_LIBS.md) | Library inventory |
+| [TESTING_STRATEGY.md](testing/TESTING_STRATEGY.md) | Testing approach |
+| [API_REFERENCE.md](api/API_REFERENCE.md) | API documentation |
+| [NX_BEST_PRACTICES.md](architecture/NX_BEST_PRACTICES.md) | Nx conventions |
