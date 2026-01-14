@@ -16,8 +16,8 @@
  *   })
  * );
  */
-import { type UserConfig } from "vitest/config";
-import path from "path";
+import { type ViteUserConfig as UserConfig } from "vitest/config";
+import path from "node:path";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export interface SharedConfigOptions {

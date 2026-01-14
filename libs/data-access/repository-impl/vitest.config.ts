@@ -5,7 +5,7 @@ import path from "path";
 export default defineConfig({
   plugins: [nxViteTsPaths()],
   test: {
-    name: "db",
+    name: "repository-impl",
     globals: true,
     environment: "node",
     root: __dirname,

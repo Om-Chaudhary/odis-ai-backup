@@ -1,4 +1,5 @@
-import { defineConfig, type CoverageOptions } from "vitest/config";
+import { defineConfig } from "vitest/config";
+import type { CoverageOptions } from "vitest/node";
 
 /**
  * Shared Vitest coverage configuration for all libraries in the monorepo.
