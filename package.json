@@ -14,7 +14,6 @@
     "lint": "nx lint web",
     "lint:all": "nx run-many -t lint",
     "lint:fix": "nx lint web --fix",
-    "test": "NX_NO_CLOUD=true SKIP_ENV_VALIDATION=true nx test web",
     "test:all": "NX_NO_CLOUD=true SKIP_ENV_VALIDATION=true nx run-many -t test -- --run",
     "test:libs": "NX_NO_CLOUD=true SKIP_ENV_VALIDATION=true nx run-many -t test --projects=tag:type:lib -- --run",
     "test:ui": "NX_NO_CLOUD=true SKIP_ENV_VALIDATION=true nx test web --ui",
