@@ -1,9 +1,9 @@
 import { defineConfig } from "vitest/config";
-import { nxViteTsPaths } from "@nx/vite/plugins/nx-tsconfig-paths.plugin";
+import tsconfigPaths from "vite-tsconfig-paths";
 import path from "path";
 
 export default defineConfig({
-  plugins: [nxViteTsPaths()],
+  plugins: [tsconfigPaths({ root: path.resolve(__dirname, "../../../..") })],
   test: {
     name: "services-shared",
     globals: true,
