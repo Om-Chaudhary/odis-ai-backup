@@ -2,9 +2,15 @@
 
 import { useRef, type Ref, type RefObject } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
-import { PhoneMissed, PhoneOutgoing, ArrowDown } from "lucide-react";
+import {
+  PhoneMissed,
+  PhoneOutgoing,
+  ArrowDown,
+  AlertTriangle,
+} from "lucide-react";
 import { SectionBackground } from "../ui/section-background";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
+import { NumberTicker } from "../ui/number-ticker";
 
 // Animation variants
 const fadeUpVariant = {
@@ -50,9 +56,10 @@ export function ProblemSection() {
           transition={{ ...transition, delay: 0.1 }}
           className="mb-14 text-center lg:mb-20"
         >
-          <span className="font-display mb-4 inline-flex items-center gap-2 text-xs font-medium tracking-widest text-amber-600 uppercase">
-            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-500" />
-            The Challenge
+          {/* Urgency Badge */}
+          <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-amber-200/60 bg-amber-50/80 px-4 py-1.5 text-xs font-semibold tracking-widest text-amber-700 uppercase backdrop-blur-sm">
+            <AlertTriangle className="h-3.5 w-3.5" />
+            The Hidden Problem
           </span>
           <h2 className="font-display text-3xl font-medium tracking-tight text-slate-900 sm:text-4xl md:text-5xl">
             Your Phone Lines Are{" "}
@@ -60,6 +67,10 @@ export function ProblemSection() {
               Leaking Revenue
             </span>
           </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-base text-slate-600 sm:text-lg">
+            While your team focuses on patients, missed calls silently drain
+            your bottom line
+          </p>
         </motion.div>
 
         {/* Main Visual - Side by Side with Unique Styling */}
@@ -96,16 +107,23 @@ export function ProblemSection() {
                   After-hours, hold times, busy staff
                 </p>
 
-                {/* Stats with visual bars */}
+                {/* Stats with animated numbers */}
                 <div className="space-y-4">
                   <div>
                     <div className="mb-1 flex items-baseline justify-between">
                       <span className="text-sm text-slate-600">
                         Calls that never connect
                       </span>
-                      <span className="font-display text-2xl font-bold text-amber-600">
-                        30%
-                      </span>
+                      <div className="flex items-baseline">
+                        <NumberTicker
+                          value={30}
+                          delay={0.3}
+                          className="font-display text-2xl font-bold text-amber-600"
+                        />
+                        <span className="font-display text-2xl font-bold text-amber-600">
+                          %
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div>
@@ -113,9 +131,16 @@ export function ProblemSection() {
                       <span className="text-sm text-slate-600">
                         Daily phone tag
                       </span>
-                      <span className="font-display text-xl font-bold text-slate-700">
-                        3+ hrs
-                      </span>
+                      <div className="flex items-baseline gap-1">
+                        <NumberTicker
+                          value={3}
+                          delay={0.5}
+                          className="font-display text-xl font-bold text-slate-700"
+                        />
+                        <span className="font-display text-xl font-bold text-slate-700">
+                          + hrs
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -153,16 +178,26 @@ export function ProblemSection() {
                   Discharge calls that never happen
                 </p>
 
-                {/* Stats */}
+                {/* Stats with animated numbers */}
                 <div className="space-y-4">
                   <div>
                     <div className="mb-1 flex items-baseline justify-between">
                       <span className="text-sm text-slate-600">
                         Revenue lost monthly
                       </span>
-                      <span className="font-display text-2xl font-bold text-amber-600">
-                        $2,400+
-                      </span>
+                      <div className="flex items-baseline">
+                        <span className="font-display text-2xl font-bold text-amber-600">
+                          $
+                        </span>
+                        <NumberTicker
+                          value={2400}
+                          delay={0.4}
+                          className="font-display text-2xl font-bold text-amber-600"
+                        />
+                        <span className="font-display text-2xl font-bold text-amber-600">
+                          +
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div>
@@ -170,9 +205,16 @@ export function ProblemSection() {
                       <span className="text-sm text-slate-600">
                         Lost to competitors
                       </span>
-                      <span className="font-display text-xl font-bold text-slate-700">
-                        15-20%
-                      </span>
+                      <div className="flex items-baseline gap-0.5">
+                        <NumberTicker
+                          value={15}
+                          delay={0.6}
+                          className="font-display text-xl font-bold text-slate-700"
+                        />
+                        <span className="font-display text-xl font-bold text-slate-700">
+                          -20%
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -215,17 +257,20 @@ export function ProblemSection() {
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
           transition={{ ...transition, delay: 0.6 }}
-          className="mt-8 text-center lg:mt-10"
+          className="mt-12 text-center lg:mt-16"
         >
-          <a
-            href="#sample-calls"
-            className="inline-flex items-center gap-2 text-teal-600 transition-colors hover:text-teal-700"
-          >
-            <span className="text-sm font-medium">
-              See how Odis solves this
-            </span>
-            <ArrowDown className="h-4 w-4 animate-bounce" />
-          </a>
+          <div className="inline-flex flex-col items-center gap-3 rounded-2xl border border-teal-200/50 bg-gradient-to-br from-teal-50/80 to-emerald-50/60 px-8 py-5 backdrop-blur-sm">
+            <p className="text-sm font-medium text-teal-800">
+              There&apos;s a better way
+            </p>
+            <a
+              href="#sample-calls"
+              className="group inline-flex items-center gap-2 rounded-full bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-teal-500/25 transition-all hover:scale-[1.02] hover:bg-teal-700 hover:shadow-xl"
+            >
+              <span>Hear the solution</span>
+              <ArrowDown className="h-4 w-4 animate-bounce transition-transform group-hover:translate-y-0.5" />
+            </a>
+          </div>
         </motion.div>
       </div>
     </section>

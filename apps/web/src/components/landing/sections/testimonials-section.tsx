@@ -2,7 +2,8 @@
 
 import { useRef } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
-import { Star } from "lucide-react";
+import { Star, Quote, Calendar, BadgeCheck } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@odis-ai/shared/util";
 import { Marquee } from "../ui/marquee";
 import { AvatarCircles } from "../ui/avatar-circles";
@@ -183,12 +184,21 @@ export const TestimonialsSection = () => {
           transition={{ ...transition, delay: 0.25 }}
           className="mb-12 text-center lg:mb-16"
         >
-          <span className="font-display text-primary mb-4 inline-flex items-center gap-2 text-xs font-medium tracking-widest uppercase">
-            <span className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
-            Testimonials
-          </span>
+          <div className="mb-5 flex flex-wrap items-center justify-center gap-2">
+            <span className="inline-flex items-center gap-2 rounded-full border border-teal-200/60 bg-teal-50/80 px-4 py-1.5 text-xs font-semibold tracking-widest text-teal-700 uppercase backdrop-blur-sm">
+              <Quote className="h-3.5 w-3.5" />
+              Testimonials
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-200/60 bg-amber-50/80 px-3 py-1.5 text-xs font-medium text-amber-700">
+              <BadgeCheck className="h-3 w-3" />
+              Verified Reviews
+            </span>
+          </div>
           <h2 className="font-display mb-6 text-2xl font-medium tracking-tight text-slate-800 sm:text-3xl md:text-4xl lg:text-5xl">
-            What Veterinary Teams Are Saying
+            What Veterinary Teams Are{" "}
+            <span className="bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
+              Saying
+            </span>
           </h2>
           <div className="mx-auto flex items-center justify-center gap-3">
             <AvatarCircles avatarUrls={avatarUrls} />
@@ -218,6 +228,36 @@ export const TestimonialsSection = () => {
           <div className="from-background pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r to-transparent" />
           <div className="from-background pointer-events-none absolute inset-y-0 right-0 w-1/4 bg-gradient-to-l to-transparent" />
         </div>
+
+        {/* Bottom CTA */}
+        <motion.div
+          variants={fadeUpVariant}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+          transition={{ ...transition, delay: 0.45 }}
+          className="text-center"
+        >
+          <div className="inline-flex flex-col items-center gap-4 rounded-2xl border border-teal-200/50 bg-gradient-to-br from-white/90 to-teal-50/60 px-8 py-6 backdrop-blur-sm sm:px-10 sm:py-7">
+            <p className="text-sm font-medium text-slate-700">
+              Join these veterinary teams transforming their practices
+            </p>
+            <Link
+              href="/demo"
+              className={cn(
+                "group relative inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-full px-7 py-3",
+                "bg-gradient-to-r from-teal-600 to-emerald-600",
+                "text-sm font-semibold text-white shadow-lg shadow-teal-500/25",
+                "transition-all duration-300",
+                "hover:scale-[1.02] hover:shadow-xl hover:shadow-teal-500/30",
+              )}
+            >
+              {/* Shimmer effect */}
+              <span className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              <Calendar className="relative h-4 w-4" />
+              <span className="relative">Schedule Your Demo</span>
+            </Link>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

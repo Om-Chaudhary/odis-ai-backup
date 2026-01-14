@@ -2,8 +2,10 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
-import { Mic } from "lucide-react";
+import { Mic, Headphones, CheckCircle2, Calendar } from "lucide-react";
 import { usePostHog } from "posthog-js/react";
+import Link from "next/link";
+import { cn } from "@odis-ai/shared/util";
 import { AudioDemoCard, type DemoCardData } from "../shared/audio-demo-card";
 import { SectionBackground } from "../ui/section-background";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
@@ -276,11 +278,17 @@ export function AudioDemoSection() {
           transition={{ ...transition, delay: 0 }}
           className="mb-12 text-center lg:mb-16"
         >
-          {/* Pill badge */}
-          <span className="mb-4 inline-flex items-center gap-2 rounded-full border border-teal-200/60 bg-teal-50/80 px-4 py-1.5 text-xs font-semibold tracking-widest text-teal-700 uppercase backdrop-blur-sm">
-            <Mic className="h-4 w-4" />
-            Live Demo
-          </span>
+          {/* Pill badge with verification */}
+          <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
+            <span className="inline-flex items-center gap-2 rounded-full border border-teal-200/60 bg-teal-50/80 px-4 py-1.5 text-xs font-semibold tracking-widest text-teal-700 uppercase backdrop-blur-sm">
+              <Headphones className="h-3.5 w-3.5" />
+              Live Demos
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/60 bg-emerald-50/80 px-3 py-1.5 text-xs font-medium text-emerald-700">
+              <CheckCircle2 className="h-3 w-3" />
+              Real Calls
+            </span>
+          </div>
 
           {/* Title */}
           <h2 className="font-display mb-4 text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl md:text-4xl lg:text-5xl">
@@ -293,7 +301,8 @@ export function AudioDemoSection() {
 
           {/* Subtitle */}
           <p className="mx-auto max-w-xl text-base text-slate-600 sm:text-lg">
-            Real conversations. Real results. Hear Odis handle a call live.
+            Listen to actual client calls—no scripts, no actors. This is how
+            Odis sounds with real pet parents.
           </p>
         </motion.div>
 
@@ -328,6 +337,39 @@ export function AudioDemoSection() {
             );
           })}
         </div>
+
+        {/* Bottom CTA */}
+        <motion.div
+          variants={disableAnimations ? {} : fadeUpVariant}
+          initial={disableAnimations ? false : "hidden"}
+          animate={isInView ? "visible" : "hidden"}
+          transition={{ ...transition, delay: 0.4 }}
+          className="mt-12 text-center lg:mt-16"
+        >
+          <div className="inline-flex flex-col items-center gap-4 rounded-2xl border border-teal-200/50 bg-gradient-to-br from-white/90 to-teal-50/60 px-8 py-6 backdrop-blur-sm sm:px-10 sm:py-7">
+            <p className="text-sm font-medium text-slate-700">
+              Ready to hear how Odis can help your practice?
+            </p>
+            <Link
+              href="/demo"
+              className={cn(
+                "group relative inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-full px-7 py-3",
+                "bg-gradient-to-r from-teal-600 to-emerald-600",
+                "text-sm font-semibold text-white shadow-lg shadow-teal-500/25",
+                "transition-all duration-300",
+                "hover:scale-[1.02] hover:shadow-xl hover:shadow-teal-500/30",
+              )}
+            >
+              {/* Shimmer effect */}
+              <span className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              <Calendar className="relative h-4 w-4" />
+              <span className="relative">Schedule a Demo</span>
+            </Link>
+            <p className="text-xs text-slate-500">
+              No commitment required · See results in 48 hours
+            </p>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

@@ -8,7 +8,15 @@ import {
   useScroll,
   useTransform,
 } from "framer-motion";
-import { Link2, Settings, Rocket, Check, Sparkles } from "lucide-react";
+import {
+  Link2,
+  Settings,
+  Rocket,
+  Check,
+  Sparkles,
+  Calendar,
+} from "lucide-react";
+import Link from "next/link";
 import { SectionBackground } from "../ui/section-background";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
 import { cn } from "@odis-ai/shared/util";
@@ -431,12 +439,12 @@ export const HowItWorksSection = () => {
           </div>
         </div>
 
-        {/* Footer */}
+        {/* Footer with CTA */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ ...transition, delay: 0.7 }}
-          className="mt-16 flex justify-center sm:mt-20"
+          className="mt-16 flex flex-col items-center gap-6 sm:mt-20"
         >
           <div className="inline-flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-teal-100/80 bg-gradient-to-br from-white/90 to-teal-50/60 px-6 py-4 shadow-xl shadow-teal-500/[0.05] backdrop-blur-sm sm:gap-5 sm:px-8">
             {[
@@ -454,6 +462,23 @@ export const HowItWorksSection = () => {
               </div>
             ))}
           </div>
+
+          {/* CTA Button */}
+          <Link
+            href="/demo"
+            className={cn(
+              "group relative inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-full px-7 py-3",
+              "bg-gradient-to-r from-teal-600 to-emerald-600",
+              "text-sm font-semibold text-white shadow-lg shadow-teal-500/25",
+              "transition-all duration-300",
+              "hover:scale-[1.02] hover:shadow-xl hover:shadow-teal-500/30",
+            )}
+          >
+            {/* Shimmer effect */}
+            <span className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+            <Calendar className="relative h-4 w-4" />
+            <span className="relative">Get Started Today</span>
+          </Link>
         </motion.div>
       </div>
     </section>
