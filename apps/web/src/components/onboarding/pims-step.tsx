@@ -139,16 +139,16 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="space-y-2">
-        <h1 className="font-display text-xl font-bold text-slate-800 sm:text-2xl">
+        <h1 className="font-display text-xl font-bold text-white sm:text-2xl">
           Connect your PIMS
         </h1>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-slate-200">
           Select your Practice Information Management System(s) to continue
         </p>
       </div>
 
       <div className="space-y-4">
-        <Label className="text-sm font-medium text-slate-700">
+        <Label className="text-sm font-medium text-slate-100">
           Which PIMS do you use? (Select all that apply)
         </Label>
 
@@ -156,10 +156,10 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
           {PIMS_SYSTEMS.map((system) => (
             <div
               key={system.id}
-              className={`flex cursor-pointer items-center space-x-3 rounded-lg border p-3 transition-all duration-200 hover:bg-slate-50 ${
+              className={`flex cursor-pointer items-center space-x-3 rounded-lg border p-3 transition-all duration-200 hover:bg-white/5 ${
                 selectedSystems.includes(system.id)
-                  ? "border-teal-500 bg-teal-50/50"
-                  : "border-slate-200"
+                  ? "border-teal-400 bg-teal-500/20"
+                  : "border-slate-300/30 bg-white/5"
               }`}
               onClick={() => handleSystemToggle(system.id)}
             >
@@ -183,7 +183,7 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
                 )}
                 <Label
                   htmlFor={system.id}
-                  className="cursor-pointer text-sm font-medium text-slate-700"
+                  className="cursor-pointer text-sm font-medium text-slate-100"
                 >
                   {system.name}
                 </Label>
@@ -193,8 +193,8 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
         </div>
 
         {selectedSystems.length > 0 && !selectedSystems.includes("none") && (
-          <div className="space-y-4 border-t pt-4">
-            <Label className="text-sm font-medium text-slate-700">
+          <div className="space-y-4 border-t border-slate-300/20 pt-4">
+            <Label className="text-sm font-medium text-slate-100">
               Enter your PIMS credentials for each selected system:
             </Label>
             {selectedSystems
@@ -204,7 +204,7 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
                 return (
                   <div
                     key={systemId}
-                    className="space-y-3 rounded-lg bg-slate-50 p-4"
+                    className="space-y-3 rounded-lg bg-white/5 p-4"
                   >
                     <div className="flex items-center gap-2">
                       {system?.logo && (
@@ -217,7 +217,7 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
                           />
                         </div>
                       )}
-                      <Label className="text-sm font-semibold text-slate-800">
+                      <Label className="text-sm font-semibold text-white">
                         {system?.name} Credentials
                       </Label>
                     </div>
@@ -225,7 +225,7 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
                       <div>
                         <Label
                           htmlFor={`${systemId}-username`}
-                          className="text-xs text-slate-600"
+                          className="text-xs text-slate-200"
                         >
                           Username
                         </Label>
@@ -241,13 +241,13 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
                               e.target.value,
                             )
                           }
-                          className="mt-1 text-sm"
+                          className="mt-1 border-slate-200 bg-white/90 text-slate-900 backdrop-blur-sm transition-all duration-200 placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500/20"
                         />
                       </div>
                       <div>
                         <Label
                           htmlFor={`${systemId}-password`}
-                          className="text-xs text-slate-600"
+                          className="text-xs text-slate-200"
                         >
                           Password
                         </Label>
@@ -263,7 +263,7 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
                               e.target.value,
                             )
                           }
-                          className="mt-1 text-sm"
+                          className="mt-1 border-slate-200 bg-white/90 text-slate-900 backdrop-blur-sm transition-all duration-200 placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500/20"
                         />
                       </div>
                     </div>
@@ -274,7 +274,7 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
         )}
 
         {selectedSystems.length > 0 && (
-          <div className="rounded-md bg-slate-50 p-3 text-xs text-slate-500">
+          <div className="rounded-md bg-white/5 p-3 text-xs text-slate-200">
             {selectedSystems.includes("none")
               ? "You can set up PIMS integrations later in your dashboard settings."
               : "These are sandbox credentials for testing purposes only. You can update them later in your dashboard settings."}
@@ -292,13 +292,13 @@ export default function PIMSStep({ userId, onComplete }: PIMSStepProps) {
         <Button
           onClick={handleComplete}
           disabled={isLoading || selectedSystems.length === 0}
-          className="w-full bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-[#2a9a92] hover:to-[#31aba3] hover:shadow-lg hover:shadow-[#31aba3]/30 disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full bg-gradient-to-r from-teal-600 to-teal-500 text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:from-teal-500 hover:to-teal-600 hover:shadow-xl hover:shadow-teal-500/30 disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isLoading ? "Completing setup..." : "Complete setup"}
         </Button>
 
         {selectedSystems.length === 0 && (
-          <p className="text-center text-sm text-slate-500">
+          <p className="text-center text-sm text-slate-200">
             Please select at least one PIMS system to continue
           </p>
         )}

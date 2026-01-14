@@ -23,8 +23,8 @@ export default function OnboardingContainer() {
   };
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl bg-teal-50/60 p-6 shadow-xl backdrop-blur-md sm:p-8">
-      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-teal-50/50 to-cyan-100/40" />
+    <div className="relative w-full overflow-hidden rounded-2xl bg-white/10 p-6 shadow-xl backdrop-blur-md sm:p-8">
+      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-white/5 to-white/10" />
       <div className="relative space-y-6">
         <StepIndicator currentStep={currentStep} totalSteps={totalSteps} />
 

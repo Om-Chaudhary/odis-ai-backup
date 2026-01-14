@@ -47,17 +47,17 @@ export default function AccountStep({ onComplete }: AccountStepProps) {
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="space-y-2">
-        <h1 className="font-display text-xl font-bold text-slate-800 sm:text-2xl">
+        <h1 className="font-display text-xl font-bold text-white sm:text-2xl">
           Create your account
         </h1>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-slate-200">
           Enter your email and password to get started
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
         <div className="space-y-1.5 sm:space-y-2">
-          <Label htmlFor="email" className="text-sm font-medium text-slate-700">
+          <Label htmlFor="email" className="text-sm font-medium text-slate-100">
             Email
           </Label>
           <Input
@@ -69,14 +69,14 @@ export default function AccountStep({ onComplete }: AccountStepProps) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="veterinarian@clinic.com"
-            className="border-slate-200 bg-white/90 text-slate-900 backdrop-blur-sm transition-all duration-200 placeholder:text-slate-500 focus:border-teal-500 focus:ring-teal-500/20"
+            className="border-slate-200 bg-white/90 text-slate-900 backdrop-blur-sm transition-all duration-200 placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500/20"
           />
         </div>
 
         <div className="space-y-1.5 sm:space-y-2">
           <Label
             htmlFor="password"
-            className="text-sm font-medium text-slate-700"
+            className="text-sm font-medium text-slate-100"
           >
             Password
           </Label>
@@ -90,7 +90,7 @@ export default function AccountStep({ onComplete }: AccountStepProps) {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Create a secure password (min. 6 characters)"
             minLength={6}
-            className="border-slate-200 bg-white/90 text-slate-900 backdrop-blur-sm transition-all duration-200 placeholder:text-slate-500 focus:border-teal-500 focus:ring-teal-500/20"
+            className="border-slate-200 bg-white/90 text-slate-900 backdrop-blur-sm transition-all duration-200 placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500/20"
           />
         </div>
 
@@ -103,7 +103,7 @@ export default function AccountStep({ onComplete }: AccountStepProps) {
         <Button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-[#2a9a92] hover:to-[#31aba3] hover:shadow-lg hover:shadow-[#31aba3]/30 disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50"
+          className="w-full bg-gradient-to-r from-teal-600 to-teal-500 text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:from-teal-500 hover:to-teal-600 hover:shadow-xl hover:shadow-teal-500/30 disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isLoading ? "Creating account..." : "Continue"}
         </Button>

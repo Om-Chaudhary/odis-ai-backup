@@ -5,20 +5,35 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, useInView } from "framer-motion";
 import { usePostHog } from "posthog-js/react";
-import { Calendar, Play } from "lucide-react";
+import {
+  Calendar,
+  Play,
+  ChevronDown,
+  Sparkles,
+  CheckCircle2,
+  Shield,
+} from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
 import { usePageLoaded } from "~/hooks/use-page-loaded";
 import { Logo } from "@odis-ai/shared/ui/Logo";
 import { WordRotate } from "../ui/word-rotate";
 import { AnimatedGradientText } from "../ui/animated-gradient-text";
+import { NumberTicker } from "../ui/number-ticker";
 import { DotPattern } from "@odis-ai/shared/ui";
 
 // Rotating words for dynamic headline - benefit-focused
 const ROTATING_WORDS = [
   "Never Misses a Call",
+  "Books More Appointments",
   "Saves 10+ Hours Weekly",
   "Works 24/7",
-  "Books More Appointments",
+];
+
+// Social proof stats
+const STATS = [
+  { value: 50000, suffix: "+", label: "Calls Handled" },
+  { value: 98, suffix: "%", label: "Client Satisfaction" },
+  { value: 10, suffix: "+", label: "Hours Saved Weekly" },
 ];
 
 // Animation variants - slower, more noticeable
@@ -157,11 +172,27 @@ export function HeroSection() {
 
         {/* Centered Content */}
         <motion.div
-          className="-mt-16 flex w-full max-w-5xl flex-col items-center text-center sm:-mt-20"
+          className="-mt-12 flex w-full max-w-5xl flex-col items-center text-center sm:-mt-16"
           variants={containerVariants}
           initial="hidden"
           animate={shouldAnimate ? "visible" : "hidden"}
         >
+          {/* Trust Badge */}
+          <motion.div variants={itemVariants} className="mb-6">
+            <span
+              className={cn(
+                "inline-flex items-center gap-2 rounded-full px-4 py-1.5",
+                "bg-teal-500/10 ring-1 ring-teal-400/20 backdrop-blur-sm",
+                "text-sm font-medium text-teal-200",
+              )}
+            >
+              <Sparkles className="h-3.5 w-3.5 text-teal-300" />
+              <span>Built for Veterinary Practices</span>
+              <span className="h-1 w-1 rounded-full bg-teal-400/60" />
+              <span className="text-teal-300">AI-Powered</span>
+            </span>
+          </motion.div>
+
           {/* Headline */}
           <motion.h1
             variants={itemVariants}
@@ -184,7 +215,7 @@ export function HeroSection() {
           {/* Subheadline */}
           <motion.p
             variants={itemVariants}
-            className="mt-8 max-w-3xl text-lg leading-relaxed text-teal-50/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.15)] sm:text-xl sm:leading-8"
+            className="mt-6 max-w-3xl text-lg leading-relaxed text-teal-50/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.15)] sm:text-xl sm:leading-8"
           >
             Enterprise Veterinary AI voice assistance that picks up every call,
             follows-up with every client, and{" "}
@@ -202,22 +233,24 @@ export function HeroSection() {
           {/* CTA Buttons - Centered */}
           <motion.div
             variants={itemVariants}
-            className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5"
+            className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5"
           >
-            {/* Primary CTA - Schedule Demo */}
+            {/* Primary CTA - Schedule Demo with shimmer */}
             <Link
               href="/demo"
               onClick={handleScheduleDemoClick}
               className={cn(
-                "group relative inline-flex items-center justify-center gap-2.5 rounded-full px-8 py-4",
+                "group relative inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-full px-8 py-4",
                 "bg-white text-teal-900",
                 "text-base font-semibold",
                 "shadow-xl shadow-teal-950/30",
                 "transition-all duration-300",
-                "hover:scale-[1.03] hover:bg-white hover:shadow-2xl hover:shadow-teal-400/25",
+                "hover:scale-[1.03] hover:shadow-2xl hover:shadow-teal-400/25",
                 "focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-teal-900 focus-visible:outline-none",
               )}
             >
+              {/* Animated shimmer effect */}
+              <span className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-teal-400/20 to-transparent" />
               {/* Glow effect on hover */}
               <span className="pointer-events-none absolute inset-0 rounded-full bg-white opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-30" />
               <Calendar className="relative h-5 w-5 shrink-0" />
@@ -240,8 +273,66 @@ export function HeroSection() {
               <span>Hear Odis</span>
             </a>
           </motion.div>
+
+          {/* Trust Line */}
+          <motion.div
+            variants={itemVariants}
+            className="mt-5 flex items-center gap-4 text-sm text-teal-100/70"
+          >
+            <span className="flex items-center gap-1.5">
+              <CheckCircle2 className="h-4 w-4 text-teal-400" />
+              No credit card required
+            </span>
+            <span className="h-1 w-1 rounded-full bg-teal-400/40" />
+            <span className="flex items-center gap-1.5">
+              <Shield className="h-4 w-4 text-teal-400" />
+              HIPAA Compliant
+            </span>
+          </motion.div>
+
+          {/* Social Proof Stats */}
+          <motion.div
+            variants={itemVariants}
+            className="mt-10 flex flex-wrap items-center justify-center gap-8 sm:gap-12"
+          >
+            {STATS.map((stat, index) => (
+              <div key={stat.label} className="flex flex-col items-center">
+                <div className="flex items-baseline gap-0.5">
+                  <NumberTicker
+                    value={stat.value}
+                    delay={0.3 + index * 0.15}
+                    className="font-display text-3xl font-bold text-white sm:text-4xl"
+                  />
+                  <span className="font-display text-2xl font-bold text-teal-300 sm:text-3xl">
+                    {stat.suffix}
+                  </span>
+                </div>
+                <span className="mt-1 text-sm font-medium text-teal-100/60">
+                  {stat.label}
+                </span>
+              </div>
+            ))}
+          </motion.div>
         </motion.div>
       </div>
+
+      {/* Scroll Indicator */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={shouldAnimate ? { opacity: 1, y: 0 } : { opacity: 0, y: -10 }}
+        transition={{ delay: 1.2, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+        className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2"
+      >
+        <a
+          href="#problem"
+          className="group flex flex-col items-center gap-2 text-teal-100/50 transition-colors hover:text-teal-100/80"
+        >
+          <span className="text-xs font-medium tracking-widest uppercase">
+            Learn More
+          </span>
+          <ChevronDown className="h-5 w-5 animate-bounce" />
+        </a>
+      </motion.div>
 
       {/* Bottom gradient fade for smooth transition */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-teal-950 to-transparent" />

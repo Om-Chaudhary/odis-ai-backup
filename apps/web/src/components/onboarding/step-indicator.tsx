@@ -19,10 +19,10 @@ export default function StepIndicator({
             <div
               className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-all duration-300 ${
                 isActive
-                  ? "bg-gradient-to-r from-[#31aba3] to-[#2a9a92] text-white shadow-lg"
+                  ? "bg-gradient-to-r from-teal-600 to-teal-500 text-white shadow-lg"
                   : isCompleted
                     ? "bg-teal-600 text-white"
-                    : "bg-slate-200 text-slate-500"
+                    : "bg-white/20 text-slate-200"
               } `}
             >
               {isCompleted ? (
@@ -45,7 +45,7 @@ export default function StepIndicator({
             {stepNumber < totalSteps && (
               <div
                 className={`ml-4 h-0.5 w-12 transition-all duration-300 ${
-                  isCompleted ? "bg-teal-600" : "bg-slate-200"
+                  isCompleted ? "bg-teal-600" : "bg-white/20"
                 } `}
               />
             )}

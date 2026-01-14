@@ -236,7 +236,8 @@
       "Bash(for file in /Users/taylorallen/Development/odis-ai-web/libs/shared/testing/src/*.ts /Users/taylorallen/Development/odis-ai-web/libs/shared/testing/src/mocks/*.ts /Users/taylorallen/Development/odis-ai-web/libs/shared/testing/src/setup/*.ts /Users/taylorallen/Development/odis-ai-web/libs/shared/testing/src/utils/*.ts* /Users/taylorallen/Development/odis-ai-web/libs/shared/testing/src/fixtures/*.ts)",
       "WebFetch(domain:nx.dev)",
       "mcp__supabase__get_advisors",
-      "Bash(nx show:*)"
+      "Bash(nx show:*)",
+      "WebFetch(domain:ui.shadcn.com)"
     ],
     "deny": [],
     "ask": []
