@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 import { usePostHog } from "posthog-js/react";
 import {
   Calendar,
@@ -12,6 +12,8 @@ import {
   Sparkles,
   CheckCircle2,
   Shield,
+  Menu,
+  X,
 } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
 import { usePageLoaded } from "~/hooks/use-page-loaded";
@@ -34,6 +36,13 @@ const STATS = [
   { value: 50000, suffix: "+", label: "Calls Handled" },
   { value: 98, suffix: "%", label: "Client Satisfaction" },
   { value: 10, suffix: "+", label: "Hours Saved Weekly" },
+];
+
+// Navigation links
+const NAVIGATION_LINKS = [
+  { name: "Features", link: "#features" },
+  { name: "How It Works", link: "#how-it-works" },
+  { name: "Testimonials", link: "#testimonials" },
 ];
 
 // Animation variants - slower, more noticeable
@@ -66,6 +75,7 @@ export function HeroSection() {
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
   const isPageLoaded = usePageLoaded(150); // Wait for page load + 150ms
   const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Fallback timeout - don't wait forever if image fails to load
   useEffect(() => {
@@ -82,6 +92,14 @@ export function HeroSection() {
     posthog?.capture("schedule_demo_clicked", {
       location: "hero_secondary_cta",
     });
+  };
+
+  const handleLinkClick = (href: string) => {
+    setIsMobileMenuOpen(false);
+    const element = document.querySelector(href);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   return (
@@ -147,9 +165,12 @@ export function HeroSection() {
               OdisAI
             </span>
           </div>
+
+          {/* Desktop - Book Demo button */}
           <Link
             href="/demo"
             className={cn(
+              "hidden items-center justify-center sm:inline-flex",
               "rounded-full px-5 py-2.5 text-sm font-medium",
               "bg-white/95 text-teal-900 backdrop-blur-sm",
               "shadow-lg shadow-teal-950/20",
@@ -159,11 +180,77 @@ export function HeroSection() {
           >
             Book Demo
           </Link>
+
+          {/* Mobile - Hamburger button */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="rounded-lg p-2 text-white transition-colors hover:bg-white/10 sm:hidden"
+            aria-label="Toggle menu"
+          >
+            {isMobileMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
+          </button>
         </div>
       </motion.nav>
 
+      {/* Mobile menu */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            {/* Backdrop overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-30 bg-teal-950/80 backdrop-blur-sm sm:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+
+            {/* Menu content */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="fixed top-20 right-4 left-4 z-40 rounded-2xl border border-white/10 bg-teal-900/95 backdrop-blur-xl sm:hidden"
+            >
+              <div className="space-y-1 px-6 py-4">
+                {NAVIGATION_LINKS.map((link) => (
+                  <button
+                    key={link.name}
+                    onClick={() => handleLinkClick(link.link)}
+                    className="block w-full rounded-lg px-4 py-3 text-left text-base font-medium text-white transition-colors hover:bg-white/10"
+                  >
+                    {link.name}
+                  </button>
+                ))}
+
+                <Link
+                  href="/demo"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={cn(
+                    "mt-4 flex items-center justify-center gap-2",
+                    "w-full rounded-full px-6 py-3",
+                    "bg-white text-teal-900",
+                    "text-base font-semibold",
+                    "transition-all hover:bg-white/90",
+                  )}
+                >
+                  <Calendar className="h-4 w-4" />
+                  Book Demo
+                </Link>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Main Content */}
-      <div className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center px-4 pt-16 pb-20 sm:px-6 sm:pt-20 lg:px-8 lg:pt-24">
+      <div className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center px-4 pt-12 pb-16 sm:px-6 sm:pt-20 sm:pb-20 lg:px-8 lg:pt-24">
         {/* Subtle ambient glow behind content */}
         <div
           className="pointer-events-none absolute top-1/2 left-1/2 -z-10 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-teal-500/10 blur-[100px]"
@@ -172,22 +259,25 @@ export function HeroSection() {
 
         {/* Centered Content */}
         <motion.div
-          className="-mt-12 flex w-full max-w-5xl flex-col items-center text-center sm:-mt-16"
+          className="-mt-8 flex w-full max-w-5xl flex-col items-center text-center sm:-mt-16"
           variants={containerVariants}
           initial="hidden"
           animate={shouldAnimate ? "visible" : "hidden"}
         >
           {/* Trust Badge */}
-          <motion.div variants={itemVariants} className="mb-6">
+          <motion.div variants={itemVariants} className="mb-4 sm:mb-6">
             <span
               className={cn(
-                "inline-flex items-center gap-2 rounded-full px-4 py-1.5",
+                "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:gap-2 sm:px-4",
                 "bg-teal-500/10 ring-1 ring-teal-400/20 backdrop-blur-sm",
-                "text-sm font-medium text-teal-200",
+                "text-xs font-medium text-teal-200 sm:text-sm",
               )}
             >
-              <Sparkles className="h-3.5 w-3.5 text-teal-300" />
-              <span>Built for Veterinary Practices</span>
+              <Sparkles className="h-3 w-3 text-teal-300 sm:h-3.5 sm:w-3.5" />
+              <span className="xs:inline hidden">
+                Built for Veterinary Practices
+              </span>
+              <span className="xs:hidden">For Veterinary Practices</span>
               <span className="h-1 w-1 rounded-full bg-teal-400/60" />
               <span className="text-teal-300">AI-Powered</span>
             </span>
@@ -196,7 +286,7 @@ export function HeroSection() {
           {/* Headline */}
           <motion.h1
             variants={itemVariants}
-            className="font-display text-5xl leading-[1.08] font-bold tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.25)] sm:text-6xl lg:text-7xl"
+            className="font-display text-4xl leading-[1.1] font-bold tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.25)] sm:text-6xl sm:leading-[1.08] lg:text-7xl"
           >
             Your AI Assistant <br className="hidden sm:block" />
             <WordRotate
@@ -215,7 +305,7 @@ export function HeroSection() {
           {/* Subheadline */}
           <motion.p
             variants={itemVariants}
-            className="mt-6 max-w-3xl text-lg leading-relaxed text-teal-50/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.15)] sm:text-xl sm:leading-8"
+            className="mt-4 max-w-3xl text-base leading-relaxed text-teal-50/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.15)] sm:mt-6 sm:text-xl sm:leading-8"
           >
             Enterprise Veterinary AI voice assistance that picks up every call,
             follows-up with every client, and{" "}
@@ -233,16 +323,16 @@ export function HeroSection() {
           {/* CTA Buttons - Centered */}
           <motion.div
             variants={itemVariants}
-            className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5"
+            className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center sm:gap-5"
           >
             {/* Primary CTA - Schedule Demo with shimmer */}
             <Link
               href="/demo"
               onClick={handleScheduleDemoClick}
               className={cn(
-                "group relative inline-flex items-center justify-center gap-2.5 overflow-hidden rounded-full px-8 py-4",
+                "group relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-full px-6 py-3.5 sm:w-auto sm:gap-2.5 sm:px-8 sm:py-4",
                 "bg-white text-teal-900",
-                "text-base font-semibold",
+                "text-sm font-semibold sm:text-base",
                 "shadow-xl shadow-teal-950/30",
                 "transition-all duration-300",
                 "hover:scale-[1.03] hover:shadow-2xl hover:shadow-teal-400/25",
@@ -253,7 +343,7 @@ export function HeroSection() {
               <span className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-teal-400/20 to-transparent" />
               {/* Glow effect on hover */}
               <span className="pointer-events-none absolute inset-0 rounded-full bg-white opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-30" />
-              <Calendar className="relative h-5 w-5 shrink-0" />
+              <Calendar className="relative h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
               <span className="relative">Schedule Demo</span>
             </Link>
 
@@ -261,15 +351,15 @@ export function HeroSection() {
             <a
               href="#sample-calls"
               className={cn(
-                "group relative inline-flex items-center justify-center gap-2.5 rounded-full px-8 py-4",
+                "group relative inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 sm:w-auto sm:gap-2.5 sm:px-8 sm:py-4",
                 "bg-white/10 text-white ring-1 ring-white/20 backdrop-blur-sm",
-                "text-base font-semibold",
+                "text-sm font-semibold sm:text-base",
                 "transition-all duration-300",
                 "hover:bg-white/15 hover:shadow-lg hover:shadow-teal-400/10 hover:ring-white/30",
                 "focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-teal-900 focus-visible:outline-none",
               )}
             >
-              <Play className="h-5 w-5 shrink-0 transition-transform duration-300 group-hover:scale-110" />
+              <Play className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:scale-110 sm:h-5 sm:w-5" />
               <span>Hear Odis</span>
             </a>
           </motion.div>
@@ -277,15 +367,15 @@ export function HeroSection() {
           {/* Trust Line */}
           <motion.div
             variants={itemVariants}
-            className="mt-5 flex items-center gap-4 text-sm text-teal-100/70"
+            className="mt-4 flex flex-col items-center gap-2 text-xs text-teal-100/70 sm:mt-5 sm:flex-row sm:gap-4 sm:text-sm"
           >
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-teal-400" />
+              <CheckCircle2 className="h-3.5 w-3.5 text-teal-400 sm:h-4 sm:w-4" />
               No credit card required
             </span>
-            <span className="h-1 w-1 rounded-full bg-teal-400/40" />
+            <span className="hidden h-1 w-1 rounded-full bg-teal-400/40 sm:block" />
             <span className="flex items-center gap-1.5">
-              <Shield className="h-4 w-4 text-teal-400" />
+              <Shield className="h-3.5 w-3.5 text-teal-400 sm:h-4 sm:w-4" />
               HIPAA Compliant
             </span>
           </motion.div>
@@ -293,7 +383,7 @@ export function HeroSection() {
           {/* Social Proof Stats */}
           <motion.div
             variants={itemVariants}
-            className="mt-10 flex flex-wrap items-center justify-center gap-8 sm:gap-12"
+            className="mt-8 flex flex-wrap items-center justify-center gap-6 sm:mt-10 sm:gap-12"
           >
             {STATS.map((stat, index) => (
               <div key={stat.label} className="flex flex-col items-center">
@@ -301,13 +391,13 @@ export function HeroSection() {
                   <NumberTicker
                     value={stat.value}
                     delay={0.3 + index * 0.15}
-                    className="font-display text-3xl font-bold text-white sm:text-4xl"
+                    className="font-display text-2xl font-bold text-white sm:text-4xl"
                   />
-                  <span className="font-display text-2xl font-bold text-teal-300 sm:text-3xl">
+                  <span className="font-display text-xl font-bold text-teal-300 sm:text-3xl">
                     {stat.suffix}
                   </span>
                 </div>
-                <span className="mt-1 text-sm font-medium text-teal-100/60">
+                <span className="mt-0.5 text-xs font-medium text-teal-100/60 sm:mt-1 sm:text-sm">
                   {stat.label}
                 </span>
               </div>
