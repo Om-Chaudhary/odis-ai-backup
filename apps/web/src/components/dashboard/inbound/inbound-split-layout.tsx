@@ -70,22 +70,13 @@ export function InboundSplitLayout({
         </div>
       </Panel>
 
-      {/* Resize Handle */}
+      {/* Invisible Resize Handle - allows resizing without visible divider */}
       <PanelResizeHandle
         className={cn(
-          "group relative w-2 transition-all duration-200",
+          "group relative w-1 cursor-col-resize transition-all duration-200",
           !showRightPanel && "hidden",
         )}
-      >
-        <div
-          className={cn(
-            "absolute inset-y-4 left-1/2 w-1 -translate-x-1/2 rounded-full",
-            "bg-teal-300/60 transition-all duration-200",
-            "group-hover:bg-teal-400/70 group-hover:shadow-sm",
-            "group-active:bg-teal-500/80",
-          )}
-        />
-      </PanelResizeHandle>
+      />
 
       {/* Right Panel - Detail (connected to active row with matching teal background) */}
       <Panel
@@ -101,8 +92,8 @@ export function InboundSplitLayout({
         <div
           className={cn(
             "relative flex h-full flex-col overflow-hidden",
-            // Match the active row teal background color
-            "bg-teal-50/70",
+            // Slightly darker teal background to show connection to active row
+            "bg-teal-100/80",
             // Border on all sides except left (connects to table)
             "border-y border-r border-teal-200/40",
             "rounded-l-none rounded-r-xl",
