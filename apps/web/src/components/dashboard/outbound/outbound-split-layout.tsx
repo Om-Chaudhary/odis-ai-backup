@@ -56,24 +56,26 @@ export function OutboundSplitLayout({
       <Panel defaultSize={100} minSize={40} className="min-w-0 overflow-hidden">
         <div
           className={cn(
-            "flex h-full flex-col overflow-hidden",
+            "flex h-full flex-col",
             "border border-teal-200/40",
             "bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70",
             "shadow-lg shadow-teal-500/5 backdrop-blur-md",
             // When right panel is open, remove right border-radius to connect
             showRightPanel
-              ? "rounded-l-xl rounded-r-none border-r-0"
-              : "rounded-xl",
+              ? "overflow-visible rounded-l-xl rounded-r-none border-r-0"
+              : "overflow-hidden rounded-xl",
           )}
         >
           {leftPanel}
         </div>
       </Panel>
 
-      {/* Invisible Resize Handle - allows resizing without visible divider */}
+      {/* Resize Handle with visual bridge connector */}
       <PanelResizeHandle
         className={cn(
           "group relative w-1 cursor-col-resize transition-all duration-200",
+          // Bridge background matches selected row + panel
+          showRightPanel && "bg-teal-100/80",
           !showRightPanel && "hidden",
         )}
       />
@@ -92,9 +94,11 @@ export function OutboundSplitLayout({
         <div
           className={cn(
             "relative flex h-full flex-col overflow-hidden",
-            // Slightly darker teal background to show connection to active row
+            // Match selected row background for seamless connection
             "bg-teal-100/80",
-            // Border on all sides except left (connects to table)
+            // Left accent bar matching the selected row's teal-500 border
+            "border-l-2 border-l-teal-500",
+            // Border on other sides
             "border-y border-r border-teal-200/40",
             "rounded-l-none rounded-r-xl",
             "shadow-lg shadow-teal-500/5 backdrop-blur-md",

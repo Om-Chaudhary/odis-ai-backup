@@ -116,8 +116,9 @@ export function InboundTable({
                   ref={isSelected ? selectedRowRef : null}
                   className={cn(
                     "group cursor-pointer transition-all duration-150",
+                    // Selected row: matching background + accent for visual connection to detail panel
                     isSelected
-                      ? "border-l-2 border-l-teal-500 bg-teal-50/70"
+                      ? "border-l-2 border-l-teal-500 bg-teal-100/80"
                       : "hover:bg-teal-50/30",
                   )}
                   onClick={() => onSelectItem(item)}

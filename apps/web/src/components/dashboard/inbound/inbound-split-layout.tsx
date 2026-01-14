@@ -47,10 +47,7 @@ export function InboundSplitLayout({
   return (
     <PanelGroup
       direction="horizontal"
-      className={cn(
-        "h-full px-6 py-4",
-        showRightPanel ? "gap-0" : "gap-4",
-      )}
+      className={cn("h-full px-6 py-4", showRightPanel ? "gap-0" : "gap-4")}
     >
       {/* Left Panel - Table */}
       <Panel defaultSize={100} minSize={40} className="overflow-hidden">
@@ -70,10 +67,12 @@ export function InboundSplitLayout({
         </div>
       </Panel>
 
-      {/* Invisible Resize Handle - allows resizing without visible divider */}
+      {/* Resize Handle with visual bridge connector */}
       <PanelResizeHandle
         className={cn(
           "group relative w-1 cursor-col-resize transition-all duration-200",
+          // Bridge background matches selected row + panel
+          showRightPanel && "bg-teal-100/80",
           !showRightPanel && "hidden",
         )}
       />
@@ -92,9 +91,11 @@ export function InboundSplitLayout({
         <div
           className={cn(
             "relative flex h-full flex-col overflow-hidden",
-            // Slightly darker teal background to show connection to active row
+            // Match selected row background for seamless connection
             "bg-teal-100/80",
-            // Border on all sides except left (connects to table)
+            // Left accent bar matching the selected row's teal-500 border
+            "border-l-2 border-l-teal-500",
+            // Border on other sides
             "border-y border-r border-teal-200/40",
             "rounded-l-none rounded-r-xl",
             "shadow-lg shadow-teal-500/5 backdrop-blur-md",
