@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, type Ref, type RefObject } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { PhoneMissed, PhoneOutgoing, ArrowDown } from "lucide-react";
 import { SectionBackground } from "../ui/section-background";
@@ -24,10 +24,8 @@ export function ProblemSection() {
   const shouldReduceMotion = useReducedMotion();
 
   const sectionRef = (el: HTMLElement | null) => {
-    (localRef as React.MutableRefObject<HTMLElement | null>).current = el;
-    (
-      sectionVisibilityRef as React.MutableRefObject<HTMLElement | null>
-    ).current = el;
+    localRef.current = el;
+    sectionVisibilityRef.current = el;
   };
 
   const transition = {
@@ -37,7 +35,7 @@ export function ProblemSection() {
 
   return (
     <section
-      ref={sectionRef as React.LegacyRef<HTMLElement>}
+      ref={sectionRef as Ref<HTMLElement>}
       id="problem"
       className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >
@@ -58,7 +56,7 @@ export function ProblemSection() {
           </span>
           <h2 className="font-display text-3xl font-medium tracking-tight text-slate-900 sm:text-4xl md:text-5xl">
             Your Phone Lines Are{" "}
-            <span className="bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
+            <span className="bg-linear-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent">
               Leaking Revenue
             </span>
           </h2>
@@ -76,17 +74,17 @@ export function ProblemSection() {
               className="relative"
             >
               {/* Gradient glow behind */}
-              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-amber-200/40 via-orange-100/20 to-transparent blur-2xl" />
+              <div className="absolute -inset-4 rounded-3xl bg-linear-to-br from-amber-200/40 via-orange-100/20 to-transparent blur-2xl" />
 
               {/* Content */}
-              <div className="relative rounded-2xl bg-gradient-to-br from-white via-amber-50/50 to-orange-50/30 p-8 ring-1 ring-amber-200/50 backdrop-blur-sm">
+              <div className="relative rounded-2xl bg-linear-to-br from-white via-amber-50/50 to-orange-50/30 p-8 ring-1 ring-amber-200/50 backdrop-blur-sm">
                 {/* Icon with animated ring */}
                 <div className="relative mb-6 inline-flex">
                   <div
                     className="absolute inset-0 animate-ping rounded-full bg-amber-400/20"
                     style={{ animationDuration: "3s" }}
                   />
-                  <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/25">
+                  <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/25">
                     <PhoneMissed className="h-7 w-7 text-white" />
                   </div>
                 </div>
@@ -108,14 +106,6 @@ export function ProblemSection() {
                       <span className="font-display text-2xl font-bold text-amber-600">
                         30%
                       </span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                      <motion.div
-                        className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500"
-                        initial={{ width: 0 }}
-                        animate={isInView ? { width: "30%" } : { width: 0 }}
-                        transition={{ duration: 1, delay: 0.5 }}
-                      />
                     </div>
                   </div>
                   <div>
@@ -141,17 +131,17 @@ export function ProblemSection() {
               className="relative"
             >
               {/* Gradient glow behind */}
-              <div className="absolute -inset-4 rounded-3xl bg-gradient-to-bl from-amber-200/40 via-orange-100/20 to-transparent blur-2xl" />
+              <div className="absolute -inset-4 rounded-3xl bg-linear-to-bl from-amber-200/40 via-orange-100/20 to-transparent blur-2xl" />
 
               {/* Content */}
-              <div className="relative rounded-2xl bg-gradient-to-bl from-white via-amber-50/50 to-orange-50/30 p-8 ring-1 ring-amber-200/50 backdrop-blur-sm">
+              <div className="relative rounded-2xl bg-linear-to-bl from-white via-amber-50/50 to-orange-50/30 p-8 ring-1 ring-amber-200/50 backdrop-blur-sm">
                 {/* Icon with animated ring */}
                 <div className="relative mb-6 inline-flex">
                   <div
                     className="absolute inset-0 animate-ping rounded-full bg-amber-400/20"
                     style={{ animationDuration: "3s", animationDelay: "1.5s" }}
                   />
-                  <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/25">
+                  <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-br from-amber-400 to-orange-500 shadow-lg shadow-amber-500/25">
                     <PhoneOutgoing className="h-7 w-7 text-white" />
                   </div>
                 </div>
@@ -173,14 +163,6 @@ export function ProblemSection() {
                       <span className="font-display text-2xl font-bold text-amber-600">
                         $2,400+
                       </span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                      <motion.div
-                        className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500"
-                        initial={{ width: 0 }}
-                        animate={isInView ? { width: "65%" } : { width: 0 }}
-                        transition={{ duration: 1, delay: 0.7 }}
-                      />
                     </div>
                   </div>
                   <div>
@@ -209,17 +191,9 @@ export function ProblemSection() {
             {/* Converging lines with drip effect */}
             <div className="relative flex w-full max-w-lg items-center justify-center">
               {/* Left line */}
-              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-300 to-amber-400" />
-
-              {/* Center drip indicator */}
-              <div className="relative mx-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-b from-amber-100 to-amber-200 ring-4 ring-amber-100/50">
-                  <ArrowDown className="h-5 w-5 text-amber-600" />
-                </div>
-              </div>
-
+              <div className="h-px flex-1 bg-linear-to-r from-transparent via-amber-300 to-amber-400" />
               {/* Right line */}
-              <div className="h-px flex-1 bg-gradient-to-l from-transparent via-amber-300 to-amber-400" />
+              <div className="h-px flex-1 bg-linear-to-l from-transparent via-amber-300 to-amber-400" />
             </div>
 
             {/* Impact Statement */}
@@ -241,7 +215,7 @@ export function ProblemSection() {
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
           transition={{ ...transition, delay: 0.6 }}
-          className="mt-30 text-center lg:mt-36"
+          className="mt-8 text-center lg:mt-10"
         >
           <a
             href="#sample-calls"
