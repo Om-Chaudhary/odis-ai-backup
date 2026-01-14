@@ -237,7 +237,8 @@
       "WebFetch(domain:nx.dev)",
       "mcp__supabase__get_advisors",
       "Bash(nx show:*)",
-      "WebFetch(domain:ui.shadcn.com)"
+      "WebFetch(domain:ui.shadcn.com)",
+      "Bash(pnpm view:*)"
     ],
     "deny": [],
     "ask": []
