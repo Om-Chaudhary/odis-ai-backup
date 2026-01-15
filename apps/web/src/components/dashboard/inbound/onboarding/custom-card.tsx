@@ -19,7 +19,7 @@ export function CustomOnboardingCard({
   arrow,
 }: CardComponentProps) {
   return (
-    <div className="relative rounded-lg border border-teal-200/50 bg-gradient-to-br from-white/95 via-teal-50/30 to-white/95 p-6 shadow-xl shadow-teal-500/20 backdrop-blur-xl">
+    <div className="relative max-w-[400px] min-w-[320px] rounded-lg border border-teal-200/50 bg-gradient-to-br from-white/95 via-teal-50/30 to-white/95 p-6 shadow-xl shadow-teal-500/20 backdrop-blur-xl">
       {arrow}
 
       {step.icon && (

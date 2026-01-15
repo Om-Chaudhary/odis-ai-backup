@@ -39,13 +39,19 @@ export function useInboundOnboarding() {
   };
 
   const restartTour = () => {
-    startOnborda?.("inbound-first-time");
+    // Close any existing tour first
+    closeOnborda?.();
+    // Small delay to ensure clean state before restarting
+    setTimeout(() => {
+      startOnborda?.("inbound-first-time");
+    }, 100);
   };
 
   return {
     hasSeenTour,
     markTourComplete,
     restartTour,
-    closeOnborda: closeOnborda ?? null,
+    // eslint-disable-next-line @typescript-eslint/no-empty-function -- intentional noop fallback
+    closeOnborda: closeOnborda ?? (() => {}),
   };
 }
