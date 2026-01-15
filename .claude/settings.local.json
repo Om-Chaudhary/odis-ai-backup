@@ -239,7 +239,9 @@
       "Bash(nx show:*)",
       "WebFetch(domain:ui.shadcn.com)",
       "Bash(pnpm view:*)",
-      "mcp__supabase__search_docs"
+      "mcp__supabase__search_docs",
+      "Skill(frontend-design)",
+      "Bash(supabase db push:*)"
     ],
     "deny": [],
     "ask": []
