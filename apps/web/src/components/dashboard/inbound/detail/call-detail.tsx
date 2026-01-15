@@ -111,7 +111,7 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
       : call);
 
   return (
-    <div className="flex h-full flex-col">
+    <div id="call-detail-panel" className="flex h-full flex-col">
       {/* Compact Caller Header - matches outbound patient header style */}
       <div className="bg-muted/30 relative border-b px-6 py-4">
         <div className="flex items-start justify-between gap-4">
