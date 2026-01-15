@@ -1,6 +1,13 @@
 "use client";
 
-import { Phone, Calendar, MessageSquare, Clock } from "lucide-react";
+import {
+  Phone,
+  Calendar,
+  MessageSquare,
+  Clock,
+  DollarSign,
+  Timer,
+} from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
 import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
 import type { OverviewValue, OverviewPeriod, DateRangeOption } from "./types";
@@ -11,6 +18,14 @@ interface ValueSummaryProps {
   period: OverviewPeriod;
   selectedDays: DateRangeOption;
   onDaysChange: (days: DateRangeOption) => void;
+}
+
+function formatTimeSaved(hours: number): string {
+  if (hours < 1) {
+    const minutes = Math.round(hours * 60);
+    return `~${minutes}m saved`;
+  }
+  return `~${hours}h saved`;
 }
 
 export function ValueSummary({
@@ -57,7 +72,7 @@ export function ValueSummary({
         </div>
       </div>
 
-      <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         <ValueStat
           icon={Phone}
           value={value.callsAnswered}
@@ -90,7 +105,41 @@ export function ValueSummary({
           iconColor="text-amber-600"
           iconBg="bg-amber-50"
         />
+        <ValueStat
+          icon={Timer}
+          value={formatTimeSaved(value.timeSavedHours)}
+          label="staff time"
+          description="Hours your team didn't spend on calls"
+          iconColor="text-teal-600"
+          iconBg="bg-teal-50"
+        />
+        <ValueStat
+          icon={DollarSign}
+          value={`$${value.costSaved}`}
+          label="estimated savings"
+          description="vs manual call handling"
+          iconColor="text-green-600"
+          iconBg="bg-green-50"
+        />
       </div>
+
+      {/* Contextual summary */}
+      {value.callsAnswered > 0 && (
+        <div className="mt-6 rounded-lg bg-stone-50 p-4">
+          <p className="text-sm text-slate-700">
+            <span className="font-medium">Summary:</span> Your AI assistant
+            handled{" "}
+            <span className="font-semibold text-slate-900">
+              {value.callsAnswered} calls
+            </span>{" "}
+            this period, saving your team approximately{" "}
+            <span className="font-semibold text-teal-700">
+              {value.timeSavedHours} hours
+            </span>{" "}
+            of phone time.
+          </p>
+        </div>
+      )}
 
       <Link
         href={inboundUrl}

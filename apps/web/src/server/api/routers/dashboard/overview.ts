@@ -11,9 +11,33 @@ import {
   getClinicByUserId,
   getClinicBySlug,
   userHasClinicAccess,
+  getClinicUserIdsEnhanced,
+  getClinicUserIds,
 } from "@odis-ai/domain/clinics";
-import { subDays, format, startOfDay, endOfDay } from "date-fns";
+import { subDays, subHours, format, startOfDay, endOfDay } from "date-fns";
 import { TRPCError } from "@trpc/server";
+
+// Constants for ROI calculations
+const AVG_MANUAL_CALL_MINUTES = 5; // Average time for a manual discharge call
+const HOURLY_RATE = 25; // Average hourly rate for receptionist
+
+// Type for call analysis structure
+interface CallAnalysisStructuredData {
+  needsAttention?: {
+    flagged?: boolean;
+    type?: string;
+    severity?: string;
+    summary?: string;
+  };
+  wentToVoicemail?: boolean;
+  appointmentScheduled?: boolean;
+}
+
+interface CallAnalysis {
+  summary?: string;
+  structuredData?: CallAnalysisStructuredData;
+  successEvaluation?: boolean | string;
+}
 
 export const overviewRouter = createTRPCRouter({
   /**
@@ -203,6 +227,220 @@ export const overviewRouter = createTRPCRouter({
       const hasUrgentItems = criticalCount > 0 || urgentCount > 0;
 
       // ============================================================================
+      // OUTBOUND STATS (Discharge calls)
+      // ============================================================================
+      // Get all users in the clinic for multi-clinic support
+      const clinicUserIds = clinic?.id
+        ? await getClinicUserIdsEnhanced(clinic.id, ctx.supabase)
+        : await getClinicUserIds(userId, ctx.supabase);
+
+      // Get outbound calls in the period (clinic-scoped)
+      const { data: outboundCallsData } = await ctx.supabase
+        .from("scheduled_discharge_calls")
+        .select(
+          "id, status, duration_seconds, cost, call_analysis, success_evaluation, created_at",
+        )
+        .in("user_id", clinicUserIds)
+        .gte("created_at", startDateStr)
+        .lte("created_at", endDateStr);
+
+      const outboundCalls = outboundCallsData ?? [];
+      const outboundCompleted = outboundCalls.filter(
+        (c) => c.status === "completed",
+      ).length;
+      const outboundFailed = outboundCalls.filter(
+        (c) => c.status === "failed",
+      ).length;
+      const outboundQueued = outboundCalls.filter(
+        (c) => c.status === "queued" || c.status === "ringing",
+      ).length;
+
+      // Calculate voicemail count from completed outbound calls
+      const outboundVoicemails = outboundCalls.filter((c) => {
+        if (c.status !== "completed") return false;
+        const analysis = c.call_analysis as CallAnalysis | null;
+        return analysis?.structuredData?.wentToVoicemail === true;
+      }).length;
+
+      // Calculate success rate from completed calls
+      const outboundSuccessful = outboundCalls.filter((c) => {
+        if (c.status !== "completed") return false;
+        return c.success_evaluation === "true" || c.success_evaluation === true;
+      }).length;
+
+      const outboundSuccessRate =
+        outboundCompleted > 0
+          ? Math.round((outboundSuccessful / outboundCompleted) * 100)
+          : 0;
+
+      // ============================================================================
+      // TODAY'S ACTIVITY (Real-time snapshot)
+      // ============================================================================
+      const todayStart = startOfDay(new Date());
+      const todayStartStr = todayStart.toISOString();
+
+      // Today's inbound calls
+      let todayInboundQuery = ctx.supabase
+        .from("inbound_vapi_calls")
+        .select("id, status")
+        .gte("created_at", todayStartStr);
+
+      if (clinic?.name) {
+        todayInboundQuery = todayInboundQuery.eq("clinic_name", clinic.name);
+      }
+
+      const { data: todayInboundData } = await todayInboundQuery;
+      const todayInbound = todayInboundData ?? [];
+      const todayCallsHandled = todayInbound.filter(
+        (c) => c.status === "completed",
+      ).length;
+
+      // Today's appointments
+      let todayAppointmentsQuery = ctx.supabase
+        .from("vapi_bookings")
+        .select("id")
+        .gte("created_at", todayStartStr);
+
+      if (clinic?.id) {
+        todayAppointmentsQuery = todayAppointmentsQuery.eq(
+          "clinic_id",
+          clinic.id,
+        );
+      }
+
+      const { data: todayAppointmentsData } = await todayAppointmentsQuery;
+      const todayAppointments = todayAppointmentsData?.length ?? 0;
+
+      // Today's messages
+      let todayMessagesQuery = ctx.supabase
+        .from("clinic_messages")
+        .select("id")
+        .gte("created_at", todayStartStr);
+
+      if (clinic?.id) {
+        todayMessagesQuery = todayMessagesQuery.eq("clinic_id", clinic.id);
+      }
+
+      const { data: todayMessagesData } = await todayMessagesQuery;
+      const todayMessages = todayMessagesData?.length ?? 0;
+
+      // ============================================================================
+      // CASE COVERAGE STATS
+      // ============================================================================
+      const { data: casesData } = await ctx.supabase
+        .from("cases")
+        .select(
+          `
+          id,
+          status,
+          discharge_summaries(id),
+          soap_notes(id)
+        `,
+        )
+        .in("user_id", clinicUserIds);
+
+      const cases = casesData ?? [];
+      const totalCases = cases.length;
+
+      // Count cases with discharge summaries
+      const casesWithDischarge = cases.filter((c) => {
+        const summaries = c.discharge_summaries;
+        return Array.isArray(summaries) && summaries.length > 0;
+      }).length;
+
+      // Count cases with SOAP notes
+      const casesWithSoap = cases.filter((c) => {
+        const notes = c.soap_notes;
+        return Array.isArray(notes) && notes.length > 0;
+      }).length;
+
+      const dischargeCoveragePct =
+        totalCases > 0
+          ? Math.round((casesWithDischarge / totalCases) * 100)
+          : 0;
+      const soapCoveragePct =
+        totalCases > 0 ? Math.round((casesWithSoap / totalCases) * 100) : 0;
+
+      // ============================================================================
+      // CRITICAL ACTIONS COUNT (for status banner)
+      // ============================================================================
+      const last24Hours = subHours(new Date(), 24);
+
+      // Get failed outbound calls in last 24h
+      const { count: failedCallsCount } = await ctx.supabase
+        .from("scheduled_discharge_calls")
+        .select("id", { count: "exact", head: true })
+        .in("user_id", clinicUserIds)
+        .eq("status", "failed")
+        .gte("created_at", last24Hours.toISOString());
+
+      // Get voicemails needing follow-up (last 72 hours)
+      const last72Hours = subHours(new Date(), 72);
+      const { data: voicemailCallsData } = await ctx.supabase
+        .from("scheduled_discharge_calls")
+        .select("id, call_analysis, case_id, ended_at")
+        .in("user_id", clinicUserIds)
+        .eq("status", "completed")
+        .gte("ended_at", last72Hours.toISOString());
+
+      // Filter for voicemail calls
+      const voicemailCalls =
+        voicemailCallsData?.filter((call) => {
+          const analysis = call.call_analysis as CallAnalysis | null;
+          if (analysis?.structuredData?.wentToVoicemail === true) return true;
+          const summary = analysis?.summary?.toLowerCase() ?? "";
+          return (
+            summary.includes("voicemail") ||
+            summary.includes("went to vm") ||
+            summary.includes("no answer")
+          );
+        }) ?? [];
+
+      const voicemailsNeedingAction = voicemailCalls.length;
+
+      // ============================================================================
+      // ROI CALCULATIONS
+      // ============================================================================
+      // Time saved = total calls handled * avg manual call time
+      const totalCallsHandled = completedCalls.length + outboundCompleted;
+      const timeSavedMinutes = totalCallsHandled * AVG_MANUAL_CALL_MINUTES;
+      const timeSavedHours = Math.round((timeSavedMinutes / 60) * 10) / 10; // Round to 1 decimal
+
+      // Cost saved = time saved (in hours) * hourly rate
+      const costSaved = Math.round(timeSavedHours * HOURLY_RATE);
+
+      // ============================================================================
+      // SYSTEM HEALTH STATUS
+      // ============================================================================
+      // Get most recent activity timestamp
+      let lastActivityQuery = ctx.supabase
+        .from("inbound_vapi_calls")
+        .select("created_at")
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (clinic?.name) {
+        lastActivityQuery = lastActivityQuery.eq("clinic_name", clinic.name);
+      }
+
+      const { data: lastActivityData } = await lastActivityQuery;
+      const lastActivity = lastActivityData?.[0]?.created_at ?? null;
+
+      // Determine system health based on recent activity and errors
+      const totalCriticalActions =
+        (failedCallsCount ?? 0) +
+        criticalCount +
+        urgentCount +
+        voicemailsNeedingAction;
+
+      const systemStatus: "healthy" | "warning" | "error" =
+        criticalCount > 0
+          ? "error"
+          : totalCriticalActions > 5
+            ? "warning"
+            : "healthy";
+
+      // ============================================================================
       // RETURN OVERVIEW DATA
       // ============================================================================
       return {
@@ -223,13 +461,52 @@ export const overviewRouter = createTRPCRouter({
           inProgressCalls: inProgressCalls.length,
         },
 
-        // Value metrics
+        // System health
+        systemHealth: {
+          status: systemStatus,
+          lastActivity,
+          totalCriticalActions,
+          failedCallsCount: failedCallsCount ?? 0,
+          voicemailsNeedingAction,
+        },
+
+        // Today's activity (real-time snapshot)
+        todayActivity: {
+          callsHandled: todayCallsHandled,
+          appointmentsBooked: todayAppointments,
+          messagesCaptured: todayMessages,
+        },
+
+        // Value metrics (inbound)
         value: {
           callsAnswered: completedCalls.length,
           appointmentsBooked:
             confirmedAppointments.length + pendingAppointments.length,
           messagesCapured: allMessages.length,
           avgCallDuration: avgDuration,
+          // ROI metrics
+          timeSavedMinutes,
+          timeSavedHours,
+          costSaved,
+        },
+
+        // Outbound performance
+        outboundPerformance: {
+          total: outboundCalls.length,
+          completed: outboundCompleted,
+          failed: outboundFailed,
+          queued: outboundQueued,
+          voicemails: outboundVoicemails,
+          successRate: outboundSuccessRate,
+        },
+
+        // Case coverage
+        caseCoverage: {
+          totalCases,
+          casesWithDischarge,
+          casesWithSoap,
+          dischargeCoveragePct,
+          soapCoveragePct,
         },
 
         // Detailed stats

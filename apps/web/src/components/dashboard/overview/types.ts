@@ -4,6 +4,8 @@
 
 export type DateRangeOption = 7 | 14 | 30;
 
+export type SystemHealthStatus = "healthy" | "warning" | "error";
+
 export interface OverviewPeriod {
   startDate: string;
   endDate: string;
@@ -19,11 +21,46 @@ export interface OverviewStatus {
   inProgressCalls: number;
 }
 
+export interface SystemHealth {
+  status: SystemHealthStatus;
+  lastActivity: string | null;
+  totalCriticalActions: number;
+  failedCallsCount: number;
+  voicemailsNeedingAction: number;
+}
+
+export interface TodayActivity {
+  callsHandled: number;
+  appointmentsBooked: number;
+  messagesCaptured: number;
+}
+
 export interface OverviewValue {
   callsAnswered: number;
   appointmentsBooked: number;
   messagesCapured: number;
   avgCallDuration: number;
+  // ROI metrics
+  timeSavedMinutes: number;
+  timeSavedHours: number;
+  costSaved: number;
+}
+
+export interface OutboundPerformance {
+  total: number;
+  completed: number;
+  failed: number;
+  queued: number;
+  voicemails: number;
+  successRate: number;
+}
+
+export interface CaseCoverage {
+  totalCases: number;
+  casesWithDischarge: number;
+  casesWithSoap: number;
+  dischargeCoveragePct: number;
+  soapCoveragePct: number;
 }
 
 export interface OverviewStats {
@@ -58,7 +95,11 @@ export interface FlaggedItem {
 export interface OverviewData {
   period: OverviewPeriod;
   status: OverviewStatus;
+  systemHealth: SystemHealth;
+  todayActivity: TodayActivity;
   value: OverviewValue;
+  outboundPerformance: OutboundPerformance;
+  caseCoverage: CaseCoverage;
   stats: OverviewStats;
   flaggedItems: FlaggedItem[];
   totalFlaggedCount: number;
