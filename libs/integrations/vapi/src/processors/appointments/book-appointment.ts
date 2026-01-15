@@ -261,6 +261,9 @@ export function formatTime12Hour(time24: string): string {
    Business Logic Processor
    ======================================== */
 
+// Del Valle Pet Hospital clinic ID (uses Avimark - no API, hardcoded availability)
+const DEL_VALLE_CLINIC_ID = "cf9d40fc-8bd3-415a-b4ab-57d99870e139";
+
 /**
  * Process book appointment request
  *
@@ -272,7 +275,7 @@ export async function processBookAppointment(
   input: BookAppointmentInput,
   ctx: ToolContext,
 ): Promise<ToolResult> {
-  const { clinic, supabase, logger } = ctx;
+  const { clinic, supabase, logger, callId } = ctx;
 
   if (!clinic) {
     return {
@@ -313,6 +316,101 @@ export async function processBookAppointment(
     };
   }
 
+  // Format date and time for human-readable response
+  const formattedDate = new Date(parsedDate).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+  const formattedTime = formatTime12Hour(parsedTime);
+
+  // === Del Valle Pet Hospital: Store booking in inbound call record ===
+  // Del Valle uses Avimark (cloud PIMS, no API), so we store the booking
+  // in the inbound_vapi_calls table for staff to manually enter into Avimark
+  if (clinic.id === DEL_VALLE_CLINIC_ID) {
+    if (!callId) {
+      logger.error("Del Valle booking requires callId", {
+        clinicId: clinic.id,
+      });
+      return {
+        success: false,
+        error: "missing_call_id",
+        message:
+          "I'm having trouble booking your appointment right now. Please try again.",
+      };
+    }
+
+    // Store booking details in the inbound call record
+    const { error } = await supabase
+      .from("inbound_vapi_calls")
+      .update({
+        structured_data: {
+          appointment: {
+            date: parsedDate,
+            time: parsedTime,
+            client_name: input.client_name,
+            client_phone: input.client_phone,
+            patient_name: input.patient_name,
+            reason: input.reason ?? null,
+            species: input.species ?? null,
+            breed: input.breed ?? null,
+            is_new_client: input.is_new_client ?? false,
+            booked_at: new Date().toISOString(),
+          },
+        },
+        call_analysis: {
+          outcome: "scheduled",
+          appointment_booked: true,
+        },
+        // Set outcome field directly for dashboard filtering
+        // This will be overridden by end-of-call-report webhook if VAPI sends call_outcome_data
+        outcome: "Scheduled",
+      })
+      .eq("vapi_call_id", callId);
+
+    if (error) {
+      logger.error("Failed to store Del Valle booking", {
+        error,
+        callId,
+        clinicId: clinic.id,
+      });
+      return {
+        success: false,
+        error: "database_error",
+        message:
+          "I'm having trouble booking your appointment right now. Please try again in a moment.",
+      };
+    }
+
+    logger.info("Del Valle appointment stored in inbound call", {
+      callId,
+      clinicId: clinic.id,
+      clinicName: clinic.name,
+      date: parsedDate,
+      time: parsedTime,
+      patientName: input.patient_name,
+    });
+
+    return {
+      success: true,
+      message: `Perfect! I've scheduled ${input.patient_name} for ${formattedDate} at ${formattedTime}. Is there anything else I can help you with?`,
+      data: {
+        appointment: {
+          date: parsedDate,
+          formatted_date: formattedDate,
+          time: parsedTime,
+          formatted_time: formattedTime,
+          patient_name: input.patient_name,
+          client_name: input.client_name,
+          reason: input.reason,
+        },
+        clinic_name: clinic.name,
+        note: "Appointment will be manually entered into Avimark by clinic staff",
+      },
+    };
+  }
+
+  // === All other clinics: Use schedule_slots booking ===
   // Call the book_slot_with_hold function
   const rpcParams = {
     p_clinic_id: clinic.id,
@@ -343,14 +441,6 @@ export async function processBookAppointment(
   }
 
   const result = data as unknown as BookingResult;
-
-  // Format date and time for human-readable response
-  const formattedDate = new Date(parsedDate).toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
-  const formattedTime = formatTime12Hour(parsedTime);
 
   if (!result.success) {
     // Booking failed - slot not available
