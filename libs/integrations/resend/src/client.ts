@@ -14,6 +14,14 @@ async function getResendClient() {
 }
 
 /**
+ * Lazily get the site URL for email links
+ */
+async function getSiteUrl(): Promise<string> {
+  const { env } = await import("@odis-ai/shared/env");
+  return env.NEXT_PUBLIC_SITE_URL ?? "https://odisai.net";
+}
+
+/**
  * Send a discharge email to a pet owner
  *
  * @param to - Recipient email address(es)
@@ -56,6 +64,79 @@ export async function sendDischargeEmail({
     return { data: response.data, error: null };
   } catch (error) {
     console.error("[Resend] Error sending email:", error);
+    return {
+      data: null,
+      error: error instanceof Error ? error : new Error("Unknown error"),
+    };
+  }
+}
+
+/**
+ * Send a clinic invitation email
+ *
+ * Sends an invitation email to a user to join a clinic team.
+ *
+ * @param params - Invitation email parameters
+ * @returns Resend email response with email ID
+ *
+ * @example
+ * ```typescript
+ * const { data, error } = await sendInvitationEmail({
+ *   to: "newuser@example.com",
+ *   clinicName: "Happy Paws Veterinary",
+ *   inviterName: "Dr. Smith",
+ *   role: "member",
+ *   token: "abc123-uuid-token",
+ *   expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+ * });
+ * ```
+ */
+export async function sendInvitationEmail({
+  to,
+  clinicName,
+  inviterName,
+  inviterEmail,
+  role,
+  token,
+  expiresAt,
+}: {
+  to: string;
+  clinicName: string;
+  inviterName: string;
+  inviterEmail?: string;
+  role: string;
+  token: string;
+  expiresAt: Date;
+}) {
+  try {
+    // Dynamically import the template to avoid Next.js issues
+    const { ClinicInvitationEmailTemplate } =
+      await import("@odis-ai/shared/email/clinic-invitation-template");
+
+    const siteUrl = await getSiteUrl();
+    const inviteUrl = `${siteUrl}/onboarding?token=${token}`;
+
+    const html = ClinicInvitationEmailTemplate({
+      clinicName,
+      inviterName,
+      inviterEmail,
+      recipientEmail: to,
+      role,
+      inviteUrl,
+      expiresAt,
+    });
+
+    const resend = await getResendClient();
+    const response = await resend.emails.send({
+      from: "OdisAI <noreply@odisai.net>",
+      to: [to],
+      subject: `You've been invited to join ${clinicName} on OdisAI`,
+      html,
+    });
+
+    return { data: response.data, error: null };
+  } catch (error) {
+    console.error("[Resend] Error sending invitation email:", error);
     return {
       data: null,
       error: error instanceof Error ? error : new Error("Unknown error"),

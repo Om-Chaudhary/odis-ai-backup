@@ -10,6 +10,51 @@ interface AccountStepProps {
   onComplete: () => void;
 }
 
+/**
+ * Map auth errors to user-friendly messages
+ */
+function getUserFriendlyErrorMessage(errorMessage: string): string {
+  // Database errors (500 errors from triggers)
+  if (
+    errorMessage.includes("Database error") ||
+    errorMessage.includes("database")
+  ) {
+    return "There was a problem creating your account. Please try again in a moment. If the issue persists, contact support@odisai.net.";
+  }
+
+  // Email already registered
+  if (
+    errorMessage.includes("already registered") ||
+    errorMessage.includes("User already registered")
+  ) {
+    return "This email is already registered. Try signing in instead or reset your password.";
+  }
+
+  // Invalid email format
+  if (
+    errorMessage.includes("invalid email") ||
+    errorMessage.includes("Invalid email")
+  ) {
+    return "Please enter a valid email address.";
+  }
+
+  // Weak password
+  if (errorMessage.includes("Password") && errorMessage.includes("weak")) {
+    return "Password is too weak. Please use at least 6 characters with a mix of letters and numbers.";
+  }
+
+  // Rate limiting
+  if (
+    errorMessage.includes("rate limit") ||
+    errorMessage.includes("too many")
+  ) {
+    return "Too many signup attempts. Please wait a few minutes and try again.";
+  }
+
+  // Default: return original message for unknown errors
+  return errorMessage;
+}
+
 export default function AccountStep({ onComplete }: AccountStepProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,27 +67,66 @@ export default function AccountStep({ onComplete }: AccountStepProps) {
     setError(null);
 
     try {
+      console.log("[Signup] Creating Supabase client...");
       const supabase = createClient();
 
+      console.log("[Signup] Calling signUp...", { email });
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
       });
 
+      console.log("[Signup] SignUp response:", { data, error: signUpError });
+
       if (signUpError) {
-        setError(signUpError.message);
+        console.error("[Signup] SignUp error:", {
+          message: signUpError.message,
+          status: signUpError.status,
+          code: signUpError.code,
+          name: signUpError.name,
+        });
+
+        // Track critical errors (500, database errors)
+        if (
+          signUpError.status === 500 ||
+          signUpError.message.includes("Database error")
+        ) {
+          console.error("[Signup] CRITICAL ERROR - Database trigger failed:", {
+            email,
+            error: signUpError,
+            timestamp: new Date().toISOString(),
+          });
+
+          // TODO: Add Sentry tracking here when configured
+          // if (typeof Sentry !== 'undefined') {
+          //   Sentry.captureException(signUpError, {
+          //     tags: { flow: 'signup', critical: true },
+          //     extra: { email },
+          //   });
+          // }
+        }
+
+        setError(getUserFriendlyErrorMessage(signUpError.message));
         return;
       }
 
       if (data.user) {
+        console.log("[Signup] User created successfully, calling onComplete");
         // User profile is automatically created by database trigger
         onComplete();
+      } else {
+        console.warn("[Signup] No user in response data");
+        setError("Signup succeeded but no user was returned");
       }
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "An unexpected error occurred",
-      );
+      console.error("[Signup] Unexpected error:", err);
+
+      const errorMessage =
+        err instanceof Error ? err.message : "An unexpected error occurred";
+
+      setError(getUserFriendlyErrorMessage(errorMessage));
     } finally {
+      console.log("[Signup] Setting loading to false");
       setIsLoading(false);
     }
   };

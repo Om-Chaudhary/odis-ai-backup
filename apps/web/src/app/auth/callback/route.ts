@@ -25,7 +25,8 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { error, data: sessionData } =
+      await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
       console.error("Auth callback: Failed to exchange code for session:", {
@@ -39,15 +40,32 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Determine redirect destination based on onboarding status
+    let redirectTo = next;
+
+    // Check if onboarding is complete (only if not already going to onboarding)
+    if (!next.startsWith("/onboarding") && sessionData?.user) {
+      const { data: profile } = await supabase
+        .from("users")
+        .select("onboarding_completed")
+        .eq("id", sessionData.user.id)
+        .single();
+
+      // Redirect to onboarding if not complete
+      if (!profile?.onboarding_completed) {
+        redirectTo = "/onboarding";
+      }
+    }
+
     const forwardedHost = request.headers.get("x-forwarded-host"); // original origin before load balancer
     const isLocalEnv = process.env.NODE_ENV === "development";
     if (isLocalEnv) {
       // we can be sure that there is no load balancer in between, so no need to watch for X-Forwarded-Host
-      return NextResponse.redirect(`${origin}${next}`);
+      return NextResponse.redirect(`${origin}${redirectTo}`);
     } else if (forwardedHost) {
-      return NextResponse.redirect(`https://${forwardedHost}${next}`);
+      return NextResponse.redirect(`https://${forwardedHost}${redirectTo}`);
     } else {
-      return NextResponse.redirect(`${origin}${next}`);
+      return NextResponse.redirect(`${origin}${redirectTo}`);
     }
   }
 

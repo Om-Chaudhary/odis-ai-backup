@@ -441,6 +441,56 @@ export type Database = {
           },
         ];
       };
+      clinic_invitations: {
+        Row: {
+          accepted_at: string | null;
+          accepted_by: string | null;
+          clinic_id: string;
+          created_at: string;
+          email: string;
+          expires_at: string;
+          id: string;
+          invited_by: string;
+          role: string;
+          status: string;
+          token: string;
+        };
+        Insert: {
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          clinic_id: string;
+          created_at?: string;
+          email: string;
+          expires_at?: string;
+          id?: string;
+          invited_by: string;
+          role?: string;
+          status?: string;
+          token?: string;
+        };
+        Update: {
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          clinic_id?: string;
+          created_at?: string;
+          email?: string;
+          expires_at?: string;
+          id?: string;
+          invited_by?: string;
+          role?: string;
+          status?: string;
+          token?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "clinic_invitations_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       clinic_messages: {
         Row: {
           assigned_to_user_id: string | null;
@@ -3503,6 +3553,10 @@ export type Database = {
       };
     };
     Functions: {
+      accept_clinic_invitation: {
+        Args: { p_token: string; p_user_id: string };
+        Returns: Json;
+      };
       auto_reschedule_conflicts: {
         Args: { p_clinic_id: string; p_date: string };
         Returns: {
@@ -3532,6 +3586,7 @@ export type Database = {
         Args: { resource: string; user_uuid: string };
         Returns: boolean;
       };
+      expire_old_invitations: { Args: never; Returns: number };
       generate_confirmation_number: { Args: never; Returns: string };
       get_active_sync_count: { Args: { p_clinic_id: string }; Returns: number };
       get_available_slots: {

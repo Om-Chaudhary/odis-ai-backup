@@ -41,7 +41,7 @@ export function ForgotPasswordTwoColumn() {
   }
 
   return (
-    <div className="relative grid min-h-svh lg:grid-cols-2">
+    <div className="relative grid h-screen overflow-hidden lg:grid-cols-2">
       {/* Full-screen background image */}
       <Image
         alt="Veterinary care"
@@ -56,7 +56,7 @@ export function ForgotPasswordTwoColumn() {
       />
 
       {/* Left Column - Forgot Password Form */}
-      <div className="relative flex flex-col gap-4 p-6 md:p-10">
+      <div className="relative flex h-full flex-col gap-4 overflow-y-auto p-6 md:p-10">
         {/* Blurred teal overlay for readability */}
         <div className="absolute inset-0 bg-teal-950/75 backdrop-blur-md" />
 

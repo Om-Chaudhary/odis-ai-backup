@@ -74,7 +74,10 @@
         "default",
         "{workspaceRoot}/.eslintrc.json",
         "{workspaceRoot}/eslint.config.js"
-      ]
+      ],
+      "options": {
+        "args": "--quiet"
+      }
     },
     "test": {
       "cache": true,

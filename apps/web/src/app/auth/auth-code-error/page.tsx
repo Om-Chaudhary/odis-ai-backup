@@ -37,7 +37,7 @@ function AuthCodeErrorContent() {
   };
 
   return (
-    <div className="relative flex min-h-svh items-center justify-center overflow-hidden">
+    <div className="relative flex h-screen items-center justify-center overflow-hidden">
       {/* Dark gradient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-red-950/30 to-slate-900" />
 
@@ -164,7 +164,7 @@ export default function AuthCodeErrorPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-svh items-center justify-center bg-slate-950">
+        <div className="flex h-screen items-center justify-center bg-slate-950">
           <div className="animate-pulse text-slate-400">Loading...</div>
         </div>
       }

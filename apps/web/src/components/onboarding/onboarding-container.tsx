@@ -7,7 +7,8 @@ export default function OnboardingContainer() {
   const router = useRouter();
 
   const handleAccountComplete = () => {
-    router.push("/dashboard");
+    // After account creation, navigate to the full onboarding flow
+    router.push("/onboarding");
   };
 
   return (
