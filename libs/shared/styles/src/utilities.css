@@ -468,3 +468,16 @@
     display: none !important;
   }
 }
+
+/* ============================================
+   Onboarding Overlay Utilities
+   ============================================ */
+
+/* Ensure onborda overlay elements are above all dashboard content */
+[data-name="onborda-overlay"] {
+  z-index: 9999 !important;
+}
+
+[data-name="onborda-card"] {
+  z-index: 10000 !important;
+}
