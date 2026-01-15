@@ -12,7 +12,7 @@ import { PhoneIncoming, Calendar, Keyboard, MousePointer } from "lucide-react";
  * 4. Row selection for details
  *
  * Note: Selectors target elements outside the overflow cascade for reliable positioning.
- * The OnboardingProvider must be placed at the dashboard layout level (outside z-10).
+ * The OnboardingProvider is scoped to the inbound page to avoid blocking other dashboard pages.
  */
 export const firstTimeTour: Tour = {
   tour: "inbound-first-time",

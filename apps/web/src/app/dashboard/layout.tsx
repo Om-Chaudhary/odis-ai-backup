@@ -9,7 +9,6 @@ import type { Metadata } from "next";
 import { AUTH_PARAMS } from "@odis-ai/shared/constants/auth";
 import { getClinicByUserId, getUserClinics } from "@odis-ai/domain/clinics";
 import { Toaster } from "sonner";
-import { OnboardingProvider } from "~/components/providers";
 
 export const metadata: Metadata = {
   title: "Dashboard | Odis AI",
@@ -87,75 +86,73 @@ export default async function DashboardLayout({
   ]);
 
   return (
-    <OnboardingProvider>
-      <div className="flex h-screen overflow-hidden">
-        {/* Background Effects */}
-        <div className="pointer-events-none fixed inset-0 z-0">
-          {/* Animated gradient overlays */}
-          <div
-            style={{
-              background:
-                "radial-gradient(circle at 30% 40%, rgba(49, 171, 163, 0.08) 0%, rgba(49, 171, 163, 0.04) 40%, transparent 70%)",
-            }}
-            className="animate-gradient-move absolute inset-0 opacity-50 blur-sm"
-          />
-          <div
-            style={{
-              background:
-                "radial-gradient(circle at 70% 60%, rgba(49, 171, 163, 0.06) 0%, rgba(49, 171, 163, 0.03) 50%, transparent 80%)",
-            }}
-            className="animate-gradient-move-reverse absolute inset-0 opacity-40 blur-sm"
-          />
-          {/* Floating orbs */}
-          <div
-            style={{
-              background:
-                "radial-gradient(circle, rgba(49, 171, 163, 0.04) 0%, transparent 60%)",
-            }}
-            className="animate-float-slow absolute top-1/4 left-1/4 h-[400px] w-[400px] rounded-full opacity-30 blur-3xl"
-          />
-          <div
-            style={{
-              background:
-                "radial-gradient(circle, rgba(49, 171, 163, 0.03) 0%, transparent 60%)",
-            }}
-            className="animate-float-slow-reverse absolute right-1/3 bottom-1/3 h-[300px] w-[300px] rounded-full opacity-25 blur-3xl"
-          />
-        </div>
-        {/* Dotted background pattern */}
+    <div className="flex h-screen overflow-hidden">
+      {/* Background Effects */}
+      <div className="pointer-events-none fixed inset-0 z-0">
+        {/* Animated gradient overlays */}
         <div
           style={{
-            backgroundImage:
-              "radial-gradient(circle, #31aba3 1px, transparent 1px)",
-            backgroundSize: "40px 40px",
+            background:
+              "radial-gradient(circle at 30% 40%, rgba(49, 171, 163, 0.08) 0%, rgba(49, 171, 163, 0.04) 40%, transparent 70%)",
           }}
-          className="pointer-events-none fixed inset-0 z-0 opacity-10"
+          className="animate-gradient-move absolute inset-0 opacity-50 blur-sm"
         />
-
-        {/* Icon Sidebar */}
-        <IconSidebar
-          user={user}
-          profile={profile}
-          clinicSlug={clinic?.slug ?? null}
-          allClinics={allClinics.map((c) => ({
-            id: c.id,
-            name: c.name,
-            slug: c.slug,
-          }))}
-          currentClinicName={clinic?.name}
+        <div
+          style={{
+            background:
+              "radial-gradient(circle at 70% 60%, rgba(49, 171, 163, 0.06) 0%, rgba(49, 171, 163, 0.03) 50%, transparent 80%)",
+          }}
+          className="animate-gradient-move-reverse absolute inset-0 opacity-40 blur-sm"
         />
-
-        {/* Navigation Panel - rendered by child routes */}
-        <NavigationPanel clinicSlug={clinic?.slug ?? null} />
-
-        {/* Main Content Area */}
-        <div className="relative flex min-w-0 flex-1 flex-col bg-gray-50">
-          <DashboardHeader />
-          <div className="flex h-full min-h-0 flex-1 flex-col">{children}</div>
-        </div>
-
-        <Toaster richColors />
+        {/* Floating orbs */}
+        <div
+          style={{
+            background:
+              "radial-gradient(circle, rgba(49, 171, 163, 0.04) 0%, transparent 60%)",
+          }}
+          className="animate-float-slow absolute top-1/4 left-1/4 h-[400px] w-[400px] rounded-full opacity-30 blur-3xl"
+        />
+        <div
+          style={{
+            background:
+              "radial-gradient(circle, rgba(49, 171, 163, 0.03) 0%, transparent 60%)",
+          }}
+          className="animate-float-slow-reverse absolute right-1/3 bottom-1/3 h-[300px] w-[300px] rounded-full opacity-25 blur-3xl"
+        />
       </div>
-    </OnboardingProvider>
+      {/* Dotted background pattern */}
+      <div
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, #31aba3 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+        }}
+        className="pointer-events-none fixed inset-0 z-0 opacity-10"
+      />
+
+      {/* Icon Sidebar */}
+      <IconSidebar
+        user={user}
+        profile={profile}
+        clinicSlug={clinic?.slug ?? null}
+        allClinics={allClinics.map((c) => ({
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+        }))}
+        currentClinicName={clinic?.name}
+      />
+
+      {/* Navigation Panel - rendered by child routes */}
+      <NavigationPanel clinicSlug={clinic?.slug ?? null} />
+
+      {/* Main Content Area */}
+      <div className="relative flex min-w-0 flex-1 flex-col bg-gray-50">
+        <DashboardHeader />
+        <div className="flex h-full min-h-0 flex-1 flex-col">{children}</div>
+      </div>
+
+      <Toaster richColors />
+    </div>
   );
 }
