@@ -108,6 +108,17 @@ if (!projectRef) {
 
 console.log(`📦 Generating types for project: ${projectRef}`);
 
+// Check if project is linked
+const supabaseConfigPath = path.join(process.cwd(), ".supabase", "config.toml");
+if (!existsSync(supabaseConfigPath)) {
+  console.warn(
+    "⚠️  Project not linked. Attempting to use --project-id instead...",
+  );
+  console.warn("   For faster, non-hanging execution, run:");
+  console.warn(`   npx supabase link --project-ref ${projectRef}`);
+  console.warn("");
+}
+
 try {
   // Generate to libs/shared/types for the Nx monorepo structure
   const outputPath = path.join(
@@ -118,16 +129,32 @@ try {
     "src",
     "database.types.ts",
   );
-  const command = `npx supabase gen types --lang=typescript --project-id "${projectRef}" > "${outputPath}"`;
+
+  // Try --linked first (faster, no auth prompt), fallback to --project-id
+  let command;
+  if (existsSync(supabaseConfigPath)) {
+    command = `npx supabase gen types typescript --linked > "${outputPath}"`;
+  } else {
+    command = `npx supabase gen types typescript --project-id "${projectRef}" > "${outputPath}"`;
+    console.warn("⚠️  Using --project-id (may prompt for authentication)");
+  }
 
   execSync(command, {
     stdio: "inherit",
     env: { ...process.env },
+    timeout: 60000, // 60 second timeout to prevent infinite hanging
   });
 
   console.log(`✅ Types generated successfully at: ${outputPath}`);
 } catch (error) {
   const errorMessage = error instanceof Error ? error.message : String(error);
   console.error("❌ Failed to generate types:", errorMessage);
+  console.error("");
+  console.error("Troubleshooting:");
+  console.error("1. Make sure you're logged in: npx supabase login");
+  console.error(
+    `2. Link your project: npx supabase link --project-ref ${projectRef}`,
+  );
+  console.error("3. Then run this script again");
   process.exit(1);
 }
