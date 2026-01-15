@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useQueryState, parseAsInteger } from "nuqs";
-import { Download, CheckCircle } from "lucide-react";
+import { Download } from "lucide-react";
 
 import type { OutcomeFilter, OutcomeFilterCategory } from "./types";
 import type { Database } from "@odis-ai/shared/types";

@@ -37,7 +37,6 @@ export function InboundSplitLayout({
   rightPanel,
   showRightPanel,
   onCloseRightPanel,
-  selectedRowPosition,
 }: InboundSplitLayoutProps) {
   const rightPanelRef = useRef<ImperativePanelHandle>(null);
   const rightPanelContainerRef = useRef<HTMLDivElement>(null);
