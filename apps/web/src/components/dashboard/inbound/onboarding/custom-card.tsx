@@ -1,5 +1,10 @@
+"use client";
+
 import type { CardComponentProps } from "onborda";
+import { useOnborda } from "onborda";
 import { Button } from "@odis-ai/shared/ui";
+
+const TOUR_STORAGE_KEY = "inbound-tour-completed";
 
 /**
  * Custom onboarding card component with glassmorphism styling
@@ -18,6 +23,20 @@ export function CustomOnboardingCard({
   prevStep,
   arrow,
 }: CardComponentProps) {
+  const { closeOnborda } = useOnborda();
+
+  const isLastStep = currentStep === totalSteps - 1;
+
+  const handleNext = () => {
+    if (isLastStep) {
+      // Mark tour as complete and close
+      localStorage.setItem(TOUR_STORAGE_KEY, "true");
+      closeOnborda();
+    } else {
+      nextStep();
+    }
+  };
+
   return (
     <div className="relative max-w-[400px] min-w-[320px] rounded-lg border border-teal-200/50 bg-gradient-to-br from-white/95 via-teal-50/30 to-white/95 p-6 shadow-xl shadow-teal-500/20 backdrop-blur-xl">
       {arrow}
@@ -43,8 +62,8 @@ export function CustomOnboardingCard({
               Back
             </Button>
           )}
-          <Button variant="default" size="sm" onClick={nextStep}>
-            {currentStep === totalSteps - 1 ? "Finish" : "Next"}
+          <Button variant="default" size="sm" onClick={handleNext}>
+            {isLastStep ? "Finish" : "Next"}
           </Button>
         </div>
       </div>
