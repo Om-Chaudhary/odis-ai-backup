@@ -149,7 +149,9 @@ export default async function DashboardLayout({
       {/* Main Content Area */}
       <div className="relative flex min-w-0 flex-1 flex-col bg-gray-50">
         <DashboardHeader />
-        <div className="flex h-full min-h-0 flex-1 flex-col">{children}</div>
+        <div className="flex h-full min-h-0 flex-1 flex-col overflow-auto">
+          {children}
+        </div>
       </div>
 
       <Toaster richColors />
