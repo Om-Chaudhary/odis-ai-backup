@@ -1,5 +1,5 @@
-import { useOnborda } from "onborda";
 import { useEffect, useState } from "react";
+import { useSafeOnborda } from "~/components/providers/onboarding-provider";
 
 /**
  * Hook for managing inbound dashboard onboarding tour
@@ -8,12 +8,21 @@ import { useEffect, useState } from "react";
  * - Auto-starts tour on first visit (500ms delay for UI render)
  * - Persists completion state in localStorage
  * - Provides manual restart capability
+ * - Safely handles missing provider context (graceful degradation)
  */
 export function useInboundOnboarding() {
-  const { startOnborda, closeOnborda } = useOnborda();
   const [hasSeenTour, setHasSeenTour] = useState(false);
 
+  // Use safe context that returns null instead of throwing when outside provider
+  const onbordaContext = useSafeOnborda();
+
+  const startOnborda = onbordaContext?.startOnborda;
+  const closeOnborda = onbordaContext?.closeOnborda;
+
   useEffect(() => {
+    // Skip if no context available
+    if (!startOnborda) return;
+
     // Check localStorage for tour completion
     const seen = localStorage.getItem("inbound-tour-completed");
     if (!seen) {
@@ -30,8 +39,13 @@ export function useInboundOnboarding() {
   };
 
   const restartTour = () => {
-    startOnborda("inbound-first-time");
+    startOnborda?.("inbound-first-time");
   };
 
-  return { hasSeenTour, markTourComplete, restartTour, closeOnborda };
+  return {
+    hasSeenTour,
+    markTourComplete,
+    restartTour,
+    closeOnborda: closeOnborda ?? null,
+  };
 }
