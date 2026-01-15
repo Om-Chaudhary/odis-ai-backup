@@ -81,7 +81,7 @@ export async function executeScheduledCall(
 
   // 4. Validate VAPI configuration
   const assistantId = call.assistant_id;
-  const phoneNumberId = call.phone_number_id;
+  const phoneNumberId = call.outbound_phone_number_id;
   const customerPhone = call.customer_phone;
 
   if (!assistantId) {
@@ -94,11 +94,13 @@ export async function executeScheduledCall(
   }
 
   if (!phoneNumberId) {
-    console.error("[CALL_EXECUTOR] Missing phone_number_id", { callId });
+    console.error("[CALL_EXECUTOR] Missing outbound_phone_number_id", {
+      callId,
+    });
     return {
       success: false,
       callId,
-      error: "Missing phone_number_id configuration",
+      error: "Missing outbound_phone_number_id configuration",
     };
   }
 

@@ -16,7 +16,7 @@
 import { execSync } from "child_process";
 import path from "path";
 import { fileURLToPath } from "url";
-import { readFileSync, existsSync } from "fs";
+import { readFileSync, existsSync, writeFileSync } from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -74,6 +74,50 @@ function loadEnvFile() {
   } catch (error) {
     // Silently fail if we can't read the file
     console.warn(`⚠️  Could not read ${envFilePath}:`, error);
+  }
+}
+
+/**
+ * Fix known issues in generated Supabase types
+ * This addresses TypeScript linting errors that occur in generated code
+ */
+function fixGeneratedTypes(filePath) {
+  if (!existsSync(filePath)) {
+    return;
+  }
+
+  let content = readFileSync(filePath, "utf-8");
+  let modified = false;
+
+  // Fix: Remove redundant 'never' in union type for CompositeTypes
+  // When CompositeTypes is empty, keyof DefaultSchema["CompositeTypes"] is 'never'
+  // This creates a redundant union: never | { schema: ... }
+  // We fix it by conditionally including the keyof only when it's not never
+  // Pattern matches the Supabase-generated format (handles both single-line and multiline):
+  //   PublicCompositeTypeNameOrOptions extends
+  //     | keyof DefaultSchema["CompositeTypes"]
+  //     | { schema: keyof DatabaseWithoutInternals },
+  // Use a more flexible pattern that matches the key structure
+  const compositeTypesRegex =
+    /(export type CompositeTypes<\s*PublicCompositeTypeNameOrOptions extends\s*[\s\n]*\| keyof DefaultSchema\["CompositeTypes"\]\s*[\s\n]*\| \{ schema: keyof DatabaseWithoutInternals \},)/s;
+
+  if (
+    compositeTypesRegex.test(content) &&
+    !content.includes('keyof DefaultSchema["CompositeTypes"] extends never')
+  ) {
+    content = content.replace(
+      compositeTypesRegex,
+      `export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"] extends never
+    ? { schema: keyof DatabaseWithoutInternals }
+    : keyof DefaultSchema["CompositeTypes"] | { schema: keyof DatabaseWithoutInternals },`,
+    );
+    modified = true;
+  }
+
+  if (modified) {
+    writeFileSync(filePath, content, "utf-8");
+    console.log("🔧 Fixed redundant 'never' type in CompositeTypes");
   }
 }
 
@@ -144,6 +188,9 @@ try {
     env: { ...process.env },
     timeout: 60000, // 60 second timeout to prevent infinite hanging
   });
+
+  // Fix known issues in generated types
+  fixGeneratedTypes(outputPath);
 
   console.log(`✅ Types generated successfully at: ${outputPath}`);
 } catch (error) {

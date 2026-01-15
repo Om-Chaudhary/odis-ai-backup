@@ -96,7 +96,7 @@ export interface ScheduledDischargeCall {
   user_id: string;
   case_id: string | null;
   assistant_id: string;
-  phone_number_id: string;
+  outbound_phone_number_id: string;
   customer_phone: string;
   scheduled_for: string;
   status: "queued" | "in-progress" | "completed" | "failed" | "canceled";

@@ -4,8 +4,8 @@
  * Handles scheduling discharge calls with VAPI, QStash, and test mode support.
  */
 
-import type { Database, Json } from "@odis-ai/shared/types";
-import type { SupabaseClientType } from "@odis-ai/shared/types/supabase";
+import type { Database } from "@odis-ai/data-access/db";
+import type { Json, SupabaseClientType } from "@odis-ai/shared/types/supabase";
 import type { AIGeneratedCallIntelligence } from "@odis-ai/integrations/vapi/types";
 import type { CaseMetadata } from "@odis-ai/shared/types/case";
 import type {
@@ -490,7 +490,7 @@ export async function scheduleDischargeCall(
 
     const updateData: Partial<ScheduledCallRow> = {
       assistant_id: assistantId ?? "",
-      phone_number_id: phoneNumberId ?? "",
+      outbound_phone_number_id: phoneNumberId ?? "",
       customer_phone: customerPhone,
       user_id: userId,
       scheduled_for: scheduledAt.toISOString(),
@@ -606,7 +606,7 @@ export async function scheduleDischargeCall(
       user_id: userId,
       case_id: caseId,
       assistant_id: assistantId ?? "",
-      phone_number_id: phoneNumberId ?? "",
+      outbound_phone_number_id: phoneNumberId ?? "",
       customer_phone: customerPhone,
       scheduled_for: scheduledAt.toISOString(),
       status: "queued" as const,

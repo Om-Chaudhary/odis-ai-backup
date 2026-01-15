@@ -1,5 +1,5 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
-import type { Database } from "./database.types";
+import type { Database, Json } from "./database.types";
 
 // Auth types
 export type AuthUser = User;
@@ -78,3 +78,14 @@ export type MiddlewareConfig = {
  * Use this type for service methods that accept a Supabase client
  */
 export type SupabaseClientType = SupabaseClient<Database>;
+
+/* ========================================
+   Database Column Types
+   ======================================== */
+
+/**
+ * JSONB column type for Supabase
+ * Imported from auto-generated database.types.ts
+ * @see database.types.ts for the canonical definition
+ */
+export type { Json };

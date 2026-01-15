@@ -10,7 +10,7 @@
  * **RECOMMENDED PATTERN**: Use a SINGLE shared VAPI assistant for all clinics,
  * with per-clinic customization via:
  *
- * 1. **Phone Number ID** (`clinics.phone_number_id`) - Different SIP trunk per clinic
+ * 1. **Phone Number ID** (`clinics.outbound_phone_number_id`) - Different SIP trunk per clinic
  * 2. **Dynamic Variables** (`assistantOverrides.variableValues`) - Per-call customization
  *    - clinic_name, clinic_phone, emergency_phone
  *    - agent_name, pet_name, owner_name
@@ -29,7 +29,7 @@
  *
  * ## Configuration Priority
  *
- * 1. `clinics.phone_number_id` → Per-clinic SIP trunk (REQUIRED for multi-clinic)
+ * 1. `clinics.outbound_phone_number_id` → Per-clinic SIP trunk (REQUIRED for multi-clinic)
  * 2. `clinics.outbound_assistant_id` → Optional, falls back to `VAPI_ASSISTANT_ID`
  * 3. `VAPI_ASSISTANT_ID` env var → Shared assistant for all clinics (RECOMMENDED)
  *
@@ -134,7 +134,7 @@ export async function getClinicVapiConfig(
   const hasClinicConfig =
     clinic.outbound_assistant_id != null ||
     clinic.inbound_assistant_id != null ||
-    clinic.phone_number_id != null;
+    clinic.outbound_phone_number_id != null;
 
   if (!hasClinicConfig) {
     logger.debug("Clinic has no VAPI config, using env fallback", {
@@ -150,7 +150,7 @@ export async function getClinicVapiConfig(
     clinicName: clinic.name,
     hasOutbound: !!clinic.outbound_assistant_id,
     hasInbound: !!clinic.inbound_assistant_id,
-    hasPhoneNumber: !!clinic.phone_number_id,
+    hasPhoneNumber: !!clinic.outbound_phone_number_id,
   });
 
   return {
@@ -158,7 +158,8 @@ export async function getClinicVapiConfig(
     outboundAssistantId: clinic.outbound_assistant_id ?? sharedAssistantId,
     inboundAssistantId: clinic.inbound_assistant_id ?? sharedAssistantId,
     // Phone number ID is per-clinic (different SIP trunks)
-    phoneNumberId: clinic.phone_number_id ?? env.VAPI_PHONE_NUMBER_ID ?? null,
+    phoneNumberId:
+      clinic.outbound_phone_number_id ?? env.VAPI_PHONE_NUMBER_ID ?? null,
     clinicName: clinic.name,
     source: "clinic",
   };
@@ -212,7 +213,7 @@ export async function getClinicVapiConfigByUserId(
   const hasClinicConfig =
     clinic.outbound_assistant_id != null ||
     clinic.inbound_assistant_id != null ||
-    clinic.phone_number_id != null;
+    clinic.outbound_phone_number_id != null;
 
   if (!hasClinicConfig) {
     logger.debug("User's clinic has no VAPI config, using env fallback", {
@@ -230,7 +231,7 @@ export async function getClinicVapiConfigByUserId(
     clinicName: clinic.name,
     hasOutbound: !!clinic.outbound_assistant_id,
     hasInbound: !!clinic.inbound_assistant_id,
-    hasPhoneNumber: !!clinic.phone_number_id,
+    hasPhoneNumber: !!clinic.outbound_phone_number_id,
     usingSharedAssistant: !clinic.outbound_assistant_id,
   });
 
@@ -239,7 +240,8 @@ export async function getClinicVapiConfigByUserId(
     outboundAssistantId: clinic.outbound_assistant_id ?? sharedAssistantId,
     inboundAssistantId: clinic.inbound_assistant_id ?? sharedAssistantId,
     // Phone number ID is per-clinic (different SIP trunks)
-    phoneNumberId: clinic.phone_number_id ?? env.VAPI_PHONE_NUMBER_ID ?? null,
+    phoneNumberId:
+      clinic.outbound_phone_number_id ?? env.VAPI_PHONE_NUMBER_ID ?? null,
     clinicName: clinic.name,
     source: "clinic",
   };

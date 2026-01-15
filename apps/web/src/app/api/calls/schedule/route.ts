@@ -266,7 +266,7 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: user.id,
         assistant_id: vapiConfig.outboundAssistantId ?? "",
-        phone_number_id: vapiConfig.phoneNumberId ?? "",
+        outbound_phone_number_id: vapiConfig.phoneNumberId ?? "",
         customer_phone: validated.phoneNumber,
         scheduled_for: finalScheduledTime,
         status: "queued",

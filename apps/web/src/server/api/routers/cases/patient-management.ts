@@ -397,7 +397,7 @@ export const patientManagementRouter = createTRPCRouter({
       inboundPhoneNumberId: clinic?.inbound_phone_number_id ?? null,
       inboundAssistantId: clinic?.inbound_assistant_id ?? null,
       // VAPI configuration - outbound calls
-      outboundPhoneNumberId: clinic?.phone_number_id ?? null,
+      outboundPhoneNumberId: clinic?.outbound_phone_number_id ?? null,
       outboundAssistantId: clinic?.outbound_assistant_id ?? null,
     };
   }),
@@ -595,7 +595,7 @@ export const patientManagementRouter = createTRPCRouter({
       }
       // VAPI configuration - outbound calls
       if (input.outboundPhoneNumberId !== undefined) {
-        clinicUpdateData.phone_number_id = input.outboundPhoneNumberId;
+        clinicUpdateData.outbound_phone_number_id = input.outboundPhoneNumberId;
       }
       if (input.outboundAssistantId !== undefined) {
         clinicUpdateData.outbound_assistant_id = input.outboundAssistantId;

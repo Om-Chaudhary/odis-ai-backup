@@ -29,9 +29,10 @@ export default tseslint.config(
       "**/vitest.config.ts",
       "apps/web/vitest.config.ts",
       "apps/web/src/test/**",
-      // Auto-generated files
+      // Auto-generated files (Supabase types - fixed post-generation by scripts/update-types.js)
       "src/database.types.ts",
       "libs/types/src/database.types.ts",
+      "libs/shared/types/src/database.types.ts",
       // Markdown documentation
       "**/*.md",
       // Docusaurus app (has different config requirements)

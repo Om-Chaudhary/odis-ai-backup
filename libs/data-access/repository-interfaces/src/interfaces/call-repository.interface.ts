@@ -33,7 +33,7 @@ export interface ScheduledCall extends Record<string, unknown> {
   id: string;
   user_id: string;
   assistant_id: string;
-  phone_number_id: string;
+  outbound_phone_number_id: string;
   customer_phone: string;
   scheduled_for: string;
   status: CallStatus;

@@ -2,21 +2,22 @@
 
 ## Overview
 
-This guide explains how to configure the Del Valle Pet Hospital inbound VAPI assistant (`735ef4b4-981b-4b91-bed8-5841e79892ae`) to match Alum Rock's call intelligence capabilities.
+This guide explains how to configure the Del Valle Pet Hospital inbound VAPI assistant (`361f19e5-f710-4e5d-a48d-6eb64942dcb9`) to match Alum Rock's call intelligence capabilities.
 
 ## Prerequisites
 
 - Access to VAPI Dashboard: https://dashboard.vapi.ai
-- Del Valle assistant ID: `735ef4b4-981b-4b91-bed8-5841e79892ae`
+- Del Valle inbound assistant ID: `361f19e5-f710-4e5d-a48d-6eb64942dcb9`
+- Del Valle outbound assistant ID: `735ef4b4-981b-4b91-bed8-5841e79892ae`
 - Alum Rock assistant ID (for reference): `ae3e6a54-17a3-4915-9c3e-48779b5dbf09`
 
 ## Configuration Steps
 
-### Step 1: Navigate to Del Valle Assistant
+### Step 1: Navigate to Del Valle Inbound Assistant
 
 1. Log in to VAPI Dashboard
 2. Go to **Assistants** section
-3. Find and open assistant `735ef4b4-981b-4b91-bed8-5841e79892ae`
+3. Find and open assistant `361f19e5-f710-4e5d-a48d-6eb64942dcb9` (DVPH - Inbound)
 
 ### Step 2: Configure Structured Outputs
 
@@ -383,10 +384,18 @@ FROM vapi_assistant_mappings m
 JOIN clinics c ON c.id = m.clinic_id
 WHERE c.name = 'Del Valle Pet Hospital';
 
--- Expected result:
+-- Expected results:
+-- clinic_name: Del Valle Pet Hospital
+-- assistant_id: 361f19e5-f710-4e5d-a48d-6eb64942dcb9
+-- assistant_name: del-valle-inbound-assistant
+-- assistant_type: inbound
+-- environment: production
+-- is_active: true
+
 -- clinic_name: Del Valle Pet Hospital
 -- assistant_id: 735ef4b4-981b-4b91-bed8-5841e79892ae
--- assistant_name: del-valle-inbound-assistant
+-- assistant_name: del-valle-outbound-assistant
+-- assistant_type: outbound
 -- environment: production
 -- is_active: true
 ```
