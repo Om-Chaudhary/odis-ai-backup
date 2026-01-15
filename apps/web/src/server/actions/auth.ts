@@ -84,12 +84,14 @@ export async function getUser() {
     const { error: insertError } = await supabase.from("users").insert({
       id: user.id,
       email: user.email!,
+      onboarding_completed: false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     });
 
     if (insertError) {
       console.error("Error creating user profile:", insertError);
+      throw new Error(`Failed to create user profile: ${insertError.message}`);
     }
   }
 

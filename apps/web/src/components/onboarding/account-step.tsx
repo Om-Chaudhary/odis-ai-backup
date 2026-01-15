@@ -7,7 +7,7 @@ import { Label } from "@odis-ai/shared/ui/label";
 import { createClient } from "@odis-ai/data-access/db/client";
 
 interface AccountStepProps {
-  onComplete: (userId: string) => void;
+  onComplete: () => void;
 }
 
 export default function AccountStep({ onComplete }: AccountStepProps) {
@@ -35,10 +35,13 @@ export default function AccountStep({ onComplete }: AccountStepProps) {
       }
 
       if (data.user) {
-        onComplete(data.user.id);
+        // User profile is automatically created by database trigger
+        onComplete();
       }
-    } catch {
-      setError("An unexpected error occurred");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred",
+      );
     } finally {
       setIsLoading(false);
     }
