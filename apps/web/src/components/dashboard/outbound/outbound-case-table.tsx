@@ -315,7 +315,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                   "group cursor-pointer transition-all duration-150",
                   // Selected row: matching background + accent for visual connection to detail panel
                   isSelected
-                    ? "border-l-2 border-l-teal-500 bg-teal-100/80"
+                    ? "relative z-20 rounded-r-none border-y border-r border-l-2 border-teal-200/40 border-l-teal-500 bg-teal-100/80"
                     : "hover:bg-teal-50/30",
                   // Attention case highlighting (when not selected)
                   !isSelected &&
@@ -333,7 +333,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                     "bg-red-50/30 hover:bg-red-50/50",
                   caseItem.status === "in_progress" &&
                     !isSelected &&
-                    "bg-teal-50/20",
+                    "bg-teal-50/15",
                   caseItem.status === "scheduled" &&
                     !isSelected &&
                     "bg-purple-50/20",
@@ -491,7 +491,7 @@ function StatusCell<T extends TableCaseBase>({
       <Button
         size="sm"
         variant="outline"
-        className="h-7 gap-1.5 border-teal-200 bg-teal-50 px-2.5 text-xs font-medium text-teal-700 hover:bg-teal-100 hover:text-teal-800"
+        className="h-7 gap-1.5 border-teal-100 bg-teal-50/40 px-2.5 text-xs font-medium text-teal-600 hover:bg-teal-50 hover:text-teal-700"
         onClick={(e) => {
           e.stopPropagation();
           onQuickSchedule(caseItem);
@@ -670,42 +670,42 @@ function CaseTableSkeleton() {
   return (
     <div className="w-full overflow-hidden">
       {/* Header skeleton */}
-      <div className="mb-0 flex gap-2 border-b border-teal-100/50 px-6 py-3">
-        <div className="h-3 w-[5%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[5%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[32%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[10%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[10%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[18%] animate-pulse rounded bg-teal-100/50" />
-        <div className="h-3 w-[14%] animate-pulse rounded bg-teal-100/50" />
+      <div className="mb-0 flex gap-2 border-b border-cyan-100/30 px-6 py-3">
+        <div className="h-3 w-[5%] animate-pulse rounded bg-cyan-50/40" />
+        <div className="h-3 w-[5%] animate-pulse rounded bg-cyan-50/40" />
+        <div className="h-3 w-[32%] animate-pulse rounded bg-cyan-50/40" />
+        <div className="h-3 w-[10%] animate-pulse rounded bg-cyan-50/40" />
+        <div className="h-3 w-[10%] animate-pulse rounded bg-cyan-50/40" />
+        <div className="h-3 w-[18%] animate-pulse rounded bg-cyan-50/40" />
+        <div className="h-3 w-[14%] animate-pulse rounded bg-cyan-50/40" />
       </div>
       {/* Row skeletons */}
       {Array.from({ length: 10 }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-2 border-b border-teal-50 px-6 py-3"
+          className="flex items-center gap-2 border-b border-cyan-50/40 px-6 py-3"
         >
           <div className="flex w-[5%] justify-center">
-            <div className="h-4 w-4 animate-pulse rounded bg-teal-50" />
+            <div className="h-4 w-4 animate-pulse rounded bg-cyan-50/50" />
           </div>
           <div className="flex w-[5%] justify-center">
-            <div className="h-4 w-4 animate-pulse rounded bg-teal-50" />
+            <div className="h-4 w-4 animate-pulse rounded bg-cyan-50/50" />
           </div>
           <div className="w-[32%] space-y-1">
-            <div className="h-4 w-24 animate-pulse rounded bg-teal-100/40" />
-            <div className="h-3 w-32 animate-pulse rounded bg-teal-50" />
+            <div className="h-4 w-24 animate-pulse rounded bg-cyan-50/60" />
+            <div className="h-3 w-32 animate-pulse rounded bg-cyan-50/50" />
           </div>
           <div className="flex w-[10%] justify-center">
-            <div className="h-6 w-6 animate-pulse rounded-full bg-teal-50" />
+            <div className="h-6 w-6 animate-pulse rounded-full bg-cyan-50/50" />
           </div>
           <div className="flex w-[10%] justify-center">
-            <div className="h-6 w-6 animate-pulse rounded-full bg-teal-50" />
+            <div className="h-6 w-6 animate-pulse rounded-full bg-cyan-50/50" />
           </div>
           <div className="flex w-[18%] justify-center">
-            <div className="h-7 w-18 animate-pulse rounded-md bg-teal-50" />
+            <div className="h-7 w-18 animate-pulse rounded-md bg-cyan-50/50" />
           </div>
           <div className="flex w-[14%] justify-end">
-            <div className="h-3 w-14 animate-pulse rounded bg-teal-50" />
+            <div className="h-3 w-14 animate-pulse rounded bg-cyan-50/50" />
           </div>
         </div>
       ))}

@@ -130,7 +130,7 @@ export function InboundCallDetail({ call }: InboundCallDetailProps) {
   return (
     <div className="space-y-6">
       {/* Call Header */}
-      <Card>
+      <Card className="border-teal-200/40 bg-teal-100/80">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -235,7 +235,7 @@ export function InboundCallDetail({ call }: InboundCallDetailProps) {
 
       {/* Recording */}
       {call.recording_url && (
-        <Card>
+        <Card className="border-teal-200/40 bg-teal-100/80">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Play className="h-5 w-5" />
@@ -253,7 +253,7 @@ export function InboundCallDetail({ call }: InboundCallDetailProps) {
 
       {/* Transcript */}
       {transcript && (
-        <Card>
+        <Card className="border-teal-200/40 bg-teal-100/80">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5" />
@@ -270,7 +270,7 @@ export function InboundCallDetail({ call }: InboundCallDetailProps) {
 
       {/* Message-by-Message Transcript */}
       {messages.length > 0 && (
-        <Card>
+        <Card className="border-teal-200/40 bg-teal-100/80">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
@@ -302,7 +302,7 @@ export function InboundCallDetail({ call }: InboundCallDetailProps) {
 
       {/* Analysis */}
       {(call.summary ?? call.success_evaluation ?? call.call_analysis) && (
-        <Card>
+        <Card className="border-teal-200/40 bg-teal-100/80">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
@@ -343,7 +343,7 @@ export function InboundCallDetail({ call }: InboundCallDetailProps) {
       )}
 
       {/* Metadata */}
-      <Card>
+      <Card className="border-teal-200/40 bg-teal-100/80">
         <CardHeader>
           <CardTitle>Metadata</CardTitle>
         </CardHeader>

@@ -35,15 +35,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@odis-ai/shared/ui/dialog";
-import {
-  Phone,
-  Search,
-  RefreshCw,
-  Clock,
-  DollarSign,
-  TrendingUp,
-  Eye,
-} from "lucide-react";
+import { Phone, Search, RefreshCw, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { PaginationControls } from "@odis-ai/shared/ui";
 import { InboundCallDetail } from "./inbound-call-detail";
@@ -128,12 +120,6 @@ export function InboundCallsClient() {
     }
   }, [callsData?.calls]);
 
-  // Fetch statistics
-  const { data: statsData } = api.inboundCalls.getInboundCallStats.useQuery({
-    startDate: startDate || undefined,
-    endDate: endDate || undefined,
-  });
-
   // Memoize calls and pagination to prevent unnecessary re-renders
   const calls = useMemo(() => callsData?.calls ?? [], [callsData?.calls]);
   const pagination = useMemo(
@@ -145,28 +131,6 @@ export function InboundCallsClient() {
         totalPages: 0,
       },
     [callsData?.pagination],
-  );
-  const stats = useMemo(
-    () =>
-      statsData ?? {
-        totalCalls: 0,
-        completedCalls: 0,
-        failedCalls: 0,
-        inProgressCalls: 0,
-        avgDuration: 0,
-        totalCost: 0,
-        sentimentCounts: { positive: 0, neutral: 0, negative: 0 },
-        statusDistribution: {
-          queued: 0,
-          ringing: 0,
-          in_progress: 0,
-          completed: 0,
-          failed: 0,
-          cancelled: 0,
-        },
-        callsByDay: [],
-      },
-    [statsData],
   );
 
   const handleViewCall = useCallback((call: InboundCall) => {
@@ -245,62 +209,6 @@ export function InboundCallsClient() {
 
   return (
     <div className="space-y-6">
-      {/* Statistics Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Calls</CardTitle>
-            <Phone className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCalls}</div>
-            <p className="text-muted-foreground text-xs">
-              {stats.completedCalls} completed, {stats.failedCalls} failed
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Duration</CardTitle>
-            <Clock className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {stats.avgDuration > 0 ? formatDuration(stats.avgDuration) : "0s"}
-            </div>
-            <p className="text-muted-foreground text-xs">Average call length</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Cost</CardTitle>
-            <DollarSign className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              ${stats.totalCost.toFixed(2)}
-            </div>
-            <p className="text-muted-foreground text-xs">All inbound calls</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Calls</CardTitle>
-            <TrendingUp className="text-muted-foreground h-4 w-4" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.inProgressCalls}</div>
-            <p className="text-muted-foreground text-xs">
-              {stats.statusDistribution.ringing} ringing,{" "}
-              {stats.statusDistribution.in_progress} in progress
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Filters */}
       <Card>
         <CardHeader>
@@ -436,10 +344,10 @@ export function InboundCallsClient() {
             </div>
           ) : (
             <>
-              <div className="rounded-md border">
+              <div className="rounded-md border border-cyan-100/30">
                 <Table>
-                  <TableHeader>
-                    <TableRow>
+                  <TableHeader className="border-b border-cyan-100/30 bg-gradient-to-r from-cyan-50/20 to-white/40 backdrop-blur-sm">
+                    <TableRow className="hover:bg-transparent">
                       <TableHead>Date/Time</TableHead>
                       <TableHead>Caller</TableHead>
                       <TableHead>Duration</TableHead>
@@ -449,12 +357,15 @@ export function InboundCallsClient() {
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
+                  <TableBody className="divide-y divide-cyan-50/40">
                     {calls.map((call) => {
                       // Type assertion: tRPC returns status as string, but we know it's a valid CallStatus
                       const typedCall = call as InboundCall;
                       return (
-                        <TableRow key={typedCall.id}>
+                        <TableRow
+                          key={typedCall.id}
+                          className="transition-colors duration-150 hover:bg-cyan-50/15"
+                        >
                           <TableCell>
                             <div className="flex flex-col">
                               <span className="font-medium">

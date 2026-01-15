@@ -276,7 +276,7 @@ export function OutboundCaseDetail({
             <CollapsibleTrigger asChild>
               <Button
                 variant="ghost"
-                className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white/50 px-4 py-3 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900/50 dark:hover:bg-slate-800/50"
+                className="flex w-full items-center justify-between rounded-lg border border-teal-200/40 bg-teal-100/80 px-4 py-3 hover:bg-teal-100/90"
               >
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">Workflow Timeline</span>
@@ -299,7 +299,7 @@ export function OutboundCaseDetail({
               </Button>
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-2">
-              <div className="overflow-hidden rounded-lg border border-slate-200 bg-white/50 dark:border-slate-700 dark:bg-slate-900/50">
+              <div className="overflow-hidden rounded-lg border border-teal-200/40 bg-teal-100/80">
                 <WorkflowCanvas
                   caseData={workflowCaseData}
                   className="h-[300px] min-h-[300px]"

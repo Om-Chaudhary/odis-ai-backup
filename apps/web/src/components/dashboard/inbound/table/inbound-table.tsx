@@ -118,7 +118,7 @@ export function InboundTable({
                     "group cursor-pointer transition-all duration-150",
                     // Selected row: matching background + accent for visual connection to detail panel
                     isSelected
-                      ? "border-l-2 border-l-teal-500 bg-teal-100/80"
+                      ? "relative z-20 rounded-r-none border-y border-r border-l-2 border-teal-200/40 border-l-teal-500 bg-teal-100/80"
                       : "hover:bg-teal-50/30",
                   )}
                   onClick={() => onSelectItem(item)}

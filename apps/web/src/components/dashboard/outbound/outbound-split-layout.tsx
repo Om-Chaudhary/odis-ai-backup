@@ -48,8 +48,9 @@ export function OutboundSplitLayout({
     <PanelGroup
       direction="horizontal"
       className={cn(
-        "h-full w-full overflow-hidden px-6 py-4",
-        showRightPanel ? "gap-0" : "gap-4",
+        "h-full w-full overflow-hidden py-4",
+        // reduce horizontal padding when detail panel open
+        showRightPanel ? "gap-0 px-2" : "gap-4 px-6",
       )}
     >
       {/* Left Panel - Table */}
@@ -74,7 +75,7 @@ export function OutboundSplitLayout({
       <PanelResizeHandle
         className={cn(
           "group relative w-1 cursor-col-resize transition-all duration-200",
-          // Bridge background matches selected row + panel
+          // Bridge background matches selected row + panel (darker teal)
           showRightPanel && "bg-teal-100/80",
           !showRightPanel && "hidden",
         )}
@@ -94,12 +95,13 @@ export function OutboundSplitLayout({
         <div
           className={cn(
             "relative flex h-full flex-col overflow-hidden",
-            // Match selected row background for seamless connection
+            // Match selected row background for seamless connection (darker teal)
             "bg-teal-100/80",
             // Left accent bar matching the selected row's teal-500 border
             "border-l-2 border-l-teal-500",
-            // Border on other sides
-            "border-y border-r border-teal-200/40",
+            // NOTE: removed border-y and border-r here so the selected row
+            // provides the top/bottom/right border and visually connects
+            // seamlessly to this panel without an inner gray line.
             "rounded-l-none rounded-r-xl",
             "shadow-lg shadow-teal-500/5 backdrop-blur-md",
           )}

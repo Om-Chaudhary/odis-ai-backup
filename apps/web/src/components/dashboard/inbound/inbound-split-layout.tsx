@@ -10,6 +10,7 @@ import {
 } from "react-resizable-panels";
 import { cn } from "@odis-ai/shared/util";
 
+// Props for the split layout component
 interface InboundSplitLayoutProps {
   leftPanel: ReactNode;
   rightPanel: ReactNode;
@@ -47,20 +48,26 @@ export function InboundSplitLayout({
   return (
     <PanelGroup
       direction="horizontal"
-      className={cn("h-full px-6 py-4", showRightPanel ? "gap-0" : "gap-4")}
+      className={cn(
+        "h-full py-4",
+        // reduce horizontal padding when right panel is open so rows
+        // and the detail panel can meet without a gap
+        showRightPanel ? "gap-0 px-2" : "gap-4 px-6",
+      )}
     >
       {/* Left Panel - Table */}
       <Panel defaultSize={100} minSize={40} className="overflow-hidden">
         <div
           className={cn(
-            "flex h-full flex-col overflow-hidden",
+            "flex h-full flex-col",
             "border border-teal-200/40",
             "bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70",
             "shadow-lg shadow-teal-500/5 backdrop-blur-md",
-            // When right panel is open, remove right border-radius to connect
+            // When right panel is open, allow overflow so selected row can
+            // visually extend into the right panel area and appear connected
             showRightPanel
-              ? "rounded-l-xl rounded-r-none border-r-0"
-              : "rounded-xl",
+              ? "overflow-visible rounded-l-xl rounded-r-none border-r-0"
+              : "overflow-hidden rounded-xl",
           )}
         >
           {leftPanel}
@@ -71,8 +78,8 @@ export function InboundSplitLayout({
       <PanelResizeHandle
         className={cn(
           "group relative w-1 cursor-col-resize transition-all duration-200",
-          // Bridge background matches selected row + panel
-          showRightPanel && "bg-teal-100/80",
+          // Bridge background matches selected row + panel (so there's no harsh gray seam)
+          showRightPanel && "bg-teal-50/30",
           !showRightPanel && "hidden",
         )}
       />
@@ -91,12 +98,13 @@ export function InboundSplitLayout({
         <div
           className={cn(
             "relative flex h-full flex-col overflow-hidden",
-            // Match selected row background for seamless connection
+            // Match selected row background for seamless connection (darker teal)
             "bg-teal-100/80",
             // Left accent bar matching the selected row's teal-500 border
             "border-l-2 border-l-teal-500",
-            // Border on other sides
-            "border-y border-r border-teal-200/40",
+            // NOTE: removed border-y and border-r here so the selected row
+            // provides the top/bottom/right border and visually connects
+            // seamlessly to this panel without an inner gray line.
             "rounded-l-none rounded-r-xl",
             "shadow-lg shadow-teal-500/5 backdrop-blur-md",
           )}
