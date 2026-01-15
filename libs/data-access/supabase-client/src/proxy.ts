@@ -89,6 +89,8 @@ export async function updateSession(request: ProxyRequest) {
   const publicPaths = [
     "/login",
     "/signup",
+    "/forgot-password",
+    "/reset-password",
     "/auth",
     "/studio",
     "/blog",
