@@ -1,0 +1,5023 @@
+{
+  "graph": {
+    "nodes": {
+      "data-access-repository-interfaces": {
+        "name": "data-access-repository-interfaces",
+        "type": "lib",
+        "data": {
+          "root": "libs/data-access/repository-interfaces",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/data-access/repository-interfaces",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit -p tsconfig.json",
+                "cwd": "libs/data-access/repository-interfaces"
+              },
+              "configurations": {},
+              "parallelism": true,
+              "cache": true,
+              "inputs": ["default", "^default"]
+            }
+          },
+          "name": "data-access-repository-interfaces",
+          "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/data-access/repository-interfaces/src",
+          "projectType": "library",
+          "tags": ["type:types", "scope:shared", "platform:node"],
+          "implicitDependencies": []
+        }
+      },
+      "domain-discharge-data-access": {
+        "name": "domain-discharge-data-access",
+        "type": "lib",
+        "data": {
+          "root": "libs/domain/discharge/data-access",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/domain/discharge/data-access",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "cache": true,
+              "inputs": ["default", "^production"],
+              "outputs": ["{projectRoot}/coverage"],
+              "metadata": {
+                "technologies": [
+                  "vite",
+                  "vite",
+                  "vite",
+                  "vitest",
+                  "vitest",
+                  "vitest"
+                ],
+                "description": "Run Vitest tests",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "bail": 1,
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "options": {
+                "cwd": "libs/domain/discharge/data-access",
+                "command": "vitest"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit -p tsconfig.json",
+                "cwd": "libs/domain/discharge/data-access"
+              },
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-deps": {
+              "dependsOn": ["^build"],
+              "configurations": {},
+              "options": {},
+              "parallelism": true,
+              "executor": "nx:noop"
+            },
+            "watch-deps": {
+              "continuous": true,
+              "dependsOn": ["build-deps"],
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "pnpm exec nx watch --projects domain-discharge-data-access --includeDependentProjects -- pnpm exec nx build-deps domain-discharge-data-access"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci--src/__tests__/discharge-batch-stagger.test.ts": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": [
+                "{workspaceRoot}/libs/domain/discharge/data-access/coverage"
+              ],
+              "metadata": {
+                "technologies": ["vitest", "vitest", "vitest"],
+                "description": "Run Vitest Tests in src/__tests__/discharge-batch-stagger.test.ts",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "options": {
+                "cwd": "libs/domain/discharge/data-access",
+                "command": "vitest run src/__tests__/discharge-batch-stagger.test.ts"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci": {
+              "executor": "nx:noop",
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": [
+                "{workspaceRoot}/libs/domain/discharge/data-access/coverage"
+              ],
+              "dependsOn": [
+                "test-ci--src/__tests__/discharge-batch-stagger.test.ts"
+              ],
+              "metadata": {
+                "technologies": ["vitest", "vitest", "vitest"],
+                "description": "Run Vitest Tests in CI",
+                "nonAtomizedTarget": "test",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "configurations": {},
+              "options": {},
+              "parallelism": true
+            }
+          },
+          "metadata": {
+            "targetGroups": {
+              "TEST (CI)": [
+                "test-ci",
+                "test-ci--src/__tests__/discharge-batch-stagger.test.ts",
+                "test-ci",
+                "test-ci--src/__tests__/discharge-batch-stagger.test.ts",
+                "test-ci",
+                "test-ci--src/__tests__/discharge-batch-stagger.test.ts"
+              ]
+            },
+            "js": {
+              "packageName": "@odis-ai/services-discharge",
+              "packageVersion": "0.0.1",
+              "packageExports": {
+                ".": {
+                  "import": "./src/index.js",
+                  "types": "./src/index.d.ts"
+                },
+                "./call-executor": {
+                  "import": "./src/lib/call-executor.js",
+                  "types": "./src/lib/call-executor.d.ts"
+                },
+                "./email-executor": {
+                  "import": "./src/lib/email-executor.js",
+                  "types": "./src/lib/email-executor.d.ts"
+                },
+                "./discharge-orchestrator": {
+                  "import": "./src/lib/discharge-orchestrator.js",
+                  "types": "./src/lib/discharge-orchestrator.d.ts"
+                },
+                "./discharge-batch-processor": {
+                  "import": "./src/lib/discharge-batch-processor.js",
+                  "types": "./src/lib/discharge-batch-processor.d.ts"
+                }
+              },
+              "packageMain": "./src/index.js",
+              "isInPackageManagerWorkspaces": false
+            }
+          },
+          "projectType": "library",
+          "name": "domain-discharge-data-access",
+          "tags": [
+            "npm:private",
+            "type:service",
+            "scope:server",
+            "platform:node"
+          ],
+          "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/domain/discharge/data-access/src",
+          "implicitDependencies": []
+        }
+      },
+      "data-access-repository-impl": {
+        "name": "data-access-repository-impl",
+        "type": "lib",
+        "data": {
+          "root": "libs/data-access/repository-impl",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/data-access/repository-impl",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "vitest run",
+                "cwd": "libs/data-access/repository-impl"
+              },
+              "configurations": {},
+              "parallelism": true,
+              "cache": true,
+              "inputs": ["default", "^production"],
+              "outputs": ["{projectRoot}/coverage"]
+            },
+            "typecheck": {
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "technologies": ["typescript"],
+                "help": {
+                  "command": "pnpm exec tsc -p tsconfig.json --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "options": {
+                "cwd": "libs/data-access/repository-impl",
+                "command": "tsc --noEmit -p tsconfig.json"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-deps": {
+              "dependsOn": ["^build"],
+              "configurations": {},
+              "options": {},
+              "parallelism": true,
+              "executor": "nx:noop"
+            },
+            "watch-deps": {
+              "continuous": true,
+              "dependsOn": ["build-deps"],
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "pnpm exec nx watch --projects data-access-repository-impl --includeDependentProjects -- pnpm exec nx build-deps data-access-repository-impl"
+              },
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "metadata": {
+            "targetGroups": {
+              "TEST (CI)": []
+            }
+          },
+          "projectType": "library",
+          "name": "data-access-repository-impl",
+          "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/data-access/repository-impl/src",
+          "tags": ["type:data-access", "scope:server", "platform:node"],
+          "implicitDependencies": []
+        }
+      },
+      "data-access-supabase-client": {
+        "name": "data-access-supabase-client",
+        "type": "lib",
+        "data": {
+          "root": "libs/data-access/supabase-client",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/data-access/supabase-client",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit -p tsconfig.json",
+                "cwd": "libs/data-access/supabase-client"
+              },
+              "configurations": {},
+              "parallelism": true,
+              "cache": true,
+              "inputs": ["default", "^default"]
+            }
+          },
+          "name": "data-access-supabase-client",
+          "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/data-access/supabase-client/src",
+          "projectType": "library",
+          "tags": ["type:data-access", "scope:shared", "platform:node+browser"],
+          "implicitDependencies": []
+        }
+      },
+      "integrations-vapi-handlers": {
+        "name": "integrations-vapi-handlers",
+        "type": "lib",
+        "data": {
+          "root": "libs/integrations/vapi/handlers",
+          "name": "integrations-vapi-handlers",
+          "": "../../../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/integrations/vapi/handlers/src",
+          "projectType": "library",
+          "tags": ["type:integration", "scope:server", "platform:node"],
+          "implicitDependencies": [],
+          "targets": {}
+        }
+      },
+      "integrations-vapi-webhooks": {
+        "name": "integrations-vapi-webhooks",
+        "type": "lib",
+        "data": {
+          "root": "libs/integrations/vapi/webhooks",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/integrations/vapi/webhooks",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "integrations-vapi-webhooks",
+          "": "../../../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/integrations/vapi/webhooks/src",
+          "projectType": "library",
+          "tags": ["type:integration", "scope:server", "platform:node"],
+          "implicitDependencies": []
+        }
+      },
+      "integrations-vapi-inbound": {
+        "name": "integrations-vapi-inbound",
+        "type": "lib",
+        "data": {
+          "root": "libs/integrations/vapi/inbound",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/integrations/vapi/inbound",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "integrations-vapi-inbound",
+          "": "../../../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/integrations/vapi/inbound/src",
+          "projectType": "library",
+          "tags": ["type:integration", "scope:server", "platform:node"],
+          "implicitDependencies": []
+        }
+      },
+      "domain-cases-data-access": {
+        "name": "domain-cases-data-access",
+        "type": "lib",
+        "data": {
+          "root": "libs/domain/cases/data-access",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/domain/cases/data-access",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "vitest run",
+                "cwd": "libs/domain/cases/data-access"
+              },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/libs/services-cases/vitest.config.ts"
+              ],
+              "configurations": {},
+              "parallelism": true,
+              "outputs": ["{projectRoot}/coverage"]
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit -p tsconfig.json",
+                "cwd": "libs/domain/cases/data-access"
+              },
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-deps": {
+              "dependsOn": ["^build"],
+              "configurations": {},
+              "options": {},
+              "parallelism": true,
+              "executor": "nx:noop"
+            },
+            "watch-deps": {
+              "continuous": true,
+              "dependsOn": ["build-deps"],
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "pnpm exec nx watch --projects domain-cases-data-access --includeDependentProjects -- pnpm exec nx build-deps domain-cases-data-access"
+              },
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "metadata": {
+            "targetGroups": {
+              "TEST (CI)": []
+            },
+            "js": {
+              "packageName": "@odis-ai/services-cases",
+              "packageVersion": "0.0.1",
+              "packageMain": "./src/index.js",
+              "isInPackageManagerWorkspaces": false
+            }
+          },
+          "projectType": "library",
+          "name": "domain-cases-data-access",
+          "tags": [
+            "npm:private",
+            "type:service",
+            "scope:server",
+            "platform:node"
+          ],
+          "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/domain/cases/data-access/src",
+          "implicitDependencies": []
+        }
+      },
+      "integrations-vapi-tools": {
+        "name": "integrations-vapi-tools",
+        "type": "lib",
+        "data": {
+          "root": "libs/integrations/vapi/tools",
+          "name": "integrations-vapi-tools",
+          "": "../../../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/integrations/vapi/tools/src",
+          "projectType": "library",
+          "tags": ["type:integration", "scope:server", "platform:node"],
+          "implicitDependencies": [],
+          "targets": {}
+        }
+      },
+      "data-access-entities": {
+        "name": "data-access-entities",
+        "type": "lib",
+        "data": {
+          "root": "libs/data-access/entities",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/data-access/entities",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit -p tsconfig.json",
+                "cwd": "libs/data-access/entities"
+              },
+              "configurations": {},
+              "parallelism": true,
+              "cache": true,
+              "inputs": ["default", "^default"]
+            }
+          },
+          "name": "data-access-entities",
+          "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/data-access/entities/src",
+          "projectType": "library",
+          "tags": ["type:util", "scope:shared", "platform:node"],
+          "implicitDependencies": []
+        }
+      },
+      "domain-clinics-util": {
+        "name": "domain-clinics-util",
+        "type": "lib",
+        "data": {
+          "root": "libs/domain/clinics/util",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/domain/clinics/util",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit -p tsconfig.json",
+                "cwd": "libs/domain/clinics/util"
+              },
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "domain-clinics-util",
+          "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/domain/clinics/util/src",
+          "projectType": "library",
+          "tags": ["type:util", "scope:shared", "platform:neutral"],
+          "implicitDependencies": []
+        }
+      },
+      "integrations-qstash": {
+        "name": "integrations-qstash",
+        "type": "lib",
+        "data": {
+          "root": "libs/integrations/qstash",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/integrations/qstash",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "vitest run",
+                "cwd": "libs/integrations/qstash"
+              },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/libs/qstash/vitest.config.ts"
+              ],
+              "configurations": {},
+              "parallelism": true,
+              "outputs": ["{projectRoot}/coverage"]
+            },
+            "typecheck": {
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "technologies": ["typescript"],
+                "help": {
+                  "command": "pnpm exec tsc -p tsconfig.json --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "options": {
+                "cwd": "libs/integrations/qstash",
+                "command": "tsc --noEmit -p tsconfig.json"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-deps": {
+              "dependsOn": ["^build"],
+              "configurations": {},
+              "options": {},
+              "parallelism": true,
+              "executor": "nx:noop"
+            },
+            "watch-deps": {
+              "continuous": true,
+              "dependsOn": ["build-deps"],
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "pnpm exec nx watch --projects integrations-qstash --includeDependentProjects -- pnpm exec nx build-deps integrations-qstash"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci--src/__tests__/client.test.ts": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/integrations/qstash/coverage"],
+              "options": {
+                "cwd": "libs/integrations/qstash",
+                "command": "vitest run src/__tests__/client.test.ts"
+              },
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in src/__tests__/client.test.ts",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci": {
+              "executor": "nx:noop",
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/integrations/qstash/coverage"],
+              "dependsOn": ["test-ci--src/__tests__/client.test.ts"],
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in CI",
+                "nonAtomizedTarget": "test",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "configurations": {},
+              "options": {},
+              "parallelism": true
+            }
+          },
+          "metadata": {
+            "targetGroups": {
+              "TEST (CI)": ["test-ci", "test-ci--src/__tests__/client.test.ts"]
+            }
+          },
+          "projectType": "library",
+          "name": "integrations-qstash",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/integrations/qstash/src",
+          "tags": ["type:integration", "scope:server", "platform:node"],
+          "implicitDependencies": []
+        }
+      },
+      "integrations-resend": {
+        "name": "integrations-resend",
+        "type": "lib",
+        "data": {
+          "root": "libs/integrations/resend",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/integrations/resend",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit -p tsconfig.json",
+                "cwd": "libs/integrations/resend"
+              },
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "integrations-resend",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/integrations/resend/src",
+          "projectType": "library",
+          "tags": ["type:integration", "scope:server", "platform:node"],
+          "implicitDependencies": []
+        }
+      },
+      "integrations-stripe": {
+        "name": "integrations-stripe",
+        "type": "lib",
+        "data": {
+          "root": "libs/integrations/stripe",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/integrations/stripe",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "vitest run",
+                "cwd": "libs/integrations/stripe"
+              },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/libs/integrations/stripe/vitest.config.ts"
+              ],
+              "configurations": {},
+              "parallelism": true,
+              "outputs": ["{projectRoot}/coverage"]
+            },
+            "typecheck": {
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "technologies": ["typescript"],
+                "help": {
+                  "command": "pnpm exec tsc -p tsconfig.json --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "options": {
+                "cwd": "libs/integrations/stripe",
+                "command": "tsc --noEmit -p tsconfig.json"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-deps": {
+              "dependsOn": ["^build"],
+              "configurations": {},
+              "options": {},
+              "parallelism": true,
+              "executor": "nx:noop"
+            },
+            "watch-deps": {
+              "continuous": true,
+              "dependsOn": ["build-deps"],
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "pnpm exec nx watch --projects integrations-stripe --includeDependentProjects -- pnpm exec nx build-deps integrations-stripe"
+              },
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "metadata": {
+            "targetGroups": {
+              "TEST (CI)": []
+            }
+          },
+          "projectType": "library",
+          "name": "integrations-stripe",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/integrations/stripe/src",
+          "tags": ["type:integration", "scope:server", "platform:node"],
+          "implicitDependencies": []
+        }
+      },
+      "domain-shared-util": {
+        "name": "domain-shared-util",
+        "type": "lib",
+        "data": {
+          "root": "libs/domain/shared/util",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/domain/shared/util",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "vitest run",
+                "cwd": "libs/domain/shared/util"
+              },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/libs/services-shared/vitest.config.ts"
+              ],
+              "configurations": {},
+              "parallelism": true,
+              "outputs": ["{projectRoot}/coverage"]
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit -p tsconfig.json",
+                "cwd": "libs/domain/shared/util"
+              },
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-deps": {
+              "dependsOn": ["^build"],
+              "configurations": {},
+              "options": {},
+              "parallelism": true,
+              "executor": "nx:noop"
+            },
+            "watch-deps": {
+              "continuous": true,
+              "dependsOn": ["build-deps"],
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "pnpm exec nx watch --projects domain-shared-util --includeDependentProjects -- pnpm exec nx build-deps domain-shared-util"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci--src/__tests__/execution-plan.test.ts": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/domain/shared/util/coverage"],
+              "metadata": {
+                "technologies": ["vitest", "vitest", "vitest"],
+                "description": "Run Vitest Tests in src/__tests__/execution-plan.test.ts",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "options": {
+                "cwd": "libs/domain/shared/util",
+                "command": "vitest run src/__tests__/execution-plan.test.ts"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci": {
+              "executor": "nx:noop",
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/domain/shared/util/coverage"],
+              "dependsOn": ["test-ci--src/__tests__/execution-plan.test.ts"],
+              "metadata": {
+                "technologies": ["vitest", "vitest", "vitest"],
+                "description": "Run Vitest Tests in CI",
+                "nonAtomizedTarget": "test",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "configurations": {},
+              "options": {},
+              "parallelism": true
+            }
+          },
+          "metadata": {
+            "targetGroups": {
+              "TEST (CI)": [
+                "test-ci",
+                "test-ci--src/__tests__/execution-plan.test.ts",
+                "test-ci",
+                "test-ci--src/__tests__/execution-plan.test.ts",
+                "test-ci",
+                "test-ci--src/__tests__/execution-plan.test.ts"
+              ]
+            },
+            "js": {
+              "packageName": "@odis-ai/services-shared",
+              "packageVersion": "0.0.1",
+              "packageMain": "./src/index.js",
+              "isInPackageManagerWorkspaces": false
+            }
+          },
+          "projectType": "library",
+          "name": "domain-shared-util",
+          "tags": [
+            "npm:private",
+            "type:service",
+            "scope:server",
+            "platform:node"
+          ],
+          "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/domain/shared/util/src",
+          "implicitDependencies": []
+        }
+      },
+      "integrations-idexx": {
+        "name": "integrations-idexx",
+        "type": "lib",
+        "data": {
+          "root": "libs/integrations/idexx",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/integrations/idexx",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "vitest run",
+                "cwd": "libs/integrations/idexx"
+              },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/libs/idexx/vitest.config.ts"
+              ],
+              "configurations": {},
+              "parallelism": true,
+              "outputs": ["{projectRoot}/coverage"]
+            },
+            "typecheck": {
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "technologies": ["typescript"],
+                "help": {
+                  "command": "pnpm exec tsc -p tsconfig.json --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "options": {
+                "cwd": "libs/integrations/idexx",
+                "command": "tsc --noEmit -p tsconfig.json"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-deps": {
+              "dependsOn": ["^build"],
+              "configurations": {},
+              "options": {},
+              "parallelism": true,
+              "executor": "nx:noop"
+            },
+            "watch-deps": {
+              "continuous": true,
+              "dependsOn": ["build-deps"],
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "pnpm exec nx watch --projects integrations-idexx --includeDependentProjects -- pnpm exec nx build-deps integrations-idexx"
+              },
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "metadata": {
+            "targetGroups": {
+              "TEST (CI)": []
+            }
+          },
+          "projectType": "library",
+          "name": "integrations-idexx",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/integrations/idexx/src",
+          "tags": ["type:integration", "scope:server", "platform:node"],
+          "implicitDependencies": []
+        }
+      },
+      "integrations-slack": {
+        "name": "integrations-slack",
+        "type": "lib",
+        "data": {
+          "root": "libs/integrations/slack",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/integrations/slack",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "vitest run",
+                "cwd": "libs/integrations/slack"
+              },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/libs/slack/vitest.config.ts"
+              ],
+              "configurations": {},
+              "parallelism": true,
+              "outputs": ["{projectRoot}/coverage"]
+            },
+            "typecheck": {
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "technologies": ["typescript"],
+                "help": {
+                  "command": "pnpm exec tsc -p tsconfig.json --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "options": {
+                "cwd": "libs/integrations/slack",
+                "command": "tsc --noEmit -p tsconfig.json"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-deps": {
+              "dependsOn": ["^build"],
+              "configurations": {},
+              "options": {},
+              "parallelism": true,
+              "executor": "nx:noop"
+            },
+            "watch-deps": {
+              "continuous": true,
+              "dependsOn": ["build-deps"],
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "pnpm exec nx watch --projects integrations-slack --includeDependentProjects -- pnpm exec nx build-deps integrations-slack"
+              },
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "metadata": {
+            "targetGroups": {
+              "TEST (CI)": []
+            }
+          },
+          "projectType": "library",
+          "name": "integrations-slack",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/integrations/slack/src",
+          "tags": ["type:integration", "scope:server", "platform:node"],
+          "implicitDependencies": []
+        }
+      },
+      "integrations-vapi": {
+        "name": "integrations-vapi",
+        "type": "lib",
+        "data": {
+          "root": "libs/integrations/vapi",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/integrations/vapi",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "vitest run",
+                "cwd": "libs/integrations/vapi"
+              },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/libs/vapi/vitest.config.ts"
+              ],
+              "configurations": {},
+              "parallelism": true,
+              "outputs": ["{projectRoot}/coverage"]
+            },
+            "typecheck": {
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "technologies": ["typescript"],
+                "help": {
+                  "command": "pnpm exec tsc -p tsconfig.json --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "options": {
+                "cwd": "libs/integrations/vapi",
+                "command": "tsc --noEmit -p tsconfig.json"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-deps": {
+              "dependsOn": ["^build"],
+              "configurations": {},
+              "options": {},
+              "parallelism": true,
+              "executor": "nx:noop"
+            },
+            "watch-deps": {
+              "continuous": true,
+              "dependsOn": ["build-deps"],
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "pnpm exec nx watch --projects integrations-vapi --includeDependentProjects -- pnpm exec nx build-deps integrations-vapi"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci--src/__tests__/utils.test.ts": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/integrations/vapi/coverage"],
+              "options": {
+                "cwd": "libs/integrations/vapi",
+                "command": "vitest run src/__tests__/utils.test.ts"
+              },
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in src/__tests__/utils.test.ts",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci--src/__tests__/validators.test.ts": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/integrations/vapi/coverage"],
+              "options": {
+                "cwd": "libs/integrations/vapi",
+                "command": "vitest run src/__tests__/validators.test.ts"
+              },
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in src/__tests__/validators.test.ts",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci": {
+              "executor": "nx:noop",
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/integrations/vapi/coverage"],
+              "dependsOn": [
+                "test-ci--src/__tests__/utils.test.ts",
+                "test-ci--src/__tests__/validators.test.ts"
+              ],
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in CI",
+                "nonAtomizedTarget": "test",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "configurations": {},
+              "options": {},
+              "parallelism": true
+            }
+          },
+          "metadata": {
+            "targetGroups": {
+              "TEST (CI)": [
+                "test-ci",
+                "test-ci--src/__tests__/utils.test.ts",
+                "test-ci--src/__tests__/validators.test.ts"
+              ]
+            }
+          },
+          "projectType": "library",
+          "name": "integrations-vapi",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/integrations/vapi/src",
+          "tags": ["type:integration", "scope:server", "platform:node"],
+          "implicitDependencies": ["integrations-ai"]
+        }
+      },
+      "shared-validators": {
+        "name": "shared-validators",
+        "type": "lib",
+        "data": {
+          "root": "libs/shared/validators",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/shared/validators",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "vitest run",
+                "cwd": "libs/shared/validators"
+              },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/libs/validators/vitest.config.ts"
+              ],
+              "configurations": {},
+              "parallelism": true,
+              "outputs": ["{projectRoot}/coverage"]
+            },
+            "typecheck": {
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "technologies": ["typescript"],
+                "help": {
+                  "command": "pnpm exec tsc -p tsconfig.json --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "options": {
+                "cwd": "libs/shared/validators",
+                "command": "tsc --noEmit -p tsconfig.json"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-deps": {
+              "dependsOn": ["^build"],
+              "configurations": {},
+              "options": {},
+              "parallelism": true,
+              "executor": "nx:noop"
+            },
+            "watch-deps": {
+              "continuous": true,
+              "dependsOn": ["build-deps"],
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "pnpm exec nx watch --projects shared-validators --includeDependentProjects -- pnpm exec nx build-deps shared-validators"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci--src/__tests__/assessment-questions.test.ts": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/shared/validators/coverage"],
+              "options": {
+                "cwd": "libs/shared/validators",
+                "command": "vitest run src/__tests__/assessment-questions.test.ts"
+              },
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in src/__tests__/assessment-questions.test.ts",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci--src/__tests__/discharge-summary.test.ts": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/shared/validators/coverage"],
+              "options": {
+                "cwd": "libs/shared/validators",
+                "command": "vitest run src/__tests__/discharge-summary.test.ts"
+              },
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in src/__tests__/discharge-summary.test.ts",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci--src/__tests__/discharge.test.ts": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/shared/validators/coverage"],
+              "options": {
+                "cwd": "libs/shared/validators",
+                "command": "vitest run src/__tests__/discharge.test.ts"
+              },
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in src/__tests__/discharge.test.ts",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci--src/__tests__/orchestration.test.ts": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/shared/validators/coverage"],
+              "options": {
+                "cwd": "libs/shared/validators",
+                "command": "vitest run src/__tests__/orchestration.test.ts"
+              },
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in src/__tests__/orchestration.test.ts",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci--src/__tests__/schedule.test.ts": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/shared/validators/coverage"],
+              "options": {
+                "cwd": "libs/shared/validators",
+                "command": "vitest run src/__tests__/schedule.test.ts"
+              },
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in src/__tests__/schedule.test.ts",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci--src/__tests__/scribe.test.ts": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/shared/validators/coverage"],
+              "options": {
+                "cwd": "libs/shared/validators",
+                "command": "vitest run src/__tests__/scribe.test.ts"
+              },
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in src/__tests__/scribe.test.ts",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci": {
+              "executor": "nx:noop",
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/shared/validators/coverage"],
+              "dependsOn": [
+                "test-ci--src/__tests__/assessment-questions.test.ts",
+                "test-ci--src/__tests__/discharge-summary.test.ts",
+                "test-ci--src/__tests__/discharge.test.ts",
+                "test-ci--src/__tests__/orchestration.test.ts",
+                "test-ci--src/__tests__/schedule.test.ts",
+                "test-ci--src/__tests__/scribe.test.ts"
+              ],
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in CI",
+                "nonAtomizedTarget": "test",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "configurations": {},
+              "options": {},
+              "parallelism": true
+            },
+            "test:watch": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "vitest watch",
+                "cwd": "libs/shared/validators"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test:coverage": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "vitest run --coverage",
+                "cwd": "libs/shared/validators"
+              },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/libs/validators/vitest.config.ts"
+              ],
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "metadata": {
+            "targetGroups": {
+              "TEST (CI)": [
+                "test-ci",
+                "test-ci--src/__tests__/assessment-questions.test.ts",
+                "test-ci--src/__tests__/discharge-summary.test.ts",
+                "test-ci--src/__tests__/discharge.test.ts",
+                "test-ci--src/__tests__/orchestration.test.ts",
+                "test-ci--src/__tests__/schedule.test.ts",
+                "test-ci--src/__tests__/scribe.test.ts"
+              ]
+            }
+          },
+          "projectType": "library",
+          "name": "shared-validators",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/shared/validators/src",
+          "tags": ["type:util", "scope:shared", "platform:neutral"],
+          "implicitDependencies": []
+        }
+      },
+      "domain-auth-util": {
+        "name": "domain-auth-util",
+        "type": "lib",
+        "data": {
+          "root": "libs/domain/auth/util",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "options": {
+                "cwd": "libs/domain/auth/util",
+                "command": "eslint ."
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit -p tsconfig.json",
+                "cwd": "libs/domain/auth/util"
+              },
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "domain-auth-util",
+          "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/domain/auth/util/src",
+          "projectType": "library",
+          "tags": ["type:util", "scope:shared", "platform:neutral"],
+          "implicitDependencies": []
+        }
+      },
+      "shared-constants": {
+        "name": "shared-constants",
+        "type": "lib",
+        "data": {
+          "root": "libs/shared/constants",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/shared/constants",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit -p tsconfig.json",
+                "cwd": "libs/shared/constants"
+              },
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "shared-constants",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/shared/constants/src",
+          "projectType": "library",
+          "tags": ["type:config", "scope:shared", "platform:neutral"],
+          "implicitDependencies": []
+        }
+      },
+      "data-access-api": {
+        "name": "data-access-api",
+        "type": "lib",
+        "data": {
+          "root": "libs/data-access/api",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/data-access/api",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "vitest run",
+                "cwd": "libs/data-access/api"
+              },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/libs/api/vitest.config.ts"
+              ],
+              "configurations": {},
+              "parallelism": true,
+              "outputs": ["{projectRoot}/coverage"]
+            },
+            "typecheck": {
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "technologies": ["typescript"],
+                "help": {
+                  "command": "pnpm exec tsc -p tsconfig.json --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "options": {
+                "cwd": "libs/data-access/api",
+                "command": "tsc --noEmit -p tsconfig.json"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-deps": {
+              "dependsOn": ["^build"],
+              "configurations": {},
+              "options": {},
+              "parallelism": true,
+              "executor": "nx:noop"
+            },
+            "watch-deps": {
+              "continuous": true,
+              "dependsOn": ["build-deps"],
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "pnpm exec nx watch --projects data-access-api --includeDependentProjects -- pnpm exec nx build-deps data-access-api"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci--src/__tests__/cors.test.ts": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/data-access/api/coverage"],
+              "options": {
+                "cwd": "libs/data-access/api",
+                "command": "vitest run src/__tests__/cors.test.ts"
+              },
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in src/__tests__/cors.test.ts",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci": {
+              "executor": "nx:noop",
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/data-access/api/coverage"],
+              "dependsOn": ["test-ci--src/__tests__/cors.test.ts"],
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in CI",
+                "nonAtomizedTarget": "test",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "configurations": {},
+              "options": {},
+              "parallelism": true
+            }
+          },
+          "metadata": {
+            "targetGroups": {
+              "TEST (CI)": ["test-ci", "test-ci--src/__tests__/cors.test.ts"]
+            }
+          },
+          "projectType": "library",
+          "name": "data-access-api",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/data-access/api/src",
+          "tags": ["type:data-access", "scope:server", "platform:node"],
+          "implicitDependencies": []
+        }
+      },
+      "integrations-ai": {
+        "name": "integrations-ai",
+        "type": "lib",
+        "data": {
+          "root": "libs/integrations/ai",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/integrations/ai",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "vitest run",
+                "cwd": "libs/integrations/ai"
+              },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/libs/ai/vitest.config.ts"
+              ],
+              "configurations": {},
+              "parallelism": true,
+              "outputs": ["{projectRoot}/coverage"]
+            },
+            "typecheck": {
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "technologies": ["typescript"],
+                "help": {
+                  "command": "pnpm exec tsc -p tsconfig.json --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "options": {
+                "cwd": "libs/integrations/ai",
+                "command": "tsc --noEmit -p tsconfig.json"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-deps": {
+              "dependsOn": ["^build"],
+              "configurations": {},
+              "options": {},
+              "parallelism": true,
+              "executor": "nx:noop"
+            },
+            "watch-deps": {
+              "continuous": true,
+              "dependsOn": ["build-deps"],
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "pnpm exec nx watch --projects integrations-ai --includeDependentProjects -- pnpm exec nx build-deps integrations-ai"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci--src/__tests__/llamaindex-integration.test.ts": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/integrations/ai/coverage"],
+              "options": {
+                "cwd": "libs/integrations/ai",
+                "command": "vitest run src/__tests__/llamaindex-integration.test.ts"
+              },
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in src/__tests__/llamaindex-integration.test.ts",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci": {
+              "executor": "nx:noop",
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/integrations/ai/coverage"],
+              "dependsOn": [
+                "test-ci--src/__tests__/llamaindex-integration.test.ts"
+              ],
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in CI",
+                "nonAtomizedTarget": "test",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "configurations": {},
+              "options": {},
+              "parallelism": true
+            }
+          },
+          "metadata": {
+            "targetGroups": {
+              "TEST (CI)": [
+                "test-ci",
+                "test-ci--src/__tests__/llamaindex-integration.test.ts"
+              ]
+            }
+          },
+          "projectType": "library",
+          "name": "integrations-ai",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/integrations/ai/src",
+          "tags": ["type:util", "scope:server", "platform:node"],
+          "implicitDependencies": []
+        }
+      },
+      "data-access-db": {
+        "name": "data-access-db",
+        "type": "lib",
+        "data": {
+          "root": "libs/data-access/db",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/data-access/db",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "vitest run",
+                "cwd": "libs/data-access/db"
+              },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/libs/db/vitest.config.ts"
+              ],
+              "configurations": {},
+              "parallelism": true,
+              "outputs": ["{projectRoot}/coverage"]
+            },
+            "typecheck": {
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "technologies": ["typescript"],
+                "help": {
+                  "command": "pnpm exec tsc -p tsconfig.json --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "options": {
+                "cwd": "libs/data-access/db",
+                "command": "tsc --noEmit -p tsconfig.json"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-deps": {
+              "dependsOn": ["^build"],
+              "configurations": {},
+              "options": {},
+              "parallelism": true,
+              "executor": "nx:noop"
+            },
+            "watch-deps": {
+              "continuous": true,
+              "dependsOn": ["build-deps"],
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "pnpm exec nx watch --projects data-access-db --includeDependentProjects -- pnpm exec nx build-deps data-access-db"
+              },
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "metadata": {
+            "targetGroups": {
+              "TEST (CI)": []
+            }
+          },
+          "projectType": "library",
+          "name": "data-access-db",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/data-access/db/src",
+          "tags": ["type:data-access", "scope:server", "platform:node"],
+          "implicitDependencies": []
+        }
+      },
+      "shared-testing": {
+        "name": "shared-testing",
+        "type": "lib",
+        "data": {
+          "root": "libs/shared/testing",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/shared/testing",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit -p tsconfig.json",
+                "cwd": "libs/shared/testing"
+              },
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "shared-testing",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/shared/testing/src",
+          "projectType": "library",
+          "tags": ["type:testing", "scope:shared", "platform:neutral"],
+          "implicitDependencies": []
+        }
+      },
+      "shared-crypto": {
+        "name": "shared-crypto",
+        "type": "lib",
+        "data": {
+          "root": "libs/shared/crypto",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/shared/crypto",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit -p tsconfig.json",
+                "cwd": "libs/shared/crypto"
+              },
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "shared-crypto",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/shared/crypto/src",
+          "projectType": "library",
+          "tags": ["type:util", "scope:shared", "platform:neutral"],
+          "implicitDependencies": []
+        }
+      },
+      "shared-logger": {
+        "name": "shared-logger",
+        "type": "lib",
+        "data": {
+          "root": "libs/shared/logger",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/shared/logger",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit -p tsconfig.json",
+                "cwd": "libs/shared/logger"
+              },
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "shared-logger",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/shared/logger/src",
+          "projectType": "library",
+          "tags": ["type:util", "scope:shared", "platform:neutral"],
+          "implicitDependencies": []
+        }
+      },
+      "shared-styles": {
+        "name": "shared-styles",
+        "type": "lib",
+        "data": {
+          "root": "libs/shared/styles",
+          "name": "shared-styles",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/shared/styles/src",
+          "projectType": "library",
+          "tags": ["type:ui", "scope:shared", "platform:browser"],
+          "targets": {
+            "lint": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "echo 'No linting for CSS-only library'",
+                "cwd": "libs/shared/styles"
+              },
+              "cache": true,
+              "configurations": {},
+              "parallelism": true,
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ]
+            }
+          },
+          "implicitDependencies": []
+        }
+      },
+      "shared-email": {
+        "name": "shared-email",
+        "type": "lib",
+        "data": {
+          "root": "libs/shared/email",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/shared/email",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit -p tsconfig.json",
+                "cwd": "libs/shared/email"
+              },
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "shared-email",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/shared/email/src",
+          "projectType": "library",
+          "tags": ["type:util", "scope:server", "platform:node"],
+          "implicitDependencies": []
+        }
+      },
+      "shared-hooks": {
+        "name": "shared-hooks",
+        "type": "lib",
+        "data": {
+          "root": "libs/shared/hooks",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "options": {
+                "cwd": "libs/shared/hooks",
+                "command": "eslint ."
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit -p tsconfig.json",
+                "cwd": "libs/shared/hooks"
+              },
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "shared-hooks",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/shared/hooks/src",
+          "projectType": "library",
+          "tags": ["type:util", "scope:shared", "platform:browser"],
+          "implicitDependencies": []
+        }
+      },
+      "shared-types": {
+        "name": "shared-types",
+        "type": "lib",
+        "data": {
+          "root": "libs/shared/types",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/shared/types",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit -p tsconfig.json",
+                "cwd": "libs/shared/types"
+              },
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "shared-types",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/shared/types/src",
+          "projectType": "library",
+          "tags": ["type:types", "scope:shared", "platform:neutral"],
+          "implicitDependencies": []
+        }
+      },
+      "shared-util": {
+        "name": "shared-util",
+        "type": "lib",
+        "data": {
+          "root": "libs/shared/util",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/shared/util",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "vitest run",
+                "cwd": "libs/shared/util"
+              },
+              "cache": true,
+              "inputs": [
+                "default",
+                "^default",
+                "{workspaceRoot}/libs/utils/vitest.config.ts"
+              ],
+              "configurations": {},
+              "parallelism": true,
+              "outputs": ["{projectRoot}/coverage"]
+            },
+            "typecheck": {
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "metadata": {
+                "description": "Runs type-checking for the project.",
+                "technologies": ["typescript"],
+                "help": {
+                  "command": "pnpm exec tsc -p tsconfig.json --help",
+                  "example": {
+                    "options": {
+                      "noEmit": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "options": {
+                "cwd": "libs/shared/util",
+                "command": "tsc --noEmit -p tsconfig.json"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-deps": {
+              "dependsOn": ["^build"],
+              "configurations": {},
+              "options": {},
+              "parallelism": true,
+              "executor": "nx:noop"
+            },
+            "watch-deps": {
+              "continuous": true,
+              "dependsOn": ["build-deps"],
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "pnpm exec nx watch --projects shared-util --includeDependentProjects -- pnpm exec nx build-deps shared-util"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci--src/__tests__/business-hours.test.ts": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/shared/util/coverage"],
+              "options": {
+                "cwd": "libs/shared/util",
+                "command": "vitest run src/__tests__/business-hours.test.ts"
+              },
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in src/__tests__/business-hours.test.ts",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci--src/__tests__/cn.test.ts": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/shared/util/coverage"],
+              "options": {
+                "cwd": "libs/shared/util",
+                "command": "vitest run src/__tests__/cn.test.ts"
+              },
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in src/__tests__/cn.test.ts",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci--src/__tests__/phone-formatting.test.ts": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/shared/util/coverage"],
+              "options": {
+                "cwd": "libs/shared/util",
+                "command": "vitest run src/__tests__/phone-formatting.test.ts"
+              },
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in src/__tests__/phone-formatting.test.ts",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci--src/__tests__/schedule-time.test.ts": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/shared/util/coverage"],
+              "options": {
+                "cwd": "libs/shared/util",
+                "command": "vitest run src/__tests__/schedule-time.test.ts"
+              },
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in src/__tests__/schedule-time.test.ts",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci": {
+              "executor": "nx:noop",
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{workspaceRoot}/libs/shared/util/coverage"],
+              "dependsOn": [
+                "test-ci--src/__tests__/business-hours.test.ts",
+                "test-ci--src/__tests__/cn.test.ts",
+                "test-ci--src/__tests__/phone-formatting.test.ts",
+                "test-ci--src/__tests__/schedule-time.test.ts"
+              ],
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in CI",
+                "nonAtomizedTarget": "test",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "configurations": {},
+              "options": {},
+              "parallelism": true
+            }
+          },
+          "metadata": {
+            "targetGroups": {
+              "TEST (CI)": [
+                "test-ci",
+                "test-ci--src/__tests__/business-hours.test.ts",
+                "test-ci--src/__tests__/cn.test.ts",
+                "test-ci--src/__tests__/phone-formatting.test.ts",
+                "test-ci--src/__tests__/schedule-time.test.ts"
+              ]
+            }
+          },
+          "projectType": "library",
+          "name": "shared-util",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/shared/util/src",
+          "tags": ["type:util", "scope:shared", "platform:neutral"],
+          "implicitDependencies": []
+        }
+      },
+      "idexx-sync": {
+        "name": "idexx-sync",
+        "type": "app",
+        "data": {
+          "root": "apps/idexx-sync",
+          "targets": {
+            "lint": {
+              "executor": "@nx/eslint:lint",
+              "options": {
+                "lintFilePatterns": ["apps/idexx-sync/**/*.ts"]
+              },
+              "configurations": {},
+              "parallelism": true,
+              "cache": true,
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ]
+            },
+            "test": {
+              "executor": "@nx/vitest:test",
+              "outputs": ["{workspaceRoot}/coverage/apps/idexx-sync"],
+              "options": {
+                "configFile": "apps/idexx-sync/vitest.config.ts",
+                "passWithNoTests": true
+              },
+              "configurations": {},
+              "parallelism": true,
+              "cache": true,
+              "inputs": ["default", "^production"]
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit -p apps/idexx-sync/tsconfig.app.json",
+                "cwd": ""
+              },
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "dependsOn": ["^typecheck"],
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-deps": {
+              "dependsOn": ["^build"],
+              "configurations": {},
+              "options": {},
+              "parallelism": true,
+              "executor": "nx:noop"
+            },
+            "watch-deps": {
+              "continuous": true,
+              "dependsOn": ["build-deps"],
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "pnpm exec nx watch --projects idexx-sync --includeDependentProjects -- pnpm exec nx build-deps idexx-sync"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "start": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "start"
+              },
+              "metadata": {
+                "scriptContent": "dotenv -e ../../.env.local -e .env.local -- env PORT=5050 node ../../dist/apps/idexx-sync/main.js",
+                "runCommand": "pnpm run start"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "start:visible": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "start:visible"
+              },
+              "metadata": {
+                "scriptContent": "dotenv -e ../../.env.local -e .env.local -- env PORT=5050 HEADLESS=false node ../../dist/apps/idexx-sync/main.js",
+                "runCommand": "pnpm run start:visible"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "build": {
+              "executor": "@nx/esbuild:esbuild",
+              "outputs": ["{options.outputPath}"],
+              "defaultConfiguration": "production",
+              "options": {
+                "platform": "node",
+                "outputPath": "dist/apps/idexx-sync",
+                "format": ["cjs"],
+                "bundle": true,
+                "main": "apps/idexx-sync/src/main.ts",
+                "tsConfig": "apps/idexx-sync/tsconfig.app.json",
+                "assets": ["apps/idexx-sync/src/assets"],
+                "generatePackageJson": true,
+                "external": ["playwright"],
+                "esbuildOptions": {
+                  "sourcemap": true,
+                  "outExtension": {
+                    ".js": ".js"
+                  }
+                }
+              },
+              "configurations": {
+                "development": {},
+                "production": {
+                  "generateLockfile": true,
+                  "esbuildOptions": {
+                    "sourcemap": false,
+                    "outExtension": {
+                      ".js": ".js"
+                    }
+                  }
+                }
+              },
+              "parallelism": true,
+              "cache": true,
+              "dependsOn": ["^build"],
+              "inputs": ["production", "^production"]
+            },
+            "prune-lockfile": {
+              "dependsOn": ["build"],
+              "cache": true,
+              "executor": "@nx/js:prune-lockfile",
+              "outputs": [
+                "{workspaceRoot}/dist/apps/idexx-sync/package.json",
+                "{workspaceRoot}/dist/apps/idexx-sync/pnpm-lock.yaml"
+              ],
+              "options": {
+                "buildTarget": "build"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "copy-workspace-modules": {
+              "dependsOn": ["build"],
+              "cache": true,
+              "outputs": [
+                "{workspaceRoot}/dist/apps/idexx-sync/workspace_modules"
+              ],
+              "executor": "@nx/js:copy-workspace-modules",
+              "options": {
+                "buildTarget": "build"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "prune": {
+              "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
+              "executor": "nx:noop",
+              "configurations": {},
+              "options": {},
+              "parallelism": true
+            },
+            "serve": {
+              "continuous": true,
+              "executor": "@nx/js:node",
+              "defaultConfiguration": "development",
+              "dependsOn": ["build"],
+              "options": {
+                "buildTarget": "idexx-sync:build",
+                "runBuildTargetDependencies": false
+              },
+              "configurations": {
+                "development": {
+                  "buildTarget": "idexx-sync:build:development"
+                },
+                "production": {
+                  "buildTarget": "idexx-sync:build:production"
+                }
+              },
+              "parallelism": true
+            },
+            "cli": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "pnpm --filter idexx-sync cli",
+                "cwd": ""
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "docker:build": {
+              "dependsOn": ["build"],
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "docker build -t idexx-sync -f apps/idexx-sync/Dockerfile .",
+                "cwd": ""
+              },
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "metadata": {
+            "targetGroups": {
+              "TEST (CI)": [],
+              "NPM Scripts": ["start", "start:visible"]
+            },
+            "js": {
+              "packageName": "idexx-sync",
+              "packageVersion": "2.0.0",
+              "isInPackageManagerWorkspaces": true
+            }
+          },
+          "projectType": "application",
+          "name": "idexx-sync",
+          "tags": ["npm:private", "type:app", "scope:server", "platform:node"],
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "apps/idexx-sync/src",
+          "implicitDependencies": [
+            "integrations-idexx",
+            "data-access-db",
+            "shared-crypto",
+            "integrations-qstash"
+          ]
+        }
+      },
+      "shared-env": {
+        "name": "shared-env",
+        "type": "lib",
+        "data": {
+          "root": "libs/shared/env",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/shared/env",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit -p tsconfig.json",
+                "cwd": "libs/shared/env"
+              },
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "shared-env",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/shared/env/src",
+          "projectType": "library",
+          "tags": ["type:config", "scope:shared", "platform:neutral"],
+          "implicitDependencies": []
+        }
+      },
+      "shared-ui": {
+        "name": "shared-ui",
+        "type": "lib",
+        "data": {
+          "root": "libs/shared/ui",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "libs/shared/ui",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit -p tsconfig.json",
+                "cwd": "libs/shared/ui"
+              },
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "name": "shared-ui",
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "libs/shared/ui/src",
+          "projectType": "library",
+          "tags": ["type:ui", "scope:shared", "platform:browser"],
+          "implicitDependencies": []
+        }
+      },
+      "docs": {
+        "name": "docs",
+        "type": "app",
+        "data": {
+          "root": "apps/docs",
+          "name": "docs",
+          "tags": ["npm:private", "type:app", "scope:docs", "platform:web"],
+          "metadata": {
+            "targetGroups": {
+              "NPM Scripts": ["docusaurus"]
+            },
+            "js": {
+              "packageName": "docs",
+              "packageVersion": "0.0.0",
+              "isInPackageManagerWorkspaces": true
+            }
+          },
+          "targets": {
+            "docusaurus": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "docusaurus"
+              },
+              "metadata": {
+                "scriptContent": "docusaurus",
+                "runCommand": "pnpm run docusaurus"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "start": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "docusaurus start --port 3001",
+                "cwd": "apps/docs"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "build": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "docusaurus build",
+                "cwd": "apps/docs"
+              },
+              "cache": true,
+              "outputs": ["{projectRoot}/build"],
+              "configurations": {},
+              "parallelism": true,
+              "dependsOn": ["^build"],
+              "inputs": ["production", "^production"]
+            },
+            "serve": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "docusaurus serve --port 3001",
+                "cwd": "apps/docs"
+              },
+              "dependsOn": ["build"],
+              "configurations": {},
+              "parallelism": true
+            },
+            "clear": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "docusaurus clear",
+                "cwd": "apps/docs"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "swizzle": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "docusaurus swizzle",
+                "cwd": "apps/docs"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "deploy": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "docusaurus deploy",
+                "cwd": "apps/docs"
+              },
+              "dependsOn": ["build"],
+              "configurations": {},
+              "parallelism": true
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit",
+                "cwd": "apps/docs"
+              },
+              "cache": true,
+              "configurations": {},
+              "parallelism": true,
+              "inputs": ["default", "^default"]
+            },
+            "write-translations": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "docusaurus write-translations",
+                "cwd": "apps/docs"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "write-heading-ids": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "docusaurus write-heading-ids",
+                "cwd": "apps/docs"
+              },
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "projectType": "application",
+          "sourceRoot": "apps/docs",
+          "implicitDependencies": []
+        }
+      },
+      "web": {
+        "name": "web",
+        "type": "app",
+        "data": {
+          "root": "apps/web",
+          "targets": {
+            "lint": {
+              "cache": true,
+              "options": {
+                "cwd": "apps/web",
+                "command": "eslint ."
+              },
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ],
+              "outputs": ["{options.outputFile}"],
+              "metadata": {
+                "technologies": ["eslint"],
+                "description": "Runs ESLint on project",
+                "help": {
+                  "command": "pnpm exec eslint --help",
+                  "example": {
+                    "options": {
+                      "max-warnings": 0
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "build": {
+              "options": {
+                "cwd": "apps/web",
+                "tty": false,
+                "command": "next build"
+              },
+              "dependsOn": ["^build"],
+              "cache": true,
+              "inputs": ["production", "^production"],
+              "outputs": [
+                "{workspaceRoot}/apps/web/.next/!(cache)/**/*",
+                "{workspaceRoot}/apps/web/.next/!(cache)"
+              ],
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "dev": {
+              "continuous": true,
+              "options": {
+                "cwd": "apps/web",
+                "command": "next dev"
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "start": {
+              "continuous": true,
+              "options": {
+                "cwd": "apps/web",
+                "command": "next start"
+              },
+              "dependsOn": ["build"],
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "serve-static": {
+              "continuous": true,
+              "options": {
+                "cwd": "apps/web",
+                "command": "next start"
+              },
+              "dependsOn": ["build"],
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "build-deps": {
+              "dependsOn": ["^build"],
+              "configurations": {},
+              "options": {},
+              "parallelism": true,
+              "executor": "nx:noop"
+            },
+            "watch-deps": {
+              "continuous": true,
+              "dependsOn": ["build-deps"],
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "pnpm exec nx watch --projects web --includeDependentProjects -- pnpm exec nx build-deps web"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test": {
+              "cache": true,
+              "inputs": ["default", "^production"],
+              "outputs": ["{projectRoot}/coverage"],
+              "metadata": {
+                "technologies": ["vite", "vitest"],
+                "description": "Run Vitest tests",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "bail": 1,
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "options": {
+                "cwd": "apps/web",
+                "command": "vitest"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "typecheck": {
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc --noEmit -p apps/web/tsconfig.json",
+                "cwd": ""
+              },
+              "cache": true,
+              "inputs": ["default", "^default"],
+              "dependsOn": ["^typecheck"],
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci--src/server/actions/__tests__/auth.test.ts": {
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{projectRoot}/coverage"],
+              "options": {
+                "cwd": "apps/web",
+                "command": "vitest run src/server/actions/__tests__/auth.test.ts"
+              },
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in src/server/actions/__tests__/auth.test.ts",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "executor": "nx:run-commands",
+              "configurations": {},
+              "parallelism": true
+            },
+            "test-ci": {
+              "executor": "nx:noop",
+              "cache": true,
+              "inputs": [
+                "default",
+                "^production",
+                {
+                  "externalDependencies": ["vitest"]
+                },
+                {
+                  "env": "CI"
+                }
+              ],
+              "outputs": ["{projectRoot}/coverage"],
+              "dependsOn": [
+                "test-ci--src/server/actions/__tests__/auth.test.ts"
+              ],
+              "metadata": {
+                "technologies": ["vitest"],
+                "description": "Run Vitest Tests in CI",
+                "nonAtomizedTarget": "test",
+                "help": {
+                  "command": "pnpm exec vitest --help",
+                  "example": {
+                    "options": {
+                      "coverage": true
+                    }
+                  }
+                }
+              },
+              "configurations": {},
+              "options": {},
+              "parallelism": true
+            }
+          },
+          "metadata": {
+            "targetGroups": {
+              "TEST (CI)": [
+                "test-ci",
+                "test-ci--src/server/actions/__tests__/auth.test.ts"
+              ]
+            },
+            "js": {
+              "packageName": "web",
+              "packageVersion": "0.0.1",
+              "isInPackageManagerWorkspaces": true
+            }
+          },
+          "projectType": "application",
+          "name": "web",
+          "tags": ["npm:private", "type:app", "scope:web", "platform:node"],
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "sourceRoot": "apps/web/src",
+          "implicitDependencies": []
+        }
+      },
+      "odis-ai": {
+        "name": "odis-ai",
+        "type": "app",
+        "data": {
+          "root": ".",
+          "name": "odis-ai",
+          "tags": ["npm:private"],
+          "metadata": {
+            "targetGroups": {
+              "NPM Scripts": [
+                "build",
+                "build:all",
+                "dev",
+                "dev:docs",
+                "start",
+                "preview",
+                "kill-dev",
+                "lint",
+                "lint:all",
+                "lint:fix",
+                "test:all",
+                "test:libs",
+                "test:ui",
+                "test:coverage",
+                "test:coverage:all",
+                "test:ci",
+                "test:affected",
+                "test:watch",
+                "typecheck",
+                "typecheck:all",
+                "check",
+                "format:check",
+                "format:write",
+                "update-types",
+                "graph",
+                "docs:nx",
+                "prepare",
+                "docs:dev",
+                "docs:build",
+                "docs:serve",
+                "docs:clear",
+                "backfill:inbound-outcomes"
+              ]
+            },
+            "js": {
+              "packageName": "odis-ai",
+              "packageVersion": "0.1.1",
+              "isInPackageManagerWorkspaces": true
+            }
+          },
+          "targets": {
+            "build": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "build"
+              },
+              "metadata": {
+                "scriptContent": "NX_ISOLATE_PLUGINS=false NODE_ENV=production nx build web",
+                "runCommand": "pnpm run build"
+              },
+              "configurations": {},
+              "parallelism": true,
+              "cache": true,
+              "dependsOn": ["^build"],
+              "inputs": ["production", "^production"]
+            },
+            "build:all": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "build:all"
+              },
+              "metadata": {
+                "scriptContent": "NODE_ENV=production nx run-many -t build",
+                "runCommand": "pnpm run build:all"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "dev": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "dev"
+              },
+              "metadata": {
+                "scriptContent": "NODE_OPTIONS='--no-deprecation' nx dev web",
+                "runCommand": "pnpm run dev"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "dev:docs": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "dev:docs"
+              },
+              "metadata": {
+                "scriptContent": "nx start docs",
+                "runCommand": "pnpm run dev:docs"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "start": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "start"
+              },
+              "metadata": {
+                "scriptContent": "nx start web",
+                "runCommand": "pnpm run start"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "preview": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "preview"
+              },
+              "metadata": {
+                "scriptContent": "nx build web && nx start web",
+                "runCommand": "pnpm run preview"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "kill-dev": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "kill-dev"
+              },
+              "metadata": {
+                "scriptContent": "node scripts/kill-dev-servers.js",
+                "runCommand": "pnpm run kill-dev"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "lint": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "lint"
+              },
+              "metadata": {
+                "scriptContent": "nx lint web",
+                "runCommand": "pnpm run lint"
+              },
+              "configurations": {},
+              "parallelism": true,
+              "cache": true,
+              "inputs": [
+                "default",
+                "{workspaceRoot}/.eslintrc.json",
+                "{workspaceRoot}/eslint.config.js"
+              ]
+            },
+            "lint:all": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "lint:all"
+              },
+              "metadata": {
+                "scriptContent": "nx run-many -t lint",
+                "runCommand": "pnpm run lint:all"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "lint:fix": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "lint:fix"
+              },
+              "metadata": {
+                "scriptContent": "nx lint web --fix",
+                "runCommand": "pnpm run lint:fix"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test:all": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:all"
+              },
+              "metadata": {
+                "scriptContent": "NX_NO_CLOUD=true SKIP_ENV_VALIDATION=true nx run-many -t test -- --run",
+                "runCommand": "pnpm run test:all"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test:libs": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:libs"
+              },
+              "metadata": {
+                "scriptContent": "NX_NO_CLOUD=true SKIP_ENV_VALIDATION=true nx run-many -t test --projects=tag:type:lib -- --run",
+                "runCommand": "pnpm run test:libs"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test:ui": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:ui"
+              },
+              "metadata": {
+                "scriptContent": "NX_NO_CLOUD=true SKIP_ENV_VALIDATION=true nx test web --ui",
+                "runCommand": "pnpm run test:ui"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test:coverage": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:coverage"
+              },
+              "metadata": {
+                "scriptContent": "NX_NO_CLOUD=true SKIP_ENV_VALIDATION=true nx test web -- --coverage --run",
+                "runCommand": "pnpm run test:coverage"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test:coverage:all": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:coverage:all"
+              },
+              "metadata": {
+                "scriptContent": "NX_NO_CLOUD=true SKIP_ENV_VALIDATION=true nx run-many -t test -- --coverage --run",
+                "runCommand": "pnpm run test:coverage:all"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test:ci": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:ci"
+              },
+              "metadata": {
+                "scriptContent": "NX_NO_CLOUD=true SKIP_ENV_VALIDATION=true nx run-many -t test -- --coverage --ci",
+                "runCommand": "pnpm run test:ci"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test:affected": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:affected"
+              },
+              "metadata": {
+                "scriptContent": "NX_NO_CLOUD=true SKIP_ENV_VALIDATION=true nx affected -t test -- --run",
+                "runCommand": "pnpm run test:affected"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "test:watch": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "test:watch"
+              },
+              "metadata": {
+                "scriptContent": "NX_NO_CLOUD=true SKIP_ENV_VALIDATION=true nx test web --watch",
+                "runCommand": "pnpm run test:watch"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "typecheck": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "typecheck"
+              },
+              "metadata": {
+                "scriptContent": "nx typecheck web",
+                "runCommand": "pnpm run typecheck"
+              },
+              "configurations": {},
+              "parallelism": true,
+              "cache": true,
+              "inputs": ["default", "^default"]
+            },
+            "typecheck:all": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "typecheck:all"
+              },
+              "metadata": {
+                "scriptContent": "nx run-many -t typecheck",
+                "runCommand": "pnpm run typecheck:all"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "check": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "check"
+              },
+              "metadata": {
+                "scriptContent": "nx run-many -t lint,typecheck",
+                "runCommand": "pnpm run check"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "format:check": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "format:check"
+              },
+              "metadata": {
+                "scriptContent": "prettier --check \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
+                "runCommand": "pnpm run format:check"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "format:write": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "format:write"
+              },
+              "metadata": {
+                "scriptContent": "prettier --write \"**/*.{ts,tsx,js,jsx,mdx}\" --cache",
+                "runCommand": "pnpm run format:write"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "update-types": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "update-types"
+              },
+              "metadata": {
+                "scriptContent": "node scripts/update-types.js",
+                "runCommand": "pnpm run update-types"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "graph": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "graph"
+              },
+              "metadata": {
+                "scriptContent": "nx graph",
+                "runCommand": "pnpm run graph"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "docs:nx": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "docs:nx"
+              },
+              "metadata": {
+                "scriptContent": "node scripts/generate-nx-docs.js",
+                "runCommand": "pnpm run docs:nx"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "prepare": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "prepare"
+              },
+              "metadata": {
+                "scriptContent": "husky",
+                "runCommand": "pnpm run prepare"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "docs:dev": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "docs:dev"
+              },
+              "metadata": {
+                "scriptContent": "nx start docs",
+                "runCommand": "pnpm run docs:dev"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "docs:build": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "docs:build"
+              },
+              "metadata": {
+                "scriptContent": "nx build docs",
+                "runCommand": "pnpm run docs:build"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "docs:serve": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "docs:serve"
+              },
+              "metadata": {
+                "scriptContent": "nx serve docs",
+                "runCommand": "pnpm run docs:serve"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "docs:clear": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "docs:clear"
+              },
+              "metadata": {
+                "scriptContent": "nx clear docs",
+                "runCommand": "pnpm run docs:clear"
+              },
+              "configurations": {},
+              "parallelism": true
+            },
+            "backfill:inbound-outcomes": {
+              "executor": "nx:run-script",
+              "options": {
+                "script": "backfill:inbound-outcomes"
+              },
+              "metadata": {
+                "scriptContent": "tsx apps/web/src/scripts/backfill-inbound-outcomes.ts",
+                "runCommand": "pnpm run backfill:inbound-outcomes"
+              },
+              "configurations": {},
+              "parallelism": true
+            }
+          },
+          "implicitDependencies": []
+        }
+      }
+    },
+    "dependencies": {
+      "data-access-repository-interfaces": [
+        {
+          "source": "data-access-repository-interfaces",
+          "target": "shared-types",
+          "type": "static"
+        }
+      ],
+      "domain-discharge-data-access": [
+        {
+          "source": "domain-discharge-data-access",
+          "target": "shared-types",
+          "type": "static"
+        },
+        {
+          "source": "domain-discharge-data-access",
+          "target": "domain-shared-util",
+          "type": "static"
+        },
+        {
+          "source": "domain-discharge-data-access",
+          "target": "shared-util",
+          "type": "static"
+        },
+        {
+          "source": "domain-discharge-data-access",
+          "target": "integrations-vapi",
+          "type": "dynamic"
+        },
+        {
+          "source": "domain-discharge-data-access",
+          "target": "domain-cases-data-access",
+          "type": "dynamic"
+        },
+        {
+          "source": "domain-discharge-data-access",
+          "target": "shared-validators",
+          "type": "static"
+        },
+        {
+          "source": "domain-discharge-data-access",
+          "target": "integrations-resend",
+          "type": "static"
+        },
+        {
+          "source": "domain-discharge-data-access",
+          "target": "domain-clinics-util",
+          "type": "static"
+        },
+        {
+          "source": "domain-discharge-data-access",
+          "target": "integrations-ai",
+          "type": "dynamic"
+        },
+        {
+          "source": "domain-discharge-data-access",
+          "target": "integrations-qstash",
+          "type": "dynamic"
+        },
+        {
+          "source": "domain-discharge-data-access",
+          "target": "shared-email",
+          "type": "dynamic"
+        }
+      ],
+      "data-access-repository-impl": [
+        {
+          "source": "data-access-repository-impl",
+          "target": "shared-util",
+          "type": "static"
+        },
+        {
+          "source": "data-access-repository-impl",
+          "target": "shared-logger",
+          "type": "static"
+        },
+        {
+          "source": "data-access-repository-impl",
+          "target": "data-access-repository-interfaces",
+          "type": "static"
+        }
+      ],
+      "data-access-supabase-client": [
+        {
+          "source": "data-access-supabase-client",
+          "target": "shared-types",
+          "type": "static"
+        },
+        {
+          "source": "data-access-supabase-client",
+          "target": "shared-env",
+          "type": "static"
+        },
+        {
+          "source": "data-access-supabase-client",
+          "target": "shared-constants",
+          "type": "static"
+        }
+      ],
+      "integrations-vapi-handlers": [],
+      "integrations-vapi-webhooks": [
+        {
+          "source": "integrations-vapi-webhooks",
+          "target": "shared-logger",
+          "type": "static"
+        },
+        {
+          "source": "integrations-vapi-webhooks",
+          "target": "integrations-vapi",
+          "type": "static"
+        },
+        {
+          "source": "integrations-vapi-webhooks",
+          "target": "integrations-qstash",
+          "type": "static"
+        },
+        {
+          "source": "integrations-vapi-webhooks",
+          "target": "integrations-ai",
+          "type": "static"
+        },
+        {
+          "source": "integrations-vapi-webhooks",
+          "target": "data-access-db",
+          "type": "static"
+        }
+      ],
+      "integrations-vapi-inbound": [
+        {
+          "source": "integrations-vapi-inbound",
+          "target": "data-access-db",
+          "type": "static"
+        },
+        {
+          "source": "integrations-vapi-inbound",
+          "target": "integrations-vapi",
+          "type": "static"
+        },
+        {
+          "source": "integrations-vapi-inbound",
+          "target": "shared-logger",
+          "type": "static"
+        },
+        {
+          "source": "integrations-vapi-inbound",
+          "target": "domain-clinics-util",
+          "type": "static"
+        }
+      ],
+      "domain-cases-data-access": [
+        {
+          "source": "domain-cases-data-access",
+          "target": "data-access-db",
+          "type": "static"
+        },
+        {
+          "source": "domain-cases-data-access",
+          "target": "shared-types",
+          "type": "static"
+        },
+        {
+          "source": "domain-cases-data-access",
+          "target": "integrations-vapi",
+          "type": "static"
+        },
+        {
+          "source": "domain-cases-data-access",
+          "target": "integrations-vapi",
+          "type": "dynamic"
+        },
+        {
+          "source": "domain-cases-data-access",
+          "target": "domain-shared-util",
+          "type": "static"
+        },
+        {
+          "source": "domain-cases-data-access",
+          "target": "shared-util",
+          "type": "static"
+        },
+        {
+          "source": "domain-cases-data-access",
+          "target": "domain-clinics-util",
+          "type": "static"
+        },
+        {
+          "source": "domain-cases-data-access",
+          "target": "integrations-ai",
+          "type": "dynamic"
+        },
+        {
+          "source": "domain-cases-data-access",
+          "target": "domain-discharge-data-access",
+          "type": "dynamic"
+        },
+        {
+          "source": "domain-cases-data-access",
+          "target": "integrations-qstash",
+          "type": "dynamic"
+        },
+        {
+          "source": "domain-cases-data-access",
+          "target": "shared-validators",
+          "type": "static"
+        }
+      ],
+      "integrations-vapi-tools": [],
+      "data-access-entities": [
+        {
+          "source": "data-access-entities",
+          "target": "shared-types",
+          "type": "static"
+        },
+        {
+          "source": "data-access-entities",
+          "target": "shared-validators",
+          "type": "static"
+        }
+      ],
+      "domain-clinics-util": [
+        {
+          "source": "domain-clinics-util",
+          "target": "shared-types",
+          "type": "static"
+        },
+        {
+          "source": "domain-clinics-util",
+          "target": "shared-logger",
+          "type": "static"
+        },
+        {
+          "source": "domain-clinics-util",
+          "target": "shared-env",
+          "type": "static"
+        }
+      ],
+      "integrations-qstash": [],
+      "integrations-resend": [
+        {
+          "source": "integrations-resend",
+          "target": "shared-env",
+          "type": "dynamic"
+        }
+      ],
+      "integrations-stripe": [
+        {
+          "source": "integrations-stripe",
+          "target": "shared-constants",
+          "type": "static"
+        },
+        {
+          "source": "integrations-stripe",
+          "target": "shared-logger",
+          "type": "static"
+        }
+      ],
+      "domain-shared-util": [
+        {
+          "source": "domain-shared-util",
+          "target": "shared-validators",
+          "type": "static"
+        },
+        {
+          "source": "domain-shared-util",
+          "target": "shared-types",
+          "type": "static"
+        }
+      ],
+      "integrations-idexx": [
+        {
+          "source": "integrations-idexx",
+          "target": "data-access-db",
+          "type": "static"
+        },
+        {
+          "source": "integrations-idexx",
+          "target": "shared-crypto",
+          "type": "static"
+        },
+        {
+          "source": "integrations-idexx",
+          "target": "shared-validators",
+          "type": "static"
+        },
+        {
+          "source": "integrations-idexx",
+          "target": "integrations-vapi",
+          "type": "static"
+        }
+      ],
+      "integrations-slack": [
+        {
+          "source": "integrations-slack",
+          "target": "data-access-db",
+          "type": "static"
+        },
+        {
+          "source": "integrations-slack",
+          "target": "shared-crypto",
+          "type": "static"
+        }
+      ],
+      "integrations-vapi": [
+        {
+          "source": "integrations-vapi",
+          "target": "integrations-ai",
+          "type": "implicit"
+        },
+        {
+          "source": "integrations-vapi",
+          "target": "shared-env",
+          "type": "static"
+        },
+        {
+          "source": "integrations-vapi",
+          "target": "shared-logger",
+          "type": "static"
+        },
+        {
+          "source": "integrations-vapi",
+          "target": "data-access-db",
+          "type": "static"
+        },
+        {
+          "source": "integrations-vapi",
+          "target": "shared-types",
+          "type": "static"
+        },
+        {
+          "source": "integrations-vapi",
+          "target": "shared-validators",
+          "type": "static"
+        },
+        {
+          "source": "integrations-vapi",
+          "target": "domain-clinics-util",
+          "type": "static"
+        },
+        {
+          "source": "integrations-vapi",
+          "target": "data-access-api",
+          "type": "static"
+        },
+        {
+          "source": "integrations-vapi",
+          "target": "integrations-ai",
+          "type": "static"
+        },
+        {
+          "source": "integrations-vapi",
+          "target": "integrations-slack",
+          "type": "dynamic"
+        },
+        {
+          "source": "integrations-vapi",
+          "target": "integrations-qstash",
+          "type": "dynamic"
+        }
+      ],
+      "shared-validators": [],
+      "domain-auth-util": [],
+      "shared-constants": [],
+      "data-access-api": [
+        {
+          "source": "data-access-api",
+          "target": "data-access-db",
+          "type": "static"
+        },
+        {
+          "source": "data-access-api",
+          "target": "shared-env",
+          "type": "static"
+        },
+        {
+          "source": "data-access-api",
+          "target": "shared-util",
+          "type": "static"
+        }
+      ],
+      "integrations-ai": [
+        {
+          "source": "integrations-ai",
+          "target": "shared-validators",
+          "type": "static"
+        },
+        {
+          "source": "integrations-ai",
+          "target": "shared-env",
+          "type": "static"
+        }
+      ],
+      "data-access-db": [
+        {
+          "source": "data-access-db",
+          "target": "shared-types",
+          "type": "static"
+        },
+        {
+          "source": "data-access-db",
+          "target": "shared-env",
+          "type": "static"
+        },
+        {
+          "source": "data-access-db",
+          "target": "data-access-supabase-client",
+          "type": "static"
+        },
+        {
+          "source": "data-access-db",
+          "target": "data-access-repository-interfaces",
+          "type": "static"
+        },
+        {
+          "source": "data-access-db",
+          "target": "data-access-repository-impl",
+          "type": "static"
+        },
+        {
+          "source": "data-access-db",
+          "target": "data-access-entities",
+          "type": "static"
+        },
+        {
+          "source": "data-access-db",
+          "target": "shared-validators",
+          "type": "static"
+        },
+        {
+          "source": "data-access-db",
+          "target": "shared-constants",
+          "type": "static"
+        }
+      ],
+      "shared-testing": [],
+      "shared-crypto": [
+        {
+          "source": "shared-crypto",
+          "target": "shared-env",
+          "type": "static"
+        }
+      ],
+      "shared-logger": [],
+      "shared-styles": [],
+      "shared-email": [
+        {
+          "source": "shared-email",
+          "target": "shared-validators",
+          "type": "static"
+        }
+      ],
+      "shared-hooks": [],
+      "shared-types": [],
+      "shared-util": [
+        {
+          "source": "shared-util",
+          "target": "shared-types",
+          "type": "static"
+        },
+        {
+          "source": "shared-util",
+          "target": "shared-validators",
+          "type": "static"
+        }
+      ],
+      "idexx-sync": [
+        {
+          "source": "idexx-sync",
+          "target": "integrations-idexx",
+          "type": "implicit"
+        },
+        {
+          "source": "idexx-sync",
+          "target": "data-access-db",
+          "type": "implicit"
+        },
+        {
+          "source": "idexx-sync",
+          "target": "shared-crypto",
+          "type": "implicit"
+        },
+        {
+          "source": "idexx-sync",
+          "target": "integrations-qstash",
+          "type": "implicit"
+        },
+        {
+          "source": "idexx-sync",
+          "target": "data-access-db",
+          "type": "dynamic"
+        },
+        {
+          "source": "idexx-sync",
+          "target": "shared-logger",
+          "type": "static"
+        },
+        {
+          "source": "idexx-sync",
+          "target": "integrations-idexx",
+          "type": "static"
+        }
+      ],
+      "shared-env": [],
+      "shared-ui": [
+        {
+          "source": "shared-ui",
+          "target": "shared-util",
+          "type": "static"
+        },
+        {
+          "source": "shared-ui",
+          "target": "shared-types",
+          "type": "static"
+        }
+      ],
+      "docs": [],
+      "web": [
+        {
+          "source": "web",
+          "target": "shared-ui",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "shared-util",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "data-access-db",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "shared-logger",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "data-access-api",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "shared-validators",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "domain-clinics-util",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "integrations-vapi",
+          "type": "dynamic"
+        },
+        {
+          "source": "web",
+          "target": "integrations-vapi",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "integrations-qstash",
+          "type": "dynamic"
+        },
+        {
+          "source": "web",
+          "target": "shared-types",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "shared-types",
+          "type": "dynamic"
+        },
+        {
+          "source": "web",
+          "target": "domain-cases-data-access",
+          "type": "dynamic"
+        },
+        {
+          "source": "web",
+          "target": "domain-discharge-data-access",
+          "type": "dynamic"
+        },
+        {
+          "source": "web",
+          "target": "integrations-resend",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "integrations-ai",
+          "type": "dynamic"
+        },
+        {
+          "source": "web",
+          "target": "integrations-idexx",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "shared-crypto",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "integrations-slack",
+          "type": "dynamic"
+        },
+        {
+          "source": "web",
+          "target": "integrations-stripe",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "shared-constants",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "shared-hooks",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "data-access-supabase-client",
+          "type": "static"
+        },
+        {
+          "source": "web",
+          "target": "shared-env",
+          "type": "static"
+        }
+      ],
+      "odis-ai": [
+        {
+          "source": "odis-ai",
+          "target": "shared-validators",
+          "type": "static"
+        },
+        {
+          "source": "odis-ai",
+          "target": "integrations-ai",
+          "type": "dynamic"
+        },
+        {
+          "source": "odis-ai",
+          "target": "integrations-vapi",
+          "type": "static"
+        }
+      ]
+    }
+  }
+}
