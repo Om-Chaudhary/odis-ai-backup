@@ -8,11 +8,25 @@ import { Button } from "@odis-ai/shared/ui/button";
 import { Input } from "@odis-ai/shared/ui/input";
 import { Label } from "@odis-ai/shared/ui/label";
 import { Logo } from "@odis-ai/shared/ui/Logo";
+import { Checkbox } from "@odis-ai/shared/ui/checkbox";
 import { cn } from "@odis-ai/shared/util";
 import { DotPattern } from "@odis-ai/shared/ui";
 
+const REMEMBER_EMAIL_KEY = "odis_remember_email";
+
 export function LoginFormTwoColumn() {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [email, setEmail] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+
+  // Load saved email from localStorage on mount
+  useEffect(() => {
+    const savedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY);
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   // Fallback timeout for image loading
   useEffect(() => {
@@ -21,6 +35,16 @@ export function LoginFormTwoColumn() {
     }, 3000);
     return () => clearTimeout(timeout);
   }, []);
+
+  const handleSubmit = (formData: FormData) => {
+    // Save or remove email from localStorage based on checkbox
+    if (rememberMe) {
+      localStorage.setItem(REMEMBER_EMAIL_KEY, email);
+    } else {
+      localStorage.removeItem(REMEMBER_EMAIL_KEY);
+    }
+    void signIn(formData);
+  };
 
   return (
     <div className="relative grid min-h-svh lg:grid-cols-2">
@@ -82,7 +106,7 @@ export function LoginFormTwoColumn() {
             </div>
 
             {/* Login Form */}
-            <form action={signIn} className="space-y-4">
+            <form action={handleSubmit} className="space-y-4">
               {/* Email Field */}
               <div className="space-y-2">
                 <Label
@@ -97,6 +121,8 @@ export function LoginFormTwoColumn() {
                   type="email"
                   autoComplete="email"
                   required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="veterinarian@clinic.com"
                   className="border-slate-200 bg-white/90 text-slate-900 backdrop-blur-sm transition-all duration-200 placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500/20"
                 />
@@ -127,6 +153,22 @@ export function LoginFormTwoColumn() {
                   placeholder="Your secure password"
                   className="border-slate-200 bg-white/90 text-slate-900 backdrop-blur-sm transition-all duration-200 placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500/20"
                 />
+              </div>
+
+              {/* Remember Me Checkbox */}
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="remember-me"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => setRememberMe(checked === true)}
+                  className="border-slate-300 data-[state=checked]:border-teal-500 data-[state=checked]:bg-teal-500"
+                />
+                <Label
+                  htmlFor="remember-me"
+                  className="cursor-pointer text-sm text-slate-200"
+                >
+                  Remember me
+                </Label>
               </div>
 
               {/* Login Button */}
