@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useQueryState, parseAsInteger } from "nuqs";
+import { Download, CheckCircle } from "lucide-react";
 
 import type { OutcomeFilter, OutcomeFilterCategory } from "./types";
 import type { Database } from "@odis-ai/shared/types";
@@ -9,11 +10,17 @@ import { PageContent, PageFooter } from "../layout";
 import { InboundTable } from "./table";
 import { CallDetail } from "./detail/call-detail";
 import {
-  InboundSplitLayout,
+  DashboardSplitLayout,
   type SelectedRowPosition,
-} from "./inbound-split-layout";
-import { useInboundData, useInboundMutations } from "./hooks";
+} from "../shared/layouts";
+import { BulkActionBar, type BulkAction } from "../shared/bulk-action-bar";
+import {
+  useInboundData,
+  useInboundMutations,
+  useInboundOnboarding,
+} from "./hooks";
 import { DataTablePagination } from "../shared/data-table";
+import { useToast } from "~/hooks/use-toast";
 
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
@@ -58,6 +65,13 @@ export function InboundClient() {
   const [selectedRowPosition, setSelectedRowPosition] =
     useState<SelectedRowPosition | null>(null);
 
+  // Bulk selection state
+  const [selectedForBulk, setSelectedForBulk] = useState<Set<string>>(
+    new Set(),
+  );
+
+  const { toast } = useToast();
+
   // Get search term from URL
   const [searchQuery] = useQueryState("search", { defaultValue: "" });
   const searchTerm = searchQuery ?? "";
@@ -77,6 +91,9 @@ export function InboundClient() {
       void refetchCalls();
     },
   });
+
+  // Initialize onboarding tour
+  useInboundOnboarding();
 
   // Escape to close panel
   useEffect(() => {
@@ -150,9 +167,87 @@ export function InboundClient() {
     [calls, selectedCall, handleSelectCall],
   );
 
+  // Bulk selection handlers
+  const handleToggleBulkSelect = useCallback((callId: string) => {
+    setSelectedForBulk((prev) => {
+      const next = new Set(prev);
+      if (next.has(callId)) {
+        next.delete(callId);
+      } else {
+        next.add(callId);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    if (selectedForBulk.size === calls.length) {
+      setSelectedForBulk(new Set());
+    } else {
+      setSelectedForBulk(new Set(calls.map((c) => c.id)));
+    }
+  }, [calls, selectedForBulk.size]);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedForBulk(new Set());
+  }, []);
+
+  // Bulk action handlers
+  const handleExportSelected = useCallback(() => {
+    // Get selected calls
+    const selectedCalls = calls.filter((c) => selectedForBulk.has(c.id));
+
+    // Create CSV content
+    const headers = ["Date", "Time", "Phone", "Outcome", "Duration (s)"];
+    const rows = selectedCalls.map((call) => {
+      const date = call.created_at
+        ? new Date(call.created_at).toLocaleDateString()
+        : "";
+      const time = call.created_at
+        ? new Date(call.created_at).toLocaleTimeString()
+        : "";
+      return [
+        date,
+        time,
+        call.customer_phone ?? "",
+        call.outcome_category ?? "",
+        call.duration_seconds != null ? String(call.duration_seconds) : "",
+      ];
+    });
+
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${cell}"`).join(","))
+      .join("\n");
+
+    // Download file
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `inbound-calls-${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "Export complete",
+      description: `Exported ${selectedCalls.length} calls to CSV`,
+    });
+  }, [calls, selectedForBulk, toast]);
+
+  // Bulk actions config
+  const bulkActions: BulkAction[] = [
+    {
+      id: "export",
+      label: "Export Selected",
+      icon: Download,
+      onClick: handleExportSelected,
+      variant: "outline",
+    },
+  ];
+
   return (
-    <div className="flex h-full flex-col">
-      <InboundSplitLayout
+    <div id="inbound-page-container" className="flex h-full flex-col">
+      <DashboardSplitLayout
         showRightPanel={selectedCall !== null}
         onCloseRightPanel={handleClosePanel}
         selectedRowPosition={selectedRowPosition}
@@ -168,6 +263,9 @@ export function InboundClient() {
                 isLoading={isLoading}
                 isCompact={selectedCall !== null}
                 onSelectedRowPositionChange={setSelectedRowPosition}
+                selectedForBulk={selectedForBulk}
+                onToggleBulkSelect={handleToggleBulkSelect}
+                onSelectAll={handleSelectAll}
               />
             </PageContent>
             <PageFooter fullWidth>
@@ -190,6 +288,15 @@ export function InboundClient() {
             />
           )
         }
+      />
+
+      {/* Bulk Action Bar - appears when calls are selected */}
+      <BulkActionBar
+        selectedCount={selectedForBulk.size}
+        onClearSelection={handleClearSelection}
+        actions={bulkActions}
+        itemLabel="call"
+        itemLabelPlural="calls"
       />
     </div>
   );

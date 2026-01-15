@@ -4,9 +4,9 @@ import { PageContent, PageFooter } from "~/components/dashboard/layout";
 import { OutboundNeedsAttentionTable } from "../outbound-needs-attention-table";
 import { DataTablePagination } from "../../shared/data-table/data-table-pagination";
 import {
-  OutboundSplitLayout,
+  DashboardSplitLayout,
   type SelectedRowPosition,
-} from "../outbound-split-layout";
+} from "../../shared/layouts";
 import { OutboundCaseDetail } from "../outbound-case-detail";
 import type { OutboundHeaderProps } from "../outbound-header";
 import type { TransformedCase, DeliveryToggles } from "../types";
@@ -82,7 +82,7 @@ export function NeedsAttentionView({
   }, [onClosePanel]);
 
   return (
-    <OutboundSplitLayout
+    <DashboardSplitLayout
       showRightPanel={selectedCase !== null}
       onCloseRightPanel={handleClosePanel}
       selectedRowPosition={selectedRowPosition}

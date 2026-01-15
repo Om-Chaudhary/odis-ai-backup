@@ -6,14 +6,29 @@ import { format, formatDistanceToNow, isPast, parseISO } from "date-fns";
 
 /**
  * Format duration in seconds to human-readable string
- * @param seconds Duration in seconds
- * @returns Formatted string (e.g., "2m 30s" or "45s")
+ *
+ * Examples:
+ * - 45 → "45s"
+ * - 90 → "1m 30s"
+ * - 3665 → "1h 1m"
+ *
+ * @param seconds Duration in seconds (or null/undefined)
+ * @returns Formatted string, or em dash for null/undefined/zero
  */
-export function formatDuration(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  if (mins === 0) return `${secs}s`;
-  return `${mins}m ${secs}s`;
+export function formatDuration(seconds: number | null | undefined): string {
+  if (seconds == null || seconds <= 0) return "—";
+
+  const hours = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+
+  if (hours > 0) {
+    return `${hours}h ${mins}m`;
+  }
+  if (mins > 0) {
+    return `${mins}m ${secs}s`;
+  }
+  return `${secs}s`;
 }
 
 /**

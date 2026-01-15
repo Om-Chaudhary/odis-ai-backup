@@ -12,6 +12,7 @@
 export { OutboundDashboard } from "./outbound-dashboard";
 
 // Layout components
+// NOTE: OutboundSplitLayout is deprecated - use DashboardSplitLayout from shared/layouts
 export { OutboundSplitLayout } from "./outbound-split-layout";
 export { OutboundHeader } from "./outbound-header";
 

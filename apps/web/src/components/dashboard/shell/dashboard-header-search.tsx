@@ -18,8 +18,14 @@ export function DashboardHeaderSearch() {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Only show search on inbound and outbound pages
-  const showSearch =
-    pathname.includes("/inbound") || pathname.includes("/outbound");
+  const isInbound = pathname.includes("/inbound");
+  const isOutbound = pathname.includes("/outbound");
+  const showSearch = isInbound || isOutbound;
+
+  // Dynamic placeholder based on current page
+  const placeholder = isInbound
+    ? "Search by phone, name, or outcome..."
+    : "Search cases...";
 
   // Sync with URL search param
   useEffect(() => {
@@ -65,7 +71,7 @@ export function DashboardHeaderSearch() {
       <input
         type="text"
         data-search="dashboard-search"
-        placeholder="Search..."
+        placeholder={placeholder}
         value={searchTerm}
         onChange={(e) => handleSearchChange(e.target.value)}
         className={cn(

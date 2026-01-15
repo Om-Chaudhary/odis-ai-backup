@@ -69,16 +69,16 @@ export function OutcomeBadge({
   className,
   showDescription = false,
 }: OutcomeBadgeProps) {
-  // Don't display badge for no-response calls (leaves outcome column blank)
+  // Show em dash for no-response calls
   if (isNoResponseCall(call)) {
-    return null;
+    return <span className="text-muted-foreground">—</span>;
   }
 
   const outcome = getDescriptiveOutcome(call);
 
-  // Don't display badge if outcome is null (doesn't match any category)
+  // Show em dash if outcome is null (doesn't match any category)
   if (!outcome) {
-    return null;
+    return <span className="text-muted-foreground">—</span>;
   }
 
   const { className: styleClassName } = getVariantStyle(outcome.variant);

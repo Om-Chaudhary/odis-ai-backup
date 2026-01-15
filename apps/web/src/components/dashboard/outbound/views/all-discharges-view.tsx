@@ -4,9 +4,9 @@ import { PageContent, PageFooter } from "~/components/dashboard/layout";
 import { OutboundCaseTable } from "../outbound-case-table";
 import { DataTablePagination } from "../../shared/data-table/data-table-pagination";
 import {
-  OutboundSplitLayout,
+  DashboardSplitLayout,
   type SelectedRowPosition,
-} from "../outbound-split-layout";
+} from "../../shared/layouts";
 import { OutboundCaseDetail } from "../outbound-case-detail";
 import { OutboundHeader } from "../outbound-header";
 import type { OutboundHeaderProps } from "../outbound-header";
@@ -102,7 +102,7 @@ export function AllDischargesView({
   }, [onClosePanel]);
 
   return (
-    <OutboundSplitLayout
+    <DashboardSplitLayout
       showRightPanel={selectedCase !== null}
       onCloseRightPanel={handleClosePanel}
       selectedRowPosition={selectedRowPosition}

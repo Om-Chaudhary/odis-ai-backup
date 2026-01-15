@@ -6,6 +6,7 @@ import {
   userHasClinicAccess,
 } from "@odis-ai/domain/clinics";
 import { ClinicProvider } from "@odis-ai/shared/ui/clinic-context";
+import { OnboardingProvider } from "~/components/providers";
 
 interface ClinicLayoutProps {
   children: React.ReactNode;
@@ -59,5 +60,9 @@ export default async function ClinicLayout({
     notFound();
   }
 
-  return <ClinicProvider clinic={clinic}>{children}</ClinicProvider>;
+  return (
+    <ClinicProvider clinic={clinic}>
+      <OnboardingProvider>{children}</OnboardingProvider>
+    </ClinicProvider>
+  );
 }

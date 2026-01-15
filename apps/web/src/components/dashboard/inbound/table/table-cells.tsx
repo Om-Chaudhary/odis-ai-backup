@@ -12,8 +12,12 @@ import type { Database } from "@odis-ai/shared/types";
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
 /**
- * Displays phone number as primary, with pet name · caller name below if available
- * Consistent format with appointments tab: phone (semibold), then 🐾 Pet · Client (muted)
+ * Displays caller information with name as primary when available
+ *
+ * Display hierarchy:
+ * 1. Caller name (primary, bold) + phone (secondary, muted) when name is known
+ * 2. Phone only (primary, bold) when no name available
+ * 3. Pet name always shown below with paw icon
  */
 export function CallerDisplay({
   phone,
@@ -41,30 +45,30 @@ export function CallerDisplay({
   const callerName = demoName ?? callerInfo?.name ?? null;
   const petName = callerInfo?.petName ?? null;
 
-  // Determine if we have any secondary info to show
-  const hasSecondaryInfo = callerName ?? petName;
-
   return (
     <div className="flex flex-col gap-0.5">
-      {/* Phone number is always primary */}
-      <span className="text-sm font-semibold">
-        {isLoading && !demoName ? (
-          <span className="text-muted-foreground">{formattedPhone}</span>
-        ) : (
-          formattedPhone
-        )}
-      </span>
-      {/* Show pet name · caller name if available - consistent with appointments tab */}
-      {hasSecondaryInfo && (
-        <div className="text-muted-foreground flex items-center gap-1 text-xs">
-          {petName && (
-            <>
-              <PawPrint className="h-3 w-3" />
-              <span>{petName}</span>
-              {callerName && <span>·</span>}
-            </>
+      {/* Primary line: Name if available, otherwise phone */}
+      {callerName ? (
+        <>
+          <span className="truncate text-sm font-semibold">{callerName}</span>
+          <span className="text-muted-foreground text-xs">
+            {formattedPhone}
+          </span>
+        </>
+      ) : (
+        <span className="text-sm font-semibold">
+          {isLoading && !demoName ? (
+            <span className="text-muted-foreground">{formattedPhone}</span>
+          ) : (
+            formattedPhone
           )}
-          {callerName && <span>{callerName}</span>}
+        </span>
+      )}
+      {/* Pet name with icon - always shown below */}
+      {petName && (
+        <div className="text-muted-foreground flex items-center gap-1 text-xs">
+          <PawPrint className="h-3 w-3" />
+          <span className="truncate">{petName}</span>
         </div>
       )}
     </div>
@@ -78,12 +82,12 @@ export function CallDuration({ call }: { call: InboundCall }) {
   // Check for hardcoded modifications
   const callMods = getCallModifications(call);
 
-  // Silent calls show blank duration
+  // Silent calls show em dash
   if (callMods.isSilent) {
-    return <span className="text-muted-foreground text-xs">-</span>;
+    return <span className="text-muted-foreground text-xs">—</span>;
   }
 
-  // Use existing duration if available, otherwise show loading or dash
+  // Use existing duration if available, otherwise show loading or em dash
   // Note: This will be throttled by the request queue to prevent rate limits
   const shouldFetchFromVAPI = !call.duration_seconds && !!call.vapi_call_id;
   const vapiQuery = api.inboundCalls.fetchCallFromVAPI.useQuery(
@@ -116,7 +120,7 @@ export function CallDuration({ call }: { call: InboundCall }) {
     );
   }
 
-  return <span className="text-muted-foreground text-xs">-</span>;
+  return <span className="text-muted-foreground text-xs">—</span>;
 }
 
 /**
