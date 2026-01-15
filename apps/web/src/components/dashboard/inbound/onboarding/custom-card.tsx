@@ -2,6 +2,7 @@
 
 import type { CardComponentProps } from "onborda";
 import { useOnborda } from "onborda";
+import { X } from "lucide-react";
 import { Button } from "@odis-ai/shared/ui";
 
 const TOUR_STORAGE_KEY = "inbound-tour-completed";
@@ -37,8 +38,23 @@ export function CustomOnboardingCard({
     }
   };
 
+  const handleSkip = () => {
+    // Mark tour as complete so it doesn't show again
+    localStorage.setItem(TOUR_STORAGE_KEY, "true");
+    closeOnborda();
+  };
+
   return (
     <div className="relative max-w-[400px] min-w-[320px] rounded-lg border border-teal-200/50 bg-gradient-to-br from-white/95 via-teal-50/30 to-white/95 p-6 shadow-xl shadow-teal-500/20 backdrop-blur-xl">
+      {/* Skip/Close button */}
+      <button
+        onClick={handleSkip}
+        className="absolute top-3 right-3 rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+        aria-label="Skip tour"
+      >
+        <X className="h-4 w-4" />
+      </button>
+
       {arrow}
 
       {step.icon && (

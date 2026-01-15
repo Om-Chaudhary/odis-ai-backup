@@ -150,7 +150,10 @@ export function InboundTable({
       className="h-full min-h-0 w-full overflow-auto"
     >
       <table className="w-full min-w-0 table-fixed">
-        <thead className="sticky top-0 z-10 border-b border-teal-100/20 bg-gradient-to-r from-teal-50/40 via-teal-50/30 to-white/60 backdrop-blur-xl">
+        <thead
+          id="inbound-table-header"
+          className="sticky top-0 z-10 border-b border-teal-100/20 bg-gradient-to-r from-teal-50/40 via-teal-50/30 to-white/60 backdrop-blur-xl"
+        >
           <CallsHeader
             isCompact={isCompact}
             showCheckboxes={showCheckboxes}

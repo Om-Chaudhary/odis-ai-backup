@@ -40,8 +40,8 @@ export const firstTimeTour: Tour = {
       title: "Your Calls Table",
       content:
         "All incoming calls are listed here. You can see caller info, outcome type, duration, and timestamp at a glance.",
-      selector: "#inbound-table",
-      side: "top",
+      selector: "#inbound-table-header",
+      side: "bottom",
       showControls: true,
     },
     {
@@ -49,8 +49,8 @@ export const firstTimeTour: Tour = {
       title: "View Details & Navigate",
       content:
         "Click any row to see full details in a side panel. Use Arrow keys to navigate, Enter to select, and Escape to close.",
-      selector: "#inbound-table",
-      side: "top",
+      selector: "#inbound-table-header",
+      side: "bottom",
       showControls: true,
     },
   ],
