@@ -86,6 +86,39 @@ export const STRIPE_PRODUCT_IDS = {
 } as const;
 
 /**
+ * Stripe Payment Links (created in Stripe Dashboard - no API key required)
+ * These are read from environment variables at runtime
+ */
+export const STRIPE_PAYMENT_LINKS = {
+  [SUBSCRIPTION_TIERS.INBOUND]:
+    process.env.NEXT_PUBLIC_STRIPE_LINK_INBOUND ?? "",
+  [SUBSCRIPTION_TIERS.PROFESSIONAL]:
+    process.env.NEXT_PUBLIC_STRIPE_LINK_PROFESSIONAL ?? "",
+  [SUBSCRIPTION_TIERS.ENTERPRISE]:
+    process.env.NEXT_PUBLIC_STRIPE_LINK_ENTERPRISE ?? "",
+} as const;
+
+/**
+ * Stripe Billing Portal URL (static link - no API key required)
+ * Customers can log in with their email to manage subscriptions
+ */
+export const STRIPE_BILLING_PORTAL_URL =
+  process.env.NEXT_PUBLIC_STRIPE_BILLING_PORTAL_URL ??
+  "https://billing.stripe.com/p/login/eVqbJ0ctPemHbrq7w25sA00";
+
+/**
+ * Build a Payment Link URL with clinic ID for tracking
+ */
+export function getPaymentLinkUrl(
+  tier: Exclude<SubscriptionTier, "none">,
+  clinicId: string,
+): string | null {
+  const baseUrl = STRIPE_PAYMENT_LINKS[tier];
+  if (!baseUrl) return null;
+  return `${baseUrl}?client_reference_id=${encodeURIComponent(clinicId)}`;
+}
+
+/**
  * Display information for each tier
  */
 export const TIER_DISPLAY_INFO = {

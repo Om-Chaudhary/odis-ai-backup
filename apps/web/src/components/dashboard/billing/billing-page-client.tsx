@@ -14,7 +14,6 @@ import {
   Phone,
   PhoneOutgoing,
   MessageSquare,
-  Loader2,
   Crown,
   ChevronRight,
 } from "lucide-react";
@@ -34,6 +33,8 @@ import { api } from "~/trpc/client";
 import {
   SUBSCRIPTION_TIERS,
   TIER_DISPLAY_INFO,
+  STRIPE_BILLING_PORTAL_URL,
+  getPaymentLinkUrl,
   type SubscriptionTier,
 } from "@odis-ai/shared/constants";
 import { toast } from "sonner";
@@ -103,32 +104,24 @@ export function BillingPageClient() {
   const { data: status, isLoading: statusLoading } =
     api.subscription.getStatus.useQuery();
 
-  const createPortalSession = api.subscription.createPortalSession.useMutation({
-    onSuccess: (data: { url: string }) => {
-      window.location.href = data.url;
-    },
-    onError: (error: { message?: string }) => {
-      toast.error(error.message ?? "Failed to open billing portal");
-    },
-  });
-
-  const createCheckoutSession =
-    api.subscription.createCheckoutSession.useMutation({
-      onSuccess: (data: { sessionUrl: string }) => {
-        window.location.href = data.sessionUrl;
-      },
-      onError: (error: { message?: string }) => {
-        toast.error(error.message ?? "Failed to create checkout session");
-      },
-    });
-
   const handleManageBilling = () => {
-    createPortalSession.mutate();
+    window.open(STRIPE_BILLING_PORTAL_URL, "_blank");
   };
 
   const handleSelectPlan = (tier: Exclude<SubscriptionTier, "none">) => {
+    if (!status?.clinicId) {
+      toast.error("Unable to determine clinic ID");
+      return;
+    }
+
+    const paymentUrl = getPaymentLinkUrl(tier, status.clinicId);
+    if (!paymentUrl) {
+      toast.error("Payment link not configured. Please contact support.");
+      return;
+    }
+
     setSelectedTier(tier);
-    createCheckoutSession.mutate({ tier });
+    window.location.href = paymentUrl;
   };
 
   const tiers: Exclude<SubscriptionTier, "none">[] = [
@@ -243,14 +236,9 @@ export function BillingPageClient() {
                   <Button
                     variant="outline"
                     onClick={handleManageBilling}
-                    disabled={createPortalSession.isPending}
                     className="shrink-0 gap-2 border-slate-200 bg-white/80 shadow-sm hover:border-slate-300 hover:bg-white"
                   >
-                    {createPortalSession.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <ArrowUpRight className="h-4 w-4" />
-                    )}
+                    <ArrowUpRight className="h-4 w-4" />
                     Manage Billing
                   </Button>
                 </div>
@@ -431,17 +419,9 @@ export function BillingPageClient() {
                             : "bg-slate-900 hover:bg-slate-800",
                         )}
                         onClick={() => handleSelectPlan(tier)}
-                        disabled={createCheckoutSession.isPending}
                       >
-                        {createCheckoutSession.isPending &&
-                        selectedTier === tier ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <>
-                            {isUpgrade ? "Switch to" : "Get"} {info.name}
-                            <ChevronRight className="h-4 w-4" />
-                          </>
-                        )}
+                        {isUpgrade ? "Switch to" : "Get"} {info.name}
+                        <ChevronRight className="h-4 w-4" />
                       </Button>
                     )}
                   </CardFooter>

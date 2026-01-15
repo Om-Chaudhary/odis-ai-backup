@@ -16,9 +16,10 @@ import { cn } from "@odis-ai/shared/util";
 import {
   SUBSCRIPTION_TIERS,
   TIER_DISPLAY_INFO,
+  getPaymentLinkUrl,
   type SubscriptionTier,
 } from "@odis-ai/shared/constants";
-import { api } from "~/trpc/client";
+import { toast } from "sonner";
 
 interface PaywallProps {
   clinicId: string;
@@ -56,17 +57,15 @@ export function Paywall({ clinicId, clinicName }: PaywallProps) {
     Exclude<SubscriptionTier, "none">
   >(SUBSCRIPTION_TIERS.PROFESSIONAL);
 
-  const createCheckoutSession =
-    api.subscription.createCheckoutSession.useMutation({
-      onSuccess: (data) => {
-        // Redirect to Stripe Checkout
-        window.location.href = data.sessionUrl;
-      },
-    });
-
   const handleSelectPlan = (tier: Exclude<SubscriptionTier, "none">) => {
+    const paymentUrl = getPaymentLinkUrl(tier, clinicId);
+    if (!paymentUrl) {
+      toast.error("Payment link not configured. Please contact support.");
+      return;
+    }
+
     setSelectedTier(tier);
-    createCheckoutSession.mutate({ tier, clinicId });
+    window.location.href = paymentUrl;
   };
 
   const tiers: Exclude<SubscriptionTier, "none">[] = [
@@ -153,11 +152,8 @@ export function Paywall({ clinicId, clinicName }: PaywallProps) {
                       : "bg-slate-800 hover:bg-slate-900",
                   )}
                   onClick={() => handleSelectPlan(tier)}
-                  disabled={createCheckoutSession.isPending}
                 >
-                  {createCheckoutSession.isPending && selectedTier === tier
-                    ? "Redirecting..."
-                    : `Get ${info.name}`}
+                  Get {info.name}
                 </Button>
               </CardFooter>
             </Card>
