@@ -95,6 +95,9 @@ export function IconSidebar({
   const settingsUrl = clinicSlug
     ? `/dashboard/${clinicSlug}/settings`
     : "/dashboard/settings";
+  const billingUrl = clinicSlug
+    ? `/dashboard/${clinicSlug}/billing`
+    : "/dashboard/billing";
 
   // Determine active states
   const isOnDashboard =
@@ -263,15 +266,10 @@ export function IconSidebar({
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <a
-                  href="https://billing.stripe.com/p/login/eVqbJ0ctPemHbrq7w25sA00"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
+                <Link href={billingUrl} className="flex items-center gap-2">
                   <CreditCard className="h-4 w-4 text-gray-500" />
-                  <span>Manage Billing</span>
-                </a>
+                  <span>Billing</span>
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
