@@ -116,7 +116,7 @@ const BlogLayout = ({
                           {post.tags?.map((tag) => (
                             <span
                               key={tag}
-                              className="inline-flex items-center rounded-full border border-teal-200/60 bg-teal-100/60 px-3 py-1 text-xs font-medium text-teal-700 transition-colors duration-200 hover:bg-teal-200/80"
+                              className="inline-flex items-center rounded-full border border-teal-200/60 bg-teal-100/50 px-3 py-1 text-xs font-medium text-teal-700 transition-colors duration-200 hover:bg-teal-200/80"
                             >
                               {tag}
                             </span>

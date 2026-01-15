@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { format, parseISO } from "date-fns";
 import { CheckCircle2, XCircle, Clock, Loader2 } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
@@ -15,6 +15,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@odis-ai/shared/ui/tooltip";
+import type { SelectedRowPosition } from "./outbound-split-layout";
 
 /**
  * Minimum required fields for needs attention table
@@ -38,7 +39,9 @@ interface OutboundNeedsAttentionTableProps<T extends NeedsAttentionCaseBase> {
   cases: T[];
   selectedCaseId: string | null;
   onSelectCase: (caseItem: T) => void;
+  onToggleCase?: (caseItem: T) => void;
   isLoading: boolean;
+  onSelectedRowPositionChange?: (position: SelectedRowPosition | null) => void;
 }
 
 /**
@@ -56,12 +59,32 @@ export function OutboundNeedsAttentionTable<T extends NeedsAttentionCaseBase>({
   cases,
   selectedCaseId,
   onSelectCase,
+  onToggleCase,
   isLoading,
+  onSelectedRowPositionChange,
 }: OutboundNeedsAttentionTableProps<T>) {
   const tableRef = useRef<HTMLDivElement>(null);
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
 
-  // Scroll selected row into view
+  // Update selected row position for tab connection effect
+  const updateRowPosition = useCallback(() => {
+    if (
+      selectedRowRef.current &&
+      tableRef.current &&
+      onSelectedRowPositionChange
+    ) {
+      const tableRect = tableRef.current.getBoundingClientRect();
+      const rowRect = selectedRowRef.current.getBoundingClientRect();
+      onSelectedRowPositionChange({
+        top: rowRect.top - tableRect.top + tableRef.current.scrollTop,
+        height: rowRect.height,
+      });
+    } else if (onSelectedRowPositionChange && !selectedCaseId) {
+      onSelectedRowPositionChange(null);
+    }
+  }, [onSelectedRowPositionChange, selectedCaseId]);
+
+  // Scroll selected row into view and update position
   useEffect(() => {
     if (selectedRowRef.current) {
       selectedRowRef.current.scrollIntoView({
@@ -69,7 +92,22 @@ export function OutboundNeedsAttentionTable<T extends NeedsAttentionCaseBase>({
         block: "nearest",
       });
     }
-  }, [selectedCaseId]);
+    // Small delay to let scroll finish before measuring
+    const timer = setTimeout(updateRowPosition, 100);
+    return () => clearTimeout(timer);
+  }, [selectedCaseId, updateRowPosition]);
+
+  // Handle row click with toggle support
+  const handleRowClick = useCallback(
+    (caseItem: T) => {
+      if (selectedCaseId === caseItem.id && onToggleCase) {
+        onToggleCase(caseItem);
+      } else {
+        onSelectCase(caseItem);
+      }
+    },
+    [selectedCaseId, onSelectCase, onToggleCase],
+  );
 
   if (isLoading) {
     return <NeedsAttentionSkeleton />;
@@ -78,7 +116,7 @@ export function OutboundNeedsAttentionTable<T extends NeedsAttentionCaseBase>({
   return (
     <div ref={tableRef} className="h-full min-h-[600px] w-full overflow-auto">
       <table className="w-full min-w-0 table-fixed">
-        <thead className="sticky top-0 z-10 border-b border-orange-100/50 bg-gradient-to-r from-orange-50/40 to-white/60 backdrop-blur-sm">
+        <thead className="sticky top-0 z-10 border-b border-teal-100/20 bg-gradient-to-r from-teal-50/40 via-teal-50/30 to-white/60 backdrop-blur-xl">
           <tr className="text-xs text-slate-500">
             <th className="h-12 w-[80px] pl-4 text-left font-medium">
               Severity
@@ -92,7 +130,7 @@ export function OutboundNeedsAttentionTable<T extends NeedsAttentionCaseBase>({
             <th className="h-12 w-[80px] pr-4 text-right font-medium">Time</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-teal-100/10">
           {cases.map((caseItem) => {
             const isSelected = selectedCaseId === caseItem.id;
             const severity = caseItem.attentionSeverity ?? "routine";
@@ -102,11 +140,12 @@ export function OutboundNeedsAttentionTable<T extends NeedsAttentionCaseBase>({
                 key={caseItem.id}
                 ref={isSelected ? selectedRowRef : null}
                 className={cn(
-                  "group cursor-pointer border-b border-orange-50 transition-all duration-150",
+                  "group cursor-pointer transition-all duration-150",
+                  // Selected row: gradient starts white, builds to teal on right, matches panel
                   isSelected
-                    ? "border-l-2 border-l-orange-500 bg-orange-50/70"
-                    : "hover:bg-orange-50/30",
-                  // Severity-based styling
+                    ? "relative z-20 rounded-r-none border-l-2 border-l-teal-400/50 bg-gradient-to-r from-white/30 via-teal-50/55 to-teal-50/80 shadow-sm shadow-teal-500/10 backdrop-blur-sm"
+                    : "transition-all duration-200 hover:bg-teal-50/30 hover:backdrop-blur-sm",
+                  // Severity-based styling (when not selected)
                   !isSelected &&
                     severity === "critical" &&
                     "border-l-2 border-l-red-500 bg-red-50/40 hover:bg-red-50/60",
@@ -114,12 +153,12 @@ export function OutboundNeedsAttentionTable<T extends NeedsAttentionCaseBase>({
                     severity === "urgent" &&
                     "bg-orange-50/30 hover:bg-orange-50/50",
                 )}
-                onClick={() => onSelectCase(caseItem)}
+                onClick={() => handleRowClick(caseItem)}
                 tabIndex={0}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
-                    onSelectCase(caseItem);
+                    handleRowClick(caseItem);
                   }
                 }}
               >

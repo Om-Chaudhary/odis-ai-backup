@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
-import { Mic, Headphones, CheckCircle2, Calendar } from "lucide-react";
+import { Headphones, CheckCircle2, Calendar } from "lucide-react";
 import { usePostHog } from "posthog-js/react";
 import Link from "next/link";
 import { cn } from "@odis-ai/shared/util";

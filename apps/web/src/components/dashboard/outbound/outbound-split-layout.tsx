@@ -10,11 +10,18 @@ import {
 } from "react-resizable-panels";
 import { cn } from "@odis-ai/shared/util";
 
+// Shared selected row position type
+export interface SelectedRowPosition {
+  top: number;
+  height: number;
+}
+
 interface OutboundSplitLayoutProps {
   leftPanel: ReactNode;
   rightPanel: ReactNode;
   showRightPanel: boolean;
   onCloseRightPanel: () => void;
+  selectedRowPosition?: SelectedRowPosition | null;
 }
 
 /**
@@ -29,8 +36,10 @@ export function OutboundSplitLayout({
   rightPanel,
   showRightPanel,
   onCloseRightPanel,
+  selectedRowPosition,
 }: OutboundSplitLayoutProps) {
   const rightPanelRef = useRef<ImperativePanelHandle>(null);
+  const rightPanelContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (showRightPanel) {
@@ -48,9 +57,9 @@ export function OutboundSplitLayout({
     <PanelGroup
       direction="horizontal"
       className={cn(
-        "h-full w-full overflow-hidden py-4",
+        "h-full w-full overflow-hidden",
         // reduce horizontal padding when detail panel open
-        showRightPanel ? "gap-0 px-2" : "gap-4 px-6",
+        showRightPanel ? "gap-0" : "gap-4",
       )}
     >
       {/* Left Panel - Table */}
@@ -58,30 +67,25 @@ export function OutboundSplitLayout({
         <div
           className={cn(
             "flex h-full flex-col",
-            "border border-teal-200/40",
-            "bg-gradient-to-br from-white/70 via-teal-50/20 to-white/70",
-            "shadow-lg shadow-teal-500/5 backdrop-blur-md",
-            // When right panel is open, remove right border-radius to connect
-            showRightPanel
-              ? "overflow-visible rounded-l-xl rounded-r-none border-r-0"
-              : "overflow-hidden rounded-xl",
+            "bg-gradient-to-br from-white/90 via-teal-50/20 to-white/90",
+            "backdrop-blur-xl",
+            // When right panel is open, allow overflow for seamless connection
+            showRightPanel ? "overflow-visible" : "overflow-hidden",
           )}
         >
           {leftPanel}
         </div>
       </Panel>
 
-      {/* Resize Handle with visual bridge connector */}
+      {/* Resize Handle - invisible bridge between table and panel */}
       <PanelResizeHandle
         className={cn(
-          "group relative w-1 cursor-col-resize transition-all duration-200",
-          // Bridge background matches selected row + panel (darker teal)
-          showRightPanel && "bg-teal-100/80",
+          "group relative w-0 cursor-col-resize transition-all duration-200",
           !showRightPanel && "hidden",
         )}
       />
 
-      {/* Right Panel - Detail (connected to active row with matching teal background) */}
+      {/* Right Panel - Detail with tab-style connection to selected row */}
       <Panel
         ref={rightPanelRef}
         defaultSize={0}
@@ -93,17 +97,14 @@ export function OutboundSplitLayout({
         className={cn("min-w-0 overflow-hidden", !showRightPanel && "hidden")}
       >
         <div
+          ref={rightPanelContainerRef}
           className={cn(
             "relative flex h-full flex-col overflow-hidden",
-            // Match selected row background for seamless connection (darker teal)
-            "bg-teal-100/80",
-            // Left accent bar matching the selected row's teal-500 border
-            "border-l-2 border-l-teal-500",
-            // NOTE: removed border-y and border-r here so the selected row
-            // provides the top/bottom/right border and visually connects
-            // seamlessly to this panel without an inner gray line.
-            "rounded-l-none rounded-r-xl",
-            "shadow-lg shadow-teal-500/5 backdrop-blur-md",
+            // Subtle teal radial gradient that matches selected row - fades from left to middle toright (teal on left and right, white in middle)
+            "bg-gradient-to-r from-teal-50/80 to-teal-50/50",
+            "rounded-r-xl",
+            "shadow-xl shadow-teal-500/10 backdrop-blur-xl",
+            "ring-1 ring-teal-200/30 ring-inset",
           )}
         >
           {/* Close Button */}
@@ -112,8 +113,8 @@ export function OutboundSplitLayout({
             className={cn(
               "absolute top-4 right-4 z-10",
               "flex h-8 w-8 items-center justify-center rounded-lg",
-              "bg-white/60 text-slate-400 backdrop-blur-sm transition-all duration-200",
-              "hover:bg-white/80 hover:text-slate-600 hover:shadow-md",
+              "bg-white/70 text-slate-400 backdrop-blur-sm transition-all duration-200",
+              "hover:bg-white/90 hover:text-slate-600 hover:shadow-md",
             )}
             aria-label="Close"
           >

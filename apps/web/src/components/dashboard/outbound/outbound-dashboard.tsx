@@ -41,7 +41,7 @@ function OutboundDashboardInner() {
     defaultValue: format(startOfDay(new Date()), "yyyy-MM-dd"),
   });
 
-  const [viewMode, setViewMode] = useQueryState("view", {
+  const [viewMode] = useQueryState("view", {
     defaultValue: "all" as ViewMode,
     parse: (v) =>
       (["all", "needs_attention"].includes(v) ? v : "all") as ViewMode,
@@ -115,7 +115,6 @@ function OutboundDashboardInner() {
   const {
     cases,
     totalCases,
-    stats: statsData,
     settings: settingsData,
     deepLinkData,
     isDeepLinkLoading,
@@ -291,15 +290,6 @@ function OutboundDashboardInner() {
       void setPage(1);
     },
     [setDateStr, setPage],
-  );
-
-  const handleViewChange = useCallback(
-    (view: string) => {
-      void setViewMode(view as ViewMode);
-      void setPage(1);
-      setSelectedCase(null);
-    },
-    [setViewMode, setPage],
   );
 
   const handlePageChange = useCallback(

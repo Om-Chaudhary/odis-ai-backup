@@ -25,7 +25,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl bg-teal-50/60 p-6 shadow-xl backdrop-blur-md sm:p-8">
+    <div className="relative w-full overflow-hidden rounded-2xl bg-teal-100/50 p-6 shadow-xl backdrop-blur-md sm:p-8">
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-teal-50/50 to-cyan-100/40" />
       <div className="relative space-y-4 sm:space-y-6">
         <div className="space-y-2">

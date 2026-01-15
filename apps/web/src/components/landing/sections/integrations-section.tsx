@@ -96,7 +96,6 @@ const IntegrationLogo = ({ app }: { app: IntegrationApp }) => {
 };
 
 export const IntegrationsSection = ({
-  title = "Connects with your practice management system.",
   subtitle = "OdisAI integrates with the tools you already use—so every call syncs seamlessly with your patient records.",
   topRowApps = defaultTopRowApps,
   bottomRowApps = defaultBottomRowApps,

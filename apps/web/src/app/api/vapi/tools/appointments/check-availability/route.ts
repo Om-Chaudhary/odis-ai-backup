@@ -4,18 +4,32 @@
  * POST /api/vapi/tools/appointments/check-availability
  */
 
-import { NextResponse } from "next/server";
-import { createToolHandler } from "@odis-ai/integrations/vapi/core";
-import { CheckAvailabilitySchema } from "@odis-ai/integrations/vapi/schemas";
-import { processCheckAvailability } from "@odis-ai/integrations/vapi/processors";
+import { type NextRequest, NextResponse } from "next/server";
 
-const handler = createToolHandler({
-  name: "check-availability",
-  schema: CheckAvailabilitySchema,
-  processor: processCheckAvailability,
-});
+// Helper to load the handler dynamically
+async function getHandler() {
+  const { createToolHandler } = await import("@odis-ai/integrations/vapi/core");
+  const { CheckAvailabilitySchema } =
+    await import("@odis-ai/integrations/vapi/schemas");
+  const { processCheckAvailability } =
+    await import("@odis-ai/integrations/vapi/processors");
 
-export const { POST, OPTIONS } = handler;
+  return createToolHandler({
+    name: "check-availability",
+    schema: CheckAvailabilitySchema,
+    processor: processCheckAvailability,
+  });
+}
+
+export async function POST(request: NextRequest) {
+  const handler = await getHandler();
+  return handler.POST(request);
+}
+
+export async function OPTIONS(request: NextRequest) {
+  const handler = await getHandler();
+  return handler.OPTIONS(request);
+}
 
 export async function GET() {
   return NextResponse.json({

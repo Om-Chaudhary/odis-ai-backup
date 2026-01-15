@@ -9,7 +9,6 @@ import {
 } from "framer-motion";
 import {
   Phone,
-  Share2,
   Zap,
   ArrowRight,
   Shield,

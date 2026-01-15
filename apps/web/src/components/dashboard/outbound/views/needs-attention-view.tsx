@@ -1,7 +1,12 @@
+"use client";
+import { useState, useCallback } from "react";
 import { PageContent, PageFooter } from "~/components/dashboard/layout";
 import { OutboundNeedsAttentionTable } from "../outbound-needs-attention-table";
 import { DataTablePagination } from "../../shared/data-table/data-table-pagination";
-import { OutboundSplitLayout } from "../outbound-split-layout";
+import {
+  OutboundSplitLayout,
+  type SelectedRowPosition,
+} from "../outbound-split-layout";
 import { OutboundCaseDetail } from "../outbound-case-detail";
 import type { OutboundHeaderProps } from "../outbound-header";
 import type { TransformedCase, DeliveryToggles } from "../types";
@@ -55,10 +60,32 @@ export function NeedsAttentionView({
   testModeEnabled,
   ...headerProps
 }: NeedsAttentionViewProps) {
+  // State for row position (for tab connection effect)
+  const [selectedRowPosition, setSelectedRowPosition] =
+    useState<SelectedRowPosition | null>(null);
+
+  // Toggle handler: clicking same row closes panel
+  const handleToggleCase = useCallback(
+    (caseItem: TransformedCase) => {
+      if (selectedCase?.id === caseItem.id) {
+        onClosePanel();
+        setSelectedRowPosition(null);
+      }
+    },
+    [selectedCase?.id, onClosePanel],
+  );
+
+  // Wrap onClosePanel to also clear position
+  const handleClosePanel = useCallback(() => {
+    onClosePanel();
+    setSelectedRowPosition(null);
+  }, [onClosePanel]);
+
   return (
     <OutboundSplitLayout
       showRightPanel={selectedCase !== null}
-      onCloseRightPanel={onClosePanel}
+      onCloseRightPanel={handleClosePanel}
+      selectedRowPosition={selectedRowPosition}
       leftPanel={
         <>
           <PageContent>
@@ -66,7 +93,9 @@ export function NeedsAttentionView({
               cases={cases}
               selectedCaseId={selectedCase?.id ?? null}
               onSelectCase={onSelectCase}
+              onToggleCase={handleToggleCase}
               isLoading={headerProps.isLoading}
+              onSelectedRowPositionChange={setSelectedRowPosition}
             />
           </PageContent>
           <PageFooter>
@@ -91,7 +120,7 @@ export function NeedsAttentionView({
           isSubmitting={isSubmitting}
           isCancelling={isCancelling}
           testModeEnabled={testModeEnabled}
-          onDelete={onClosePanel}
+          onDelete={handleClosePanel}
         />
       }
     />

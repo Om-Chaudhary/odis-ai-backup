@@ -26,6 +26,7 @@ interface PageContentProps {
 interface PageFooterProps {
   children: ReactNode;
   className?: string;
+  fullWidth?: boolean;
 }
 
 /**
@@ -107,14 +108,18 @@ export function PageContent({ children, className }: PageContentProps) {
 /**
  * Page Footer - Bottom section for pagination and summary info
  */
-export function PageFooter({ children, className }: PageFooterProps) {
+export function PageFooter({
+  children,
+  className,
+  fullWidth = false,
+}: PageFooterProps) {
   return (
     <div
       className={cn(
         "flex shrink-0 items-center justify-between",
         "border-t border-teal-100/50",
         "bg-gradient-to-r from-teal-50/30 to-white/50",
-        "px-6 py-2",
+        fullWidth ? "px-0 py-2" : "px-6 py-2",
         className,
       )}
     >

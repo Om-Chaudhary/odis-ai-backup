@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { cn } from "@odis-ai/shared/util";
 import type { Database } from "@odis-ai/shared/types";
 import { DataTableEmptyState } from "../../shared/data-table/data-table-empty-state";
@@ -9,6 +9,7 @@ import { CallsHeader } from "./table-headers";
 import { CallRow } from "./rows/call-row";
 import { TableSkeleton } from "./table-states";
 import { getCallModifications } from "../demo-data";
+import type { SelectedRowPosition } from "../inbound-split-layout";
 
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
@@ -16,10 +17,13 @@ interface InboundTableProps {
   items: InboundCall[];
   selectedItemId: string | null;
   onSelectItem: (item: InboundCall) => void;
+  onToggleItem?: (item: InboundCall) => void;
   onKeyNavigation: (direction: "up" | "down") => void;
   isLoading: boolean;
   // Compact mode (when detail sidebar is open)
   isCompact?: boolean;
+  // Callback for selected row position (for tab connection effect)
+  onSelectedRowPositionChange?: (position: SelectedRowPosition | null) => void;
 }
 
 /**
@@ -32,12 +36,32 @@ export function InboundTable({
   items,
   selectedItemId,
   onSelectItem,
+  onToggleItem,
   onKeyNavigation,
   isLoading,
   isCompact = false,
+  onSelectedRowPositionChange,
 }: InboundTableProps) {
   const tableRef = useRef<HTMLDivElement>(null);
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
+
+  // Update selected row position for tab connection effect
+  const updateRowPosition = useCallback(() => {
+    if (
+      selectedRowRef.current &&
+      tableRef.current &&
+      onSelectedRowPositionChange
+    ) {
+      const tableRect = tableRef.current.getBoundingClientRect();
+      const rowRect = selectedRowRef.current.getBoundingClientRect();
+      onSelectedRowPositionChange({
+        top: rowRect.top - tableRect.top + tableRef.current.scrollTop,
+        height: rowRect.height,
+      });
+    } else if (onSelectedRowPositionChange && !selectedItemId) {
+      onSelectedRowPositionChange(null);
+    }
+  }, [onSelectedRowPositionChange, selectedItemId]);
 
   // Global keyboard handler for navigation
   useEffect(() => {
@@ -71,7 +95,7 @@ export function InboundTable({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onKeyNavigation, selectedItemId, items, onSelectItem]);
 
-  // Scroll selected row into view
+  // Scroll selected row into view and update position
   useEffect(() => {
     if (selectedRowRef.current) {
       selectedRowRef.current.scrollIntoView({
@@ -79,7 +103,22 @@ export function InboundTable({
         block: "nearest",
       });
     }
-  }, [selectedItemId]);
+    // Small delay to let scroll finish before measuring
+    const timer = setTimeout(updateRowPosition, 100);
+    return () => clearTimeout(timer);
+  }, [selectedItemId, updateRowPosition]);
+
+  // Handle row click with toggle support
+  const handleRowClick = useCallback(
+    (item: InboundCall) => {
+      if (selectedItemId === item.id && onToggleItem) {
+        onToggleItem(item);
+      } else {
+        onSelectItem(item);
+      }
+    },
+    [selectedItemId, onSelectItem, onToggleItem],
+  );
 
   if (isLoading) {
     return <TableSkeleton />;
@@ -96,12 +135,12 @@ export function InboundTable({
   }
 
   return (
-    <div ref={tableRef} className="h-full min-h-0 overflow-auto">
-      <table className="w-full">
-        <thead className="sticky top-0 z-10 border-b border-teal-100/50 bg-gradient-to-r from-teal-50/40 to-white/60 backdrop-blur-sm">
+    <div ref={tableRef} className="h-full min-h-0 w-full overflow-auto">
+      <table className="w-full min-w-0 table-fixed">
+        <thead className="sticky top-0 z-10 border-b border-teal-100/20 bg-gradient-to-r from-teal-50/40 via-teal-50/30 to-white/60 backdrop-blur-xl">
           <CallsHeader isCompact={isCompact} />
         </thead>
-        <tbody className="divide-y divide-teal-50">
+        <tbody className="divide-y divide-teal-100/10">
           {items
             .filter((item) => {
               // Apply call filtering for hardcoded modifications
@@ -116,17 +155,17 @@ export function InboundTable({
                   ref={isSelected ? selectedRowRef : null}
                   className={cn(
                     "group cursor-pointer transition-all duration-150",
-                    // Selected row: matching background + accent for visual connection to detail panel
+                    // Selected row: gradient starts white, builds to teal on right, matches panel
                     isSelected
-                      ? "relative z-20 rounded-r-none border-y border-r border-l-2 border-teal-200/40 border-l-teal-500 bg-teal-100/80"
-                      : "hover:bg-teal-50/30",
+                      ? "relative z-20 rounded-r-none border-l-2 border-l-teal-400/50 bg-gradient-to-r from-white/30 via-teal-50/55 to-teal-50/80 shadow-sm shadow-teal-500/10 backdrop-blur-sm"
+                      : "transition-all duration-200 hover:bg-teal-50/30 hover:backdrop-blur-sm",
                   )}
-                  onClick={() => onSelectItem(item)}
+                  onClick={() => handleRowClick(item)}
                   tabIndex={0}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
-                      onSelectItem(item);
+                      handleRowClick(item);
                     }
                   }}
                 >

@@ -4,18 +4,32 @@
  * POST /api/vapi/tools/messaging/leave-message
  */
 
-import { NextResponse } from "next/server";
-import { createToolHandler } from "@odis-ai/integrations/vapi/core";
-import { LeaveMessageSchema } from "@odis-ai/integrations/vapi/schemas";
-import { processLeaveMessage } from "@odis-ai/integrations/vapi/processors";
+import { type NextRequest, NextResponse } from "next/server";
 
-const handler = createToolHandler({
-  name: "leave-message",
-  schema: LeaveMessageSchema,
-  processor: processLeaveMessage,
-});
+// Helper to load the handler dynamically
+async function getHandler() {
+  const { createToolHandler } = await import("@odis-ai/integrations/vapi/core");
+  const { LeaveMessageSchema } =
+    await import("@odis-ai/integrations/vapi/schemas");
+  const { processLeaveMessage } =
+    await import("@odis-ai/integrations/vapi/processors");
 
-export const { POST, OPTIONS } = handler;
+  return createToolHandler({
+    name: "leave-message",
+    schema: LeaveMessageSchema,
+    processor: processLeaveMessage,
+  });
+}
+
+export async function POST(request: NextRequest) {
+  const handler = await getHandler();
+  return handler.POST(request);
+}
+
+export async function OPTIONS(request: NextRequest) {
+  const handler = await getHandler();
+  return handler.OPTIONS(request);
+}
 
 export async function GET() {
   return NextResponse.json({

@@ -4,18 +4,32 @@
  * POST /api/vapi/tools/appointments/book
  */
 
-import { NextResponse } from "next/server";
-import { createToolHandler } from "@odis-ai/integrations/vapi/core";
-import { BookAppointmentSchema } from "@odis-ai/integrations/vapi/schemas";
-import { processBookAppointment } from "@odis-ai/integrations/vapi/processors";
+import { type NextRequest, NextResponse } from "next/server";
 
-const handler = createToolHandler({
-  name: "book-appointment",
-  schema: BookAppointmentSchema,
-  processor: processBookAppointment,
-});
+// Helper to load the handler dynamically
+async function getHandler() {
+  const { createToolHandler } = await import("@odis-ai/integrations/vapi/core");
+  const { BookAppointmentSchema } =
+    await import("@odis-ai/integrations/vapi/schemas");
+  const { processBookAppointment } =
+    await import("@odis-ai/integrations/vapi/processors");
 
-export const { POST, OPTIONS } = handler;
+  return createToolHandler({
+    name: "book-appointment",
+    schema: BookAppointmentSchema,
+    processor: processBookAppointment,
+  });
+}
+
+export async function POST(request: NextRequest) {
+  const handler = await getHandler();
+  return handler.POST(request);
+}
+
+export async function OPTIONS(request: NextRequest) {
+  const handler = await getHandler();
+  return handler.OPTIONS(request);
+}
 
 export async function GET() {
   return NextResponse.json({

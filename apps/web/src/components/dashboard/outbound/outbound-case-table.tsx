@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { format, formatDistanceToNow, parseISO, isPast } from "date-fns";
 import { CheckCircle2, Loader2, Mail, Phone, Send, Star } from "lucide-react";
 import { Button } from "@odis-ai/shared/ui/button";
@@ -16,6 +16,7 @@ import {
   type DeliveryStatus,
 } from "./detail/utils/status-display";
 import { DataTableEmptyState } from "~/components/dashboard/shared/data-table";
+import type { SelectedRowPosition } from "./outbound-split-layout";
 
 // Minimum required fields for table display
 interface TableCaseBase {
@@ -139,6 +140,7 @@ interface OutboundCaseTableProps<T extends TableCaseBase> {
   cases: T[];
   selectedCaseId: string | null;
   onSelectCase: (caseItem: T) => void;
+  onToggleCase?: (caseItem: T) => void;
   onKeyNavigation: (direction: "up" | "down") => void;
   isLoading: boolean;
   // Quick scheduling props (supports concurrent scheduling)
@@ -153,6 +155,8 @@ interface OutboundCaseTableProps<T extends TableCaseBase> {
   onSelectAll?: () => void;
   // Compact mode (when detail sidebar is open)
   isCompact?: boolean;
+  // Callback for selected row position (for tab connection effect)
+  onSelectedRowPositionChange?: (position: SelectedRowPosition | null) => void;
 }
 
 /**
@@ -174,6 +178,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
   cases,
   selectedCaseId,
   onSelectCase,
+  onToggleCase,
   onKeyNavigation,
   isLoading,
   onQuickSchedule,
@@ -184,9 +189,28 @@ export function OutboundCaseTable<T extends TableCaseBase>({
   onToggleBulkSelect,
   onSelectAll,
   isCompact = false,
+  onSelectedRowPositionChange,
 }: OutboundCaseTableProps<T>) {
   const tableRef = useRef<HTMLDivElement>(null);
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
+
+  // Update selected row position for tab connection effect
+  const updateRowPosition = useCallback(() => {
+    if (
+      selectedRowRef.current &&
+      tableRef.current &&
+      onSelectedRowPositionChange
+    ) {
+      const tableRect = tableRef.current.getBoundingClientRect();
+      const rowRect = selectedRowRef.current.getBoundingClientRect();
+      onSelectedRowPositionChange({
+        top: rowRect.top - tableRect.top + tableRef.current.scrollTop,
+        height: rowRect.height,
+      });
+    } else if (onSelectedRowPositionChange && !selectedCaseId) {
+      onSelectedRowPositionChange(null);
+    }
+  }, [onSelectedRowPositionChange, selectedCaseId]);
 
   // Global keyboard handler for navigation
   useEffect(() => {
@@ -222,7 +246,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [onKeyNavigation, selectedCaseId, cases, onSelectCase]);
 
-  // Scroll selected row into view
+  // Scroll selected row into view and update position
   useEffect(() => {
     if (selectedRowRef.current) {
       selectedRowRef.current.scrollIntoView({
@@ -230,7 +254,22 @@ export function OutboundCaseTable<T extends TableCaseBase>({
         block: "nearest",
       });
     }
-  }, [selectedCaseId]);
+    // Small delay to let scroll finish before measuring
+    const timer = setTimeout(updateRowPosition, 100);
+    return () => clearTimeout(timer);
+  }, [selectedCaseId, updateRowPosition]);
+
+  // Handle row click with toggle support
+  const handleRowClick = useCallback(
+    (caseItem: T) => {
+      if (selectedCaseId === caseItem.id && onToggleCase) {
+        onToggleCase(caseItem);
+      } else {
+        onSelectCase(caseItem);
+      }
+    },
+    [selectedCaseId, onSelectCase, onToggleCase],
+  );
 
   if (isLoading) {
     return <CaseTableSkeleton />;
@@ -249,7 +288,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
   return (
     <div ref={tableRef} className="h-full min-h-0 w-full overflow-auto">
       <table className="w-full min-w-0 table-fixed">
-        <thead className="sticky top-0 z-10 border-b border-teal-100/50 bg-gradient-to-r from-teal-50/40 to-white/60 backdrop-blur-sm">
+        <thead className="sticky top-0 z-10 border-b border-teal-100/20 bg-gradient-to-r from-teal-50/40 via-teal-50/30 to-white/60 backdrop-blur-xl">
           <tr className="text-xs text-slate-500">
             {onToggleBulkSelect && !isCompact && (
               <th className="h-10 w-[5%] pl-6 text-center font-medium">
@@ -304,7 +343,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
             )}
           </tr>
         </thead>
-        <tbody className="divide-y divide-teal-50">
+        <tbody className="divide-y divide-teal-100/10">
           {cases.map((caseItem) => {
             const isSelected = selectedCaseId === caseItem.id;
             return (
@@ -313,10 +352,10 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                 ref={isSelected ? selectedRowRef : null}
                 className={cn(
                   "group cursor-pointer transition-all duration-150",
-                  // Selected row: matching background + accent for visual connection to detail panel
+                  // Selected row: gradient starts white, builds to teal on right, matches panel
                   isSelected
-                    ? "relative z-20 rounded-r-none border-y border-r border-l-2 border-teal-200/40 border-l-teal-500 bg-teal-100/80"
-                    : "hover:bg-teal-50/30",
+                    ? "relative z-20 rounded-r-none border-l-2 border-l-teal-400/50 bg-gradient-to-r from-white/30 via-teal-50/55 to-teal-50/80 shadow-sm shadow-teal-500/10 backdrop-blur-sm"
+                    : "transition-all duration-200 hover:bg-teal-50/30 hover:backdrop-blur-sm",
                   // Attention case highlighting (when not selected)
                   !isSelected &&
                     caseItem.needsAttention &&
@@ -338,12 +377,12 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                     !isSelected &&
                     "bg-purple-50/20",
                 )}
-                onClick={() => onSelectCase(caseItem)}
+                onClick={() => handleRowClick(caseItem)}
                 tabIndex={0}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
-                    onSelectCase(caseItem);
+                    handleRowClick(caseItem);
                   }
                 }}
               >

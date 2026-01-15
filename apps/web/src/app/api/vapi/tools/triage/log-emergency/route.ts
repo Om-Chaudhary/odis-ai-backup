@@ -4,18 +4,32 @@
  * POST /api/vapi/tools/triage/log-emergency
  */
 
-import { NextResponse } from "next/server";
-import { createToolHandler } from "@odis-ai/integrations/vapi/core";
-import { LogEmergencyTriageSchema } from "@odis-ai/integrations/vapi/schemas";
-import { processLogEmergencyTriage } from "@odis-ai/integrations/vapi/processors";
+import { type NextRequest, NextResponse } from "next/server";
 
-const handler = createToolHandler({
-  name: "log-emergency-triage",
-  schema: LogEmergencyTriageSchema,
-  processor: processLogEmergencyTriage,
-});
+// Helper to load the handler dynamically
+async function getHandler() {
+  const { createToolHandler } = await import("@odis-ai/integrations/vapi/core");
+  const { LogEmergencyTriageSchema } =
+    await import("@odis-ai/integrations/vapi/schemas");
+  const { processLogEmergencyTriage } =
+    await import("@odis-ai/integrations/vapi/processors");
 
-export const { POST, OPTIONS } = handler;
+  return createToolHandler({
+    name: "log-emergency-triage",
+    schema: LogEmergencyTriageSchema,
+    processor: processLogEmergencyTriage,
+  });
+}
+
+export async function POST(request: NextRequest) {
+  const handler = await getHandler();
+  return handler.POST(request);
+}
+
+export async function OPTIONS(request: NextRequest) {
+  const handler = await getHandler();
+  return handler.OPTIONS(request);
+}
 
 export async function GET() {
   return NextResponse.json({

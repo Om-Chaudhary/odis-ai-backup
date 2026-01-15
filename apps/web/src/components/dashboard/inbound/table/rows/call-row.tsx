@@ -28,7 +28,7 @@ export function CallRow({ call, isCompact = false }: CallRowProps) {
 
   return (
     <>
-      <td className="py-3 pl-6">
+      <td className="py-2 pl-4">
         <div className="flex flex-col gap-0.5 overflow-hidden">
           <CallerDisplay
             phone={call.customer_phone}
@@ -36,10 +36,10 @@ export function CallRow({ call, isCompact = false }: CallRowProps) {
           />
         </div>
       </td>
-      <td className="py-3 text-center">
+      <td className="py-2 text-center">
         <OutcomeBadge call={call} />
       </td>
-      <td className={`py-3 ${isCompact ? "pr-6 text-right" : "text-center"}`}>
+      <td className={`py-2 ${isCompact ? "pr-4 text-right" : "text-center"}`}>
         {isCompact ? (
           <span className="text-xs font-medium text-slate-800">
             {format(displayDate, "MMM d, h:mm a")}
@@ -49,7 +49,7 @@ export function CallRow({ call, isCompact = false }: CallRowProps) {
         )}
       </td>
       {!isCompact && (
-        <td className="py-3 pr-6 text-right">
+        <td className="py-2 pr-4 text-right">
           {/* Compact single-line date/time format */}
           <span className="text-xs font-medium text-slate-800">
             {format(displayDate, "MMM d, h:mm a")}

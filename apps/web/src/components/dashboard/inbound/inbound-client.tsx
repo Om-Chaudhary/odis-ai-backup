@@ -8,7 +8,10 @@ import type { Database } from "@odis-ai/shared/types";
 import { PageContent, PageFooter } from "../layout";
 import { InboundTable } from "./table";
 import { CallDetail } from "./detail/call-detail";
-import { InboundSplitLayout } from "./inbound-split-layout";
+import {
+  InboundSplitLayout,
+  type SelectedRowPosition,
+} from "./inbound-split-layout";
 import { useInboundData, useInboundMutations } from "./hooks";
 import { DataTablePagination } from "../shared/data-table";
 
@@ -25,7 +28,7 @@ type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
  */
 export function InboundClient() {
   // URL-synced state
-  const [outcomeFilter, setOutcomeFilter] = useQueryState("outcome", {
+  const [outcomeFilter] = useQueryState("outcome", {
     defaultValue: "all" as OutcomeFilter,
     parse: (v) => {
       if (v === "all") return "all";
@@ -52,13 +55,15 @@ export function InboundClient() {
 
   // Local state
   const [selectedCall, setSelectedCall] = useState<InboundCall | null>(null);
+  const [selectedRowPosition, setSelectedRowPosition] =
+    useState<SelectedRowPosition | null>(null);
 
   // Get search term from URL
   const [searchQuery] = useQueryState("search", { defaultValue: "" });
   const searchTerm = searchQuery ?? "";
 
   // Use custom hooks for data and mutations
-  const { calls, pagination, stats, isLoading, refetchCalls } = useInboundData({
+  const { calls, pagination, isLoading, refetchCalls } = useInboundData({
     page,
     pageSize,
     callStatus: "all",
@@ -84,16 +89,6 @@ export function InboundClient() {
     return () => document.removeEventListener("keydown", handleEscape);
   }, [selectedCall]);
 
-  // Handle outcome filter change
-  const handleOutcomeFilterChange = useCallback(
-    (category: OutcomeFilterCategory | "all") => {
-      void setOutcomeFilter(category === "all" ? "all" : [category]);
-      void setPage(1);
-      setSelectedCall(null);
-    },
-    [setOutcomeFilter, setPage],
-  );
-
   // Handlers
   const handlePageChange = useCallback(
     (newPage: number) => {
@@ -116,8 +111,20 @@ export function InboundClient() {
     setSelectedCall(call);
   }, []);
 
+  // Toggle handler: clicking same row closes panel
+  const handleToggleCall = useCallback(
+    (call: InboundCall) => {
+      if (selectedCall?.id === call.id) {
+        setSelectedCall(null);
+        setSelectedRowPosition(null);
+      }
+    },
+    [selectedCall?.id],
+  );
+
   const handleClosePanel = useCallback(() => {
     setSelectedCall(null);
+    setSelectedRowPosition(null);
   }, []);
 
   const handleKeyNavigation = useCallback(
@@ -148,6 +155,7 @@ export function InboundClient() {
       <InboundSplitLayout
         showRightPanel={selectedCall !== null}
         onCloseRightPanel={handleClosePanel}
+        selectedRowPosition={selectedRowPosition}
         leftPanel={
           <>
             <PageContent>
@@ -155,12 +163,14 @@ export function InboundClient() {
                 items={calls}
                 selectedItemId={selectedCall?.id ?? null}
                 onSelectItem={handleSelectCall}
+                onToggleItem={handleToggleCall}
                 onKeyNavigation={handleKeyNavigation}
                 isLoading={isLoading}
                 isCompact={selectedCall !== null}
+                onSelectedRowPositionChange={setSelectedRowPosition}
               />
             </PageContent>
-            <PageFooter>
+            <PageFooter fullWidth>
               <DataTablePagination
                 page={pagination.page}
                 pageSize={pagination.pageSize}
