@@ -147,9 +147,9 @@ export default async function DashboardLayout({
       <NavigationPanel clinicSlug={clinic?.slug ?? null} />
 
       {/* Main Content Area */}
-      <div className="relative flex min-w-0 flex-1 flex-col bg-gray-50">
+      <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-gray-50">
         <DashboardHeader />
-        <div className="flex h-full min-h-0 flex-1 flex-col overflow-auto">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {children}
         </div>
       </div>
