@@ -4,7 +4,7 @@
  */
 export function TableSkeleton() {
   return (
-    <div className="flex h-full min-h-[600px] w-full flex-col overflow-hidden">
+    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden">
       {/* Header skeleton */}
       <div className="mb-0 flex shrink-0 gap-2 border-b border-teal-100/50 px-6 py-3">
         <div className="h-3 w-[32%] animate-pulse rounded bg-teal-100/50" />

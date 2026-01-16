@@ -289,7 +289,7 @@ function formatCaseType(caseType: string | null): string {
 
 function NeedsReviewSkeleton() {
   return (
-    <div className="h-full min-h-[600px] space-y-1 p-2">
+    <div className="h-full min-h-0 space-y-1 p-2">
       <div className="flex gap-3 border-b pb-1.5 pl-3">
         <Skeleton className="h-3 w-[200px]" />
         <Skeleton className="h-3 w-[160px]" />

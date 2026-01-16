@@ -114,8 +114,8 @@ export function OutboundNeedsAttentionTable<T extends NeedsAttentionCaseBase>({
   }
 
   return (
-    <div ref={tableRef} className="h-full min-h-[600px] w-full overflow-auto">
-      <table className="h-full w-full min-w-0 table-fixed">
+    <div ref={tableRef} className="h-full min-h-0 w-full overflow-auto">
+      <table className="w-full min-w-0 table-fixed">
         <thead className="sticky top-0 z-10 border-b border-teal-100/20 bg-gradient-to-r from-teal-50/40 via-teal-50/30 to-white/60 backdrop-blur-xl">
           <tr className="text-xs text-slate-500">
             <th className="h-12 w-[80px] pl-4 text-left font-medium">
@@ -292,7 +292,7 @@ function CallStatusBadge({
  */
 function NeedsAttentionSkeleton() {
   return (
-    <div className="flex h-full min-h-[600px] flex-col overflow-hidden p-3">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden p-3">
       {/* Header skeleton */}
       <div className="mb-4 flex shrink-0 gap-3 border-b border-orange-100/50 pb-3">
         <div className="h-3 w-[80px] animate-pulse rounded bg-orange-100/50" />
