@@ -287,7 +287,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
 
   return (
     <div ref={tableRef} className="h-full min-h-0 w-full overflow-auto">
-      <table className="w-full min-w-0 table-fixed">
+      <table className="h-full w-full min-w-0 table-fixed">
         <thead className="sticky top-0 z-10 border-b border-teal-100/20 bg-gradient-to-r from-teal-50/40 via-teal-50/30 to-white/60 backdrop-blur-xl">
           <tr className="text-xs text-slate-500">
             {onToggleBulkSelect && !isCompact && (
@@ -707,7 +707,7 @@ function DeliveryIcon({
  */
 function CaseTableSkeleton() {
   return (
-    <div className="w-full overflow-hidden">
+    <div className="h-full min-h-[600px] w-full overflow-hidden">
       {/* Header skeleton */}
       <div className="mb-0 flex gap-2 border-b border-cyan-100/30 px-6 py-3">
         <div className="h-3 w-[5%] animate-pulse rounded bg-cyan-50/40" />
