@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import { InboundClient } from "~/components/dashboard/inbound";
 import { InboundCallsErrorBoundary } from "~/components/dashboard/calls/inbound-calls-error-boundary";
-import { OnboardingProvider } from "~/components/providers";
 
 export const metadata: Metadata = {
   title: "Inbound | Dashboard",
@@ -24,27 +23,25 @@ export const metadata: Metadata = {
  */
 export default function ClinicInboundPage() {
   return (
-    <OnboardingProvider>
-      <div className="flex h-full flex-col">
-        <InboundCallsErrorBoundary>
-          <Suspense
-            fallback={
-              <div className="flex h-[50vh] items-center justify-center">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-100">
-                    <Loader2 className="h-6 w-6 animate-spin text-teal-600" />
-                  </div>
-                  <p className="text-sm text-slate-500">
-                    Loading inbound data...
-                  </p>
+    <div className="flex h-full flex-col">
+      <InboundCallsErrorBoundary>
+        <Suspense
+          fallback={
+            <div className="flex h-[50vh] items-center justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-100">
+                  <Loader2 className="h-6 w-6 animate-spin text-teal-600" />
                 </div>
+                <p className="text-sm text-slate-500">
+                  Loading inbound data...
+                </p>
               </div>
-            }
-          >
-            <InboundClient />
-          </Suspense>
-        </InboundCallsErrorBoundary>
-      </div>
-    </OnboardingProvider>
+            </div>
+          }
+        >
+          <InboundClient />
+        </Suspense>
+      </InboundCallsErrorBoundary>
+    </div>
   );
 }

@@ -1,12 +1,15 @@
 "use client";
 
+import { signUp } from "~/server/actions/auth";
 import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { Button } from "@odis-ai/shared/ui/button";
+import { Input } from "@odis-ai/shared/ui/input";
+import { Label } from "@odis-ai/shared/ui/label";
 import { Logo } from "@odis-ai/shared/ui/Logo";
 import { cn } from "@odis-ai/shared/util";
 import { DotPattern } from "@odis-ai/shared/ui";
-import OnboardingContainer from "~/components/onboarding/onboarding-container";
 
 export function SignupFormTwoColumn() {
   const [isImageLoaded, setIsImageLoaded] = useState(false);
@@ -67,19 +70,65 @@ export function SignupFormTwoColumn() {
 
         {/* Form Section - Centered */}
         <div className="relative flex flex-1 items-center justify-center">
-          <div className="w-full max-w-md space-y-6">
+          <div className="w-full max-w-sm space-y-6">
             {/* Title */}
             <div className="space-y-2 text-center">
               <h1 className="font-display text-3xl font-bold tracking-tight text-white">
-                Welcome to OdisAI
+                Create your account
               </h1>
               <p className="text-sm text-slate-200">
-                Streamline your veterinary practice with AI
+                Enter your email below to create your account
               </p>
             </div>
 
-            {/* Onboarding Container */}
-            <OnboardingContainer />
+            {/* Signup Form */}
+            <form action={signUp} className="space-y-4">
+              {/* Email Field */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="email"
+                  className="text-sm font-medium text-slate-100"
+                >
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  placeholder="veterinarian@clinic.com"
+                  className="border-slate-200 bg-white/90 text-slate-900 backdrop-blur-sm transition-all duration-200 placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500/20"
+                />
+              </div>
+
+              {/* Password Field */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="password"
+                  className="text-sm font-medium text-slate-100"
+                >
+                  Password
+                </Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  placeholder="Create a secure password"
+                  className="border-slate-200 bg-white/90 text-slate-900 backdrop-blur-sm transition-all duration-200 placeholder:text-slate-400 focus:border-teal-500 focus:ring-teal-500/20"
+                />
+              </div>
+
+              {/* Signup Button */}
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-teal-600 to-teal-500 text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:from-teal-500 hover:to-teal-600 hover:shadow-xl hover:shadow-teal-500/30"
+              >
+                Create Account
+              </Button>
+            </form>
 
             {/* Sign In Link */}
             <div className="text-center text-sm text-slate-200">

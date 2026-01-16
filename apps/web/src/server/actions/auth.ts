@@ -84,7 +84,6 @@ export async function getUser() {
     const { error: insertError } = await supabase.from("users").insert({
       id: user.id,
       email: user.email!,
-      onboarding_completed: false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     });
@@ -124,7 +123,6 @@ export async function updateUserProfile(
     role?: "veterinarian" | "vet_tech" | "admin" | "practice_owner" | "client";
     clinicName?: string;
     licenseNumber?: string;
-    onboardingCompleted?: boolean;
   },
 ) {
   const supabase = await createClient();

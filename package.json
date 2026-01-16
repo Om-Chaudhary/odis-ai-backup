@@ -105,7 +105,6 @@
     "lucide-react": "^0.545.0",
     "next": "16.0.10",
     "nuqs": "^2.8.1",
-    "onborda": "^1.2.5",
     "playwright": "^1.57.0",
     "posthog-js": "^1.275.1",
     "posthog-node": "^5.9.5",

@@ -130,7 +130,7 @@ export function DashboardSplitLayout({
         <div
           ref={rightPanelContainerRef}
           className={cn(
-            "relative flex h-full flex-col overflow-hidden",
+            "relative flex h-full flex-col",
             // Subtle teal radial gradient that matches selected row
             "bg-gradient-to-r from-teal-50/80 to-teal-50/50",
             "rounded-r-xl",
@@ -152,7 +152,7 @@ export function DashboardSplitLayout({
           >
             <X className="h-4 w-4" />
           </button>
-          <div className="flex-1 overflow-auto">{rightPanel}</div>
+          <div className="min-h-0 flex-1 overflow-y-auto">{rightPanel}</div>
         </div>
       </Panel>
     </PanelGroup>

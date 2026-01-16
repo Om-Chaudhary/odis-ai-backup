@@ -14,11 +14,7 @@ import {
   type SelectedRowPosition,
 } from "../shared/layouts";
 import { BulkActionBar, type BulkAction } from "../shared/bulk-action-bar";
-import {
-  useInboundData,
-  useInboundMutations,
-  useInboundOnboarding,
-} from "./hooks";
+import { useInboundData, useInboundMutations } from "./hooks";
 import { DataTablePagination } from "../shared/data-table";
 import { useToast } from "~/hooks/use-toast";
 
@@ -91,9 +87,6 @@ export function InboundClient() {
       void refetchCalls();
     },
   });
-
-  // Initialize onboarding tour
-  useInboundOnboarding();
 
   // Escape to close panel
   useEffect(() => {

@@ -40,22 +40,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Determine redirect destination based on onboarding status
-    let redirectTo = next;
-
-    // Check if onboarding is complete (only if not already going to onboarding)
-    if (!next.startsWith("/onboarding") && sessionData?.user) {
-      const { data: profile } = await supabase
-        .from("users")
-        .select("onboarding_completed")
-        .eq("id", sessionData.user.id)
-        .single();
-
-      // Redirect to onboarding if not complete
-      if (!profile?.onboarding_completed) {
-        redirectTo = "/onboarding";
-      }
-    }
+    const redirectTo = next;
 
     const forwardedHost = request.headers.get("x-forwarded-host"); // original origin before load balancer
     const isLocalEnv = process.env.NODE_ENV === "development";

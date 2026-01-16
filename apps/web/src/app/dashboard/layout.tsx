@@ -65,16 +65,6 @@ export default async function DashboardLayout({
   // Get full user profile, primary clinic, and all accessible clinics from database for the sidebar
   const supabase = await createClient();
 
-  // Check onboarding status - redirect if not complete
-  const { data: onboardingCheck } = await supabase
-    .from("users")
-    .select("onboarding_completed")
-    .eq("id", user.id)
-    .single();
-
-  if (!onboardingCheck?.onboarding_completed) {
-    redirect("/onboarding");
-  }
   const [{ data: profile }, clinic, allClinics] = await Promise.all([
     supabase
       .from("users")

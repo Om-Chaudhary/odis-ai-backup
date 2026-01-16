@@ -10,7 +10,6 @@ import {
   Info,
 } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
-import { OnboardingTrigger } from "~/components/dashboard/inbound/onboarding-trigger";
 
 interface InboundNavigationProps {
   clinicSlug: string;
@@ -153,11 +152,6 @@ export function InboundNavigation({
         isActive={pathname.startsWith(baseUrl) && outcomeFilter === "emergency"}
         variant="emergency"
       />
-
-      {/* Tour trigger button */}
-      <div className="mt-2 border-t border-gray-200 pt-2">
-        <OnboardingTrigger />
-      </div>
     </nav>
   );
 }
