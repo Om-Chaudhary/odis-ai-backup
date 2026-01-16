@@ -1,18 +1,22 @@
 "use client";
 
 import { usePathname, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import {
   Breadcrumb,
   BreadcrumbItem,
+  BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@odis-ai/shared/ui/breadcrumb";
+import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
 import React from "react";
 
 export function DashboardBreadcrumb() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const clinicContext = useOptionalClinic();
 
   // Simple path mapping logic
   const segments = pathname.split("/").filter(Boolean);
@@ -98,14 +102,38 @@ export function DashboardBreadcrumb() {
     ? getFilterName(currentPage, filterParam)
     : null;
 
+  // Build clinic dashboard URL
+  const clinicSlug = segments[1];
+  const clinicDashboardUrl = clinicSlug ? `/dashboard/${clinicSlug}` : null;
+
   return (
     <Breadcrumb>
       <BreadcrumbList>
+        {/* Show clinic name as first breadcrumb */}
+        {clinicContext && (
+          <BreadcrumbItem>
+            {currentPage && clinicDashboardUrl ? (
+              <BreadcrumbLink asChild>
+                <Link href={clinicDashboardUrl}>
+                  {clinicContext.clinicName}
+                </Link>
+              </BreadcrumbLink>
+            ) : (
+              <BreadcrumbPage>{clinicContext.clinicName}</BreadcrumbPage>
+            )}
+          </BreadcrumbItem>
+        )}
+
         {/* Show page name if present */}
         {currentPage && (
-          <BreadcrumbItem>
-            <BreadcrumbPage>{getBreadcrumbName(currentPage)}</BreadcrumbPage>
-          </BreadcrumbItem>
+          <>
+            {clinicContext && (
+              <BreadcrumbSeparator className="hidden md:block" />
+            )}
+            <BreadcrumbItem>
+              <BreadcrumbPage>{getBreadcrumbName(currentPage)}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </>
         )}
 
         {/* Show filter if present */}
