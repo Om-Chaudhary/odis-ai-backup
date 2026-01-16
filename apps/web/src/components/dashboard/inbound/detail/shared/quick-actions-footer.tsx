@@ -11,6 +11,7 @@ interface QuickActionsFooterProps {
   phone?: string | null;
   status?: string;
   isSubmitting?: boolean;
+  callerName?: string | null;
   // Call actions
   onDelete?: () => void;
   // Appointment actions
@@ -28,6 +29,7 @@ export function QuickActionsFooter({
   variant,
   status,
   isSubmitting = false,
+  callerName,
   onDelete,
   onConfirm,
   onReject,
@@ -41,7 +43,15 @@ export function QuickActionsFooter({
     return (
       <div className="space-y-3">
         <p className="text-sm text-slate-500">
-          Are you sure you want to delete? This action cannot be undone.
+          Are you sure you want to delete this{" "}
+          {variant === "call"
+            ? "call"
+            : variant === "appointment"
+              ? "appointment"
+              : "message"}
+          {variant === "call" && callerName ? ` from ${callerName}` : ""}? This
+          action cannot be undone and will permanently delete all associated
+          data.
         </p>
         <div className="flex gap-2">
           <Button

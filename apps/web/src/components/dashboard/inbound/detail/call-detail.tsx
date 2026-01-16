@@ -274,6 +274,7 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
         <QuickActionsFooter
           variant="call"
           isSubmitting={isSubmitting}
+          callerName={callerName}
           onDelete={onDelete ? () => onDelete(call.id) : undefined}
         />
       </div>

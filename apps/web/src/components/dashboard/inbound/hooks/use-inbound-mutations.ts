@@ -15,10 +15,16 @@ interface UseInboundMutationsOptions {
  */
 export function useInboundMutations(options: UseInboundMutationsOptions = {}) {
   const { onCallSuccess } = options;
+  const utils = api.useUtils();
 
   const deleteCall = api.inboundCalls.deleteInboundCall.useMutation({
     onSuccess: () => {
       toast.success("Call deleted");
+
+      // Invalidate queries to refetch data
+      void utils.inboundCalls.listInboundCalls.invalidate();
+      void utils.inbound.getInboundStats.invalidate();
+
       onCallSuccess?.();
     },
     onError: (error) => {
