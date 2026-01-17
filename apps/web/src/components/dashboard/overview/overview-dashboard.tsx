@@ -27,13 +27,11 @@ import {
   DashboardToolbar,
 } from "~/components/dashboard/shared";
 
-interface ComprehensiveDashboardProps {
+interface OverviewDashboardProps {
   clinicSlug?: string;
 }
 
-export function ComprehensiveDashboard({
-  clinicSlug,
-}: ComprehensiveDashboardProps) {
+export function OverviewDashboard({ clinicSlug }: OverviewDashboardProps) {
   const [mounted, setMounted] = useState(false);
 
   const {
@@ -68,7 +66,7 @@ export function ComprehensiveDashboard({
   const isError = overviewError || dailyStatsError;
 
   if (isLoading) {
-    return <DashboardSkeleton />;
+    return <OverviewDashboardSkeleton />;
   }
 
   if (isError || !overview || !dailyStats) {
@@ -84,6 +82,11 @@ export function ComprehensiveDashboard({
       </div>
     );
   }
+
+  // Use the dedicated daily stats for accurate today vs yesterday comparison
+  const { inbound, outbound } = dailyStats;
+  const inboundTrend = inbound.trend;
+  const outboundTrend = outbound.trend;
 
   return (
     <PageContainer>
@@ -482,7 +485,7 @@ function ActivityItem({
   );
 }
 
-function DashboardSkeleton() {
+function OverviewDashboardSkeleton() {
   return (
     <PageContainer>
       <DashboardPageHeader
