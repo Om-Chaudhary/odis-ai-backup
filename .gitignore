@@ -72,3 +72,19 @@ out
 # Nx generated files
 graph.html
 static/
+
+# Ralph Wiggum (autonomous agent)
+# Ignore active working files (change between runs)
+plan.md
+activity.md
+screenshots/
+screenshots-archive/
+
+# Cache directories
+.cache/
+
+# Keep these tracked in git:
+# - Templates: plan-template.md, activity-template.md
+# - Scripts: ralph.sh, ralph-new.sh, ralph-status.sh
+# - Docs: README-RALPH.md, RALPH_SETUP.md, RALPH_WORKFLOW.md
+# - Instructions: PROMPT.md

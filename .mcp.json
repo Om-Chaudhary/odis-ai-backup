@@ -22,7 +22,13 @@
     },
     "playwright": {
       "command": "npx",
-      "args": ["@playwright/mcp@latest"]
+      "args": [
+        "-y",
+        "@playwright/mcp@latest",
+        "--headless",
+        "--output-dir",
+        "screenshots"
+      ]
     },
     "supabase": {
       "type": "http",
