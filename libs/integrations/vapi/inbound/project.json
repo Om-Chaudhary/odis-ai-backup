@@ -1,7 +1,0 @@
-{
-  "name": "integrations-vapi-inbound",
-  "": "../../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/integrations/vapi/inbound/src",
-  "projectType": "library",
-  "tags": ["type:integration", "scope:server", "platform:node"]
-}

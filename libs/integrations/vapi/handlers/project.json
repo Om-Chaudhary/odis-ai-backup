@@ -1,7 +1,0 @@
-{
-  "name": "integrations-vapi-handlers",
-  "": "../../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/integrations/vapi/handlers/src",
-  "projectType": "library",
-  "tags": ["type:integration", "scope:server", "platform:node"]
-}

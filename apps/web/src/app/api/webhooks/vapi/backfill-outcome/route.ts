@@ -14,6 +14,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceClient } from "@odis-ai/data-access/db/server";
 import { loggers } from "@odis-ai/shared/logger";
+// eslint-disable-next-line @nx/enforce-module-boundaries -- vapi lib used in webhook route
+import { parseAllStructuredOutputs } from "@odis-ai/integrations/vapi/webhooks/processors";
 
 const logger = loggers.api.child("vapi-backfill-outcome");
 
@@ -24,57 +26,6 @@ const BackfillSchema = z.object({
 });
 
 type BackfillInput = z.infer<typeof BackfillSchema>;
-
-/**
- * Extract structured outputs from call data (same logic as webhook handler)
- */
-function parseStructuredOutputs(
-  structuredOutputs: Record<string, unknown> | undefined,
-): {
-  callOutcome: Record<string, unknown> | null;
-  petHealth: Record<string, unknown> | null;
-  medicationCompliance: Record<string, unknown> | null;
-  ownerSentiment: Record<string, unknown> | null;
-  escalation: Record<string, unknown> | null;
-  followUp: Record<string, unknown> | null;
-} {
-  if (!structuredOutputs) {
-    return {
-      callOutcome: null,
-      petHealth: null,
-      medicationCompliance: null,
-      ownerSentiment: null,
-      escalation: null,
-      followUp: null,
-    };
-  }
-
-  // Extract by schema name from structured outputs array
-  const extractByName = (name: string): Record<string, unknown> | null => {
-    const outputs = Array.isArray(structuredOutputs)
-      ? structuredOutputs
-      : Object.values(structuredOutputs);
-
-    for (const output of outputs) {
-      if (typeof output === "object" && output && "schema" in output) {
-        const schema = output.schema as { name?: string };
-        if (schema.name === name && "data" in output) {
-          return output.data as Record<string, unknown>;
-        }
-      }
-    }
-    return null;
-  };
-
-  return {
-    callOutcome: extractByName("call_outcome"),
-    petHealth: extractByName("pet_health_status"),
-    medicationCompliance: extractByName("medication_compliance"),
-    ownerSentiment: extractByName("owner_sentiment"),
-    escalation: extractByName("escalation_tracking"),
-    followUp: extractByName("follow_up_status"),
-  };
-}
 
 /**
  * Handle POST request - backfill outcome for incomplete calls
@@ -116,11 +67,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Extract structured outputs from VAPI response
+    // Extract structured outputs from VAPI response using shared parser
     const artifact = (
       vapiCall as unknown as { artifact?: { structuredOutputs?: unknown } }
     ).artifact;
-    const structuredOutputs = parseStructuredOutputs(
+    const structuredOutputs = parseAllStructuredOutputs(
       artifact?.structuredOutputs as Record<string, unknown> | undefined,
     );
 

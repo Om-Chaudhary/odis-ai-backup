@@ -1,4 +1,5 @@
 {
+  "amp.experimental.autoHandoff": { "context": 90 },
   "permissions": {
     "allow": [
       "Bash(where pnpm:*)",

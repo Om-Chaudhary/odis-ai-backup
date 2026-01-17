@@ -80,7 +80,25 @@ libs/
     auth/util/              # Authentication utilities
 
   integrations/             # External services
-    vapi/                   # VAPI voice AI (client, webhooks, tools)
+    vapi/                   # VAPI voice AI integration
+      src/
+        client.ts           # VapiClient wrapper (createPhoneCall)
+        validators.ts       # Dynamic variable validation
+        utils.ts            # Variable formatting helpers
+        types.ts            # TypeScript types (DynamicVariables, etc.)
+        core/               # Request/response primitives
+        schemas/            # Zod schemas by domain (appointments, triage, etc.)
+        processors/         # Tool call processors by domain
+        webhooks/
+          types.ts          # Webhook payload types
+          tools/            # Tool execution (registry, executor, built-in)
+          background-jobs/  # Fire-and-forget tasks (Slack, transcripts)
+          utils/            # Modular utilities:
+            status-mapper   # Call status conversion
+            retry-scheduler # Retry logic with backoff
+            cost-calculator # Duration and cost formatting
+            sentiment-analyzer # Analysis extraction
+            call-enricher   # Payload transformation
     idexx/                  # IDEXX Neo transforms, credentials
     qstash/                 # QStash scheduling (IScheduler)
     resend/                 # Email sending (IEmailClient)
@@ -126,7 +144,18 @@ import { ExecutionPlan } from "@odis-ai/domain/shared";
 import { getClinicByUserId, getVapiConfig } from "@odis-ai/domain/clinics";
 
 // Integrations
-import { createPhoneCall, validateVariables } from "@odis-ai/integrations/vapi";
+import {
+  createPhoneCall,
+  validateDynamicVariables,
+} from "@odis-ai/integrations/vapi";
+import {
+  mapVapiStatus,
+  shouldRetry,
+} from "@odis-ai/integrations/vapi/webhooks/utils";
+import {
+  processToolCall,
+  ToolRegistry,
+} from "@odis-ai/integrations/vapi/webhooks/tools";
 import { scheduleCallExecution } from "@odis-ai/integrations/qstash";
 import { sendEmail } from "@odis-ai/integrations/resend";
 import { transformIdexxData } from "@odis-ai/integrations/idexx";
@@ -304,18 +333,19 @@ vi.mock("@upstash/qstash", () => ({
 
 ## Key File Locations
 
-| Purpose               | Location                                      |
-| --------------------- | --------------------------------------------- |
-| API Routes            | `apps/web/src/app/api/`                       |
-| tRPC Routers          | `apps/web/src/server/api/routers/`            |
-| Server Actions        | `apps/web/src/server/actions/`                |
-| VAPI Webhooks         | `apps/web/src/app/api/webhooks/vapi/`         |
-| Dashboard Pages       | `apps/web/src/app/dashboard/`                 |
-| UI Components         | `libs/shared/ui/src/`                         |
-| Domain Services       | `libs/domain/*/`                              |
-| Repository Interfaces | `libs/data-access/repository-interfaces/src/` |
-| Zod Validators        | `libs/shared/validators/src/`                 |
-| Test Utilities        | `libs/shared/testing/src/`                    |
+| Purpose                | Location                                      |
+| ---------------------- | --------------------------------------------- |
+| API Routes             | `apps/web/src/app/api/`                       |
+| tRPC Routers           | `apps/web/src/server/api/routers/`            |
+| Server Actions         | `apps/web/src/server/actions/`                |
+| VAPI Webhooks (routes) | `apps/web/src/app/api/webhooks/vapi/`         |
+| VAPI Library           | `libs/integrations/vapi/src/`                 |
+| Dashboard Pages        | `apps/web/src/app/dashboard/`                 |
+| UI Components          | `libs/shared/ui/src/`                         |
+| Domain Services        | `libs/domain/*/`                              |
+| Repository Interfaces  | `libs/data-access/repository-interfaces/src/` |
+| Zod Validators         | `libs/shared/validators/src/`                 |
+| Test Utilities         | `libs/shared/testing/src/`                    |
 
 ---
 
