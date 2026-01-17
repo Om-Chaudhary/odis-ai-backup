@@ -14,6 +14,7 @@ import { listingsRouter } from "./listings";
 import { widgetsRouter } from "./widgets";
 import { overviewRouter } from "./overview";
 import { clinicsRouter } from "./clinics";
+import { dailyStatsRouter } from "./daily-stats";
 
 export const dashboardRouter = createTRPCRouter({
   // Overview procedures (new dashboard overview)
@@ -51,6 +52,9 @@ export const dashboardRouter = createTRPCRouter({
 
   // Clinic procedures (multi-clinic support)
   getUserClinics: clinicsRouter.getUserClinics,
+
+  // Daily stats procedures (today vs yesterday comparison)
+  getTodayStats: dailyStatsRouter.getTodayStats,
 });
 
 // Re-export types for convenience

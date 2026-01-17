@@ -85,6 +85,30 @@
   --color-sidebar-accent: hsl(var(--sidebar-accent));
   --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
   --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  /* Custom dashboard colors - Sage */
+  --color-sage-50: #f7f9f8;
+  --color-sage-100: #e8f0ed;
+  --color-sage-200: #d1e1da;
+  --color-sage-300: #a8c5b7;
+  --color-sage-400: #7c9885;
+  --color-sage-500: #5f7d6a;
+  --color-sage-600: #4a6354;
+  --color-sage-700: #3d5145;
+  --color-sage-800: #334139;
+  --color-sage-900: #2b3730;
+
+  /* Custom dashboard colors - Terracotta */
+  --color-terracotta-50: #fef8f6;
+  --color-terracotta-100: #fdeee9;
+  --color-terracotta-200: #fbd9ce;
+  --color-terracotta-300: #f7bca8;
+  --color-terracotta-400: #f09477;
+  --color-terracotta-500: #e07a5f;
+  --color-terracotta-600: #cd5a3a;
+  --color-terracotta-700: #ab4a2f;
+  --color-terracotta-800: #8d3f2a;
+  --color-terracotta-900: #743827;
 }
 
 /* Dark mode - currently mirrors light mode for brand consistency */
