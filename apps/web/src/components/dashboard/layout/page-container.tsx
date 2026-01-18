@@ -64,9 +64,9 @@ export function PageHeader({ children, className }: PageHeaderProps) {
     <div
       className={cn(
         "flex shrink-0 items-center justify-between",
-        "border-b border-teal-100/50",
-        "bg-gradient-to-r from-white/50 to-teal-50/30",
-        "px-6 py-3",
+        "border-b border-slate-200/60",
+        "bg-white/70 backdrop-blur-sm",
+        "px-5 py-3",
         className,
       )}
     >
@@ -83,9 +83,9 @@ export function PageToolbar({ children, className }: PageToolbarProps) {
     <div
       className={cn(
         "flex shrink-0 flex-col gap-3",
-        "border-b border-teal-100/30",
-        "bg-white/40 backdrop-blur-sm",
-        "px-6 py-3",
+        "border-b border-slate-200/40",
+        "bg-white/50 backdrop-blur-sm",
+        "px-5 py-2.5",
         className,
       )}
     >
@@ -117,9 +117,9 @@ export function PageFooter({
     <div
       className={cn(
         "flex shrink-0 items-center justify-between",
-        "border-t border-teal-100/50",
-        "bg-gradient-to-r from-teal-50/30 to-white/50",
-        fullWidth ? "px-0 py-2" : "px-6 py-2",
+        "border-t border-slate-200/60",
+        "bg-white/70 backdrop-blur-sm",
+        fullWidth ? "px-0 py-2" : "px-5 py-2",
         className,
       )}
     >

@@ -14,6 +14,8 @@ import {
   Info,
   AlertCircle,
   AlertTriangle,
+  Shield,
+  Building2,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -28,12 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@odis-ai/shared/ui/dropdown-menu";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@odis-ai/shared/ui/tooltip";
+import { TooltipProvider } from "@odis-ai/shared/ui/tooltip";
 import { cn } from "@odis-ai/shared/util";
 import { signOut } from "~/server/actions/auth";
 import type { User } from "@supabase/supabase-js";
@@ -246,49 +243,92 @@ export function UnifiedSidebar({
             {allClinics && allClinics.length > 1 && clinicSlug ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex flex-1 items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors hover:bg-white/5">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-white">
-                        {currentClinic?.name ?? "Select Clinic"}
-                      </p>
+                  <button className="group relative flex flex-1 items-center gap-2 overflow-hidden rounded-lg bg-white/5 px-3 py-2 text-left transition-all hover:bg-white/10 hover:shadow-lg hover:shadow-teal-900/20">
+                    {/* Subtle gradient overlay on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-teal-500/0 via-teal-500/5 to-teal-500/0 opacity-0 transition-opacity group-hover:opacity-100" />
+
+                    <div className="relative flex min-w-0 flex-1 items-center gap-2">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-md bg-teal-500/20 transition-colors group-hover:bg-teal-500/30">
+                        <Building2 className="h-3.5 w-3.5 text-teal-400" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-medium text-white">
+                          {currentClinic?.name ?? "Select Clinic"}
+                        </p>
+                      </div>
+                      <ChevronRight className="h-3.5 w-3.5 text-teal-400/60 transition-transform group-hover:translate-x-0.5 group-hover:text-teal-400" />
                     </div>
-                    <ChevronRight className="h-4 w-4 text-teal-600/60" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   side="right"
                   align="start"
-                  className="w-56"
+                  className="w-64"
                   sideOffset={12}
                 >
-                  <DropdownMenuLabel className="text-xs font-normal text-gray-500">
-                    Switch Clinic
+                  <DropdownMenuLabel className="flex items-center gap-2 px-3 py-2">
+                    <Building2 className="h-4 w-4 text-teal-600" />
+                    <span className="text-xs font-semibold text-gray-700">
+                      Switch Clinic
+                    </span>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {allClinics.map((clinic) => (
-                    <DropdownMenuItem key={clinic.id} asChild>
-                      <Link
-                        href={`/dashboard/${clinic.slug}`}
-                        className={cn(
-                          "flex items-center justify-between",
-                          clinic.slug === clinicSlug &&
-                            "bg-teal-50 text-teal-700",
-                        )}
-                      >
-                        <span>{clinic.name}</span>
-                        {clinic.slug === clinicSlug && (
-                          <ChevronRight className="h-4 w-4 text-teal-500" />
-                        )}
-                      </Link>
-                    </DropdownMenuItem>
-                  ))}
+                  <div className="max-h-80 overflow-y-auto">
+                    {allClinics.map((clinic) => (
+                      <DropdownMenuItem key={clinic.id} asChild>
+                        <Link
+                          href={`/dashboard/${clinic.slug}`}
+                          className={cn(
+                            "group relative flex items-center gap-3 px-3 py-2.5 transition-colors",
+                            clinic.slug === clinicSlug
+                              ? "bg-teal-50 text-teal-700"
+                              : "hover:bg-gray-50",
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
+                              clinic.slug === clinicSlug
+                                ? "bg-teal-100"
+                                : "bg-gray-100 group-hover:bg-teal-50",
+                            )}
+                          >
+                            <Building2
+                              className={cn(
+                                "h-4 w-4",
+                                clinic.slug === clinicSlug
+                                  ? "text-teal-600"
+                                  : "text-gray-500 group-hover:text-teal-600",
+                              )}
+                            />
+                          </div>
+                          <span className="flex-1 text-sm font-medium">
+                            {clinic.name}
+                          </span>
+                          {clinic.slug === clinicSlug && (
+                            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-teal-600">
+                              <ChevronRight
+                                className="h-3 w-3 text-white"
+                                strokeWidth={3}
+                              />
+                            </div>
+                          )}
+                        </Link>
+                      </DropdownMenuItem>
+                    ))}
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-white">
-                  {currentClinic?.name ?? "Odis AI"}
-                </p>
+              <div className="min-w-0 flex-1 rounded-lg bg-white/5 px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-md bg-teal-500/20">
+                    <Building2 className="h-3.5 w-3.5 text-teal-400" />
+                  </div>
+                  <p className="truncate text-xs font-medium text-white">
+                    {currentClinic?.name ?? "Odis AI"}
+                  </p>
+                </div>
               </div>
             )}
           </div>
@@ -451,16 +491,6 @@ export function UnifiedSidebar({
                       {user.email}
                     </p>
                   </div>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="rounded-md p-1.5 text-slate-500 transition-colors hover:bg-white/10 hover:text-slate-300">
-                        <Settings className="h-4 w-4" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" sideOffset={8}>
-                      Account Settings
-                    </TooltipContent>
-                  </Tooltip>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -506,6 +536,14 @@ export function UnifiedSidebar({
                       <span>Billing</span>
                     </Link>
                   </DropdownMenuItem>
+                  {profile?.role === "admin" && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin" className="flex items-center gap-2">
+                        <Shield className="h-4 w-4 text-amber-600" />
+                        <span className="text-amber-700">Admin Panel</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem

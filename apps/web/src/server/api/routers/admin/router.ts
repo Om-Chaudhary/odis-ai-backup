@@ -7,58 +7,11 @@
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import {
-  createTRPCRouter,
-  protectedProcedure,
-  middleware,
-} from "~/server/api/trpc";
-
-/**
- * Admin middleware - verifies user has admin role
- */
-const adminMiddleware = middleware(async ({ ctx, next }) => {
-  const userId = ctx.user?.id;
-
-  if (!userId) {
-    throw new TRPCError({
-      code: "UNAUTHORIZED",
-      message: "Authentication required",
-    });
-  }
-
-  // Check user role from database
-  const { data: profile, error } = await ctx.supabase
-    .from("users")
-    .select("role, clinic_name")
-    .eq("id", userId)
-    .single();
-
-  if (error || !profile) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to fetch user profile",
-    });
-  }
-
-  if (profile.role !== "admin") {
-    throw new TRPCError({
-      code: "FORBIDDEN",
-      message: "Admin access required",
-    });
-  }
-
-  return next({
-    ctx: {
-      ...ctx,
-      adminProfile: profile,
-    },
-  });
-});
-
-/**
- * Admin procedure - requires admin role
- */
-const adminProcedure = protectedProcedure.use(adminMiddleware);
+import { createTRPCRouter } from "~/server/api/trpc";
+import { adminProcedure } from "./middleware";
+import { adminClinicsRouter } from "./clinics/router";
+import { adminUsersRouter } from "./users/router";
+import { adminSyncRouter } from "./sync/router";
 
 /**
  * Scheduled item type for unified response
@@ -81,6 +34,11 @@ interface ScheduledItem {
 }
 
 export const adminRouter = createTRPCRouter({
+  // Sub-routers
+  clinics: adminClinicsRouter,
+  users: adminUsersRouter,
+  sync: adminSyncRouter,
+
   /**
    * Get all scheduled items for users in the same clinic
    */
@@ -443,4 +401,97 @@ export const adminRouter = createTRPCRouter({
       totalFailed: allItems.filter((i) => i.status === "failed").length,
     };
   }),
+
+  /**
+   * Bulk cancel multiple scheduled items
+   */
+  bulkCancelItems: adminProcedure
+    .input(
+      z.object({
+        items: z.array(
+          z.object({
+            id: z.string().uuid(),
+            type: z.enum(["call", "email"]),
+          }),
+        ),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const results = await Promise.allSettled(
+        input.items.map(async (item) => {
+          const table =
+            item.type === "call"
+              ? "scheduled_discharge_calls"
+              : "scheduled_discharge_emails";
+
+          const { error } = await ctx.supabase
+            .from(table)
+            .update({
+              status: "cancelled",
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", item.id);
+
+          if (error) throw error;
+          return { id: item.id, type: item.type };
+        }),
+      );
+
+      const successful = results.filter((r) => r.status === "fulfilled").length;
+      const failed = results.filter((r) => r.status === "rejected").length;
+
+      return {
+        success: true,
+        total: input.items.length,
+        successful,
+        failed,
+      };
+    }),
+
+  /**
+   * Bulk reschedule multiple items
+   */
+  bulkRescheduleItems: adminProcedure
+    .input(
+      z.object({
+        items: z.array(
+          z.object({
+            id: z.string().uuid(),
+            type: z.enum(["call", "email"]),
+          }),
+        ),
+        newScheduledFor: z.string().datetime(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const results = await Promise.allSettled(
+        input.items.map(async (item) => {
+          const table =
+            item.type === "call"
+              ? "scheduled_discharge_calls"
+              : "scheduled_discharge_emails";
+
+          const { error } = await ctx.supabase
+            .from(table)
+            .update({
+              scheduled_for: input.newScheduledFor,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", item.id);
+
+          if (error) throw error;
+          return { id: item.id, type: item.type };
+        }),
+      );
+
+      const successful = results.filter((r) => r.status === "fulfilled").length;
+      const failed = results.filter((r) => r.status === "rejected").length;
+
+      return {
+        success: true,
+        total: input.items.length,
+        successful,
+        failed,
+      };
+    }),
 });

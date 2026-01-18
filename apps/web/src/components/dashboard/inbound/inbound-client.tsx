@@ -15,8 +15,10 @@ import {
 } from "../shared/layouts";
 import { BulkActionBar, type BulkAction } from "../shared/bulk-action-bar";
 import { useInboundData, useInboundMutations } from "./hooks";
+import { useClinicSchedule } from "./hooks/use-clinic-schedule";
 import { DataTablePagination } from "../shared/data-table";
 import { useToast } from "~/hooks/use-toast";
+import { useClinic } from "@odis-ai/shared/ui/clinic-context";
 
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
@@ -30,6 +32,10 @@ type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
  * - Detail panel for selected calls
  */
 export function InboundClient() {
+  // Get clinic context for schedule data
+  const { clinicId } = useClinic();
+  const { getStatus: getBusinessHoursStatus } = useClinicSchedule({ clinicId });
+
   // URL-synced state
   const [outcomeFilter] = useQueryState("outcome", {
     defaultValue: "all" as OutcomeFilter,
@@ -259,6 +265,7 @@ export function InboundClient() {
                 selectedForBulk={selectedForBulk}
                 onToggleBulkSelect={handleToggleBulkSelect}
                 onSelectAll={handleSelectAll}
+                getBusinessHoursStatus={getBusinessHoursStatus}
               />
             </PageContent>
             <PageFooter fullWidth>

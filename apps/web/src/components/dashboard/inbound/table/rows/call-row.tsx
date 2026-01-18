@@ -7,6 +7,10 @@ import { getCallModifications } from "../../demo-data";
 import { RowActionMenu, type RowAction } from "../../../shared/row-action-menu";
 import { useToast } from "~/hooks/use-toast";
 import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
+import {
+  BusinessHoursBadge,
+  type BusinessHoursStatus,
+} from "../business-hours-badge";
 
 // Use Database type for compatibility with table data and demo functions
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
@@ -18,6 +22,8 @@ interface CallRowProps {
   onViewTranscript?: () => void;
   /** Whether checkboxes are shown (affects first cell padding) */
   showCheckboxes?: boolean;
+  /** Function to determine business hours status for a timestamp */
+  getBusinessHoursStatus?: (timestamp: Date | string) => BusinessHoursStatus;
 }
 
 /**
@@ -34,11 +40,17 @@ export function CallRow({
   isCompact = false,
   onViewTranscript,
   showCheckboxes = false,
+  getBusinessHoursStatus,
 }: CallRowProps) {
   const callMods = getCallModifications(call);
   const { toast } = useToast();
   // Use created_at for consistent sorting with backend
   const displayDate = callMods.adjustedDate ?? safeParseDate(call.created_at);
+
+  // Get business hours status for this call
+  const businessHoursStatus = getBusinessHoursStatus
+    ? getBusinessHoursStatus(displayDate)
+    : undefined;
 
   // Build row actions
   const actions: RowAction[] = [];
@@ -108,18 +120,34 @@ export function CallRow({
       </td>
       <td className={`py-2 ${isCompact ? "text-right" : "text-center"}`}>
         {isCompact ? (
-          <span className="text-xs font-medium text-slate-800">
-            {format(displayDate, "MMM d, h:mm a")}
-          </span>
+          <div className="flex flex-col items-end gap-0.5">
+            <span className="text-xs font-medium text-slate-800">
+              {format(displayDate, "MMM d, h:mm a")}
+            </span>
+            {businessHoursStatus && (
+              <BusinessHoursBadge
+                status={businessHoursStatus}
+                showLabel={false}
+              />
+            )}
+          </div>
         ) : (
           <CallDuration call={call} />
         )}
       </td>
       {!isCompact && (
         <td className="py-2 text-right">
-          <span className="text-xs font-medium text-slate-800">
-            {format(displayDate, "MMM d, h:mm a")}
-          </span>
+          <div className="flex flex-col items-end gap-0.5">
+            <span className="text-xs font-medium text-slate-800">
+              {format(displayDate, "MMM d, h:mm a")}
+            </span>
+            {businessHoursStatus && (
+              <BusinessHoursBadge
+                status={businessHoursStatus}
+                showLabel={true}
+              />
+            )}
+          </div>
         </td>
       )}
       <td className="py-2 pr-4 text-right">

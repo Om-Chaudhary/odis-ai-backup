@@ -1,5 +1,4 @@
 import { UnifiedSidebar } from "~/components/dashboard/shell/unified-sidebar";
-import { DashboardHeader } from "~/components/dashboard/shell/dashboard-header";
 import { getUser } from "~/server/actions/auth";
 import { createClient } from "@odis-ai/data-access/db/server";
 import { redirect } from "next/navigation";
@@ -76,49 +75,6 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Background Effects */}
-      <div className="pointer-events-none fixed inset-0 z-0">
-        {/* Animated gradient overlays */}
-        <div
-          style={{
-            background:
-              "radial-gradient(circle at 30% 40%, rgba(49, 171, 163, 0.08) 0%, rgba(49, 171, 163, 0.04) 40%, transparent 70%)",
-          }}
-          className="animate-gradient-move absolute inset-0 opacity-50 blur-sm"
-        />
-        <div
-          style={{
-            background:
-              "radial-gradient(circle at 70% 60%, rgba(49, 171, 163, 0.06) 0%, rgba(49, 171, 163, 0.03) 50%, transparent 80%)",
-          }}
-          className="animate-gradient-move-reverse absolute inset-0 opacity-40 blur-sm"
-        />
-        {/* Floating orbs */}
-        <div
-          style={{
-            background:
-              "radial-gradient(circle, rgba(49, 171, 163, 0.04) 0%, transparent 60%)",
-          }}
-          className="animate-float-slow absolute top-1/4 left-1/4 h-[400px] w-[400px] rounded-full opacity-30 blur-3xl"
-        />
-        <div
-          style={{
-            background:
-              "radial-gradient(circle, rgba(49, 171, 163, 0.03) 0%, transparent 60%)",
-          }}
-          className="animate-float-slow-reverse absolute right-1/3 bottom-1/3 h-[300px] w-[300px] rounded-full opacity-25 blur-3xl"
-        />
-      </div>
-      {/* Dotted background pattern */}
-      <div
-        style={{
-          backgroundImage:
-            "radial-gradient(circle, #31aba3 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
-        }}
-        className="pointer-events-none fixed inset-0 z-0 opacity-10"
-      />
-
       {/* Unified Sidebar */}
       <UnifiedSidebar
         user={user}
@@ -133,8 +89,46 @@ export default async function DashboardLayout({
       />
 
       {/* Main Content Area */}
-      <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-gray-50">
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
+        {/* Layered background for depth */}
+        <div className="pointer-events-none absolute inset-0">
+          {/* Base gradient - warm white to subtle teal tint */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(135deg, #fafbfc 0%, #f8fafa 25%, #f5f9f9 50%, #f3f8f8 75%, #f0f7f6 100%)",
+            }}
+          />
+          {/* Subtle radial glow from top-left corner (where sidebar meets content) */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "radial-gradient(ellipse at 0% 0%, rgba(49, 171, 163, 0.04) 0%, transparent 50%)",
+            }}
+          />
+          {/* Subtle ambient glow */}
+          <div
+            className="absolute inset-0 opacity-60"
+            style={{
+              background:
+                "radial-gradient(ellipse at 80% 20%, rgba(49, 171, 163, 0.025) 0%, transparent 40%)",
+            }}
+          />
+          {/* Subtle dot pattern for texture */}
+          <div
+            className="absolute inset-0 opacity-[0.025]"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle, #31aba3 0.5px, transparent 0.5px)",
+              backgroundSize: "24px 24px",
+            }}
+          />
+        </div>
+
+        {/* Content */}
+        <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden">
           {children}
         </div>
       </div>

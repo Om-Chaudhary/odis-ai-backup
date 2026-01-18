@@ -11,6 +11,7 @@ import { CallRow } from "./rows/call-row";
 import { TableSkeleton } from "./table-states";
 import { getCallModifications } from "../demo-data";
 import type { SelectedRowPosition } from "../../shared/layouts";
+import type { BusinessHoursStatus } from "./business-hours-badge";
 
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
@@ -29,6 +30,8 @@ interface InboundTableProps {
   selectedForBulk?: Set<string>;
   onToggleBulkSelect?: (callId: string) => void;
   onSelectAll?: () => void;
+  // Business hours status function
+  getBusinessHoursStatus?: (timestamp: Date | string) => BusinessHoursStatus;
 }
 
 /**
@@ -49,6 +52,7 @@ export function InboundTable({
   selectedForBulk = new Set(),
   onToggleBulkSelect,
   onSelectAll,
+  getBusinessHoursStatus,
 }: InboundTableProps) {
   const showCheckboxes = !isCompact && !!onToggleBulkSelect;
   const tableRef = useRef<HTMLDivElement>(null);
@@ -214,6 +218,7 @@ export function InboundTable({
                     isCompact={isCompact}
                     onViewTranscript={() => onSelectItem(item)}
                     showCheckboxes={showCheckboxes}
+                    getBusinessHoursStatus={getBusinessHoursStatus}
                   />
                 </tr>
               );

@@ -44,22 +44,22 @@ export function DashboardPageHeader({
       {/* Header Row */}
       <div
         className={cn(
-          "flex items-start justify-between gap-4",
-          "border-b border-teal-100/50",
-          "bg-gradient-to-r from-white/50 to-teal-50/30",
-          "px-6 py-4",
+          "flex items-center justify-between gap-4",
+          "border-b border-slate-200/60",
+          "bg-white/70 backdrop-blur-sm",
+          "px-5 py-3",
         )}
       >
         {/* Left: Icon + Title Area */}
-        <div className="flex items-start gap-3">
+        <div className="flex items-center gap-3">
           {Icon && (
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-100/50">
-              <Icon className="h-5 w-5 text-teal-600" />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 shadow-sm shadow-teal-500/20">
+              <Icon className="h-[18px] w-[18px] text-white" strokeWidth={2} />
             </div>
           )}
           <div className="flex flex-col">
-            <h1 className="text-lg font-semibold text-slate-800">{title}</h1>
-            {subtitle && <p className="text-sm text-slate-500">{subtitle}</p>}
+            <h1 className="text-base font-semibold text-slate-800">{title}</h1>
+            {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
           </div>
         </div>
 
@@ -74,9 +74,9 @@ export function DashboardPageHeader({
         <div
           className={cn(
             "flex shrink-0 items-center justify-between gap-4",
-            "border-b border-teal-100/30",
-            "bg-white/40 backdrop-blur-sm",
-            "px-6 py-3",
+            "border-b border-slate-200/40",
+            "bg-white/50 backdrop-blur-sm",
+            "px-5 py-2.5",
           )}
         >
           {children}

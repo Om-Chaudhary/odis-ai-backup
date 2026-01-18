@@ -13,6 +13,7 @@ import { getStatsRouter } from "./procedures/get-stats";
 import { updateAppointmentRouter } from "./procedures/update-appointment";
 import { deleteAppointmentRouter } from "./procedures/delete-appointment";
 import { callAssociationsRouter } from "./procedures/call-associations";
+import { clinicScheduleRouter } from "./procedures/clinic-schedule";
 
 export const inboundRouter = createTRPCRouter({
   // Queries
@@ -21,6 +22,7 @@ export const inboundRouter = createTRPCRouter({
   checkCallAppointmentAssociation:
     callAssociationsRouter.checkCallAppointmentAssociation,
   getCallerNameByPhone: callAssociationsRouter.getCallerNameByPhone,
+  getClinicSchedule: clinicScheduleRouter.getClinicSchedule,
 
   // Mutations
   updateAppointmentRequest: updateAppointmentRouter.updateAppointmentRequest,

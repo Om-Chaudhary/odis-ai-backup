@@ -69,32 +69,32 @@ export function DashboardHeader() {
     <>
       <header
         className={cn(
-          "relative flex h-16 shrink-0 items-center gap-2 border-b transition-all duration-300",
+          "relative flex h-12 shrink-0 items-center border-b transition-all duration-300",
           isTestMode
-            ? "border-amber-200/60 bg-gradient-to-r from-amber-50/90 via-amber-50/70 to-amber-50/90"
-            : "border-teal-200/40 bg-gradient-to-r from-teal-50/30 via-white/90 to-teal-50/30 backdrop-blur-sm",
+            ? "border-amber-200/50 bg-gradient-to-r from-amber-50/80 via-amber-50/60 to-amber-50/80"
+            : "border-teal-200/30 bg-white/60 backdrop-blur-md",
         )}
       >
-        {/* Subtle gradient overlay */}
+        {/* Subtle bottom edge highlight */}
         {!isTestMode && (
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-teal-500/[0.03] to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-teal-400/20 to-transparent" />
         )}
 
-        <div className="relative z-10 flex flex-1 items-center justify-between px-6">
-          <div className="flex items-center gap-3">
+        <div className="relative z-10 flex flex-1 items-center justify-between px-4">
+          <div className="flex items-center gap-2">
             {/* Mobile menu button (hidden on md+ screens) */}
             <Button
               variant="ghost"
               size="icon"
-              className="-ml-2 h-9 w-9 rounded-xl md:hidden"
+              className="-ml-1 h-8 w-8 rounded-lg md:hidden"
               aria-label="Open menu"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-4 w-4" />
             </Button>
             <DashboardBreadcrumb />
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <DashboardHeaderSearch />
             {isTestMode && settings && (
               <TestModeControls
