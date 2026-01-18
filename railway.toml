@@ -1,9 +1,9 @@
-# Railway Deployment Configuration - Service Level
-# Note: Root railway.toml takes precedence for monorepo deployments
+# Railway Deployment Configuration
+# PIMS Sync Service - Monorepo deployment
 
 [build]
 # Use Docker for deployment (multi-stage build)
-builder = "dockerfile"
+builder = "DOCKERFILE"
 dockerfilePath = "apps/pims-sync/Dockerfile"
 
 # Watch patterns for selective rebuilds
@@ -21,8 +21,6 @@ watchPatterns = [
 healthcheckPath = "/health"
 healthcheckTimeout = 60
 startCommand = "node main.js"
-restartPolicyType = "on-failure"
-restartPolicyMaxRetries = 3
 
 # Resource configuration
 numReplicas = 1
