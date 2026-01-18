@@ -1,5 +1,3 @@
-export * from "./icon-sidebar";
-export * from "./navigation-panel";
 export * from "./inbound-navigation";
 export * from "./outbound-navigation";
 export * from "./dashboard-breadcrumb";

@@ -1,5 +1,4 @@
-import { IconSidebar } from "~/components/dashboard/shell/icon-sidebar";
-import { NavigationPanel } from "~/components/dashboard/shell/navigation-panel";
+import { UnifiedSidebar } from "~/components/dashboard/shell/unified-sidebar";
 import { DashboardHeader } from "~/components/dashboard/shell/dashboard-header";
 import { getUser } from "~/server/actions/auth";
 import { createClient } from "@odis-ai/data-access/db/server";
@@ -120,8 +119,8 @@ export default async function DashboardLayout({
         className="pointer-events-none fixed inset-0 z-0 opacity-10"
       />
 
-      {/* Icon Sidebar */}
-      <IconSidebar
+      {/* Unified Sidebar */}
+      <UnifiedSidebar
         user={user}
         profile={profile}
         clinicSlug={clinic?.slug ?? null}
@@ -132,9 +131,6 @@ export default async function DashboardLayout({
         }))}
         currentClinicName={clinic?.name}
       />
-
-      {/* Navigation Panel - rendered by child routes */}
-      <NavigationPanel clinicSlug={clinic?.slug ?? null} />
 
       {/* Main Content Area */}
       <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-gray-50">
