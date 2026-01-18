@@ -124,6 +124,18 @@ export function DashboardBreadcrumb() {
           </BreadcrumbItem>
         )}
 
+        {/* Show home if on root path or clinic dashboard path  */}
+        {clinicDashboardUrl && (
+          <>
+            <BreadcrumbSeparator className="hidden md:block" />
+            <BreadcrumbItem>
+              <BreadcrumbPage className="text-muted-foreground">
+                Home
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </>
+        )}
+
         {/* Show page name if present */}
         {currentPage && (
           <>
@@ -131,7 +143,9 @@ export function DashboardBreadcrumb() {
               <BreadcrumbSeparator className="hidden md:block" />
             )}
             <BreadcrumbItem>
-              <BreadcrumbPage>{getBreadcrumbName(currentPage)}</BreadcrumbPage>
+              <BreadcrumbPage className="text-muted-foreground">
+                {getBreadcrumbName(currentPage)}
+              </BreadcrumbPage>
             </BreadcrumbItem>
           </>
         )}
@@ -141,9 +155,7 @@ export function DashboardBreadcrumb() {
           <>
             <BreadcrumbSeparator className="hidden md:block" />
             <BreadcrumbItem>
-              <BreadcrumbPage className="text-muted-foreground">
-                {filterName}
-              </BreadcrumbPage>
+              <BreadcrumbPage>{filterName}</BreadcrumbPage>
             </BreadcrumbItem>
           </>
         )}

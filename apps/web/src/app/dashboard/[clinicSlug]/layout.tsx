@@ -10,6 +10,7 @@ import { ClinicProvider } from "@odis-ai/shared/ui/clinic-context";
 import { isActiveSubscription } from "@odis-ai/shared/constants";
 import type { SubscriptionStatus } from "@odis-ai/shared/constants";
 import { Paywall } from "~/components/dashboard/subscription/paywall";
+import { DashboardHeader } from "~/components/dashboard/shell/dashboard-header";
 
 interface ClinicLayoutProps {
   children: React.ReactNode;
@@ -57,6 +58,7 @@ export default async function ClinicLayout({
     // User doesn't have access to this clinic
     // Redirect to a clinic they do have access to, otherwise 404
     const userClinics = await getUserClinics(user.id, supabase);
+    // If user has no clinics, redirect to
     const firstClinic = userClinics[0];
     if (firstClinic) {
       redirect(`/dashboard/${firstClinic.slug}`);
@@ -83,10 +85,16 @@ export default async function ClinicLayout({
   if (!hasActiveSubscription && !isBillingPage) {
     return (
       <ClinicProvider clinic={clinic}>
+        <DashboardHeader />
         <Paywall clinicId={clinic.id} clinicName={clinic.name} />
       </ClinicProvider>
     );
   }
 
-  return <ClinicProvider clinic={clinic}>{children}</ClinicProvider>;
+  return (
+    <ClinicProvider clinic={clinic}>
+      <DashboardHeader />
+      {children}
+    </ClinicProvider>
+  );
 }

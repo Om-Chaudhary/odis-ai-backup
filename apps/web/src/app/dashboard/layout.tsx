@@ -138,7 +138,6 @@ export default async function DashboardLayout({
 
       {/* Main Content Area */}
       <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-gray-50">
-        <DashboardHeader />
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           {children}
         </div>
