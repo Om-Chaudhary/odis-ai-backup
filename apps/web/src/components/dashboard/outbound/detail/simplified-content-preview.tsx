@@ -6,17 +6,16 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@odis-ai/shared/ui/collapsible";
-import { ChevronDown, ChevronUp, Mail, CheckCircle2 } from "lucide-react";
-import { Card } from "@odis-ai/shared/ui/card";
+import { ChevronDown, ChevronUp, Mail } from "lucide-react";
 import type {
   StructuredDischargeContent,
   OwnerSentimentData,
   PetHealthData,
   FollowUpData,
 } from "../types";
-import { CallTabContent } from "./communication-tabs/call-tab-content";
 import { EmailTabContent } from "./communication-tabs/email-tab-content";
 import { CallIntelligenceIndicators } from "./call-intelligence-indicators";
+import { CallDetailContent } from "../../shared/call-detail-content";
 
 interface ScheduledCallData {
   id: string;
@@ -47,21 +46,23 @@ interface SimplifiedContentPreviewProps {
   ownerSentimentData?: OwnerSentimentData | null;
   petHealthData?: PetHealthData | null;
   followUpData?: FollowUpData | null;
+  patientName?: string;
+  ownerName?: string;
 }
 
 export function SimplifiedContentPreview({
-  callScript,
   emailContent,
   dischargeSummary,
   structuredContent,
   scheduledCall,
   phoneSent,
   emailSent,
-  hasOwnerPhone,
   hasOwnerEmail,
   ownerSentimentData,
   petHealthData,
   followUpData,
+  patientName,
+  ownerName,
 }: SimplifiedContentPreviewProps) {
   const [emailOpen, setEmailOpen] = useState(false);
 
@@ -69,41 +70,38 @@ export function SimplifiedContentPreview({
   const callWasSuccessful = phoneSent && scheduledCall?.summary;
 
   return (
-    <div className="space-y-3">
-      {/* Call Summary Card - shown if call was successful and summary exists */}
-      {callWasSuccessful && (
-        <Card className="p-4">
-          <div className="flex items-start gap-3">
-            <div className="rounded-full bg-green-50 p-2">
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-            </div>
-            <div className="flex-1 space-y-2">
-              <h3 className="text-foreground text-sm font-semibold">
-                Call Summary
-              </h3>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                {scheduledCall.summary}
-              </p>
-              {/* Intelligence Indicators */}
+    <div className="space-y-4">
+      {/* Call Content Section - shown if call was sent */}
+      {phoneSent && scheduledCall && (
+        <>
+          <CallDetailContent
+            callId={scheduledCall.id}
+            summary={scheduledCall.summary}
+            timestamp={scheduledCall.endedAt ?? scheduledCall.startedAt}
+            durationSeconds={scheduledCall.durationSeconds}
+            recordingUrl={scheduledCall.recordingUrl ?? null}
+            transcript={scheduledCall.transcript}
+            cleanedTranscript={scheduledCall.cleanedTranscript}
+            title={
+              patientName ? `Discharge Call - ${patientName}` : "Discharge Call"
+            }
+            subtitle={ownerName ?? undefined}
+            isSuccessful={
+              scheduledCall.endedReason === "assistant-ended-call" ||
+              scheduledCall.endedReason === "customer-ended-call"
+            }
+          />
+
+          {/* Intelligence Indicators - shown separately for additional context */}
+          {callWasSuccessful &&
+            (ownerSentimentData ?? petHealthData ?? followUpData) && (
               <CallIntelligenceIndicators
                 ownerSentimentData={ownerSentimentData}
                 petHealthData={petHealthData}
                 followUpData={followUpData}
               />
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* Call Transcript Section */}
-      {phoneSent && (
-        <CallTabContent
-          caseData={{ scheduledCall }}
-          callScript={callScript}
-          phoneWasSent={phoneSent}
-          phoneCanBeSent={!phoneSent}
-          hasOwnerPhone={hasOwnerPhone}
-        />
+            )}
+        </>
       )}
 
       {/* Email Content Section */}

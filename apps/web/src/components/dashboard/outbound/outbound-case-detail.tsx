@@ -268,6 +268,8 @@ export function OutboundCaseDetail({
           ownerSentimentData={caseData.ownerSentimentData}
           petHealthData={caseData.petHealthData}
           followUpData={caseData.followUpData}
+          patientName={caseData.patient.name}
+          ownerName={caseData.owner.name}
         />
 
         {/* Workflow Timeline - Collapsible, shown for sent/scheduled cases */}

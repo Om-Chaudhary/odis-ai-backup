@@ -240,7 +240,7 @@ export function UnifiedSidebar({
             </Link>
 
             {/* Clinic Selector */}
-            {allClinics && allClinics.length > 1 && clinicSlug ? (
+            {allClinics && allClinics.length > 1 && clinicSlug && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="group relative flex flex-1 items-center gap-2 overflow-hidden rounded-lg bg-white/5 px-3 py-2 text-left transition-all hover:bg-white/10 hover:shadow-lg hover:shadow-teal-900/20">
@@ -319,17 +319,6 @@ export function UnifiedSidebar({
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : (
-              <div className="min-w-0 flex-1 rounded-lg bg-white/5 px-3 py-2">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-md bg-teal-500/20">
-                    <Building2 className="h-3.5 w-3.5 text-teal-400" />
-                  </div>
-                  <p className="truncate text-xs font-medium text-white">
-                    {currentClinic?.name ?? "Odis AI"}
-                  </p>
-                </div>
-              </div>
             )}
           </div>
 

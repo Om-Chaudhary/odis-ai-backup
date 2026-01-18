@@ -1,21 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Card } from "@odis-ai/shared/ui/card";
-import {
-  Building2,
-  Loader2,
-  FileText,
-  Mic,
-  Clock,
-  AlertTriangle,
-} from "lucide-react";
+import { Building2, Clock } from "lucide-react";
 import { Badge } from "@odis-ai/shared/ui/badge";
-import { CallRecordingPlayer } from "../../shared/call-recording-player";
+import { CallDetailContent } from "../../shared/call-detail-content";
 import { api } from "~/trpc/client";
 import { getCallDataOverride } from "./demo-data";
 import { getDemoCallerName } from "../demo-data";
 import { QuickActionsFooter } from "./shared/quick-actions-footer";
-import { TimestampBadge } from "./shared/timestamp-badge";
 import type { Database } from "@odis-ai/shared/types";
 
 // Use Database type for compatibility with table data
@@ -177,96 +168,25 @@ export function CallDetail({ call, onDelete, isSubmitting }: CallDetailProps) {
         </div>
       </div>
 
-      {/* Scrollable Content */}
+      {/* Scrollable Content - Using new shared components */}
       <div className="flex-1 space-y-4 overflow-auto p-4">
-        {/* Call Summary Card */}
-        <Card className="border-border/40">
-          <div className="space-y-3 p-4">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <FileText className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-              Call Summary
-            </div>
-
-            <div className="space-y-4">
-              {/* Timestamp */}
-              <TimestampBadge
-                timestamp={call.created_at}
-                duration={callData.duration_seconds}
-                size="sm"
-              />
-
-              {/* Summary Text */}
-              {callData.summary ? (
-                <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-                  {callData.summary}
-                </p>
-              ) : (
-                <p className="text-sm text-slate-400 italic dark:text-slate-500">
-                  No summary available
-                </p>
-              )}
-
-              {/* Actions Taken */}
-              {Array.isArray(call.actions_taken) &&
-                call.actions_taken.length > 0 && (
-                  <div className="mt-3 rounded-lg border border-slate-200/50 bg-slate-50/50 p-3 dark:border-slate-700/50 dark:bg-slate-800/30">
-                    <p className="mb-2 text-xs font-medium text-slate-600 dark:text-slate-400">
-                      Actions Taken
-                    </p>
-                    <ul className="space-y-1 text-sm text-slate-700 dark:text-slate-300">
-                      {call.actions_taken.map(
-                        (action: unknown, index: number) => (
-                          <li key={index} className="flex items-start gap-2">
-                            <span className="text-teal-500">•</span>
-                            <span>
-                              {typeof action === "string"
-                                ? action
-                                : JSON.stringify(action)}
-                            </span>
-                          </li>
-                        ),
-                      )}
-                    </ul>
-                  </div>
-                )}
-            </div>
-          </div>
-        </Card>
-
-        {/* Recording & Transcript Card */}
-        <Card className="border-border/40">
-          <div className="space-y-3 p-4">
-            <div className="flex items-center gap-2 text-sm font-medium">
-              <Mic className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-              Recording & Transcript
-              {vapiQuery.isLoading && shouldFetchFromVAPI && (
-                <Loader2 className="ml-2 h-3 w-3 animate-spin text-slate-400" />
-              )}
-            </div>
-
-            {vapiQuery.isLoading && shouldFetchFromVAPI ? (
-              <div className="flex items-center justify-center gap-2 py-6 text-slate-500">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Loading call recording...
-              </div>
-            ) : callData.recording_url ? (
-              <CallRecordingPlayer
-                recordingUrl={callData.recording_url}
-                transcript={callData.transcript ?? null}
-                durationSeconds={callData.duration_seconds}
-              />
-            ) : vapiQuery.error && shouldFetchFromVAPI ? (
-              <div className="flex items-center justify-center gap-2 py-4 text-amber-600">
-                <AlertTriangle className="h-4 w-4" />
-                <span className="text-sm">Unable to load call recording</span>
-              </div>
-            ) : (
-              <div className="py-4 text-center text-sm text-slate-400 dark:text-slate-500">
-                No recording available for this call
-              </div>
-            )}
-          </div>
-        </Card>
+        <CallDetailContent
+          callId={call.id}
+          summary={callData.summary}
+          timestamp={call.created_at}
+          durationSeconds={callData.duration_seconds}
+          actionsTaken={
+            Array.isArray(call.actions_taken)
+              ? (call.actions_taken as string[])
+              : undefined
+          }
+          recordingUrl={callData.recording_url}
+          transcript={callData.transcript}
+          title={callerName ?? "Call Recording"}
+          subtitle={call.clinic_name ?? undefined}
+          isLoadingRecording={vapiQuery.isLoading && shouldFetchFromVAPI}
+          isSuccessful={call.ended_reason !== "error"}
+        />
       </div>
 
       {/* Quick Actions Footer */}
