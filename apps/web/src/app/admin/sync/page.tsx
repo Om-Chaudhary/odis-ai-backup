@@ -85,7 +85,13 @@ export default function AdminSyncPage() {
           </p>
         </div>
 
-        <SyncHistoryTable data={history?.syncs ?? []} isLoading={isLoading} />
+        <SyncHistoryTable
+          data={(history?.syncs ?? []).map((sync) => ({
+            ...sync,
+            clinics: sync.clinics?.[0] ?? null,
+          }))}
+          isLoading={isLoading}
+        />
 
         {history && (
           <div className="mt-4 text-center text-sm text-slate-500">
