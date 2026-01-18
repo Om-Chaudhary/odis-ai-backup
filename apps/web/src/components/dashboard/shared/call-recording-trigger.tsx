@@ -28,7 +28,7 @@ interface CallRecordingTriggerProps {
 /**
  * Call Recording Trigger Component
  *
- * A beautiful button that triggers the floating audio player.
+ * A glassmorphic button that triggers the floating audio player.
  * Shows play/pause state and integrates with the audio player context.
  */
 export function CallRecordingTrigger({
@@ -72,19 +72,25 @@ export function CallRecordingTrigger({
     return (
       <div
         className={cn(
-          "flex items-center gap-4 rounded-xl border px-4 py-3",
-          "bg-gradient-to-r from-slate-50 to-white",
-          "border-slate-200/60",
-          "dark:from-slate-800/50 dark:to-slate-900/50",
-          "dark:border-slate-700/50",
+          "relative flex items-center gap-4 overflow-hidden rounded-xl px-4 py-3",
           className,
         )}
       >
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
+        {/* Glassmorphic background */}
+        <div
+          className={cn(
+            "absolute inset-0",
+            "bg-gradient-to-r from-white/50 via-white/30 to-slate-50/30",
+            "dark:from-slate-800/50 dark:via-slate-800/30 dark:to-slate-900/30",
+            "backdrop-blur-sm",
+            "ring-1 ring-slate-200/30 dark:ring-slate-700/30",
+          )}
+        />
+        <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-slate-200/50 dark:bg-slate-700/50">
           <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
         </div>
-        <div>
-          <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
+        <div className="relative">
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
             Loading recording...
           </p>
         </div>
@@ -97,18 +103,24 @@ export function CallRecordingTrigger({
     return (
       <div
         className={cn(
-          "flex items-center gap-4 rounded-xl border px-4 py-3",
-          "bg-gradient-to-r from-slate-50 to-white",
-          "border-slate-200/60",
-          "dark:from-slate-800/50 dark:to-slate-900/50",
-          "dark:border-slate-700/50",
+          "relative flex items-center gap-4 overflow-hidden rounded-xl px-4 py-3",
           className,
         )}
       >
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
+        {/* Glassmorphic background */}
+        <div
+          className={cn(
+            "absolute inset-0",
+            "bg-gradient-to-r from-white/50 via-white/30 to-slate-50/30",
+            "dark:from-slate-800/50 dark:via-slate-800/30 dark:to-slate-900/30",
+            "backdrop-blur-sm",
+            "ring-1 ring-slate-200/30 dark:ring-slate-700/30",
+          )}
+        />
+        <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-slate-200/50 dark:bg-slate-700/50">
           <AlertCircle className="h-5 w-5 text-slate-400" />
         </div>
-        <div>
+        <div className="relative">
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
             No recording available
           </p>
@@ -123,39 +135,49 @@ export function CallRecordingTrigger({
   return (
     <motion.button
       onClick={handleClick}
-      whileHover={{ scale: 1.01 }}
-      whileTap={{ scale: 0.99 }}
+      whileHover={{ scale: 1.005 }}
+      whileTap={{ scale: 0.995 }}
       className={cn(
-        "group flex w-full items-center gap-4 rounded-xl border px-4 py-3",
-        "bg-gradient-to-r from-slate-50 via-white to-teal-50/30",
-        "border-slate-200/60 hover:border-teal-300/60",
-        "dark:from-slate-800/50 dark:via-slate-900/50 dark:to-teal-950/30",
-        "dark:border-slate-700/50 dark:hover:border-teal-700/50",
+        "group relative flex w-full items-center gap-4 overflow-hidden rounded-xl px-4 py-3",
         "transition-all duration-200",
-        isPlaying && "border-teal-300 ring-2 ring-teal-500/30",
         className,
       )}
     >
+      {/* Glassmorphic background */}
+      <div
+        className={cn(
+          "absolute inset-0",
+          "bg-gradient-to-r from-white/60 via-white/40 to-teal-50/40",
+          "dark:from-slate-800/60 dark:via-slate-800/40 dark:to-teal-950/40",
+          "backdrop-blur-sm",
+          "ring-1 transition-all duration-200",
+          isPlaying
+            ? "shadow-lg shadow-teal-500/10 ring-teal-400/40"
+            : "ring-slate-200/40 group-hover:ring-teal-400/30 dark:ring-slate-700/40",
+        )}
+      />
+
+      {/* Decorative glow when playing */}
+      {isPlaying && (
+        <div className="pointer-events-none absolute -top-4 -right-4 h-20 w-20 rounded-full bg-teal-400/20 blur-xl" />
+      )}
+
       {/* Play button */}
       <motion.div
-        animate={isPlaying ? { scale: [1, 1.05, 1] } : {}}
+        animate={isPlaying ? { scale: [1, 1.03, 1] } : {}}
         transition={{ repeat: Infinity, duration: 1.5 }}
         className={cn(
-          "relative flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl",
-          "bg-gradient-to-br shadow-lg transition-all duration-200",
+          "relative flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl",
+          "transition-all duration-200",
           isPlaying
-            ? "from-teal-500 to-teal-600 shadow-teal-500/30"
-            : "from-slate-200 to-slate-300 group-hover:from-teal-500 group-hover:to-teal-600",
-          isPlaying
-            ? ""
-            : "dark:from-slate-700 dark:to-slate-800 dark:group-hover:from-teal-500 dark:group-hover:to-teal-600",
-          isPlaying ? "" : "group-hover:shadow-teal-500/20",
+            ? "bg-gradient-to-br from-teal-500 to-teal-600 shadow-lg shadow-teal-500/30"
+            : "bg-gradient-to-br from-slate-100 to-slate-200 group-hover:from-teal-500 group-hover:to-teal-600 dark:from-slate-700 dark:to-slate-800 dark:group-hover:from-teal-500 dark:group-hover:to-teal-600",
         )}
       >
         {isPlaying ? (
           <Pause className="h-5 w-5 text-white" />
         ) : (
-          <Play className="ml-0.5 h-5 w-5 text-slate-600 group-hover:text-white dark:text-slate-300" />
+          <Play className="ml-0.5 h-5 w-5 text-slate-500 group-hover:text-white dark:text-slate-400" />
         )}
 
         {/* Animated rings when playing */}
@@ -163,12 +185,12 @@ export function CallRecordingTrigger({
           <>
             <motion.div
               className="absolute inset-0 rounded-xl border-2 border-teal-400"
-              animate={{ scale: [1, 1.3], opacity: [0.5, 0] }}
+              animate={{ scale: [1, 1.25], opacity: [0.4, 0] }}
               transition={{ repeat: Infinity, duration: 1.5 }}
             />
             <motion.div
               className="absolute inset-0 rounded-xl border-2 border-teal-400"
-              animate={{ scale: [1, 1.3], opacity: [0.5, 0] }}
+              animate={{ scale: [1, 1.25], opacity: [0.4, 0] }}
               transition={{ repeat: Infinity, duration: 1.5, delay: 0.5 }}
             />
           </>
@@ -176,29 +198,29 @@ export function CallRecordingTrigger({
       </motion.div>
 
       {/* Info */}
-      <div className="flex-1 text-left">
+      <div className="relative flex-1 text-left">
         <div className="flex items-center gap-2">
-          <Headphones className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+          <Headphones className="h-4 w-4 text-teal-500" />
           <span className="font-medium text-slate-700 dark:text-slate-200">
             {isPlaying ? "Now Playing" : "Play Recording"}
           </span>
         </div>
         {durationSeconds && (
-          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
             Duration: {formatDuration(durationSeconds)}
           </p>
         )}
       </div>
 
-      {/* Visual indicator */}
+      {/* Visual indicator - sound bars */}
       {isPlaying && (
-        <div className="flex items-center gap-0.5">
+        <div className="relative flex items-center gap-0.5 pr-1">
           {[...Array(4)].map((_, i) => (
             <motion.div
               key={i}
               className="h-4 w-1 rounded-full bg-teal-500"
               animate={{
-                height: [16, 8 + Math.random() * 16, 16],
+                height: [16, 8 + Math.random() * 12, 16],
               }}
               transition={{
                 repeat: Infinity,

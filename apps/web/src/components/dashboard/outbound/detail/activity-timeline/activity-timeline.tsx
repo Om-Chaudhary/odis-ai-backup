@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Card } from "@odis-ai/shared/ui/card";
 import { Alert, AlertDescription } from "@odis-ai/shared/ui/alert";
 import { AlertCircle, Sparkles } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
@@ -13,7 +12,6 @@ import type {
   TimelineEventStatus,
 } from "./types";
 
-// Import the props interface from delivery-timeline to maintain compatibility
 interface DeliveryTimelineProps {
   callStatus: "sent" | "pending" | "failed" | "not_applicable" | null;
   emailStatus: "sent" | "pending" | "failed" | "not_applicable" | null;
@@ -42,9 +40,6 @@ interface DeliveryTimelineProps {
   ownerEmail?: string | null;
 }
 
-/**
- * Determine event status from delivery status and scheduling info
- */
 function determineEventStatus(
   deliveryStatus: DeliveryTimelineProps["callStatus"],
   scheduledFor: string | null | undefined,
@@ -57,9 +52,6 @@ function determineEventStatus(
   return "not_started";
 }
 
-/**
- * Compute email event from props
- */
 function computeEmailEvent(props: DeliveryTimelineProps): TimelineEventType {
   const status = determineEventStatus(
     props.emailStatus,
@@ -68,8 +60,6 @@ function computeEmailEvent(props: DeliveryTimelineProps): TimelineEventType {
   );
 
   const actions = [];
-
-  // Cancel action for scheduled emails
   if (status === "scheduled" && props.onCancelEmail) {
     actions.push({
       type: "cancel" as const,
@@ -92,9 +82,6 @@ function computeEmailEvent(props: DeliveryTimelineProps): TimelineEventType {
   };
 }
 
-/**
- * Compute phone event from props
- */
 function computePhoneEvent(props: DeliveryTimelineProps): TimelineEventType {
   const status = determineEventStatus(
     props.callStatus,
@@ -103,8 +90,6 @@ function computePhoneEvent(props: DeliveryTimelineProps): TimelineEventType {
   );
 
   const actions = [];
-
-  // Retry action for failed calls
   if (status === "failed" && props.onRetryCall) {
     actions.push({
       type: "retry" as const,
@@ -112,8 +97,6 @@ function computePhoneEvent(props: DeliveryTimelineProps): TimelineEventType {
       handler: props.onRetryCall,
     });
   }
-
-  // Cancel action for scheduled calls
   if (status === "scheduled" && props.onCancelCall) {
     actions.push({
       type: "cancel" as const,
@@ -139,8 +122,8 @@ function computePhoneEvent(props: DeliveryTimelineProps): TimelineEventType {
 }
 
 /**
- * Main Activity Timeline Container
- * Vertical timeline showing email and phone events with inline scheduling
+ * Compact Activity Timeline
+ * Shows email and phone delivery status in a minimal, glassmorphic design
  */
 export function ActivityTimeline(props: DeliveryTimelineProps) {
   const {
@@ -154,138 +137,121 @@ export function ActivityTimeline(props: DeliveryTimelineProps) {
     testModeEnabled = false,
   } = props;
 
-  // Local state for channel toggles
   const [emailEnabled, setEmailEnabled] = useState(hasOwnerEmail);
   const [phoneEnabled, setPhoneEnabled] = useState(hasOwnerPhone);
 
-  // Compute events
   const emailEvent = computeEmailEvent(props);
   const phoneEvent = computePhoneEvent(props);
 
-  // Determine which events to show
   const showEmail = hasOwnerEmail;
   const showPhone = hasOwnerPhone;
   const hasAnyContact = showEmail || showPhone;
 
-  // Container classes with attention severity
-  const containerClasses = cn(
-    "rounded-lg border-2 p-6",
-    attentionSeverity === "critical" &&
-      "border-red-500 bg-gradient-to-r from-red-50/50 to-transparent",
-    attentionSeverity === "urgent" &&
-      "border-amber-500 bg-gradient-to-r from-amber-50/50 to-transparent",
-    !attentionSeverity && "border-gray-200",
-  );
+  if (!hasAnyContact) {
+    return (
+      <div className="py-6 text-center text-sm text-slate-500">
+        <AlertCircle className="mx-auto mb-2 h-6 w-6 text-slate-400" />
+        <p>No contact information available</p>
+      </div>
+    );
+  }
 
   return (
-    <Card className={containerClasses}>
-      {hasAnyContact ? (
-        <div className="space-y-4">
-          {/* Timeline events wrapper with vertical line */}
-          <div className="relative space-y-4">
-            {/* Vertical timeline line - only extends through events */}
-            <div className="absolute top-0 bottom-0 left-5 w-0.5 bg-gray-200 dark:bg-gray-700" />
-
-            {/* Email Event - only if email exists */}
-            {showEmail && (
-              <TimelineEvent event={emailEvent}>
-                {emailEvent.status === "not_started" &&
-                  showScheduleRemainingEmail && (
-                    <ChannelScheduler
-                      channel="email"
-                      contactInfo={emailEvent.contactInfo}
-                      isEnabled={emailEnabled}
-                      onToggle={setEmailEnabled}
-                      isSubmitting={isSubmitting}
-                    />
-                  )}
-              </TimelineEvent>
-            )}
-
-            {/* Phone Event - only if phone exists */}
-            {showPhone && (
-              <TimelineEvent event={phoneEvent}>
-                {phoneEvent.status === "not_started" &&
-                  showScheduleRemainingCall && (
-                    <ChannelScheduler
-                      channel="phone"
-                      contactInfo={phoneEvent.contactInfo}
-                      isEnabled={phoneEnabled}
-                      onToggle={setPhoneEnabled}
-                      isSubmitting={isSubmitting}
-                    />
-                  )}
-              </TimelineEvent>
-            )}
-          </div>
-
-          {/* Unified Action Buttons - appears below timeline when at least one channel is enabled */}
-          {(showScheduleRemainingEmail || showScheduleRemainingCall) &&
-            onScheduleRemaining && (
-              <UnifiedActions
-                emailEnabled={emailEnabled}
-                phoneEnabled={phoneEnabled}
-                hasEmailContact={Boolean(emailEvent.contactInfo)}
-                hasPhoneContact={Boolean(phoneEvent.contactInfo)}
-                onSchedule={() => {
-                  const shouldScheduleEmail =
-                    emailEnabled && Boolean(emailEvent.contactInfo);
-                  const shouldScheduleCall =
-                    phoneEnabled && Boolean(phoneEvent.contactInfo);
-
-                  if (shouldScheduleEmail || shouldScheduleCall) {
-                    onScheduleRemaining({
-                      scheduleEmail: shouldScheduleEmail,
-                      scheduleCall: shouldScheduleCall,
-                      immediate: false,
-                    });
-                  }
-                }}
-                onSendNow={() => {
-                  const shouldScheduleEmail =
-                    emailEnabled && Boolean(emailEvent.contactInfo);
-                  const shouldScheduleCall =
-                    phoneEnabled && Boolean(phoneEvent.contactInfo);
-
-                  if (shouldScheduleEmail || shouldScheduleCall) {
-                    onScheduleRemaining({
-                      scheduleEmail: shouldScheduleEmail,
-                      scheduleCall: shouldScheduleCall,
-                      immediate: true,
-                    });
-                  }
-                }}
+    <div className="space-y-2">
+      {/* Email Event */}
+      {showEmail && (
+        <TimelineEvent event={emailEvent}>
+          {emailEvent.status === "not_started" &&
+            showScheduleRemainingEmail && (
+              <ChannelScheduler
+                channel="email"
+                contactInfo={emailEvent.contactInfo}
+                isEnabled={emailEnabled}
+                onToggle={setEmailEnabled}
                 isSubmitting={isSubmitting}
               />
             )}
-
-          {/* Test Mode Badge */}
-          {testModeEnabled && (
-            <div className="relative z-10 flex gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-50">
-                <Sparkles className="h-5 w-5 text-amber-600" />
-              </div>
-              <div className="flex-1">
-                <Alert className="border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/30">
-                  <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                  <AlertDescription className="text-amber-800 dark:text-amber-300">
-                    Test mode active - communications will be sent to test
-                    numbers/emails
-                  </AlertDescription>
-                </Alert>
-              </div>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="py-8 text-center text-sm text-gray-500">
-          <AlertCircle className="mx-auto mb-2 h-8 w-8 text-gray-400" />
-          <p>No contact information available</p>
-          <p className="mt-1 text-xs">
-            Add phone or email to schedule discharge communications
-          </p>
-        </div>
+        </TimelineEvent>
       )}
-    </Card>
+
+      {/* Phone Event */}
+      {showPhone && (
+        <TimelineEvent event={phoneEvent}>
+          {phoneEvent.status === "not_started" && showScheduleRemainingCall && (
+            <ChannelScheduler
+              channel="phone"
+              contactInfo={phoneEvent.contactInfo}
+              isEnabled={phoneEnabled}
+              onToggle={setPhoneEnabled}
+              isSubmitting={isSubmitting}
+            />
+          )}
+        </TimelineEvent>
+      )}
+
+      {/* Unified Action Buttons */}
+      {(showScheduleRemainingEmail || showScheduleRemainingCall) &&
+        onScheduleRemaining && (
+          <UnifiedActions
+            emailEnabled={emailEnabled}
+            phoneEnabled={phoneEnabled}
+            hasEmailContact={Boolean(emailEvent.contactInfo)}
+            hasPhoneContact={Boolean(phoneEvent.contactInfo)}
+            onSchedule={() => {
+              const shouldScheduleEmail =
+                emailEnabled && Boolean(emailEvent.contactInfo);
+              const shouldScheduleCall =
+                phoneEnabled && Boolean(phoneEvent.contactInfo);
+              if (shouldScheduleEmail || shouldScheduleCall) {
+                onScheduleRemaining({
+                  scheduleEmail: shouldScheduleEmail,
+                  scheduleCall: shouldScheduleCall,
+                  immediate: false,
+                });
+              }
+            }}
+            onSendNow={() => {
+              const shouldScheduleEmail =
+                emailEnabled && Boolean(emailEvent.contactInfo);
+              const shouldScheduleCall =
+                phoneEnabled && Boolean(phoneEvent.contactInfo);
+              if (shouldScheduleEmail || shouldScheduleCall) {
+                onScheduleRemaining({
+                  scheduleEmail: shouldScheduleEmail,
+                  scheduleCall: shouldScheduleCall,
+                  immediate: true,
+                });
+              }
+            }}
+            isSubmitting={isSubmitting}
+          />
+        )}
+
+      {/* Test Mode Badge */}
+      {testModeEnabled && (
+        <Alert
+          className={cn(
+            "border-amber-200/50 bg-amber-50/50",
+            "dark:border-amber-800/50 dark:bg-amber-950/30",
+          )}
+        >
+          <Sparkles className="h-4 w-4 text-amber-500" />
+          <AlertDescription className="text-xs text-amber-700 dark:text-amber-300">
+            Test mode - communications sent to test contacts
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Attention severity indicator */}
+      {attentionSeverity && (
+        <div
+          className={cn(
+            "h-1 rounded-full",
+            attentionSeverity === "critical" && "bg-red-500",
+            attentionSeverity === "urgent" && "bg-amber-500",
+          )}
+        />
+      )}
+    </div>
   );
 }

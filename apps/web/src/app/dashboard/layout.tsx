@@ -78,15 +78,17 @@ export default async function DashboardLayout({
     <div className="flex h-screen overflow-hidden">
       {/* Unified Sidebar */}
       <UnifiedSidebar
-        user={user}
         profile={profile}
         clinicSlug={clinic?.slug ?? null}
-        allClinics={allClinics.map((c) => ({
-          id: c.id,
-          name: c.name,
-          slug: c.slug,
-        }))}
-        currentClinicName={clinic?.name}
+        allClinics={
+          profile?.role === "admin" && allClinics.length > 1
+            ? allClinics.map((c) => ({
+                id: c.id,
+                name: c.name,
+                slug: c.slug,
+              }))
+            : undefined
+        }
       />
 
       {/* Main Content Area */}

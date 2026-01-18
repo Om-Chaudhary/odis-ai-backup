@@ -2,13 +2,12 @@
 
 import { motion } from "framer-motion";
 import {
-  FileText,
-  Clock,
   CheckCircle2,
+  Clock,
+  AlertTriangle,
   Sparkles,
   ChevronRight,
 } from "lucide-react";
-import { Badge } from "@odis-ai/shared/ui/badge";
 import { cn } from "@odis-ai/shared/util";
 import { format } from "date-fns";
 
@@ -35,12 +34,8 @@ interface CallSummaryCardProps {
 /**
  * Call Summary Card Component
  *
- * A beautiful, modern card displaying call summary information.
- * Features:
- * - Gradient header with icon
- * - Timestamp and duration badges
- * - Animated actions list
- * - Dark mode support
+ * A glassmorphic, modern card displaying call summary information.
+ * Features frosted glass effect, subtle gradients, and teal accents.
  */
 export function CallSummaryCard({
   summary,
@@ -67,43 +62,50 @@ export function CallSummaryCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className={cn(
-        "group relative overflow-hidden rounded-xl border",
-        "bg-gradient-to-br from-white via-slate-50/50 to-teal-50/30",
-        "border-slate-200/60",
-        "dark:from-slate-900 dark:via-slate-800/50 dark:to-teal-950/30",
-        "dark:border-slate-700/50",
-        "shadow-sm transition-shadow duration-300 hover:shadow-md",
-        className,
-      )}
+      transition={{ duration: 0.25 }}
+      className={cn("relative overflow-hidden", className)}
     >
-      {/* Decorative gradient orb */}
-      <div className="pointer-events-none absolute -top-12 -right-12 h-32 w-32 rounded-full bg-gradient-to-br from-teal-400/10 to-cyan-400/10 blur-2xl dark:from-teal-500/5 dark:to-cyan-500/5" />
+      {/* Glassmorphic background */}
+      <div
+        className={cn(
+          "absolute inset-0 rounded-2xl",
+          "bg-gradient-to-br from-white/60 via-white/40 to-teal-50/30",
+          "dark:from-slate-800/60 dark:via-slate-800/40 dark:to-teal-950/30",
+          "backdrop-blur-md",
+          "ring-1 ring-white/50 dark:ring-white/10",
+          "shadow-lg shadow-slate-200/30 dark:shadow-slate-900/50",
+        )}
+      />
 
-      {/* Header */}
-      <div className="relative border-b border-slate-100 dark:border-slate-800">
-        <div className="flex items-center justify-between px-5 py-4">
+      {/* Decorative glow */}
+      <div className="pointer-events-none absolute -top-6 -right-6 h-24 w-24 rounded-full bg-teal-400/15 blur-2xl" />
+      <div className="pointer-events-none absolute -bottom-4 -left-4 h-16 w-16 rounded-full bg-cyan-400/10 blur-xl" />
+
+      {/* Content */}
+      <div className="relative p-5">
+        {/* Header row */}
+        <div className="mb-4 flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
+            {/* Status icon */}
             <div
               className={cn(
                 "flex h-10 w-10 items-center justify-center rounded-xl",
-                "bg-gradient-to-br shadow-sm",
+                "bg-gradient-to-br",
                 isSuccessful
-                  ? "from-teal-500 to-teal-600 shadow-teal-500/20"
-                  : "from-amber-500 to-amber-600 shadow-amber-500/20",
+                  ? "from-teal-500/20 to-emerald-500/20 ring-1 ring-teal-500/20"
+                  : "from-amber-500/20 to-orange-500/20 ring-1 ring-amber-500/20",
               )}
             >
               {isSuccessful ? (
-                <CheckCircle2 className="h-5 w-5 text-white" />
+                <CheckCircle2 className="h-5 w-5 text-teal-600 dark:text-teal-400" />
               ) : (
-                <FileText className="h-5 w-5 text-white" />
+                <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
               )}
             </div>
             <div>
-              <h3 className="font-semibold text-slate-900 dark:text-slate-100">
+              <h3 className="font-semibold text-slate-800 dark:text-slate-100">
                 Call Summary
               </h3>
               {formattedDate && (
@@ -114,27 +116,29 @@ export function CallSummaryCard({
             </div>
           </div>
 
-          {/* Duration badge */}
+          {/* Duration pill */}
           {formattedDuration && (
-            <Badge
-              variant="secondary"
-              className="flex items-center gap-1.5 bg-slate-100/80 text-slate-600 dark:bg-slate-800/80 dark:text-slate-300"
+            <div
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs",
+                "bg-white/60 dark:bg-white/10",
+                "text-slate-600 dark:text-slate-300",
+                "ring-1 ring-slate-200/50 dark:ring-slate-600/50",
+              )}
             >
-              <Clock className="h-3 w-3" />
-              {formattedDuration}
-            </Badge>
+              <Clock className="h-3 w-3 text-teal-500" />
+              <span className="font-medium">{formattedDuration}</span>
+            </div>
           )}
         </div>
-      </div>
 
-      {/* Content */}
-      <div className="relative px-5 py-4">
+        {/* Summary text */}
         {summary ? (
-          <p className="leading-relaxed text-slate-700 dark:text-slate-300">
+          <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
             {summary}
           </p>
         ) : (
-          <p className="text-slate-400 italic dark:text-slate-500">
+          <p className="text-sm text-slate-400 italic dark:text-slate-500">
             No summary available for this call
           </p>
         )}
@@ -144,31 +148,30 @@ export function CallSummaryCard({
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="mt-4"
+            transition={{ delay: 0.15 }}
+            className="mt-4 border-t border-slate-200/50 pt-4 dark:border-slate-700/50"
           >
-            <div className="mb-3 flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-teal-500" />
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            <div className="mb-2.5 flex items-center gap-2">
+              <Sparkles className="h-3.5 w-3.5 text-teal-500" />
+              <span className="text-xs font-medium tracking-wide text-slate-600 uppercase dark:text-slate-400">
                 Actions Taken
               </span>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {actions.map((action, index) => (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, x: -10 }}
+                  initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 * index }}
+                  transition={{ delay: 0.05 * index }}
                   className={cn(
-                    "flex items-start gap-2 rounded-lg px-3 py-2",
-                    "bg-gradient-to-r from-teal-50/50 to-transparent",
-                    "dark:from-teal-950/30 dark:to-transparent",
-                    "border-l-2 border-teal-500/50",
+                    "flex items-start gap-2 rounded-lg px-3 py-1.5",
+                    "bg-gradient-to-r from-teal-500/5 to-transparent",
+                    "border-l-2 border-teal-500/40",
                   )}
                 >
-                  <ChevronRight className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-teal-500" />
-                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                  <ChevronRight className="mt-0.5 h-3 w-3 flex-shrink-0 text-teal-500/70" />
+                  <span className="text-xs text-slate-600 dark:text-slate-400">
                     {action}
                   </span>
                 </motion.div>

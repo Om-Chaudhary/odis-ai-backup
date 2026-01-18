@@ -265,6 +265,8 @@ export function OutboundCaseDetail({
           emailSent={emailSent}
           hasOwnerPhone={hasOwnerPhone}
           hasOwnerEmail={hasOwnerEmail}
+          scheduledCallFor={caseData.scheduledCallFor}
+          scheduledEmailFor={caseData.scheduledEmailFor}
           ownerSentimentData={caseData.ownerSentimentData}
           petHealthData={caseData.petHealthData}
           followUpData={caseData.followUpData}

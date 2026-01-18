@@ -4,12 +4,11 @@ import {
   Mail,
   CheckCircle2,
   XCircle,
-  AlertCircle,
   Clock,
+  RefreshCw,
+  X,
 } from "lucide-react";
-import { Badge } from "@odis-ai/shared/ui/badge";
 import { Button } from "@odis-ai/shared/ui/button";
-import { RefreshCw, X } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
 import type { TimelineEvent as TimelineEventType } from "./types";
 
@@ -21,31 +20,27 @@ interface TimelineEventProps {
 const STATUS_CONFIG = {
   completed: {
     icon: CheckCircle2,
-    iconColor: "text-green-600",
-    bgColor: "bg-green-50",
-    badgeClass: "bg-green-100 text-green-700 border-green-300",
     label: "Delivered",
+    color: "text-emerald-500",
+    bgColor: "bg-emerald-500/10",
   },
   failed: {
     icon: XCircle,
-    iconColor: "text-red-600",
-    bgColor: "bg-red-50",
-    badgeClass: "bg-red-100 text-red-700 border-red-300",
     label: "Failed",
+    color: "text-red-500",
+    bgColor: "bg-red-500/10",
   },
   scheduled: {
     icon: Clock,
-    iconColor: "text-blue-600",
-    bgColor: "bg-blue-50",
-    badgeClass: "bg-blue-100 text-blue-700 border-blue-300",
     label: "Scheduled",
+    color: "text-amber-500",
+    bgColor: "bg-amber-500/10",
   },
   not_started: {
-    icon: AlertCircle,
-    iconColor: "text-gray-400",
-    bgColor: "bg-gray-50",
-    badgeClass: "bg-gray-100 text-gray-600 border-gray-300",
-    label: "Not Scheduled",
+    icon: Clock,
+    label: "Pending",
+    color: "text-slate-400",
+    bgColor: "bg-slate-400/10",
   },
 };
 
@@ -53,13 +48,14 @@ const formatDuration = (seconds: number | undefined): string => {
   if (!seconds) return "";
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
-  return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+  if (mins === 0) return `${secs}s`;
+  return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
 };
 
 const getFailureReason = (reason: string | undefined): string => {
   if (!reason) return "Unknown error";
   const reasonMap: Record<string, string> = {
-    voicemail: "Voicemail (no message left)",
+    voicemail: "Voicemail",
     "no-answer": "No answer",
     "user-hangup": "User hung up",
     "assistant-error": "System error",
@@ -70,8 +66,7 @@ const getFailureReason = (reason: string | undefined): string => {
 };
 
 /**
- * Individual timeline event row
- * Shows icon, label, badge, timestamp, metadata, and optional children (ChannelScheduler)
+ * Compact timeline event row
  */
 export function TimelineEvent({ event, children }: TimelineEventProps) {
   const config = STATUS_CONFIG[event.status];
@@ -79,105 +74,111 @@ export function TimelineEvent({ event, children }: TimelineEventProps) {
   const ChannelIcon = event.channel === "email" ? Mail : Phone;
   const channelLabel = event.channel === "email" ? "Email" : "Phone Call";
 
-  // Find action handlers
   const retryAction = event.actions.find((a) => a.type === "retry");
   const cancelAction = event.actions.find((a) => a.type === "cancel");
 
+  // Build metadata string
+  const metaParts: string[] = [];
+  if (event.timestamp) {
+    const timeStr = formatDistanceToNow(new Date(event.timestamp), {
+      addSuffix: true,
+    });
+    metaParts.push(timeStr);
+  }
+  if (event.metadata?.duration && event.status === "completed") {
+    metaParts.push(`Duration: ${formatDuration(event.metadata.duration)}`);
+  }
+
   return (
-    <div className="relative flex gap-4">
-      {/* Icon Container */}
+    <div
+      className={cn(
+        "flex items-center gap-3 rounded-xl px-3 py-2.5",
+        "bg-white/40 dark:bg-white/5",
+        "ring-1 ring-slate-200/30 dark:ring-slate-700/30",
+        "backdrop-blur-sm",
+      )}
+    >
+      {/* Channel icon */}
       <div
         className={cn(
-          "relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
-          config.bgColor,
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+          "bg-gradient-to-br from-teal-500/10 to-cyan-500/10",
+          "ring-1 ring-teal-500/10",
         )}
       >
-        <StatusIcon className={cn("h-5 w-5", config.iconColor)} />
+        <ChannelIcon className="h-4 w-4 text-teal-600 dark:text-teal-400" />
       </div>
 
-      {/* Content Area */}
-      <div className="flex-1 space-y-2 pb-4">
-        {/* Header: Channel + Badge */}
+      {/* Content */}
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5">
-            <ChannelIcon className="h-3.5 w-3.5 text-gray-600" />
-            <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-              {channelLabel}
-            </span>
-          </div>
-          <Badge variant="outline" className={cn("text-xs", config.badgeClass)}>
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+            {channelLabel}
+          </span>
+          {/* Status badge */}
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium",
+              config.bgColor,
+              config.color,
+            )}
+          >
+            <StatusIcon className="h-2.5 w-2.5" />
             {config.label}
-          </Badge>
+          </span>
         </div>
 
-        {/* Timestamp */}
-        {event.timestamp && (
-          <p className="text-xs text-gray-600 dark:text-gray-400">
-            {event.status === "scheduled"
-              ? `Scheduled ${formatDistanceToNow(new Date(event.timestamp), { addSuffix: true })}`
-              : formatDistanceToNow(new Date(event.timestamp), {
-                  addSuffix: true,
-                })}
+        {/* Metadata line */}
+        {(metaParts.length > 0 || event.status === "failed") && (
+          <p className="mt-0.5 text-[11px] text-slate-400 dark:text-slate-500">
+            {event.status === "failed" && event.metadata?.endedReason && (
+              <span className="text-red-500">
+                {getFailureReason(event.metadata.endedReason)}
+                {metaParts.length > 0 && " · "}
+              </span>
+            )}
+            {event.metadata?.endedReason === "voicemail" &&
+              event.status === "completed" && (
+                <span className="text-amber-500">
+                  Voicemail
+                  {metaParts.length > 0 && " · "}
+                </span>
+              )}
+            {metaParts.join(" · ")}
           </p>
         )}
 
-        {/* Metadata */}
-        {event.metadata && (
-          <div className="space-y-1 text-xs text-gray-600">
-            {/* Call duration */}
-            {event.metadata.duration && event.status === "completed" && (
-              <p className="text-gray-500">
-                Duration: {formatDuration(event.metadata.duration)}
-              </p>
-            )}
-
-            {/* Voicemail badge */}
-            {event.metadata.endedReason === "voicemail" &&
-              event.status === "completed" && (
-                <p className="text-amber-600">Left voicemail</p>
-              )}
-
-            {/* Failure reason */}
-            {event.status === "failed" && (
-              <p className="text-red-600">
-                {getFailureReason(event.metadata.endedReason)}
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Action Buttons */}
-        {(retryAction ?? cancelAction) && (
-          <div className="mt-2 flex gap-2">
-            {retryAction?.enabled && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={retryAction.handler}
-                className="gap-1"
-              >
-                <RefreshCw className="h-3 w-3" />
-                Retry
-              </Button>
-            )}
-
-            {cancelAction?.enabled && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={cancelAction.handler}
-                className="gap-1 text-red-600 hover:text-red-700"
-              >
-                <X className="h-3 w-3" />
-                Cancel
-              </Button>
-            )}
-          </div>
-        )}
-
-        {/* Children (ChannelScheduler for "not_started" state) */}
-        {children}
+        {/* Inline children (scheduler) */}
+        {children && <div className="mt-2">{children}</div>}
       </div>
+
+      {/* Action buttons - inline on the right */}
+      {(retryAction?.enabled ?? cancelAction?.enabled) && (
+        <div className="flex shrink-0 gap-1">
+          {retryAction?.enabled && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={retryAction.handler}
+              className="h-7 gap-1 px-2 text-xs"
+            >
+              <RefreshCw className="h-3 w-3" />
+              Retry
+            </Button>
+          )}
+          {cancelAction?.enabled && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={cancelAction.handler}
+              className="h-7 gap-1 px-2 text-xs text-red-500 hover:bg-red-50 hover:text-red-600"
+            >
+              <X className="h-3 w-3" />
+              Cancel
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

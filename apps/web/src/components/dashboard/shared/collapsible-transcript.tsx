@@ -100,9 +100,9 @@ function parseTranscript(text: string): TranscriptMessage[] {
 /**
  * Collapsible Transcript Component
  *
- * A beautiful, animated collapsible transcript with:
+ * A glassmorphic, animated collapsible transcript with:
  * - Speaker avatars with distinct styling
- * - Message bubbles with gradient backgrounds
+ * - Message bubbles with soft backgrounds
  * - Smooth expand/collapse animations
  * - Copy to clipboard functionality
  * - Dark mode support
@@ -111,7 +111,6 @@ export function CollapsibleTranscript({
   transcript,
   cleanedTranscript,
   preferCleaned = true,
-  currentTime,
   onSeek,
   maxHeight = 400,
   className,
@@ -153,23 +152,30 @@ export function CollapsibleTranscript({
         <motion.button
           whileHover={{ scale: 1.005 }}
           whileTap={{ scale: 0.995 }}
-          className={cn(
-            "flex w-full items-center justify-between rounded-xl border px-4 py-3.5",
-            "bg-gradient-to-r from-slate-50 to-white",
-            "border-slate-200/60 hover:border-slate-300/80",
-            "dark:from-slate-800/50 dark:to-slate-900/50",
-            "dark:border-slate-700/50 dark:hover:border-slate-600/80",
-            "group transition-all duration-200",
-          )}
+          className="group relative flex w-full items-center justify-between overflow-hidden rounded-xl px-4 py-3"
         >
-          <div className="flex items-center gap-3">
+          {/* Glassmorphic background */}
+          <div
+            className={cn(
+              "absolute inset-0",
+              "bg-gradient-to-r from-white/50 via-white/30 to-slate-50/40",
+              "dark:from-slate-800/50 dark:via-slate-800/30 dark:to-slate-900/40",
+              "backdrop-blur-sm",
+              "ring-1 ring-slate-200/30 dark:ring-slate-700/30",
+              "group-hover:ring-slate-300/40 dark:group-hover:ring-slate-600/40",
+              "transition-all duration-200",
+            )}
+          />
+
+          <div className="relative flex items-center gap-3">
             <div
               className={cn(
                 "flex h-9 w-9 items-center justify-center rounded-lg",
-                "bg-gradient-to-br from-slate-100 to-slate-200",
-                "dark:from-slate-700 dark:to-slate-800",
-                "group-hover:from-teal-50 group-hover:to-teal-100",
-                "dark:group-hover:from-teal-900/30 dark:group-hover:to-teal-800/30",
+                "bg-gradient-to-br from-slate-100/80 to-slate-200/80",
+                "dark:from-slate-700/80 dark:to-slate-800/80",
+                "group-hover:from-teal-100/80 group-hover:to-teal-200/80",
+                "dark:group-hover:from-teal-900/50 dark:group-hover:to-teal-800/50",
+                "ring-1 ring-slate-200/30 dark:ring-slate-600/30",
                 "transition-colors duration-200",
               )}
             >
@@ -185,16 +191,16 @@ export function CollapsibleTranscript({
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="relative flex items-center gap-2">
             {hasCleanedVersion && (
               <span
                 className={cn(
-                  "hidden items-center gap-1 rounded-full px-2 py-1 text-xs sm:inline-flex",
-                  "bg-purple-100/80 text-purple-700",
-                  "dark:bg-purple-900/30 dark:text-purple-400",
+                  "hidden items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium sm:inline-flex",
+                  "bg-purple-500/10 text-purple-600",
+                  "dark:bg-purple-500/20 dark:text-purple-400",
                 )}
               >
-                <Sparkles className="h-3 w-3" />
+                <Sparkles className="h-2.5 w-2.5" />
                 Enhanced
               </span>
             )}
@@ -219,17 +225,20 @@ export function CollapsibleTranscript({
               className="mt-2"
             >
               {/* Transcript container */}
-              <div
-                className={cn(
-                  "overflow-hidden rounded-xl border",
-                  "bg-gradient-to-br from-slate-50/80 via-white to-slate-50/50",
-                  "border-slate-200/60",
-                  "dark:from-slate-900/80 dark:via-slate-800/50 dark:to-slate-900/50",
-                  "dark:border-slate-700/50",
-                )}
-              >
+              <div className="relative overflow-hidden rounded-xl">
+                {/* Glassmorphic background */}
+                <div
+                  className={cn(
+                    "absolute inset-0",
+                    "bg-gradient-to-br from-white/60 via-white/40 to-slate-50/50",
+                    "dark:from-slate-900/60 dark:via-slate-800/40 dark:to-slate-900/50",
+                    "backdrop-blur-sm",
+                    "ring-1 ring-slate-200/30 dark:ring-slate-700/30",
+                  )}
+                />
+
                 {/* Toolbar */}
-                <div className="flex items-center justify-between border-b border-slate-200/60 px-4 py-2 dark:border-slate-700/50">
+                <div className="relative flex items-center justify-between border-b border-slate-200/40 px-4 py-2 dark:border-slate-700/40">
                   <div className="flex items-center gap-2">
                     {hasCleanedVersion && (
                       <Button
@@ -238,8 +247,8 @@ export function CollapsibleTranscript({
                         className={cn(
                           "h-7 text-xs",
                           showCleaned
-                            ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-                            : "text-slate-500",
+                            ? "bg-purple-500/10 text-purple-600 hover:bg-purple-500/20 dark:bg-purple-500/20 dark:text-purple-400"
+                            : "text-slate-500 hover:text-slate-700",
                         )}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -260,7 +269,7 @@ export function CollapsibleTranscript({
                   >
                     {copied ? (
                       <>
-                        <Check className="mr-1 h-3 w-3 text-green-500" />
+                        <Check className="mr-1 h-3 w-3 text-emerald-500" />
                         Copied!
                       </>
                     ) : (
@@ -273,16 +282,16 @@ export function CollapsibleTranscript({
                 </div>
 
                 {/* Messages */}
-                <ScrollArea style={{ maxHeight }} className="p-4">
+                <ScrollArea style={{ maxHeight }} className="relative p-4">
                   <div className="space-y-3">
                     {messages.map((message, index) => (
                       <motion.div
                         key={index}
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.03, duration: 0.2 }}
+                        transition={{ delay: index * 0.02, duration: 0.2 }}
                         className={cn(
-                          "flex gap-3",
+                          "flex gap-2.5",
                           message.speaker === "User" && "flex-row-reverse",
                         )}
                         onClick={() => {
@@ -294,7 +303,7 @@ export function CollapsibleTranscript({
                         {/* Avatar */}
                         <div
                           className={cn(
-                            "flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full",
+                            "flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full",
                             message.speaker === "AI"
                               ? "bg-gradient-to-br from-teal-500 to-teal-600 shadow-sm shadow-teal-500/20"
                               : message.speaker === "User"
@@ -303,28 +312,23 @@ export function CollapsibleTranscript({
                           )}
                         >
                           {message.speaker === "AI" ? (
-                            <Bot className="h-4 w-4 text-white" />
+                            <Bot className="h-3.5 w-3.5 text-white" />
                           ) : message.speaker === "User" ? (
-                            <User className="h-4 w-4 text-white" />
+                            <User className="h-3.5 w-3.5 text-white" />
                           ) : (
-                            <MessageSquare className="h-4 w-4 text-white" />
+                            <MessageSquare className="h-3.5 w-3.5 text-white" />
                           )}
                         </div>
 
                         {/* Message bubble */}
                         <div
                           className={cn(
-                            "relative max-w-[85%] rounded-2xl px-4 py-2.5",
+                            "relative max-w-[85%] rounded-xl px-3 py-2",
                             message.speaker === "AI"
-                              ? "rounded-tl-sm bg-gradient-to-br from-teal-50 to-teal-100/50 dark:from-teal-950/50 dark:to-teal-900/30"
+                              ? "rounded-tl-sm bg-teal-500/8 dark:bg-teal-500/15"
                               : message.speaker === "User"
-                                ? "rounded-tr-sm bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/50 dark:to-blue-900/30"
-                                : "bg-slate-100 dark:bg-slate-800/50",
-                            "border border-transparent",
-                            message.speaker === "AI" &&
-                              "border-teal-200/30 dark:border-teal-800/30",
-                            message.speaker === "User" &&
-                              "border-blue-200/30 dark:border-blue-800/30",
+                                ? "rounded-tr-sm bg-blue-500/8 dark:bg-blue-500/15"
+                                : "bg-slate-500/8 dark:bg-slate-500/15",
                           )}
                         >
                           <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">

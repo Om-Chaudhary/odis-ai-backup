@@ -66,6 +66,13 @@ export default async function ClinicLayout({
     notFound();
   }
 
+  // Fetch user profile for header
+  const { data: profile } = await supabase
+    .from("users")
+    .select("first_name, last_name, role, avatar_url")
+    .eq("id", user.id)
+    .single();
+
   // Check subscription status - cast to access fields not yet in types
   const clinicWithSub = clinic as typeof clinic & {
     subscription_status?: string | null;
@@ -85,7 +92,7 @@ export default async function ClinicLayout({
   if (!hasActiveSubscription && !isBillingPage) {
     return (
       <ClinicProvider clinic={clinic}>
-        <DashboardHeader />
+        <DashboardHeader user={user} profile={profile} />
         <Paywall clinicId={clinic.id} clinicName={clinic.name} />
       </ClinicProvider>
     );
@@ -93,7 +100,7 @@ export default async function ClinicLayout({
 
   return (
     <ClinicProvider clinic={clinic}>
-      <DashboardHeader />
+      <DashboardHeader user={user} profile={profile} />
       {children}
     </ClinicProvider>
   );

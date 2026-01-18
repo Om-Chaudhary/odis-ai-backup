@@ -1,7 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Menu, TestTube, Settings2, X } from "lucide-react";
+import {
+  Menu,
+  TestTube,
+  Settings2,
+  X,
+  Bell,
+  HelpCircle,
+  LogOut,
+  Settings,
+  CreditCard,
+  Shield,
+  AlertTriangle,
+  CheckCircle2,
+  PhoneMissed,
+} from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 import { DashboardBreadcrumb } from "./dashboard-breadcrumb";
 import { DashboardHeaderSearch } from "./dashboard-header-search";
 import { api } from "~/trpc/client";
@@ -16,11 +32,40 @@ import {
 } from "@odis-ai/shared/ui/dialog";
 import { Input } from "@odis-ai/shared/ui/input";
 import { Label } from "@odis-ai/shared/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@odis-ai/shared/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@odis-ai/shared/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@odis-ai/shared/ui/tooltip";
 import { toast } from "sonner";
 import type { DischargeSettings } from "@odis-ai/shared/types";
 import { cn } from "@odis-ai/shared/util";
+import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
+import { signOut } from "~/server/actions/auth";
+import type { User } from "@supabase/supabase-js";
 
-export function DashboardHeader() {
+interface DashboardHeaderProps {
+  user?: User;
+  profile?: {
+    first_name: string | null;
+    last_name: string | null;
+    role: string;
+    avatar_url: string | null;
+  } | null;
+}
+
+export function DashboardHeader({ user, profile }: DashboardHeaderProps) {
   const { data: settings, refetch } = api.cases.getDischargeSettings.useQuery();
 
   const updateSettingsMutation = api.cases.updateDischargeSettings.useMutation({
@@ -64,12 +109,30 @@ export function DashboardHeader() {
   };
 
   const isTestMode = settings?.testModeEnabled ?? false;
+  const clinicContext = useOptionalClinic();
+
+  // User display info
+  const firstName = profile?.first_name ?? "User";
+  const lastName = profile?.last_name ?? "";
+  const initials =
+    `${firstName.charAt(0)}${lastName.charAt(0) || firstName.charAt(1) || ""}`.toUpperCase();
+  const fullName = `${firstName} ${lastName}`.trim() ?? user?.email ?? "User";
+
+  // Build settings/billing URLs
+  const clinicSlug = clinicContext?.clinicSlug;
+  const settingsUrl = clinicSlug
+    ? `/dashboard/${clinicSlug}/settings`
+    : "/dashboard/settings";
+  const billingUrl = clinicSlug
+    ? `/dashboard/${clinicSlug}/billing`
+    : "/dashboard/billing";
+  const dashboardUrl = clinicSlug ? `/dashboard/${clinicSlug}` : "/dashboard";
 
   return (
-    <>
+    <TooltipProvider delayDuration={0}>
       <header
         className={cn(
-          "relative flex h-12 shrink-0 items-center border-b transition-all duration-300",
+          "relative flex h-14 shrink-0 items-center border-b transition-all duration-300",
           isTestMode
             ? "border-amber-200/50 bg-gradient-to-r from-amber-50/80 via-amber-50/60 to-amber-50/80"
             : "border-teal-200/30 bg-white/60 backdrop-blur-md",
@@ -81,7 +144,8 @@ export function DashboardHeader() {
         )}
 
         <div className="relative z-10 flex flex-1 items-center justify-between px-4">
-          <div className="flex items-center gap-2">
+          {/* Left: Logo + Clinic Name + Breadcrumb */}
+          <div className="flex items-center gap-3">
             {/* Mobile menu button (hidden on md+ screens) */}
             <Button
               variant="ghost"
@@ -91,11 +155,33 @@ export function DashboardHeader() {
             >
               <Menu className="h-4 w-4" />
             </Button>
+
+            {/* Logo */}
+            <Link
+              href={dashboardUrl}
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 shadow-sm transition-transform hover:scale-105"
+            >
+              <Image
+                src="/icon-128.png"
+                alt="Odis AI"
+                width={18}
+                height={18}
+                className="h-[18px] w-[18px]"
+              />
+            </Link>
+
+            {/* Divider */}
+            <div className="hidden h-6 w-px bg-slate-200 md:block" />
+
+            {/* Breadcrumb (includes clinic name) */}
             <DashboardBreadcrumb />
           </div>
 
-          <div className="flex items-center gap-3">
+          {/* Right: Search + Actions + User */}
+          <div className="flex items-center gap-2">
             <DashboardHeaderSearch />
+
+            {/* Test Mode Controls */}
             {isTestMode && settings && (
               <TestModeControls
                 settings={settings}
@@ -103,10 +189,128 @@ export function DashboardHeader() {
                 isLoading={updateSettingsMutation.isPending}
               />
             )}
+
+            {/* Divider before utility icons */}
+            <div className="hidden h-6 w-px bg-slate-200 md:block" />
+
+            {/* Help Icon */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+                  asChild
+                >
+                  <a
+                    href="https://odisai.net/support"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <HelpCircle className="h-[18px] w-[18px]" />
+                  </a>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p>Help & Support</p>
+              </TooltipContent>
+            </Tooltip>
+
+            {/* Notifications */}
+            <NotificationsDropdown clinicSlug={clinicSlug} />
+
+            {/* User Profile Dropdown */}
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 rounded-lg py-1 pr-2 pl-1 transition-colors hover:bg-slate-100">
+                    <Avatar className="h-8 w-8 rounded-lg ring-1 ring-slate-200">
+                      {profile?.avatar_url && (
+                        <AvatarImage src={profile.avatar_url} alt={fullName} />
+                      )}
+                      <AvatarFallback className="rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 text-xs font-semibold text-white">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="hidden text-sm font-medium text-slate-700 md:block">
+                      {firstName}
+                    </span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-56"
+                  align="end"
+                  sideOffset={8}
+                >
+                  <DropdownMenuLabel className="p-0 font-normal">
+                    <div className="flex items-center gap-2 px-2 py-2">
+                      <Avatar className="h-8 w-8 rounded-lg">
+                        {profile?.avatar_url && (
+                          <AvatarImage
+                            src={profile.avatar_url}
+                            alt={fullName}
+                          />
+                        )}
+                        <AvatarFallback className="rounded-lg bg-teal-100 text-xs font-medium text-teal-700">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex min-w-0 flex-col">
+                        <span className="truncate text-sm font-medium text-gray-900">
+                          {fullName}
+                        </span>
+                        <span className="truncate text-xs text-gray-500">
+                          {user.email}
+                        </span>
+                      </div>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem asChild>
+                      <Link
+                        href={settingsUrl}
+                        className="flex items-center gap-2"
+                      >
+                        <Settings className="h-4 w-4 text-gray-500" />
+                        <span>Settings</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link
+                        href={billingUrl}
+                        className="flex items-center gap-2"
+                      >
+                        <CreditCard className="h-4 w-4 text-gray-500" />
+                        <span>Billing</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    {profile?.role === "admin" && (
+                      <DropdownMenuItem asChild>
+                        <Link href="/admin" className="flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-amber-600" />
+                          <span className="text-amber-700">Admin Panel</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="flex items-center gap-2 text-red-600 focus:bg-red-50 focus:text-red-600"
+                    onClick={async () => {
+                      await signOut();
+                    }}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </header>
-    </>
+    </TooltipProvider>
   );
 }
 
@@ -265,5 +469,128 @@ function TestModeControls({
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+/**
+ * Notifications dropdown showing actionable items
+ */
+interface NotificationsDropdownProps {
+  clinicSlug: string | null | undefined;
+}
+
+function NotificationsDropdown({ clinicSlug }: NotificationsDropdownProps) {
+  // Fetch stats for notifications
+  const { data: outboundStats } = api.outbound.getDischargeCaseStats.useQuery(
+    { clinicSlug: clinicSlug ?? undefined },
+    { enabled: !!clinicSlug },
+  );
+
+  const { data: inboundStats } = api.inbound.getInboundStats.useQuery(
+    {},
+    { enabled: !!clinicSlug },
+  );
+
+  const needsAttention = outboundStats?.needsAttention ?? 0;
+  const callbacks = inboundStats?.calls?.callback ?? 0;
+  const totalNotifications = needsAttention + callbacks;
+
+  const outboundUrl = clinicSlug
+    ? `/dashboard/${clinicSlug}/outbound?view=needs_attention`
+    : "/dashboard/outbound?view=needs_attention";
+  const inboundUrl = clinicSlug
+    ? `/dashboard/${clinicSlug}/inbound?outcome=callback`
+    : "/dashboard/inbound?outcome=callback";
+
+  return (
+    <DropdownMenu>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative h-8 w-8 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+            >
+              <Bell className="h-[18px] w-[18px]" />
+              {totalNotifications > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white ring-2 ring-white">
+                  {totalNotifications > 9 ? "9+" : totalNotifications}
+                </span>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">
+          <p>Notifications</p>
+        </TooltipContent>
+      </Tooltip>
+      <DropdownMenuContent className="w-72" align="end" sideOffset={8}>
+        <DropdownMenuLabel className="flex items-center justify-between">
+          <span>Notifications</span>
+          {totalNotifications > 0 && (
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+              {totalNotifications}
+            </span>
+          )}
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+
+        {totalNotifications === 0 ? (
+          <div className="flex flex-col items-center gap-2 py-6 text-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-50">
+              <CheckCircle2 className="h-5 w-5 text-teal-600" />
+            </div>
+            <p className="text-sm font-medium text-slate-700">All caught up!</p>
+            <p className="text-xs text-slate-500">No items need attention</p>
+          </div>
+        ) : (
+          <div className="max-h-80 overflow-y-auto">
+            {needsAttention > 0 && (
+              <DropdownMenuItem asChild>
+                <Link
+                  href={outboundUrl}
+                  className="flex items-start gap-3 px-3 py-2.5"
+                >
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100">
+                    <AlertTriangle className="h-4 w-4 text-amber-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-slate-900">
+                      {needsAttention} discharge
+                      {needsAttention === 1 ? "" : "s"} need attention
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      Review failed or flagged calls
+                    </p>
+                  </div>
+                </Link>
+              </DropdownMenuItem>
+            )}
+
+            {callbacks > 0 && (
+              <DropdownMenuItem asChild>
+                <Link
+                  href={inboundUrl}
+                  className="flex items-start gap-3 px-3 py-2.5"
+                >
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-100">
+                    <PhoneMissed className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-slate-900">
+                      {callbacks} callback{callbacks === 1 ? "" : "s"} requested
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      Callers waiting for follow-up
+                    </p>
+                  </div>
+                </Link>
+              </DropdownMenuItem>
+            )}
+          </div>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

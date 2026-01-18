@@ -6,25 +6,19 @@ import {
   PhoneIncoming,
   PhoneOutgoing,
   Settings,
-  LogOut,
-  CreditCard,
   ChevronRight,
   Calendar,
   PhoneCall,
   Info,
   AlertCircle,
   AlertTriangle,
-  Shield,
   Building2,
 } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "@odis-ai/shared/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -32,12 +26,9 @@ import {
 } from "@odis-ai/shared/ui/dropdown-menu";
 import { TooltipProvider } from "@odis-ai/shared/ui/tooltip";
 import { cn } from "@odis-ai/shared/util";
-import { signOut } from "~/server/actions/auth";
-import type { User } from "@supabase/supabase-js";
 import { api } from "~/trpc/client";
 
 interface UnifiedSidebarProps {
-  user: User;
   profile?: {
     first_name: string | null;
     last_name: string | null;
@@ -47,7 +38,6 @@ interface UnifiedSidebarProps {
   } | null;
   clinicSlug: string | null;
   allClinics?: Array<{ id: string; name: string; slug: string }>;
-  currentClinicName?: string;
 }
 
 interface MainNavItemProps {
@@ -137,18 +127,11 @@ function SecondaryNavItem({
 }
 
 export function UnifiedSidebar({
-  user,
-  profile,
   clinicSlug,
   allClinics,
 }: UnifiedSidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
-  const firstName = profile?.first_name ?? "User";
-  const lastName = profile?.last_name ?? "";
-  const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
-  const fullName = `${firstName} ${lastName}`.trim() ?? user.email ?? "User";
 
   // Build clinic-scoped URLs
   const dashboardUrl = clinicSlug ? `/dashboard/${clinicSlug}` : "/dashboard";
@@ -161,9 +144,6 @@ export function UnifiedSidebar({
   const settingsUrl = clinicSlug
     ? `/dashboard/${clinicSlug}/settings`
     : "/dashboard/settings";
-  const billingUrl = clinicSlug
-    ? `/dashboard/${clinicSlug}/billing`
-    : "/dashboard/billing";
 
   // Determine active states
   const isOnDashboard =
@@ -224,23 +204,10 @@ export function UnifiedSidebar({
           {/* Subtle texture overlay */}
           <div className="pointer-events-none absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCI+CjxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgZmlsbD0ibm9uZSIvPgo8Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDMpIi8+Cjwvc3ZnPg==')] opacity-50" />
 
-          {/* Header: Logo & Clinic */}
-          <div className="relative z-10 flex items-center gap-3 px-4 pt-5 pb-4">
-            <Link
-              href={dashboardUrl}
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 shadow-lg shadow-teal-900/30 transition-transform hover:scale-105"
-            >
-              <Image
-                src="/icon-128.png"
-                alt="Odis AI"
-                width={20}
-                height={20}
-                className="h-5 w-5"
-              />
-            </Link>
-
-            {/* Clinic Selector */}
-            {allClinics && allClinics.length > 1 && clinicSlug && (
+          {/* Header: Clinic Selector (admin only) */}
+          {allClinics && allClinics.length > 1 && clinicSlug && (
+            <div className="relative z-10 px-3 pt-4 pb-2">
+              {/* Clinic Selector */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="group relative flex flex-1 items-center gap-2 overflow-hidden rounded-lg bg-white/5 px-3 py-2 text-left transition-all hover:bg-white/10 hover:shadow-lg hover:shadow-teal-900/20">
@@ -319,8 +286,8 @@ export function UnifiedSidebar({
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Main Navigation */}
           <nav className="relative z-10 flex flex-col gap-1 px-3 py-2">
@@ -451,102 +418,8 @@ export function UnifiedSidebar({
             </>
           )}
 
-          {/* Spacer when no secondary nav */}
+          {/* Spacer - fills remaining space */}
           {!showSecondaryNav && <div className="flex-1" />}
-
-          {/* Footer Divider - matches section divider above */}
-          <div className="relative z-10 mx-4 mt-auto mb-3">
-            <div className="h-px bg-gradient-to-r from-transparent via-teal-700/40 to-transparent" />
-          </div>
-
-          {/* Footer: User Menu */}
-          <div className="relative z-10 px-3 pb-3">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex w-full items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-white/5">
-                  <Avatar className="h-8 w-8 rounded-lg ring-2 ring-teal-800/50">
-                    {profile?.avatar_url && (
-                      <AvatarImage src={profile.avatar_url} alt={fullName} />
-                    )}
-                    <AvatarFallback className="rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 text-xs font-semibold text-white">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1 text-left">
-                    <p className="truncate text-sm font-medium text-white">
-                      {fullName}
-                    </p>
-                    <p className="truncate text-xs text-slate-400">
-                      {user.email}
-                    </p>
-                  </div>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-56"
-                side="top"
-                align="start"
-                sideOffset={8}
-              >
-                <DropdownMenuLabel className="p-0 font-normal">
-                  <div className="flex items-center gap-2 px-2 py-2">
-                    <Avatar className="h-8 w-8 rounded-lg">
-                      {profile?.avatar_url && (
-                        <AvatarImage src={profile.avatar_url} alt={fullName} />
-                      )}
-                      <AvatarFallback className="rounded-lg bg-teal-100 text-xs font-medium text-teal-700">
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex min-w-0 flex-col">
-                      <span className="truncate text-sm font-medium text-gray-900">
-                        {fullName}
-                      </span>
-                      <span className="truncate text-xs text-gray-500">
-                        {user.email}
-                      </span>
-                    </div>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href={settingsUrl}
-                      className="flex items-center gap-2"
-                    >
-                      <Settings className="h-4 w-4 text-gray-500" />
-                      <span>Settings</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href={billingUrl} className="flex items-center gap-2">
-                      <CreditCard className="h-4 w-4 text-gray-500" />
-                      <span>Billing</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  {profile?.role === "admin" && (
-                    <DropdownMenuItem asChild>
-                      <Link href="/admin" className="flex items-center gap-2">
-                        <Shield className="h-4 w-4 text-amber-600" />
-                        <span className="text-amber-700">Admin Panel</span>
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="flex items-center gap-2 text-red-600 focus:bg-red-50 focus:text-red-600"
-                  onClick={async () => {
-                    await signOut();
-                  }}
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
         </div>
       </div>
     </TooltipProvider>
