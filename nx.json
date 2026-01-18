@@ -25,12 +25,14 @@
   "plugins": [
     {
       "plugin": "@nx/eslint/plugin",
+      "include": ["apps/**", "libs/**"],
       "options": {
         "targetName": "lint"
       }
     },
     {
       "plugin": "@nx/next/plugin",
+      "include": ["apps/web/**"],
       "options": {
         "startTargetName": "start",
         "buildTargetName": "build",
@@ -42,6 +44,7 @@
     },
     {
       "plugin": "@nx/vite/plugin",
+      "include": ["libs/**"],
       "options": {
         "buildTargetName": "vite:build",
         "serveTargetName": "vite:serve",
@@ -49,13 +52,8 @@
       }
     },
     {
-      "plugin": "@nx/esbuild",
-      "options": {
-        "buildTargetName": "esbuild:build"
-      }
-    },
-    {
       "plugin": "@nx/vitest",
+      "include": ["apps/**", "libs/**"],
       "options": {
         "testTargetName": "test",
         "ciTargetName": "test-ci"

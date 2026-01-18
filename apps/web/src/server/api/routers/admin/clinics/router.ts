@@ -229,7 +229,11 @@ export const adminClinicsRouter = createTRPCRouter({
         });
       }
 
-      return data ?? [];
+      // Transform to ensure users is a single object (Supabase returns it as array in types)
+      return (data ?? []).map((access) => ({
+        ...access,
+        users: Array.isArray(access.users) ? access.users[0] : access.users,
+      }));
     }),
 
   /**
