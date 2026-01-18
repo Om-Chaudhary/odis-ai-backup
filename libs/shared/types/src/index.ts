@@ -15,6 +15,7 @@ export * from "./dashboard";
 export * from "./entities";
 export * from "./idexx";
 export * from "./patient";
+export * from "./pims";
 export * from "./services";
 export * from "./supabase";
 

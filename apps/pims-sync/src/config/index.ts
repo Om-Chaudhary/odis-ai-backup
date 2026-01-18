@@ -24,10 +24,10 @@ const envSchema = z.object({
     .string()
     .min(1, "SUPABASE_SERVICE_ROLE_KEY is required"),
 
-  // Encryption configuration
-  ENCRYPTION_KEY: z
+  // Encryption configuration (used by @odis-ai/shared/crypto for credential decryption)
+  IDEXX_ENCRYPTION_KEY: z
     .string()
-    .min(32, "ENCRYPTION_KEY must be at least 32 characters"),
+    .min(32, "IDEXX_ENCRYPTION_KEY must be at least 32 characters"),
 
   // Browser configuration
   HEADLESS: z

@@ -46,7 +46,7 @@ healthRouter.get("/health", (req: Request, res: Response) => {
   const requiredEnvVars = [
     "SUPABASE_URL",
     "SUPABASE_SERVICE_ROLE_KEY",
-    "ENCRYPTION_KEY",
+    "IDEXX_ENCRYPTION_KEY",
   ];
   const missingEnvVars = requiredEnvVars.filter((key) => !process.env[key]);
   const envHealthy = missingEnvVars.length === 0;

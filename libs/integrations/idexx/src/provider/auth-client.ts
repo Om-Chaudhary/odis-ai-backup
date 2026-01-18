@@ -4,7 +4,7 @@
  */
 
 import type { Page } from "playwright";
-import type { PimsCredentials } from "@odis-ai/domain/sync";
+import type { PimsCredentials } from "@odis-ai/shared/types";
 import type { BrowserService } from "../browser/browser-service";
 import type { IdexxAuthState } from "./types";
 import { IDEXX_ENDPOINTS, IDEXX_SELECTORS } from "./types";
@@ -75,27 +75,25 @@ export class IdexxAuthClient {
     page: Page,
     credentials: PimsCredentials,
   ): Promise<void> {
-    // Wait for form to be visible
-    await page.waitForSelector(IDEXX_SELECTORS.USERNAME_INPUT, {
-      state: "visible",
-    });
+    // Fill company ID first (if present) - this is the first field on the login page
+    if (credentials.companyId) {
+      // Wait for company ID field to be visible
+      await page.waitForSelector(IDEXX_SELECTORS.COMPANY_ID_INPUT, {
+        state: "visible",
+      });
+      await page.fill(IDEXX_SELECTORS.COMPANY_ID_INPUT, credentials.companyId);
+    } else {
+      // If no company ID, wait for username field
+      await page.waitForSelector(IDEXX_SELECTORS.USERNAME_INPUT, {
+        state: "visible",
+      });
+    }
 
     // Fill username/email
     await page.fill(IDEXX_SELECTORS.USERNAME_INPUT, credentials.username);
 
     // Fill password
     await page.fill(IDEXX_SELECTORS.PASSWORD_INPUT, credentials.password);
-
-    // Fill company ID if present
-    if (credentials.companyId) {
-      const companyIdInput = await page.$(IDEXX_SELECTORS.COMPANY_ID_INPUT);
-      if (companyIdInput) {
-        await page.fill(
-          IDEXX_SELECTORS.COMPANY_ID_INPUT,
-          credentials.companyId,
-        );
-      }
-    }
   }
 
   /**

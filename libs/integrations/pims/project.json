@@ -1,0 +1,31 @@
+{
+  "name": "integrations-pims",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/integrations/pims/src",
+  "projectType": "library",
+  "tags": ["type:lib", "scope:integrations", "platform:browser"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["libs/integrations/pims/**/*.ts"]
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p libs/integrations/pims/tsconfig.json",
+        "cwd": "{workspaceRoot}"
+      },
+      "cache": true,
+      "inputs": ["default", "^default"]
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/libs/integrations/pims"],
+      "options": {
+        "config": "libs/integrations/pims/vitest.config.ts"
+      }
+    }
+  }
+}

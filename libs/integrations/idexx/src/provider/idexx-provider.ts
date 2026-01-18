@@ -8,7 +8,7 @@ import type {
   PimsCredentials,
   PimsAppointment,
   PimsConsultation,
-} from "@odis-ai/domain/sync";
+} from "@odis-ai/shared/types";
 import { type BrowserService } from "../browser/browser-service";
 import { IdexxAuthClient } from "./auth-client";
 import { IdexxScheduleClient } from "./schedule-client";
