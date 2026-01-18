@@ -137,13 +137,14 @@ export class IdexxConsultationClient {
       return res.json();
     }, url);
 
-    if (!response?.consultation) {
+    const typedResponse = response as Partial<IdexxConsultationPageData>;
+    if (!typedResponse?.consultation) {
       console.warn("Invalid consultation response:", response);
       return null;
     }
 
     return this.mapConsultationData(
-      response as IdexxConsultationPageData,
+      typedResponse as IdexxConsultationPageData,
       consultationId,
     );
   }

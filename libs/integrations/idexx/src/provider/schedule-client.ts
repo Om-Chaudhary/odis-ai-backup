@@ -139,11 +139,16 @@ export class IdexxScheduleClient {
 
     // Extract appointments array from response
     // The response may be an array directly or wrapped in an object
+    const typedResponse = response as {
+      appointments?: IdexxApiAppointment[];
+      data?: IdexxApiAppointment[];
+      events?: IdexxApiAppointment[];
+    };
     const rawAppointments: IdexxApiAppointment[] =
-      response.appointments ??
-      response.data ??
-      response.events ??
-      (Array.isArray(response) ? response : []);
+      typedResponse.appointments ??
+      typedResponse.data ??
+      typedResponse.events ??
+      (Array.isArray(response) ? (response as IdexxApiAppointment[]) : []);
 
     if (!Array.isArray(rawAppointments)) {
       console.warn("Unexpected appointments response format:", response);

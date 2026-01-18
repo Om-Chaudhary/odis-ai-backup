@@ -7,6 +7,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 
 import type { PimsCredentials } from "@odis-ai/domain/sync";
+import type {
+  ScrapeType,
+  ScrapedAppointment,
+  ScrapedConsultation,
+} from "../types";
 import { persistenceLogger as logger } from "../lib/logger";
 
 /**
