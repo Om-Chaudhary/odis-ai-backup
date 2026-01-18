@@ -34,7 +34,7 @@ export async function loadClinicSchedules(
     // is not yet in generated Database types (requires migration + type regen)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call
     const { data, error } = await (supabase as any)
-      .from("clinic_schedule_configs")
+      .from("clinic_schedule_config")
       .select(
         `
         clinic_id,

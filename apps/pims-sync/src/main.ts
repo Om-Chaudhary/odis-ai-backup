@@ -3,6 +3,7 @@
  *
  * A standalone Node.js application for on-demand IDEXX Neo data scraping.
  * Deployed on Railway via Docker.
+ * Version: 1.0.1
  *
  * Endpoints:
  * - POST /api/idexx/scrape - On-demand scraping endpoint

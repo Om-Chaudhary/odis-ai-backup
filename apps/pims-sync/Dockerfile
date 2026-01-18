@@ -37,7 +37,7 @@ RUN pnpm nx build pims-sync --verbose
 # ============================================
 # Stage 2: Production
 # ============================================
-FROM mcr.microsoft.com/playwright:v1.49.1-noble
+FROM mcr.microsoft.com/playwright:v1.57.0-noble
 
 # Environment configuration
 ENV HOST=0.0.0.0
