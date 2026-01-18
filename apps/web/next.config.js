@@ -95,9 +95,34 @@ const config = {
   // Compression
   compress: true,
 
+  // Watch options to reduce file watchers
+  webpack: (config, { isServer }) => {
+    // Reduce file watching
+    config.watchOptions = {
+      ignored: [
+        "**/node_modules/**",
+        "**/.git/**",
+        "**/.next/**",
+        "**/dist/**",
+        "**/coverage/**",
+        "**/.nx/**",
+        "**/apps/!(web)/**",
+        "**/libs/**/!(src)/**",
+      ],
+      aggregateTimeout: 300,
+      poll: false,
+    };
+    return config;
+  },
+
   // Experimental features for better performance
   experimental: {
     optimizePackageImports: ["lucide-react", "@radix-ui/react-icons"],
+    // Turbopack configuration
+    turbo: {
+      resolveAlias: {},
+      rules: {},
+    },
   },
 
   // Transpile internal packages to ensure proper handling

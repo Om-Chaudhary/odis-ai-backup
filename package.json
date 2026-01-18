@@ -6,7 +6,8 @@
   "scripts": {
     "build": "NX_NO_CLOUD=true NODE_ENV=production nx build web --verbose",
     "build:all": "NX_NO_CLOUD=true NODE_ENV=production nx run-many -t build",
-    "dev": "NODE_OPTIONS='--no-deprecation' nx dev web",
+    "dev": "NX_NO_CLOUD=true NODE_OPTIONS='--no-deprecation' nx dev web",
+    "dev:pims-sync": "nx serve pims-sync",
     "dev:docs": "nx start docs",
     "start": "nx start web",
     "preview": "nx build web && nx start web",

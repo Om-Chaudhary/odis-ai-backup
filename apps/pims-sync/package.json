@@ -4,8 +4,8 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "start": "dotenv -e ../../.env.local -- env PORT=5050 node ../../dist/apps/pims-sync/main.js",
-    "start:visible": "dotenv -e ../../.env.local -- env PORT=5050 HEADLESS=false node ../../dist/apps/pims-sync/main.js",
+    "start": "dotenv -e ../../.env.local -- env PORT=5051 node ../../dist/apps/pims-sync/main.js",
+    "start:visible": "dotenv -e ../../.env.local -- env PORT=5051 HEADLESS=false node ../../dist/apps/pims-sync/main.js",
     "cli": "dotenv -e ../../.env.local -- tsx src/cli-runner.mjs"
   },
   "dependencies": {

@@ -99,6 +99,5 @@
       "inputs": ["production", "^production"]
     }
   },
-  "defaultBase": "main",
-  "nxCloudId": "6938de285975394df8d6f1d3"
+  "defaultBase": "main"
 }
