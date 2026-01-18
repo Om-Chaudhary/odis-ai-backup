@@ -87,7 +87,6 @@ export function DashboardBreadcrumb() {
           return formatSlugToTitle(filterParam);
       }
     }
-
     return null;
   };
 
@@ -125,7 +124,7 @@ export function DashboardBreadcrumb() {
         )}
 
         {/* Show home if on root path or clinic dashboard path  */}
-        {clinicDashboardUrl && (
+        {segments.length === 2 && (
           <>
             <BreadcrumbSeparator className="hidden md:block" />
             <BreadcrumbItem>
