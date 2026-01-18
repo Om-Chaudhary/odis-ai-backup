@@ -57,6 +57,14 @@
       "@odis-ai/integrations/vapi/*": ["libs/integrations/vapi/src/*"],
       "@odis-ai/integrations/idexx": ["libs/integrations/idexx/src/index.ts"],
       "@odis-ai/integrations/idexx/*": ["libs/integrations/idexx/src/*"],
+      "@odis-ai/integrations/idexx/provider": [
+        "libs/integrations/idexx/src/provider/index.ts"
+      ],
+      "@odis-ai/integrations/idexx/browser": [
+        "libs/integrations/idexx/src/browser/index.ts"
+      ],
+      "@odis-ai/integrations/axiom": ["libs/integrations/axiom/src/index.ts"],
+      "@odis-ai/integrations/axiom/*": ["libs/integrations/axiom/src/*"],
       "@odis-ai/integrations/qstash": ["libs/integrations/qstash/src/index.ts"],
       "@odis-ai/integrations/qstash/*": ["libs/integrations/qstash/src/*"],
       "@odis-ai/integrations/resend": ["libs/integrations/resend/src/index.ts"],
@@ -81,6 +89,8 @@
       "@odis-ai/domain/clinics/*": ["libs/domain/clinics/util/src/*"],
       "@odis-ai/domain/auth": ["libs/domain/auth/util/src/index.ts"],
       "@odis-ai/domain/auth/*": ["libs/domain/auth/util/src/*"],
+      "@odis-ai/domain/sync": ["libs/domain/sync/data-access/src/index.ts"],
+      "@odis-ai/domain/sync/*": ["libs/domain/sync/data-access/src/*"],
 
       // Data Access - DB Split
       "@odis-ai/data-access/supabase-client": [

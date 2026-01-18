@@ -196,6 +196,59 @@ export type Database = {
           },
         ];
       };
+      case_sync_audits: {
+        Row: {
+          appointments_found: number;
+          cases_created: number;
+          cases_deleted: number;
+          cases_skipped: number;
+          cases_updated: number;
+          clinic_id: string;
+          created_at: string;
+          error_message: string | null;
+          id: string;
+          status: string;
+          sync_type: string;
+          updated_at: string;
+        };
+        Insert: {
+          appointments_found?: number;
+          cases_created?: number;
+          cases_deleted?: number;
+          cases_skipped?: number;
+          cases_updated?: number;
+          clinic_id: string;
+          created_at?: string;
+          error_message?: string | null;
+          id?: string;
+          status?: string;
+          sync_type: string;
+          updated_at?: string;
+        };
+        Update: {
+          appointments_found?: number;
+          cases_created?: number;
+          cases_deleted?: number;
+          cases_skipped?: number;
+          cases_updated?: number;
+          clinic_id?: string;
+          created_at?: string;
+          error_message?: string | null;
+          id?: string;
+          status?: string;
+          sync_type?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "case_sync_audits_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       cases: {
         Row: {
           canonical_patient_id: string | null;
@@ -360,6 +413,59 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "clients_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      clinic_api_keys: {
+        Row: {
+          clinic_id: string;
+          created_at: string;
+          expires_at: string | null;
+          id: string;
+          is_active: boolean;
+          key_hash: string;
+          key_prefix: string;
+          last_used_at: string | null;
+          name: string;
+          permissions: Json | null;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          clinic_id: string;
+          created_at?: string;
+          expires_at?: string | null;
+          id?: string;
+          is_active?: boolean;
+          key_hash: string;
+          key_prefix: string;
+          last_used_at?: string | null;
+          name: string;
+          permissions?: Json | null;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          clinic_id?: string;
+          created_at?: string;
+          expires_at?: string | null;
+          id?: string;
+          is_active?: boolean;
+          key_hash?: string;
+          key_prefix?: string;
+          last_used_at?: string | null;
+          name?: string;
+          permissions?: Json | null;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "clinic_api_keys_clinic_id_fkey";
             columns: ["clinic_id"];
             isOneToOne: false;
             referencedRelation: "clinics";
@@ -573,6 +679,7 @@ export type Database = {
           slot_duration_minutes: number;
           stale_threshold_minutes: number;
           sync_horizon_days: number;
+          sync_schedules: Json | null;
           timezone: string;
           updated_at: string;
         };
@@ -588,6 +695,7 @@ export type Database = {
           slot_duration_minutes?: number;
           stale_threshold_minutes?: number;
           sync_horizon_days?: number;
+          sync_schedules?: Json | null;
           timezone?: string;
           updated_at?: string;
         };
@@ -603,6 +711,7 @@ export type Database = {
           slot_duration_minutes?: number;
           stale_threshold_minutes?: number;
           sync_horizon_days?: number;
+          sync_schedules?: Json | null;
           timezone?: string;
           updated_at?: string;
         };
@@ -622,6 +731,8 @@ export type Database = {
           address_config: Json | null;
           business_hours: Json | null;
           created_at: string;
+          current_period_end: string | null;
+          current_period_start: string | null;
           email: string | null;
           email_footer_text: string | null;
           email_header_text: string | null;
@@ -638,6 +749,10 @@ export type Database = {
           pims_type: string;
           primary_color: string | null;
           slug: string;
+          stripe_customer_id: string | null;
+          stripe_subscription_id: string | null;
+          subscription_status: string | null;
+          subscription_tier: string | null;
           timezone: string | null;
           updated_at: string;
         };
@@ -646,6 +761,8 @@ export type Database = {
           address_config?: Json | null;
           business_hours?: Json | null;
           created_at?: string;
+          current_period_end?: string | null;
+          current_period_start?: string | null;
           email?: string | null;
           email_footer_text?: string | null;
           email_header_text?: string | null;
@@ -662,6 +779,10 @@ export type Database = {
           pims_type?: string;
           primary_color?: string | null;
           slug: string;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          subscription_status?: string | null;
+          subscription_tier?: string | null;
           timezone?: string | null;
           updated_at?: string;
         };
@@ -670,6 +791,8 @@ export type Database = {
           address_config?: Json | null;
           business_hours?: Json | null;
           created_at?: string;
+          current_period_end?: string | null;
+          current_period_start?: string | null;
           email?: string | null;
           email_footer_text?: string | null;
           email_header_text?: string | null;
@@ -686,6 +809,10 @@ export type Database = {
           pims_type?: string;
           primary_color?: string | null;
           slug?: string;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          subscription_status?: string | null;
+          subscription_tier?: string | null;
           timezone?: string | null;
           updated_at?: string;
         };
@@ -3777,11 +3904,8 @@ export type Enums<
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    keyof DefaultSchema["CompositeTypes"] extends never
-      ? { schema: keyof DatabaseWithoutInternals }
-      :
-          | keyof DefaultSchema["CompositeTypes"]
-          | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }

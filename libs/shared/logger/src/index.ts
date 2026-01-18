@@ -6,6 +6,7 @@
  * - Structured context (key-value pairs)
  * - Namespacing for different modules
  * - JSON output for log aggregation services
+ * - Custom transports (Axiom, CloudWatch, etc.)
  */
 export type LogLevel = "debug" | "info" | "warn" | "error";
 
@@ -20,8 +21,52 @@ export interface LogEntry {
   environment?: string;
 }
 
+/**
+ * Log transport interface
+ * Implement this to send logs to external services (Axiom, CloudWatch, etc.)
+ */
+export interface LogTransport {
+  log(entry: LogEntry): void;
+  flush?(): Promise<void>;
+  close?(): Promise<void>;
+}
+
 export class Logger {
-  constructor(private namespace: string) {}
+  private transports: LogTransport[] = [];
+
+  constructor(
+    private namespace: string,
+    options?: {
+      transports?: LogTransport[];
+    },
+  ) {
+    this.transports = options?.transports ?? [];
+  }
+
+  /**
+   * Add a transport to this logger
+   */
+  addTransport(transport: LogTransport): void {
+    this.transports.push(transport);
+  }
+
+  /**
+   * Flush all transports (if they support flushing)
+   */
+  async flush(): Promise<void> {
+    await Promise.all(
+      this.transports.map((t) => (t.flush ? t.flush() : Promise.resolve())),
+    );
+  }
+
+  /**
+   * Close all transports (if they support closing)
+   */
+  async close(): Promise<void> {
+    await Promise.all(
+      this.transports.map((t) => (t.close ? t.close() : Promise.resolve())),
+    );
+  }
 
   private log(level: LogLevel, message: string, context?: LogContext): void {
     const logEntry: LogEntry = {
@@ -33,10 +78,19 @@ export class Logger {
       environment: process.env.NODE_ENV,
     };
 
-    if (process.env.NODE_ENV === "production") {
-      // TODO: integrate with log aggregation service
+    // Send to all transports
+    for (const transport of this.transports) {
+      try {
+        transport.log(logEntry);
+      } catch (error) {
+        console.error(
+          `[Logger] Transport failed for ${this.namespace}:`,
+          error,
+        );
+      }
     }
 
+    // Always log to console
     const formattedMessage = this.formatConsoleOutput(logEntry);
 
     switch (level) {
@@ -95,12 +149,49 @@ export class Logger {
   }
 
   child(childNamespace: string): Logger {
-    return new Logger(`${this.namespace}:${childNamespace}`);
+    return new Logger(`${this.namespace}:${childNamespace}`, {
+      transports: this.transports,
+    });
   }
 }
 
-export function createLogger(namespace: string): Logger {
-  return new Logger(namespace);
+export function createLogger(
+  namespace: string,
+  options?: {
+    transports?: LogTransport[];
+  },
+): Logger {
+  return new Logger(namespace, options);
+}
+
+/**
+ * Create a logger with Axiom transport
+ * Note: Import AxiomLoggerAdapter from @odis-ai/integrations/axiom and pass it as a transport
+ *
+ * @example
+ * ```typescript
+ * import { AxiomLoggerAdapter } from '@odis-ai/integrations/axiom';
+ * import { createLogger } from '@odis-ai/shared/logger';
+ *
+ * const adapter = new AxiomLoggerAdapter({
+ *   apiToken: process.env.AXIOM_API_TOKEN!,
+ *   dataset: 'idexx-sync',
+ * });
+ *
+ * const logger = createLogger('idexx-sync', {
+ *   transports: [adapter]
+ * });
+ *
+ * // Or add transport to existing logger
+ * const logger = createLogger('idexx-sync');
+ * logger.addTransport(adapter);
+ * ```
+ */
+export function createLoggerWithTransports(
+  namespace: string,
+  transports: LogTransport[],
+): Logger {
+  return new Logger(namespace, { transports });
 }
 
 export const loggers = {

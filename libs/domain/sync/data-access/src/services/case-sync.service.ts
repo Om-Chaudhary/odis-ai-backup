@@ -1,0 +1,403 @@
+/**
+ * Case Sync Service
+ * Enriches cases with consultation data from PIMS
+ */
+
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database, Json } from "@odis-ai/shared/types";
+import type {
+  IPimsProvider,
+  PimsConsultation,
+  CaseSyncOptions,
+  SyncResult,
+  SyncStats,
+} from "../types";
+import { createLogger } from "@odis-ai/shared/logger";
+
+const logger = createLogger("case-sync");
+
+/**
+ * Case row with PIMS metadata
+ */
+interface CaseWithPimsData {
+  id: string;
+  external_id: string | null;
+  metadata: Json | null;
+}
+
+/**
+ * PIMS appointment data from metadata
+ */
+interface PimsAppointmentMetadata {
+  id: string;
+  consultationId: string | null;
+}
+
+/**
+ * CaseSyncService - Enriches cases with PIMS consultation data
+ *
+ * Responsibilities:
+ * - Find cases with consultation IDs
+ * - Fetch consultation data from PIMS
+ * - Update cases with SOAP notes, discharge summary, products/services
+ * - Track sync statistics
+ */
+export class CaseSyncService {
+  constructor(
+    private supabase: SupabaseClient<Database>,
+    private provider: IPimsProvider,
+    private clinicId: string,
+  ) {}
+
+  /**
+   * Sync consultation data for cases in date range
+   */
+  async sync(options: CaseSyncOptions): Promise<SyncResult> {
+    const syncId = crypto.randomUUID();
+    const startTime = Date.now();
+    const errors: Array<{
+      message: string;
+      context?: Record<string, unknown>;
+    }> = [];
+
+    logger.info("Starting case sync", {
+      syncId,
+      clinicId: this.clinicId,
+      provider: this.provider.name,
+      dateRange: {
+        start: options.startDate.toISOString(),
+        end: options.endDate.toISOString(),
+      },
+    });
+
+    const stats: SyncStats = {
+      total: 0,
+      created: 0,
+      updated: 0,
+      skipped: 0,
+      failed: 0,
+    };
+
+    try {
+      // Find cases with consultation IDs that need enrichment
+      const casesToEnrich = await this.findCasesNeedingEnrichment(
+        options.startDate,
+        options.endDate,
+      );
+
+      stats.total = casesToEnrich.length;
+
+      logger.info("Found cases needing enrichment", {
+        syncId,
+        count: casesToEnrich.length,
+      });
+
+      if (casesToEnrich.length === 0) {
+        return {
+          success: true,
+          syncId,
+          stats,
+          durationMs: Date.now() - startTime,
+        };
+      }
+
+      // Extract consultation IDs
+      const consultationMap = this.buildConsultationMap(casesToEnrich);
+      const consultationIds = Array.from(consultationMap.keys());
+
+      logger.info("Fetching consultations from PIMS", {
+        syncId,
+        count: consultationIds.length,
+      });
+
+      // Batch fetch consultations
+      const batchSize = options.parallelBatchSize ?? 5;
+      const consultations = await this.fetchConsultationsBatched(
+        consultationIds,
+        batchSize,
+      );
+
+      logger.info("Fetched consultations", {
+        syncId,
+        requested: consultationIds.length,
+        received: consultations.size,
+      });
+
+      // Update cases with consultation data
+      for (const [consultationId, caseIds] of Array.from(
+        consultationMap.entries(),
+      )) {
+        const consultation = consultations.get(consultationId);
+
+        for (const caseId of caseIds) {
+          try {
+            if (consultation) {
+              await this.enrichCaseWithConsultation(caseId, consultation);
+              stats.updated++;
+            } else {
+              // Consultation not found - mark as skipped
+              stats.skipped++;
+              logger.debug("Consultation not found for case", {
+                caseId,
+                consultationId,
+              });
+            }
+          } catch (error) {
+            stats.failed++;
+            const message =
+              error instanceof Error ? error.message : "Unknown error";
+            errors.push({
+              message: `Failed to enrich case ${caseId}: ${message}`,
+              context: { caseId, consultationId },
+            });
+            logger.error("Failed to enrich case", {
+              syncId,
+              caseId,
+              consultationId,
+              error: message,
+            });
+          }
+        }
+      }
+
+      // Record sync audit
+      await this.recordSyncAudit(syncId, "cases", stats, errors.length === 0);
+
+      const durationMs = Date.now() - startTime;
+
+      logger.info("Case sync completed", {
+        syncId,
+        stats,
+        durationMs,
+        hasErrors: errors.length > 0,
+      });
+
+      return {
+        success: errors.length === 0,
+        syncId,
+        stats,
+        durationMs,
+        errors: errors.length > 0 ? errors : undefined,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      const durationMs = Date.now() - startTime;
+
+      logger.error("Case sync failed", {
+        syncId,
+        error: message,
+        durationMs,
+      });
+
+      await this.recordSyncAudit(syncId, "cases", stats, false, message);
+
+      return {
+        success: false,
+        syncId,
+        stats,
+        durationMs,
+        errors: [{ message }],
+      };
+    }
+  }
+
+  /**
+   * Find cases that have consultation IDs but haven't been fully enriched
+   */
+  private async findCasesNeedingEnrichment(
+    startDate: Date,
+    endDate: Date,
+  ): Promise<CaseWithPimsData[]> {
+    const { data, error } = await this.supabase
+      .from("cases")
+      .select("id, external_id, metadata")
+      .eq("clinic_id", this.clinicId)
+      .gte("scheduled_at", startDate.toISOString())
+      .lte("scheduled_at", endDate.toISOString())
+      .not("metadata->pimsAppointment->consultationId", "is", null);
+
+    if (error) {
+      throw new Error(`Failed to query cases: ${error.message}`);
+    }
+
+    // Filter to cases that haven't been enriched yet
+    return (data ?? []).filter((caseRow) => {
+      const metadata = caseRow.metadata as Record<string, unknown> | null;
+      // Not enriched if no consultation data in metadata
+      return !metadata?.pimsConsultation;
+    });
+  }
+
+  /**
+   * Build map of consultationId -> caseIds
+   */
+  private buildConsultationMap(
+    cases: CaseWithPimsData[],
+  ): Map<string, string[]> {
+    const map = new Map<string, string[]>();
+
+    for (const caseRow of cases) {
+      const metadata = caseRow.metadata as Record<string, unknown> | null;
+      const pimsAppointment = metadata?.pimsAppointment as
+        | PimsAppointmentMetadata
+        | undefined;
+      const consultationId = pimsAppointment?.consultationId;
+
+      if (consultationId) {
+        const existing = map.get(consultationId) ?? [];
+        existing.push(caseRow.id);
+        map.set(consultationId, existing);
+      }
+    }
+
+    return map;
+  }
+
+  /**
+   * Fetch consultations in batches
+   */
+  private async fetchConsultationsBatched(
+    consultationIds: string[],
+    batchSize: number,
+  ): Promise<Map<string, PimsConsultation>> {
+    const results = new Map<string, PimsConsultation>();
+
+    for (let i = 0; i < consultationIds.length; i += batchSize) {
+      const batch = consultationIds.slice(i, i + batchSize);
+
+      // Fetch batch in parallel
+      const batchResults = await Promise.all(
+        batch.map(async (id) => {
+          try {
+            const consultation = await this.provider.fetchConsultation(id);
+            return { id, consultation };
+          } catch (error) {
+            logger.warn("Failed to fetch consultation", {
+              consultationId: id,
+              error: error instanceof Error ? error.message : "Unknown error",
+            });
+            return { id, consultation: null };
+          }
+        }),
+      );
+
+      for (const { id, consultation } of batchResults) {
+        if (consultation) {
+          results.set(id, consultation);
+        }
+      }
+
+      // Small delay between batches to avoid rate limiting
+      if (i + batchSize < consultationIds.length) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Enrich a case with consultation data
+   */
+  private async enrichCaseWithConsultation(
+    caseId: string,
+    consultation: PimsConsultation,
+  ): Promise<void> {
+    // Get current case
+    const { data: currentCase, error: fetchError } = await this.supabase
+      .from("cases")
+      .select("metadata")
+      .eq("id", caseId)
+      .single();
+
+    if (fetchError) {
+      throw new Error(`Failed to fetch case: ${fetchError.message}`);
+    }
+
+    const currentMetadata = (currentCase?.metadata ?? {}) as Record<
+      string,
+      unknown
+    >;
+    const currentEntities = currentMetadata.entities as
+      | Record<string, unknown>
+      | undefined;
+
+    // Build enriched metadata
+    const enrichedMetadata = {
+      ...currentMetadata,
+      pimsConsultation: consultation,
+      entities: {
+        ...currentEntities,
+        clinical: {
+          ...(currentEntities?.clinical as Record<string, unknown> | undefined),
+          // Add consultation-specific fields
+          clinicalNotes: consultation.notes ?? undefined,
+          visitReason:
+            consultation.reason ??
+            (currentEntities?.clinical as Record<string, unknown>)?.visitReason,
+          productsServicesProvided: consultation.productsServices
+            ? consultation.productsServices.split("; ")
+            : undefined,
+          productsServicesDeclined: consultation.declinedProductsServices
+            ? consultation.declinedProductsServices.split("; ")
+            : undefined,
+        },
+      },
+      // Store discharge summary at top level for VAPI
+      dischargeSummary: consultation.dischargeSummary,
+      enrichedAt: new Date().toISOString(),
+    };
+
+    // Update case
+    const { error: updateError } = await this.supabase
+      .from("cases")
+      .update({
+        metadata:
+          enrichedMetadata as unknown as Database["public"]["Tables"]["cases"]["Update"]["metadata"],
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", caseId);
+
+    if (updateError) {
+      throw new Error(`Failed to update case: ${updateError.message}`);
+    }
+
+    logger.debug("Enriched case with consultation data", {
+      caseId,
+      consultationId: consultation.id,
+      hasNotes: !!consultation.notes,
+      hasDischargeSummary: !!consultation.dischargeSummary,
+    });
+  }
+
+  /**
+   * Record sync audit in database
+   */
+  private async recordSyncAudit(
+    syncId: string,
+    syncType: "inbound" | "cases" | "reconciliation",
+    stats: SyncStats,
+    success: boolean,
+    errorMessage?: string,
+  ): Promise<void> {
+    try {
+      await this.supabase.from("case_sync_audits").insert({
+        id: syncId,
+        clinic_id: this.clinicId,
+        sync_type: syncType,
+        appointments_found: stats.total,
+        cases_created: stats.created,
+        cases_updated: stats.updated,
+        cases_skipped: stats.skipped,
+        cases_deleted: stats.deleted ?? 0,
+        status: success ? "completed" : "failed",
+        error_message: errorMessage ?? null,
+      });
+    } catch (error) {
+      logger.error("Failed to record sync audit", {
+        syncId,
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+}

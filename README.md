@@ -136,7 +136,7 @@ odis-ai/
 │   │   │   └── components/  # React components
 │   │   └── public/
 │   ├── docs/                # Docusaurus documentation
-│   └── idexx-sync/          # IDEXX Neo sync service (Express + Playwright)
+│   └── pims-sync/           # Multi-PIMS sync service (Express + Playwright)
 │
 ├── libs/
 │   ├── shared/              # Cross-cutting concerns

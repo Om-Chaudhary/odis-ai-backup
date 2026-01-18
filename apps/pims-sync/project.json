@@ -1,0 +1,134 @@
+{
+  "name": "pims-sync",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/pims-sync/src",
+  "projectType": "application",
+  "tags": ["type:app", "scope:server", "platform:node"],
+  "implicitDependencies": [
+    "integrations-idexx",
+    "integrations-axiom",
+    "domain-sync-data-access",
+    "data-access-db",
+    "shared-crypto",
+    "shared-logger",
+    "integrations-qstash"
+  ],
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/apps/pims-sync",
+        "format": ["cjs"],
+        "bundle": true,
+        "main": "apps/pims-sync/src/main.ts",
+        "tsConfig": "apps/pims-sync/tsconfig.app.json",
+        "assets": ["apps/pims-sync/src/assets"],
+        "generatePackageJson": true,
+        "external": ["playwright"],
+        "esbuildOptions": {
+          "sourcemap": true,
+          "outExtension": {
+            ".js": ".js"
+          }
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "generateLockfile": true,
+          "esbuildOptions": {
+            "sourcemap": false,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        }
+      }
+    },
+    "prune-lockfile": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "executor": "@nx/js:prune-lockfile",
+      "outputs": [
+        "{workspaceRoot}/dist/apps/pims-sync/package.json",
+        "{workspaceRoot}/dist/apps/pims-sync/pnpm-lock.yaml"
+      ],
+      "options": {
+        "buildTarget": "build"
+      }
+    },
+    "copy-workspace-modules": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "outputs": ["{workspaceRoot}/dist/apps/pims-sync/workspace_modules"],
+      "executor": "@nx/js:copy-workspace-modules",
+      "options": {
+        "buildTarget": "build"
+      }
+    },
+    "prune": {
+      "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
+      "executor": "nx:noop"
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "dependsOn": ["build"],
+      "options": {
+        "buildTarget": "pims-sync:build",
+        "runBuildTargetDependencies": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "pims-sync:build:development"
+        },
+        "production": {
+          "buildTarget": "pims-sync:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["apps/pims-sync/**/*.ts"]
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p apps/pims-sync/tsconfig.app.json",
+        "cwd": "{workspaceRoot}"
+      },
+      "cache": true,
+      "inputs": ["default", "^default"],
+      "dependsOn": ["^typecheck"]
+    },
+    "test": {
+      "executor": "@nx/vitest:test",
+      "outputs": ["{workspaceRoot}/coverage/apps/pims-sync"],
+      "options": {
+        "configFile": "apps/pims-sync/vitest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "cli": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --filter pims-sync cli",
+        "cwd": "{workspaceRoot}"
+      }
+    },
+    "docker:build": {
+      "dependsOn": ["build"],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker build -t pims-sync -f apps/pims-sync/Dockerfile .",
+        "cwd": "{workspaceRoot}"
+      }
+    }
+  }
+}

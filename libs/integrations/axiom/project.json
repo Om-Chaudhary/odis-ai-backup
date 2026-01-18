@@ -1,0 +1,31 @@
+{
+  "name": "integrations-axiom",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/integrations/axiom/src",
+  "projectType": "library",
+  "tags": ["type:integration", "scope:server", "platform:node"],
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run",
+        "cwd": "libs/integrations/axiom"
+      },
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/libs/integrations/axiom/vitest.config.ts"
+      ]
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.json",
+        "cwd": "libs/integrations/axiom"
+      },
+      "cache": true,
+      "inputs": ["default", "^default"]
+    }
+  }
+}

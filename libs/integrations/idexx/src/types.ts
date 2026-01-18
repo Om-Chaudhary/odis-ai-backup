@@ -7,7 +7,7 @@
 
 export interface IdexxPageData {
   pageData: {
-    providers: IdexxProvider[];
+    providers: IdexxStaffMember[];
     patient: IdexxPatient;
     client: IdexxClient;
     consultation: IdexxConsultation;
@@ -15,7 +15,11 @@ export interface IdexxPageData {
   };
 }
 
-export interface IdexxProvider {
+/**
+ * Represents a staff member (vet, nurse, tech) in IDEXX Neo
+ * @note Renamed from IdexxProvider to avoid conflict with IdexxProvider class
+ */
+export interface IdexxStaffMember {
   id: number;
   name: string;
   email: string;

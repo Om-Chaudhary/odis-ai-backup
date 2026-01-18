@@ -1,0 +1,29 @@
+# Railway Deployment Configuration
+# PIMS Sync Service
+
+[build]
+# Use Docker for deployment
+builder = "dockerfile"
+dockerfilePath = "apps/pims-sync/Dockerfile"
+
+# Build from workspace root (monorepo)
+watchPatterns = [
+  "apps/pims-sync/**",
+  "libs/domain/sync/**",
+  "libs/integrations/idexx/**",
+  "libs/integrations/axiom/**",
+  "libs/data-access/**",
+  "libs/shared/**"
+]
+
+[deploy]
+# Health check configuration
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+startCommand = "node main.js"
+restartPolicyType = "on-failure"
+restartPolicyMaxRetries = 3
+
+# Resource limits
+# Railway auto-scales but we set conservative defaults
+numReplicas = 1
