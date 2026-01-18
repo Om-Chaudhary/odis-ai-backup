@@ -1,11 +1,11 @@
 "use client";
 
-import { OverviewDashboard } from "./overview";
+import { DashboardOverview } from "./overview";
 
 interface DashboardContentProps {
   clinicSlug?: string;
 }
 
 export function DashboardContent({ clinicSlug }: DashboardContentProps) {
-  return <OverviewDashboard clinicSlug={clinicSlug} />;
+  return <DashboardOverview clinicSlug={clinicSlug} />;
 }
