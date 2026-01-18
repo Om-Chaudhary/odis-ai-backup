@@ -43,13 +43,13 @@ export default async function AdminLayout({
   }
 
   // Fetch all clinics for admin context
-  const { data: clinics = [] } = await supabase
+  const { data: clinics } = await supabase
     .from("clinics")
     .select("*")
     .order("name");
 
   return (
-    <AdminProvider clinics={clinics}>
+    <AdminProvider clinics={clinics ?? []}>
       <div className="flex h-screen w-full overflow-hidden">
         <AdminSidebar user={user} profile={profile} />
 
