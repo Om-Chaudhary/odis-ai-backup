@@ -27,13 +27,11 @@ import {
   DashboardToolbar,
 } from "~/components/dashboard/shared";
 
-interface ComprehensiveDashboardProps {
+interface DashboardOverviewProps {
   clinicSlug?: string;
 }
 
-export function ComprehensiveDashboard({
-  clinicSlug,
-}: ComprehensiveDashboardProps) {
+export function DashboardOverview({ clinicSlug }: DashboardOverviewProps) {
   const [mounted, setMounted] = useState(false);
 
   const {
@@ -126,14 +124,14 @@ export function ComprehensiveDashboard({
                     </h2>
                   </div>
                 </div>
-                <TrendBadge trend={inboundTrend} />
+                <TrendBadge trend={dailyStats.inbound.trend} />
               </div>
 
               <div className="mt-6 space-y-4">
                 <div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-5xl font-bold text-slate-800">
-                      {inbound.today.completed}
+                      {dailyStats.inbound.today.completed}
                     </span>
                     <span className="text-lg text-slate-600">
                       calls handled
@@ -145,13 +143,13 @@ export function ComprehensiveDashboard({
                   <StatItem
                     icon={CheckCircle}
                     label="AI Handled"
-                    value={`${inbound.today.aiHandledRate}%`}
+                    value={`${dailyStats.inbound.today.aiHandledRate}%`}
                     color="teal"
                   />
                   <StatItem
                     icon={PhoneForwarded}
                     label="Transferred"
-                    value={inbound.today.transferred}
+                    value={dailyStats.inbound.today.transferred}
                     color="amber"
                   />
                 </div>
@@ -175,14 +173,14 @@ export function ComprehensiveDashboard({
                     </h2>
                   </div>
                 </div>
-                <TrendBadge trend={outboundTrend} />
+                <TrendBadge trend={dailyStats.outbound.trend} />
               </div>
 
               <div className="mt-6 space-y-4">
                 <div>
                   <div className="flex items-baseline gap-2">
                     <span className="text-5xl font-bold text-slate-800">
-                      {outbound.today.completed}
+                      {dailyStats.outbound.today.completed}
                     </span>
                     <span className="text-lg text-slate-600">
                       calls completed
@@ -194,13 +192,13 @@ export function ComprehensiveDashboard({
                   <StatItem
                     icon={CheckCircle}
                     label="Success Rate"
-                    value={`${outbound.today.successRate}%`}
+                    value={`${dailyStats.outbound.today.successRate}%`}
                     color="teal"
                   />
                   <StatItem
                     icon={Voicemail}
                     label="Voicemail"
-                    value={outbound.today.voicemail}
+                    value={dailyStats.outbound.today.voicemail}
                     color="amber"
                   />
                 </div>
