@@ -301,6 +301,9 @@ importers:
         specifier: ^3.25.76
         version: 3.25.76
     devDependencies:
+      '@clerk/types':
+        specifier: ^4.101.11
+        version: 4.101.11(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@docusaurus/module-type-aliases':
         specifier: 3.9.2
         version: 3.9.2(@swc/core@1.5.29(@swc/helpers@0.5.18))(esbuild@0.19.12)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
