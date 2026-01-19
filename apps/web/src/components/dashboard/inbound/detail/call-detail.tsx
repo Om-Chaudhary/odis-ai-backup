@@ -235,7 +235,7 @@ export function CallDetail({
       <div className="flex-1 space-y-4 overflow-auto p-4">
         <CallDetailContent
           callId={call.id}
-          summary={callData.summary}
+          summary={callData.summary ?? null}
           timestamp={call.created_at}
           durationSeconds={callData.duration_seconds}
           actionsTaken={
@@ -243,8 +243,8 @@ export function CallDetail({
               ? (call.actions_taken as string[])
               : undefined
           }
-          recordingUrl={callData.recording_url}
-          transcript={callData.transcript}
+          recordingUrl={callData.recording_url ?? null}
+          transcript={callData.transcript ?? null}
           title={callerName ?? "Call Recording"}
           subtitle={call.clinic_name ?? undefined}
           isLoadingRecording={vapiQuery.isLoading && shouldFetchFromVAPI}

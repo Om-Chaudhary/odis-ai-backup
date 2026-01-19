@@ -271,7 +271,7 @@ export function OutboundCaseDetail({
           petHealthData={caseData.petHealthData}
           followUpData={caseData.followUpData}
           patientName={caseData.patient.name}
-          ownerName={caseData.owner.name}
+          ownerName={caseData.owner.name ?? undefined}
         />
 
         {/* Workflow Timeline - Collapsible, shown for sent/scheduled cases */}
