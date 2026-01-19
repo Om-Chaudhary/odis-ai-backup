@@ -74,7 +74,11 @@ async function getRecentActivity(): Promise<ActivityItem[]> {
 
   if (syncs) {
     syncs.forEach((sync) => {
-      const clinicName = sync.clinics?.name ?? "Unknown Clinic";
+      // Handle Supabase join which can be returned as an array or object
+      const clinicData = sync.clinics;
+      const clinicName = Array.isArray(clinicData)
+        ? clinicData[0]?.name
+        : ((clinicData as { name: string } | null)?.name ?? "Unknown Clinic");
       activities.push({
         id: `sync-${sync.id}`,
         type: sync.status === "completed" ? "sync_completed" : "sync_failed",
