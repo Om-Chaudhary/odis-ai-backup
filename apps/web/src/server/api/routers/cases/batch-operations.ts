@@ -328,7 +328,13 @@ export const batchOperationsRouter = createTRPCRouter({
 
       // Get case details for items
       const batchItems = batch.discharge_batch_items as Array<{
+        id: string;
         case_id: string;
+        status: string;
+        email_scheduled: boolean | null;
+        call_scheduled: boolean | null;
+        error_message: string | null;
+        processed_at: string | null;
       }>;
       const caseIds = batchItems.map((item) => item.case_id);
       const { data: cases } = await ctx.supabase

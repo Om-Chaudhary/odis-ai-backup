@@ -26,6 +26,7 @@ import type {
   DashboardCase,
   DischargeSettings,
   PatientUpdateInput,
+  BackendCase,
 } from "@odis-ai/shared/types";
 import { transformBackendCasesToDashboardCases } from "@odis-ai/shared/util/case-transforms";
 import {
@@ -183,7 +184,7 @@ export function DischargeManagementClient() {
   const cases: DashboardCase[] = useMemo(() => {
     return casesData?.cases
       ? transformBackendCasesToDashboardCases(
-          casesData.cases,
+          casesData.cases as unknown as BackendCase[],
           casesData.userEmail,
           casesData.testModeSettings?.enabled ?? false,
           casesData.testModeSettings?.testContactEmail,

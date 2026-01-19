@@ -265,7 +265,7 @@ export const overviewRouter = createTRPCRouter({
       // Calculate success rate from completed calls
       const outboundSuccessful = outboundCalls.filter((c) => {
         if (c.status !== "completed") return false;
-        return c.success_evaluation === "true" || c.success_evaluation === true;
+        return c.success_evaluation === "true";
       }).length;
 
       const outboundSuccessRate =

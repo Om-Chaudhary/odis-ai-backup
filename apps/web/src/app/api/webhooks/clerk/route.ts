@@ -263,19 +263,74 @@ export async function POST(request: NextRequest) {
         // Map Clerk role to ODIS AI role
         const mappedRole = ROLE_MAP[role] ?? "member";
 
-        // Get clinic by Clerk org ID
-        const { data: clinic, error: clinicError } = await supabase
+        // Try to get clinic by Clerk org ID
+        let { data: clinic } = await supabase
           .from("clinics")
           .select("id")
           .eq("clerk_org_id", organization.id)
           .single();
 
-        if (clinicError ?? !clinic) {
-          logger.warn("Clinic not found for organization", {
-            clerkOrgId: organization.id,
-            error: clinicError?.message,
-          });
-          break;
+        // If clinic not found, create it (handles race condition when org and membership events arrive together)
+        if (!clinic) {
+          logger.info(
+            "Clinic not found, creating from organization membership event",
+            {
+              clerkOrgId: organization.id,
+              orgName: organization.name,
+              orgSlug: organization.slug,
+            },
+          );
+
+          // Create the clinic from the organization data included in the membership event
+          const { data: newClinic, error: createError } = await supabase
+            .from("clinics")
+            .insert({
+              clerk_org_id: organization.id,
+              name: organization.name,
+              slug: organization.slug,
+              is_active: true,
+              pims_type: "none",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .select("id")
+            .single();
+
+          if (createError) {
+            // Handle unique constraint violation (org was created by concurrent request)
+            if (createError.code === "23505") {
+              // Retry fetching the clinic
+              const { data: retryClinic } = await supabase
+                .from("clinics")
+                .select("id")
+                .eq("clerk_org_id", organization.id)
+                .single();
+
+              if (retryClinic) {
+                clinic = retryClinic;
+              } else {
+                logger.warn("Clinic still not found after retry", {
+                  clerkOrgId: organization.id,
+                });
+                break;
+              }
+            } else {
+              logger.logError(
+                "Failed to create clinic from membership event",
+                createError as Error,
+                {
+                  clerkOrgId: organization.id,
+                },
+              );
+              throw createError;
+            }
+          } else {
+            clinic = newClinic;
+            logger.info("Clinic created from membership event", {
+              clinicId: clinic.id,
+              clerkOrgId: organization.id,
+            });
+          }
         }
 
         // Get user by Clerk user ID

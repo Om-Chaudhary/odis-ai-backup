@@ -8,6 +8,7 @@ import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { getClinicByUserId } from "@odis-ai/domain/clinics";
 import { updateAppointmentRequestInput } from "../schemas";
+import type { Json } from "@odis-ai/shared/types";
 
 export const updateAppointmentRouter = createTRPCRouter({
   /**
@@ -46,7 +47,7 @@ export const updateAppointmentRouter = createTRPCRouter({
       // Build update object for vapi_bookings table
       const updateData: {
         status: string;
-        metadata?: Record<string, unknown>;
+        metadata?: Json;
         confirmation_number?: string;
         date?: string;
         start_time?: string;
@@ -60,7 +61,10 @@ export const updateAppointmentRouter = createTRPCRouter({
       if (input.notes !== undefined) {
         const existingMetadata =
           (booking.metadata as Record<string, unknown>) ?? {};
-        updateData.metadata = { ...existingMetadata, notes: input.notes };
+        updateData.metadata = {
+          ...existingMetadata,
+          notes: input.notes,
+        } as Json;
       }
 
       if (input.confirmedAppointmentId) {

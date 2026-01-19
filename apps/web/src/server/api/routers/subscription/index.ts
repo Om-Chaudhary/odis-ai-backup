@@ -72,7 +72,7 @@ export const subscriptionRouter = createTRPCRouter({
       const { data: clinic, error } = await supabase
         .from("clinics")
         .select(
-          "id, name, clerk_org_id, stripe_customer_id, stripe_subscription_id, subscription_tier, subscription_status, current_period_start, current_period_end",
+          "id, name, stripe_customer_id, stripe_subscription_id, subscription_tier, subscription_status, current_period_start, current_period_end",
         )
         .eq("id", clinicId)
         .single();
@@ -89,7 +89,6 @@ export const subscriptionRouter = createTRPCRouter({
 
       return {
         clinicId: clinic.id,
-        clerkOrgId: clinic.clerk_org_id,
         clinicName: clinic.name,
         tier,
         tierName: tierInfo?.name ?? "No Plan",

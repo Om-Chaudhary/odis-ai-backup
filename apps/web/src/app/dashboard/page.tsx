@@ -1,6 +1,6 @@
 import { getUser } from "~/server/actions/auth";
 import { redirect } from "next/navigation";
-import { createClient } from "@odis-ai/data-access/db/server";
+import { createServiceClient } from "@odis-ai/data-access/db/server";
 import { getClinicByUserId } from "@odis-ai/domain/clinics";
 import { ExtensionAuthHandler } from "~/components/dashboard/shell/extension-auth-handler";
 import { AUTH_PARAMS } from "@odis-ai/shared/constants/auth";
@@ -52,10 +52,11 @@ export default async function DashboardPage({
     redirect("/login");
   }
 
-  const supabase = await createClient();
+  // Use service client to bypass RLS (needed for Clerk users who don't have Supabase session)
+  const serviceClient = await createServiceClient();
 
   // Get user's clinic to redirect to clinic-scoped dashboard
-  const clinic = await getClinicByUserId(user.id, supabase);
+  const clinic = await getClinicByUserId(user.id, serviceClient);
 
   // If user has a clinic, redirect to clinic-scoped dashboard
   if (clinic?.slug) {

@@ -186,10 +186,7 @@ export const performanceRouter = createTRPCRouter({
       // Calculate success rate based on success_evaluation or call_analysis
       const successfulCalls =
         calls?.filter((c) => {
-          if (
-            c.success_evaluation === "true" ||
-            c.success_evaluation === true
-          ) {
+          if (c.success_evaluation === "true") {
             return true;
           }
           const analysis = (c.call_analysis as CallAnalysis | null) ?? {};

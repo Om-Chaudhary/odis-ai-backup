@@ -24,10 +24,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "@playwright/mcp@latest",
-        "--headless",
-        "--output-dir",
-        "screenshots"
+        "@playwright/mcp@latest"
       ]
     },
     "supabase": {

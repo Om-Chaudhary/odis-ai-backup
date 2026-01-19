@@ -28,6 +28,8 @@ import { SyncedTranscript } from "../calls/synced-transcript";
 import type {
   DischargeSettings,
   TranscriptMessage,
+  CallStatus,
+  BackendCase,
 } from "@odis-ai/shared/types";
 import { cn, formatDuration } from "@odis-ai/shared/util";
 import {
@@ -118,7 +120,8 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
 
     // Check discharge readiness (content + contact validation)
     // Note: caseData from getCaseDetail includes metadata, so readiness check will work for both workflows
-    const readiness = checkCaseDischargeReadiness(caseData, null);
+    // Use unknown intermediate to avoid deep type instantiation
+    const readiness = checkCaseDischargeReadiness(caseData as unknown as BackendCase, null);
 
     if (!readiness.isReady) {
       toast.error(
@@ -157,17 +160,19 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
     });
   };
 
-  // Extract and sort data
-  const latestCall = caseData?.scheduled_discharge_calls?.[0];
-  const allCalls = (caseData?.scheduled_discharge_calls ?? []) as Array<{
+  // Extract and sort data - use proper CallStatus type for status field
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const caseDataAny = caseData as any;
+  const allCalls = ((caseDataAny?.scheduled_discharge_calls ?? []) as Array<{
     id: string;
-    status: string;
+    status: CallStatus;
     scheduled_for?: string | null;
     ended_at?: string | null;
     ended_reason?: string | null;
     started_at?: string | null;
     vapi_call_id?: string | null;
     transcript?: string | null;
+    cleaned_transcript?: string | null;
     transcript_messages?: unknown;
     call_analysis?: unknown;
     summary?: string | null;
@@ -179,25 +184,26 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
     duration_seconds?: number | null;
     cost?: number | null;
     created_at: string;
-  }>;
-  const soapNotes = (caseData?.soap_notes ?? []) as Array<{
+  }>);
+  const latestCall = allCalls[0];
+  const soapNotes = ((caseDataAny?.soap_notes ?? []) as Array<{
     id: string;
     subjective?: string | null;
     objective?: string | null;
     assessment?: string | null;
     plan?: string | null;
     created_at: string;
-  }>;
-  const transcriptions = (caseData?.transcriptions ?? []) as Array<{
+  }>);
+  const transcriptions = ((caseDataAny?.transcriptions ?? []) as Array<{
     id: string;
     transcript?: string | null;
     created_at: string;
-  }>;
-  const dischargeSummaries = (caseData?.discharge_summaries ?? []) as Array<{
+  }>);
+  const dischargeSummaries = ((caseDataAny?.discharge_summaries ?? []) as Array<{
     id: string;
     content?: string | null;
     created_at: string;
-  }>;
+  }>);
   // const scheduledEmails = (caseData?.scheduled_discharge_emails ??
   //   []) as Array<{
   //   id: string;
@@ -225,23 +231,31 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
   // Extract appointment metadata if available (from IDEXX, etc.)
   // Note: metadata is nullable jsonb field, and idexx structure only exists when source = 'idexx_neo'
   // We need to safely check if metadata exists and has the idexx property
-  const appointmentMetadata =
-    caseData?.metadata &&
-    typeof caseData.metadata === "object" &&
-    !Array.isArray(caseData.metadata) &&
-    "idexx" in caseData.metadata
-      ? (caseData.metadata as {
-          idexx?: {
-            appointment_type?: string;
-            appointment_reason?: string;
-            appointment_status?: string;
-            provider_name?: string;
-            appointment_duration?: number;
-            notes?: string;
-          };
-          [key: string]: unknown;
-        })
-      : null;
+  type IdexxMetadata = {
+    idexx?: {
+      appointment_type?: string;
+      appointment_reason?: string;
+      appointment_status?: string;
+      provider_name?: string;
+      appointment_duration?: number;
+      notes?: string;
+    };
+    [key: string]: unknown;
+  };
+  // Extract metadata, using intermediate type to avoid deep type instantiation
+  const getMetadata = (): IdexxMetadata | null => {
+    const metadata = caseDataAny?.metadata;
+    if (
+      metadata &&
+      typeof metadata === "object" &&
+      !Array.isArray(metadata) &&
+      "idexx" in metadata
+    ) {
+      return metadata as IdexxMetadata;
+    }
+    return null;
+  };
+  const appointmentMetadata = getMetadata();
 
   const SpeciesIcon = patient?.species?.toLowerCase() === "feline" ? Cat : Dog;
 
@@ -383,7 +397,9 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
                   </div>
                   <div className="space-y-1">
                     <p className="text-slate-900">
-                      {format(new Date(caseData.created_at), "MMM d, yyyy")}
+                      {caseData.created_at
+                        ? format(new Date(caseData.created_at), "MMM d, yyyy")
+                        : "Unknown"}
                     </p>
                     <p className="font-mono text-sm text-slate-600">
                       {caseData.id}
@@ -418,7 +434,10 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
                 )}
                 <span className="text-muted-foreground">•</span>
                 <span className="text-muted-foreground">
-                  Created {format(new Date(caseData.created_at), "MMM d, yyyy")}
+                  Created{" "}
+                  {caseData.created_at
+                    ? format(new Date(caseData.created_at), "MMM d, yyyy")
+                    : "Unknown"}
                 </span>
                 {caseData.scheduled_at && (
                   <>
@@ -636,12 +655,11 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
                       </AccordionTrigger>
                       <AccordionContent className="p-0">
                         {/* Synced transcript for timed messages */}
-                        {(latestCall.transcript_messages as TranscriptMessage[])
-                          ?.length > 0 ? (
+                        {Array.isArray(latestCall.transcript_messages) &&
+                        latestCall.transcript_messages.length > 0 ? (
                           <SyncedTranscript
                             messages={
-                              (latestCall.transcript_messages as TranscriptMessage[]) ??
-                              []
+                              latestCall.transcript_messages as TranscriptMessage[]
                             }
                             currentTime={currentTime}
                             onMessageClick={(_time) => {

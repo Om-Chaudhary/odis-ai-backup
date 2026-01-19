@@ -529,7 +529,11 @@ export const listingsRouter = createTRPCRouter({
 
       // Fetch case info for each call to get patient names
       const caseIds = [
-        ...new Set(filteredCalls.map((c) => c.case_id).filter(Boolean)),
+        ...new Set(
+          filteredCalls
+            .map((c) => c.case_id)
+            .filter((id): id is string => id !== null),
+        ),
       ];
       const casesMap = new Map<
         string,
@@ -696,7 +700,11 @@ export const listingsRouter = createTRPCRouter({
 
       // Fetch case info for each email to get patient names
       const caseIds = [
-        ...new Set((emails ?? []).map((e) => e.case_id).filter(Boolean)),
+        ...new Set(
+          (emails ?? [])
+            .map((e) => e.case_id)
+            .filter((id): id is string => id !== null),
+        ),
       ];
       const casesMap = new Map<
         string,

@@ -1,7 +1,10 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
-import { createClient } from "@odis-ai/data-access/db/server";
+import {
+  createClient,
+  createServiceClient,
+} from "@odis-ai/data-access/db/server";
 import type { User } from "@supabase/supabase-js";
 
 /**
@@ -21,14 +24,58 @@ export async function getUser(): Promise<User | null> {
 
   if (clerkAuth?.userId) {
     // Clerk user - fetch from Supabase by clerk_user_id
-    const { data: clerkUser, error } = await supabase
+    // Use service client to bypass RLS since Clerk users don't have Supabase Auth session
+    const serviceClient = await createServiceClient();
+    const { data: clerkUser, error } = await serviceClient
       .from("users")
       .select("id, email, created_at, updated_at")
       .eq("clerk_user_id", clerkAuth.userId)
       .single();
 
     if (error || !clerkUser) {
-      // Clerk user not yet synced to Supabase (shouldn't happen if webhook works)
+      // Clerk user not found by clerk_user_id - try email-based lookup
+      // This handles the race condition where user signs in before webhook processes
+      const clerkEmail =
+        clerkAuth.sessionClaims?.email as string | undefined;
+
+      if (clerkEmail) {
+        const { data: emailUser, error: emailError } = await serviceClient
+          .from("users")
+          .select("id, email, created_at, updated_at")
+          .eq("email", clerkEmail)
+          .single();
+
+        if (!emailError && emailUser) {
+          // Found user by email - link their Clerk account
+          await serviceClient
+            .from("users")
+            .update({
+              clerk_user_id: clerkAuth.userId,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", emailUser.id);
+
+          console.info("[getUser] Linked Clerk account to existing user:", {
+            clerkUserId: clerkAuth.userId,
+            email: clerkEmail,
+            userId: emailUser.id,
+          });
+
+          // Return the linked user
+          return {
+            id: emailUser.id,
+            email: emailUser.email ?? "",
+            created_at: emailUser.created_at,
+            updated_at: emailUser.updated_at,
+            aud: "authenticated",
+            role: "authenticated",
+            app_metadata: {},
+            user_metadata: {},
+          } as User;
+        }
+      }
+
+      // No existing user found - webhook will create them
       console.warn("[getUser] Clerk user not found in Supabase:", {
         clerkUserId: clerkAuth.userId,
         error: error?.message,

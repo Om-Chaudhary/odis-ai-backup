@@ -280,7 +280,7 @@ export function DashboardOverview({ clinicSlug }: DashboardOverviewProps) {
                       minute: "2-digit",
                     },
                   )}
-                  severity={item.severity}
+                  severity={item.severity ?? undefined}
                   delay={index * 0.05}
                 />
               ))}

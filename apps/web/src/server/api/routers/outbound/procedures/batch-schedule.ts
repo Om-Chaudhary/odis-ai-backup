@@ -180,7 +180,11 @@ export const batchScheduleRouter = createTRPCRouter({
   batchSchedule: protectedProcedure
     .input(batchScheduleInput)
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.user.id;
+      // userId is guaranteed non-null by protectedProcedure, but TypeScript needs help inferring this
+      const userId: string = ctx.user.id;
+      if (!userId) {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "User ID is required" });
+      }
       const results: BatchScheduleResult[] = [];
 
       // Fetch user discharge settings (including test mode)
@@ -587,7 +591,7 @@ export const batchScheduleRouter = createTRPCRouter({
               .insert({
                 user_id: userId,
                 case_id: caseId,
-                recipient_email: normalizedEmail,
+                recipient_email: normalizedEmail!, // Guaranteed non-null by canScheduleEmail check
                 recipient_name: recipientName,
                 subject: emailContent.subject,
                 html_content: emailContent.html,

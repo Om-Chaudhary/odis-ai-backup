@@ -27,7 +27,14 @@ export function ClerkProvider({ children }: ClerkProviderProps) {
   }
 
   return (
-    <BaseClerkProvider appearance={clerkAppearance} afterSignOutUrl="/">
+    <BaseClerkProvider
+      appearance={clerkAppearance}
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      signInFallbackRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/dashboard"
+      afterSignOutUrl="/"
+    >
       {children}
     </BaseClerkProvider>
   );

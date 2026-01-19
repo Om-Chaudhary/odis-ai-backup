@@ -115,7 +115,9 @@ export const findByConsultationRouter = createTRPCRouter({
 
       if (caseByExternalId) {
         const caseDate =
-          caseByExternalId.scheduled_at ?? caseByExternalId.created_at;
+          caseByExternalId.scheduled_at ??
+          caseByExternalId.created_at ??
+          new Date().toISOString();
         const page = await calculateCasePage(
           ctx.supabase,
           caseByExternalId.id,
@@ -149,7 +151,9 @@ export const findByConsultationRouter = createTRPCRouter({
 
       if (caseByConsultationId) {
         const caseDate =
-          caseByConsultationId.scheduled_at ?? caseByConsultationId.created_at;
+          caseByConsultationId.scheduled_at ??
+          caseByConsultationId.created_at ??
+          new Date().toISOString();
         const page = await calculateCasePage(
           ctx.supabase,
           caseByConsultationId.id,
@@ -190,7 +194,9 @@ export const findByConsultationRouter = createTRPCRouter({
       }
 
       const caseDate =
-        caseByAppointmentId.scheduled_at ?? caseByAppointmentId.created_at;
+        caseByAppointmentId.scheduled_at ??
+        caseByAppointmentId.created_at ??
+        new Date().toISOString();
       const page = await calculateCasePage(
         ctx.supabase,
         caseByAppointmentId.id,

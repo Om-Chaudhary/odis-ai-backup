@@ -21,8 +21,9 @@ export const metadata: Metadata = {
  */
 export default function TeamPage() {
   return (
-    <div className="flex min-h-screen w-full items-start justify-center px-4 py-8">
-      <div className="w-full max-w-6xl">
+    <div className="h-full w-full overflow-y-auto">
+      <div className="flex min-h-full w-full items-start justify-center px-4 py-8">
+        <div className="w-full max-w-6xl">
         <OrganizationProfile
           appearance={{
             elements: {
@@ -155,6 +156,7 @@ export default function TeamPage() {
             </div>
           </OrganizationProfile.Page>
         </OrganizationProfile>
+        </div>
       </div>
     </div>
   );

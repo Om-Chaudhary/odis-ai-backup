@@ -19,8 +19,9 @@ export const metadata: Metadata = {
  */
 export default function ProfilePage() {
   return (
-    <div className="flex min-h-screen w-full items-start justify-center px-4 py-8">
-      <div className="w-full max-w-4xl">
+    <div className="h-full w-full overflow-y-auto">
+      <div className="flex min-h-full w-full items-start justify-center px-4 py-8">
+        <div className="w-full max-w-4xl">
         <UserProfile
           appearance={{
             elements: {
@@ -83,6 +84,7 @@ export default function ProfilePage() {
             </div>
           </UserProfile.Page>
         </UserProfile>
+        </div>
       </div>
     </div>
   );

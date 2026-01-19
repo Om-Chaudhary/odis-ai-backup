@@ -168,9 +168,7 @@ export const dailyStatsRouter = createTRPCRouter({
       const todayOutboundSuccessful =
         todayOutbound?.filter((c) => {
           if (c.status !== "completed") return false;
-          return (
-            c.success_evaluation === "true" || c.success_evaluation === true
-          );
+          return c.success_evaluation === "true";
         }).length ?? 0;
 
       const yesterdayOutboundTotal = yesterdayOutbound?.length ?? 0;

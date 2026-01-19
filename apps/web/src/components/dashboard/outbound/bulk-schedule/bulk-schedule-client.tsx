@@ -287,7 +287,8 @@ export function BulkScheduleClient() {
   const currentStepIndex = steps.findIndex((s) => s.key === step);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
+    <div className="h-full overflow-y-auto">
+      <div className="mx-auto max-w-3xl px-4 py-8">
       {/* Header */}
       <div className="mb-8">
         <Button
@@ -458,6 +459,7 @@ export function BulkScheduleClient() {
             </Button>
           )}
         </div>
+      </div>
       </div>
     </div>
   );

@@ -1,7 +1,12 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import { ZodError } from "zod";
-import { createClient } from "@odis-ai/data-access/db/server";
+import {
+  createClient,
+  createServiceClient,
+} from "@odis-ai/data-access/db/server";
 import { auth } from "@clerk/nextjs/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@odis-ai/shared/types";
 
 type CreateContextOptions = {
   headers: Headers;
@@ -10,40 +15,49 @@ type CreateContextOptions = {
 
 /**
  * Enhanced tRPC context with hybrid auth support (Clerk + Supabase)
+ *
+ * For Clerk users:
+ * - `supabase` is a service client that bypasses RLS (Clerk users have no Supabase session)
+ * - `isClerkAuth` is true
+ *
+ * For Supabase Auth users (iOS):
+ * - `supabase` is an RLS-enabled client with the user's session
+ * - `isClerkAuth` is false
  */
 export const createTRPCContext = async (opts: CreateContextOptions) => {
   try {
-    const supabase = await createClient();
-
     // Try Clerk auth first (for web users)
     const clerkAuth = await auth();
+    const isClerkAuth = !!clerkAuth?.userId;
 
-    // Get Supabase user (for iOS users or if Clerk returns null)
-    const {
-      data: { user: supabaseUser },
-      error: authError,
-    } = await supabase.auth.getUser();
+    // Determine which Supabase client to use based on auth type
+    // For Clerk users, we need the service client since they don't have a Supabase session
+    // For Supabase Auth users, we use the regular client with RLS
+    let supabase: SupabaseClient<Database>;
 
-    // Log auth errors for debugging (but don't throw - let protectedProcedure handle it)
-    if (authError && !clerkAuth?.userId) {
-      // Only log if not a Clerk user
-      console.error("[tRPC Context] Supabase auth error:", {
-        code: authError.code,
-        message: authError.message,
-        status: authError.status,
-      });
+    if (isClerkAuth) {
+      // Clerk users get service client (bypasses RLS)
+      supabase = await createServiceClient();
+    } else {
+      // Supabase Auth users get RLS-enabled client
+      supabase = await createClient();
     }
 
-    // Determine auth source and extract user info
-    const isClerkAuth = !!clerkAuth?.userId;
+    // Determine user info based on auth type
     let userId: string | null = null;
-    let user: typeof supabaseUser = null;
+    let user: {
+      id: string;
+      email: string;
+      created_at: string;
+      updated_at: string | null;
+      aud: string;
+      role: string;
+      app_metadata: Record<string, unknown>;
+      user_metadata: Record<string, unknown>;
+    } | null = null;
 
     if (isClerkAuth) {
       // Clerk user - look up corresponding Supabase user record
-      userId = clerkAuth.userId;
-
-      // Fetch user from Supabase by clerk_user_id
       const { data: clerkUser } = await supabase
         .from("users")
         .select("id, email, created_at, updated_at")
@@ -51,23 +65,47 @@ export const createTRPCContext = async (opts: CreateContextOptions) => {
         .single();
 
       if (clerkUser) {
+        userId = clerkUser.id; // Use Supabase user ID for queries
         // Map to Supabase User shape for backward compatibility
         user = {
           id: clerkUser.id,
           email: clerkUser.email ?? "",
           created_at: clerkUser.created_at,
           updated_at: clerkUser.updated_at,
-          // Add minimal required fields
           aud: "authenticated",
           role: "authenticated",
           app_metadata: {},
           user_metadata: {},
-        } as typeof supabaseUser;
+        };
       }
-    } else if (supabaseUser) {
-      // Supabase Auth user
-      userId = supabaseUser.id;
-      user = supabaseUser;
+    } else {
+      // Supabase Auth user (iOS)
+      const {
+        data: { user: supabaseUser },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      if (authError) {
+        console.error("[tRPC Context] Supabase auth error:", {
+          code: authError.code,
+          message: authError.message,
+          status: authError.status,
+        });
+      }
+
+      if (supabaseUser) {
+        userId = supabaseUser.id;
+        user = {
+          id: supabaseUser.id,
+          email: supabaseUser.email ?? "",
+          created_at: supabaseUser.created_at ?? new Date().toISOString(),
+          updated_at: supabaseUser.updated_at ?? null,
+          aud: supabaseUser.aud ?? "authenticated",
+          role: supabaseUser.role ?? "authenticated",
+          app_metadata: supabaseUser.app_metadata ?? {},
+          user_metadata: supabaseUser.user_metadata ?? {},
+        };
+      }
     }
 
     // Extract org info from Clerk JWT if available
@@ -80,7 +118,7 @@ export const createTRPCContext = async (opts: CreateContextOptions) => {
 
       // Auth info
       userId,
-      user, // Populated for both Clerk and Supabase users
+      user,
       isClerkAuth,
 
       // Organization context (Clerk only)
@@ -147,12 +185,19 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
   if (!ctx.userId || !ctx.user) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
+  // Extract to local constants after guard - TypeScript narrows these
+  const userId = ctx.userId;
+  const user = ctx.user;
   return next({
     ctx: {
-      ...ctx,
-      // Infers both as non-nullable for backward compatibility
-      userId: ctx.userId,
-      user: ctx.user,
+      headers: ctx.headers,
+      supabase: ctx.supabase,
+      isClerkAuth: ctx.isClerkAuth,
+      orgId: ctx.orgId,
+      orgRole: ctx.orgRole,
+      clerkAuth: ctx.clerkAuth,
+      userId,
+      user,
     },
   });
 });

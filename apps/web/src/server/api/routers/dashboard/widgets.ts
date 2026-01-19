@@ -373,9 +373,7 @@ export const widgetsRouter = createTRPCRouter({
       const successfulCalls =
         calls?.filter((c) => {
           if (c.status !== "completed") return false;
-          return (
-            c.success_evaluation === "true" || c.success_evaluation === true
-          );
+          return c.success_evaluation === "true";
         }).length ?? 0;
 
       const successRate =
@@ -657,29 +655,38 @@ export const widgetsRouter = createTRPCRouter({
       // For each voicemail, check if there's been a successful follow-up
       const voicemailsWithFollowUp = await Promise.all(
         voicemails.slice(0, input.limit).map(async (vm) => {
-          // Check for follow-up email
-          const { data: followUpEmail } = await ctx.supabase
-            .from("scheduled_discharge_emails")
-            .select("id, status, sent_at")
-            .eq("case_id", vm.case_id)
-            .eq("status", "sent")
-            .gte("sent_at", vm.ended_at ?? vm.created_at)
-            .limit(1)
-            .maybeSingle();
+          const vmTimestamp = vm.ended_at ?? vm.created_at ?? new Date(0).toISOString();
+          const vmCaseId = vm.case_id;
 
-          // Check for successful follow-up call
-          const { data: followUpCall } = await ctx.supabase
-            .from("scheduled_discharge_calls")
-            .select("id, status, ended_at, success_evaluation")
-            .eq("case_id", vm.case_id)
-            .eq("status", "completed")
-            .gt("ended_at", vm.ended_at ?? vm.created_at)
-            .limit(1)
-            .maybeSingle();
+          // Check for follow-up email (only if case_id exists)
+          let followUpEmail = null;
+          let followUpCall = null;
+
+          if (vmCaseId) {
+            const { data: emailData } = await ctx.supabase
+              .from("scheduled_discharge_emails")
+              .select("id, status, sent_at")
+              .eq("case_id", vmCaseId)
+              .eq("status", "sent")
+              .gte("sent_at", vmTimestamp)
+              .limit(1)
+              .maybeSingle();
+            followUpEmail = emailData;
+
+            // Check for successful follow-up call
+            const { data: callData } = await ctx.supabase
+              .from("scheduled_discharge_calls")
+              .select("id, status, ended_at, success_evaluation")
+              .eq("case_id", vmCaseId)
+              .eq("status", "completed")
+              .gt("ended_at", vmTimestamp)
+              .limit(1)
+              .maybeSingle();
+            followUpCall = callData;
+          }
 
           const hasSuccessfulFollowUp =
-            followUpCall?.success_evaluation === "true" ||
-            followUpCall?.success_evaluation === true;
+            followUpCall?.success_evaluation === "true";
 
           const caseData = Array.isArray(vm.cases) ? vm.cases[0] : vm.cases;
           const patient = caseData?.patients

@@ -97,11 +97,9 @@ export function DashboardSplitLayout({
       >
         <div
           className={cn(
-            "flex h-full flex-col",
+            "flex h-full min-h-0 flex-col overflow-hidden",
             "bg-gradient-to-br from-white/90 via-teal-50/20 to-white/90",
             "backdrop-blur-xl",
-            // When right panel is open, allow overflow for seamless connection
-            showRightPanel ? "overflow-visible" : "overflow-hidden",
           )}
         >
           {leftPanel}

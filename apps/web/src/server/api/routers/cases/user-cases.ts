@@ -255,8 +255,8 @@ export const userCasesRouter = createTRPCRouter({
         if (!aReadiness.isReady && bReadiness.isReady) return 1;
 
         // Tertiary sort: by scheduled_at (with created_at fallback), newest first
-        const aDate = a.scheduled_at ?? a.created_at;
-        const bDate = b.scheduled_at ?? b.created_at;
+        const aDate = a.scheduled_at ?? a.created_at ?? "1970-01-01";
+        const bDate = b.scheduled_at ?? b.created_at ?? "1970-01-01";
         return new Date(bDate).getTime() - new Date(aDate).getTime();
       });
 

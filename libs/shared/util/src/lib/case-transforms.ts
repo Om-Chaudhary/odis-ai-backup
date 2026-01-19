@@ -78,10 +78,10 @@ export function transformBackendCaseToDashboardCase(
 
   return {
     id: backendCase.id,
-    status: backendCase.status,
+    status: backendCase.status ?? "draft",
     source: backendCase.source,
     type: backendCase.type,
-    created_at: backendCase.created_at,
+    created_at: backendCase.created_at ?? new Date().toISOString(),
     scheduled_at: backendCase.scheduled_at,
     patient: {
       id: patient.id,

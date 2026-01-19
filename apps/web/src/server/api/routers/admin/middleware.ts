@@ -47,17 +47,17 @@ export const adminMiddleware = middleware(async ({ ctx, next }) => {
   let profileResult;
 
   if (ctx.isClerkAuth && ctx.userId) {
-    // For Clerk users, look up by clerk_user_id
+    // For Clerk users, look up by id (Clerk userId is stored as user id)
     profileResult = await ctx.supabase
       .from("users")
-      .select("id, role, clerk_user_id, clinic_name")
-      .eq("clerk_user_id", ctx.userId)
+      .select("id, role, clinic_name")
+      .eq("id", ctx.userId)
       .single();
   } else if (ctx.user) {
     // For Supabase users, look up by user ID
     profileResult = await ctx.supabase
       .from("users")
-      .select("id, role, clerk_user_id, clinic_name")
+      .select("id, role, clinic_name")
       .eq("id", ctx.user.id)
       .single();
   } else {

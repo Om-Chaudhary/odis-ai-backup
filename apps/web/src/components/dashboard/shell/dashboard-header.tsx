@@ -16,7 +16,6 @@ import {
   PhoneMissed,
 } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { UserButton } from "@clerk/nextjs";
 import { DashboardBreadcrumb } from "./dashboard-breadcrumb";
 import { DashboardHeaderSearch } from "./dashboard-header-search";
@@ -114,8 +113,6 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
   const billingUrl = clinicSlug
     ? `/dashboard/${clinicSlug}/billing`
     : "/dashboard/billing";
-  const dashboardUrl = clinicSlug ? `/dashboard/${clinicSlug}` : "/dashboard";
-
   // Check if user is admin
   const isAdmin = profile?.role === "admin";
 

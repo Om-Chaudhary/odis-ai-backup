@@ -71,10 +71,10 @@ export interface CallDetails {
  */
 export interface BackendCase {
   id: string;
-  status: CaseStatus;
+  status: CaseStatus | null;
   source: string | null;
   type: "checkup" | "emergency" | "surgery" | "follow_up" | null;
-  created_at: string;
+  created_at: string | null;
   scheduled_at: string | null;
   metadata?: {
     idexx?: {
@@ -123,7 +123,7 @@ export interface BackendCase {
   }>;
   transcriptions?: Array<{
     id: string;
-    transcript: string;
+    transcript: string | null;
   }>;
   scheduled_discharge_calls: Array<{
     id: string;
@@ -269,7 +269,7 @@ export interface BatchEligibleCase {
   hasIdexxNotes: boolean;
   hasTranscription: boolean;
   hasSoapNotes: boolean;
-  createdAt: string;
+  createdAt: string | null;
   scheduledAt: string | null;
   /** Whether email has already been sent/scheduled for this case */
   emailSent: boolean;

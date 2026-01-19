@@ -56,19 +56,22 @@ export function BatchProgressMonitor({
   );
 
   // Handle batch status updates
+  // Break deep type inference by using JSON serialization as dependency
+  const dataJson = data ? JSON.stringify(data) : null;
   useEffect(() => {
-    if (data) {
-      setBatchStatus(data);
+    if (dataJson) {
+      const parsed = JSON.parse(dataJson) as BatchStatus;
+      setBatchStatus(parsed);
       // Check if batch is complete
       if (
-        data.status === "completed" ||
-        data.status === "partial_success" ||
-        data.status === "cancelled"
+        parsed.status === "completed" ||
+        parsed.status === "partial_success" ||
+        parsed.status === "cancelled"
       ) {
         onComplete?.();
       }
     }
-  }, [data, onComplete]);
+  }, [dataJson, onComplete]);
 
   // Cancel batch mutation
   const cancelBatchMutation = api.cases.cancelBatch.useMutation({

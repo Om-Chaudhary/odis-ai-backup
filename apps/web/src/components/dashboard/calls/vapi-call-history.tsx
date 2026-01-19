@@ -366,7 +366,7 @@ export function VapiCallHistory() {
                               className="h-7 w-7"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                window.open(call.recordingUrl, "_blank");
+                                window.open(call.recordingUrl ?? undefined, "_blank");
                               }}
                             >
                               <Play className="h-4 w-4" />

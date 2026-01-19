@@ -26,12 +26,13 @@ import { EmptyState } from "@odis-ai/shared/ui";
 import { cn } from "@odis-ai/shared/util";
 import { api } from "~/trpc/client";
 import Link from "next/link";
+import type { CaseStatus } from "@odis-ai/shared/types";
 
 interface CaseNeedingAttention {
   id: string;
-  status: string | null;
+  status: CaseStatus | null;
   created_at: string;
-  type: string | null;
+  type: "checkup" | "emergency" | "surgery" | "follow_up" | null;
   patient: {
     id: string;
     name: string;
@@ -139,15 +140,13 @@ export function NeedsReviewTab() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {cases
-                  .filter((c): c is CaseNeedingAttention => c !== null)
-                  .map((caseItem) => (
-                    <NeedsReviewRow
-                      key={caseItem.id}
-                      caseItem={caseItem}
-                      onUpdateContact={handleUpdateContact}
-                    />
-                  ))}
+                {cases.map((caseItem) => (
+                  <NeedsReviewRow
+                    key={caseItem.id}
+                    caseItem={caseItem as CaseNeedingAttention}
+                    onUpdateContact={handleUpdateContact}
+                  />
+                ))}
               </TableBody>
             </Table>
           </div>

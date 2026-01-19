@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import { headers } from "next/headers";
-import { createClient } from "@odis-ai/data-access/db/server";
+import { createServiceClient } from "@odis-ai/data-access/db/server";
 import {
   getClinicBySlug,
   getUserClinics,
@@ -11,6 +11,7 @@ import { isActiveSubscription } from "@odis-ai/shared/constants";
 import type { SubscriptionStatus } from "@odis-ai/shared/constants";
 import { Paywall } from "~/components/dashboard/subscription/paywall";
 import { DashboardHeader } from "~/components/dashboard/shell/dashboard-header";
+import { getUser } from "~/server/actions/auth";
 
 interface ClinicLayoutProps {
   children: React.ReactNode;
@@ -32,32 +33,34 @@ export default async function ClinicLayout({
   params,
 }: ClinicLayoutProps) {
   const { clinicSlug } = await params;
-  const supabase = await createClient();
+  // Use service client to bypass RLS for clinic lookups
+  const serviceClient = await createServiceClient();
 
-  // Get current user
-  const {
-    data: { user },
-    error: authError,
-  } = await supabase.auth.getUser();
+  // Get current user (supports both Clerk and Supabase Auth)
+  const user = await getUser();
 
-  if (authError || !user) {
+  if (!user) {
     redirect("/login");
   }
 
-  // Get clinic by slug
-  const clinic = await getClinicBySlug(clinicSlug, supabase);
+  // Get clinic by slug (use service client to bypass RLS)
+  const clinic = await getClinicBySlug(clinicSlug, serviceClient);
 
   if (!clinic) {
     notFound();
   }
 
   // Check if user has access to this clinic (supports multi-clinic access)
-  const hasAccess = await userHasClinicAccess(user.id, clinic.id, supabase);
+  const hasAccess = await userHasClinicAccess(
+    user.id,
+    clinic.id,
+    serviceClient,
+  );
 
   if (!hasAccess) {
     // User doesn't have access to this clinic
     // Redirect to a clinic they do have access to, otherwise 404
-    const userClinics = await getUserClinics(user.id, supabase);
+    const userClinics = await getUserClinics(user.id, serviceClient);
     // If user has no clinics, redirect to
     const firstClinic = userClinics[0];
     if (firstClinic) {
@@ -66,8 +69,8 @@ export default async function ClinicLayout({
     notFound();
   }
 
-  // Fetch user profile for header
-  const { data: profile } = await supabase
+  // Fetch user profile for header (use service client to bypass RLS)
+  const { data: profile } = await serviceClient
     .from("users")
     .select("first_name, last_name, role, avatar_url")
     .eq("id", user.id)
@@ -92,16 +95,22 @@ export default async function ClinicLayout({
   if (!hasActiveSubscription && !isBillingPage) {
     return (
       <ClinicProvider clinic={clinic}>
-        <DashboardHeader profile={profile} />
-        <Paywall clinicId={clinic.id} clinicName={clinic.name} />
+        <div className="flex h-full min-h-0 flex-col overflow-hidden">
+          <DashboardHeader profile={profile} />
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <Paywall clinicId={clinic.id} clinicName={clinic.name} />
+          </div>
+        </div>
       </ClinicProvider>
     );
   }
 
   return (
     <ClinicProvider clinic={clinic}>
-      <DashboardHeader profile={profile} />
-      {children}
+      <div className="flex h-full min-h-0 flex-col overflow-hidden">
+        <DashboardHeader profile={profile} />
+        <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
+      </div>
     </ClinicProvider>
   );
 }

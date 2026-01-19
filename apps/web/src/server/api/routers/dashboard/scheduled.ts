@@ -6,7 +6,7 @@
 
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import type { CallStatus, EmailStatus } from "@odis-ai/shared/types";
+import type { CallStatus, EmailStatus, CaseStatus } from "@odis-ai/shared/types";
 import {
   type SupabasePatientsResponse,
   type DynamicVariables,
@@ -279,9 +279,9 @@ export const scheduledRouter = createTRPCRouter({
             c,
           ): c is {
             id: string;
-            status: string | null;
+            status: CaseStatus | null;
             created_at: string;
-            type: string | null;
+            type: "checkup" | "emergency" | "surgery" | "follow_up" | null;
             patient: {
               id: string;
               name: string;
@@ -301,9 +301,9 @@ export const scheduledRouter = createTRPCRouter({
           if (a.priority !== b.priority) {
             return b.priority - a.priority;
           }
-          return (
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-          );
+          const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+          const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+          return dateB - dateA;
         })
         .slice(0, input.limit);
 
