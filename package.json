@@ -39,10 +39,10 @@
     "backfill:inbound-outcomes": "tsx apps/web/src/scripts/backfill-inbound-outcomes.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.69.0",
+    "@clerk/express": "^1.7.63",
     "@clerk/nextjs": "^6.12.0",
     "@clerk/themes": "^2.2.35",
-    "@anthropic-ai/sdk": "^0.69.0",
-    "svix": "^1.45.1",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -128,6 +128,7 @@
     "streamdown": "^1.4.0",
     "stripe": "^20.1.2",
     "superjson": "^2.2.2",
+    "svix": "^1.45.1",
     "tailwind-merge": "^3.3.1",
     "three": "^0.181.0",
     "type-fest": "^5.3.1",
