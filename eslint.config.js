@@ -41,6 +41,8 @@ export default tseslint.config(
       "libs/domain/shared/util/src/lib/interfaces/**",
       "libs/domain/discharge/data-access/src/**",
       "libs/domain/cases/data-access/src/**",
+      // Scripts directory (ad-hoc scripts, not part of build)
+      "scripts/**",
     ],
   },
   // Next.js plugin for Next.js-specific linting rules
@@ -257,8 +259,6 @@ export default tseslint.config(
             "*.test.tsx",
             "vitest.config.ts",
             "vitest.config.shared.ts",
-            "scripts/*.ts",
-            "scripts/*.js",
           ],
         },
         tsconfigRootDir: import.meta.dirname,
