@@ -1,4 +1,5 @@
 import { OrganizationProfile } from "@clerk/nextjs";
+import { Settings, WifiSyncIcon } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -44,7 +45,11 @@ export default function TeamPage() {
           path="/dashboard/:clinicSlug/team"
         >
           {/* Custom VAPI Settings Tab */}
-          <OrganizationProfile.Page label="VAPI Settings" url="vapi">
+          <OrganizationProfile.Page
+            labelIcon={<Settings />}
+            label="VAPI Settings"
+            url="vapi"
+          >
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
@@ -79,7 +84,11 @@ export default function TeamPage() {
           </OrganizationProfile.Page>
 
           {/* Custom PIMS Sync Tab */}
-          <OrganizationProfile.Page label="PIMS Sync" url="pims">
+          <OrganizationProfile.Page
+            labelIcon={<WifiSyncIcon />}
+            label="PIMS Sync"
+            url="pims"
+          >
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
@@ -109,7 +118,11 @@ export default function TeamPage() {
           </OrganizationProfile.Page>
 
           {/* Custom Clinic Settings Tab */}
-          <OrganizationProfile.Page label="Clinic Settings" url="clinic">
+          <OrganizationProfile.Page
+            labelIcon={<Settings />}
+            label="Clinic Settings"
+            url="clinic"
+          >
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
