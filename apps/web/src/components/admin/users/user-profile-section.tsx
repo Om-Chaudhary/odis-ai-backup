@@ -68,13 +68,13 @@ export function UserProfileSection({ user }: UserProfileSectionProps) {
           </p>
         </div>
 
-        {user.last_sign_in_at && (
+        {user.created_at && (
           <div>
             <p className="mb-1 text-sm font-medium text-slate-500">
               Last Sign In
             </p>
             <p className="text-sm text-slate-900">
-              {formatDistanceToNow(new Date(user.last_sign_in_at), {
+              {formatDistanceToNow(new Date(user.created_at), {
                 addSuffix: true,
               })}
             </p>
