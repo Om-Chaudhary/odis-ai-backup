@@ -23,6 +23,7 @@ import { toast } from "sonner";
 
 interface PaywallProps {
   clinicId: string;
+  clerkOrgId?: string | null;
   clinicName: string;
 }
 
@@ -52,13 +53,17 @@ const PLAN_FEATURES: Record<Exclude<SubscriptionTier, "none">, string[]> = {
   ],
 };
 
-export function Paywall({ clinicId, clinicName }: PaywallProps) {
+export function Paywall({
+  clinicId,
+  clerkOrgId,
+  clinicName,
+}: PaywallProps) {
   const [selectedTier, setSelectedTier] = useState<
     Exclude<SubscriptionTier, "none">
   >(SUBSCRIPTION_TIERS.PROFESSIONAL);
 
   const handleSelectPlan = (tier: Exclude<SubscriptionTier, "none">) => {
-    const paymentUrl = getPaymentLinkUrl(tier, clinicId);
+    const paymentUrl = getPaymentLinkUrl(tier, clinicId, clerkOrgId);
     if (!paymentUrl) {
       toast.error("Payment link not configured. Please contact support.");
       return;

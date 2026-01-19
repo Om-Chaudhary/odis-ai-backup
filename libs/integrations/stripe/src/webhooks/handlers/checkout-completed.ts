@@ -27,9 +27,12 @@ export async function handleCheckoutCompleted(
     return;
   }
 
+  // Prefer clerk_org_id, fall back to legacy clinicId
+  const clerkOrgId = session.metadata?.clerk_org_id;
   const clinicId = session.metadata?.clinicId;
-  if (!clinicId) {
-    logger.warn("Checkout session missing clinicId metadata", {
+
+  if (!clerkOrgId && !clinicId) {
+    logger.warn("Checkout session missing clinic identifier metadata", {
       sessionId: session.id,
     });
     return;
@@ -56,6 +59,7 @@ export async function handleCheckoutCompleted(
 
   logger.info("Processing checkout completion", {
     sessionId: session.id,
+    clerkOrgId,
     clinicId,
     customerId,
     subscriptionId,
@@ -79,21 +83,31 @@ export async function handleCheckoutCompleted(
   const status = mapStripeStatus(subscription.status);
 
   // Update clinic with subscription info
-  const { error } = await supabase
-    .from("clinics")
-    .update({
-      stripe_customer_id: customerId,
-      stripe_subscription_id: subscriptionId,
-      subscription_tier: tier,
-      subscription_status: status,
-      current_period_start: subscription.current_period_start
-        ? new Date(subscription.current_period_start * 1000).toISOString()
-        : null,
-      current_period_end: subscription.current_period_end
-        ? new Date(subscription.current_period_end * 1000).toISOString()
-        : null,
-    })
-    .eq("id", clinicId);
+  // Prefer clerk_org_id (Clerk integration), fall back to legacy clinicId (UUID)
+  const updateData = {
+    stripe_customer_id: customerId,
+    stripe_subscription_id: subscriptionId,
+    subscription_tier: tier,
+    subscription_status: status,
+    current_period_start: subscription.current_period_start
+      ? new Date(subscription.current_period_start * 1000).toISOString()
+      : null,
+    current_period_end: subscription.current_period_end
+      ? new Date(subscription.current_period_end * 1000).toISOString()
+      : null,
+  };
+
+  let query = supabase.from("clinics").update(updateData);
+
+  if (clerkOrgId) {
+    query = query.eq("clerk_org_id", clerkOrgId);
+    logger.info("Using clerk_org_id for clinic lookup", { clerkOrgId });
+  } else if (clinicId) {
+    query = query.eq("id", clinicId);
+    logger.info("Using legacy clinicId for clinic lookup", { clinicId });
+  }
+
+  const { error } = await query;
 
   if (error) {
     logger.logError("Failed to update clinic subscription", error);
@@ -101,6 +115,7 @@ export async function handleCheckoutCompleted(
   }
 
   logger.info("Clinic subscription activated", {
+    clerkOrgId,
     clinicId,
     customerId,
     subscriptionId,

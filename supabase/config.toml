@@ -299,10 +299,12 @@ enabled = false
 # user_pool_region = "us-east-1"
 
 # Use Clerk as a third-party provider alongside Supabase Auth.
+# This enables Clerk session tokens to work with Supabase RLS policies.
+# Web app uses Clerk auth, iOS app continues using Supabase Auth (hybrid approach).
 [auth.third_party.clerk]
-enabled = false
-# Obtain from https://clerk.com/setup/supabase
-# domain = "example.clerk.accounts.dev"
+enabled = true
+# Obtain from https://clerk.com/setup/supabase or Clerk Dashboard
+domain = "decent-raptor-81.clerk.accounts.dev"
 
 # OAuth server configuration
 [auth.oauth_server]

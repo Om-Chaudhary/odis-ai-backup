@@ -24,6 +24,8 @@ export async function handleSubscriptionUpdated(
 ): Promise<void> {
   const subscription = event.data.object as SubscriptionWithPeriod;
 
+  // Prefer clerk_org_id, fall back to legacy clinicId
+  const clerkOrgId = subscription.metadata?.clerk_org_id;
   const clinicId = subscription.metadata?.clinicId;
   const customerId =
     typeof subscription.customer === "string"
@@ -32,30 +34,52 @@ export async function handleSubscriptionUpdated(
 
   logger.info("Processing subscription update", {
     subscriptionId: subscription.id,
+    clerkOrgId,
     clinicId,
     customerId,
     status: subscription.status,
   });
 
-  // If we have clinicId in metadata, use that
-  if (clinicId) {
-    const tier = getTierFromSubscription(subscription);
-    const status = mapStripeStatus(subscription.status);
+  const tier = getTierFromSubscription(subscription);
+  const status = mapStripeStatus(subscription.status);
 
+  const updateData = {
+    stripe_customer_id: customerId,
+    stripe_subscription_id: subscription.id,
+    subscription_tier: tier,
+    subscription_status: status,
+    current_period_start: subscription.current_period_start
+      ? new Date(subscription.current_period_start * 1000).toISOString()
+      : null,
+    current_period_end: subscription.current_period_end
+      ? new Date(subscription.current_period_end * 1000).toISOString()
+      : null,
+  };
+
+  // Priority: clerk_org_id (Clerk integration) > clinicId (legacy UUID) > stripe_customer_id (fallback)
+  if (clerkOrgId) {
     const { error } = await supabase
       .from("clinics")
-      .update({
-        stripe_customer_id: customerId,
-        stripe_subscription_id: subscription.id,
-        subscription_tier: tier,
-        subscription_status: status,
-        current_period_start: subscription.current_period_start
-          ? new Date(subscription.current_period_start * 1000).toISOString()
-          : null,
-        current_period_end: subscription.current_period_end
-          ? new Date(subscription.current_period_end * 1000).toISOString()
-          : null,
-      })
+      .update(updateData)
+      .eq("clerk_org_id", clerkOrgId);
+
+    if (error) {
+      logger.logError("Failed to update clinic by clerk_org_id", error);
+      throw error;
+    }
+
+    logger.info("Clinic subscription updated by clerk_org_id", {
+      clerkOrgId,
+      tier,
+      status,
+    });
+    return;
+  }
+
+  if (clinicId) {
+    const { error } = await supabase
+      .from("clinics")
+      .update(updateData)
       .eq("id", clinicId);
 
     if (error) {
@@ -71,24 +95,11 @@ export async function handleSubscriptionUpdated(
     return;
   }
 
-  // Otherwise, find clinic by stripe_customer_id
+  // Fallback: Find clinic by stripe_customer_id
   if (customerId) {
-    const tier = getTierFromSubscription(subscription);
-    const status = mapStripeStatus(subscription.status);
-
     const { error, count } = await supabase
       .from("clinics")
-      .update({
-        stripe_subscription_id: subscription.id,
-        subscription_tier: tier,
-        subscription_status: status,
-        current_period_start: subscription.current_period_start
-          ? new Date(subscription.current_period_start * 1000).toISOString()
-          : null,
-        current_period_end: subscription.current_period_end
-          ? new Date(subscription.current_period_end * 1000).toISOString()
-          : null,
-      })
+      .update(updateData)
       .eq("stripe_customer_id", customerId);
 
     if (error) {

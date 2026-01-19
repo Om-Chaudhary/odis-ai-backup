@@ -6,6 +6,7 @@
  * - Server client (RLS-enabled, cookie-based auth)
  * - Service client (bypasses RLS, admin operations)
  * - Proxy middleware (session refresh)
+ * - Clerk-authenticated clients (web app with Clerk auth)
  */
 
 // Export with specific names to avoid conflicts
@@ -16,3 +17,8 @@ export {
 } from "./server";
 export * from "./browser";
 export * from "./proxy";
+
+// Clerk-authenticated Supabase clients
+// Use these when Clerk is configured for authentication
+export { createClerkClient, createOptionalClerkClient } from "./clerk-server";
+export { useClerkSupabaseClient, createPublicClient } from "./clerk-browser";

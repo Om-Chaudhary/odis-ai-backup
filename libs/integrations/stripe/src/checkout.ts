@@ -13,6 +13,8 @@ const logger = loggers.api.child("stripe-checkout");
 export interface CreateCheckoutSessionParams {
   /** Clinic ID to associate with the subscription */
   clinicId: string;
+  /** Clerk organization ID (preferred for Clerk integration) */
+  clerkOrgId?: string | null;
   /** Clinic name for Stripe customer */
   clinicName: string;
   /** Email for the Stripe customer */
@@ -41,6 +43,7 @@ export async function createCheckoutSession(
   const stripe = getStripeClient();
   const {
     clinicId,
+    clerkOrgId,
     clinicName,
     email,
     tier,
@@ -56,6 +59,7 @@ export async function createCheckoutSession(
 
   logger.info("Creating checkout session", {
     clinicId,
+    clerkOrgId,
     tier,
     priceId,
     hasExistingCustomer: !!stripeCustomerId,
@@ -68,13 +72,16 @@ export async function createCheckoutSession(
       email,
       name: clinicName,
       metadata: {
-        clinicId,
+        clinicId, // Legacy - kept for backward compatibility
+        clerk_org_id: clerkOrgId ?? "", // Preferred for Clerk integration
+        clinic_name: clinicName,
       },
     });
     customerId = customer.id;
     logger.info("Created new Stripe customer", {
       customerId,
       clinicId,
+      clerkOrgId,
     });
   }
 
@@ -93,12 +100,14 @@ export async function createCheckoutSession(
     cancel_url: cancelUrl,
     subscription_data: {
       metadata: {
-        clinicId,
+        clinicId, // Legacy - kept for backward compatibility
+        clerk_org_id: clerkOrgId ?? "", // Preferred for Clerk integration
         tier,
       },
     },
     metadata: {
-      clinicId,
+      clinicId, // Legacy - kept for backward compatibility
+      clerk_org_id: clerkOrgId ?? "", // Preferred for Clerk integration
       tier,
     },
   });
@@ -110,6 +119,7 @@ export async function createCheckoutSession(
   logger.info("Created checkout session", {
     sessionId: session.id,
     clinicId,
+    clerkOrgId,
     tier,
   });
 

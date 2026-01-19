@@ -1,15 +1,13 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
-import { cn } from "@odis-ai/shared/util";
 import React from "react";
 
 export function DashboardBreadcrumb() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const clinicContext = useOptionalClinic();
 
   // Simple path mapping logic

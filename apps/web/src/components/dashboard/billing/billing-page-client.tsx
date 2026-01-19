@@ -114,7 +114,11 @@ export function BillingPageClient() {
       return;
     }
 
-    const paymentUrl = getPaymentLinkUrl(tier, status.clinicId);
+    const paymentUrl = getPaymentLinkUrl(
+      tier,
+      status.clinicId,
+      status.clerkOrgId,
+    );
     if (!paymentUrl) {
       toast.error("Payment link not configured. Please contact support.");
       return;

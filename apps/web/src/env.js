@@ -23,6 +23,9 @@ export const env = createEnv({
       .enum(["development", "test", "production"])
       .default("development"),
     SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+    // Clerk Configuration (optional until migration is complete)
+    CLERK_SECRET_KEY: z.string().optional(),
+    CLERK_WEBHOOK_SECRET: z.string().optional(),
     // AI Configuration
     ANTHROPIC_API_KEY: z.string().optional(),
     // VAPI Configuration
@@ -49,6 +52,13 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
+    // Clerk Configuration (optional until migration is complete)
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().optional(),
+    NEXT_PUBLIC_CLERK_SIGN_IN_URL: z.string().optional(),
+    NEXT_PUBLIC_CLERK_SIGN_UP_URL: z.string().optional(),
+    NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: z.string().optional(),
+    NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL: z.string().optional(),
+    // PostHog Configuration
     NEXT_PUBLIC_POSTHOG_KEY: z.string().min(1),
     NEXT_PUBLIC_POSTHOG_HOST: z.string().url().optional(),
     NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
@@ -68,6 +78,17 @@ export const env = createEnv({
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    // Clerk
+    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+    CLERK_WEBHOOK_SECRET: process.env.CLERK_WEBHOOK_SECRET,
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
+      process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_CLERK_SIGN_IN_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL,
+    NEXT_PUBLIC_CLERK_SIGN_UP_URL: process.env.NEXT_PUBLIC_CLERK_SIGN_UP_URL,
+    NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL:
+      process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL,
+    NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL:
+      process.env.NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL,
     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
     VAPI_PRIVATE_KEY: process.env.VAPI_PRIVATE_KEY,
     VAPI_ASSISTANT_ID: process.env.VAPI_ASSISTANT_ID,

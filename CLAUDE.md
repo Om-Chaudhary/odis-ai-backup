@@ -52,6 +52,24 @@ import { ... } from "@odis-ai/integrations/vapi";
 - Default to Server Components; minimize `"use client"`
 - Prefer editing existing files over creating new ones
 
+### ⚠️ Critical: Auth Proxy Pattern
+
+**DO NOT create `middleware.ts` files!**
+
+This project uses a **custom proxy pattern** at `apps/web/src/proxy.ts` instead of standard Next.js middleware.
+
+```
+apps/web/src/proxy.ts ← USE THIS (supports Clerk + Supabase hybrid auth)
+apps/web/src/middleware.ts ← NEVER CREATE THIS
+```
+
+The proxy enables:
+- Hybrid authentication (Clerk for web, Supabase Auth for iOS)
+- Always refreshes Supabase sessions for iOS compatibility
+- Graceful fallback if Clerk is not configured
+
+See: `docs/architecture/AUTH_PROXY_PATTERN.md`
+
 ### Key Locations
 
 | Purpose | Location |

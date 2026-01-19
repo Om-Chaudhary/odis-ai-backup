@@ -108,14 +108,19 @@ export const STRIPE_BILLING_PORTAL_URL =
 
 /**
  * Build a Payment Link URL with clinic ID for tracking
+ * Prefers clerk_org_id for Clerk integration, falls back to legacy clinicId
  */
 export function getPaymentLinkUrl(
   tier: Exclude<SubscriptionTier, "none">,
   clinicId: string,
+  clerkOrgId?: string | null,
 ): string | null {
   const baseUrl = STRIPE_PAYMENT_LINKS[tier];
   if (!baseUrl) return null;
-  return `${baseUrl}?client_reference_id=${encodeURIComponent(clinicId)}`;
+
+  // Prefer clerk_org_id for Clerk integration
+  const referenceId = clerkOrgId || clinicId;
+  return `${baseUrl}?client_reference_id=${encodeURIComponent(referenceId)}`;
 }
 
 /**

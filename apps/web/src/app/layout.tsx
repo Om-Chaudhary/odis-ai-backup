@@ -3,6 +3,7 @@ import { Outfit, Inter, Lora, Plus_Jakarta_Sans } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import { Analytics } from "@vercel/analytics/next";
 import "~/styles/globals.css";
+import { ClerkProvider } from "~/components/providers/clerk-provider";
 import { ClientProviders } from "~/components/providers/client-providers";
 import { StructuredData } from "~/components/seo/structured-data";
 import { env } from "~/env.js";
@@ -142,9 +143,11 @@ export default function RootLayout({
       <body
         className={`font-sans antialiased ${outfit.variable} ${inter.variable} ${lora.variable} ${plusJakarta.variable} ${geistMono.variable}`}
       >
-        <StructuredData />
-        <ClientProviders>{children}</ClientProviders>
-        <Analytics />
+        <ClerkProvider>
+          <StructuredData />
+          <ClientProviders>{children}</ClientProviders>
+          <Analytics />
+        </ClerkProvider>
       </body>
     </html>
   );

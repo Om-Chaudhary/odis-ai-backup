@@ -5,16 +5,12 @@ import { motion, useInView, useReducedMotion } from "framer-motion";
 import {
   Phone,
   PhoneOff,
-  Clock,
-  DollarSign,
   ArrowRight,
-  Users,
   Calendar,
   Stethoscope,
 } from "lucide-react";
 import { SectionBackground } from "../ui/section-background";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
-import { NumberTicker } from "../ui/number-ticker";
 import { cn } from "@odis-ai/shared/util";
 
 // Animation variants
