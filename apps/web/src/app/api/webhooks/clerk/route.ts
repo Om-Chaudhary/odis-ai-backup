@@ -120,15 +120,26 @@ export async function POST(request: NextRequest) {
     switch (event.type) {
       case "user.created":
       case "user.updated": {
-        const { id, email_addresses, first_name, last_name, image_url } =
-          event.data;
+        const {
+          id,
+          email_addresses,
+          primary_email_address_id,
+          first_name,
+          last_name,
+          image_url,
+        } = event.data;
 
         // Get primary email
-        const primaryEmail = email_addresses.find((e) => e.id === id)
-          ?.email_address;
+        const primaryEmail = email_addresses.find(
+          (e) => e.id === primary_email_address_id,
+        )?.email_address;
 
         if (!primaryEmail) {
-          logger.warn("User has no primary email", { clerkUserId: id });
+          logger.warn("User has no primary email", {
+            clerkUserId: id,
+            primaryEmailAddressId: primary_email_address_id,
+            emailAddressCount: email_addresses.length,
+          });
           break;
         }
 
@@ -167,27 +178,30 @@ export async function POST(request: NextRequest) {
             throw linkError;
           }
 
-          logger.info("Account linked: Clerk account linked to existing iOS user", {
-            supabaseUserId: existingUser.id,
-            clerkUserId: id,
-            email: primaryEmail,
-            hadExistingData: !!(existingUser.first_name ?? existingUser.last_name),
-          });
+          logger.info(
+            "Account linked: Clerk account linked to existing iOS user",
+            {
+              supabaseUserId: existingUser.id,
+              clerkUserId: id,
+              email: primaryEmail,
+              hadExistingData: !!(
+                existingUser.first_name ?? existingUser.last_name
+              ),
+            },
+          );
         } else {
           // No existing user or user.updated event - upsert as normal
-          const { error } = await supabase
-            .from("users")
-            .upsert(
-              {
-                clerk_user_id: id,
-                email: primaryEmail,
-                first_name: first_name ?? null,
-                last_name: last_name ?? null,
-                avatar_url: image_url ?? null,
-                updated_at: new Date().toISOString(),
-              },
-              { onConflict: "clerk_user_id" },
-            );
+          const { error } = await supabase.from("users").upsert(
+            {
+              clerk_user_id: id,
+              email: primaryEmail,
+              first_name: first_name ?? null,
+              last_name: last_name ?? null,
+              avatar_url: image_url ?? null,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "clerk_user_id" },
+          );
 
           if (error) {
             logger.logError("Failed to sync user", error as Error, {
@@ -212,19 +226,17 @@ export async function POST(request: NextRequest) {
         const { id, name, slug } = event.data;
 
         // Upsert clinic to Supabase
-        const { error } = await supabase
-          .from("clinics")
-          .upsert(
-            {
-              clerk_org_id: id,
-              name,
-              slug,
-              is_active: true,
-              pims_type: "none", // Default, can be updated later
-              updated_at: new Date().toISOString(),
-            },
-            { onConflict: "clerk_org_id" },
-          );
+        const { error } = await supabase.from("clinics").upsert(
+          {
+            clerk_org_id: id,
+            name,
+            slug,
+            is_active: true,
+            pims_type: "none", // Default, can be updated later
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "clerk_org_id" },
+        );
 
         if (error) {
           logger.logError("Failed to sync organization", error as Error, {

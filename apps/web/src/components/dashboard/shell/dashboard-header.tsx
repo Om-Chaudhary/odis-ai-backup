@@ -8,7 +8,6 @@ import {
   X,
   Bell,
   HelpCircle,
-  LogOut,
   Settings,
   CreditCard,
   Shield,
@@ -18,6 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { UserButton } from "@clerk/nextjs";
 import { DashboardBreadcrumb } from "./dashboard-breadcrumb";
 import { DashboardHeaderSearch } from "./dashboard-header-search";
 import { api } from "~/trpc/client";
@@ -32,11 +32,9 @@ import {
 } from "@odis-ai/shared/ui/dialog";
 import { Input } from "@odis-ai/shared/ui/input";
 import { Label } from "@odis-ai/shared/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@odis-ai/shared/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -52,11 +50,8 @@ import { toast } from "sonner";
 import type { DischargeSettings } from "@odis-ai/shared/types";
 import { cn } from "@odis-ai/shared/util";
 import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
-import { signOut } from "~/server/actions/auth";
-import type { User } from "@supabase/supabase-js";
 
 interface DashboardHeaderProps {
-  user?: User;
   profile?: {
     first_name: string | null;
     last_name: string | null;
@@ -65,7 +60,7 @@ interface DashboardHeaderProps {
   } | null;
 }
 
-export function DashboardHeader({ user, profile }: DashboardHeaderProps) {
+export function DashboardHeader({ profile }: DashboardHeaderProps) {
   const { data: settings, refetch } = api.cases.getDischargeSettings.useQuery();
 
   const updateSettingsMutation = api.cases.updateDischargeSettings.useMutation({
@@ -111,14 +106,7 @@ export function DashboardHeader({ user, profile }: DashboardHeaderProps) {
   const isTestMode = settings?.testModeEnabled ?? false;
   const clinicContext = useOptionalClinic();
 
-  // User display info
-  const firstName = profile?.first_name ?? "User";
-  const lastName = profile?.last_name ?? "";
-  const initials =
-    `${firstName.charAt(0)}${lastName.charAt(0) || firstName.charAt(1) || ""}`.toUpperCase();
-  const fullName = `${firstName} ${lastName}`.trim() ?? user?.email ?? "User";
-
-  // Build settings/billing URLs
+  // Build URLs
   const clinicSlug = clinicContext?.clinicSlug;
   const settingsUrl = clinicSlug
     ? `/dashboard/${clinicSlug}/settings`
@@ -127,6 +115,9 @@ export function DashboardHeader({ user, profile }: DashboardHeaderProps) {
     ? `/dashboard/${clinicSlug}/billing`
     : "/dashboard/billing";
   const dashboardUrl = clinicSlug ? `/dashboard/${clinicSlug}` : "/dashboard";
+
+  // Check if user is admin
+  const isAdmin = profile?.role === "admin";
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -219,94 +210,38 @@ export function DashboardHeader({ user, profile }: DashboardHeaderProps) {
             {/* Notifications */}
             <NotificationsDropdown clinicSlug={clinicSlug} />
 
-            {/* User Profile Dropdown */}
-            {user && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 rounded-lg py-1 pr-2 pl-1 transition-colors hover:bg-slate-100">
-                    <Avatar className="h-8 w-8 rounded-lg ring-1 ring-slate-200">
-                      {profile?.avatar_url && (
-                        <AvatarImage src={profile.avatar_url} alt={fullName} />
-                      )}
-                      <AvatarFallback className="rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 text-xs font-semibold text-white">
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="hidden text-sm font-medium text-slate-700 md:block">
-                      {firstName}
-                    </span>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-56"
-                  align="end"
-                  sideOffset={8}
-                >
-                  <DropdownMenuLabel className="p-0 font-normal">
-                    <div className="flex items-center gap-2 px-2 py-2">
-                      <Avatar className="h-8 w-8 rounded-lg">
-                        {profile?.avatar_url && (
-                          <AvatarImage
-                            src={profile.avatar_url}
-                            alt={fullName}
-                          />
-                        )}
-                        <AvatarFallback className="rounded-lg bg-teal-100 text-xs font-medium text-teal-700">
-                          {initials}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex min-w-0 flex-col">
-                        <span className="truncate text-sm font-medium text-gray-900">
-                          {fullName}
-                        </span>
-                        <span className="truncate text-xs text-gray-500">
-                          {user.email}
-                        </span>
-                      </div>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuGroup>
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href={settingsUrl}
-                        className="flex items-center gap-2"
-                      >
-                        <Settings className="h-4 w-4 text-gray-500" />
-                        <span>Settings</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href={billingUrl}
-                        className="flex items-center gap-2"
-                      >
-                        <CreditCard className="h-4 w-4 text-gray-500" />
-                        <span>Billing</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    {profile?.role === "admin" && (
-                      <DropdownMenuItem asChild>
-                        <Link href="/admin" className="flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-amber-600" />
-                          <span className="text-amber-700">Admin Panel</span>
-                        </Link>
-                      </DropdownMenuItem>
-                    )}
-                  </DropdownMenuGroup>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="flex items-center gap-2 text-red-600 focus:bg-red-50 focus:text-red-600"
-                    onClick={async () => {
-                      await signOut();
-                    }}
-                  >
-                    <LogOut className="h-4 w-4" />
-                    <span>Log out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+            {/* User Profile - Clerk UserButton */}
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: "h-8 w-8 rounded-lg ring-1 ring-slate-200",
+                  userButtonTrigger:
+                    "rounded-lg hover:bg-slate-100 transition-colors",
+                },
+              }}
+              afterSignOutUrl="/sign-in"
+              showName={true}
+            >
+              <UserButton.MenuItems>
+                <UserButton.Link
+                  label="Settings"
+                  labelIcon={<Settings className="h-4 w-4" />}
+                  href={settingsUrl}
+                />
+                <UserButton.Link
+                  label="Billing"
+                  labelIcon={<CreditCard className="h-4 w-4" />}
+                  href={billingUrl}
+                />
+                {isAdmin && (
+                  <UserButton.Link
+                    label="Admin Panel"
+                    labelIcon={<Shield className="h-4 w-4 text-amber-600" />}
+                    href="/admin"
+                  />
+                )}
+              </UserButton.MenuItems>
+            </UserButton>
           </div>
         </div>
       </header>

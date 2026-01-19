@@ -92,7 +92,7 @@ export default async function ClinicLayout({
   if (!hasActiveSubscription && !isBillingPage) {
     return (
       <ClinicProvider clinic={clinic}>
-        <DashboardHeader user={user} profile={profile} />
+        <DashboardHeader profile={profile} />
         <Paywall clinicId={clinic.id} clinicName={clinic.name} />
       </ClinicProvider>
     );
@@ -100,7 +100,7 @@ export default async function ClinicLayout({
 
   return (
     <ClinicProvider clinic={clinic}>
-      <DashboardHeader user={user} profile={profile} />
+      <DashboardHeader profile={profile} />
       {children}
     </ClinicProvider>
   );
