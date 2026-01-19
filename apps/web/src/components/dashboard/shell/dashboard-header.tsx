@@ -135,7 +135,7 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
         )}
 
         <div className="relative z-10 flex flex-1 items-center justify-between px-4">
-          {/* Left: Logo + Clinic Name + Breadcrumb */}
+          {/* Left: Clinic Name + Breadcrumb */}
           <div className="flex items-center gap-3">
             {/* Mobile menu button (hidden on md+ screens) */}
             <Button
@@ -146,23 +146,6 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
             >
               <Menu className="h-4 w-4" />
             </Button>
-
-            {/* Logo */}
-            <Link
-              href={dashboardUrl}
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 shadow-sm transition-transform hover:scale-105"
-            >
-              <Image
-                src="/icon-128.png"
-                alt="Odis AI"
-                width={18}
-                height={18}
-                className="h-[18px] w-[18px]"
-              />
-            </Link>
-
-            {/* Divider */}
-            <div className="hidden h-6 w-px bg-slate-200 md:block" />
 
             {/* Breadcrumb (includes clinic name) */}
             <DashboardBreadcrumb />
