@@ -1,5 +1,6 @@
 import { UserProfile } from "@clerk/nextjs";
 import type { Metadata } from "next";
+import { User2 } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Profile | Odis AI",
@@ -35,7 +36,11 @@ export default function ProfilePage() {
           path="/dashboard/:clinicSlug/profile"
         >
           {/* Custom notification preferences tab */}
-          <UserProfile.Page label="Notifications" url="notifications">
+          <UserProfile.Page
+            label="Notifications"
+            labelIcon={<User2 />}
+            url="notifications"
+          >
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900">
