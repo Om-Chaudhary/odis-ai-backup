@@ -3,11 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/shared/util/src",
   "projectType": "library",
-  "tags": [
-    "type:util",
-    "scope:shared",
-    "platform:neutral"
-  ],
+  "tags": ["type:util", "scope:shared", "platform:neutral"],
   "targets": {
     "test": {
       "executor": "nx:run-commands",
@@ -19,7 +15,7 @@
       "inputs": [
         "default",
         "^default",
-        "{workspaceRoot}/libs/utils/vitest.config.ts"
+        "{workspaceRoot}/libs/shared/util/vitest.config.ts"
       ]
     },
     "typecheck": {
@@ -29,10 +25,7 @@
         "cwd": "libs/shared/util"
       },
       "cache": true,
-      "inputs": [
-        "default",
-        "^default"
-      ]
+      "inputs": ["default", "^default"]
     }
   }
 }

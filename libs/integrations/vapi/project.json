@@ -3,14 +3,8 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/integrations/vapi/src",
   "projectType": "library",
-  "tags": [
-    "type:integration",
-    "scope:server",
-    "platform:node"
-  ],
-  "implicitDependencies": [
-    "integrations-ai"
-  ],
+  "tags": ["type:integration", "scope:server", "platform:node"],
+  "implicitDependencies": ["integrations-ai"],
   "targets": {
     "test": {
       "executor": "nx:run-commands",
@@ -22,7 +16,7 @@
       "inputs": [
         "default",
         "^default",
-        "{workspaceRoot}/libs/vapi/vitest.config.ts"
+        "{workspaceRoot}/libs/integrations/vapi/vitest.config.ts"
       ]
     },
     "typecheck": {
@@ -32,10 +26,7 @@
         "cwd": "libs/integrations/vapi"
       },
       "cache": true,
-      "inputs": [
-        "default",
-        "^default"
-      ]
+      "inputs": ["default", "^default"]
     }
   }
 }
