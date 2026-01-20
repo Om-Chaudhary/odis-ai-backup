@@ -11,7 +11,6 @@ import { isActiveSubscription } from "@odis-ai/shared/constants";
 import type { SubscriptionStatus } from "@odis-ai/shared/constants";
 import { Paywall } from "~/components/dashboard/subscription/paywall";
 import { DashboardHeader } from "~/components/dashboard/shell/dashboard-header";
-import { ClinicHeader } from "~/components/dashboard/shell/clinic-header";
 import { getUser } from "~/server/actions/auth";
 
 interface ClinicLayoutProps {
@@ -77,17 +76,6 @@ export default async function ClinicLayout({
     .eq("id", user.id)
     .single();
 
-  // Fetch all clinics for admin users (for clinic switcher)
-  const isAdmin = profile?.role === "admin";
-  let allClinics: Array<{ id: string; name: string; slug: string }> = [];
-  if (isAdmin) {
-    const { data: clinicsData } = await serviceClient
-      .from("clinics")
-      .select("id, name, slug")
-      .order("name");
-    allClinics = clinicsData ?? [];
-  }
-
   // Check subscription status - cast to access fields not yet in types
   const clinicWithSub = clinic as typeof clinic & {
     subscription_status?: string | null;
@@ -109,12 +97,6 @@ export default async function ClinicLayout({
       <ClinicProvider clinic={clinic}>
         <div className="flex h-full min-h-0 flex-col overflow-hidden">
           <DashboardHeader profile={profile} />
-          <ClinicHeader
-            clinicName={clinic.name}
-            clinicSlug={clinicSlug}
-            isAdmin={isAdmin}
-            allClinics={allClinics}
-          />
           <div className="min-h-0 flex-1 overflow-y-auto">
             <Paywall clinicId={clinic.id} clinicName={clinic.name} />
           </div>
@@ -127,12 +109,6 @@ export default async function ClinicLayout({
     <ClinicProvider clinic={clinic}>
       <div className="flex h-full min-h-0 flex-col overflow-hidden">
         <DashboardHeader profile={profile} />
-        <ClinicHeader
-          clinicName={clinic.name}
-          clinicSlug={clinicSlug}
-          isAdmin={isAdmin}
-          allClinics={allClinics}
-        />
         <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
       </div>
     </ClinicProvider>

@@ -172,7 +172,7 @@ export const getStatsRouter = createTRPCRouter({
       // If clinicSlug is provided (admin viewing another clinic), use that clinic's users
       // Otherwise fall back to the authenticated user's clinic
       let clinicUserIds: string[];
-      let clinic: Awaited<ReturnType<typeof getClinicByUserId>> | Awaited<ReturnType<typeof getClinicBySlug>>;
+      let clinic: Awaited<ReturnType<typeof getClinicBySlug>>;
       if (input.clinicSlug) {
         clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
         if (clinic) {

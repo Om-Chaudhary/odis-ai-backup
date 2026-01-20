@@ -204,88 +204,100 @@ export function UnifiedSidebar({
           {/* Subtle texture overlay */}
           <div className="pointer-events-none absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCI+CjxyZWN0IHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgZmlsbD0ibm9uZSIvPgo8Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDMpIi8+Cjwvc3ZnPg==')] opacity-50" />
 
-          {/* Header: Clinic Selector (admin only) */}
-          {allClinics && allClinics.length > 1 && clinicSlug && (
+          {/* Header: Clinic Name/Selector */}
+          {clinicSlug && (
             <div className="relative z-10 px-3 pt-4 pb-2">
-              {/* Clinic Selector */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="group relative flex flex-1 items-center gap-2 overflow-hidden rounded-lg bg-white/5 px-3 py-2 text-left transition-all hover:bg-white/10 hover:shadow-lg hover:shadow-teal-900/20">
-                    {/* Subtle gradient overlay on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-teal-500/0 via-teal-500/5 to-teal-500/0 opacity-0 transition-opacity group-hover:opacity-100" />
+              {allClinics && allClinics.length > 1 ? (
+                /* Multi-clinic: Show dropdown selector */
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="group relative flex w-full items-center gap-2 overflow-hidden rounded-lg bg-white/5 px-3 py-2 text-left transition-all hover:bg-white/10 hover:shadow-lg hover:shadow-teal-900/20">
+                      {/* Subtle gradient overlay on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-teal-500/0 via-teal-500/5 to-teal-500/0 opacity-0 transition-opacity group-hover:opacity-100" />
 
-                    <div className="relative flex min-w-0 flex-1 items-center gap-2">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-md bg-teal-500/20 transition-colors group-hover:bg-teal-500/30">
-                        <Building2 className="h-3.5 w-3.5 text-teal-400" />
+                      <div className="relative flex min-w-0 flex-1 items-center gap-2">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-teal-500/20 transition-colors group-hover:bg-teal-500/30">
+                          <Building2 className="h-3.5 w-3.5 text-teal-400" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-xs font-medium text-white">
+                            {currentClinic?.name ?? "Select Clinic"}
+                          </p>
+                        </div>
+                        <ChevronRight className="h-3.5 w-3.5 text-teal-400/60 transition-transform group-hover:translate-x-0.5 group-hover:text-teal-400" />
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-medium text-white">
-                          {currentClinic?.name ?? "Select Clinic"}
-                        </p>
-                      </div>
-                      <ChevronRight className="h-3.5 w-3.5 text-teal-400/60 transition-transform group-hover:translate-x-0.5 group-hover:text-teal-400" />
-                    </div>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  side="right"
-                  align="start"
-                  className="w-64"
-                  sideOffset={12}
-                >
-                  <DropdownMenuLabel className="flex items-center gap-2 px-3 py-2">
-                    <Building2 className="h-4 w-4 text-teal-600" />
-                    <span className="text-xs font-semibold text-gray-700">
-                      Switch Clinic
-                    </span>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <div className="max-h-80 overflow-y-auto">
-                    {allClinics.map((clinic) => (
-                      <DropdownMenuItem key={clinic.id} asChild>
-                        <Link
-                          href={`/dashboard/${clinic.slug}`}
-                          className={cn(
-                            "group relative flex items-center gap-3 px-3 py-2.5 transition-colors",
-                            clinic.slug === clinicSlug
-                              ? "bg-teal-50 text-teal-700"
-                              : "hover:bg-gray-50",
-                          )}
-                        >
-                          <div
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    side="right"
+                    align="start"
+                    className="w-64"
+                    sideOffset={12}
+                  >
+                    <DropdownMenuLabel className="flex items-center gap-2 px-3 py-2">
+                      <Building2 className="h-4 w-4 text-teal-600" />
+                      <span className="text-xs font-semibold text-gray-700">
+                        Switch Clinic
+                      </span>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <div className="max-h-80 overflow-y-auto">
+                      {allClinics.map((clinic) => (
+                        <DropdownMenuItem key={clinic.id} asChild>
+                          <Link
+                            href={`/dashboard/${clinic.slug}`}
                             className={cn(
-                              "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
+                              "group relative flex items-center gap-3 px-3 py-2.5 transition-colors",
                               clinic.slug === clinicSlug
-                                ? "bg-teal-100"
-                                : "bg-gray-100 group-hover:bg-teal-50",
+                                ? "bg-teal-50 text-teal-700"
+                                : "hover:bg-gray-50",
                             )}
                           >
-                            <Building2
+                            <div
                               className={cn(
-                                "h-4 w-4",
+                                "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
                                 clinic.slug === clinicSlug
-                                  ? "text-teal-600"
-                                  : "text-gray-500 group-hover:text-teal-600",
+                                  ? "bg-teal-100"
+                                  : "bg-gray-100 group-hover:bg-teal-50",
                               )}
-                            />
-                          </div>
-                          <span className="flex-1 text-sm font-medium">
-                            {clinic.name}
-                          </span>
-                          {clinic.slug === clinicSlug && (
-                            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-teal-600">
-                              <ChevronRight
-                                className="h-3 w-3 text-white"
-                                strokeWidth={3}
+                            >
+                              <Building2
+                                className={cn(
+                                  "h-4 w-4",
+                                  clinic.slug === clinicSlug
+                                    ? "text-teal-600"
+                                    : "text-gray-500 group-hover:text-teal-600",
+                                )}
                               />
                             </div>
-                          )}
-                        </Link>
-                      </DropdownMenuItem>
-                    ))}
+                            <span className="flex-1 text-sm font-medium">
+                              {clinic.name}
+                            </span>
+                            {clinic.slug === clinicSlug && (
+                              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-teal-600">
+                                <ChevronRight
+                                  className="h-3 w-3 text-white"
+                                  strokeWidth={3}
+                                />
+                              </div>
+                            )}
+                          </Link>
+                        </DropdownMenuItem>
+                      ))}
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                /* Single-clinic: Show static clinic name */
+                <div className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-md bg-teal-500/20">
+                    <Building2 className="h-3.5 w-3.5 text-teal-400" />
                   </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                  <p className="truncate text-xs font-medium text-white">
+                    {currentClinic?.name ?? "Clinic"}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

@@ -108,13 +108,17 @@ export default async function DashboardLayout({
         profile={profile}
         clinicSlug={clinic?.slug ?? null}
         allClinics={
-          profile?.role === "admin" && allClinics.length > 1
-            ? allClinics.map((c) => ({
+          profile?.role === "admin"
+            ? // Admins: all clinics for switcher
+              allClinics.map((c) => ({
                 id: c.id,
                 name: c.name,
                 slug: c.slug,
               }))
-            : undefined
+            : // Non-admins: just current clinic for display
+              clinic
+              ? [{ id: clinic.id, name: clinic.name, slug: clinic.slug }]
+              : undefined
         }
       />
 

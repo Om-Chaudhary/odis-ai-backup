@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
-import { DashboardBreadcrumb } from "./dashboard-breadcrumb";
 import { DashboardHeaderSearch } from "./dashboard-header-search";
 import { api } from "~/trpc/client";
 import { Button } from "@odis-ai/shared/ui/button";
@@ -132,8 +131,8 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
         )}
 
         <div className="relative z-10 flex flex-1 items-center justify-between px-4">
-          {/* Left: Clinic Name + Breadcrumb */}
-          <div className="flex items-center gap-3">
+          {/* Left: Mobile menu */}
+          <div className="flex items-center">
             {/* Mobile menu button (hidden on md+ screens) */}
             <Button
               variant="ghost"
@@ -143,9 +142,6 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
             >
               <Menu className="h-4 w-4" />
             </Button>
-
-            {/* Breadcrumb (includes clinic name) */}
-            <DashboardBreadcrumb />
           </div>
 
           {/* Right: Search + Actions + User */}
