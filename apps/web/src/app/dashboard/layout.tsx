@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { AUTH_PARAMS } from "@odis-ai/shared/constants/auth";
-import { getClinicByUserId, getUserClinics } from "@odis-ai/domain/clinics";
+import { getUserClinics } from "@odis-ai/domain/clinics";
 import { Toaster } from "sonner";
 import { auth } from "@clerk/nextjs/server";
 
@@ -87,19 +87,33 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  // Get full user profile, primary clinic, and all accessible clinics from database for the sidebar
+  // Get full user profile and all accessible clinics from database for the sidebar
   // Use service client to bypass RLS since Clerk users don't have Supabase Auth session
   const serviceClient = await createServiceClient();
 
-  const [{ data: profile }, clinic, allClinics] = await Promise.all([
+  const [{ data: profile }, allClinics] = await Promise.all([
     serviceClient
       .from("users")
       .select("first_name, last_name, role, clinic_name, avatar_url")
       .eq("id", user.id)
       .single(),
-    getClinicByUserId(user.id, serviceClient),
     getUserClinics(user.id, serviceClient),
   ]);
+
+  // Extract clinic slug from URL path (e.g., /dashboard/[clinicSlug]/inbound)
+  // This is more reliable than getClinicByUserId which uses the legacy clinic_name field
+  const headersList = await headers();
+  const pathname =
+    headersList.get("x-invoke-path") ?? headersList.get("x-pathname") ?? "";
+  const pathParts = pathname.split("/").filter(Boolean);
+  // Path format: /dashboard/[clinicSlug]/...
+  const urlClinicSlug =
+    pathParts.length > 1 && pathParts[0] === "dashboard" ? pathParts[1] : null;
+
+  // Find clinic by URL slug, or use first available clinic
+  const clinic = urlClinicSlug
+    ? (allClinics.find((c) => c.slug === urlClinicSlug) ?? allClinics[0])
+    : allClinics[0];
 
   return (
     <div className="flex h-screen overflow-hidden">
