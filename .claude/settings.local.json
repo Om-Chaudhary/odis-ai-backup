@@ -274,7 +274,8 @@
       "mcp__Railway__get-logs",
       "mcp__Railway__set-variables",
       "mcp__Railway__generate-domain",
-      "WebFetch(domain:pims-sync-production.up.railway.app)"
+      "WebFetch(domain:pims-sync-production.up.railway.app)",
+      "WebFetch(domain:backboard.railway.com)"
     ],
     "deny": [],
     "ask": [],

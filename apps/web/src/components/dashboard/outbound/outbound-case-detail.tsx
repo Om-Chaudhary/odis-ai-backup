@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useClinic } from "@odis-ai/shared/ui/clinic-context";
 import { Button } from "@odis-ai/shared/ui/button";
 import {
   Collapsible,
@@ -56,6 +57,7 @@ export function OutboundCaseDetail({
   testModeEnabled = false,
   onDelete,
 }: OutboundCaseDetailProps) {
+  const { clinicSlug } = useClinic();
   // Workflow timeline collapsible state
   const [workflowOpen, setWorkflowOpen] = useState(false);
 
@@ -287,7 +289,7 @@ export function OutboundCaseDetail({
                 </div>
                 <div className="flex items-center gap-2">
                   <Link
-                    href={`/dashboard/outbound/workflow/${caseData.caseId}`}
+                    href={`/dashboard/${clinicSlug}/outbound/workflow/${caseData.caseId}`}
                     onClick={(e) => e.stopPropagation()}
                     className="inline-flex h-6 items-center gap-1 rounded-md px-2 text-xs text-slate-500 hover:bg-slate-100 hover:text-teal-700 dark:hover:bg-slate-800"
                   >

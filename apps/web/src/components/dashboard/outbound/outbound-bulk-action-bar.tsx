@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useClinic } from "@odis-ai/shared/ui/clinic-context";
 import { Button } from "@odis-ai/shared/ui/button";
 import {
   AlertDialog,
@@ -43,6 +44,7 @@ export function OutboundBulkActionBar({
   isBackgroundOperationActive = false,
 }: BulkActionBarProps) {
   const router = useRouter();
+  const { clinicSlug } = useClinic();
   const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   // Hide bar when no cases selected or when background operation is running
@@ -57,7 +59,7 @@ export function OutboundBulkActionBar({
     // Navigate to bulk schedule page with case IDs
     const params = new URLSearchParams();
     params.set("cases", selectedCaseIds.join(","));
-    router.push(`/dashboard/outbound/bulk-schedule?${params.toString()}`);
+    router.push(`/dashboard/${clinicSlug}/outbound/bulk-schedule?${params.toString()}`);
   };
 
   return (
