@@ -86,10 +86,13 @@ export default function AdminSyncPage() {
         </div>
 
         <SyncHistoryTable
-          data={(history?.syncs ?? []).map((sync) => ({
-            ...sync,
-            clinics: sync.clinics?.[0] ?? null,
-          }))}
+          data={
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (history?.syncs ?? []).map((sync: any) => ({
+              ...sync,
+              clinics: sync.clinics?.[0] ?? null,
+            }))
+          }
           isLoading={isLoading}
         />
 

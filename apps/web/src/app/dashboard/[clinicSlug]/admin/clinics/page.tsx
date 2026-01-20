@@ -33,8 +33,9 @@ export default function AdminClinicsPage() {
     offset: 0,
   });
 
-  // Explicitly type the clinics array to avoid deep type instantiation
-  const clinics: Clinic[] = data?.clinics ?? [];
+  // Use any to bypass deep type instantiation, then cast to Clinic[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const clinics = (data?.clinics ?? []) as any as Clinic[];
 
   return (
     <div className="flex flex-col gap-6 p-6">
