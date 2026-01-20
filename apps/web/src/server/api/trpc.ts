@@ -297,8 +297,12 @@ export const superAdminProcedure = protectedProcedure.use(
       });
     }
 
-    // Check if user is super admin using SQL helper (supports both auth types)
-    const { data, error } = await ctx.supabase.rpc("is_super_admin").single();
+    // Check if user is super admin via direct query (works with both Clerk and Supabase Auth)
+    const { data: adminCheck, error } = await ctx.supabase
+      .from("users")
+      .select("role")
+      .eq("id", userId)
+      .single();
 
     if (error) {
       console.error("[Super Admin] Error checking admin status:", error);
@@ -308,7 +312,7 @@ export const superAdminProcedure = protectedProcedure.use(
       });
     }
 
-    if (!data) {
+    if (adminCheck?.role !== "admin") {
       throw new TRPCError({
         code: "FORBIDDEN",
         message: "Super admin access required",

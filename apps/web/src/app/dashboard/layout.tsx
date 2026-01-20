@@ -120,6 +120,7 @@ export default async function DashboardLayout({
               ? [{ id: clinic.id, name: clinic.name, slug: clinic.slug }]
               : undefined
         }
+        isAdmin={profile?.role === "admin"}
       />
 
       {/* Main Content Area */}

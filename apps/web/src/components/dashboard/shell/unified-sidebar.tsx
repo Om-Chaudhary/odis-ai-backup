@@ -13,6 +13,10 @@ import {
   AlertCircle,
   AlertTriangle,
   Building2,
+  Shield,
+  Users,
+  RefreshCw,
+  CalendarClock,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -38,6 +42,7 @@ interface UnifiedSidebarProps {
   } | null;
   clinicSlug: string | null;
   allClinics?: Array<{ id: string; name: string; slug: string }>;
+  isAdmin?: boolean;
 }
 
 interface MainNavItemProps {
@@ -129,6 +134,7 @@ function SecondaryNavItem({
 export function UnifiedSidebar({
   clinicSlug,
   allClinics,
+  isAdmin,
 }: UnifiedSidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -328,6 +334,60 @@ export function UnifiedSidebar({
               isActive={!!isOnSettings}
             />
           </nav>
+
+          {/* Admin Section - only for admin users */}
+          {isAdmin && clinicSlug && (
+            <>
+              <div className="relative z-10 mx-4 my-3">
+                <div className="h-px bg-gradient-to-r from-transparent via-teal-700/40 to-transparent" />
+              </div>
+              <div className="mb-2 px-3">
+                <span className="px-3 text-[10px] font-semibold tracking-wider text-teal-400/70 uppercase">
+                  Admin
+                </span>
+              </div>
+              <nav className="flex flex-col gap-1 px-3">
+                <MainNavItem
+                  href={`/dashboard/${clinicSlug}/admin`}
+                  icon={Shield}
+                  label="Admin Overview"
+                  isActive={pathname === `/dashboard/${clinicSlug}/admin`}
+                />
+                <MainNavItem
+                  href={`/dashboard/${clinicSlug}/admin/clinics`}
+                  icon={Building2}
+                  label="Clinics"
+                  isActive={pathname.includes(
+                    `/dashboard/${clinicSlug}/admin/clinics`,
+                  )}
+                />
+                <MainNavItem
+                  href={`/dashboard/${clinicSlug}/admin/users`}
+                  icon={Users}
+                  label="Users"
+                  isActive={pathname.includes(
+                    `/dashboard/${clinicSlug}/admin/users`,
+                  )}
+                />
+                <MainNavItem
+                  href={`/dashboard/${clinicSlug}/admin/sync`}
+                  icon={RefreshCw}
+                  label="PIMS Sync"
+                  isActive={pathname.includes(
+                    `/dashboard/${clinicSlug}/admin/sync`,
+                  )}
+                />
+                <MainNavItem
+                  href={`/dashboard/${clinicSlug}/admin/operations`}
+                  icon={CalendarClock}
+                  label="Operations"
+                  isActive={pathname.includes(
+                    `/dashboard/${clinicSlug}/admin/operations`,
+                  )}
+                />
+              </nav>
+            </>
+          )}
 
           {/* Divider & Secondary Navigation */}
           {showSecondaryNav && clinicSlug && (

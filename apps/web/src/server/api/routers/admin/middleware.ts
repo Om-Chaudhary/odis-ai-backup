@@ -13,7 +13,7 @@ import { protectedProcedure, middleware } from "~/server/api/trpc";
 /**
  * Admin middleware - verifies user has super admin role
  *
- * Works with both Clerk and Supabase Auth via the `is_super_admin()` SQL helper.
+ * Works with both Clerk and Supabase Auth via direct query to users table.
  */
 export const adminMiddleware = middleware(async ({ ctx, next }) => {
   if (!ctx.userId) {
@@ -23,9 +23,11 @@ export const adminMiddleware = middleware(async ({ ctx, next }) => {
     });
   }
 
-  // Check if user is super admin using SQL helper (supports both auth types)
-  const { data, error } = await ctx.supabase
-    .rpc("is_super_admin")
+  // Check if user is super admin via direct query (works with both Clerk and Supabase Auth)
+  const { data: adminCheck, error } = await ctx.supabase
+    .from("users")
+    .select("role")
+    .eq("id", ctx.userId)
     .single();
 
   if (error) {
@@ -36,7 +38,7 @@ export const adminMiddleware = middleware(async ({ ctx, next }) => {
     });
   }
 
-  if (!data) {
+  if (adminCheck?.role !== "admin") {
     throw new TRPCError({
       code: "FORBIDDEN",
       message: "Super admin access required",
