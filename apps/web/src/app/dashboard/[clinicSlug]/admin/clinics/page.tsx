@@ -15,6 +15,9 @@ import {
 import { ClinicsDataTable } from "~/components/admin/clinics/clinics-data-table";
 import { Plus, Search } from "lucide-react";
 import { Card } from "@odis-ai/shared/ui/card";
+import type { Database } from "@odis-ai/shared/types";
+
+type Clinic = Database["public"]["Tables"]["clinics"]["Row"];
 
 export default function AdminClinicsPage() {
   const router = useRouter();
@@ -29,6 +32,9 @@ export default function AdminClinicsPage() {
     limit: 50,
     offset: 0,
   });
+
+  // Explicitly type the clinics array to avoid deep type instantiation
+  const clinics: Clinic[] = data?.clinics ?? [];
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -105,12 +111,12 @@ export default function AdminClinicsPage() {
       </Card>
 
       {/* Clinics Table */}
-      <ClinicsDataTable data={data?.clinics ?? []} isLoading={isLoading} />
+      <ClinicsDataTable data={clinics} isLoading={isLoading} />
 
       {/* Results count */}
       {data && (
         <div className="text-center text-sm text-slate-500">
-          Showing {data.clinics.length} of {data.total} clinics
+          Showing {clinics.length} of {data.total} clinics
         </div>
       )}
     </div>
