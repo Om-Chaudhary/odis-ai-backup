@@ -41,11 +41,13 @@ import {
 export function requireFeature(feature: TierFeature) {
   return middleware(async ({ ctx, next }) => {
     // Super admins bypass subscription checks
-    const { data: adminCheck } = await ctx.supabase
-      .from("users")
-      .select("role")
-      .eq("id", ctx.userId)
-      .single();
+    const { data: adminCheck } = ctx.userId
+      ? await ctx.supabase
+          .from("users")
+          .select("role")
+          .eq("id", ctx.userId)
+          .single()
+      : { data: null };
 
     if (adminCheck?.role === "admin") {
       return next({
@@ -138,11 +140,13 @@ export function requireFeature(feature: TierFeature) {
 export function requireMinimumTier(minimumTier: SubscriptionTier) {
   return middleware(async ({ ctx, next }) => {
     // Super admins bypass subscription checks
-    const { data: adminCheck } = await ctx.supabase
-      .from("users")
-      .select("role")
-      .eq("id", ctx.userId)
-      .single();
+    const { data: adminCheck } = ctx.userId
+      ? await ctx.supabase
+          .from("users")
+          .select("role")
+          .eq("id", ctx.userId)
+          .single()
+      : { data: null };
 
     if (adminCheck?.role === "admin") {
       return next({

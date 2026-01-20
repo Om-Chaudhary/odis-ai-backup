@@ -730,6 +730,7 @@ export type Database = {
           address: string | null;
           address_config: Json | null;
           business_hours: Json | null;
+          clerk_org_id: string | null;
           created_at: string;
           current_period_end: string | null;
           current_period_start: string | null;
@@ -760,6 +761,7 @@ export type Database = {
           address?: string | null;
           address_config?: Json | null;
           business_hours?: Json | null;
+          clerk_org_id?: string | null;
           created_at?: string;
           current_period_end?: string | null;
           current_period_start?: string | null;
@@ -790,6 +792,7 @@ export type Database = {
           address?: string | null;
           address_config?: Json | null;
           business_hours?: Json | null;
+          clerk_org_id?: string | null;
           created_at?: string;
           current_period_end?: string | null;
           current_period_start?: string | null;
@@ -3167,6 +3170,7 @@ export type Database = {
           batch_include_idexx_notes: boolean | null;
           batch_include_manual_transcriptions: boolean | null;
           call_delay_days: number | null;
+          clerk_user_id: string | null;
           clinic_email: string | null;
           clinic_name: string | null;
           clinic_phone: string | null;
@@ -3203,6 +3207,7 @@ export type Database = {
           batch_include_idexx_notes?: boolean | null;
           batch_include_manual_transcriptions?: boolean | null;
           call_delay_days?: number | null;
+          clerk_user_id?: string | null;
           clinic_email?: string | null;
           clinic_name?: string | null;
           clinic_phone?: string | null;
@@ -3239,6 +3244,7 @@ export type Database = {
           batch_include_idexx_notes?: boolean | null;
           batch_include_manual_transcriptions?: boolean | null;
           call_delay_days?: number | null;
+          clerk_user_id?: string | null;
           clinic_email?: string | null;
           clinic_name?: string | null;
           clinic_phone?: string | null;

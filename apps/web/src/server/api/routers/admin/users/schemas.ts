@@ -1,8 +1,26 @@
 import { z } from "zod";
 
+// User role enum matching the database user_role type
+const userRoleEnum = z.enum([
+  "veterinarian",
+  "vet_tech",
+  "admin",
+  "practice_owner",
+  "client",
+]);
+
 export const listUsersSchema = z.object({
   search: z.string().optional(),
-  role: z.enum(["all", "admin", "staff", "viewer"]).optional(),
+  role: z
+    .enum([
+      "all",
+      "veterinarian",
+      "vet_tech",
+      "admin",
+      "practice_owner",
+      "client",
+    ])
+    .optional(),
   clinicId: z.string().uuid().optional(),
   limit: z.number().min(1).max(100).default(20),
   offset: z.number().min(0).default(0),
@@ -16,14 +34,14 @@ export const inviteUserSchema = z.object({
   email: z.string().email(),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
-  role: z.enum(["admin", "staff", "viewer"]).default("staff"),
+  role: userRoleEnum.default("vet_tech"),
   clinicId: z.string().uuid(),
   clinicRole: z.enum(["owner", "admin", "member"]).default("member"),
 });
 
 export const updateUserRoleSchema = z.object({
   userId: z.string().uuid(),
-  role: z.enum(["admin", "staff", "viewer"]),
+  role: userRoleEnum,
 });
 
 export const grantClinicAccessSchema = z.object({

@@ -44,14 +44,12 @@ export function ActiveSyncsCard({ clinicId }: ActiveSyncsCardProps) {
         <div className="space-y-3">
           {}
           {activeSyncs.map((sync) => {
-            const clinic =
-              (
-                sync.clinics as Array<{
-                  id: string;
-                  name: string;
-                  slug: string;
-                }>
-              )?.[0] ?? null;
+            const clinicData = sync.clinics as unknown as {
+              id: string;
+              name: string;
+              slug: string;
+            } | null;
+            const clinic = clinicData ?? null;
 
             return (
               <div
@@ -79,7 +77,7 @@ export function ActiveSyncsCard({ clinicId }: ActiveSyncsCardProps) {
                     </div>
                     <p className="text-sm text-slate-500">
                       Started{" "}
-                      {formatDistanceToNow(new Date(sync.started_at), {
+                      {formatDistanceToNow(new Date(sync.created_at), {
                         addSuffix: true,
                       })}
                     </p>

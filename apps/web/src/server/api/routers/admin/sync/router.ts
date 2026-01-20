@@ -57,7 +57,7 @@ export const adminSyncRouter = createTRPCRouter({
           `
           id,
           clinic_id,
-          started_at,
+          created_at,
           status,
           clinics (
             id,
@@ -67,7 +67,7 @@ export const adminSyncRouter = createTRPCRouter({
         `,
         )
         .eq("status", "running")
-        .order("started_at", { ascending: false });
+        .order("created_at", { ascending: false });
 
       if (input.clinicId) {
         query = query.eq("clinic_id", input.clinicId);
@@ -100,12 +100,12 @@ export const adminSyncRouter = createTRPCRouter({
           `
           id,
           clinic_id,
-          started_at,
-          completed_at,
+          created_at,
+          updated_at,
           status,
-          inbound_cases_created,
-          inbound_cases_updated,
-          discharge_cases_updated,
+          cases_created,
+          cases_updated,
+          cases_skipped,
           error_message,
           clinics (
             id,
@@ -115,8 +115,8 @@ export const adminSyncRouter = createTRPCRouter({
         `,
           { count: "exact" },
         )
-        .not("completed_at", "is", null)
-        .order("completed_at", { ascending: false });
+        .neq("status", "running")
+        .order("created_at", { ascending: false });
 
       if (input.clinicId) {
         query = query.eq("clinic_id", input.clinicId);
@@ -145,7 +145,7 @@ export const adminSyncRouter = createTRPCRouter({
    */
   triggerSync: adminProcedure
     .input(triggerSyncSchema)
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ input }) => {
       try {
         const endpoint =
           input.type === "inbound" ? "/sync/inbound" : "/sync/case";

@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
+import type { Database } from "@odis-ai/shared/types";
 import { api } from "~/trpc/client";
 import { Button } from "@odis-ai/shared/ui/button";
 import { Badge } from "@odis-ai/shared/ui/badge";
@@ -9,6 +10,20 @@ import { ArrowLeft, Shield, User as UserIcon } from "lucide-react";
 import { UserProfileSection } from "~/components/admin/users/user-profile-section";
 import { UserClinicsSection } from "~/components/admin/users/user-clinics-section";
 import { UserActivitySection } from "~/components/admin/users/user-activity-section";
+
+type User = Database["public"]["Tables"]["users"]["Row"] & {
+  clinic_name?: string | null;
+  clinics: Array<{
+    clinic_id: string;
+    role: string;
+    clinics: {
+      id: string;
+      name: string;
+      slug: string;
+      is_active: boolean;
+    } | null;
+  }>;
+};
 
 export default function UserDetailPage() {
   const params = useParams<{ userId: string }>();
@@ -49,15 +64,18 @@ export default function UserDetailPage() {
     );
   }
 
+  // Type assertion to break deep type inference chain from tRPC
+  const userData = user as unknown as User;
+
   const initials =
-    [user.first_name, user.last_name]
+    [userData.first_name, userData.last_name]
       .filter(Boolean)
       .map((n) => n?.[0])
       .join("")
       .toUpperCase() || "?";
 
   const fullName =
-    [user.first_name, user.last_name].filter(Boolean).join(" ") ||
+    [userData.first_name, userData.last_name].filter(Boolean).join(" ") ||
     "Unnamed User";
 
   return (
@@ -88,19 +106,21 @@ export default function UserDetailPage() {
                 <Badge
                   variant="outline"
                   className={
-                    user.role === "admin"
+                    userData.role === "admin"
                       ? "border-amber-200 bg-amber-50 text-amber-700"
                       : "capitalize"
                   }
                 >
-                  {user.role === "admin" && <Shield className="mr-1 h-3 w-3" />}
-                  {user.role ?? "staff"}
+                  {userData.role === "admin" && (
+                    <Shield className="mr-1 h-3 w-3" />
+                  )}
+                  {userData.role ?? "staff"}
                 </Badge>
               </div>
-              <p className="text-sm text-slate-500">{user.email}</p>
-              {user.clinic_name && (
+              <p className="text-sm text-slate-500">{userData.email}</p>
+              {userData.clinic_name && (
                 <p className="text-sm text-slate-500">
-                  Clinic: {user.clinic_name}
+                  Clinic: {userData.clinic_name}
                 </p>
               )}
             </div>
@@ -111,10 +131,10 @@ export default function UserDetailPage() {
       {/* Content Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Profile Section */}
-        <UserProfileSection user={user} userId={userId} />
+        <UserProfileSection user={userData} userId={userId} />
 
         {/* Clinics Section */}
-        <UserClinicsSection user={user} userId={userId} />
+        <UserClinicsSection user={userData} userId={userId} />
       </div>
 
       {/* Activity Section */}

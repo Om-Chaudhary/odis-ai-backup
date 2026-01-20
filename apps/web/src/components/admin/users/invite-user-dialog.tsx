@@ -21,6 +21,13 @@ import {
 } from "@odis-ai/shared/ui/select";
 import { toast } from "sonner";
 
+type UserRole =
+  | "veterinarian"
+  | "vet_tech"
+  | "admin"
+  | "practice_owner"
+  | "client";
+
 interface InviteUserDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -34,16 +41,21 @@ export function InviteUserDialog({
     email: "",
     firstName: "",
     lastName: "",
-    role: "staff" as "admin" | "staff" | "viewer",
+    role: "vet_tech" as UserRole,
     clinicId: "",
     clinicRole: "member" as "owner" | "admin" | "member",
   });
 
-  const { data: clinics } = api.admin.clinics.list.useQuery({
+  const { data: clinicsData } = api.admin.clinics.list.useQuery({
     isActive: true,
     limit: 100,
     offset: 0,
   });
+
+  // Type assertion to break deep type inference chain
+  const clinics = clinicsData as
+    | { clinics: Array<{ id: string; name: string }> }
+    | undefined;
 
   const inviteMutation = api.admin.users.invite.useMutation({
     onSuccess: () => {
@@ -53,7 +65,7 @@ export function InviteUserDialog({
         email: "",
         firstName: "",
         lastName: "",
-        role: "staff",
+        role: "vet_tech",
         clinicId: "",
         clinicRole: "member",
       });
@@ -162,7 +174,7 @@ export function InviteUserDialog({
               <Label htmlFor="role">Platform Role *</Label>
               <Select
                 value={formData.role}
-                onValueChange={(value: "admin" | "staff" | "viewer") =>
+                onValueChange={(value: UserRole) =>
                   setFormData((prev) => ({ ...prev, role: value }))
                 }
               >
@@ -170,9 +182,11 @@ export function InviteUserDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="veterinarian">Veterinarian</SelectItem>
+                  <SelectItem value="vet_tech">Vet Tech</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="staff">Staff</SelectItem>
-                  <SelectItem value="viewer">Viewer</SelectItem>
+                  <SelectItem value="practice_owner">Practice Owner</SelectItem>
+                  <SelectItem value="client">Client</SelectItem>
                 </SelectContent>
               </Select>
             </div>

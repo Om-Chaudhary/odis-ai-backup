@@ -44,6 +44,20 @@ interface CleanedTranscriptData {
   wasModified: boolean;
 }
 
+// Type for the inbound call data from tRPC
+interface InboundCallData {
+  id: string;
+  transcriptMessages: unknown;
+  displayTranscript: string | null;
+  transcript: string | null;
+  summary: string | null;
+  recordingUrl: string | null;
+  cleanedTranscript: string | null;
+  duration: number | null;
+  durationSeconds: number | null;
+  startedAt: string | null;
+}
+
 /**
  * Inbound Call Recording Component
  *
@@ -68,11 +82,14 @@ export function InboundCallRecording({
   const [hasAttemptedCleanup, setHasAttemptedCleanup] = useState(false);
   const showRawTranscript = true; // Default to showing original VAPI transcript
 
-  const { data: callData, isLoading } =
+  const { data: rawCallData, isLoading } =
     api.inboundCalls.getInboundCallByVapiId.useQuery(
       { vapiCallId },
       { enabled: !!vapiCallId },
     );
+
+  // Type assertion to break deep type inference chain
+  const callData = rawCallData as InboundCallData | null | undefined;
 
   // Clean up transcript mutation (fallback for calls without pre-cleaned transcript)
   const cleanMutation = api.inboundCalls.cleanTranscript.useMutation({

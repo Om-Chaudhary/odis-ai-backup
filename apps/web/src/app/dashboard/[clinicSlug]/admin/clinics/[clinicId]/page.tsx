@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams, useRouter } from "next/navigation";
+import type { Database } from "@odis-ai/shared/types";
 import { api } from "~/trpc/client";
 import { Button } from "@odis-ai/shared/ui/button";
 import { Badge } from "@odis-ai/shared/ui/badge";
@@ -15,6 +16,8 @@ import { ClinicOverviewTab } from "~/components/admin/clinics/clinic-overview-ta
 import { ClinicSettingsTab } from "~/components/admin/clinics/clinic-settings-tab";
 import { ClinicUsersTab } from "~/components/admin/clinics/clinic-users-tab";
 import { ClinicSyncTab } from "~/components/admin/clinics/clinic-sync-tab";
+
+type Clinic = Database["public"]["Tables"]["clinics"]["Row"];
 
 export default function ClinicDetailPage() {
   const params = useParams<{ clinicId: string }>();
@@ -58,6 +61,9 @@ export default function ClinicDetailPage() {
     );
   }
 
+  // Type assertion to break deep type inference chain from tRPC/Supabase
+  const clinicData = clinic as unknown as Clinic;
+
   return (
     <div className="flex flex-col gap-6 p-6">
       {/* Header */}
@@ -73,25 +79,25 @@ export default function ClinicDetailPage() {
           <div>
             <div className="mb-2 flex items-center gap-3">
               <h1 className="text-2xl font-bold text-slate-900">
-                {clinic.name}
+                {clinicData.name}
               </h1>
               <Badge
-                variant={clinic.is_active ? "default" : "secondary"}
+                variant={clinicData.is_active ? "default" : "secondary"}
                 className={
-                  clinic.is_active
+                  clinicData.is_active
                     ? "bg-emerald-100 text-emerald-700"
                     : "bg-slate-100 text-slate-500"
                 }
               >
-                {clinic.is_active ? "Active" : "Inactive"}
+                {clinicData.is_active ? "Active" : "Inactive"}
               </Badge>
               <Badge variant="outline" className="font-mono uppercase">
-                {clinic.pims_type}
+                {clinicData.pims_type}
               </Badge>
             </div>
             <p className="text-sm text-slate-500">
-              {clinic.slug} • Created{" "}
-              {new Date(clinic.created_at).toLocaleDateString()}
+              {clinicData.slug} • Created{" "}
+              {new Date(clinicData.created_at).toLocaleDateString()}
             </p>
           </div>
         </div>
@@ -114,11 +120,11 @@ export default function ClinicDetailPage() {
         </TabsList>
 
         <TabsContent value="overview" className="mt-6">
-          <ClinicOverviewTab clinic={clinic} clinicId={clinicId} />
+          <ClinicOverviewTab clinic={clinicData} clinicId={clinicId} />
         </TabsContent>
 
         <TabsContent value="settings" className="mt-6">
-          <ClinicSettingsTab clinic={clinic} clinicId={clinicId} />
+          <ClinicSettingsTab clinic={clinicData} clinicId={clinicId} />
         </TabsContent>
 
         <TabsContent value="users" className="mt-6">
@@ -126,7 +132,7 @@ export default function ClinicDetailPage() {
         </TabsContent>
 
         <TabsContent value="sync" className="mt-6">
-          <ClinicSyncTab clinic={clinic} clinicId={clinicId} />
+          <ClinicSyncTab clinic={clinicData} clinicId={clinicId} />
         </TabsContent>
       </Tabs>
     </div>

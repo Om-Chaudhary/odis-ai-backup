@@ -270,24 +270,40 @@ export const adminUsersRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const supabase = ctx.supabase;
 
-      // Get recent cases created by user
+      // Get recent cases created by user with patient name from canonical_patients
       const { data: cases } = await supabase
         .from("cases")
-        .select("id, patient_name, created_at")
+        .select(
+          `
+          id,
+          created_at,
+          canonical_patients (
+            name
+          )
+        `,
+        )
         .eq("user_id", input.userId)
         .order("created_at", { ascending: false })
         .limit(input.limit);
 
+      // Transform cases to include patient_name at top level
+      const transformedCases = (cases ?? []).map((c) => ({
+        id: c.id,
+        created_at: c.created_at,
+        patient_name:
+          (c.canonical_patients as { name: string } | null)?.name ?? null,
+      }));
+
       // Get recent calls made by user
       const { data: calls } = await supabase
-        .from("calls")
+        .from("scheduled_discharge_calls")
         .select("id, status, created_at")
         .eq("user_id", input.userId)
         .order("created_at", { ascending: false })
         .limit(input.limit);
 
       return {
-        cases: cases ?? [],
+        cases: transformedCases,
         calls: calls ?? [],
       };
     }),

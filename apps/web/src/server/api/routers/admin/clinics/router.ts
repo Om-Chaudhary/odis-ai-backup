@@ -257,7 +257,7 @@ export const adminClinicsRouter = createTRPCRouter({
 
       // Get call count
       const { count: callCount } = await supabase
-        .from("calls")
+        .from("scheduled_discharge_calls")
         .select("*", { count: "exact", head: true })
         .eq("clinic_id", input.clinicId)
         .gte("created_at", daysAgo.toISOString());

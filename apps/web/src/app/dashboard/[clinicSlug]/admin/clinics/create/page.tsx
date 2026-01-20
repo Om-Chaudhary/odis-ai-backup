@@ -29,9 +29,11 @@ export default function CreateClinicPage() {
     pimsType: "idexx" as "idexx" | "neo",
   });
 
-  const createMutation = api.admin.clinics.create.useMutation({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const createMutation = api.admin.clinics.create.useMutation<any>({
     onSuccess: (data) => {
       toast.success("Clinic created successfully");
+
       router.push(`/admin/clinics/${data.id}`);
     },
     onError: (error) => {

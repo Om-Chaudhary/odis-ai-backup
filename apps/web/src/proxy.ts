@@ -38,6 +38,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhooks/(.*)",
   "/api/public/(.*)",
   "/api/health(.*)",
+  "/api/vapi/(.*)",
 ]);
 
 /**
@@ -65,8 +66,10 @@ export const proxy = clerkMiddleware(async (auth, req) => {
   const path = req.nextUrl.pathname;
 
   // Legacy redirects
-  if (path === "/login") return NextResponse.redirect(new URL("/sign-in", req.url));
-  if (path === "/signup") return NextResponse.redirect(new URL("/sign-up", req.url));
+  if (path === "/login")
+    return NextResponse.redirect(new URL("/sign-in", req.url));
+  if (path === "/signup")
+    return NextResponse.redirect(new URL("/sign-up", req.url));
 
   // Public routes - allow through
   if (isPublicRoute(req)) {

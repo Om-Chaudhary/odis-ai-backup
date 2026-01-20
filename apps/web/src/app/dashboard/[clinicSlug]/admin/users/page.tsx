@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { Database } from "@odis-ai/shared/types";
 import { api } from "~/trpc/client";
 import { Button } from "@odis-ai/shared/ui/button";
 import { Input } from "@odis-ai/shared/ui/input";
@@ -16,17 +17,29 @@ import { InviteUserDialog } from "~/components/admin/users/invite-user-dialog";
 import { Plus, Search } from "lucide-react";
 import { Card } from "@odis-ai/shared/ui/card";
 
+type User = Database["public"]["Tables"]["users"]["Row"];
+type UserRole =
+  | "all"
+  | "veterinarian"
+  | "vet_tech"
+  | "admin"
+  | "practice_owner"
+  | "client";
+
 export default function AdminUsersPage() {
   const [search, setSearch] = useState("");
-  const [role, setRole] = useState<"all" | "admin" | "staff" | "viewer">("all");
+  const [role, setRole] = useState<UserRole>("all");
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
 
-  const { data, isLoading } = api.admin.users.list.useQuery({
+  const { data: queryData, isLoading } = api.admin.users.list.useQuery({
     search: search || undefined,
     role: role,
     limit: 50,
     offset: 0,
   });
+
+  // Type assertion to break deep type inference chain
+  const data = queryData as { users: User[]; total: number } | undefined;
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -62,18 +75,18 @@ export default function AdminUsersPage() {
 
           <Select
             value={role}
-            onValueChange={(value: "all" | "admin" | "staff" | "viewer") =>
-              setRole(value)
-            }
+            onValueChange={(value: UserRole) => setRole(value)}
           >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Role" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Roles</SelectItem>
+              <SelectItem value="veterinarian">Veterinarian</SelectItem>
+              <SelectItem value="vet_tech">Vet Tech</SelectItem>
               <SelectItem value="admin">Admin</SelectItem>
-              <SelectItem value="staff">Staff</SelectItem>
-              <SelectItem value="viewer">Viewer</SelectItem>
+              <SelectItem value="practice_owner">Practice Owner</SelectItem>
+              <SelectItem value="client">Client</SelectItem>
             </SelectContent>
           </Select>
         </div>

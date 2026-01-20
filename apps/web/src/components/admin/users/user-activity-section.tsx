@@ -52,7 +52,7 @@ export function UserActivitySection({ userId }: UserActivitySectionProps) {
                           {case_.patient_name ?? "Unnamed Patient"}
                         </p>
                         <p className="text-xs text-slate-500">
-                          {formatDistanceToNow(new Date(case_.created_at), {
+                          {formatDistanceToNow(new Date(case_.created_at!), {
                             addSuffix: true,
                           })}
                         </p>
@@ -83,7 +83,7 @@ export function UserActivitySection({ userId }: UserActivitySectionProps) {
                       </div>
                       <div>
                         <p className="text-sm font-medium text-slate-900">
-                          {/* eslint-disable-next-line @typescript-eslint/no-unsafe-call */}
+                          {}
                           Call ID: {call.id.slice(0, 8)}
                         </p>
                         <p className="text-xs text-slate-500">
