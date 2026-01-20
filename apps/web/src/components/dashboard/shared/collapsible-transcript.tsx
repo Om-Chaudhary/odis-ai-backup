@@ -17,7 +17,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@odis-ai/shared/ui/collapsible";
-import { ScrollArea } from "@odis-ai/shared/ui/scroll-area";
 import { cn } from "@odis-ai/shared/util";
 
 interface TranscriptMessage {
@@ -37,8 +36,6 @@ interface CollapsibleTranscriptProps {
   currentTime?: number;
   /** Callback when user clicks on a message to seek */
   onSeek?: (timestamp: number) => void;
-  /** Maximum height of the transcript area */
-  maxHeight?: number;
   /** Additional className */
   className?: string;
   /** Whether the transcript is initially expanded */
@@ -112,7 +109,6 @@ export function CollapsibleTranscript({
   cleanedTranscript,
   preferCleaned = true,
   onSeek,
-  maxHeight = 400,
   className,
   defaultOpen = false,
 }: CollapsibleTranscriptProps) {
@@ -282,7 +278,7 @@ export function CollapsibleTranscript({
                 </div>
 
                 {/* Messages */}
-                <ScrollArea style={{ maxHeight }} className="relative p-4">
+                <div className="relative p-4">
                   <div className="space-y-3">
                     {messages.map((message, index) => (
                       <motion.div
@@ -338,7 +334,7 @@ export function CollapsibleTranscript({
                       </motion.div>
                     ))}
                   </div>
-                </ScrollArea>
+                </div>
               </div>
             </motion.div>
           )}
