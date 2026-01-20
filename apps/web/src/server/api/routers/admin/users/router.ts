@@ -1,6 +1,5 @@
 import { createTRPCRouter } from "~/server/api/trpc";
 import { adminProcedure } from "../middleware";
-import { createClient } from "@odis-ai/data-access/db/server";
 import {
   listUsersSchema,
   getUserByIdSchema,
@@ -17,8 +16,8 @@ export const adminUsersRouter = createTRPCRouter({
   /**
    * List all users with optional search and filtering
    */
-  list: adminProcedure.input(listUsersSchema).query(async ({ input }) => {
-    const supabase = await createClient();
+  list: adminProcedure.input(listUsersSchema).query(async ({ ctx, input }) => {
+    const supabase = ctx.supabase;
 
     let query = supabase.from("users").select("*", { count: "exact" });
 
@@ -70,27 +69,29 @@ export const adminUsersRouter = createTRPCRouter({
   /**
    * Get a single user by ID with clinic assignments
    */
-  getById: adminProcedure.input(getUserByIdSchema).query(async ({ input }) => {
-    const supabase = await createClient();
+  getById: adminProcedure
+    .input(getUserByIdSchema)
+    .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
-    const { data: user, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", input.userId)
-      .single();
+      const { data: user, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", input.userId)
+        .single();
 
-    if (error || !user) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "User not found",
-      });
-    }
+      if (error || !user) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "User not found",
+        });
+      }
 
-    // Get clinic access
-    const { data: clinicAccess } = await supabase
-      .from("user_clinic_access")
-      .select(
-        `
+      // Get clinic access
+      const { data: clinicAccess } = await supabase
+        .from("user_clinic_access")
+        .select(
+          `
           clinic_id,
           role,
           clinics (
@@ -100,51 +101,53 @@ export const adminUsersRouter = createTRPCRouter({
             is_active
           )
         `,
-      )
-      .eq("user_id", input.userId);
+        )
+        .eq("user_id", input.userId);
 
-    return {
-      ...user,
-      clinics: clinicAccess ?? [],
-    };
-  }),
+      return {
+        ...user,
+        clinics: clinicAccess ?? [],
+      };
+    }),
 
   /**
    * Invite a new user (creates invitation record)
    */
-  invite: adminProcedure.input(inviteUserSchema).mutation(async ({ input }) => {
-    const supabase = await createClient();
+  invite: adminProcedure
+    .input(inviteUserSchema)
+    .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
-    // Check if user already exists
-    const { data: existing } = await supabase
-      .from("users")
-      .select("id")
-      .eq("email", input.email)
-      .single();
+      // Check if user already exists
+      const { data: existing } = await supabase
+        .from("users")
+        .select("id")
+        .eq("email", input.email)
+        .single();
 
-    if (existing) {
-      throw new TRPCError({
-        code: "CONFLICT",
-        message: "A user with this email already exists",
-      });
-    }
+      if (existing) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "A user with this email already exists",
+        });
+      }
 
-    // Create invitation
-    // Note: In a real implementation, this would use the invitation service
-    // For now, we'll just return a success message
-    return {
-      success: true,
-      message: `Invitation will be sent to ${input.email}`,
-    };
-  }),
+      // Create invitation
+      // Note: In a real implementation, this would use the invitation service
+      // For now, we'll just return a success message
+      return {
+        success: true,
+        message: `Invitation will be sent to ${input.email}`,
+      };
+    }),
 
   /**
    * Update a user's platform role
    */
   updateRole: adminProcedure
     .input(updateUserRoleSchema)
-    .mutation(async ({ input }) => {
-      const supabase = await createClient();
+    .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
       const { data, error } = await supabase
         .from("users")
@@ -169,8 +172,8 @@ export const adminUsersRouter = createTRPCRouter({
    */
   grantClinicAccess: adminProcedure
     .input(grantClinicAccessSchema)
-    .mutation(async ({ input }) => {
-      const supabase = await createClient();
+    .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
       // Check if access already exists
       const { data: existing } = await supabase
@@ -213,8 +216,8 @@ export const adminUsersRouter = createTRPCRouter({
    */
   revokeClinicAccess: adminProcedure
     .input(revokeClinicAccessSchema)
-    .mutation(async ({ input }) => {
-      const supabase = await createClient();
+    .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
       const { error } = await supabase
         .from("user_clinic_access")
@@ -238,8 +241,8 @@ export const adminUsersRouter = createTRPCRouter({
    */
   deactivate: adminProcedure
     .input(deactivateUserSchema)
-    .mutation(async ({ input }) => {
-      const supabase = await createClient();
+    .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
       // In a real implementation, you'd have an is_active column
       // For now, we'll just remove their clinic access
@@ -264,8 +267,8 @@ export const adminUsersRouter = createTRPCRouter({
    */
   getUserActivity: adminProcedure
     .input(getUserActivitySchema)
-    .query(async ({ input }) => {
-      const supabase = await createClient();
+    .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
       // Get recent cases created by user
       const { data: cases } = await supabase

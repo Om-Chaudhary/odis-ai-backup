@@ -6,7 +6,6 @@
 
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { createClient } from "@odis-ai/data-access/db/server";
 
 export const callAssociationsRouter = createTRPCRouter({
   /**
@@ -18,8 +17,8 @@ export const callAssociationsRouter = createTRPCRouter({
         callId: z.string(),
       }),
     )
-    .query(async ({ input }) => {
-      const supabase = await createClient();
+    .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
       const { data, error } = await supabase
         .from("vapi_bookings")
@@ -45,8 +44,8 @@ export const callAssociationsRouter = createTRPCRouter({
         callId: z.string(),
       }),
     )
-    .query(async ({ input }) => {
-      const supabase = await createClient();
+    .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
       const { data, error } = await supabase
         .from("clinic_messages")
@@ -74,7 +73,7 @@ export const callAssociationsRouter = createTRPCRouter({
         phone: z.string(),
       }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       // Normalize phone number by removing all non-digit characters
       const normalizedPhone = input.phone.replace(/\D/g, "");
 
@@ -83,7 +82,7 @@ export const callAssociationsRouter = createTRPCRouter({
         return null;
       }
 
-      const supabase = await createClient();
+      const supabase = ctx.supabase;
 
       // Try to find in vapi_bookings first (by client_phone)
       // Select client_name, patient_name, species, breed, and created_at for context

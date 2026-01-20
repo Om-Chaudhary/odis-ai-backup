@@ -7,7 +7,6 @@
 
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { createClient } from "@odis-ai/data-access/db/server";
 
 export const clinicScheduleRouter = createTRPCRouter({
   /**
@@ -20,8 +19,8 @@ export const clinicScheduleRouter = createTRPCRouter({
         clinicId: z.string().uuid(),
       }),
     )
-    .query(async ({ input }) => {
-      const supabase = await createClient();
+    .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
       // Fetch schedule config
       const { data: scheduleConfig, error: scheduleError } = await supabase

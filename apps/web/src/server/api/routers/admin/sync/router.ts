@@ -1,6 +1,5 @@
 import { createTRPCRouter } from "~/server/api/trpc";
 import { adminProcedure } from "../middleware";
-import { createClient } from "@odis-ai/data-access/db/server";
 import {
   getActiveSyncsSchema,
   getSyncHistorySchema,
@@ -49,8 +48,8 @@ export const adminSyncRouter = createTRPCRouter({
    */
   getActiveSyncs: adminProcedure
     .input(getActiveSyncsSchema)
-    .query(async ({ input }) => {
-      const supabase = await createClient();
+    .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
       let query = supabase
         .from("case_sync_audits")
@@ -92,8 +91,8 @@ export const adminSyncRouter = createTRPCRouter({
    */
   getSyncHistory: adminProcedure
     .input(getSyncHistorySchema)
-    .query(async ({ input }) => {
-      const supabase = await createClient();
+    .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
       let query = supabase
         .from("case_sync_audits")
@@ -146,7 +145,7 @@ export const adminSyncRouter = createTRPCRouter({
    */
   triggerSync: adminProcedure
     .input(triggerSyncSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       try {
         const endpoint =
           input.type === "inbound" ? "/sync/inbound" : "/sync/case";
@@ -182,8 +181,8 @@ export const adminSyncRouter = createTRPCRouter({
    */
   getSyncSchedules: adminProcedure
     .input(getSyncSchedulesSchema)
-    .query(async ({ input }) => {
-      const supabase = await createClient();
+    .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
       let query = supabase.from("clinic_schedule_config").select("*");
 
@@ -209,8 +208,8 @@ export const adminSyncRouter = createTRPCRouter({
    */
   updateSyncSchedule: adminProcedure
     .input(updateSyncScheduleSchema)
-    .mutation(async ({ input }) => {
-      const supabase = await createClient();
+    .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
       // Check if schedule exists
       const { data: existing } = await supabase

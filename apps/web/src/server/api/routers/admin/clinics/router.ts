@@ -1,6 +1,5 @@
 import { createTRPCRouter } from "~/server/api/trpc";
 import { adminProcedure } from "../middleware";
-import { createClient } from "@odis-ai/data-access/db/server";
 import {
   listClinicsSchema,
   getClinicByIdSchema,
@@ -16,54 +15,56 @@ export const adminClinicsRouter = createTRPCRouter({
   /**
    * List all clinics with optional search and filtering
    */
-  list: adminProcedure.input(listClinicsSchema).query(async ({ input }) => {
-    const supabase = await createClient();
+  list: adminProcedure
+    .input(listClinicsSchema)
+    .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
-    let query = supabase.from("clinics").select("*", { count: "exact" });
+      let query = supabase.from("clinics").select("*", { count: "exact" });
 
-    // Apply filters
-    if (input.search) {
-      query = query.or(
-        `name.ilike.%${input.search}%,slug.ilike.%${input.search}%`,
-      );
-    }
+      // Apply filters
+      if (input.search) {
+        query = query.or(
+          `name.ilike.%${input.search}%,slug.ilike.%${input.search}%`,
+        );
+      }
 
-    if (input.pimsType && input.pimsType !== "all") {
-      query = query.eq("pims_type", input.pimsType);
-    }
+      if (input.pimsType && input.pimsType !== "all") {
+        query = query.eq("pims_type", input.pimsType);
+      }
 
-    if (input.isActive !== undefined) {
-      query = query.eq("is_active", input.isActive);
-    }
+      if (input.isActive !== undefined) {
+        query = query.eq("is_active", input.isActive);
+      }
 
-    // Apply pagination
-    query = query
-      .order("name")
-      .range(input.offset, input.offset + input.limit - 1);
+      // Apply pagination
+      query = query
+        .order("name")
+        .range(input.offset, input.offset + input.limit - 1);
 
-    const { data, error, count } = await query;
+      const { data, error, count } = await query;
 
-    if (error) {
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to fetch clinics",
-        cause: error,
-      });
-    }
+      if (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch clinics",
+          cause: error,
+        });
+      }
 
-    return {
-      clinics: data ?? [],
-      total: count ?? 0,
-    };
-  }),
+      return {
+        clinics: data ?? [],
+        total: count ?? 0,
+      };
+    }),
 
   /**
    * Get a single clinic by ID with detailed information
    */
   getById: adminProcedure
     .input(getClinicByIdSchema)
-    .query(async ({ input }) => {
-      const supabase = await createClient();
+    .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
       const { data, error } = await supabase
         .from("clinics")
@@ -86,8 +87,8 @@ export const adminClinicsRouter = createTRPCRouter({
    */
   create: adminProcedure
     .input(createClinicSchema)
-    .mutation(async ({ input }) => {
-      const supabase = await createClient();
+    .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
       // Check if slug already exists
       const { data: existing } = await supabase
@@ -135,8 +136,8 @@ export const adminClinicsRouter = createTRPCRouter({
    */
   update: adminProcedure
     .input(updateClinicSchema)
-    .mutation(async ({ input }) => {
-      const supabase = await createClient();
+    .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
       const { clinicId, ...updates } = input;
 
@@ -174,8 +175,8 @@ export const adminClinicsRouter = createTRPCRouter({
    */
   toggleActive: adminProcedure
     .input(toggleClinicActiveSchema)
-    .mutation(async ({ input }) => {
-      const supabase = await createClient();
+    .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
       const { data, error } = await supabase
         .from("clinics")
@@ -200,8 +201,8 @@ export const adminClinicsRouter = createTRPCRouter({
    */
   getClinicUsers: adminProcedure
     .input(getClinicUsersSchema)
-    .query(async ({ input }) => {
-      const supabase = await createClient();
+    .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
       const { data, error } = await supabase
         .from("user_clinic_access")
@@ -241,8 +242,8 @@ export const adminClinicsRouter = createTRPCRouter({
    */
   getClinicStats: adminProcedure
     .input(getClinicStatsSchema)
-    .query(async ({ input }) => {
-      const supabase = await createClient();
+    .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
       const daysAgo = new Date();
       daysAgo.setDate(daysAgo.getDate() - input.days);

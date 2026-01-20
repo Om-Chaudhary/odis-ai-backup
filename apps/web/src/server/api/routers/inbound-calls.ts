@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { createClient } from "@odis-ai/data-access/db/server";
 import { createServiceClient } from "@odis-ai/data-access/db";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getCallDataOverride } from "~/components/dashboard/inbound/detail/demo-data/call-overrides";
@@ -53,10 +52,7 @@ const listInboundCallsInput = z.object({
  * Get user with clinic information
  * Extracted to avoid duplication across procedures
  */
-async function getUserWithClinic(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string,
-) {
+async function getUserWithClinic(supabase: SupabaseClient, userId: string) {
   const { data: user, error } = await supabase
     .from("users")
     .select("id, role, clinic_name")
@@ -623,7 +619,7 @@ export const inboundCallsRouter = createTRPCRouter({
   getInboundCall: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .query(async ({ ctx, input }) => {
-      const supabase = await createClient();
+      const supabase = ctx.supabase;
 
       // Get current user's role and clinic
       const user = await getUserWithClinic(supabase, ctx.user.id);
@@ -673,7 +669,7 @@ export const inboundCallsRouter = createTRPCRouter({
   getInboundCallByVapiId: protectedProcedure
     .input(z.object({ vapiCallId: z.string() }))
     .query(async ({ ctx, input }) => {
-      const supabase = await createClient();
+      const supabase = ctx.supabase;
 
       // Verify user has access (will throw if not)
       await getUserWithClinic(supabase, ctx.user.id);
@@ -722,7 +718,7 @@ export const inboundCallsRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const supabase = await createClient();
+      const supabase = ctx.supabase;
 
       // Get current user's role and clinic
       const user = await getUserWithClinic(supabase, ctx.user.id);
@@ -842,7 +838,7 @@ export const inboundCallsRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const supabase = await createClient();
+      const supabase = ctx.supabase;
 
       // Get current user's role and clinic
       const user = await getUserWithClinic(supabase, ctx.user.id);
@@ -901,7 +897,7 @@ export const inboundCallsRouter = createTRPCRouter({
   deleteInboundCall: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
-      const supabase = await createClient();
+      const supabase = ctx.supabase;
 
       // Get current user's role and clinic
       const user = await getUserWithClinic(supabase, ctx.user.id);
@@ -966,7 +962,7 @@ export const inboundCallsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const supabase = await createClient();
+      const supabase = ctx.supabase;
 
       // Get current user's role and clinic
       const user = await getUserWithClinic(supabase, ctx.user.id);
@@ -1175,8 +1171,8 @@ export const inboundCallsRouter = createTRPCRouter({
         vapiCallId: z.string(),
       }),
     )
-    .query(async ({ input }) => {
-      const supabase = await createClient();
+    .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
 
       // First, try to get from database (already synced via webhooks)
       const { data: dbCall, error: dbError } = await supabase
@@ -1321,7 +1317,7 @@ export const inboundCallsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const supabase = await createClient();
+      const supabase = ctx.supabase;
 
       // Get the existing call record
       const { data: existingCall, error: fetchError } = await supabase
@@ -1520,7 +1516,7 @@ export const inboundCallsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const supabase = await createClient();
+      const supabase = ctx.supabase;
 
       // Verify admin access for batch operations
       const { data: user } = await supabase
