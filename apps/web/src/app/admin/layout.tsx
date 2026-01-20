@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getUser } from "~/server/actions/auth";
-import { createClient } from "@odis-ai/data-access/db/server";
+import { createServiceClient } from "@odis-ai/data-access/db/server";
 import { AdminSidebar } from "~/components/admin/admin-sidebar";
 import { AdminHeader } from "~/components/admin/layout/admin-header";
 import { AdminProvider } from "~/lib/admin-context";
@@ -30,8 +30,8 @@ export default async function AdminLayout({
     redirect("/login");
   }
 
-  // Check admin role
-  const supabase = await createClient();
+  // Check admin role - use service client for Clerk users who don't have Supabase session
+  const supabase = await createServiceClient();
   const { data: profile } = await supabase
     .from("users")
     .select("role, first_name, last_name, clinic_name")

@@ -1,20 +1,20 @@
 import { NextResponse } from "next/server";
 import { updateSession } from "@odis-ai/data-access/supabase-client";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { createClient } from "@supabase/supabase-js";
 
 /**
  * Proxy for authentication (Next.js 16)
  *
- * Uses Clerk's clerkMiddleware as the primary handler.
- * Supports both Clerk (when configured) and Supabase Auth (fallback for iOS).
- *
- * IMPORTANT: For Next.js 16, clerkMiddleware must be exported directly as `proxy`
- * to ensure Clerk's auth() function can detect that middleware ran.
+ * Auth flow:
+ * - Public routes: No auth required
+ * - Protected routes: Clerk auth required
+ * - Superadmins (role='admin'): Bypass organization requirement, can view all clinics
+ * - Regular users: Must have a Clerk organization membership
  */
 
-// Public routes that don't require Clerk authentication
+// Public routes - no authentication required
 const isPublicRoute = createRouteMatcher([
-  // Landing pages
   "/",
   "/pricing(.*)",
   "/about(.*)",
@@ -28,8 +28,6 @@ const isPublicRoute = createRouteMatcher([
   "/demo(.*)",
   "/features(.*)",
   "/security(.*)",
-
-  // Auth pages (both Clerk and Supabase)
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/login(.*)",
@@ -37,44 +35,63 @@ const isPublicRoute = createRouteMatcher([
   "/forgot-password(.*)",
   "/reset-password(.*)",
   "/auth/(.*)",
-
-  // Webhooks (must be public for external services)
   "/api/webhooks/(.*)",
-
-  // Public API routes
   "/api/public/(.*)",
-
-  // Health checks
   "/api/health(.*)",
 ]);
 
 /**
- * Clerk middleware exported directly as `proxy` for Next.js 16 compatibility.
- *
- * This is the correct pattern - clerkMiddleware returns a function that Next.js
- * calls as the proxy. Clerk's internal tracking works because the export is direct.
+ * Check if user is a superadmin (role='admin' in users table)
  */
+async function checkSuperAdmin(clerkUserId: string): Promise<boolean> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return false;
+
+  try {
+    const supabase = createClient(url, key);
+    const { data } = await supabase
+      .from("users")
+      .select("role")
+      .eq("clerk_user_id", clerkUserId)
+      .single();
+    return data?.role === "admin";
+  } catch {
+    return false;
+  }
+}
+
 export const proxy = clerkMiddleware(async (auth, req) => {
   const path = req.nextUrl.pathname;
 
-  // Redirect legacy auth URLs to Clerk URLs (backward compatibility)
-  if (path === "/login") {
-    return NextResponse.redirect(new URL("/sign-in", req.url));
-  }
-  if (path === "/signup") {
-    return NextResponse.redirect(new URL("/sign-up", req.url));
-  }
+  // Legacy redirects
+  if (path === "/login") return NextResponse.redirect(new URL("/sign-in", req.url));
+  if (path === "/signup") return NextResponse.redirect(new URL("/sign-up", req.url));
 
-  // For public routes, don't require authentication
+  // Public routes - allow through
   if (isPublicRoute(req)) {
-    // Still run Supabase session refresh for iOS compatibility
     return await updateSession(req);
   }
 
-  // For protected routes, require Clerk authentication
-  await auth.protect();
+  // Get auth state
+  const authState = await auth();
 
-  // After Clerk auth passes, also refresh Supabase session for iOS compatibility
+  // Not authenticated - redirect to sign in
+  if (!authState.userId) {
+    return NextResponse.redirect(new URL("/sign-in", req.url));
+  }
+
+  // Superadmins bypass organization requirement
+  if (await checkSuperAdmin(authState.userId)) {
+    return await updateSession(req);
+  }
+
+  // Regular users need an organization
+  if (!authState.orgId) {
+    // Redirect to Clerk's organization selection
+    return NextResponse.redirect(new URL("/sign-in", req.url));
+  }
+
   return await updateSession(req);
 });
 

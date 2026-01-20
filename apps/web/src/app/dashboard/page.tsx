@@ -1,7 +1,7 @@
 import { getUser } from "~/server/actions/auth";
 import { redirect } from "next/navigation";
 import { createServiceClient } from "@odis-ai/data-access/db/server";
-import { getClinicByUserId } from "@odis-ai/domain/clinics";
+import { getUserClinics } from "@odis-ai/domain/clinics";
 import { ExtensionAuthHandler } from "~/components/dashboard/shell/extension-auth-handler";
 import { AUTH_PARAMS } from "@odis-ai/shared/constants/auth";
 
@@ -17,7 +17,8 @@ interface DashboardPageProps {
  * Dashboard root page
  *
  * Redirects authenticated users to their clinic-scoped dashboard.
- * If user has no clinic, shows the default dashboard.
+ * - Superadmins (role='admin') can access all clinics, redirects to first one
+ * - Regular users redirect to their assigned clinic
  *
  * Handles Chrome extension authentication via URL parameters.
  */
@@ -55,16 +56,15 @@ export default async function DashboardPage({
   // Use service client to bypass RLS (needed for Clerk users who don't have Supabase session)
   const serviceClient = await createServiceClient();
 
-  // Get user's clinic to redirect to clinic-scoped dashboard
-  const clinic = await getClinicByUserId(user.id, serviceClient);
+  // Get user's clinics (admins get ALL clinics, regular users get their assigned clinics)
+  const clinics = await getUserClinics(user.id, serviceClient);
 
-  // If user has a clinic, redirect to clinic-scoped dashboard
-  if (clinic?.slug) {
-    redirect(`/dashboard/${clinic.slug}`);
+  // Redirect to first clinic if available
+  if (clinics.length > 0 && clinics[0]?.slug) {
+    redirect(`/dashboard/${clinics[0].slug}`);
   }
 
-  // Fallback: If no clinic, show default dashboard
-  // This allows users without a clinic to still access the dashboard
+  // Fallback: No clinics available
   return (
     <ExtensionAuthHandler>
       <div className="flex h-full items-center justify-center">
@@ -73,7 +73,7 @@ export default async function DashboardPage({
             Welcome to Odis AI
           </h2>
           <p className="mt-2 text-slate-500">
-            Your dashboard content will appear here
+            No clinics available. Please contact support.
           </p>
         </div>
       </div>
