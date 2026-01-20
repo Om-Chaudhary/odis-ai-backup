@@ -13,6 +13,7 @@ import {
   userHasClinicAccess,
   getClinicUserIdsEnhanced,
   getClinicUserIds,
+  buildClinicScopeFilter,
 } from "@odis-ai/domain/clinics";
 import { subDays, subHours, format, startOfDay, endOfDay } from "date-fns";
 import { TRPCError } from "@trpc/server";
@@ -240,7 +241,7 @@ export const overviewRouter = createTRPCRouter({
         .select(
           "id, status, duration_seconds, cost, call_analysis, success_evaluation, created_at",
         )
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .gte("created_at", startDateStr)
         .lte("created_at", endDateStr);
 
@@ -337,7 +338,7 @@ export const overviewRouter = createTRPCRouter({
           soap_notes(id)
         `,
         )
-        .in("user_id", clinicUserIds);
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds));
 
       const cases = casesData ?? [];
       const totalCases = cases.length;
@@ -370,7 +371,7 @@ export const overviewRouter = createTRPCRouter({
       const { count: failedCallsCount } = await ctx.supabase
         .from("scheduled_discharge_calls")
         .select("id", { count: "exact", head: true })
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .eq("status", "failed")
         .gte("created_at", last24Hours.toISOString());
 
@@ -379,7 +380,7 @@ export const overviewRouter = createTRPCRouter({
       const { data: voicemailCallsData } = await ctx.supabase
         .from("scheduled_discharge_calls")
         .select("id, call_analysis, case_id, ended_at")
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .eq("status", "completed")
         .gte("ended_at", last72Hours.toISOString());
 

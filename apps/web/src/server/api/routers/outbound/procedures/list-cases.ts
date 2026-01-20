@@ -8,8 +8,10 @@
 import { TRPCError } from "@trpc/server";
 import {
   getClinicUserIds,
+  getClinicByUserId,
   getClinicBySlug,
   getUserIdsByClinicName,
+  buildClinicScopeFilter,
 } from "@odis-ai/domain/clinics";
 import {
   getLocalDayRange,
@@ -341,8 +343,9 @@ export const listCasesRouter = createTRPCRouter({
       // If clinicSlug is provided (admin viewing another clinic), use that clinic's users
       // Otherwise fall back to the authenticated user's clinic
       let clinicUserIds: string[];
+      let clinic: Awaited<ReturnType<typeof getClinicByUserId>> | Awaited<ReturnType<typeof getClinicBySlug>>;
       if (input.clinicSlug) {
-        const clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
+        clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
         if (clinic) {
           clinicUserIds = await getUserIdsByClinicName(
             clinic.name,
@@ -350,9 +353,11 @@ export const listCasesRouter = createTRPCRouter({
           );
         } else {
           // Clinic not found, fall back to user's own clinic
+          clinic = await getClinicByUserId(userId, ctx.supabase);
           clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
         }
       } else {
+        clinic = await getClinicByUserId(userId, ctx.supabase);
         clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
       }
 
@@ -440,7 +445,7 @@ export const listCasesRouter = createTRPCRouter({
         `,
           { count: "exact" },
         )
-        .in("user_id", clinicUserIds);
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds));
 
       // For needs_attention mode:
       // - Skip date filtering (show ALL needs attention cases)

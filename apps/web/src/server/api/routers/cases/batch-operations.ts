@@ -7,7 +7,11 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { getClinicUserIds } from "@odis-ai/domain/clinics";
+import {
+  getClinicUserIds,
+  getClinicByUserId,
+  buildClinicScopeFilter,
+} from "@odis-ai/domain/clinics";
 
 export const batchOperationsRouter = createTRPCRouter({
   /**
@@ -19,7 +23,8 @@ export const batchOperationsRouter = createTRPCRouter({
    * - Manual cases with transcriptions or SOAP notes
    */
   getEligibleCasesForBatch: protectedProcedure.query(async ({ ctx }) => {
-    // Get all user IDs in the same clinic for shared data access
+    // Get clinic and user IDs for hybrid scoping
+    const clinic = await getClinicByUserId(ctx.user.id, ctx.supabase);
     const clinicUserIds = await getClinicUserIds(ctx.user.id, ctx.supabase);
 
     // Get user's batch preferences
@@ -74,7 +79,7 @@ export const batchOperationsRouter = createTRPCRouter({
           )
         `,
       )
-      .in("user_id", clinicUserIds)
+      .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
       .order("scheduled_at", { ascending: false, nullsFirst: false });
 
     if (error) {

@@ -7,7 +7,11 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { getClinicByUserId, getClinicUserIds } from "@odis-ai/domain/clinics";
+import {
+  getClinicByUserId,
+  getClinicUserIds,
+  buildClinicScopeFilter,
+} from "@odis-ai/domain/clinics";
 import { normalizeEmail, normalizeToE164 } from "@odis-ai/shared/util/phone";
 
 export const patientManagementRouter = createTRPCRouter({
@@ -28,7 +32,8 @@ export const patientManagementRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Get all user IDs in the same clinic for shared data access
+      // Get clinic and user IDs for hybrid scoping
+      const clinic = await getClinicByUserId(ctx.user.id, ctx.supabase);
       const clinicUserIds = await getClinicUserIds(ctx.user.id, ctx.supabase);
 
       // Build update object only with defined fields
@@ -57,7 +62,7 @@ export const patientManagementRouter = createTRPCRouter({
         .from("patients")
         .update(updateData)
         .eq("id", input.patientId)
-        .in("user_id", clinicUserIds);
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds));
 
       if (error) {
         throw new TRPCError({
@@ -92,7 +97,8 @@ export const patientManagementRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Get all user IDs in the same clinic for shared data access
+      // Get clinic and user IDs for hybrid scoping
+      const clinic = await getClinicByUserId(ctx.user.id, ctx.supabase);
       const clinicUserIds = await getClinicUserIds(ctx.user.id, ctx.supabase);
 
       const warnings: string[] = [];
@@ -139,7 +145,7 @@ export const patientManagementRouter = createTRPCRouter({
           .from("patients")
           .update(updateData)
           .eq("id", input.patientId)
-          .in("user_id", clinicUserIds);
+          .or(buildClinicScopeFilter(clinic?.id, clinicUserIds));
 
         if (error) {
           throw new TRPCError({

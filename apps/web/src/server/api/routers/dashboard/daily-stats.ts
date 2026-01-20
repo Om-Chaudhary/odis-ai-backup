@@ -12,6 +12,7 @@ import {
   userHasClinicAccess,
   getClinicUserIdsEnhanced,
   getClinicUserIds,
+  buildClinicScopeFilter,
 } from "@odis-ai/domain/clinics";
 import { startOfDay, subDays, endOfDay } from "date-fns";
 import { TRPCError } from "@trpc/server";
@@ -141,7 +142,7 @@ export const dailyStatsRouter = createTRPCRouter({
       const { data: todayOutbound } = await ctx.supabase
         .from("scheduled_discharge_calls")
         .select("id, status, call_analysis, success_evaluation")
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .gte("created_at", todayStart.toISOString())
         .lte("created_at", todayEnd.toISOString());
 
@@ -149,7 +150,7 @@ export const dailyStatsRouter = createTRPCRouter({
       const { data: yesterdayOutbound } = await ctx.supabase
         .from("scheduled_discharge_calls")
         .select("id, status")
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .gte("created_at", yesterdayStart.toISOString())
         .lte("created_at", yesterdayEnd.toISOString());
 

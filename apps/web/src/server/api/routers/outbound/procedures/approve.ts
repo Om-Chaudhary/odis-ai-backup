@@ -11,7 +11,11 @@
  */
 
 import { TRPCError } from "@trpc/server";
-import { getClinicUserIds, getClinicByUserId } from "@odis-ai/domain/clinics";
+import {
+  getClinicUserIds,
+  getClinicByUserId,
+  buildClinicScopeFilter,
+} from "@odis-ai/domain/clinics";
 import { normalizeToE164, normalizeEmail } from "@odis-ai/shared/util/phone";
 import { calculateScheduleTime } from "@odis-ai/shared/util/timezone";
 import { isBlockedExtremeCase } from "@odis-ai/shared/util/discharge-readiness";
@@ -196,13 +200,14 @@ export const approveRouter = createTRPCRouter({
 
       // Get all user IDs in the same clinic for shared access
       const clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
+      const clinic = await getClinicByUserId(userId, ctx.supabase);
 
       // Verify case belongs to clinic
       const { data: caseCheck, error: caseCheckError } = await ctx.supabase
         .from("cases")
         .select("id, user_id")
         .eq("id", input.caseId)
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .single();
 
       if (caseCheckError || !caseCheck) {

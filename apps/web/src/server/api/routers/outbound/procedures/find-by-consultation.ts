@@ -15,7 +15,11 @@
 
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { getClinicUserIds } from "@odis-ai/domain/clinics";
+import {
+  getClinicUserIds,
+  getClinicByUserId,
+  buildClinicScopeFilter,
+} from "@odis-ai/domain/clinics";
 import {
   getLocalDayRange,
   DEFAULT_TIMEZONE,
@@ -40,6 +44,7 @@ async function calculateCasePage(
   supabase: Parameters<typeof getClinicUserIds>[1],
   caseId: string,
   caseDate: string,
+  clinicId: string | null | undefined,
   clinicUserIds: string[],
   pageSize: number,
 ): Promise<number> {
@@ -52,7 +57,7 @@ async function calculateCasePage(
   const { data: casesForDate, error } = await supabase
     .from("cases")
     .select("id, scheduled_at, created_at")
-    .in("user_id", clinicUserIds)
+    .or(buildClinicScopeFilter(clinicId, clinicUserIds))
     .or(
       `and(scheduled_at.gte.${startISO},scheduled_at.lte.${endISO}),and(scheduled_at.is.null,created_at.gte.${startISO},created_at.lte.${endISO})`,
     )
@@ -90,6 +95,7 @@ export const findByConsultationRouter = createTRPCRouter({
 
       // Get all user IDs in the same clinic for shared view
       const clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
+      const clinic = await getClinicByUserId(userId, ctx.supabase);
 
       // The consultation ID could match:
       // 1. external_id column (stored as "idexx-appt-{appointmentId}")
@@ -103,7 +109,7 @@ export const findByConsultationRouter = createTRPCRouter({
         .from("cases")
         .select("id, scheduled_at, created_at")
         .eq("external_id", prefixedId)
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .maybeSingle();
 
       if (extIdError) {
@@ -122,6 +128,7 @@ export const findByConsultationRouter = createTRPCRouter({
           ctx.supabase,
           caseByExternalId.id,
           caseDate,
+          clinic?.id,
           clinicUserIds,
           input.pageSize,
         );
@@ -139,7 +146,7 @@ export const findByConsultationRouter = createTRPCRouter({
           .from("cases")
           .select("id, scheduled_at, created_at")
           .eq("metadata->idexx->>consultation_id", rawId)
-          .in("user_id", clinicUserIds)
+          .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
           .maybeSingle();
 
       if (consultError) {
@@ -158,6 +165,7 @@ export const findByConsultationRouter = createTRPCRouter({
           ctx.supabase,
           caseByConsultationId.id,
           caseDate,
+          clinic?.id,
           clinicUserIds,
           input.pageSize,
         );
@@ -174,7 +182,7 @@ export const findByConsultationRouter = createTRPCRouter({
         .from("cases")
         .select("id, scheduled_at, created_at")
         .eq("metadata->idexx->>appointment_id", rawId)
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .maybeSingle();
 
       if (apptError) {
@@ -201,6 +209,7 @@ export const findByConsultationRouter = createTRPCRouter({
         ctx.supabase,
         caseByAppointmentId.id,
         caseDate,
+        clinic?.id,
         clinicUserIds,
         input.pageSize,
       );

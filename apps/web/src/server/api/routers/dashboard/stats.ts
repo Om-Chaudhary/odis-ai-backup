@@ -23,6 +23,7 @@ import {
   getClinicByUserId,
   userHasClinicAccess,
   getClinicUserIdsEnhanced,
+  buildClinicScopeFilter,
 } from "@odis-ai/domain/clinics";
 import { TRPCError } from "@trpc/server";
 
@@ -78,7 +79,7 @@ export const statsRouter = createTRPCRouter({
       const { data: cases } = await ctx.supabase
         .from("cases")
         .select("status")
-        .in("user_id", clinicUserIds);
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds));
 
       const activeCases =
         cases?.filter((c) => c.status === "ongoing" || c.status === "draft")
@@ -88,7 +89,7 @@ export const statsRouter = createTRPCRouter({
       const { data: allCalls } = await ctx.supabase
         .from("scheduled_discharge_calls")
         .select("status, created_at, metadata")
-        .in("user_id", clinicUserIds);
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds));
 
       // Filter out test calls when test mode is disabled
       const calls = testModeEnabled
@@ -115,7 +116,7 @@ export const statsRouter = createTRPCRouter({
       const { data: emails } = await ctx.supabase
         .from("scheduled_discharge_emails")
         .select("status, created_at")
-        .in("user_id", clinicUserIds);
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds));
 
       const totalEmails = emails?.length ?? 0;
       const sentEmails = emails?.filter((e) => e.status === "sent").length ?? 0;
@@ -258,7 +259,7 @@ export const statsRouter = createTRPCRouter({
           soap_notes(id)
         `,
         )
-        .in("user_id", clinicUserIds);
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds));
 
       if (startIso) {
         casesQuery = casesQuery.gte("created_at", startIso);
@@ -321,7 +322,7 @@ export const statsRouter = createTRPCRouter({
       let dischargeSummariesQuery = ctx.supabase
         .from("discharge_summaries")
         .select("id", { count: "exact", head: true })
-        .in("user_id", clinicUserIds);
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds));
 
       if (startIso) {
         dischargeSummariesQuery = dischargeSummariesQuery.gte(
@@ -342,7 +343,7 @@ export const statsRouter = createTRPCRouter({
       let callsQuery = ctx.supabase
         .from("scheduled_discharge_calls")
         .select("id", { count: "exact", head: true })
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .eq("status", "completed");
 
       if (startIso) {
@@ -358,7 +359,7 @@ export const statsRouter = createTRPCRouter({
       let emailsQuery = ctx.supabase
         .from("scheduled_discharge_emails")
         .select("id", { count: "exact", head: true })
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .eq("status", "sent");
 
       if (startIso) {

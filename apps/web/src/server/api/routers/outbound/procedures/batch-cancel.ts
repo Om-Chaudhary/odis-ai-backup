@@ -6,7 +6,11 @@
  */
 
 import { TRPCError } from "@trpc/server";
-import { getClinicUserIds } from "@odis-ai/domain/clinics";
+import {
+  getClinicUserIds,
+  getClinicByUserId,
+  buildClinicScopeFilter,
+} from "@odis-ai/domain/clinics";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { batchCancelInput } from "../schemas";
@@ -35,6 +39,7 @@ export const batchCancelRouter = createTRPCRouter({
 
       // Get all user IDs in the same clinic for shared access
       const clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
+      const clinic = await getClinicByUserId(userId, ctx.supabase);
 
       const results: {
         totalCases: number;
@@ -60,7 +65,7 @@ export const batchCancelRouter = createTRPCRouter({
                 .from("scheduled_discharge_calls")
                 .select("id, metadata, qstash_message_id")
                 .eq("case_id", caseId)
-                .in("user_id", clinicUserIds)
+                .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
                 .eq("status", "queued")
                 .order("created_at", { ascending: false })
                 .limit(1)
@@ -101,7 +106,7 @@ export const batchCancelRouter = createTRPCRouter({
                 .from("scheduled_discharge_emails")
                 .select("id, qstash_message_id")
                 .eq("case_id", caseId)
-                .in("user_id", clinicUserIds)
+                .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
                 .eq("status", "queued")
                 .order("created_at", { ascending: false })
                 .limit(1)

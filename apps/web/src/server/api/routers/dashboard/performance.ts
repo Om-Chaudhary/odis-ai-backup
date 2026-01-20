@@ -12,6 +12,7 @@ import {
   getClinicByUserId,
   userHasClinicAccess,
   getClinicUserIdsEnhanced,
+  buildClinicScopeFilter,
 } from "@odis-ai/domain/clinics";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -59,7 +60,7 @@ export const performanceRouter = createTRPCRouter({
       const { data: emails } = await ctx.supabase
         .from("scheduled_discharge_emails")
         .select("status, created_at, sent_at, scheduled_for")
-        .in("user_id", clinicUserIds);
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds));
 
       const totalEmails = emails?.length ?? 0;
 
@@ -155,7 +156,7 @@ export const performanceRouter = createTRPCRouter({
         .select(
           "duration_seconds, cost, status, call_analysis, user_sentiment, success_evaluation",
         )
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .eq("status", "completed");
 
       const totalCalls = calls?.length ?? 0;

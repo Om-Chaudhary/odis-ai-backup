@@ -13,7 +13,11 @@ import {
   DEFAULT_TIMEZONE,
 } from "@odis-ai/shared/util/timezone";
 import type { BackendCase } from "@odis-ai/shared/types";
-import { getClinicUserIds } from "@odis-ai/domain/clinics";
+import {
+  getClinicUserIds,
+  getClinicByUserId,
+  buildClinicScopeFilter,
+} from "@odis-ai/domain/clinics";
 
 export const userCasesRouter = createTRPCRouter({
   /**
@@ -35,7 +39,8 @@ export const userCasesRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      // Get all user IDs in the same clinic for shared data access
+      // Get clinic and user IDs for hybrid scoping (supports both clinic_id and user_id filtering)
+      const clinic = await getClinicByUserId(ctx.user.id, ctx.supabase);
       const clinicUserIds = await getClinicUserIds(ctx.user.id, ctx.supabase);
 
       // Determine date range: use startDate/endDate if provided, otherwise use single date
@@ -71,7 +76,7 @@ export const userCasesRouter = createTRPCRouter({
         const { count: filteredCount } = await ctx.supabase
           .from("cases")
           .select("id", { count: "exact", head: true })
-          .in("user_id", clinicUserIds)
+          .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
           .or(
             `and(scheduled_at.gte.${startIso},scheduled_at.lte.${endIso}),and(scheduled_at.is.null,created_at.gte.${startIso},created_at.lte.${endIso})`,
           );
@@ -81,7 +86,7 @@ export const userCasesRouter = createTRPCRouter({
         const { count: totalCount } = await ctx.supabase
           .from("cases")
           .select("id", { count: "exact", head: true })
-          .in("user_id", clinicUserIds);
+          .or(buildClinicScopeFilter(clinic?.id, clinicUserIds));
         count = totalCount;
       }
 
@@ -148,7 +153,7 @@ export const userCasesRouter = createTRPCRouter({
           )
         `,
         )
-        .in("user_id", clinicUserIds);
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds));
 
       // Apply date filter by scheduled_at (with created_at fallback when scheduled_at is null)
       // Cases are shown on the day they are scheduled for, or created_at if not scheduled
@@ -292,7 +297,8 @@ export const userCasesRouter = createTRPCRouter({
    * Uses scheduled_at with fallback to created_at when scheduled_at is null
    */
   getMostRecentCaseDate: protectedProcedure.query(async ({ ctx }) => {
-    // Get all user IDs in the same clinic for shared data access
+    // Get clinic and user IDs for hybrid scoping
+    const clinic = await getClinicByUserId(ctx.user.id, ctx.supabase);
     const clinicUserIds = await getClinicUserIds(ctx.user.id, ctx.supabase);
 
     // Query to find the most recent case by scheduled_at (with created_at fallback)
@@ -300,7 +306,7 @@ export const userCasesRouter = createTRPCRouter({
     const { data, error } = await ctx.supabase
       .from("cases")
       .select("scheduled_at, created_at")
-      .in("user_id", clinicUserIds)
+      .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
       .order("scheduled_at", { ascending: false, nullsFirst: false })
       .limit(10); // Get a few cases to find the most recent by effective date
 

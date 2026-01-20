@@ -13,6 +13,7 @@ import {
   getClinicByUserId,
   userHasClinicAccess,
   getClinicUserIdsEnhanced,
+  buildClinicScopeFilter,
 } from "@odis-ai/domain/clinics";
 import { TRPCError } from "@trpc/server";
 
@@ -79,7 +80,7 @@ export const activityRouter = createTRPCRouter({
         )
       `,
         )
-        .in("user_id", clinicUserIds);
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds));
 
       if (startDate) {
         casesQuery = casesQuery.gte("created_at", startDate.toISOString());
@@ -107,7 +108,7 @@ export const activityRouter = createTRPCRouter({
         dynamic_variables
       `,
         )
-        .in("user_id", clinicUserIds);
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds));
 
       if (startDate) {
         callsQuery = callsQuery.gte("created_at", startDate.toISOString());
@@ -137,7 +138,7 @@ export const activityRouter = createTRPCRouter({
         )
       `,
         )
-        .in("user_id", clinicUserIds);
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds));
 
       if (startDate) {
         summariesQuery = summariesQuery.gte(
@@ -334,25 +335,25 @@ export const activityRouter = createTRPCRouter({
         ctx.supabase
           .from("cases")
           .select("created_at")
-          .in("user_id", clinicUserIds)
+          .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
           .gte("created_at", startDate.toISOString())
           .lte("created_at", endDate.toISOString()),
         ctx.supabase
           .from("discharge_summaries")
           .select("created_at")
-          .in("user_id", clinicUserIds)
+          .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
           .gte("created_at", startDate.toISOString())
           .lte("created_at", endDate.toISOString()),
         ctx.supabase
           .from("scheduled_discharge_calls")
           .select("created_at, status, ended_at")
-          .in("user_id", clinicUserIds)
+          .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
           .gte("created_at", startDate.toISOString())
           .lte("created_at", endDate.toISOString()),
         ctx.supabase
           .from("scheduled_discharge_emails")
           .select("created_at, status, sent_at")
-          .in("user_id", clinicUserIds)
+          .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
           .gte("created_at", startDate.toISOString())
           .lte("created_at", endDate.toISOString()),
         ctx.supabase
@@ -524,14 +525,14 @@ export const activityRouter = createTRPCRouter({
       const { data: cases } = await ctx.supabase
         .from("cases")
         .select("created_at")
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .gte("created_at", dateStart.toISOString())
         .lte("created_at", dateEnd.toISOString());
 
       const { data: calls } = await ctx.supabase
         .from("scheduled_discharge_calls")
         .select("created_at, status, ended_at")
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .gte("created_at", dateStart.toISOString())
         .lte("created_at", dateEnd.toISOString());
 

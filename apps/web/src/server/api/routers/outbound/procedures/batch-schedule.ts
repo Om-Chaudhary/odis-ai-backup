@@ -14,7 +14,11 @@
  */
 
 import { TRPCError } from "@trpc/server";
-import { getClinicUserIds, getClinicByUserId } from "@odis-ai/domain/clinics";
+import {
+  getClinicUserIds,
+  getClinicByUserId,
+  buildClinicScopeFilter,
+} from "@odis-ai/domain/clinics";
 import { normalizeToE164, normalizeEmail } from "@odis-ai/shared/util/phone";
 import { calculateScheduleTime } from "@odis-ai/shared/util/timezone";
 import { isBlockedExtremeCase } from "@odis-ai/shared/util/discharge-readiness";
@@ -222,7 +226,7 @@ export const batchScheduleRouter = createTRPCRouter({
         .from("cases")
         .select("id")
         .in("id", input.caseIds)
-        .in("user_id", clinicUserIds);
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds));
 
       if (caseCheckError) {
         throw new TRPCError({

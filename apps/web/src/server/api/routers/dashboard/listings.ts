@@ -19,6 +19,7 @@ import {
   getClinicByUserId,
   userHasClinicAccess,
   getClinicUserIdsEnhanced,
+  buildClinicScopeFilter,
 } from "@odis-ai/domain/clinics";
 
 export const listingsRouter = createTRPCRouter({
@@ -132,7 +133,7 @@ export const listingsRouter = createTRPCRouter({
         `,
           { count: "exact" },
         )
-        .in("user_id", clinicUserIds);
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds));
 
       // Apply filters
       if (input.status) {
@@ -472,7 +473,7 @@ export const listingsRouter = createTRPCRouter({
         `,
           { count: "exact" },
         )
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .order("scheduled_for", { ascending: false, nullsFirst: false });
 
       // Apply status filter
@@ -680,7 +681,7 @@ export const listingsRouter = createTRPCRouter({
         `,
           { count: "exact" },
         )
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .order("scheduled_for", { ascending: false, nullsFirst: false });
 
       // Apply status filter
@@ -830,9 +831,9 @@ export const listingsRouter = createTRPCRouter({
       // Verify the case belongs to the clinic
       const { data: existingCase, error: fetchError } = await ctx.supabase
         .from("cases")
-        .select("id, user_id")
+        .select("id, user_id, clinic_id")
         .eq("id", input.caseId)
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .single();
 
       if (fetchError || !existingCase) {
@@ -847,7 +848,7 @@ export const listingsRouter = createTRPCRouter({
         .from("cases")
         .update({ is_starred: input.starred })
         .eq("id", input.caseId)
-        .in("user_id", clinicUserIds);
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds));
 
       if (updateError) {
         throw new TRPCError({

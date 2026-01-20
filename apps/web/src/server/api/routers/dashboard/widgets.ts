@@ -13,6 +13,7 @@ import {
   getClinicByUserId,
   userHasClinicAccess,
   getClinicUserIdsEnhanced,
+  buildClinicScopeFilter,
 } from "@odis-ai/domain/clinics";
 import { TRPCError } from "@trpc/server";
 
@@ -86,7 +87,7 @@ export const widgetsRouter = createTRPCRouter({
         patients(id, name, owner_name, owner_phone, owner_email)
       `,
         )
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .in("status", ["ongoing", "draft"]);
 
       const missingContactCases =
@@ -112,7 +113,7 @@ export const widgetsRouter = createTRPCRouter({
         cases(id, patients(name, owner_name))
       `,
         )
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .eq("status", "failed")
         .gte("created_at", last24Hours.toISOString())
         .order("created_at", { ascending: false })
@@ -132,7 +133,7 @@ export const widgetsRouter = createTRPCRouter({
         cases(id, patients(name, owner_name))
       `,
         )
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .eq("status", "completed")
         .gte("ended_at", last24Hours.toISOString())
         .order("ended_at", { ascending: false });
@@ -329,7 +330,7 @@ export const widgetsRouter = createTRPCRouter({
         .select(
           "id, status, duration_seconds, cost, call_analysis, success_evaluation, metadata",
         )
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .gte("created_at", todayStart.toISOString());
 
       // Filter out test calls when test mode is disabled
@@ -344,7 +345,7 @@ export const widgetsRouter = createTRPCRouter({
       const { data: emails } = await ctx.supabase
         .from("scheduled_discharge_emails")
         .select("id, status")
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .gte("created_at", todayStart.toISOString());
 
       const totalCalls = calls?.length ?? 0;
@@ -511,7 +512,7 @@ export const widgetsRouter = createTRPCRouter({
           )
         `,
         )
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .eq("status", "failed")
         .gte("created_at", cutoffTime.toISOString())
         .order("created_at", { ascending: false })
@@ -521,7 +522,7 @@ export const widgetsRouter = createTRPCRouter({
       const { count: totalCount } = await ctx.supabase
         .from("scheduled_discharge_calls")
         .select("id", { count: "exact", head: true })
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .eq("status", "failed")
         .gte("created_at", cutoffTime.toISOString());
 
@@ -633,7 +634,7 @@ export const widgetsRouter = createTRPCRouter({
           )
         `,
         )
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .eq("status", "completed")
         .gte("ended_at", cutoffTime.toISOString())
         .order("ended_at", { ascending: false });

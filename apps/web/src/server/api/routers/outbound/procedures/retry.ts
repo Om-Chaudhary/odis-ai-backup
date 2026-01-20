@@ -5,7 +5,11 @@
  */
 
 import { TRPCError } from "@trpc/server";
-import { getClinicUserIds } from "@odis-ai/domain/clinics";
+import {
+  getClinicUserIds,
+  getClinicByUserId,
+  buildClinicScopeFilter,
+} from "@odis-ai/domain/clinics";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { retryFailedDeliveryInput } from "../schemas";
 
@@ -24,6 +28,7 @@ export const retryRouter = createTRPCRouter({
 
       // Get all user IDs in the same clinic for shared access
       const clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
+      const clinic = await getClinicByUserId(userId, ctx.supabase);
 
       const results: {
         callRetried: boolean;
@@ -40,7 +45,7 @@ export const retryRouter = createTRPCRouter({
           .from("scheduled_discharge_calls")
           .select("*")
           .eq("case_id", input.caseId)
-          .in("user_id", clinicUserIds)
+          .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
           .eq("status", "failed")
           .order("created_at", { ascending: false })
           .limit(1)
@@ -91,7 +96,7 @@ export const retryRouter = createTRPCRouter({
           .from("scheduled_discharge_emails")
           .select("*")
           .eq("case_id", input.caseId)
-          .in("user_id", clinicUserIds)
+          .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
           .eq("status", "failed")
           .order("created_at", { ascending: false })
           .limit(1)

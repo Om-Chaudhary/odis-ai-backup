@@ -5,7 +5,11 @@
  */
 
 import { TRPCError } from "@trpc/server";
-import { getClinicUserIds } from "@odis-ai/domain/clinics";
+import {
+  getClinicUserIds,
+  getClinicByUserId,
+  buildClinicScopeFilter,
+} from "@odis-ai/domain/clinics";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { skipCaseInput } from "../schemas";
 
@@ -17,13 +21,14 @@ export const skipRouter = createTRPCRouter({
 
       // Get all user IDs in the same clinic for shared access
       const clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
+      const clinic = await getClinicByUserId(userId, ctx.supabase);
 
       // Verify case belongs to clinic
       const { data: caseData, error: fetchError } = await ctx.supabase
         .from("cases")
         .select("id, metadata")
         .eq("id", input.caseId)
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .single();
 
       if (fetchError || !caseData) {

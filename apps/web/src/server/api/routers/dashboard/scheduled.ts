@@ -18,6 +18,7 @@ import {
   getClinicByUserId,
   userHasClinicAccess,
   getClinicUserIdsEnhanced,
+  buildClinicScopeFilter,
 } from "@odis-ai/domain/clinics";
 import { TRPCError } from "@trpc/server";
 
@@ -76,7 +77,7 @@ export const scheduledRouter = createTRPCRouter({
         customer_phone
       `,
         )
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .in("status", ["queued", "ringing"])
         .gte("scheduled_for", now.toISOString())
         .lte("scheduled_for", in48Hours.toISOString())
@@ -94,7 +95,7 @@ export const scheduledRouter = createTRPCRouter({
         recipient_email
       `,
         )
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .eq("status", "queued")
         .gte("scheduled_for", now.toISOString())
         .lte("scheduled_for", in48Hours.toISOString())
@@ -218,7 +219,7 @@ export const scheduledRouter = createTRPCRouter({
           soap_notes (id)
         `,
         )
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .in("status", ["ongoing", "draft"]);
 
       if (startDate) {

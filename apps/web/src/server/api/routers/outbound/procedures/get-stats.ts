@@ -7,8 +7,10 @@
 import { TRPCError } from "@trpc/server";
 import {
   getClinicUserIds,
+  getClinicByUserId,
   getClinicBySlug,
   getUserIdsByClinicName,
+  buildClinicScopeFilter,
 } from "@odis-ai/domain/clinics";
 import {
   getLocalDayRange,
@@ -170,8 +172,9 @@ export const getStatsRouter = createTRPCRouter({
       // If clinicSlug is provided (admin viewing another clinic), use that clinic's users
       // Otherwise fall back to the authenticated user's clinic
       let clinicUserIds: string[];
+      let clinic: Awaited<ReturnType<typeof getClinicByUserId>> | Awaited<ReturnType<typeof getClinicBySlug>>;
       if (input.clinicSlug) {
-        const clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
+        clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
         if (clinic) {
           clinicUserIds = await getUserIdsByClinicName(
             clinic.name,
@@ -179,9 +182,11 @@ export const getStatsRouter = createTRPCRouter({
           );
         } else {
           // Clinic not found, fall back to user's own clinic
+          clinic = await getClinicByUserId(userId, ctx.supabase);
           clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
         }
       } else {
+        clinic = await getClinicByUserId(userId, ctx.supabase);
         clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
       }
 
@@ -211,7 +216,7 @@ export const getStatsRouter = createTRPCRouter({
           scheduled_discharge_emails (id, status, scheduled_for)
         `,
         )
-        .in("user_id", clinicUserIds);
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds));
 
       // Apply date filters with proper timezone-aware boundaries
       // Use scheduled_at (appointment time) instead of created_at (sync time)
@@ -267,7 +272,7 @@ export const getStatsRouter = createTRPCRouter({
             )
           `,
           )
-          .in("user_id", clinicUserIds)
+          .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
           .not("scheduled_discharge_calls.attention_types", "is", null);
 
       if (attentionError) {
@@ -298,7 +303,7 @@ export const getStatsRouter = createTRPCRouter({
       const { count: allTimeTotal, error: allTimeError } = await ctx.supabase
         .from("cases")
         .select("id", { count: "exact", head: true })
-        .in("user_id", clinicUserIds);
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds));
 
       if (allTimeError) {
         throw new TRPCError({

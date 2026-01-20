@@ -8,7 +8,11 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { format, subDays } from "date-fns";
-import { getClinicUserIds } from "@odis-ai/domain/clinics";
+import {
+  getClinicUserIds,
+  getClinicByUserId,
+  buildClinicScopeFilter,
+} from "@odis-ai/domain/clinics";
 import {
   getLocalDayRange,
   DEFAULT_TIMEZONE,
@@ -39,6 +43,7 @@ export const findPreviousAttentionDateRouter = createTRPCRouter({
 
       // Get all user IDs in the same clinic for shared view
       const clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
+      const clinic = await getClinicByUserId(userId, ctx.supabase);
 
       // Calculate the date range: from (currentDate - maxDaysBack) to (currentDate - 1 day)
       const currentDateObj = new Date(input.currentDate);
@@ -70,7 +75,7 @@ export const findPreviousAttentionDateRouter = createTRPCRouter({
           )
         `,
         )
-        .in("user_id", clinicUserIds)
+        .or(buildClinicScopeFilter(clinic?.id, clinicUserIds))
         .not("scheduled_discharge_calls.attention_types", "is", null)
         .or(
           `and(scheduled_at.gte.${startISO},scheduled_at.lte.${endISO}),and(scheduled_at.is.null,created_at.gte.${startISO},created_at.lte.${endISO})`,
