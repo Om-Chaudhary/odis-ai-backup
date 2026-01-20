@@ -108,7 +108,7 @@ export function CallDetail({
       : call);
 
   return (
-    <div id="call-detail-panel" className="flex h-full flex-col">
+    <div id="call-detail-panel" className="flex min-h-0 flex-1 flex-col">
       {/* Glassmorphic Caller Header */}
       <div className="relative overflow-hidden">
         {/* Glassmorphic background */}
