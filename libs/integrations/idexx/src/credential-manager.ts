@@ -197,11 +197,33 @@ export class IdexxCredentialManager {
 
       // Decrypt company ID (may not exist for older credentials)
       let companyId = "";
+      console.log("[IdexxCredentialManager] company_id_encrypted data:", {
+        hasData: !!companyIdData,
+        dataType: typeof companyIdData,
+        isUint8Array: companyIdData instanceof Uint8Array,
+        isBuffer: Buffer.isBuffer(companyIdData),
+        stringPreview:
+          typeof companyIdData === "string"
+            ? companyIdData.substring(0, 20)
+            : "N/A",
+      });
+
       if (companyIdData) {
         const companyIdEncryptedBuffer = parseByteaData(companyIdData);
+        console.log("[IdexxCredentialManager] Parsed buffer length:", {
+          length: companyIdEncryptedBuffer.length,
+        });
         companyId = decrypt(
           companyIdEncryptedBuffer,
           credential.encryption_key_id,
+        );
+        console.log("[IdexxCredentialManager] Decrypted company ID:", {
+          value: companyId,
+          length: companyId.length,
+        });
+      } else {
+        console.log(
+          "[IdexxCredentialManager] No company_id_encrypted data found",
         );
       }
 

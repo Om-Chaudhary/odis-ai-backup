@@ -6,7 +6,11 @@
   "scripts": {
     "start": "dotenv -e ../../.env.local -- env PORT=5051 node ../../dist/apps/pims-sync/main.js",
     "start:visible": "dotenv -e ../../.env.local -- env PORT=5051 HEADLESS=false node ../../dist/apps/pims-sync/main.js",
-    "cli": "dotenv -e ../../.env.local -- tsx src/cli-runner.mjs"
+    "start:local": "dotenv -e .env -- node ../../dist/apps/pims-sync/main.js",
+    "start:local:visible": "dotenv -e .env -- env HEADLESS=false node ../../dist/apps/pims-sync/main.js",
+    "cli": "dotenv -e ../../.env.local -- tsx src/cli-runner.mjs",
+    "cli:local": "dotenv -e .env -- tsx src/cli-runner.mjs",
+    "debug:auth": "dotenv -e .env -- tsx src/debug-auth.ts"
   },
   "dependencies": {
     "@inquirer/prompts": "^7.5.1",

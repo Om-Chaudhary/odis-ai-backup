@@ -20,7 +20,7 @@ export class IdexxAuthClient {
   constructor(
     private browserService: BrowserService,
     private baseUrl: string,
-  ) {}
+  ) { }
 
   /**
    * Authenticate with IDEXX Neo
@@ -75,25 +75,54 @@ export class IdexxAuthClient {
     page: Page,
     credentials: PimsCredentials,
   ): Promise<void> {
-    // Fill company ID first (if present) - this is the first field on the login page
+    // Debug: Log what credentials we received
+    console.log("[IdexxAuthClient] fillLoginForm called with:", {
+      username: credentials.username,
+      hasPassword: !!credentials.password,
+      companyId: credentials.companyId,
+      companyIdLength: credentials.companyId?.length ?? 0,
+    });
+
+    // Wait for the login form to be ready (username field is always present)
+    await page.waitForSelector(IDEXX_SELECTORS.USERNAME_INPUT, {
+      state: "visible",
+      timeout: 15000,
+    });
+
+    // Try to fill company ID if provided AND if the field exists on the page
     if (credentials.companyId) {
-      // Wait for company ID field to be visible
-      await page.waitForSelector(IDEXX_SELECTORS.COMPANY_ID_INPUT, {
-        state: "visible",
-      });
-      await page.fill(IDEXX_SELECTORS.COMPANY_ID_INPUT, credentials.companyId);
-    } else {
-      // If no company ID, wait for username field
-      await page.waitForSelector(IDEXX_SELECTORS.USERNAME_INPUT, {
-        state: "visible",
-      });
+      console.log(
+        `[IdexxAuthClient] Company ID provided: "${credentials.companyId}"`,
+      );
+
+      // Check if company ID field exists (don't wait, just check)
+      const companyIdField = await page.$(IDEXX_SELECTORS.COMPANY_ID_INPUT);
+
+      if (companyIdField) {
+        console.log("[IdexxAuthClient] Company ID field found, filling...");
+        await page.fill(
+          IDEXX_SELECTORS.COMPANY_ID_INPUT,
+          credentials.companyId,
+        );
+        console.log("[IdexxAuthClient] Company ID filled successfully");
+      } else {
+        console.log(
+          "[IdexxAuthClient] Company ID field NOT found on login page - skipping",
+        );
+        console.log(
+          "[IdexxAuthClient] This IDEXX instance may not require company ID for login",
+        );
+      }
     }
 
     // Fill username/email
+    console.log(`[IdexxAuthClient] Filling username: ${credentials.username}`);
     await page.fill(IDEXX_SELECTORS.USERNAME_INPUT, credentials.username);
 
     // Fill password
+    console.log("[IdexxAuthClient] Filling password");
     await page.fill(IDEXX_SELECTORS.PASSWORD_INPUT, credentials.password);
+    console.log("[IdexxAuthClient] All credentials filled");
   }
 
   /**

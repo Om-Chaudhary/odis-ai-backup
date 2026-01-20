@@ -79,6 +79,12 @@ export class IdexxScheduleClient {
       // Apply authentication
       await this.authClient.applyAuth(page);
 
+      // IMPORTANT: Navigate to IDEXX domain first so fetch() is same-origin
+      // Without this, fetch() from about:blank is cross-origin and blocked by CORS
+      console.log("[IdexxScheduleClient] Navigating to IDEXX domain for API access...");
+      await page.goto(this.baseUrl, { waitUntil: "domcontentloaded", timeout: 15000 });
+      console.log("[IdexxScheduleClient] On IDEXX domain, ready to fetch appointments");
+
       // Format dates as IDEXX expects: "YYYY-MM-DD HH:MM:SS"
       const startFormatted = this.formatDateForApi(startDate);
       const endFormatted = this.formatDateForApi(endDate);
@@ -86,8 +92,12 @@ export class IdexxScheduleClient {
       // Build URL with query params
       const url = `${this.baseUrl}${IDEXX_ENDPOINTS.APPOINTMENTS}?start=${encodeURIComponent(startFormatted)}&end=${encodeURIComponent(endFormatted)}`;
 
+      console.log("[IdexxScheduleClient] Fetching appointments from:", url);
+
       // Fetch via page context to use authenticated session
       const appointments = await this.fetchAppointmentsFromApi(page, url);
+
+      console.log(`[IdexxScheduleClient] Fetched ${appointments.length} appointments`);
 
       return appointments;
     } catch (error) {

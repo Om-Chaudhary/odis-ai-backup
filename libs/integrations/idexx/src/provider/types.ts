@@ -68,7 +68,7 @@ export const IDEXX_SELECTORS = {
   // Login page
   USERNAME_INPUT: 'input[name="username"], input[type="email"]',
   PASSWORD_INPUT: 'input[name="password"], input[type="password"]',
-  COMPANY_ID_INPUT: 'input[name="companyId"]',
+  COMPANY_ID_INPUT: 'input[name="company_id"], input[type="company_id"]',
   LOGIN_BUTTON: 'button[type="submit"]',
   LOGIN_ERROR: ".error-message, .alert-danger",
 
