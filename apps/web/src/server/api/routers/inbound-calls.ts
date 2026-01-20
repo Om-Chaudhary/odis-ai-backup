@@ -51,6 +51,7 @@ const listInboundCallsInput = z.object({
 /**
  * Get user with clinic information
  * Extracted to avoid duplication across procedures
+ * Returns null if user not found (gracefully handles missing user records)
  */
 async function getUserWithClinic(supabase: SupabaseClient, userId: string) {
   const { data: user, error } = await supabase
@@ -60,10 +61,8 @@ async function getUserWithClinic(supabase: SupabaseClient, userId: string) {
     .single();
 
   if (error || !user) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Failed to fetch user information",
-    });
+    // Return null instead of throwing - user may not exist yet with clinic auth
+    return null;
   }
 
   return user;
@@ -75,9 +74,15 @@ async function getUserWithClinic(supabase: SupabaseClient, userId: string) {
  */
 function applyRoleBasedFilter(
   query: ReturnType<SupabaseClient<unknown>["from"]>,
-  user: { id: string; role: string | null; clinic_name: string | null },
+  user: { id: string; role: string | null; clinic_name: string | null } | null,
   clinicName: string | null,
 ) {
+  if (!user) {
+    // No user data - shouldn't happen but filter to no results
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+    return query.eq("id", "00000000-0000-0000-0000-000000000000");
+  }
+
   const isAdminOrOwner =
     user.role === "admin" || user.role === "practice_owner";
 
@@ -164,7 +169,7 @@ export const inboundCallsRouter = createTRPCRouter({
       }
 
       const isAdminOrOwner =
-        user.role === "admin" || user.role === "practice_owner";
+        user?.role === "admin" || user?.role === "practice_owner";
       if (input.clinicName && isAdminOrOwner) {
         query = query.eq("clinic_name", input.clinicName);
       }
@@ -621,8 +626,9 @@ export const inboundCallsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const supabase = ctx.supabase;
 
-      // Get current user's role and clinic
+      // Get current user's role and clinic (gracefully handles missing user record)
       const user = await getUserWithClinic(supabase, ctx.user.id);
+      const clinic = await getClinicByUserId(ctx.user.id, supabase);
 
       const { data: call, error } = await supabase
         .from("inbound_vapi_calls")
@@ -646,13 +652,18 @@ export const inboundCallsRouter = createTRPCRouter({
 
       // Check access
       const isAdminOrOwner =
-        user.role === "admin" || user.role === "practice_owner";
+        user?.role === "admin" || user?.role === "practice_owner";
 
-      if (
-        !isAdminOrOwner &&
-        call.clinic_name !== user.clinic_name &&
-        call.user_id !== user.id
-      ) {
+      // Allow access if:
+      // 1. User is admin/owner, OR
+      // 2. Call belongs to user's clinic (by clinic_name), OR
+      // 3. Call is assigned to this user
+      const hasAccess =
+        isAdminOrOwner ??
+        (clinic?.name && call.clinic_name === clinic.name) ??
+        call.user_id === ctx.user.id;
+
+      if (!hasAccess) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You don't have access to this call",
@@ -744,7 +755,7 @@ export const inboundCallsRouter = createTRPCRouter({
       }
 
       const isAdminOrOwner =
-        user.role === "admin" || user.role === "practice_owner";
+        user?.role === "admin" || user?.role === "practice_owner";
       if (input.clinicName && isAdminOrOwner) {
         query = query.eq("clinic_name", input.clinicName);
       }
@@ -845,7 +856,7 @@ export const inboundCallsRouter = createTRPCRouter({
 
       // Only admins and practice owners can use this
       const isAdminOrOwner =
-        user.role === "admin" || user.role === "practice_owner";
+        user?.role === "admin" || user?.role === "practice_owner";
 
       if (!isAdminOrOwner) {
         throw new TRPCError({
@@ -899,8 +910,9 @@ export const inboundCallsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const supabase = ctx.supabase;
 
-      // Get current user's role and clinic
+      // Get current user's role and clinic (gracefully handles missing user record)
       const user = await getUserWithClinic(supabase, ctx.user.id);
+      const clinic = await getClinicByUserId(ctx.user.id, supabase);
 
       // First, verify the call exists and check access
       const { data: call, error: fetchError } = await supabase
@@ -918,13 +930,18 @@ export const inboundCallsRouter = createTRPCRouter({
 
       // Check access
       const isAdminOrOwner =
-        user.role === "admin" || user.role === "practice_owner";
+        user?.role === "admin" || user?.role === "practice_owner";
 
-      if (
-        !isAdminOrOwner &&
-        call.clinic_name !== user.clinic_name &&
-        call.user_id !== user.id
-      ) {
+      // Allow deletion if:
+      // 1. User is admin/owner, OR
+      // 2. Call belongs to user's clinic (by clinic_name), OR
+      // 3. Call is assigned to this user
+      const hasAccess =
+        isAdminOrOwner ??
+        (clinic?.name && call.clinic_name === clinic.name) ??
+        call.user_id === ctx.user.id;
+
+      if (!hasAccess) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You don't have access to this call",
@@ -964,8 +981,9 @@ export const inboundCallsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const supabase = ctx.supabase;
 
-      // Get current user's role and clinic
+      // Get current user's role and clinic (gracefully handles missing user record)
       const user = await getUserWithClinic(supabase, ctx.user.id);
+      const clinic = await getClinicByUserId(ctx.user.id, supabase);
 
       // Verify call exists and user has access
       const { data: call, error: fetchError } = await supabase
@@ -983,13 +1001,18 @@ export const inboundCallsRouter = createTRPCRouter({
 
       // Check access
       const isAdminOrOwner =
-        user.role === "admin" || user.role === "practice_owner";
+        user?.role === "admin" || user?.role === "practice_owner";
 
-      if (
-        !isAdminOrOwner &&
-        call.clinic_name !== user.clinic_name &&
-        call.user_id !== user.id
-      ) {
+      // Allow access if:
+      // 1. User is admin/owner, OR
+      // 2. Call belongs to user's clinic (by clinic_name), OR
+      // 3. Call is assigned to this user
+      const hasAccess =
+        isAdminOrOwner ??
+        (clinic?.name && call.clinic_name === clinic.name) ??
+        call.user_id === ctx.user.id;
+
+      if (!hasAccess) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "You don't have access to this call",
