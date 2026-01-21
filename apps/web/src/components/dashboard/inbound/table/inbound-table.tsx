@@ -231,7 +231,6 @@ export function InboundTable({
                     isCompact={isCompact}
                     isSelected={isSelected}
                     onToggleDetail={() => handleRowClick(item)}
-                    getBusinessHoursStatus={getBusinessHoursStatus}
                   />
                 </tr>,
               );
