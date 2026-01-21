@@ -9,7 +9,7 @@ import { Checkbox } from "@odis-ai/shared/ui/checkbox";
 import { CallsHeader } from "./table-headers";
 import { CallRow } from "./rows/call-row";
 import { TableSkeleton } from "./table-states";
-import { getCallModifications } from "../demo-data";
+import { getCallModifications } from "../mock-data";
 import type { SelectedRowPosition } from "../../shared/layouts";
 import type { BusinessHoursStatus } from "./business-hours-badge";
 

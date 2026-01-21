@@ -16,8 +16,8 @@ export * from "./table";
 // Detail module
 export * from "./detail";
 
-// Demo data
-export * from "./demo-data";
+// Mock data
+export * from "./mock-data";
 
 // Types
 export * from "./types";

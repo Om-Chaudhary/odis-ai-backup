@@ -4,8 +4,8 @@ import { Building2, Clock, Phone, X } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
 import { CallDetailContent } from "../../shared/call-detail-content";
 import { api } from "~/trpc/client";
-import { getCallDataOverride } from "./demo-data";
-import { getDemoCallerName } from "../demo-data";
+import { getCallDataOverride } from "./mock-data";
+import { getDemoCallerName } from "../mock-data";
 import { QuickActionsFooter } from "./shared/quick-actions-footer";
 import type { Database } from "@odis-ai/shared/types";
 

@@ -282,6 +282,9 @@ export function InboundClient() {
                 total={pagination.total}
                 onPageChange={handlePageChange}
                 onPageSizeChange={handlePageSizeChange}
+                itemLabel="call"
+                hidePageSizeSelector={true}
+                simplifiedNavigation={true}
               />
             </PageFooter>
           </>

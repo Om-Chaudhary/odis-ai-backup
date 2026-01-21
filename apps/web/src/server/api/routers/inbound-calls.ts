@@ -3,8 +3,8 @@ import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { createServiceClient } from "@odis-ai/data-access/db";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getCallDataOverride } from "~/components/dashboard/inbound/detail/demo-data/call-overrides";
-import { getDemoCalls } from "~/components/dashboard/inbound/demo-data";
+import { getCallDataOverride } from "~/components/dashboard/inbound/detail/mock-data/call-overrides";
+import { getDemoCalls } from "~/components/dashboard/inbound/mock-data";
 import { getClinicByUserId } from "@odis-ai/domain/clinics";
 
 // ============================================================================

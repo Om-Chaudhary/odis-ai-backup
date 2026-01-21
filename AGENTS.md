@@ -255,6 +255,31 @@ const hasActive = useCallback(() => dataRef.current.some((x) => x.active), []);
 // Wrap client components in Suspense with fallback
 ```
 
+### Dashboard Component Organization
+
+Dashboard components follow a consistent structure:
+
+```
+{feature}/
+  hooks/          # React hooks (data fetching, mutations)
+  utils/          # Utility functions (formatters, helpers)
+  table/          # Table components and subcomponents
+  detail/         # Detail view components
+    utils/        # Only if 5+ detail-specific shared utilities
+  views/          # Top-level view components
+  types.ts        # TypeScript types (UI state, filters)
+  mock-data.ts    # Mock data for development/testing
+  index.ts        # Public API exports
+  {feature}-client.tsx
+```
+
+**Organization Rules**:
+1. **Hooks**: Always colocate in `{feature}/hooks/`, never in routing layer
+2. **Utils**: Start at feature root; nest only when subfolder needs 5+ shared utils
+3. **Types**: Feature-specific types stay local; domain types go to `@odis-ai/shared/types`
+4. **Mock Data**: Use `mock-data.ts` naming (not "demo-data")
+5. **Index Files**: Every directory with 2+ exports needs index.ts with explicit exports
+
 ---
 
 ## Security Considerations

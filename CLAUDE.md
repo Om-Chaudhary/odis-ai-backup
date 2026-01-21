@@ -51,6 +51,10 @@ import { ... } from "@odis-ai/integrations/vapi";
 - Use domain-grouped import paths (`@odis-ai/shared/*`, `@odis-ai/data-access/*`, etc.)
 - Default to Server Components; minimize `"use client"`
 - Prefer editing existing files over creating new ones
+- Dashboard hooks: Always colocate in `components/dashboard/{feature}/hooks/`
+- NEVER create hooks in `app/dashboard/*/_hooks/` - routing layer should be thin
+- Mock data: Use `mock-data.ts` naming (not "demo-data")
+- Utils: Start flat at feature root, nest only for complex subfeatures (5+ shared files)
 
 ### ⚠️ Critical: Auth Proxy Pattern
 

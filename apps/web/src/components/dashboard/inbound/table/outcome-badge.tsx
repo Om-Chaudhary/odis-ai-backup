@@ -8,8 +8,10 @@
 import { Badge } from "@odis-ai/shared/ui/badge";
 import { cn } from "@odis-ai/shared/util";
 import type { Database } from "@odis-ai/shared/types";
-import { getDescriptiveOutcome } from "../utils/get-descriptive-outcome";
-import { isNoResponseCall } from "../utils/is-no-response-call";
+import {
+  getDescriptiveOutcome,
+  isNoResponseCall,
+} from "../detail/utils";
 
 // Accept both Database type and our custom InboundCall type
 type InboundCallData =

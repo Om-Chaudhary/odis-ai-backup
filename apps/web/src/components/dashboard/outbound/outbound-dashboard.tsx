@@ -12,10 +12,7 @@ import {
   BulkOperationProvider,
   useBulkOperation,
 } from "./bulk-operation-context";
-import {
-  useOutboundData,
-  useOutboundMutations,
-} from "~/app/dashboard/outbound/_hooks";
+import { useOutboundData, useOutboundMutations } from "./hooks";
 
 import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
 

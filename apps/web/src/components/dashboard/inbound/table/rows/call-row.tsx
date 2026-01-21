@@ -3,7 +3,7 @@ import { Eye, X } from "lucide-react";
 import type { Database } from "@odis-ai/shared/types";
 import { CallerDisplay, CallDuration } from "../table-cells";
 import { OutcomeBadge } from "../outcome-badge";
-import { getCallModifications } from "../../demo-data";
+import { getCallModifications } from "../../mock-data";
 import { Button } from "@odis-ai/shared/ui/button";
 import { cn } from "@odis-ai/shared/util";
 import {
