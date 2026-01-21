@@ -297,15 +297,6 @@ function OutboundDashboardInner() {
     [setPage],
   );
 
-  const handlePageSizeChange = useCallback(
-    (newSize: number) => {
-      void setPageSize(newSize);
-      void setPage(1);
-      setSelectedCase(null);
-    },
-    [setPageSize, setPage],
-  );
-
   const handleViewModeChange = useCallback(
     (newMode: ViewMode) => {
       void setViewMode(newMode);
@@ -411,7 +402,6 @@ function OutboundDashboardInner() {
             pageSize={pageSize}
             total={totalCases}
             onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
             viewMode={viewMode}
             onViewModeChange={handleViewModeChange}
             needsAttentionCount={needsAttentionCases.length}
@@ -436,7 +426,6 @@ function OutboundDashboardInner() {
             pageSize={pageSize}
             total={totalCases}
             onPageChange={handlePageChange}
-            onPageSizeChange={handlePageSizeChange}
             viewMode={viewMode}
             onViewModeChange={handleViewModeChange}
             needsAttentionCount={needsAttentionCases.length}

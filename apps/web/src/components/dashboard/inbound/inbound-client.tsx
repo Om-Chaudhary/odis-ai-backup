@@ -54,7 +54,7 @@ export function InboundClient() {
 
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
 
-  const [pageSize, setPageSize] = useQueryState(
+  const [pageSize] = useQueryState(
     "size",
     parseAsInteger.withDefault(25),
   );
@@ -102,15 +102,6 @@ export function InboundClient() {
       setSelectedCall(null);
     },
     [setPage],
-  );
-
-  const handlePageSizeChange = useCallback(
-    (newSize: number) => {
-      void setPageSize(newSize);
-      void setPage(1);
-      setSelectedCall(null);
-    },
-    [setPageSize, setPage],
   );
 
   const handleSelectCall = useCallback((call: InboundCall) => {
@@ -191,7 +182,6 @@ export function InboundClient() {
                 pageSize={pagination.pageSize}
                 total={pagination.total}
                 onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
               />
             </PageFooter>
           </>

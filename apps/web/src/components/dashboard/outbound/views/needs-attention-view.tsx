@@ -18,7 +18,6 @@ interface NeedsAttentionViewProps extends OutboundHeaderProps {
   pageSize: number;
   total: number;
   onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
 
   // View Mode
   viewMode: ViewMode;
@@ -52,7 +51,6 @@ export function NeedsAttentionView({
   pageSize,
   total,
   onPageChange,
-  onPageSizeChange,
   viewMode,
   onViewModeChange,
   needsAttentionCount,
@@ -122,7 +120,6 @@ export function NeedsAttentionView({
               pageSize={pageSize}
               total={total}
               onPageChange={onPageChange}
-              onPageSizeChange={onPageSizeChange}
             />
           </PageFooter>
         </>

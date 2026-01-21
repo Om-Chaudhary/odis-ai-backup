@@ -18,7 +18,6 @@ interface AllDischargesViewProps extends OutboundHeaderProps {
   pageSize: number;
   total: number;
   onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
 
   // View Mode
   viewMode: ViewMode;
@@ -63,7 +62,6 @@ export function AllDischargesView({
   pageSize,
   total,
   onPageChange,
-  onPageSizeChange,
   viewMode,
   onViewModeChange,
   needsAttentionCount,
@@ -117,13 +115,13 @@ export function AllDischargesView({
       leftPanel={
         <>
           <OutboundHeader
-              {...headerProps}
-              showDateNav={true}
-              viewMode={viewMode}
-              onViewModeChange={onViewModeChange}
-              totalCount={total}
-              needsAttentionCount={needsAttentionCount}
-            />
+            {...headerProps}
+            showDateNav={true}
+            viewMode={viewMode}
+            onViewModeChange={onViewModeChange}
+            totalCount={total}
+            needsAttentionCount={needsAttentionCount}
+          />
           <PageContent>
             <OutboundCaseTable
               cases={cases}
@@ -149,7 +147,6 @@ export function AllDischargesView({
               pageSize={pageSize}
               total={total}
               onPageChange={onPageChange}
-              onPageSizeChange={onPageSizeChange}
             />
           </PageFooter>
         </>

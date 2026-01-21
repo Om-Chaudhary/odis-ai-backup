@@ -8,13 +8,6 @@ import {
 } from "lucide-react";
 
 import { Button } from "@odis-ai/shared/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@odis-ai/shared/ui/select";
 import { cn } from "@odis-ai/shared/util";
 
 interface DataTablePaginationProps {
@@ -22,9 +15,7 @@ interface DataTablePaginationProps {
   pageSize: number;
   total: number;
   onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
   className?: string;
-  pageSizeOptions?: number[];
 }
 
 export function DataTablePagination({
@@ -32,9 +23,7 @@ export function DataTablePagination({
   pageSize,
   total,
   onPageChange,
-  onPageSizeChange,
   className,
-  pageSizeOptions = [10, 25, 50, 100],
 }: DataTablePaginationProps) {
   const totalPages = Math.ceil(total / pageSize);
   const start = (page - 1) * pageSize + 1;
@@ -56,33 +45,10 @@ export function DataTablePagination({
         <span className="font-medium text-slate-700">
           {start}-{end}
         </span>{" "}
-        of <span className="font-medium text-slate-700">{total}</span> rows
+        of <span className="font-medium text-slate-700">{total}</span> calls
         {/* Optional: Add selection count here if needed */}
       </div>
       <div className="flex items-center space-x-6 lg:space-x-8">
-        <div className="flex items-center space-x-2">
-          <p className="text-sm font-medium">Rows per page</p>
-          <Select
-            value={`${pageSize}`}
-            onValueChange={(value) => {
-              onPageSizeChange(Number(value));
-            }}
-          >
-            <SelectTrigger className="h-8 w-[70px]">
-              <SelectValue placeholder={pageSize} />
-            </SelectTrigger>
-            <SelectContent side="top">
-              {pageSizeOptions.map((pageSize) => (
-                <SelectItem key={pageSize} value={`${pageSize}`}>
-                  {pageSize}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page {page} of {totalPages}
-        </div>
         <div className="flex items-center space-x-2">
           <Button
             variant="outline"
@@ -102,6 +68,7 @@ export function DataTablePagination({
             <span className="sr-only">Go to previous page</span>
             <ChevronLeft className="h-4 w-4" />
           </Button>
+          <p className="font-medium text-slate-700">{page}</p>
           <Button
             variant="outline"
             className="h-8 w-8 p-0"
