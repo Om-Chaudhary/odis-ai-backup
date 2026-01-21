@@ -180,8 +180,7 @@ export function OutboundCaseDetail({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/* Compact Patient Header */}
-      <div className="border-b">
-        <CompactPatientHeader
+      <CompactPatientHeader
           patient={{
             name: caseData.patient.name,
             species: caseData.patient.species,
@@ -197,7 +196,6 @@ export function OutboundCaseDetail({
           attentionSeverity={caseData.attentionSeverity}
           onClose={onDelete}
         />
-      </div>
 
       {/* Scrollable Content */}
       <div className="flex-1 space-y-4 overflow-auto p-4">
