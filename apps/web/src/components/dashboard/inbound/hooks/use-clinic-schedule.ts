@@ -29,7 +29,7 @@ export function useClinicSchedule({ clinicId }: UseClinicScheduleOptions) {
     (timestamp: Date | string): BusinessHoursStatus => {
       if (!data) {
         // Default to "active" if no data available
-        return "active";
+        return { type: "active" };
       }
 
       return getBusinessHoursStatus(

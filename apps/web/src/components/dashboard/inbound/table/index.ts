@@ -8,3 +8,4 @@ export { TableSkeleton } from "./table-states";
 export { CallerDisplay, CallDuration, CallAlertsIcons } from "./table-cells";
 export { CallRow } from "./rows/call-row";
 export { OutcomeFilterPills } from "./outcome-filter-pills";
+export { TimeSegmentSeparator } from "./time-segment-separator";

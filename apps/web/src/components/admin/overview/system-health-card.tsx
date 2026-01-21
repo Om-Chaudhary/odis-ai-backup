@@ -1,63 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Activity, AlertCircle, Server } from "lucide-react";
 import { Card } from "@odis-ai/shared/ui/card";
-
-interface HealthStatus {
-  status: "healthy" | "unhealthy";
-  uptime: string;
-  lastCheck: Date;
-  serviceName: string;
-}
+import { api } from "~/trpc/client";
 
 export function SystemHealthCard() {
-  const [health, setHealth] = useState<HealthStatus | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const checkHealth = async () => {
-    try {
-      const pimsUrl =
-        process.env.NEXT_PUBLIC_PIMS_SYNC_URL ??
-        "https://pims-sync-production.up.railway.app";
-      const response = await fetch(`${pimsUrl}/health`);
-
-      if (!response.ok) {
-        throw new Error(`Health check failed: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      setHealth({
-        status: "healthy",
-        uptime: data.uptime ?? "Unknown",
-        lastCheck: new Date(),
-        serviceName: "PIMS Sync Service",
-      });
-      setError(null);
-    } catch (err) {
-      setHealth({
-        status: "unhealthy",
-        uptime: "N/A",
-        lastCheck: new Date(),
-        serviceName: "PIMS Sync Service",
-      });
-      setError(err instanceof Error ? err.message : "Connection failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void checkHealth();
-    const interval = setInterval(() => {
-      void checkHealth();
-    }, 30000); // Poll every 30 seconds
-    return () => clearInterval(interval);
-  }, []);
+  // Use tRPC query instead of direct fetch to avoid CORS issues
+  const {
+    data: health,
+    isLoading: loading,
+    error,
+  } = api.admin.sync.getServiceHealth.useQuery(undefined, {
+    refetchInterval: 30000, // Poll every 30 seconds
+    retry: 1,
+  });
 
   const isHealthy = health?.status === "healthy";
+  const errorMessage =
+    error?.message ?? (health?.status === "unhealthy" ? health.error : null);
 
   return (
     <Card
@@ -77,22 +37,20 @@ export function SystemHealthCard() {
         <div className="mb-5 flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div
-              className={`flex h-11 w-11 items-center justify-center rounded-xl transition-all ${
-                loading
-                  ? "bg-white/10"
-                  : isHealthy
-                    ? "bg-teal-400/20 shadow-[0_0_20px_rgba(49,171,163,0.3)]"
-                    : "bg-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.3)]"
-              }`}
+              className={`flex h-11 w-11 items-center justify-center rounded-xl transition-all ${loading
+                ? "bg-white/10"
+                : isHealthy
+                  ? "bg-teal-400/20 shadow-[0_0_20px_rgba(49,171,163,0.3)]"
+                  : "bg-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.3)]"
+                }`}
             >
               <Server
-                className={`h-5 w-5 ${
-                  loading
-                    ? "text-slate-400"
-                    : isHealthy
-                      ? "text-teal-300"
-                      : "text-red-400"
-                }`}
+                className={`h-5 w-5 ${loading
+                  ? "text-slate-400"
+                  : isHealthy
+                    ? "text-teal-300"
+                    : "text-red-400"
+                  }`}
                 strokeWidth={2}
               />
             </div>
@@ -101,7 +59,7 @@ export function SystemHealthCard() {
                 System Status
               </h3>
               <p className="text-xs text-teal-400/70">
-                {health?.serviceName ?? "Loading..."}
+                {health?.service ?? "Loading..."}
               </p>
             </div>
           </div>
@@ -109,11 +67,10 @@ export function SystemHealthCard() {
           {/* Status Badge */}
           {!loading && (
             <div
-              className={`flex items-center gap-2 rounded-full px-3 py-1.5 transition-all ${
-                isHealthy
-                  ? "bg-teal-400/20 text-teal-300"
-                  : "bg-red-500/20 text-red-300"
-              }`}
+              className={`flex items-center gap-2 rounded-full px-3 py-1.5 transition-all ${isHealthy
+                ? "bg-teal-400/20 text-teal-300"
+                : "bg-red-500/20 text-red-300"
+                }`}
             >
               {isHealthy ? (
                 <>
@@ -142,37 +99,25 @@ export function SystemHealthCard() {
               Uptime
             </div>
             <div
-              className={`text-lg font-bold tabular-nums transition-colors ${
-                isHealthy ? "text-teal-300" : "text-slate-400"
-              }`}
+              className={`text-lg font-bold tabular-nums transition-colors ${isHealthy ? "text-teal-300" : "text-slate-400"
+                }`}
             >
               {loading ? "..." : (health?.uptime ?? "N/A")}
             </div>
           </div>
 
-          {/* Last Check */}
+          {/* Version */}
           <div className="rounded-lg border border-white/5 bg-white/5 p-3 backdrop-blur-sm transition-all hover:bg-white/10">
             <div className="mb-1 text-[10px] font-semibold tracking-wider text-teal-400/60 uppercase">
-              Last Check
-            </div>
-            <div className="text-sm font-medium text-slate-300 tabular-nums">
-              {loading
-                ? "..."
-                : health?.lastCheck
-                  ? new Date(health.lastCheck).toLocaleTimeString("en-US", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                    })
-                  : "N/A"}
+              Version
             </div>
           </div>
         </div>
 
         {/* Error Message */}
-        {error && (
+        {errorMessage && (
           <div className="mt-4 rounded-lg border border-red-500/20 bg-red-500/10 p-3">
-            <p className="text-xs text-red-300">{error}</p>
+            <p className="text-xs text-red-300">{errorMessage}</p>
           </div>
         )}
 

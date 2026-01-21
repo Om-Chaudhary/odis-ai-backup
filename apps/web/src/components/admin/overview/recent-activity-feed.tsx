@@ -1,4 +1,4 @@
-import { createClient } from "@odis-ai/data-access/db/server";
+import { createServiceClient } from "@odis-ai/data-access/db/server";
 import { Card } from "@odis-ai/shared/ui/card";
 import {
   Clock,
@@ -20,7 +20,7 @@ interface ActivityItem {
 }
 
 async function getRecentActivity(): Promise<ActivityItem[]> {
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
   const activities: ActivityItem[] = [];
 
   // Get recent clinics (last 10)

@@ -11,8 +11,30 @@ import { TableSkeleton } from "./table-states";
 import { getCallModifications } from "../mock-data";
 import type { SelectedRowPosition } from "../../shared/layouts";
 import type { BusinessHoursStatus } from "./business-hours-badge";
+import { TimeSegmentSeparator } from "./time-segment-separator";
 
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
+
+/**
+ * Check if two business hours statuses represent the same segment
+ */
+function isSameSegment(
+  a: BusinessHoursStatus | null,
+  b: BusinessHoursStatus,
+): boolean {
+  if (!a) return false;
+
+  // Different types are different segments
+  if (a.type !== b.type) return false;
+
+  // For blocked periods, check if the period name matches
+  if (a.type === "blocked" && b.type === "blocked") {
+    return a.periodName === b.periodName;
+  }
+
+  // For active and after-hours, same type means same segment
+  return true;
+}
 
 interface InboundTableProps {
   items: InboundCall[];
@@ -152,15 +174,38 @@ export function InboundTable({
           <CallsHeader isCompact={isCompact} />
         </thead>
         <tbody className="divide-y divide-teal-100/10">
-          {items
-            .filter((item) => {
+          {(() => {
+            const filteredItems = items.filter((item) => {
               // Apply call filtering for hardcoded modifications
               const callMods = getCallModifications(item);
               return !callMods.shouldHide;
-            })
-            .map((item, index) => {
+            });
+
+            let currentSegment: BusinessHoursStatus | null = null;
+            const rows: JSX.Element[] = [];
+
+            filteredItems.forEach((item, index) => {
               const isSelected = selectedItemId === item.id;
-              return (
+
+              // Get business hours status for this call
+              const status = getBusinessHoursStatus
+                ? getBusinessHoursStatus(item.created_at)
+                : null;
+
+              // Insert separator if segment changed
+              if (status && !isSameSegment(currentSegment, status)) {
+                rows.push(
+                  <TimeSegmentSeparator
+                    key={`separator-${item.id}`}
+                    status={status}
+                    timestamp={item.created_at}
+                  />,
+                );
+                currentSegment = status;
+              }
+
+              // Add the call row
+              rows.push(
                 <tr
                   key={item.id}
                   data-row-index={index}
@@ -188,9 +233,12 @@ export function InboundTable({
                     onToggleDetail={() => handleRowClick(item)}
                     getBusinessHoursStatus={getBusinessHoursStatus}
                   />
-                </tr>
+                </tr>,
               );
-            })}
+            });
+
+            return rows;
+          })()}
         </tbody>
       </table>
     </div>

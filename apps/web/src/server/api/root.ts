@@ -7,6 +7,7 @@ import { outboundRouter } from "~/server/api/routers/outbound";
 import { adminRouter } from "~/server/api/routers/admin";
 import { subscriptionRouter } from "~/server/api/routers/subscription";
 import { teamRouter } from "~/server/api/routers/team";
+import { settingsRouter } from "~/server/api/routers/settings";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
 /**
@@ -24,6 +25,7 @@ export const appRouter = createTRPCRouter({
   admin: adminRouter,
   subscription: subscriptionRouter,
   team: teamRouter,
+  settings: settingsRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -1,9 +1,9 @@
-import { createClient } from "@odis-ai/data-access/db/server";
+import { createServiceClient } from "@odis-ai/data-access/db/server";
 import { Building2, Users, FileText, TrendingUp } from "lucide-react";
 import { Card } from "@odis-ai/shared/ui/card";
 
 async function getStats() {
-  const supabase = await createClient();
+  const supabase = await createServiceClient();
 
   // Get clinic count
   const { count: clinicCount } = await supabase

@@ -1,12 +1,11 @@
-import { SettingsPageClient } from "~/components/dashboard/settings/settings-page-client";
-import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Settings | Odis AI",
-  description:
-    "Configure clinic details, vet information, and system behavior for discharge communications.",
-};
-
-export default function ClinicSettingsPage() {
-  return <SettingsPageClient />;
+export default async function SettingsPage({
+  params,
+}: {
+  params: Promise<{ clinicSlug: string }>;
+}) {
+  const { clinicSlug } = await params;
+  // Redirect to the Hours page by default
+  redirect(`/dashboard/${clinicSlug}/settings/hours`);
 }

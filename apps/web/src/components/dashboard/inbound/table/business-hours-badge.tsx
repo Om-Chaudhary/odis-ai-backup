@@ -9,7 +9,10 @@ import { toZonedTime } from "date-fns-tz";
 import { Sun, Moon, Coffee } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
 
-export type BusinessHoursStatus = "active" | "lunch" | "after-hours";
+export type BusinessHoursStatus =
+  | { type: "active" }
+  | { type: "blocked"; periodName: string }
+  | { type: "after-hours" };
 
 interface ScheduleConfig {
   open_time: string;
@@ -71,7 +74,7 @@ export function getBusinessHoursStatus(
 
   // Check if it's a closed day (not in days_of_week)
   if (!scheduleConfig.days_of_week.includes(dayOfWeek)) {
-    return "after-hours";
+    return { type: "after-hours" };
   }
 
   // Check if within operating hours
@@ -83,7 +86,7 @@ export function getBusinessHoursStatus(
   );
 
   if (!withinOperatingHours) {
-    return "after-hours";
+    return { type: "after-hours" };
   }
 
   // Check if within any blocked period (lunch break, etc.)
@@ -94,12 +97,12 @@ export function getBusinessHoursStatus(
     }
 
     if (isTimeInRange(hours, minutes, period.start_time, period.end_time)) {
-      // Return "lunch" for lunch breaks, could extend for other types
-      return "lunch";
+      // Return the actual period name from the database
+      return { type: "blocked", periodName: period.name };
     }
   }
 
-  return "active";
+  return { type: "active" };
 }
 
 interface BusinessHoursBadgeProps {
@@ -116,33 +119,33 @@ export function BusinessHoursBadge({
   className,
   showLabel = true,
 }: BusinessHoursBadgeProps) {
-  const config = {
-    active: {
-      icon: Sun,
-      label: "Active",
-      className: "bg-emerald-50 text-emerald-700 border-emerald-200",
-      iconClassName: "text-emerald-500",
-    },
-    lunch: {
-      icon: Coffee,
-      label: "Lunch",
-      className: "bg-amber-50 text-amber-700 border-amber-200",
-      iconClassName: "text-amber-500",
-    },
-    "after-hours": {
-      icon: Moon,
-      label: "After Hours",
-      className: "bg-slate-50 text-slate-600 border-slate-200",
-      iconClassName: "text-slate-400",
-    },
-  };
+  let icon: typeof Sun;
+  let label: string;
+  let statusClassName: string;
+  let iconClassName: string;
 
-  const {
-    icon: Icon,
-    label,
-    className: statusClassName,
-    iconClassName,
-  } = config[status];
+  switch (status.type) {
+    case "active":
+      icon = Sun;
+      label = "Active";
+      statusClassName = "bg-emerald-50 text-emerald-700 border-emerald-200";
+      iconClassName = "text-emerald-500";
+      break;
+    case "blocked":
+      icon = Coffee;
+      label = status.periodName; // Use actual period name from DB
+      statusClassName = "bg-amber-50 text-amber-700 border-amber-200";
+      iconClassName = "text-amber-500";
+      break;
+    case "after-hours":
+      icon = Moon;
+      label = "After Hours";
+      statusClassName = "bg-slate-50 text-slate-600 border-slate-200";
+      iconClassName = "text-slate-400";
+      break;
+  }
+
+  const Icon = icon;
 
   return (
     <span

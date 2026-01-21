@@ -46,7 +46,7 @@ function OutboundDashboardInner() {
 
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
 
-  const [pageSize, setPageSize] = useQueryState(
+  const [pageSize] = useQueryState(
     "size",
     parseAsInteger.withDefault(25),
   );
