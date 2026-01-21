@@ -274,6 +274,7 @@ Dashboard components follow a consistent structure:
 ```
 
 **Organization Rules**:
+
 1. **Hooks**: Always colocate in `{feature}/hooks/`, never in routing layer
 2. **Utils**: Start at feature root; nest only when subfolder needs 5+ shared utils
 3. **Types**: Feature-specific types stay local; domain types go to `@odis-ai/shared/types`
@@ -426,5 +427,6 @@ vi.mock("@upstash/qstash", () => ({
 - When working in individual projects, use the `nx_project_details` mcp tool to analyze and understand the specific project structure and dependencies
 - For questions around nx configuration, best practices or if you're unsure, use the `nx_docs` tool to get relevant, up-to-date docs. Always use this instead of assuming things about nx configuration
 - If the user needs help with an Nx configuration or project graph error, use the `nx_workspace` tool to get any errors
+- For Nx plugin best practices, check `node_modules/@nx/<plugin>/PLUGIN.md`. Not all plugins have this file - proceed without it if unavailable.
 
 <!-- nx configuration end-->
