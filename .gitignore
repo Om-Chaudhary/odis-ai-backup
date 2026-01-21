@@ -82,6 +82,7 @@ screenshots-archive/
 
 # Cache directories
 .cache/
+**/.cache/
 
 # Keep these tracked in git:
 # - Templates: plan-template.md, activity-template.md

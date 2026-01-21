@@ -5,6 +5,26 @@
   "projectType": "application",
   "tags": ["type:app", "scope:web", "platform:node"],
   "targets": {
+    "dev": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "web:build",
+        "dev": true,
+        "turbo": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "web:build:development",
+          "dev": true,
+          "turbo": false
+        },
+        "production": {
+          "buildTarget": "web:build:production",
+          "dev": false
+        }
+      }
+    },
     "lint": {
       "executor": "@nx/eslint:lint",
       "options": {

@@ -110,6 +110,39 @@ const config = {
 
   // Server-side packages that should not be bundled
   serverExternalPackages: ["resend"],
+
+  // Webpack/Turbopack config to prevent watching .git directory
+  webpack: (config, { isServer }) => {
+    // Configure watchOptions for both webpack and Turbopack
+    config.watchOptions = {
+      ...config.watchOptions,
+      ignored: [
+        "**/node_modules/**",
+        "**/.git/**",
+        "**/.gitbutler/**",
+        "**/.nx/**",
+        "**/.turbo/**",
+        "**/dist/**",
+        "**/.next/**",
+        "**/.cache/**",
+        "**/coverage/**",
+      ],
+      poll: undefined, // Don't poll files
+      aggregateTimeout: 300,
+    };
+
+    // Also configure for the snapshot system
+    if (config.snapshot) {
+      config.snapshot.managedPaths = [
+        ...(config.snapshot.managedPaths || []),
+      ];
+      config.snapshot.immutablePaths = [
+        ...(config.snapshot.immutablePaths || []),
+      ];
+    }
+
+    return config;
+  },
 };
 
 export default withNx(config);
