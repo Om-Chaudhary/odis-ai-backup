@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { format, formatDistanceToNow, parseISO, isPast } from "date-fns";
-import { CheckCircle2, Loader2, Mail, Phone, Send, Star } from "lucide-react";
+import { CheckCircle2, Eye, Loader2, Mail, Phone, Send, Star } from "lucide-react";
 import { Button } from "@odis-ai/shared/ui/button";
 import { Checkbox } from "@odis-ai/shared/ui/checkbox";
 import { cn } from "@odis-ai/shared/util";
@@ -339,8 +339,16 @@ export function OutboundCaseTable<T extends TableCaseBase>({
               <th className="h-10 w-[18%] text-center font-medium">Status</th>
             )}
             {!isCompact && (
-              <th className="h-10 w-[14%] pr-6 text-right font-medium">Time</th>
+              <th className="h-10 w-[14%] text-right font-medium">Time</th>
             )}
+            <th
+              className={cn(
+                "h-10 pr-6 text-right font-medium",
+                isCompact ? "w-[10%]" : "w-[8%]",
+              )}
+            >
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-teal-100/10">
@@ -480,7 +488,7 @@ export function OutboundCaseTable<T extends TableCaseBase>({
 
                 {/* Time / Schedule */}
                 {!isCompact && (
-                  <td className="py-3 pr-6 text-right text-xs">
+                  <td className="py-3 text-right text-xs">
                     <ScheduleTimeDisplay
                       status={caseItem.status}
                       timestamp={caseItem.timestamp}
@@ -489,6 +497,33 @@ export function OutboundCaseTable<T extends TableCaseBase>({
                     />
                   </td>
                 )}
+
+                {/* Actions */}
+                <td className="py-3 pr-6 text-right">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 transition-colors duration-150 hover:bg-transparent"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRowClick(caseItem);
+                    }}
+                    aria-label={
+                      isSelected
+                        ? `Close details for ${caseItem.patient.name}`
+                        : `View details for ${caseItem.patient.name}`
+                    }
+                  >
+                    <Eye
+                      className={cn(
+                        "h-4 w-4 transition-colors",
+                        isSelected
+                          ? "text-teal-600 hover:text-teal-700"
+                          : "text-slate-400 hover:text-slate-600",
+                      )}
+                    />
+                  </Button>
+                </td>
               </tr>
             );
           })}
@@ -717,6 +752,7 @@ function CaseTableSkeleton() {
         <div className="h-3 w-[10%] animate-pulse rounded bg-cyan-50/40" />
         <div className="h-3 w-[18%] animate-pulse rounded bg-cyan-50/40" />
         <div className="h-3 w-[14%] animate-pulse rounded bg-cyan-50/40" />
+        <div className="h-3 w-[8%] animate-pulse rounded bg-cyan-50/40" />
       </div>
       {/* Row skeletons */}
       {Array.from({ length: 10 }).map((_, i) => (
@@ -745,6 +781,9 @@ function CaseTableSkeleton() {
           </div>
           <div className="flex w-[14%] justify-end">
             <div className="h-3 w-14 animate-pulse rounded bg-cyan-50/50" />
+          </div>
+          <div className="flex w-[8%] justify-end">
+            <div className="h-8 w-8 animate-pulse rounded bg-cyan-50/50" />
           </div>
         </div>
       ))}
