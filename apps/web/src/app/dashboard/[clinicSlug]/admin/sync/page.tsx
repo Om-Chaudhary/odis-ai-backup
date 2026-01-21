@@ -13,12 +13,21 @@ import {
 import { useAdminContext } from "~/lib/admin-context";
 import { HealthMonitor } from "~/components/admin/sync/health-monitor";
 import { ActiveSyncsCard } from "~/components/admin/sync/active-syncs-card";
-import { SyncHistoryTable } from "~/components/admin/sync/sync-history-table";
+import {
+  SyncHistoryTable,
+  type SyncHistoryItem,
+} from "~/components/admin/sync/sync-history-table";
 import { SyncTriggerPanel } from "~/components/admin/sync/sync-trigger-panel";
+import { ClinicSyncOverview } from "~/components/admin/sync/clinic-sync-overview";
 
 export default function AdminSyncPage() {
   const { selectedClinicId, clinics, isGlobalView } = useAdminContext();
   const [triggerClinicId, setTriggerClinicId] = useState<string>("");
+
+  // Filter to only IDEXX clinics for the trigger dropdown
+  const idexxClinics = clinics.filter(
+    (c) => c.pims_type === "idexx_neo" || c.pims_type === "idexx",
+  );
 
   const { data: history, isLoading } = api.admin.sync.getSyncHistory.useQuery({
     clinicId: selectedClinicId ?? undefined,
@@ -44,14 +53,20 @@ export default function AdminSyncPage() {
       {/* Active Syncs */}
       <ActiveSyncsCard clinicId={selectedClinicId ?? undefined} />
 
+      {/* Clinic Sync Overview - Global View */}
+      {isGlobalView && <ClinicSyncOverview />}
+
       {/* Quick Trigger Panel */}
-      {isGlobalView && (
+      {isGlobalView && idexxClinics.length > 0 && (
         <Card className="border-slate-200 bg-white p-6">
           <h3 className="mb-4 text-lg font-semibold text-slate-900">
             Manual Sync Trigger
           </h3>
+          <p className="mb-4 text-sm text-slate-500">
+            Select an IDEXX clinic and trigger a manual sync operation
+          </p>
           <div className="flex items-end gap-4">
-            <div className="flex-1">
+            <div className="w-72">
               <label className="mb-2 block text-sm font-medium text-slate-700">
                 Select Clinic
               </label>
@@ -60,10 +75,10 @@ export default function AdminSyncPage() {
                 onValueChange={setTriggerClinicId}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Choose a clinic to sync" />
+                  <SelectValue placeholder="Choose an IDEXX clinic" />
                 </SelectTrigger>
                 <SelectContent>
-                  {clinics.map((clinic) => (
+                  {idexxClinics.map((clinic) => (
                     <SelectItem key={clinic.id} value={clinic.id}>
                       {clinic.name}
                     </SelectItem>
@@ -86,13 +101,28 @@ export default function AdminSyncPage() {
         </div>
 
         <SyncHistoryTable
-          data={
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (history?.syncs ?? []).map((sync: any) => ({
-              ...sync,
-              clinics: sync.clinics?.[0] ?? null,
-            }))
-          }
+          data={(history?.syncs ?? []).map((sync): SyncHistoryItem => {
+            const clinicData = sync.clinics as unknown as {
+              id: string;
+              name: string;
+              slug: string;
+            } | null;
+            return {
+              id: sync.id,
+              clinic_id: sync.clinic_id,
+              sync_type: sync.sync_type,
+              created_at: sync.created_at,
+              updated_at: sync.updated_at,
+              status: sync.status,
+              appointments_found: sync.appointments_found,
+              cases_created: sync.cases_created,
+              cases_updated: sync.cases_updated,
+              cases_skipped: sync.cases_skipped,
+              cases_deleted: sync.cases_deleted,
+              error_message: sync.error_message,
+              clinics: clinicData,
+            };
+          })}
           isLoading={isLoading}
         />
 

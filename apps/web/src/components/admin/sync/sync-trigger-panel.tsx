@@ -38,6 +38,19 @@ export function SyncTriggerPanel({ clinicId }: SyncTriggerPanelProps) {
     },
   });
 
+  const triggerReconciliationMutation = api.admin.sync.triggerSync.useMutation({
+    onSuccess: () => {
+      toast.success("Reconciliation sync triggered successfully");
+
+      void utils.admin.sync.getActiveSyncs.invalidate();
+
+      void utils.admin.sync.getSyncHistory.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message ?? "Failed to trigger reconciliation sync");
+    },
+  });
+
   return (
     <div className="flex gap-3">
       <Button
@@ -53,12 +66,12 @@ export function SyncTriggerPanel({ clinicId }: SyncTriggerPanelProps) {
             triggerInboundMutation.isPending ? "animate-spin" : ""
           }`}
         />
-        Inbound Sync
+        Inbound
       </Button>
 
       <Button
         onClick={() => {
-          triggerCaseMutation.mutate({ clinicId, type: "case" });
+          triggerCaseMutation.mutate({ clinicId, type: "cases" });
         }}
         disabled={triggerCaseMutation.isPending}
         variant="outline"
@@ -69,7 +82,26 @@ export function SyncTriggerPanel({ clinicId }: SyncTriggerPanelProps) {
             triggerCaseMutation.isPending ? "animate-spin" : ""
           }`}
         />
-        Case Sync
+        Cases
+      </Button>
+
+      <Button
+        onClick={() => {
+          triggerReconciliationMutation.mutate({
+            clinicId,
+            type: "reconciliation",
+          });
+        }}
+        disabled={triggerReconciliationMutation.isPending}
+        variant="outline"
+        className="gap-2"
+      >
+        <RefreshCw
+          className={`h-4 w-4 ${
+            triggerReconciliationMutation.isPending ? "animate-spin" : ""
+          }`}
+        />
+        Reconcile
       </Button>
     </div>
   );
