@@ -60,7 +60,7 @@ export function CallsHeader({
       <th
         className={`h-10 pr-4 text-right font-medium ${isCompact ? "w-[12%]" : "w-[8%]"}`}
       >
-        <span className="sr-only">Actions</span>
+        Actions
       </th>
     </tr>
   );

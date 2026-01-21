@@ -1,12 +1,11 @@
 import { format, isValid } from "date-fns";
-import { Play, FileText, Copy } from "lucide-react";
+import { Eye, X } from "lucide-react";
 import type { Database } from "@odis-ai/shared/types";
 import { CallerDisplay, CallDuration } from "../table-cells";
 import { OutcomeBadge } from "../outcome-badge";
 import { getCallModifications } from "../../demo-data";
-import { RowActionMenu, type RowAction } from "../../../shared/row-action-menu";
-import { useToast } from "~/hooks/use-toast";
-import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
+import { Button } from "@odis-ai/shared/ui/button";
+import { cn } from "@odis-ai/shared/util";
 import {
   BusinessHoursBadge,
   type BusinessHoursStatus,
@@ -18,8 +17,10 @@ type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 interface CallRowProps {
   call: InboundCall;
   isCompact?: boolean;
-  /** Callback when "View Transcript" is clicked (selects the row) */
-  onViewTranscript?: () => void;
+  /** Whether this row is currently selected (detail panel open) */
+  isSelected?: boolean;
+  /** Callback when action button is clicked (toggles the detail panel) */
+  onToggleDetail?: () => void;
   /** Whether checkboxes are shown (affects first cell padding) */
   showCheckboxes?: boolean;
   /** Function to determine business hours status for a timestamp */
@@ -38,12 +39,12 @@ function safeParseDate(dateStr: string | null | undefined): Date {
 export function CallRow({
   call,
   isCompact = false,
-  onViewTranscript,
+  isSelected = false,
+  onToggleDetail,
   showCheckboxes = false,
   getBusinessHoursStatus,
 }: CallRowProps) {
   const callMods = getCallModifications(call);
-  const { toast } = useToast();
   // Use created_at for consistent sorting with backend
   const displayDate = callMods.adjustedDate ?? safeParseDate(call.created_at);
 
@@ -51,59 +52,6 @@ export function CallRow({
   const businessHoursStatus = getBusinessHoursStatus
     ? getBusinessHoursStatus(displayDate)
     : undefined;
-
-  // Build row actions
-  const actions: RowAction[] = [];
-
-  // Play Recording - only if recording URL exists
-  if (call.recording_url) {
-    actions.push({
-      id: "play",
-      label: "Play Recording",
-      icon: Play,
-      onClick: () => {
-        window.open(call.recording_url!, "_blank");
-      },
-    });
-  }
-
-  // View Transcript - always available, selects the row to show transcript
-  actions.push({
-    id: "transcript",
-    label: "View Transcript",
-    icon: FileText,
-    onClick: () => {
-      onViewTranscript?.();
-    },
-  });
-
-  // Copy Phone Number
-  if (call.customer_phone) {
-    const customerPhone = call.customer_phone;
-    actions.push({
-      id: "copy",
-      label: "Copy Phone Number",
-      icon: Copy,
-      onClick: () => {
-        const phone = formatPhoneNumber(customerPhone) ?? customerPhone;
-        void navigator.clipboard
-          .writeText(phone)
-          .then(() => {
-            toast({
-              title: "Copied!",
-              description: `Phone number ${phone} copied to clipboard`,
-            });
-          })
-          .catch(() => {
-            toast({
-              title: "Failed to copy",
-              description: "Could not copy phone number to clipboard",
-              variant: "destructive",
-            });
-          });
-      },
-    });
-  }
 
   return (
     <>
@@ -151,10 +99,28 @@ export function CallRow({
         </td>
       )}
       <td className="py-2 pr-4 text-right">
-        <RowActionMenu
-          actions={actions}
-          ariaLabel={`Actions for call from ${call.customer_phone ?? "unknown"}`}
-        />
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "h-8 w-8 p-0",
+            "transition-colors duration-150",
+            isSelected
+              ? "bg-teal-100 text-teal-700 hover:bg-teal-200 hover:text-teal-800"
+              : "text-slate-400 hover:bg-slate-100 hover:text-slate-600",
+          )}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleDetail?.();
+          }}
+          aria-label={
+            isSelected
+              ? `Close details for call from ${call.customer_phone ?? "unknown"}`
+              : `View details for call from ${call.customer_phone ?? "unknown"}`
+          }
+        >
+          {isSelected ? <X className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </Button>
       </td>
     </>
   );

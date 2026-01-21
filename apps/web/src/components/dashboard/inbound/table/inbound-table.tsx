@@ -216,7 +216,8 @@ export function InboundTable({
                   <CallRow
                     call={item}
                     isCompact={isCompact}
-                    onViewTranscript={() => onSelectItem(item)}
+                    isSelected={isSelected}
+                    onToggleDetail={() => handleRowClick(item)}
                     showCheckboxes={showCheckboxes}
                     getBusinessHoursStatus={getBusinessHoursStatus}
                   />
