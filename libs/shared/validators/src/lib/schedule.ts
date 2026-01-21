@@ -205,3 +205,62 @@ export const ScheduleSyncRequestSchema = z
   );
 
 export type ScheduleSyncRequest = z.infer<typeof ScheduleSyncRequestSchema>;
+
+/* ========================================
+   Business Hours Schemas
+   ======================================== */
+
+/**
+ * Schema for a single day's hours configuration
+ */
+export const DayHoursConfigSchema = z.object({
+  enabled: z.boolean(),
+  open: timeSchema.optional(),
+  close: timeSchema.optional(),
+}).refine(
+  (data) => {
+    // If enabled, must have both open and close times
+    if (data.enabled) {
+      return !!data.open && !!data.close;
+    }
+    return true;
+  },
+  {
+    message: "Open and close times are required when day is enabled",
+  }
+).refine(
+  (data) => {
+    // If has times, validate close is after open
+    if (data.open && data.close) {
+      const openParts = data.open.split(":");
+      const closeParts = data.close.split(":");
+      if (openParts.length !== 2 || closeParts.length !== 2) return false;
+
+      const openHours = Number(openParts[0]);
+      const openMinutes = Number(openParts[1]);
+      const closeHours = Number(closeParts[0]);
+      const closeMinutes = Number(closeParts[1]);
+
+      const openTime = openHours * 60 + openMinutes;
+      const closeTime = closeHours * 60 + closeMinutes;
+      return closeTime > openTime;
+    }
+    return true;
+  },
+  {
+    message: "Close time must be after open time",
+  }
+);
+
+export type DayHoursConfig = z.infer<typeof DayHoursConfigSchema>;
+
+/**
+ * Schema for per-day business hours configuration
+ * Keys must be valid day numbers (0-6)
+ */
+export const DailyHoursSchema = z.record(
+  z.string().regex(/^[0-6]$/, "Day key must be 0-6"),
+  DayHoursConfigSchema
+);
+
+export type DailyHours = z.infer<typeof DailyHoursSchema>;

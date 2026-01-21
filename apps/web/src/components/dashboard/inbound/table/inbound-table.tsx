@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, type JSX } from "react";
 import { cn } from "@odis-ai/shared/util";
 import type { Database } from "@odis-ai/shared/types";
 import { DataTableEmptyState } from "../../shared/data-table/data-table-empty-state";
