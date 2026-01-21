@@ -1,10 +1,19 @@
 "use client";
 
 import { type ReactNode } from "react";
+import { ChevronRight } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
 
 interface PageContainerProps {
   children: ReactNode;
+  className?: string;
+}
+
+interface PageBreadcrumbProps {
+  items: Array<{
+    label: string;
+    href?: string;
+  }>;
   className?: string;
 }
 
@@ -52,6 +61,51 @@ export function PageContainer({ children, className }: PageContainerProps) {
   return (
     <div className={cn("flex h-full flex-col overflow-hidden", className)}>
       {children}
+    </div>
+  );
+}
+
+/**
+ * Page Breadcrumb - Navigation breadcrumb trail
+ *
+ * Usage:
+ * ```tsx
+ * <PageBreadcrumb items={[
+ *   { label: "After Hours" },
+ *   { label: "All Calls" }
+ * ]} />
+ * ```
+ */
+export function PageBreadcrumb({ items, className }: PageBreadcrumbProps) {
+  return (
+    <div
+      className={cn(
+        "flex shrink-0 items-center",
+        "border-b border-slate-200/60",
+        "bg-white",
+        "px-4 py-2",
+        className,
+      )}
+    >
+      <nav className="flex items-center gap-1.5">
+        {items.map((item, index) => (
+          <span key={index} className="flex items-center gap-1.5">
+            {index > 0 && (
+              <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+            )}
+            <span
+              className={cn(
+                "text-sm font-medium",
+                index === items.length - 1
+                  ? "text-slate-800"
+                  : "text-slate-500",
+              )}
+            >
+              {item.label}
+            </span>
+          </span>
+        ))}
+      </nav>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   Menu,
   TestTube,
@@ -14,6 +15,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   PhoneMissed,
+  ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
@@ -59,7 +61,37 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ profile }: DashboardHeaderProps) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { data: settings, refetch } = api.cases.getDischargeSettings.useQuery();
+
+  // Determine breadcrumbs based on pathname
+  const getBreadcrumbs = (): Array<{ label: string }> => {
+    const isInbound = pathname.includes("/inbound");
+    const isOutbound = pathname.includes("/outbound");
+
+    if (isInbound) {
+      const outcomeParam = searchParams.get("outcome");
+      let filterLabel = "All Calls";
+      if (outcomeParam === "emergency") filterLabel = "Emergency";
+      else if (outcomeParam === "appointment") filterLabel = "Appointments";
+      else if (outcomeParam === "callback") filterLabel = "Callback";
+      else if (outcomeParam === "info") filterLabel = "Info";
+      else if (outcomeParam && outcomeParam !== "all") filterLabel = "Filtered";
+      return [{ label: "After Hours" }, { label: filterLabel }];
+    }
+
+    if (isOutbound) {
+      const viewParam = searchParams.get("view");
+      const viewLabel =
+        viewParam === "needs_attention" ? "Needs Attention" : "All Calls";
+      return [{ label: "Discharge" }, { label: viewLabel }];
+    }
+
+    return [];
+  };
+
+  const breadcrumbs = getBreadcrumbs();
 
   const updateSettingsMutation = api.cases.updateDischargeSettings.useMutation({
     onSuccess: () => {
@@ -131,8 +163,8 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
         )}
 
         <div className="relative z-10 flex flex-1 items-center justify-between px-4">
-          {/* Left: Mobile menu */}
-          <div className="flex items-center">
+          {/* Left: Mobile menu + Breadcrumbs */}
+          <div className="flex items-center gap-3">
             {/* Mobile menu button (hidden on md+ screens) */}
             <Button
               variant="ghost"
@@ -142,6 +174,29 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
             >
               <Menu className="h-4 w-4" />
             </Button>
+
+            {/* Breadcrumbs */}
+            {breadcrumbs.length > 0 && (
+              <nav className="hidden items-center gap-1.5 md:flex">
+                {breadcrumbs.map((item, index) => (
+                  <span key={index} className="flex items-center gap-1.5">
+                    {index > 0 && (
+                      <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
+                    )}
+                    <span
+                      className={cn(
+                        "text-sm font-medium",
+                        index === breadcrumbs.length - 1
+                          ? "text-slate-800"
+                          : "text-slate-500",
+                      )}
+                    >
+                      {item.label}
+                    </span>
+                  </span>
+                ))}
+              </nav>
+            )}
           </div>
 
           {/* Right: Search + Actions + User */}

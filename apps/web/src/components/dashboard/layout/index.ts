@@ -1,5 +1,6 @@
 export {
   PageContainer,
+  PageBreadcrumb,
   PageHeader,
   PageToolbar,
   PageContent,
