@@ -363,7 +363,6 @@ export async function POST(request: NextRequest) {
             .from("user_clinic_access")
             .update({
               role: mappedRole,
-              updated_at: new Date().toISOString(),
             })
             .eq("user_id", user.id)
             .eq("clinic_id", clinic.id);
