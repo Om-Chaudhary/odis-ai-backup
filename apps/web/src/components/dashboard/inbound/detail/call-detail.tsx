@@ -2,12 +2,15 @@
 import { useState, useEffect } from "react";
 import { Phone, X, PawPrint, User } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
-import { CallDetailContent } from "../../shared/call-detail-content";
+import { ActionCardSelector } from "../../shared/action-cards";
+import { CallDetailTabs } from "../../shared/tabbed-panel";
+import { CollapsibleTranscript } from "../../shared/collapsible-transcript";
 import { api } from "~/trpc/client";
 import { getCallDataOverride } from "./mock-data";
 import { getDemoCallerName } from "../mock-data";
 import { QuickActionsFooter } from "./shared/quick-actions-footer";
 import type { Database } from "@odis-ai/shared/types";
+import type { CallOutcome } from "../types";
 
 // Use Database type for compatibility with table data
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
@@ -17,17 +20,6 @@ interface CallDetailProps {
   onDelete?: (id: string) => Promise<void>;
   onClose?: () => void;
   isSubmitting: boolean;
-}
-
-/**
- * Format duration in seconds to a readable string
- */
-function formatDuration(seconds: number | null | undefined): string {
-  if (!seconds) return "--";
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  if (mins === 0) return `${secs}s`;
-  return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
 }
 
 export function CallDetail({
@@ -44,6 +36,16 @@ export function CallDetail({
     { phone: call.customer_phone ?? "" },
     {
       enabled: !!call.customer_phone && !demoCallerName,
+      staleTime: 5 * 60 * 1000, // 5 minutes cache
+      retry: false,
+    },
+  );
+
+  // Query for booking data by vapi_call_id
+  const { data: bookingData } = api.inbound.getBookingByVapiCallId.useQuery(
+    { vapiCallId: call.vapi_call_id },
+    {
+      enabled: !!call.vapi_call_id,
       staleTime: 5 * 60 * 1000, // 5 minutes cache
       retry: false,
     },
@@ -156,25 +158,61 @@ export function CallDetail({
         </div>
       </header>
 
-      {/* Scrollable Content - Using shared components */}
+      {/* Scrollable Content */}
       <div className="flex-1 space-y-4 overflow-auto p-4">
-        <CallDetailContent
-          callId={call.id}
+        {/* Action Card - Outcome-specific display */}
+        <ActionCardSelector
+          call={{
+            id: call.id,
+            outcome: (call.outcome as CallOutcome) ?? null,
+            summary: callData.summary ?? null,
+            structured_data: call.structured_data as Record<string, unknown> | null,
+            call_outcome_data: call.call_outcome_data as {
+              call_outcome?: string;
+              outcome_summary?: string;
+              key_topics_discussed?: string[];
+            } | null,
+            escalation_data: call.escalation_data as {
+              escalation_triggered?: boolean;
+              escalation_summary?: string;
+              escalation_type?: string;
+              staff_action_needed?: string;
+            } | null,
+            follow_up_data: call.follow_up_data as {
+              follow_up_needed?: boolean;
+              follow_up_summary?: string;
+              appointment_status?: string;
+              next_steps?: string;
+            } | null,
+            customer_phone: call.customer_phone,
+          }}
+          booking={bookingData}
+          callerName={callerName}
+          petName={petName}
+        />
+
+        {/* Tabbed Panel - Summary & Actions */}
+        <CallDetailTabs
           summary={callData.summary ?? null}
-          timestamp={call.created_at}
+          recordingUrl={callData.recording_url ?? null}
+          transcript={callData.transcript ?? null}
           durationSeconds={callData.duration_seconds}
+          isLoadingRecording={vapiQuery.isLoading && shouldFetchFromVAPI}
           actionsTaken={
             Array.isArray(call.actions_taken)
               ? (call.actions_taken as string[])
               : undefined
           }
-          recordingUrl={callData.recording_url ?? null}
-          transcript={callData.transcript ?? null}
-          title={callerName ?? "Call Recording"}
-          subtitle={call.clinic_name ?? undefined}
-          isLoadingRecording={vapiQuery.isLoading && shouldFetchFromVAPI}
           isSuccessful={call.ended_reason !== "error"}
         />
+
+        {/* Collapsible Transcript */}
+        {(callData.transcript ?? call.cleaned_transcript) && (
+          <CollapsibleTranscript
+            transcript={callData.transcript ?? null}
+            cleanedTranscript={call.cleaned_transcript ?? null}
+          />
+        )}
       </div>
 
       {/* Quick Actions Footer */}

@@ -7,6 +7,29 @@ export * from "./forms";
 // Card components
 export * from "./cards";
 
+// Action cards (outcome-specific) - explicitly export to avoid naming conflicts
+export {
+  ActionCardSelector,
+  ScheduledAppointmentCard,
+  CanceledAppointmentCard,
+  EmergencyCard,
+  CallbackCard,
+  EditorialCardBase,
+  EditorialHeader,
+  EditorialFieldList,
+  EditorialActionButton,
+  EditorialStatusBadge,
+  getEditorialVariantStyles,
+  type EditorialVariant,
+  type FieldItem,
+} from "./action-cards";
+// Note: InfoCard from action-cards is intentionally not exported here
+// to avoid conflict with generic InfoCard from ./cards.
+// Import it directly from "./action-cards" when needed for call outcomes.
+
+// Tabbed panel components
+export * from "./tabbed-panel";
+
 // Layout components
 export * from "./layouts";
 export * from "./dashboard-page-header";

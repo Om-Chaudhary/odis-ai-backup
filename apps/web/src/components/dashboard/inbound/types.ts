@@ -40,6 +40,35 @@ export type UserSentiment = "positive" | "neutral" | "negative";
 // =============================================================================
 
 /**
+ * Booking data from vapi_bookings table
+ * Used for structured display in action cards
+ */
+export interface BookingData {
+  /** Patient/pet name */
+  patient_name: string;
+  /** Species (e.g., "cat", "dog") */
+  species: string | null;
+  /** Breed (e.g., "British Longhair") */
+  breed: string | null;
+  /** Appointment date (YYYY-MM-DD) */
+  date: string;
+  /** Start time (HH:MM:SS) */
+  start_time: string;
+  /** Reason for visit */
+  reason: string | null;
+  /** Client/owner name */
+  client_name: string;
+  /** Client phone number */
+  client_phone: string;
+  /** Booking status: "confirmed" | "cancelled" | "pending" | etc. */
+  status: string;
+  /** Whether this is a new client */
+  is_new_client: boolean | null;
+  /** Rescheduled reason if applicable */
+  rescheduled_reason: string | null;
+}
+
+/**
  * Appointment request from VAPI schedule-appointment tool
  */
 export interface AppointmentRequest {

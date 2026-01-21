@@ -63,6 +63,53 @@ export const callAssociationsRouter = createTRPCRouter({
     }),
 
   /**
+   * Get booking data by VAPI call ID
+   * Returns structured booking data for action card display
+   */
+  getBookingByVapiCallId: protectedProcedure
+    .input(
+      z.object({
+        vapiCallId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
+
+      const { data, error } = await supabase
+        .from("vapi_bookings")
+        .select(
+          "patient_name, species, breed, date, start_time, reason, client_name, client_phone, status, is_new_client, rescheduled_reason",
+        )
+        .eq("vapi_call_id", input.vapiCallId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error && error.code !== "PGRST116") {
+        console.error("Error fetching booking by vapi_call_id:", error);
+        return null;
+      }
+
+      if (!data) {
+        return null;
+      }
+
+      return {
+        patient_name: data.patient_name,
+        species: data.species,
+        breed: data.breed,
+        date: data.date,
+        start_time: data.start_time,
+        reason: data.reason,
+        client_name: data.client_name,
+        client_phone: data.client_phone,
+        status: data.status,
+        is_new_client: data.is_new_client,
+        rescheduled_reason: data.rescheduled_reason,
+      };
+    }),
+
+  /**
    * Get caller info by phone number from appointments or messages
    * Returns caller name, pet name, species, breed, lastVisit (if from appointment), and source
    * Used to display caller info in the Calls tab and Pet Context in Messages tab
