@@ -19,7 +19,7 @@
       "inputs": [
         "default",
         "^default",
-        "{workspaceRoot}/libs/validators/vitest.config.ts"
+        "{workspaceRoot}/libs/shared/validators/vitest.config.ts"
       ]
     },
     "test:watch": {
@@ -39,7 +39,7 @@
       "inputs": [
         "default",
         "^default",
-        "{workspaceRoot}/libs/validators/vitest.config.ts"
+        "{workspaceRoot}/libs/shared/validators/vitest.config.ts"
       ]
     },
     "typecheck": {

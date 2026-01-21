@@ -11,17 +11,20 @@
       "options": {
         "buildTarget": "web:build",
         "dev": true,
-        "turbo": false
+        "turbo": false,
+        "port": 3000
       },
       "configurations": {
         "development": {
           "buildTarget": "web:build:development",
           "dev": true,
-          "turbo": false
+          "turbo": false,
+          "port": 3000
         },
         "production": {
           "buildTarget": "web:build:production",
-          "dev": false
+          "dev": false,
+          "port": 3000
         }
       }
     },

@@ -19,7 +19,7 @@
       "inputs": [
         "default",
         "^default",
-        "{workspaceRoot}/libs/db/vitest.config.ts"
+        "{workspaceRoot}/libs/data-access/db/vitest.config.ts"
       ]
     },
     "typecheck": {
