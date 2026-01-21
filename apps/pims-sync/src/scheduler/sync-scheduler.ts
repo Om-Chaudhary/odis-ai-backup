@@ -99,7 +99,6 @@ export class SyncScheduler {
 
     // Stop all cron jobs
     for (const job of this.jobs) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       job.task.stop();
       logger.debug("Stopped scheduled job", {
         clinicId: job.clinicId,
@@ -173,7 +172,6 @@ export class SyncScheduler {
 
     // Stop existing jobs
     for (const job of this.jobs) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       job.task.stop();
     }
     this.jobs = [];
@@ -198,7 +196,6 @@ export class SyncScheduler {
       }
 
       // Validate cron expression
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       if (!cron.validate(schedule.cron)) {
         logger.error("Invalid cron expression, skipping", {
           clinicId: config.clinicId,
@@ -209,15 +206,21 @@ export class SyncScheduler {
       }
 
       // Create cron task
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       const task = cron.schedule(
         schedule.cron,
-        async () => {
-          await this.executeSyncJob(
+        () => {
+          this.executeSyncJob(
             config.clinicId,
             config.clinicName,
             schedule.type,
-          );
+          ).catch((error) => {
+            logger.error("Sync job failed", {
+              clinicId: config.clinicId,
+              clinicName: config.clinicName,
+              type: schedule.type,
+              error: error instanceof Error ? error.message : "Unknown error",
+            });
+          });
         },
         {
           scheduled: true,
