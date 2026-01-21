@@ -137,44 +137,16 @@ export default async function DashboardLayout({
         isAdmin={profile?.role === "admin"}
       />
 
-      {/* Main Content Area */}
-      <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
-        {/* Layered background for depth */}
-        <div className="pointer-events-none absolute inset-0">
-          {/* Base gradient - warm white to subtle teal tint */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(135deg, #fafbfc 0%, #f8fafa 25%, #f5f9f9 50%, #f3f8f8 75%, #f0f7f6 100%)",
-            }}
-          />
-          {/* Subtle radial glow from top-left corner (where sidebar meets content) */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "radial-gradient(ellipse at 0% 0%, rgba(49, 171, 163, 0.04) 0%, transparent 50%)",
-            }}
-          />
-          {/* Subtle ambient glow */}
-          <div
-            className="absolute inset-0 opacity-60"
-            style={{
-              background:
-                "radial-gradient(ellipse at 80% 20%, rgba(49, 171, 163, 0.025) 0%, transparent 40%)",
-            }}
-          />
-          {/* Subtle dot pattern for texture */}
-          <div
-            className="absolute inset-0 opacity-[0.025]"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle, #31aba3 0.5px, transparent 0.5px)",
-              backgroundSize: "24px 24px",
-            }}
-          />
-        </div>
+      {/* Main Content Area - Warm sage background for visual hierarchy */}
+      <div className="bg-background relative flex min-w-0 flex-1 flex-col overflow-hidden">
+        {/* Subtle gradient overlay for depth */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(180deg, hsl(150 10% 96%) 0%, hsl(150 8% 95%) 100%)",
+          }}
+        />
 
         {/* Content */}
         <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden">

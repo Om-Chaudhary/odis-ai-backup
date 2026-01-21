@@ -82,14 +82,9 @@ export function DashboardSplitLayout({
   return (
     <PanelGroup
       direction="horizontal"
-      className={cn(
-        "h-full w-full overflow-hidden",
-        // Reduce horizontal padding when detail panel open
-        showRightPanel ? "gap-0" : "gap-4",
-        className,
-      )}
+      className={cn("h-full w-full overflow-hidden", className)}
     >
-      {/* Left Panel - Table */}
+      {/* Left Panel - Table flush to edges */}
       <Panel
         defaultSize={100}
         minSize={leftPanelMinSize}
@@ -98,23 +93,22 @@ export function DashboardSplitLayout({
         <div
           className={cn(
             "flex h-full min-h-0 flex-col overflow-hidden",
-            "bg-gradient-to-br from-white/90 via-teal-50/20 to-white/90",
-            "backdrop-blur-xl",
+            "bg-card",
           )}
         >
           {leftPanel}
         </div>
       </Panel>
 
-      {/* Resize Handle - invisible bridge between table and panel */}
+      {/* Resize Handle - subtle divider */}
       <PanelResizeHandle
         className={cn(
-          "group relative w-0 cursor-col-resize transition-all duration-200",
+          "group bg-border/50 hover:bg-primary/30 relative w-px cursor-col-resize transition-all duration-200",
           !showRightPanel && "hidden",
         )}
       />
 
-      {/* Right Panel - Detail with glassmorphism styling */}
+      {/* Right Panel - Detail flush to edges */}
       <Panel
         ref={rightPanelRef}
         defaultSize={0}
@@ -129,11 +123,8 @@ export function DashboardSplitLayout({
           ref={rightPanelContainerRef}
           className={cn(
             "relative flex h-full flex-col",
-            // Subtle teal radial gradient that matches selected row
-            "bg-gradient-to-r from-teal-50/80 to-teal-50/50",
-            "rounded-r-xl",
-            "shadow-xl shadow-teal-500/10 backdrop-blur-xl",
-            "ring-1 ring-teal-200/30 ring-inset",
+            "bg-card",
+            "border-border/50 border-l",
           )}
         >
           {/* Close Button */}
@@ -142,9 +133,9 @@ export function DashboardSplitLayout({
             className={cn(
               "absolute top-4 right-4 z-10",
               "flex h-8 w-8 items-center justify-center rounded-lg",
-              "bg-white/70 text-slate-400 backdrop-blur-sm transition-all duration-200",
-              "hover:bg-white/90 hover:text-slate-600 hover:shadow-md",
-              "focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 focus:outline-none",
+              "bg-muted text-muted-foreground transition-all duration-200",
+              "hover:bg-accent hover:text-accent-foreground hover:shadow-sm",
+              "focus:ring-primary focus:ring-2 focus:ring-offset-2 focus:outline-none",
             )}
             aria-label="Close detail panel"
           >

@@ -8,11 +8,11 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Background & Foreground */
-  --background: 0 0% 100%;
+  /* Background & Foreground - Warm sage-tinted for depth */
+  --background: 150 8% 95%;
   --foreground: 0 0% 9%;
 
-  /* Card */
+  /* Card - Pure white for elevation */
   --card: 0 0% 100%;
   --card-foreground: 0 0% 9%;
 
@@ -24,34 +24,40 @@
   --primary: 174 56% 43%;
   --primary-foreground: 0 0% 100%;
 
-  /* Secondary */
-  --secondary: 0 0% 96%;
+  /* Secondary - Slightly warmer */
+  --secondary: 150 5% 96%;
   --secondary-foreground: 0 0% 9%;
 
-  /* Muted */
-  --muted: 0 0% 96%;
+  /* Muted - Warm sage tint */
+  --muted: 150 6% 94%;
   --muted-foreground: 0 0% 45%;
 
-  /* Accent */
-  --accent: 0 0% 96%;
+  /* Accent - Light sage for hover/selected */
+  --accent: 150 12% 94%;
   --accent-foreground: 0 0% 9%;
 
   /* Destructive */
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
 
-  /* Border & Input */
-  --border: 0 0% 90%;
-  --input: 0 0% 90%;
+  /* Border & Input - Warmer gray */
+  --border: 150 5% 88%;
+  --input: 150 5% 88%;
   --ring: 174 56% 43%;
 
-  /* Sidebar */
-  --sidebar: 0 0% 98%;
-  --sidebar-foreground: 0 0% 9%;
-  --sidebar-border: 0 0% 90%;
-  --sidebar-accent: 174 60% 92%;
-  --sidebar-accent-foreground: 174 70% 30%;
+  /* Sidebar - Deep teal-slate */
+  --sidebar: 175 30% 10%;
+  --sidebar-foreground: 0 0% 95%;
+  --sidebar-border: 175 20% 15%;
+  --sidebar-accent: 174 40% 18%;
+  --sidebar-accent-foreground: 174 60% 75%;
   --sidebar-ring: 174 56% 43%;
+  --sidebar-muted: 175 20% 15%;
+
+  /* Surface hierarchy for visual depth */
+  --surface-ground: 150 8% 95%;
+  --surface-raised: 0 0% 100%;
+  --surface-overlay: 0 0% 100%;
 
   /* Border Radius */
   --radius: 0.5rem;
@@ -85,6 +91,12 @@
   --color-sidebar-accent: hsl(var(--sidebar-accent));
   --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
   --color-sidebar-ring: hsl(var(--sidebar-ring));
+  --color-sidebar-muted: hsl(var(--sidebar-muted));
+
+  /* Surface hierarchy colors */
+  --color-surface-ground: hsl(var(--surface-ground));
+  --color-surface-raised: hsl(var(--surface-raised));
+  --color-surface-overlay: hsl(var(--surface-overlay));
 
   /* Custom dashboard colors - Sage */
   --color-sage-50: #f7f9f8;
@@ -111,10 +123,10 @@
   --color-terracotta-900: #743827;
 }
 
-/* Dark mode - currently mirrors light mode for brand consistency */
+/* Dark mode - mirrors light mode for brand consistency (veterinary clinics prefer light UI) */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: 0 0% 100%;
+    --background: 150 8% 95%;
     --foreground: 0 0% 9%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 9%;
@@ -122,28 +134,32 @@
     --popover-foreground: 0 0% 9%;
     --primary: 174 56% 43%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 96%;
+    --secondary: 150 5% 96%;
     --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96%;
+    --muted: 150 6% 94%;
     --muted-foreground: 0 0% 45%;
-    --accent: 0 0% 96%;
+    --accent: 150 12% 94%;
     --accent-foreground: 0 0% 9%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
+    --border: 150 5% 88%;
+    --input: 150 5% 88%;
     --ring: 174 56% 43%;
-    --sidebar: 0 0% 98%;
-    --sidebar-foreground: 0 0% 9%;
-    --sidebar-border: 0 0% 90%;
-    --sidebar-accent: 174 60% 92%;
-    --sidebar-accent-foreground: 174 70% 30%;
+    --sidebar: 175 30% 10%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-border: 175 20% 15%;
+    --sidebar-accent: 174 40% 18%;
+    --sidebar-accent-foreground: 174 60% 75%;
     --sidebar-ring: 174 56% 43%;
+    --sidebar-muted: 175 20% 15%;
+    --surface-ground: 150 8% 95%;
+    --surface-raised: 0 0% 100%;
+    --surface-overlay: 0 0% 100%;
   }
 }
 
 .dark {
-  --background: 0 0% 100%;
+  --background: 150 8% 95%;
   --foreground: 0 0% 9%;
   --card: 0 0% 100%;
   --card-foreground: 0 0% 9%;
@@ -151,23 +167,27 @@
   --popover-foreground: 0 0% 9%;
   --primary: 174 56% 43%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 0 0% 96%;
+  --secondary: 150 5% 96%;
   --secondary-foreground: 0 0% 9%;
-  --muted: 0 0% 96%;
+  --muted: 150 6% 94%;
   --muted-foreground: 0 0% 45%;
-  --accent: 0 0% 96%;
+  --accent: 150 12% 94%;
   --accent-foreground: 0 0% 9%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
-  --border: 0 0% 90%;
-  --input: 0 0% 90%;
+  --border: 150 5% 88%;
+  --input: 150 5% 88%;
   --ring: 174 56% 43%;
-  --sidebar: 0 0% 98%;
-  --sidebar-foreground: 0 0% 9%;
-  --sidebar-border: 0 0% 90%;
-  --sidebar-accent: 174 60% 92%;
-  --sidebar-accent-foreground: 174 70% 30%;
+  --sidebar: 175 30% 10%;
+  --sidebar-foreground: 0 0% 95%;
+  --sidebar-border: 175 20% 15%;
+  --sidebar-accent: 174 40% 18%;
+  --sidebar-accent-foreground: 174 60% 75%;
   --sidebar-ring: 174 56% 43%;
+  --sidebar-muted: 175 20% 15%;
+  --surface-ground: 150 8% 95%;
+  --surface-raised: 0 0% 100%;
+  --surface-overlay: 0 0% 100%;
 }
 
 /* Base element styling */
