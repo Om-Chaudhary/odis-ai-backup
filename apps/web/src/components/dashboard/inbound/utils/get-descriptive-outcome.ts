@@ -51,7 +51,7 @@ export function getDescriptiveOutcome(
   // Schedule appointment
   if (outcome === "scheduled" || outcome === "schedule appointment") {
     return {
-      label: "Scheduled Appointment",
+      label: "Scheduled",
       description: clinicalSummary,
       variant: "appointment",
     };
@@ -66,7 +66,7 @@ export function getDescriptiveOutcome(
         summaryLower.includes("re-schedule")))
   ) {
     return {
-      label: "Rescheduled Appointment",
+      label: "Rescheduled",
       description: clinicalSummary,
       variant: "appointment",
     };
@@ -75,7 +75,7 @@ export function getDescriptiveOutcome(
   // Cancel appointment
   if (outcome === "cancellation" || outcome === "cancel appointment") {
     return {
-      label: "Cancelled Appointment",
+      label: "Cancellation",
       description: clinicalSummary,
       variant: "appointment",
     };
@@ -87,7 +87,7 @@ export function getDescriptiveOutcome(
 
   if (outcome === "emergency" || outcome === "emergency triage") {
     return {
-      label: "Emergency Triage",
+      label: "ER",
       description: clinicalSummary,
       variant: "emergency",
     };
@@ -103,7 +103,7 @@ export function getDescriptiveOutcome(
     outcome === "client requests callback"
   ) {
     return {
-      label: "Callback Request",
+      label: "Callback",
       description: clinicalSummary,
       variant: "callback",
     };
@@ -115,7 +115,7 @@ export function getDescriptiveOutcome(
 
   if (outcome === "info" || outcome === "clinic info") {
     return {
-      label: "Clinic Info",
+      label: "Info",
       description: clinicalSummary,
       variant: "info",
     };

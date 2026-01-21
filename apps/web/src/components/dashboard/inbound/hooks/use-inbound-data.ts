@@ -34,7 +34,7 @@ export function useInboundData(params: UseInboundDataParams) {
     return filter;
   };
 
-  // Map outcome filter categories to actual outcome values
+  // Map outcome filter to actual outcome values
   const getOutcomesForFilter = (
     filter: OutcomeFilter,
   ):
@@ -48,27 +48,11 @@ export function useInboundData(params: UseInboundDataParams) {
       >
     | undefined => {
     if (filter === "all") return undefined;
-
-    // Map filter categories to database outcome values
-    const outcomeMap: Record<
-      string,
-      Array<
-        | "scheduled"
-        | "rescheduled"
-        | "cancellation"
-        | "emergency"
-        | "callback"
-        | "info"
-      >
-    > = {
-      appointment: ["scheduled", "rescheduled", "cancellation"],
-      emergency: ["emergency"],
-      callback: ["callback"],
-      info: ["info"],
-    };
-
-    // Flatten the array of categories into their outcome values
-    return filter.flatMap((category) => outcomeMap[category] ?? []);
+    // "appointment" maps to all appointment-related outcomes
+    if (filter === "appointment")
+      return ["scheduled", "rescheduled", "cancellation"];
+    // Return single outcome value as array
+    return [filter];
   };
 
   // Fetch calls with optional outcome filtering
@@ -189,10 +173,13 @@ export function useInboundData(params: UseInboundDataParams) {
           failed: 0,
           cancelled: 0,
           needsAttention: 0,
+          scheduled: 0,
+          rescheduled: 0,
+          cancellation: 0,
           emergency: 0,
-          appointment: 0,
           callback: 0,
           info: 0,
+          appointment: 0,
         },
         totals: { appointments: 0, calls: 0, needsAttention: 0 },
       }

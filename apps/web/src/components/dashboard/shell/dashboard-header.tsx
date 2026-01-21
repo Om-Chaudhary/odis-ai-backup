@@ -73,11 +73,10 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
     if (isInbound) {
       const outcomeParam = searchParams.get("outcome");
       let filterLabel = "All Calls";
-      if (outcomeParam === "emergency") filterLabel = "Emergency";
+      if (outcomeParam === "emergency") filterLabel = "ER";
       else if (outcomeParam === "appointment") filterLabel = "Appointments";
       else if (outcomeParam === "callback") filterLabel = "Callback";
       else if (outcomeParam === "info") filterLabel = "Info";
-      else if (outcomeParam && outcomeParam !== "all") filterLabel = "Filtered";
       return [{ label: "After Hours" }, { label: filterLabel }];
     }
 

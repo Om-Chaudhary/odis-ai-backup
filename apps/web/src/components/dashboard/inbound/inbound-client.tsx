@@ -4,10 +4,10 @@ import { useState, useCallback, useEffect } from "react";
 import { useQueryState, parseAsInteger } from "nuqs";
 import { Download } from "lucide-react";
 
-import type { OutcomeFilter, OutcomeFilterCategory } from "./types";
+import type { OutcomeFilter, OutcomeFilterValue } from "./types";
 import type { Database } from "@odis-ai/shared/types";
-import { PageContent, PageFooter } from "../layout";
-import { InboundTable } from "./table";
+import { PageContent, PageFooter, PageToolbar } from "../layout";
+import { InboundTable, OutcomeFilterPills } from "./table";
 import { CallDetail } from "./detail/call-detail";
 import {
   DashboardSplitLayout,
@@ -37,22 +37,22 @@ export function InboundClient() {
   const { getStatus: getBusinessHoursStatus } = useClinicSchedule({ clinicId });
 
   // URL-synced state
-  const [outcomeFilter] = useQueryState("outcome", {
+  const [outcomeFilter, setOutcomeFilter] = useQueryState("outcome", {
     defaultValue: "all" as OutcomeFilter,
     parse: (v) => {
       if (v === "all") return "all";
-      // Parse comma-separated categories
-      const categories = v
-        .split(",")
-        .filter((cat): cat is OutcomeFilterCategory =>
-          ["emergency", "appointment", "callback", "info"].includes(cat),
-        );
-      return categories.length > 0 ? categories : "all";
+      // Parse single outcome value
+      const validOutcomes: OutcomeFilterValue[] = [
+        "appointment",
+        "emergency",
+        "callback",
+        "info",
+      ];
+      return validOutcomes.includes(v as OutcomeFilterValue)
+        ? (v as OutcomeFilterValue)
+        : "all";
     },
-    serialize: (value) => {
-      if (value === "all") return "all";
-      return value.join(",");
-    },
+    serialize: (value) => value,
   });
 
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
@@ -79,7 +79,7 @@ export function InboundClient() {
   const searchTerm = searchQuery ?? "";
 
   // Use custom hooks for data and mutations
-  const { calls, pagination, isLoading, refetchCalls } = useInboundData({
+  const { calls, pagination, stats, isLoading, refetchCalls } = useInboundData({
     page,
     pageSize,
     callStatus: "all",
@@ -252,6 +252,13 @@ export function InboundClient() {
         selectedRowPosition={selectedRowPosition}
         leftPanel={
           <>
+            <PageToolbar>
+              <OutcomeFilterPills
+                value={outcomeFilter}
+                onChange={(value) => void setOutcomeFilter(value)}
+                stats={stats.calls}
+              />
+            </PageToolbar>
             <PageContent>
               <InboundTable
                 items={calls}

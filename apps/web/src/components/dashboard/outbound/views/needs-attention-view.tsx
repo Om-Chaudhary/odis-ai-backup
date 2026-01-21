@@ -8,8 +8,8 @@ import {
   type SelectedRowPosition,
 } from "../../shared/layouts";
 import { OutboundCaseDetail } from "../outbound-case-detail";
-import type { OutboundHeaderProps } from "../outbound-header";
-import type { TransformedCase, DeliveryToggles } from "../types";
+import { OutboundHeader, type OutboundHeaderProps } from "../outbound-header";
+import type { TransformedCase, DeliveryToggles, ViewMode } from "../types";
 
 interface NeedsAttentionViewProps extends OutboundHeaderProps {
   cases: TransformedCase[];
@@ -19,6 +19,12 @@ interface NeedsAttentionViewProps extends OutboundHeaderProps {
   total: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
+
+  // View Mode
+  viewMode: ViewMode;
+  onViewModeChange: (mode: ViewMode) => void;
+  needsAttentionCount: number;
+  totalCasesCount: number;
 
   // Selection & Detail
   selectedCase: TransformedCase | null;
@@ -47,6 +53,10 @@ export function NeedsAttentionView({
   total,
   onPageChange,
   onPageSizeChange,
+  viewMode,
+  onViewModeChange,
+  needsAttentionCount,
+  totalCasesCount,
   selectedCase,
   onSelectCase,
   onClosePanel,
@@ -88,6 +98,14 @@ export function NeedsAttentionView({
       selectedRowPosition={selectedRowPosition}
       leftPanel={
         <>
+          <OutboundHeader
+            {...headerProps}
+            showDateNav={true}
+            viewMode={viewMode}
+            onViewModeChange={onViewModeChange}
+            totalCount={totalCasesCount}
+            needsAttentionCount={needsAttentionCount}
+          />
           <PageContent>
             <OutboundNeedsAttentionTable
               cases={cases}

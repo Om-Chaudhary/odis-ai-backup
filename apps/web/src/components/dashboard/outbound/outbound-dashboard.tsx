@@ -41,7 +41,7 @@ function OutboundDashboardInner() {
     defaultValue: format(startOfDay(new Date()), "yyyy-MM-dd"),
   });
 
-  const [viewMode] = useQueryState("view", {
+  const [viewMode, setViewMode] = useQueryState("view", {
     defaultValue: "all" as ViewMode,
     parse: (v) =>
       (["all", "needs_attention"].includes(v) ? v : "all") as ViewMode,
@@ -309,6 +309,15 @@ function OutboundDashboardInner() {
     [setPageSize, setPage],
   );
 
+  const handleViewModeChange = useCallback(
+    (newMode: ViewMode) => {
+      void setViewMode(newMode);
+      void setPage(1);
+      setSelectedCase(null);
+    },
+    [setViewMode, setPage],
+  );
+
   const handleClosePanel = useCallback(() => {
     setSelectedCase(null);
   }, []);
@@ -406,6 +415,10 @@ function OutboundDashboardInner() {
             total={totalCases}
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
+            viewMode={viewMode}
+            onViewModeChange={handleViewModeChange}
+            needsAttentionCount={needsAttentionCases.length}
+            totalCasesCount={totalCases}
             selectedCase={selectedCase}
             onSelectCase={handleSelectCase}
             onClosePanel={handleClosePanel}
@@ -427,6 +440,9 @@ function OutboundDashboardInner() {
             total={totalCases}
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
+            viewMode={viewMode}
+            onViewModeChange={handleViewModeChange}
+            needsAttentionCount={needsAttentionCases.length}
             selectedCase={selectedCase}
             onSelectCase={handleSelectCase}
             onKeyNavigation={handleKeyNavigation}

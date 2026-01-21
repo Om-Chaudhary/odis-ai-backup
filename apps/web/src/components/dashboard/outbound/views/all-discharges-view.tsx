@@ -10,7 +10,7 @@ import {
 import { OutboundCaseDetail } from "../outbound-case-detail";
 import { OutboundHeader } from "../outbound-header";
 import type { OutboundHeaderProps } from "../outbound-header";
-import type { TransformedCase, DeliveryToggles } from "../types";
+import type { TransformedCase, DeliveryToggles, ViewMode } from "../types";
 
 interface AllDischargesViewProps extends OutboundHeaderProps {
   cases: TransformedCase[];
@@ -19,6 +19,11 @@ interface AllDischargesViewProps extends OutboundHeaderProps {
   total: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
+
+  // View Mode
+  viewMode: ViewMode;
+  onViewModeChange: (mode: ViewMode) => void;
+  needsAttentionCount: number;
 
   // Selection & Detail
   selectedCase: TransformedCase | null;
@@ -59,6 +64,9 @@ export function AllDischargesView({
   total,
   onPageChange,
   onPageSizeChange,
+  viewMode,
+  onViewModeChange,
+  needsAttentionCount,
   selectedCase,
   onSelectCase,
   onClosePanel,
@@ -108,7 +116,14 @@ export function AllDischargesView({
       selectedRowPosition={selectedRowPosition}
       leftPanel={
         <>
-          <OutboundHeader {...headerProps} showDateNav={true} />
+          <OutboundHeader
+              {...headerProps}
+              showDateNav={true}
+              viewMode={viewMode}
+              onViewModeChange={onViewModeChange}
+              totalCount={total}
+              needsAttentionCount={needsAttentionCount}
+            />
           <PageContent>
             <OutboundCaseTable
               cases={cases}

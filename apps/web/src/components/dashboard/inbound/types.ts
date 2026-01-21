@@ -197,20 +197,20 @@ export interface InboundCall {
 // =============================================================================
 
 /**
- * Outcome filter category for the unified calls table
- * Maps to display categories in the filter dropdown
+ * Outcome filter value for the inbound table
+ * Maps to specific call outcomes
  */
-export type OutcomeFilterCategory =
-  | "emergency" // Emergency triage calls
-  | "appointment" // All appointment-related calls (scheduled, rescheduled, cancellation)
-  | "callback" // Callback request calls
-  | "info"; // Informational calls
+export type OutcomeFilterValue =
+  | "appointment" // Combines scheduled, rescheduled, cancellation
+  | "emergency"
+  | "callback"
+  | "info";
 
 /**
  * Outcome filter type
- * Can be "all" or an array of specific outcome categories
+ * Can be "all" or a specific outcome value (single-select)
  */
-export type OutcomeFilter = "all" | OutcomeFilterCategory[];
+export type OutcomeFilter = "all" | OutcomeFilterValue;
 
 /**
  * Action filter for calls
@@ -260,10 +260,15 @@ export interface CallStats {
   failed: number;
   cancelled: number;
   needsAttention: number; // Calls requiring staff action
+  // Granular outcome counts
+  scheduled: number;
+  rescheduled: number;
+  cancellation: number;
   emergency: number;
-  appointment: number;
   callback: number;
   info: number;
+  // Legacy grouped counts (computed from granular counts)
+  appointment: number; // scheduled + rescheduled + cancellation
 }
 
 /**

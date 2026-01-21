@@ -97,6 +97,25 @@ export const getStatsRouter = createTRPCRouter({
       const { data: calls, count: callCount } = await callQuery;
 
       // Count call statuses
+      const scheduled = (calls ?? []).filter(
+        (c) => c.outcome === "scheduled",
+      ).length;
+      const rescheduled = (calls ?? []).filter(
+        (c) => c.outcome === "rescheduled",
+      ).length;
+      const cancellation = (calls ?? []).filter(
+        (c) => c.outcome === "cancellation",
+      ).length;
+      const emergency = (calls ?? []).filter(
+        (c) => c.outcome === "emergency" || c.outcome === "Urgent",
+      ).length;
+      const callback = (calls ?? []).filter(
+        (c) => c.outcome === "callback" || c.outcome === "Call Back",
+      ).length;
+      const info = (calls ?? []).filter(
+        (c) => c.outcome === "info" || c.outcome === "Info Only",
+      ).length;
+
       const callStats = {
         total: callCount ?? 0,
         completed: (calls ?? []).filter((c) => c.status === "completed").length,
@@ -106,27 +125,18 @@ export const getStatsRouter = createTRPCRouter({
         failed: (calls ?? []).filter((c) => c.status === "failed").length,
         cancelled: (calls ?? []).filter((c) => c.status === "cancelled").length,
         // Count calls that need attention (Urgent, Call Back outcomes)
-        // Will be refined with descriptive outcome logic later
         needsAttention: (calls ?? []).filter(
           (c) => c.outcome === "Urgent" || c.outcome === "Call Back",
         ).length,
-        // Detailed outcome categories
-        appointment: (calls ?? []).filter(
-          (c) =>
-            c.outcome === "scheduled" ||
-            c.outcome === "rescheduled" ||
-            c.outcome === "cancellation" ||
-            c.outcome === "Appointment",
-        ).length,
-        emergency: (calls ?? []).filter(
-          (c) => c.outcome === "emergency" || c.outcome === "Urgent",
-        ).length,
-        callback: (calls ?? []).filter(
-          (c) => c.outcome === "callback" || c.outcome === "Call Back",
-        ).length,
-        info: (calls ?? []).filter(
-          (c) => c.outcome === "info" || c.outcome === "Info Only",
-        ).length,
+        // Granular outcome counts
+        scheduled,
+        rescheduled,
+        cancellation,
+        emergency,
+        callback,
+        info,
+        // Legacy grouped count (computed from granular counts)
+        appointment: scheduled + rescheduled + cancellation,
       };
 
       return {
