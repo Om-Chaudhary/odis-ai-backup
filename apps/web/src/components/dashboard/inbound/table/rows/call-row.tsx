@@ -1,5 +1,5 @@
 import { format, isValid } from "date-fns";
-import { Eye, X } from "lucide-react";
+import { Eye } from "lucide-react";
 import type { Database } from "@odis-ai/shared/types";
 import { CallerDisplay, CallDuration } from "../table-cells";
 import { OutcomeBadge } from "../outcome-badge";
@@ -21,8 +21,6 @@ interface CallRowProps {
   isSelected?: boolean;
   /** Callback when action button is clicked (toggles the detail panel) */
   onToggleDetail?: () => void;
-  /** Whether checkboxes are shown (affects first cell padding) */
-  showCheckboxes?: boolean;
   /** Function to determine business hours status for a timestamp */
   getBusinessHoursStatus?: (timestamp: Date | string) => BusinessHoursStatus;
 }
@@ -41,7 +39,6 @@ export function CallRow({
   isCompact = false,
   isSelected = false,
   onToggleDetail,
-  showCheckboxes = false,
   getBusinessHoursStatus,
 }: CallRowProps) {
   const callMods = getCallModifications(call);
@@ -55,7 +52,7 @@ export function CallRow({
 
   return (
     <>
-      <td className={`py-2 ${showCheckboxes ? "pl-2" : "pl-4"}`}>
+      <td className="py-2 pl-4">
         <div className="flex flex-col gap-0.5 overflow-hidden">
           <CallerDisplay
             phone={call.customer_phone}
@@ -102,13 +99,7 @@ export function CallRow({
         <Button
           variant="ghost"
           size="sm"
-          className={cn(
-            "h-8 w-8 p-0",
-            "transition-colors duration-150",
-            isSelected
-              ? "bg-teal-100 text-teal-700 hover:bg-teal-200 hover:text-teal-800"
-              : "text-slate-400 hover:bg-slate-100 hover:text-slate-600",
-          )}
+          className="h-8 w-8 p-0 transition-colors duration-150 hover:bg-transparent"
           onClick={(e) => {
             e.stopPropagation();
             onToggleDetail?.();
@@ -119,7 +110,14 @@ export function CallRow({
               : `View details for call from ${call.customer_phone ?? "unknown"}`
           }
         >
-          {isSelected ? <X className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          <Eye
+            className={cn(
+              "h-4 w-4 transition-colors",
+              isSelected
+                ? "text-teal-600 hover:text-teal-700"
+                : "text-slate-400 hover:text-slate-600",
+            )}
+          />
         </Button>
       </td>
     </>

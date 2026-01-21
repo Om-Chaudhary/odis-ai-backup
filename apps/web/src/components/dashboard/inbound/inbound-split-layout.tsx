@@ -112,13 +112,12 @@ export function InboundSplitLayout({
             onClick={onCloseRightPanel}
             className={cn(
               "absolute top-4 right-4 z-10",
-              "flex h-8 w-8 items-center justify-center rounded-lg",
-              "bg-white/70 text-slate-400 backdrop-blur-sm transition-all duration-200",
-              "hover:bg-white/90 hover:text-slate-600 hover:shadow-md",
+              "flex h-8 w-8 items-center justify-center",
+              "transition-colors duration-200",
             )}
             aria-label="Close"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4 text-teal-600 transition-colors hover:text-teal-700" />
           </button>
           <div className="min-h-0 flex-1 overflow-y-auto">{rightPanel}</div>
         </div>

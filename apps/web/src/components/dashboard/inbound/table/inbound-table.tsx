@@ -5,7 +5,6 @@ import { cn } from "@odis-ai/shared/util";
 import type { Database } from "@odis-ai/shared/types";
 import { DataTableEmptyState } from "../../shared/data-table/data-table-empty-state";
 import { Phone } from "lucide-react";
-import { Checkbox } from "@odis-ai/shared/ui/checkbox";
 import { CallsHeader } from "./table-headers";
 import { CallRow } from "./rows/call-row";
 import { TableSkeleton } from "./table-states";
@@ -26,10 +25,6 @@ interface InboundTableProps {
   isCompact?: boolean;
   // Callback for selected row position (for tab connection effect)
   onSelectedRowPositionChange?: (position: SelectedRowPosition | null) => void;
-  // Bulk selection
-  selectedForBulk?: Set<string>;
-  onToggleBulkSelect?: (callId: string) => void;
-  onSelectAll?: () => void;
   // Business hours status function
   getBusinessHoursStatus?: (timestamp: Date | string) => BusinessHoursStatus;
 }
@@ -49,12 +44,8 @@ export function InboundTable({
   isLoading,
   isCompact = false,
   onSelectedRowPositionChange,
-  selectedForBulk = new Set(),
-  onToggleBulkSelect,
-  onSelectAll,
   getBusinessHoursStatus,
 }: InboundTableProps) {
-  const showCheckboxes = !isCompact && !!onToggleBulkSelect;
   const tableRef = useRef<HTMLDivElement>(null);
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
 
@@ -158,14 +149,7 @@ export function InboundTable({
           id="inbound-table-header"
           className="sticky top-0 z-10 border-b border-teal-100/20 bg-gradient-to-r from-teal-50/40 via-teal-50/30 to-white/60 backdrop-blur-xl"
         >
-          <CallsHeader
-            isCompact={isCompact}
-            showCheckboxes={showCheckboxes}
-            allSelected={
-              items.length > 0 && selectedForBulk.size === items.length
-            }
-            onSelectAll={onSelectAll}
-          />
+          <CallsHeader isCompact={isCompact} />
         </thead>
         <tbody className="divide-y divide-teal-100/10">
           {items
@@ -187,10 +171,6 @@ export function InboundTable({
                     isSelected
                       ? "relative z-20 rounded-r-none border-l-2 border-l-teal-400/50 bg-gradient-to-r from-white/30 via-teal-50/55 to-teal-50/80 shadow-sm shadow-teal-500/10 backdrop-blur-sm"
                       : "transition-all duration-200 hover:bg-teal-50/30 hover:backdrop-blur-sm",
-                    // Highlight for bulk selection
-                    selectedForBulk.has(item.id) &&
-                      !isSelected &&
-                      "bg-teal-50/40",
                   )}
                   onClick={() => handleRowClick(item)}
                   tabIndex={0}
@@ -201,24 +181,11 @@ export function InboundTable({
                     }
                   }}
                 >
-                  {/* Checkbox cell */}
-                  {showCheckboxes && (
-                    <td className="py-2 pl-4">
-                      <Checkbox
-                        checked={selectedForBulk.has(item.id)}
-                        onCheckedChange={() => onToggleBulkSelect?.(item.id)}
-                        onClick={(e) => e.stopPropagation()}
-                        aria-label={`Select call from ${item.customer_phone ?? "unknown"}`}
-                        className="h-4 w-4"
-                      />
-                    </td>
-                  )}
                   <CallRow
                     call={item}
                     isCompact={isCompact}
                     isSelected={isSelected}
                     onToggleDetail={() => handleRowClick(item)}
-                    showCheckboxes={showCheckboxes}
                     getBusinessHoursStatus={getBusinessHoursStatus}
                   />
                 </tr>
