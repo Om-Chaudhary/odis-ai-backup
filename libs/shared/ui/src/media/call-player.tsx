@@ -117,11 +117,13 @@ const WaveformScrubber = forwardRef<HTMLDivElement, WaveformScrubberProps>(
     const animationRef = useRef<number | undefined>(undefined);
     const [isHovering, setIsHovering] = useState(false);
     const [hoverX, setHoverX] = useState(0);
+    const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
-    // Generate deterministic waveform bars based on duration
+    // Generate deterministic waveform bars (use fixed seed so bars are consistent)
     const waveformBars = useMemo(() => {
       const barCount = 64;
-      const seed = Math.floor(duration * 1000) || 42;
+      // Use a stable seed based on duration, but fallback to fixed seed for initial render
+      const seed = duration > 0 ? Math.floor(duration * 1000) : 12345;
       return Array.from({ length: barCount }, (_, i) => {
         // Pseudo-random but deterministic
         const x = Math.sin(seed * (i + 1) * 0.1) * 10000;
@@ -129,28 +131,42 @@ const WaveformScrubber = forwardRef<HTMLDivElement, WaveformScrubberProps>(
       });
     }, [duration]);
 
-    // Draw waveform
+    // ResizeObserver to track canvas dimensions
+    useEffect(() => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const observer = new ResizeObserver((entries) => {
+        const entry = entries[0];
+        if (entry) {
+          const { width, height } = entry.contentRect;
+          if (width > 0 && height > 0) {
+            setCanvasSize({ width, height });
+          }
+        }
+      });
+
+      observer.observe(container);
+      return () => observer.disconnect();
+    }, []);
+
+    // Draw waveform whenever size, progress, or playing state changes
     useEffect(() => {
       const canvas = canvasRef.current;
-      if (!canvas) return;
+      if (!canvas || canvasSize.width === 0 || canvasSize.height === 0) return;
 
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
       // Get DPR for crisp rendering
       const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.getBoundingClientRect();
-
-      // Guard against zero dimensions
-      if (rect.width === 0 || rect.height === 0) return;
-
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
+      canvas.width = canvasSize.width * dpr;
+      canvas.height = canvasSize.height * dpr;
       ctx.scale(dpr, dpr);
 
       const draw = () => {
-        const width = rect.width;
-        const height = rect.height;
+        const width = canvasSize.width;
+        const height = canvasSize.height;
 
         ctx.clearRect(0, 0, width, height);
 
@@ -215,28 +231,7 @@ const WaveformScrubber = forwardRef<HTMLDivElement, WaveformScrubberProps>(
           cancelAnimationFrame(animationRef.current);
         }
       };
-    }, [currentTime, duration, isPlaying, waveformBars]);
-
-    // Redraw on isPlaying change
-    useEffect(() => {
-      const canvas = canvasRef.current;
-      if (!canvas || !isPlaying) return;
-
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-
-      const draw = () => {
-        animationRef.current = requestAnimationFrame(draw);
-      };
-
-      draw();
-
-      return () => {
-        if (animationRef.current) {
-          cancelAnimationFrame(animationRef.current);
-        }
-      };
-    }, [isPlaying]);
+    }, [currentTime, duration, isPlaying, waveformBars, canvasSize]);
 
     const handleClick = (e: React.MouseEvent) => {
       const rect = e.currentTarget.getBoundingClientRect();
