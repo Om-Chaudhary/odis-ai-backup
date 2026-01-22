@@ -92,7 +92,6 @@ export function EmergencyCard({
         title="Emergency Triage"
         icon={AlertTriangle}
         variant="emergency"
-        showConfirmButton={false}
       />
 
       <EditorialFieldList variant="emergency" fields={fields} />

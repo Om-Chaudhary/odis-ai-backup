@@ -137,7 +137,7 @@ export function EditorialCardBase({
         className,
       )}
     >
-      {/* Gradient background */}
+      {/* Subtle gradient background - starts from header gradient color and gets lighter */}
       <div
         className={cn(
           "absolute inset-0",

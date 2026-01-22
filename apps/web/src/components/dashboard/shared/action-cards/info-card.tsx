@@ -70,7 +70,6 @@ export function InfoCard({
         title="Information Provided"
         icon={Info}
         variant="info"
-        showConfirmButton={false}
       />
 
       <EditorialFieldList

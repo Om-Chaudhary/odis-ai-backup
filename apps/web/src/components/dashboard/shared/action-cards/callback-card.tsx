@@ -73,10 +73,6 @@ export function CallbackCard({
         title="Callback Request"
         icon={PhoneCall}
         variant="callback"
-        showConfirmButton
-        onConfirm={onConfirm}
-        isConfirming={isConfirming}
-        isConfirmed={isConfirmed}
       />
 
       <EditorialFieldList
@@ -88,6 +84,10 @@ export function CallbackCard({
             isQuoted: true,
           },
         ]}
+        showConfirmButton
+        onConfirm={onConfirm}
+        isConfirming={isConfirming}
+        isConfirmed={isConfirmed}
       />
     </EditorialCardBase>
   );

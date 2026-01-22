@@ -86,10 +86,6 @@ export function ScheduledAppointmentCard({
         icon={CalendarCheck}
         variant="scheduled"
         showNotificationDots
-        showConfirmButton
-        onConfirm={onConfirm}
-        isConfirming={isConfirming}
-        isConfirmed={isConfirmed}
       />
 
       <EditorialFieldList
@@ -106,6 +102,10 @@ export function ScheduledAppointmentCard({
             isQuoted: true,
           },
         ]}
+        showConfirmButton
+        onConfirm={onConfirm}
+        isConfirming={isConfirming}
+        isConfirmed={isConfirmed}
       />
     </EditorialCardBase>
   );

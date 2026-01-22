@@ -89,10 +89,6 @@ export function CanceledAppointmentCard({
         title="Appointment Cancelled"
         icon={CalendarX}
         variant="canceled"
-        showConfirmButton
-        onConfirm={onConfirm}
-        isConfirming={isConfirming}
-        isConfirmed={isConfirmed}
       />
 
       <EditorialFieldList
@@ -109,6 +105,10 @@ export function CanceledAppointmentCard({
             isQuoted: true,
           },
         ]}
+        showConfirmButton
+        onConfirm={onConfirm}
+        isConfirming={isConfirming}
+        isConfirmed={isConfirmed}
       />
     </EditorialCardBase>
   );
