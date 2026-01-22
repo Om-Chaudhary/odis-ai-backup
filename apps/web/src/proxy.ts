@@ -39,6 +39,9 @@ const isPublicRoute = createRouteMatcher([
   "/api/public/(.*)",
   "/api/health(.*)",
   "/api/vapi/(.*)",
+  "/sitemap.xml",
+  "/robots.txt",
+  "/integrations(.*)",
 ]);
 
 /**
@@ -105,9 +108,11 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - sitemap.xml (sitemap file)
+     * - robots.txt (robots file)
      * - images/ (public images)
      * - fonts/ (public fonts)
      */
-    "/((?!_next/static|_next/image|favicon.ico|images/|fonts/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|images/|fonts/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
