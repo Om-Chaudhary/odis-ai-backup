@@ -128,8 +128,10 @@ export const metadata: Metadata = {
     google: process.env.GOOGLE_SITE_VERIFICATION,
   },
   icons: {
-    icon: "/icon-128.png",
-    shortcut: "/icon-128.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon-128.png", sizes: "128x128", type: "image/png" },
+    ],
     apple: "/icon-128.png",
   },
 };
