@@ -86,13 +86,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
     // Auth pages
     {
-      url: `${baseUrl}/login`,
+      url: `${baseUrl}/sign-in`,
       lastModified: currentDate,
       changeFrequency: "yearly",
       priority: 0.5,
     },
     {
-      url: `${baseUrl}/signup`,
+      url: `${baseUrl}/sign-up`,
       lastModified: currentDate,
       changeFrequency: "yearly",
       priority: 0.8,

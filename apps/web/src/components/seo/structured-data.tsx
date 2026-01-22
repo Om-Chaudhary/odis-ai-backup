@@ -74,12 +74,7 @@ export function StructuredData() {
           priceCurrency: "USD",
           offerCount: "3",
         },
-        aggregateRating: {
-          "@type": "AggregateRating",
-          ratingValue: "4.9",
-          ratingCount: "47",
-          bestRating: "5",
-        },
+
         featureList: [
           "24/7 AI Voice Answering",
           "Appointment Scheduling",
