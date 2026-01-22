@@ -38,7 +38,7 @@ export function InlineAudioPlayer({
   const [duration, setDuration] = useState(durationHint ?? 0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [, setIsLoaded] = useState(false);
 
   // Handle audio events
   useEffect(() => {

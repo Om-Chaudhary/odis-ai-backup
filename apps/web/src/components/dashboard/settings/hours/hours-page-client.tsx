@@ -2,17 +2,17 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { Clock, Plus, Loader2 } from "lucide-react";
+import { Clock, Plus, Loader2, X } from "lucide-react";
 import { api } from "~/trpc/client";
 import { Button } from "@odis-ai/shared/ui/button";
 import { BusinessHoursForm } from "./business-hours-form";
 import { BlockedPeriodsList } from "./blocked-periods-list";
-import { BlockedPeriodDialog } from "./blocked-period-dialog";
+import { BlockedPeriodInlineForm } from "./blocked-period-inline-form";
 
 export function HoursPageClient() {
   const params = useParams<{ clinicSlug: string }>();
   const clinicSlug = params?.clinicSlug;
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
 
   const { data: scheduleConfig, isLoading: isLoadingSchedule } =
     api.settings.schedule.getScheduleConfig.useQuery({ clinicSlug });
@@ -20,6 +20,7 @@ export function HoursPageClient() {
   const { data: blockedPeriods = [], isLoading: isLoadingPeriods } =
     api.settings.schedule.getBlockedPeriods.useQuery({ clinicSlug });
 
+  const clinicId = scheduleConfig?.clinic_id;
   const isLoading = isLoadingSchedule || isLoadingPeriods;
 
   return (
@@ -60,6 +61,7 @@ export function HoursPageClient() {
             <BusinessHoursForm
               initialData={scheduleConfig}
               clinicSlug={clinicSlug}
+              clinicId={clinicId}
             />
           </div>
 
@@ -74,27 +76,46 @@ export function HoursPageClient() {
                   Manage blocked periods like lunch breaks and staff meetings
                 </p>
               </div>
-              <Button
-                onClick={() => setIsAddDialogOpen(true)}
-                size="sm"
-                className="bg-teal-600 hover:bg-teal-700"
-              >
-                <Plus className="mr-1.5 h-4 w-4" />
-                Add Segment
-              </Button>
+              {!showAddForm && (
+                <Button
+                  onClick={() => setShowAddForm(true)}
+                  size="sm"
+                  className="bg-teal-600 hover:bg-teal-700"
+                >
+                  <Plus className="mr-1.5 h-4 w-4" />
+                  Add Segment
+                </Button>
+              )}
             </div>
+
+            {/* Inline Add Form */}
+            {showAddForm && (
+              <div className="mb-6 rounded-lg border border-teal-200 bg-teal-50/30 p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <h3 className="font-semibold text-slate-900">
+                    Add Time Segment
+                  </h3>
+                  <Button
+                    onClick={() => setShowAddForm(false)}
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <BlockedPeriodInlineForm
+                  clinicSlug={clinicSlug}
+                  onSuccess={() => setShowAddForm(false)}
+                  onCancel={() => setShowAddForm(false)}
+                />
+              </div>
+            )}
+
             <BlockedPeriodsList periods={blockedPeriods} clinicSlug={clinicSlug} />
           </div>
         </div>
       )}
-
-      {/* Add Period Dialog */}
-      <BlockedPeriodDialog
-        open={isAddDialogOpen}
-        onOpenChange={setIsAddDialogOpen}
-        mode="create"
-        clinicSlug={clinicSlug}
-      />
     </div>
   );
 }

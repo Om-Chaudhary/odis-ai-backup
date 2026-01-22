@@ -3,6 +3,9 @@
  *
  * Fetches clinic operating hours and blocked periods (lunch breaks, etc.)
  * for determining if calls occurred during active vs after hours.
+ *
+ * NOTE: This uses the same filtering as settings.schedule.getBlockedPeriods
+ * to ensure consistency. Only active periods are returned for dividers.
  */
 
 import { z } from "zod";
@@ -12,6 +15,9 @@ export const clinicScheduleRouter = createTRPCRouter({
   /**
    * Get clinic schedule config and blocked periods by clinic ID
    * Used to determine if calls occurred during active hours or after hours
+   *
+   * IMPORTANT: Only returns ACTIVE blocked periods (is_active = true)
+   * This ensures dividers only show for currently enabled time segments
    */
   getClinicSchedule: protectedProcedure
     .input(
@@ -25,7 +31,7 @@ export const clinicScheduleRouter = createTRPCRouter({
       // Fetch schedule config
       const { data: scheduleConfig, error: scheduleError } = await supabase
         .from("clinic_schedule_config")
-        .select("open_time, close_time, days_of_week, timezone")
+        .select("daily_hours, timezone")
         .eq("clinic_id", input.clinicId)
         .single();
 
@@ -33,12 +39,14 @@ export const clinicScheduleRouter = createTRPCRouter({
         console.error("Error fetching clinic schedule config:", scheduleError);
       }
 
-      // Fetch blocked periods (lunch breaks, etc.)
+      // Fetch ONLY ACTIVE blocked periods (lunch breaks, etc.)
+      // This matches the settings UI - only active periods create dividers
       const { data: blockedPeriods, error: blockedError } = await supabase
         .from("clinic_blocked_periods")
-        .select("name, start_time, end_time, days_of_week")
+        .select("name, start_time, end_time, days_of_week, is_active")
         .eq("clinic_id", input.clinicId)
-        .eq("is_active", true);
+        .eq("is_active", true)
+        .order("start_time");
 
       if (blockedError) {
         console.error("Error fetching clinic blocked periods:", blockedError);
@@ -46,9 +54,15 @@ export const clinicScheduleRouter = createTRPCRouter({
 
       return {
         scheduleConfig: scheduleConfig ?? {
-          open_time: "08:00:00",
-          close_time: "18:00:00",
-          days_of_week: [1, 2, 3, 4, 5, 6], // Mon-Sat default
+          daily_hours: {
+            "0": { enabled: false },
+            "1": { enabled: true, open: "08:00", close: "18:00" },
+            "2": { enabled: true, open: "08:00", close: "18:00" },
+            "3": { enabled: true, open: "08:00", close: "18:00" },
+            "4": { enabled: true, open: "08:00", close: "18:00" },
+            "5": { enabled: true, open: "08:00", close: "18:00" },
+            "6": { enabled: true, open: "08:00", close: "18:00" },
+          },
           timezone: "America/Los_Angeles",
         },
         blockedPeriods: blockedPeriods ?? [],

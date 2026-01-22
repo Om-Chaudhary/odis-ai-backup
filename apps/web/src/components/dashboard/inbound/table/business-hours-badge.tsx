@@ -8,6 +8,7 @@
 import { toZonedTime } from "date-fns-tz";
 import { Sun, Moon, Coffee } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
+import type { DailyHours } from "@odis-ai/shared/types";
 
 export type BusinessHoursStatus =
   | { type: "active" }
@@ -15,9 +16,7 @@ export type BusinessHoursStatus =
   | { type: "after-hours" };
 
 interface ScheduleConfig {
-  open_time: string;
-  close_time: string;
-  days_of_week: number[];
+  daily_hours: DailyHours;
   timezone: string;
 }
 
@@ -72,17 +71,20 @@ export function getBusinessHoursStatus(
   const minutes = zonedTime.getMinutes();
   const dayOfWeek = zonedTime.getDay(); // 0 = Sunday, 1 = Monday, etc.
 
-  // Check if it's a closed day (not in days_of_week)
-  if (!scheduleConfig.days_of_week.includes(dayOfWeek)) {
+  // Get the configuration for this specific day
+  const dayConfig = scheduleConfig.daily_hours[String(dayOfWeek)];
+
+  // Check if day is closed
+  if (!dayConfig?.enabled) {
     return { type: "after-hours" };
   }
 
-  // Check if within operating hours
+  // Check if within operating hours for this specific day
   const withinOperatingHours = isTimeInRange(
     hours,
     minutes,
-    scheduleConfig.open_time,
-    scheduleConfig.close_time,
+    dayConfig.open!,
+    dayConfig.close!,
   );
 
   if (!withinOperatingHours) {

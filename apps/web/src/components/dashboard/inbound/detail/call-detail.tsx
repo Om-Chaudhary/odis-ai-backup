@@ -4,7 +4,6 @@ import { Phone, X, PawPrint, User } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
 import { ActionCardSelector } from "../../shared/action-cards";
 import { CallDetailTabs } from "../../shared/tabbed-panel";
-import { CollapsibleTranscript } from "../../shared/collapsible-transcript";
 import { api } from "~/trpc/client";
 import { getCallDataOverride } from "./mock-data";
 import { getDemoCallerName } from "../mock-data";
@@ -52,8 +51,9 @@ export function CallDetail({
   );
 
   // Get caller name and pet name
+  // Prioritize VAPI booking data, then fall back to database lookup
   const callerName = demoCallerName ?? callerInfo?.name ?? null;
-  const petName = callerInfo?.petName ?? null;
+  const petName = bookingData?.patient_name ?? callerInfo?.petName ?? null;
 
   // Lazy loading: Only fetch VAPI data when needed (when detail panel is opened)
   // Use a small delay to ensure component is mounted and user is viewing it
@@ -191,11 +191,12 @@ export function CallDetail({
           petName={petName}
         />
 
-        {/* Tabbed Panel - Summary & Actions */}
+        {/* Tabbed Panel - Call & Summary */}
         <CallDetailTabs
           summary={callData.summary ?? null}
           recordingUrl={callData.recording_url ?? null}
           transcript={callData.transcript ?? null}
+          cleanedTranscript={call.cleaned_transcript ?? null}
           durationSeconds={callData.duration_seconds}
           isLoadingRecording={vapiQuery.isLoading && shouldFetchFromVAPI}
           actionsTaken={
@@ -205,14 +206,6 @@ export function CallDetail({
           }
           isSuccessful={call.ended_reason !== "error"}
         />
-
-        {/* Collapsible Transcript */}
-        {(callData.transcript ?? call.cleaned_transcript) && (
-          <CollapsibleTranscript
-            transcript={callData.transcript ?? null}
-            cleanedTranscript={call.cleaned_transcript ?? null}
-          />
-        )}
       </div>
 
       {/* Quick Actions Footer */}

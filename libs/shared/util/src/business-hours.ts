@@ -7,6 +7,7 @@ import {
   isWeekend,
   getDay,
 } from "date-fns";
+import type { DailyHours } from "@odis-ai/shared/types";
 
 export interface BusinessHoursConfig {
   startHour: number; // 24-hour format (e.g., 9 for 9 AM)
@@ -118,6 +119,47 @@ export function getNextBusinessHourSlot(
   }
 
   return candidate;
+}
+
+/**
+ * Check if a given time is within business hours using per-day configuration
+ *
+ * @param timestamp - The timestamp to check
+ * @param dailyHours - Per-day business hours configuration
+ * @param timezone - IANA timezone string (e.g., "America/Los_Angeles")
+ * @returns true if timestamp is within business hours for that specific day, false otherwise
+ */
+export function isWithinBusinessHoursPerDay(
+  timestamp: Date,
+  dailyHours: DailyHours,
+  timezone: string,
+): boolean {
+  const zonedTime = toZonedTime(timestamp, timezone);
+  const dayOfWeek = zonedTime.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  const dayConfig = dailyHours[String(dayOfWeek)];
+
+  // Check if day is closed
+  if (!dayConfig?.enabled) {
+    return false;
+  }
+
+  // Check time range for this day
+  const hour = zonedTime.getHours();
+  const minute = zonedTime.getMinutes();
+
+  const openParts = (dayConfig.open ?? "00:00").split(":").map(Number);
+  const closeParts = (dayConfig.close ?? "00:00").split(":").map(Number);
+
+  const openH = openParts[0] ?? 0;
+  const openM = openParts[1] ?? 0;
+  const closeH = closeParts[0] ?? 0;
+  const closeM = closeParts[1] ?? 0;
+
+  const current = hour * 60 + minute;
+  const open = openH * 60 + openM;
+  const close = closeH * 60 + closeM;
+
+  return current >= open && current < close;
 }
 
 /**

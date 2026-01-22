@@ -96,9 +96,10 @@ export function BlockedPeriodDialog({
   }, [open, initialData, reset]);
 
   const createMutation = api.settings.schedule.createBlockedPeriod.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Time segment created successfully");
-      void utils.settings.schedule.getBlockedPeriods.invalidate();
+      // Refetch to ensure table shows the new period
+      await utils.settings.schedule.getBlockedPeriods.invalidate();
       onOpenChange(false);
       reset();
     },
@@ -108,9 +109,10 @@ export function BlockedPeriodDialog({
   });
 
   const updateMutation = api.settings.schedule.updateBlockedPeriod.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Time segment updated successfully");
-      void utils.settings.schedule.getBlockedPeriods.invalidate();
+      // Refetch to ensure table shows the updated period
+      await utils.settings.schedule.getBlockedPeriods.invalidate();
       onOpenChange(false);
     },
     onError: (error) => {

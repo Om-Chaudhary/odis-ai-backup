@@ -1,11 +1,20 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import {
-  createServerClient,
-  createServiceClient,
-} from "@odis-ai/data-access/db";
+import { createServerClient } from "@odis-ai/data-access/db";
 import { getClinicByUserId, getClinicBySlug } from "@odis-ai/domain/clinics";
+import { DailyHoursSchema } from "@odis-ai/shared/validators";
+import type { DailyHours } from "@odis-ai/shared/types";
+
+/** Typed response for schedule config mutations */
+interface ScheduleConfigResponse {
+  id: string;
+  clinic_id: string;
+  daily_hours: DailyHours;
+  timezone: string;
+  created_at: string;
+  updated_at: string;
+}
 
 /**
  * Schedule Settings Router
@@ -17,13 +26,28 @@ export const scheduleRouter = createTRPCRouter({
    * Get clinic schedule configuration (business hours)
    */
   getScheduleConfig: protectedProcedure
-    .input(z.object({ clinicSlug: z.string().optional() }).optional())
+    .input(
+      z
+        .object({
+          clinicSlug: z.string().optional(),
+          clinicId: z.string().uuid().optional(),
+        })
+        .optional(),
+    )
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
 
-      // Get clinic (use slug if provided, otherwise get user's clinic)
+      // Get clinic (prioritize clinicId, then slug, then user's clinic)
       let clinic;
-      if (input?.clinicSlug) {
+      if (input?.clinicId) {
+        // Direct clinic ID lookup (used by inbound table)
+        const { data } = await ctx.supabase
+          .from("clinics")
+          .select("id, name, slug")
+          .eq("id", input.clinicId)
+          .single();
+        clinic = data;
+      } else if (input?.clinicSlug) {
         clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
       } else {
         clinic = await getClinicByUserId(userId, ctx.supabase);
@@ -59,18 +83,25 @@ export const scheduleRouter = createTRPCRouter({
     .input(
       z.object({
         clinicSlug: z.string().optional(),
-        open_time: z.string(),
-        close_time: z.string(),
-        days_of_week: z.array(z.number().min(0).max(6)),
+        clinicId: z.string().uuid().optional(),
+        daily_hours: DailyHoursSchema,
         timezone: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user.id;
 
-      // Get clinic (use slug if provided, otherwise get user's clinic)
+      // Get clinic (prioritize clinicId, then slug, then user's clinic)
       let clinic;
-      if (input.clinicSlug) {
+      if (input.clinicId) {
+        // Direct clinic ID lookup
+        const { data } = await ctx.supabase
+          .from("clinics")
+          .select("id, name, slug")
+          .eq("id", input.clinicId)
+          .single();
+        clinic = data;
+      } else if (input.clinicSlug) {
         clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
       } else {
         clinic = await getClinicByUserId(userId, ctx.supabase);
@@ -83,8 +114,8 @@ export const scheduleRouter = createTRPCRouter({
         });
       }
 
-      // Use service client to bypass RLS for admin-only settings operations
-      const supabase = await createServiceClient();
+      // Use RLS-enabled client for consistency with query
+      const supabase = ctx.supabase;
 
       // Check if config exists
       const { data: existing } = await supabase
@@ -98,54 +129,77 @@ export const scheduleRouter = createTRPCRouter({
         const { data, error } = await supabase
           .from("clinic_schedule_config")
           .update({
-            open_time: input.open_time,
-            close_time: input.close_time,
-            days_of_week: input.days_of_week,
+            daily_hours: input.daily_hours,
             timezone: input.timezone,
             updated_at: new Date().toISOString(),
           })
           .eq("clinic_id", clinic.id)
-          .select()
+          .select("id, clinic_id, daily_hours, timezone, created_at, updated_at")
           .single();
 
         if (error) {
           throw new Error(`Failed to update schedule config: ${error.message}`);
         }
 
-        return data;
+        // Return with properly typed daily_hours
+        return {
+          ...data,
+          daily_hours: data.daily_hours as unknown as DailyHours,
+        } satisfies ScheduleConfigResponse;
       } else {
         // Create new config
         const { data, error } = await supabase
           .from("clinic_schedule_config")
           .insert({
             clinic_id: clinic.id,
-            open_time: input.open_time,
-            close_time: input.close_time,
-            days_of_week: input.days_of_week,
+            daily_hours: input.daily_hours,
             timezone: input.timezone,
           })
-          .select()
+          .select("id, clinic_id, daily_hours, timezone, created_at, updated_at")
           .single();
 
         if (error) {
           throw new Error(`Failed to create schedule config: ${error.message}`);
         }
 
-        return data;
+        // Return with properly typed daily_hours
+        return {
+          ...data,
+          daily_hours: data.daily_hours as unknown as DailyHours,
+        } satisfies ScheduleConfigResponse;
       }
     }),
 
   /**
    * Get all blocked periods (lunch breaks, staff meetings, etc.)
+   *
+   * NOTE: This is the source of truth for blocked periods.
+   * Both settings UI and inbound table should use this endpoint.
    */
   getBlockedPeriods: protectedProcedure
-    .input(z.object({ clinicSlug: z.string().optional() }).optional())
+    .input(
+      z
+        .object({
+          clinicSlug: z.string().optional(),
+          clinicId: z.string().uuid().optional(),
+          activeOnly: z.boolean().default(false),
+        })
+        .optional(),
+    )
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
 
-      // Get clinic (use slug if provided, otherwise get user's clinic)
+      // Get clinic (prioritize clinicId, then slug, then user's clinic)
       let clinic;
-      if (input?.clinicSlug) {
+      if (input?.clinicId) {
+        // Direct clinic ID lookup (used by inbound table)
+        const { data } = await ctx.supabase
+          .from("clinics")
+          .select("id, name, slug")
+          .eq("id", input.clinicId)
+          .single();
+        clinic = data;
+      } else if (input?.clinicSlug) {
         clinic = await getClinicBySlug(input.clinicSlug, ctx.supabase);
       } else {
         clinic = await getClinicByUserId(userId, ctx.supabase);
@@ -160,11 +214,18 @@ export const scheduleRouter = createTRPCRouter({
 
       const supabase = await createServerClient();
 
-      const { data, error } = await supabase
+      // Build query
+      let query = supabase
         .from("clinic_blocked_periods")
         .select("*")
-        .eq("clinic_id", clinic.id)
-        .order("start_time");
+        .eq("clinic_id", clinic.id);
+
+      // Filter by active status if requested
+      if (input?.activeOnly) {
+        query = query.eq("is_active", true);
+      }
+
+      const { data, error } = await query.order("start_time");
 
       if (error) {
         throw new Error(`Failed to fetch blocked periods: ${error.message}`);
@@ -205,10 +266,8 @@ export const scheduleRouter = createTRPCRouter({
         });
       }
 
-      // Use service client to bypass RLS for admin-only settings operations
-      const supabase = await createServiceClient();
-
-      const { data, error } = await supabase
+      // Use RLS-enabled client for consistency
+      const { data, error } = await ctx.supabase
         .from("clinic_blocked_periods")
         .insert({
           clinic_id: clinic.id,
@@ -261,12 +320,10 @@ export const scheduleRouter = createTRPCRouter({
         });
       }
 
-      // Use service client to bypass RLS for admin-only settings operations
-      const supabase = await createServiceClient();
-
+      // Use RLS-enabled client for consistency
       const { id, ...updates } = input;
 
-      const { data, error } = await supabase
+      const { data, error } = await ctx.supabase
         .from("clinic_blocked_periods")
         .update({
           ...updates,
@@ -312,10 +369,8 @@ export const scheduleRouter = createTRPCRouter({
         });
       }
 
-      // Use service client to bypass RLS for admin-only settings operations
-      const supabase = await createServiceClient();
-
-      const { error } = await supabase
+      // Use RLS-enabled client for consistency
+      const { error } = await ctx.supabase
         .from("clinic_blocked_periods")
         .delete()
         .eq("id", input.id)

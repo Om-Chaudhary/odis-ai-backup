@@ -61,9 +61,10 @@ export function BlockedPeriodsList({
   const utils = api.useUtils();
 
   const deleteMutation = api.settings.schedule.deleteBlockedPeriod.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Time segment deleted successfully");
-      void utils.settings.schedule.getBlockedPeriods.invalidate();
+      // Refetch to ensure table updates immediately
+      await utils.settings.schedule.getBlockedPeriods.invalidate();
       setDeletingPeriod(null);
     },
     onError: (error) => {

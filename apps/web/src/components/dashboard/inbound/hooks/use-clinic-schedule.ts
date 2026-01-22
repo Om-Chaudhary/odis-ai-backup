@@ -3,6 +3,9 @@
  *
  * Fetches clinic operating hours and blocked periods,
  * and provides a function to determine business hours status for any timestamp.
+ *
+ * NOTE: Uses settings.schedule queries as the single source of truth
+ * This ensures consistency between settings UI and inbound table dividers
  */
 
 import { useCallback } from "react";
@@ -17,33 +20,47 @@ interface UseClinicScheduleOptions {
 }
 
 export function useClinicSchedule({ clinicId }: UseClinicScheduleOptions) {
-  const { data, isLoading } = api.inbound.getClinicSchedule.useQuery(
-    { clinicId: clinicId! },
+  // Use settings queries as single source of truth
+  const { data: scheduleConfig } = api.settings.schedule.getScheduleConfig.useQuery(
+    { clinicId },
     {
       enabled: !!clinicId,
       staleTime: 5 * 60 * 1000, // Cache for 5 minutes
     },
   );
 
+  // Get ONLY ACTIVE blocked periods (matches settings UI behavior)
+  const { data: blockedPeriods = [], isLoading } =
+    api.settings.schedule.getBlockedPeriods.useQuery(
+      { clinicId, activeOnly: true },
+      {
+        enabled: !!clinicId,
+        staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+      },
+    );
+
   const getStatus = useCallback(
     (timestamp: Date | string): BusinessHoursStatus => {
-      if (!data) {
+      if (!scheduleConfig) {
         // Default to "active" if no data available
         return { type: "active" };
       }
 
       return getBusinessHoursStatus(
         timestamp,
-        data.scheduleConfig,
-        data.blockedPeriods,
+        {
+          daily_hours: scheduleConfig.daily_hours,
+          timezone: scheduleConfig.timezone,
+        },
+        blockedPeriods,
       );
     },
-    [data],
+    [scheduleConfig, blockedPeriods],
   );
 
   return {
-    scheduleConfig: data?.scheduleConfig,
-    blockedPeriods: data?.blockedPeriods,
+    scheduleConfig,
+    blockedPeriods,
     isLoading,
     getStatus,
   };

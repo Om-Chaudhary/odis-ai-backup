@@ -192,8 +192,12 @@ export function InboundTable({
                 ? getBusinessHoursStatus(item.created_at)
                 : null;
 
-              // Insert separator if segment changed
-              if (status && !isSameSegment(currentSegment, status)) {
+              // Check if segment changed
+              const segmentChanged = status && !isSameSegment(currentSegment, status);
+
+              // Insert separator only for blocked periods (not active/after-hours)
+              // Only show dividers for explicitly configured time segments
+              if (segmentChanged && status.type === "blocked") {
                 rows.push(
                   <TimeSegmentSeparator
                     key={`separator-${item.id}`}
@@ -201,6 +205,10 @@ export function InboundTable({
                     timestamp={item.created_at}
                   />,
                 );
+              }
+
+              // Update current segment for tracking purposes
+              if (segmentChanged) {
                 currentSegment = status;
               }
 
