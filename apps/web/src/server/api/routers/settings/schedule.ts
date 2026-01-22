@@ -321,7 +321,7 @@ export const scheduleRouter = createTRPCRouter({
       }
 
       // Use RLS-enabled client for consistency
-      const { id, ...updates } = input;
+      const { id, clinicSlug: _clinicSlug, ...updates } = input;
 
       const { data, error } = await ctx.supabase
         .from("clinic_blocked_periods")
