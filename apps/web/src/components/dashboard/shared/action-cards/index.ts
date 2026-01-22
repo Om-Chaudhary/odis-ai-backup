@@ -3,7 +3,7 @@
  *
  * Outcome-specific cards for displaying call action items.
  * Each card type corresponds to a specific call outcome from VAPI.
- * Uses clean, utilitarian design with colored left accent bars.
+ * Uses refined editorial design with gradient backgrounds.
  */
 
 export { ActionCardSelector } from "./action-card-selector";
@@ -14,12 +14,17 @@ export { EmergencyCard } from "./emergency-card";
 export { InfoCard } from "./info-card";
 export { CallbackCard } from "./callback-card";
 
-// Base component for custom card implementations
+// Editorial components for custom card implementations
 export {
-  SimpleCardBase,
-  getCardVariantStyles,
-  type CardVariant,
-} from "./simple-card-base";
+  EditorialCardBase,
+  EditorialHeader,
+  EditorialFieldList,
+  EditorialConfirmButton,
+  EditorialIconContainer,
+  getEditorialVariantStyles,
+  type EditorialVariant,
+  type FieldItem,
+} from "./editorial";
 
 // Action card data utilities
 export {

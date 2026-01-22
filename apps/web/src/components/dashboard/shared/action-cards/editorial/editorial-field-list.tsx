@@ -8,17 +8,19 @@ import {
 } from "./editorial-card-base";
 
 export interface FieldItem {
-  /** Label for the field (e.g., "Name", "Reason", "Time") */
+  /** Label for the field (e.g., "Date:", "Reason:", "Request:") */
   label: string;
   /** Value to display */
   value: string | null | undefined;
-  /** Optional icon or badge to display before the value */
-  prefix?: React.ReactNode;
+  /** Whether the value should be displayed in quotes and italic */
+  isQuoted?: boolean;
+  /** Custom color class for the value (overrides default) */
+  valueColorClass?: string;
+  /** Whether the value should be bold */
+  isBold?: boolean;
 }
 
 interface EditorialFieldListProps {
-  /** Section label (e.g., "PATIENT DETAILS", "REQUEST DETAILS") */
-  sectionLabel: string;
   /** List of field items to display */
   fields: FieldItem[];
   /** Semantic color variant */
@@ -30,11 +32,10 @@ interface EditorialFieldListProps {
 /**
  * Editorial Field List
  *
- * Key-value pairs display component with serif labels (Lora)
- * and sans-serif values. Print-inspired with thin rule separator.
+ * Key-value pairs display component for action cards.
+ * Supports quoted text (italic, muted) and variant-colored values.
  */
 export function EditorialFieldList({
-  sectionLabel,
   fields,
   variant,
   className,
@@ -43,7 +44,8 @@ export function EditorialFieldList({
 
   // Filter out fields with empty values
   const visibleFields = fields.filter(
-    (field) => field.value !== null && field.value !== undefined && field.value !== "",
+    (field) =>
+      field.value !== null && field.value !== undefined && field.value !== "",
   );
 
   if (visibleFields.length === 0) return null;
@@ -53,23 +55,10 @@ export function EditorialFieldList({
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.15, duration: 0.3 }}
-      className={cn("px-5", className)}
+      className={cn("px-5 pb-5 pt-1", className)}
     >
-      {/* Thin rule separator */}
-      <div className="h-px bg-border/60 mb-3" />
-
-      {/* Section label - uppercase, tracking-wide, serif */}
-      <span
-        className={cn(
-          "font-serif text-[11px] font-normal uppercase tracking-[0.2em]",
-          styles.sectionLabelColor,
-        )}
-      >
-        {sectionLabel}
-      </span>
-
       {/* Field list */}
-      <div className="mt-3 space-y-2">
+      <div className="space-y-1.5">
         {visibleFields.map((field, index) => (
           <motion.div
             key={field.label}
@@ -78,16 +67,27 @@ export function EditorialFieldList({
             transition={{ delay: 0.2 + index * 0.05, duration: 0.25 }}
             className="flex items-baseline gap-3"
           >
-            {/* Label - serif, lighter weight */}
-            <span className="font-serif text-[13px] font-normal text-muted-foreground min-w-[72px]">
+            {/* Label */}
+            <span className="text-sm text-muted-foreground shrink-0">
               {field.label}
             </span>
 
-            {/* Value - sans, medium weight */}
-            <span className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-              {field.prefix}
-              {field.value}
-            </span>
+            {/* Value */}
+            {field.isQuoted ? (
+              <span className="text-sm italic text-muted-foreground">
+                "{field.value}"
+              </span>
+            ) : (
+              <span
+                className={cn(
+                  "text-lg",
+                  field.isBold && "font-semibold",
+                  field.valueColorClass ?? styles.valueColor,
+                )}
+              >
+                {field.value}
+              </span>
+            )}
           </motion.div>
         ))}
       </div>

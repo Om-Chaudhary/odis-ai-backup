@@ -7,16 +7,26 @@ import {
   type EditorialVariant,
   getEditorialVariantStyles,
 } from "./editorial-card-base";
+import { EditorialIconContainer } from "./editorial-icon-container";
+import { EditorialConfirmButton } from "./editorial-confirm-button";
 
 interface EditorialHeaderProps {
-  /** First line of title (e.g., "Appointment") */
-  titleLine1: string;
-  /** Second line of title (e.g., "Scheduled") */
-  titleLine2: string;
+  /** Title text (e.g., "Appointment Scheduled") */
+  title: string;
   /** Large icon to display */
   icon: LucideIcon;
   /** Semantic color variant */
   variant: EditorialVariant;
+  /** Whether to show decorative notification dots on icon */
+  showNotificationDots?: boolean;
+  /** Whether to show the confirm button */
+  showConfirmButton?: boolean;
+  /** Callback when confirm is clicked */
+  onConfirm?: () => void;
+  /** Whether confirm action is in progress */
+  isConfirming?: boolean;
+  /** Whether the action has been confirmed */
+  isConfirmed?: boolean;
   /** Additional className */
   className?: string;
 }
@@ -24,14 +34,18 @@ interface EditorialHeaderProps {
 /**
  * Editorial Header
  *
- * Magazine-style header with gradient background, large icon,
- * and two-line title using display typography.
+ * Redesigned header with icon on LEFT, title in the middle,
+ * and optional confirm button on the RIGHT.
  */
 export function EditorialHeader({
-  titleLine1,
-  titleLine2,
-  icon: Icon,
+  title,
+  icon,
   variant,
+  showNotificationDots = false,
+  showConfirmButton = false,
+  onConfirm,
+  isConfirming,
+  isConfirmed,
   className,
 }: EditorialHeaderProps) {
   const styles = getEditorialVariantStyles(variant);
@@ -39,49 +53,38 @@ export function EditorialHeader({
   return (
     <div
       className={cn(
-        "relative flex items-start justify-between px-5 pt-5 pb-4",
+        "relative flex items-center gap-4 px-5 pt-5 pb-3",
         className,
       )}
     >
-      {/* Title stack */}
-      <div className="flex flex-col">
-        <motion.h3
-          initial={{ opacity: 0, x: -8 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.05, duration: 0.3 }}
-          className={cn(
-            "font-display text-xl font-bold tracking-tight",
-            styles.titleColor,
-          )}
-        >
-          {titleLine1}
-        </motion.h3>
-        <motion.span
-          initial={{ opacity: 0, x: -8 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.1, duration: 0.3 }}
-          className={cn(
-            "font-display text-lg font-semibold tracking-tight -mt-0.5",
-            styles.labelColor,
-          )}
-        >
-          {titleLine2}
-        </motion.span>
-      </div>
+      {/* Icon on the left */}
+      <EditorialIconContainer
+        icon={icon}
+        variant={variant}
+        showDots={showNotificationDots}
+      />
 
-      {/* Large icon */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.15, duration: 0.3 }}
+      {/* Title - grows to fill space */}
+      <motion.h3
+        initial={{ opacity: 0, x: -8 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.05, duration: 0.3 }}
         className={cn(
-          "flex h-12 w-12 items-center justify-center rounded-xl",
-          "shadow-lg",
-          styles.iconBg,
+          "flex-1 text-xl font-semibold tracking-tight",
+          styles.titleColor,
         )}
       >
-        <Icon className={cn("h-6 w-6", styles.iconColor)} strokeWidth={1.75} />
-      </motion.div>
+        {title}
+      </motion.h3>
+
+      {/* Confirm button on the right (when applicable) */}
+      {showConfirmButton && (onConfirm ?? isConfirmed) && (
+        <EditorialConfirmButton
+          onClick={onConfirm}
+          isLoading={isConfirming}
+          isConfirmed={isConfirmed}
+        />
+      )}
     </div>
   );
 }

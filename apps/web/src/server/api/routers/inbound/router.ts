@@ -14,6 +14,7 @@ import { updateAppointmentRouter } from "./procedures/update-appointment";
 import { deleteAppointmentRouter } from "./procedures/delete-appointment";
 import { callAssociationsRouter } from "./procedures/call-associations";
 import { clinicScheduleRouter } from "./procedures/clinic-schedule";
+import { confirmActionRouter } from "./procedures/confirm-action";
 
 export const inboundRouter = createTRPCRouter({
   // Queries
@@ -28,4 +29,5 @@ export const inboundRouter = createTRPCRouter({
   // Mutations
   updateAppointmentRequest: updateAppointmentRouter.updateAppointmentRequest,
   deleteAppointmentRequest: deleteAppointmentRouter.deleteAppointmentRequest,
+  confirmCallAction: confirmActionRouter.confirmCallAction,
 });

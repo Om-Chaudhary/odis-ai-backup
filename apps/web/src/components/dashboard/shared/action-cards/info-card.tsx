@@ -1,8 +1,11 @@
 "use client";
 
 import { Info } from "lucide-react";
-import { cn } from "@odis-ai/shared/util";
-import { SimpleCardBase, getCardVariantStyles } from "./simple-card-base";
+import {
+  EditorialCardBase,
+  EditorialHeader,
+  EditorialFieldList,
+} from "./editorial";
 
 interface InfoCardProps {
   /** Outcome summary from VAPI */
@@ -37,8 +40,8 @@ function getInquiryText(
   }
 
   // Fall back to outcome summary, truncate if needed
-  if (outcomeSummary.length > 80) {
-    return outcomeSummary.slice(0, 77) + "...";
+  if (outcomeSummary.length > 100) {
+    return outcomeSummary.slice(0, 97) + "...";
   }
 
   return outcomeSummary;
@@ -47,37 +50,39 @@ function getInquiryText(
 /**
  * Info Card
  *
- * Clean, utilitarian design:
- * - Info icon + header line
- * - Single line showing topic/question in quotes
- * - NO confirm button
+ * Editorial design with:
+ * - Blue gradient background
+ * - Info circle icon
+ * - Information text in quotes
+ * - NO confirm button (info-only cards don't need confirmation)
  */
 export function InfoCard({
   outcomeSummary,
   keyTopics,
   className,
 }: InfoCardProps) {
-  const styles = getCardVariantStyles("info");
-
   // Get inquiry text
   const inquiry = getInquiryText(outcomeSummary, keyTopics);
 
   return (
-    <SimpleCardBase variant="info" className={className}>
-      <div className="p-4">
-        {/* Header */}
-        <div className="flex items-center gap-2.5">
-          <div className={cn("rounded-md p-1.5", styles.iconBg)}>
-            <Info className="h-4 w-4" strokeWidth={1.75} />
-          </div>
-          <h3 className="text-sm font-semibold text-foreground">Clinic Info</h3>
-        </div>
+    <EditorialCardBase variant="info" className={className}>
+      <EditorialHeader
+        title="Information Provided"
+        icon={Info}
+        variant="info"
+        showConfirmButton={false}
+      />
 
-        {/* Inquiry */}
-        <p className="mt-2.5 text-sm italic text-muted-foreground">
-          "{inquiry}"
-        </p>
-      </div>
-    </SimpleCardBase>
+      <EditorialFieldList
+        variant="info"
+        fields={[
+          {
+            label: "Info:",
+            value: inquiry,
+            isQuoted: true,
+          },
+        ]}
+      />
+    </EditorialCardBase>
   );
 }

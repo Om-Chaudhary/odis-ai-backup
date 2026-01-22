@@ -1,8 +1,8 @@
 /**
  * Editorial Action Card Components
  *
- * Magazine-style editorial components for displaying structured
- * call outcome data with print-inspired typography and layouts.
+ * Refined editorial components for displaying structured
+ * call outcome data with clean typography and gradient backgrounds.
  */
 
 export {
@@ -12,5 +12,5 @@ export {
 } from "./editorial-card-base";
 export { EditorialHeader } from "./editorial-header";
 export { EditorialFieldList, type FieldItem } from "./editorial-field-list";
-export { EditorialActionButton } from "./editorial-action-button";
-export { EditorialStatusBadge } from "./editorial-status-badge";
+export { EditorialConfirmButton } from "./editorial-confirm-button";
+export { EditorialIconContainer } from "./editorial-icon-container";

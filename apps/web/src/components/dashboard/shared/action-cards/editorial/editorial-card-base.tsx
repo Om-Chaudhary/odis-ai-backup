@@ -5,14 +5,15 @@ import { cn } from "@odis-ai/shared/util";
 
 export type EditorialVariant =
   | "scheduled"
+  | "rescheduled"
   | "canceled"
   | "callback"
   | "emergency"
   | "info";
 
 /**
- * Variant-specific styling with ODIS sage/terracotta palette
- * Editorial magazine aesthetic with print-inspired gradients
+ * Variant-specific styling
+ * Refined editorial design matching the new visual specifications
  */
 const variantStyles: Record<
   EditorialVariant,
@@ -25,57 +26,74 @@ const variantStyles: Record<
     labelColor: string;
     borderColor: string;
     sectionLabelColor: string;
+    valueColor: string;
   }
 > = {
   scheduled: {
-    gradientFrom: "from-sage-100",
-    gradientTo: "to-white",
-    iconBg: "bg-sage-600",
+    gradientFrom: "from-emerald-50",
+    gradientTo: "to-emerald-50/30",
+    iconBg: "bg-primary",
     iconColor: "text-white",
-    titleColor: "text-sage-900",
-    labelColor: "text-sage-700",
-    borderColor: "border-sage-200/60",
-    sectionLabelColor: "text-sage-600",
+    titleColor: "text-primary",
+    labelColor: "text-muted-foreground",
+    borderColor: "border-emerald-200/60",
+    sectionLabelColor: "text-muted-foreground",
+    valueColor: "text-primary",
+  },
+  rescheduled: {
+    gradientFrom: "from-emerald-50",
+    gradientTo: "to-emerald-50/30",
+    iconBg: "bg-primary",
+    iconColor: "text-white",
+    titleColor: "text-primary",
+    labelColor: "text-muted-foreground",
+    borderColor: "border-emerald-200/60",
+    sectionLabelColor: "text-muted-foreground",
+    valueColor: "text-primary",
   },
   canceled: {
-    gradientFrom: "from-slate-100",
-    gradientTo: "to-white",
-    iconBg: "bg-slate-500",
+    gradientFrom: "from-rose-50",
+    gradientTo: "to-rose-50/30",
+    iconBg: "bg-rose-500",
     iconColor: "text-white",
-    titleColor: "text-slate-800",
-    labelColor: "text-slate-600",
-    borderColor: "border-slate-200/60",
-    sectionLabelColor: "text-slate-500",
+    titleColor: "text-rose-600",
+    labelColor: "text-muted-foreground",
+    borderColor: "border-rose-200/60",
+    sectionLabelColor: "text-muted-foreground",
+    valueColor: "text-rose-600",
   },
   callback: {
-    gradientFrom: "from-terracotta-100",
-    gradientTo: "to-white",
-    iconBg: "bg-terracotta-500",
+    gradientFrom: "from-amber-50",
+    gradientTo: "to-orange-50/30",
+    iconBg: "bg-orange-500",
     iconColor: "text-white",
-    titleColor: "text-terracotta-900",
-    labelColor: "text-terracotta-700",
-    borderColor: "border-terracotta-200/60",
-    sectionLabelColor: "text-terracotta-600",
+    titleColor: "text-orange-600",
+    labelColor: "text-muted-foreground",
+    borderColor: "border-amber-200/60",
+    sectionLabelColor: "text-muted-foreground",
+    valueColor: "text-orange-600",
   },
   emergency: {
-    gradientFrom: "from-rose-100",
-    gradientTo: "to-white",
-    iconBg: "bg-rose-600",
+    gradientFrom: "from-rose-50",
+    gradientTo: "to-rose-50/30",
+    iconBg: "bg-rose-500",
     iconColor: "text-white",
-    titleColor: "text-rose-900",
-    labelColor: "text-rose-700",
+    titleColor: "text-rose-600",
+    labelColor: "text-muted-foreground",
     borderColor: "border-rose-200/60",
-    sectionLabelColor: "text-rose-600",
+    sectionLabelColor: "text-muted-foreground",
+    valueColor: "text-rose-600",
   },
   info: {
-    gradientFrom: "from-sky-100",
-    gradientTo: "to-white",
-    iconBg: "bg-sky-600",
+    gradientFrom: "from-sky-50",
+    gradientTo: "to-sky-50/30",
+    iconBg: "bg-sky-500",
     iconColor: "text-white",
-    titleColor: "text-sky-900",
-    labelColor: "text-sky-700",
+    titleColor: "text-sky-600",
+    labelColor: "text-muted-foreground",
     borderColor: "border-sky-200/60",
-    sectionLabelColor: "text-sky-600",
+    sectionLabelColor: "text-muted-foreground",
+    valueColor: "text-sky-600",
   },
 };
 

@@ -117,8 +117,9 @@ export function ActionCardSelector({
 
   const cardData = getActionCardData(call.action_card_data, legacyCallData, booking);
 
-  // If no valid card data or card is confirmed, don't render
-  if (!cardData || isConfirmed) {
+  // If no valid card data, don't render
+  // Note: We now render confirmed cards with the "Confirmed" badge instead of hiding them
+  if (!cardData) {
     return null;
   }
 
@@ -142,8 +143,9 @@ export function ActionCardSelector({
             cardData.appointment_data?.reason ?? outcomeSummary
           }
           petName={cardData.appointment_data?.patient_name ?? petName}
-          onConfirm={onConfirm}
+          onConfirm={isConfirmed ? undefined : onConfirm}
           isConfirming={isConfirming}
+          isConfirmed={isConfirmed}
           className={className}
         />
       );
@@ -154,8 +156,9 @@ export function ActionCardSelector({
           booking={booking}
           outcomeSummary={cardData.reschedule_reason ?? outcomeSummary}
           petName={cardData.appointment_data?.patient_name ?? petName}
-          onConfirm={onConfirm}
+          onConfirm={isConfirmed ? undefined : onConfirm}
           isConfirming={isConfirming}
+          isConfirmed={isConfirmed}
           className={className}
         />
       );
@@ -166,8 +169,9 @@ export function ActionCardSelector({
           booking={booking}
           outcomeSummary={cardData.cancellation_reason ?? outcomeSummary}
           petName={cardData.appointment_data?.patient_name ?? petName}
-          onConfirm={onConfirm}
+          onConfirm={isConfirmed ? undefined : onConfirm}
           isConfirming={isConfirming}
+          isConfirmed={isConfirmed}
           className={className}
         />
       );
@@ -197,8 +201,9 @@ export function ActionCardSelector({
           callerName={cardData.callback_data?.caller_name ?? callerName}
           petName={cardData.callback_data?.pet_name ?? petName}
           phoneNumber={cardData.callback_data?.phone_number ?? call.customer_phone}
-          onConfirm={onConfirm}
+          onConfirm={isConfirmed ? undefined : onConfirm}
           isConfirming={isConfirming}
+          isConfirmed={isConfirmed}
           className={className}
         />
       );

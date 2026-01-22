@@ -1,10 +1,15 @@
 "use client";
 
-import { CalendarClock, Check, Loader2 } from "lucide-react";
+import { CalendarClock } from "lucide-react";
 import { format, parse } from "date-fns";
+import { motion } from "framer-motion";
 import { cn } from "@odis-ai/shared/util";
 import type { BookingData } from "../../inbound/types";
-import { SimpleCardBase, getCardVariantStyles } from "./simple-card-base";
+import {
+  EditorialCardBase,
+  EditorialHeader,
+  getEditorialVariantStyles,
+} from "./editorial";
 
 interface RescheduledAppointmentCardProps {
   /** Booking data from vapi_bookings table */
@@ -17,6 +22,8 @@ interface RescheduledAppointmentCardProps {
   onConfirm?: () => void;
   /** Whether confirm action is in progress */
   isConfirming?: boolean;
+  /** Whether the action has been confirmed */
+  isConfirmed?: boolean;
   /** Additional className */
   className?: string;
 }
@@ -34,12 +41,12 @@ function formatTime(time: string): string {
 }
 
 /**
- * Format date for display (YYYY-MM-DD -> MMM d, yyyy)
+ * Format date for display (YYYY-MM-DD -> MMM d)
  */
 function formatDate(dateStr: string): string {
   try {
     const date = new Date(dateStr);
-    return format(date, "MMM d, yyyy");
+    return format(date, "MMM d");
   } catch {
     return dateStr;
   }
@@ -48,26 +55,27 @@ function formatDate(dateStr: string): string {
 /**
  * Rescheduled Appointment Card
  *
- * Shows both original and new appointment times:
- * - Icon + header line
- * - Original date/time (struck through or labeled)
- * - New date/time
+ * Editorial design with:
+ * - Green gradient background
+ * - Calendar clock icon with notification dots
+ * - Original and new date/time in teal
  * - Reason in quotes
- * - Simple confirm button
+ * - Large green confirm button
  */
 export function RescheduledAppointmentCard({
   booking,
   outcomeSummary,
   onConfirm,
   isConfirming,
+  isConfirmed,
   className,
 }: RescheduledAppointmentCardProps) {
-  const styles = getCardVariantStyles("rescheduled");
+  const styles = getEditorialVariantStyles("rescheduled");
 
   // Build new date/time string
   const newDateTimeStr =
     booking?.date && booking?.start_time
-      ? `${formatDate(booking.date)} at ${formatTime(booking.start_time)}`
+      ? `${formatDate(booking.date)},  ${formatTime(booking.start_time)}`
       : booking?.date
         ? formatDate(booking.date)
         : null;
@@ -75,7 +83,7 @@ export function RescheduledAppointmentCard({
   // Build original date/time string (if available)
   const originalDateTimeStr =
     booking?.original_date && booking?.original_time
-      ? `${formatDate(booking.original_date)} at ${formatTime(booking.original_time)}`
+      ? `${formatDate(booking.original_date)},  ${formatTime(booking.original_time)}`
       : booking?.original_date
         ? formatDate(booking.original_date)
         : null;
@@ -84,71 +92,71 @@ export function RescheduledAppointmentCard({
   const reason = booking?.rescheduled_reason ?? outcomeSummary ?? null;
 
   return (
-    <SimpleCardBase variant="rescheduled" className={className}>
-      <div className="p-4">
-        {/* Header */}
-        <div className="flex items-center gap-2.5">
-          <div className={cn("rounded-md p-1.5", styles.iconBg)}>
-            <CalendarClock className="h-4 w-4" strokeWidth={1.75} />
-          </div>
-          <h3 className="text-sm font-semibold text-foreground">
-            Appointment Rescheduled
-          </h3>
-        </div>
+    <EditorialCardBase variant="rescheduled" className={className}>
+      <EditorialHeader
+        title="Appointment Rescheduled"
+        icon={CalendarClock}
+        variant="rescheduled"
+        showNotificationDots
+        showConfirmButton
+        onConfirm={onConfirm}
+        isConfirming={isConfirming}
+        isConfirmed={isConfirmed}
+      />
 
-        {/* Date/Time info */}
-        <div className="mt-2.5 space-y-1">
-          {/* Original time */}
+      {/* Custom field layout for Original/New side by side */}
+      <motion.div
+        initial={{ opacity: 0, y: 4 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.3 }}
+        className="px-5 pb-5 pt-1 space-y-1.5"
+      >
+        {/* Date row with Original and New */}
+        <div className="flex items-baseline gap-6">
           {originalDateTimeStr && (
-            <p className="text-sm text-muted-foreground">
-              <span className="font-medium text-muted-foreground/70">
-                Original:
-              </span>{" "}
-              <span className="line-through">{originalDateTimeStr}</span>
-            </p>
+            <motion.div
+              initial={{ opacity: 0, x: -4 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2, duration: 0.25 }}
+              className="flex items-baseline gap-2"
+            >
+              <span className="text-sm text-muted-foreground">Original:</span>
+              <span className={cn("text-lg font-semibold", styles.valueColor)}>
+                {originalDateTimeStr}
+              </span>
+            </motion.div>
           )}
 
-          {/* New time */}
           {newDateTimeStr && (
-            <p className="text-sm text-foreground/90">
-              <span className="font-medium text-sage-600">New:</span>{" "}
-              <span className="font-medium">{newDateTimeStr}</span>
-            </p>
+            <motion.div
+              initial={{ opacity: 0, x: -4 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.25, duration: 0.25 }}
+              className="flex items-baseline gap-2"
+            >
+              <span className="text-sm text-muted-foreground">New:</span>
+              <span className={cn("text-lg font-bold", styles.valueColor)}>
+                {newDateTimeStr}
+              </span>
+            </motion.div>
           )}
         </div>
 
         {/* Reason */}
         {reason && (
-          <p className="mt-2 text-sm italic text-muted-foreground">
-            "{reason}"
-          </p>
+          <motion.div
+            initial={{ opacity: 0, x: -4 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3, duration: 0.25 }}
+            className="flex items-baseline gap-3"
+          >
+            <span className="text-sm text-muted-foreground">Reason:</span>
+            <span className="text-sm italic text-muted-foreground">
+              "{reason}"
+            </span>
+          </motion.div>
         )}
-
-        {/* Confirm button */}
-        {onConfirm && (
-          <div className="mt-4 flex justify-end">
-            <button
-              onClick={onConfirm}
-              disabled={isConfirming}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5",
-                "text-xs font-medium",
-                "bg-sage-500 text-white",
-                "hover:bg-sage-600 active:bg-sage-700",
-                "disabled:cursor-not-allowed disabled:opacity-50",
-                "transition-colors duration-150",
-              )}
-            >
-              {isConfirming ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Check className="h-3.5 w-3.5" strokeWidth={2} />
-              )}
-              Confirm
-            </button>
-          </div>
-        )}
-      </div>
-    </SimpleCardBase>
+      </motion.div>
+    </EditorialCardBase>
   );
 }

@@ -98,6 +98,14 @@ export const getInboundStatsInput = z.object({
 });
 
 // =============================================================================
+// Input Schemas - Action Confirmation
+// =============================================================================
+
+export const confirmCallActionInput = z.object({
+  callId: z.string().uuid(),
+});
+
+// =============================================================================
 // Type Exports
 // =============================================================================
 
@@ -118,3 +126,4 @@ export type ListClinicMessagesInput = z.infer<typeof listClinicMessagesInput>;
 export type UpdateClinicMessageInput = z.infer<typeof updateClinicMessageInput>;
 export type MarkMessageReadInput = z.infer<typeof markMessageReadInput>;
 export type GetInboundStatsInput = z.infer<typeof getInboundStatsInput>;
+export type ConfirmCallActionInput = z.infer<typeof confirmCallActionInput>;

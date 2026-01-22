@@ -1,8 +1,11 @@
 "use client";
 
-import { Cross } from "lucide-react";
-import { cn } from "@odis-ai/shared/util";
-import { SimpleCardBase, getCardVariantStyles } from "./simple-card-base";
+import { AlertTriangle } from "lucide-react";
+import {
+  EditorialCardBase,
+  EditorialHeader,
+  EditorialFieldList,
+} from "./editorial";
 
 interface EmergencyCardProps {
   /** Escalation summary from VAPI */
@@ -15,37 +18,10 @@ interface EmergencyCardProps {
   keyTopics?: string[] | string | null;
   /** Pet name if available */
   petName?: string | null;
-  /** ER name if provided directly from VAPI structured output (skips regex extraction) */
+  /** ER name if provided directly from VAPI structured output */
   erName?: string | null;
   /** Additional className */
   className?: string;
-}
-
-/**
- * Extract ER/hospital name from escalation text
- * Looks for common patterns like "sent to [Name] ER", "referred to [Name] Hospital", etc.
- */
-function extractERName(
-  escalationSummary: string,
-  staffActionNeeded?: string | null,
-): string | null {
-  const combined = `${escalationSummary} ${staffActionNeeded ?? ""}`;
-
-  // Common patterns for ER/hospital references
-  const patterns = [
-    /(?:sent|referred|directed|go|going)\s+to\s+([A-Z][A-Za-z\s]+(?:ER|Emergency|Hospital|Clinic|Vet|Animal\s+Hospital))/i,
-    /([A-Z][A-Za-z\s]+(?:ER|Emergency|Hospital|Clinic|Vet|Animal\s+Hospital))/i,
-    /nearest\s+([A-Z][A-Za-z\s]+(?:ER|Emergency))/i,
-  ];
-
-  for (const pattern of patterns) {
-    const match = combined.match(pattern);
-    if (match?.[1]) {
-      return match[1].trim();
-    }
-  }
-
-  return null;
 }
 
 /**
@@ -67,8 +43,8 @@ function getReasonText(
   }
 
   // Fall back to escalation summary, but truncate if too long
-  if (escalationSummary.length > 80) {
-    return escalationSummary.slice(0, 77) + "...";
+  if (escalationSummary.length > 100) {
+    return escalationSummary.slice(0, 97) + "...";
   }
 
   return escalationSummary;
@@ -77,52 +53,49 @@ function getReasonText(
 /**
  * Emergency Card
  *
- * Clean, utilitarian design:
- * - Plus/cross icon + header line
- * - Reason/symptoms in quotes
- * - ER referral line (or "Referred to nearest ER")
- * - NO confirm button
+ * Editorial design with:
+ * - Pink/rose gradient background
+ * - Warning triangle icon
+ * - Request/symptoms in quotes
+ * - NO confirm button (emergency actions don't need confirmation)
  */
 export function EmergencyCard({
   escalationSummary,
-  staffActionNeeded,
   keyTopics,
-  erName: providedErName,
+  erName,
   className,
 }: EmergencyCardProps) {
-  const styles = getCardVariantStyles("emergency");
-
-  // Use provided ER name or extract from text as fallback
-  const extractedErName = extractERName(escalationSummary, staffActionNeeded);
-  const erName = providedErName ?? extractedErName;
-  const erText = erName ? `Sent to ${erName}` : "Referred to nearest ER";
-
   // Get reason text
   const reason = getReasonText(escalationSummary, keyTopics);
 
+  // Build fields dynamically
+  const fields = [
+    {
+      label: "Request:",
+      value: reason,
+      isQuoted: true,
+    },
+  ];
+
+  // Add ER name if available
+  if (erName) {
+    fields.push({
+      label: "Triaged To:",
+      value: erName,
+      isQuoted: false,
+    });
+  }
+
   return (
-    <SimpleCardBase variant="emergency" className={className}>
-      <div className="p-4">
-        {/* Header */}
-        <div className="flex items-center gap-2.5">
-          <div className={cn("rounded-md p-1.5", styles.iconBg)}>
-            <Cross className="h-4 w-4" strokeWidth={1.75} />
-          </div>
-          <h3 className="text-sm font-semibold text-foreground">
-            Emergency Triage
-          </h3>
-        </div>
+    <EditorialCardBase variant="emergency" className={className}>
+      <EditorialHeader
+        title="Emergency Triage"
+        icon={AlertTriangle}
+        variant="emergency"
+        showConfirmButton={false}
+      />
 
-        {/* Reason/Symptoms */}
-        {reason && (
-          <p className="mt-2.5 text-sm italic text-muted-foreground">
-            "{reason}"
-          </p>
-        )}
-
-        {/* ER Referral */}
-        <p className="mt-2 text-sm font-medium text-rose-600">{erText}</p>
-      </div>
-    </SimpleCardBase>
+      <EditorialFieldList variant="emergency" fields={fields} />
+    </EditorialCardBase>
   );
 }

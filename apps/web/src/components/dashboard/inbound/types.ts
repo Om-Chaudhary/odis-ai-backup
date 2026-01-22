@@ -225,6 +225,8 @@ export interface InboundCall {
   follow_up_data?: FollowUpData | null;
   /** Pre-computed action card data from VAPI structured output (new calls) */
   action_card_data?: ActionCardData | null;
+  /** Whether the user has confirmed the action shown in the action card */
+  action_confirmed?: boolean;
 }
 
 // =============================================================================

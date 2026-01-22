@@ -8,6 +8,7 @@ import { api } from "~/trpc/client";
 import { getCallDataOverride } from "./mock-data";
 import { getDemoCallerName } from "../mock-data";
 import { QuickActionsFooter } from "./shared/quick-actions-footer";
+import { toast } from "sonner";
 import type { Database } from "@odis-ai/shared/types";
 import type { CallOutcome } from "../types";
 
@@ -54,6 +55,37 @@ export function CallDetail({
   // Prioritize VAPI booking data, then fall back to database lookup
   const callerName = demoCallerName ?? callerInfo?.name ?? null;
   const petName = bookingData?.patient_name ?? callerInfo?.petName ?? null;
+
+  // Action confirmation state - track locally for optimistic updates
+  const [isActionConfirmed, setIsActionConfirmed] = useState(
+    call.action_confirmed ?? false,
+  );
+
+  // Sync with prop changes
+  useEffect(() => {
+    setIsActionConfirmed(call.action_confirmed ?? false);
+  }, [call.action_confirmed]);
+
+  // Confirm action mutation
+  const confirmActionMutation = api.inbound.confirmCallAction.useMutation({
+    onSuccess: () => {
+      toast.success("Action confirmed");
+    },
+    onError: (error) => {
+      // Revert optimistic update
+      setIsActionConfirmed(call.action_confirmed ?? false);
+      toast.error(`Failed to confirm action: ${error.message}`);
+    },
+  });
+
+  // Handle confirm action
+  const handleConfirmAction = () => {
+    // Optimistic update
+    setIsActionConfirmed(true);
+
+    // Call mutation
+    confirmActionMutation.mutate({ callId: call.id });
+  };
 
   // Lazy loading: Only fetch VAPI data when needed (when detail panel is opened)
   // Use a small delay to ensure component is mounted and user is viewing it
@@ -189,6 +221,9 @@ export function CallDetail({
           booking={bookingData}
           callerName={callerName}
           petName={petName}
+          isConfirmed={isActionConfirmed}
+          onConfirm={handleConfirmAction}
+          isConfirming={confirmActionMutation.isPending}
         />
 
         {/* Tabbed Panel - Call & Summary */}

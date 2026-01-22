@@ -1,10 +1,13 @@
 "use client";
 
-import { CalendarX, Check, Loader2 } from "lucide-react";
+import { CalendarX } from "lucide-react";
 import { format, parse } from "date-fns";
-import { cn } from "@odis-ai/shared/util";
 import type { BookingData } from "../../inbound/types";
-import { SimpleCardBase, getCardVariantStyles } from "./simple-card-base";
+import {
+  EditorialCardBase,
+  EditorialHeader,
+  EditorialFieldList,
+} from "./editorial";
 
 interface CanceledAppointmentCardProps {
   /** Booking data from vapi_bookings table */
@@ -19,6 +22,8 @@ interface CanceledAppointmentCardProps {
   onConfirm?: () => void;
   /** Whether confirm action is in progress */
   isConfirming?: boolean;
+  /** Whether the action has been confirmed */
+  isConfirmed?: boolean;
   /** Additional className */
   className?: string;
 }
@@ -36,12 +41,12 @@ function formatTime(time: string): string {
 }
 
 /**
- * Format date for display (YYYY-MM-DD -> MMM d, yyyy)
+ * Format date for display (YYYY-MM-DD -> MMM d)
  */
 function formatDate(dateStr: string): string {
   try {
     const date = new Date(dateStr);
-    return format(date, "MMM d, yyyy");
+    return format(date, "MMM d");
   } catch {
     return dateStr;
   }
@@ -50,11 +55,12 @@ function formatDate(dateStr: string): string {
 /**
  * Canceled Appointment Card
  *
- * Clean, utilitarian design:
- * - Icon + header line
- * - Date/time of canceled appointment
+ * Editorial design with:
+ * - Pink/rose gradient background
+ * - Calendar X icon
+ * - Date/time in red
  * - Reason in quotes
- * - Simple confirm button
+ * - Large green confirm button OR "Confirmed" badge
  */
 export function CanceledAppointmentCard({
   booking,
@@ -62,14 +68,13 @@ export function CanceledAppointmentCard({
   cancellationReason,
   onConfirm,
   isConfirming,
+  isConfirmed,
   className,
 }: CanceledAppointmentCardProps) {
-  const styles = getCardVariantStyles("canceled");
-
   // Build date/time string
   const dateTimeStr =
     booking?.date && booking?.start_time
-      ? `${formatDate(booking.date)} at ${formatTime(booking.start_time)}`
+      ? `${formatDate(booking.date)},  ${formatTime(booking.start_time)}`
       : booking?.date
         ? formatDate(booking.date)
         : null;
@@ -79,57 +84,32 @@ export function CanceledAppointmentCard({
     booking?.rescheduled_reason ?? cancellationReason ?? outcomeSummary ?? null;
 
   return (
-    <SimpleCardBase variant="canceled" className={className}>
-      <div className="p-4">
-        {/* Header */}
-        <div className="flex items-center gap-2.5">
-          <div className={cn("rounded-md p-1.5", styles.iconBg)}>
-            <CalendarX className="h-4 w-4" strokeWidth={1.75} />
-          </div>
-          <h3 className="text-sm font-semibold text-foreground">
-            Appointment Cancelled
-          </h3>
-        </div>
+    <EditorialCardBase variant="canceled" className={className}>
+      <EditorialHeader
+        title="Appointment Cancelled"
+        icon={CalendarX}
+        variant="canceled"
+        showConfirmButton
+        onConfirm={onConfirm}
+        isConfirming={isConfirming}
+        isConfirmed={isConfirmed}
+      />
 
-        {/* Date/Time */}
-        {dateTimeStr && (
-          <p className="mt-2.5 text-sm font-medium text-foreground/90">
-            {dateTimeStr}
-          </p>
-        )}
-
-        {/* Reason */}
-        {reason && (
-          <p className="mt-1.5 text-sm italic text-muted-foreground">
-            "{reason}"
-          </p>
-        )}
-
-        {/* Confirm button */}
-        {onConfirm && (
-          <div className="mt-4 flex justify-end">
-            <button
-              onClick={onConfirm}
-              disabled={isConfirming}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5",
-                "text-xs font-medium",
-                "bg-slate-500 text-white",
-                "hover:bg-slate-600 active:bg-slate-700",
-                "disabled:cursor-not-allowed disabled:opacity-50",
-                "transition-colors duration-150",
-              )}
-            >
-              {isConfirming ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Check className="h-3.5 w-3.5" strokeWidth={2} />
-              )}
-              Confirm
-            </button>
-          </div>
-        )}
-      </div>
-    </SimpleCardBase>
+      <EditorialFieldList
+        variant="canceled"
+        fields={[
+          {
+            label: "Date:",
+            value: dateTimeStr,
+            isBold: true,
+          },
+          {
+            label: "Reason:",
+            value: reason,
+            isQuoted: true,
+          },
+        ]}
+      />
+    </EditorialCardBase>
   );
 }
