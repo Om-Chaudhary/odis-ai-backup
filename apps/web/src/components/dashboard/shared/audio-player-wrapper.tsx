@@ -1,8 +1,4 @@
-"use client";
-
 import type { ReactNode } from "react";
-import { AudioPlayerProvider } from "./audio-player-context";
-import { FloatingAudioPlayer } from "./floating-audio-player";
 
 interface AudioPlayerWrapperProps {
   children: ReactNode;
@@ -11,16 +7,12 @@ interface AudioPlayerWrapperProps {
 /**
  * Audio Player Wrapper Component
  *
- * Wraps the dashboard content with the AudioPlayerProvider context
- * and renders the FloatingAudioPlayer at the bottom.
+ * Legacy wrapper that previously provided context for a floating audio player.
+ * Now simplified to just pass children through for backwards compatibility.
  *
- * This is a client component wrapper to be used in server component layouts.
+ * @deprecated This wrapper is no longer needed. The new CallPlayer component
+ * from @odis-ai/shared/ui/media includes its own integrated player.
  */
 export function AudioPlayerWrapper({ children }: AudioPlayerWrapperProps) {
-  return (
-    <AudioPlayerProvider>
-      {children}
-      <FloatingAudioPlayer />
-    </AudioPlayerProvider>
-  );
+  return <>{children}</>;
 }

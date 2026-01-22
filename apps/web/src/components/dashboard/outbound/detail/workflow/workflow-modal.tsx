@@ -46,7 +46,7 @@ import { AnimatedEdge } from "./edges";
 import { buildWorkflow, type CaseDataForWorkflow } from "./workflow-builder";
 
 // Import content components
-import { CallRecordingPlayer } from "~/components/dashboard/shared";
+import { CallPlayer } from "@odis-ai/shared/ui/media";
 
 // Define node types
 const nodeTypes: NodeTypes = {
@@ -92,11 +92,14 @@ function ContentPanel({ type, caseData, onClose }: ContentPanelProps) {
             </div>
             {caseData.scheduledCall?.recordingUrl ||
             caseData.scheduledCall?.transcript ? (
-              <CallRecordingPlayer
-                recordingUrl={caseData.scheduledCall.recordingUrl}
-                transcript={caseData.scheduledCall.transcript}
-                cleanedTranscript={caseData.scheduledCall.cleanedTranscript}
-                durationSeconds={caseData.scheduledCall.durationSeconds}
+              <CallPlayer
+                audioUrl={caseData.scheduledCall.recordingUrl ?? ""}
+                plainTranscript={
+                  caseData.scheduledCall.cleanedTranscript ??
+                  caseData.scheduledCall.transcript
+                }
+                duration={caseData.scheduledCall.durationSeconds ?? undefined}
+                title="Discharge Call"
               />
             ) : (
               <div className="rounded-lg bg-slate-50 p-4 text-sm text-slate-600">

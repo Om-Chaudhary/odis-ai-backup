@@ -19,6 +19,8 @@
     "hooks": "~/hooks"
   },
   "registries": {
-    "@magicui": "https://magicui.design/r/{name}.json"
+    "@magicui": "https://magicui.design/r/{name}.json",
+    "@ai-sdk": "https://ai-sdk.dev/r/{name}.json",
+    "@ui.elevenlabs": "https://ui.elevenlabs.io/r/{name}.json"
   }
 }

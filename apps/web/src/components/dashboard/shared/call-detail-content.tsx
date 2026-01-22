@@ -1,9 +1,8 @@
 "use client";
 
 import { cn } from "@odis-ai/shared/util";
+import { CallPlayer } from "@odis-ai/shared/ui/media";
 import { CallSummaryCard } from "./call-summary-card";
-import { CallRecordingTrigger } from "./call-recording-trigger";
-import { CollapsibleTranscript } from "./collapsible-transcript";
 
 interface CallDetailContentProps {
   /** Call ID for tracking */
@@ -44,11 +43,9 @@ interface CallDetailContentProps {
  *
  * Layout (top to bottom):
  * 1. Call Summary Card - with timestamp, duration, and actions
- * 2. Recording Trigger - beautiful play button to launch floating player
- * 3. Collapsible Transcript - expandable with speaker avatars
+ * 2. Unified Call Player - with waveform and integrated transcript
  */
 export function CallDetailContent({
-  callId,
   summary,
   timestamp,
   durationSeconds,
@@ -57,17 +54,16 @@ export function CallDetailContent({
   transcript,
   cleanedTranscript,
   title = "Call Recording",
-  subtitle,
-  isLoadingRecording = false,
   isSuccessful = true,
-  transcriptDefaultOpen = false,
   className,
 }: CallDetailContentProps) {
   const hasContent = summary ?? recordingUrl ?? transcript;
 
-  if (!hasContent && !isLoadingRecording) {
+  if (!hasContent) {
     return null;
   }
+
+  const displayTranscript = cleanedTranscript ?? transcript;
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -82,22 +78,13 @@ export function CallDetailContent({
         />
       )}
 
-      {/* Recording Trigger - Launches floating player */}
-      <CallRecordingTrigger
-        recordingUrl={recordingUrl}
-        title={title}
-        subtitle={subtitle}
-        durationSeconds={durationSeconds}
-        callId={callId}
-        isLoading={isLoadingRecording}
-      />
-
-      {/* Collapsible Transcript */}
-      {(transcript ?? cleanedTranscript) && (
-        <CollapsibleTranscript
-          transcript={transcript}
-          cleanedTranscript={cleanedTranscript}
-          defaultOpen={transcriptDefaultOpen}
+      {/* Unified Call Player with integrated transcript */}
+      {recordingUrl && (
+        <CallPlayer
+          audioUrl={recordingUrl}
+          plainTranscript={displayTranscript}
+          duration={durationSeconds ?? undefined}
+          title={title}
         />
       )}
     </div>

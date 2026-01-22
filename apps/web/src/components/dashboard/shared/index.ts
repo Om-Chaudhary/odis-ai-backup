@@ -35,12 +35,8 @@ export * from "./bulk-action-bar";
 export * from "./call-recording-player";
 export * from "./completion-indicator";
 
-// Audio player system (floating player)
-export * from "./audio-player-context";
-export * from "./floating-audio-player";
-export * from "./call-recording-trigger";
+// Audio player system
 export * from "./call-summary-card";
-export * from "./collapsible-transcript";
 export * from "./call-detail-content";
 export * from "./audio-player-wrapper";
 export * from "./contact-indicator";

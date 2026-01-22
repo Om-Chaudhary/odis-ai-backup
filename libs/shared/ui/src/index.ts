@@ -70,6 +70,9 @@ export * from "./audio-player";
 export * from "./day-pagination";
 export * from "./calendar";
 
+// Media components
+export * from "./media";
+
 // Context providers
 export * from "./lib/clinic-context";
 

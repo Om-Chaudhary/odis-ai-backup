@@ -4,8 +4,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@odis-ai/shared/ui/card";
+import { CallPlayer } from "@odis-ai/shared/ui/media";
 import { Phone } from "lucide-react";
-import { CallRecordingPlayer } from "~/components/dashboard";
 
 interface ScheduledCallData {
   id: string;
@@ -37,12 +37,16 @@ export function CallTabContent({
 }: CallTabContentProps) {
   // If phone was sent, show audio player with transcript
   if (phoneWasSent && caseData.scheduledCall) {
+    const displayTranscript =
+      caseData.scheduledCall.cleanedTranscript ??
+      caseData.scheduledCall.transcript;
+
     return (
-      <CallRecordingPlayer
-        recordingUrl={caseData.scheduledCall.recordingUrl ?? null}
-        transcript={caseData.scheduledCall.transcript}
-        cleanedTranscript={caseData.scheduledCall.cleanedTranscript}
-        durationSeconds={caseData.scheduledCall.durationSeconds}
+      <CallPlayer
+        audioUrl={caseData.scheduledCall.recordingUrl ?? ""}
+        plainTranscript={displayTranscript}
+        duration={caseData.scheduledCall.durationSeconds ?? undefined}
+        title="Discharge Call"
       />
     );
   }

@@ -275,7 +275,9 @@
       "mcp__Railway__set-variables",
       "mcp__Railway__generate-domain",
       "WebFetch(domain:pims-sync-production.up.railway.app)",
-      "WebFetch(domain:backboard.railway.com)"
+      "WebFetch(domain:backboard.railway.com)",
+      "WebFetch(domain:api.vapi.ai)",
+      "WebFetch(domain:ui.elevenlabs.io)"
     ],
     "deny": [],
     "ask": [],
