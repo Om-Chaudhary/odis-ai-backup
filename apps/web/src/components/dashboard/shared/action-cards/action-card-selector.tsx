@@ -2,6 +2,7 @@
 
 import type { CallOutcome, BookingData } from "../../inbound/types";
 import { ScheduledAppointmentCard } from "./scheduled-appointment-card";
+import { RescheduledAppointmentCard } from "./rescheduled-appointment-card";
 import { CanceledAppointmentCard } from "./canceled-appointment-card";
 import { InfoCard } from "./info-card";
 import { EmergencyCard } from "./emergency-card";
@@ -65,8 +66,10 @@ interface ActionCardSelectorProps {
   callerName?: string | null;
   /** Pet name if resolved externally */
   petName?: string | null;
-  /** Callback when appointment is confirmed */
-  onConfirmAppointment?: (callId: string) => void;
+  /** Whether this card has been confirmed/dismissed */
+  isConfirmed?: boolean;
+  /** Callback when card is confirmed (only for confirmable cards) */
+  onConfirm?: () => void;
   /** Whether confirm is in progress */
   isConfirming?: boolean;
   /** Additional className */
@@ -74,82 +77,84 @@ interface ActionCardSelectorProps {
 }
 
 /**
- * Normalize outcome string to match our expected values
- */
-function normalizeOutcome(outcome: string | null | undefined): CallOutcome | null {
-  if (!outcome) return null;
-
-  const lower = outcome.toLowerCase().trim();
-
-  // Map various outcome strings to our canonical values
-  if (lower === "scheduled" || lower === "appointment") return "scheduled";
-  if (lower === "rescheduled") return "rescheduled";
-  if (lower === "cancellation" || lower === "cancelled" || lower === "canceled")
-    return "cancellation";
-  if (lower === "callback" || lower === "call back" || lower === "message_taken")
-    return "callback";
-  if (lower === "emergency" || lower === "urgent_concern") return "emergency";
-  if (lower === "info" || lower === "information") return "info";
-  if (lower === "blank" || lower === "null" || lower === "voicemail") return null;
-
-  return outcome as CallOutcome;
-}
-
-/**
  * Action Card Selector
  *
  * Polymorphic component that selects and renders the appropriate
- * action card based on the call outcome type, using VAPI structured data
- * and booking data from vapi_bookings table.
+ * action card based on the call outcome type.
+ *
+ * Data sources (in order of preference):
+ * 1. action_card_data - Pre-computed structured output from VAPI (new calls)
+ * 2. Legacy fields - Derived from call_outcome_data, escalation_data, etc. (old calls)
+ * 3. Booking data - From vapi_bookings table for appointment-related cards
+ *
+ * Confirm functionality is available for:
+ * - Scheduled appointments
+ * - Rescheduled appointments
+ * - Cancelled appointments
+ * - Callback requests
+ *
+ * Info and Emergency cards do NOT have confirm buttons.
  */
 export function ActionCardSelector({
   call,
   booking,
   callerName,
   petName,
-  onConfirmAppointment,
+  isConfirmed,
+  onConfirm,
   isConfirming,
   className,
 }: ActionCardSelectorProps) {
-  const {
-    outcome,
-    call_outcome_data,
-    escalation_data,
-    follow_up_data,
-  } = call;
+  // Get action card data with fallback to legacy derivation
+  const legacyCallData: LegacyCallData = {
+    outcome: call.outcome,
+    summary: call.summary,
+    customer_phone: call.customer_phone,
+    call_outcome_data: call.call_outcome_data,
+    escalation_data: call.escalation_data,
+    follow_up_data: call.follow_up_data,
+  };
 
-  // Normalize the outcome
-  const normalizedOutcome = normalizeOutcome(outcome);
+  const cardData = getActionCardData(call.action_card_data, legacyCallData, booking);
 
-  // If no valid outcome, don't render anything
-  if (!normalizedOutcome) {
+  // If no valid card data or card is confirmed, don't render
+  if (!cardData || isConfirmed) {
     return null;
   }
 
-  // Extract common data
+  // Legacy fallback data (used when action_card_data fields are incomplete)
   const outcomeSummary =
-    call_outcome_data?.outcome_summary ?? call.summary ?? "";
-  const keyTopics = call_outcome_data?.key_topics_discussed;
-  const nextSteps = follow_up_data?.next_steps;
-  const followUpSummary = follow_up_data?.follow_up_summary;
-  const escalationSummary = escalation_data?.escalation_summary;
+    call.call_outcome_data?.outcome_summary ?? call.summary ?? "";
+  const keyTopics = call.call_outcome_data?.key_topics_discussed;
+  const escalationSummary = call.escalation_data?.escalation_summary;
   const staffActionNeeded =
-    escalation_data?.staff_action_needed ??
-    escalation_data?.staff_action_required;
+    call.escalation_data?.staff_action_needed ??
+    call.escalation_data?.staff_action_required;
+  const followUpSummary = call.follow_up_data?.follow_up_summary;
+  const nextSteps = call.follow_up_data?.next_steps;
 
-  switch (normalizedOutcome) {
+  switch (cardData.card_type) {
     case "scheduled":
-    case "rescheduled":
       return (
         <ScheduledAppointmentCard
           booking={booking}
+          outcomeSummary={
+            cardData.appointment_data?.reason ?? outcomeSummary
+          }
+          petName={cardData.appointment_data?.patient_name ?? petName}
+          onConfirm={onConfirm}
+          isConfirming={isConfirming}
+          className={className}
+        />
+      );
+
+    case "rescheduled":
+      return (
+        <RescheduledAppointmentCard
+          booking={booking}
           outcomeSummary={cardData.reschedule_reason ?? outcomeSummary}
           petName={cardData.appointment_data?.patient_name ?? petName}
-          onConfirm={
-            onConfirmAppointment
-              ? () => onConfirmAppointment(call.id)
-              : undefined
-          }
+          onConfirm={onConfirm}
           isConfirming={isConfirming}
           className={className}
         />
@@ -161,6 +166,8 @@ export function ActionCardSelector({
           booking={booking}
           outcomeSummary={cardData.cancellation_reason ?? outcomeSummary}
           petName={cardData.appointment_data?.patient_name ?? petName}
+          onConfirm={onConfirm}
+          isConfirming={isConfirming}
           className={className}
         />
       );
@@ -171,8 +178,10 @@ export function ActionCardSelector({
           escalationSummary={escalationSummary ?? outcomeSummary}
           outcomeSummary={outcomeSummary}
           staffActionNeeded={staffActionNeeded}
-          keyTopics={keyTopics}
+          keyTopics={cardData.emergency_data?.symptoms ?? keyTopics}
           petName={petName}
+          // New: pass ER name directly when available
+          erName={cardData.emergency_data?.er_name}
           className={className}
         />
       );
@@ -188,6 +197,8 @@ export function ActionCardSelector({
           callerName={cardData.callback_data?.caller_name ?? callerName}
           petName={cardData.callback_data?.pet_name ?? petName}
           phoneNumber={cardData.callback_data?.phone_number ?? call.customer_phone}
+          onConfirm={onConfirm}
+          isConfirming={isConfirming}
           className={className}
         />
       );
@@ -195,16 +206,15 @@ export function ActionCardSelector({
     case "info":
       return (
         <InfoCard
-          outcomeSummary={outcomeSummary}
+          outcomeSummary={cardData.info_data?.summary ?? outcomeSummary}
           followUpSummary={followUpSummary}
           nextSteps={nextSteps}
-          keyTopics={keyTopics}
+          keyTopics={cardData.info_data?.topics ?? keyTopics}
           className={className}
         />
       );
 
     default:
-      // Unknown outcome type - don't render anything
       return null;
   }
 }

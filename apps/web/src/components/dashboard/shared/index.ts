@@ -14,14 +14,6 @@ export {
   CanceledAppointmentCard,
   EmergencyCard,
   CallbackCard,
-  EditorialCardBase,
-  EditorialHeader,
-  EditorialFieldList,
-  EditorialActionButton,
-  EditorialStatusBadge,
-  getEditorialVariantStyles,
-  type EditorialVariant,
-  type FieldItem,
 } from "./action-cards";
 // Note: InfoCard from action-cards is intentionally not exported here
 // to avoid conflict with generic InfoCard from ./cards.

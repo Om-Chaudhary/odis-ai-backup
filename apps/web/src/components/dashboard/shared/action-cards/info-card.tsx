@@ -1,13 +1,8 @@
 "use client";
 
 import { Info } from "lucide-react";
-import {
-  EditorialCardBase,
-  EditorialHeader,
-  EditorialFieldList,
-  EditorialStatusBadge,
-  type FieldItem,
-} from "./editorial";
+import { cn } from "@odis-ai/shared/util";
+import { SimpleCardBase, getCardVariantStyles } from "./simple-card-base";
 
 interface InfoCardProps {
   /** Outcome summary from VAPI */
@@ -23,18 +18,12 @@ interface InfoCardProps {
 }
 
 /**
- * Info Card (Editorial Design)
- *
- * Displays information request details from VAPI call_outcome_data
- * with magazine-style editorial layout and key-value pairs.
+ * Get the inquiry text to display
  */
-export function InfoCard({
-  outcomeSummary: _outcomeSummary,
-  followUpSummary,
-  nextSteps,
-  keyTopics,
-  className,
-}: InfoCardProps) {
+function getInquiryText(
+  outcomeSummary: string,
+  keyTopics?: string[] | string | null,
+): string {
   // Parse key topics
   const topics = Array.isArray(keyTopics)
     ? keyTopics
@@ -42,45 +31,53 @@ export function InfoCard({
       ? keyTopics.split(",").map((t) => t.trim())
       : [];
 
-  // Determine resolution status
-  const getResolution = (): string => {
-    if (nextSteps) return "Pending follow-up";
-    if (followUpSummary?.toLowerCase().includes("resolved")) return "Resolved";
-    return "Questions answered";
-  };
+  if (topics.length > 0) {
+    const topicList = topics.slice(0, 3).join(", ");
+    return `Asked about ${topicList.toLowerCase()}`;
+  }
 
-  // Build field items for structured display
-  const fields: FieldItem[] = [
-    {
-      label: "Topics",
-      value: topics.length > 0 ? topics.slice(0, 3).join(", ") : null,
-    },
-    {
-      label: "Resolution",
-      value: getResolution(),
-    },
-  ];
+  // Fall back to outcome summary, truncate if needed
+  if (outcomeSummary.length > 80) {
+    return outcomeSummary.slice(0, 77) + "...";
+  }
+
+  return outcomeSummary;
+}
+
+/**
+ * Info Card
+ *
+ * Clean, utilitarian design:
+ * - Info icon + header line
+ * - Single line showing topic/question in quotes
+ * - NO confirm button
+ */
+export function InfoCard({
+  outcomeSummary,
+  keyTopics,
+  className,
+}: InfoCardProps) {
+  const styles = getCardVariantStyles("info");
+
+  // Get inquiry text
+  const inquiry = getInquiryText(outcomeSummary, keyTopics);
 
   return (
-    <EditorialCardBase variant="info" className={className}>
-      <EditorialHeader
-        titleLine1="Information"
-        titleLine2="Provided"
-        icon={Info}
-        variant="info"
-      />
+    <SimpleCardBase variant="info" className={className}>
+      <div className="p-4">
+        {/* Header */}
+        <div className="flex items-center gap-2.5">
+          <div className={cn("rounded-md p-1.5", styles.iconBg)}>
+            <Info className="h-4 w-4" strokeWidth={1.75} />
+          </div>
+          <h3 className="text-sm font-semibold text-foreground">Clinic Info</h3>
+        </div>
 
-      <EditorialFieldList
-        sectionLabel="Inquiry Details"
-        fields={fields}
-        variant="info"
-      />
-
-      <EditorialStatusBadge
-        text="Inquiry Resolved"
-        showCheck
-        variant="info"
-      />
-    </EditorialCardBase>
+        {/* Inquiry */}
+        <p className="mt-2.5 text-sm italic text-muted-foreground">
+          "{inquiry}"
+        </p>
+      </div>
+    </SimpleCardBase>
   );
 }
