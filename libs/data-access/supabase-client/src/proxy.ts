@@ -33,8 +33,10 @@ export async function updateSession(request: ProxyRequest) {
           // Debug: Log Supabase auth cookies in development
           if (process.env.NODE_ENV === "development") {
             const authCookies = cookies.filter((c) => c.name.startsWith("sb-"));
+            const hasClerkCookies = cookies.some((c) => c.name.startsWith("__clerk"));
             if (
               authCookies.length === 0 &&
+              !hasClerkCookies && // Skip log if Clerk auth is present
               request.nextUrl.pathname.startsWith("/api/trpc")
             ) {
               console.log(
@@ -74,7 +76,8 @@ export async function updateSession(request: ProxyRequest) {
   } = await supabase.auth.getUser();
 
   // Log auth errors for debugging (but only in development)
-  if (authError && process.env.NODE_ENV === "development") {
+  const hasClerkCookies = request.cookies.getAll().some((c) => c.name.startsWith("__clerk"));
+  if (authError && process.env.NODE_ENV === "development" && !hasClerkCookies) {
     console.error("[Proxy] Auth error:", {
       code: authError.code,
       message: authError.message,
