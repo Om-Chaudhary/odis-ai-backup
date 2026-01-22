@@ -13,6 +13,63 @@ import { loggers } from "@odis-ai/shared/logger";
 const logger = loggers.webhook.child("structured-output");
 
 /**
+ * Action card data from VAPI structured output
+ * Pre-formatted data for action card display in dashboard
+ */
+export interface ActionCardData {
+  /** Type of action card to display */
+  card_type:
+    | "scheduled"
+    | "rescheduled"
+    | "cancellation"
+    | "emergency"
+    | "callback"
+    | "info";
+
+  /** Appointment data for scheduled/rescheduled/cancellation cards */
+  appointment_data?: {
+    patient_name?: string;
+    client_name?: string;
+    date?: string;
+    time?: string;
+    reason?: string;
+  };
+
+  /** Original appointment data for rescheduled cards */
+  original_appointment?: {
+    date?: string;
+    time?: string;
+  };
+
+  /** Reason for rescheduling */
+  reschedule_reason?: string;
+
+  /** Reason for cancellation */
+  cancellation_reason?: string;
+
+  /** Emergency triage data */
+  emergency_data?: {
+    symptoms?: string[];
+    er_name?: string | null;
+    urgency_level?: "critical" | "urgent" | "monitor";
+  };
+
+  /** Callback request data */
+  callback_data?: {
+    reason?: string;
+    phone_number?: string;
+    caller_name?: string;
+    pet_name?: string;
+  };
+
+  /** Informational call data */
+  info_data?: {
+    topics?: string[];
+    summary?: string;
+  };
+}
+
+/**
  * Parsed structured outputs from a VAPI call
  */
 export interface ParsedStructuredOutputs {
@@ -30,6 +87,8 @@ export interface ParsedStructuredOutputs {
   escalation: Record<string, unknown> | null;
   /** Follow-up scheduling data */
   followUp: Record<string, unknown> | null;
+  /** Action card display data (inbound calls) */
+  actionCard: ActionCardData | null;
 }
 
 /**
@@ -43,6 +102,7 @@ export const STRUCTURED_OUTPUT_SCHEMAS = {
   ESCALATION: "escalation_tracking",
   FOLLOW_UP: "follow_up_status",
   ATTENTION_CLASSIFICATION: "attention_classification",
+  ACTION_CARD: "action_card_output",
 } as const;
 
 /**
@@ -188,6 +248,12 @@ export function extractStructuredOutputByName(
     ) {
       return output;
     }
+    if (
+      schemaName === STRUCTURED_OUTPUT_SCHEMAS.ACTION_CARD &&
+      "card_type" in output
+    ) {
+      return output;
+    }
   }
 
   return null;
@@ -234,6 +300,10 @@ export function parseAllStructuredOutputs(
       structuredOutputs,
       STRUCTURED_OUTPUT_SCHEMAS.FOLLOW_UP,
     ),
+    actionCard: extractStructuredOutputByName(
+      structuredOutputs,
+      STRUCTURED_OUTPUT_SCHEMAS.ACTION_CARD,
+    ) as ActionCardData | null,
   };
 }
 
@@ -255,6 +325,8 @@ export function logStructuredOutputAvailability(
     hasOwnerSentiment: !!outputs.ownerSentiment,
     hasEscalation: !!outputs.escalation,
     hasFollowUp: !!outputs.followUp,
+    hasActionCard: !!outputs.actionCard,
+    actionCardType: outputs.actionCard?.card_type ?? null,
     hasAttentionClassification:
       Object.keys(outputs.attentionClassification).length > 0,
   });

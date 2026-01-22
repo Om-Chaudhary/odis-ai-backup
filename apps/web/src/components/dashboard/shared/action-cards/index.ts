@@ -24,3 +24,11 @@ export {
   type EditorialVariant,
   type FieldItem,
 } from "./editorial";
+
+// Action card data utilities
+export {
+  getActionCardData,
+  deriveActionCardData,
+  type ActionCardData,
+  type LegacyCallData,
+} from "./derive-action-card-data";

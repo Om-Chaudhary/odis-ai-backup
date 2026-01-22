@@ -20,6 +20,8 @@ interface EmergencyCardProps {
   keyTopics?: string[] | string | null;
   /** Pet name if available */
   petName?: string | null;
+  /** ER name if provided directly from VAPI structured output (skips regex extraction) */
+  erName?: string | null;
   /** Additional className */
   className?: string;
 }

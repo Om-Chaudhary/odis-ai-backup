@@ -321,6 +321,8 @@ function buildInboundUpdateData(
     owner_sentiment_data: structuredOutputs.ownerSentiment,
     escalation_data: structuredOutputs.escalation,
     follow_up_data: structuredOutputs.followUp,
+    // Action card display data (pre-formatted from VAPI)
+    action_card_data: structuredOutputs.actionCard,
     // Metadata
     metadata: {
       artifact,
@@ -361,6 +363,8 @@ function logInboundCallData(
       hasOwnerSentiment: !!structuredOutputs.ownerSentiment,
       hasEscalation: !!structuredOutputs.escalation,
       hasFollowUp: !!structuredOutputs.followUp,
+      hasActionCard: !!structuredOutputs.actionCard,
+      actionCardType: structuredOutputs.actionCard?.card_type ?? null,
     },
   });
 }

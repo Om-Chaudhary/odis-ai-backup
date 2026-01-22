@@ -78,7 +78,7 @@ export const callAssociationsRouter = createTRPCRouter({
       const { data, error } = await supabase
         .from("vapi_bookings")
         .select(
-          "patient_name, species, breed, date, start_time, reason, client_name, client_phone, status, is_new_client, rescheduled_reason",
+          "patient_name, species, breed, date, start_time, reason, client_name, client_phone, status, is_new_client, rescheduled_reason, original_date, original_time",
         )
         .eq("vapi_call_id", input.vapiCallId)
         .order("created_at", { ascending: false })
@@ -106,6 +106,8 @@ export const callAssociationsRouter = createTRPCRouter({
         status: data.status,
         is_new_client: data.is_new_client,
         rescheduled_reason: data.rescheduled_reason,
+        original_date: data.original_date,
+        original_time: data.original_time,
       };
     }),
 

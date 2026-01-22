@@ -66,6 +66,10 @@ export interface BookingData {
   is_new_client: boolean | null;
   /** Rescheduled reason if applicable */
   rescheduled_reason: string | null;
+  /** Original appointment date before rescheduling (YYYY-MM-DD) */
+  original_date: string | null;
+  /** Original start time before rescheduling (HH:MM:SS) */
+  original_time: string | null;
 }
 
 /**
@@ -219,6 +223,69 @@ export interface InboundCall {
   owner_sentiment_data?: OwnerSentimentData | null;
   escalation_data?: EscalationData | null;
   follow_up_data?: FollowUpData | null;
+  /** Pre-computed action card data from VAPI structured output (new calls) */
+  action_card_data?: ActionCardData | null;
+}
+
+// =============================================================================
+// Action Card Data (from VAPI structured output)
+// =============================================================================
+
+/**
+ * Action card data from VAPI structured output
+ * Pre-formatted data for action card display in dashboard
+ */
+export interface ActionCardData {
+  /** Type of action card to display */
+  card_type:
+    | "scheduled"
+    | "rescheduled"
+    | "cancellation"
+    | "emergency"
+    | "callback"
+    | "info";
+
+  /** Appointment data for scheduled/rescheduled/cancellation cards */
+  appointment_data?: {
+    patient_name?: string;
+    client_name?: string;
+    date?: string;
+    time?: string;
+    reason?: string;
+  };
+
+  /** Original appointment data for rescheduled cards */
+  original_appointment?: {
+    date?: string;
+    time?: string;
+  };
+
+  /** Reason for rescheduling */
+  reschedule_reason?: string;
+
+  /** Reason for cancellation */
+  cancellation_reason?: string;
+
+  /** Emergency triage data */
+  emergency_data?: {
+    symptoms?: string[];
+    er_name?: string | null;
+    urgency_level?: "critical" | "urgent" | "monitor";
+  };
+
+  /** Callback request data */
+  callback_data?: {
+    reason?: string;
+    phone_number?: string;
+    caller_name?: string;
+    pet_name?: string;
+  };
+
+  /** Informational call data */
+  info_data?: {
+    topics?: string[];
+    summary?: string;
+  };
 }
 
 // =============================================================================

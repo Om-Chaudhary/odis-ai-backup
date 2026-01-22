@@ -6,6 +6,11 @@ import { CanceledAppointmentCard } from "./canceled-appointment-card";
 import { InfoCard } from "./info-card";
 import { EmergencyCard } from "./emergency-card";
 import { CallbackCard } from "./callback-card";
+import {
+  getActionCardData,
+  type ActionCardData,
+  type LegacyCallData,
+} from "./derive-action-card-data";
 
 /**
  * Call outcome data from VAPI structured output
@@ -47,6 +52,8 @@ interface InboundCallData {
   follow_up_data?: FollowUpData | null;
   /** Customer phone number */
   customer_phone?: string | null;
+  /** Pre-computed action card data from VAPI (new calls) */
+  action_card_data?: ActionCardData | null;
 }
 
 interface ActionCardSelectorProps {
@@ -136,8 +143,8 @@ export function ActionCardSelector({
       return (
         <ScheduledAppointmentCard
           booking={booking}
-          outcomeSummary={outcomeSummary}
-          petName={petName}
+          outcomeSummary={cardData.reschedule_reason ?? outcomeSummary}
+          petName={cardData.appointment_data?.patient_name ?? petName}
           onConfirm={
             onConfirmAppointment
               ? () => onConfirmAppointment(call.id)
@@ -152,8 +159,8 @@ export function ActionCardSelector({
       return (
         <CanceledAppointmentCard
           booking={booking}
-          outcomeSummary={outcomeSummary}
-          petName={petName}
+          outcomeSummary={cardData.cancellation_reason ?? outcomeSummary}
+          petName={cardData.appointment_data?.patient_name ?? petName}
           className={className}
         />
       );
@@ -173,12 +180,14 @@ export function ActionCardSelector({
     case "callback":
       return (
         <CallbackCard
-          escalationSummary={escalationSummary ?? outcomeSummary}
+          escalationSummary={
+            cardData.callback_data?.reason ?? escalationSummary ?? outcomeSummary
+          }
           staffActionNeeded={staffActionNeeded}
           nextSteps={nextSteps}
-          callerName={callerName}
-          petName={petName}
-          phoneNumber={call.customer_phone}
+          callerName={cardData.callback_data?.caller_name ?? callerName}
+          petName={cardData.callback_data?.pet_name ?? petName}
+          phoneNumber={cardData.callback_data?.phone_number ?? call.customer_phone}
           className={className}
         />
       );
