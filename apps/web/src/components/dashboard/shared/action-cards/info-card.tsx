@@ -8,22 +8,20 @@ import {
 } from "./editorial";
 
 interface InfoCardProps {
-  /** Outcome summary from VAPI */
+  /** Info topic/reason from VAPI structured output (new format) */
+  reason?: string | null;
+  /** Outcome summary from VAPI (legacy fallback) */
   outcomeSummary: string;
-  /** Follow-up summary if any */
-  followUpSummary?: string | null;
-  /** Next steps if any */
-  nextSteps?: string | null;
-  /** Key topics discussed */
+  /** Key topics discussed (legacy fallback) */
   keyTopics?: string[] | string | null;
   /** Additional className */
   className?: string;
 }
 
 /**
- * Get the inquiry text to display
+ * Get the inquiry text to display from legacy fields
  */
-function getInquiryText(
+function getLegacyInquiryText(
   outcomeSummary: string,
   keyTopics?: string[] | string | null,
 ): string {
@@ -57,31 +55,32 @@ function getInquiryText(
  * - NO confirm button (info-only cards don't need confirmation)
  */
 export function InfoCard({
+  reason,
   outcomeSummary,
   keyTopics,
   className,
 }: InfoCardProps) {
-  // Get inquiry text
-  const inquiry = getInquiryText(outcomeSummary, keyTopics);
+  // Use new reason field if available, otherwise fall back to legacy derivation
+  const inquiry = reason ?? getLegacyInquiryText(outcomeSummary, keyTopics);
+
+  // Build fields - only show topic
+  const fields = [
+    {
+      label: "Topic:",
+      value: inquiry,
+      isQuoted: true,
+    },
+  ];
 
   return (
     <EditorialCardBase variant="info" className={className}>
       <EditorialHeader
-        title="Information Provided"
+        title="Informational Call"
         icon={Info}
         variant="info"
       />
 
-      <EditorialFieldList
-        variant="info"
-        fields={[
-          {
-            label: "Info:",
-            value: inquiry,
-            isQuoted: true,
-          },
-        ]}
-      />
+      <EditorialFieldList variant="info" fields={fields} />
     </EditorialCardBase>
   );
 }

@@ -12,10 +12,14 @@ import {
 interface ScheduledAppointmentCardProps {
   /** Booking data from vapi_bookings table */
   booking?: BookingData | null;
+  /** Appointment date from action_card_data (YYYY-MM-DD) */
+  appointmentDate?: string | null;
+  /** Appointment time from action_card_data (HH:MM) */
+  appointmentTime?: string | null;
+  /** Reason from action_card_data (short, structured) */
+  appointmentReason?: string | null;
   /** Fallback: Summary of the scheduled appointment from VAPI */
   outcomeSummary?: string;
-  /** Fallback: Pet name if available */
-  petName?: string | null;
   /** Callback when confirm is clicked */
   onConfirm?: () => void;
   /** Whether confirm action is in progress */
@@ -27,10 +31,16 @@ interface ScheduledAppointmentCardProps {
 }
 
 /**
- * Format time for display (HH:MM:SS -> h:mm a)
+ * Format time for display (HH:MM:SS or HH:MM -> h:mm a)
  */
 function formatTime(time: string): string {
   try {
+    // Try HH:MM format first (from action_card_data)
+    if (time.split(":").length === 2) {
+      const parsed = parse(time, "HH:mm", new Date());
+      return format(parsed, "h:mm a");
+    }
+    // Fall back to HH:MM:SS format (from booking table)
     const parsed = parse(time, "HH:mm:ss", new Date());
     return format(parsed, "h:mm a");
   } catch {
@@ -43,7 +53,8 @@ function formatTime(time: string): string {
  */
 function formatDate(dateStr: string): string {
   try {
-    const date = new Date(dateStr);
+    // Parse as local date (not UTC) by explicitly specifying format
+    const date = parse(dateStr, "yyyy-MM-dd", new Date());
     return format(date, "MMM d");
   } catch {
     return dateStr;
@@ -62,22 +73,29 @@ function formatDate(dateStr: string): string {
  */
 export function ScheduledAppointmentCard({
   booking,
+  appointmentDate,
+  appointmentTime,
+  appointmentReason,
   outcomeSummary,
   onConfirm,
   isConfirming,
   isConfirmed,
   className,
 }: ScheduledAppointmentCardProps) {
+  // Priority: action_card_data fields, then booking fields
+  const date = appointmentDate ?? booking?.date;
+  const time = appointmentTime ?? booking?.start_time;
+
   // Build date/time string (e.g., "Jan 25, 9:30 AM")
   const dateTimeStr =
-    booking?.date && booking?.start_time
-      ? `${formatDate(booking.date)},  ${formatTime(booking.start_time)}`
-      : booking?.date
-        ? formatDate(booking.date)
+    date && time
+      ? `${formatDate(date)},  ${formatTime(time)}`
+      : date
+        ? formatDate(date)
         : null;
 
-  // Get reason text
-  const reason = booking?.reason ?? outcomeSummary ?? null;
+  // Get reason text - prioritize structured action_card_data reason
+  const reason = appointmentReason ?? booking?.reason ?? outcomeSummary ?? null;
 
   return (
     <EditorialCardBase variant="scheduled" className={className}>
@@ -101,7 +119,7 @@ export function ScheduledAppointmentCard({
             value: reason,
             isQuoted: true,
           },
-        ]}
+        ].filter((field) => field.value !== null)}
         showConfirmButton
         onConfirm={onConfirm}
         isConfirming={isConfirming}

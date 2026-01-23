@@ -12,8 +12,6 @@ interface EmergencyCardProps {
   escalationSummary: string;
   /** Outcome summary with details */
   outcomeSummary?: string | null;
-  /** Staff action needed */
-  staffActionNeeded?: string | null;
   /** Key topics/symptoms discussed */
   keyTopics?: string[] | string | null;
   /** Pet name if available */
@@ -68,23 +66,22 @@ export function EmergencyCard({
   // Get reason text
   const reason = getReasonText(escalationSummary, keyTopics);
 
-  // Build fields dynamically
+  // Use ER name if available, otherwise default to "Nearest clinic"
+  const triagedTo = erName ?? "Nearest clinic";
+
+  // Build fields - only show reason and where triaged
   const fields = [
     {
-      label: "Request:",
+      label: "Reason:",
       value: reason,
       isQuoted: true,
     },
-  ];
-
-  // Add ER name if available
-  if (erName) {
-    fields.push({
+    {
       label: "Triaged To:",
-      value: erName,
+      value: triagedTo,
       isQuoted: false,
-    });
-  }
+    },
+  ];
 
   return (
     <EditorialCardBase variant="emergency" className={className}>

@@ -15,10 +15,18 @@ import {
 interface RescheduledAppointmentCardProps {
   /** Booking data from vapi_bookings table */
   booking?: BookingData | null;
+  /** New appointment date from action_card_data (YYYY-MM-DD) */
+  appointmentDate?: string | null;
+  /** New appointment time from action_card_data (HH:MM) */
+  appointmentTime?: string | null;
+  /** Original appointment date from action_card_data (YYYY-MM-DD) */
+  originalDate?: string | null;
+  /** Original appointment time from action_card_data (HH:MM) */
+  originalTime?: string | null;
+  /** Reschedule reason from action_card_data */
+  rescheduleReason?: string | null;
   /** Fallback: Summary of the rescheduled appointment from VAPI */
   outcomeSummary?: string;
-  /** Fallback: Pet name if available */
-  petName?: string | null;
   /** Callback when confirm is clicked */
   onConfirm?: () => void;
   /** Whether confirm action is in progress */
@@ -30,10 +38,16 @@ interface RescheduledAppointmentCardProps {
 }
 
 /**
- * Format time for display (HH:MM:SS -> h:mm a)
+ * Format time for display (HH:MM:SS or HH:MM -> h:mm a)
  */
 function formatTime(time: string): string {
   try {
+    // Try HH:MM format first (from action_card_data)
+    if (time.split(":").length === 2) {
+      const parsed = parse(time, "HH:mm", new Date());
+      return format(parsed, "h:mm a");
+    }
+    // Fall back to HH:MM:SS format (from booking table)
     const parsed = parse(time, "HH:mm:ss", new Date());
     return format(parsed, "h:mm a");
   } catch {
@@ -46,7 +60,8 @@ function formatTime(time: string): string {
  */
 function formatDate(dateStr: string): string {
   try {
-    const date = new Date(dateStr);
+    // Parse as local date (not UTC) by explicitly specifying format
+    const date = parse(dateStr, "yyyy-MM-dd", new Date());
     return format(date, "MMM d");
   } catch {
     return dateStr;
@@ -65,6 +80,11 @@ function formatDate(dateStr: string): string {
  */
 export function RescheduledAppointmentCard({
   booking,
+  appointmentDate,
+  appointmentTime,
+  originalDate,
+  originalTime,
+  rescheduleReason,
   outcomeSummary,
   onConfirm,
   isConfirming,
@@ -73,24 +93,30 @@ export function RescheduledAppointmentCard({
 }: RescheduledAppointmentCardProps) {
   const styles = getEditorialVariantStyles("rescheduled");
 
+  // Priority: action_card_data fields, then booking fields
+  const newDate = appointmentDate ?? booking?.date;
+  const newTime = appointmentTime ?? booking?.start_time;
+  const origDate = originalDate ?? booking?.original_date;
+  const origTime = originalTime ?? booking?.original_time;
+
   // Build new date/time string
   const newDateTimeStr =
-    booking?.date && booking?.start_time
-      ? `${formatDate(booking.date)},  ${formatTime(booking.start_time)}`
-      : booking?.date
-        ? formatDate(booking.date)
+    newDate && newTime
+      ? `${formatDate(newDate)},  ${formatTime(newTime)}`
+      : newDate
+        ? formatDate(newDate)
         : null;
 
   // Build original date/time string (if available)
   const originalDateTimeStr =
-    booking?.original_date && booking?.original_time
-      ? `${formatDate(booking.original_date)},  ${formatTime(booking.original_time)}`
-      : booking?.original_date
-        ? formatDate(booking.original_date)
+    origDate && origTime
+      ? `${formatDate(origDate)},  ${formatTime(origTime)}`
+      : origDate
+        ? formatDate(origDate)
         : null;
 
-  // Get reason text
-  const reason = booking?.rescheduled_reason ?? outcomeSummary ?? null;
+  // Get reason text - prioritize structured reason
+  const reason = rescheduleReason ?? booking?.rescheduled_reason ?? outcomeSummary ?? null;
 
   return (
     <EditorialCardBase variant="rescheduled" className={className}>

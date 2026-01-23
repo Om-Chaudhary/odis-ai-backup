@@ -89,3 +89,10 @@ export {
   type ClinicInfoCategory,
   type GetClinicInfoInput,
 } from "./info";
+
+// Action Card Output (Structured Data Plan)
+export {
+  ACTION_CARD_OUTPUT_SCHEMA,
+  ACTION_CARD_OUTPUT_CONFIG,
+  type ActionCardOutput,
+} from "./action-card-output";

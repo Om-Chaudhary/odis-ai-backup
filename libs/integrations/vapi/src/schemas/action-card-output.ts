@@ -1,0 +1,204 @@
+/**
+ * Action Card Output Schema
+ *
+ * TypeScript export of the VAPI structured output schema for action cards.
+ * Used to configure VAPI assistants' analysisPlan.structuredDataPlan.
+ *
+ * The schema is defined in JSON at the project root (action_card_output_schema.json)
+ * and exported here for use in configuration scripts.
+ *
+ * @module vapi/schemas/action-card-output
+ */
+
+/**
+ * Action card output schema for VAPI structured data plan.
+ * This schema is applied to the analysisPlan.structuredDataPlan.schema field
+ * of inbound VAPI assistants.
+ */
+export const ACTION_CARD_OUTPUT_SCHEMA = {
+  type: "object",
+  properties: {
+    card_type: {
+      type: "string",
+      description:
+        "The type of action card based on call outcome. scheduled=new appointment. rescheduled=appointment moved. cancellation=appointment cancelled. emergency=referred to ER. callback=staff callback needed. info=informational only.",
+      enum: [
+        "scheduled",
+        "rescheduled",
+        "cancellation",
+        "emergency",
+        "callback",
+        "info",
+      ],
+    },
+    info_data: {
+      type: "object",
+      description:
+        "Informational call details when caller just needed information.",
+      properties: {
+        reason: {
+          type: "string",
+          description:
+            "Topic or subject ONLY. 1-6 words. Start with noun, no verbs or pronouns. GOOD: Clinic hours, Vaccination pricing, If clinic sees birds. BAD: Asked about hours, They wanted pricing info.",
+        },
+      },
+    },
+    callback_data: {
+      type: "object",
+      description: "Callback request details when staff callback is needed.",
+      properties: {
+        reason: {
+          type: "string",
+          description:
+            "The specific request ONLY. 3-8 words. NO caller name, NO phone number, NO contact or call back. GOOD: Prescription refill for Max, Billing question. BAD: Contact John at 408-555-1234.",
+        },
+        caller_name: {
+          type: "string",
+          description: "Caller first name only, or first and last if given.",
+        },
+        pet_name: {
+          type: "string",
+          description: "Pet name if mentioned. Single name only.",
+        },
+        phone_number: {
+          type: "string",
+          description: "Callback phone number if different from caller ID.",
+        },
+      },
+    },
+    emergency_data: {
+      type: "object",
+      description: "Emergency triage details when caller was referred to ER.",
+      properties: {
+        symptoms: {
+          type: "string",
+          description:
+            "Comma-separated symptom keywords. No articles, no pronouns, no full sentences. GOOD: vomiting, lethargy, not eating. BAD: The dog is vomiting.",
+        },
+        er_name: {
+          type: "string",
+          description:
+            "Name of ER or emergency hospital if mentioned. Use Nearest ER if no specific name.",
+        },
+        urgency_level: {
+          type: "string",
+          description:
+            "Urgency level. critical=life-threatening. urgent=needs same-day care. monitor=watch closely.",
+          enum: ["critical", "urgent", "monitor"],
+        },
+      },
+    },
+    appointment_data: {
+      type: "object",
+      description:
+        "Appointment details for scheduled/rescheduled/cancellation outcomes.",
+      properties: {
+        date: {
+          type: "string",
+          description: "Appointment date in YYYY-MM-DD format only.",
+        },
+        time: {
+          type: "string",
+          description: "Appointment time in HH:MM 24-hour format only.",
+        },
+        reason: {
+          type: "string",
+          description:
+            "Presenting complaint ONLY. 2-5 words. No pet names, no owner names. GOOD: Annual checkup, Limping back leg. BAD: Luna needs dental.",
+        },
+        client_name: {
+          type: "string",
+          description: "Client/owner full name.",
+        },
+        patient_name: {
+          type: "string",
+          description: "Pet name only.",
+        },
+        reschedule_reason: {
+          type: "string",
+          description:
+            "Why rescheduling. 2-6 words. No names. GOOD: Work conflict, Pet feeling better.",
+        },
+        cancellation_reason: {
+          type: "string",
+          description:
+            "Why cancelling. 2-6 words. No names. GOOD: Pet passed away, Going to different vet.",
+        },
+        original_appointment: {
+          type: "object",
+          description:
+            "Original appointment details for rescheduled appointments only.",
+          properties: {
+            date: {
+              type: "string",
+              description:
+                "Original appointment date before rescheduling. YYYY-MM-DD format.",
+            },
+            time: {
+              type: "string",
+              description:
+                "Original appointment time before rescheduling. HH:MM 24-hour format.",
+            },
+          },
+        },
+      },
+    },
+  },
+  required: ["card_type"],
+} as const;
+
+/**
+ * Full action card output configuration for reference.
+ * Contains name, description, and schema.
+ */
+export const ACTION_CARD_OUTPUT_CONFIG = {
+  name: "action_card_output",
+  description:
+    "Extract action card display data from inbound calls for the dashboard",
+  schema: ACTION_CARD_OUTPUT_SCHEMA,
+} as const;
+
+/**
+ * TypeScript type for action card output data.
+ * Matches the schema structure for type-safe usage.
+ */
+export interface ActionCardOutput {
+  card_type:
+    | "scheduled"
+    | "rescheduled"
+    | "cancellation"
+    | "emergency"
+    | "callback"
+    | "info";
+
+  info_data?: {
+    reason?: string;
+  };
+
+  callback_data?: {
+    reason?: string;
+    caller_name?: string;
+    pet_name?: string;
+    phone_number?: string;
+  };
+
+  emergency_data?: {
+    symptoms?: string;
+    er_name?: string;
+    urgency_level?: "critical" | "urgent" | "monitor";
+  };
+
+  appointment_data?: {
+    date?: string;
+    time?: string;
+    reason?: string;
+    client_name?: string;
+    patient_name?: string;
+    reschedule_reason?: string;
+    cancellation_reason?: string;
+    original_appointment?: {
+      date?: string;
+      time?: string;
+    };
+  };
+}

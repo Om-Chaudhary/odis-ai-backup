@@ -236,6 +236,9 @@ export interface InboundCall {
 /**
  * Action card data from VAPI structured output
  * Pre-formatted data for action card display in dashboard
+ *
+ * Schema is defined in libs/integrations/vapi/src/schemas/action-card-output.ts
+ * and synced to VAPI assistants via scripts/configure-vapi-structured-outputs.ts
  */
 export interface ActionCardData {
   /** Type of action card to display */
@@ -254,23 +257,42 @@ export interface ActionCardData {
     date?: string;
     time?: string;
     reason?: string;
+    /** Why rescheduling (new location - preferred) */
+    reschedule_reason?: string;
+    /** Why cancelling (new location - preferred) */
+    cancellation_reason?: string;
+    /** Original appointment for rescheduled cards (new location - preferred) */
+    original_appointment?: {
+      date?: string;
+      time?: string;
+    };
   };
 
-  /** Original appointment data for rescheduled cards */
+  /**
+   * Original appointment data for rescheduled cards
+   * @deprecated Use appointment_data.original_appointment instead
+   */
   original_appointment?: {
     date?: string;
     time?: string;
   };
 
-  /** Reason for rescheduling */
+  /**
+   * Reason for rescheduling
+   * @deprecated Use appointment_data.reschedule_reason instead
+   */
   reschedule_reason?: string;
 
-  /** Reason for cancellation */
+  /**
+   * Reason for cancellation
+   * @deprecated Use appointment_data.cancellation_reason instead
+   */
   cancellation_reason?: string;
 
   /** Emergency triage data */
   emergency_data?: {
-    symptoms?: string[];
+    /** Comma-separated symptom keywords (new: string, legacy: string[]) */
+    symptoms?: string | string[];
     er_name?: string | null;
     urgency_level?: "critical" | "urgent" | "monitor";
   };
@@ -285,7 +307,17 @@ export interface ActionCardData {
 
   /** Informational call data */
   info_data?: {
+    /** Info topic/reason (new: single string, 1-6 words) */
+    reason?: string;
+    /**
+     * Key topics discussed
+     * @deprecated Use reason instead
+     */
     topics?: string[];
+    /**
+     * Summary of the call
+     * @deprecated Use reason instead
+     */
     summary?: string;
   };
 }

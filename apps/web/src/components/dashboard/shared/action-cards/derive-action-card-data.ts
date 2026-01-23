@@ -7,54 +7,14 @@
  * @module dashboard/shared/action-cards/derive-action-card-data
  */
 
-import type { BookingData, CallOutcome } from "../../inbound/types";
+import type {
+  BookingData,
+  CallOutcome,
+  ActionCardData,
+} from "../../inbound/types";
 
-/**
- * Action card data structure (matches VAPI structured output)
- */
-export interface ActionCardData {
-  card_type:
-    | "scheduled"
-    | "rescheduled"
-    | "cancellation"
-    | "emergency"
-    | "callback"
-    | "info";
-
-  appointment_data?: {
-    patient_name?: string;
-    client_name?: string;
-    date?: string;
-    time?: string;
-    reason?: string;
-  };
-
-  original_appointment?: {
-    date?: string;
-    time?: string;
-  };
-
-  reschedule_reason?: string;
-  cancellation_reason?: string;
-
-  emergency_data?: {
-    symptoms?: string[];
-    er_name?: string | null;
-    urgency_level?: "critical" | "urgent" | "monitor";
-  };
-
-  callback_data?: {
-    reason?: string;
-    phone_number?: string;
-    caller_name?: string;
-    pet_name?: string;
-  };
-
-  info_data?: {
-    topics?: string[];
-    summary?: string;
-  };
-}
+// Re-export for consumers that import from here
+export type { ActionCardData };
 
 /**
  * Call outcome data from VAPI structured output

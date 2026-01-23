@@ -97,7 +97,7 @@ export const callsRouter = createTRPCRouter({
       if (error) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to fetch inbound calls: ${error.message}`,
+          message: `Failed to fetch inbound calls: ${JSON.stringify(error)}`,
         });
       }
 

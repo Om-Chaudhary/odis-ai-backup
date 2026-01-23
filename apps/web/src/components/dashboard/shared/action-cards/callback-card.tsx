@@ -14,10 +14,6 @@ interface CallbackCardProps {
   staffActionNeeded?: string | null;
   /** Follow-up next steps */
   nextSteps?: string | null;
-  /** Caller name if available */
-  callerName?: string | null;
-  /** Pet name if available */
-  petName?: string | null;
   /** Phone number to call back */
   phoneNumber?: string | null;
   /** Callback when confirm is clicked */
@@ -67,6 +63,15 @@ export function CallbackCard({
   // Get reason text
   const reason = getReasonText(escalationSummary, staffActionNeeded);
 
+  // Build fields - only show reason
+  const fields = [
+    {
+      label: "Reason:",
+      value: reason,
+      isQuoted: true,
+    },
+  ];
+
   return (
     <EditorialCardBase variant="callback" className={className}>
       <EditorialHeader
@@ -77,13 +82,7 @@ export function CallbackCard({
 
       <EditorialFieldList
         variant="callback"
-        fields={[
-          {
-            label: "Request:",
-            value: reason,
-            isQuoted: true,
-          },
-        ]}
+        fields={fields}
         showConfirmButton
         onConfirm={onConfirm}
         isConfirming={isConfirming}

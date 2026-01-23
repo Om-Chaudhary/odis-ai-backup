@@ -98,7 +98,6 @@ interface ActionCardSelectorProps {
 export function ActionCardSelector({
   call,
   booking,
-  callerName,
   petName,
   isConfirmed,
   onConfirm,
@@ -131,7 +130,6 @@ export function ActionCardSelector({
   const staffActionNeeded =
     call.escalation_data?.staff_action_needed ??
     call.escalation_data?.staff_action_required;
-  const followUpSummary = call.follow_up_data?.follow_up_summary;
   const nextSteps = call.follow_up_data?.next_steps;
 
   switch (cardData.card_type) {
@@ -139,10 +137,10 @@ export function ActionCardSelector({
       return (
         <ScheduledAppointmentCard
           booking={booking}
-          outcomeSummary={
-            cardData.appointment_data?.reason ?? outcomeSummary
-          }
-          petName={cardData.appointment_data?.patient_name ?? petName}
+          appointmentDate={cardData.appointment_data?.date}
+          appointmentTime={cardData.appointment_data?.time}
+          appointmentReason={cardData.appointment_data?.reason}
+          outcomeSummary={outcomeSummary}
           onConfirm={isConfirmed ? undefined : onConfirm}
           isConfirming={isConfirming}
           isConfirmed={isConfirmed}
@@ -150,41 +148,58 @@ export function ActionCardSelector({
         />
       );
 
-    case "rescheduled":
+    case "rescheduled": {
+      // Check both new location (appointment_data) and legacy location (root)
+      const rescheduleReason =
+        cardData.appointment_data?.reschedule_reason ??
+        cardData.reschedule_reason;
+      const originalAppointment =
+        cardData.appointment_data?.original_appointment ??
+        cardData.original_appointment;
+
       return (
         <RescheduledAppointmentCard
           booking={booking}
-          outcomeSummary={cardData.reschedule_reason ?? outcomeSummary}
-          petName={cardData.appointment_data?.patient_name ?? petName}
+          appointmentDate={cardData.appointment_data?.date}
+          appointmentTime={cardData.appointment_data?.time}
+          originalDate={originalAppointment?.date}
+          originalTime={originalAppointment?.time}
+          rescheduleReason={rescheduleReason}
+          outcomeSummary={outcomeSummary}
           onConfirm={isConfirmed ? undefined : onConfirm}
           isConfirming={isConfirming}
           isConfirmed={isConfirmed}
           className={className}
         />
       );
+    }
 
-    case "cancellation":
+    case "cancellation": {
+      // Check both new location (appointment_data) and legacy location (root)
+      const cancellationReason =
+        cardData.appointment_data?.cancellation_reason ??
+        cardData.cancellation_reason;
+
       return (
         <CanceledAppointmentCard
           booking={booking}
-          outcomeSummary={cardData.cancellation_reason ?? outcomeSummary}
-          petName={cardData.appointment_data?.patient_name ?? petName}
+          appointmentDate={cardData.appointment_data?.date}
+          appointmentTime={cardData.appointment_data?.time}
+          cancellationReason={cancellationReason}
+          outcomeSummary={outcomeSummary}
           onConfirm={isConfirmed ? undefined : onConfirm}
           isConfirming={isConfirming}
           isConfirmed={isConfirmed}
           className={className}
         />
       );
+    }
 
     case "emergency":
       return (
         <EmergencyCard
           escalationSummary={escalationSummary ?? outcomeSummary}
-          outcomeSummary={outcomeSummary}
-          staffActionNeeded={staffActionNeeded}
           keyTopics={cardData.emergency_data?.symptoms ?? keyTopics}
-          petName={petName}
-          // New: pass ER name directly when available
           erName={cardData.emergency_data?.er_name}
           className={className}
         />
@@ -198,8 +213,6 @@ export function ActionCardSelector({
           }
           staffActionNeeded={staffActionNeeded}
           nextSteps={nextSteps}
-          callerName={cardData.callback_data?.caller_name ?? callerName}
-          petName={cardData.callback_data?.pet_name ?? petName}
           phoneNumber={cardData.callback_data?.phone_number ?? call.customer_phone}
           onConfirm={isConfirmed ? undefined : onConfirm}
           isConfirming={isConfirming}
@@ -211,9 +224,8 @@ export function ActionCardSelector({
     case "info":
       return (
         <InfoCard
+          reason={cardData.info_data?.reason}
           outcomeSummary={cardData.info_data?.summary ?? outcomeSummary}
-          followUpSummary={followUpSummary}
-          nextSteps={nextSteps}
           keyTopics={cardData.info_data?.topics ?? keyTopics}
           className={className}
         />
