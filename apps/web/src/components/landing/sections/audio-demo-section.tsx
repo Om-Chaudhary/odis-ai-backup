@@ -12,17 +12,16 @@ import { useSectionVisibility } from "~/hooks/useSectionVisibility";
 
 // Demo cards with real VAPI call recordings - organized for 2-column staggered layout
 const demoCards: DemoCardData[] = [
-  // Real call: Chloe - Ear infection follow-up (61s)
+  // Real call: Ivy - Wound care follow-up (60s)
   {
-    id: "chloe-ear-followup",
-    title: "Ear Infection Follow-up",
-    description: "Checking on medication and ear cleaning",
-    duration: 61,
-    audioUrl:
-      "https://storage.vapi.ai/019b0b35-9dfd-7eeb-8f84-827e9b9b1623-1765419709915-fa94c4a3-ab1a-4c9c-a33a-afc713b0494e-mono.wav",
-    petName: "Chloe",
+    id: "ivy-wound-care-followup",
+    title: "Wound Care Follow-up",
+    description: "Brief check-in on wound recovery",
+    duration: 60,
+    audioUrl: "/audio/ivy-wound-care-followup.mp3",
+    petName: "Ivy",
     petImage:
-      "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=100&h=100&fit=crop&crop=face",
+      "https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=100&h=100&fit=crop&crop=face",
     callType: "outbound",
   },
   // Real call: Pishi - Deworming follow-up (60s)
@@ -38,16 +37,17 @@ const demoCards: DemoCardData[] = [
       "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=100&h=100&fit=crop&crop=face",
     callType: "outbound",
   },
-  // Real call: Ivy - Wound care follow-up (60s)
+  // Real call: Chloe - Ear infection follow-up (61s)
   {
-    id: "ivy-wound-care-followup",
-    title: "Wound Care Follow-up",
-    description: "Brief check-in on wound recovery",
-    duration: 60,
-    audioUrl: "/audio/ivy-wound-care-followup.mp3",
-    petName: "Ivy",
+    id: "chloe-ear-followup",
+    title: "Ear Infection Follow-up",
+    description: "Checking on medication and ear cleaning",
+    duration: 61,
+    audioUrl:
+      "https://storage.vapi.ai/019b0b35-9dfd-7eeb-8f84-827e9b9b1623-1765419709915-fa94c4a3-ab1a-4c9c-a33a-afc713b0494e-mono.wav",
+    petName: "Chloe",
     petImage:
-      "https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=100&h=100&fit=crop&crop=face",
+      "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=100&h=100&fit=crop&crop=face",
     callType: "outbound",
   },
 ];
