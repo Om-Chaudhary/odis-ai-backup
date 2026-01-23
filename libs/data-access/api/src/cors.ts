@@ -84,7 +84,7 @@ export const CORS_MAX_AGE = 86400;
 export function getCorsHeaders(
   origin: string | null,
   allowCredentials = true,
-): HeadersInit {
+): Record<string, string> {
   // Check if origin is allowed
   const isAllowed = origin && isOriginAllowed(origin);
 

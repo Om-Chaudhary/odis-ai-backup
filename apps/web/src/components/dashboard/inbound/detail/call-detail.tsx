@@ -225,8 +225,6 @@ export function CallDetail({
             customer_phone: call.customer_phone,
           }}
           booking={bookingData}
-          callerName={callerName}
-          petName={petName}
           isConfirmed={isActionConfirmed}
           onConfirm={handleConfirmAction}
           isConfirming={confirmActionMutation.isPending}

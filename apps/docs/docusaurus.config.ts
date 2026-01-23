@@ -90,9 +90,9 @@ const config: Config = {
         {
           title: "Documentation",
           items: [
-            { label: "Getting Started", to: "/getting-started" },
-            { label: "API Reference", to: "/api" },
-            { label: "Integrations", to: "/integrations" },
+            { label: "Getting Started", to: "/getting-started/quick-start" },
+            { label: "API Reference", to: "/api/overview" },
+            { label: "Integrations", to: "/integrations/supabase" },
           ],
         },
         {

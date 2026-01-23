@@ -4,9 +4,9 @@
   "sourceRoot": "libs/domain/auth/util/src",
   "projectType": "library",
   "tags": [
-    "type:util",
-    "scope:shared",
-    "platform:neutral"
+    "type:feature",
+    "scope:server",
+    "platform:node"
   ],
   "targets": {
     "lint": {

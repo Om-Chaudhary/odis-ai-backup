@@ -196,7 +196,7 @@ export function createToolHandler<TSchema extends z.ZodType>(
         // Try to extract toolCallId from body for error response
         let toolCallId: string | undefined;
         try {
-          const body = await req.clone().json();
+          const body = (await req.clone().json()) as Record<string, unknown>;
           const extracted = extractToolArguments(body);
           toolCallId = extracted.toolCallId;
         } catch {

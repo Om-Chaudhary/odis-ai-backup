@@ -64,8 +64,6 @@ interface ActionCardSelectorProps {
   booking?: BookingData | null;
   /** Caller name if resolved externally */
   callerName?: string | null;
-  /** Pet name if resolved externally */
-  petName?: string | null;
   /** Whether this card has been confirmed/dismissed */
   isConfirmed?: boolean;
   /** Callback when card is confirmed (only for confirmable cards) */
@@ -98,7 +96,6 @@ interface ActionCardSelectorProps {
 export function ActionCardSelector({
   call,
   booking,
-  petName,
   isConfirmed,
   onConfirm,
   isConfirming,

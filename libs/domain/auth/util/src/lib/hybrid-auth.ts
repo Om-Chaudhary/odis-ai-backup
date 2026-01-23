@@ -337,7 +337,10 @@ export async function resolveUserWithLinking(
   }
 
   // Try standard Clerk lookup first
-  const clerkUserId = clerkAuth!.userId!;
+  const clerkUserId = clerkAuth.userId;
+  if (!clerkUserId) {
+    return { user: null };
+  }
   const existingUser = await resolveClerkUser(clerkUserId, supabase);
 
   if (existingUser) {
