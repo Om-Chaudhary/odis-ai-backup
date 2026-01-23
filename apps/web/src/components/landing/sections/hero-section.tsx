@@ -27,15 +27,15 @@ import { DotPattern } from "@odis-ai/shared/ui";
 const ROTATING_WORDS = [
   "Never Misses a Call",
   "Books More Appointments",
-  "Saves 10+ Hours Weekly",
+  "Saves 15+ Hours Weekly",
   "Works 24/7",
 ];
 
 // Social proof stats
 const STATS = [
-  { value: 50000, suffix: "+", label: "Calls Handled" },
+  { value: 5000, suffix: "+", label: "Calls Handled" },
   { value: 98, suffix: "%", label: "Client Satisfaction" },
-  { value: 10, suffix: "+", label: "Hours Saved Weekly" },
+  { value: 15, suffix: "+", label: "Hours Saved Weekly" },
 ];
 
 // Navigation links
