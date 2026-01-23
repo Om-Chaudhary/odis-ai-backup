@@ -38,15 +38,14 @@ const demoCards: DemoCardData[] = [
       "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=100&h=100&fit=crop&crop=face",
     callType: "outbound",
   },
-  // Real call: Missy - Nail trim follow-up (25s)
+  // Real call: Ivy - Wound care follow-up (60s)
   {
-    id: "missy-nail-followup",
-    title: "Nail Trim Follow-up",
-    description: "Brief check-in after grooming visit",
-    duration: 25,
-    audioUrl:
-      "https://storage.vapi.ai/019b0608-a3d0-7006-893e-bb8780038c4a-1765332827998-573401b1-76ec-4db4-b9b0-12188db82df2-mono.wav",
-    petName: "Missy",
+    id: "ivy-wound-care-followup",
+    title: "Wound Care Follow-up",
+    description: "Brief check-in on wound recovery",
+    duration: 60,
+    audioUrl: "/audio/ivy-wound-care-followup.mp3",
+    petName: "Ivy",
     petImage:
       "https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=100&h=100&fit=crop&crop=face",
     callType: "outbound",
