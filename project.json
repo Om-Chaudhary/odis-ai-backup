@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/nx/schemas/project-schema.json",
+  "name": "odis-ai",
+  "projectType": "application",
+  "tags": ["scope:root"],
+  "targets": {
+    "build": {
+      "executor": "nx:noop",
+      "metadata": {
+        "description": "Use 'nx build web' directly instead"
+      }
+    }
+  }
+}
