@@ -16,6 +16,7 @@ import {
   getLocalDayRange,
   DEFAULT_TIMEZONE,
 } from "@odis-ai/shared/util/timezone";
+import { categorizeFailure } from "@odis-ai/shared/util";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { getDischargeCaseStatsInput } from "../schemas";
 
@@ -94,63 +95,6 @@ interface CaseRow {
     status: string;
     scheduled_for: string | null;
   }>;
-}
-
-/**
- * Categorize a failure based on ended_reason and statuses
- */
-function categorizeFailure(
-  callEndedReason: string | null,
-  callStatus: string | null,
-  emailStatus: string | null,
-):
-  | "silence_timeout"
-  | "no_answer"
-  | "connection_error"
-  | "voicemail"
-  | "email_failed"
-  | "other"
-  | null {
-  // If neither call nor email failed, not a failure
-  if (callStatus !== "failed" && emailStatus !== "failed") {
-    return null;
-  }
-
-  // Email failure (when call didn't fail)
-  if (emailStatus === "failed" && callStatus !== "failed") {
-    return "email_failed";
-  }
-
-  // Call failure - categorize by ended_reason
-  if (callStatus === "failed" && callEndedReason) {
-    const reason = callEndedReason.toLowerCase();
-
-    if (
-      reason.includes("silence-timed-out") ||
-      reason.includes("silence_timed_out")
-    ) {
-      return "silence_timeout";
-    }
-    if (
-      reason.includes("no-answer") ||
-      reason.includes("did-not-answer") ||
-      reason.includes("no_answer")
-    ) {
-      return "no_answer";
-    }
-    if (reason.includes("voicemail")) {
-      return "voicemail";
-    }
-    if (
-      reason.includes("error") ||
-      reason.includes("failed-to-connect") ||
-      reason.includes("sip")
-    ) {
-      return "connection_error";
-    }
-  }
-
-  return "other";
 }
 
 export const getStatsRouter = createTRPCRouter({

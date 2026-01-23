@@ -6,6 +6,7 @@
 
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { deriveDeliveryStatus } from "@odis-ai/shared/util";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 
 const getCaseByIdInput = z.object({
@@ -178,35 +179,8 @@ export const getCaseByIdRouter = createTRPCRouter({
       const callStatus = call?.status ?? null;
       const emailStatus = email?.status ?? null;
 
-      function deriveDeliveryStatus(
-        status: string | null,
-        hasContact: boolean,
-      ): "sent" | "pending" | "failed" | "not_applicable" | null {
-        if (!hasContact) return "not_applicable";
-        if (!status) return null;
-        switch (status) {
-          case "completed":
-          case "sent":
-            return "sent";
-          case "queued":
-          case "ringing":
-          case "in_progress":
-            return "pending";
-          case "failed":
-            return "failed";
-          default:
-            return null;
-        }
-      }
-
-      const phoneSent = deriveDeliveryStatus(
-        callStatus,
-        !!patient?.owner_phone,
-      );
-      const emailSent = deriveDeliveryStatus(
-        emailStatus,
-        !!patient?.owner_email,
-      );
+      const phoneSent = deriveDeliveryStatus(callStatus, !!patient?.owner_phone);
+      const emailSent = deriveDeliveryStatus(emailStatus, !!patient?.owner_email);
 
       // Derive composite status
       let status = "pending_review";

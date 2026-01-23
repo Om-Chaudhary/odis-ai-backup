@@ -315,14 +315,6 @@ export class CallRepository extends BaseRepository<ScheduledCall> {
   async getStatsByUser(userId: string): Promise<Record<CallStatus, number>> {
     this.logger.debug("Getting call statistics for user", { userId });
 
-    const statuses: CallStatus[] = [
-      "queued",
-      "in-progress",
-      "completed",
-      "failed",
-      "canceled",
-    ];
-
     const stats: Record<CallStatus, number> = {
       queued: 0,
       "in-progress": 0,
@@ -331,9 +323,28 @@ export class CallRepository extends BaseRepository<ScheduledCall> {
       canceled: 0,
     };
 
-    // Count calls for each status
-    for (const status of statuses) {
-      stats[status] = await this.count({ user_id: userId, status });
+    // Single query with GROUP BY for all statuses
+    const { data, error } = await this.supabase
+      .from(this.tableName)
+      .select("status")
+      .eq("user_id", userId);
+
+    if (error) {
+      this.logger.error("Failed to get call statistics", {
+        userId,
+        error: error.message,
+      });
+      return stats;
+    }
+
+    // Count occurrences of each status
+    if (data) {
+      for (const row of data) {
+        const status = row.status as CallStatus;
+        if (status in stats) {
+          stats[status]++;
+        }
+      }
     }
 
     this.logger.debug("Call statistics retrieved", { userId, stats });

@@ -53,7 +53,7 @@ import {
 } from "./handlers";
 
 // Utils
-import { formatWebhookForLog } from "./utils";
+import { formatWebhookForLog } from "./utils/index";
 
 // Type guards
 import {
@@ -258,6 +258,6 @@ export function requiresSynchronousResponse(
 
 // Re-export types for convenience
 export * from "./types";
-export * from "./utils";
+export * from "./utils/index";
 export * from "./handlers";
 export * from "./tools";

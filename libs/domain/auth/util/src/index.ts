@@ -1,9 +1,34 @@
 /**
- * @odis-ai/auth
+ * @odis-ai/domain/auth
  *
- * Shared Supabase authentication client for browser-based platforms.
- * Works with web, Chrome extensions, and Electron renderer.
+ * Authentication utilities for the ODIS AI platform.
+ *
+ * Includes:
+ * - Hybrid auth service (Clerk + Supabase Auth)
+ * - Browser auth client for web/extension/Electron
+ * - Session management utilities
+ * - Storage adapters
  */
+
+// Hybrid Auth (Clerk + Supabase)
+export {
+  detectAuthType,
+  selectSupabaseClient,
+  resolveUser,
+  resolveClerkUser,
+  resolveSupabaseUser,
+  resolveUserWithLinking,
+  resolveAuthContext,
+  linkClerkAccount,
+} from "./lib/hybrid-auth";
+
+export type {
+  AuthType,
+  NormalizedUser,
+  AuthContext,
+  ClerkAuthObject,
+  ResolveUserResult,
+} from "./lib/hybrid-auth";
 
 // Client
 export { createBrowserAuthClient, createAuthStorage } from "./client";

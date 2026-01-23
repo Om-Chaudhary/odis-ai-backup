@@ -61,15 +61,21 @@ export function CallDetail({
     call.action_confirmed ?? false,
   );
 
-  // Sync with prop changes
+  // Sync with prop changes (reset when switching between calls)
   useEffect(() => {
     setIsActionConfirmed(call.action_confirmed ?? false);
-  }, [call.action_confirmed]);
+  }, [call.id, call.action_confirmed]);
+
+  // Get utils for cache invalidation
+  const utils = api.useUtils();
 
   // Confirm action mutation
   const confirmActionMutation = api.inbound.confirmCallAction.useMutation({
     onSuccess: () => {
       toast.success("Action confirmed");
+
+      // Invalidate queries to update cache
+      void utils.inboundCalls.listInboundCalls.invalidate();
     },
     onError: (error) => {
       // Revert optimistic update

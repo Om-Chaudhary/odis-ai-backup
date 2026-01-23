@@ -13,9 +13,8 @@ import { EscalationCard } from "./escalation-card";
 import { FollowUpCard } from "./follow-up-card";
 
 // Types for structured output data - exported for reuse
-// Using index signatures for compatibility with various data shapes
+// Strictly typed interfaces without index signatures for better type safety
 export interface CallOutcomeData {
-  [key: string]: unknown;
   call_outcome?: string;
   conversation_stage_reached?: string;
   owner_available?: boolean;
@@ -23,7 +22,6 @@ export interface CallOutcomeData {
 }
 
 export interface PetHealthData {
-  [key: string]: unknown;
   pet_recovery_status?: string;
   symptoms_reported?: string[];
   new_concerns_raised?: boolean;
@@ -31,7 +29,6 @@ export interface PetHealthData {
 }
 
 export interface MedicationComplianceData {
-  [key: string]: unknown;
   medication_discussed?: boolean;
   medication_compliance?: string;
   medication_issues?: string[];
@@ -39,7 +36,6 @@ export interface MedicationComplianceData {
 }
 
 export interface OwnerSentimentData {
-  [key: string]: unknown;
   owner_sentiment?: string;
   owner_engagement_level?: string;
   expressed_gratitude?: boolean;
@@ -47,7 +43,6 @@ export interface OwnerSentimentData {
 }
 
 export interface EscalationData {
-  [key: string]: unknown;
   escalation_triggered?: boolean;
   escalation_type?: string;
   transfer_attempted?: boolean;
@@ -56,7 +51,6 @@ export interface EscalationData {
 }
 
 export interface FollowUpData {
-  [key: string]: unknown;
   recheck_reminder_delivered?: boolean;
   recheck_confirmed?: boolean;
   appointment_requested?: boolean;

@@ -116,7 +116,7 @@ export const scheduledRouter = createTRPCRouter({
             id: String(c.id ?? ""),
             type: "call" as const,
             scheduledFor: c.scheduled_for ? String(c.scheduled_for) : null,
-            status: (c.status ?? null) as CallStatus,
+            status: (c.status as CallStatus | null) ?? null,
             description: `Call to ${
               dynamicVars?.owner_name ?? c.customer_phone ?? "unknown"
             }`,
@@ -130,7 +130,7 @@ export const scheduledRouter = createTRPCRouter({
           id: String(e.id ?? ""),
           type: "email" as const,
           scheduledFor: e.scheduled_for ? String(e.scheduled_for) : null,
-          status: (e.status ?? null) as EmailStatus,
+          status: (e.status as EmailStatus | null) ?? null,
           description: `Email to ${
             e.recipient_name ?? e.recipient_email ?? "unknown"
           }`,

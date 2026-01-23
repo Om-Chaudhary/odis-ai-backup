@@ -22,7 +22,6 @@ import {
 import { normalizeToE164, normalizeEmail } from "@odis-ai/shared/util/phone";
 import { calculateScheduleTime } from "@odis-ai/shared/util/timezone";
 import { isBlockedExtremeCase } from "@odis-ai/shared/util/discharge-readiness";
-import type { NormalizedEntities } from "@odis-ai/shared/validators";
 import type { Json } from "@odis-ai/shared/types";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
@@ -31,6 +30,8 @@ import { batchScheduleInput } from "../schemas";
 // Dynamic imports for lazy-loaded libraries
 const getCasesService = () =>
   import("@odis-ai/domain/cases").then((m) => m.CasesService);
+const getBuildEntitiesFromIdexxMetadata = () =>
+  import("@odis-ai/domain/cases").then((m) => m.buildEntitiesFromIdexxMetadata);
 const getGenerateStructuredDischargeSummaryWithRetry = () =>
   import("@odis-ai/integrations/ai/generate-structured-discharge").then(
     (m) => m.generateStructuredDischargeSummaryWithRetry,
@@ -46,138 +47,6 @@ interface BatchScheduleResult {
   callScheduledFor?: string;
   emailScheduledFor?: string;
   summaryGenerated?: boolean;
-}
-
-/**
- * IDEXX metadata structure for entity extraction
- */
-interface IdexxMetadata {
-  pet_name?: string;
-  patient_name?: string;
-  patient_species?: string;
-  patient_breed?: string;
-  species?: string;
-  breed?: string;
-  client_name?: string;
-  client_first_name?: string;
-  client_last_name?: string;
-  owner_name?: string;
-  client_phone?: string;
-  client_email?: string;
-  appointment_reason?: string;
-  appointment_type?: string;
-  products_services?: string;
-  consultation_notes?: string;
-  notes?: string;
-  provider_name?: string;
-}
-
-/**
- * Builds NormalizedEntities from IDEXX metadata when AI extraction isn't possible
- */
-function buildEntitiesFromIdexxMetadata(
-  idexx: IdexxMetadata,
-  patient: {
-    name?: string | null;
-    species?: string | null;
-    breed?: string | null;
-    owner_name?: string | null;
-    owner_phone?: string | null;
-    owner_email?: string | null;
-  } | null,
-): NormalizedEntities {
-  let ownerName =
-    idexx.client_name ?? idexx.owner_name ?? patient?.owner_name ?? "unknown";
-  if (
-    ownerName === "unknown" &&
-    idexx.client_first_name &&
-    idexx.client_last_name
-  ) {
-    ownerName = `${idexx.client_first_name} ${idexx.client_last_name}`.trim();
-  }
-
-  const speciesRaw =
-    idexx.patient_species ?? idexx.species ?? patient?.species ?? "unknown";
-  const speciesLower = speciesRaw.toLowerCase();
-  const validSpecies = [
-    "dog",
-    "cat",
-    "bird",
-    "rabbit",
-    "other",
-    "unknown",
-  ] as const;
-  type ValidSpecies = (typeof validSpecies)[number];
-  const species: ValidSpecies = validSpecies.includes(
-    speciesLower as ValidSpecies,
-  )
-    ? (speciesLower as ValidSpecies)
-    : "unknown";
-
-  const procedures: string[] = [];
-  if (idexx.products_services) {
-    procedures.push(
-      ...idexx.products_services
-        .split(/[,;]/)
-        .map((s) => s.trim())
-        .filter(Boolean),
-    );
-  }
-
-  let caseType: NormalizedEntities["caseType"] = "exam";
-  if (idexx.appointment_type) {
-    const appointmentTypeLower = idexx.appointment_type.toLowerCase();
-    if (appointmentTypeLower.includes("follow")) caseType = "follow_up";
-    else if (appointmentTypeLower.includes("surgery")) caseType = "surgery";
-    else if (appointmentTypeLower.includes("dental")) caseType = "dental";
-    else if (
-      appointmentTypeLower.includes("vaccine") ||
-      appointmentTypeLower.includes("vaccination")
-    )
-      caseType = "vaccination";
-    else if (appointmentTypeLower.includes("emergency")) caseType = "emergency";
-    else if (
-      appointmentTypeLower.includes("checkup") ||
-      appointmentTypeLower.includes("wellness")
-    )
-      caseType = "checkup";
-  }
-
-  let followUpInstructions: string | undefined;
-  if (idexx.consultation_notes) {
-    followUpInstructions = idexx.consultation_notes
-      .replace(/<[^>]*>/g, " ")
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/\s+/g, " ")
-      .trim();
-  } else if (idexx.notes) {
-    followUpInstructions = idexx.notes;
-  }
-
-  return {
-    patient: {
-      name: idexx.pet_name ?? idexx.patient_name ?? patient?.name ?? "unknown",
-      species,
-      breed: idexx.patient_breed ?? idexx.breed ?? patient?.breed ?? undefined,
-      owner: {
-        name: ownerName,
-        phone: idexx.client_phone ?? patient?.owner_phone ?? undefined,
-        email: idexx.client_email ?? patient?.owner_email ?? undefined,
-      },
-    },
-    clinical: {
-      visitReason: idexx.appointment_reason ?? undefined,
-      chiefComplaint: idexx.appointment_reason ?? undefined,
-      procedures: procedures.length > 0 ? procedures : undefined,
-      followUpInstructions,
-      productsServicesProvided: procedures.length > 0 ? procedures : undefined,
-    },
-    caseType,
-    confidence: { overall: 0.7, patient: 0.7, clinical: 0.6 },
-  };
 }
 
 export const batchScheduleRouter = createTRPCRouter({
@@ -421,6 +290,15 @@ export const batchScheduleRouter = createTRPCRouter({
             }
 
             const entities = caseInfo.entities;
+            type IdexxMetadata = {
+              pet_name?: string;
+              species?: string;
+              client_first_name?: string;
+              client_last_name?: string;
+              owner_name?: string;
+              notes?: string;
+              consultation_notes?: string;
+            };
             const idexxMetadata = caseInfo.metadata as {
               idexx?: IdexxMetadata;
             } | null;
@@ -655,6 +533,15 @@ export const batchScheduleRouter = createTRPCRouter({
           if (canSchedulePhone && callScheduledFor) {
             // Ensure entities exist
             let entities = caseInfo.entities;
+            type IdexxMetadata = {
+              pet_name?: string;
+              species?: string;
+              client_first_name?: string;
+              client_last_name?: string;
+              owner_name?: string;
+              notes?: string;
+              consultation_notes?: string;
+            };
             const idexxMetadata = caseInfo.metadata as {
               idexx?: IdexxMetadata;
             } | null;
@@ -667,6 +554,7 @@ export const batchScheduleRouter = createTRPCRouter({
               if (aiEntities) {
                 entities = aiEntities;
               } else {
+                const buildEntitiesFromIdexxMetadata = await getBuildEntitiesFromIdexxMetadata();
                 entities = buildEntitiesFromIdexxMetadata(
                   idexxMetadata.idexx,
                   patient ?? null,

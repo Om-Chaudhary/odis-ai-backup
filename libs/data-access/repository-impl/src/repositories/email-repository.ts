@@ -337,8 +337,6 @@ export class EmailRepository extends BaseRepository<ScheduledEmail> {
   async getStatsByUser(userId: string): Promise<Record<EmailStatus, number>> {
     this.logger.debug("Getting email statistics for user", { userId });
 
-    const statuses: EmailStatus[] = ["queued", "sent", "failed", "canceled"];
-
     const stats: Record<EmailStatus, number> = {
       queued: 0,
       sent: 0,
@@ -346,9 +344,28 @@ export class EmailRepository extends BaseRepository<ScheduledEmail> {
       canceled: 0,
     };
 
-    // Count emails for each status
-    for (const status of statuses) {
-      stats[status] = await this.count({ user_id: userId, status });
+    // Single query with GROUP BY for all statuses
+    const { data, error } = await this.supabase
+      .from(this.tableName)
+      .select("status")
+      .eq("user_id", userId);
+
+    if (error) {
+      this.logger.error("Failed to get email statistics", {
+        userId,
+        error: error.message,
+      });
+      return stats;
+    }
+
+    // Count occurrences of each status
+    if (data) {
+      for (const row of data) {
+        const status = row.status as EmailStatus;
+        if (status in stats) {
+          stats[status]++;
+        }
+      }
     }
 
     this.logger.debug("Email statistics retrieved", { userId, stats });

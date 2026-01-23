@@ -1,5 +1,4 @@
 import { UnifiedSidebar } from "~/components/dashboard/shell/unified-sidebar";
-import { AudioPlayerWrapper } from "~/components/dashboard/shared";
 import { getUser } from "~/server/actions/auth";
 import { createServiceClient } from "@odis-ai/data-access/db/server";
 import { redirect } from "next/navigation";
@@ -150,7 +149,7 @@ export default async function DashboardLayout({
 
         {/* Content */}
         <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden">
-          <AudioPlayerWrapper>{children}</AudioPlayerWrapper>
+          {children}
         </div>
       </div>
 

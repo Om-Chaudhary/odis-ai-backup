@@ -210,3 +210,154 @@ export function mergeEntities(
   if (!current) return incoming;
   return incoming;
 }
+
+/**
+ * IDEXX metadata structure for entity extraction
+ */
+export interface IdexxMetadata {
+  pet_name?: string;
+  patient_name?: string;
+  patient_species?: string;
+  patient_breed?: string;
+  species?: string;
+  breed?: string;
+  client_name?: string;
+  client_first_name?: string;
+  client_last_name?: string;
+  owner_name?: string;
+  client_phone?: string;
+  client_email?: string;
+  appointment_reason?: string;
+  appointment_type?: string;
+  products_services?: string;
+  consultation_notes?: string;
+  notes?: string;
+  provider_name?: string;
+}
+
+/**
+ * Patient data subset for entity building
+ */
+export interface PatientDataForEntities {
+  name?: string | null;
+  species?: string | null;
+  breed?: string | null;
+  owner_name?: string | null;
+  owner_phone?: string | null;
+  owner_email?: string | null;
+}
+
+const VALID_SPECIES = ["dog", "cat", "bird", "rabbit", "other", "unknown"] as const;
+type ValidSpecies = (typeof VALID_SPECIES)[number];
+
+/**
+ * Parse species string to valid species enum value
+ */
+function parseSpecies(speciesRaw: string): ValidSpecies {
+  const speciesLower = speciesRaw.toLowerCase();
+  return VALID_SPECIES.includes(speciesLower as ValidSpecies)
+    ? (speciesLower as ValidSpecies)
+    : "unknown";
+}
+
+/**
+ * Parse procedures from comma/semicolon separated string
+ */
+function parseProcedures(productsServices: string | undefined): string[] {
+  if (!productsServices) return [];
+  return productsServices
+    .split(/[,;]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Determine case type from appointment type string
+ */
+function determineCaseType(appointmentType: string | undefined): NormalizedEntities["caseType"] {
+  if (!appointmentType) return "exam";
+
+  const lower = appointmentType.toLowerCase();
+  if (lower.includes("follow")) return "follow_up";
+  if (lower.includes("surgery")) return "surgery";
+  if (lower.includes("dental")) return "dental";
+  if (lower.includes("vaccine") || lower.includes("vaccination")) return "vaccination";
+  if (lower.includes("emergency")) return "emergency";
+  if (lower.includes("checkup") || lower.includes("wellness")) return "checkup";
+  return "exam";
+}
+
+/**
+ * Strip HTML tags and decode entities from consultation notes
+ */
+function cleanConsultationNotes(notes: string): string {
+  return notes
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Builds NormalizedEntities from IDEXX metadata when AI extraction isn't possible
+ * (e.g., consultation_notes too short for AI extraction)
+ */
+export function buildEntitiesFromIdexxMetadata(
+  idexx: IdexxMetadata,
+  patient: PatientDataForEntities | null,
+): NormalizedEntities {
+  // Build owner name from available sources
+  let ownerName =
+    idexx.client_name ?? idexx.owner_name ?? patient?.owner_name ?? "unknown";
+  if (
+    ownerName === "unknown" &&
+    idexx.client_first_name &&
+    idexx.client_last_name
+  ) {
+    ownerName = `${idexx.client_first_name} ${idexx.client_last_name}`.trim();
+  }
+
+  // Determine species
+  const speciesRaw =
+    idexx.patient_species ?? idexx.species ?? patient?.species ?? "unknown";
+  const species = parseSpecies(speciesRaw);
+
+  // Parse procedures from products_services
+  const procedures = parseProcedures(idexx.products_services);
+
+  // Determine case type from appointment_type
+  const caseType = determineCaseType(idexx.appointment_type);
+
+  // Build clinical notes from available sources
+  let followUpInstructions: string | undefined;
+  if (idexx.consultation_notes) {
+    followUpInstructions = cleanConsultationNotes(idexx.consultation_notes);
+  } else if (idexx.notes) {
+    followUpInstructions = idexx.notes;
+  }
+
+  return {
+    patient: {
+      name: idexx.pet_name ?? idexx.patient_name ?? patient?.name ?? "unknown",
+      species,
+      breed: idexx.patient_breed ?? idexx.breed ?? patient?.breed ?? undefined,
+      owner: {
+        name: ownerName,
+        phone: idexx.client_phone ?? patient?.owner_phone ?? undefined,
+        email: idexx.client_email ?? patient?.owner_email ?? undefined,
+      },
+    },
+    clinical: {
+      visitReason: idexx.appointment_reason ?? undefined,
+      chiefComplaint: idexx.appointment_reason ?? undefined,
+      procedures: procedures.length > 0 ? procedures : undefined,
+      followUpInstructions,
+      productsServicesProvided: procedures.length > 0 ? procedures : undefined,
+    },
+    caseType,
+    confidence: { overall: 0.7, patient: 0.7, clinical: 0.6 }, // Lower confidence since not AI-extracted
+  };
+}

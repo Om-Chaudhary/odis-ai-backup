@@ -11,3 +11,4 @@ export * from "./repositories/email-repository";
 export * from "./repositories/user-repository";
 export * from "./repositories/client-repository";
 export * from "./repositories/canonical-patient-repository";
+export * from "./repositories/cases-repository";

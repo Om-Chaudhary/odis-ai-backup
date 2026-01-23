@@ -6,40 +6,7 @@
 
 import { z } from "zod";
 
-/**
- * Normalizes a phone number to E.164 format
- * Inlined to avoid circular dependency with shared-util
- */
-function normalizeToE164(phone: string | null | undefined): string | null {
-  if (!phone) return null;
-
-  const trimmed = phone.trim();
-  if (!trimmed) return null;
-
-  const digits = trimmed.replace(/\D/g, "");
-  if (digits.length === 0) return null;
-
-  // 10 digits without country code (US)
-  if (digits.length === 10) {
-    return `+1${digits}`;
-  }
-
-  // 11 digits starting with 1 (US country code)
-  if (digits.length === 11 && digits.startsWith("1")) {
-    return `+${digits}`;
-  }
-
-  // Other formats
-  if (trimmed.startsWith("+")) {
-    return `+${digits}`;
-  }
-
-  if (digits.length >= 1 && digits.length <= 15) {
-    return `+${digits}`;
-  }
-
-  return null;
-}
+import { normalizeToE164 } from "@odis-ai/shared/util/phone";
 
 /**
  * Phone number validation schema

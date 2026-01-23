@@ -38,7 +38,6 @@ export * from "./completion-indicator";
 // Audio player system
 export * from "./call-summary-card";
 export * from "./call-detail-content";
-export * from "./audio-player-wrapper";
 export * from "./contact-indicator";
 export * from "./date-picker-nav";
 export * from "./email-history";

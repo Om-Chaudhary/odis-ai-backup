@@ -17,12 +17,14 @@ import {
   getLocalDayRange,
   DEFAULT_TIMEZONE,
 } from "@odis-ai/shared/util/timezone";
-import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import {
-  listDischargeCasesInput,
-  type DischargeCaseStatus,
-  type FailureCategory,
-} from "../schemas";
+  deriveDischargeStatus,
+  deriveDeliveryStatus,
+  hasActionableAttentionTypes,
+  categorizeFailure,
+} from "@odis-ai/shared/util";
+import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import { listDischargeCasesInput } from "../schemas";
 import type { StructuredDischargeContent } from "~/components/dashboard/outbound";
 
 interface PatientData {
@@ -170,158 +172,6 @@ interface CaseRow {
   scheduled_discharge_calls: ScheduledCallData[];
   scheduled_discharge_emails: ScheduledEmailData[];
   soap_notes: SoapNoteData[];
-}
-
-/**
- * Derive composite discharge status from case data
- */
-function deriveDischargeStatus(
-  caseStatus: string | null,
-  hasDischargeSummary: boolean,
-  callStatus: string | null,
-  emailStatus: string | null,
-  callScheduledFor: string | null,
-  emailScheduledFor: string | null,
-): DischargeCaseStatus {
-  const now = new Date();
-
-  // Failed: call or email failed
-  if (callStatus === "failed" || emailStatus === "failed") {
-    return "failed";
-  }
-
-  // Completed: call completed (or no call needed) and email sent (or no email needed)
-  if (
-    (callStatus === "completed" || callStatus === null) &&
-    (emailStatus === "sent" || emailStatus === null) &&
-    (callStatus === "completed" || emailStatus === "sent")
-  ) {
-    return "completed";
-  }
-
-  // In Progress: call is ringing or in progress
-  if (callStatus === "ringing" || callStatus === "in_progress") {
-    return "in_progress";
-  }
-
-  // Check if queued items are scheduled for the future
-  const callIsFuture = callScheduledFor && new Date(callScheduledFor) > now;
-  const emailIsFuture = emailScheduledFor && new Date(emailScheduledFor) > now;
-
-  // Scheduled: has queued items with future scheduled_for time
-  if (
-    (callStatus === "queued" && callIsFuture) ||
-    (emailStatus === "queued" && emailIsFuture)
-  ) {
-    return "scheduled";
-  }
-
-  // Ready: has queued items with past/current scheduled_for time (ready to send)
-  if (callStatus === "queued" || emailStatus === "queued") {
-    return "ready";
-  }
-
-  // Pending Review: case completed with discharge summary, but nothing scheduled
-  if (caseStatus === "completed" && hasDischargeSummary) {
-    return "pending_review";
-  }
-
-  // Default to pending_review
-  return "pending_review";
-}
-
-/**
- * Derive delivery status for phone/email columns
- */
-function deriveDeliveryStatus(
-  status: string | null,
-  hasContactInfo: boolean,
-): "sent" | "pending" | "failed" | "not_applicable" | null {
-  if (!hasContactInfo) return "not_applicable";
-  if (!status) return null;
-
-  switch (status) {
-    case "completed":
-    case "sent":
-      return "sent";
-    case "queued":
-    case "ringing":
-    case "in_progress":
-      return "pending";
-    case "failed":
-      return "failed";
-    default:
-      return null;
-  }
-}
-
-/**
- * Check if attention types contain actionable items that warrant being shown in needs attention
- * Only show cases with pill (medication_question), phone (callback_request), or calendar (appointment_needed) icons
- * Exclude cases with only triangle (health_concern) or octagon (emergency_signs) icons
- */
-function hasActionableAttentionTypes(attentionTypes: string[] | null): boolean {
-  if (!attentionTypes || attentionTypes.length === 0) {
-    return false;
-  }
-
-  const actionableTypes = [
-    "medication_question", // Pill icon
-    "callback_request", // Phone icon
-    "appointment_needed", // Calendar icon
-  ];
-
-  return attentionTypes.some((type) => actionableTypes.includes(type));
-}
-
-/**
- * Categorize a failure based on ended_reason and statuses
- */
-function categorizeFailure(
-  callEndedReason: string | null,
-  callStatus: string | null,
-  emailStatus: string | null,
-): Exclude<FailureCategory, "all_failed"> | null {
-  // If neither call nor email failed, not a failure
-  if (callStatus !== "failed" && emailStatus !== "failed") {
-    return null;
-  }
-
-  // Email failure (when call didn't fail)
-  if (emailStatus === "failed" && callStatus !== "failed") {
-    return "email_failed";
-  }
-
-  // Call failure - categorize by ended_reason
-  if (callStatus === "failed" && callEndedReason) {
-    const reason = callEndedReason.toLowerCase();
-
-    if (
-      reason.includes("silence-timed-out") ||
-      reason.includes("silence_timed_out")
-    ) {
-      return "silence_timeout";
-    }
-    if (
-      reason.includes("no-answer") ||
-      reason.includes("did-not-answer") ||
-      reason.includes("no_answer")
-    ) {
-      return "no_answer";
-    }
-    if (reason.includes("voicemail")) {
-      return "voicemail";
-    }
-    if (
-      reason.includes("error") ||
-      reason.includes("failed-to-connect") ||
-      reason.includes("sip")
-    ) {
-      return "connection_error";
-    }
-  }
-
-  return "other";
 }
 
 export const listCasesRouter = createTRPCRouter({

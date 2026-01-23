@@ -189,6 +189,7 @@ export function InboundClient() {
         rightPanel={
           selectedCall && (
             <CallDetail
+              key={selectedCall.id}
               call={selectedCall}
               onDelete={handleDeleteCall}
               isSubmitting={isSubmitting}

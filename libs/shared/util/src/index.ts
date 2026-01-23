@@ -43,3 +43,6 @@ export * from "./errors";
 
 // Case transforms
 export * from "./lib/case-transforms";
+
+// Discharge status derivation
+export * from "./lib/discharge-status";
