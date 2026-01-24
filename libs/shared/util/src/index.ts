@@ -8,22 +8,8 @@
 // Core utilities
 export * from "./cn";
 
-// Phone utilities
+// Phone utilities (consolidated)
 export * from "./phone";
-export {
-  formatPhoneNumberDisplay,
-  formatPhoneCompact,
-  formatPhoneShort,
-  isValidE164,
-  toE164,
-  getCountryCode,
-  isUSNumber,
-  extractPhoneNumber,
-  parsePhoneFromText,
-  hasValidPhone,
-  extractPhoneWithDetails,
-  type PhoneExtractionResult,
-} from "./phone-formatting";
 
 // Contact utilities (email, etc.)
 export * from "./contact";

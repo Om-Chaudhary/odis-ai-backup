@@ -9,7 +9,7 @@ import type { SupabaseClientType } from "@odis-ai/shared/types/supabase";
 import type { NormalizedEntities } from "@odis-ai/shared/validators";
 import type { AIGeneratedCallIntelligence } from "@odis-ai/integrations/vapi/types";
 import type { CaseMetadata } from "@odis-ai/shared/types/case";
-import { parseBillingString } from "@odis-ai/shared/types/idexx";
+import { enrichEntitiesWithIdexxMetadata } from "./entity-utils";
 
 /**
  * Auto-generate structured discharge summary for IDEXX Neo cases
@@ -173,74 +173,7 @@ export async function extractEntitiesFromIdexx(
       "idexx_consultation_notes",
     );
 
-    // Enrich with IDEXX metadata
-    if (rawIdexxData.pet_name) {
-      entities.patient.name = rawIdexxData.pet_name as string;
-    }
-    if (rawIdexxData.species) {
-      const species = (rawIdexxData.species as string).toLowerCase();
-      const validSpecies = [
-        "dog",
-        "cat",
-        "bird",
-        "rabbit",
-        "other",
-        "unknown",
-      ] as const;
-      type ValidSpecies = (typeof validSpecies)[number];
-      entities.patient.species = validSpecies.includes(species as ValidSpecies)
-        ? (species as ValidSpecies)
-        : "unknown";
-    }
-    if (rawIdexxData.breed) {
-      entities.patient.breed = rawIdexxData.breed as string;
-    }
-
-    const clientFirstName = rawIdexxData.client_first_name as
-      | string
-      | undefined;
-    const clientLastName = rawIdexxData.client_last_name as string | undefined;
-    const ownerName = rawIdexxData.owner_name as string | undefined;
-    if (clientFirstName && clientLastName) {
-      entities.patient.owner.name = `${clientFirstName} ${clientLastName}`;
-    } else if (ownerName) {
-      entities.patient.owner.name = ownerName;
-    }
-
-    const phone =
-      (rawIdexxData.phone_number as string | undefined) ??
-      (rawIdexxData.mobile_number as string | undefined);
-    if (phone) {
-      entities.patient.owner.phone = phone;
-    }
-    const email = rawIdexxData.email as string | undefined;
-    if (email) {
-      entities.patient.owner.email = email;
-    }
-
-    const acceptedItems = parseBillingString(
-      rawIdexxData.products_services as string | undefined,
-      false,
-    );
-    const declinedItems = parseBillingString(
-      rawIdexxData.declined_products_services as string | undefined,
-      true,
-    );
-
-    if (acceptedItems.length > 0) {
-      entities.clinical.productsServicesProvided = acceptedItems.map((item) =>
-        item.quantity > 1
-          ? `${item.productService} (Qty: ${item.quantity})`
-          : item.productService,
-      );
-    }
-    if (declinedItems.length > 0) {
-      entities.clinical.productsServicesDeclined = declinedItems.map((item) =>
-        item.quantity > 1
-          ? `${item.productService} (Qty: ${item.quantity})`
-          : item.productService,
-      );
-    }
+    enrichEntitiesWithIdexxMetadata(entities, rawIdexxData);
 
     console.log("[CaseAI] Successfully extracted entities from IDEXX notes", {
       patientName: entities.patient.name,

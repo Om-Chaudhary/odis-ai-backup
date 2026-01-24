@@ -11,7 +11,7 @@ import type {
   CaseSyncOptions,
   SyncResult,
   SyncStats,
-} from "../types";
+} from "../types.js";
 import { createLogger } from "@odis-ai/shared/logger";
 import { recordSyncAudit, asCaseUpdateMetadata } from "../utils";
 

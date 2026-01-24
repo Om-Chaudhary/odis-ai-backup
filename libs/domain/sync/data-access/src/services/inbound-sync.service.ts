@@ -11,7 +11,7 @@ import type {
   InboundSyncOptions,
   SyncResult,
   SyncStats,
-} from "../types";
+} from "../types.js";
 import { createLogger } from "@odis-ai/shared/logger";
 import {
   createPatientFromPimsAppointment,
@@ -254,7 +254,9 @@ export class InboundSyncService {
       .single();
 
     if (error || !newCase) {
-      throw new Error(`Failed to create case: ${error?.message ?? "Unknown error"}`);
+      throw new Error(
+        `Failed to create case: ${error?.message ?? "Unknown error"}`,
+      );
     }
 
     // Create patient record for this case

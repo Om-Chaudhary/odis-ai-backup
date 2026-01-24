@@ -297,9 +297,9 @@ async function findSafeCallStartTime(
   }
 
   // Find a window where adding our calls won't exceed the limit
-  const existingTimes = queuedCalls.map((c) =>
-    new Date(c.scheduled_for).getTime(),
-  );
+  const existingTimes = queuedCalls
+    .filter((c) => c.scheduled_for != null)
+    .map((c) => new Date(c.scheduled_for!).getTime());
   let candidateStart = Math.max(
     proposedStartTime.getTime(),
     Date.now() + 60000,
@@ -671,7 +671,6 @@ async function processSingleCase({
   staggerState,
   immediateBaseTime,
   staggerMs,
-  now,
   ctx,
   CasesService,
   baseEmailTime,

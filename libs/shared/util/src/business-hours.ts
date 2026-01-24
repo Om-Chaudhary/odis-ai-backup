@@ -163,7 +163,7 @@ export function isWithinBusinessHoursPerDay(
 }
 
 /**
- * Validate that a scheduled time is in the future
+ * Check if a scheduled time is in the future
  *
  * @param scheduledTime - The time to validate
  * @returns true if scheduledTime is in the future
@@ -178,7 +178,14 @@ export function isFutureTime(scheduledTime: Date): boolean {
  * @param scheduledTime - Target execution time
  * @returns Delay in seconds (0 if time is in the past)
  */
-export function calculateDelay(scheduledTime: Date): number {
+export function calculateDelaySeconds(scheduledTime: Date): number {
   const delayMs = scheduledTime.getTime() - Date.now();
   return Math.max(0, Math.floor(delayMs / 1000));
+}
+
+/**
+ * @deprecated Use calculateDelaySeconds for clarity
+ */
+export function calculateDelay(scheduledTime: Date): number {
+  return calculateDelaySeconds(scheduledTime);
 }

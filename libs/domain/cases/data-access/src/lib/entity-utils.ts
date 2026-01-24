@@ -7,6 +7,8 @@
 
 import type { NormalizedEntities } from "@odis-ai/shared/validators";
 import type { Database } from "@odis-ai/shared/types";
+import { getFirstOrNull } from "./case-helpers";
+import { parseBillingString } from "@odis-ai/shared/types/idexx";
 
 type PatientRow = Database["public"]["Tables"]["patients"]["Row"];
 
@@ -57,16 +59,10 @@ export function enrichEntitiesWithPatient(
   entities: NormalizedEntities | undefined,
   patient: PatientRow | PatientRow[] | null,
 ): void {
-  if (!entities || !patient) {
-    return;
-  }
+  if (!entities) return;
 
-  // Handle both single patient and array of patients
-  const patientData = Array.isArray(patient) ? patient[0] : patient;
-
-  if (!patientData) {
-    return;
-  }
+  const patientData = getFirstOrNull(patient);
+  if (!patientData) return;
 
   // Enrich patient name from database (database takes priority)
   if (patientData.name && patientData.name.trim() !== "") {
@@ -201,13 +197,14 @@ export function mergeEntitiesForExtraction(
 }
 
 /**
- * Merge logic for entities (used during case creation/update)
+ * Merge logic for entities during case update
+ * Currently replaces existing entities with incoming data
+ * TODO: Implement smart merge strategy if needed (preserve non-conflicting fields)
  */
 export function mergeEntities(
-  current: NormalizedEntities | undefined,
+  _current: NormalizedEntities | undefined,
   incoming: NormalizedEntities,
 ): NormalizedEntities {
-  if (!current) return incoming;
   return incoming;
 }
 
@@ -247,13 +244,20 @@ export interface PatientDataForEntities {
   owner_email?: string | null;
 }
 
-const VALID_SPECIES = ["dog", "cat", "bird", "rabbit", "other", "unknown"] as const;
+const VALID_SPECIES = [
+  "dog",
+  "cat",
+  "bird",
+  "rabbit",
+  "other",
+  "unknown",
+] as const;
 type ValidSpecies = (typeof VALID_SPECIES)[number];
 
 /**
  * Parse species string to valid species enum value
  */
-function parseSpecies(speciesRaw: string): ValidSpecies {
+export function parseSpecies(speciesRaw: string): ValidSpecies {
   const speciesLower = speciesRaw.toLowerCase();
   return VALID_SPECIES.includes(speciesLower as ValidSpecies)
     ? (speciesLower as ValidSpecies)
@@ -274,14 +278,17 @@ function parseProcedures(productsServices: string | undefined): string[] {
 /**
  * Determine case type from appointment type string
  */
-function determineCaseType(appointmentType: string | undefined): NormalizedEntities["caseType"] {
+function determineCaseType(
+  appointmentType: string | undefined,
+): NormalizedEntities["caseType"] {
   if (!appointmentType) return "exam";
 
   const lower = appointmentType.toLowerCase();
   if (lower.includes("follow")) return "follow_up";
   if (lower.includes("surgery")) return "surgery";
   if (lower.includes("dental")) return "dental";
-  if (lower.includes("vaccine") || lower.includes("vaccination")) return "vaccination";
+  if (lower.includes("vaccine") || lower.includes("vaccination"))
+    return "vaccination";
   if (lower.includes("emergency")) return "emergency";
   if (lower.includes("checkup") || lower.includes("wellness")) return "checkup";
   return "exam";
@@ -299,6 +306,71 @@ function cleanConsultationNotes(notes: string): string {
     .replace(/&gt;/g, ">")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/**
+ * Enrich entities with IDEXX metadata
+ * Applies IDEXX-specific fields to an entities object
+ */
+export function enrichEntitiesWithIdexxMetadata(
+  entities: NormalizedEntities,
+  rawIdexxData: Record<string, unknown>,
+): void {
+  if (rawIdexxData.pet_name) {
+    entities.patient.name = rawIdexxData.pet_name as string;
+  }
+  if (rawIdexxData.species) {
+    entities.patient.species = parseSpecies(rawIdexxData.species as string);
+  }
+  if (rawIdexxData.breed) {
+    entities.patient.breed = rawIdexxData.breed as string;
+  }
+
+  const clientFirstName = rawIdexxData.client_first_name as string | undefined;
+  const clientLastName = rawIdexxData.client_last_name as string | undefined;
+  const ownerName = rawIdexxData.owner_name as string | undefined;
+
+  if (clientFirstName && clientLastName) {
+    entities.patient.owner.name = `${clientFirstName} ${clientLastName}`;
+  } else if (ownerName) {
+    entities.patient.owner.name = ownerName;
+  }
+
+  const phone =
+    (rawIdexxData.phone_number as string | undefined) ??
+    (rawIdexxData.mobile_number as string | undefined);
+  if (phone) {
+    entities.patient.owner.phone = phone;
+  }
+
+  const email = rawIdexxData.email as string | undefined;
+  if (email) {
+    entities.patient.owner.email = email;
+  }
+
+  const acceptedItems = parseBillingString(
+    rawIdexxData.products_services as string | undefined,
+    false,
+  );
+  const declinedItems = parseBillingString(
+    rawIdexxData.declined_products_services as string | undefined,
+    true,
+  );
+
+  if (acceptedItems.length > 0) {
+    entities.clinical.productsServicesProvided = acceptedItems.map((item) =>
+      item.quantity > 1
+        ? `${item.productService} (Qty: ${item.quantity})`
+        : item.productService,
+    );
+  }
+  if (declinedItems.length > 0) {
+    entities.clinical.productsServicesDeclined = declinedItems.map((item) =>
+      item.quantity > 1
+        ? `${item.productService} (Qty: ${item.quantity})`
+        : item.productService,
+    );
+  }
 }
 
 /**

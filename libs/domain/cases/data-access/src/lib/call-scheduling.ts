@@ -14,6 +14,7 @@ import type {
   ScheduledDischargeCall,
 } from "@odis-ai/shared/types/services";
 import type { ICallExecutor } from "@odis-ai/domain/shared";
+import type { NormalizedEntities } from "@odis-ai/shared/validators";
 
 import { normalizeToE164 } from "@odis-ai/shared/util/phone";
 import { getClinicVapiConfigByUserId } from "@odis-ai/domain/clinics/vapi-config";
@@ -33,6 +34,184 @@ type ScheduledCallRow =
 type ScheduledCallInsert =
   Database["public"]["Tables"]["scheduled_discharge_calls"]["Insert"];
 type PatientRow = Database["public"]["Tables"]["patients"]["Row"];
+
+/**
+ * Extract client instructions with priority order:
+ * 1. SOAP notes client_instructions
+ * 2. SOAP notes plan
+ * 3. Discharge summary content
+ */
+function getClientInstructions(
+  caseInfo: {
+    soapNotes: Database["public"]["Tables"]["soap_notes"]["Row"][] | null;
+    dischargeSummaries:
+      | Database["public"]["Tables"]["discharge_summaries"]["Row"][]
+      | null;
+  },
+  caseId: string,
+): string | null {
+  const latestSoapNote = caseInfo.soapNotes?.[0];
+  if (latestSoapNote?.client_instructions) {
+    console.log("[CallScheduling] Using client instructions from SOAP notes", {
+      caseId,
+      source: "soap_notes.client_instructions",
+      preview: latestSoapNote.client_instructions.substring(0, 100),
+    });
+    return latestSoapNote.client_instructions;
+  }
+
+  if (latestSoapNote?.plan) {
+    console.log("[CallScheduling] Using plan from SOAP notes", {
+      caseId,
+      source: "soap_notes.plan",
+      preview: latestSoapNote.plan.substring(0, 100),
+    });
+    return latestSoapNote.plan;
+  }
+
+  const latestDischargeSummary = caseInfo.dischargeSummaries?.[0];
+  if (latestDischargeSummary?.content) {
+    console.log("[CallScheduling] Using discharge summary content", {
+      caseId,
+      source: "discharge_summaries.content",
+      preview: latestDischargeSummary.content.substring(0, 100),
+    });
+    return latestDischargeSummary.content;
+  }
+
+  return null;
+}
+
+/**
+ * Determine when to schedule the call
+ */
+function determineScheduledTime(
+  optionsScheduledAt: Date | undefined,
+  defaultScheduleDelayMinutes: number | null | undefined,
+  testModeEnabled: boolean,
+  serverNow: Date,
+): Date {
+  if (optionsScheduledAt) {
+    if (optionsScheduledAt <= serverNow) {
+      throw new Error(
+        `Scheduled time must be in the future. Provided: ${optionsScheduledAt.toISOString()}, Server now: ${serverNow.toISOString()}`,
+      );
+    }
+    return optionsScheduledAt;
+  }
+
+  const delayMinutes = defaultScheduleDelayMinutes ?? (testModeEnabled ? 1 : 2);
+
+  if (
+    defaultScheduleDelayMinutes !== null &&
+    defaultScheduleDelayMinutes !== undefined
+  ) {
+    console.log("[CallScheduling] Using user override for schedule delay", {
+      delayMinutes,
+      serverNow: serverNow.toISOString(),
+    });
+  }
+
+  const scheduledAt = new Date(serverNow.getTime() + delayMinutes * 60 * 1000);
+  console.log("[CallScheduling] Scheduling call", {
+    delayMinutes,
+    testModeEnabled,
+    serverNow: serverNow.toISOString(),
+    scheduledAt: scheduledAt.toISOString(),
+  });
+
+  return scheduledAt;
+}
+
+/**
+ * Get pre-generated AI intelligence or generate new
+ */
+async function getOrGenerateCallIntelligence(
+  caseId: string,
+  metadata: CaseMetadata,
+  entities: NormalizedEntities,
+): Promise<AIGeneratedCallIntelligence | null> {
+  const preGenerated = metadata.callIntelligence;
+
+  if (preGenerated) {
+    console.log(
+      "[CallScheduling] Using pre-generated call intelligence from ingest",
+      {
+        caseId,
+        generatedAt: preGenerated.generatedAt,
+        questionCount: preGenerated.assessmentQuestions?.length ?? 0,
+        callApproach: preGenerated.callApproach,
+        confidence: preGenerated.confidence,
+      },
+    );
+    return preGenerated;
+  }
+
+  console.log(
+    "[CallScheduling] Generating AI call intelligence at schedule-time",
+    {
+      caseId,
+      petName: entities.patient.name,
+      diagnosis: entities.clinical.diagnoses?.[0],
+    },
+  );
+
+  const { generateCallIntelligenceFromEntities } =
+    await import("@odis-ai/integrations/ai/generate-assessment-questions");
+  const intelligence = await generateCallIntelligenceFromEntities(entities);
+
+  console.log("[CallScheduling] AI call intelligence generated", {
+    caseId,
+    questionCount: intelligence.assessmentQuestions?.length ?? 0,
+    callApproach: intelligence.callApproach,
+    shouldAskQuestions: intelligence.shouldAskClinicalQuestions,
+    confidence: intelligence.confidence,
+  });
+
+  return intelligence;
+}
+
+/**
+ * Build update data for existing scheduled call
+ * Preserves status if call is already in progress or completed
+ */
+function buildUpdateData(
+  currentStatus: string | null,
+  assistantId: string | null | undefined,
+  phoneNumberId: string | null | undefined,
+  customerPhone: string,
+  userId: string,
+  scheduledAt: Date,
+  dynamicVariables: Record<string, unknown>,
+  notes: string | undefined,
+): Partial<ScheduledCallRow> {
+  const activeStatuses = ["in_progress", "ringing", "completed"];
+  const shouldPreserveStatus =
+    currentStatus && activeStatuses.includes(currentStatus);
+
+  return {
+    assistant_id: assistantId ?? "",
+    outbound_phone_number_id: phoneNumberId ?? "",
+    customer_phone: customerPhone,
+    user_id: userId,
+    scheduled_for: scheduledAt.toISOString(),
+    status: shouldPreserveStatus
+      ? (currentStatus as
+          | "queued"
+          | "in_progress"
+          | "ringing"
+          | "completed"
+          | "failed"
+          | "canceled")
+      : "queued",
+    dynamic_variables: dynamicVariables as Json,
+    metadata: {
+      notes,
+      retry_count: 0,
+      max_retries: 3,
+    } as Json,
+  };
+}
 
 /**
  * Schedule the discharge call linked to a case
@@ -55,59 +234,9 @@ export async function scheduleDischargeCall(
 
   // 1b. Enrich with client instructions from SOAP notes or discharge summaries
   if (entities) {
-    let clientInstructions: string | null = null;
-
-    // Priority 1: SOAP notes client_instructions
-    if (caseInfo.soapNotes && caseInfo.soapNotes.length > 0) {
-      const latestSoapNote = caseInfo.soapNotes[0];
-      if (latestSoapNote?.client_instructions) {
-        clientInstructions = latestSoapNote.client_instructions;
-        console.log(
-          "[CallScheduling] Using client instructions from SOAP notes",
-          {
-            caseId,
-            source: "soap_notes.client_instructions",
-            preview: clientInstructions?.substring(0, 100) ?? "",
-          },
-        );
-      } else if (latestSoapNote?.plan) {
-        // Priority 2: SOAP notes plan
-        clientInstructions = latestSoapNote.plan;
-        console.log("[CallScheduling] Using plan from SOAP notes", {
-          caseId,
-          source: "soap_notes.plan",
-          preview: clientInstructions?.substring(0, 100) ?? "",
-        });
-      }
-    }
-
-    // Priority 3: Discharge summaries content
-    if (
-      !clientInstructions &&
-      caseInfo.dischargeSummaries &&
-      caseInfo.dischargeSummaries.length > 0
-    ) {
-      const latestDischargeSummary = caseInfo.dischargeSummaries[0];
-      if (latestDischargeSummary?.content) {
-        clientInstructions = latestDischargeSummary.content;
-        console.log("[CallScheduling] Using discharge summary content", {
-          caseId,
-          source: "discharge_summaries.content",
-          preview: clientInstructions?.substring(0, 100) ?? "",
-        });
-      }
-    }
-
-    // Add to entities if found
+    const clientInstructions = getClientInstructions(caseInfo, caseId);
     if (clientInstructions) {
       entities.clinical.followUpInstructions = clientInstructions;
-      console.log(
-        "[CallScheduling] Enriched entities with client instructions",
-        {
-          caseId,
-          instructionsLength: clientInstructions.length,
-        },
-      );
     }
   }
 
@@ -215,69 +344,12 @@ export async function scheduleDischargeCall(
     await import("@odis-ai/integrations/vapi/extract-variables");
   const extractedVars = extractVapiVariablesFromEntities(entities);
 
-  // 2a. Check for pre-generated AI call intelligence (generated at ingest-time)
-  let aiIntelligence: AIGeneratedCallIntelligence | null = null;
-  const caseMeta = caseInfo?.metadata as CaseMetadata | null;
-  const preGeneratedIntelligence = caseMeta?.callIntelligence;
-
-  if (preGeneratedIntelligence) {
-    console.log(
-      "[CallScheduling] Using pre-generated call intelligence from ingest",
-      {
-        caseId,
-        generatedAt: preGeneratedIntelligence.generatedAt,
-        questionCount:
-          preGeneratedIntelligence.assessmentQuestions?.length ?? 0,
-        callApproach: preGeneratedIntelligence.callApproach,
-        confidence: preGeneratedIntelligence.confidence,
-      },
-    );
-
-    aiIntelligence = {
-      caseContextSummary: preGeneratedIntelligence.caseContextSummary,
-      assessmentQuestions: preGeneratedIntelligence.assessmentQuestions,
-      warningSignsToMonitor: preGeneratedIntelligence.warningSignsToMonitor,
-      normalExpectations: preGeneratedIntelligence.normalExpectations,
-      emergencyCriteria: preGeneratedIntelligence.emergencyCriteria,
-      shouldAskClinicalQuestions:
-        preGeneratedIntelligence.shouldAskClinicalQuestions,
-      callApproach: preGeneratedIntelligence.callApproach,
-      confidence: preGeneratedIntelligence.confidence,
-    };
-  } else {
-    // Generate AI call intelligence at schedule-time (for non-IDEXX cases or legacy data)
-    console.log(
-      "[CallScheduling] Generating AI call intelligence at schedule-time",
-      {
-        caseId,
-        petName: entities.patient.name,
-        diagnosis: entities.clinical.diagnoses?.[0],
-      },
-    );
-
-    // Dynamic import to avoid lazy-load constraint
-    const { generateCallIntelligenceFromEntities } =
-      await import("@odis-ai/integrations/ai/generate-assessment-questions");
-    const intelligence = await generateCallIntelligenceFromEntities(entities);
-    aiIntelligence = {
-      caseContextSummary: intelligence.caseContextSummary,
-      assessmentQuestions: intelligence.assessmentQuestions,
-      warningSignsToMonitor: intelligence.warningSignsToMonitor,
-      normalExpectations: intelligence.normalExpectations,
-      emergencyCriteria: intelligence.emergencyCriteria,
-      shouldAskClinicalQuestions: intelligence.shouldAskClinicalQuestions,
-      callApproach: intelligence.callApproach,
-      confidence: intelligence.confidence,
-    };
-
-    console.log("[CallScheduling] AI call intelligence generated", {
-      caseId,
-      questionCount: intelligence.assessmentQuestions?.length ?? 0,
-      callApproach: intelligence.callApproach,
-      shouldAskQuestions: intelligence.shouldAskClinicalQuestions,
-      confidence: intelligence.confidence,
-    });
-  }
+  // 2a. Get or generate AI call intelligence
+  const aiIntelligence = await getOrGenerateCallIntelligence(
+    caseId,
+    caseInfo!.metadata,
+    entities,
+  );
 
   // 3. Build Dynamic Variables with knowledge base integration
   // Dynamic imports to avoid lazy-load constraint
@@ -399,42 +471,14 @@ export async function scheduleDischargeCall(
   }
   customerPhone = normalizedPhone;
 
-  // Determine scheduled time using server time
+  // Determine scheduled time
   const serverNow = new Date();
-  let scheduledAt: Date;
-
-  if (options.scheduledAt) {
-    if (options.scheduledAt <= serverNow) {
-      throw new Error(
-        `Scheduled time must be in the future. Provided: ${options.scheduledAt.toISOString()}, Server now: ${serverNow.toISOString()}`,
-      );
-    }
-    scheduledAt = options.scheduledAt;
-  } else {
-    let delayMinutes: number;
-    if (
-      defaultScheduleDelayMinutes !== null &&
-      defaultScheduleDelayMinutes !== undefined
-    ) {
-      delayMinutes = defaultScheduleDelayMinutes;
-      console.log("[CallScheduling] Using user override for schedule delay", {
-        delayMinutes,
-        serverNow: serverNow.toISOString(),
-      });
-    } else if (testModeEnabled) {
-      delayMinutes = 1;
-    } else {
-      delayMinutes = 2;
-    }
-
-    scheduledAt = new Date(serverNow.getTime() + delayMinutes * 60 * 1000);
-    console.log("[CallScheduling] Scheduling call", {
-      delayMinutes,
-      testModeEnabled,
-      serverNow: serverNow.toISOString(),
-      scheduledAt: scheduledAt.toISOString(),
-    });
-  }
+  let scheduledAt = determineScheduledTime(
+    options.scheduledAt,
+    defaultScheduleDelayMinutes,
+    testModeEnabled,
+    serverNow,
+  );
 
   // Auto-stagger calls to prevent VAPI concurrency limit (10 calls max)
   const STAGGER_MINUTES = 2;
@@ -480,36 +524,16 @@ export async function scheduleDischargeCall(
   let scheduledCall: ScheduledDischargeCall;
 
   if (existingCall) {
-    // Update existing call - preserve status if call is already in progress/completed
-    const currentStatus = existingCall.status;
-    const shouldPreserveStatus =
-      currentStatus &&
-      (currentStatus === "in_progress" ||
-        currentStatus === "ringing" ||
-        currentStatus === "completed");
-
-    const updateData: Partial<ScheduledCallRow> = {
-      assistant_id: assistantId ?? "",
-      outbound_phone_number_id: phoneNumberId ?? "",
-      customer_phone: customerPhone,
-      user_id: userId,
-      scheduled_for: scheduledAt.toISOString(),
-      status: shouldPreserveStatus
-        ? (currentStatus as
-            | "queued"
-            | "in_progress"
-            | "ringing"
-            | "completed"
-            | "failed"
-            | "canceled")
-        : ("queued" as const),
-      dynamic_variables: mergedVariables as Json,
-      metadata: {
-        notes: options.notes,
-        retry_count: 0,
-        max_retries: 3,
-      } as Json,
-    };
+    const updateData = buildUpdateData(
+      existingCall.status,
+      assistantId,
+      phoneNumberId,
+      customerPhone,
+      userId,
+      scheduledAt,
+      mergedVariables,
+      options.notes,
+    );
 
     const { data: updatedCall, error: updateError } = await supabase
       .from("scheduled_discharge_calls")
@@ -529,7 +553,6 @@ export async function scheduleDischargeCall(
     console.log("[CallScheduling] Updated existing call for case", {
       caseId,
       callId: scheduledCall.id,
-      preservedStatus: shouldPreserveStatus,
       status: scheduledCall.status,
     });
 

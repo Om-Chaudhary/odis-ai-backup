@@ -26,13 +26,14 @@ import type {
   DashboardCase,
   DischargeSettings,
   PatientUpdateInput,
-  BackendCase,
 } from "@odis-ai/shared/types";
-import { transformBackendCasesToDashboardCases } from "@odis-ai/shared/util/case-transforms";
+import type { BackendCase } from "@odis-ai/shared/types";
 import {
+  transformBackendCasesToDashboardCases,
   normalizePlaceholder,
   hasValidContact,
-} from "@odis-ai/shared/util/dashboard-helpers";
+  type PartialBackendCase,
+} from "@odis-ai/shared/util";
 import { toast } from "sonner";
 import {
   format,
@@ -182,15 +183,18 @@ export function DischargeManagementClient() {
 
   // Transform backend data to UI shape - all cases are now fetched at once
   const cases: DashboardCase[] = useMemo(() => {
-    return casesData?.cases
-      ? transformBackendCasesToDashboardCases(
-          casesData.cases as unknown as BackendCase[],
-          casesData.userEmail,
-          casesData.testModeSettings?.enabled ?? false,
-          casesData.testModeSettings?.testContactEmail,
-          casesData.testModeSettings?.testContactPhone,
-        )
-      : [];
+    if (!casesData?.cases) return [];
+
+    // List API returns a Supabase subset compatible with what the transform uses.
+    // Double cast required: API shape (e.g. status: string, missing optional call
+    // fields) does not exactly match BackendCase / PartialBackendCase.
+    return transformBackendCasesToDashboardCases(
+      casesData.cases as unknown as (BackendCase | PartialBackendCase)[],
+      casesData.userEmail,
+      casesData.testModeSettings?.enabled ?? false,
+      casesData.testModeSettings?.testContactEmail,
+      casesData.testModeSettings?.testContactPhone,
+    );
   }, [casesData?.cases, casesData?.userEmail, casesData?.testModeSettings]);
 
   // Total cases count

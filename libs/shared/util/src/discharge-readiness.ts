@@ -1,6 +1,12 @@
 import type { BackendCase } from "@odis-ai/shared/types/dashboard";
-import { hasValidContact } from "./dashboard-helpers";
-import type { NormalizedEntities } from "@odis-ai/shared/validators";
+import { hasValidContact } from "./contact";
+
+/**
+ * Minimal type for entity metadata - avoids circular dependency with validators
+ */
+interface EntityMetadata {
+  caseType?: string;
+}
 
 /**
  * Discharge requirements for a specific user
@@ -106,9 +112,7 @@ export function checkCaseDischargeReadiness(
   const missingRequirements: string[] = [];
 
   // === CONDITION 0: Check for euthanasia case - never send discharge ===
-  const entities = caseData.metadata?.entities as
-    | NormalizedEntities
-    | undefined;
+  const entities = caseData.metadata?.entities as EntityMetadata | undefined;
   if (entities?.caseType === "euthanasia") {
     return {
       isReady: false,

@@ -28,7 +28,7 @@ import type {
   PatientUpdateInput,
   DischargeSettings,
 } from "@odis-ai/shared/types";
-import type { PartialBackendCase } from "@odis-ai/shared/util/case-transforms";
+import type { PartialBackendCase } from "@odis-ai/shared/util";
 import { cn } from "@odis-ai/shared/util";
 import {
   DropdownMenu,

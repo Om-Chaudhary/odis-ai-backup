@@ -7,6 +7,7 @@
 import type { Database } from "@odis-ai/shared/types";
 import type { NormalizedEntities } from "@odis-ai/shared/validators";
 import { parseBillingString } from "@odis-ai/shared/types/idexx";
+import { parseSpecies } from "./entity-utils";
 
 /**
  * Map case type string to database enum value
@@ -38,23 +39,9 @@ export function mapIdexxToEntities(
   data: Record<string, unknown>,
 ): NormalizedEntities {
   const petName = typeof data.pet_name === "string" ? data.pet_name : "Unknown";
-
-  const validSpecies = [
-    "dog",
-    "cat",
-    "bird",
-    "rabbit",
-    "other",
-    "unknown",
-  ] as const;
-  type ValidSpecies = (typeof validSpecies)[number];
   const rawSpecies =
-    typeof data.species === "string" ? data.species.toLowerCase() : "unknown";
-  const species: ValidSpecies = validSpecies.includes(
-    rawSpecies as ValidSpecies,
-  )
-    ? (rawSpecies as ValidSpecies)
-    : "unknown";
+    typeof data.species === "string" ? data.species : "unknown";
+  const species = parseSpecies(rawSpecies);
 
   const clientFirstName =
     typeof data.client_first_name === "string" ? data.client_first_name : "";
@@ -125,7 +112,7 @@ export function mapIdexxToEntities(
 /**
  * Parse weight string to number
  */
-export function parseWeight(weightStr?: string): number | null {
+export function parseWeight(weightStr?: string | null): number | null {
   if (!weightStr) return null;
   const num = parseFloat(weightStr);
   return isNaN(num) ? null : num;
@@ -182,4 +169,22 @@ export function generateSummaryFromEntities(
     parts.push(`Instructions: ${entities.clinical.followUpInstructions}`);
   }
   return parts.join(" ");
+}
+
+/**
+ * Normalize array or single value to array
+ * Handles Supabase query results that may return single object or array
+ */
+export function normalizeToArray<T>(value: T | T[] | null): T[] {
+  if (!value) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
+/**
+ * Get first item from array or single value
+ * Handles Supabase query results that may return single object or array
+ */
+export function getFirstOrNull<T>(value: T | T[] | null): T | null {
+  if (!value) return null;
+  return Array.isArray(value) ? (value[0] ?? null) : value;
 }

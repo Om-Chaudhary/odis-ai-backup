@@ -13,7 +13,13 @@ import type {
 } from "@odis-ai/shared/types/case";
 import { buildIdexxConsultationData } from "@odis-ai/shared/types/idexx";
 import { mergeEntities } from "./entity-utils";
-import { mapCaseTypeToDb, parseWeight, parseScheduledAt } from "./case-helpers";
+import {
+  mapCaseTypeToDb,
+  parseWeight,
+  parseScheduledAt,
+  normalizeToArray,
+  getFirstOrNull,
+} from "./case-helpers";
 import { resolveClientIdentity } from "./client-identity";
 
 type CaseRow = Database["public"]["Tables"]["cases"]["Row"];
@@ -319,20 +325,14 @@ export async function getCaseWithEntities(
     | NormalizedEntities
     | undefined;
 
-  const patient = Array.isArray(caseData.patient)
-    ? (caseData.patient[0] ?? null)
-    : (caseData.patient ?? null);
-
-  const soapNotes = Array.isArray(caseData.soap_notes)
-    ? caseData.soap_notes
-    : caseData.soap_notes
-      ? [caseData.soap_notes]
+  const patient = getFirstOrNull(caseData.patient);
+  const soapNotes =
+    normalizeToArray(caseData.soap_notes).length > 0
+      ? normalizeToArray(caseData.soap_notes)
       : null;
-
-  const dischargeSummaries = Array.isArray(caseData.discharge_summaries)
-    ? caseData.discharge_summaries
-    : caseData.discharge_summaries
-      ? [caseData.discharge_summaries]
+  const dischargeSummaries =
+    normalizeToArray(caseData.discharge_summaries).length > 0
+      ? normalizeToArray(caseData.discharge_summaries)
       : null;
 
   return {

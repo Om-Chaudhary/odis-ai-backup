@@ -6,7 +6,7 @@
  */
 
 import { toZonedTime, format as formatTz } from "date-fns-tz";
-import { DEFAULT_TIMEZONE } from "./timezone";
+import { DEFAULT_TIMEZONE, formatRelativeTime } from "./timezone";
 
 export type DateGroup = "today" | "yesterday" | "this_week" | "older";
 
@@ -167,37 +167,12 @@ export function formatDateInGroup(
  *
  * @param timestamp - UTC timestamp (ISO string or Date)
  * @param timezone - IANA timezone string (defaults to DEFAULT_TIMEZONE)
+ *
+ * @deprecated Use formatRelativeTime from timezone.ts instead
  */
 export function getRelativeTime(
   timestamp: string | Date,
   timezone: string = DEFAULT_TIMEZONE,
 ): string {
-  const date = typeof timestamp === "string" ? new Date(timestamp) : timestamp;
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffSeconds = Math.floor(diffMs / 1000);
-  const diffMinutes = Math.floor(diffSeconds / 60);
-  const diffHours = Math.floor(diffMinutes / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffSeconds < 60) {
-    return "just now";
-  } else if (diffMinutes < 60) {
-    return `${diffMinutes} ${diffMinutes === 1 ? "minute" : "minutes"} ago`;
-  } else if (diffHours < 24) {
-    return `${diffHours} ${diffHours === 1 ? "hour" : "hours"} ago`;
-  } else if (diffDays < 7) {
-    return `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`;
-  } else {
-    // For older dates, return formatted date
-    const zonedDate = toZonedTime(date, timezone);
-    const zonedNow = toZonedTime(now, timezone);
-    const sameYear = zonedDate.getFullYear() === zonedNow.getFullYear();
-
-    if (sameYear) {
-      return formatTz(date, "MMM d", { timeZone: timezone });
-    } else {
-      return formatTz(date, "MMM d, yyyy", { timeZone: timezone });
-    }
-  }
+  return formatRelativeTime(timestamp, timezone);
 }
