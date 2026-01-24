@@ -18,7 +18,7 @@ const demoCards: DemoCardData[] = [
     title: "Wound Care Follow-up",
     description: "Brief check-in on wound recovery",
     duration: 60,
-    audioUrl: "/audio/ivy-wound-care-followup.mp3",
+    audioUrl: "https://drive.google.com/uc?export=download&id=15yuitt1KL5FnB7P69Pn3gtCJqcfmfgtv",
     petName: "Ivy",
     petImage:
       "https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=100&h=100&fit=crop&crop=face",
