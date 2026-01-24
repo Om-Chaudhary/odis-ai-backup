@@ -21,6 +21,37 @@ nx graph                    # View dependency graph
 pnpm docs:nx                # Regenerate Nx inventory
 ```
 
+### ⚠️ Database Schema Changes
+
+**CRITICAL: After modifying the Supabase database schema (adding/modifying tables, columns, types, etc.), ALWAYS run:**
+
+```bash
+pnpm update-types
+```
+
+This regenerates TypeScript types from the Supabase database schema to `libs/shared/types/src/database.types.ts`.
+
+**When to run:**
+
+- After creating/modifying tables in Supabase dashboard
+- After running migrations locally or in production
+- After modifying database enums, composite types, or functions
+- When you see TypeScript errors about missing database types
+
+**What it does:**
+
+- Connects to your Supabase project (via `NEXT_PUBLIC_SUPABASE_URL` or `PROJECT_REF`)
+- Generates TypeScript types matching your database schema
+- Automatically fixes known issues in generated types
+- Ensures type safety across the entire codebase
+
+**Note:** The script requires Supabase CLI authentication. If it prompts for login:
+
+```bash
+npx supabase login
+npx supabase link --project-ref <your-project-ref>
+```
+
 ### Workspace Exploration
 
 Use MCP tools for efficient codebase navigation:
