@@ -175,15 +175,57 @@ See [`docs/IDEXX_API_ENDPOINTS.md`](./docs/IDEXX_API_ENDPOINTS.md) for complete 
 
 ## Environment Variables
 
-| Variable                    | Required | Default   | Description                                   |
-| --------------------------- | -------- | --------- | --------------------------------------------- |
-| `SUPABASE_URL`              | ✅       | -         | Supabase project URL                          |
-| `SUPABASE_SERVICE_ROLE_KEY` | ✅       | -         | Service role key (bypasses RLS)               |
-| `ENCRYPTION_KEY`            | ✅       | -         | AES encryption key for PIMS credentials (32+) |
-| `PORT`                      | ❌       | `3001`    | Server port                                   |
-| `HOST`                      | ❌       | `0.0.0.0` | Server host                                   |
-| `HEADLESS`                  | ❌       | `true`    | Set `false` for visible browser (debugging)   |
-| `ENABLE_SCHEDULER`          | ❌       | `true`    | Enable per-clinic cron scheduler              |
+All environment variables should be set in the root `.env.local` file.
+
+| Variable                    | Required | Default       | Description                                        |
+| --------------------------- | -------- | ------------- | -------------------------------------------------- |
+| `SUPABASE_URL`              | Yes      | -             | Supabase project URL                               |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes      | -             | Service role key (bypasses RLS)                    |
+| `IDEXX_ENCRYPTION_KEY`      | Yes      | -             | AES encryption key for PIMS credentials (min 32)   |
+| `NODE_ENV`                  | No       | `development` | Environment: development, production, test         |
+| `PORT`                      | No       | `3001`        | Server port                                        |
+| `HOST`                      | No       | `0.0.0.0`     | Server host                                        |
+| `HEADLESS`                  | No       | `true`        | Set `false` to see browser during sync (debugging) |
+| `SYNC_TIMEOUT_MS`           | No       | `300000`      | Sync operation timeout in ms (5 min default)       |
+| `ENABLE_SCHEDULER`          | No       | `true`        | Enable per-clinic cron scheduler                   |
+
+### Local Development Setup
+
+To run pims-sync locally against production:
+
+1. **Ensure root `.env.local` has required variables:**
+   ```bash
+   # Required for pims-sync
+   SUPABASE_URL=https://your-project.supabase.co
+   SUPABASE_SERVICE_ROLE_KEY=eyJhbGc...
+   IDEXX_ENCRYPTION_KEY=your-32-char-min-key
+   ```
+
+2. **Verify clinic has credentials in database:**
+   ```sql
+   -- Check IDEXX credentials exist
+   SELECT * FROM idexx_credentials WHERE clinic_id = 'your-clinic-id' AND is_active = true;
+
+   -- Check API key exists
+   SELECT * FROM clinic_api_keys WHERE clinic_id = 'your-clinic-id';
+   ```
+
+3. **Build and run:**
+   ```bash
+   nx build pims-sync
+   pnpm --filter pims-sync start          # Uses root .env.local
+   pnpm --filter pims-sync start:visible  # With visible browser
+   ```
+
+4. **Use the CLI:**
+   ```bash
+   pnpm --filter pims-sync cli            # Interactive CLI
+   ```
+
+5. **Disable scheduler for local testing** (optional):
+   ```bash
+   ENABLE_SCHEDULER=false pnpm --filter pims-sync start
+   ```
 
 **API Key Setup:**
 

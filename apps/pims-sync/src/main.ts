@@ -55,20 +55,23 @@ app.get("/", (req, res) => {
           auth: "X-API-Key header",
           description: "Sync appointments from PIMS to database",
           body: {
-            startDate: "YYYY-MM-DD (optional)",
-            endDate: "YYYY-MM-DD (optional)",
+            startDate: "YYYY-MM-DD (optional, flat format)",
+            endDate: "YYYY-MM-DD (optional, flat format)",
             daysAhead: "number (default: 7)",
+            dateRange: "{ start: YYYY-MM-DD, end: YYYY-MM-DD } (optional, nested format)",
           },
         },
         cases: {
           method: "POST",
           path: "/api/sync/cases",
           auth: "X-API-Key header",
-          description: "Enrich cases with consultation data from PIMS",
+          description:
+            "Enrich cases with consultation data from PIMS (only past appointments)",
           body: {
-            startDate: "YYYY-MM-DD (optional)",
-            endDate: "YYYY-MM-DD (optional)",
+            startDate: "YYYY-MM-DD (optional, flat format)",
+            endDate: "YYYY-MM-DD (optional, flat format, capped at now)",
             parallelBatchSize: "number (optional)",
+            dateRange: "{ start: YYYY-MM-DD, end: YYYY-MM-DD } (optional, nested format)",
           },
         },
         reconcile: {
@@ -87,10 +90,11 @@ app.get("/", (req, res) => {
           description:
             "Run full sync pipeline (inbound + cases + reconciliation)",
           body: {
-            startDate: "YYYY-MM-DD (optional)",
-            endDate: "YYYY-MM-DD (optional)",
+            startDate: "YYYY-MM-DD (optional, flat format)",
+            endDate: "YYYY-MM-DD (optional, flat format)",
             daysAhead: "number (default: 7)",
             lookbackDays: "number (default: 7)",
+            dateRange: "{ start: YYYY-MM-DD, end: YYYY-MM-DD } (optional, nested format)",
           },
         },
       },

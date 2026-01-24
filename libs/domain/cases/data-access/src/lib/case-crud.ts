@@ -348,6 +348,149 @@ export async function getCaseWithEntities(
 /**
  * Delete a case by IDEXX appointment ID (for no-show handling)
  */
+/**
+ * Patient info for PIMS appointment creation
+ */
+export interface PimsPatientInput {
+  caseId: string;
+  clinicId: string;
+  patientInfo: {
+    name: string;
+    species: string | null;
+    breed: string | null;
+  };
+  ownerInfo: {
+    name: string | null;
+    phone: string | null;
+    email: string | null;
+  };
+}
+
+/**
+ * Create a patient record from a PIMS appointment
+ * Used by InboundSyncService to create patients alongside cases
+ */
+export async function createPatientFromPimsAppointment(
+  supabase: SupabaseClientType,
+  input: PimsPatientInput,
+): Promise<PatientRow | null> {
+  const { caseId, clinicId, patientInfo, ownerInfo } = input;
+
+  const patientInsert: PatientInsert = {
+    case_id: caseId,
+    clinic_id: clinicId,
+    name: patientInfo.name,
+    species: patientInfo.species,
+    breed: patientInfo.breed,
+    owner_name: ownerInfo.name,
+    owner_phone: ownerInfo.phone,
+    owner_email: ownerInfo.email,
+  };
+
+  const { data: newPatient, error } = await supabase
+    .from("patients")
+    .insert(patientInsert)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[CaseCRUD] Error creating patient from PIMS appointment:", {
+      error: error.message,
+      caseId,
+      patientName: patientInfo.name,
+    });
+    return null;
+  }
+
+  console.log("[CaseCRUD] Created patient from PIMS appointment", {
+    patientId: newPatient.id,
+    patientName: newPatient.name,
+    caseId,
+  });
+
+  return newPatient;
+}
+
+/**
+ * Update a patient record from PIMS appointment data
+ * Used when existing case is updated with new appointment info
+ */
+export async function updatePatientFromPimsAppointment(
+  supabase: SupabaseClientType,
+  caseId: string,
+  input: Omit<PimsPatientInput, "caseId" | "clinicId">,
+): Promise<PatientRow | null> {
+  const { patientInfo, ownerInfo } = input;
+
+  // First check if a patient exists for this case
+  const { data: existingPatient } = await supabase
+    .from("patients")
+    .select("*")
+    .eq("case_id", caseId)
+    .maybeSingle();
+
+  if (!existingPatient) {
+    console.log("[CaseCRUD] No existing patient found for case", { caseId });
+    return null;
+  }
+
+  // Update only non-null fields from the new data
+  const updateData: Partial<PatientInsert> = {};
+
+  if (patientInfo.name && patientInfo.name !== "Unknown") {
+    updateData.name = patientInfo.name;
+  }
+  if (patientInfo.species) {
+    updateData.species = patientInfo.species;
+  }
+  if (patientInfo.breed) {
+    updateData.breed = patientInfo.breed;
+  }
+  if (ownerInfo.name) {
+    updateData.owner_name = ownerInfo.name;
+  }
+  if (ownerInfo.phone) {
+    updateData.owner_phone = ownerInfo.phone;
+  }
+  if (ownerInfo.email) {
+    updateData.owner_email = ownerInfo.email;
+  }
+
+  // Skip update if no meaningful changes
+  if (Object.keys(updateData).length === 0) {
+    return existingPatient;
+  }
+
+  updateData.updated_at = new Date().toISOString();
+
+  const { data: updatedPatient, error } = await supabase
+    .from("patients")
+    .update(updateData)
+    .eq("id", existingPatient.id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("[CaseCRUD] Error updating patient from PIMS appointment:", {
+      error: error.message,
+      caseId,
+      patientId: existingPatient.id,
+    });
+    return null;
+  }
+
+  console.log("[CaseCRUD] Updated patient from PIMS appointment", {
+    patientId: updatedPatient.id,
+    patientName: updatedPatient.name,
+    caseId,
+  });
+
+  return updatedPatient;
+}
+
+/**
+ * Delete a case by IDEXX appointment ID (for no-show handling)
+ */
 export async function deleteNoShowCase(
   supabase: SupabaseClientType,
   userId: string,

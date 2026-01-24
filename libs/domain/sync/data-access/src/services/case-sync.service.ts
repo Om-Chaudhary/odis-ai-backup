@@ -13,6 +13,7 @@ import type {
   SyncStats,
 } from "../types";
 import { createLogger } from "@odis-ai/shared/logger";
+import { recordSyncAudit, asCaseUpdateMetadata } from "../utils";
 
 const logger = createLogger("case-sync");
 
@@ -161,7 +162,14 @@ export class CaseSyncService {
       }
 
       // Record sync audit
-      await this.recordSyncAudit(syncId, "cases", stats, errors.length === 0);
+      await recordSyncAudit({
+        supabase: this.supabase,
+        syncId,
+        clinicId: this.clinicId,
+        syncType: "cases",
+        stats,
+        success: errors.length === 0,
+      });
 
       const durationMs = Date.now() - startTime;
 
@@ -189,7 +197,15 @@ export class CaseSyncService {
         durationMs,
       });
 
-      await this.recordSyncAudit(syncId, "cases", stats, false, message);
+      await recordSyncAudit({
+        supabase: this.supabase,
+        syncId,
+        clinicId: this.clinicId,
+        syncType: "cases",
+        stats,
+        success: false,
+        errorMessage: message,
+      });
 
       return {
         success: false,
@@ -203,17 +219,33 @@ export class CaseSyncService {
 
   /**
    * Find cases that have consultation IDs but haven't been fully enriched
+   *
+   * IMPORTANT: Only queries cases where scheduled_at is in the past.
+   * The IDEXX API only returns consultation data for COMPLETED consultations,
+   * so we must skip future appointments to avoid "NOT FOUND" errors.
    */
   private async findCasesNeedingEnrichment(
     startDate: Date,
     endDate: Date,
   ): Promise<CaseWithPimsData[]> {
+    // Cap endDate at current time - consultation data only exists for past appointments
+    const now = new Date();
+    const effectiveEndDate = endDate > now ? now : endDate;
+
+    logger.debug("Finding cases needing enrichment", {
+      clinicId: this.clinicId,
+      startDate: startDate.toISOString(),
+      originalEndDate: endDate.toISOString(),
+      effectiveEndDate: effectiveEndDate.toISOString(),
+      cappedAtNow: endDate > now,
+    });
+
     const { data, error } = await this.supabase
       .from("cases")
       .select("id, external_id, metadata")
       .eq("clinic_id", this.clinicId)
       .gte("scheduled_at", startDate.toISOString())
-      .lte("scheduled_at", endDate.toISOString())
+      .lte("scheduled_at", effectiveEndDate.toISOString())
       .not("metadata->pimsAppointment->consultationId", "is", null);
 
     if (error) {
@@ -352,8 +384,7 @@ export class CaseSyncService {
     const { error: updateError } = await this.supabase
       .from("cases")
       .update({
-        metadata:
-          enrichedMetadata as unknown as Database["public"]["Tables"]["cases"]["Update"]["metadata"],
+        metadata: asCaseUpdateMetadata(enrichedMetadata),
         updated_at: new Date().toISOString(),
       })
       .eq("id", caseId);
@@ -368,36 +399,5 @@ export class CaseSyncService {
       hasNotes: !!consultation.notes,
       hasDischargeSummary: !!consultation.dischargeSummary,
     });
-  }
-
-  /**
-   * Record sync audit in database
-   */
-  private async recordSyncAudit(
-    syncId: string,
-    syncType: "inbound" | "cases" | "reconciliation",
-    stats: SyncStats,
-    success: boolean,
-    errorMessage?: string,
-  ): Promise<void> {
-    try {
-      await this.supabase.from("case_sync_audits").insert({
-        id: syncId,
-        clinic_id: this.clinicId,
-        sync_type: syncType,
-        appointments_found: stats.total,
-        cases_created: stats.created,
-        cases_updated: stats.updated,
-        cases_skipped: stats.skipped,
-        cases_deleted: stats.deleted ?? 0,
-        status: success ? "completed" : "failed",
-        error_message: errorMessage ?? null,
-      });
-    } catch (error) {
-      logger.error("Failed to record sync audit", {
-        syncId,
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
   }
 }

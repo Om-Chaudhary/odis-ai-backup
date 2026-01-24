@@ -13,6 +13,12 @@ import type {
   SyncStats,
 } from "../types";
 import { createLogger } from "@odis-ai/shared/logger";
+import {
+  recordSyncAudit,
+  mapAppointmentStatus,
+  buildPimsExternalId,
+  asCaseUpdateMetadata,
+} from "../utils";
 
 const logger = createLogger("case-reconciler");
 
@@ -96,12 +102,17 @@ export class CaseReconciler {
 
       // Build set of PIMS appointment IDs
       const pimsAppointmentIds = new Set(
-        pimsAppointments.map((appt) => this.buildExternalId(appt.id)),
+        pimsAppointments.map((appt) =>
+          buildPimsExternalId(this.provider.name, appt.id),
+        ),
       );
 
       // Build map of PIMS appointments by external ID for status checks
       const pimsAppointmentMap = new Map(
-        pimsAppointments.map((appt) => [this.buildExternalId(appt.id), appt]),
+        pimsAppointments.map((appt) => [
+          buildPimsExternalId(this.provider.name, appt.id),
+          appt,
+        ]),
       );
 
       // Get local cases for the same period
@@ -153,12 +164,14 @@ export class CaseReconciler {
       }
 
       // Record sync audit
-      await this.recordSyncAudit(
+      await recordSyncAudit({
+        supabase: this.supabase,
         syncId,
-        "reconciliation",
+        clinicId: this.clinicId,
+        syncType: "reconciliation",
         stats,
-        errors.length === 0,
-      );
+        success: errors.length === 0,
+      });
 
       const durationMs = Date.now() - startTime;
 
@@ -188,13 +201,15 @@ export class CaseReconciler {
         durationMs,
       });
 
-      await this.recordSyncAudit(
+      await recordSyncAudit({
+        supabase: this.supabase,
         syncId,
-        "reconciliation",
+        clinicId: this.clinicId,
+        syncType: "reconciliation",
         stats,
-        false,
-        message,
-      );
+        success: false,
+        errorMessage: message,
+      });
 
       return {
         success: false,
@@ -245,7 +260,7 @@ export class CaseReconciler {
     caseRow: CaseForReconciliation,
     pimsAppointment: PimsAppointment,
   ): boolean {
-    const pimsStatus = this.mapAppointmentStatus(pimsAppointment.status);
+    const pimsStatus = mapAppointmentStatus(pimsAppointment.status);
     return caseRow.status !== pimsStatus;
   }
 
@@ -276,14 +291,14 @@ export class CaseReconciler {
       .from("cases")
       .update({
         status: "reviewed", // 'reviewed' = closed/archived cases
-        metadata: {
+        metadata: asCaseUpdateMetadata({
           ...currentMetadata,
           reconciliation: {
             softDeleted: true,
             reason,
             deletedAt: new Date().toISOString(),
           },
-        } as unknown as Database["public"]["Tables"]["cases"]["Update"]["metadata"],
+        }),
         updated_at: new Date().toISOString(),
       })
       .eq("id", caseId);
@@ -302,7 +317,7 @@ export class CaseReconciler {
     caseId: string,
     pimsAppointment: PimsAppointment,
   ): Promise<void> {
-    const newStatus = this.mapAppointmentStatus(pimsAppointment.status);
+    const newStatus = mapAppointmentStatus(pimsAppointment.status);
 
     const { error } = await this.supabase
       .from("cases")
@@ -347,13 +362,6 @@ export class CaseReconciler {
   }
 
   /**
-   * Build external ID for PIMS appointment
-   */
-  private buildExternalId(appointmentId: string): string {
-    return `pims-appt-${this.provider.name.toLowerCase().replace(/\s+/g, "-")}-${appointmentId}`;
-  }
-
-  /**
    * Get date range for lookback
    */
   private getDateRange(lookbackDays: number): { start: Date; end: Date } {
@@ -365,59 +373,5 @@ export class CaseReconciler {
     start.setHours(0, 0, 0, 0);
 
     return { start, end };
-  }
-
-  /**
-   * Map PIMS appointment status to case status
-   * Maps to existing CaseStatus enum: reviewed | ongoing | completed | draft
-   */
-  private mapAppointmentStatus(
-    status: string,
-  ): Database["public"]["Enums"]["CaseStatus"] {
-    const statusMap: Record<string, Database["public"]["Enums"]["CaseStatus"]> =
-      {
-        scheduled: "draft",
-        confirmed: "draft",
-        "checked-in": "ongoing",
-        "in-progress": "ongoing",
-        completed: "completed",
-        discharged: "completed",
-        cancelled: "reviewed",
-        "no-show": "reviewed",
-      };
-
-    const normalized = status.toLowerCase().replace(/[_\s]+/g, "-");
-    return statusMap[normalized] ?? "draft";
-  }
-
-  /**
-   * Record sync audit in database
-   */
-  private async recordSyncAudit(
-    syncId: string,
-    syncType: "inbound" | "cases" | "reconciliation",
-    stats: SyncStats,
-    success: boolean,
-    errorMessage?: string,
-  ): Promise<void> {
-    try {
-      await this.supabase.from("case_sync_audits").insert({
-        id: syncId,
-        clinic_id: this.clinicId,
-        sync_type: syncType,
-        appointments_found: stats.total,
-        cases_created: stats.created,
-        cases_updated: stats.updated,
-        cases_skipped: stats.skipped,
-        cases_deleted: stats.deleted ?? 0,
-        status: success ? "completed" : "failed",
-        error_message: errorMessage ?? null,
-      });
-    } catch (error) {
-      logger.error("Failed to record sync audit", {
-        syncId,
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
   }
 }

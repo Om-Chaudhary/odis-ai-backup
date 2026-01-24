@@ -103,8 +103,16 @@ export class SyncOrchestrator {
       }
 
       // Phase 2: Case sync (enrich with consultation data)
+      // Note: CaseSyncService internally caps endDate at current time since
+      // consultation data is only available for past/completed appointments
       if (!options?.skipCases) {
         const dateRange = this.getDateRangeFromInbound(options?.inboundOptions);
+        logger.info("Starting case sync phase", {
+          clinicId: this.clinicId,
+          startDate: dateRange.startDate.toISOString(),
+          endDate: dateRange.endDate.toISOString(),
+          note: "CaseSyncService will cap endDate at current time for consultation fetch",
+        });
         result.cases = await this.caseService.sync({
           ...dateRange,
           ...options?.caseOptions,

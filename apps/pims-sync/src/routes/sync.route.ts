@@ -77,12 +77,22 @@ interface InboundSyncRequest {
   startDate?: string; // YYYY-MM-DD
   endDate?: string; // YYYY-MM-DD
   daysAhead?: number;
+  /** Alternative nested format for date range */
+  dateRange?: {
+    start?: string;
+    end?: string;
+  };
 }
 
 interface CaseSyncRequest {
   startDate?: string; // YYYY-MM-DD
   endDate?: string; // YYYY-MM-DD
   parallelBatchSize?: number;
+  /** Alternative nested format for date range */
+  dateRange?: {
+    start?: string;
+    end?: string;
+  };
 }
 
 interface ReconciliationRequest {
@@ -94,6 +104,11 @@ interface FullSyncRequest {
   endDate?: string;
   daysAhead?: number;
   lookbackDays?: number;
+  /** Alternative nested format for date range */
+  dateRange?: {
+    start?: string;
+    end?: string;
+  };
 }
 
 /**
@@ -136,10 +151,10 @@ async function handleInboundSync(
       const { InboundSyncService } = await import("@odis-ai/domain/sync");
       const syncService = new InboundSyncService(supabase, provider, clinic.id);
 
-      // Build date range
+      // Build date range - support both flat (startDate/endDate) and nested (dateRange.start/end) formats
       const dateRange = buildDateRange(
-        body.startDate,
-        body.endDate,
+        body.startDate ?? body.dateRange?.start,
+        body.endDate ?? body.dateRange?.end,
         body.daysAhead ?? 7,
       );
 
@@ -218,12 +233,14 @@ async function handleCaseSync(
       const syncService = new CaseSyncService(supabase, provider, clinic.id);
 
       // Build date range (default: today only)
-      const startDate = body.startDate ? new Date(body.startDate) : new Date();
+      // Support both flat (startDate/endDate) and nested (dateRange.start/end) formats
+      const startDateStr = body.startDate ?? body.dateRange?.start;
+      const endDateStr = body.endDate ?? body.dateRange?.end;
+
+      const startDate = startDateStr ? new Date(startDateStr) : new Date();
       startDate.setHours(0, 0, 0, 0);
 
-      const endDate = body.endDate
-        ? new Date(body.endDate)
-        : new Date(startDate);
+      const endDate = endDateStr ? new Date(endDateStr) : new Date(startDate);
       endDate.setHours(23, 59, 59, 999);
 
       // Run sync
@@ -381,10 +398,10 @@ async function handleFullSync(
       const { SyncOrchestrator } = await import("@odis-ai/domain/sync");
       const orchestrator = new SyncOrchestrator(supabase, provider, clinic.id);
 
-      // Build date range
+      // Build date range - support both flat (startDate/endDate) and nested (dateRange.start/end) formats
       const dateRange = buildDateRange(
-        body.startDate,
-        body.endDate,
+        body.startDate ?? body.dateRange?.start,
+        body.endDate ?? body.dateRange?.end,
         body.daysAhead ?? 7,
       );
 

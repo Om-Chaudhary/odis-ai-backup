@@ -13,6 +13,19 @@ import type {
   SyncStats,
 } from "../types";
 import { createLogger } from "@odis-ai/shared/logger";
+import {
+  createPatientFromPimsAppointment,
+  updatePatientFromPimsAppointment,
+} from "@odis-ai/domain/cases";
+import {
+  recordSyncAudit,
+  mapAppointmentStatus,
+  mapAppointmentType,
+  buildPimsExternalId,
+  buildPimsSource,
+  asCaseInsertMetadata,
+  asCaseUpdateMetadata,
+} from "../utils";
 
 const logger = createLogger("inbound-sync");
 
@@ -100,7 +113,14 @@ export class InboundSyncService {
       }
 
       // Record sync audit
-      await this.recordSyncAudit(syncId, "inbound", stats, errors.length === 0);
+      await recordSyncAudit({
+        supabase: this.supabase,
+        syncId,
+        clinicId: this.clinicId,
+        syncType: "inbound",
+        stats,
+        success: errors.length === 0,
+      });
 
       const durationMs = Date.now() - startTime;
 
@@ -129,7 +149,15 @@ export class InboundSyncService {
       });
 
       // Record failed sync audit
-      await this.recordSyncAudit(syncId, "inbound", stats, false, message);
+      await recordSyncAudit({
+        supabase: this.supabase,
+        syncId,
+        clinicId: this.clinicId,
+        syncType: "inbound",
+        stats,
+        success: false,
+        errorMessage: message,
+      });
 
       return {
         success: false,
@@ -148,7 +176,7 @@ export class InboundSyncService {
     appointment: PimsAppointment,
   ): Promise<"created" | "updated" | "skipped"> {
     // Build external ID for idempotency
-    const externalId = `pims-appt-${this.provider.name.toLowerCase().replace(/\s+/g, "-")}-${appointment.id}`;
+    const externalId = buildPimsExternalId(this.provider.name, appointment.id);
 
     // Check if appointment already exists
     const { data: existing } = await this.supabase
@@ -173,8 +201,7 @@ export class InboundSyncService {
         const { error } = await this.supabase
           .from("cases")
           .update({
-            metadata:
-              metadata as unknown as Database["public"]["Tables"]["cases"]["Update"]["metadata"],
+            metadata: asCaseUpdateMetadata(metadata),
             scheduled_at: appointment.startTime?.toISOString() ?? null,
             updated_at: new Date().toISOString(),
           })
@@ -183,6 +210,20 @@ export class InboundSyncService {
         if (error) {
           throw new Error(`Failed to update case: ${error.message}`);
         }
+
+        // Update patient record if it exists
+        await updatePatientFromPimsAppointment(this.supabase, existing.id, {
+          patientInfo: {
+            name: appointment.patient.name ?? "Unknown",
+            species: this.normalizeSpecies(appointment.patient.species),
+            breed: appointment.patient.breed ?? null,
+          },
+          ownerInfo: {
+            name: appointment.client.name ?? null,
+            phone: appointment.client.phone ?? null,
+            email: appointment.client.email ?? null,
+          },
+        });
 
         logger.debug("Updated existing appointment", {
           caseId: existing.id,
@@ -197,23 +238,43 @@ export class InboundSyncService {
     }
 
     // Create new case for this appointment
-    const { error } = await this.supabase.from("cases").insert({
-      external_id: externalId,
-      clinic_id: this.clinicId,
-      source: `pims:${this.provider.name.toLowerCase().replace(/\s+/g, "-")}`,
-      status: this.mapAppointmentStatus(appointment.status),
-      type: this.mapAppointmentType(appointment.type),
-      scheduled_at: appointment.startTime?.toISOString() ?? null,
-      metadata:
-        metadata as unknown as Database["public"]["Tables"]["cases"]["Insert"]["metadata"],
-      visibility: "private", // Clinic-internal cases are private
-    });
+    const { data: newCase, error } = await this.supabase
+      .from("cases")
+      .insert({
+        external_id: externalId,
+        clinic_id: this.clinicId,
+        source: buildPimsSource(this.provider.name),
+        status: mapAppointmentStatus(appointment.status),
+        type: mapAppointmentType(appointment.type),
+        scheduled_at: appointment.startTime?.toISOString() ?? null,
+        metadata: asCaseInsertMetadata(metadata),
+        visibility: "private", // Clinic-internal cases are private
+      })
+      .select("id")
+      .single();
 
-    if (error) {
-      throw new Error(`Failed to create case: ${error.message}`);
+    if (error || !newCase) {
+      throw new Error(`Failed to create case: ${error?.message ?? "Unknown error"}`);
     }
 
-    logger.debug("Created new case from appointment", {
+    // Create patient record for this case
+    await createPatientFromPimsAppointment(this.supabase, {
+      caseId: newCase.id,
+      clinicId: this.clinicId,
+      patientInfo: {
+        name: appointment.patient.name ?? "Unknown",
+        species: this.normalizeSpecies(appointment.patient.species),
+        breed: appointment.patient.breed ?? null,
+      },
+      ownerInfo: {
+        name: appointment.client.name ?? null,
+        phone: appointment.client.phone ?? null,
+        email: appointment.client.email ?? null,
+      },
+    });
+
+    logger.debug("Created new case with patient from appointment", {
+      caseId: newCase.id,
       externalId,
       appointmentId: appointment.id,
       patientName: appointment.patient.name,
@@ -244,7 +305,7 @@ export class InboundSyncService {
         clinical: {
           visitReason: appointment.reason ?? undefined,
         },
-        caseType: this.mapAppointmentType(appointment.type) ?? "unknown",
+        caseType: mapAppointmentType(appointment.type) ?? "unknown",
         confidence: {
           overall: 0.9, // High confidence from structured data
           patient: 0.95,
@@ -274,59 +335,6 @@ export class InboundSyncService {
       existing.patient.name !== incoming.patient.name ||
       existing.client.phone !== incoming.client.phone
     );
-  }
-
-  /**
-   * Map PIMS appointment status to case status
-   * Maps to existing CaseStatus enum: reviewed | ongoing | completed | draft
-   */
-  private mapAppointmentStatus(
-    status: string,
-  ): Database["public"]["Enums"]["CaseStatus"] {
-    const statusMap: Record<string, Database["public"]["Enums"]["CaseStatus"]> =
-      {
-        scheduled: "draft",
-        confirmed: "draft",
-        "checked-in": "ongoing",
-        "in-progress": "ongoing",
-        completed: "completed",
-        discharged: "completed",
-        cancelled: "reviewed",
-        "no-show": "reviewed",
-      };
-
-    const normalized = status.toLowerCase().replace(/[_\s]+/g, "-");
-    return statusMap[normalized] ?? "draft";
-  }
-
-  /**
-   * Map PIMS appointment type to case type
-   * Maps to existing CaseType enum: checkup | emergency | surgery | follow_up
-   */
-  private mapAppointmentType(
-    type: string | null,
-  ): Database["public"]["Enums"]["CaseType"] {
-    if (!type) return "checkup";
-
-    const typeMap: Record<string, Database["public"]["Enums"]["CaseType"]> = {
-      exam: "checkup",
-      checkup: "checkup",
-      "well-visit": "checkup",
-      wellness: "checkup",
-      vaccination: "checkup",
-      vaccine: "checkup",
-      surgery: "surgery",
-      dental: "surgery",
-      emergency: "emergency",
-      urgent: "emergency",
-      "follow-up": "follow_up",
-      recheck: "follow_up",
-      diagnostic: "checkup",
-      consultation: "checkup",
-    };
-
-    const normalized = type.toLowerCase().replace(/[_\s]+/g, "-");
-    return typeMap[normalized] ?? "checkup";
   }
 
   /**
@@ -371,36 +379,5 @@ export class InboundSyncService {
     end.setHours(23, 59, 59, 999);
 
     return { start, end };
-  }
-
-  /**
-   * Record sync audit in database
-   */
-  private async recordSyncAudit(
-    syncId: string,
-    syncType: "inbound" | "cases" | "reconciliation",
-    stats: SyncStats,
-    success: boolean,
-    errorMessage?: string,
-  ): Promise<void> {
-    try {
-      await this.supabase.from("case_sync_audits").insert({
-        id: syncId,
-        clinic_id: this.clinicId,
-        sync_type: syncType,
-        appointments_found: stats.total,
-        cases_created: stats.created,
-        cases_updated: stats.updated,
-        cases_skipped: stats.skipped,
-        cases_deleted: stats.deleted ?? 0,
-        status: success ? "completed" : "failed",
-        error_message: errorMessage ?? null,
-      });
-    } catch (error) {
-      logger.error("Failed to record sync audit", {
-        syncId,
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
   }
 }
