@@ -89,3 +89,6 @@ screenshots-archive/
 # - Scripts: ralph.sh, ralph-new.sh, ralph-status.sh
 # - Docs: README-RALPH.md, RALPH_SETUP.md, RALPH_WORKFLOW.md
 # - Instructions: PROMPT.md
+
+# Claude skills (auto-generated, ignore all skills)
+.claude/skills/
