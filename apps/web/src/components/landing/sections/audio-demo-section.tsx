@@ -10,6 +10,10 @@ import { AudioDemoCard, type DemoCardData } from "../shared/audio-demo-card";
 import { SectionBackground } from "../ui/section-background";
 import { useSectionVisibility } from "~/hooks/useSectionVisibility";
 
+// Supabase Storage base URL for demo audio files
+const DEMO_AUDIO_BASE_URL =
+  "https://nndjdbdnhnhxkasjgxqk.supabase.co/storage/v1/object/public/public-assets/demos";
+
 // Demo cards with real VAPI call recordings - organized for 2-column staggered layout
 const demoCards: DemoCardData[] = [
   // Real call: Ivy - Wound care follow-up (60s)
@@ -18,7 +22,7 @@ const demoCards: DemoCardData[] = [
     title: "Wound Care Follow-up",
     description: "Brief check-in on wound recovery",
     duration: 60,
-    audioUrl: "/audio/ivy-wound-care-followup.wav",
+    audioUrl: `${DEMO_AUDIO_BASE_URL}/ivy-wound-care-followup.wav`,
     petName: "Ivy",
     petImage:
       "https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=100&h=100&fit=crop&crop=face",
@@ -30,8 +34,7 @@ const demoCards: DemoCardData[] = [
     title: "Deworming Follow-up",
     description: "Post-treatment check on scratching and stool",
     duration: 60,
-    audioUrl:
-      "https://storage.vapi.ai/019b0605-d8f5-7bb0-aaee-71af8165573c-1765332680243-7bf39c88-7600-44f3-9dd6-d53e78ed2773-mono.wav",
+    audioUrl: `${DEMO_AUDIO_BASE_URL}/pishi-deworming-followup.wav`,
     petName: "Pishi",
     petImage:
       "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=100&h=100&fit=crop&crop=face",
@@ -43,8 +46,7 @@ const demoCards: DemoCardData[] = [
     title: "Ear Infection Follow-up",
     description: "Checking on medication and ear cleaning",
     duration: 61,
-    audioUrl:
-      "https://storage.vapi.ai/019b0b35-9dfd-7eeb-8f84-827e9b9b1623-1765419709915-fa94c4a3-ab1a-4c9c-a33a-afc713b0494e-mono.wav",
+    audioUrl: `${DEMO_AUDIO_BASE_URL}/chloe-ear-followup.wav`,
     petName: "Chloe",
     petImage:
       "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=100&h=100&fit=crop&crop=face",
