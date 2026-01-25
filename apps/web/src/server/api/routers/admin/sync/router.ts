@@ -99,6 +99,10 @@ export const adminSyncRouter = createTRPCRouter({
           sync_type,
           created_at,
           status,
+          total_items,
+          processed_items,
+          progress_percentage,
+          last_progress_update,
           clinics (
             id,
             name,

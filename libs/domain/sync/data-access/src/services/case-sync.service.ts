@@ -4,7 +4,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, Json } from "@odis-ai/shared/types";
+import type { Json } from "@odis-ai/shared/types";
 import type {
   IPimsProvider,
   PimsConsultation,
@@ -13,7 +13,9 @@ import type {
   SyncStats,
 } from "../types.js";
 import { createLogger } from "@odis-ai/shared/logger";
-import { recordSyncAudit, asCaseUpdateMetadata } from "../utils";
+import { createSyncAudit, recordSyncAudit } from "../utils/sync-audit.js";
+import { asCaseUpdateMetadata } from "../utils/metadata.js";
+import { ProgressThrottler } from "../utils/progress-throttler.js";
 
 const logger = createLogger("case-sync");
 
@@ -45,10 +47,10 @@ interface PimsAppointmentMetadata {
  */
 export class CaseSyncService {
   constructor(
-    private supabase: SupabaseClient<Database>,
+    private supabase: SupabaseClient,
     private provider: IPimsProvider,
     private clinicId: string,
-  ) {}
+  ) { }
 
   /**
    * Sync consultation data for cases in date range
@@ -80,6 +82,17 @@ export class CaseSyncService {
     };
 
     try {
+      // Create initial sync audit with in_progress status
+      await createSyncAudit({
+        supabase: this.supabase,
+        syncId,
+        clinicId: this.clinicId,
+        syncType: "cases",
+      });
+
+      // Initialize progress throttler (1-second throttle)
+      const throttler = new ProgressThrottler(1000);
+
       // Find cases with consultation IDs that need enrichment
       const casesToEnrich = await this.findCasesNeedingEnrichment(
         options.startDate,
@@ -94,6 +107,18 @@ export class CaseSyncService {
       });
 
       if (casesToEnrich.length === 0) {
+        // No cases to process - mark as complete
+        await throttler.queueUpdate(
+          {
+            supabase: this.supabase,
+            syncId,
+            total_items: 0,
+            processed_items: 0,
+            progress_percentage: 100,
+          },
+          true,
+        );
+
         return {
           success: true,
           syncId,
@@ -111,6 +136,18 @@ export class CaseSyncService {
         count: consultationIds.length,
       });
 
+      // Update with total count immediately (force)
+      await throttler.queueUpdate(
+        {
+          supabase: this.supabase,
+          syncId,
+          total_items: casesToEnrich.length,
+          processed_items: 0,
+          progress_percentage: 0,
+        },
+        true,
+      ); // Force immediate update
+
       // Batch fetch consultations
       const batchSize = options.parallelBatchSize ?? 5;
       const consultations = await this.fetchConsultationsBatched(
@@ -125,6 +162,7 @@ export class CaseSyncService {
       });
 
       // Update cases with consultation data
+      let processedCount = 0;
       for (const [consultationId, caseIds] of Array.from(
         consultationMap.entries(),
       )) {
@@ -158,8 +196,24 @@ export class CaseSyncService {
               error: message,
             });
           }
+
+          // Update progress (throttled automatically)
+          processedCount++;
+          const percentage = Math.floor(
+            (processedCount / casesToEnrich.length) * 100,
+          );
+          await throttler.queueUpdate({
+            supabase: this.supabase,
+            syncId,
+            total_items: casesToEnrich.length,
+            processed_items: processedCount,
+            progress_percentage: percentage,
+          });
         }
       }
+
+      // Flush any pending updates before final completion
+      await throttler.flush();
 
       // Record sync audit
       await recordSyncAudit({

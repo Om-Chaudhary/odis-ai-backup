@@ -5,22 +5,13 @@ import type { Database } from "@odis-ai/shared/types";
 import { api } from "~/trpc/client";
 import { Button } from "@odis-ai/shared/ui/button";
 import { Badge } from "@odis-ai/shared/ui/badge";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@odis-ai/shared/ui/tabs";
 import { ArrowLeft, Building2 } from "lucide-react";
-import { ClinicOverviewTab } from "~/components/admin/clinics/clinic-overview-tab";
-import { ClinicSettingsTab } from "~/components/admin/clinics/clinic-settings-tab";
-import { ClinicUsersTab } from "~/components/admin/clinics/clinic-users-tab";
 import { ClinicSyncTab } from "~/components/admin/clinics/clinic-sync-tab";
 
 type Clinic = Database["public"]["Tables"]["clinics"]["Row"];
 
 export default function ClinicDetailPage() {
-  const params = useParams<{ clinicId: string }>();
+  const params = useParams<{ clinicId: string; clinicSlug: string }>();
   const router = useRouter();
   const clinicId = params.clinicId;
 
@@ -102,39 +93,10 @@ export default function ClinicDetailPage() {
           </div>
         </div>
 
-        <Button
-          variant="outline"
-          onClick={() => router.push(`/admin/clinics/${clinicId}/edit`)}
-        >
-          Edit Settings
-        </Button>
       </div>
 
-      {/* Tabs */}
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 lg:inline-grid lg:w-auto">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="sync">PIMS Sync</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="mt-6">
-          <ClinicOverviewTab clinic={clinicData} clinicId={clinicId} />
-        </TabsContent>
-
-        <TabsContent value="settings" className="mt-6">
-          <ClinicSettingsTab clinic={clinicData} clinicId={clinicId} />
-        </TabsContent>
-
-        <TabsContent value="users" className="mt-6">
-          <ClinicUsersTab clinicId={clinicId} />
-        </TabsContent>
-
-        <TabsContent value="sync" className="mt-6">
-          <ClinicSyncTab clinic={clinicData} clinicId={clinicId} />
-        </TabsContent>
-      </Tabs>
+      {/* PIMS Sync Configuration */}
+      <ClinicSyncTab clinic={clinicData} clinicId={clinicId} />
     </div>
   );
 }

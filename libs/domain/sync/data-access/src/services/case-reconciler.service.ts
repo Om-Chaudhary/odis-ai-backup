@@ -14,10 +14,12 @@ import type {
 } from "../types.js";
 import { createLogger } from "@odis-ai/shared/logger";
 import {
+  createSyncAudit,
   recordSyncAudit,
   mapAppointmentStatus,
   buildPimsExternalId,
   asCaseUpdateMetadata,
+  ProgressThrottler,
 } from "../utils";
 
 const logger = createLogger("case-reconciler");
@@ -85,6 +87,17 @@ export class CaseReconciler {
     };
 
     try {
+      // Create initial sync audit with in_progress status
+      await createSyncAudit({
+        supabase: this.supabase,
+        syncId,
+        clinicId: this.clinicId,
+        syncType: "reconciliation",
+      });
+
+      // Initialize progress throttler (2-second throttle)
+      const throttler = new ProgressThrottler(2000);
+
       // Calculate date range for lookback
       const { start, end } = this.getDateRange(lookbackDays);
 
@@ -125,8 +138,25 @@ export class CaseReconciler {
         pimsAppointments: pimsAppointments.length,
       });
 
+      // Update with total count immediately (force)
+      if (localCases.length > 0) {
+        await throttler.queueUpdate(
+          {
+            supabase: this.supabase,
+            syncId,
+            total_items: localCases.length,
+            processed_items: 0,
+            progress_percentage: 0,
+          },
+          true,
+        ); // Force immediate update
+      }
+
       // Process each local case
-      for (const caseRow of localCases) {
+      for (let i = 0; i < localCases.length; i++) {
+        const caseRow = localCases[i];
+        if (!caseRow) continue;
+
         try {
           const result = await this.reconcileCase(
             caseRow,
@@ -161,7 +191,21 @@ export class CaseReconciler {
             error: message,
           });
         }
+
+        // Update progress (throttled automatically)
+        const processed = i + 1;
+        const percentage = Math.floor((processed / localCases.length) * 100);
+        await throttler.queueUpdate({
+          supabase: this.supabase,
+          syncId,
+          total_items: localCases.length,
+          processed_items: processed,
+          progress_percentage: percentage,
+        });
       }
+
+      // Flush any pending updates before final completion
+      await throttler.flush();
 
       // Record sync audit
       await recordSyncAudit({

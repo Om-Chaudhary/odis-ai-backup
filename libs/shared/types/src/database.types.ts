@@ -390,8 +390,12 @@ export type Database = {
           created_at: string
           error_message: string | null
           id: string
+          last_progress_update: string | null
+          processed_items: number | null
+          progress_percentage: number | null
           status: string
           sync_type: string
+          total_items: number | null
           updated_at: string
         }
         Insert: {
@@ -404,8 +408,12 @@ export type Database = {
           created_at?: string
           error_message?: string | null
           id?: string
+          last_progress_update?: string | null
+          processed_items?: number | null
+          progress_percentage?: number | null
           status?: string
           sync_type: string
+          total_items?: number | null
           updated_at?: string
         }
         Update: {
@@ -418,8 +426,12 @@ export type Database = {
           created_at?: string
           error_message?: string | null
           id?: string
+          last_progress_update?: string | null
+          processed_items?: number | null
+          progress_percentage?: number | null
           status?: string
           sync_type?: string
+          total_items?: number | null
           updated_at?: string
         }
         Relationships: [

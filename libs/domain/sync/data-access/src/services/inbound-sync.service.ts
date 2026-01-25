@@ -18,6 +18,7 @@ import {
   updatePatientFromPimsAppointment,
 } from "@odis-ai/domain/cases";
 import {
+  createSyncAudit,
   recordSyncAudit,
   mapAppointmentStatus,
   mapAppointmentType,
@@ -25,6 +26,7 @@ import {
   buildPimsSource,
   asCaseInsertMetadata,
   asCaseUpdateMetadata,
+  ProgressThrottler,
 } from "../utils";
 
 const logger = createLogger("inbound-sync");
@@ -71,6 +73,17 @@ export class InboundSyncService {
     };
 
     try {
+      // Create initial sync audit with in_progress status
+      await createSyncAudit({
+        supabase: this.supabase,
+        syncId,
+        clinicId: this.clinicId,
+        syncType: "inbound",
+      });
+
+      // Initialize progress throttler (2-second throttle)
+      const throttler = new ProgressThrottler(2000);
+
       // Determine date range
       const { start, end } = this.getDateRange(options);
 
@@ -84,8 +97,25 @@ export class InboundSyncService {
         dateRange: { start: start.toISOString(), end: end.toISOString() },
       });
 
+      // Update with total count immediately (force)
+      if (appointments.length > 0) {
+        await throttler.queueUpdate(
+          {
+            supabase: this.supabase,
+            syncId,
+            total_items: appointments.length,
+            processed_items: 0,
+            progress_percentage: 0,
+          },
+          true,
+        ); // Force immediate update
+      }
+
       // Process each appointment
-      for (const appointment of appointments) {
+      for (let i = 0; i < appointments.length; i++) {
+        const appointment = appointments[i];
+        if (!appointment) continue;
+
         try {
           const result = await this.processAppointment(appointment);
 
@@ -110,7 +140,21 @@ export class InboundSyncService {
             error: message,
           });
         }
+
+        // Update progress (throttled automatically)
+        const processed = i + 1;
+        const percentage = Math.floor((processed / appointments.length) * 100);
+        await throttler.queueUpdate({
+          supabase: this.supabase,
+          syncId,
+          total_items: appointments.length,
+          processed_items: processed,
+          progress_percentage: percentage,
+        });
       }
+
+      // Flush any pending updates before final completion
+      await throttler.flush();
 
       // Record sync audit
       await recordSyncAudit({
@@ -147,6 +191,9 @@ export class InboundSyncService {
         error: message,
         durationMs,
       });
+
+      // Note: throttler may not be initialized if error happens before try block
+      // This is fine - we'll just record the failed audit without flushing
 
       // Record failed sync audit
       await recordSyncAudit({

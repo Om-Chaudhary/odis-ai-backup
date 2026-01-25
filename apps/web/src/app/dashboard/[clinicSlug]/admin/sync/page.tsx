@@ -19,7 +19,9 @@ import {
 } from "~/components/admin/sync/sync-history-table";
 import { SyncTriggerPanel } from "~/components/admin/sync/sync-trigger-panel";
 import { ClinicSyncOverview } from "~/components/admin/sync/clinic-sync-overview";
+import { ClinicSyncScheduleCard } from "~/components/admin/sync/clinic-sync-schedule-card";
 import { useSyncAuditRealtime } from "~/components/admin/sync/hooks";
+import { CalendarClock } from "lucide-react";
 
 export default function AdminSyncPage() {
   const { selectedClinicId, clinics, isGlobalView } = useAdminContext();
@@ -30,6 +32,12 @@ export default function AdminSyncPage() {
   const idexxClinics = clinics.filter(
     (c) => c.pims_type === "idexx_neo" || c.pims_type === "idexx",
   );
+
+  // Find the selected clinic to get its details
+  const selectedClinic = clinics.find((c) => c.id === selectedClinicId);
+  const isIdexxClinic =
+    selectedClinic?.pims_type === "idexx_neo" ||
+    selectedClinic?.pims_type === "idexx";
 
   const { data: history, isLoading } = api.admin.sync.getSyncHistory.useQuery({
     clinicId: selectedClinicId ?? undefined,
@@ -65,6 +73,28 @@ export default function AdminSyncPage() {
 
       {/* Active Syncs */}
       <ActiveSyncsCard clinicId={selectedClinicId ?? undefined} />
+
+      {/* Sync Schedule Configuration - Clinic View Only */}
+      {!isGlobalView && selectedClinicId ? (
+        <ClinicSyncScheduleCard
+          clinicId={selectedClinicId}
+          clinicTimezone={selectedClinic?.timezone ?? undefined}
+          isIdexxClinic={isIdexxClinic}
+        />
+      ) : isGlobalView ? (
+        <Card className="border-slate-200 bg-white p-6">
+          <div className="py-8 text-center">
+            <CalendarClock className="mx-auto mb-3 h-12 w-12 text-slate-300" />
+            <h3 className="mb-2 text-lg font-semibold text-slate-900">
+              Select a Clinic
+            </h3>
+            <p className="text-sm text-slate-500">
+              Choose a specific clinic from the dropdown above to configure sync
+              schedules
+            </p>
+          </div>
+        </Card>
+      ) : null}
 
       {/* Clinic Sync Overview - Global View */}
       {isGlobalView && <ClinicSyncOverview />}

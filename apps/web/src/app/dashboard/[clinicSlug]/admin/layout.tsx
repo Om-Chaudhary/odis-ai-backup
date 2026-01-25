@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { getUser } from "~/server/actions/auth";
 import { createServiceClient } from "@odis-ai/data-access/db/server";
 import { AdminProvider } from "~/lib/admin-context";
+import { AdminHeader } from "~/components/admin/layout/admin-header";
+import { FloatingSyncWidget } from "~/components/admin/sync/floating-sync-widget";
 
 export const metadata: Metadata = {
   title: "Admin | Odis AI",
@@ -45,5 +47,13 @@ export default async function AdminLayout({
     .select("*")
     .order("name");
 
-  return <AdminProvider clinics={clinics ?? []}>{children}</AdminProvider>;
+  return (
+    <AdminProvider clinics={clinics ?? []}>
+      <div className="flex h-full flex-col">
+        <AdminHeader />
+        <div className="flex-1 overflow-auto">{children}</div>
+        <FloatingSyncWidget />
+      </div>
+    </AdminProvider>
+  );
 }
