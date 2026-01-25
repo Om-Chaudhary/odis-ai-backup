@@ -216,6 +216,9 @@ importers:
       geist:
         specifier: ^1.5.1
         version: 1.5.1(next@16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(sass@1.97.2))
+      import-in-the-middle:
+        specifier: ^2.0.5
+        version: 2.0.5
       llamaindex:
         specifier: ^0.12.0
         version: 0.12.1(@modelcontextprotocol/sdk@1.25.2(hono@4.11.4)(zod@3.25.76))(hono@4.11.4)(next@16.0.10(@babel/core@7.28.6)(@opentelemetry/api@1.9.0)(babel-plugin-macros@3.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(sass@1.97.2))(p-retry@6.2.1)(rxjs@7.8.2)(tree-sitter@0.22.4)(web-tree-sitter@0.24.7)(zod@3.25.76)
@@ -261,6 +264,9 @@ importers:
       recharts:
         specifier: 2.15.4
         version: 2.15.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      require-in-the-middle:
+        specifier: ^8.0.1
+        version: 8.0.1
       resend:
         specifier: ^6.4.2
         version: 6.7.0
@@ -270,6 +276,9 @@ importers:
       sass:
         specifier: ^1.86.0
         version: 1.97.2
+      server-only:
+        specifier: ^0.0.1
+        version: 0.0.1
       shiki:
         specifier: ^3.20.0
         version: 3.21.0

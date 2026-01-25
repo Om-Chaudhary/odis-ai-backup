@@ -1,3 +1,5 @@
+import "server-only";
+
 import { auth } from "@clerk/nextjs/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { env } from "@odis-ai/shared/env";

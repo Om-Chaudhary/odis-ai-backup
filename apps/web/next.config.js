@@ -112,7 +112,11 @@ const config = {
   transpilePackages: [],
 
   // Server-side packages that should not be bundled
-  serverExternalPackages: ["resend"],
+  serverExternalPackages: [
+    "resend",
+    "import-in-the-middle",
+    "require-in-the-middle",
+  ],
 
   // Webpack/Turbopack config to prevent watching .git directory
   webpack: (config, { isServer }) => {

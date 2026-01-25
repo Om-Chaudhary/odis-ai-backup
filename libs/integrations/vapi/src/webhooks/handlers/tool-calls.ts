@@ -38,7 +38,8 @@ function normalizeToolName(name: string): string {
 
 /**
  * Extract tool call data from VAPI's payload format.
- * VAPI sends tool calls in OpenAI format with function.name and function.arguments (JSON string).
+ * VAPI sends tool calls in OpenAI format with function.name and function.arguments.
+ * Arguments can be either a JSON string OR an already-parsed object.
  */
 function extractToolCallData(toolCall: Record<string, unknown>): {
   id: string;
@@ -49,25 +50,31 @@ function extractToolCallData(toolCall: Record<string, unknown>): {
 
   // VAPI sends OpenAI-style format: { id, type: "function", function: { name, arguments } }
   const functionData = toolCall.function as
-    | { name?: string; arguments?: string }
+    | { name?: string; arguments?: string | Record<string, unknown> }
     | undefined;
 
   if (functionData?.name) {
-    // OpenAI/VAPI format - parse arguments from JSON string
+    // OpenAI/VAPI format - arguments can be string OR object
     let parameters: Record<string, unknown> = {};
-    if (functionData.arguments) {
-      try {
-        parameters = JSON.parse(functionData.arguments) as Record<
-          string,
-          unknown
-        >;
-      } catch {
-        logger.warn("Failed to parse function.arguments", {
-          id,
-          arguments: functionData.arguments,
-        });
+    const args = functionData.arguments;
+
+    if (args) {
+      // Handle object case first (VAPI sometimes sends pre-parsed objects)
+      if (typeof args === "object" && args !== null) {
+        parameters = args;
+      } else if (typeof args === "string") {
+        // Parse JSON string
+        try {
+          parameters = JSON.parse(args) as Record<string, unknown>;
+        } catch {
+          logger.warn("Failed to parse function.arguments", {
+            id,
+            arguments: args,
+          });
+        }
       }
     }
+
     return { id, name: functionData.name, parameters };
   }
 

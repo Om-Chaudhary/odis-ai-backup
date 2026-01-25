@@ -10,7 +10,7 @@
 import type { NextRequest, NextResponse } from "next/server";
 import type { z } from "zod";
 import { loggers } from "@odis-ai/shared/logger";
-import { createServiceClient } from "@odis-ai/data-access/db";
+import { createServiceClient } from "@odis-ai/data-access/db/server";
 import { extractToolArguments } from "./request-parser";
 import {
   buildVapiResponse,

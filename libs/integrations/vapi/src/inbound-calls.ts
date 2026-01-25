@@ -5,7 +5,7 @@
  * and transforming VAPI webhook data to database format.
  */
 
-import { createServiceClient } from "@odis-ai/data-access/db";
+import { createServiceClient } from "@odis-ai/data-access/db/server";
 import type { VapiCallResponse } from "./client";
 import { loggers } from "@odis-ai/shared/logger";
 import { getClinicByName } from "@odis-ai/domain/clinics/utils";
