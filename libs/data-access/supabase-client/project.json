@@ -3,7 +3,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/data-access/supabase-client/src",
   "projectType": "library",
-  "tags": ["type:data-access", "scope:shared", "platform:node+browser"],
+  "tags": ["type:data-access", "scope:shared", "platform:neutral"],
   "targets": {
     "typecheck": {
       "executor": "nx:run-commands",

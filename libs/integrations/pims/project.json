@@ -3,7 +3,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/integrations/pims/src",
   "projectType": "library",
-  "tags": ["type:lib", "scope:integrations", "platform:browser"],
+  "tags": ["type:integration", "scope:shared", "platform:browser"],
   "targets": {
     "lint": {
       "executor": "@nx/eslint:lint",

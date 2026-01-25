@@ -75,6 +75,8 @@
       "@odis-ai/integrations/ai/*": ["libs/integrations/ai/src/*"],
       "@odis-ai/integrations/stripe": ["libs/integrations/stripe/src/index.ts"],
       "@odis-ai/integrations/stripe/*": ["libs/integrations/stripe/src/*"],
+      "@odis-ai/integrations/pims": ["libs/integrations/pims/src/index.ts"],
+      "@odis-ai/integrations/pims/*": ["libs/integrations/pims/src/*"],
       "@odis-ai/domain/cases": ["libs/domain/cases/data-access/src/index.ts"],
       "@odis-ai/domain/cases/*": ["libs/domain/cases/data-access/src/*"],
       "@odis-ai/domain/discharge": [
