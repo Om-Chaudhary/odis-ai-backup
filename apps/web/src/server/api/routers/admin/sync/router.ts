@@ -436,6 +436,31 @@ export const adminSyncRouter = createTRPCRouter({
     }),
 
   /**
+   * Get all clinic IDs that have active IDEXX credentials
+   * Returns an array of clinic IDs (convert to Set on client for efficient lookup)
+   */
+  getClinicsWithCredentials: adminProcedure.query(async ({ ctx }) => {
+    const supabase = ctx.supabase;
+
+    const { data, error } = await supabase
+      .from("idexx_credentials")
+      .select("clinic_id")
+      .eq("is_active", true)
+      .not("clinic_id", "is", null);
+
+    if (error) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "Failed to fetch clinics with credentials",
+        cause: error,
+      });
+    }
+
+    // Return array of clinic IDs (client will convert to Set for fast lookup)
+    return (data ?? []).map((row) => row.clinic_id);
+  }),
+
+  /**
    * Update sync schedule configuration for a clinic
    */
   updateSyncSchedule: adminProcedure

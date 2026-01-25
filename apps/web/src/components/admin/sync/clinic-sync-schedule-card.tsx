@@ -5,7 +5,6 @@ import { api } from "~/trpc/client";
 import { Card } from "@odis-ai/shared/ui/card";
 import { Button } from "@odis-ai/shared/ui/button";
 import { Badge } from "@odis-ai/shared/ui/badge";
-import { Input } from "@odis-ai/shared/ui/input";
 import { Label } from "@odis-ai/shared/ui/label";
 import { Switch } from "@odis-ai/shared/ui/switch";
 import {
@@ -17,9 +16,11 @@ import {
   Database as DatabaseIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import { ScheduleBuilder } from "./schedule-builder";
 
 interface ClinicSyncScheduleCardProps {
   clinicId: string;
+  clinicSlug: string;
   clinicTimezone?: string;
   isIdexxClinic: boolean;
 }
@@ -229,39 +230,20 @@ export function ClinicSyncScheduleCard({
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Label
-                      htmlFor={`${schedule.type}-cron`}
-                      className="whitespace-nowrap text-xs text-slate-600"
-                    >
-                      Cron:
-                    </Label>
-                    <Input
-                      id={`${schedule.type}-cron`}
-                      value={schedule.cron}
-                      onChange={(e) =>
-                        handleScheduleChange(
-                          schedule.type,
-                          "cron",
-                          e.target.value,
-                        )
-                      }
-                      placeholder="0 9 * * *"
-                      className="h-8 font-mono text-sm"
-                      disabled={!schedule.enabled}
-                    />
-                  </div>
+                  <ScheduleBuilder
+                    value={schedule.cron}
+                    onChange={(newCron) =>
+                      handleScheduleChange(schedule.type, "cron", newCron)
+                    }
+                    enabled={schedule.enabled}
+                    timezone={clinicTimezone ?? "America/Los_Angeles"}
+                    label={info.label}
+                    description={info.description}
+                  />
                 </div>
               </div>
             );
           })}
-          <p className="text-xs text-slate-500">
-            Cron format: minute hour day-of-month month day-of-week (e.g., "0
-            9 * * 1-5" = 9 AM Mon-Fri)
-          </p>
-          <p className="text-xs text-slate-500">
-            Cron schedules are evaluated in the clinic timezone shown above.
-          </p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -302,9 +284,7 @@ export function ClinicSyncScheduleCard({
           ) : (
             <div className="py-4 text-center">
               <Clock className="mx-auto mb-2 h-8 w-8 text-slate-300" />
-              <p className="text-sm text-slate-500">
-                No schedules configured
-              </p>
+              <p className="text-sm text-slate-500">No schedules configured</p>
               {isIdexxClinic && (
                 <p className="mt-1 text-xs text-slate-400">
                   Click "Configure" to set up automated sync schedules

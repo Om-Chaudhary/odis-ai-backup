@@ -37,6 +37,14 @@ export function ClinicSyncOverview() {
       isLoading: boolean;
     };
 
+  const { data: credentialedClinicIdsArray, isLoading: credentialsLoading } =
+    api.admin.sync.getClinicsWithCredentials.useQuery();
+
+  // Convert array to Set for efficient lookup
+  const credentialedClinicIds = credentialedClinicIdsArray
+    ? new Set(credentialedClinicIdsArray)
+    : undefined;
+
   // Create a map of clinic ID to schedules
   const schedulesByClinic = new Map<string, SyncSchedule[]>();
   if (allSchedules) {
@@ -59,12 +67,14 @@ export function ClinicSyncOverview() {
     }
   }
 
-  // Filter to only IDEXX clinics
+  // Filter to only IDEXX Neo clinics WITH active credentials
   const idexxClinics = clinics.filter(
-    (c) => c.pims_type === "idexx_neo" || c.pims_type === "idexx",
+    (c) =>
+      c.pims_type === "idexx_neo" &&
+      credentialedClinicIds?.has(c.id),
   );
 
-  if (schedulesLoading) {
+  if (schedulesLoading || credentialsLoading) {
     return (
       <Card className="border-slate-200 bg-white p-6">
         <div className="flex items-center justify-center py-8">
@@ -94,7 +104,9 @@ export function ClinicSyncOverview() {
       {idexxClinics.length === 0 ? (
         <div className="py-8 text-center">
           <Building2 className="mx-auto mb-3 h-12 w-12 text-slate-300" />
-          <p className="text-sm text-slate-500">No IDEXX clinics found</p>
+          <p className="text-sm text-slate-500">
+            No IDEXX clinics with credentials configured
+          </p>
         </div>
       ) : (
         <div className="space-y-3">

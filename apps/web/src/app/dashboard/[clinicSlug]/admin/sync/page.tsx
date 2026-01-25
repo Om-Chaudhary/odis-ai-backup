@@ -28,16 +28,25 @@ export default function AdminSyncPage() {
   const [triggerClinicId, setTriggerClinicId] = useState<string>("");
   const utils = api.useUtils();
 
-  // Filter to only IDEXX clinics for the trigger dropdown
+  const { data: credentialedClinicIdsArray } =
+    api.admin.sync.getClinicsWithCredentials.useQuery();
+
+  // Convert array to Set for efficient lookup
+  const credentialedClinicIds = credentialedClinicIdsArray
+    ? new Set(credentialedClinicIdsArray)
+    : undefined;
+
+  // Filter to only IDEXX Neo clinics WITH active credentials
   const idexxClinics = clinics.filter(
-    (c) => c.pims_type === "idexx_neo" || c.pims_type === "idexx",
+    (c) => c.pims_type === "idexx_neo" && credentialedClinicIds?.has(c.id),
   );
 
   // Find the selected clinic to get its details
   const selectedClinic = clinics.find((c) => c.id === selectedClinicId);
   const isIdexxClinic =
-    selectedClinic?.pims_type === "idexx_neo" ||
-    selectedClinic?.pims_type === "idexx";
+    (selectedClinic?.pims_type === "idexx_neo" &&
+      credentialedClinicIds?.has(selectedClinicId ?? "")) ??
+    false;
 
   const { data: history, isLoading } = api.admin.sync.getSyncHistory.useQuery({
     clinicId: selectedClinicId ?? undefined,
@@ -75,10 +84,11 @@ export default function AdminSyncPage() {
       <ActiveSyncsCard clinicId={selectedClinicId ?? undefined} />
 
       {/* Sync Schedule Configuration - Clinic View Only */}
-      {!isGlobalView && selectedClinicId ? (
+      {!isGlobalView && selectedClinicId && selectedClinic ? (
         <ClinicSyncScheduleCard
           clinicId={selectedClinicId}
-          clinicTimezone={selectedClinic?.timezone ?? undefined}
+          clinicSlug={selectedClinic.slug}
+          clinicTimezone={selectedClinic.timezone ?? undefined}
           isIdexxClinic={isIdexxClinic}
         />
       ) : isGlobalView ? (
@@ -99,7 +109,7 @@ export default function AdminSyncPage() {
       {/* Clinic Sync Overview - Global View */}
       {isGlobalView && <ClinicSyncOverview />}
 
-      {/* Quick Trigger Panel */}
+      {/* Quick Trigger Panel - Global View */}
       {isGlobalView && idexxClinics.length > 0 && (
         <Card className="border-slate-200 bg-white p-6">
           <h3 className="mb-4 text-lg font-semibold text-slate-900">
@@ -131,6 +141,19 @@ export default function AdminSyncPage() {
             </div>
             {triggerClinicId && <SyncTriggerPanel clinicId={triggerClinicId} />}
           </div>
+        </Card>
+      )}
+
+      {/* Quick Trigger Panel - Clinic View */}
+      {!isGlobalView && selectedClinicId && isIdexxClinic && (
+        <Card className="border-slate-200 bg-white p-6">
+          <h3 className="mb-4 text-lg font-semibold text-slate-900">
+            Manual Sync Trigger
+          </h3>
+          <p className="mb-4 text-sm text-slate-500">
+            Trigger a manual sync operation for this clinic
+          </p>
+          <SyncTriggerPanel clinicId={selectedClinicId} />
         </Card>
       )}
 

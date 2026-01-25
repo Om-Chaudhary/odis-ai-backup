@@ -162,7 +162,7 @@ export function ClinicSyncTab({ clinic, clinicId }: ClinicSyncTabProps) {
   };
 
   const isIdexxClinic =
-    clinic.pims_type === "idexx_neo" || clinic.pims_type === "idexx";
+    clinic.pims_type === "idexx_neo";
 
   return (
     <div className="space-y-6">
