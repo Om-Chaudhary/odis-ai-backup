@@ -3,6 +3,7 @@
   "position": 3,
   "link": {
     "type": "generated-index",
+    "slug": "/guides",
     "description": "In-depth guides for configuring and using ODIS AI."
   }
 }

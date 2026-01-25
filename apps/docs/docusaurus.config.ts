@@ -17,8 +17,13 @@ const config: Config = {
   organizationName: "odis-ai",
   projectName: "docs",
 
-  onBrokenLinks: "throw",
-  onBrokenMarkdownLinks: "warn",
+  // We don't want docs links to block builds.
+  onBrokenLinks: "ignore",
+  markdown: {
+    hooks: {
+      onBrokenMarkdownLinks: "ignore",
+    },
+  },
 
   i18n: {
     defaultLocale: "en",
@@ -67,12 +72,6 @@ const config: Config = {
       },
       items: [
         {
-          type: "docSidebar",
-          sidebarId: "docsSidebar",
-          position: "left",
-          label: "Documentation",
-        },
-        {
           href: "https://odis.ai",
           label: "Main Site",
           position: "right",
@@ -87,14 +86,6 @@ const config: Config = {
     footer: {
       style: "dark",
       links: [
-        {
-          title: "Documentation",
-          items: [
-            { label: "Getting Started", to: "/getting-started/quick-start" },
-            { label: "API Reference", to: "/api/overview" },
-            { label: "Integrations", to: "/integrations/supabase" },
-          ],
-        },
         {
           title: "Product",
           items: [

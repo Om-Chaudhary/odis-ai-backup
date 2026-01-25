@@ -3,6 +3,7 @@
   "position": 4,
   "link": {
     "type": "generated-index",
+    "slug": "/api",
     "description": "Technical API documentation for developers."
   }
 }
