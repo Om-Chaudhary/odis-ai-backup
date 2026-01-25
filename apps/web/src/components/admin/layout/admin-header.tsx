@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   Users,
   RefreshCw,
-  CalendarClock,
 } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
 import { useAdminContext } from "~/lib/admin-context";
@@ -26,7 +25,6 @@ const pageIcons: Record<string, React.ElementType> = {
   "/admin/clinics": Building2,
   "/admin/users": Users,
   "/admin/sync": RefreshCw,
-  "/admin/operations": CalendarClock,
 };
 
 const pageTitles: Record<string, string> = {
@@ -34,7 +32,6 @@ const pageTitles: Record<string, string> = {
   "/admin/clinics": "Clinics",
   "/admin/users": "Users",
   "/admin/sync": "PIMS Sync",
-  "/admin/operations": "Operations",
 };
 
 export function AdminHeader() {
@@ -52,11 +49,11 @@ export function AdminHeader() {
   return (
     <div className="relative z-10 flex h-12 items-center justify-between border-b border-slate-200/60 bg-white/60 px-5 backdrop-blur-md">
       {/* Subtle bottom edge highlight */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-teal-400/20 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-linear-to-r from-transparent via-teal-400/20 to-transparent" />
 
       {/* Breadcrumb */}
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 shadow-sm shadow-teal-500/20">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-teal-500 to-teal-600 shadow-sm shadow-teal-500/20">
           <Icon className="h-[18px] w-[18px] text-white" strokeWidth={2} />
         </div>
         <div>

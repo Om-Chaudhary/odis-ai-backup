@@ -10,7 +10,6 @@ import {
   Shield,
   Users,
   RefreshCw,
-  CalendarClock,
   Building2,
 } from "lucide-react";
 import Link from "next/link";
@@ -116,7 +115,7 @@ export function UnifiedSidebar({
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="hidden h-screen w-60 flex-shrink-0 md:flex">
+      <div className="hidden h-screen w-60 shrink-0 md:flex">
         {/* Sidebar Container - Teal-family dark for brand cohesion */}
         <div
           className="relative flex w-full flex-col"
@@ -137,7 +136,7 @@ export function UnifiedSidebar({
                   <DropdownMenuTrigger asChild>
                     <button className="group relative flex w-full items-center gap-2 overflow-hidden rounded-lg bg-white/5 px-3 py-2 text-left transition-all hover:bg-white/10 hover:shadow-lg hover:shadow-teal-900/20">
                       {/* Subtle gradient overlay on hover */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-teal-500/0 via-teal-500/5 to-teal-500/0 opacity-0 transition-opacity group-hover:opacity-100" />
+                      <div className="absolute inset-0 bg-linear-to-r from-teal-500/0 via-teal-500/5 to-teal-500/0 opacity-0 transition-opacity group-hover:opacity-100" />
 
                       <div className="relative flex min-w-0 flex-1 items-center gap-2">
                         <div className="flex h-6 w-6 items-center justify-center rounded-md bg-teal-500/20 transition-colors group-hover:bg-teal-500/30">
@@ -262,7 +261,7 @@ export function UnifiedSidebar({
           {isAdmin && clinicSlug && (
             <>
               <div className="relative z-10 mx-4 my-3">
-                <div className="h-px bg-gradient-to-r from-transparent via-teal-700/40 to-transparent" />
+                <div className="h-px bg-linear-to-r from-transparent via-teal-700/40 to-transparent" />
               </div>
               <div className="mb-2 px-3">
                 <span className="px-3 text-[10px] font-semibold tracking-wider text-teal-400/70 uppercase">
@@ -298,14 +297,6 @@ export function UnifiedSidebar({
                   label="PIMS Sync"
                   isActive={pathname.includes(
                     `/dashboard/${clinicSlug}/admin/sync`,
-                  )}
-                />
-                <MainNavItem
-                  href={`/dashboard/${clinicSlug}/admin/operations`}
-                  icon={CalendarClock}
-                  label="Operations"
-                  isActive={pathname.includes(
-                    `/dashboard/${clinicSlug}/admin/operations`,
                   )}
                 />
               </nav>
