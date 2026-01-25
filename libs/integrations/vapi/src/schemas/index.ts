@@ -19,10 +19,12 @@
 // Appointments
 export {
   CheckAvailabilitySchema,
+  CheckAvailabilityRangeSchema,
   BookAppointmentSchema,
   CancelAppointmentSchema,
   RescheduleAppointmentSchema,
   type CheckAvailabilityInput,
+  type CheckAvailabilityRangeInput,
   type BookAppointmentInput,
   type CancelAppointmentInput,
   type RescheduleAppointmentInput,
@@ -96,3 +98,23 @@ export {
   ACTION_CARD_OUTPUT_CONFIG,
   type ActionCardOutput,
 } from "./action-card-output";
+
+// Structured Outputs (Zod schemas for VAPI analysis)
+export {
+  CallOutcomeSchema,
+  PetHealthSchema,
+  MedicationComplianceSchema,
+  OwnerSentimentSchema,
+  EscalationSchema,
+  FollowUpSchema,
+  AttentionClassificationSchema,
+  STRUCTURED_OUTPUT_NAMES,
+  type CallOutcome,
+  type PetHealth,
+  type MedicationCompliance,
+  type OwnerSentiment,
+  type Escalation,
+  type FollowUp,
+  type AttentionClassification,
+  type StructuredOutputName,
+} from "./structured-outputs";

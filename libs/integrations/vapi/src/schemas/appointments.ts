@@ -165,3 +165,30 @@ export const RescheduleAppointmentSchema = z.object({
 export type RescheduleAppointmentInput = z.infer<
   typeof RescheduleAppointmentSchema
 >;
+
+/* ========================================
+   Check Availability Range
+   ======================================== */
+
+/**
+ * Schema: check_availability_range
+ *
+ * Check appointment availability across a date range (up to 14 days).
+ * Returns summary of available days and detailed times for the first available date.
+ */
+export const CheckAvailabilityRangeSchema = z.object({
+  // VAPI context
+  assistant_id: z.string().optional(),
+  clinic_id: z.string().uuid().optional(),
+  vapi_call_id: z.string().optional(),
+
+  // Number of days to check (default: 14, max: 30)
+  days_ahead: z.coerce.number().min(1).max(30).optional().default(14),
+
+  // Optional: specific start date (YYYY-MM-DD, defaults to today)
+  start_date: z.string().optional(),
+});
+
+export type CheckAvailabilityRangeInput = z.infer<
+  typeof CheckAvailabilityRangeSchema
+>;

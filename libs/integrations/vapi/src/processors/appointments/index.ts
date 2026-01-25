@@ -5,6 +5,7 @@
  */
 
 export { processCheckAvailability } from "./check-availability";
+export { processCheckAvailabilityRange } from "./check-availability-range";
 export {
   processBookAppointment,
   parseDateToISO,

@@ -18,6 +18,7 @@
 // Appointments
 export {
   processCheckAvailability,
+  processCheckAvailabilityRange,
   processBookAppointment,
   parseDateToISO,
   parseTimeToISO,
@@ -29,3 +30,6 @@ export { processLeaveMessage } from "./messaging";
 
 // Triage
 export { processLogEmergencyTriage } from "./triage";
+
+// Clinical
+export { processCreateRefillRequest } from "./clinical";

@@ -35,6 +35,8 @@ export * from "./knowledge-base";
 // Request queue for rate limiting
 export * from "./request-queue";
 
-// NOTE: schemas and processors are NOT re-exported here to keep imports explicit:
+// NOTE: The following modules are NOT re-exported here to keep imports explicit:
 // - import { ... } from "@odis-ai/integrations/vapi/schemas"
 // - import { ... } from "@odis-ai/integrations/vapi/processors"
+// - import { ... } from "@odis-ai/integrations/vapi/prompts"
+// - import { ... } from "@odis-ai/integrations/vapi/assistant-manager"
