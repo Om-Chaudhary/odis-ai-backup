@@ -44,6 +44,8 @@ export const env = createEnv({
     APP_ENV: z
       .enum(["development", "staging", "production"])
       .default(currentEnv),
+    // Sentry Server Auth
+    SENTRY_AUTH_TOKEN: z.string().optional(),
   },
 
   /**
@@ -69,6 +71,12 @@ export const env = createEnv({
     NEXT_PUBLIC_APP_ENV: z
       .enum(["development", "staging", "production"])
       .default(currentEnv),
+    // Sentry Client Config
+    NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
+    NEXT_PUBLIC_SENTRY_ENVIRONMENT: z
+      .enum(["development", "staging", "production"])
+      .optional()
+      .default("production"),
   },
 
   /**
@@ -78,7 +86,6 @@ export const env = createEnv({
   runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
-    // Clerk
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
     CLERK_WEBHOOK_SECRET: process.env.CLERK_WEBHOOK_SECRET,
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
@@ -106,6 +113,9 @@ export const env = createEnv({
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
     APP_ENV: currentEnv,
     NEXT_PUBLIC_APP_ENV: currentEnv,
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    NEXT_PUBLIC_SENTRY_ENVIRONMENT: process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT,
+    SENTRY_AUTH_TOKEN: process.env.SENTRY_AUTH_TOKEN,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

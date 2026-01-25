@@ -21,6 +21,7 @@
  * @see https://docs.vapi.ai/server_url
  */
 
+import * as Sentry from "@sentry/nextjs";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { loggers } from "@odis-ai/shared/logger";
@@ -100,6 +101,16 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     logger.logError("Webhook processing failed", error as Error);
+
+    // Sentry Capture
+    Sentry.withScope((scope) => {
+      scope.setTag("webhook_type", "vapi");
+      scope.setContext("request", {
+        url: request.url,
+        method: request.method,
+      });
+      Sentry.captureException(error);
+    });
 
     return withCorsHeaders(
       request,

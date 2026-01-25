@@ -58,3 +58,7 @@ browser_console_messages()
 - Run affected: `nx affected -t lint,test`
 - View graph: `pnpm graph`
 - Regenerate docs: `pnpm docs:nx`
+
+## Sentry
+
+See `.cursor/rules/sentry.mdc` for Sentry usage rules (exceptions, spans/tracing, logs).

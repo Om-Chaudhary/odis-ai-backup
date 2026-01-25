@@ -1,0 +1,127 @@
+---
+description: Use Sentry correctly (exceptions, spans, logs) in Next.js
+---
+
+# Sentry (Next.js)
+
+These rules are guidance for using Sentry correctly in this codebase.
+
+## Exception catching
+
+- Use `Sentry.captureException(error)` to capture exceptions and send them to Sentry.
+- Prefer capturing in `try/catch` blocks or other areas where exceptions are expected.
+
+## Tracing (spans)
+
+- Create spans for meaningful actions (button clicks, API calls, key function calls).
+- Use `Sentry.startSpan` to create spans.
+- Child spans can exist within a parent span.
+- The `name` and `op` properties should be meaningful for the activity.
+- Attach attributes for relevant request/config/metrics context.
+
+### Custom span instrumentation in component actions
+
+```javascript
+function TestComponent() {
+  const handleTestButtonClick = () => {
+    // Create a transaction/span to measure performance
+    Sentry.startSpan(
+      {
+        op: "ui.click",
+        name: "Test Button Click",
+      },
+      (span) => {
+        const value = "some config";
+        const metric = "some metric";
+        // Metrics can be added to the span
+        span.setAttribute("config", value);
+        span.setAttribute("metric", metric);
+        doSomething();
+      },
+    );
+  };
+  return (
+    <button type="button" onClick={handleTestButtonClick}>
+      Test Sentry
+    </button>
+  );
+}
+```
+
+### Custom span instrumentation in API calls
+
+```javascript
+async function fetchUserData(userId) {
+  return Sentry.startSpan(
+    {
+      op: "http.client",
+      name: `GET /api/users/${userId}`,
+    },
+    async () => {
+      const response = await fetch(`/api/users/${userId}`);
+      const data = await response.json();
+      return data;
+    },
+  );
+}
+```
+
+## Logs
+
+- Where logs are used, ensure Sentry is imported using `import * as Sentry from "@sentry/nextjs"`.
+- Enable logging in Sentry using `Sentry.init({ enableLogs: true })`.
+- Reference the logger using `Sentry.logger`.
+- Sentry offers a `consoleLoggingIntegration` that can send specific console calls as logs automatically.
+
+### Configuration (Next.js)
+
+- Client-side initialization: `instrumentation-client.ts`
+- Server initialization: `sentry.server.config.ts`
+- Edge initialization: `sentry.edge.config.ts`
+
+Initialization should live in these initialization files; **do not repeat `Sentry.init(...)` elsewhere**. Use `import * as Sentry from "@sentry/nextjs"` anywhere you need Sentry APIs.
+
+#### Baseline
+
+```javascript
+import * as Sentry from "@sentry/nextjs";
+Sentry.init({
+  dsn: "https://examplePublicKey@o0.ingest.sentry.io/0",
+  enableLogs: true,
+});
+```
+
+#### Logger integration
+
+```javascript
+Sentry.init({
+  dsn: "https://examplePublicKey@o0.ingest.sentry.io/0",
+  integrations: [
+    // send console.log, console.error, and console.warn calls as logs to Sentry
+    Sentry.consoleLoggingIntegration({ levels: ["log", "error", "warn"] }),
+  ],
+});
+```
+
+### Logger examples
+
+`logger.fmt` is a template literal function that should be used to bring variables into the structured logs.
+
+```javascript
+logger.trace("Starting database connection", { database: "users" });
+logger.debug(logger.fmt`Cache miss for user: ${userId}`);
+logger.info("Updated profile", { profileId: 345 });
+logger.warn("Rate limit reached for endpoint", {
+  endpoint: "/api/results/",
+  isEnterprise: false,
+});
+logger.error("Failed to process payment", {
+  orderId: "order_123",
+  amount: 99.99,
+});
+logger.fatal("Database connection pool exhausted", {
+  database: "users",
+  activeConnections: 100,
+});
+```
+

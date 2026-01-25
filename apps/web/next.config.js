@@ -1,4 +1,5 @@
 import { withNx } from "@nx/next/plugins/with-nx.js";
+import { withSentryConfig } from "@sentry/nextjs";
 
 /**
  * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially useful
@@ -6,7 +7,9 @@ import { withNx } from "@nx/next/plugins/with-nx.js";
  */
 import "./src/env.js";
 
-/** @type {import("next").NextConfig} */
+/**
+ * @type {import('@nx/next/plugins/with-nx').WithNxOptions}
+ **/
 const config = {
   async rewrites() {
     return [
@@ -145,4 +148,9 @@ const config = {
   },
 };
 
-export default withNx(config);
+const sentryOptions = {
+  silent: true,
+  hideSourceMaps: true,
+};
+
+export default withSentryConfig(withNx(config), sentryOptions);

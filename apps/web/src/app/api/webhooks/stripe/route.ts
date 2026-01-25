@@ -16,6 +16,7 @@
  * @see https://stripe.com/docs/webhooks
  */
 
+import * as Sentry from "@sentry/nextjs";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { loggers } from "@odis-ai/shared/logger";
@@ -83,6 +84,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     logger.logError("Stripe webhook processing failed", error as Error);
+
+    // Sentry Capture
+    Sentry.withScope((scope) => {
+      scope.setTag("webhook_type", "stripe");
+      Sentry.captureException(error);
+    });
+
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

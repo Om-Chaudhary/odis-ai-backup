@@ -24,6 +24,7 @@
  * @see https://clerk.com/docs/integrations/webhooks
  */
 
+import * as Sentry from "@sentry/nextjs";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { Webhook } from "svix";
@@ -496,10 +497,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ received: true, type: event.type });
   } catch (error) {
     logger.logError("Clerk webhook processing failed", error as Error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+
+   // Sentry Capture
+   Sentry.withScope((scope) => {
+    scope.setTag("webhook_type", "clerk");
+    Sentry.captureException(error);
+  });
+
+  return NextResponse.json(
+    { error: "Internal server error" },
+    { status: 500 },
+  );
   }
 }
 

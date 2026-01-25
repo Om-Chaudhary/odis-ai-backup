@@ -22,7 +22,7 @@ export function PostHogProvider({ children }: { children: ReactNode }) {
           process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
         ui_host: "https://us.posthog.com",
         capture_pageview: true, // Enable automatic pageview tracking
-        capture_exceptions: true,
+        capture_exceptions: false,
         person_profiles: "identified_only", // Only create profiles for identified users
         debug: false, // Disable debug mode to reduce console noise
       });
