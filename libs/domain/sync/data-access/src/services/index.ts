@@ -10,4 +10,6 @@ export {
   SyncOrchestrator,
   type FullSyncResult,
   type FullSyncOptions,
+  type BidirectionalSyncOptions,
+  type BidirectionalSyncResult,
 } from "./sync-orchestrator";

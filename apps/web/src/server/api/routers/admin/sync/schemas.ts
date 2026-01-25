@@ -15,6 +15,12 @@ export const triggerSyncSchema = z.object({
   type: z.enum(["inbound", "cases", "reconciliation"]),
 });
 
+export const triggerFullSyncSchema = z.object({
+  clinicId: z.string().uuid(),
+  lookbackDays: z.number().int().min(1).max(60).default(14),
+  forwardDays: z.number().int().min(1).max(60).default(14),
+});
+
 export const getSyncSchedulesSchema = z.object({
   clinicId: z.string().uuid().optional(),
 });
@@ -42,3 +48,4 @@ export const updateSyncScheduleSchema = z.object({
 // Types for client usage
 export type SyncScheduleItem = z.infer<typeof syncScheduleItemSchema>;
 export type TriggerSyncType = z.infer<typeof triggerSyncSchema>["type"];
+export type TriggerFullSyncInput = z.infer<typeof triggerFullSyncSchema>;

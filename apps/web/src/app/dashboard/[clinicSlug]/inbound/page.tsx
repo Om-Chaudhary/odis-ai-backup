@@ -21,7 +21,7 @@ export const metadata: Metadata = {
  * This route is clinic-scoped under /dashboard/[clinicSlug]/inbound
  * and uses the ClinicProvider from the parent layout.
  */
-export default function ClinicInboundPage() {
+export default async function ClinicInboundPage() {
   return (
     <div className="flex h-full flex-col">
       <InboundCallsErrorBoundary>

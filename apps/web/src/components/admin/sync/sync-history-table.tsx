@@ -58,10 +58,22 @@ export function SyncHistoryTable({ data, isLoading }: SyncHistoryTableProps) {
         const syncType = row.original.sync_type;
         if (!syncType) return <span className="text-slate-400">—</span>;
 
+        // Infer "full" sync from having both backward and forward inbound operations
+        // This is a temporary solution until we add a dedicated sync_type column
+        const isFull = syncType === "full" || syncType === "bidirectional";
+
+        const displayType = isFull
+          ? "Full Sync"
+          : syncType.replace("_", " ");
+
+        const variantClass = isFull
+          ? "bg-purple-100 text-purple-700 font-medium"
+          : "";
+
         return (
-          <span className="text-sm text-slate-700 capitalize">
-            {syncType.replace("_", " ")}
-          </span>
+          <Badge variant="outline" className={variantClass}>
+            <span className="capitalize">{displayType}</span>
+          </Badge>
         );
       },
     },
@@ -172,6 +184,25 @@ export function SyncHistoryTable({ data, isLoading }: SyncHistoryTableProps) {
             {minutes > 0 && `${minutes}m `}
             {seconds}s
           </span>
+        );
+      },
+    },
+    {
+      accessorKey: "error_message",
+      header: "Error",
+      cell: ({ row }) => {
+        const errorMessage = row.original.error_message;
+        const status = row.original.status;
+
+        if (!errorMessage || status !== "failed")
+          return <span className="text-slate-400">—</span>;
+
+        return (
+          <div className="max-w-xs">
+            <p className="truncate text-xs text-red-600" title={errorMessage}>
+              {errorMessage}
+            </p>
+          </div>
         );
       },
     },

@@ -104,6 +104,12 @@ interface FullSyncRequest {
   endDate?: string;
   daysAhead?: number;
   lookbackDays?: number;
+  /** Number of days to look backward (default: 14) */
+  backwardDays?: number;
+  /** Number of days to look forward (default: 14) */
+  forwardDays?: number;
+  /** Use bidirectional sync (backward + forward) instead of simple forward sync */
+  bidirectional?: boolean;
   /** Alternative nested format for date range */
   dateRange?: {
     start?: string;
@@ -398,32 +404,70 @@ async function handleFullSync(
       const { SyncOrchestrator } = await import("@odis-ai/domain/sync");
       const orchestrator = new SyncOrchestrator(supabase, provider, clinic.id);
 
-      // Build date range - support both flat (startDate/endDate) and nested (dateRange.start/end) formats
-      const dateRange = buildDateRange(
-        body.startDate ?? body.dateRange?.start,
-        body.endDate ?? body.dateRange?.end,
-        body.daysAhead ?? 7,
-      );
+      // Use bidirectional sync if requested (default: true for comprehensive sync)
+      const useBidirectional = body.bidirectional ?? true;
 
-      // Run full sync
-      const result = await orchestrator.runFullSync({
-        inboundOptions: {
+      let result;
+
+      if (useBidirectional) {
+        // Bidirectional sync: backward (past cases) + forward (future appointments)
+        const backwardDays = body.backwardDays ?? body.lookbackDays ?? 14;
+        const forwardDays = body.forwardDays ?? body.daysAhead ?? 14;
+
+        logger.info("Running bidirectional sync", {
+          clinicId: clinic.id,
+          backwardDays,
+          forwardDays,
+        });
+
+        result = await orchestrator.runBidirectionalSync({
+          lookbackDays: backwardDays,
+          forwardDays: forwardDays,
+          reconciliationLookbackDays: 7,
+        });
+
+        logger.info("Bidirectional sync completed", {
+          clinicId: clinic.id,
+          phases: {
+            backwardInbound: result.backwardInbound?.success,
+            forwardInbound: result.forwardInbound?.success,
+            cases: result.cases?.success,
+            reconciliation: result.reconciliation?.success,
+          },
+          durationMs: result.totalDurationMs,
+        });
+      } else {
+        // Legacy forward-only sync
+        const dateRange = buildDateRange(
+          body.startDate ?? body.dateRange?.start,
+          body.endDate ?? body.dateRange?.end,
+          body.daysAhead ?? 7,
+        );
+
+        logger.info("Running legacy forward sync", {
+          clinicId: clinic.id,
           dateRange,
-        },
-        reconciliationOptions: {
-          lookbackDays: body.lookbackDays ?? 7,
-        },
-      });
+        });
 
-      logger.info("Full sync completed", {
-        clinicId: clinic.id,
-        phases: {
-          inbound: result.inbound?.success,
-          cases: result.cases?.success,
-          reconciliation: result.reconciliation?.success,
-        },
-        durationMs: result.totalDurationMs,
-      });
+        result = await orchestrator.runFullSync({
+          inboundOptions: {
+            dateRange,
+          },
+          reconciliationOptions: {
+            lookbackDays: body.lookbackDays ?? 7,
+          },
+        });
+
+        logger.info("Full sync completed", {
+          clinicId: clinic.id,
+          phases: {
+            inbound: result.inbound?.success,
+            cases: result.cases?.success,
+            reconciliation: result.reconciliation?.success,
+          },
+          durationMs: result.totalDurationMs,
+        });
+      }
 
       res.status(result.success ? 200 : 500).json({
         ...result,

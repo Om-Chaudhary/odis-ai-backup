@@ -1,7 +1,6 @@
 "use client";
 
 import { Settings as SettingsIcon, Loader2, Save, AlertCircle } from "lucide-react";
-import { useAuth } from "@clerk/nextjs";
 import { api } from "~/trpc/client";
 import { useForm } from "react-hook-form";
 import { useEffect, useMemo } from "react";
@@ -11,8 +10,9 @@ import { Button } from "@odis-ai/shared/ui/button";
 import { SystemSettingsSection } from "~/components/dashboard/settings/discharge-settings/sections";
 
 export default function SystemSettingsPage() {
-  const { orgRole } = useAuth();
-  const isAdmin = orgRole === "org:admin" || orgRole === "admin";
+  // Check system-level super admin role from database
+  const { data: userRoleData } = api.dashboard.getCurrentUserRole.useQuery();
+  const isAdmin = userRoleData?.role === "admin";
 
   const { data: settingsData, refetch: refetchSettings } =
     api.cases.getDischargeSettings.useQuery();

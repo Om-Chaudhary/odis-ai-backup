@@ -4,6 +4,7 @@ import {
   getActiveSyncsSchema,
   getSyncHistorySchema,
   triggerSyncSchema,
+  triggerFullSyncSchema,
   getSyncSchedulesSchema,
   getClinicSyncConfigSchema,
   getIdexxCredentialStatusSchema,
@@ -225,6 +226,51 @@ export const adminSyncRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: `Failed to trigger ${input.type} sync: ${error instanceof Error ? error.message : "Unknown error"}`,
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Trigger a full bidirectional sync operation
+   * Syncs both backward (past cases) and forward (future appointments)
+   */
+  triggerFullSync: adminProcedure
+    .input(triggerFullSyncSchema)
+    .mutation(async ({ input }) => {
+      try {
+        const response = await fetch(`${PIMS_SYNC_URL}/api/sync/full`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": PIMS_SYNC_API_KEY,
+          },
+          body: JSON.stringify({
+            clinicId: input.clinicId,
+            bidirectional: true,
+            backwardDays: input.lookbackDays,
+            forwardDays: input.forwardDays,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(
+            `Full sync trigger failed: ${response.status} - ${errorText}`,
+          );
+        }
+
+        const data = await response.json();
+
+        return {
+          success: true,
+          message: `Full sync triggered successfully (${input.lookbackDays}d backward + ${input.forwardDays}d forward)`,
+          data,
+        };
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to trigger full sync: ${error instanceof Error ? error.message : "Unknown error"}`,
           cause: error,
         });
       }
