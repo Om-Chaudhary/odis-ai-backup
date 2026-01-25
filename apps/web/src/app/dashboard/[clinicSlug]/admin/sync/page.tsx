@@ -19,10 +19,12 @@ import {
 } from "~/components/admin/sync/sync-history-table";
 import { SyncTriggerPanel } from "~/components/admin/sync/sync-trigger-panel";
 import { ClinicSyncOverview } from "~/components/admin/sync/clinic-sync-overview";
+import { useSyncAuditRealtime } from "~/components/admin/sync/hooks";
 
 export default function AdminSyncPage() {
   const { selectedClinicId, clinics, isGlobalView } = useAdminContext();
   const [triggerClinicId, setTriggerClinicId] = useState<string>("");
+  const utils = api.useUtils();
 
   // Filter to only IDEXX clinics for the trigger dropdown
   const idexxClinics = clinics.filter(
@@ -33,6 +35,17 @@ export default function AdminSyncPage() {
     clinicId: selectedClinicId ?? undefined,
     limit: 20,
     offset: 0,
+  });
+
+  // Subscribe to realtime updates to refresh sync history when syncs complete or fail
+  useSyncAuditRealtime({
+    clinicId: selectedClinicId ?? undefined,
+    onSyncCompleted: () => {
+      void utils.admin.sync.getSyncHistory.invalidate();
+    },
+    onSyncFailed: () => {
+      void utils.admin.sync.getSyncHistory.invalidate();
+    },
   });
 
   return (

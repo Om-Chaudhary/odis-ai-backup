@@ -8,9 +8,12 @@
  * - @odis-ai/data-access/entities (domain entity helpers)
  *
  * Consumers should migrate to importing from specific libraries directly.
+ *
+ * For server-side imports, use:
+ * - import { ... } from "@odis-ai/data-access/db/server"
  */
 
-// Supabase clients
+// Supabase clients (client-side only)
 export * from "@odis-ai/data-access/supabase-client";
 
 // Repository interfaces

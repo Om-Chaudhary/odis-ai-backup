@@ -6,7 +6,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createServiceClient } from "@odis-ai/data-access/db";
+import { createServiceClient } from "@odis-ai/data-access/db/server";
 import { decrypt, encrypt } from "@odis-ai/shared/crypto/aes-encryption";
 
 export interface IdexxCredentials {

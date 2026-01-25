@@ -3,22 +3,17 @@
  *
  * Provides Supabase client creation for different contexts:
  * - Browser client (RLS-enabled)
- * - Server client (RLS-enabled, cookie-based auth)
- * - Service client (bypasses RLS, admin operations)
- * - Proxy middleware (session refresh)
  * - Clerk-authenticated clients (web app with Clerk auth)
+ * - Proxy middleware (session refresh)
+ *
+ * For server-side imports:
+ * - Server client: import from "@odis-ai/data-access/supabase-client/server"
+ * - Service client: import from "@odis-ai/data-access/supabase-client/server"
+ * - Clerk server client: import from "@odis-ai/data-access/supabase-client/clerk-server"
  */
 
-// Export with specific names to avoid conflicts
+// Client-side exports (safe for "use client" components and middleware)
 export { createClient as createBrowserClient } from "./client";
-export {
-  createClient as createServerClient,
-  createServiceClient,
-} from "./server";
 export * from "./browser";
-export * from "./proxy";
-
-// Clerk-authenticated Supabase clients
-// Use these when Clerk is configured for authentication
-export { createClerkClient, createOptionalClerkClient } from "./clerk-server";
 export { useClerkSupabaseClient, createPublicClient } from "./clerk-browser";
+export * from "./proxy";

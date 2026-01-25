@@ -1,13 +1,13 @@
 import "server-only";
 
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient as createSupabaseServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { env } from "@odis-ai/shared/env";
 
 export async function createClient() {
   const cookieStore = await cookies();
 
-  return createServerClient(
+  return createSupabaseServerClient(
     env.NEXT_PUBLIC_SUPABASE_URL,
     env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
@@ -31,10 +31,13 @@ export async function createClient() {
   );
 }
 
+// Export with both names for compatibility
+export { createClient as createServerClient };
+
 export async function createServiceClient() {
   // Service client should NOT use cookies - it bypasses RLS entirely
   // Using the service role key with no auth context
-  return createServerClient(
+  return createSupabaseServerClient(
     env.NEXT_PUBLIC_SUPABASE_URL,
     env.SUPABASE_SERVICE_ROLE_KEY,
     {
