@@ -6,6 +6,7 @@
 
 import type { Database } from "@odis-ai/shared/types";
 import type { NormalizedEntities } from "@odis-ai/shared/validators";
+// eslint-disable-next-line @nx/enforce-module-boundaries -- Shared types are a core dependency
 import { parseBillingString } from "@odis-ai/shared/types/idexx";
 import { parseSpecies } from "./entity-utils";
 

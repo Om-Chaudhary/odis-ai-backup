@@ -6,6 +6,7 @@
 
 import type { StepResult } from "@odis-ai/shared/types/orchestration";
 import type { Database, Json } from "@odis-ai/shared/types";
+// eslint-disable-next-line @nx/enforce-module-boundaries -- Shared types are a core dependency
 import { createClinicBranding } from "@odis-ai/shared/types/clinic-branding";
 import { isValidEmail } from "@odis-ai/integrations/resend/utils";
 import { getClinicByUserId } from "@odis-ai/domain/clinics/utils";

@@ -20,6 +20,7 @@ import { setupRoutes } from "./routes";
 import { SyncScheduler } from "./scheduler";
 import { PersistenceService } from "./services/persistence.service";
 import { setSchedulerInstance } from "./lib/scheduler-manager";
+import { createSupabaseServiceClient } from "./lib/supabase";
 
 const app = express();
 
@@ -190,8 +191,7 @@ const server = app.listen(config.PORT, config.HOST, () => {
   if (config.ENABLE_SCHEDULER) {
     void (async () => {
       try {
-        const { createServiceClient } = await import("@odis-ai/data-access/db");
-        const supabase = await createServiceClient();
+        const supabase = createSupabaseServiceClient();
         scheduler = new SyncScheduler(supabase, createProviderForScheduler);
         await scheduler.start();
         setSchedulerInstance(scheduler);

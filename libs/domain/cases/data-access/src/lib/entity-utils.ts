@@ -8,6 +8,7 @@
 import type { NormalizedEntities } from "@odis-ai/shared/validators";
 import type { Database } from "@odis-ai/shared/types";
 import { getFirstOrNull } from "./case-helpers";
+// eslint-disable-next-line @nx/enforce-module-boundaries -- Shared types are a core dependency
 import { parseBillingString } from "@odis-ai/shared/types/idexx";
 
 type PatientRow = Database["public"]["Tables"]["patients"]["Row"];

@@ -15,6 +15,7 @@ const logger = createLogger("scheduler:sync");
 interface ScheduledJob {
   clinicId: string;
   clinicName: string;
+  clinicTimezone: string;
   type: "inbound" | "cases" | "reconciliation";
   cron: string;
   task: cron.ScheduledTask;
@@ -123,6 +124,7 @@ export class SyncScheduler {
     jobs: Array<{
       clinicId: string;
       clinicName: string;
+      clinicTimezone: string;
       type: string;
       cron: string;
     }>;
@@ -142,6 +144,7 @@ export class SyncScheduler {
       jobs: this.jobs.map((job) => ({
         clinicId: job.clinicId,
         clinicName: job.clinicName,
+        clinicTimezone: job.clinicTimezone,
         type: job.type,
         cron: job.cron,
       })),
@@ -224,13 +227,14 @@ export class SyncScheduler {
         },
         {
           scheduled: true,
-          timezone: "America/Los_Angeles", // TODO: Make configurable per clinic
+          timezone: config.clinicTimezone,
         },
       );
 
       this.jobs.push({
         clinicId: config.clinicId,
         clinicName: config.clinicName,
+        clinicTimezone: config.clinicTimezone,
         type: schedule.type,
         cron: schedule.cron,
         task,

@@ -17,6 +17,7 @@ import { logger } from "../lib/logger";
 import { apiKeyAuth, type AuthenticatedRequest } from "../middleware";
 import { PersistenceService } from "../services/persistence.service";
 import { config } from "../config";
+import { createSupabaseServiceClient } from "../lib/supabase";
 import type { IdexxProvider } from "@odis-ai/integrations/idexx";
 import type { PimsCredentials } from "@odis-ai/domain/sync";
 
@@ -150,8 +151,7 @@ async function handleInboundSync(
       }
 
       // Create Supabase client
-      const { createServiceClient } = await import("@odis-ai/data-access/db");
-      const supabase = await createServiceClient();
+      const supabase = createSupabaseServiceClient();
 
       // Create sync service
       const { InboundSyncService } = await import("@odis-ai/domain/sync");
@@ -231,8 +231,7 @@ async function handleCaseSync(
       }
 
       // Create Supabase client
-      const { createServiceClient } = await import("@odis-ai/data-access/db");
-      const supabase = await createServiceClient();
+      const supabase = createSupabaseServiceClient();
 
       // Create sync service
       const { CaseSyncService } = await import("@odis-ai/domain/sync");
@@ -320,8 +319,7 @@ async function handleReconciliation(
       }
 
       // Create Supabase client
-      const { createServiceClient } = await import("@odis-ai/data-access/db");
-      const supabase = await createServiceClient();
+      const supabase = createSupabaseServiceClient();
 
       // Create reconciler
       const { CaseReconciler } = await import("@odis-ai/domain/sync");
@@ -397,8 +395,7 @@ async function handleFullSync(
       }
 
       // Create Supabase client
-      const { createServiceClient } = await import("@odis-ai/data-access/db");
-      const supabase = await createServiceClient();
+      const supabase = createSupabaseServiceClient();
 
       // Create orchestrator
       const { SyncOrchestrator } = await import("@odis-ai/domain/sync");

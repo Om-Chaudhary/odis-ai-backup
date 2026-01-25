@@ -13,6 +13,7 @@ import type {
   ScrapedConsultation,
 } from "../types";
 import { persistenceLogger as logger } from "../lib/logger";
+import { createSupabaseServiceClient } from "../lib/supabase";
 
 /**
  * Result of credential lookup
@@ -44,8 +45,7 @@ export class PersistenceService {
    */
   private async getClient(): Promise<SupabaseClient> {
     if (!this.supabase) {
-      const { createServiceClient } = await import("@odis-ai/data-access/db");
-      this.supabase = await createServiceClient();
+      this.supabase = createSupabaseServiceClient();
     }
     return this.supabase;
   }

@@ -178,6 +178,27 @@ export async function executeScheduledCall(
       })
       .eq("id", callId);
 
+    // 11. Update auto-scheduled item status if applicable
+    try {
+      // eslint-disable-next-line @nx/enforce-module-boundaries -- Dynamic import avoids build-time circular dependency
+      const { updateAutoScheduledItemStatus } = await import(
+        "@odis-ai/domain/auto-scheduling"
+      );
+      await updateAutoScheduledItemStatus(supabase, {
+        scheduledCallId: callId,
+        status: "completed",
+      });
+    } catch (autoScheduleError) {
+      // Log but don't fail - auto-scheduling tracking is optional
+      console.warn("[CALL_EXECUTOR] Failed to update auto-scheduled item status", {
+        callId,
+        error:
+          autoScheduleError instanceof Error
+            ? autoScheduleError.message
+            : String(autoScheduleError),
+      });
+    }
+
     return {
       success: true,
       callId,
@@ -206,6 +227,27 @@ export async function executeScheduledCall(
         },
       })
       .eq("id", callId);
+
+    // Update auto-scheduled item status if applicable
+    try {
+      // eslint-disable-next-line @nx/enforce-module-boundaries -- Dynamic import avoids build-time circular dependency
+      const { updateAutoScheduledItemStatus } = await import(
+        "@odis-ai/domain/auto-scheduling"
+      );
+      await updateAutoScheduledItemStatus(supabase, {
+        scheduledCallId: callId,
+        status: "failed",
+      });
+    } catch (autoScheduleError) {
+      // Log but don't fail - auto-scheduling tracking is optional
+      console.warn("[CALL_EXECUTOR] Failed to update auto-scheduled item status", {
+        callId,
+        error:
+          autoScheduleError instanceof Error
+            ? autoScheduleError.message
+            : String(autoScheduleError),
+      });
+    }
 
     return { success: false, callId, error: errorMessage };
   }

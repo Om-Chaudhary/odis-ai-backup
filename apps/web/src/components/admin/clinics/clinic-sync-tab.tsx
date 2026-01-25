@@ -234,6 +234,13 @@ export function ClinicSyncTab({ clinic, clinicId }: ClinicSyncTabProps) {
             <p className="text-sm text-slate-500">
               Configure automated sync schedules (cron expressions)
             </p>
+            <p className="mt-1 text-xs text-slate-400">
+              Timezone:{" "}
+              <span className="font-mono">
+                {clinic.timezone ?? "America/Los_Angeles"}
+              </span>{" "}
+              (clinic timezone)
+            </p>
           </div>
           {!isEditing ? (
             <Button
@@ -345,6 +352,9 @@ export function ClinicSyncTab({ clinic, clinicId }: ClinicSyncTabProps) {
             <p className="text-xs text-slate-500">
               Cron format: minute hour day-of-month month day-of-week (e.g., "0
               9 * * 1-5" = 9 AM Mon-Fri)
+            </p>
+            <p className="text-xs text-slate-500">
+              Cron schedules are evaluated in the clinic timezone shown above.
             </p>
           </div>
         ) : (

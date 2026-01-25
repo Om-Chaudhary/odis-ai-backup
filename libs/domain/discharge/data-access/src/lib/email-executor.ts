@@ -92,6 +92,27 @@ export async function executeScheduledEmail(
       })
       .eq("id", emailId);
 
+    // Update auto-scheduled item status if applicable
+    try {
+      // eslint-disable-next-line @nx/enforce-module-boundaries -- Dynamic import avoids build-time circular dependency
+      const { updateAutoScheduledItemStatus } = await import(
+        "@odis-ai/domain/auto-scheduling"
+      );
+      await updateAutoScheduledItemStatus(supabase, {
+        scheduledEmailId: emailId,
+        status: "failed",
+      });
+    } catch (autoScheduleError) {
+      // Log but don't fail - auto-scheduling tracking is optional
+      console.warn("[EMAIL_EXECUTOR] Failed to update auto-scheduled item status", {
+        emailId,
+        error:
+          autoScheduleError instanceof Error
+            ? autoScheduleError.message
+            : String(autoScheduleError),
+      });
+    }
+
     return { success: false, emailId, error: errorMessage };
   }
 
@@ -113,6 +134,27 @@ export async function executeScheduledEmail(
       },
     })
     .eq("id", emailId);
+
+  // 5. Update auto-scheduled item status if applicable
+  try {
+    // eslint-disable-next-line @nx/enforce-module-boundaries -- Dynamic import avoids build-time circular dependency
+    const { updateAutoScheduledItemStatus } = await import(
+      "@odis-ai/domain/auto-scheduling"
+    );
+    await updateAutoScheduledItemStatus(supabase, {
+      scheduledEmailId: emailId,
+      status: "completed",
+    });
+  } catch (autoScheduleError) {
+    // Log but don't fail - auto-scheduling tracking is optional
+    console.warn("[EMAIL_EXECUTOR] Failed to update auto-scheduled item status", {
+      emailId,
+      error:
+        autoScheduleError instanceof Error
+          ? autoScheduleError.message
+          : String(autoScheduleError),
+    });
+  }
 
   return {
     success: true,

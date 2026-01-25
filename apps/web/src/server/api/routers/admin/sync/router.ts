@@ -439,6 +439,22 @@ export const adminSyncRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const supabase = ctx.supabase;
 
+      const { data: clinic, error: clinicError } = await supabase
+        .from("clinics")
+        .select("timezone")
+        .eq("id", input.clinicId)
+        .maybeSingle();
+
+      if (clinicError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch clinic timezone",
+          cause: clinicError,
+        });
+      }
+
+      const clinicTimezone = clinic?.timezone ?? "America/Los_Angeles";
+
       // Check if schedule config exists
       const { data: existing } = await supabase
         .from("clinic_schedule_config")
@@ -459,6 +475,7 @@ export const adminSyncRouter = createTRPCRouter({
           .from("clinic_schedule_config")
           .update({
             sync_schedules: syncSchedulesJson,
+            timezone: clinicTimezone,
             updated_at: new Date().toISOString(),
           })
           .eq("id", existing.id)
@@ -481,7 +498,7 @@ export const adminSyncRouter = createTRPCRouter({
           .insert({
             clinic_id: input.clinicId,
             sync_schedules: syncSchedulesJson,
-            timezone: "America/Los_Angeles",
+            timezone: clinicTimezone,
             open_time: "08:00",
             close_time: "18:00",
             days_of_week: [1, 2, 3, 4, 5], // Mon-Fri

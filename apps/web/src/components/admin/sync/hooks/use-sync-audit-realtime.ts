@@ -121,6 +121,7 @@ export function useSyncAuditRealtime(
 
     // Handle INSERT events (sync started)
     if (payload.eventType === "INSERT") {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
       const audit = payload.new as CaseSyncAudit;
       if (audit.status === "in_progress") {
         onSyncStartedRef.current?.(audit);
@@ -130,6 +131,7 @@ export function useSyncAuditRealtime(
     // Handle UPDATE events (status transitions)
     if (payload.eventType === "UPDATE") {
       const oldAudit = payload.old as CaseSyncAudit;
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
       const newAudit = payload.new as CaseSyncAudit;
 
       // Detect status transitions from in_progress
@@ -172,15 +174,19 @@ export function useSyncAuditRealtime(
         handleChange
       )
       .subscribe((status, err) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
         if (status === "SUBSCRIBED") {
           setStatus("connected");
           setError(null);
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
         } else if (status === "CHANNEL_ERROR") {
           setStatus("error");
           setError(err?.message ?? "Channel subscription error");
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
         } else if (status === "TIMED_OUT") {
           setStatus("error");
           setError("Subscription timed out");
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
         } else if (status === "CLOSED") {
           setStatus("disconnected");
         }

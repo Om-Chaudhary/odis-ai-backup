@@ -67,6 +67,189 @@ export type Database = {
           },
         ]
       }
+      auto_scheduled_items: {
+        Row: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          case_id: string
+          clinic_id: string
+          created_at: string | null
+          id: string
+          run_id: string | null
+          scheduled_call_id: string | null
+          scheduled_config: Json
+          scheduled_email_id: string | null
+          status: string
+        }
+        Insert: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          case_id: string
+          clinic_id: string
+          created_at?: string | null
+          id?: string
+          run_id?: string | null
+          scheduled_call_id?: string | null
+          scheduled_config?: Json
+          scheduled_email_id?: string | null
+          status?: string
+        }
+        Update: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          case_id?: string
+          clinic_id?: string
+          created_at?: string | null
+          id?: string
+          run_id?: string | null
+          scheduled_call_id?: string | null
+          scheduled_config?: Json
+          scheduled_email_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auto_scheduled_items_cancelled_by_fkey"
+            columns: ["cancelled_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "auto_scheduled_items_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "auto_scheduled_items_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "auto_scheduled_items_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "auto_scheduling_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "auto_scheduled_items_scheduled_call_id_fkey"
+            columns: ["scheduled_call_id"]
+            isOneToOne: false
+            referencedRelation: "scheduled_discharge_calls"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "auto_scheduled_items_scheduled_email_id_fkey"
+            columns: ["scheduled_email_id"]
+            isOneToOne: false
+            referencedRelation: "scheduled_discharge_emails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      auto_scheduling_config: {
+        Row: {
+          auto_call_enabled: boolean | null
+          auto_email_enabled: boolean | null
+          call_delay_days: number | null
+          clinic_id: string
+          created_at: string | null
+          email_delay_days: number | null
+          id: string
+          is_enabled: boolean | null
+          preferred_call_time: string | null
+          preferred_email_time: string | null
+          scheduling_criteria: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          auto_call_enabled?: boolean | null
+          auto_email_enabled?: boolean | null
+          call_delay_days?: number | null
+          clinic_id: string
+          created_at?: string | null
+          email_delay_days?: number | null
+          id?: string
+          is_enabled?: boolean | null
+          preferred_call_time?: string | null
+          preferred_email_time?: string | null
+          scheduling_criteria?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          auto_call_enabled?: boolean | null
+          auto_email_enabled?: boolean | null
+          call_delay_days?: number | null
+          clinic_id?: string
+          created_at?: string | null
+          email_delay_days?: number | null
+          id?: string
+          is_enabled?: boolean | null
+          preferred_call_time?: string | null
+          preferred_email_time?: string | null
+          scheduling_criteria?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auto_scheduling_config_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: true
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      auto_scheduling_runs: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          results: Json | null
+          started_at: string
+          status: string
+          total_calls_scheduled: number | null
+          total_cases_processed: number | null
+          total_emails_scheduled: number | null
+          total_errors: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          results?: Json | null
+          started_at?: string
+          status?: string
+          total_calls_scheduled?: number | null
+          total_cases_processed?: number | null
+          total_emails_scheduled?: number | null
+          total_errors?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          results?: Json | null
+          started_at?: string
+          status?: string
+          total_calls_scheduled?: number | null
+          total_cases_processed?: number | null
+          total_emails_scheduled?: number | null
+          total_errors?: number | null
+        }
+        Relationships: []
+      }
       call_patients: {
         Row: {
           clinic_name: string | null
@@ -251,6 +434,7 @@ export type Database = {
       }
       cases: {
         Row: {
+          auto_scheduled_at: string | null
           canonical_patient_id: string | null
           clinic_id: string | null
           created_at: string | null
@@ -263,6 +447,7 @@ export type Database = {
           is_urgent: boolean | null
           metadata: Json | null
           scheduled_at: string | null
+          scheduling_source: string | null
           source: string | null
           status: Database["public"]["Enums"]["CaseStatus"] | null
           type: Database["public"]["Enums"]["CaseType"] | null
@@ -272,6 +457,7 @@ export type Database = {
           visibility: Database["public"]["Enums"]["CaseVisibility"]
         }
         Insert: {
+          auto_scheduled_at?: string | null
           canonical_patient_id?: string | null
           clinic_id?: string | null
           created_at?: string | null
@@ -284,6 +470,7 @@ export type Database = {
           is_urgent?: boolean | null
           metadata?: Json | null
           scheduled_at?: string | null
+          scheduling_source?: string | null
           source?: string | null
           status?: Database["public"]["Enums"]["CaseStatus"] | null
           type?: Database["public"]["Enums"]["CaseType"] | null
@@ -293,6 +480,7 @@ export type Database = {
           visibility?: Database["public"]["Enums"]["CaseVisibility"]
         }
         Update: {
+          auto_scheduled_at?: string | null
           canonical_patient_id?: string | null
           clinic_id?: string | null
           created_at?: string | null
@@ -305,6 +493,7 @@ export type Database = {
           is_urgent?: boolean | null
           metadata?: Json | null
           scheduled_at?: string | null
+          scheduling_source?: string | null
           source?: string | null
           status?: Database["public"]["Enums"]["CaseStatus"] | null
           type?: Database["public"]["Enums"]["CaseType"] | null

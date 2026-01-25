@@ -29,6 +29,7 @@ async function getHandler() {
 let cachedHandler: Awaited<ReturnType<typeof getHandler>> | null = null;
 
 export async function POST(request: NextRequest) {
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
   if (!cachedHandler) {
     cachedHandler = await getHandler();
   }
@@ -36,6 +37,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function OPTIONS(request: NextRequest) {
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
   if (!cachedHandler) {
     cachedHandler = await getHandler();
   }

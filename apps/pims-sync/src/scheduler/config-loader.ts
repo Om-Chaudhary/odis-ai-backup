@@ -17,6 +17,7 @@ export interface ClinicSyncSchedule {
 export interface ClinicScheduleConfig {
   clinicId: string;
   clinicName: string;
+  clinicTimezone: string;
   schedules: ClinicSyncSchedule[];
 }
 
@@ -29,18 +30,15 @@ export async function loadClinicSchedules(
   logger.info("Loading clinic sync schedules...");
 
   try {
-    // Query clinic_schedule_configs with sync_schedules
-    // Note: Using 'any' type assertion as clinic_schedule_configs table
-    // is not yet in generated Database types (requires migration + type regen)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("clinic_schedule_config")
       .select(
         `
         clinic_id,
         sync_schedules,
         clinics!inner (
-          name
+          name,
+          timezone
         )
       `,
       )
@@ -70,20 +68,27 @@ export async function loadClinicSchedules(
           continue;
         }
 
-        const clinicName =
-          Array.isArray(row.clinics) && row.clinics[0]?.name
-            ? row.clinics[0].name
-            : "Unknown";
+        const clinic =
+          Array.isArray(row.clinics) && row.clinics[0]
+            ? row.clinics[0]
+            : (!Array.isArray(row.clinics) && row.clinics
+                ? (row.clinics as unknown as { name?: string; timezone?: string })
+                : null);
+
+        const clinicName = clinic?.name ?? "Unknown";
+        const clinicTimezone = clinic?.timezone ?? "America/Los_Angeles";
 
         configs.push({
           clinicId: row.clinic_id,
           clinicName,
+          clinicTimezone,
           schedules,
         });
 
         logger.info("Loaded clinic schedule config", {
           clinicId: row.clinic_id,
           clinicName,
+          clinicTimezone,
           schedulesCount: schedules.length,
         });
       } catch (error) {

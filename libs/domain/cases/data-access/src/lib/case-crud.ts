@@ -11,6 +11,7 @@ import type {
   CaseMetadata,
   CaseMetadataJson,
 } from "@odis-ai/shared/types/case";
+// eslint-disable-next-line @nx/enforce-module-boundaries -- Shared types are a core dependency
 import { buildIdexxConsultationData } from "@odis-ai/shared/types/idexx";
 import { mergeEntities } from "./entity-utils";
 import {

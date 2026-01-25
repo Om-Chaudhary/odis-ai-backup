@@ -12,6 +12,7 @@ import { adminProcedure } from "./middleware";
 import { adminClinicsRouter } from "./clinics/router";
 import { adminUsersRouter } from "./users/router";
 import { adminSyncRouter } from "./sync/router";
+import { adminAutoSchedulingRouter } from "./auto-scheduling/router";
 
 /**
  * Scheduled item type for unified response
@@ -38,6 +39,7 @@ export const adminRouter = createTRPCRouter({
   clinics: adminClinicsRouter,
   users: adminUsersRouter,
   sync: adminSyncRouter,
+  autoScheduling: adminAutoSchedulingRouter,
 
   /**
    * Get all scheduled items for users in the same clinic

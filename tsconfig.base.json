@@ -93,6 +93,12 @@
       "@odis-ai/domain/auth/*": ["libs/domain/auth/util/src/*"],
       "@odis-ai/domain/sync": ["libs/domain/sync/data-access/src/index.ts"],
       "@odis-ai/domain/sync/*": ["libs/domain/sync/data-access/src/*"],
+      "@odis-ai/domain/auto-scheduling": [
+        "libs/domain/auto-scheduling/data-access/src/index.ts"
+      ],
+      "@odis-ai/domain/auto-scheduling/*": [
+        "libs/domain/auto-scheduling/data-access/src/*"
+      ],
 
       // Data Access - DB Split
       "@odis-ai/data-access/supabase-client": [
