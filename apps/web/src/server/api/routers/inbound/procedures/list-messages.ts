@@ -8,7 +8,7 @@
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { getClinicByUserId } from "@odis-ai/domain/clinics";
-import { createServiceClient } from "@odis-ai/data-access/db";
+import { createServiceClient } from "@odis-ai/data-access/db/server";
 import { listClinicMessagesInput } from "../schemas";
 
 export const listMessagesRouter = createTRPCRouter({

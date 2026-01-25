@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { createServerClient } from "@odis-ai/data-access/db";
+import { createServerClient } from "@odis-ai/data-access/db/server";
 import { getClinicByUserId, getClinicBySlug } from "@odis-ai/domain/clinics";
 import { DailyHoursSchema } from "@odis-ai/shared/validators";
 import type { DailyHours } from "@odis-ai/shared/types";

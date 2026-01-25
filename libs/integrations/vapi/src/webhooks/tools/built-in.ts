@@ -10,6 +10,11 @@
 import { registerTool } from "./registry";
 import { loggers } from "@odis-ai/shared/logger";
 import { createServiceClient } from "@odis-ai/data-access/db/server";
+import { findClinicWithConfigByAssistantId } from "../../inbound-tools/find-clinic-by-assistant";
+import {
+  processCheckAvailability,
+  processCheckAvailabilityRange,
+} from "../../processors/appointments";
 
 const logger = loggers.webhook.child("built-in-tools");
 
@@ -226,15 +231,13 @@ export function registerBuiltInTools(): void {
     name: "check_availability",
     description: "Check appointment availability for a specific date",
     handler: async (params, context) => {
-      const { date, provider_name } = params as {
+      const { date } = params as {
         date?: string;
-        provider_name?: string;
       };
 
       logger.info("Check availability called", {
         callId: context.callId,
         date,
-        provider_name,
       });
 
       if (!date) {
@@ -244,111 +247,43 @@ export function registerBuiltInTools(): void {
         };
       }
 
-      try {
-        // Validate assistant ID is available
-        if (!context.assistantId) {
-          return {
-            error: "Assistant ID not available",
-            message:
-              "Unable to check availability. Assistant context not found.",
-          };
-        }
-
-        // Get clinic_id from assistant_id
-        const supabase = await createServiceClient();
-
-        const { data: clinic } = await supabase
-          .from("clinics")
-          .select("id, name")
-          .or(
-            `inbound_assistant_id.eq.${context.assistantId},outbound_assistant_id.eq.${context.assistantId}`,
-          )
-          .single();
-
-        if (!clinic) {
-          return {
-            error: "Clinic not found",
-            message:
-              "Unable to check availability. Clinic configuration not found.",
-          };
-        }
-
-        // Build query params
-        const params = new URLSearchParams({
-          clinic_id: clinic.id,
-          date,
-          slot_duration_minutes: "30",
-        });
-
-        // If provider_name specified, look up provider_id
-        if (provider_name) {
-          const { data: provider } = await supabase
-            .from("providers")
-            .select("id, name")
-            .eq("clinic_id", clinic.id)
-            .ilike("name", `%${provider_name}%`)
-            .maybeSingle();
-
-          if (provider) {
-            params.append("provider_id", provider.id);
-            logger.info("Provider filter applied", {
-              provider_name,
-              provider_id: provider.id,
-            });
-          }
-        }
-
-        // Call availability API
-        const baseUrl =
-          process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-        const response = await fetch(
-          `${baseUrl}/api/appointments/availability?${params}`,
-        );
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(
-            (data as { error?: string }).error ?? "Availability check failed",
-          );
-        }
-
-        interface AvailabilityResponse {
-          available_slots: Array<{ start: string }>;
-        }
-
-        // Format response for VAPI agent
-        const availableTimes = (
-          data as AvailabilityResponse
-        ).available_slots.map((s) => s.start);
-
-        logger.info("Availability check successful", {
-          date,
-          available_count: availableTimes.length,
-          clinic_id: clinic.id,
-        });
-
+      // Validate assistant ID is available
+      if (!context.assistantId) {
         return {
-          date: data.date,
-          available_times: availableTimes,
-          total_available: data.available_slots.length,
-          last_synced: data.sync_freshness,
+          error: "Assistant ID not available",
           message:
-            data.available_slots.length > 0
-              ? `We have ${data.available_slots.length} available slots on ${date}`
-              : `No available slots on ${date}. The schedule was last updated ${data.sync_freshness}.`,
-        };
-      } catch (error) {
-        logger.error("Availability check failed", {
-          error: error instanceof Error ? error.message : String(error),
-          date,
-        });
-
-        return {
-          error: "Failed to check availability",
-          message:
-            "I'm having trouble checking our schedule right now. Let me take your information and have someone call you back to schedule.",
+            "Unable to check availability. Assistant context not found.",
         };
       }
+
+      // Get clinic from assistant_id using the standard lookup
+      const supabase = await createServiceClient();
+      const clinic = await findClinicWithConfigByAssistantId(
+        supabase,
+        context.assistantId,
+      );
+
+      // Call the processor directly (no HTTP roundtrip)
+      const result = await processCheckAvailability(
+        { date, include_blocked: false },
+        {
+          callId: context.callId,
+          toolCallId: context.toolCallId,
+          assistantId: context.assistantId,
+          clinic,
+          supabase,
+          logger,
+        },
+      );
+
+      logger.info("Availability check completed", {
+        date,
+        success: result.success,
+        callId: context.callId,
+      });
+
+      // Spread result to match expected Record<string, unknown> return type
+      return { ...result };
     },
   });
 
@@ -374,104 +309,34 @@ export function registerBuiltInTools(): void {
         };
       }
 
-      try {
-        // Get clinic_id from assistant_id
-        const supabase = await createServiceClient();
+      // Get clinic from assistant_id using the standard lookup
+      const supabase = await createServiceClient();
+      const clinic = await findClinicWithConfigByAssistantId(
+        supabase,
+        context.assistantId,
+      );
 
-        const { data: clinic } = await supabase
-          .from("clinics")
-          .select("id, name")
-          .or(
-            `inbound_assistant_id.eq.${context.assistantId},outbound_assistant_id.eq.${context.assistantId}`,
-          )
-          .single();
+      // Call the processor directly (no HTTP roundtrip)
+      const result = await processCheckAvailabilityRange(
+        { days_ahead: Math.min(Math.max(1, days_ahead), 14) },
+        {
+          callId: context.callId,
+          toolCallId: context.toolCallId,
+          assistantId: context.assistantId,
+          clinic,
+          supabase,
+          logger,
+        },
+      );
 
-        if (!clinic) {
-          return {
-            error: "Clinic not found",
-            message:
-              "Unable to check availability. Clinic configuration not found.",
-          };
-        }
+      logger.info("Availability range check completed", {
+        days_ahead,
+        success: result.success,
+        callId: context.callId,
+      });
 
-        // Call availability range API
-        const baseUrl =
-          process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-        const response = await fetch(
-          `${baseUrl}/api/vapi/tools/check-availability-range`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              assistant_id: context.assistantId,
-              days_ahead: Math.min(Math.max(1, days_ahead), 14),
-              vapi_call_id: context.callId,
-            }),
-          },
-        );
-
-        const data = (await response.json()) as {
-          available: boolean;
-          summary?: {
-            days_with_availability: number;
-            total_available_slots: number;
-          };
-          first_available?: {
-            formatted_date: string;
-            day_of_week: string;
-            times: Array<{ time: string }>;
-          };
-          availability?: Array<{
-            date: string;
-            formatted_date: string;
-            day_of_week: string;
-            available_slots: number;
-          }>;
-          message: string;
-          error?: string;
-        };
-
-        if (!response.ok) {
-          throw new Error(data.error ?? "Availability check failed");
-        }
-
-        logger.info("Availability range check successful", {
-          days_ahead,
-          days_with_availability: data.summary?.days_with_availability ?? 0,
-          clinic_id: clinic.id,
-        });
-
-        return {
-          available: data.available,
-          days_checked: days_ahead,
-          days_with_availability: data.summary?.days_with_availability ?? 0,
-          total_slots: data.summary?.total_available_slots ?? 0,
-          first_available: data.first_available
-            ? {
-                date: data.first_available.formatted_date,
-                day: data.first_available.day_of_week,
-                times: data.first_available.times
-                  .slice(0, 5)
-                  .map((t) => t.time),
-              }
-            : null,
-          availability: data.availability
-            ?.filter((d) => d.available_slots > 0)
-            .slice(0, 7),
-          message: data.message,
-        };
-      } catch (error) {
-        logger.error("Availability range check failed", {
-          error: error instanceof Error ? error.message : String(error),
-          days_ahead,
-        });
-
-        return {
-          error: "Failed to check availability",
-          message:
-            "I'm having trouble checking our schedule right now. Let me take your information and have someone call you back to schedule.",
-        };
-      }
+      // Spread result to match expected Record<string, unknown> return type
+      return { ...result };
     },
   });
 

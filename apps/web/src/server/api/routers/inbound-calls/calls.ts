@@ -6,7 +6,7 @@
 
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { createServiceClient } from "@odis-ai/data-access/db";
+import { createServiceClient } from "@odis-ai/data-access/db/server";
 import { getClinicByUserId } from "@odis-ai/domain/clinics";
 import { getCallDataOverride } from "~/components/dashboard/inbound/detail/mock-data/call-overrides";
 import { getDemoCalls } from "~/components/dashboard/inbound/mock-data";
