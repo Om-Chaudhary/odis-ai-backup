@@ -18,6 +18,68 @@ import { executeTool } from "../tools";
 const logger = loggers.webhook.child("tool-calls");
 
 /**
+ * Known clinic prefixes to strip from tool names.
+ * Allows VAPI tools like `alum_rock_check_availability` to map to `check_availability`.
+ */
+const CLINIC_PREFIXES = ["alum_rock_", "clinic_"];
+
+/**
+ * Normalize tool name by stripping clinic prefix.
+ * e.g., "alum_rock_check_availability" -> "check_availability"
+ */
+function normalizeToolName(name: string): string {
+  for (const prefix of CLINIC_PREFIXES) {
+    if (name.startsWith(prefix)) {
+      return name.slice(prefix.length);
+    }
+  }
+  return name;
+}
+
+/**
+ * Extract tool call data from VAPI's payload format.
+ * VAPI sends tool calls in OpenAI format with function.name and function.arguments (JSON string).
+ */
+function extractToolCallData(toolCall: Record<string, unknown>): {
+  id: string;
+  name: string;
+  parameters: Record<string, unknown>;
+} {
+  const id = (toolCall.id as string) ?? `unknown-${Date.now()}`;
+
+  // VAPI sends OpenAI-style format: { id, type: "function", function: { name, arguments } }
+  const functionData = toolCall.function as
+    | { name?: string; arguments?: string }
+    | undefined;
+
+  if (functionData?.name) {
+    // OpenAI/VAPI format - parse arguments from JSON string
+    let parameters: Record<string, unknown> = {};
+    if (functionData.arguments) {
+      try {
+        parameters = JSON.parse(functionData.arguments) as Record<
+          string,
+          unknown
+        >;
+      } catch {
+        logger.warn("Failed to parse function.arguments", {
+          id,
+          arguments: functionData.arguments,
+        });
+      }
+    }
+    return { id, name: functionData.name, parameters };
+  }
+
+  // Legacy format: { id, name, parameters }
+  return {
+    id,
+    name: (toolCall.name as string) ?? "unknown",
+    parameters: (toolCall.parameters as Record<string, unknown>) ?? {},
+  };
+}
+
+/**
  * Handle tool-calls webhook
  *
  * When VAPI assistant invokes a server-side tool, this handler executes the tool
@@ -32,7 +94,7 @@ const logger = loggers.webhook.child("tool-calls");
 export async function handleToolCalls(
   message: ToolCallsMessage,
 ): Promise<ToolCallsResponse> {
-  const toolCallList = message.toolCallList ?? [];
+  const toolCallList = (message.toolCallList ?? []) as unknown as Record<string, unknown>[];
   const callId = message.call?.id ?? "unknown";
   const assistantId = message.call?.assistantId;
 
@@ -40,7 +102,6 @@ export async function handleToolCalls(
     callId,
     assistantId,
     toolCount: toolCallList.length,
-    toolNames: toolCallList.map((t) => t.name),
   });
 
   if (toolCallList.length === 0) {
@@ -52,28 +113,41 @@ export async function handleToolCalls(
 
   // Process each tool call
   const results: VapiToolCallResult[] = await Promise.all(
-    toolCallList.map(async (toolCall) => {
+    toolCallList.map(async (rawToolCall) => {
+      // Extract and normalize tool call data
+      const { id, name: rawName, parameters } = extractToolCallData(rawToolCall);
+      const normalizedName = normalizeToolName(rawName);
+
+      logger.debug("Tool call extracted", {
+        callId,
+        toolCallId: id,
+        rawName,
+        normalizedName,
+        parameterKeys: Object.keys(parameters),
+      });
+
       try {
-        const result = await executeTool(toolCall.name, toolCall.parameters, {
+        const result = await executeTool(normalizedName, parameters, {
           callId,
-          toolCallId: toolCall.id,
+          toolCallId: id,
           assistantId,
         });
 
         return {
-          toolCallId: toolCall.id,
+          toolCallId: id,
           result: JSON.stringify(result),
         };
       } catch (error) {
         logger.error("Tool call execution failed", {
           callId,
-          toolName: toolCall.name,
-          toolCallId: toolCall.id,
+          toolName: normalizedName,
+          rawToolName: rawName,
+          toolCallId: id,
           error: error instanceof Error ? error.message : String(error),
         });
 
         return {
-          toolCallId: toolCall.id,
+          toolCallId: id,
           result: JSON.stringify({
             error: "Tool execution failed",
             message: error instanceof Error ? error.message : "Unknown error",
