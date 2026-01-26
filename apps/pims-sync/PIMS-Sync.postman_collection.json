@@ -1,0 +1,399 @@
+{
+  "info": {
+    "name": "PIMS Sync API",
+    "description": "IDEXX Neo synchronization and appointment management service\n\nThis collection includes all endpoints for:\n- Sync operations (inbound, cases, reconciliation, full)\n- Appointment management (search, create, cancel, reschedule)\n- Health monitoring\n\n**Authentication:** All API endpoints require `X-API-Key` header (configured in collection variables)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.1"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "value",
+        "value": "{{api_key}}",
+        "type": "string"
+      },
+      {
+        "key": "key",
+        "value": "X-API-Key",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3030",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "your-api-key-here",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Service Info",
+      "item": [
+        {
+          "name": "Get Service Info",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/",
+              "host": ["{{base_url}}"],
+              "path": [""]
+            },
+            "description": "Returns service information and available endpoints"
+          },
+          "response": []
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Health check for monitoring - validates memory, environment, scheduler"
+          },
+          "response": []
+        },
+        {
+          "name": "Readiness Probe",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/ready",
+              "host": ["{{base_url}}"],
+              "path": ["ready"]
+            },
+            "description": "Readiness probe for deployment - checks if service can accept traffic"
+          },
+          "response": []
+        },
+        {
+          "name": "Metrics",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/metrics",
+              "host": ["{{base_url}}"],
+              "path": ["metrics"]
+            },
+            "description": "Prometheus-compatible metrics endpoint"
+          },
+          "response": []
+        }
+      ],
+      "description": "Service information and health monitoring endpoints"
+    },
+    {
+      "name": "Sync Operations",
+      "item": [
+        {
+          "name": "Inbound Sync",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"daysAhead\": 7\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/sync/inbound",
+              "host": ["{{base_url}}"],
+              "path": ["api", "sync", "inbound"]
+            },
+            "description": "Sync appointments from PIMS to database.\n\n**Body Options:**\n- `startDate` (YYYY-MM-DD): Start date for sync\n- `endDate` (YYYY-MM-DD): End date for sync\n- `daysAhead` (number): Days ahead to sync (default: 7)\n- `dateRange` (object): Alternative nested format `{ start, end }`"
+          },
+          "response": []
+        },
+        {
+          "name": "Inbound Sync (Custom Date Range)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startDate\": \"2026-01-26\",\n  \"endDate\": \"2026-02-02\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/sync/inbound",
+              "host": ["{{base_url}}"],
+              "path": ["api", "sync", "inbound"]
+            },
+            "description": "Sync appointments with custom date range (flat format)"
+          },
+          "response": []
+        },
+        {
+          "name": "Inbound Sync (Nested Date Range)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dateRange\": {\n    \"start\": \"2026-01-26\",\n    \"end\": \"2026-02-02\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/sync/inbound",
+              "host": ["{{base_url}}"],
+              "path": ["api", "sync", "inbound"]
+            },
+            "description": "Sync appointments with nested date range format"
+          },
+          "response": []
+        },
+        {
+          "name": "Case Sync (Enrich)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startDate\": \"2026-01-26\",\n  \"endDate\": \"2026-01-26\",\n  \"parallelBatchSize\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/sync/cases",
+              "host": ["{{base_url}}"],
+              "path": ["api", "sync", "cases"]
+            },
+            "description": "Enrich cases with consultation data from PIMS (SOAP notes, discharge summaries).\n\n**Note:** Only processes past appointments (endDate capped at now)\n\n**Body Options:**\n- `startDate` (YYYY-MM-DD): Start date (defaults to today)\n- `endDate` (YYYY-MM-DD): End date (defaults to startDate)\n- `parallelBatchSize` (number): Parallel batch size for processing\n- `dateRange` (object): Alternative nested format"
+          },
+          "response": []
+        },
+        {
+          "name": "Reconcile Cases",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lookbackDays\": 7\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/sync/reconcile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "sync", "reconcile"]
+            },
+            "description": "Reconcile local cases with PIMS source of truth.\n\n**Actions:**\n- Soft-deletes orphaned cases\n- Updates case statuses\n- Ensures data consistency\n\n**Body Options:**\n- `lookbackDays` (number): Days to look back (default: 7)"
+          },
+          "response": []
+        },
+        {
+          "name": "Full Sync (Bidirectional)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bidirectional\": true,\n  \"backwardDays\": 14,\n  \"forwardDays\": 14\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/sync/full",
+              "host": ["{{base_url}}"],
+              "path": ["api", "sync", "full"]
+            },
+            "description": "Run full sync pipeline (all phases):\n\n**Bidirectional Mode (default):**\n1. Backward inbound sync (past cases)\n2. Forward inbound sync (future appointments)\n3. Case enrichment\n4. Reconciliation\n\n**Body Options:**\n- `bidirectional` (boolean): Use bidirectional sync (default: true)\n- `backwardDays` (number): Days to look back (default: 14)\n- `forwardDays` (number): Days to look forward (default: 14)\n- `lookbackDays` (number): Reconciliation lookback (default: 7)"
+          },
+          "response": []
+        },
+        {
+          "name": "Full Sync (Legacy Forward-Only)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bidirectional\": false,\n  \"daysAhead\": 7,\n  \"lookbackDays\": 7\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/sync/full",
+              "host": ["{{base_url}}"],
+              "path": ["api", "sync", "full"]
+            },
+            "description": "Legacy forward-only sync mode:\n1. Inbound sync (appointments)\n2. Case enrichment\n3. Reconciliation\n\n**Body Options:**\n- `bidirectional` (boolean): Set to false for legacy mode\n- `startDate` (YYYY-MM-DD): Start date\n- `endDate` (YYYY-MM-DD): End date\n- `daysAhead` (number): Days ahead to sync (default: 7)\n- `lookbackDays` (number): Reconciliation lookback (default: 7)"
+          },
+          "response": []
+        }
+      ],
+      "description": "PIMS data synchronization endpoints"
+    },
+    {
+      "name": "Appointments",
+      "item": [
+        {
+          "name": "Search Patient",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"Smith\",\n  \"limit\": 10\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/appointments/search-patient",
+              "host": ["{{base_url}}"],
+              "path": ["api", "appointments", "search-patient"]
+            },
+            "description": "Search for existing patients by name, client name, or phone.\n\n**Body:**\n- `query` (string, required): Search query\n- `limit` (number, optional): Max results (default: 10)"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Appointment (Existing Patient)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"patientId\": \"patient-123\",\n  \"clientId\": \"client-456\",\n  \"date\": \"2026-01-28\",\n  \"startTime\": \"14:00\",\n  \"endTime\": \"14:15\",\n  \"reason\": \"Follow-up checkup\",\n  \"note\": \"Patient doing well after surgery\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/appointments/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "appointments", "create"]
+            },
+            "description": "Create appointment for existing patient.\n\n**Required Fields:**\n- `patientId` (string): IDEXX patient ID\n- `date` (YYYY-MM-DD): Appointment date\n- `startTime` (HH:MM): Start time\n- `reason` (string): Appointment reason\n\n**Optional Fields:**\n- `clientId` (string): IDEXX client ID\n- `endTime` (HH:MM): End time (defaults to startTime + 15min)\n- `note` (string): Additional notes\n- `providerId` (string): IDEXX provider ID\n- `appointmentTypeId` (string): IDEXX appointment type ID\n- `roomId` (string): IDEXX room ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Appointment (New Client)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isNewClient\": true,\n  \"newClient\": {\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"phone\": \"555-123-4567\",\n    \"email\": \"john.doe@example.com\"\n  },\n  \"newPatient\": {\n    \"name\": \"Buddy\",\n    \"species\": \"Dog\",\n    \"breed\": \"Golden Retriever\"\n  },\n  \"date\": \"2026-01-28\",\n  \"startTime\": \"10:00\",\n  \"reason\": \"New patient wellness exam\",\n  \"note\": \"First visit - new client\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/appointments/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "appointments", "create"]
+            },
+            "description": "Create appointment with new client and patient.\n\n**Required Fields:**\n- `isNewClient` (boolean): Must be true\n- `newClient` (object):\n  - `firstName` (string)\n  - `lastName` (string)\n  - `phone` (string)\n  - `email` (string, optional)\n- `newPatient` (object):\n  - `name` (string)\n  - `species` (string)\n  - `breed` (string, optional)\n- `date` (YYYY-MM-DD): Appointment date\n- `startTime` (HH:MM): Start time\n- `reason` (string): Appointment reason"
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"appointmentId\": \"appt-789\",\n  \"reason\": \"Client requested cancellation\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/appointments/cancel",
+              "host": ["{{base_url}}"],
+              "path": ["api", "appointments", "cancel"]
+            },
+            "description": "Cancel an existing appointment.\n\n**Body:**\n- `appointmentId` (string, required): IDEXX appointment ID\n- `reason` (string, optional): Cancellation reason (defaults to \"Cancelled via phone\")"
+          },
+          "response": []
+        },
+        {
+          "name": "Reschedule Appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cancelAppointmentId\": \"appt-old-123\",\n  \"patientId\": \"patient-123\",\n  \"clientId\": \"client-456\",\n  \"date\": \"2026-01-30\",\n  \"startTime\": \"15:30\",\n  \"reason\": \"Follow-up checkup\",\n  \"note\": \"Rescheduled from 01/28\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/appointments/reschedule",
+              "host": ["{{base_url}}"],
+              "path": ["api", "appointments", "reschedule"]
+            },
+            "description": "Reschedule appointment (atomic cancel + create).\n\n**Required Fields:**\n- `cancelAppointmentId` (string): Original appointment ID to cancel\n- `patientId` (string): Patient ID for new appointment\n- `date` (YYYY-MM-DD): New appointment date\n- `startTime` (HH:MM): New start time\n- `reason` (string): Appointment reason\n\n**Optional Fields:**\n- `clientId` (string)\n- `endTime` (HH:MM)\n- `note` (string)\n- `providerId` (string)\n- `appointmentTypeId` (string)\n- `roomId` (string)\n\n**Note:** If create step fails after cancel succeeds, response includes `rollbackRequired: true`"
+          },
+          "response": []
+        }
+      ],
+      "description": "Appointment management endpoints (search, create, cancel, reschedule)"
+    }
+  ]
+}
