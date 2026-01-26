@@ -13,7 +13,14 @@ import { type BrowserService } from "../browser/browser-service";
 import { IdexxAuthClient } from "./auth-client";
 import { IdexxScheduleClient } from "./schedule-client";
 import { IdexxConsultationClient } from "./consultation-client";
+import { IdexxAppointmentManagementClient } from "./appointment-management-client";
 import type { IdexxProviderConfig } from "./types";
+import type {
+  CreateAppointmentInput,
+  AppointmentOperationResult,
+  SearchPatientParams,
+  PatientSearchResult,
+} from "./appointment-management-types";
 
 /**
  * IDEXX Neo provider implementation
@@ -26,6 +33,7 @@ export class IdexxProvider implements IPimsProvider {
   private authClient: IdexxAuthClient;
   private scheduleClient: IdexxScheduleClient;
   private consultationClient: IdexxConsultationClient;
+  private appointmentMgmtClient: IdexxAppointmentManagementClient;
   private baseUrl: string;
   private debug: boolean;
 
@@ -42,6 +50,11 @@ export class IdexxProvider implements IPimsProvider {
       this.baseUrl,
     );
     this.consultationClient = new IdexxConsultationClient(
+      this.browserService,
+      this.authClient,
+      this.baseUrl,
+    );
+    this.appointmentMgmtClient = new IdexxAppointmentManagementClient(
       this.browserService,
       this.authClient,
       this.baseUrl,
@@ -179,6 +192,123 @@ export class IdexxProvider implements IPimsProvider {
         console.error("[IdexxProvider] Batch consultation error:", error);
       }
       return new Map();
+    }
+  }
+
+  /**
+   * Search for patients by name or ID
+   */
+  async searchPatient(
+    params: SearchPatientParams,
+  ): Promise<PatientSearchResult> {
+    if (this.debug) {
+      console.log("[IdexxProvider] Searching patients:", params.query);
+    }
+
+    try {
+      const result = await this.appointmentMgmtClient.searchPatient(params);
+
+      if (this.debug) {
+        console.log(
+          `[IdexxProvider] Found ${result.patients.length} patients`,
+        );
+      }
+
+      return result;
+    } catch (error) {
+      if (this.debug) {
+        console.error("[IdexxProvider] Patient search error:", error);
+      }
+      return { patients: [], totalCount: 0 };
+    }
+  }
+
+  /**
+   * Create appointment for existing patient
+   */
+  async createAppointment(
+    input: CreateAppointmentInput,
+  ): Promise<AppointmentOperationResult> {
+    if (this.debug) {
+      console.log("[IdexxProvider] Creating appointment:", {
+        patientId: input.patientId,
+        date: input.date,
+        time: input.startTime,
+      });
+    }
+
+    try {
+      const result = await this.appointmentMgmtClient.createAppointment(input);
+
+      if (this.debug) {
+        console.log("[IdexxProvider] Appointment creation result:", {
+          success: result.success,
+          appointmentId: result.appointmentId,
+        });
+      }
+
+      return result;
+    } catch (error) {
+      if (this.debug) {
+        console.error("[IdexxProvider] Appointment creation error:", error);
+      }
+      return {
+        success: false,
+        error: {
+          code: "provider_error",
+          message:
+            error instanceof Error ? error.message : "Unknown error occurred",
+          details: error,
+        },
+      };
+    }
+  }
+
+  /**
+   * Create appointment with new client and patient
+   */
+  async createAppointmentWithNewClient(
+    input: CreateAppointmentInput,
+  ): Promise<AppointmentOperationResult> {
+    if (this.debug) {
+      console.log("[IdexxProvider] Creating appointment with new client:", {
+        clientName: `${input.newClient?.firstName} ${input.newClient?.lastName}`,
+        patientName: input.newPatient?.name,
+        date: input.date,
+      });
+    }
+
+    try {
+      const result =
+        await this.appointmentMgmtClient.createAppointmentWithNewClient(input);
+
+      if (this.debug) {
+        console.log(
+          "[IdexxProvider] New client appointment creation result:",
+          {
+            success: result.success,
+            appointmentId: result.appointmentId,
+          },
+        );
+      }
+
+      return result;
+    } catch (error) {
+      if (this.debug) {
+        console.error(
+          "[IdexxProvider] New client appointment creation error:",
+          error,
+        );
+      }
+      return {
+        success: false,
+        error: {
+          code: "provider_error",
+          message:
+            error instanceof Error ? error.message : "Unknown error occurred",
+          details: error,
+        },
+      };
     }
   }
 

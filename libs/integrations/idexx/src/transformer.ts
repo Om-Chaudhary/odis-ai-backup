@@ -1,6 +1,14 @@
 import type { IdexxPageData } from "./types";
 import type { ScheduleCallInput } from "@odis-ai/shared/validators";
-import { extractFirstName } from "@odis-ai/integrations/vapi/utils";
+
+/**
+ * Extract first name from full name string
+ * (Duplicated from VAPI utils to avoid circular dependency)
+ */
+function extractFirstName(name: string | null | undefined): string {
+  if (!name) return "Unknown";
+  return name.trim().split(/\s+/)[0] ?? "Unknown";
+}
 
 /**
  * Transform IDEXX Neo consultation data to call request format
