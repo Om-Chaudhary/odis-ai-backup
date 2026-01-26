@@ -20,6 +20,7 @@ import type {
   AppointmentOperationResult,
   SearchPatientParams,
   PatientSearchResult,
+  CancelAppointmentInput,
 } from "./appointment-management-types";
 
 /**
@@ -244,6 +245,7 @@ export class IdexxProvider implements IPimsProvider {
         console.log("[IdexxProvider] Appointment creation result:", {
           success: result.success,
           appointmentId: result.appointmentId,
+          error: result.error,
         });
       }
 
