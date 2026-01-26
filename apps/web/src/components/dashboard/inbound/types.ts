@@ -223,22 +223,26 @@ export interface InboundCall {
   owner_sentiment_data?: OwnerSentimentData | null;
   escalation_data?: EscalationData | null;
   follow_up_data?: FollowUpData | null;
-  /** Pre-computed action card data from VAPI structured output (new calls) */
-  action_card_data?: ActionCardData | null;
   /** Whether the user has confirmed the action shown in the action card */
   action_confirmed?: boolean;
+  /**
+   * Structured data from VAPI's analysis.structuredData
+   * Contains action card format data (card_type, appointment_data, etc.)
+   * This is the primary source for action card display.
+   */
+  structured_data?: Record<string, unknown> | null;
 }
 
 // =============================================================================
-// Action Card Data (from VAPI structured output)
+// Action Card Data (from VAPI analysis.structuredData / structured_data column)
 // =============================================================================
 
 /**
- * Action card data from VAPI structured output
+ * Action card data format from VAPI's analysis.structuredData
  * Pre-formatted data for action card display in dashboard
  *
- * Schema is defined in libs/integrations/vapi/src/schemas/action-card-output.ts
- * and synced to VAPI assistants via scripts/configure-vapi-structured-outputs.ts
+ * This data is stored in the `structured_data` column and read by the
+ * ActionCardSelector component to determine which card type to display.
  */
 export interface ActionCardData {
   /** Type of action card to display */

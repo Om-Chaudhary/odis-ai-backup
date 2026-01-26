@@ -2,7 +2,7 @@
  * Derive Action Card Data
  *
  * Utility to derive action card display data from legacy call fields.
- * Used as fallback when action_card_data is not available (pre-migration calls).
+ * Used as fallback when structured_data is not available (pre-migration calls).
  *
  * @module dashboard/shared/action-cards/derive-action-card-data
  */
@@ -137,7 +137,7 @@ function parseKeyTopics(
 /**
  * Derive action card data from legacy call fields
  *
- * Used as fallback when action_card_data column is null (pre-migration calls).
+ * Used as fallback when structured_data is null (pre-migration calls).
  * Extracts and normalizes data from existing structured output columns.
  *
  * @param call - Legacy call data with structured output columns
@@ -258,22 +258,22 @@ export function deriveActionCardData(
  * Get action card data with fallback to derived data
  *
  * Primary entry point for action card components.
- * Uses VAPI-provided action_card_data if available,
+ * Uses structured_data from VAPI's analysis.structuredData if available,
  * otherwise derives from legacy fields.
  *
- * @param actionCardData - Pre-computed action card data from VAPI (may be null)
+ * @param structuredData - Structured data from VAPI (may be null)
  * @param call - Legacy call data for fallback derivation
  * @param booking - Optional booking data from vapi_bookings table
  * @returns Action card data or null if no valid outcome
  */
 export function getActionCardData(
-  actionCardData: ActionCardData | null | undefined,
+  structuredData: ActionCardData | null | undefined,
   call: LegacyCallData,
   booking?: BookingData | null,
 ): ActionCardData | null {
-  // Use pre-computed data if available
-  if (actionCardData?.card_type) {
-    return actionCardData;
+  // Use structured data if available and valid
+  if (structuredData?.card_type) {
+    return structuredData;
   }
 
   // Fall back to deriving from legacy fields

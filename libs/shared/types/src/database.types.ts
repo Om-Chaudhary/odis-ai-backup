@@ -1737,7 +1737,6 @@ export type Database = {
       }
       inbound_vapi_calls: {
         Row: {
-          action_card_data: Json | null
           action_confirmed: boolean | null
           actions_taken: Json | null
           assistant_id: string
@@ -1783,7 +1782,6 @@ export type Database = {
           vapi_call_id: string
         }
         Insert: {
-          action_card_data?: Json | null
           action_confirmed?: boolean | null
           actions_taken?: Json | null
           assistant_id: string
@@ -1829,7 +1827,6 @@ export type Database = {
           vapi_call_id: string
         }
         Update: {
-          action_card_data?: Json | null
           action_confirmed?: boolean | null
           actions_taken?: Json | null
           assistant_id?: string

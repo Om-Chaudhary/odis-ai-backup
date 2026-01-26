@@ -15,15 +15,15 @@ import {
 interface RescheduledAppointmentCardProps {
   /** Booking data from vapi_bookings table */
   booking?: BookingData | null;
-  /** New appointment date from action_card_data (YYYY-MM-DD) */
+  /** New appointment date from structured_data (YYYY-MM-DD) */
   appointmentDate?: string | null;
-  /** New appointment time from action_card_data (HH:MM) */
+  /** New appointment time from structured_data (HH:MM) */
   appointmentTime?: string | null;
-  /** Original appointment date from action_card_data (YYYY-MM-DD) */
+  /** Original appointment date from structured_data (YYYY-MM-DD) */
   originalDate?: string | null;
-  /** Original appointment time from action_card_data (HH:MM) */
+  /** Original appointment time from structured_data (HH:MM) */
   originalTime?: string | null;
-  /** Reschedule reason from action_card_data */
+  /** Reschedule reason from structured_data */
   rescheduleReason?: string | null;
   /** Fallback: Summary of the rescheduled appointment from VAPI */
   outcomeSummary?: string;
@@ -42,7 +42,7 @@ interface RescheduledAppointmentCardProps {
  */
 function formatTime(time: string): string {
   try {
-    // Try HH:MM format first (from action_card_data)
+    // Try HH:MM format first (from structured_data)
     if (time.split(":").length === 2) {
       const parsed = parse(time, "HH:mm", new Date());
       return format(parsed, "h:mm a");
@@ -93,7 +93,7 @@ export function RescheduledAppointmentCard({
 }: RescheduledAppointmentCardProps) {
   const styles = getEditorialVariantStyles("rescheduled");
 
-  // Priority: action_card_data fields, then booking fields
+  // Priority: structured_data fields, then booking fields
   const newDate = appointmentDate ?? booking?.date;
   const newTime = appointmentTime ?? booking?.start_time;
   const origDate = originalDate ?? booking?.original_date;

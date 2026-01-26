@@ -47,14 +47,13 @@ interface InboundCallData {
   id: string;
   outcome?: CallOutcome | null;
   summary?: string | null;
+  /** Structured data from VAPI's analysis.structuredData - contains action card data */
   structured_data?: Record<string, unknown> | null;
   call_outcome_data?: CallOutcomeData | null;
   escalation_data?: EscalationData | null;
   follow_up_data?: FollowUpData | null;
   /** Customer phone number */
   customer_phone?: string | null;
-  /** Pre-computed action card data from VAPI (new calls) */
-  action_card_data?: ActionCardData | null;
 }
 
 interface ActionCardSelectorProps {
@@ -81,7 +80,7 @@ interface ActionCardSelectorProps {
  * action card based on the call outcome type.
  *
  * Data sources (in order of preference):
- * 1. action_card_data - Pre-computed structured output from VAPI (new calls)
+ * 1. structured_data - From VAPI's analysis.structuredData (contains action card format)
  * 2. Legacy fields - Derived from call_outcome_data, escalation_data, etc. (old calls)
  * 3. Booking data - From vapi_bookings table for appointment-related cards
  *
@@ -111,7 +110,9 @@ export function ActionCardSelector({
     follow_up_data: call.follow_up_data,
   };
 
-  const cardData = getActionCardData(call.action_card_data, legacyCallData, booking);
+  // structured_data from VAPI's analysis.structuredData contains action card format
+  const structuredActionCard = call.structured_data as ActionCardData | null;
+  const cardData = getActionCardData(structuredActionCard, legacyCallData, booking);
 
   // If no valid card data, don't render
   // Note: We now render confirmed cards with the "Confirmed" badge instead of hiding them
@@ -119,7 +120,7 @@ export function ActionCardSelector({
     return null;
   }
 
-  // Legacy fallback data (used when action_card_data fields are incomplete)
+  // Legacy fallback data (used when structured_data fields are incomplete)
   const outcomeSummary =
     call.call_outcome_data?.outcome_summary ?? call.summary ?? "";
   const keyTopics = call.call_outcome_data?.key_topics_discussed;

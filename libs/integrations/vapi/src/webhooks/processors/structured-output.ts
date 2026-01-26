@@ -71,6 +71,9 @@ export interface ActionCardData {
 
 /**
  * Parsed structured outputs from a VAPI call
+ *
+ * Note: Action card data is now sourced from VAPI's analysis.structuredData
+ * (saved to structured_data column) rather than artifact.structuredOutputs.
  */
 export interface ParsedStructuredOutputs {
   /** Legacy attention classification data */
@@ -87,12 +90,12 @@ export interface ParsedStructuredOutputs {
   escalation: Record<string, unknown> | null;
   /** Follow-up scheduling data */
   followUp: Record<string, unknown> | null;
-  /** Action card display data (inbound calls) */
-  actionCard: ActionCardData | null;
 }
 
 /**
  * Schema names used by VAPI for structured outputs
+ *
+ * Note: Action card data comes from analysis.structuredData, not artifact.structuredOutputs.
  */
 export const STRUCTURED_OUTPUT_SCHEMAS = {
   CALL_OUTCOME: "call_outcome",
@@ -102,7 +105,6 @@ export const STRUCTURED_OUTPUT_SCHEMAS = {
   ESCALATION: "escalation_tracking",
   FOLLOW_UP: "follow_up_status",
   ATTENTION_CLASSIFICATION: "attention_classification",
-  ACTION_CARD: "action_card_output",
 } as const;
 
 /**
@@ -248,12 +250,6 @@ export function extractStructuredOutputByName(
     ) {
       return output;
     }
-    if (
-      schemaName === STRUCTURED_OUTPUT_SCHEMAS.ACTION_CARD &&
-      "card_type" in output
-    ) {
-      return output;
-    }
   }
 
   return null;
@@ -300,10 +296,6 @@ export function parseAllStructuredOutputs(
       structuredOutputs,
       STRUCTURED_OUTPUT_SCHEMAS.FOLLOW_UP,
     ),
-    actionCard: extractStructuredOutputByName(
-      structuredOutputs,
-      STRUCTURED_OUTPUT_SCHEMAS.ACTION_CARD,
-    ) as ActionCardData | null,
   };
 }
 
@@ -325,8 +317,6 @@ export function logStructuredOutputAvailability(
     hasOwnerSentiment: !!outputs.ownerSentiment,
     hasEscalation: !!outputs.escalation,
     hasFollowUp: !!outputs.followUp,
-    hasActionCard: !!outputs.actionCard,
-    actionCardType: outputs.actionCard?.card_type ?? null,
     hasAttentionClassification:
       Object.keys(outputs.attentionClassification).length > 0,
   });

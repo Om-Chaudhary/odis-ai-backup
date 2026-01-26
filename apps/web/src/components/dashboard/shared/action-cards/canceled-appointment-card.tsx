@@ -12,11 +12,11 @@ import {
 interface CanceledAppointmentCardProps {
   /** Booking data from vapi_bookings table */
   booking?: BookingData | null;
-  /** Appointment date from action_card_data (YYYY-MM-DD) */
+  /** Appointment date from structured_data (YYYY-MM-DD) */
   appointmentDate?: string | null;
-  /** Appointment time from action_card_data (HH:MM) */
+  /** Appointment time from structured_data (HH:MM) */
   appointmentTime?: string | null;
-  /** Cancellation reason from action_card_data */
+  /** Cancellation reason from structured_data */
   cancellationReason?: string | null;
   /** Fallback: Summary of the cancellation from VAPI */
   outcomeSummary?: string;
@@ -35,7 +35,7 @@ interface CanceledAppointmentCardProps {
  */
 function formatTime(time: string): string {
   try {
-    // Try HH:MM format first (from action_card_data)
+    // Try HH:MM format first (from structured_data)
     if (time.split(":").length === 2) {
       const parsed = parse(time, "HH:mm", new Date());
       return format(parsed, "h:mm a");
@@ -82,7 +82,7 @@ export function CanceledAppointmentCard({
   isConfirmed,
   className,
 }: CanceledAppointmentCardProps) {
-  // Priority: action_card_data fields, then booking fields
+  // Priority: structured_data fields, then booking fields
   const date = appointmentDate ?? booking?.date;
   const time = appointmentTime ?? booking?.start_time;
 
