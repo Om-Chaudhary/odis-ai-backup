@@ -19,7 +19,10 @@
 export {
   processCheckAvailability,
   processCheckAvailabilityRange,
+  processVerifyAppointment,
   processBookAppointment,
+  processCancelAppointment,
+  processRescheduleAppointment,
   parseDateToISO,
   parseTimeToISO,
   formatTime12Hour,
