@@ -15,7 +15,7 @@
         "properties": {
           "reason": {
             "type": "string",
-            "description": "Topic or subject ONLY. 1-6 words. Start with noun, no verbs or pronouns. GOOD: Clinic hours, Vaccination pricing, If clinic sees birds. BAD: Asked about hours, They wanted pricing info."
+            "description": "Topic or subject ONLY. 1-6 words. Start with noun, no verbs or pronouns."
           }
         }
       },
@@ -25,7 +25,7 @@
         "properties": {
           "reason": {
             "type": "string",
-            "description": "The specific request ONLY. 3-8 words. NO caller name, NO phone number, NO contact or call back. GOOD: Prescription refill for Max, Billing question. BAD: Contact John at 408-555-1234."
+            "description": "The specific request ONLY. 3-8 words. NO caller name, NO phone number, NO contact or call back. NO reason for calling."
           },
           "caller_name": {
             "type": "string",
@@ -47,7 +47,7 @@
         "properties": {
           "symptoms": {
             "type": "string",
-            "description": "Comma-separated symptom keywords. No articles, no pronouns, no full sentences. GOOD: vomiting, lethargy, not eating. BAD: The dog is vomiting."
+            "description": "Comma-separated symptom keywords. No articles, no pronouns, no full sentences."
           },
           "er_name": {
             "type": "string",
@@ -74,7 +74,7 @@
           },
           "reason": {
             "type": "string",
-            "description": "Presenting complaint ONLY. 2-5 words. No pet names, no owner names. GOOD: Annual checkup, Limping back leg. BAD: Luna needs dental."
+            "description": "Presenting complaint ONLY. 2-5 words. No pet names, no owner names."
           },
           "client_name": {
             "type": "string",
@@ -86,11 +86,11 @@
           },
           "reschedule_reason": {
             "type": "string",
-            "description": "Why rescheduling. 2-6 words. No names. GOOD: Work conflict, Pet feeling better."
+            "description": "Why rescheduling. 2-6 words. No names."
           },
           "cancellation_reason": {
             "type": "string",
-            "description": "Why cancelling. 2-6 words. No names. GOOD: Pet passed away, Going to different vet."
+            "description": "Why cancelling. 2-6 words. No names."
           },
           "original_appointment": {
             "type": "object",
