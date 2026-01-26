@@ -168,6 +168,19 @@ export class IdexxAuthClient {
   }
 
   /**
+   * Authenticate on an existing page by applying stored session cookies
+   * @returns true if authenticated successfully
+   */
+  async authenticateOnPage(page: Page): Promise<boolean> {
+    try {
+      await this.applyAuth(page);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Apply stored authentication to a page
    */
   async applyAuth(page: Page): Promise<void> {

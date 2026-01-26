@@ -592,6 +592,38 @@ export class IdexxAppointmentManagementClient {
   }
 
   /**
+   * Build appointment payload from input for IDEXX API
+   */
+  private buildAppointmentPayload(input: CreateAppointmentInput): IdexxAppointmentCreateFormData {
+    const startTime = this.formatTimeForForm(input.startTime);
+    const endTime = input.endTime
+      ? this.formatTimeForForm(input.endTime)
+      : this.addMinutesToTime(startTime, 15);
+
+    return {
+      patient_id: input.patientId,
+      type_id: input.appointmentTypeId ?? "1",
+      user_id: input.providerId ?? "1",
+      room: input.roomId ?? "0",
+      appointment_date: input.date,
+      time: startTime,
+      time_end: endTime,
+      useRealEndTime: "true",
+    };
+  }
+
+  /**
+   * Add minutes to a time string (HH:MM)
+   */
+  private addMinutesToTime(time: string, minutes: number): string {
+    const [hours, mins] = time.split(":").map(Number);
+    const totalMinutes = (hours ?? 0) * 60 + (mins ?? 0) + minutes;
+    const newHours = Math.floor(totalMinutes / 60) % 24;
+    const newMins = totalMinutes % 60;
+    return `${String(newHours).padStart(2, "0")}:${String(newMins).padStart(2, "0")}`;
+  }
+
+  /**
    * Post appointment to IDEXX API using multipart/form-data
    * IDEXX Neo requires multipart/form-data format (discovered January 2026)
    */

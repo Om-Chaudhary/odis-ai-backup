@@ -197,7 +197,9 @@ export function createLoggerWithTransports(
 export const loggers = {
   api: createLogger("api"),
   auth: createLogger("auth"),
+  background: createLogger("background"),
   database: createLogger("database"),
+  idexx: createLogger("idexx"),
   webhook: createLogger("webhook"),
   vapi: createLogger("vapi"),
   email: createLogger("email"),
