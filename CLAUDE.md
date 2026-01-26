@@ -21,6 +21,36 @@ nx graph                    # View dependency graph
 pnpm docs:nx                # Regenerate Nx inventory
 ```
 
+### ⚠️ Environment Configuration
+
+**Each app has its own `.env.local` file following Nx best practices.**
+
+```bash
+# First-time setup for any app
+cp apps/{app-name}/.env.example apps/{app-name}/.env.local
+
+# Edit with your actual values
+# .env.local is gitignored - never commit it
+```
+
+**Quick setup:**
+```bash
+# Web app (Next.js - uses NEXT_PUBLIC_ prefix)
+cp apps/web/.env.example apps/web/.env.local
+
+# Mobile app (Expo - uses EXPO_PUBLIC_ prefix)
+cp apps/mobile/.env.example apps/mobile/.env.local
+
+# IDEXX sync service
+cp apps/idexx-sync/.env.example apps/idexx-sync/.env.local
+```
+
+**See `ENV_SETUP.md` for:**
+- Required variables per app
+- How to get credentials
+- Security best practices
+- Troubleshooting
+
 ### ⚠️ Database Schema Changes
 
 **CRITICAL: After modifying the Supabase database schema (adding/modifying tables, columns, types, etc.), ALWAYS run:**
