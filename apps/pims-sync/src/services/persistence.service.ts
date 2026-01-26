@@ -44,9 +44,7 @@ export class PersistenceService {
    * Get or create Supabase client
    */
   private async getClient(): Promise<SupabaseClient> {
-    if (!this.supabase) {
-      this.supabase = createSupabaseServiceClient();
-    }
+    this.supabase ??= createSupabaseServiceClient();
     return this.supabase;
   }
 
