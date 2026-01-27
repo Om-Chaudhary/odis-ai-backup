@@ -16,6 +16,7 @@ import type { Database } from "@odis-ai/shared/types";
 import type { CallExecutionResult } from "@odis-ai/shared/types/services";
 import type { ICallExecutor } from "@odis-ai/domain/shared";
 import { isWithinBusinessHours } from "@odis-ai/shared/util/business-hours";
+import { isBlockedExtremeCase } from "@odis-ai/shared/util/discharge-readiness";
 
 /* ========================================
    Types
@@ -109,8 +110,37 @@ export async function executeScheduledCall(
     return { success: false, callId, error: "Missing customer phone number" };
   }
 
-  // 5. Enrich variables with fresh case data
-  const dynamicVariables = await enrichCallVariables(call, supabase);
+  // 5. Enrich variables with fresh case data AND check for blocked cases
+  const { variables: dynamicVariables, blockedReason } = await enrichCallVariablesWithBlockCheck(call, supabase);
+
+  // 5b. Block execution for extreme cases (euthanasia, deceased, etc.)
+  // This catches cases where notes were updated AFTER scheduling
+  if (blockedReason) {
+    console.warn("[CALL_EXECUTOR] Blocked extreme case detected at execution time", {
+      callId,
+      reason: blockedReason,
+    });
+
+    // Mark as cancelled (not failed) - this is an intentional block
+    await supabase
+      .from("scheduled_discharge_calls")
+      .update({
+        status: "cancelled",
+        metadata: {
+          ...metadata,
+          blocked_at: new Date().toISOString(),
+          blocked_reason: blockedReason,
+          auto_blocked: true,
+        },
+      })
+      .eq("id", callId);
+
+    return {
+      success: false,
+      callId,
+      error: `Call blocked: ${blockedReason}`,
+    };
+  }
 
   // 6. Normalize variables for VAPI
   const normalizedVariables = normalizeVariablesToSnakeCase(dynamicVariables);
@@ -258,15 +288,24 @@ export async function executeScheduledCall(
    ======================================== */
 
 /**
- * Enrich call variables with fresh case data
- *
- * Fetches the latest case data and merges it with stored variables
- * to ensure the call uses the most up-to-date information.
+ * Result of enriching call variables with block check
  */
-async function enrichCallVariables(
+interface EnrichResult {
+  variables: Record<string, unknown>;
+  blockedReason: string | null;
+}
+
+/**
+ * Enrich call variables with fresh case data AND check for blocked cases
+ *
+ * Fetches the latest case data, checks if it's a blocked extreme case
+ * (euthanasia, deceased, etc.), and merges variables.
+ * This catches cases where clinical notes were updated AFTER scheduling.
+ */
+async function enrichCallVariablesWithBlockCheck(
   call: ScheduledCallRow,
   supabase: SupabaseClientType,
-): Promise<Record<string, unknown>> {
+): Promise<EnrichResult> {
   let dynamicVariables = call.dynamic_variables as Record<
     string,
     unknown
@@ -282,7 +321,7 @@ async function enrichCallVariables(
 
   // Skip enrichment if no case linked
   if (!call.case_id) {
-    return dynamicVariables ?? {};
+    return { variables: dynamicVariables ?? {}, blockedReason: null };
   }
 
   try {
@@ -306,7 +345,29 @@ async function enrichCallVariables(
         callId: call.id,
         caseId: call.case_id,
       });
-      return dynamicVariables ?? {};
+      return { variables: dynamicVariables ?? {}, blockedReason: null };
+    }
+
+    // CRITICAL: Check for blocked extreme cases using FRESH case data
+    // This catches cases where notes were updated after scheduling
+    const blockedCheck = isBlockedExtremeCase({
+      caseType: caseInfo.entities.caseType,
+      dischargeSummary: caseInfo.dischargeSummaries?.[0]?.content,
+      consultationNotes: (caseInfo.case.metadata as Record<string, unknown>)
+        ?.idexx
+        ? ((
+            (caseInfo.case.metadata as Record<string, unknown>)
+              ?.idexx as Record<string, unknown>
+          )?.consultation_notes as string | undefined)
+        : undefined,
+      metadata: caseInfo.case.metadata as Record<string, unknown> | null,
+    });
+
+    if (blockedCheck.blocked) {
+      return {
+        variables: dynamicVariables ?? {},
+        blockedReason: blockedCheck.reason ?? "Blocked extreme case",
+      };
     }
 
     console.log("[CALL_EXECUTOR] Enriching with fresh case data", {
@@ -400,7 +461,7 @@ async function enrichCallVariables(
       variableCount: Object.keys(dynamicVariables).length,
     });
 
-    return dynamicVariables;
+    return { variables: dynamicVariables, blockedReason: null };
   } catch (enrichError) {
     console.error("[CALL_EXECUTOR] Failed to enrich with case data", {
       callId: call.id,
@@ -410,7 +471,7 @@ async function enrichCallVariables(
           : String(enrichError),
     });
     // Continue with stored variables on error
-    return dynamicVariables ?? {};
+    return { variables: dynamicVariables ?? {}, blockedReason: null };
   }
 }
 
