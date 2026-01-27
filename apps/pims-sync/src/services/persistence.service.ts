@@ -72,6 +72,10 @@ export class PersistenceService {
 
   /**
    * Get PIMS credentials for a clinic
+   *
+   * Lookup strategy:
+   * 1. First try credentials directly associated with the clinic_id
+   * 2. If not found, look for credentials via user_clinic_access (for users who have access to this clinic)
    */
   async getClinicCredentials(
     clinicId: string,
@@ -82,8 +86,8 @@ export class PersistenceService {
       const credentialManager = await IdexxCredentialManager.create();
       const supabase = await this.getClient();
 
-      // Get credentials by clinic_id
-      const { data: credential, error } = await supabase
+      // Strategy 1: Get credentials directly by clinic_id
+      const { data: directCredential, error: directError } = await supabase
         .from("idexx_credentials")
         .select("user_id")
         .eq("clinic_id", clinicId)
@@ -91,25 +95,91 @@ export class PersistenceService {
         .limit(1)
         .single();
 
-      if (error || !credential) {
-        logger.debug(`No credentials found for clinic ${clinicId}`);
-        return null;
+      if (!directError && directCredential) {
+        const credentials = await credentialManager.getCredentials(
+          directCredential.user_id,
+          clinicId,
+        );
+
+        if (credentials) {
+          logger.debug(
+            `Found credentials for clinic ${clinicId} via direct lookup`,
+          );
+          return {
+            credentials,
+            userId: directCredential.user_id,
+          };
+        }
       }
 
-      const credentials = await credentialManager.getCredentials(
-        credential.user_id,
-        clinicId,
+      // Strategy 2: Look for credentials via user_clinic_access
+      // This handles cases where credentials were stored with clinic_id = null
+      logger.debug(
+        `No direct credentials for clinic ${clinicId}, trying user_clinic_access fallback`,
       );
 
-      if (!credentials) {
-        logger.warn(`Failed to decrypt credentials for clinic ${clinicId}`);
+      const { data: clinicUsers, error: usersError } = await supabase
+        .from("user_clinic_access")
+        .select("user_id")
+        .eq("clinic_id", clinicId);
+
+      if (usersError || !clinicUsers || clinicUsers.length === 0) {
+        logger.debug(`No users found with access to clinic ${clinicId}`);
         return null;
       }
 
-      return {
-        credentials,
-        userId: credential.user_id,
-      };
+      // Check each user with clinic access for credentials
+      for (const { user_id } of clinicUsers) {
+        // First try credentials associated with this specific clinic
+        const { data: userClinicCred } = await supabase
+          .from("idexx_credentials")
+          .select("user_id")
+          .eq("user_id", user_id)
+          .eq("clinic_id", clinicId)
+          .eq("is_active", true)
+          .limit(1)
+          .single();
+
+        if (userClinicCred) {
+          const credentials = await credentialManager.getCredentials(
+            user_id,
+            clinicId,
+          );
+          if (credentials) {
+            logger.info(
+              `Found credentials for clinic ${clinicId} via user ${user_id} (clinic-specific)`,
+            );
+            return { credentials, userId: user_id };
+          }
+        }
+
+        // Fallback: try credentials with clinic_id = null (global user credentials)
+        const { data: userGlobalCred } = await supabase
+          .from("idexx_credentials")
+          .select("user_id")
+          .eq("user_id", user_id)
+          .is("clinic_id", null)
+          .eq("is_active", true)
+          .limit(1)
+          .single();
+
+        if (userGlobalCred) {
+          // For global credentials, don't pass clinicId to getCredentials
+          const credentials = await credentialManager.getCredentials(
+            user_id,
+            null,
+          );
+          if (credentials) {
+            logger.info(
+              `Found credentials for clinic ${clinicId} via user ${user_id} (global credentials)`,
+            );
+            return { credentials, userId: user_id };
+          }
+        }
+      }
+
+      logger.warn(`No credentials found for clinic ${clinicId} after fallback`);
+      return null;
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Unknown error";
       logger.error(`Error getting credentials for clinic ${clinicId}: ${msg}`);

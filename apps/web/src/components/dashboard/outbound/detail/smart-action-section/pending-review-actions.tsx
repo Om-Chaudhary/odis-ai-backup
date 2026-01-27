@@ -1,4 +1,4 @@
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, Zap } from "lucide-react";
 import { Button } from "@odis-ai/shared/ui/button";
 import {
   Card,
@@ -50,8 +50,8 @@ export function PendingReviewActions({
         </CardHeader>
         <CardContent>
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            No phone number or email address is available for this case.
-            Contact information is required to schedule outreach.
+            No phone number or email address is available for this case. Contact
+            information is required to schedule outreach.
           </p>
         </CardContent>
       </Card>
@@ -71,28 +71,59 @@ export function PendingReviewActions({
           </p>
         </div>
 
-        {/* Schedule button */}
-        <Button
-          onClick={() => onApprove(false)}
-          disabled={!canSchedule || isSubmitting}
-          className="w-full"
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Scheduling...
-            </>
-          ) : (
-            "Schedule Outreach"
-          )}
-        </Button>
+        {/* Action buttons */}
+        <div className="flex gap-2">
+          {/* Schedule button */}
+          <Button
+            onClick={() => onApprove(false)}
+            disabled={!canSchedule || isSubmitting}
+            className="flex-1"
+            variant="default"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Scheduling...
+              </>
+            ) : (
+              "Schedule Outreach"
+            )}
+          </Button>
 
-        {/* Test mode warning */}
-        {testModeEnabled && (
-          <p className="text-center text-xs text-amber-600 dark:text-amber-400">
-            Test mode enabled - will use test contacts
-          </p>
-        )}
+          {/* Send Immediately button */}
+          <Button
+            onClick={() => onApprove(true)}
+            disabled={!canSchedule || isSubmitting}
+            variant="outline"
+            className="flex-1 border-teal-300 bg-teal-50 hover:bg-teal-100 dark:border-teal-700 dark:bg-teal-950 dark:hover:bg-teal-900"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Sending...
+              </>
+            ) : (
+              <>
+                <Zap className="mr-2 h-4 w-4" />
+                Send Now
+              </>
+            )}
+          </Button>
+        </div>
+
+        {/* Info text */}
+        <p className="text-center text-xs text-slate-500 dark:text-slate-400">
+          {testModeEnabled ? (
+            <span className="text-amber-600 dark:text-amber-400">
+              <strong>Test mode:</strong> will use test contacts
+            </span>
+          ) : (
+            <>
+              <strong>Schedule:</strong> uses delay settings •{" "}
+              <strong>Send Now:</strong> sends within 1-2 minutes
+            </>
+          )}
+        </p>
       </CardContent>
     </Card>
   );

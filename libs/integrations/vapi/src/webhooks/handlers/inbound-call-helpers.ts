@@ -18,11 +18,13 @@ import {
 const logger = loggers.webhook.child("inbound-helpers");
 
 /**
- * Create inbound call record if it doesn't exist
+ * Create or update inbound call record
+ *
+ * Uses upsert to handle duplicate webhook calls gracefully (VAPI may retry webhooks).
  *
  * @param call - VAPI call object
  * @param supabase - Supabase client
- * @returns Created call ID or null if failed
+ * @returns Created/updated call ID or null if failed
  */
 export async function createInboundCallRecord(
   call: VapiWebhookCall,
@@ -37,29 +39,33 @@ export async function createInboundCallRecord(
   // Format call data
   const callData = formatInboundCallData(callResponse, clinicName, userId);
 
-  const { data: newCall, error: insertError } = await supabase
+  // Use upsert to handle duplicate webhook calls (VAPI may retry or send multiple events)
+  const { data: upsertedCall, error: upsertError } = await supabase
     .from("inbound_vapi_calls")
-    .insert(callData)
+    .upsert(callData, {
+      onConflict: "vapi_call_id",
+      ignoreDuplicates: false, // Update on conflict
+    })
     .select("id")
     .single();
 
-  if (insertError || !newCall) {
-    logger.error("Failed to create inbound call record", {
+  if (upsertError || !upsertedCall) {
+    logger.error("Failed to create/update inbound call record", {
       callId: call.id,
-      error: insertError?.message,
-      errorCode: insertError?.code,
+      error: upsertError?.message,
+      errorCode: upsertError?.code,
     });
     return null;
   }
 
-  logger.info("Created inbound call record", {
+  logger.info("Upserted inbound call record", {
     callId: call.id,
-    dbId: newCall.id,
+    dbId: upsertedCall.id,
     clinicName,
     userId,
   });
 
-  return newCall.id;
+  return upsertedCall.id;
 }
 
 /**
