@@ -5,7 +5,7 @@ import { cn } from "@odis-ai/shared/util";
 
 interface NeedsAttentionCardProps {
   attentionTypes: string[];
-  attentionSeverity: "routine" | "urgent" | "critical";
+  attentionSeverity: string | null;
   attentionSummary: string | null;
   className?: string;
 }
@@ -30,6 +30,15 @@ export function NeedsAttentionCard({
   // Get user-friendly title from attention types
   const title = getAttentionTitle(attentionTypes);
 
+  // Normalize severity to expected values
+  const normalizedSeverity = (() => {
+    if (!attentionSeverity) return "routine";
+    const lower = attentionSeverity.toLowerCase();
+    if (lower === "critical") return "critical";
+    if (lower === "urgent") return "urgent";
+    return "routine";
+  })();
+
   // Severity colors for background and border
   const severityColors = {
     critical: "bg-red-50 border-red-200 border-l-red-500",
@@ -37,13 +46,13 @@ export function NeedsAttentionCard({
     routine: "bg-blue-50 border-blue-200 border-l-blue-500"
   };
 
-  const colors = severityColors[attentionSeverity];
+  const colors = severityColors[normalizedSeverity];
 
   return (
     <div className={cn(
       "rounded-lg border border-l-4 p-4 space-y-3",
       colors,
-      attentionSeverity === "critical" && "animate-pulse",
+      normalizedSeverity === "critical" && "animate-pulse",
       className
     )}>
       {/* Main title from attention type */}

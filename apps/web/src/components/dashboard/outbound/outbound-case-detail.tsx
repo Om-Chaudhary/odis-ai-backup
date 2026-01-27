@@ -342,7 +342,7 @@ export function OutboundCaseDetail({
         {hasActionableAttentionTypes(caseData.attentionTypes) && (
           <NeedsAttentionCard
             attentionTypes={caseData.attentionTypes || []}
-            attentionSeverity={caseData.attentionSeverity || 'routine'}
+            attentionSeverity={caseData.attentionSeverity}
             attentionSummary={caseData.attentionSummary}
             className="mb-6"
           />

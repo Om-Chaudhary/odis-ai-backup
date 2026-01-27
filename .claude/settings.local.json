@@ -277,7 +277,15 @@
       "WebFetch(domain:pims-sync-production.up.railway.app)",
       "WebFetch(domain:backboard.railway.com)",
       "WebFetch(domain:api.vapi.ai)",
-      "WebFetch(domain:ui.elevenlabs.io)"
+      "WebFetch(domain:ui.elevenlabs.io)",
+      "Bash(\"https://archive.org/upload.php\" )",
+      "Bash(ffmpeg:*)",
+      "Bash(VAPI_PRIVATE_KEY=$VAPI_PRIVATE_KEY node scripts/upload-ivy-audio-to-vapi-standalone.js)",
+      "Bash(VAPI_PRIVATE_KEY=$VAPI_PRIVATE_KEY node scripts/upload-audio-to-vapi-direct.js)",
+      "Bash(pnpm vitest run:*)",
+      "Bash(SKIP_ENV_VALIDATION=true pnpm dev)",
+      "Bash(open http://localhost:3000/demo/attention-card)",
+      "Bash(open /Users/om/Documents/GitHub/odis-ai-web/attention-card-demo.html)"
     ],
     "deny": [],
     "ask": [],
