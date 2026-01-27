@@ -9,6 +9,7 @@ import {
   getClinicSyncConfigSchema,
   getIdexxCredentialStatusSchema,
   updateSyncScheduleSchema,
+  cancelSyncSchema,
   type SyncScheduleItem,
 } from "./schemas";
 import { TRPCError } from "@trpc/server";
@@ -549,5 +550,61 @@ export const adminSyncRouter = createTRPCRouter({
 
         return { success: true, action: "created", configId: data.id };
       }
+    }),
+
+  /**
+   * Cancel an active/stale sync operation
+   * Marks the sync as cancelled in the database
+   */
+  cancelSync: adminProcedure
+    .input(cancelSyncSchema)
+    .mutation(async ({ ctx, input }) => {
+      const supabase = ctx.supabase;
+
+      // First verify the sync exists and is in a cancellable state
+      const { data: existingSync, error: fetchError } = await supabase
+        .from("case_sync_audits")
+        .select("id, status, clinic_id, sync_type")
+        .eq("id", input.syncId)
+        .single();
+
+      if (fetchError || !existingSync) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Sync operation not found",
+        });
+      }
+
+      // Only cancel syncs that are running or in_progress
+      if (!["running", "in_progress"].includes(existingSync.status)) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Cannot cancel sync with status: ${existingSync.status}`,
+        });
+      }
+
+      // Update the sync status to failed (cancelled not in DB check constraint)
+      const { error: updateError } = await supabase
+        .from("case_sync_audits")
+        .update({
+          status: "failed",
+          error_message: "Manually cancelled by admin",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", input.syncId);
+
+      if (updateError) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to cancel sync",
+          cause: updateError,
+        });
+      }
+
+      return {
+        success: true,
+        message: `${existingSync.sync_type} sync cancelled`,
+        syncId: input.syncId,
+      };
     }),
 });

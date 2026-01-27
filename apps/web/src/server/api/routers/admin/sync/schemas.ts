@@ -33,6 +33,10 @@ export const getIdexxCredentialStatusSchema = z.object({
   clinicId: z.string().uuid(),
 });
 
+export const cancelSyncSchema = z.object({
+  syncId: z.string().uuid(),
+});
+
 // Individual sync schedule item
 export const syncScheduleItemSchema = z.object({
   type: z.enum(["inbound", "cases", "reconciliation"]),

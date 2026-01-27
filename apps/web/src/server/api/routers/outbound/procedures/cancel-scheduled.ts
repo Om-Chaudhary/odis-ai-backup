@@ -41,16 +41,15 @@ export const cancelScheduledRouter = createTRPCRouter({
       const clinicUserIds = await getClinicUserIds(userId, ctx.supabase);
       const clinic = await getClinicByUserId(userId, ctx.supabase);
 
-      const results: {
-        callCancelled: boolean;
-        emailCancelled: boolean;
-        qstashCallCancelled: boolean;
-        qstashEmailCancelled: boolean;
-      } = {
+      const results = {
         callCancelled: false,
         emailCancelled: false,
         qstashCallCancelled: false,
         qstashEmailCancelled: false,
+        callNotFound: false,
+        emailNotFound: false,
+        callRequested: input.cancelCall,
+        emailRequested: input.cancelEmail,
       };
 
       // Cancel call if requested
@@ -68,6 +67,7 @@ export const cancelScheduledRouter = createTRPCRouter({
             .single();
 
         if (callFetchError || !scheduledCall) {
+          results.callNotFound = true;
           console.warn(
             "[Cancel] No scheduled call found for case:",
             input.caseId,
@@ -140,6 +140,7 @@ export const cancelScheduledRouter = createTRPCRouter({
             .single();
 
         if (emailFetchError || !scheduledEmail) {
+          results.emailNotFound = true;
           console.warn(
             "[Cancel] No scheduled email found for case:",
             input.caseId,
@@ -196,13 +197,7 @@ export const cancelScheduledRouter = createTRPCRouter({
         }
       }
 
-      if (!results.callCancelled && !results.emailCancelled) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "No scheduled deliveries found to cancel",
-        });
-      }
-
+      // Return results even if nothing was cancelled - frontend handles the messaging
       return results;
     }),
 });
