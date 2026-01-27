@@ -403,11 +403,22 @@ export function generateMockCases(count = 12, includeAttentionCases = false): Di
     const attentionCases = generateAttentionScenarios(Math.min(6, count));
     // Replace the first N cases with attention scenarios
     for (let i = 0; i < attentionCases.length && i < cases.length; i++) {
+      const attentionCase = attentionCases[i]!;
+      const baseCase = cases[i]!;
+
       cases[i] = {
-        ...cases[i],
-        ...attentionCases[i],
-        id: cases[i].id, // Keep original ID
-        caseId: cases[i].caseId, // Keep original case ID
+        ...baseCase,
+        // Only override defined properties from attention case
+        ...(attentionCase.patient && { patient: attentionCase.patient }),
+        ...(attentionCase.owner && { owner: attentionCase.owner }),
+        ...(attentionCase.attentionTypes !== undefined && { attentionTypes: attentionCase.attentionTypes }),
+        ...(attentionCase.attentionSeverity !== undefined && { attentionSeverity: attentionCase.attentionSeverity }),
+        ...(attentionCase.attentionSummary !== undefined && { attentionSummary: attentionCase.attentionSummary }),
+        ...(attentionCase.attentionFlaggedAt !== undefined && { attentionFlaggedAt: attentionCase.attentionFlaggedAt }),
+        ...(attentionCase.needsAttention !== undefined && { needsAttention: attentionCase.needsAttention }),
+        ...(attentionCase.timestamp && { timestamp: attentionCase.timestamp }),
+        id: baseCase.id, // Keep original ID
+        caseId: baseCase.caseId, // Keep original case ID
       };
     }
   }
