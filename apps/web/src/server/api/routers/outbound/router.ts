@@ -18,6 +18,8 @@ import { batchScheduleRouter } from "./procedures/batch-schedule";
 import { batchCancelRouter } from "./procedures/batch-cancel";
 import { getCaseByIdRouter } from "./procedures/get-case-by-id";
 import { getCasesByIdsRouter } from "./procedures/get-cases-by-ids";
+import { updateScheduleRouter } from "./procedures/update-schedule";
+import { updateCommunicationPreferencesRouter } from "./procedures/update-communication-preferences";
 
 export const outboundRouter = createTRPCRouter({
   // Queries
@@ -37,4 +39,7 @@ export const outboundRouter = createTRPCRouter({
   cancelScheduledDelivery: cancelScheduledRouter.cancelScheduledDelivery,
   batchSchedule: batchScheduleRouter.batchSchedule,
   batchCancel: batchCancelRouter.batchCancel,
+  updateScheduleDelays: updateScheduleRouter.updateScheduleDelays,
+  updateCommunicationPreferences:
+    updateCommunicationPreferencesRouter.updateCommunicationPreferences,
 });

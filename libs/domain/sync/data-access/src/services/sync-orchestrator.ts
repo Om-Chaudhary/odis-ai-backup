@@ -96,9 +96,10 @@ export class SyncOrchestrator {
     private supabase: SupabaseClient<Database>,
     private provider: IPimsProvider,
     private clinicId: string,
+    private userId?: string,
   ) {
     this.inboundService = new InboundSyncService(supabase, provider, clinicId);
-    this.caseService = new CaseSyncService(supabase, provider, clinicId);
+    this.caseService = new CaseSyncService(supabase, provider, clinicId, userId);
     this.reconciler = new CaseReconciler(supabase, provider, clinicId);
   }
 

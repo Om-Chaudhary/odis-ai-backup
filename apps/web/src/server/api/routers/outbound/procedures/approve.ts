@@ -133,7 +133,37 @@ export const approveRouter = createTRPCRouter({
       let recipientName = patient?.owner_name ?? null;
 
       // Test mode: Override with test contacts
+      // CRITICAL: Require BOTH test contacts to prevent accidentally contacting real patients
       if (testModeEnabled) {
+        const hasTestPhone = testContactPhone && normalizeToE164(testContactPhone);
+        const hasTestEmail = testContactEmail && normalizeEmail(testContactEmail);
+
+        // If user enables test mode but only has partial test contacts,
+        // throw an error to prevent accidentally calling/emailing real patients
+        if (input.phoneEnabled && !hasTestPhone) {
+          console.error("[Approve] BLOCKED: Test mode enabled but no valid test phone configured", {
+            caseId: input.caseId,
+            testContactPhone,
+            realPatientPhone: patient?.owner_phone,
+          });
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Test mode is enabled but no valid test phone is configured. Configure a test phone in Settings or disable test mode to use the patient's phone.",
+          });
+        }
+
+        if (input.emailEnabled && !hasTestEmail) {
+          console.error("[Approve] BLOCKED: Test mode enabled but no valid test email configured", {
+            caseId: input.caseId,
+            testContactEmail,
+            realPatientEmail: patient?.owner_email,
+          });
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Test mode is enabled but no valid test email is configured. Configure a test email in Settings or disable test mode to use the patient's email.",
+          });
+        }
+
         console.log("[Approve] Test mode enabled - using test contacts", {
           caseId: input.caseId,
           testContactEmail,
@@ -142,15 +172,11 @@ export const approveRouter = createTRPCRouter({
           originalPhone: patient?.owner_phone,
         });
 
-        // Override with test contacts if available
+        // Override with test contacts (now guaranteed to be valid if channel is enabled)
         if (testContactPhone) {
           const normalizedTestPhone = normalizeToE164(testContactPhone);
           if (normalizedTestPhone) {
             normalizedPhone = normalizedTestPhone;
-          } else {
-            console.warn("[Approve] Test mode: Invalid test phone format", {
-              testContactPhone,
-            });
           }
         }
 
@@ -158,10 +184,6 @@ export const approveRouter = createTRPCRouter({
           const normalizedTestEmail = normalizeEmail(testContactEmail);
           if (normalizedTestEmail) {
             normalizedEmail = normalizedTestEmail;
-          } else {
-            console.warn("[Approve] Test mode: Invalid test email format", {
-              testContactEmail,
-            });
           }
         }
 

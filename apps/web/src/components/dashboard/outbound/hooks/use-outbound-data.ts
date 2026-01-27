@@ -12,6 +12,8 @@ interface UseOutboundDataParams {
   startDate: string;
   endDate: string;
   consultationId?: string | null;
+  /** Direct case ID for deep linking (e.g., from IDEXX Neo extension) */
+  caseId?: string | null;
   /** Current view mode - needed to fetch previous attention date when in needs_attention view */
   viewMode?: "all" | "needs_review" | "needs_attention";
   /** Clinic slug for admin users viewing a specific clinic's data */
@@ -30,6 +32,7 @@ export function useOutboundData(params: UseOutboundDataParams) {
     startDate,
     endDate,
     consultationId,
+    caseId,
     viewMode,
     clinicSlug,
   } = params;
@@ -87,6 +90,16 @@ export function useOutboundData(params: UseOutboundDataParams) {
       },
     );
 
+  // Deep link: Get case directly by ID (for IDEXX Neo extension)
+  const { data: caseByIdData, isLoading: isCaseByIdLoading } =
+    api.outbound.getCaseById.useQuery(
+      { id: caseId ?? "" },
+      {
+        enabled: !!caseId,
+        staleTime: Infinity,
+      },
+    );
+
   // Previous attention date navigation is no longer needed since we show all attention cases
   // Keep the query disabled but retain the return values for backwards compatibility
   const previousAttentionData = null;
@@ -110,6 +123,9 @@ export function useOutboundData(params: UseOutboundDataParams) {
     settings: settingsData,
     deepLinkData,
     isDeepLinkLoading,
+    // Direct case ID deep link
+    caseByIdData,
+    isCaseByIdLoading,
     isLoading,
     refetch,
     currentPagination: casesData?.pagination ?? {

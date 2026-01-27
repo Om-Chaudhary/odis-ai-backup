@@ -14,9 +14,10 @@ import { api } from "~/trpc/client";
 import type { DeliveryToggles, TransformedCase } from "./types";
 import { EmptyDetailState } from "./detail";
 import { CompactPatientHeader } from "./detail/compact-patient-header";
-import { ActivityTimeline } from "./detail/activity-timeline";
+import { CommunicationStatusCards } from "./detail/communication-status-cards";
+import { CommunicationTabsPanel } from "./detail/communication-tabs-panel";
+import { EmailPreviewSection } from "./detail/email-preview-section";
 import { SmartActionSection } from "./detail/smart-action-section";
-import { SimplifiedContentPreview } from "./detail/simplified-content-preview";
 import { WorkflowCanvas, type CaseDataForWorkflow } from "./detail/workflow";
 
 interface OutboundCaseDetailProps {
@@ -29,21 +30,32 @@ interface OutboundCaseDetailProps {
     cancelCall: boolean;
     cancelEmail: boolean;
   }) => void;
+  onUpdateScheduleDelays?: (options: {
+    callDelayDays?: number;
+    emailDelayDays?: number;
+  }) => void;
   isSubmitting: boolean;
-  isCancelling?: boolean;
+  isCancellingCall?: boolean;
+  isCancellingEmail?: boolean;
+  isUpdatingSchedule?: boolean;
   testModeEnabled?: boolean;
   onDelete?: () => void;
+  /** Default delay days for calls (from user settings) */
+  defaultCallDelayDays?: number;
+  /** Default delay days for emails (from user settings) */
+  defaultEmailDelayDays?: number;
 }
 
 /**
- * Case Detail Panel Component (Redesigned)
+ * Case Detail Panel Component (Redesigned v2)
  *
  * Glanceable design with:
  * 1. Patient/Owner card at top
- * 2. Status overview with inline channel statuses
+ * 2. Communication status cards (phone/email with toggles and delays)
  * 3. Context-aware action section
- * 4. Communication previews (inline, expandable)
- * 5. Workflow timeline (collapsible)
+ * 4. Email preview for scheduled cases
+ * 5. Communication tabs for completed/failed cases
+ * 6. Workflow timeline (collapsible)
  */
 export function OutboundCaseDetail({
   caseData,
@@ -52,14 +64,23 @@ export function OutboundCaseDetail({
   onApprove,
   onRetry,
   onCancelScheduled,
+  onUpdateScheduleDelays,
   isSubmitting,
-  isCancelling = false,
+  isCancellingCall = false,
+  isCancellingEmail = false,
+  isUpdatingSchedule = false,
   testModeEnabled = false,
   onDelete,
+  defaultCallDelayDays = 2,
+  defaultEmailDelayDays = 1,
 }: OutboundCaseDetailProps) {
   const { clinicSlug } = useClinic();
   // Workflow timeline collapsible state
   const [workflowOpen, setWorkflowOpen] = useState(false);
+
+  // Local state for delay days (allows optimistic UI)
+  const [callDelayDays, setCallDelayDays] = useState(defaultCallDelayDays);
+  const [emailDelayDays, setEmailDelayDays] = useState(defaultEmailDelayDays);
 
   // Mutation for scheduling remaining outreach (for partial delivery cases)
   const utils = api.useUtils();
@@ -118,13 +139,6 @@ export function OutboundCaseDetail({
     caseData.status === "completed" || caseData.status === "failed";
   const isScheduled = caseData.status === "scheduled";
 
-  // Check if discharge summary needs to be generated
-  const hasStructuredContent = Boolean(caseData.structuredContent?.patientName);
-  const hasDischargeSummary =
-    hasStructuredContent || Boolean(caseData.dischargeSummary?.trim());
-  const needsGeneration =
-    !hasDischargeSummary &&
-    (caseData.status === "pending_review" || caseData.status === "ready");
 
   // Get call script from dynamic variables
   const callScript =
@@ -138,6 +152,8 @@ export function OutboundCaseDetail({
   const hasOwnerEmail = Boolean(caseData.owner.email);
   const phoneSent = caseData.phoneSent === "sent";
   const emailSent = caseData.emailSent === "sent";
+  const phoneFailed = caseData.phoneSent === "failed";
+  const emailFailed = caseData.emailSent === "failed";
 
   // Handler for canceling scheduled items
   const handleCancelCall = () => {
@@ -149,6 +165,43 @@ export function OutboundCaseDetail({
   const handleCancelEmail = () => {
     if (onCancelScheduled) {
       onCancelScheduled({ cancelCall: false, cancelEmail: true });
+    }
+  };
+
+  // Handler for retry
+  const handlePhoneRetry = () => {
+    if (onRetry) {
+      onRetry();
+    }
+  };
+
+  const handleEmailRetry = () => {
+    if (onRetry) {
+      onRetry();
+    }
+  };
+
+  // Handler for toggling delivery channels
+  const handlePhoneToggle = (enabled: boolean) => {
+    onToggleChange({ ...deliveryToggles, phoneEnabled: enabled });
+  };
+
+  const handleEmailToggle = (enabled: boolean) => {
+    onToggleChange({ ...deliveryToggles, emailEnabled: enabled });
+  };
+
+  // Handler for delay changes - auto-saves
+  const handleCallDelayChange = (days: number) => {
+    setCallDelayDays(days);
+    if (onUpdateScheduleDelays && isScheduled) {
+      onUpdateScheduleDelays({ callDelayDays: days });
+    }
+  };
+
+  const handleEmailDelayChange = (days: number) => {
+    setEmailDelayDays(days);
+    if (onUpdateScheduleDelays && isScheduled) {
+      onUpdateScheduleDelays({ emailDelayDays: days });
     }
   };
 
@@ -170,63 +223,83 @@ export function OutboundCaseDetail({
 
   // Determine if we should show action section
   // Show for: ready, pending_review, scheduled, failed
-  // Partial delivery is now handled in timeline
   const showActionSection =
     caseData.status === "ready" ||
     caseData.status === "pending_review" ||
     caseData.status === "scheduled" ||
     caseData.status === "failed";
 
+  // Show status cards for ALL statuses (they handle each state internally)
+  const showStatusCards = true;
+
+  // Show email preview whenever email content exists (regardless of status)
+  const isToSchedule = caseData.status === "pending_review" || caseData.status === "ready";
+  const showEmailPreview =
+    !!caseData.structuredContent?.patientName ||
+    !!(caseData.emailContent?.trim()) ||
+    !!(caseData.dischargeSummary?.trim());
+
+  // Show tabs for completed/failed cases
+  const showContentTabs = isSentCase;
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {/* Compact Patient Header */}
       <CompactPatientHeader
-          patient={{
-            name: caseData.patient.name,
-            species: caseData.patient.species,
-            breed: caseData.patient.breed,
-            dateOfBirth: caseData.patient.dateOfBirth,
-          }}
-          owner={{
-            name: caseData.owner.name,
-          }}
-          ownerPhone={caseData.owner.phone}
-          ownerEmail={caseData.owner.email}
-          attentionTypes={caseData.attentionTypes ?? []}
-          attentionSeverity={caseData.attentionSeverity}
-          onClose={onDelete}
-        />
+        patient={{
+          name: caseData.patient.name,
+          species: caseData.patient.species,
+          breed: caseData.patient.breed,
+          dateOfBirth: caseData.patient.dateOfBirth,
+        }}
+        owner={{
+          name: caseData.owner.name,
+        }}
+        ownerPhone={caseData.owner.phone}
+        ownerEmail={caseData.owner.email}
+        attentionTypes={caseData.attentionTypes ?? []}
+        attentionSeverity={caseData.attentionSeverity}
+        onClose={onDelete}
+      />
 
       {/* Scrollable Content */}
       <div className="flex-1 space-y-4 overflow-auto p-4">
-        {/* Activity Timeline */}
-        <ActivityTimeline
-          callStatus={caseData.phoneSent}
-          emailStatus={caseData.emailSent}
-          scheduledCallFor={caseData.scheduledCallFor}
-          scheduledEmailFor={caseData.scheduledEmailFor}
-          callEndedReason={caseData.scheduledCall?.endedReason}
-          callDuration={caseData.scheduledCall?.durationSeconds}
-          callCompletedAt={caseData.scheduledCall?.endedAt}
-          emailSentAt={null}
-          attentionSeverity={caseData.attentionSeverity}
-          hasOwnerPhone={hasOwnerPhone}
-          hasOwnerEmail={hasOwnerEmail}
-          ownerPhone={caseData.owner.phone}
-          ownerEmail={caseData.owner.email}
-          onRetryCall={onRetry}
-          onCancelCall={handleCancelCall}
-          onCancelEmail={handleCancelEmail}
-          onScheduleRemaining={handleScheduleRemaining}
-          showScheduleRemainingCall={
-            !phoneSent && !caseData.scheduledCallFor && hasOwnerPhone
-          }
-          showScheduleRemainingEmail={
-            !emailSent && !caseData.scheduledEmailFor && hasOwnerEmail
-          }
-          isSubmitting={isSubmitting || isCancelling}
-          testModeEnabled={testModeEnabled}
-        />
+        {/* Communication Status Cards - Side by side phone/email status */}
+        {showStatusCards && (
+          <CommunicationStatusCards
+            // Phone props
+            phoneStatus={caseData.phoneSent}
+            phoneEnabled={deliveryToggles.phoneEnabled}
+            phoneScheduledFor={caseData.scheduledCallFor}
+            phoneCompletedAt={caseData.scheduledCall?.endedAt ?? null}
+            phoneFailureReason={caseData.scheduledCall?.endedReason ?? null}
+            phoneDelayDays={callDelayDays}
+            onPhoneToggle={handlePhoneToggle}
+            onPhoneDelayChange={handleCallDelayChange}
+            onPhoneCancel={isScheduled ? handleCancelCall : undefined}
+            onPhoneRetry={phoneFailed ? handlePhoneRetry : undefined}
+            hasOwnerPhone={hasOwnerPhone}
+            // Email props
+            emailStatus={caseData.emailSent}
+            emailEnabled={deliveryToggles.emailEnabled}
+            emailScheduledFor={caseData.scheduledEmailFor}
+            emailSentAt={caseData.scheduledEmail?.sentAt ?? null}
+            emailFailureReason={
+              emailFailed ? "Email delivery failed" : null
+            }
+            emailDelayDays={emailDelayDays}
+            onEmailToggle={handleEmailToggle}
+            onEmailDelayChange={handleEmailDelayChange}
+            onEmailCancel={isScheduled ? handleCancelEmail : undefined}
+            onEmailRetry={emailFailed ? handleEmailRetry : undefined}
+            hasOwnerEmail={hasOwnerEmail}
+            // Global
+            isSubmitting={isSubmitting || isUpdatingSchedule}
+            isPhoneCancelling={isCancellingCall}
+            isEmailCancelling={isCancellingEmail}
+            caseStatus={caseData.status}
+          />
+        )}
 
         {/* Smart Action Section - Context-aware actions */}
         {showActionSection && (
@@ -247,32 +320,41 @@ export function OutboundCaseDetail({
             onCancelScheduled={onCancelScheduled}
             onScheduleRemaining={handleScheduleRemaining}
             isSubmitting={isSubmitting}
-            isCancelling={isCancelling}
-            needsGeneration={needsGeneration}
+            isCancelling={isCancellingCall || isCancellingEmail}
             testModeEnabled={testModeEnabled}
             failureReason={caseData.scheduledCall?.endedReason}
           />
         )}
 
-        {/* Simplified Content Preview - No previews, expandable only */}
-        <SimplifiedContentPreview
-          callScript={callScript}
-          emailContent={caseData.emailContent}
-          dischargeSummary={caseData.dischargeSummary}
-          structuredContent={caseData.structuredContent}
-          scheduledCall={caseData.scheduledCall}
-          phoneSent={phoneSent}
-          emailSent={emailSent}
-          hasOwnerPhone={hasOwnerPhone}
-          hasOwnerEmail={hasOwnerEmail}
-          scheduledCallFor={caseData.scheduledCallFor}
-          scheduledEmailFor={caseData.scheduledEmailFor}
-          ownerSentimentData={caseData.ownerSentimentData}
-          petHealthData={caseData.petHealthData}
-          followUpData={caseData.followUpData}
-          patientName={caseData.patient.name}
-          ownerName={caseData.owner.name ?? undefined}
-        />
+        {/* Email Preview Section - Always show when content exists */}
+        {showEmailPreview && (
+          <EmailPreviewSection
+            structuredContent={caseData.structuredContent}
+            emailContent={caseData.emailContent}
+            dischargeSummary={caseData.dischargeSummary}
+            defaultOpen={!emailSent && isToSchedule}
+          />
+        )}
+
+        {/* Communication Tabs Panel - For completed/failed cases */}
+        {showContentTabs && (
+          <CommunicationTabsPanel
+            scheduledCall={caseData.scheduledCall}
+            phoneSent={phoneSent}
+            emailSent={emailSent}
+            hasOwnerPhone={hasOwnerPhone}
+            hasOwnerEmail={hasOwnerEmail}
+            callScript={callScript}
+            emailContent={caseData.emailContent}
+            dischargeSummary={caseData.dischargeSummary}
+            structuredContent={caseData.structuredContent}
+            ownerSentimentData={caseData.ownerSentimentData}
+            petHealthData={caseData.petHealthData}
+            followUpData={caseData.followUpData}
+            patientName={caseData.patient.name}
+            ownerName={caseData.owner.name ?? undefined}
+          />
+        )}
 
         {/* Workflow Timeline - Collapsible, shown for sent/scheduled cases */}
         {(isSentCase || isScheduled) && (

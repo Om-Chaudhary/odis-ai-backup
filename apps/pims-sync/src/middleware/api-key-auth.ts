@@ -57,7 +57,6 @@ async function validateApiKey(apiKey: string): Promise<ApiKeyValidation> {
     const hash = hashApiKey(apiKey);
 
     // Look up key by prefix first (fast indexed lookup)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const { data: keyRecord, error } = await supabase
       .from("clinic_api_keys")
       .select("id, clinic_id, key_hash, is_active, expires_at, permissions")
@@ -92,7 +91,6 @@ async function validateApiKey(apiKey: string): Promise<ApiKeyValidation> {
     }
 
     // Update last_used_at (fire and forget)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     void supabase
       .from("clinic_api_keys")
       .update({ last_used_at: new Date().toISOString() })

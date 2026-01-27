@@ -170,6 +170,24 @@ export const batchScheduleInput = z.object({
   scheduleBaseTime: z.string().datetime().optional(),
 });
 
+export const updateScheduleDelaysInput = z.object({
+  /** Case ID to update schedule for */
+  caseId: z.string().uuid(),
+  /** New delay in days for the call (0-7 days) */
+  callDelayDays: z.number().min(0).max(7).optional(),
+  /** New delay in days for the email (0-7 days) */
+  emailDelayDays: z.number().min(0).max(7).optional(),
+});
+
+export const updateCommunicationPreferencesInput = z.object({
+  /** Case ID to update preferences for */
+  caseId: z.string().uuid(),
+  /** Whether phone calls are enabled for this case */
+  callEnabled: z.boolean(),
+  /** Whether emails are enabled for this case */
+  emailEnabled: z.boolean(),
+});
+
 // =============================================================================
 // Type Exports
 // =============================================================================
@@ -202,3 +220,5 @@ export type CancelScheduledDeliveryInput = z.infer<
 >;
 export type BatchCancelInput = z.infer<typeof batchCancelInput>;
 export type BatchScheduleInput = z.infer<typeof batchScheduleInput>;
+export type UpdateScheduleDelaysInput = z.infer<typeof updateScheduleDelaysInput>;
+export type UpdateCommunicationPreferencesInput = z.infer<typeof updateCommunicationPreferencesInput>;

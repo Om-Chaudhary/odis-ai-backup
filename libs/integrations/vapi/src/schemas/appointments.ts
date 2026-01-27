@@ -101,13 +101,61 @@ export interface BookingResult {
 }
 
 /* ========================================
+   Verify Appointment (Internal Helper)
+   ======================================== */
+
+/**
+ * Schema: appointment_verification
+ *
+ * Verify that an appointment exists for a given patient on a given date.
+ * This is an internal helper tool used by confirm, cancel, and reschedule.
+ * Queries local database only (synced data), no IDEXX calls.
+ */
+export const VerifyAppointmentSchema = z.object({
+  // VAPI context
+  assistant_id: z.string().optional(),
+  clinic_id: z.string().uuid().optional(),
+  vapi_call_id: z.string().optional(),
+
+  // Search criteria
+  owner_name: z.string().min(1, "owner_name is required"),
+  patient_name: z.string().min(1, "patient_name is required"),
+  appointment_date: z.string().min(1, "appointment_date is required"), // Natural language supported
+});
+
+export type VerifyAppointmentInput = z.infer<typeof VerifyAppointmentSchema>;
+
+/**
+ * Result from appointment verification
+ */
+export interface VerifyAppointmentResult {
+  status: "FOUND" | "DOES_NOT_EXIST";
+  appointment_id?: string;
+  idexx_appointment_id?: string;
+  appointment_time?: string;
+  appointment_time_end?: string;
+  appointment_date?: string;
+  formatted_date?: string;
+  formatted_time?: string;
+  provider_name?: string;
+  appointment_type?: string;
+  room?: string;
+  patient_name?: string;
+  client_name?: string;
+  client_phone?: string;
+  source?: "schedule_appointments" | "vapi_bookings";
+  message?: string;
+}
+
+/* ========================================
    Cancel Appointment
    ======================================== */
 
 /**
  * Schema: cancel_appointment
  *
- * Log a request to cancel an existing appointment.
+ * Cancel an existing appointment with explicit consent.
+ * Two-step process: First call verifies appointment, second call with confirmed=true cancels it.
  */
 export const CancelAppointmentSchema = z.object({
   // VAPI context
@@ -125,7 +173,12 @@ export const CancelAppointmentSchema = z.object({
   // Appointment details
   appointment_date: z.string().min(1, "appointment_date is required"),
   appointment_time: z.string().optional(),
+
+  // Cancellation details
   reason: z.string().optional(),
+
+  // CONSENT: Must be true to execute cancellation
+  confirmed: z.boolean().optional().default(false),
 });
 
 export type CancelAppointmentInput = z.infer<typeof CancelAppointmentSchema>;
@@ -137,7 +190,11 @@ export type CancelAppointmentInput = z.infer<typeof CancelAppointmentSchema>;
 /**
  * Schema: reschedule_appointment
  *
- * Log a request to reschedule an existing appointment.
+ * Reschedule an existing appointment to a new date/time.
+ * Two-step process: First call verifies original and checks availability,
+ * second call with confirmed=true executes the atomic reschedule.
+ *
+ * ATOMIC TRANSACTION: Cancel old + Create new with rollback on failure.
  */
 export const RescheduleAppointmentSchema = z.object({
   // VAPI context
@@ -160,6 +217,9 @@ export const RescheduleAppointmentSchema = z.object({
   preferred_new_date: z.string().min(1, "preferred_new_date is required"),
   preferred_new_time: z.string().optional(),
   reason: z.string().optional(),
+
+  // CONSENT: Must be true to execute reschedule
+  confirmed: z.boolean().optional().default(false),
 });
 
 export type RescheduleAppointmentInput = z.infer<

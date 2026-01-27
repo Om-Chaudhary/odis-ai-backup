@@ -213,7 +213,7 @@ async function handleCaseSync(
 
   try {
     // Get provider and credentials
-    const { provider, credentials, cleanup } = await createProviderForClinic(
+    const { provider, credentials, cleanup, userId } = await createProviderForClinic(
       clinic.id,
     );
 
@@ -233,9 +233,9 @@ async function handleCaseSync(
       // Create Supabase client
       const supabase = createSupabaseServiceClient();
 
-      // Create sync service
+      // Create sync service with userId for AI generation
       const { CaseSyncService } = await import("@odis-ai/domain/sync");
-      const syncService = new CaseSyncService(supabase, provider, clinic.id);
+      const syncService = new CaseSyncService(supabase, provider, clinic.id, userId);
 
       // Build date range (default: today only)
       // Support both flat (startDate/endDate) and nested (dateRange.start/end) formats
@@ -377,7 +377,7 @@ async function handleFullSync(
 
   try {
     // Get provider and credentials
-    const { provider, credentials, cleanup } = await createProviderForClinic(
+    const { provider, credentials, cleanup, userId } = await createProviderForClinic(
       clinic.id,
     );
 
@@ -397,9 +397,9 @@ async function handleFullSync(
       // Create Supabase client
       const supabase = createSupabaseServiceClient();
 
-      // Create orchestrator
+      // Create orchestrator with userId for AI generation
       const { SyncOrchestrator } = await import("@odis-ai/domain/sync");
-      const orchestrator = new SyncOrchestrator(supabase, provider, clinic.id);
+      const orchestrator = new SyncOrchestrator(supabase, provider, clinic.id, userId);
 
       // Use bidirectional sync if requested (default: true for comprehensive sync)
       const useBidirectional = body.bidirectional ?? true;
@@ -497,6 +497,7 @@ async function createProviderForClinic(clinicId: string): Promise<{
   provider: IdexxProvider;
   credentials: PimsCredentials;
   cleanup: () => Promise<void>;
+  userId: string;
 }> {
   // Get credentials
   const persistence = new PersistenceService();
@@ -538,6 +539,7 @@ async function createProviderForClinic(clinicId: string): Promise<{
     cleanup: async () => {
       await provider.close();
     },
+    userId: credentialResult.userId,
   };
 }
 

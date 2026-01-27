@@ -4,7 +4,7 @@
  */
 
 import type { Page } from "playwright";
-import type { PimsAppointment } from "@odis-ai/domain/sync";
+import type { PimsAppointment } from "@odis-ai/shared/types";
 import type { BrowserService } from "../browser/browser-service";
 import type { IdexxAuthClient } from "./auth-client";
 import { IDEXX_ENDPOINTS } from "./types";

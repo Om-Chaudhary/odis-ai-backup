@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { toast } from "sonner";
-import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
+import { useQueryState, parseAsInteger, parseAsString, parseAsBoolean } from "nuqs";
 import { format, parseISO, startOfDay } from "date-fns";
 
 import type { ViewMode, DeliveryToggles, TransformedCase } from "./types";
@@ -53,6 +53,12 @@ function OutboundDashboardInner() {
     "consultationId",
     parseAsString,
   );
+
+  // Deep link support: Direct case ID (for IDEXX Neo extension)
+  const [caseId, setCaseId] = useQueryState("caseId", parseAsString);
+
+  // Deep link support: Auto-open panel when linked from extension
+  const [openPanel, setOpenPanel] = useQueryState("openPanel", parseAsBoolean);
 
   // Parse current date
   const currentDate = useMemo(() => {
@@ -112,6 +118,8 @@ function OutboundDashboardInner() {
     settings: settingsData,
     deepLinkData,
     isDeepLinkLoading,
+    caseByIdData,
+    isCaseByIdLoading,
     isLoading,
     refetch,
   } = useOutboundData({
@@ -121,6 +129,7 @@ function OutboundDashboardInner() {
     startDate,
     endDate,
     consultationId,
+    caseId,
     viewMode: viewMode,
     clinicSlug,
   });
@@ -139,10 +148,12 @@ function OutboundDashboardInner() {
     isBulkCancelling,
     schedulingCaseIds,
     togglingStarCaseIds,
-    cancellingCaseIds,
+    cancellingCallCaseIds,
+    cancellingEmailCaseIds,
   } = useOutboundMutations({
     onSuccess: () => {
-      setSelectedCase(null);
+      // Only clear selection for non-cancel operations
+      // Cancel operations should keep the panel open so user can cancel the other channel
       setSelectedForBulk(new Set());
       void refetch();
     },
@@ -173,9 +184,12 @@ function OutboundDashboardInner() {
     [selectedCase, cancelScheduledHandler],
   );
 
-  // Check if current case is being cancelled
-  const isCancellingCurrentCase = selectedCase
-    ? cancellingCaseIds.has(selectedCase.id)
+  // Check if current case is being cancelled (separate for call and email)
+  const isCancellingCall = selectedCase
+    ? cancellingCallCaseIds.has(selectedCase.id)
+    : false;
+  const isCancellingEmail = selectedCase
+    ? cancellingEmailCaseIds.has(selectedCase.id)
     : false;
 
   // Escape to close panel
@@ -219,7 +233,7 @@ function OutboundDashboardInner() {
     setConsultationId,
   ]);
 
-  // Deep link handling: Auto-select case once data loads
+  // Deep link handling: Auto-select case once data loads (for consultationId)
   const deepLinkSelectedRef = useRef<string | null>(null);
   useEffect(() => {
     if (
@@ -249,6 +263,75 @@ function OutboundDashboardInner() {
     isLoading,
     handleSelectCase,
     setConsultationId,
+  ]);
+
+  // Deep link handling: Direct case ID (for IDEXX Neo extension)
+  const caseIdDeepLinkHandledRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!caseId || isCaseByIdLoading || isLoading) return;
+    if (caseIdDeepLinkHandledRef.current === caseId) return;
+
+    // First, check if case exists in current list
+    const existingCase = cases.find((c) => c.id === caseId);
+    if (existingCase) {
+      caseIdDeepLinkHandledRef.current = caseId;
+      handleSelectCase(existingCase);
+      toast.success("Case opened", {
+        description: `${existingCase.patient.name} - ${existingCase.owner.name ?? "Unknown owner"}`,
+      });
+      void setCaseId(null);
+      // Clear openPanel param after successfully opening the panel
+      if (openPanel) {
+        void setOpenPanel(null);
+      }
+      return;
+    }
+
+    // Case not in current list - check if it exists via API
+    if (caseByIdData) {
+      caseIdDeepLinkHandledRef.current = caseId;
+      // Navigate to the case's date if we have timestamp info
+      const caseDate = caseByIdData.timestamp
+        ? format(startOfDay(parseISO(caseByIdData.timestamp)), "yyyy-MM-dd")
+        : null;
+
+      if (caseDate && caseDate !== dateStr) {
+        // Navigate to the case's date
+        void setDateStr(caseDate);
+        toast.info("Navigating to case", {
+          description: `Loading ${caseByIdData.patient.name}'s discharge from ${caseDate}`,
+        });
+        // Don't clear caseId yet - let it re-trigger after date change
+        caseIdDeepLinkHandledRef.current = null;
+      } else {
+        // Same date but case not found in list - possibly filtered out
+        toast.warning("Case not in current view", {
+          description: `${caseByIdData.patient.name} - try adjusting filters`,
+        });
+        void setCaseId(null);
+        if (openPanel) void setOpenPanel(null);
+      }
+    } else if (!isCaseByIdLoading) {
+      // API query complete but no data - case not found
+      caseIdDeepLinkHandledRef.current = caseId;
+      toast.error("Case not found", {
+        description: `No case found for ID: ${caseId}`,
+      });
+      void setCaseId(null);
+      if (openPanel) void setOpenPanel(null);
+    }
+  }, [
+    caseId,
+    caseByIdData,
+    isCaseByIdLoading,
+    cases,
+    isLoading,
+    dateStr,
+    handleSelectCase,
+    setCaseId,
+    setDateStr,
+    openPanel,
+    setOpenPanel,
   ]);
 
   // Sync selectedCase with fetched data to show updated timeline
@@ -412,7 +495,8 @@ function OutboundDashboardInner() {
             onRetry={handleRetry}
             onCancelScheduled={handleCancelScheduled}
             isSubmitting={isSubmitting}
-            isCancelling={isCancellingCurrentCase}
+            isCancellingCall={isCancellingCall}
+            isCancellingEmail={isCancellingEmail}
             testModeEnabled={settingsData?.testModeEnabled ?? false}
           />
         ) : (
@@ -443,7 +527,8 @@ function OutboundDashboardInner() {
             onRetry={handleRetry}
             onCancelScheduled={handleCancelScheduled}
             isSubmitting={isSubmitting}
-            isCancelling={isCancellingCurrentCase}
+            isCancellingCall={isCancellingCall}
+            isCancellingEmail={isCancellingEmail}
             testModeEnabled={settingsData?.testModeEnabled ?? false}
           />
         )}

@@ -21,3 +21,8 @@ export * from "./preview-text";
 // Call intelligence structured outputs
 export * from "./call-intelligence";
 export * from "./call-intelligence-indicators";
+
+// New redesigned panel components (Phase 1-4)
+export * from "./communication-status-cards";
+export * from "./communication-tabs-panel";
+export * from "./email-preview-section";
