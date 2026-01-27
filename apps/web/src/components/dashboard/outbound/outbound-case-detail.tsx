@@ -19,6 +19,8 @@ import { CommunicationTabsPanel } from "./detail/communication-tabs-panel";
 import { EmailPreviewSection } from "./detail/email-preview-section";
 import { SmartActionSection } from "./detail/smart-action-section";
 import { WorkflowCanvas, type CaseDataForWorkflow } from "./detail/workflow";
+import { NeedsAttentionCard } from "./detail/needs-attention-card";
+import { hasActionableAttentionTypes } from "@odis-ai/shared/util";
 
 interface OutboundCaseDetailProps {
   caseData: TransformedCase | null;
@@ -333,6 +335,16 @@ export function OutboundCaseDetail({
             emailContent={caseData.emailContent}
             dischargeSummary={caseData.dischargeSummary}
             defaultOpen={!emailSent && isToSchedule}
+          />
+        )}
+
+        {/* Needs Attention Card */}
+        {hasActionableAttentionTypes(caseData.attentionTypes) && (
+          <NeedsAttentionCard
+            attentionTypes={caseData.attentionTypes || []}
+            attentionSeverity={caseData.attentionSeverity || 'routine'}
+            attentionSummary={caseData.attentionSummary}
+            className="mb-6"
           />
         )}
 
