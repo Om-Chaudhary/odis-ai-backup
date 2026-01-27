@@ -237,6 +237,15 @@ export async function processRescheduleAppointment(
   const source = originalAppt.source;
   const originalId = originalAppt.appointment_id;
 
+  // Verify we have an appointment ID to work with
+  if (!originalId) {
+    return {
+      success: false,
+      error: "missing_appointment_id",
+      message: "I couldn't find the appointment ID. Please try again or call the office directly.",
+    };
+  }
+
   if (source === "schedule_appointments") {
     const { error: cancelError } = await supabase
       .from("schedule_appointments")
@@ -404,23 +413,14 @@ export async function processRescheduleAppointment(
     }
   }
 
-  // 4e. Update inbound call record
+  // 4e. Update inbound call record with outcome
+  // Note: Actions are already logged in appointment_audit_log
   if (callId) {
     await supabase
       .from("inbound_vapi_calls")
       .update({
-        actions_taken: supabase.rpc("jsonb_array_append", {
-          target: "actions_taken",
-          value: {
-            action: "reschedule_appointment",
-            original_appointment_id: originalId,
-            new_booking_id: newBooking.id,
-            original_datetime: `${originalAppt.formatted_date} ${originalAppt.formatted_time}`,
-            new_datetime: `${formattedNewDate} ${formattedNewTime}`,
-            rescheduled_at: new Date().toISOString(),
-          },
-        }),
         outcome: "Rescheduled",
+        updated_at: new Date().toISOString(),
       })
       .eq("vapi_call_id", callId);
   }

@@ -14,6 +14,78 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointment_audit_log: {
+        Row: {
+          action: string
+          appointment_id: string | null
+          clinic_id: string
+          created_at: string
+          error_code: string | null
+          error_message: string | null
+          id: string
+          idexx_appointment_id: string | null
+          new_appointment_id: string | null
+          new_datetime: string | null
+          old_appointment_id: string | null
+          old_datetime: string | null
+          performed_by: string | null
+          reason: string | null
+          vapi_booking_id: string | null
+          vapi_call_id: string | null
+        }
+        Insert: {
+          action: string
+          appointment_id?: string | null
+          clinic_id: string
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          idexx_appointment_id?: string | null
+          new_appointment_id?: string | null
+          new_datetime?: string | null
+          old_appointment_id?: string | null
+          old_datetime?: string | null
+          performed_by?: string | null
+          reason?: string | null
+          vapi_booking_id?: string | null
+          vapi_call_id?: string | null
+        }
+        Update: {
+          action?: string
+          appointment_id?: string | null
+          clinic_id?: string
+          created_at?: string
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          idexx_appointment_id?: string | null
+          new_appointment_id?: string | null
+          new_datetime?: string | null
+          old_appointment_id?: string | null
+          old_datetime?: string | null
+          performed_by?: string | null
+          reason?: string | null
+          vapi_booking_id?: string | null
+          vapi_call_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_audit_log_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_audit_log_vapi_booking_id_fkey"
+            columns: ["vapi_booking_id"]
+            isOneToOne: false
+            referencedRelation: "vapi_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audio_files: {
         Row: {
           bit_rate: number | null
@@ -2236,6 +2308,10 @@ export type Database = {
       schedule_appointments: {
         Row: {
           appointment_type: string | null
+          booked_via: string
+          cancelled_at: string | null
+          cancelled_reason: string | null
+          client_id: string | null
           client_name: string | null
           client_phone: string | null
           clinic_id: string
@@ -2246,6 +2322,7 @@ export type Database = {
           id: string
           last_synced_at: string
           neo_appointment_id: string
+          patient_id: string | null
           patient_name: string | null
           provider_name: string | null
           room_id: string | null
@@ -2257,6 +2334,10 @@ export type Database = {
         }
         Insert: {
           appointment_type?: string | null
+          booked_via?: string
+          cancelled_at?: string | null
+          cancelled_reason?: string | null
+          client_id?: string | null
           client_name?: string | null
           client_phone?: string | null
           clinic_id: string
@@ -2267,6 +2348,7 @@ export type Database = {
           id?: string
           last_synced_at?: string
           neo_appointment_id: string
+          patient_id?: string | null
           patient_name?: string | null
           provider_name?: string | null
           room_id?: string | null
@@ -2278,6 +2360,10 @@ export type Database = {
         }
         Update: {
           appointment_type?: string | null
+          booked_via?: string
+          cancelled_at?: string | null
+          cancelled_reason?: string | null
+          client_id?: string | null
           client_name?: string | null
           client_phone?: string | null
           clinic_id?: string
@@ -2288,6 +2374,7 @@ export type Database = {
           id?: string
           last_synced_at?: string
           neo_appointment_id?: string
+          patient_id?: string | null
           patient_name?: string | null
           provider_name?: string | null
           room_id?: string | null
@@ -3553,25 +3640,36 @@ export type Database = {
       }
       vapi_bookings: {
         Row: {
+          appointment_type: string | null
           booked_at_sync_id: string | null
           breed: string | null
+          cancelled_at: string | null
+          cancelled_reason: string | null
           client_name: string
           client_phone: string
           clinic_id: string
           confirmation_number: string | null
           created_at: string
           date: string
+          end_time: string | null
           has_conflict: boolean
           hold_expires_at: string | null
           id: string
+          idexx_appointment_id: string | null
+          idexx_client_id: string | null
+          idexx_patient_id: string | null
           is_new_client: boolean | null
           metadata: Json | null
           original_date: string | null
           original_time: string | null
           patient_name: string
+          provider_name: string | null
           reason: string | null
           rescheduled_at: string | null
+          rescheduled_from_id: string | null
           rescheduled_reason: string | null
+          rescheduled_to_id: string | null
+          room_id: string | null
           slot_id: string | null
           species: string | null
           start_time: string
@@ -3581,25 +3679,36 @@ export type Database = {
           vapi_call_id: string | null
         }
         Insert: {
+          appointment_type?: string | null
           booked_at_sync_id?: string | null
           breed?: string | null
+          cancelled_at?: string | null
+          cancelled_reason?: string | null
           client_name: string
           client_phone: string
           clinic_id: string
           confirmation_number?: string | null
           created_at?: string
           date: string
+          end_time?: string | null
           has_conflict?: boolean
           hold_expires_at?: string | null
           id?: string
+          idexx_appointment_id?: string | null
+          idexx_client_id?: string | null
+          idexx_patient_id?: string | null
           is_new_client?: boolean | null
           metadata?: Json | null
           original_date?: string | null
           original_time?: string | null
           patient_name: string
+          provider_name?: string | null
           reason?: string | null
           rescheduled_at?: string | null
+          rescheduled_from_id?: string | null
           rescheduled_reason?: string | null
+          rescheduled_to_id?: string | null
+          room_id?: string | null
           slot_id?: string | null
           species?: string | null
           start_time: string
@@ -3609,25 +3718,36 @@ export type Database = {
           vapi_call_id?: string | null
         }
         Update: {
+          appointment_type?: string | null
           booked_at_sync_id?: string | null
           breed?: string | null
+          cancelled_at?: string | null
+          cancelled_reason?: string | null
           client_name?: string
           client_phone?: string
           clinic_id?: string
           confirmation_number?: string | null
           created_at?: string
           date?: string
+          end_time?: string | null
           has_conflict?: boolean
           hold_expires_at?: string | null
           id?: string
+          idexx_appointment_id?: string | null
+          idexx_client_id?: string | null
+          idexx_patient_id?: string | null
           is_new_client?: boolean | null
           metadata?: Json | null
           original_date?: string | null
           original_time?: string | null
           patient_name?: string
+          provider_name?: string | null
           reason?: string | null
           rescheduled_at?: string | null
+          rescheduled_from_id?: string | null
           rescheduled_reason?: string | null
+          rescheduled_to_id?: string | null
+          room_id?: string | null
           slot_id?: string | null
           species?: string | null
           start_time?: string
@@ -3642,6 +3762,20 @@ export type Database = {
             columns: ["clinic_id"]
             isOneToOne: false
             referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vapi_bookings_rescheduled_from_id_fkey"
+            columns: ["rescheduled_from_id"]
+            isOneToOne: false
+            referencedRelation: "vapi_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vapi_bookings_rescheduled_to_id_fkey"
+            columns: ["rescheduled_to_id"]
+            isOneToOne: false
+            referencedRelation: "vapi_bookings"
             referencedColumns: ["id"]
           },
           {

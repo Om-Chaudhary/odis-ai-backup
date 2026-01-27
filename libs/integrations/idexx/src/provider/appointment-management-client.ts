@@ -262,7 +262,7 @@ export class IdexxAppointmentManagementClient {
 
       // 2. Navigate to appointment form with date/time pre-filled via URL params
       const formUrl = `${this.baseUrl}/schedule/appointments/new?date=${input.date}&time=${this.formatTimeForUrl(input.startTime)}`;
-      logger.debug("[IdexxAppointmentMgmt] Navigating to form:", formUrl);
+      logger.debug("[IdexxAppointmentMgmt] Navigating to form:", { formUrl });
 
       await page.goto(formUrl, {
         waitUntil: "networkidle",
@@ -295,7 +295,7 @@ export class IdexxAppointmentManagementClient {
         // Check if there's an error message on the page
         const errorText = await page.textContent('.error-message, .alert-danger, [role="alert"]').catch(() => null);
         if (errorText) {
-          logger.error("[IdexxAppointmentMgmt] Form error:", errorText);
+          logger.error("[IdexxAppointmentMgmt] Form error:", { errorText });
           return {
             success: false,
             error: {
@@ -323,7 +323,7 @@ export class IdexxAppointmentManagementClient {
         };
       }
     } catch (error) {
-      logger.error("[IdexxAppointmentMgmt] Form-based appointment creation failed:", error);
+      logger.error("[IdexxAppointmentMgmt] Form-based appointment creation failed:", { error });
       return {
         success: false,
         error: {
@@ -345,7 +345,7 @@ export class IdexxAppointmentManagementClient {
       throw new Error("Patient ID is required for form-based appointment creation");
     }
 
-    logger.debug("[IdexxAppointmentMgmt] Selecting patient:", input.patientId);
+    logger.debug("[IdexxAppointmentMgmt] Selecting patient:", { patientId: input.patientId });
 
     // Click on the patient search combobox to open it
     await page.click('span.select2-selection--single:has-text("Search")');
@@ -375,7 +375,7 @@ export class IdexxAppointmentManagementClient {
       const firstResult = await page.$('li.select2-results__option');
       if (firstResult) {
         const resultText = await firstResult.textContent();
-        logger.debug("[IdexxAppointmentMgmt] Selecting first result:", resultText);
+        logger.debug("[IdexxAppointmentMgmt] Selecting first result:", { resultText });
         await firstResult.click();
       } else {
         throw new Error(`Patient not found in search results: ${searchQuery}`);
@@ -389,7 +389,7 @@ export class IdexxAppointmentManagementClient {
   private async fillAppointmentDetailsInForm(page: Page, input: CreateAppointmentInput): Promise<void> {
     // Select Provider if specified
     if (input.providerId) {
-      logger.debug("[IdexxAppointmentMgmt] Selecting provider:", input.providerId);
+      logger.debug("[IdexxAppointmentMgmt] Selecting provider:", { providerId: input.providerId });
       try {
         // The provider dropdown uses select2 or native select
         const providerSelect = await page.$('select[name*="provider"], select[name*="user_id"]');
@@ -401,13 +401,13 @@ export class IdexxAppointmentManagementClient {
           await page.click(`li.select2-results__option:has-text("${input.providerId}")`);
         }
       } catch (err) {
-        logger.debug("[IdexxAppointmentMgmt] Could not set provider, using default:", err);
+        logger.debug("[IdexxAppointmentMgmt] Could not set provider, using default:", { error: err });
       }
     }
 
     // Select Reason if specified
     if (input.reason) {
-      logger.debug("[IdexxAppointmentMgmt] Selecting reason:", input.reason);
+      logger.debug("[IdexxAppointmentMgmt] Selecting reason:", { reason: input.reason });
       try {
         // Find the reason dropdown - look for combobox with "Reason" label
         const reasonDropdown = page.locator('select').filter({ hasText: /Exam|Follow-up|Surgery|Vaccines/ }).first();
@@ -420,17 +420,17 @@ export class IdexxAppointmentManagementClient {
           await page.selectOption('select[name*="type"], select[name*="reason"]', { label: input.reason });
         }
       } catch (err) {
-        logger.debug("[IdexxAppointmentMgmt] Could not set reason, using default:", err);
+        logger.debug("[IdexxAppointmentMgmt] Could not set reason, using default:", { error: err });
       }
     }
 
     // Select Room if specified
     if (input.roomId) {
-      logger.debug("[IdexxAppointmentMgmt] Selecting room:", input.roomId);
+      logger.debug("[IdexxAppointmentMgmt] Selecting room:", { roomId: input.roomId });
       try {
         await page.selectOption('select[name*="room"]', input.roomId);
       } catch (err) {
-        logger.debug("[IdexxAppointmentMgmt] Could not set room, using default:", err);
+        logger.debug("[IdexxAppointmentMgmt] Could not set room, using default:", { error: err });
       }
     }
 
@@ -440,7 +440,7 @@ export class IdexxAppointmentManagementClient {
       try {
         await page.fill('textarea[name*="note"], input[name*="note"]', input.note);
       } catch (err) {
-        logger.debug("[IdexxAppointmentMgmt] Could not set note:", err);
+        logger.debug("[IdexxAppointmentMgmt] Could not set note:", { error: err });
       }
     }
 
@@ -449,7 +449,7 @@ export class IdexxAppointmentManagementClient {
       try {
         // The "From" time dropdown
         const timeValue = this.formatTimeForDropdown(input.startTime);
-        logger.debug("[IdexxAppointmentMgmt] Verifying start time:", timeValue);
+        logger.debug("[IdexxAppointmentMgmt] Verifying start time:", { timeValue });
         // Time may already be set via URL params
       } catch (err) {
         logger.debug("[IdexxAppointmentMgmt] Time already set via URL params");
@@ -535,7 +535,7 @@ export class IdexxAppointmentManagementClient {
 
       return result;
     } catch (error) {
-      logger.error("Failed to create appointment via API:", error);
+      logger.error("Failed to create appointment via API:", { error });
       return {
         success: false,
         error: {
@@ -558,7 +558,7 @@ export class IdexxAppointmentManagementClient {
     input: CreateAppointmentInput,
   ): IdexxAppointmentCreateFormData {
     return {
-      patient_id: input.patientId ?? "",
+      patient_id: input.patientId ?? "0",
       type_id: input.appointmentTypeId ?? "1", // Default to "Default" type
       user_id: input.providerId ?? "1", // Provider/User ID
       room: input.roomId ?? "7", // Default to first room
@@ -601,7 +601,7 @@ export class IdexxAppointmentManagementClient {
       : this.addMinutesToTime(startTime, 15);
 
     return {
-      patient_id: input.patientId,
+      patient_id: input.patientId ?? "0",
       type_id: input.appointmentTypeId ?? "1",
       user_id: input.providerId ?? "1",
       room: input.roomId ?? "0",

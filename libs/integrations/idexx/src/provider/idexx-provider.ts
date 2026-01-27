@@ -315,6 +315,47 @@ export class IdexxProvider implements IPimsProvider {
   }
 
   /**
+   * Cancel an appointment
+   */
+  async cancelAppointment(
+    input: CancelAppointmentInput,
+  ): Promise<AppointmentOperationResult> {
+    if (this.debug) {
+      console.log("[IdexxProvider] Cancelling appointment:", {
+        appointmentId: input.appointmentId,
+        action: input.action,
+        reason: input.reason,
+      });
+    }
+
+    try {
+      const result = await this.appointmentMgmtClient.cancelAppointment(input);
+
+      if (this.debug) {
+        console.log("[IdexxProvider] Appointment cancellation result:", {
+          success: result.success,
+          error: result.error,
+        });
+      }
+
+      return result;
+    } catch (error) {
+      if (this.debug) {
+        console.error("[IdexxProvider] Appointment cancellation error:", error);
+      }
+      return {
+        success: false,
+        error: {
+          code: "provider_error",
+          message:
+            error instanceof Error ? error.message : "Unknown error occurred",
+          details: error,
+        },
+      };
+    }
+  }
+
+  /**
    * Cleanup resources
    */
   async close(): Promise<void> {

@@ -111,7 +111,21 @@ export async function processCancelAppointment(
 
   // 3a. Update local database IMMEDIATELY (fast, no external calls)
   const source = verificationData.source;
-  const appointmentId = verificationData.appointment_id;
+
+  // Type guard: Ensure appointmentId exists
+  if (!verificationData.appointment_id) {
+    logger.error("Missing appointment_id in verification data", {
+      verificationData,
+    });
+    return {
+      success: false,
+      error: "invalid_state",
+      message: "I apologize, but I'm having some trouble right now. Please call the office directly.",
+    };
+  }
+
+  // Now TypeScript knows appointment_id is a string
+  const appointmentId: string = verificationData.appointment_id;
 
   if (source === "schedule_appointments") {
     const { error: updateError } = await supabase
@@ -202,22 +216,14 @@ export async function processCancelAppointment(
     }
   }
 
-  // 3d. Update inbound call record with action taken
+  // 3d. Update inbound call record with outcome
+  // Note: Actions are already logged in appointment_audit_log
   if (callId) {
     await supabase
       .from("inbound_vapi_calls")
       .update({
-        actions_taken: supabase.rpc("jsonb_array_append", {
-          target: "actions_taken",
-          value: {
-            action: "cancel_appointment",
-            appointment_id: appointmentId,
-            idexx_appointment_id: verificationData.idexx_appointment_id,
-            reason: input.reason,
-            cancelled_at: new Date().toISOString(),
-          },
-        }),
         outcome: "Cancelled",
+        updated_at: new Date().toISOString(),
       })
       .eq("vapi_call_id", callId);
   }

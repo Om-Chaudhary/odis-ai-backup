@@ -80,23 +80,23 @@ export async function processVerifyAppointment(
   }
 
   // Check if we found an appointment in schedule_appointments
-  if (scheduleAppts && scheduleAppts.length > 0) {
+  if (scheduleAppts && scheduleAppts.length > 0 && scheduleAppts[0]) {
     const appt = scheduleAppts[0];
     const result: VerifyAppointmentResult = {
       status: "FOUND",
       appointment_id: appt.id,
-      idexx_appointment_id: appt.neo_appointment_id,
-      appointment_time: appt.start_time,
-      appointment_time_end: appt.end_time,
-      appointment_date: appt.date,
+      idexx_appointment_id: appt.neo_appointment_id ?? undefined,
+      appointment_time: appt.start_time ?? undefined,
+      appointment_time_end: appt.end_time ?? undefined,
+      appointment_date: appt.date ?? undefined,
       formatted_date: formattedDate,
-      formatted_time: formatTime12Hour(appt.start_time),
-      provider_name: appt.provider_name,
-      appointment_type: appt.appointment_type,
-      room: appt.room_id,
-      patient_name: appt.patient_name,
-      client_name: appt.client_name,
-      client_phone: appt.client_phone,
+      formatted_time: appt.start_time ? formatTime12Hour(appt.start_time) : undefined,
+      provider_name: appt.provider_name ?? undefined,
+      appointment_type: appt.appointment_type ?? undefined,
+      room: appt.room_id ?? undefined,
+      patient_name: appt.patient_name ?? undefined,
+      client_name: appt.client_name ?? undefined,
+      client_phone: appt.client_phone ?? undefined,
       source: "schedule_appointments",
     };
 
@@ -108,8 +108,8 @@ export async function processVerifyAppointment(
 
     return {
       success: true,
-      message: `Found appointment for ${appt.patient_name} on ${formattedDate} at ${result.formatted_time}.`,
-      data: result,
+      message: `Found appointment for ${appt.patient_name ?? "your pet"} on ${formattedDate} at ${result.formatted_time ?? "scheduled time"}.`,
+      data: result as unknown as Record<string, unknown>,
     };
   }
 
@@ -130,23 +130,23 @@ export async function processVerifyAppointment(
     });
   }
 
-  if (vapiBookings && vapiBookings.length > 0) {
+  if (vapiBookings && vapiBookings.length > 0 && vapiBookings[0]) {
     const booking = vapiBookings[0];
     const result: VerifyAppointmentResult = {
       status: "FOUND",
       appointment_id: booking.id,
       idexx_appointment_id: booking.idexx_appointment_id ?? undefined,
-      appointment_time: booking.start_time,
+      appointment_time: booking.start_time ?? undefined,
       appointment_time_end: booking.end_time ?? undefined,
-      appointment_date: booking.date,
+      appointment_date: booking.date ?? undefined,
       formatted_date: formattedDate,
-      formatted_time: formatTime12Hour(booking.start_time),
+      formatted_time: booking.start_time ? formatTime12Hour(booking.start_time) : undefined,
       provider_name: booking.provider_name ?? undefined,
       appointment_type: booking.appointment_type ?? undefined,
       room: booking.room_id ?? undefined,
-      patient_name: booking.patient_name,
-      client_name: booking.client_name,
-      client_phone: booking.client_phone,
+      patient_name: booking.patient_name ?? undefined,
+      client_name: booking.client_name ?? undefined,
+      client_phone: booking.client_phone ?? undefined,
       source: "vapi_bookings",
     };
 
@@ -158,13 +158,13 @@ export async function processVerifyAppointment(
 
     return {
       success: true,
-      message: `Found appointment for ${booking.patient_name} on ${formattedDate} at ${result.formatted_time}.`,
-      data: result,
+      message: `Found appointment for ${booking.patient_name ?? "your pet"} on ${formattedDate} at ${result.formatted_time ?? "scheduled time"}.`,
+      data: result as unknown as Record<string, unknown>,
     };
   }
 
   // Step 3: Appointment not found
-  const result: VerifyAppointmentResult = {
+  const notFoundResult: VerifyAppointmentResult = {
     status: "DOES_NOT_EXIST",
     message: `No appointment found for ${input.patient_name} on ${formattedDate}.`,
   };
@@ -179,6 +179,6 @@ export async function processVerifyAppointment(
   return {
     success: true,
     message: `I don't see an appointment scheduled for ${input.patient_name} on ${formattedDate}. Would you like me to check a different date?`,
-    data: result,
+    data: notFoundResult as unknown as Record<string, unknown>,
   };
 }
