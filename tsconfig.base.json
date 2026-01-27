@@ -122,7 +122,15 @@
       "@odis-ai/data-access/entities": [
         "libs/data-access/entities/src/index.ts"
       ],
-      "@odis-ai/data-access/entities/*": ["libs/data-access/entities/src/*"]
+      "@odis-ai/data-access/entities/*": ["libs/data-access/entities/src/*"],
+
+      // Extension
+      "@odis-ai/extension/shared": ["libs/extension/shared/src/index.ts"],
+      "@odis-ai/extension/shared/*": ["libs/extension/shared/src/*"],
+
+      // Mobile
+      "@odis-ai/mobile/ui": ["libs/mobile/ui/src/index.ts"],
+      "@odis-ai/mobile/ui/*": ["libs/mobile/ui/src/*"]
     }
   },
   "exclude": ["node_modules", "tmp"]

@@ -1,0 +1,18 @@
+{
+  "name": "extension-shared",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/extension/shared/src",
+  "projectType": "library",
+  "tags": ["type:util", "scope:extension", "platform:browser"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.json",
+        "cwd": "libs/extension/shared"
+      },
+      "cache": true,
+      "inputs": ["default", "^default"]
+    }
+  }
+}

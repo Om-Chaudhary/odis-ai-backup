@@ -36,10 +36,18 @@
     "docs:build": "nx build docs",
     "docs:serve": "nx serve docs",
     "docs:clear": "nx clear docs",
-    "backfill:inbound-outcomes": "tsx apps/web/src/scripts/backfill-inbound-outcomes.ts"
+    "backfill:inbound-outcomes": "tsx apps/web/src/scripts/backfill-inbound-outcomes.ts",
+    "idexx:discover": "tsx scripts/discover-idexx-endpoints.mjs",
+    "idexx:test": "tsx scripts/test-idexx-appointment-create.mjs",
+    "mobile:start": "nx start mobile",
+    "mobile:ios": "nx run-ios mobile",
+    "mobile:android": "nx run-android mobile",
+    "mobile:prebuild": "nx prebuild mobile"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.69.0",
+    "@clerk/clerk-expo": "^2.7.1",
+    "@clerk/chrome-extension": "^2.8.20",
     "@clerk/express": "^1.7.63",
     "@clerk/nextjs": "^6.12.0",
     "@clerk/themes": "^2.2.35",
@@ -143,6 +151,7 @@
   "devDependencies": {
     "@clerk/types": "^4.101.11",
     "@docusaurus/module-type-aliases": "3.9.2",
+    "@types/chrome": "^0.0.308",
     "@docusaurus/tsconfig": "3.9.2",
     "@docusaurus/types": "3.9.2",
     "@eslint/eslintrc": "^3.3.1",

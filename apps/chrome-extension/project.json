@@ -1,0 +1,76 @@
+{
+  "name": "chrome-extension",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/chrome-extension/src",
+  "projectType": "application",
+  "tags": ["type:app", "scope:extension", "platform:browser"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/chrome-extension"],
+      "defaultConfiguration": "production",
+      "options": {
+        "command": "vite build",
+        "cwd": "apps/chrome-extension"
+      },
+      "configurations": {
+        "development": {
+          "command": "vite build --mode development"
+        },
+        "production": {
+          "command": "vite build --mode production"
+        }
+      },
+      "cache": true,
+      "inputs": ["default", "^default"],
+      "dependsOn": ["^build"]
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "command": "vite build --watch --mode development",
+        "cwd": "apps/chrome-extension"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "options": {
+        "lintFilePatterns": ["apps/chrome-extension/**/*.{ts,tsx}"]
+      },
+      "cache": true,
+      "inputs": ["default", "^default", "{workspaceRoot}/.eslintrc.json"]
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.app.json",
+        "cwd": "apps/chrome-extension"
+      },
+      "cache": true,
+      "inputs": ["default", "^default"],
+      "dependsOn": ["^typecheck"]
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{workspaceRoot}/coverage/apps/chrome-extension"],
+      "options": {
+        "config": "apps/chrome-extension/vitest.config.ts",
+        "passWithNoTests": true
+      },
+      "cache": true,
+      "inputs": ["default", "^default"]
+    },
+    "pack": {
+      "dependsOn": ["build"],
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/apps/chrome-extension.zip"],
+      "options": {
+        "commands": [
+          "cd dist/apps/chrome-extension && zip -r ../chrome-extension.zip ."
+        ],
+        "cwd": "{workspaceRoot}"
+      }
+    }
+  }
+}
