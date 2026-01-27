@@ -6,7 +6,8 @@
  */
 
 // Core utilities
-export * from "./cn";
+export { cn } from "./cn";
+export { formatDuration as formatCallDuration } from "./cn";
 
 // Phone utilities (consolidated)
 export * from "./phone";
@@ -18,7 +19,19 @@ export * from "./contact";
 export * from "./business-hours";
 export * from "./date-grouping";
 export * from "./date-ranges";
-export * from "./timezone";
+export {
+  DEFAULT_TIMEZONE,
+  getLocalDayRange,
+  formatLocalDate,
+  formatLocalTime,
+  formatLocalDateTime,
+  toLocalDate,
+  getTodayInTimezone,
+  isOnDate,
+  formatRelativeTime as formatTimezoneRelativeTime,
+  getPresetDateRange,
+  calculateScheduleTime,
+} from "./timezone";
 
 // Dashboard helpers
 export * from "./dashboard-helpers";
@@ -34,7 +47,11 @@ export * from "./lib/case-transforms";
 export * from "./lib/discharge-status";
 
 // Relative time formatting
-export * from "./lib/relative-time";
+export {
+  formatRelativeTime,
+  formatDuration,
+  formatShortDateTime,
+} from "./lib/relative-time";
 
 // Attention summary parsing
 export * from "./lib/attention-parser";

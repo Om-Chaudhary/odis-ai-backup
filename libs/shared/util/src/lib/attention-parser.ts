@@ -162,6 +162,9 @@ export function getAttentionTitle(attentionTypes: string[]): string {
 
   // Take the first (highest priority) attention type
   const primaryType = attentionTypes[0];
+  if (!primaryType) {
+    return 'Attention Needed';
+  }
   return ATTENTION_TYPE_LABELS[primaryType] ?? 'Attention Needed';
 }
 

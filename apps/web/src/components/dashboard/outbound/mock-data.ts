@@ -149,6 +149,123 @@ function emailFromName(name: string): string {
 }
 
 /**
+ * Attention scenario templates for comprehensive mock data
+ */
+interface AttentionScenarioTemplate {
+  attentionTypes: string[];
+  attentionSeverity: "critical" | "urgent" | "routine";
+  attentionSummary: string;
+  patient: { name: string; species?: string; breed?: string };
+  owner: { name: string };
+  caseType?: "checkup" | "emergency" | "surgery" | "follow_up";
+  veterinarian?: string;
+}
+
+const ATTENTION_SCENARIOS: AttentionScenarioTemplate[] = [
+  // Critical scenarios - Emergency situations requiring immediate attention
+  {
+    attentionTypes: ["health_concern", "emergency_signs"],
+    attentionSeverity: "critical",
+    attentionSummary: "**[EMERGENCY] - Severe symptoms observed: Owner reports pet showing signs of bloat, contact emergency vet immediately**",
+    patient: { name: "Max", species: "Canine", breed: "German Shepherd" },
+    owner: { name: "Sarah Johnson" },
+    caseType: "emergency",
+    veterinarian: "Dr. Emily Chen",
+  },
+  {
+    attentionTypes: ["medication_issue", "health_concern"],
+    attentionSeverity: "critical",
+    attentionSummary: "**[MEDICATION] - Adverse reaction reported: Owner states pet vomiting after medication, stop immediately and bring in**",
+    patient: { name: "Luna", species: "Feline", breed: "Persian" },
+    owner: { name: "Michael Chen" },
+    caseType: "follow_up",
+    veterinarian: "Dr. Sarah Mitchell",
+  },
+
+  // Urgent scenarios - Need prompt attention within 24 hours
+  {
+    attentionTypes: ["owner_complaint", "billing_question"],
+    attentionSeverity: "urgent",
+    attentionSummary: "**[CALLBACK] - Owner dissatisfied with care: Concerns about treatment plan and unexpected charges**",
+    patient: { name: "Charlie", species: "Canine", breed: "Labrador Retriever" },
+    owner: { name: "Jessica Martinez" },
+    caseType: "surgery",
+    veterinarian: "Dr. James Park",
+  },
+  {
+    attentionTypes: ["health_concern", "scheduling_problem"],
+    attentionSeverity: "urgent",
+    attentionSummary: "**[FOLLOW-UP] - Wound healing concerns: Owner reports incision site swelling, schedule recheck within 24 hours**",
+    patient: { name: "Bella", species: "Canine", breed: "Golden Retriever" },
+    owner: { name: "David Kim" },
+    caseType: "surgery",
+    veterinarian: "Dr. Lisa Thompson",
+  },
+  {
+    attentionTypes: ["medication_issue"],
+    attentionSeverity: "urgent",
+    attentionSummary: "**[MEDICATION] - Dosing confusion: Owner unsure about pain medication schedule, requires clarification**",
+    patient: { name: "Rocky", species: "Canine", breed: "Bulldog" },
+    owner: { name: "Amanda Thompson" },
+    caseType: "surgery",
+    veterinarian: "Dr. Michael Roberts",
+  },
+
+  // Routine scenarios - Standard follow-up needed
+  {
+    attentionTypes: ["medication_issue"],
+    attentionSeverity: "routine",
+    attentionSummary: "**[MEDICATION] - Clarification needed: Confirm if antibiotic should be given with food**",
+    patient: { name: "Daisy", species: "Feline", breed: "Maine Coon" },
+    owner: { name: "Robert Garcia" },
+    caseType: "checkup",
+    veterinarian: "Dr. Emily Chen",
+  },
+  {
+    attentionTypes: ["billing_question"],
+    attentionSeverity: "routine",
+    attentionSummary: "**[BILLING] - Invoice question: Owner requesting itemized breakdown of lab work charges**",
+    patient: { name: "Buddy", species: "Canine", breed: "Beagle" },
+    owner: { name: "Michelle Lee" },
+    caseType: "checkup",
+    veterinarian: "Dr. Sarah Mitchell",
+  },
+
+  // Complex multi-issue scenarios
+  {
+    attentionTypes: ["health_concern", "medication_issue", "owner_complaint"],
+    attentionSeverity: "urgent",
+    attentionSummary: "**[COMPLEX] - Multiple concerns: Address medication questions, health monitoring, and owner frustrations**",
+    patient: { name: "Zeus", species: "Canine", breed: "Rottweiler" },
+    owner: { name: "Christopher Brown" },
+    caseType: "surgery",
+    veterinarian: "Dr. James Park",
+  },
+
+  // Legacy unstructured format examples
+  {
+    attentionTypes: ["health_concern"],
+    attentionSeverity: "urgent",
+    attentionSummary: "Owner concerned about lethargy and decreased appetite since dental procedure yesterday",
+    patient: { name: "Molly", species: "Feline", breed: "Siamese" },
+    owner: { name: "Ashley Davis" },
+    caseType: "surgery",
+    veterinarian: "Dr. Lisa Thompson",
+  },
+
+  // Edge cases for testing
+  {
+    attentionTypes: [],
+    attentionSeverity: "routine",
+    attentionSummary: "General follow-up needed - no specific concerns noted",
+    patient: { name: "Ginger", species: "Canine", breed: "Dachshund" },
+    owner: { name: "Matthew Wilson" },
+    caseType: "checkup",
+    veterinarian: "Dr. Michael Roberts",
+  },
+];
+
+/**
  * Generate mock discharge cases with optional attention scenarios
  * @param count - Total number of cases to generate
  * @param includeAttentionCases - Whether to include attention scenarios in the generated cases
@@ -443,12 +560,6 @@ export function generateMockCases(count = 12, includeAttentionCases = false): Di
 export const mockDischargeCases: DischargeCase[] = generateMockCases(12);
 
 /**
- * Pre-generated mock cases WITH attention scenarios for development
- * Use this for testing attention-related functionality
- */
-export const mockDischargeAttentionCases: DischargeCase[] = generateMockCases(12, true);
-
-/**
  * Mock statistics computed from mock cases
  */
 export const mockStats: DischargeSummaryStats = {
@@ -479,122 +590,6 @@ export const mockStats: DischargeSummaryStats = {
   },
 };
 
-/**
- * Attention scenario templates for comprehensive demo data
- */
-interface AttentionScenarioTemplate {
-  attentionTypes: string[];
-  attentionSeverity: "critical" | "urgent" | "routine";
-  attentionSummary: string;
-  patient: { name: string; species?: string; breed?: string };
-  owner: { name: string };
-  caseType?: "checkup" | "emergency" | "surgery" | "follow_up";
-  veterinarian?: string;
-}
-
-const ATTENTION_SCENARIOS: AttentionScenarioTemplate[] = [
-  // Critical scenarios - Emergency situations requiring immediate attention
-  {
-    attentionTypes: ["health_concern", "emergency_signs"],
-    attentionSeverity: "critical",
-    attentionSummary: "**[EMERGENCY] - Severe symptoms observed: Owner reports pet showing signs of bloat, contact emergency vet immediately**",
-    patient: { name: "Max", species: "Canine", breed: "German Shepherd" },
-    owner: { name: "Sarah Johnson" },
-    caseType: "emergency",
-    veterinarian: "Dr. Emily Chen",
-  },
-  {
-    attentionTypes: ["medication_issue", "health_concern"],
-    attentionSeverity: "critical",
-    attentionSummary: "**[MEDICATION] - Adverse reaction reported: Owner states pet vomiting after medication, stop immediately and bring in**",
-    patient: { name: "Luna", species: "Feline", breed: "Persian" },
-    owner: { name: "Michael Chen" },
-    caseType: "follow_up",
-    veterinarian: "Dr. Sarah Mitchell",
-  },
-
-  // Urgent scenarios - Need prompt attention within 24 hours
-  {
-    attentionTypes: ["owner_complaint", "billing_question"],
-    attentionSeverity: "urgent",
-    attentionSummary: "**[CALLBACK] - Owner dissatisfied with care: Concerns about treatment plan and unexpected charges**",
-    patient: { name: "Charlie", species: "Canine", breed: "Labrador Retriever" },
-    owner: { name: "Jessica Martinez" },
-    caseType: "surgery",
-    veterinarian: "Dr. James Park",
-  },
-  {
-    attentionTypes: ["health_concern", "scheduling_problem"],
-    attentionSeverity: "urgent",
-    attentionSummary: "**[FOLLOW-UP] - Wound healing concerns: Owner reports incision site swelling, schedule recheck within 24 hours**",
-    patient: { name: "Bella", species: "Canine", breed: "Golden Retriever" },
-    owner: { name: "David Kim" },
-    caseType: "surgery",
-    veterinarian: "Dr. Lisa Thompson",
-  },
-  {
-    attentionTypes: ["medication_issue"],
-    attentionSeverity: "urgent",
-    attentionSummary: "**[MEDICATION] - Dosing confusion: Owner unsure about pain medication schedule, requires clarification**",
-    patient: { name: "Rocky", species: "Canine", breed: "Bulldog" },
-    owner: { name: "Amanda Thompson" },
-    caseType: "surgery",
-    veterinarian: "Dr. Michael Roberts",
-  },
-
-  // Routine scenarios - Standard follow-up needed
-  {
-    attentionTypes: ["medication_issue"],
-    attentionSeverity: "routine",
-    attentionSummary: "**[MEDICATION] - Clarification needed: Confirm if antibiotic should be given with food**",
-    patient: { name: "Daisy", species: "Feline", breed: "Maine Coon" },
-    owner: { name: "Robert Garcia" },
-    caseType: "checkup",
-    veterinarian: "Dr. Emily Chen",
-  },
-  {
-    attentionTypes: ["billing_question"],
-    attentionSeverity: "routine",
-    attentionSummary: "**[BILLING] - Invoice question: Owner requesting itemized breakdown of lab work charges**",
-    patient: { name: "Buddy", species: "Canine", breed: "Beagle" },
-    owner: { name: "Michelle Lee" },
-    caseType: "checkup",
-    veterinarian: "Dr. Sarah Mitchell",
-  },
-
-  // Complex multi-issue scenarios
-  {
-    attentionTypes: ["health_concern", "medication_issue", "owner_complaint"],
-    attentionSeverity: "urgent",
-    attentionSummary: "**[COMPLEX] - Multiple concerns: Address medication questions, health monitoring, and owner frustrations**",
-    patient: { name: "Zeus", species: "Canine", breed: "Rottweiler" },
-    owner: { name: "Christopher Brown" },
-    caseType: "surgery",
-    veterinarian: "Dr. James Park",
-  },
-
-  // Legacy unstructured format examples
-  {
-    attentionTypes: ["health_concern"],
-    attentionSeverity: "urgent",
-    attentionSummary: "Owner concerned about lethargy and decreased appetite since dental procedure yesterday",
-    patient: { name: "Molly", species: "Feline", breed: "Siamese" },
-    owner: { name: "Ashley Davis" },
-    caseType: "surgery",
-    veterinarian: "Dr. Lisa Thompson",
-  },
-
-  // Edge cases for testing
-  {
-    attentionTypes: [],
-    attentionSeverity: "routine",
-    attentionSummary: "General follow-up needed - no specific concerns noted",
-    patient: { name: "Ginger", species: "Canine", breed: "Dachshund" },
-    owner: { name: "Matthew Wilson" },
-    caseType: "checkup",
-    veterinarian: "Dr. Michael Roberts",
-  },
-];
 
 /**
  * Generate attention scenario cases for demo/testing
@@ -650,84 +645,3 @@ export function generateAttentionScenarios(count: number): Partial<DischargeCase
   return scenarios;
 }
 
-/**
- * Generate mock cases specifically for attention testing
- * @param includeEmpty - Whether to include cases without attention flags for contrast
- */
-export function generateAttentionDemoCases(includeEmpty = true): DischargeCase[] {
-  // Generate base cases
-  const baseCases = generateMockCases(includeEmpty ? 15 : 10, false);
-
-  // Generate attention scenarios (will replace first N cases)
-  const attentionCases = generateMockCases(10, true);
-
-  // If including empty cases, mix them in
-  if (includeEmpty) {
-    // First 10 are attention cases, remaining 5 are normal cases
-    return [...attentionCases.slice(0, 10), ...baseCases.slice(10, 15)];
-  }
-
-  return attentionCases.slice(0, 10);
-}
-
-/**
- * Pre-generated demo cases with attention scenarios for development
- * Use this for consistent demo data that showcases all attention features
- */
-export const mockAttentionDemoCases: DischargeCase[] = generateAttentionDemoCases();
-
-/**
- * Mock statistics for attention demo cases
- */
-export const mockAttentionDemoStats = {
-  ...mockStats,
-  needsAttention: mockAttentionDemoCases.filter((c) => c.needsAttention).length,
-  needsAttentionBreakdown: {
-    critical: mockAttentionDemoCases.filter((c) => c.attentionSeverity === "critical").length,
-    urgent: mockAttentionDemoCases.filter((c) => c.attentionSeverity === "urgent").length,
-    routine: mockAttentionDemoCases.filter((c) => c.attentionSeverity === "routine").length,
-  },
-};
-
-/**
- * Development utilities for testing attention scenarios
- */
-export const attentionTestUtils = {
-  /**
-   * Get cases by severity level
-   */
-  getCasesBySeverity: (severity: "critical" | "urgent" | "routine") =>
-    mockAttentionDemoCases.filter((c) => c.attentionSeverity === severity),
-
-  /**
-   * Get cases by attention type
-   */
-  getCasesByType: (type: string) =>
-    mockAttentionDemoCases.filter((c) => c.attentionTypes?.includes(type)),
-
-  /**
-   * Get structured vs unstructured summary cases
-   */
-  getStructuredCases: () =>
-    mockAttentionDemoCases.filter((c) => c.attentionSummary?.startsWith("**[")),
-
-  getUnstructuredCases: () =>
-    mockAttentionDemoCases.filter((c) => c.attentionSummary && !c.attentionSummary.startsWith("**[")),
-
-  /**
-   * Get cases needing immediate attention (critical)
-   */
-  getCriticalCases: () =>
-    mockAttentionDemoCases.filter((c) => c.attentionSeverity === "critical"),
-
-  /**
-   * Generate a single test case with specific attention properties
-   */
-  createTestCase: (overrides: Partial<DischargeCase>) => {
-    const baseCase = generateMockCases(1)[0]!;
-    return {
-      ...baseCase,
-      ...overrides,
-    };
-  },
-};
