@@ -28,6 +28,7 @@ export {
   toLocalDate,
   getTodayInTimezone,
   isOnDate,
+  formatRelativeTime,
   formatRelativeTime as formatTimezoneRelativeTime,
   getPresetDateRange,
   calculateScheduleTime,
