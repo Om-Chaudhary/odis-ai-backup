@@ -42,7 +42,7 @@ export function EmailPreviewSection({
 
   // Determine what content to show
   const hasStructuredContent = structuredContent?.patientName;
-  const hasFallbackContent = emailContent?.trim() || dischargeSummary?.trim();
+  const hasFallbackContent = emailContent?.trim() ?? dischargeSummary?.trim();
 
   // If no content at all, don't render
   if (!hasStructuredContent && !hasFallbackContent) {
@@ -53,7 +53,10 @@ export function EmailPreviewSection({
     <Collapsible
       open={isOpen}
       onOpenChange={setIsOpen}
-      className={cn("rounded-xl border border-slate-200/60 dark:border-slate-700/60", className)}
+      className={cn(
+        "rounded-xl border border-slate-200/60 dark:border-slate-700/60",
+        className,
+      )}
     >
       <CollapsibleTrigger className="group flex w-full items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
         <div className="flex items-center gap-3">
@@ -89,11 +92,11 @@ export function EmailPreviewSection({
       <CollapsibleContent>
         <div className="border-t border-slate-200/60 p-4 dark:border-slate-700/60">
           {hasStructuredContent ? (
-            <EmailStructuredPreview content={structuredContent!} />
+            <EmailStructuredPreview content={structuredContent ?? null} />
           ) : (
             <div className="max-h-64 overflow-auto rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
-              <p className="whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-300">
-                {emailContent || dischargeSummary}
+              <p className="text-sm whitespace-pre-wrap text-slate-600 dark:text-slate-300">
+                {emailContent ?? dischargeSummary}
               </p>
             </div>
           )}

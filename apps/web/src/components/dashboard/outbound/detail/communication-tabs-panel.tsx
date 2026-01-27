@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { Phone, Mail } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@odis-ai/shared/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@odis-ai/shared/ui/tabs";
 import { cn } from "@odis-ai/shared/util";
 import type {
   StructuredDischargeContent,
@@ -93,13 +98,15 @@ export function CommunicationTabsPanel({
   className,
 }: CommunicationTabsPanelProps) {
   // Determine default tab - prefer phone if call exists with content
-  const hasCallContent = scheduledCall && (scheduledCall.summary || scheduledCall.recordingUrl);
+  const hasCallContent =
+    scheduledCall && (scheduledCall.summary ?? scheduledCall.recordingUrl);
   const defaultTab: TabValue = hasCallContent ? "phone" : "email";
   const [activeTab, setActiveTab] = useState<TabValue>(defaultTab);
 
   // Determine if call was successful
   const callWasSuccessful = phoneSent && scheduledCall?.summary;
-  const hasIntelligenceData = ownerSentimentData || petHealthData || followUpData;
+  const hasIntelligenceData =
+    ownerSentimentData ?? petHealthData ?? followUpData;
 
   // Check which tabs should be enabled
   const phoneTabEnabled = hasOwnerPhone || phoneSent;
@@ -228,7 +235,9 @@ function PhoneContent({
         recordingUrl={scheduledCall.recordingUrl ?? null}
         transcript={scheduledCall.transcript}
         cleanedTranscript={scheduledCall.cleanedTranscript}
-        title={patientName ? `Discharge Call - ${patientName}` : "Discharge Call"}
+        title={
+          patientName ? `Discharge Call - ${patientName}` : "Discharge Call"
+        }
         subtitle={ownerName ?? undefined}
         isSuccessful={
           scheduledCall.endedReason === "assistant-ended-call" ||
@@ -244,7 +253,9 @@ function PhoneContent({
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
         <div className="flex items-center gap-2 text-slate-500">
           <Phone className="h-4 w-4" />
-          <span className="text-sm">No phone number available for this owner</span>
+          <span className="text-sm">
+            No phone number available for this owner
+          </span>
         </div>
       </div>
     );
@@ -258,7 +269,7 @@ function PhoneContent({
         Call Script Preview
       </h4>
       <div className="max-h-80 overflow-auto rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
-        <p className="whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-300">
+        <p className="text-sm whitespace-pre-wrap text-slate-600 dark:text-slate-300">
           {callScript || "No call script available."}
         </p>
       </div>

@@ -30,6 +30,7 @@
     "../../libs/extension-storage/**/*",
     "../../libs/extension-shared/**/*",
     "../../libs/extension-env/**/*",
-    "../../libs/ui/src/extension/**/*"
+    "../../libs/ui/src/extension/**/*",
+    "../../libs/mobile/**/*"
   ]
 }
