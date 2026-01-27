@@ -6,7 +6,7 @@
  */
 
 // Core utilities
-export { cn } from "./cn";
+export { cn, formatDuration } from "./cn";
 export { formatDuration as formatCallDuration } from "./cn";
 
 // Phone utilities (consolidated)

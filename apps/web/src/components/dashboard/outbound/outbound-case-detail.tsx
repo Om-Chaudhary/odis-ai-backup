@@ -141,7 +141,6 @@ export function OutboundCaseDetail({
     caseData.status === "completed" || caseData.status === "failed";
   const isScheduled = caseData.status === "scheduled";
 
-
   // Get call script from dynamic variables
   const callScript =
     typeof caseData.callScript === "object" && caseData.callScript !== null
@@ -235,11 +234,12 @@ export function OutboundCaseDetail({
   const showStatusCards = true;
 
   // Show email preview whenever email content exists (regardless of status)
-  const isToSchedule = caseData.status === "pending_review" || caseData.status === "ready";
+  const isToSchedule =
+    caseData.status === "pending_review" || caseData.status === "ready";
   const showEmailPreview =
     !!caseData.structuredContent?.patientName ||
-    !!(caseData.emailContent?.trim()) ||
-    !!(caseData.dischargeSummary?.trim());
+    !!caseData.emailContent?.trim() ||
+    !!caseData.dischargeSummary?.trim();
 
   // Show tabs for completed/failed cases
   const showContentTabs = isSentCase;
@@ -286,9 +286,7 @@ export function OutboundCaseDetail({
             emailEnabled={deliveryToggles.emailEnabled}
             emailScheduledFor={caseData.scheduledEmailFor}
             emailSentAt={caseData.scheduledEmail?.sentAt ?? null}
-            emailFailureReason={
-              emailFailed ? "Email delivery failed" : null
-            }
+            emailFailureReason={emailFailed ? "Email delivery failed" : null}
             emailDelayDays={emailDelayDays}
             onEmailToggle={handleEmailToggle}
             onEmailDelayChange={handleEmailDelayChange}
@@ -341,7 +339,7 @@ export function OutboundCaseDetail({
         {/* Needs Attention Card */}
         {hasActionableAttentionTypes(caseData.attentionTypes) && (
           <NeedsAttentionCard
-            attentionTypes={caseData.attentionTypes || []}
+            attentionTypes={caseData.attentionTypes ?? []}
             attentionSeverity={caseData.attentionSeverity}
             attentionSummary={caseData.attentionSummary}
             className="mb-6"
