@@ -41,7 +41,8 @@ interface NeedsAttentionViewProps extends OutboundHeaderProps {
     cancelEmail: boolean;
   }) => void;
   isSubmitting: boolean;
-  isCancelling: boolean;
+  isCancellingCall: boolean;
+  isCancellingEmail: boolean;
   testModeEnabled: boolean;
 }
 
@@ -64,7 +65,8 @@ export function NeedsAttentionView({
   onRetry,
   onCancelScheduled,
   isSubmitting,
-  isCancelling,
+  isCancellingCall,
+  isCancellingEmail,
   testModeEnabled,
   ...headerProps
 }: NeedsAttentionViewProps) {
@@ -133,7 +135,8 @@ export function NeedsAttentionView({
           onRetry={onRetry}
           onCancelScheduled={onCancelScheduled}
           isSubmitting={isSubmitting}
-          isCancelling={isCancelling}
+          isCancellingCall={isCancellingCall}
+          isCancellingEmail={isCancellingEmail}
           testModeEnabled={testModeEnabled}
           onDelete={handleClosePanel}
         />

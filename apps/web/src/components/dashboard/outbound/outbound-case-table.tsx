@@ -535,11 +535,11 @@ export function OutboundCaseTable<T extends TableCaseBase>({
 
 /**
  * Status cell showing case status with descriptive messages
- * Shows "Schedule" button for pending_review cases, status badge for others
+ * Shows "To Schedule" badge for pending_review cases, status badges for others
  */
 function StatusCell<T extends TableCaseBase>({
   caseItem,
-  onQuickSchedule,
+  onQuickSchedule: _onQuickSchedule,
   isScheduling,
 }: {
   caseItem: T;
@@ -548,8 +548,6 @@ function StatusCell<T extends TableCaseBase>({
 }) {
   const hasContact =
     Boolean(caseItem.owner.phone) || Boolean(caseItem.owner.email);
-  const canSchedule =
-    caseItem.status === "pending_review" && hasContact && onQuickSchedule;
 
   if (isScheduling) {
     return (
@@ -560,20 +558,13 @@ function StatusCell<T extends TableCaseBase>({
     );
   }
 
-  if (canSchedule) {
+  // Show "To Schedule" badge for pending_review cases with contact info
+  if (caseItem.status === "pending_review" && hasContact) {
     return (
-      <Button
-        size="sm"
-        variant="outline"
-        className="h-7 gap-1.5 border-teal-100 bg-teal-50/40 px-2.5 text-xs font-medium text-teal-600 hover:bg-teal-50 hover:text-teal-700"
-        onClick={(e) => {
-          e.stopPropagation();
-          onQuickSchedule(caseItem);
-        }}
-      >
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
         <Send className="h-3 w-3" />
-        Schedule
-      </Button>
+        To Schedule
+      </span>
     );
   }
 

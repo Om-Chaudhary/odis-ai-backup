@@ -26,18 +26,18 @@ export function useOutboundMutations(
   const [togglingStarCaseIds, setTogglingStarCaseIds] = useState<Set<string>>(
     new Set(),
   );
-  // Track which cases are being cancelled
-  const [cancellingCaseIds, setCancellingCaseIds] = useState<Set<string>>(
+  // Track which cases are being cancelled (separate for call and email)
+  const [cancellingCallCaseIds, setCancellingCallCaseIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [cancellingEmailCaseIds, setCancellingEmailCaseIds] = useState<Set<string>>(
     new Set(),
   );
 
   // Mutations
   const approveAndSchedule = api.outbound.approveAndSchedule.useMutation({
-    onSuccess: (data) => {
-      const message = data.summaryGenerated
-        ? "Discharge generated and scheduled"
-        : "Discharge scheduled";
-      toast.success(message);
+    onSuccess: () => {
+      toast.success("Outreach scheduled");
       onSuccess?.();
     },
     onError: (error) => {
@@ -110,9 +110,21 @@ export function useOutboundMutations(
     api.outbound.cancelScheduledDelivery.useMutation({
       onSuccess: (data) => {
         const cancelled: string[] = [];
+        const notFound: string[] = [];
+
         if (data.callCancelled) cancelled.push("call");
+        else if (data.callRequested && data.callNotFound) notFound.push("call");
+
         if (data.emailCancelled) cancelled.push("email");
-        toast.success(`Cancelled scheduled ${cancelled.join(" and ")}`);
+        else if (data.emailRequested && data.emailNotFound) notFound.push("email");
+
+        if (cancelled.length > 0) {
+          toast.success(`Cancelled scheduled ${cancelled.join(" and ")}`);
+        }
+        if (notFound.length > 0) {
+          toast.info(`No scheduled ${notFound.join(" or ")} to cancel`);
+        }
+
         onSuccess?.();
       },
       onError: (error) => {
@@ -121,6 +133,22 @@ export function useOutboundMutations(
         });
       },
     });
+
+  // Update schedule delays mutation
+  const updateScheduleDelays = api.outbound.updateScheduleDelays.useMutation({
+    onSuccess: (data) => {
+      const updated: string[] = [];
+      if (data.callUpdated) updated.push("call");
+      if (data.emailUpdated) updated.push("email");
+      toast.success(`Updated ${updated.join(" and ")} schedule`);
+      onSuccess?.();
+    },
+    onError: (error) => {
+      toast.error("Failed to update schedule", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    },
+  });
 
   const batchCancel = api.outbound.batchCancel.useMutation({
     onSuccess: (data) => {
@@ -387,7 +415,13 @@ export function useOutboundMutations(
       caseId: string,
       options: { cancelCall: boolean; cancelEmail: boolean },
     ) => {
-      setCancellingCaseIds((prev) => new Set(prev).add(caseId));
+      // Track separately based on what's being cancelled
+      if (options.cancelCall) {
+        setCancellingCallCaseIds((prev) => new Set(prev).add(caseId));
+      }
+      if (options.cancelEmail) {
+        setCancellingEmailCaseIds((prev) => new Set(prev).add(caseId));
+      }
       try {
         await cancelScheduledDelivery.mutateAsync({
           caseId,
@@ -395,11 +429,20 @@ export function useOutboundMutations(
           cancelEmail: options.cancelEmail,
         });
       } finally {
-        setCancellingCaseIds((prev) => {
-          const next = new Set(prev);
-          next.delete(caseId);
-          return next;
-        });
+        if (options.cancelCall) {
+          setCancellingCallCaseIds((prev) => {
+            const next = new Set(prev);
+            next.delete(caseId);
+            return next;
+          });
+        }
+        if (options.cancelEmail) {
+          setCancellingEmailCaseIds((prev) => {
+            const next = new Set(prev);
+            next.delete(caseId);
+            return next;
+          });
+        }
       }
     },
     [cancelScheduledDelivery],
@@ -408,8 +451,13 @@ export function useOutboundMutations(
   // Bulk cancel multiple cases' scheduled deliveries
   const handleBulkCancel = useCallback(
     async (caseIds: string[]) => {
-      // Add all case IDs to cancelling state
-      setCancellingCaseIds((prev) => {
+      // Add all case IDs to both cancelling states (bulk cancels both)
+      setCancellingCallCaseIds((prev) => {
+        const next = new Set(prev);
+        caseIds.forEach((id) => next.add(id));
+        return next;
+      });
+      setCancellingEmailCaseIds((prev) => {
         const next = new Set(prev);
         caseIds.forEach((id) => next.add(id));
         return next;
@@ -422,8 +470,13 @@ export function useOutboundMutations(
           cancelEmails: true,
         });
       } finally {
-        // Remove all case IDs from cancelling state
-        setCancellingCaseIds((prev) => {
+        // Remove all case IDs from both cancelling states
+        setCancellingCallCaseIds((prev) => {
+          const next = new Set(prev);
+          caseIds.forEach((id) => next.delete(id));
+          return next;
+        });
+        setCancellingEmailCaseIds((prev) => {
           const next = new Set(prev);
           caseIds.forEach((id) => next.delete(id));
           return next;
@@ -431,6 +484,21 @@ export function useOutboundMutations(
       }
     },
     [batchCancel],
+  );
+
+  // Update schedule delays for a case
+  const handleUpdateScheduleDelays = useCallback(
+    async (
+      caseId: string,
+      options: { callDelayDays?: number; emailDelayDays?: number },
+    ) => {
+      await updateScheduleDelays.mutateAsync({
+        caseId,
+        callDelayDays: options.callDelayDays,
+        emailDelayDays: options.emailDelayDays,
+      });
+    },
+    [updateScheduleDelays],
   );
 
   const isSubmitting =
@@ -441,6 +509,8 @@ export function useOutboundMutations(
   const isBulkScheduling = batchSchedule.isPending;
   const isBulkCancelling = batchCancel.isPending;
 
+  const isUpdatingSchedule = updateScheduleDelays.isPending;
+
   return {
     // Mutations
     approveAndSchedule,
@@ -450,6 +520,7 @@ export function useOutboundMutations(
     batchSchedule,
     cancelScheduledDelivery,
     batchCancel,
+    updateScheduleDelays,
     // Handlers
     handleApproveAndSend,
     handleSkip,
@@ -461,12 +532,15 @@ export function useOutboundMutations(
     handleBulkScheduleImmediateBackground,
     handleCancelScheduled,
     handleBulkCancel,
+    handleUpdateScheduleDelays,
     // State
     isSubmitting,
     isBulkScheduling,
     isBulkCancelling,
+    isUpdatingSchedule,
     schedulingCaseIds,
     togglingStarCaseIds,
-    cancellingCaseIds,
+    cancellingCallCaseIds,
+    cancellingEmailCaseIds,
   };
 }

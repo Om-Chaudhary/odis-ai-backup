@@ -1,4 +1,5 @@
 import type { DischargeCaseStatus, DeliveryToggles } from "../types";
+import { PendingReviewActions } from "./smart-action-section/pending-review-actions";
 import { ScheduledActions } from "./smart-action-section/scheduled-actions";
 import { CompletedSummary } from "./smart-action-section/completed-summary";
 
@@ -27,7 +28,6 @@ interface SmartActionSectionProps {
   }) => void;
   isSubmitting: boolean;
   isCancelling?: boolean;
-  needsGeneration?: boolean;
   testModeEnabled?: boolean;
   failureReason?: string | null;
 }
@@ -36,10 +36,9 @@ interface SmartActionSectionProps {
  * Smart Action Section - Context-aware component that shows different UI based on case state
  *
  * Routes to appropriate sub-component:
+ * - PendingReviewActions: For ready/pending_review cases (schedule UI)
  * - ScheduledActions: For fully scheduled cases
  * - CompletedSummary: For completed/failed cases
- *
- * Note: Ready/pending_review states are now handled inline in ActivityTimeline component
  */
 export function SmartActionSection({
   status,
@@ -47,24 +46,32 @@ export function SmartActionSection({
   emailStatus,
   scheduledCallFor,
   scheduledEmailFor,
-  hasOwnerPhone: _hasOwnerPhone,
-  hasOwnerEmail: _hasOwnerEmail,
+  hasOwnerPhone,
+  hasOwnerEmail,
   ownerPhone: _ownerPhone,
   ownerEmail: _ownerEmail,
-  deliveryToggles: _deliveryToggles,
+  deliveryToggles,
   onToggleChange: _onToggleChange,
-  onApprove: _onApprove,
+  onApprove,
   onRetry,
   onCancelScheduled,
   isSubmitting,
   isCancelling,
-  needsGeneration: _needsGeneration,
-  testModeEnabled: _testModeEnabled,
+  testModeEnabled,
   failureReason,
 }: SmartActionSectionProps) {
-  // State: Ready to Send - now handled inline in ActivityTimeline
+  // State: Ready to Send / Pending Review - show schedule UI
   if (status === "ready" || status === "pending_review") {
-    return null;
+    return (
+      <PendingReviewActions
+        hasOwnerPhone={hasOwnerPhone}
+        hasOwnerEmail={hasOwnerEmail}
+        deliveryToggles={deliveryToggles}
+        onApprove={onApprove}
+        isSubmitting={isSubmitting}
+        testModeEnabled={testModeEnabled}
+      />
+    );
   }
 
   // State: Fully Scheduled

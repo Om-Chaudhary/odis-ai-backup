@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState, memo } from "react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, X, Loader2 } from "lucide-react";
 import { Progress } from "@odis-ai/shared/ui/progress";
+import { Button } from "@odis-ai/shared/ui/button";
 import { formatDistanceToNow } from "date-fns";
+import { api } from "~/trpc/client";
+import { toast } from "sonner";
 
 interface SyncProgressItemProps {
   sync: {
@@ -33,6 +36,22 @@ export const SyncProgressItem = memo(function SyncProgressItem({
   const [smoothProgress, setSmoothProgress] = useState(
     sync.progress_percentage ?? 0,
   );
+
+  const utils = api.useUtils();
+  const cancelMutation = api.admin.sync.cancelSync.useMutation({
+    onSuccess: () => {
+      toast.success("Sync cancelled");
+      void utils.admin.sync.getActiveSyncs.invalidate();
+      void utils.admin.sync.getSyncHistory.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`Failed to cancel: ${error.message}`);
+    },
+  });
+
+  const handleCancel = () => {
+    cancelMutation.mutate({ syncId: sync.id });
+  };
 
   // Smooth progress interpolation between server updates
   useEffect(() => {
@@ -89,7 +108,23 @@ export const SyncProgressItem = memo(function SyncProgressItem({
             {clinicName}
           </span>
         </div>
-        <span className="text-xs text-slate-500">{elapsedTime}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">{elapsedTime}</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCancel}
+            disabled={cancelMutation.isPending}
+            className="h-6 w-6 p-0 text-slate-400 hover:bg-red-50 hover:text-red-600"
+            title="Cancel sync"
+          >
+            {cancelMutation.isPending ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <X className="h-3 w-3" />
+            )}
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-1">

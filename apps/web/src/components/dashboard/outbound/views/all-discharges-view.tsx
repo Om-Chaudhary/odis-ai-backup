@@ -52,7 +52,8 @@ interface AllDischargesViewProps extends OutboundHeaderProps {
     cancelEmail: boolean;
   }) => void;
   isSubmitting: boolean;
-  isCancelling: boolean; // For current case
+  isCancellingCall: boolean; // For current case phone cancel
+  isCancellingEmail: boolean; // For current case email cancel
   testModeEnabled: boolean;
 }
 
@@ -82,7 +83,8 @@ export function AllDischargesView({
   onRetry,
   onCancelScheduled,
   isSubmitting,
-  isCancelling,
+  isCancellingCall,
+  isCancellingEmail,
   testModeEnabled,
   ...headerProps
 }: AllDischargesViewProps) {
@@ -160,7 +162,8 @@ export function AllDischargesView({
           onRetry={onRetry}
           onCancelScheduled={onCancelScheduled}
           isSubmitting={isSubmitting}
-          isCancelling={isCancelling}
+          isCancellingCall={isCancellingCall}
+          isCancellingEmail={isCancellingEmail}
           testModeEnabled={testModeEnabled}
           onDelete={handleClosePanel}
         />
