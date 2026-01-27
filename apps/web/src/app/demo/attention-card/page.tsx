@@ -17,7 +17,7 @@ interface DemoScenario {
   name: string;
   description: string;
   attentionTypes: string[];
-  attentionSeverity: "routine" | "urgent" | "critical";
+  attentionSeverity: string | null;
   attentionSummary: string | null;
 }
 
