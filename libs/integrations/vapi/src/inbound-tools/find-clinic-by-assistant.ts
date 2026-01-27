@@ -26,6 +26,8 @@ export interface ClinicLookupResult {
 export interface ClinicWithConfig extends ClinicLookupResult {
   /** Clinic timezone (e.g., "America/Los_Angeles") */
   timezone?: string | null;
+  /** PIMS type (e.g., "idexx", "avimark", etc.) */
+  pims_type?: string | null;
   er_config?: {
     name: string;
     address: string;
@@ -141,7 +143,7 @@ export async function findClinicWithConfigByAssistantId(
     // Found in mappings - get clinic details with config
     const { data: clinic, error: clinicError } = await supabase
       .from("clinics")
-      .select("id, name, timezone, er_config, business_hours, address_config")
+      .select("id, name, timezone, pims_type, er_config, business_hours, address_config")
       .eq("id", mapping.clinic_id)
       .single();
 
@@ -158,7 +160,7 @@ export async function findClinicWithConfigByAssistantId(
   // Fallback: check legacy inbound_assistant_id column
   const { data: clinic, error } = await supabase
     .from("clinics")
-    .select("id, name, timezone, er_config, business_hours, address_config")
+    .select("id, name, timezone, pims_type, er_config, business_hours, address_config")
     .eq("inbound_assistant_id", assistantId)
     .single();
 
@@ -213,7 +215,7 @@ export async function findClinicWithConfigById(
 ): Promise<ClinicWithConfig | null> {
   const { data: clinic, error } = await supabase
     .from("clinics")
-    .select("id, name, timezone, er_config, business_hours, address_config")
+    .select("id, name, timezone, pims_type, er_config, business_hours, address_config")
     .eq("id", clinicId)
     .single();
 

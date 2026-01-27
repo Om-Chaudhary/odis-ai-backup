@@ -324,6 +324,215 @@ export async function processBookAppointment(
   });
   const formattedTime = formatTime12Hour(parsedTime);
 
+  // === IDEXX Neo Clinics: Use IDEXX API ===
+  // For clinics using IDEXX Neo, use the appointment management API
+  if (clinic.pims_type === "idexx") {
+    try {
+      // Dynamic import to avoid loading IDEXX dependencies for non-IDEXX clinics
+      const { IdexxProvider } = await import("@odis-ai/integrations/idexx");
+      const { BrowserService } = await import(
+        "@odis-ai/integrations/idexx/browser"
+      );
+
+      // Get IDEXX credentials from clinic config or environment
+      // TODO: Store IDEXX credentials in clinic settings
+      const credentials = {
+        username: process.env.IDEXX_USERNAME ?? "",
+        password: process.env.IDEXX_PASSWORD ?? "",
+        companyId: process.env.IDEXX_COMPANY_ID ?? "",
+      };
+
+      if (!credentials.username || !credentials.password) {
+        logger.error("IDEXX credentials not configured", {
+          clinicId: clinic.id,
+        });
+        throw new Error("IDEXX credentials not configured");
+      }
+
+      // Initialize IDEXX provider
+      const browserService = new BrowserService({
+        headless: true,
+        defaultTimeout: 30000,
+      });
+
+      const provider = new IdexxProvider({
+        browserService,
+        debug: false,
+      });
+
+      // Authenticate
+      const authenticated = await provider.authenticate(credentials);
+      if (!authenticated) {
+        logger.error("IDEXX authentication failed", { clinicId: clinic.id });
+        throw new Error("IDEXX authentication failed");
+      }
+
+      logger.info("IDEXX provider authenticated", { clinicId: clinic.id });
+
+      // Calculate end time (default 15 minutes)
+      const calculateEndTime = (startTime: string, durationMinutes = 15): string => {
+        const [hours, minutes] = startTime.split(":").map(Number);
+        const startDate = new Date();
+        startDate.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+        startDate.setMinutes(startDate.getMinutes() + durationMinutes);
+        
+        const endHours = String(startDate.getHours()).padStart(2, "0");
+        const endMinutes = String(startDate.getMinutes()).padStart(2, "0");
+        return `${endHours}:${endMinutes}`;
+      };
+
+      // Determine if this is a new client or existing
+      const isNewClient = input.is_new_client ?? false;
+
+      let result;
+
+      if (isNewClient) {
+        // Create appointment with new client and patient
+        result = await provider.createAppointmentWithNewClient({
+          newClient: {
+            firstName: input.client_name.split(" ")[0] ?? "",
+            lastName: input.client_name.split(" ").slice(1).join(" ") || input.client_name,
+            phone: input.client_phone,
+          },
+          newPatient: {
+            name: input.patient_name,
+            species: input.species ?? "Unknown",
+            breed: input.breed,
+          },
+          reason: input.reason ?? "Appointment",
+          date: parsedDate,
+          startTime: parsedTime,
+          endTime: calculateEndTime(parsedTime),
+          note: `Booked via VAPI inbound call${callId ? ` (Call ID: ${callId})` : ""}`,
+        });
+      } else {
+        // Search for existing patient first
+        const searchResult = await provider.searchPatient({
+          query: input.patient_name,
+          limit: 5,
+        });
+
+        if (searchResult.patients.length === 0) {
+          logger.warn("Patient not found in IDEXX, treating as new client", {
+            patientName: input.patient_name,
+            clinicId: clinic.id,
+          });
+          // Fallback to new client workflow
+          result = await provider.createAppointmentWithNewClient({
+            newClient: {
+              firstName: input.client_name.split(" ")[0] ?? "",
+              lastName: input.client_name.split(" ").slice(1).join(" ") || input.client_name,
+              phone: input.client_phone,
+            },
+            newPatient: {
+              name: input.patient_name,
+              species: input.species ?? "Unknown",
+              breed: input.breed,
+            },
+            reason: input.reason ?? "Appointment",
+            date: parsedDate,
+            startTime: parsedTime,
+            endTime: calculateEndTime(parsedTime),
+            note: `Booked via VAPI inbound call${callId ? ` (Call ID: ${callId})` : ""}`,
+          });
+        } else {
+          // Use first matching patient
+          const patient = searchResult.patients[0];
+          logger.info("Found matching patient in IDEXX", {
+            patientId: patient?.id,
+            patientName: patient?.name,
+            clinicId: clinic.id,
+          });
+
+          result = await provider.createAppointment({
+            patientId: patient?.id,
+            clientId: patient?.clientId,
+            reason: input.reason ?? "Appointment",
+            date: parsedDate,
+            startTime: parsedTime,
+            endTime: calculateEndTime(parsedTime),
+            note: `Booked via VAPI inbound call${callId ? ` (Call ID: ${callId})` : ""}`,
+          });
+        }
+      }
+
+      // Clean up browser resources
+      await provider.close();
+
+      if (result.success) {
+        logger.info("IDEXX appointment created successfully", {
+          appointmentId: result.appointmentId,
+          clinicId: clinic.id,
+          clinicName: clinic.name,
+          date: parsedDate,
+          time: parsedTime,
+          patientName: input.patient_name,
+        });
+
+        // Optionally store in inbound_vapi_calls for tracking
+        if (callId) {
+          await supabase
+            .from("inbound_vapi_calls")
+            .update({
+              structured_data: {
+                appointment: {
+                  date: parsedDate,
+                  time: parsedTime,
+                  idexx_appointment_id: result.appointmentId,
+                  client_name: input.client_name,
+                  client_phone: input.client_phone,
+                  patient_name: input.patient_name,
+                  reason: input.reason ?? null,
+                  species: input.species ?? null,
+                  breed: input.breed ?? null,
+                  is_new_client: isNewClient,
+                  booked_at: new Date().toISOString(),
+                },
+              },
+              call_analysis: {
+                outcome: "scheduled",
+                appointment_booked: true,
+              },
+              outcome: "Scheduled",
+            })
+            .eq("vapi_call_id", callId);
+        }
+
+        return {
+          success: true,
+          message: `Perfect! I've scheduled ${input.patient_name} for ${formattedDate} at ${formattedTime}. Your appointment has been added to the system. Is there anything else I can help you with?`,
+          data: {
+            appointment_id: result.appointmentId,
+            appointment: {
+              date: parsedDate,
+              formatted_date: formattedDate,
+              time: parsedTime,
+              formatted_time: formattedTime,
+              patient_name: input.patient_name,
+              client_name: input.client_name,
+              reason: input.reason,
+            },
+            clinic_name: clinic.name,
+            pims_type: "idexx",
+          },
+        };
+      } else {
+        // IDEXX API failed, fall back to schedule_slots
+        logger.error("IDEXX appointment creation failed, falling back to schedule_slots", {
+          error: result.error,
+          clinicId: clinic.id,
+        });
+        // Continue to schedule_slots fallback below
+      }
+    } catch (error) {
+      logger.error("IDEXX appointment creation error, falling back to schedule_slots", {
+        error,
+        clinicId: clinic.id,
+      });
+      // Continue to schedule_slots fallback below
+    }
+  }
+
   // === Del Valle Pet Hospital: Store booking in inbound call record ===
   // Del Valle uses Avimark (cloud PIMS, no API), so we store the booking
   // in the inbound_vapi_calls table for staff to manually enter into Avimark

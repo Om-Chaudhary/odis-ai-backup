@@ -16,9 +16,6 @@ import {
   handleCorsPreflightRequest,
   withCorsHeaders,
 } from "@odis-ai/data-access/api/cors";
-import { IdexxCredentialManager } from "@odis-ai/integrations/idexx/credential-manager";
-import { validateIdexxCredentials } from "@odis-ai/integrations/idexx/validation";
-
 const validateCredentialsSchema = z.object({
   username: z.string().optional(),
   password: z.string().optional(),
@@ -98,6 +95,13 @@ export async function POST(request: NextRequest) {
     // Parse and validate request body
     const body = await request.json().catch(() => ({}));
     const validated = validateCredentialsSchema.parse(body);
+
+    // Lazy-load IDEXX integration modules
+    const [{ IdexxCredentialManager }, { validateIdexxCredentials }] =
+      await Promise.all([
+        import("@odis-ai/integrations/idexx/credential-manager"),
+        import("@odis-ai/integrations/idexx/validation"),
+      ]);
 
     let username: string;
     let password: string;
