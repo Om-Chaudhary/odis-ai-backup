@@ -1,0 +1,16 @@
+{
+  "name": "mobile-ui",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/mobile/ui/src",
+  "projectType": "library",
+  "tags": ["type:ui", "scope:mobile", "platform:react-native"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit",
+        "cwd": "libs/mobile/ui"
+      }
+    }
+  }
+}

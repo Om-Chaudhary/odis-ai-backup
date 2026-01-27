@@ -24,6 +24,19 @@
   },
   "plugins": [
     {
+      "plugin": "@nx/expo/plugin",
+      "include": ["apps/mobile/**"],
+      "options": {
+        "startTargetName": "start",
+        "runIosTargetName": "run-ios",
+        "runAndroidTargetName": "run-android",
+        "exportTargetName": "export",
+        "prebuildTargetName": "prebuild",
+        "buildTargetName": "build",
+        "installTargetName": "install"
+      }
+    },
+    {
       "plugin": "@nx/eslint/plugin",
       "include": ["apps/**", "libs/**"],
       "options": {
