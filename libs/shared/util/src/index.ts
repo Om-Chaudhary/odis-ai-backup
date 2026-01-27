@@ -47,11 +47,7 @@ export * from "./lib/case-transforms";
 export * from "./lib/discharge-status";
 
 // Relative time formatting
-export {
-  formatRelativeTime,
-  formatDuration,
-  formatShortDateTime,
-} from "./lib/relative-time";
+export { formatDurationHuman, formatShortDateTime } from "./lib/relative-time";
 
 // Attention summary parsing
 export * from "./lib/attention-parser";
