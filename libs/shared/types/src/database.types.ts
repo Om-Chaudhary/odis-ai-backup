@@ -519,10 +519,12 @@ export type Database = {
       cases: {
         Row: {
           auto_scheduled_at: string | null
+          call_enabled: boolean | null
           canonical_patient_id: string | null
           clinic_id: string | null
           created_at: string | null
           created_by: string | null
+          email_enabled: boolean | null
           entity_extraction: Json | null
           external_id: string | null
           extreme_case_check: Json | null
@@ -542,10 +544,12 @@ export type Database = {
         }
         Insert: {
           auto_scheduled_at?: string | null
+          call_enabled?: boolean | null
           canonical_patient_id?: string | null
           clinic_id?: string | null
           created_at?: string | null
           created_by?: string | null
+          email_enabled?: boolean | null
           entity_extraction?: Json | null
           external_id?: string | null
           extreme_case_check?: Json | null
@@ -565,10 +569,12 @@ export type Database = {
         }
         Update: {
           auto_scheduled_at?: string | null
+          call_enabled?: boolean | null
           canonical_patient_id?: string | null
           clinic_id?: string | null
           created_at?: string | null
           created_by?: string | null
+          email_enabled?: boolean | null
           entity_extraction?: Json | null
           external_id?: string | null
           extreme_case_check?: Json | null

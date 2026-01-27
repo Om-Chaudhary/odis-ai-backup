@@ -1,31 +1,8 @@
-## Development Workflow
+# .claude/CLAUDE.md
 
-- Never use `git commit` or `git add` — GitButler handles all commits
-- After completing a task, GitButler auto-commits your changes
-- Use conventional commits: type(scope): description
+Additional Claude Code configuration. See root `CLAUDE.md` for main instructions.
 
-## OdisAI Commit Scopes
+## Environment-Specific Notes
 
-Use these scopes in commit messages:
-
-- (web): Next.js frontend
-- (extension): Chrome extension, IDEXX Neo
-- (cases): case management, SOAP notes
-- (clinics): clinic config, multi-tenant
-- (vapi): VAPI voice AI
-- (outbound): discharge calls/emails
-- (inbound): incoming calls, booking
-- (dashboard): widgets, analytics
-- (ui): shared components
-- (util): utilities
-- (db): Supabase
-
-## Project Structure
-
-Nx monorepo:
-
-- apps/web — Next.js dashboard
-- apps/extension — Chrome extension
-- libs/domain/\* — Business logic
-- libs/integrations/\* — External services (vapi, qstash, ai, resend)
-- libs/shared/\* — Shared utilities, UI, validators
+<!-- Add machine-specific or local development notes here -->
+<!-- This file is for configuration that shouldn't be in the main CLAUDE.md -->
