@@ -146,6 +146,16 @@ export const cancelScheduledDeliveryInput = z.object({
   cancelEmail: z.boolean().default(false),
 });
 
+export const rescheduleDeliveryInput = z.object({
+  caseId: z.string().uuid(),
+  rescheduleCall: z.boolean().default(false),
+  rescheduleEmail: z.boolean().default(false),
+  /** Number of days to delay (0-7). Ignored if immediate=true */
+  delayDays: z.number().min(0).max(7).default(0),
+  /** When true, schedules for ~1 minute from now */
+  immediate: z.boolean().default(false),
+});
+
 export const batchCancelInput = z.object({
   /** List of case IDs to cancel scheduled deliveries for */
   caseIds: z.array(z.string().uuid()).min(1).max(100),
@@ -218,7 +228,12 @@ export type ScheduleRemainingOutreachInput = z.infer<
 export type CancelScheduledDeliveryInput = z.infer<
   typeof cancelScheduledDeliveryInput
 >;
+export type RescheduleDeliveryInput = z.infer<typeof rescheduleDeliveryInput>;
 export type BatchCancelInput = z.infer<typeof batchCancelInput>;
 export type BatchScheduleInput = z.infer<typeof batchScheduleInput>;
-export type UpdateScheduleDelaysInput = z.infer<typeof updateScheduleDelaysInput>;
-export type UpdateCommunicationPreferencesInput = z.infer<typeof updateCommunicationPreferencesInput>;
+export type UpdateScheduleDelaysInput = z.infer<
+  typeof updateScheduleDelaysInput
+>;
+export type UpdateCommunicationPreferencesInput = z.infer<
+  typeof updateCommunicationPreferencesInput
+>;

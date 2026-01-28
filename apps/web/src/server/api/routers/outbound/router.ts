@@ -14,6 +14,7 @@ import { findByConsultationRouter } from "./procedures/find-by-consultation";
 import { findPreviousAttentionDateRouter } from "./procedures/find-previous-attention-date";
 import { scheduleRemainingRouter } from "./procedures/schedule-remaining";
 import { cancelScheduledRouter } from "./procedures/cancel-scheduled";
+import { rescheduleRouter } from "./procedures/reschedule";
 import { batchScheduleRouter } from "./procedures/batch-schedule";
 import { batchCancelRouter } from "./procedures/batch-cancel";
 import { getCaseByIdRouter } from "./procedures/get-case-by-id";
@@ -37,6 +38,7 @@ export const outboundRouter = createTRPCRouter({
   retryFailedDelivery: retryRouter.retryFailedDelivery,
   scheduleRemainingOutreach: scheduleRemainingRouter.scheduleRemainingOutreach,
   cancelScheduledDelivery: cancelScheduledRouter.cancelScheduledDelivery,
+  rescheduleDelivery: rescheduleRouter.rescheduleDelivery,
   batchSchedule: batchScheduleRouter.batchSchedule,
   batchCancel: batchCancelRouter.batchCancel,
   updateScheduleDelays: updateScheduleRouter.updateScheduleDelays,
