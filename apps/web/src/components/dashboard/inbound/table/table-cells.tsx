@@ -12,12 +12,12 @@ import type { Database } from "@odis-ai/shared/types";
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
 /**
- * Displays caller information with name as primary when available
+ * Displays caller information with phone number as primary
  *
  * Display hierarchy:
- * 1. Caller name (primary, bold) + phone (secondary, muted) when name is known
- * 2. Phone only (primary, bold) when no name available
- * 3. Pet name always shown below with paw icon
+ * 1. Phone number (primary, bold) - always shown first
+ * 2. Owner name (secondary, muted, smaller) when available
+ * 3. Pet name with paw icon (tertiary, muted, smaller) when available
  */
 export function CallerDisplay({
   phone,
@@ -47,24 +47,19 @@ export function CallerDisplay({
 
   return (
     <div className="flex flex-col gap-0.5">
-      {/* Primary line: Name if available, otherwise phone */}
-      {callerName ? (
-        <>
-          <span className="truncate text-sm font-semibold">{callerName}</span>
-          <span className="text-muted-foreground text-xs">
-            {formattedPhone}
-          </span>
-        </>
-      ) : (
-        <span className="text-sm font-semibold">
-          {isLoading && !demoName ? (
-            <span className="text-muted-foreground">{formattedPhone}</span>
-          ) : (
-            formattedPhone
-          )}
-        </span>
+      {/* Primary line: Phone number (always first) */}
+      <span className="text-sm font-semibold">
+        {isLoading && !demoName ? (
+          <span className="text-muted-foreground">{formattedPhone}</span>
+        ) : (
+          formattedPhone
+        )}
+      </span>
+      {/* Secondary line: Owner name if available */}
+      {callerName && (
+        <span className="text-muted-foreground truncate text-xs">{callerName}</span>
       )}
-      {/* Pet name with icon - always shown below */}
+      {/* Pet name with icon - always shown below when available */}
       {petName && (
         <div className="text-muted-foreground flex items-center gap-1 text-xs">
           <PawPrint className="h-3 w-3" />
@@ -91,7 +86,7 @@ export function CallDuration({ call }: { call: InboundCall }) {
   // Note: This will be throttled by the request queue to prevent rate limits
   const shouldFetchFromVAPI = !call.duration_seconds && !!call.vapi_call_id;
   const vapiQuery = api.inboundCalls.fetchCallFromVAPI.useQuery(
-    { vapiCallId: call.vapi_call_id },
+    { vapiCallId: call.vapi_call_id || "placeholder" }, // Provide fallback for disabled queries
     {
       enabled: shouldFetchFromVAPI,
       staleTime: 5 * 60 * 1000, // 5 minutes cache

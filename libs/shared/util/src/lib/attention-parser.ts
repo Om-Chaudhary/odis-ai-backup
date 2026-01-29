@@ -123,22 +123,20 @@ export function isStructuredFormat(summary: string | null): boolean {
 
 /**
  * Map attention types to user-friendly titles
+ * Aligned with production VAPI configuration
  */
 const ATTENTION_TYPE_LABELS: Record<string, string> = {
+  // Production VAPI types (7 total)
   medication_question: 'Medication Question',
   callback_request: 'Callback Request',
   appointment_needed: 'Appointment Needed',
   health_concern: 'Health Concern',
   emergency_signs: 'Emergency Signs',
-  owner_dissatisfaction: 'Owner Dissatisfaction',
-  follow_up_needed: 'Follow-up Needed',
+  dissatisfaction: 'Owner Dissatisfaction',
   billing_question: 'Billing Question',
-  treatment_concern: 'Treatment Concern',
-  side_effects: 'Side Effects',
-  care_instructions: 'Care Instructions',
-  urgent_callback: 'Urgent Callback',
-  recheck_needed: 'Recheck Needed',
-  complications: 'Complications',
+
+  // Backward compatibility (deprecated - remove after migration)
+  owner_dissatisfaction: 'Owner Dissatisfaction',
 };
 
 /**

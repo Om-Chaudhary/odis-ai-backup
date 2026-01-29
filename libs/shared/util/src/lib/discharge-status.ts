@@ -138,14 +138,16 @@ export function deriveDeliveryStatus(
  * - medication_question (Pill icon)
  * - callback_request (Phone icon)
  * - appointment_needed (Calendar icon)
+ * - emergency_signs (Octagon icon)
  *
- * Excludes health_concern (triangle) and emergency_signs (octagon) which
- * are informational rather than requiring staff action.
+ * Excludes health_concern (triangle) and other informational types which
+ * do not require immediate staff action.
  */
 const ACTIONABLE_ATTENTION_TYPES = [
   "medication_question",
   "callback_request",
   "appointment_needed",
+  "emergency_signs",
 ] as const;
 
 /**

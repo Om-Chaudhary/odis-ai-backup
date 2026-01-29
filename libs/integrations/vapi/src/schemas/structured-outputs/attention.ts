@@ -14,20 +14,20 @@ export const AttentionClassificationSchema = z.object({
   attention_types: z
     .array(
       z.enum([
+        "medication_question",
+        "callback_request",
+        "appointment_needed",
         "health_concern",
         "emergency_signs",
-        "owner_complaint",
+        "dissatisfaction",
         "billing_question",
-        "medication_issue",
-        "scheduling_problem",
-        "other",
       ]),
     )
     .optional()
     .describe("Categories of attention needed"),
 
   attention_severity: z
-    .enum(["critical", "high", "medium", "low"])
+    .enum(["critical", "urgent", "routine"])
     .optional()
     .describe("How urgently attention is needed"),
 

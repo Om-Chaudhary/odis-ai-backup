@@ -103,11 +103,11 @@ export const cleanTranscriptInput = z.object({
 // =============================================================================
 
 export const fetchCallFromVAPIInput = z.object({
-  vapiCallId: z.string(),
+  vapiCallId: z.string().min(1, "VAPI call ID cannot be empty"),
 });
 
 export const getCallDataForAppointmentInput = z.object({
-  vapiCallId: z.string(),
+  vapiCallId: z.string().min(1, "VAPI call ID cannot be empty"),
 });
 
 export const syncCallFromVAPIInput = z.object({

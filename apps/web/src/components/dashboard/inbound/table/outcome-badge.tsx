@@ -29,6 +29,7 @@ interface OutcomeBadgeProps {
  */
 function getVariantStyle(
   variant: "emergency" | "appointment" | "callback" | "info" | "blank",
+  label?: string,
 ): {
   variant: "default" | "secondary" | "destructive" | "outline";
   className: string;
@@ -41,6 +42,13 @@ function getVariantStyle(
           "bg-orange-500/20 text-orange-700 dark:text-orange-400 font-semibold",
       };
     case "appointment":
+      // Special case: Cancellation should be red but still categorized as appointment
+      if (label === "Cancellation") {
+        return {
+          variant: "destructive",
+          className: "bg-red-500/15 text-red-700 dark:text-red-400",
+        };
+      }
       return {
         variant: "default",
         className: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
@@ -83,7 +91,7 @@ export function OutcomeBadge({
     return <span className="text-muted-foreground">—</span>;
   }
 
-  const { className: styleClassName } = getVariantStyle(outcome.variant);
+  const { className: styleClassName } = getVariantStyle(outcome.variant, outcome.label);
 
   // Text to display - use description for detail views, label for table
   const displayText =

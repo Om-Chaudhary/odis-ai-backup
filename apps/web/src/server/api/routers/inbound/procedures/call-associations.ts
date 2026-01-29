@@ -6,6 +6,7 @@
 
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
+import type { ActionCardOutput } from "@odis-ai/integrations/vapi/schemas/action-card-output";
 
 export const callAssociationsRouter = createTRPCRouter({
   /**
@@ -176,6 +177,51 @@ export const callAssociationsRouter = createTRPCRouter({
           lastVisit: null,
           source: "message" as const,
         };
+      }
+
+      // Try to find in inbound_vapi_calls structured_data (from VAPI action cards)
+      const { data: vapiCall } = await supabase
+        .from("inbound_vapi_calls")
+        .select("structured_data, created_at")
+        .or(
+          `customer_phone.eq.${normalizedPhone},customer_phone.eq.+1${normalizedPhone},customer_phone.ilike.%${normalizedPhone.slice(-10)}%`,
+        )
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (vapiCall?.structured_data) {
+        const structuredData = vapiCall.structured_data as unknown as ActionCardOutput;
+
+        // Check for appointment data (scheduled/rescheduled/cancellation)
+        if (structuredData?.appointment_data) {
+          const { client_name, patient_name } = structuredData.appointment_data;
+          if (client_name || patient_name) {
+            return {
+              name: client_name ?? null,
+              petName: patient_name ?? null,
+              species: null,
+              breed: null,
+              lastVisit: vapiCall.created_at,
+              source: "appointment" as const,
+            };
+          }
+        }
+
+        // Check for callback data
+        if (structuredData?.callback_data) {
+          const { caller_name, pet_name } = structuredData.callback_data;
+          if (caller_name || pet_name) {
+            return {
+              name: caller_name ?? null,
+              petName: pet_name ?? null,
+              species: null,
+              breed: null,
+              lastVisit: vapiCall.created_at,
+              source: "message" as const,
+            };
+          }
+        }
       }
 
       return null;

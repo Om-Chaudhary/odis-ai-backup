@@ -43,7 +43,7 @@ export function CallDetail({
 
   // Query for booking data by vapi_call_id
   const { data: bookingData } = api.inbound.getBookingByVapiCallId.useQuery(
-    { vapiCallId: call.vapi_call_id },
+    { vapiCallId: call.vapi_call_id || "placeholder" }, // Provide fallback for disabled queries
     {
       enabled: !!call.vapi_call_id,
       staleTime: 5 * 60 * 1000, // 5 minutes cache
@@ -110,7 +110,7 @@ export function CallDetail({
   }, [shouldFetchFromVAPI]);
 
   const vapiQuery = api.inboundCalls.fetchCallFromVAPI.useQuery(
-    { vapiCallId: call.vapi_call_id },
+    { vapiCallId: call.vapi_call_id || "placeholder" }, // Provide fallback for disabled queries
     {
       enabled: shouldFetchVAPI && shouldFetchFromVAPI,
       staleTime: 5 * 60 * 1000, // 5 minutes cache

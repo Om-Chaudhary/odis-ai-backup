@@ -1,6 +1,7 @@
 "use client";
 
 import type { CallOutcome, BookingData } from "../../inbound/types";
+import type { Database } from "@odis-ai/shared/types";
 import { ScheduledAppointmentCard } from "./scheduled-appointment-card";
 import { RescheduledAppointmentCard } from "./rescheduled-appointment-card";
 import { CanceledAppointmentCard } from "./canceled-appointment-card";
@@ -12,6 +13,8 @@ import {
   type ActionCardData,
   type LegacyCallData,
 } from "./derive-action-card-data";
+import { isNoResponseCall } from "../../inbound/detail/utils/is-no-response-call";
+import { getDescriptiveOutcome } from "../../inbound/detail/utils/get-descriptive-outcome";
 
 /**
  * Call outcome data from VAPI structured output
@@ -117,6 +120,14 @@ export function ActionCardSelector({
     escalation_data: call.escalation_data,
     follow_up_data: call.follow_up_data,
   };
+
+  // Apply same filtering logic as outcome column - don't show action cards for calls with no outcome
+  // Check if this call should show "—" in the outcome column
+  // Type cast to database row type for utility function compatibility
+  const callAsDbRow = call as Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
+  if (isNoResponseCall(callAsDbRow) || !getDescriptiveOutcome(callAsDbRow)) {
+    return null;
+  }
 
   // structured_data from VAPI's analysis.structuredData contains action card format
   const structuredActionCard = call.structured_data as ActionCardData | null;

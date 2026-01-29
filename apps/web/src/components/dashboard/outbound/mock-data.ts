@@ -173,7 +173,7 @@ const ATTENTION_SCENARIOS: AttentionScenarioTemplate[] = [
     veterinarian: "Dr. Emily Chen",
   },
   {
-    attentionTypes: ["medication_issue", "health_concern"],
+    attentionTypes: ["medication_question", "health_concern"],
     attentionSeverity: "critical",
     attentionSummary: "**[MEDICATION] - Adverse reaction reported: Owner states pet vomiting after medication, stop immediately and bring in**",
     patient: { name: "Luna", species: "Feline", breed: "Persian" },
@@ -184,7 +184,7 @@ const ATTENTION_SCENARIOS: AttentionScenarioTemplate[] = [
 
   // Urgent scenarios - Need prompt attention within 24 hours
   {
-    attentionTypes: ["owner_complaint", "billing_question"],
+    attentionTypes: ["dissatisfaction", "billing_question"],
     attentionSeverity: "urgent",
     attentionSummary: "**[CALLBACK] - Owner dissatisfied with care: Concerns about treatment plan and unexpected charges**",
     patient: { name: "Charlie", species: "Canine", breed: "Labrador Retriever" },
@@ -193,7 +193,7 @@ const ATTENTION_SCENARIOS: AttentionScenarioTemplate[] = [
     veterinarian: "Dr. James Park",
   },
   {
-    attentionTypes: ["health_concern", "scheduling_problem"],
+    attentionTypes: ["health_concern", "appointment_needed"],
     attentionSeverity: "urgent",
     attentionSummary: "**[FOLLOW-UP] - Wound healing concerns: Owner reports incision site swelling, schedule recheck within 24 hours**",
     patient: { name: "Bella", species: "Canine", breed: "Golden Retriever" },
@@ -202,7 +202,7 @@ const ATTENTION_SCENARIOS: AttentionScenarioTemplate[] = [
     veterinarian: "Dr. Lisa Thompson",
   },
   {
-    attentionTypes: ["medication_issue"],
+    attentionTypes: ["medication_question"],
     attentionSeverity: "urgent",
     attentionSummary: "**[MEDICATION] - Dosing confusion: Owner unsure about pain medication schedule, requires clarification**",
     patient: { name: "Rocky", species: "Canine", breed: "Bulldog" },
@@ -213,7 +213,7 @@ const ATTENTION_SCENARIOS: AttentionScenarioTemplate[] = [
 
   // Routine scenarios - Standard follow-up needed
   {
-    attentionTypes: ["medication_issue"],
+    attentionTypes: ["medication_question"],
     attentionSeverity: "routine",
     attentionSummary: "**[MEDICATION] - Clarification needed: Confirm if antibiotic should be given with food**",
     patient: { name: "Daisy", species: "Feline", breed: "Maine Coon" },
@@ -233,7 +233,7 @@ const ATTENTION_SCENARIOS: AttentionScenarioTemplate[] = [
 
   // Complex multi-issue scenarios
   {
-    attentionTypes: ["health_concern", "medication_issue", "owner_complaint"],
+    attentionTypes: ["health_concern", "medication_question", "dissatisfaction"],
     attentionSeverity: "urgent",
     attentionSummary: "**[COMPLEX] - Multiple concerns: Address medication questions, health monitoring, and owner frustrations**",
     patient: { name: "Zeus", species: "Canine", breed: "Rottweiler" },

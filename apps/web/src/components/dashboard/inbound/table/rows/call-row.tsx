@@ -5,7 +5,6 @@ import { CallerDisplay, CallDuration } from "../table-cells";
 import { OutcomeBadge } from "../outcome-badge";
 import { getCallModifications } from "../../mock-data";
 import { Button } from "@odis-ai/shared/ui/button";
-import { cn } from "@odis-ai/shared/util";
 
 // Use Database type for compatibility with table data and demo functions
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
@@ -83,12 +82,11 @@ export function CallRow({
           }
         >
           <Eye
-            className={cn(
-              "h-4 w-4 transition-colors",
+            className={`h-4 w-4 transition-all duration-200 ${
               isSelected
-                ? "text-teal-600 hover:text-teal-700"
-                : "text-slate-400 hover:text-slate-600",
-            )}
+                ? "text-teal-600 hover:text-teal-700 drop-shadow-[0_0_4px_rgba(13,148,136,0.4)] stroke-[2.5]"
+                : "text-slate-400 hover:text-slate-600 stroke-2"
+            }`}
           />
         </Button>
       </td>
