@@ -7,6 +7,7 @@ import { useRef, useEffect, useMemo } from "react";
 import { api } from "~/trpc/client";
 import type { CallStatusFilter, OutcomeFilter } from "../types";
 import type { Database } from "@odis-ai/shared/types";
+import { useClinic } from "@odis-ai/shared/ui/clinic-context";
 
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
@@ -24,6 +25,9 @@ interface UseInboundDataParams {
  */
 export function useInboundData(params: UseInboundDataParams) {
   const { page, pageSize, callStatus, outcomeFilter, searchTerm } = params;
+
+  // Get clinic context for filtering
+  const { clinicId } = useClinic();
 
   // Refs for polling stability
   const callsRef = useRef<InboundCall[]>([]);
@@ -88,8 +92,10 @@ export function useInboundData(params: UseInboundDataParams) {
     },
   );
 
-  // Fetch stats (global stats without date filtering)
-  const { data: statsData } = api.inbound.getInboundStats.useQuery({});
+  // Fetch stats filtered by current clinic
+  const { data: statsData } = api.inbound.getInboundStats.useQuery({
+    clinicId,
+  });
 
   // Update refs when data changes
   useEffect(() => {

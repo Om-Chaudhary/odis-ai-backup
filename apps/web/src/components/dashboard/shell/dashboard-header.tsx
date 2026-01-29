@@ -21,6 +21,7 @@ import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { DashboardHeaderSearch } from "./dashboard-header-search";
 import { api } from "~/trpc/client";
+import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
 import { Button } from "@odis-ai/shared/ui/button";
 import {
   Dialog,
@@ -49,7 +50,6 @@ import {
 import { toast } from "sonner";
 import type { DischargeSettings } from "@odis-ai/shared/types";
 import { cn } from "@odis-ai/shared/util";
-import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
 
 interface DashboardHeaderProps {
   profile?: {
@@ -445,6 +445,10 @@ interface NotificationsDropdownProps {
 }
 
 function NotificationsDropdown({ clinicSlug }: NotificationsDropdownProps) {
+  // Get clinic context for filtering
+  const clinicContext = useOptionalClinic();
+  const clinicId = clinicContext?.clinicId;
+
   // Fetch stats for notifications
   const { data: outboundStats } = api.outbound.getDischargeCaseStats.useQuery(
     { clinicSlug: clinicSlug ?? undefined },
@@ -452,7 +456,7 @@ function NotificationsDropdown({ clinicSlug }: NotificationsDropdownProps) {
   );
 
   const { data: inboundStats } = api.inbound.getInboundStats.useQuery(
-    {},
+    { clinicId },
     { enabled: !!clinicSlug },
   );
 

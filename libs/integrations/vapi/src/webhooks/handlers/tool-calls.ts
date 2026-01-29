@@ -21,7 +21,7 @@ const logger = loggers.webhook.child("tool-calls");
  * Known clinic prefixes to strip from tool names.
  * Allows VAPI tools like `alum_rock_check_availability` to map to `check_availability`.
  */
-const CLINIC_PREFIXES = ["alum_rock_", "clinic_"];
+const CLINIC_PREFIXES = ["alum_rock_", "masson_", "clinic_"];
 
 /**
  * Normalize tool name by stripping clinic prefix.
@@ -101,7 +101,10 @@ function extractToolCallData(toolCall: Record<string, unknown>): {
 export async function handleToolCalls(
   message: ToolCallsMessage,
 ): Promise<ToolCallsResponse> {
-  const toolCallList = (message.toolCallList ?? []) as unknown as Record<string, unknown>[];
+  const toolCallList = (message.toolCallList ?? []) as unknown as Record<
+    string,
+    unknown
+  >[];
   const callId = message.call?.id ?? "unknown";
   const assistantId = message.call?.assistantId;
 
@@ -122,7 +125,11 @@ export async function handleToolCalls(
   const results: VapiToolCallResult[] = await Promise.all(
     toolCallList.map(async (rawToolCall) => {
       // Extract and normalize tool call data
-      const { id, name: rawName, parameters } = extractToolCallData(rawToolCall);
+      const {
+        id,
+        name: rawName,
+        parameters,
+      } = extractToolCallData(rawToolCall);
       const normalizedName = normalizeToolName(rawName);
 
       logger.debug("Tool call extracted", {

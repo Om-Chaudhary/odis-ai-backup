@@ -17,15 +17,35 @@ export const getStatsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
 
-      // Get current user's clinic (gracefully handles missing user record)
-      const clinic = await getClinicByUserId(userId, ctx.supabase);
+      // Use provided clinicId from input, or fall back to user's default clinic
+      let clinic = null;
+      let clinicName = null;
 
-      // Also get user's clinic_name for calls filtering (which uses clinic_name, not clinic_id)
-      const { data: userRecord } = await ctx.supabase
-        .from("users")
-        .select("clinic_name, role")
-        .eq("id", userId)
-        .maybeSingle();
+      if (input.clinicId) {
+        // If clinicId is provided, fetch that clinic directly
+        const { data } = await ctx.supabase
+          .from("clinics")
+          .select("id, name")
+          .eq("id", input.clinicId)
+          .maybeSingle();
+
+        if (data) {
+          clinic = { id: data.id };
+          clinicName = data.name;
+        }
+      } else {
+        // Fall back to user's default clinic
+        clinic = await getClinicByUserId(userId, ctx.supabase);
+
+        // Also get user's clinic_name for calls filtering (which uses clinic_name, not clinic_id)
+        const { data: userRecord } = await ctx.supabase
+          .from("users")
+          .select("clinic_name, role")
+          .eq("id", userId)
+          .maybeSingle();
+
+        clinicName = userRecord?.clinic_name ?? null;
+      }
 
       // Build date filter helper - uses generic type to preserve query builder chain
       const buildDateFilter = <
@@ -88,8 +108,8 @@ export const getStatsRouter = createTRPCRouter({
         .select("status, user_sentiment, outcome", { count: "exact" });
 
       // Apply clinic filtering for calls (uses clinic_name field)
-      if (userRecord?.clinic_name) {
-        callQuery = callQuery.eq("clinic_name", userRecord.clinic_name);
+      if (clinicName) {
+        callQuery = callQuery.eq("clinic_name", clinicName);
       }
 
       callQuery = buildDateFilter(callQuery, input.startDate, input.endDate);

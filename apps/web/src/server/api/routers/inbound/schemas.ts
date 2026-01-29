@@ -95,6 +95,7 @@ export const markMessageReadInput = z.object({
 export const getInboundStatsInput = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
+  clinicId: z.string().uuid().optional(),
 });
 
 // =============================================================================
