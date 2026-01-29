@@ -41,6 +41,9 @@ const envSchema = z.object({
     .string()
     .transform((val) => val !== "false")
     .default("true"),
+
+  // AI configuration (for discharge summary and call intelligence generation)
+  ANTHROPIC_API_KEY: z.string().optional(),
 });
 
 /**

@@ -59,7 +59,8 @@ app.get("/", (req, res) => {
             startDate: "YYYY-MM-DD (optional, flat format)",
             endDate: "YYYY-MM-DD (optional, flat format)",
             daysAhead: "number (default: 7)",
-            dateRange: "{ start: YYYY-MM-DD, end: YYYY-MM-DD } (optional, nested format)",
+            dateRange:
+              "{ start: YYYY-MM-DD, end: YYYY-MM-DD } (optional, nested format)",
           },
         },
         cases: {
@@ -72,7 +73,8 @@ app.get("/", (req, res) => {
             startDate: "YYYY-MM-DD (optional, flat format)",
             endDate: "YYYY-MM-DD (optional, flat format, capped at now)",
             parallelBatchSize: "number (optional)",
-            dateRange: "{ start: YYYY-MM-DD, end: YYYY-MM-DD } (optional, nested format)",
+            dateRange:
+              "{ start: YYYY-MM-DD, end: YYYY-MM-DD } (optional, nested format)",
           },
         },
         reconcile: {
@@ -95,7 +97,8 @@ app.get("/", (req, res) => {
             endDate: "YYYY-MM-DD (optional, flat format)",
             daysAhead: "number (default: 7)",
             lookbackDays: "number (default: 7)",
-            dateRange: "{ start: YYYY-MM-DD, end: YYYY-MM-DD } (optional, nested format)",
+            dateRange:
+              "{ start: YYYY-MM-DD, end: YYYY-MM-DD } (optional, nested format)",
           },
         },
       },
@@ -176,6 +179,29 @@ async function createProviderForScheduler(
   await provider.authenticate(credentials);
 
   return provider;
+}
+
+// Initialize AI client if API key is configured
+if (config.ANTHROPIC_API_KEY) {
+  void (async () => {
+    try {
+      const { initializeLlamaIndex } =
+        await import("@odis-ai/integrations/ai/llamaindex/init");
+      initializeLlamaIndex();
+      logger.info("LlamaIndex initialized for AI generation");
+    } catch (error) {
+      logger.warn(
+        "Failed to initialize LlamaIndex - AI generation will be skipped",
+        {
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+    }
+  })();
+} else {
+  logger.warn(
+    "ANTHROPIC_API_KEY not configured - AI generation will be skipped",
+  );
 }
 
 // Initialize scheduler (if enabled)

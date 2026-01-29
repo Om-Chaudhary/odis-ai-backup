@@ -83,8 +83,10 @@ export class PersistenceService {
     try {
       const { IdexxCredentialManager } =
         await import("@odis-ai/integrations/idexx");
-      const credentialManager = await IdexxCredentialManager.create();
       const supabase = await this.getClient();
+      // Pass the supabase client directly instead of using .create()
+      // which imports Next.js-only modules
+      const credentialManager = new IdexxCredentialManager(supabase);
 
       // Strategy 1: Get credentials directly by clinic_id
       const { data: directCredential, error: directError } = await supabase
@@ -182,6 +184,23 @@ export class PersistenceService {
       return null;
     } catch (error) {
       const msg = error instanceof Error ? error.message : "Unknown error";
+
+      // Distinguish decryption failures from not-found
+      if (
+        msg.includes("decrypt") ||
+        msg.includes("Authentication tag") ||
+        msg.includes("Unsupported state") ||
+        msg.includes("bad decrypt")
+      ) {
+        logger.error(
+          `Credential decryption failed for clinic ${clinicId}: ${msg}`,
+        );
+        throw new Error(
+          `Credential decryption failed for clinic ${clinicId}. ` +
+            `Verify IDEXX_ENCRYPTION_KEY matches between web app and pims-sync.`,
+        );
+      }
+
       logger.error(`Error getting credentials for clinic ${clinicId}: ${msg}`);
       return null;
     }

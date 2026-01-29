@@ -8,6 +8,8 @@
     "start:visible": "dotenv -e ../../.env.local -- env PORT=5051 HEADLESS=false node ../../dist/apps/pims-sync/main.js",
     "start:local": "dotenv -e .env -- node ../../dist/apps/pims-sync/main.js",
     "start:local:visible": "dotenv -e .env -- env HEADLESS=false node ../../dist/apps/pims-sync/main.js",
+    "dev:visible": "dotenv -e ../../.env.local -- env PORT=5051 HEADLESS=false tsx src/main.ts",
+    "dev:local:visible": "dotenv -e .env -- env HEADLESS=false tsx src/main.ts",
     "cli": "dotenv -e ../../.env.local -- tsx src/cli-runner.mjs",
     "cli:local": "dotenv -e .env -- tsx src/cli-runner.mjs",
     "debug:auth": "dotenv -e .env -- tsx src/debug-auth.ts"

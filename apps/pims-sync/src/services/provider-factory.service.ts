@@ -28,6 +28,8 @@ export interface ProviderFactoryResult {
   provider: IdexxProvider;
   credentials: PimsCredentials;
   cleanup: () => Promise<void>;
+  /** User ID who owns the credentials (needed for AI generation) */
+  userId: string;
 }
 
 /**
@@ -54,8 +56,10 @@ export async function createProviderForClinic(
 
   // Import browser and provider
   // Import from specific submodules to avoid pulling in credential-manager which has "server-only" imports
-  const { BrowserService } = await import("@odis-ai/integrations/idexx/browser");
-  const { IdexxProvider } = await import("@odis-ai/integrations/idexx/provider");
+  const { BrowserService } =
+    await import("@odis-ai/integrations/idexx/browser");
+  const { IdexxProvider } =
+    await import("@odis-ai/integrations/idexx/provider");
 
   // Create browser service
   const browserService = new BrowserService({
@@ -94,5 +98,6 @@ export async function createProviderForClinic(
     cleanup: async () => {
       await provider.close();
     },
+    userId: credentialResult.userId,
   };
 }
