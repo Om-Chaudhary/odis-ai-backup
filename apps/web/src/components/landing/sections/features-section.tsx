@@ -953,7 +953,7 @@ const features = [
   {
     title: "Automated Discharge Calls",
     description:
-      "Batch schedule and execute follow-up calls with intelligent retry logic.",
+      "Odis automatically calls every discharged client without staff lifting a finger.",
     skeleton: <DischargeCallAnimation />,
     className: "col-span-1 border-b lg:col-span-4 lg:border-r",
   },
@@ -988,7 +988,7 @@ const features = [
   {
     title: "24/7 AI Voice Assistant",
     description:
-      "Never miss a call. Our AI handles every inquiry with natural conversation.",
+      "Never miss a call — Odis answers every client like a real conversation, day or night.",
     skeleton: <VoiceWaveSkeleton />,
     className: "col-span-1 lg:col-span-4",
   },

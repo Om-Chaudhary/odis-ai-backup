@@ -6,8 +6,8 @@
  */
 
 // Core utilities
-export { cn, formatDuration } from "./cn";
-export { formatDuration as formatCallDuration } from "./cn";
+export { cn } from "./cn";
+export { formatDuration } from "./cn";
 
 // Phone utilities (consolidated)
 export * from "./phone";
@@ -28,7 +28,6 @@ export {
   toLocalDate,
   getTodayInTimezone,
   isOnDate,
-  formatRelativeTime,
   formatRelativeTime as formatTimezoneRelativeTime,
   getPresetDateRange,
   calculateScheduleTime,
@@ -48,7 +47,11 @@ export * from "./lib/case-transforms";
 export * from "./lib/discharge-status";
 
 // Relative time formatting
-export { formatDurationHuman, formatShortDateTime } from "./lib/relative-time";
+export {
+  formatRelativeTime,
+  formatDurationHuman,
+  formatShortDateTime,
+} from "./lib/relative-time";
 
 // Attention summary parsing
 export * from "./lib/attention-parser";

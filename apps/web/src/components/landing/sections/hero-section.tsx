@@ -10,8 +10,6 @@ import {
   Play,
   ChevronDown,
   Sparkles,
-  CheckCircle2,
-  Shield,
   Menu,
   X,
 } from "lucide-react";
@@ -33,7 +31,7 @@ const ROTATING_WORDS = [
 
 // Social proof stats
 const STATS = [
-  { value: 5000, suffix: "+", label: "Calls Handled" },
+  { value: 10000, suffix: "+", label: "Calls Handled" },
   { value: 98, suffix: "%", label: "Client Satisfaction" },
   { value: 15, suffix: "+", label: "Hours Saved Weekly" },
 ];
@@ -275,11 +273,9 @@ export function HeroSection() {
             >
               <Sparkles className="h-3 w-3 text-teal-300 sm:h-3.5 sm:w-3.5" />
               <span className="xs:inline hidden">
-                Built for Veterinary Practices
+                Built for Busy Veterinary Clinics
               </span>
-              <span className="xs:hidden">For Veterinary Practices</span>
-              <span className="h-1 w-1 rounded-full bg-teal-400/60" />
-              <span className="text-teal-300">AI-Powered</span>
+              <span className="xs:hidden">Built for Busy Veterinary Clinics</span>
             </span>
           </motion.div>
 
@@ -307,8 +303,7 @@ export function HeroSection() {
             variants={itemVariants}
             className="mt-4 max-w-3xl text-base leading-relaxed text-teal-50/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.15)] sm:mt-6 sm:text-xl sm:leading-8"
           >
-            Enterprise Veterinary AI voice assistance that picks up every call,
-            follows-up with every client, and{" "}
+            Veterinary AI voice assistants that pick up every call, follow-up with every client, and{" "}
             <AnimatedGradientText
               speed={2}
               colorFrom="#5eead4"
@@ -360,25 +355,10 @@ export function HeroSection() {
               )}
             >
               <Play className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:scale-110 sm:h-5 sm:w-5" />
-              <span>Hear Odis</span>
+              <span>Hear Real Calls</span>
             </a>
           </motion.div>
 
-          {/* Trust Line */}
-          <motion.div
-            variants={itemVariants}
-            className="mt-4 flex flex-col items-center gap-2 text-xs text-teal-100/70 sm:mt-5 sm:flex-row sm:gap-4 sm:text-sm"
-          >
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-3.5 w-3.5 text-teal-400 sm:h-4 sm:w-4" />
-              No credit card required
-            </span>
-            <span className="hidden h-1 w-1 rounded-full bg-teal-400/40 sm:block" />
-            <span className="flex items-center gap-1.5">
-              <Shield className="h-3.5 w-3.5 text-teal-400 sm:h-4 sm:w-4" />
-              HIPAA Compliant
-            </span>
-          </motion.div>
 
           {/* Social Proof Stats */}
           <motion.div
