@@ -61,6 +61,13 @@ export function InboundClient() {
   // Deep link support: Direct call ID (for extension integration)
   const [callId, setCallId] = useQueryState("callId", parseAsString);
 
+  // Tab state management: Persistent across call navigation
+  const [activeTab, setActiveTab] = useQueryState("tab", {
+    defaultValue: "call" as "call" | "summary",
+    parse: (v) => (v === "summary" ? "summary" : "call"),
+    serialize: (value) => value,
+  });
+
   // Local state
   const [selectedCall, setSelectedCall] = useState<InboundCall | null>(null);
   const [selectedRowPosition, setSelectedRowPosition] =
@@ -251,6 +258,8 @@ export function InboundClient() {
               call={selectedCall}
               onDelete={handleDeleteCall}
               isSubmitting={isSubmitting}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
             />
           )
         }

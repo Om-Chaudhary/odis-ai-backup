@@ -182,7 +182,7 @@ export const callAssociationsRouter = createTRPCRouter({
       // Try to find in inbound_vapi_calls structured_data (from VAPI action cards)
       const { data: vapiCall } = await supabase
         .from("inbound_vapi_calls")
-        .select("structured_data, created_at")
+        .select("structured_data, created_at, vapi_call_id")
         .or(
           `customer_phone.eq.${normalizedPhone},customer_phone.eq.+1${normalizedPhone},customer_phone.ilike.%${normalizedPhone.slice(-10)}%`,
         )
@@ -193,9 +193,20 @@ export const callAssociationsRouter = createTRPCRouter({
       if (vapiCall?.structured_data) {
         const structuredData = vapiCall.structured_data as unknown as ActionCardOutput;
 
+        // Log the structured data for debugging
+        console.log("Found structured_data for phone lookup:", {
+          phone: normalizedPhone,
+          callId: vapiCall.vapi_call_id || "unknown",
+          structuredData,
+          hasAppointmentData: !!structuredData?.appointment_data,
+          hasCallbackData: !!structuredData?.callback_data,
+          hasEmergencyData: !!structuredData?.emergency_data,
+        });
+
         // Check for appointment data (scheduled/rescheduled/cancellation)
         if (structuredData?.appointment_data) {
           const { client_name, patient_name } = structuredData.appointment_data;
+          console.log("Found appointment data with names:", { client_name, patient_name });
           if (client_name || patient_name) {
             return {
               name: client_name ?? null,
@@ -211,6 +222,7 @@ export const callAssociationsRouter = createTRPCRouter({
         // Check for callback data
         if (structuredData?.callback_data) {
           const { caller_name, pet_name } = structuredData.callback_data;
+          console.log("Found callback data with names:", { caller_name, pet_name });
           if (caller_name || pet_name) {
             return {
               name: caller_name ?? null,
@@ -221,6 +233,11 @@ export const callAssociationsRouter = createTRPCRouter({
               source: "message" as const,
             };
           }
+        }
+
+        // Check for emergency data - emergency calls might have caller name in callback_data
+        if (structuredData?.emergency_data) {
+          console.log("Found emergency data but no associated callback data for names");
         }
       }
 

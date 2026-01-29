@@ -20,6 +20,8 @@ interface CallDetailProps {
   onDelete?: (id: string) => Promise<void>;
   onClose?: () => void;
   isSubmitting: boolean;
+  activeTab?: "call" | "summary";
+  onTabChange?: (tab: "call" | "summary") => void;
 }
 
 export function CallDetail({
@@ -27,6 +29,8 @@ export function CallDetail({
   onDelete,
   onClose,
   isSubmitting,
+  activeTab,
+  onTabChange,
 }: CallDetailProps) {
   // Check static demo mapping first for caller name
   const demoCallerName = getDemoCallerName(call.customer_phone);
@@ -244,6 +248,8 @@ export function CallDetail({
               : undefined
           }
           isSuccessful={call.ended_reason !== "error"}
+          activeTab={activeTab}
+          onTabChange={onTabChange}
         />
       </div>
 

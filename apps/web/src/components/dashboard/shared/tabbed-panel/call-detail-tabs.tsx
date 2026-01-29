@@ -25,6 +25,10 @@ interface CallDetailTabsProps {
   isSuccessful?: boolean;
   /** Default active tab */
   defaultTab?: "call" | "summary";
+  /** Active tab (controlled) */
+  activeTab?: "call" | "summary";
+  /** Tab change handler (controlled) */
+  onTabChange?: (tab: "call" | "summary") => void;
   /** Additional className */
   className?: string;
 }
@@ -48,11 +52,23 @@ export function CallDetailTabs({
   actionsTaken: _actionsTaken, // Not used anymore (shown in action cards)
   isSuccessful: _isSuccessful,
   defaultTab = "call",
+  activeTab,
+  onTabChange,
   className,
 }: CallDetailTabsProps) {
+  // Use controlled tabs if activeTab and onTabChange are provided, otherwise use defaultValue
+  const tabsProps = activeTab && onTabChange
+    ? {
+        value: activeTab,
+        onValueChange: (value: string) => onTabChange(value as "call" | "summary")
+      }
+    : {
+        defaultValue: defaultTab
+      };
+
   return (
     <Tabs
-      defaultValue={defaultTab}
+      {...tabsProps}
       className={cn("flex flex-col", className)}
       style={{ fontFamily: "'IBM Plex Sans', system-ui, sans-serif" }}
     >
