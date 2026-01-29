@@ -100,6 +100,14 @@ export function ActionCardSelector({
   isConfirming,
   className,
 }: ActionCardSelectorProps) {
+  // Early return if call has no outcome and no structured card data
+  // This prevents displaying empty action cards
+  const structuredCardType = (call.structured_data as ActionCardData | null)
+    ?.card_type;
+  if (!call.outcome && !structuredCardType) {
+    return null;
+  }
+
   // Get action card data with fallback to legacy derivation
   const legacyCallData: LegacyCallData = {
     outcome: call.outcome,
@@ -112,7 +120,11 @@ export function ActionCardSelector({
 
   // structured_data from VAPI's analysis.structuredData contains action card format
   const structuredActionCard = call.structured_data as ActionCardData | null;
-  const cardData = getActionCardData(structuredActionCard, legacyCallData, booking);
+  const cardData = getActionCardData(
+    structuredActionCard,
+    legacyCallData,
+    booking,
+  );
 
   // If no valid card data, don't render
   // Note: We now render confirmed cards with the "Confirmed" badge instead of hiding them
@@ -207,11 +219,15 @@ export function ActionCardSelector({
       return (
         <CallbackCard
           escalationSummary={
-            cardData.callback_data?.reason ?? escalationSummary ?? outcomeSummary
+            cardData.callback_data?.reason ??
+            escalationSummary ??
+            outcomeSummary
           }
           staffActionNeeded={staffActionNeeded}
           nextSteps={nextSteps}
-          phoneNumber={cardData.callback_data?.phone_number ?? call.customer_phone}
+          phoneNumber={
+            cardData.callback_data?.phone_number ?? call.customer_phone
+          }
           onConfirm={isConfirmed ? undefined : onConfirm}
           isConfirming={isConfirming}
           isConfirmed={isConfirmed}

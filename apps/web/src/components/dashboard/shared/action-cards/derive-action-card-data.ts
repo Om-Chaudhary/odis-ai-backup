@@ -70,13 +70,13 @@ function normalizeOutcome(
 
   if (lower === "scheduled" || lower === "appointment") return "scheduled";
   if (lower === "rescheduled") return "rescheduled";
-  if (
-    lower === "cancellation" ||
-    lower === "cancelled" ||
-    lower === "canceled"
-  )
+  if (lower === "cancellation" || lower === "cancelled" || lower === "canceled")
     return "cancellation";
-  if (lower === "callback" || lower === "call back" || lower === "message_taken")
+  if (
+    lower === "callback" ||
+    lower === "call back" ||
+    lower === "message_taken"
+  )
     return "callback";
   if (lower === "emergency" || lower === "urgent_concern") return "emergency";
   if (lower === "info" || lower === "information") return "info";
@@ -124,14 +124,29 @@ function extractPhoneNumber(text?: string | null): string | null {
 /**
  * Parse key topics from various formats
  */
-function parseKeyTopics(
-  keyTopics?: string[] | string | null,
-): string[] {
+function parseKeyTopics(keyTopics?: string[] | string | null): string[] {
   if (Array.isArray(keyTopics)) return keyTopics;
   if (typeof keyTopics === "string") {
-    return keyTopics.split(",").map((t) => t.trim()).filter(Boolean);
+    return keyTopics
+      .split(",")
+      .map((t) => t.trim())
+      .filter(Boolean);
   }
   return [];
+}
+
+/**
+ * Truncate a reason string to a maximum length with ellipsis
+ * Used for callback reasons that may be too long for UI display
+ */
+function truncateReason(
+  reason: string | null | undefined,
+  maxLength = 60,
+): string | undefined {
+  if (!reason) return undefined;
+  const trimmed = reason.trim();
+  if (trimmed.length <= maxLength) return trimmed;
+  return trimmed.slice(0, maxLength - 3) + "...";
 }
 
 /**
@@ -190,7 +205,8 @@ export function deriveActionCardData(
                 time: booking.original_time ?? undefined,
               }
             : undefined,
-        reschedule_reason: booking?.rescheduled_reason ?? (outcomeSummary || undefined),
+        reschedule_reason:
+          booking?.rescheduled_reason ?? (outcomeSummary || undefined),
       };
 
     case "cancellation":
@@ -219,8 +235,10 @@ export function deriveActionCardData(
               escalation_data?.staff_action_required,
           ),
           urgency_level:
-            (escalation_data?.escalation_type as "critical" | "urgent" | "monitor") ??
-            "urgent",
+            (escalation_data?.escalation_type as
+              | "critical"
+              | "urgent"
+              | "monitor") ?? "urgent",
         },
       };
 
@@ -228,11 +246,13 @@ export function deriveActionCardData(
       return {
         card_type: "callback",
         callback_data: {
-          reason:
+          reason: truncateReason(
             escalation_data?.staff_action_needed ??
-            escalation_data?.staff_action_required ??
-            escalation_data?.escalation_summary ??
-            (outcomeSummary || undefined),
+              escalation_data?.staff_action_required ??
+              escalation_data?.escalation_summary ??
+              outcomeSummary,
+            60,
+          ),
           phone_number:
             call.customer_phone ??
             extractPhoneNumber(escalation_data?.staff_action_needed) ??

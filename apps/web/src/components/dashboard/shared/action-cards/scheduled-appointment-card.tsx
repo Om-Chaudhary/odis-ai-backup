@@ -82,9 +82,10 @@ export function ScheduledAppointmentCard({
   isConfirmed,
   className,
 }: ScheduledAppointmentCardProps) {
-  // Priority: structured_data fields, then booking fields
-  const date = appointmentDate ?? booking?.date;
-  const time = appointmentTime ?? booking?.start_time;
+  // Priority: booking fields first (always YYYY-MM-DD format), then structured_data
+  // Booking data is more reliable because structured_data may contain relative text like "tomorrow"
+  const date = booking?.date ?? appointmentDate;
+  const time = booking?.start_time ?? appointmentTime;
 
   // Build date/time string (e.g., "Jan 25, 9:30 AM")
   const dateTimeStr =

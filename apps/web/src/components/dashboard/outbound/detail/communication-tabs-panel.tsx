@@ -74,11 +74,20 @@ type TabValue = "phone" | "email";
  * Communication Tabs Panel
  *
  * A tabbed interface for switching between phone call and email content.
- * Displays:
- * - Phone tab: Call summary, recording player, transcript (if call completed)
- * - Email tab: Email preview or sent email content
  *
- * Default tab is Phone if a call exists, otherwise Email.
+ * Phone Tab:
+ * - Enabled ONLY when phoneSent is true (call completed)
+ * - Shows call summary, audio player, transcript when enabled
+ * - Greyed out and disabled when call not yet sent
+ *
+ * Email Tab:
+ * - ALWAYS enabled
+ * - Label: "Email" if sent, "Email Preview" if not
+ * - Shows sent email content or preview
+ *
+ * Default Tab:
+ * - Phone if phoneSent is true
+ * - Email otherwise
  */
 export function CommunicationTabsPanel({
   scheduledCall,
@@ -97,97 +106,94 @@ export function CommunicationTabsPanel({
   ownerName,
   className,
 }: CommunicationTabsPanelProps) {
-  // Determine default tab - prefer phone if call exists with content
-  const hasCallContent =
-    scheduledCall && (scheduledCall.summary ?? scheduledCall.recordingUrl);
-  const defaultTab: TabValue = hasCallContent ? "phone" : "email";
+  // Phone tab enabled only when call was actually sent/completed
+  const phoneTabEnabled = phoneSent;
+
+  // Default tab: phone if sent, otherwise email
+  const defaultTab: TabValue = phoneSent ? "phone" : "email";
   const [activeTab, setActiveTab] = useState<TabValue>(defaultTab);
 
-  // Determine if call was successful
+  // Determine if call was successful for intelligence display
   const callWasSuccessful = phoneSent && scheduledCall?.summary;
   const hasIntelligenceData =
     ownerSentimentData ?? petHealthData ?? followUpData;
 
-  // Check which tabs should be enabled
-  const phoneTabEnabled = hasOwnerPhone || phoneSent;
-  const emailTabEnabled = hasOwnerEmail || emailSent;
+  // Email tab label: "Email" if sent, "Email Preview" if not
+  const emailTabLabel = emailSent ? "Email" : "Email Preview";
 
-  // If only one tab is available, just show that content without tabs
-  if (!phoneTabEnabled && !emailTabEnabled) {
+  // Check if there's any content to show
+  const hasEmailContent = [
+    structuredContent?.patientName,
+    emailContent?.trim(),
+    dischargeSummary?.trim(),
+  ].some(Boolean);
+
+  // If no email content and no phone sent, nothing to show
+  if (!hasEmailContent && !phoneSent) {
     return null;
   }
 
-  if (phoneTabEnabled && !emailTabEnabled) {
-    // Only phone content
-    return (
-      <div className={cn("space-y-4", className)}>
-        <PhoneContent
-          scheduledCall={scheduledCall}
-          phoneSent={phoneSent}
-          callScript={callScript}
-          patientName={patientName}
-          ownerName={ownerName}
-          hasOwnerPhone={hasOwnerPhone}
-        />
-        {callWasSuccessful && hasIntelligenceData && (
-          <CallIntelligenceIndicators
-            ownerSentimentData={ownerSentimentData}
-            petHealthData={petHealthData}
-            followUpData={followUpData}
-          />
-        )}
-      </div>
-    );
-  }
+  // Handle tab change - prevent switching to disabled phone tab
+  const handleTabChange = (value: string) => {
+    if (value === "phone" && !phoneTabEnabled) {
+      return; // Prevent switching to disabled tab
+    }
+    setActiveTab(value as TabValue);
+  };
 
-  if (emailTabEnabled && !phoneTabEnabled) {
-    // Only email content
-    return (
-      <div className={className}>
-        <EmailContent
-          structuredContent={structuredContent}
-          emailContent={emailContent}
-          dischargeSummary={dischargeSummary}
-          emailSent={emailSent}
-          hasOwnerEmail={hasOwnerEmail}
-        />
-      </div>
-    );
-  }
-
-  // Both tabs available
   return (
     <Tabs
       value={activeTab}
-      onValueChange={(value) => setActiveTab(value as TabValue)}
+      onValueChange={handleTabChange}
       className={className}
     >
       <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="phone" className="gap-2">
+        <TabsTrigger
+          value="phone"
+          className={cn(
+            "gap-2",
+            !phoneTabEnabled &&
+              "cursor-not-allowed opacity-50 data-[state=active]:bg-transparent",
+          )}
+          disabled={!phoneTabEnabled}
+        >
           <Phone className="h-4 w-4" />
           <span>Phone Call</span>
         </TabsTrigger>
         <TabsTrigger value="email" className="gap-2">
           <Mail className="h-4 w-4" />
-          <span>Email</span>
+          <span>{emailTabLabel}</span>
         </TabsTrigger>
       </TabsList>
 
       <TabsContent value="phone" className="mt-4 space-y-4">
-        <PhoneContent
-          scheduledCall={scheduledCall}
-          phoneSent={phoneSent}
-          callScript={callScript}
-          patientName={patientName}
-          ownerName={ownerName}
-          hasOwnerPhone={hasOwnerPhone}
-        />
-        {callWasSuccessful && hasIntelligenceData && (
-          <CallIntelligenceIndicators
-            ownerSentimentData={ownerSentimentData}
-            petHealthData={petHealthData}
-            followUpData={followUpData}
-          />
+        {phoneTabEnabled ? (
+          <>
+            <PhoneContent
+              scheduledCall={scheduledCall}
+              phoneSent={phoneSent}
+              callScript={callScript}
+              patientName={patientName}
+              ownerName={ownerName}
+              hasOwnerPhone={hasOwnerPhone}
+            />
+            {callWasSuccessful && hasIntelligenceData && (
+              <CallIntelligenceIndicators
+                ownerSentimentData={ownerSentimentData}
+                petHealthData={petHealthData}
+                followUpData={followUpData}
+              />
+            )}
+          </>
+        ) : (
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/50">
+            <div className="flex items-center gap-2 text-slate-400">
+              <Phone className="h-4 w-4" />
+              <span className="text-sm">
+                Phone call details will appear here after the call is completed
+              </span>
+            </div>
+          </div>
         )}
       </TabsContent>
 
@@ -205,7 +211,7 @@ export function CommunicationTabsPanel({
 }
 
 /**
- * Phone content section
+ * Phone content section - shows call details when call completed
  */
 interface PhoneContentProps {
   scheduledCall: ScheduledCallData | null;
@@ -278,7 +284,7 @@ function PhoneContent({
 }
 
 /**
- * Email content section
+ * Email content section - shows email preview or sent content
  */
 interface EmailContentProps {
   structuredContent: StructuredDischargeContent | null;

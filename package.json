@@ -8,6 +8,7 @@
     "build:all": "NX_NO_CLOUD=true NODE_ENV=production nx run-many -t build",
     "dev": "NX_NO_CLOUD=true NODE_OPTIONS='--no-deprecation' nx dev web",
     "dev:pims-sync": "nx serve pims-sync",
+    "dev:pims-sync:visible": "pnpm --filter pims-sync dev:visible",
     "dev:docs": "nx start docs",
     "start": "nx start web",
     "preview": "nx build web && nx start web",

@@ -189,3 +189,205 @@ export function getFirstOrNull<T>(value: T | T[] | null): T | null {
   if (!value) return null;
   return Array.isArray(value) ? (value[0] ?? null) : value;
 }
+
+/**
+ * Standardized case types for cadence configuration.
+ * These map to entries in the clinic_case_type_cadence table.
+ */
+export type StandardizedCaseType =
+  | "euthanasia"
+  | "surgery"
+  | "wellness_exam"
+  | "sick_visit"
+  | "dental"
+  | "emergency"
+  | "vaccination"
+  | "follow_up"
+  | "general";
+
+/**
+ * Detect standardized case type from IDEXX data.
+ *
+ * Maps IDEXX appointment_type, reason, and invoice data to
+ * standardized case types used for cadence configuration.
+ *
+ * @param idexxData - Raw IDEXX consultation/appointment data
+ * @returns Standardized case type for cadence lookup
+ */
+export function detectCaseTypeFromIdexx(
+  idexxData: Record<string, unknown> | null,
+): StandardizedCaseType {
+  if (!idexxData) return "general";
+
+  // Extract relevant fields
+  const appointmentType =
+    (idexxData.appointment_type as string)?.toLowerCase() ?? "";
+  const appointmentReason =
+    (idexxData.appointment_reason as string)?.toLowerCase() ??
+    (idexxData.reason as string)?.toLowerCase() ??
+    "";
+  const productsServices =
+    (idexxData.products_services as string)?.toLowerCase() ?? "";
+  const chiefComplaint =
+    (idexxData.chief_complaint as string)?.toLowerCase() ?? "";
+
+  // Combine text for pattern matching
+  const allText = `${appointmentType} ${appointmentReason} ${productsServices} ${chiefComplaint}`;
+
+  // Euthanasia detection - high priority, should never auto-schedule
+  const euthanasiaPatterns = [
+    "euthanasia",
+    "euth",
+    "put to sleep",
+    "humane end",
+    "end of life",
+    "quality of life",
+    "pts",
+    "pallative",
+    "hospice",
+  ];
+  if (euthanasiaPatterns.some((p) => allText.includes(p))) {
+    return "euthanasia";
+  }
+
+  // Emergency detection
+  const emergencyPatterns = [
+    "emergency",
+    "urgent",
+    "critical",
+    "trauma",
+    "hit by car",
+    "hbc",
+    "poison",
+    "toxin",
+    "bloat",
+    "gdv",
+    "seizure",
+    "collapse",
+    "unresponsive",
+    "difficulty breathing",
+    "dyspnea",
+  ];
+  if (emergencyPatterns.some((p) => allText.includes(p))) {
+    return "emergency";
+  }
+
+  // Surgery detection
+  const surgeryPatterns = [
+    "surgery",
+    "surgical",
+    "spay",
+    "neuter",
+    "castration",
+    "ovariohysterectomy",
+    "mass removal",
+    "tumor removal",
+    "amputation",
+    "exploratory",
+    "laparotomy",
+    "cystotomy",
+    "gastropexy",
+    "orthopedic",
+    "tplo",
+    "fho",
+    "cruciate",
+  ];
+  if (surgeryPatterns.some((p) => allText.includes(p))) {
+    return "surgery";
+  }
+
+  // Dental detection
+  const dentalPatterns = [
+    "dental",
+    "teeth cleaning",
+    "tooth extraction",
+    "periodontal",
+    "prophy",
+    "prophylaxis",
+    "dentistry",
+    "oral surgery",
+  ];
+  if (dentalPatterns.some((p) => allText.includes(p))) {
+    return "dental";
+  }
+
+  // Vaccination detection
+  const vaccinationPatterns = [
+    "vaccine",
+    "vaccination",
+    "booster",
+    "rabies",
+    "dhpp",
+    "fvrcp",
+    "bordetella",
+    "leptospirosis",
+    "lyme",
+    "influenza",
+    "distemper",
+    "parvo",
+  ];
+  if (vaccinationPatterns.some((p) => allText.includes(p))) {
+    return "vaccination";
+  }
+
+  // Wellness exam detection
+  const wellnessPatterns = [
+    "wellness",
+    "well visit",
+    "annual",
+    "yearly",
+    "checkup",
+    "check-up",
+    "routine exam",
+    "preventive",
+    "health check",
+    "physical exam",
+  ];
+  if (wellnessPatterns.some((p) => allText.includes(p))) {
+    return "wellness_exam";
+  }
+
+  // Follow-up detection
+  const followUpPatterns = [
+    "follow up",
+    "follow-up",
+    "followup",
+    "recheck",
+    "re-check",
+    "progress exam",
+    "suture removal",
+    "post-op",
+    "postop",
+    "post operative",
+  ];
+  if (followUpPatterns.some((p) => allText.includes(p))) {
+    return "follow_up";
+  }
+
+  // Sick visit detection
+  const sickVisitPatterns = [
+    "sick",
+    "illness",
+    "not eating",
+    "vomiting",
+    "diarrhea",
+    "lethargy",
+    "lameness",
+    "limping",
+    "coughing",
+    "sneezing",
+    "discharge",
+    "itching",
+    "scratching",
+    "skin problem",
+    "ear infection",
+    "uti",
+    "bladder",
+  ];
+  if (sickVisitPatterns.some((p) => allText.includes(p))) {
+    return "sick_visit";
+  }
+
+  // Default to general
+  return "general";
+}

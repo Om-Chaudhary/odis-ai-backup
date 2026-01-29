@@ -6,4 +6,5 @@
 
 export * from "./browser-service";
 export * from "./browser-pool";
+export * from "./retry";
 export * from "./types";

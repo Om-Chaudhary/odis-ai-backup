@@ -36,6 +36,14 @@ interface NeedsAttentionViewProps extends OutboundHeaderProps {
   setDeliveryToggles: (toggles: DeliveryToggles) => void;
   onApprove: (immediate?: boolean) => void;
   onRetry: () => void;
+  onPhoneReschedule: (options: {
+    delayDays: number;
+    immediate: boolean;
+  }) => void;
+  onEmailReschedule: (options: {
+    delayDays: number;
+    immediate: boolean;
+  }) => void;
   onCancelScheduled: (options: {
     cancelCall: boolean;
     cancelEmail: boolean;
@@ -43,6 +51,7 @@ interface NeedsAttentionViewProps extends OutboundHeaderProps {
   isSubmitting: boolean;
   isCancellingCall: boolean;
   isCancellingEmail: boolean;
+  isRescheduling: boolean;
   testModeEnabled: boolean;
 }
 
@@ -63,10 +72,13 @@ export function NeedsAttentionView({
   setDeliveryToggles,
   onApprove,
   onRetry,
+  onPhoneReschedule,
+  onEmailReschedule,
   onCancelScheduled,
   isSubmitting,
   isCancellingCall,
   isCancellingEmail,
+  isRescheduling,
   testModeEnabled,
   ...headerProps
 }: NeedsAttentionViewProps) {
@@ -133,10 +145,13 @@ export function NeedsAttentionView({
           onToggleChange={setDeliveryToggles}
           onApprove={onApprove}
           onRetry={onRetry}
+          onPhoneReschedule={onPhoneReschedule}
+          onEmailReschedule={onEmailReschedule}
           onCancelScheduled={onCancelScheduled}
           isSubmitting={isSubmitting}
           isCancellingCall={isCancellingCall}
           isCancellingEmail={isCancellingEmail}
+          isRescheduling={isRescheduling}
           testModeEnabled={testModeEnabled}
           onDelete={handleClosePanel}
         />

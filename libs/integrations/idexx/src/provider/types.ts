@@ -26,6 +26,18 @@ export interface IdexxProviderConfig {
   timeout?: number;
 
   /**
+   * Default timeout for browser operations in milliseconds
+   * @default 30000
+   */
+  defaultTimeout?: number;
+
+  /**
+   * Run browser in headless mode
+   * @default true
+   */
+  headless?: boolean;
+
+  /**
    * Enable debug logging
    * @default false
    */

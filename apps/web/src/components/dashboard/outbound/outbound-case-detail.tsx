@@ -1,24 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import Link from "next/link";
-import { useClinic } from "@odis-ai/shared/ui/clinic-context";
-import { Button } from "@odis-ai/shared/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@odis-ai/shared/ui/collapsible";
-import { ExternalLink, ChevronDown } from "lucide-react";
+import { useState } from "react";
 import { api } from "~/trpc/client";
 import type { DeliveryToggles, TransformedCase } from "./types";
 import { EmptyDetailState } from "./detail";
 import { CompactPatientHeader } from "./detail/compact-patient-header";
 import { CommunicationStatusCards } from "./detail/communication-status-cards";
 import { CommunicationTabsPanel } from "./detail/communication-tabs-panel";
-import { EmailPreviewSection } from "./detail/email-preview-section";
 import { SmartActionSection } from "./detail/smart-action-section";
-import { WorkflowCanvas, type CaseDataForWorkflow } from "./detail/workflow";
 import { NeedsAttentionCard } from "./detail/needs-attention-card";
 import { hasActionableAttentionTypes } from "@odis-ai/shared/util";
 
@@ -28,6 +17,14 @@ interface OutboundCaseDetailProps {
   onToggleChange: (toggles: DeliveryToggles) => void;
   onApprove: (immediate?: boolean) => void;
   onRetry?: () => void;
+  onPhoneReschedule?: (options: {
+    delayDays: number;
+    immediate: boolean;
+  }) => void;
+  onEmailReschedule?: (options: {
+    delayDays: number;
+    immediate: boolean;
+  }) => void;
   onCancelScheduled?: (options: {
     cancelCall: boolean;
     cancelEmail: boolean;
@@ -40,6 +37,7 @@ interface OutboundCaseDetailProps {
   isCancellingCall?: boolean;
   isCancellingEmail?: boolean;
   isUpdatingSchedule?: boolean;
+  isRescheduling?: boolean;
   testModeEnabled?: boolean;
   onDelete?: () => void;
   /** Default delay days for calls (from user settings) */
@@ -55,9 +53,7 @@ interface OutboundCaseDetailProps {
  * 1. Patient/Owner card at top
  * 2. Communication status cards (phone/email with toggles and delays)
  * 3. Context-aware action section
- * 4. Email preview for scheduled cases
- * 5. Communication tabs for completed/failed cases
- * 6. Workflow timeline (collapsible)
+ * 4. Communication tabs panel (all states)
  */
 export function OutboundCaseDetail({
   caseData,
@@ -65,21 +61,20 @@ export function OutboundCaseDetail({
   onToggleChange,
   onApprove,
   onRetry,
+  onPhoneReschedule,
+  onEmailReschedule,
   onCancelScheduled,
   onUpdateScheduleDelays,
   isSubmitting,
   isCancellingCall = false,
   isCancellingEmail = false,
   isUpdatingSchedule = false,
+  isRescheduling = false,
   testModeEnabled = false,
   onDelete,
   defaultCallDelayDays = 2,
   defaultEmailDelayDays = 1,
 }: OutboundCaseDetailProps) {
-  const { clinicSlug } = useClinic();
-  // Workflow timeline collapsible state
-  const [workflowOpen, setWorkflowOpen] = useState(false);
-
   // Local state for delay days (allows optimistic UI)
   const [callDelayDays, setCallDelayDays] = useState(defaultCallDelayDays);
   const [emailDelayDays, setEmailDelayDays] = useState(defaultEmailDelayDays);
@@ -93,52 +88,20 @@ export function OutboundCaseDetail({
       },
     });
 
-  // Transform case data for workflow visualization
-  const workflowCaseData: CaseDataForWorkflow | null = useMemo(() => {
-    if (!caseData) return null;
-    return {
-      id: caseData.id,
-      caseId: caseData.caseId,
-      status: caseData.status,
-      caseType: caseData.caseType,
-      timestamp:
-        caseData.scheduledCall?.startedAt ??
-        caseData.scheduledEmailFor ??
-        new Date().toISOString(),
-      emailSent: caseData.emailSent,
-      scheduledEmailFor: caseData.scheduledEmailFor,
-      phoneSent: caseData.phoneSent,
-      scheduledCallFor: caseData.scheduledCallFor,
-      scheduledCall: caseData.scheduledCall
-        ? {
-            id: caseData.scheduledCall.id,
-            durationSeconds: caseData.scheduledCall.durationSeconds,
-            transcript: caseData.scheduledCall.transcript,
-            cleanedTranscript: caseData.scheduledCall.cleanedTranscript,
-            recordingUrl: caseData.scheduledCall.recordingUrl ?? null,
-            summary: caseData.scheduledCall.summary,
-            endedReason: caseData.scheduledCall.endedReason,
-          }
-        : null,
-      needsAttention: caseData.needsAttention,
-      attentionTypes: caseData.attentionTypes,
-      attentionSeverity: caseData.attentionSeverity,
-      attentionSummary: caseData.attentionSummary,
-      owner: {
-        email: caseData.owner.email,
-        phone: caseData.owner.phone,
+  // Mutation for updating communication preferences (immediate persistence)
+  const updatePrefsMutation =
+    api.outbound.updateCommunicationPreferences.useMutation({
+      onSuccess: () => {
+        void utils.outbound.listDischargeCases.invalidate();
       },
-    };
-  }, [caseData]);
+    });
 
   // Early return after all hooks are called
-  if (!caseData || !workflowCaseData) {
+  if (!caseData) {
     return <EmptyDetailState />;
   }
 
   // Determine case states
-  const isSentCase =
-    caseData.status === "completed" || caseData.status === "failed";
   const isScheduled = caseData.status === "scheduled";
 
   // Get call script from dynamic variables
@@ -182,13 +145,31 @@ export function OutboundCaseDetail({
     }
   };
 
-  // Handler for toggling delivery channels
+  // Handler for toggling delivery channels (with immediate persistence)
   const handlePhoneToggle = (enabled: boolean) => {
     onToggleChange({ ...deliveryToggles, phoneEnabled: enabled });
+
+    // Persist immediately if case exists
+    if (caseData?.caseId) {
+      updatePrefsMutation.mutate({
+        caseId: caseData.caseId,
+        callEnabled: enabled,
+        emailEnabled: deliveryToggles.emailEnabled,
+      });
+    }
   };
 
   const handleEmailToggle = (enabled: boolean) => {
     onToggleChange({ ...deliveryToggles, emailEnabled: enabled });
+
+    // Persist immediately if case exists
+    if (caseData?.caseId) {
+      updatePrefsMutation.mutate({
+        caseId: caseData.caseId,
+        callEnabled: deliveryToggles.phoneEnabled,
+        emailEnabled: enabled,
+      });
+    }
   };
 
   // Handler for delay changes - auto-saves
@@ -223,26 +204,18 @@ export function OutboundCaseDetail({
   };
 
   // Determine if we should show action section
-  // Show for: ready, pending_review, scheduled, failed
+  // Show for: ready, pending_review, scheduled
+  // Note: Failed cases have retry/reschedule in the status cards, so no separate action section needed
   const showActionSection =
     caseData.status === "ready" ||
     caseData.status === "pending_review" ||
-    caseData.status === "scheduled" ||
-    caseData.status === "failed";
+    caseData.status === "scheduled";
 
   // Show status cards for ALL statuses (they handle each state internally)
   const showStatusCards = true;
 
-  // Show email preview whenever email content exists (regardless of status)
-  const isToSchedule =
-    caseData.status === "pending_review" || caseData.status === "ready";
-  const showEmailPreview =
-    !!caseData.structuredContent?.patientName ||
-    !!caseData.emailContent?.trim() ||
-    !!caseData.dischargeSummary?.trim();
-
-  // Show tabs for completed/failed cases
-  const showContentTabs = isSentCase;
+  // Show tabs panel for ALL states (phone tab disabled when not sent, email tab always enabled)
+  const showContentTabs = true;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -280,6 +253,9 @@ export function OutboundCaseDetail({
             onPhoneDelayChange={handleCallDelayChange}
             onPhoneCancel={isScheduled ? handleCancelCall : undefined}
             onPhoneRetry={phoneFailed ? handlePhoneRetry : undefined}
+            onPhoneReschedule={
+              phoneFailed && onPhoneReschedule ? onPhoneReschedule : undefined
+            }
             hasOwnerPhone={hasOwnerPhone}
             // Email props
             emailStatus={caseData.emailSent}
@@ -292,11 +268,15 @@ export function OutboundCaseDetail({
             onEmailDelayChange={handleEmailDelayChange}
             onEmailCancel={isScheduled ? handleCancelEmail : undefined}
             onEmailRetry={emailFailed ? handleEmailRetry : undefined}
+            onEmailReschedule={
+              emailFailed && onEmailReschedule ? onEmailReschedule : undefined
+            }
             hasOwnerEmail={hasOwnerEmail}
             // Global
             isSubmitting={isSubmitting || isUpdatingSchedule}
             isPhoneCancelling={isCancellingCall}
             isEmailCancelling={isCancellingEmail}
+            isRescheduling={isRescheduling}
             caseStatus={caseData.status}
           />
         )}
@@ -326,16 +306,6 @@ export function OutboundCaseDetail({
           />
         )}
 
-        {/* Email Preview Section - Always show when content exists */}
-        {showEmailPreview && (
-          <EmailPreviewSection
-            structuredContent={caseData.structuredContent}
-            emailContent={caseData.emailContent}
-            dischargeSummary={caseData.dischargeSummary}
-            defaultOpen={!emailSent && isToSchedule}
-          />
-        )}
-
         {/* Needs Attention Card */}
         {hasActionableAttentionTypes(caseData.attentionTypes) && (
           <NeedsAttentionCard
@@ -346,7 +316,7 @@ export function OutboundCaseDetail({
           />
         )}
 
-        {/* Communication Tabs Panel - For completed/failed cases */}
+        {/* Communication Tabs Panel - Shows for all states */}
         {showContentTabs && (
           <CommunicationTabsPanel
             scheduledCall={caseData.scheduledCall}
@@ -364,45 +334,6 @@ export function OutboundCaseDetail({
             patientName={caseData.patient.name}
             ownerName={caseData.owner.name ?? undefined}
           />
-        )}
-
-        {/* Workflow Timeline - Collapsible, shown for sent/scheduled cases */}
-        {(isSentCase || isScheduled) && (
-          <Collapsible open={workflowOpen} onOpenChange={setWorkflowOpen}>
-            <CollapsibleTrigger asChild>
-              <Button
-                variant="ghost"
-                className="flex w-full items-center justify-between rounded-lg border border-teal-200/40 bg-teal-100/80 px-4 py-3 hover:bg-teal-100/90"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">Workflow Timeline</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={`/dashboard/${clinicSlug}/outbound/workflow/${caseData.caseId}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="inline-flex h-6 items-center gap-1 rounded-md px-2 text-xs text-slate-500 hover:bg-slate-100 hover:text-teal-700 dark:hover:bg-slate-800"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    <span>Open</span>
-                  </Link>
-                  <ChevronDown
-                    className={`h-4 w-4 text-slate-500 transition-transform ${
-                      workflowOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </div>
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="mt-2">
-              <div className="overflow-hidden rounded-lg border border-teal-200/40 bg-teal-100/80">
-                <WorkflowCanvas
-                  caseData={workflowCaseData}
-                  className="h-[300px] min-h-[300px]"
-                />
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
         )}
       </div>
     </div>

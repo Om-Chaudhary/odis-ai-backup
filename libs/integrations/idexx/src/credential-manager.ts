@@ -6,7 +6,6 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { createServiceClient } from "@odis-ai/data-access/db/server";
 import { decrypt, encrypt } from "@odis-ai/shared/crypto/aes-encryption";
 
 export interface IdexxCredentials {
@@ -51,8 +50,14 @@ export class IdexxCredentialManager {
 
   /**
    * Create a new IdexxCredentialManager instance with service client
+   *
+   * Note: This method uses dynamic import to avoid pulling in Next.js-specific
+   * modules at the top level, allowing the class to be used in non-Next.js
+   * environments (like pims-sync) by passing a Supabase client to the constructor.
    */
   static async create(): Promise<IdexxCredentialManager> {
+    const { createServiceClient } =
+      await import("@odis-ai/data-access/db/server");
     const supabase = await createServiceClient();
     return new IdexxCredentialManager(supabase as unknown as SupabaseClient);
   }

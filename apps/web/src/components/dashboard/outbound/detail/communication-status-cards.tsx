@@ -1,7 +1,7 @@
 "use client";
 
-import { Phone, Mail, X, RotateCcw } from "lucide-react";
-import { Card, CardContent } from "@odis-ai/shared/ui/card";
+import { useState } from "react";
+import { Clock, X, RotateCcw, CalendarClock } from "lucide-react";
 import { Checkbox } from "@odis-ai/shared/ui/checkbox";
 import { Button } from "@odis-ai/shared/ui/button";
 import {
@@ -11,11 +11,64 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@odis-ai/shared/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@odis-ai/shared/ui/popover";
 import { cn, formatRelativeTime } from "@odis-ai/shared/util";
+import { getShortFailureReason } from "../../shared/utils";
 import type { DeliveryStatus } from "../types";
 
-// Delay options for scheduling (in days)
-const DELAY_OPTIONS = [0, 1, 2, 3, 5, 7];
+// Generate date options for the next 14 days
+function getDateOptions(): { value: string; label: string; date: Date }[] {
+  const options: { value: string; label: string; date: Date }[] = [];
+  const today = new Date();
+
+  for (let i = 0; i < 14; i++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + i);
+    const label = date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+    options.push({
+      value: String(i),
+      label,
+      date,
+    });
+  }
+
+  return options;
+}
+
+const DATE_OPTIONS = getDateOptions();
+
+/** Reschedule options with delay days - showing actual dates */
+function getRescheduleOptions(): { value: number; label: string }[] {
+  const today = new Date();
+  const delays = [0, 1, 2, 3, 4, 5]; // Today + 5 future dates
+
+  return delays.map((delayDays) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() + delayDays);
+    const label = date.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+
+    return { value: delayDays, label };
+  });
+}
+
+const RESCHEDULE_DELAY_OPTIONS = getRescheduleOptions();
+
+/** Reschedule options for failed/cancelled items */
+interface RescheduleOptions {
+  delayDays: number;
+  immediate: boolean;
+}
 
 interface CommunicationStatusCardsProps {
   // Phone state
@@ -29,6 +82,7 @@ interface CommunicationStatusCardsProps {
   onPhoneDelayChange: (days: number) => void;
   onPhoneCancel?: () => void;
   onPhoneRetry?: () => void;
+  onPhoneReschedule?: (options: RescheduleOptions) => void;
   hasOwnerPhone: boolean;
 
   // Email state
@@ -42,16 +96,30 @@ interface CommunicationStatusCardsProps {
   onEmailDelayChange: (days: number) => void;
   onEmailCancel?: () => void;
   onEmailRetry?: () => void;
+  onEmailReschedule?: (options: RescheduleOptions) => void;
   hasOwnerEmail: boolean;
 
   // Global
   isSubmitting: boolean;
   isPhoneCancelling?: boolean;
   isEmailCancelling?: boolean;
-  caseStatus: "pending_review" | "ready" | "scheduled" | "completed" | "failed" | "in_progress";
+  isRescheduling?: boolean;
+  caseStatus:
+    | "pending_review"
+    | "ready"
+    | "scheduled"
+    | "completed"
+    | "failed"
+    | "in_progress";
 }
 
-type CardStatus = "to_schedule" | "scheduled" | "delivered" | "failed" | "not_available" | "pending";
+type CardStatus =
+  | "to_schedule"
+  | "scheduled"
+  | "delivered"
+  | "failed"
+  | "not_available"
+  | "pending";
 
 interface StatusBadgeProps {
   status: CardStatus;
@@ -61,34 +129,46 @@ function StatusBadge({ status }: StatusBadgeProps) {
   const config = {
     to_schedule: {
       label: "To Schedule",
-      className: "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300",
+      className: "bg-amber-50 text-amber-600 border-amber-200",
+      showIcon: false,
     },
     scheduled: {
       label: "Scheduled",
-      className: "bg-teal-100 text-teal-700 dark:bg-teal-900/50 dark:text-teal-300",
+      className: "bg-amber-50 text-amber-600 border-amber-200",
+      showIcon: true,
     },
     delivered: {
       label: "Delivered",
-      className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300",
+      className: "bg-emerald-50 text-emerald-600 border-emerald-200",
+      showIcon: false,
     },
     failed: {
       label: "Failed",
-      className: "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300",
+      className: "bg-red-50 text-red-600 border-red-200",
+      showIcon: false,
     },
     not_available: {
       label: "N/A",
-      className: "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400",
+      className: "bg-slate-50 text-slate-500 border-slate-200",
+      showIcon: false,
     },
     pending: {
       label: "Pending",
-      className: "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300",
+      className: "bg-amber-50 text-amber-600 border-amber-200",
+      showIcon: true,
     },
   };
 
-  const { label, className } = config[status];
+  const { label, className, showIcon } = config[status];
 
   return (
-    <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium", className)}>
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium",
+        className,
+      )}
+    >
+      {showIcon && <Clock className="h-3 w-3" />}
       {label}
     </span>
   );
@@ -107,9 +187,28 @@ interface ChannelCardProps {
   onDelayChange: (days: number) => void;
   onCancel?: () => void;
   onRetry?: () => void;
+  onReschedule?: (options: RescheduleOptions) => void;
   isSubmitting: boolean;
   isCancelling?: boolean;
+  isRescheduling?: boolean;
   showControls: boolean;
+}
+
+/**
+ * Get the scheduled date formatted as "Mon DD" (e.g., "Jan 28")
+ */
+function getScheduledDateLabel(
+  scheduledFor: string | null,
+  delayDays: number,
+): string {
+  if (scheduledFor) {
+    const date = new Date(scheduledFor);
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  }
+  // Fall back to delay days from today
+  const date = new Date();
+  date.setDate(date.getDate() + delayDays);
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 function ChannelCard({
@@ -125,11 +224,13 @@ function ChannelCard({
   onDelayChange,
   onCancel,
   onRetry,
+  onReschedule,
   isSubmitting,
   isCancelling,
+  isRescheduling,
   showControls,
 }: ChannelCardProps) {
-  const Icon = type === "phone" ? Phone : Mail;
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const label = type === "phone" ? "Phone Call" : "Email";
 
   // Determine what to show based on status
@@ -145,220 +246,205 @@ function ChannelCard({
 
   // Format failure reason for display
   const displayFailureReason = failureReason
-    ? formatFailureReason(failureReason)
+    ? getShortFailureReason(failureReason)
     : "Delivery failed";
 
+  // Get scheduled date label
+  const scheduledDateLabel = getScheduledDateLabel(scheduledFor, delayDays);
+
+  // Show date picker for scheduled or to_schedule states
+  const showDatePicker =
+    (isScheduled || isToSchedule) && showControls && hasContact;
+
   return (
-    <Card className={cn(
-      "flex-1 transition-colors",
-      isNotAvailable && "opacity-60",
-      isFailed && "border-red-200 dark:border-red-800/50",
-      isDelivered && "border-emerald-200 dark:border-emerald-800/50",
-      isScheduled && "border-teal-200 dark:border-teal-800/50",
-      isToSchedule && "border-amber-200 dark:border-amber-800/50",
-    )}>
-      <CardContent className="p-4">
-        {/* Header row */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            {/* Checkbox - only show for pending/ready cases with contact info */}
-            {showControls && hasContact && (
-              <Checkbox
-                id={`${type}-toggle`}
-                checked={enabled}
-                onCheckedChange={(checked) => onToggle(Boolean(checked))}
-                disabled={isSubmitting}
-              />
-            )}
-            <Icon className={cn(
-              "h-4 w-4",
-              isDelivered && "text-emerald-600",
-              isFailed && "text-red-500",
-              isScheduled && "text-teal-600",
-              isPending && "text-amber-600",
-              isToSchedule && "text-amber-600",
-              isNotAvailable && "text-slate-400",
-            )} />
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
-              {label}
+    <div
+      className={cn(
+        "flex-1 rounded-xl border-2 bg-white p-4 transition-colors dark:bg-slate-900",
+        isNotAvailable && "border-slate-200 opacity-60 dark:border-slate-700",
+        isFailed && "border-red-200 dark:border-red-700",
+        isDelivered && "border-emerald-200 dark:border-emerald-700",
+        (isScheduled || isPending) && "border-slate-200 dark:border-slate-600",
+        isToSchedule && "border-slate-200 dark:border-slate-600",
+      )}
+    >
+      {/* Header row */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-3">
+          {/* Checkbox - only show for pending/ready cases with contact info */}
+          {showControls && hasContact && (
+            <Checkbox
+              id={`${type}-toggle`}
+              checked={enabled}
+              onCheckedChange={(checked) => onToggle(Boolean(checked))}
+              disabled={isSubmitting}
+              className="h-6 w-6 rounded border-2 border-slate-300 data-[state=checked]:border-slate-800 data-[state=checked]:bg-slate-800 data-[state=checked]:text-white"
+            />
+          )}
+          <span className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+            {label}
+          </span>
+        </div>
+        <StatusBadge status={cardStatus} />
+      </div>
+
+      {/* Divider - only show when there's content below */}
+      {(showDatePicker ||
+        isDelivered ||
+        isFailed ||
+        isPending ||
+        isNotAvailable) && (
+        <div className="my-3 border-t border-slate-200 dark:border-slate-700" />
+      )}
+
+      {/* Content based on status */}
+      <div>
+        {/* Scheduled or To Schedule: Show date picker */}
+        {showDatePicker && (
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-base text-slate-600 italic dark:text-slate-400">
+              Send on
+            </span>
+            <Select
+              value={String(delayDays)}
+              onValueChange={(value) => onDelayChange(Number(value))}
+              disabled={isSubmitting}
+            >
+              <SelectTrigger className="h-9 w-[100px] border-slate-300 bg-white text-sm font-medium dark:border-slate-600 dark:bg-slate-800">
+                <SelectValue>{scheduledDateLabel}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {DATE_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+
+        {/* Scheduled without controls: Just show the date */}
+        {isScheduled && !showControls && scheduledFor && (
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-base text-slate-600 italic dark:text-slate-400">
+              Send on
+            </span>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              {scheduledDateLabel}
             </span>
           </div>
-          <StatusBadge status={cardStatus} />
-        </div>
+        )}
 
-        {/* Content based on status */}
-        <div className="mt-3">
-          {/* Scheduled: Show delay dropdown and cancel */}
-          {isScheduled && (
-            <div className="space-y-2">
-              {showControls && (
-                <div className="flex items-center gap-2">
-                  <Select
-                    value={String(delayDays)}
-                    onValueChange={(value) => onDelayChange(Number(value))}
-                    disabled={isSubmitting}
-                  >
-                    <SelectTrigger className="h-8 w-20">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {DELAY_OPTIONS.map((days) => (
-                        <SelectItem key={days} value={String(days)}>
-                          {days === 0 ? "Same day" : days}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {delayDays > 0 && <span className="text-sm text-slate-500">day{delayDays > 1 ? "s" : ""}</span>}
-                </div>
-              )}
-              {scheduledFor && (
-                <p className="text-xs text-teal-600 dark:text-teal-400">
-                  {formatScheduledTime(scheduledFor)}
-                </p>
-              )}
-              {onCancel && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onCancel}
-                  disabled={isSubmitting || isCancelling}
-                  className="h-7 gap-1 text-xs text-slate-500 hover:text-red-600"
-                >
-                  <X className="h-3 w-3" />
-                  {isCancelling ? "Cancelling..." : "Cancel"}
-                </Button>
-              )}
-            </div>
-          )}
+        {/* Cancel button for scheduled items */}
+        {isScheduled && onCancel && (
+          <div className="mt-3 flex justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onCancel}
+              disabled={isSubmitting || isCancelling}
+              className="h-7 gap-1 text-xs text-slate-500 hover:text-red-600"
+            >
+              <X className="h-3 w-3" />
+              {isCancelling ? "Cancelling..." : "Cancel"}
+            </Button>
+          </div>
+        )}
 
-          {/* Delivered: Show relative time */}
-          {isDelivered && relativeTime && (
-            <p className="text-sm text-emerald-600 dark:text-emerald-400">
-              {relativeTime}
+        {/* Delivered: Show relative time */}
+        {isDelivered && relativeTime && (
+          <p className="text-sm text-emerald-600 dark:text-emerald-400">
+            Delivered {relativeTime}
+          </p>
+        )}
+
+        {/* Failed: Show failure reason and retry/reschedule */}
+        {isFailed && (
+          <div className="space-y-2">
+            <p className="text-sm text-red-600 dark:text-red-400">
+              {displayFailureReason}
             </p>
-          )}
-
-          {/* Failed: Show failure reason and retry */}
-          {isFailed && (
-            <div className="space-y-2">
-              <p className="text-sm text-red-600 dark:text-red-400">
-                {displayFailureReason}
-              </p>
+            <div className="flex items-center gap-2">
               {onRetry && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={onRetry}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isRescheduling}
                   className="h-7 gap-1 text-xs text-slate-500 hover:text-teal-600"
                 >
                   <RotateCcw className="h-3 w-3" />
-                  Retry
+                  Retry Now
                 </Button>
               )}
+              {onReschedule && (
+                <Popover open={rescheduleOpen} onOpenChange={setRescheduleOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={isSubmitting || isRescheduling}
+                      className="h-7 gap-1 text-xs text-slate-500 hover:text-teal-600"
+                    >
+                      <CalendarClock className="h-3 w-3" />
+                      {isRescheduling ? "Scheduling..." : "Reschedule"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-48 p-2" align="start">
+                    <div className="space-y-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-sm"
+                        onClick={() => {
+                          onReschedule({ delayDays: 0, immediate: true });
+                          setRescheduleOpen(false);
+                        }}
+                      >
+                        Send Now
+                      </Button>
+                      <div className="my-1 border-t border-slate-200 dark:border-slate-700" />
+                      {RESCHEDULE_DELAY_OPTIONS.map((option) => (
+                        <Button
+                          key={option.value}
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start text-sm"
+                          onClick={() => {
+                            onReschedule({
+                              delayDays: option.value,
+                              immediate: false,
+                            });
+                            setRescheduleOpen(false);
+                          }}
+                        >
+                          {option.label}
+                        </Button>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Pending: Show "in progress" message */}
-          {isPending && (
-            <p className="text-sm text-amber-600 dark:text-amber-400">
-              Delivery in progress...
-            </p>
-          )}
+        {/* Pending: Show "in progress" message */}
+        {isPending && (
+          <p className="text-sm text-amber-600 dark:text-amber-400">
+            Delivery in progress...
+          </p>
+        )}
 
-          {/* Not available: Show reason */}
-          {isNotAvailable && (
-            <p className="text-sm text-slate-500">
-              No {type === "phone" ? "phone number" : "email address"} on file
-            </p>
-          )}
-
-          {/* To Schedule: Show delay dropdown for configuring schedule */}
-          {isToSchedule && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Select
-                  value={String(delayDays)}
-                  onValueChange={(value) => onDelayChange(Number(value))}
-                  disabled={isSubmitting}
-                >
-                  <SelectTrigger className="h-8 w-20">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DELAY_OPTIONS.map((days) => (
-                      <SelectItem key={days} value={String(days)}>
-                        {days === 0 ? "Same day" : days}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {delayDays > 0 && (
-                  <span className="text-sm text-slate-500">
-                    day{delayDays > 1 ? "s" : ""} after discharge
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+        {/* Not available: Show reason */}
+        {isNotAvailable && (
+          <p className="text-sm text-slate-500">
+            No {type === "phone" ? "phone number" : "email address"} on file
+          </p>
+        )}
+      </div>
+    </div>
   );
-}
-
-/**
- * Formats the scheduled time for display.
- */
-function formatScheduledTime(scheduledFor: string): string {
-  const date = new Date(scheduledFor);
-  return date.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-}
-
-/**
- * Formats failure reasons for human-readable display.
- */
-function formatFailureReason(reason: string): string {
-  const reasonMap: Record<string, string> = {
-    // VAPI ended reasons
-    "voicemail-reached": "Voicemail Detected",
-    "voicemail": "Voicemail Detected",
-    "machine-detected": "Voicemail Detected",
-    "dial-no-answer": "No Answer",
-    "customer-did-not-answer": "No Answer",
-    "no-answer": "No Answer",
-    "silence-timed-out": "No Response",
-    "silence-timeout": "No Response",
-    "failed-to-connect-call": "Connection Failed",
-    "connection-error": "Connection Failed",
-    "busy": "Line Busy",
-    "customer-busy": "Line Busy",
-    "rejected": "Call Rejected",
-    "invalid-phone": "Invalid Phone Number",
-    // Email failures
-    "invalid-email": "No Email Address",
-    "email-bounced": "Email Bounced",
-    "email-rejected": "Email Rejected",
-  };
-
-  // Check for partial matches
-  const lowerReason = reason.toLowerCase();
-  for (const [key, display] of Object.entries(reasonMap)) {
-    if (lowerReason.includes(key.toLowerCase())) {
-      return display;
-    }
-  }
-
-  // Return formatted version of original
-  return reason.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
 }
 
 /**
@@ -368,7 +454,7 @@ function deriveCardStatus(
   deliveryStatus: DeliveryStatus,
   hasContact: boolean,
   scheduledFor: string | null,
-  caseStatus: string
+  caseStatus: string,
 ): CardStatus {
   if (!hasContact) {
     return "not_available";
@@ -422,6 +508,7 @@ export function CommunicationStatusCards({
   onPhoneDelayChange,
   onPhoneCancel,
   onPhoneRetry,
+  onPhoneReschedule,
   hasOwnerPhone,
   // Email props
   emailStatus,
@@ -434,23 +521,37 @@ export function CommunicationStatusCards({
   onEmailDelayChange,
   onEmailCancel,
   onEmailRetry,
+  onEmailReschedule,
   hasOwnerEmail,
   // Global
   isSubmitting,
   isPhoneCancelling,
   isEmailCancelling,
+  isRescheduling,
   caseStatus,
 }: CommunicationStatusCardsProps) {
   // Determine if we should show controls (checkboxes, delay dropdowns)
   // Only for pending_review, ready, or scheduled cases
-  const showControls = ["pending_review", "ready", "scheduled"].includes(caseStatus);
+  const showControls = ["pending_review", "ready", "scheduled"].includes(
+    caseStatus,
+  );
 
   // Derive card statuses
-  const phoneCardStatus = deriveCardStatus(phoneStatus, hasOwnerPhone, phoneScheduledFor, caseStatus);
-  const emailCardStatus = deriveCardStatus(emailStatus, hasOwnerEmail, emailScheduledFor, caseStatus);
+  const phoneCardStatus = deriveCardStatus(
+    phoneStatus,
+    hasOwnerPhone,
+    phoneScheduledFor,
+    caseStatus,
+  );
+  const emailCardStatus = deriveCardStatus(
+    emailStatus,
+    hasOwnerEmail,
+    emailScheduledFor,
+    caseStatus,
+  );
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <ChannelCard
         type="phone"
         cardStatus={phoneCardStatus}
@@ -464,8 +565,10 @@ export function CommunicationStatusCards({
         onDelayChange={onPhoneDelayChange}
         onCancel={onPhoneCancel}
         onRetry={onPhoneRetry}
+        onReschedule={onPhoneReschedule}
         isSubmitting={isSubmitting}
         isCancelling={isPhoneCancelling}
+        isRescheduling={isRescheduling}
         showControls={showControls}
       />
       <ChannelCard
@@ -481,8 +584,10 @@ export function CommunicationStatusCards({
         onDelayChange={onEmailDelayChange}
         onCancel={onEmailCancel}
         onRetry={onEmailRetry}
+        onReschedule={onEmailReschedule}
         isSubmitting={isSubmitting}
         isCancelling={isEmailCancelling}
+        isRescheduling={isRescheduling}
         showControls={showControls}
       />
     </div>

@@ -92,3 +92,5 @@ screenshots-archive/
 
 # Claude skills (auto-generated, ignore all skills)
 .claude/skills/
+
+docs/temp

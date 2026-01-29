@@ -9,7 +9,9 @@ import { initializeLlamaIndex } from "./config";
  * Import this file early in your app startup to ensure LlamaIndex is configured
  * before any AI operations are performed.
  */
-if (typeof window === "undefined") {
+const isServer = typeof globalThis !== "undefined" && !("window" in globalThis);
+
+if (isServer) {
   initializeLlamaIndex();
   console.log("[LlamaIndex] Initialized with Anthropic LLM");
 }

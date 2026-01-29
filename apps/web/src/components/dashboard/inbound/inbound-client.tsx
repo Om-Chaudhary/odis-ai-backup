@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { useQueryState, parseAsInteger } from "nuqs";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { useQueryState, parseAsInteger, parseAsString } from "nuqs";
+import { toast } from "sonner";
 
 import type { OutcomeFilter, OutcomeFilterValue } from "./types";
 import type { Database } from "@odis-ai/shared/types";
@@ -16,6 +17,7 @@ import { useInboundData, useInboundMutations } from "./hooks";
 import { useClinicSchedule } from "./hooks/use-clinic-schedule";
 import { DataTablePagination } from "../shared/data-table";
 import { useClinic } from "@odis-ai/shared/ui/clinic-context";
+import { api } from "~/trpc/client";
 
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
@@ -54,10 +56,10 @@ export function InboundClient() {
 
   const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
 
-  const [pageSize] = useQueryState(
-    "size",
-    parseAsInteger.withDefault(25),
-  );
+  const [pageSize] = useQueryState("size", parseAsInteger.withDefault(25));
+
+  // Deep link support: Direct call ID (for extension integration)
+  const [callId, setCallId] = useQueryState("callId", parseAsString);
 
   // Local state
   const [selectedCall, setSelectedCall] = useState<InboundCall | null>(null);
@@ -76,6 +78,13 @@ export function InboundClient() {
     outcomeFilter,
     searchTerm,
   });
+
+  // Deep link: Fetch call by ID when callId param is present
+  const { data: callByIdData, isLoading: isCallByIdLoading } =
+    api.inbound.getCallById.useQuery(
+      { callId: callId! },
+      { enabled: !!callId },
+    );
 
   const { handleDeleteCall, isSubmitting } = useInboundMutations({
     onCallSuccess: () => {
@@ -104,9 +113,14 @@ export function InboundClient() {
     [setPage],
   );
 
-  const handleSelectCall = useCallback((call: InboundCall) => {
-    setSelectedCall(call);
-  }, []);
+  const handleSelectCall = useCallback(
+    (call: InboundCall) => {
+      setSelectedCall(call);
+      // Update URL for deep linking / shareable URLs
+      void setCallId(call.id);
+    },
+    [setCallId],
+  );
 
   // Toggle handler: clicking same row closes panel
   const handleToggleCall = useCallback(
@@ -122,7 +136,9 @@ export function InboundClient() {
   const handleClosePanel = useCallback(() => {
     setSelectedCall(null);
     setSelectedRowPosition(null);
-  }, []);
+    // Clear URL param when closing panel
+    void setCallId(null);
+  }, [setCallId]);
 
   const handleKeyNavigation = useCallback(
     (direction: "up" | "down") => {
@@ -147,6 +163,48 @@ export function InboundClient() {
     [calls, selectedCall, handleSelectCall],
   );
 
+  // Deep link handling: Auto-select call when callId param is present
+  const callIdDeepLinkHandledRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!callId || isCallByIdLoading || isLoading) return;
+    if (callIdDeepLinkHandledRef.current === callId) return;
+
+    // First, check if call exists in current list
+    const existingCall = calls.find((c) => c.id === callId);
+    if (existingCall) {
+      callIdDeepLinkHandledRef.current = callId;
+      handleSelectCall(existingCall);
+      toast.success("Call opened");
+      void setCallId(null);
+      return;
+    }
+
+    // Call not in current list - check if it exists via API
+    if (callByIdData) {
+      callIdDeepLinkHandledRef.current = callId;
+      // Call exists but not in current filtered view
+      handleSelectCall(callByIdData);
+      toast.success("Call opened", {
+        description: "Call was loaded from another view",
+      });
+      void setCallId(null);
+    } else if (!isCallByIdLoading) {
+      // API query complete but no data - call not found
+      callIdDeepLinkHandledRef.current = callId;
+      toast.error("Call not found", {
+        description: `No call found for ID: ${callId}`,
+      });
+      void setCallId(null);
+    }
+  }, [
+    callId,
+    callByIdData,
+    isCallByIdLoading,
+    calls,
+    isLoading,
+    handleSelectCall,
+    setCallId,
+  ]);
 
   return (
     <div id="inbound-page-container" className="flex h-full flex-col">
@@ -197,7 +255,6 @@ export function InboundClient() {
           )
         }
       />
-
     </div>
   );
 }

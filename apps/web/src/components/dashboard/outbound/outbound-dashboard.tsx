@@ -109,15 +109,20 @@ function OutboundDashboardInner() {
   // Track if we've handled the deep link to avoid re-processing
   const deepLinkHandledRef = useRef<string | null>(null);
 
-  const handleSelectCase = useCallback((caseItem: unknown) => {
-    const typedCase = caseItem as TransformedCase;
-    setSelectedCase(typedCase);
-    setDeliveryToggles((prev) => ({
-      phoneEnabled: !!typedCase.owner.phone,
-      emailEnabled: !!typedCase.owner.email,
-      immediateDelivery: prev.immediateDelivery ?? false,
-    }));
-  }, []);
+  const handleSelectCase = useCallback(
+    (caseItem: unknown) => {
+      const typedCase = caseItem as TransformedCase;
+      setSelectedCase(typedCase);
+      setDeliveryToggles((prev) => ({
+        phoneEnabled: !!typedCase.owner.phone,
+        emailEnabled: !!typedCase.owner.email,
+        immediateDelivery: prev.immediateDelivery ?? false,
+      }));
+      // Update URL for deep linking / shareable URLs
+      void setCaseId(typedCase.id);
+    },
+    [setCaseId],
+  );
 
   // Use custom hooks for data and mutations
   const {
@@ -148,6 +153,7 @@ function OutboundDashboardInner() {
   const {
     handleApproveAndSend: approveAndSendHandler,
     handleRetry: retryHandler,
+    handleReschedule: rescheduleHandler,
     handleQuickSchedule,
     handleToggleStar,
     handleCancelScheduled: cancelScheduledHandler,
@@ -158,6 +164,7 @@ function OutboundDashboardInner() {
     togglingStarCaseIds,
     cancellingCallCaseIds,
     cancellingEmailCaseIds,
+    reschedulingCaseIds,
   } = useOutboundMutations({
     onSuccess: () => {
       // Only clear selection for non-cancel operations
@@ -199,11 +206,46 @@ function OutboundDashboardInner() {
 
   const handleRetry = useCallback(async () => {
     if (!selectedCase) return;
-    await retryHandler(selectedCase.id, {
-      retryCall: selectedCase.phoneSent === "failed",
-      retryEmail: selectedCase.emailSent === "failed",
-    });
-  }, [selectedCase, retryHandler]);
+
+    const phoneFailed = selectedCase.phoneSent === "failed";
+    const emailFailed = selectedCase.emailSent === "failed";
+
+    // Only retry if at least one channel failed
+    if (!phoneFailed && !emailFailed) {
+      toast.error("No failed deliveries to retry");
+      return;
+    }
+
+    try {
+      await retryHandler(selectedCase.id, {
+        retryCall: phoneFailed,
+        retryEmail: emailFailed,
+      });
+    } catch (error) {
+      // If retry fails because no failed record exists in DB, schedule a new delivery instead
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes("No failed deliveries")) {
+        // Fall back to scheduling a new immediate delivery
+        const hasPhone = !!selectedCase.owner.phone;
+        const hasEmail = !!selectedCase.owner.email;
+
+        await approveAndSendHandler(
+          selectedCase.id,
+          {
+            phoneEnabled: phoneFailed && hasPhone,
+            emailEnabled: emailFailed && hasEmail,
+            immediateDelivery: true,
+          },
+          true, // immediate
+        );
+        toast.success("New delivery scheduled");
+      } else {
+        // Re-throw other errors to let the mutation error handler deal with them
+        throw error;
+      }
+    }
+  }, [selectedCase, retryHandler, approveAndSendHandler]);
 
   const handleCancelScheduled = useCallback(
     async (options: { cancelCall: boolean; cancelEmail: boolean }) => {
@@ -213,12 +255,44 @@ function OutboundDashboardInner() {
     [selectedCase, cancelScheduledHandler],
   );
 
+  // Reschedule phone call to a specific date
+  const handlePhoneReschedule = useCallback(
+    async (options: { delayDays: number; immediate: boolean }) => {
+      if (!selectedCase) return;
+      await rescheduleHandler(selectedCase.id, {
+        rescheduleCall: true,
+        rescheduleEmail: false,
+        delayDays: options.delayDays,
+        immediate: options.immediate,
+      });
+    },
+    [selectedCase, rescheduleHandler],
+  );
+
+  // Reschedule email to a specific date
+  const handleEmailReschedule = useCallback(
+    async (options: { delayDays: number; immediate: boolean }) => {
+      if (!selectedCase) return;
+      await rescheduleHandler(selectedCase.id, {
+        rescheduleCall: false,
+        rescheduleEmail: true,
+        delayDays: options.delayDays,
+        immediate: options.immediate,
+      });
+    },
+    [selectedCase, rescheduleHandler],
+  );
+
   // Check if current case is being cancelled (separate for call and email)
   const isCancellingCall = selectedCase
     ? cancellingCallCaseIds.has(selectedCase.id)
     : false;
   const isCancellingEmail = selectedCase
     ? cancellingEmailCaseIds.has(selectedCase.id)
+    : false;
+  // Check if current case is being rescheduled
+  const isReschedulingCase = selectedCase
+    ? reschedulingCaseIds.has(selectedCase.id)
     : false;
 
   // Escape to close panel
@@ -417,7 +491,10 @@ function OutboundDashboardInner() {
 
   const handleClosePanel = useCallback(() => {
     setSelectedCase(null);
-  }, []);
+    // Clear URL params when closing panel
+    void setCaseId(null);
+    void setOpenPanel(null);
+  }, [setCaseId, setOpenPanel]);
 
   const handleKeyNavigation = useCallback(
     (direction: "up" | "down") => {
@@ -531,10 +608,13 @@ function OutboundDashboardInner() {
             setDeliveryToggles={setDeliveryToggles}
             onApprove={handleApproveAndSend}
             onRetry={handleRetry}
+            onPhoneReschedule={handlePhoneReschedule}
+            onEmailReschedule={handleEmailReschedule}
             onCancelScheduled={handleCancelScheduled}
             isSubmitting={isSubmitting}
             isCancellingCall={isCancellingCall}
             isCancellingEmail={isCancellingEmail}
+            isRescheduling={isReschedulingCase}
             testModeEnabled={settingsData?.testModeEnabled ?? false}
           />
         ) : (
@@ -563,10 +643,13 @@ function OutboundDashboardInner() {
             setDeliveryToggles={setDeliveryToggles}
             onApprove={handleApproveAndSend}
             onRetry={handleRetry}
+            onPhoneReschedule={handlePhoneReschedule}
+            onEmailReschedule={handleEmailReschedule}
             onCancelScheduled={handleCancelScheduled}
             isSubmitting={isSubmitting}
             isCancellingCall={isCancellingCall}
             isCancellingEmail={isCancellingEmail}
+            isRescheduling={isReschedulingCase}
             testModeEnabled={settingsData?.testModeEnabled ?? false}
           />
         )}

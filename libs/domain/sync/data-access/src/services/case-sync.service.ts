@@ -29,6 +29,14 @@ interface CaseWithPimsData {
 }
 
 /**
+ * Case that has pimsConsultation but needs AI generation
+ */
+interface CaseNeedingAIGeneration {
+  id: string;
+  pimsConsultation: PimsConsultation;
+}
+
+/**
  * PIMS appointment data from metadata
  */
 interface PimsAppointmentMetadata {
@@ -52,7 +60,7 @@ export class CaseSyncService {
     private provider: IPimsProvider,
     private clinicId: string,
     private userId?: string,
-  ) { }
+  ) {}
 
   /**
    * Sync consultation data for cases in date range
@@ -101,14 +109,25 @@ export class CaseSyncService {
         options.endDate,
       );
 
-      stats.total = casesToEnrich.length;
+      // Find cases that have pimsConsultation but need AI generation
+      const casesNeedingAI = this.userId
+        ? await this.findCasesNeedingAIGeneration(
+            options.startDate,
+            options.endDate,
+          )
+        : [];
 
-      logger.info("Found cases needing enrichment", {
+      const totalCases = casesToEnrich.length + casesNeedingAI.length;
+      stats.total = totalCases;
+
+      logger.info("Found cases to process", {
         syncId,
-        count: casesToEnrich.length,
+        needingEnrichment: casesToEnrich.length,
+        needingAIGeneration: casesNeedingAI.length,
+        total: totalCases,
       });
 
-      if (casesToEnrich.length === 0) {
+      if (totalCases === 0) {
         // No cases to process - mark as complete
         await throttler.queueUpdate(
           {
@@ -143,75 +162,121 @@ export class CaseSyncService {
         {
           supabase: this.supabase,
           syncId,
-          total_items: casesToEnrich.length,
+          total_items: totalCases,
           processed_items: 0,
           progress_percentage: 0,
         },
         true,
       ); // Force immediate update
 
-      // Batch fetch consultations
-      const batchSize = options.parallelBatchSize ?? 5;
-      const consultations = await this.fetchConsultationsBatched(
-        consultationIds,
-        batchSize,
-      );
-
-      logger.info("Fetched consultations", {
-        syncId,
-        requested: consultationIds.length,
-        received: consultations.size,
-      });
-
-      // Update cases with consultation data
       let processedCount = 0;
-      for (const [consultationId, caseIds] of Array.from(
-        consultationMap.entries(),
-      )) {
-        const consultation = consultations.get(consultationId);
 
-        for (const caseId of caseIds) {
-          try {
-            if (consultation) {
-              await this.enrichCaseWithConsultation(caseId, consultation);
-              // Trigger AI generation for enriched cases with clinical notes
-              if (consultation.notes && this.userId) {
-                await this.triggerAIGeneration(caseId, consultation);
+      // Phase 1: Enrich cases that need PIMS consultation data
+      if (casesToEnrich.length > 0) {
+        // Batch fetch consultations (reduced from 5 to 2 to prevent browser resource exhaustion)
+        const batchSize = options.parallelBatchSize ?? 2;
+        const consultations = await this.fetchConsultationsBatched(
+          consultationIds,
+          batchSize,
+        );
+
+        logger.info("Fetched consultations", {
+          syncId,
+          requested: consultationIds.length,
+          received: consultations.size,
+        });
+
+        // Update cases with consultation data
+        for (const [consultationId, caseIds] of Array.from(
+          consultationMap.entries(),
+        )) {
+          const consultation = consultations.get(consultationId);
+
+          for (const caseId of caseIds) {
+            try {
+              if (consultation) {
+                await this.enrichCaseWithConsultation(caseId, consultation);
+                // Trigger AI generation for enriched cases with clinical notes or discharge summary
+                const hasClinicalContent =
+                  !!consultation.notes || !!consultation.dischargeSummary;
+                if (hasClinicalContent && this.userId) {
+                  await this.triggerAIGeneration(caseId, consultation);
+                }
+                stats.updated++;
+              } else {
+                // Consultation not found - mark as skipped
+                stats.skipped++;
+                logger.debug("Consultation not found for case", {
+                  caseId,
+                  consultationId,
+                });
               }
-              stats.updated++;
-            } else {
-              // Consultation not found - mark as skipped
-              stats.skipped++;
-              logger.debug("Consultation not found for case", {
+            } catch (error) {
+              stats.failed++;
+              const message =
+                error instanceof Error ? error.message : "Unknown error";
+              errors.push({
+                message: `Failed to enrich case ${caseId}: ${message}`,
+                context: { caseId, consultationId },
+              });
+              logger.error("Failed to enrich case", {
+                syncId,
                 caseId,
                 consultationId,
+                error: message,
               });
             }
+
+            // Update progress (throttled automatically)
+            processedCount++;
+            const percentage = Math.floor((processedCount / totalCases) * 100);
+            await throttler.queueUpdate({
+              supabase: this.supabase,
+              syncId,
+              total_items: totalCases,
+              processed_items: processedCount,
+              progress_percentage: percentage,
+            });
+          }
+        }
+      }
+
+      // Phase 2: Generate AI content for cases that have pimsConsultation but no discharge summary
+      if (casesNeedingAI.length > 0) {
+        logger.info("Processing cases needing AI generation", {
+          syncId,
+          count: casesNeedingAI.length,
+        });
+
+        for (const caseData of casesNeedingAI) {
+          try {
+            await this.triggerAIGeneration(
+              caseData.id,
+              caseData.pimsConsultation,
+            );
+            stats.updated++;
           } catch (error) {
             stats.failed++;
             const message =
               error instanceof Error ? error.message : "Unknown error";
             errors.push({
-              message: `Failed to enrich case ${caseId}: ${message}`,
-              context: { caseId, consultationId },
+              message: `Failed AI generation for case ${caseData.id}: ${message}`,
+              context: { caseId: caseData.id },
             });
-            logger.error("Failed to enrich case", {
+            logger.error("Failed AI generation for case", {
               syncId,
-              caseId,
-              consultationId,
+              caseId: caseData.id,
               error: message,
             });
           }
 
-          // Update progress (throttled automatically)
+          // Update progress
           processedCount++;
-          const percentage = Math.floor(
-            (processedCount / casesToEnrich.length) * 100,
-          );
+          const percentage = Math.floor((processedCount / totalCases) * 100);
           await throttler.queueUpdate({
             supabase: this.supabase,
             syncId,
-            total_items: casesToEnrich.length,
+            total_items: totalCases,
             processed_items: processedCount,
             progress_percentage: percentage,
           });
@@ -318,6 +383,71 @@ export class CaseSyncService {
       // Not enriched if no consultation data in metadata
       return !metadata?.pimsConsultation;
     });
+  }
+
+  /**
+   * Find cases that have pimsConsultation data but are missing discharge summaries
+   * These cases were enriched but AI generation failed (e.g., missing API key)
+   */
+  private async findCasesNeedingAIGeneration(
+    startDate: Date,
+    endDate: Date,
+  ): Promise<CaseNeedingAIGeneration[]> {
+    // Cap endDate at current time
+    const now = new Date();
+    const effectiveEndDate = endDate > now ? now : endDate;
+
+    // Find cases with pimsConsultation that don't have a discharge_summary
+    const { data: cases, error } = await this.supabase
+      .from("cases")
+      .select("id, metadata")
+      .eq("clinic_id", this.clinicId)
+      .gte("scheduled_at", startDate.toISOString())
+      .lte("scheduled_at", effectiveEndDate.toISOString())
+      .not("metadata->pimsConsultation", "is", null);
+
+    if (error) {
+      throw new Error(
+        `Failed to query cases for AI generation: ${error.message}`,
+      );
+    }
+
+    if (!cases || cases.length === 0) {
+      return [];
+    }
+
+    // Get case IDs that already have discharge summaries
+    const caseIds = cases.map((c) => c.id);
+    const { data: existingSummaries, error: summaryError } = await this.supabase
+      .from("discharge_summaries")
+      .select("case_id")
+      .in("case_id", caseIds);
+
+    if (summaryError) {
+      throw new Error(
+        `Failed to query discharge summaries: ${summaryError.message}`,
+      );
+    }
+
+    const casesWithSummaries = new Set(
+      (existingSummaries ?? []).map((s) => s.case_id),
+    );
+
+    // Filter to cases that need AI generation
+    return cases
+      .filter((caseRow) => !casesWithSummaries.has(caseRow.id))
+      .map((caseRow) => {
+        const metadata = caseRow.metadata as Record<string, unknown>;
+        return {
+          id: caseRow.id,
+          pimsConsultation: metadata.pimsConsultation as PimsConsultation,
+        };
+      })
+      .filter((c) => {
+        // Only include cases with clinical content
+        const consultation = c.pimsConsultation;
+        return !!consultation.notes || !!consultation.dischargeSummary;
+      });
   }
 
   /**
@@ -485,8 +615,9 @@ export class CaseSyncService {
       } = await import("@odis-ai/domain/cases");
 
       // Build raw data for entity extraction
+      // Use dischargeSummary as fallback since IDEXX returns clinical content there
       const rawIdexxData: Record<string, unknown> = {
-        consultation_notes: consultation.notes,
+        consultation_notes: consultation.notes ?? consultation.dischargeSummary,
         products_services: consultation.productsServices,
         declined_products_services: consultation.declinedProductsServices,
         reason: consultation.reason,
@@ -498,7 +629,8 @@ export class CaseSyncService {
       if (!entities) {
         logger.debug("Entity extraction returned null - skipping generation", {
           caseId,
-          notesLength: consultation.notes?.length ?? 0,
+          notesLength:
+            (consultation.notes ?? consultation.dischargeSummary)?.length ?? 0,
         });
         return;
       }
@@ -511,7 +643,9 @@ export class CaseSyncService {
 
       // Generate discharge summary
       const summaryResult = await autoGenerateDischargeSummary(
-        this.supabase as unknown as Parameters<typeof autoGenerateDischargeSummary>[0],
+        this.supabase as unknown as Parameters<
+          typeof autoGenerateDischargeSummary
+        >[0],
         this.userId,
         caseId,
         entities,
@@ -526,7 +660,9 @@ export class CaseSyncService {
 
       // Generate call intelligence
       const intelligenceResult = await generateAndStoreCallIntelligence(
-        this.supabase as unknown as Parameters<typeof generateAndStoreCallIntelligence>[0],
+        this.supabase as unknown as Parameters<
+          typeof generateAndStoreCallIntelligence
+        >[0],
         caseId,
         entities,
       );

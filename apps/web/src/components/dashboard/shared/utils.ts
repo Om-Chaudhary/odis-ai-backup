@@ -85,29 +85,7 @@ export function getFailureReason(
 
   const reason = endedReason.toLowerCase();
 
-  if (reason.includes("silence-timed-out")) {
-    return {
-      short: "No response from owner",
-      detail:
-        "The call connected but the owner did not respond. They may have been unavailable or the call went to a busy line.",
-    };
-  }
-  if (
-    reason.includes("customer-did-not-answer") ||
-    reason.includes("dial-no-answer")
-  ) {
-    return {
-      short: "Owner didn't answer",
-      detail:
-        "The phone rang but no one picked up. The owner may be unavailable.",
-    };
-  }
-  if (reason.includes("dial-busy")) {
-    return {
-      short: "Line was busy",
-      detail: "The owner's phone line was busy. They may be on another call.",
-    };
-  }
+  // Voicemail outcomes
   if (reason.includes("voicemail")) {
     return {
       short: "Reached voicemail",
@@ -115,20 +93,80 @@ export function getFailureReason(
         "The call went to voicemail. A message was not left per your settings.",
     };
   }
+
+  // No answer outcomes
+  if (
+    reason.includes("customer-did-not-answer") ||
+    reason.includes("dial-no-answer") ||
+    reason.includes("no-answer")
+  ) {
+    return {
+      short: "No answer",
+      detail:
+        "The phone rang but no one picked up. The owner may be unavailable.",
+    };
+  }
+
+  // Timeout/silence outcomes
+  if (
+    reason.includes("silence-timed-out") ||
+    reason.includes("silence-timeout")
+  ) {
+    return {
+      short: "No response",
+      detail:
+        "The call connected but the owner did not respond. They may have been unavailable.",
+    };
+  }
+
+  if (reason.includes("exceeded-max-duration")) {
+    return {
+      short: "Call too long",
+      detail: "The call exceeded the maximum allowed duration and was ended.",
+    };
+  }
+
+  // Connection failures
+  if (reason.includes("dial-failed")) {
+    return {
+      short: "Call failed",
+      detail:
+        "The call could not be connected. Please verify the phone number.",
+    };
+  }
+
   if (
     reason.includes("sip") ||
     reason.includes("failed-to-connect") ||
-    reason.includes("twilio")
+    reason.includes("twilio") ||
+    reason.includes("connection")
   ) {
     return {
       short: "Connection failed",
       detail: "Unable to connect the call due to a network or carrier issue.",
     };
   }
-  if (reason.includes("error")) {
+
+  // Busy/rejected outcomes
+  if (reason.includes("dial-busy") || reason.includes("busy")) {
     return {
-      short: "Call error occurred",
-      detail: "An error occurred during the call attempt.",
+      short: "Line busy",
+      detail: "The owner's phone line was busy. They may be on another call.",
+    };
+  }
+
+  if (reason.includes("rejected") || reason.includes("vonage-rejected")) {
+    return {
+      short: "Call declined",
+      detail: "The call was declined by the recipient or carrier.",
+    };
+  }
+
+  // Assistant/system errors
+  if (reason.includes("assistant") || reason.includes("error")) {
+    return {
+      short: "System error",
+      detail: "A system error occurred during the call attempt.",
     };
   }
 
@@ -158,30 +196,58 @@ export function getShortFailureReason(
 
   const reason = endedReason.toLowerCase();
 
-  if (reason.includes("silence-timed-out")) {
-    return "No response";
-  }
-  if (
-    reason.includes("customer-did-not-answer") ||
-    reason.includes("dial-no-answer")
-  ) {
-    return "No pickup";
-  }
-  if (reason.includes("dial-busy")) {
-    return "Line busy";
-  }
+  // Voicemail
   if (reason.includes("voicemail")) {
     return "Voicemail";
   }
+
+  // No answer
+  if (
+    reason.includes("customer-did-not-answer") ||
+    reason.includes("dial-no-answer") ||
+    reason.includes("no-answer")
+  ) {
+    return "No answer";
+  }
+
+  // Timeout/silence
+  if (
+    reason.includes("silence-timed-out") ||
+    reason.includes("silence-timeout")
+  ) {
+    return "No response";
+  }
+
+  if (reason.includes("exceeded-max-duration")) {
+    return "Too long";
+  }
+
+  // Connection failures
+  if (reason.includes("dial-failed")) {
+    return "Call failed";
+  }
+
   if (
     reason.includes("sip") ||
     reason.includes("failed-to-connect") ||
-    reason.includes("twilio")
+    reason.includes("twilio") ||
+    reason.includes("connection")
   ) {
-    return "Connection error";
+    return "Connection failed";
   }
-  if (reason.includes("error")) {
-    return "Call error";
+
+  // Busy/rejected
+  if (reason.includes("dial-busy") || reason.includes("busy")) {
+    return "Line busy";
+  }
+
+  if (reason.includes("rejected") || reason.includes("vonage-rejected")) {
+    return "Call declined";
+  }
+
+  // System errors
+  if (reason.includes("assistant") || reason.includes("error")) {
+    return "System error";
   }
 
   return "Failed";

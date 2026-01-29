@@ -14,3 +14,4 @@ export * from "./lib/case-helpers";
 export * from "./lib/call-scheduling";
 export * from "./lib/entity-utils";
 export * from "./lib/client-identity";
+export * from "./lib/cadence-lookup";

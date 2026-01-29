@@ -3,7 +3,12 @@
  * Manages a pool of browser instances for concurrent scraping
  */
 
-import { chromium, type Browser, type BrowserContext } from "playwright";
+import {
+  chromium,
+  type Browser,
+  type BrowserContext,
+  type Page,
+} from "playwright";
 import type {
   BrowserPoolConfig,
   BrowserInstance,
@@ -173,6 +178,19 @@ export class BrowserPool {
     } finally {
       await this.release(session);
     }
+  }
+
+  /**
+   * Execute a function with an authenticated page session
+   */
+  async withAuthenticatedPage<T>(
+    authClient: { applyAuth: (page: Page) => Promise<void> },
+    fn: (session: PageSession) => Promise<T>,
+  ): Promise<T> {
+    return this.withPage(async (session) => {
+      await authClient.applyAuth(session.page);
+      return fn(session);
+    });
   }
 
   /**

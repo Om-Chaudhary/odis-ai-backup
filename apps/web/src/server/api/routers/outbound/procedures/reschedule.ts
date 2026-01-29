@@ -114,23 +114,28 @@ export const rescheduleRouter = createTRPCRouter({
         ? caseData.scheduled_discharge_emails[0]
         : caseData.scheduled_discharge_emails;
 
-      // Verify failed/cancelled records exist for requested channels
+      // Check if existing records can be rescheduled (failed/cancelled) OR if no record exists yet
+      // We allow scheduling new deliveries even if no failed record exists - this handles cases where:
+      // 1. The UI shows "failed" but the record doesn't exist in DB
+      // 2. User wants to schedule a new delivery from a previously failed/cancelled state
       const callCanBeRescheduled =
-        existingCall && ["failed", "cancelled"].includes(existingCall.status);
+        !existingCall || ["failed", "cancelled"].includes(existingCall.status);
       const emailCanBeRescheduled =
-        existingEmail && ["failed", "cancelled"].includes(existingEmail.status);
+        !existingEmail ||
+        ["failed", "cancelled"].includes(existingEmail.status);
 
+      // Only block if there's an active/pending delivery
       if (input.rescheduleCall && !callCanBeRescheduled) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "No failed or cancelled call to reschedule",
+          message: "Cannot reschedule - call is already queued or in progress",
         });
       }
 
       if (input.rescheduleEmail && !emailCanBeRescheduled) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "No failed or cancelled email to reschedule",
+          message: "Cannot reschedule - email is already queued or pending",
         });
       }
 

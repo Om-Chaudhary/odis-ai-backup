@@ -18,6 +18,7 @@ import {
   Zap,
   Loader2,
 } from "lucide-react";
+import { getFailureReason } from "../../shared/utils";
 
 interface ScheduledCallData {
   id: string;
@@ -57,79 +58,6 @@ interface DeliveryCompleteCardProps {
   isScheduling?: boolean;
 }
 
-// Get friendly failure reason from ended_reason
-function getFailureReason(
-  endedReason: string | null | undefined,
-  emailStatus: "sent" | "pending" | "failed" | "not_applicable" | null,
-): { short: string; detail: string } {
-  if (!endedReason) {
-    if (emailStatus === "failed") {
-      return {
-        short: "Email delivery failed",
-        detail: "The email could not be delivered to the recipient.",
-      };
-    }
-    return {
-      short: "Delivery failed",
-      detail: "Communications could not be delivered.",
-    };
-  }
-
-  const reason = endedReason.toLowerCase();
-
-  if (reason.includes("silence-timed-out")) {
-    return {
-      short: "No response from owner",
-      detail:
-        "The call connected but the owner did not respond. They may have been unavailable or the call went to a busy line.",
-    };
-  }
-  if (
-    reason.includes("customer-did-not-answer") ||
-    reason.includes("dial-no-answer")
-  ) {
-    return {
-      short: "Owner didn't answer",
-      detail:
-        "The phone rang but no one picked up. The owner may be unavailable.",
-    };
-  }
-  if (reason.includes("dial-busy")) {
-    return {
-      short: "Line was busy",
-      detail: "The owner's phone line was busy. They may be on another call.",
-    };
-  }
-  if (reason.includes("voicemail")) {
-    return {
-      short: "Reached voicemail",
-      detail:
-        "The call went to voicemail. A message was not left per your settings.",
-    };
-  }
-  if (
-    reason.includes("sip") ||
-    reason.includes("failed-to-connect") ||
-    reason.includes("twilio")
-  ) {
-    return {
-      short: "Connection failed",
-      detail: "Unable to connect the call due to a network or carrier issue.",
-    };
-  }
-  if (reason.includes("error")) {
-    return {
-      short: "Call error occurred",
-      detail: "An error occurred during the call attempt.",
-    };
-  }
-
-  return {
-    short: "Delivery failed",
-    detail: "Communications could not be delivered.",
-  };
-}
-
 // Generate delivery summary
 function getDeliverySummary(
   status: "completed" | "failed",
@@ -137,7 +65,10 @@ function getDeliverySummary(
   emailStatus: "sent" | "pending" | "failed" | "not_applicable" | null,
 ): string {
   if (status === "failed") {
-    const failureInfo = getFailureReason(call?.endedReason, emailStatus);
+    const failureInfo = getFailureReason(
+      call?.endedReason,
+      emailStatus === "failed",
+    );
     return failureInfo.detail;
   }
 
@@ -214,7 +145,10 @@ export function DeliveryCompleteCard({
         {status === "failed" ? (
           <>
             <p className="text-sm font-medium text-red-700 dark:text-red-400">
-              {getFailureReason(call?.endedReason, emailStatus).short}
+              {
+                getFailureReason(call?.endedReason, emailStatus === "failed")
+                  .short
+              }
             </p>
             <p className="text-sm text-red-600/80 dark:text-red-400/80">
               {getDeliverySummary(status, call, emailStatus)}

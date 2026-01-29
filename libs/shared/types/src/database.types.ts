@@ -519,11 +519,15 @@ export type Database = {
       cases: {
         Row: {
           auto_scheduled_at: string | null;
+          cadence_source: string | null;
+          call_delay_days: number | null;
           call_enabled: boolean | null;
           canonical_patient_id: string | null;
           clinic_id: string | null;
           created_at: string | null;
           created_by: string | null;
+          detected_case_type: string | null;
+          email_delay_days: number | null;
           email_enabled: boolean | null;
           entity_extraction: Json | null;
           external_id: string | null;
@@ -544,11 +548,15 @@ export type Database = {
         };
         Insert: {
           auto_scheduled_at?: string | null;
+          cadence_source?: string | null;
+          call_delay_days?: number | null;
           call_enabled?: boolean | null;
           canonical_patient_id?: string | null;
           clinic_id?: string | null;
           created_at?: string | null;
           created_by?: string | null;
+          detected_case_type?: string | null;
+          email_delay_days?: number | null;
           email_enabled?: boolean | null;
           entity_extraction?: Json | null;
           external_id?: string | null;
@@ -569,11 +577,15 @@ export type Database = {
         };
         Update: {
           auto_scheduled_at?: string | null;
+          cadence_source?: string | null;
+          call_delay_days?: number | null;
           call_enabled?: boolean | null;
           canonical_patient_id?: string | null;
           clinic_id?: string | null;
           created_at?: string | null;
           created_by?: string | null;
+          detected_case_type?: string | null;
+          email_delay_days?: number | null;
           email_enabled?: boolean | null;
           entity_extraction?: Json | null;
           external_id?: string | null;
@@ -819,6 +831,59 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "clinic_blocked_periods_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      clinic_case_type_cadence: {
+        Row: {
+          auto_schedule_call: boolean | null;
+          auto_schedule_email: boolean | null;
+          call_delay_days: number | null;
+          case_type: string;
+          clinic_id: string;
+          created_at: string | null;
+          email_delay_days: number | null;
+          id: string;
+          never_auto_schedule: boolean | null;
+          preferred_call_time: string | null;
+          preferred_email_time: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          auto_schedule_call?: boolean | null;
+          auto_schedule_email?: boolean | null;
+          call_delay_days?: number | null;
+          case_type: string;
+          clinic_id: string;
+          created_at?: string | null;
+          email_delay_days?: number | null;
+          id?: string;
+          never_auto_schedule?: boolean | null;
+          preferred_call_time?: string | null;
+          preferred_email_time?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          auto_schedule_call?: boolean | null;
+          auto_schedule_email?: boolean | null;
+          call_delay_days?: number | null;
+          case_type?: string;
+          clinic_id?: string;
+          created_at?: string | null;
+          email_delay_days?: number | null;
+          id?: string;
+          never_auto_schedule?: boolean | null;
+          preferred_call_time?: string | null;
+          preferred_email_time?: string | null;
+          updated_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "clinic_case_type_cadence_clinic_id_fkey";
             columns: ["clinic_id"];
             isOneToOne: false;
             referencedRelation: "clinics";
@@ -4277,8 +4342,11 @@ export type Enums<
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
+    keyof DefaultSchema["CompositeTypes"] extends never
+      ? { schema: keyof DatabaseWithoutInternals }
+      :
+          | keyof DefaultSchema["CompositeTypes"]
+          | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals;
   }

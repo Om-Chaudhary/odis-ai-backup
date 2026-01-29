@@ -27,10 +27,14 @@ export function useOutboundMutations(
     new Set(),
   );
   // Track which cases are being cancelled (separate for call and email)
-  const [cancellingCallCaseIds, setCancellingCallCaseIds] = useState<Set<string>>(
-    new Set(),
-  );
-  const [cancellingEmailCaseIds, setCancellingEmailCaseIds] = useState<Set<string>>(
+  const [cancellingCallCaseIds, setCancellingCallCaseIds] = useState<
+    Set<string>
+  >(new Set());
+  const [cancellingEmailCaseIds, setCancellingEmailCaseIds] = useState<
+    Set<string>
+  >(new Set());
+  // Track which cases are being rescheduled
+  const [reschedulingCaseIds, setReschedulingCaseIds] = useState<Set<string>>(
     new Set(),
   );
 
@@ -66,6 +70,21 @@ export function useOutboundMutations(
     },
     onError: (error) => {
       toast.error("Failed to retry", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+    },
+  });
+
+  const rescheduleDelivery = api.outbound.rescheduleDelivery.useMutation({
+    onSuccess: (data) => {
+      const scheduled: string[] = [];
+      if (data.callRescheduled) scheduled.push("call");
+      if (data.emailRescheduled) scheduled.push("email");
+      toast.success(`${scheduled.join(" and ")} scheduled`);
+      onSuccess?.();
+    },
+    onError: (error) => {
+      toast.error("Failed to reschedule", {
         description: error instanceof Error ? error.message : "Unknown error",
       });
     },
@@ -116,7 +135,8 @@ export function useOutboundMutations(
         else if (data.callRequested && data.callNotFound) notFound.push("call");
 
         if (data.emailCancelled) cancelled.push("email");
-        else if (data.emailRequested && data.emailNotFound) notFound.push("email");
+        else if (data.emailRequested && data.emailNotFound)
+          notFound.push("email");
 
         if (cancelled.length > 0) {
           toast.success(`Cancelled scheduled ${cancelled.join(" and ")}`);
@@ -216,6 +236,37 @@ export function useOutboundMutations(
       });
     },
     [retryDelivery],
+  );
+
+  // Reschedule a failed/cancelled delivery with date options
+  const handleReschedule = useCallback(
+    async (
+      caseId: string,
+      rescheduleOptions: {
+        rescheduleCall: boolean;
+        rescheduleEmail: boolean;
+        delayDays: number;
+        immediate: boolean;
+      },
+    ) => {
+      setReschedulingCaseIds((prev) => new Set(prev).add(caseId));
+      try {
+        await rescheduleDelivery.mutateAsync({
+          caseId,
+          rescheduleCall: rescheduleOptions.rescheduleCall,
+          rescheduleEmail: rescheduleOptions.rescheduleEmail,
+          delayDays: rescheduleOptions.delayDays,
+          immediate: rescheduleOptions.immediate,
+        });
+      } finally {
+        setReschedulingCaseIds((prev) => {
+          const next = new Set(prev);
+          next.delete(caseId);
+          return next;
+        });
+      }
+    },
+    [rescheduleDelivery],
   );
 
   // Quick schedule from table row (supports concurrent scheduling)
@@ -504,18 +555,21 @@ export function useOutboundMutations(
   const isSubmitting =
     approveAndSchedule.isPending ||
     skipCase.isPending ||
-    retryDelivery.isPending;
+    retryDelivery.isPending ||
+    rescheduleDelivery.isPending;
 
   const isBulkScheduling = batchSchedule.isPending;
   const isBulkCancelling = batchCancel.isPending;
 
   const isUpdatingSchedule = updateScheduleDelays.isPending;
+  const isRescheduling = rescheduleDelivery.isPending;
 
   return {
     // Mutations
     approveAndSchedule,
     skipCase,
     retryDelivery,
+    rescheduleDelivery,
     toggleStarred,
     batchSchedule,
     cancelScheduledDelivery,
@@ -525,6 +579,7 @@ export function useOutboundMutations(
     handleApproveAndSend,
     handleSkip,
     handleRetry,
+    handleReschedule,
     handleQuickSchedule,
     handleToggleStar,
     handleBulkSchedule,
@@ -538,9 +593,11 @@ export function useOutboundMutations(
     isBulkScheduling,
     isBulkCancelling,
     isUpdatingSchedule,
+    isRescheduling,
     schedulingCaseIds,
     togglingStarCaseIds,
     cancellingCallCaseIds,
     cancellingEmailCaseIds,
+    reschedulingCaseIds,
   };
 }

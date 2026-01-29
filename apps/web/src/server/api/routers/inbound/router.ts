@@ -15,6 +15,7 @@ import { deleteAppointmentRouter } from "./procedures/delete-appointment";
 import { callAssociationsRouter } from "./procedures/call-associations";
 import { clinicScheduleRouter } from "./procedures/clinic-schedule";
 import { confirmActionRouter } from "./procedures/confirm-action";
+import { getCallByIdRouter } from "./procedures/get-call-by-id";
 
 export const inboundRouter = createTRPCRouter({
   // Queries
@@ -25,6 +26,7 @@ export const inboundRouter = createTRPCRouter({
   getCallerNameByPhone: callAssociationsRouter.getCallerNameByPhone,
   getBookingByVapiCallId: callAssociationsRouter.getBookingByVapiCallId,
   getClinicSchedule: clinicScheduleRouter.getClinicSchedule,
+  getCallById: getCallByIdRouter.getCallById,
 
   // Mutations
   updateAppointmentRequest: updateAppointmentRouter.updateAppointmentRequest,

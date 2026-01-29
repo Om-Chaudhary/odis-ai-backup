@@ -47,6 +47,14 @@ interface AllDischargesViewProps extends OutboundHeaderProps {
   setDeliveryToggles: (toggles: DeliveryToggles) => void;
   onApprove: (immediate?: boolean) => void;
   onRetry: () => void;
+  onPhoneReschedule: (options: {
+    delayDays: number;
+    immediate: boolean;
+  }) => void;
+  onEmailReschedule: (options: {
+    delayDays: number;
+    immediate: boolean;
+  }) => void;
   onCancelScheduled: (options: {
     cancelCall: boolean;
     cancelEmail: boolean;
@@ -54,6 +62,7 @@ interface AllDischargesViewProps extends OutboundHeaderProps {
   isSubmitting: boolean;
   isCancellingCall: boolean; // For current case phone cancel
   isCancellingEmail: boolean; // For current case email cancel
+  isRescheduling: boolean;
   testModeEnabled: boolean;
 }
 
@@ -81,10 +90,13 @@ export function AllDischargesView({
   setDeliveryToggles,
   onApprove,
   onRetry,
+  onPhoneReschedule,
+  onEmailReschedule,
   onCancelScheduled,
   isSubmitting,
   isCancellingCall,
   isCancellingEmail,
+  isRescheduling,
   testModeEnabled,
   ...headerProps
 }: AllDischargesViewProps) {
@@ -160,10 +172,13 @@ export function AllDischargesView({
           onToggleChange={setDeliveryToggles}
           onApprove={onApprove}
           onRetry={onRetry}
+          onPhoneReschedule={onPhoneReschedule}
+          onEmailReschedule={onEmailReschedule}
           onCancelScheduled={onCancelScheduled}
           isSubmitting={isSubmitting}
           isCancellingCall={isCancellingCall}
           isCancellingEmail={isCancellingEmail}
+          isRescheduling={isRescheduling}
           testModeEnabled={testModeEnabled}
           onDelete={handleClosePanel}
         />

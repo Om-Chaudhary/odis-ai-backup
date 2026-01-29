@@ -5,9 +5,50 @@
 
 import type { Page } from "playwright";
 import type { PimsConsultation } from "@odis-ai/shared/types";
-import type { BrowserService } from "../browser/browser-service";
+import type { BrowserPool } from "../browser/browser-pool";
 import type { IdexxAuthClient } from "./auth-client";
 import { IDEXX_ENDPOINTS } from "./types";
+import { withRetry, isRetryableError } from "../browser/retry";
+
+/** Error types for consultation fetch operations */
+export type ConsultationErrorType =
+  | "network"
+  | "auth"
+  | "not_found"
+  | "unknown";
+
+/** Result of a single consultation fetch */
+export interface ConsultationFetchResult {
+  consultation: PimsConsultation | null;
+  error?: {
+    type: ConsultationErrorType;
+    message: string;
+  };
+}
+
+/** Stats from batch consultation fetch */
+export interface ConsultationBatchStats {
+  total: number;
+  successful: number;
+  failed: number;
+  networkErrors: number;
+  notFound: number;
+}
+
+/** Result of batch consultation fetch */
+export interface ConsultationBatchResult {
+  consultations: Map<string, PimsConsultation>;
+  errors: Map<string, { type: ConsultationErrorType; message: string }>;
+  stats: ConsultationBatchStats;
+}
+
+/** Configuration for consultation client */
+export interface ConsultationClientConfig {
+  /** Delay between requests in milliseconds (default: 200) */
+  requestDelayMs?: number;
+  /** Batch size for parallel fetches (default: 2) */
+  batchSize?: number;
+}
 
 /**
  * IDEXX consultation line item (product/service)
@@ -67,48 +108,113 @@ interface IdexxConsultationPageData {
 
 /**
  * Client for fetching consultation data from IDEXX Neo
+ * Uses BrowserPool for efficient resource management
  */
 export class IdexxConsultationClient {
+  private config: Required<ConsultationClientConfig>;
+
   constructor(
-    private browserService: BrowserService,
+    private browserPool: BrowserPool,
     private authClient: IdexxAuthClient,
     private baseUrl: string,
-  ) {}
+    config: ConsultationClientConfig = {},
+  ) {
+    this.config = {
+      requestDelayMs: config.requestDelayMs ?? 200,
+      batchSize: config.batchSize ?? 2,
+    };
+  }
 
   /**
    * Fetch consultation details by ID
+   * Uses pooled browser context with retry logic for transient errors
    */
   async fetchConsultation(
     consultationId: string,
-  ): Promise<PimsConsultation | null> {
+  ): Promise<ConsultationFetchResult> {
     if (!this.authClient.isAuthenticated()) {
-      throw new Error("Not authenticated");
+      return {
+        consultation: null,
+        error: { type: "auth", message: "Not authenticated" },
+      };
     }
 
-    const session = await this.browserService.createPage("consultation");
-    const { page } = session;
+    const url = `${this.baseUrl}${IDEXX_ENDPOINTS.CONSULTATION(consultationId)}`;
 
-    try {
-      // Apply authentication
-      await this.authClient.applyAuth(page);
+    // Use browser pool with retry for transient network errors
+    const result = await withRetry(
+      async () => {
+        return this.browserPool.withAuthenticatedPage(
+          this.authClient,
+          async (session) => {
+            return this.fetchConsultationFromApi(
+              session.page,
+              url,
+              consultationId,
+            );
+          },
+        );
+      },
+      {
+        maxRetries: 3,
+        baseDelayMs: 1000,
+        maxDelayMs: 10000,
+        onRetry: (error, attempt, delayMs) => {
+          console.log(
+            `[ConsultationClient] Retrying consultation ${consultationId} (attempt ${attempt}, delay ${delayMs}ms):`,
+            error instanceof Error ? error.message : error,
+          );
+        },
+      },
+    );
 
-      // Build consultation page-data URL
-      const url = `${this.baseUrl}${IDEXX_ENDPOINTS.CONSULTATION(consultationId)}`;
-
-      // Fetch via page context
-      const consultation = await this.fetchConsultationFromApi(
-        page,
-        url,
-        consultationId,
-      );
-
-      return consultation;
-    } catch (error) {
-      console.error(`Failed to fetch consultation ${consultationId}:`, error);
-      return null;
-    } finally {
-      await page.close();
+    if (result.success && result.data) {
+      return { consultation: result.data };
     }
+
+    // Classify the error
+    const errorType = this.classifyError(result.error);
+    const errorMessage =
+      result.error instanceof Error ? result.error.message : "Unknown error";
+
+    return {
+      consultation: null,
+      error: { type: errorType, message: errorMessage },
+    };
+  }
+
+  /**
+   * Classify error type for proper handling/tracking
+   */
+  private classifyError(error: unknown): ConsultationErrorType {
+    if (!error) return "unknown";
+    if (isRetryableError(error)) return "network";
+
+    const message = this.getErrorMessage(error).toLowerCase();
+
+    if (
+      message.includes("not authenticated") ||
+      message.includes("session expired") ||
+      message.includes("401")
+    ) {
+      return "auth";
+    }
+
+    if (
+      message.includes("404") ||
+      message.includes("not found") ||
+      message.includes("invalid consultation")
+    ) {
+      return "not_found";
+    }
+
+    return "unknown";
+  }
+
+  private getErrorMessage(error: unknown): string {
+    if (error instanceof Error) return error.message;
+    if (typeof error === "string") return error;
+    return JSON.stringify(error);
   }
 
   /**
@@ -119,6 +225,13 @@ export class IdexxConsultationClient {
     url: string,
     consultationId: string,
   ): Promise<PimsConsultation | null> {
+    // IMPORTANT: Navigate to IDEXX domain first so fetch() is same-origin
+    // Without this, fetch() from about:blank is cross-origin and blocked by CORS
+    await page.goto(this.baseUrl, {
+      waitUntil: "domcontentloaded",
+      timeout: 15000,
+    });
+
     // Use page.evaluate to make fetch with authenticated session
     const response = await page.evaluate(async (apiUrl: string) => {
       const res = await fetch(apiUrl, {
@@ -195,56 +308,96 @@ export class IdexxConsultationClient {
     lines: IdexxConsultationLine[] | undefined,
     declinedOnly: boolean,
   ): string | null {
-    if (!lines || lines.length === 0) {
-      return null;
-    }
+    if (!lines?.length) return null;
 
     const filtered = lines.filter((line) =>
       declinedOnly ? line.isDeclined : !line.isDeclined,
     );
-
-    if (filtered.length === 0) {
-      return null;
-    }
+    if (filtered.length === 0) return null;
 
     return filtered
       .map((line) => {
-        const parts = [line.productService];
         if (line.quantity && line.quantity !== 1) {
-          parts.push(`(Qty: ${line.quantity})`);
+          return `${line.productService} (Qty: ${line.quantity})`;
         }
-        return parts.join(" ");
+        return line.productService;
       })
       .join("; ");
   }
 
   /**
-   * Batch fetch consultations
+   * Batch fetch consultations with proper error tracking
+   * Uses reduced parallelism and inter-request delays to prevent resource exhaustion
    */
   async fetchConsultations(
     consultationIds: string[],
-  ): Promise<Map<string, PimsConsultation>> {
-    const results = new Map<string, PimsConsultation>();
+  ): Promise<ConsultationBatchResult> {
+    const consultations = new Map<string, PimsConsultation>();
+    const errors = new Map<
+      string,
+      { type: ConsultationErrorType; message: string }
+    >();
+    const stats: ConsultationBatchStats = {
+      total: consultationIds.length,
+      successful: 0,
+      failed: 0,
+      networkErrors: 0,
+      notFound: 0,
+    };
 
-    // Fetch consultations in parallel (with limit)
-    const BATCH_SIZE = 5;
-    for (let i = 0; i < consultationIds.length; i += BATCH_SIZE) {
-      const batch = consultationIds.slice(i, i + BATCH_SIZE);
+    const { batchSize, requestDelayMs } = this.config;
 
+    // Process in small batches to limit concurrent browser contexts
+    for (let i = 0; i < consultationIds.length; i += batchSize) {
+      const batch = consultationIds.slice(i, i + batchSize);
+
+      // Fetch batch in parallel (limited concurrency)
       const batchResults = await Promise.all(
         batch.map(async (id) => {
-          const consultation = await this.fetchConsultation(id);
-          return { id, consultation };
+          const result = await this.fetchConsultation(id);
+          return { id, result };
         }),
       );
 
-      for (const { id, consultation } of batchResults) {
-        if (consultation) {
-          results.set(id, consultation);
+      // Process results
+      for (const { id, result } of batchResults) {
+        if (result.consultation) {
+          consultations.set(id, result.consultation);
+          stats.successful++;
+        } else if (result.error) {
+          errors.set(id, result.error);
+          stats.failed++;
+
+          // Track specific error types
+          if (result.error.type === "network") {
+            stats.networkErrors++;
+          } else if (result.error.type === "not_found") {
+            stats.notFound++;
+          }
         }
+      }
+
+      const processed = Math.min(i + batchSize, consultationIds.length);
+      const isLastBatch = processed >= consultationIds.length;
+
+      // Inter-batch delay to prevent resource exhaustion
+      if (!isLastBatch) {
+        await new Promise((resolve) => setTimeout(resolve, requestDelayMs));
+      }
+
+      // Log progress every 10 items or on completion
+      if (processed % 10 === 0 || isLastBatch) {
+        console.log(
+          `[ConsultationClient] Progress: ${processed}/${consultationIds.length}`,
+          `(success: ${stats.successful}, failed: ${stats.failed}, network: ${stats.networkErrors})`,
+        );
+        console.log(
+          "[ConsultationClient] Pool stats:",
+          this.browserPool.getStats(),
+        );
       }
     }
 
-    return results;
+    return { consultations, errors, stats };
   }
 }

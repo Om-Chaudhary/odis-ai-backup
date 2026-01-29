@@ -10,6 +10,7 @@ import type {
   PimsConsultation,
 } from "@odis-ai/shared/types";
 import { type BrowserService } from "../browser/browser-service";
+import { BrowserPool } from "../browser/browser-pool";
 import { IdexxAuthClient } from "./auth-client";
 import { IdexxScheduleClient } from "./schedule-client";
 import { IdexxConsultationClient } from "./consultation-client";
@@ -31,6 +32,7 @@ export class IdexxProvider implements IPimsProvider {
   readonly name = "IDEXX Neo";
 
   private browserService: BrowserService;
+  private browserPool: BrowserPool;
   private authClient: IdexxAuthClient;
   private scheduleClient: IdexxScheduleClient;
   private consultationClient: IdexxConsultationClient;
@@ -43,6 +45,15 @@ export class IdexxProvider implements IPimsProvider {
     this.baseUrl = config.baseUrl ?? "https://us.idexxneo.com";
     this.debug = config.debug ?? false;
 
+    // Create browser pool for consultation fetching
+    // Limited to 1 browser with 3 contexts to prevent resource exhaustion
+    this.browserPool = new BrowserPool({
+      maxBrowsers: 1,
+      maxContextsPerBrowser: 3,
+      headless: config.headless ?? true,
+      defaultTimeout: config.defaultTimeout ?? 30000,
+    });
+
     // Initialize clients
     this.authClient = new IdexxAuthClient(this.browserService, this.baseUrl);
     this.scheduleClient = new IdexxScheduleClient(
@@ -50,10 +61,12 @@ export class IdexxProvider implements IPimsProvider {
       this.authClient,
       this.baseUrl,
     );
+    // Use browser pool for consultation client (prevents resource exhaustion)
     this.consultationClient = new IdexxConsultationClient(
-      this.browserService,
+      this.browserPool,
       this.authClient,
       this.baseUrl,
+      { requestDelayMs: 200, batchSize: 2 },
     );
     this.appointmentMgmtClient = new IdexxAppointmentManagementClient(
       this.browserService,
@@ -146,17 +159,23 @@ export class IdexxProvider implements IPimsProvider {
     }
 
     try {
-      const consultation =
+      const result =
         await this.consultationClient.fetchConsultation(consultationId);
 
       if (this.debug) {
-        console.log(
-          "[IdexxProvider] Consultation:",
-          consultation ? "FOUND" : "NOT FOUND",
-        );
+        if (result.consultation) {
+          console.log("[IdexxProvider] Consultation: FOUND");
+        } else {
+          console.log(
+            "[IdexxProvider] Consultation: NOT FOUND",
+            result.error
+              ? `(${result.error.type}: ${result.error.message})`
+              : "",
+          );
+        }
       }
 
-      return consultation;
+      return result.consultation;
     } catch (error) {
       if (this.debug) {
         console.error("[IdexxProvider] Consultation error:", error);
@@ -178,16 +197,17 @@ export class IdexxProvider implements IPimsProvider {
     }
 
     try {
-      const consultations =
+      const result =
         await this.consultationClient.fetchConsultations(consultationIds);
 
       if (this.debug) {
         console.log(
-          `[IdexxProvider] Fetched ${consultations.size}/${consultationIds.length} consultations`,
+          `[IdexxProvider] Fetched ${result.stats.successful}/${consultationIds.length} consultations`,
+          `(failed: ${result.stats.failed}, network: ${result.stats.networkErrors}, not_found: ${result.stats.notFound})`,
         );
       }
 
-      return consultations;
+      return result.consultations;
     } catch (error) {
       if (this.debug) {
         console.error("[IdexxProvider] Batch consultation error:", error);
@@ -210,9 +230,7 @@ export class IdexxProvider implements IPimsProvider {
       const result = await this.appointmentMgmtClient.searchPatient(params);
 
       if (this.debug) {
-        console.log(
-          `[IdexxProvider] Found ${result.patients.length} patients`,
-        );
+        console.log(`[IdexxProvider] Found ${result.patients.length} patients`);
       }
 
       return result;
@@ -285,13 +303,10 @@ export class IdexxProvider implements IPimsProvider {
         await this.appointmentMgmtClient.createAppointmentWithNewClient(input);
 
       if (this.debug) {
-        console.log(
-          "[IdexxProvider] New client appointment creation result:",
-          {
-            success: result.success,
-            appointmentId: result.appointmentId,
-          },
-        );
+        console.log("[IdexxProvider] New client appointment creation result:", {
+          success: result.success,
+          appointmentId: result.appointmentId,
+        });
       }
 
       return result;
@@ -367,7 +382,10 @@ export class IdexxProvider implements IPimsProvider {
       // Clear authentication state
       this.authClient.clearAuth();
 
-      // Close browser service
+      // Close browser pool (for consultations)
+      await this.browserPool.close();
+
+      // Close browser service (for auth, schedule, appointments)
       await this.browserService.close();
 
       if (this.debug) {
@@ -388,8 +406,11 @@ export class IdexxProvider implements IPimsProvider {
       name: this.name,
       authenticated: this.isAuthenticated(),
       authState: this.authClient.getAuthState(),
-      browserRunning: this.browserService.isRunning(),
-      activeContexts: this.browserService.getContextCount(),
+      browserService: {
+        running: this.browserService.isRunning(),
+        contexts: this.browserService.getContextCount(),
+      },
+      browserPool: this.browserPool.getStats(),
     };
   }
 }
