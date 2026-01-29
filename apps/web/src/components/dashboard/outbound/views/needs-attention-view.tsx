@@ -53,6 +53,8 @@ interface NeedsAttentionViewProps extends OutboundHeaderProps {
   isCancellingEmail: boolean;
   isRescheduling: boolean;
   testModeEnabled: boolean;
+  /** Whether the current user is a superadmin (role='admin') */
+  isSuperAdmin?: boolean;
 }
 
 export function NeedsAttentionView({
@@ -80,6 +82,7 @@ export function NeedsAttentionView({
   isCancellingEmail,
   isRescheduling,
   testModeEnabled,
+  isSuperAdmin,
   ...headerProps
 }: NeedsAttentionViewProps) {
   // State for row position (for tab connection effect)
@@ -154,6 +157,7 @@ export function NeedsAttentionView({
           isRescheduling={isRescheduling}
           testModeEnabled={testModeEnabled}
           onDelete={handleClosePanel}
+          isSuperAdmin={isSuperAdmin}
         />
       }
     />

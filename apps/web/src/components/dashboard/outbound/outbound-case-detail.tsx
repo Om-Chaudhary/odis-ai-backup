@@ -44,6 +44,8 @@ interface OutboundCaseDetailProps {
   defaultCallDelayDays?: number;
   /** Default delay days for emails (from user settings) */
   defaultEmailDelayDays?: number;
+  /** Whether the current user is a superadmin (role='admin') */
+  isSuperAdmin?: boolean;
 }
 
 /**
@@ -74,6 +76,7 @@ export function OutboundCaseDetail({
   onDelete,
   defaultCallDelayDays = 2,
   defaultEmailDelayDays = 1,
+  isSuperAdmin = false,
 }: OutboundCaseDetailProps) {
   // Local state for delay days (allows optimistic UI)
   const [callDelayDays, setCallDelayDays] = useState(defaultCallDelayDays);
@@ -303,6 +306,7 @@ export function OutboundCaseDetail({
             isCancelling={isCancellingCall || isCancellingEmail}
             testModeEnabled={testModeEnabled}
             failureReason={caseData.scheduledCall?.endedReason}
+            isSuperAdmin={isSuperAdmin}
           />
         )}
 

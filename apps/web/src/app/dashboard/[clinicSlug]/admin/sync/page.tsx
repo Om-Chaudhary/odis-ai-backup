@@ -67,6 +67,36 @@ export default function AdminSyncPage() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
+      {/* DEBUG Panel - Remove after fixing */}
+      <div className="rounded-lg border-2 border-red-500 bg-red-50 p-4 font-mono text-xs">
+        <p>
+          <strong>DEBUG INFO:</strong>
+        </p>
+        <p>
+          URL clinicSlug:{" "}
+          <span className="text-blue-600">{clinicSlugFromUrl}</span>
+        </p>
+        <p>
+          selectedClinicId:{" "}
+          <span className="text-blue-600">{selectedClinicId ?? "NULL"}</span>
+        </p>
+        <p>
+          selectedClinic name:{" "}
+          <span className="text-blue-600">
+            {selectedClinic?.name ?? "NULL"}
+          </span>
+        </p>
+        <p>
+          Available clinics:{" "}
+          <span className="text-blue-600">
+            {clinics.map((c) => c.slug).join(", ") || "NONE"}
+          </span>
+        </p>
+        <p>
+          Clinics count: <span className="text-blue-600">{clinics.length}</span>
+        </p>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

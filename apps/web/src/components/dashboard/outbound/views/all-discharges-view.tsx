@@ -64,6 +64,8 @@ interface AllDischargesViewProps extends OutboundHeaderProps {
   isCancellingEmail: boolean; // For current case email cancel
   isRescheduling: boolean;
   testModeEnabled: boolean;
+  /** Whether the current user is a superadmin (role='admin') */
+  isSuperAdmin?: boolean;
 }
 
 export function AllDischargesView({
@@ -98,6 +100,7 @@ export function AllDischargesView({
   isCancellingEmail,
   isRescheduling,
   testModeEnabled,
+  isSuperAdmin,
   ...headerProps
 }: AllDischargesViewProps) {
   // State for row position (for tab connection effect)
@@ -181,6 +184,7 @@ export function AllDischargesView({
           isRescheduling={isRescheduling}
           testModeEnabled={testModeEnabled}
           onDelete={handleClosePanel}
+          isSuperAdmin={isSuperAdmin}
         />
       }
     />

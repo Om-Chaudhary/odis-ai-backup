@@ -30,6 +30,8 @@ interface SmartActionSectionProps {
   isCancelling?: boolean;
   testModeEnabled?: boolean;
   failureReason?: string | null;
+  /** Whether the current user is a superadmin (role='admin') */
+  isSuperAdmin?: boolean;
 }
 
 /**
@@ -59,9 +61,14 @@ export function SmartActionSection({
   isCancelling,
   testModeEnabled,
   failureReason,
+  isSuperAdmin,
 }: SmartActionSectionProps) {
   // State: Ready to Send / Pending Review - show schedule UI
+  // Only show if user is a superadmin
   if (status === "ready" || status === "pending_review") {
+    if (!isSuperAdmin) {
+      return null;
+    }
     return (
       <PendingReviewActions
         hasOwnerPhone={hasOwnerPhone}

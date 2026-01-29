@@ -125,6 +125,10 @@ function OutboundDashboardInner() {
   );
 
   // Use custom hooks for data and mutations
+  // Check if user is a superadmin
+  const { data: userRoleData } = api.dashboard.getCurrentUserRole.useQuery();
+  const isSuperAdmin = userRoleData?.role === "admin";
+
   const {
     cases,
     totalCases,
@@ -616,6 +620,7 @@ function OutboundDashboardInner() {
             isCancellingEmail={isCancellingEmail}
             isRescheduling={isReschedulingCase}
             testModeEnabled={settingsData?.testModeEnabled ?? false}
+            isSuperAdmin={isSuperAdmin}
           />
         ) : (
           <AllDischargesView
@@ -651,6 +656,7 @@ function OutboundDashboardInner() {
             isCancellingEmail={isCancellingEmail}
             isRescheduling={isReschedulingCase}
             testModeEnabled={settingsData?.testModeEnabled ?? false}
+            isSuperAdmin={isSuperAdmin}
           />
         )}
       </div>

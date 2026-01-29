@@ -17,7 +17,46 @@ import { TRPCError } from "@trpc/server";
 
 const PIMS_SYNC_URL =
   process.env.PIMS_SYNC_URL ?? "https://pims-sync-production.up.railway.app";
-const PIMS_SYNC_API_KEY = process.env.PIMS_SYNC_API_KEY ?? "";
+
+/**
+ * Clinic-specific API keys for PIMS sync service.
+ * The API key determines which clinic the sync runs for on the PIMS service side.
+ */
+const CLINIC_API_KEYS: Record<string, string> = {
+  // Alum Rock Animal Hospital
+  "33f3bbb8-6613-45bc-a1f2-d55e30c243ae":
+    process.env.PIMS_SYNC_API_KEY_ALUM_ROCK ??
+    process.env.PIMS_SYNC_API_KEY ??
+    "",
+  // Masson Veterinary Hospital
+  "efcc1733-7a7b-4eab-8104-a6f49defd7a6":
+    process.env.PIMS_SYNC_API_KEY_MASSON ?? "",
+};
+
+/**
+ * Get the API key for a specific clinic.
+ * Falls back to default PIMS_SYNC_API_KEY if no clinic-specific key is found.
+ */
+function getApiKeyForClinic(clinicId: string): string {
+  const key = CLINIC_API_KEYS[clinicId];
+
+  // DEBUG: Log which key is being selected
+  console.log("[getApiKeyForClinic] clinicId:", clinicId);
+  console.log(
+    "[getApiKeyForClinic] found key prefix:",
+    key ? key.slice(0, 10) + "..." : "NONE",
+  );
+  console.log(
+    "[getApiKeyForClinic] available clinic IDs:",
+    Object.keys(CLINIC_API_KEYS),
+  );
+
+  if (key) return key;
+
+  // Fallback to default key
+  console.log("[getApiKeyForClinic] FALLING BACK to default key");
+  return process.env.PIMS_SYNC_API_KEY ?? "";
+}
 
 export const adminSyncRouter = createTRPCRouter({
   /**
@@ -56,11 +95,13 @@ export const adminSyncRouter = createTRPCRouter({
    */
   getSchedulerStatus: adminProcedure.query(async () => {
     try {
+      // Use any valid API key for status checks (not clinic-specific)
+      const defaultApiKey = process.env.PIMS_SYNC_API_KEY ?? "";
       const response = await fetch(`${PIMS_SYNC_URL}/api/scheduler/status`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": PIMS_SYNC_API_KEY,
+          "x-api-key": defaultApiKey,
         },
       });
 
@@ -209,7 +250,7 @@ export const adminSyncRouter = createTRPCRouter({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-api-key": PIMS_SYNC_API_KEY,
+            "x-api-key": getApiKeyForClinic(input.clinicId),
           },
           body: JSON.stringify({ clinicId: input.clinicId }),
         });
@@ -249,7 +290,7 @@ export const adminSyncRouter = createTRPCRouter({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-api-key": PIMS_SYNC_API_KEY,
+            "x-api-key": getApiKeyForClinic(input.clinicId),
           },
           body: JSON.stringify({
             clinicId: input.clinicId,
@@ -296,7 +337,7 @@ export const adminSyncRouter = createTRPCRouter({
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-api-key": PIMS_SYNC_API_KEY,
+              "x-api-key": getApiKeyForClinic(input.clinicId),
             },
             body: JSON.stringify({
               clinicId: input.clinicId,
