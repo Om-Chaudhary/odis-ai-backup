@@ -7,7 +7,7 @@
 
 // Core utilities
 export { cn } from "./cn";
-export { formatDuration as formatCallDuration } from "./cn";
+export { formatDuration } from "./cn";
 
 // Phone utilities (consolidated)
 export * from "./phone";
@@ -49,7 +49,7 @@ export * from "./lib/discharge-status";
 // Relative time formatting
 export {
   formatRelativeTime,
-  formatDuration,
+  formatDurationHuman,
   formatShortDateTime,
 } from "./lib/relative-time";
 

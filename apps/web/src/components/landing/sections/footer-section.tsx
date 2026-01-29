@@ -40,7 +40,6 @@ const defaultSections: FooterSection[] = [
     title: "Product",
     links: [
       { label: "Features", href: "/features" },
-      { label: "Pricing", href: "/pricing" },
       { label: "Security", href: "/security" },
     ],
   },
