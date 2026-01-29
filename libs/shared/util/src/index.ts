@@ -28,6 +28,7 @@ export {
   toLocalDate,
   getTodayInTimezone,
   isOnDate,
+  formatRelativeTime,
   formatRelativeTime as formatTimezoneRelativeTime,
   getPresetDateRange,
   calculateScheduleTime,
@@ -48,7 +49,6 @@ export * from "./lib/discharge-status";
 
 // Relative time formatting
 export {
-  formatRelativeTime,
   formatDurationHuman,
   formatShortDateTime,
 } from "./lib/relative-time";
