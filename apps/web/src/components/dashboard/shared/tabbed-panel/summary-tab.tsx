@@ -174,28 +174,28 @@ function formatEnhancedCallSummary(summary: string | null) {
 
   // Color mapping for different field types
   const getFieldColors = (fieldName: string, value: string) => {
-    // Green styling for completed actions
+    // Green styling for completed actions (both label and value colored)
     if ((fieldName === 'ACTION TAKEN' || fieldName === 'ACTION') && value.toLowerCase() !== 'no') {
       return {
         icon: 'text-green-500',
         label: 'text-green-600 font-semibold',
-        value: 'text-green-700 font-medium'
+        value: 'text-green-700 font-medium' // Keep green for ACTION content
       };
     }
 
-    // Orange styling for context/follow-up (incomplete/abandoned)
+    // Orange styling for context/follow-up field names only (content stays default)
     if (fieldName === 'CONTEXT' || fieldName === 'FOLLOW-UP') {
       return {
         icon: 'text-orange-500',
         label: 'text-orange-600 font-semibold dark:text-orange-400',
-        value: 'text-orange-700 dark:text-orange-300'
+        value: 'text-slate-700 dark:text-slate-300' // Default color for content
       };
     }
 
     return {
       icon: 'text-teal-500',
       label: 'text-slate-600 font-semibold dark:text-slate-400',
-      value: 'text-slate-700 dark:text-slate-300'
+      value: 'text-slate-700 dark:text-slate-300' // Default color for content
     };
   };
 

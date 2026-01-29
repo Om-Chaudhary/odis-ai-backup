@@ -341,7 +341,10 @@ function buildInboundUpdateData(
     // Call intelligence columns
     outcome:
       (structuredOutputs.callOutcome as { call_outcome?: string } | null)
-        ?.call_outcome ?? null,
+        ?.call_outcome ??
+      // Fallback: derive outcome from action card data if structured outputs don't have it
+      deriveOutcomeFromActionCard(callData.structuredData) ??
+      null,
     call_outcome_data: structuredOutputs.callOutcome,
     pet_health_data: structuredOutputs.petHealth,
     medication_compliance_data: structuredOutputs.medicationCompliance,
@@ -484,4 +487,42 @@ function enhanceStructuredDataWithTranscriptNames(
   }
 
   return enhanced;
+}
+
+/**
+ * Derive outcome from action card data
+ *
+ * When VAPI's structured outputs don't contain a call_outcome,
+ * we can infer it from the action card data in analysis.structuredData.
+ *
+ * @param structuredData - Action card data from VAPI's analysis.structuredData
+ * @returns Inferred outcome string or null
+ */
+function deriveOutcomeFromActionCard(
+  structuredData: Record<string, unknown> | undefined,
+): string | null {
+  if (!structuredData?.card_type) {
+    return null;
+  }
+
+  const cardType = structuredData.card_type as string;
+
+  // Map action card types to outcome values
+  switch (cardType) {
+    case "scheduled":
+      return "scheduled";
+    case "rescheduled":
+      return "rescheduled";
+    case "cancellation":
+    case "canceled":
+      return "cancellation";
+    case "emergency":
+      return "emergency";
+    case "callback":
+      return "callback";
+    case "info":
+      return "info";
+    default:
+      return null;
+  }
 }
