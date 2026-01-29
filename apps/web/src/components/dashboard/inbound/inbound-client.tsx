@@ -82,7 +82,7 @@ export function InboundClient() {
   // Deep link: Fetch call by ID when callId param is present
   const { data: callByIdData, isLoading: isCallByIdLoading } =
     api.inbound.getCallById.useQuery(
-      { callId: callId! },
+      { callId: callId ?? "00000000-0000-0000-0000-000000000000" },
       { enabled: !!callId },
     );
 
