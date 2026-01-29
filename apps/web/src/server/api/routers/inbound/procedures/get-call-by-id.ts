@@ -34,19 +34,20 @@ export const getCallByIdRouter = createTRPCRouter({
       // Get current user's clinic
       const clinic = await getClinicByUserId(userId, serviceClient);
 
-      if (!clinic?.id) {
+      if (!clinic?.id || !clinic?.name) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "User clinic not found",
         });
       }
 
-      // Fetch the call with clinic verification
+      // Fetch the call with clinic verification using clinic_name
+      // (inbound_vapi_calls uses clinic_name, not clinic_id)
       const { data: call, error } = await serviceClient
         .from("inbound_vapi_calls")
         .select("*")
         .eq("id", input.callId)
-        .eq("clinic_id", clinic.id)
+        .ilike("clinic_name", clinic.name)
         .single();
 
       if (error) {
