@@ -72,6 +72,16 @@ syncRouter.post("/full", (req: Request, res: Response) => {
 });
 
 /**
+ * POST /api/sync/schedule-slots
+ *
+ * Generate schedule availability slots based on clinic business hours.
+ * Does not require PIMS browser - uses clinic config from database.
+ */
+syncRouter.post("/schedule-slots", (req: Request, res: Response) => {
+  void handleScheduleSlotsSync(req as AuthenticatedRequest, res);
+});
+
+/**
  * Request body types
  */
 interface InboundSyncRequest {
@@ -116,6 +126,36 @@ interface FullSyncRequest {
     start?: string;
     end?: string;
   };
+}
+
+interface ScheduleSlotsRequest {
+  /** Start date for slot generation (default: today) */
+  startDate?: string;
+  /** End date for slot generation (default: 30 days from start) */
+  endDate?: string;
+  /** Number of days ahead to generate (alternative to endDate, default: 30) */
+  daysAhead?: number;
+  /** Slot duration in minutes (default: 15) */
+  slotDurationMinutes?: number;
+  /** Default capacity per slot (default: 2) */
+  defaultCapacity?: number;
+}
+
+interface BusinessHours {
+  open: string;
+  close: string;
+  lunch_start?: string;
+  lunch_end?: string;
+}
+
+interface BusinessHoursConfig {
+  monday?: BusinessHours;
+  tuesday?: BusinessHours;
+  wednesday?: BusinessHours;
+  thursday?: BusinessHours;
+  friday?: BusinessHours;
+  saturday?: BusinessHours;
+  sunday?: BusinessHours;
 }
 
 /**
@@ -213,9 +253,8 @@ async function handleCaseSync(
 
   try {
     // Get provider and credentials
-    const { provider, credentials, cleanup, userId } = await createProviderForClinic(
-      clinic.id,
-    );
+    const { provider, credentials, cleanup, userId } =
+      await createProviderForClinic(clinic.id);
 
     try {
       // Authenticate with PIMS
@@ -235,7 +274,12 @@ async function handleCaseSync(
 
       // Create sync service with userId for AI generation
       const { CaseSyncService } = await import("@odis-ai/domain/sync");
-      const syncService = new CaseSyncService(supabase, provider, clinic.id, userId);
+      const syncService = new CaseSyncService(
+        supabase,
+        provider,
+        clinic.id,
+        userId,
+      );
 
       // Build date range (default: today only)
       // Support both flat (startDate/endDate) and nested (dateRange.start/end) formats
@@ -377,9 +421,8 @@ async function handleFullSync(
 
   try {
     // Get provider and credentials
-    const { provider, credentials, cleanup, userId } = await createProviderForClinic(
-      clinic.id,
-    );
+    const { provider, credentials, cleanup, userId } =
+      await createProviderForClinic(clinic.id);
 
     try {
       // Authenticate with PIMS
@@ -399,7 +442,12 @@ async function handleFullSync(
 
       // Create orchestrator with userId for AI generation
       const { SyncOrchestrator } = await import("@odis-ai/domain/sync");
-      const orchestrator = new SyncOrchestrator(supabase, provider, clinic.id, userId);
+      const orchestrator = new SyncOrchestrator(
+        supabase,
+        provider,
+        clinic.id,
+        userId,
+      );
 
       // Use bidirectional sync if requested (default: true for comprehensive sync)
       const useBidirectional = body.bidirectional ?? true;
@@ -560,4 +608,324 @@ function buildDateRange(
   end.setHours(23, 59, 59, 999);
 
   return { start, end };
+}
+
+/**
+ * Handle schedule slots sync request
+ *
+ * Generates availability slots based on clinic business hours.
+ * Does not require PIMS browser authentication.
+ */
+async function handleScheduleSlotsSync(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const startTime = Date.now();
+  const { clinic } = req;
+  const body = req.body as ScheduleSlotsRequest;
+
+  logger.info("Starting schedule slots sync", { clinicId: clinic.id });
+
+  try {
+    const supabase = createSupabaseServiceClient();
+
+    // Get clinic config including business hours
+    const { data: clinicData, error: clinicError } = await supabase
+      .from("clinics")
+      .select("name, timezone, business_hours")
+      .eq("id", clinic.id)
+      .single();
+
+    if (clinicError || !clinicData) {
+      res.status(404).json({
+        success: false,
+        error: `Clinic not found: ${clinic.id}`,
+        durationMs: Date.now() - startTime,
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+
+    if (!clinicData.business_hours) {
+      res.status(400).json({
+        success: false,
+        error: "Clinic does not have business hours configured",
+        durationMs: Date.now() - startTime,
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+
+    const businessHours = clinicData.business_hours as BusinessHoursConfig;
+    const timezone = clinicData.timezone ?? "America/Los_Angeles";
+    const slotDurationMinutes = body.slotDurationMinutes ?? 15;
+    const defaultCapacity = body.defaultCapacity ?? 2;
+
+    // Build date range
+    const startDate = body.startDate ? new Date(body.startDate) : new Date();
+    startDate.setHours(0, 0, 0, 0);
+
+    const daysAhead = body.daysAhead ?? 30;
+    const endDate = body.endDate
+      ? new Date(body.endDate)
+      : new Date(startDate.getTime() + daysAhead * 24 * 60 * 60 * 1000);
+
+    // Generate slots
+    const slots = generateScheduleSlots({
+      clinicId: clinic.id,
+      startDate,
+      endDate,
+      businessHours,
+      slotDurationMinutes,
+      defaultCapacity,
+    });
+
+    if (slots.length === 0) {
+      res.status(200).json({
+        success: true,
+        message: "No slots to generate (no business hours for date range)",
+        stats: {
+          daysProcessed: 0,
+          slotsGenerated: 0,
+        },
+        durationMs: Date.now() - startTime,
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+
+    // Insert slots in batches (Supabase has limits)
+    const batchSize = 500;
+    let totalInserted = 0;
+    let totalSkipped = 0;
+
+    for (let i = 0; i < slots.length; i += batchSize) {
+      const batch = slots.slice(i, i + batchSize);
+      const { data, error } = await supabase
+        .from("schedule_slots")
+        .upsert(batch, {
+          onConflict: "clinic_id,date,start_time",
+          ignoreDuplicates: true,
+        })
+        .select("id");
+
+      if (error) {
+        logger.error("Failed to insert schedule slots batch", {
+          clinicId: clinic.id,
+          batchIndex: i,
+          error: error.message,
+        });
+        throw error;
+      }
+
+      totalInserted += data?.length ?? 0;
+      totalSkipped += batch.length - (data?.length ?? 0);
+    }
+
+    // Record sync in schedule_syncs table
+    const startDateStr = startDate.toISOString().split("T")[0]!;
+    const endDateStr = endDate.toISOString().split("T")[0]!;
+    await supabase.from("schedule_syncs").insert({
+      clinic_id: clinic.id,
+      sync_start_date: startDateStr,
+      sync_end_date: endDateStr,
+      status: "completed",
+      slots_created: totalInserted,
+      started_at: new Date(startTime).toISOString(),
+      completed_at: new Date().toISOString(),
+      duration_ms: Date.now() - startTime,
+    });
+
+    logger.info("Schedule slots sync completed", {
+      clinicId: clinic.id,
+      clinicName: clinicData.name,
+      timezone,
+      dateRange: {
+        start: startDate.toISOString().split("T")[0],
+        end: endDate.toISOString().split("T")[0],
+      },
+      stats: {
+        totalGenerated: slots.length,
+        inserted: totalInserted,
+        skipped: totalSkipped,
+      },
+      durationMs: Date.now() - startTime,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Generated ${totalInserted} schedule slots`,
+      clinic: {
+        id: clinic.id,
+        name: clinicData.name,
+        timezone,
+      },
+      dateRange: {
+        start: startDate.toISOString().split("T")[0],
+        end: endDate.toISOString().split("T")[0],
+      },
+      stats: {
+        totalGenerated: slots.length,
+        inserted: totalInserted,
+        skipped: totalSkipped,
+        slotDurationMinutes,
+        defaultCapacity,
+      },
+      durationMs: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    logger.error("Schedule slots sync failed", {
+      clinicId: clinic.id,
+      error: errorMessage,
+    });
+
+    res.status(500).json({
+      success: false,
+      error: errorMessage,
+      durationMs: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    });
+  }
+}
+
+/**
+ * Generate schedule slots for a date range based on business hours
+ */
+function generateScheduleSlots(options: {
+  clinicId: string;
+  startDate: Date;
+  endDate: Date;
+  businessHours: BusinessHoursConfig;
+  slotDurationMinutes: number;
+  defaultCapacity: number;
+}): Array<{
+  clinic_id: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  capacity: number;
+  booked_count: number;
+  last_synced_at: string;
+}> {
+  const {
+    clinicId,
+    startDate,
+    endDate,
+    businessHours,
+    slotDurationMinutes,
+    defaultCapacity,
+  } = options;
+
+  const slots: Array<{
+    clinic_id: string;
+    date: string;
+    start_time: string;
+    end_time: string;
+    capacity: number;
+    booked_count: number;
+    last_synced_at: string;
+  }> = [];
+
+  const dayNames: Array<keyof BusinessHoursConfig> = [
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+  ];
+
+  const now = new Date().toISOString();
+  const currentDate = new Date(startDate);
+
+  while (currentDate <= endDate) {
+    const dayOfWeek = currentDate.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6;
+    const dayName = dayNames[dayOfWeek]!;
+    const dayHours = businessHours[dayName];
+
+    if (dayHours?.open && dayHours?.close) {
+      const dateStr = currentDate.toISOString().split("T")[0]!;
+
+      // Parse times (format: "HH:MM")
+      const openParts = dayHours.open.split(":");
+      const openHour = parseInt(openParts[0] ?? "0", 10);
+      const openMin = parseInt(openParts[1] ?? "0", 10);
+
+      const closeParts = dayHours.close.split(":");
+      const closeHour = parseInt(closeParts[0] ?? "0", 10);
+      const closeMin = parseInt(closeParts[1] ?? "0", 10);
+
+      // Parse lunch times if present
+      let lunchStartMinutes: number | null = null;
+      let lunchEndMinutes: number | null = null;
+
+      if (dayHours.lunch_start && dayHours.lunch_end) {
+        const lunchStartParts = dayHours.lunch_start.split(":");
+        const lunchStartHour = parseInt(lunchStartParts[0] ?? "0", 10);
+        const lunchStartMin = parseInt(lunchStartParts[1] ?? "0", 10);
+
+        const lunchEndParts = dayHours.lunch_end.split(":");
+        const lunchEndHour = parseInt(lunchEndParts[0] ?? "0", 10);
+        const lunchEndMin = parseInt(lunchEndParts[1] ?? "0", 10);
+
+        lunchStartMinutes = lunchStartHour * 60 + lunchStartMin;
+        lunchEndMinutes = lunchEndHour * 60 + lunchEndMin;
+      }
+
+      // Generate slots
+      let currentMinutes = openHour * 60 + openMin;
+      const closeMinutes = closeHour * 60 + closeMin;
+
+      while (currentMinutes + slotDurationMinutes <= closeMinutes) {
+        // Skip lunch period
+        if (
+          lunchStartMinutes !== null &&
+          lunchEndMinutes !== null &&
+          currentMinutes >= lunchStartMinutes &&
+          currentMinutes < lunchEndMinutes
+        ) {
+          currentMinutes = lunchEndMinutes;
+          continue;
+        }
+
+        const slotStartHour = Math.floor(currentMinutes / 60);
+        const slotStartMin = currentMinutes % 60;
+        const slotEndMinutes = currentMinutes + slotDurationMinutes;
+        const slotEndHour = Math.floor(slotEndMinutes / 60);
+        const slotEndMin = slotEndMinutes % 60;
+
+        // Don't create slots that would overlap with lunch
+        if (
+          lunchStartMinutes !== null &&
+          lunchEndMinutes !== null &&
+          currentMinutes < lunchStartMinutes &&
+          slotEndMinutes > lunchStartMinutes
+        ) {
+          currentMinutes += slotDurationMinutes;
+          continue;
+        }
+
+        slots.push({
+          clinic_id: clinicId,
+          date: dateStr,
+          start_time: `${String(slotStartHour).padStart(2, "0")}:${String(slotStartMin).padStart(2, "0")}:00`,
+          end_time: `${String(slotEndHour).padStart(2, "0")}:${String(slotEndMin).padStart(2, "0")}:00`,
+          capacity: defaultCapacity,
+          booked_count: 0,
+          last_synced_at: now,
+        });
+
+        currentMinutes += slotDurationMinutes;
+      }
+    }
+
+    // Move to next day
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return slots;
 }

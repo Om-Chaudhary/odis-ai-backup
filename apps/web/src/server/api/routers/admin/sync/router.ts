@@ -5,6 +5,7 @@ import {
   getSyncHistorySchema,
   triggerSyncSchema,
   triggerFullSyncSchema,
+  triggerScheduleSlotsSchema,
   getSyncSchedulesSchema,
   getClinicSyncConfigSchema,
   getIdexxCredentialStatusSchema,
@@ -276,6 +277,55 @@ export const adminSyncRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: `Failed to trigger full sync: ${error instanceof Error ? error.message : "Unknown error"}`,
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Trigger schedule slots generation for a clinic
+   * Generates availability slots based on clinic business hours
+   */
+  triggerScheduleSlots: adminProcedure
+    .input(triggerScheduleSlotsSchema)
+    .mutation(async ({ input }) => {
+      try {
+        const response = await fetch(
+          `${PIMS_SYNC_URL}/api/sync/schedule-slots`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": PIMS_SYNC_API_KEY,
+            },
+            body: JSON.stringify({
+              clinicId: input.clinicId,
+              startDate: input.startDate,
+              daysAhead: input.daysAhead,
+              slotDurationMinutes: input.slotDurationMinutes,
+              defaultCapacity: input.defaultCapacity,
+            }),
+          },
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(
+            `Schedule slots generation failed: ${response.status} - ${errorText}`,
+          );
+        }
+
+        const data = await response.json();
+
+        return {
+          success: true,
+          message: `Schedule slots generated successfully`,
+          data,
+        };
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to generate schedule slots: ${error instanceof Error ? error.message : "Unknown error"}`,
           cause: error,
         });
       }

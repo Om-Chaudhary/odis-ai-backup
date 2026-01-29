@@ -21,6 +21,18 @@ export const triggerFullSyncSchema = z.object({
   forwardDays: z.number().int().min(1).max(60).default(14),
 });
 
+export const triggerScheduleSlotsSchema = z.object({
+  clinicId: z.string().uuid(),
+  /** Start date for slot generation (default: today) */
+  startDate: z.string().optional(),
+  /** Number of days ahead to generate (default: 30) */
+  daysAhead: z.number().int().min(1).max(90).default(30),
+  /** Slot duration in minutes (default: 15) */
+  slotDurationMinutes: z.number().int().min(5).max(60).default(15),
+  /** Default capacity per slot (default: 2) */
+  defaultCapacity: z.number().int().min(1).max(10).default(2),
+});
+
 export const getSyncSchedulesSchema = z.object({
   clinicId: z.string().uuid().optional(),
 });
@@ -53,3 +65,6 @@ export const updateSyncScheduleSchema = z.object({
 export type SyncScheduleItem = z.infer<typeof syncScheduleItemSchema>;
 export type TriggerSyncType = z.infer<typeof triggerSyncSchema>["type"];
 export type TriggerFullSyncInput = z.infer<typeof triggerFullSyncSchema>;
+export type TriggerScheduleSlotsInput = z.infer<
+  typeof triggerScheduleSlotsSchema
+>;
