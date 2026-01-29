@@ -71,12 +71,40 @@ function MainNavItem({ href, icon: Icon, label, isActive }: MainNavItemProps) {
   );
 }
 
+/**
+ * Extract clinic slug from URL path
+ * e.g., /dashboard/alum-rock/admin/sync -> alum-rock
+ * e.g., /dashboard/masson-veterinary-hospital -> masson-veterinary-hospital
+ */
+function getClinicSlugFromPathname(pathname: string): string | null {
+  const match = /^\/dashboard\/([^/]+)/.exec(pathname);
+  return match?.[1] ?? null;
+}
+
+/**
+ * Extract sub-path from clinic-scoped URL
+ * e.g., /dashboard/alum-rock/admin/sync -> /admin/sync
+ * e.g., /dashboard/alum-rock/inbound -> /inbound
+ * e.g., /dashboard/alum-rock -> ""
+ */
+function getSubPathFromPathname(pathname: string): string {
+  const match = /^\/dashboard\/[^/]+(\/.*)?$/.exec(pathname);
+  return match?.[1] ?? "";
+}
+
 export function UnifiedSidebar({
-  clinicSlug,
+  clinicSlug: initialClinicSlug,
   allClinics,
   isAdmin,
 }: UnifiedSidebarProps) {
   const pathname = usePathname();
+
+  // Derive clinic slug from URL path (client-side, updates on navigation)
+  // Fall back to server-provided slug for initial render
+  const clinicSlug = getClinicSlugFromPathname(pathname) ?? initialClinicSlug;
+
+  // Get current sub-path to preserve when switching clinics
+  const currentSubPath = getSubPathFromPathname(pathname);
 
   // Build clinic-scoped URLs
   const dashboardUrl = clinicSlug ? `/dashboard/${clinicSlug}` : "/dashboard";
@@ -168,7 +196,7 @@ export function UnifiedSidebar({
                       {allClinics.map((clinic) => (
                         <DropdownMenuItem key={clinic.id} asChild>
                           <Link
-                            href={`/dashboard/${clinic.slug}`}
+                            href={`/dashboard/${clinic.slug}${currentSubPath}`}
                             className={cn(
                               "group relative flex items-center gap-3 px-3 py-2.5 transition-colors",
                               clinic.slug === clinicSlug

@@ -285,7 +285,8 @@
       "Bash(pnpm vitest run:*)",
       "Bash(SKIP_ENV_VALIDATION=true pnpm dev)",
       "Bash(open http://localhost:3000/demo/attention-card)",
-      "Bash(open /Users/om/Documents/GitHub/odis-ai-web/attention-card-demo.html)"
+      "Bash(open /Users/om/Documents/GitHub/odis-ai-web/attention-card-demo.html)",
+      "WebFetch(domain:clerk.com)"
     ],
     "deny": [],
     "ask": [],

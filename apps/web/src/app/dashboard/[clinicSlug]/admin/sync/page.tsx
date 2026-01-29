@@ -1,15 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useParams } from "next/navigation";
 import { api } from "~/trpc/client";
 import { Card } from "@odis-ai/shared/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@odis-ai/shared/ui/select";
 import { useAdminContext } from "~/lib/admin-context";
 import { HealthMonitor } from "~/components/admin/sync/health-monitor";
 import { ActiveSyncsCard } from "~/components/admin/sync/active-syncs-card";
@@ -18,15 +11,28 @@ import {
   type SyncHistoryItem,
 } from "~/components/admin/sync/sync-history-table";
 import { SyncTriggerPanel } from "~/components/admin/sync/sync-trigger-panel";
-import { ClinicSyncOverview } from "~/components/admin/sync/clinic-sync-overview";
 import { ClinicSyncScheduleCard } from "~/components/admin/sync/clinic-sync-schedule-card";
 import { useSyncAuditRealtime } from "~/components/admin/sync/hooks";
-import { CalendarClock } from "lucide-react";
 
 export default function AdminSyncPage() {
-  const { selectedClinicId, clinics, isGlobalView } = useAdminContext();
-  const [triggerClinicId, setTriggerClinicId] = useState<string>("");
+  // Get clinic slug directly from URL params (most reliable source)
+  const params = useParams<{ clinicSlug: string }>();
+  const clinicSlugFromUrl = params.clinicSlug;
+
+  // Get clinics list from context, but derive selected clinic from URL
+  const { clinics } = useAdminContext();
+
+  // Find the clinic by slug from URL (single source of truth)
+  const selectedClinic =
+    clinics.find((c) => c.slug === clinicSlugFromUrl) ?? null;
+  const selectedClinicId = selectedClinic?.id ?? null;
+
   const utils = api.useUtils();
+
+  // DEBUG: Log the clinic being used
+  console.log("[AdminSyncPage] URL clinicSlug:", clinicSlugFromUrl);
+  console.log("[AdminSyncPage] selectedClinicId:", selectedClinicId);
+  console.log("[AdminSyncPage] selectedClinic:", selectedClinic?.name);
 
   const { data: credentialedClinicIdsArray } =
     api.admin.sync.getClinicsWithCredentials.useQuery();
@@ -36,13 +42,7 @@ export default function AdminSyncPage() {
     ? new Set(credentialedClinicIdsArray)
     : undefined;
 
-  // Filter to only IDEXX Neo clinics WITH active credentials
-  const idexxClinics = clinics.filter(
-    (c) => c.pims_type === "idexx_neo" && credentialedClinicIds?.has(c.id),
-  );
-
-  // Find the selected clinic to get its details
-  const selectedClinic = clinics.find((c) => c.id === selectedClinicId);
+  // Check if selected clinic is an IDEXX clinic with credentials
   const isIdexxClinic =
     (selectedClinic?.pims_type === "idexx_neo" &&
       credentialedClinicIds?.has(selectedClinicId ?? "")) ??
@@ -83,69 +83,18 @@ export default function AdminSyncPage() {
       {/* Active Syncs */}
       <ActiveSyncsCard clinicId={selectedClinicId ?? undefined} />
 
-      {/* Sync Schedule Configuration - Clinic View Only */}
-      {!isGlobalView && selectedClinicId && selectedClinic ? (
+      {/* Sync Schedule Configuration */}
+      {selectedClinicId && selectedClinic && (
         <ClinicSyncScheduleCard
           clinicId={selectedClinicId}
           clinicSlug={selectedClinic.slug}
           clinicTimezone={selectedClinic.timezone ?? undefined}
           isIdexxClinic={isIdexxClinic}
         />
-      ) : isGlobalView ? (
-        <Card className="border-slate-200 bg-white p-6">
-          <div className="py-8 text-center">
-            <CalendarClock className="mx-auto mb-3 h-12 w-12 text-slate-300" />
-            <h3 className="mb-2 text-lg font-semibold text-slate-900">
-              Select a Clinic
-            </h3>
-            <p className="text-sm text-slate-500">
-              Choose a specific clinic from the dropdown above to configure sync
-              schedules
-            </p>
-          </div>
-        </Card>
-      ) : null}
-
-      {/* Clinic Sync Overview - Global View */}
-      {isGlobalView && <ClinicSyncOverview />}
-
-      {/* Quick Trigger Panel - Global View */}
-      {isGlobalView && idexxClinics.length > 0 && (
-        <Card className="border-slate-200 bg-white p-6">
-          <h3 className="mb-4 text-lg font-semibold text-slate-900">
-            Manual Sync Trigger
-          </h3>
-          <p className="mb-4 text-sm text-slate-500">
-            Select an IDEXX clinic and trigger a manual sync operation
-          </p>
-          <div className="flex items-end gap-4">
-            <div className="w-72">
-              <label className="mb-2 block text-sm font-medium text-slate-700">
-                Select Clinic
-              </label>
-              <Select
-                value={triggerClinicId}
-                onValueChange={setTriggerClinicId}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Choose an IDEXX clinic" />
-                </SelectTrigger>
-                <SelectContent>
-                  {idexxClinics.map((clinic) => (
-                    <SelectItem key={clinic.id} value={clinic.id}>
-                      {clinic.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {triggerClinicId && <SyncTriggerPanel clinicId={triggerClinicId} />}
-          </div>
-        </Card>
       )}
 
-      {/* Quick Trigger Panel - Clinic View */}
-      {!isGlobalView && selectedClinicId && isIdexxClinic && (
+      {/* Manual Sync Trigger - only for IDEXX clinics */}
+      {selectedClinicId && isIdexxClinic && (
         <Card className="border-slate-200 bg-white p-6">
           <h3 className="mb-4 text-lg font-semibold text-slate-900">
             Manual Sync Trigger
@@ -153,7 +102,11 @@ export default function AdminSyncPage() {
           <p className="mb-4 text-sm text-slate-500">
             Trigger a manual sync operation for this clinic
           </p>
-          <SyncTriggerPanel clinicId={selectedClinicId} />
+          {/* Key forces remount when clinic changes to ensure fresh mutation state */}
+          <SyncTriggerPanel
+            key={selectedClinicId}
+            clinicId={selectedClinicId}
+          />
         </Card>
       )}
 
@@ -161,9 +114,7 @@ export default function AdminSyncPage() {
       <Card className="border-slate-200 bg-white p-6">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-slate-900">Sync History</h3>
-          <p className="text-sm text-slate-500">
-            {isGlobalView ? "All Clinics" : "Current Clinic"}
-          </p>
+          <p className="text-sm text-slate-500">Current Clinic</p>
         </div>
 
         <SyncHistoryTable

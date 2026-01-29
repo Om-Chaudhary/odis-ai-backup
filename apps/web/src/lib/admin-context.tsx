@@ -1,21 +1,15 @@
 "use client";
 
 import type { Database } from "@odis-ai/shared/types";
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  type ReactNode,
-} from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 
 type Clinic = Database["public"]["Tables"]["clinics"]["Row"];
 
 interface AdminContextValue {
   selectedClinicId: string | null; // null = all clinics (global view)
+  selectedClinic: Clinic | null;
   clinics: Clinic[];
-  setSelectedClinic: (id: string | null) => void;
   isGlobalView: boolean;
 }
 
@@ -26,71 +20,41 @@ interface AdminProviderProps {
   clinics: Clinic[];
 }
 
-const STORAGE_KEY = "admin_selected_clinic_id";
+/**
+ * Extract clinic slug from pathname
+ * e.g., /dashboard/alum-rock-animal-hospital/admin/sync -> alum-rock-animal-hospital
+ */
+function getClinicSlugFromPathname(pathname: string): string | null {
+  const match = /^\/dashboard\/([^/]+)/.exec(pathname);
+  return match?.[1] ?? null;
+}
 
 export function AdminProvider({ children, clinics }: AdminProviderProps) {
-  const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
-  // Initialize from URL query param, then localStorage, then null (global view)
-  const [selectedClinicId, setSelectedClinicIdState] = useState<string | null>(
-    () => {
-      if (typeof window === "undefined") return null;
+  // Derive selected clinic from URL path (single source of truth)
+  const { selectedClinicId, selectedClinic } = useMemo(() => {
+    const slug = getClinicSlugFromPathname(pathname);
 
-      const urlClinicId = searchParams.get("clinic");
-      if (urlClinicId) return urlClinicId;
+    // DEBUG: Log what's happening
+    console.log("[AdminProvider] pathname:", pathname);
+    console.log("[AdminProvider] extracted slug:", slug);
+    console.log(
+      "[AdminProvider] available clinics:",
+      clinics.map((c) => c.slug),
+    );
 
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored === "null") return null;
-      return stored;
-    },
-  );
-
-  // Sync URL query param with state
-  useEffect(() => {
-    const urlClinicId = searchParams.get("clinic");
-    const currentId = selectedClinicId;
-
-    if (urlClinicId !== currentId) {
-      if (urlClinicId) {
-        setSelectedClinicIdState(urlClinicId);
-      } else if (!urlClinicId && currentId !== null) {
-        // URL doesn't have clinic param but state does - update URL
-        updateUrl(currentId);
-      }
-    }
-  }, [searchParams]);
-
-  const updateUrl = (clinicId: string | null) => {
-    const params = new URLSearchParams(searchParams.toString());
-
-    if (clinicId) {
-      params.set("clinic", clinicId);
-    } else {
-      params.delete("clinic");
+    if (!slug) {
+      return { selectedClinicId: null, selectedClinic: null };
     }
 
-    const query = params.toString();
-    const url = query ? `${pathname}?${query}` : pathname;
-    router.replace(url, { scroll: false });
-  };
-
-  const setSelectedClinic = (id: string | null) => {
-    setSelectedClinicIdState(id);
-
-    // Persist to localStorage
-    if (typeof window !== "undefined") {
-      if (id === null) {
-        localStorage.setItem(STORAGE_KEY, "null");
-      } else {
-        localStorage.setItem(STORAGE_KEY, id);
-      }
-    }
-
-    // Update URL
-    updateUrl(id);
-  };
+    const clinic = clinics.find((c) => c.slug === slug);
+    console.log("[AdminProvider] found clinic:", clinic?.name, clinic?.id);
+    return {
+      selectedClinicId: clinic?.id ?? null,
+      selectedClinic: clinic ?? null,
+    };
+  }, [pathname, clinics]);
 
   const isGlobalView = selectedClinicId === null;
 
@@ -98,8 +62,8 @@ export function AdminProvider({ children, clinics }: AdminProviderProps) {
     <AdminContext.Provider
       value={{
         selectedClinicId,
+        selectedClinic,
         clinics,
-        setSelectedClinic,
         isGlobalView,
       }}
     >

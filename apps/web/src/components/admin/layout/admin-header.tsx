@@ -1,10 +1,9 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ChevronDown,
   Building2,
-  Globe,
   LayoutDashboard,
   Users,
   RefreshCw,
@@ -15,7 +14,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@odis-ai/shared/ui/dropdown-menu";
 import { Button } from "@odis-ai/shared/ui/button";
@@ -34,17 +32,38 @@ const pageTitles: Record<string, string> = {
   "/admin/sync": "PIMS Sync",
 };
 
+/**
+ * Extract admin sub-path from clinic-scoped URL
+ * e.g., /dashboard/alum-rock/admin/sync -> /admin/sync
+ * e.g., /dashboard/alum-rock/admin/users/123 -> /admin/users/123
+ * e.g., /dashboard/alum-rock/admin -> /admin
+ */
+function getAdminSubPathFromPathname(pathname: string): string {
+  const match = /^\/dashboard\/[^/]+(\/admin.*)$/.exec(pathname);
+  return match?.[1] ?? "/admin";
+}
+
 export function AdminHeader() {
   const pathname = usePathname();
-  const { selectedClinicId, clinics, setSelectedClinic, isGlobalView } =
-    useAdminContext();
+  const router = useRouter();
+  const { selectedClinicId, selectedClinic, clinics } = useAdminContext();
 
-  // Get the base path (without IDs)
-  const basePath = pathname.split("/").slice(0, 3).join("/");
-  const Icon = pageIcons[basePath] ?? LayoutDashboard;
-  const title = pageTitles[basePath] ?? "Admin";
+  // Get the admin sub-path for title/icon
+  const adminSubPath = getAdminSubPathFromPathname(pathname);
+  const Icon = pageIcons[adminSubPath] ?? LayoutDashboard;
+  const title = pageTitles[adminSubPath] ?? "Admin";
 
-  const selectedClinic = clinics.find((c) => c.id === selectedClinicId);
+  /**
+   * Navigate to the selected clinic's admin page
+   * The admin context will automatically update from the URL path
+   */
+  const handleClinicSelect = (clinicId: string) => {
+    const clinic = clinics.find((c) => c.id === clinicId);
+    if (!clinic) return;
+
+    // Navigate to the same admin sub-path but for the selected clinic
+    router.push(`/dashboard/${clinic.slug}${adminSubPath}`);
+  };
 
   return (
     <div className="relative z-10 flex h-12 items-center justify-between border-b border-slate-200/60 bg-white/60 px-5 backdrop-blur-md">
@@ -59,7 +78,7 @@ export function AdminHeader() {
         <div>
           <h1 className="text-base font-semibold text-slate-800">{title}</h1>
           <p className="text-xs text-slate-500">
-            {isGlobalView ? "All Clinics" : (selectedClinic?.name ?? "Unknown")}
+            {selectedClinic?.name ?? "Select Clinic"}
           </p>
         </div>
       </div>
@@ -69,42 +88,20 @@ export function AdminHeader() {
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
-            className={cn(
-              "h-9 gap-2 border-slate-200/70 text-sm",
-              isGlobalView
-                ? "text-slate-600"
-                : "border-teal-200 bg-teal-50 text-teal-700",
-            )}
+            className="h-9 gap-2 border-teal-200 bg-teal-50 text-sm text-teal-700"
           >
-            {isGlobalView ? (
-              <Globe className="h-4 w-4" />
-            ) : (
-              <Building2 className="h-4 w-4" />
-            )}
+            <Building2 className="h-4 w-4" />
             <span className="font-medium">
-              {isGlobalView
-                ? "All Clinics"
-                : (selectedClinic?.name ?? "Select Clinic")}
+              {selectedClinic?.name ?? "Select Clinic"}
             </span>
             <ChevronDown className="h-3.5 w-3.5 opacity-50" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="z-50 w-64">
-          <DropdownMenuItem
-            onClick={() => setSelectedClinic(null)}
-            className={cn(
-              "cursor-pointer",
-              isGlobalView && "bg-teal-50 text-teal-700",
-            )}
-          >
-            <Globe className="mr-2 h-4 w-4" />
-            <span>All Clinics</span>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
           {clinics.map((clinic) => (
             <DropdownMenuItem
               key={clinic.id}
-              onClick={() => setSelectedClinic(clinic.id)}
+              onClick={() => handleClinicSelect(clinic.id)}
               className={cn(
                 "cursor-pointer",
                 selectedClinicId === clinic.id && "bg-teal-50 text-teal-700",
