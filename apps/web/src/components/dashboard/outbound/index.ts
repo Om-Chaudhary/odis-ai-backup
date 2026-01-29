@@ -105,4 +105,4 @@ export type {
 } from "./types";
 
 // Mock data (development only)
-export { mockDischargeCases, mockStats, generateMockCases } from "./mock-data";
+export { getMockDischargeCases, getMockStats, generateMockCases } from "./mock-data";

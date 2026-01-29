@@ -3,7 +3,7 @@
 import { CalendarClock } from "lucide-react";
 import { format, parse } from "date-fns";
 import { motion } from "framer-motion";
-import { cn } from "@odis-ai/shared/util";
+import { cn, parseAndFormatAppointmentDate } from "@odis-ai/shared/util";
 import type { BookingData } from "../../inbound/types";
 import {
   EditorialCardBase,
@@ -57,15 +57,10 @@ function formatTime(time: string): string {
 
 /**
  * Format date for display (YYYY-MM-DD -> MMM d)
+ * Also handles natural language dates that may come from VAPI
  */
 function formatDate(dateStr: string): string {
-  try {
-    // Parse as local date (not UTC) by explicitly specifying format
-    const date = parse(dateStr, "yyyy-MM-dd", new Date());
-    return format(date, "MMM d");
-  } catch {
-    return dateStr;
-  }
+  return parseAndFormatAppointmentDate(dateStr);
 }
 
 /**

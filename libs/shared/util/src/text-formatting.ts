@@ -78,84 +78,270 @@ export function stripMarkdownBold(text: string): string {
 }
 
 /**
- * Parse attention summary into context and action parts
+ * Extract caller name from transcript
  *
- * Attempts to split attention summaries into situational context and required actions.
- * Handles various formats and provides fallback parsing.
+ * Looks for common patterns where callers introduce themselves:
+ * - "My name is John Smith"
+ * - "This is Jane Doe"
+ * - "I'm Bob Johnson"
+ * - Direct name followed by phone digits: "Dene Garamalo, 408-817"
  *
- * @param summary - The attention summary text to parse
- * @returns Object with context and action properties, or null if no summary
+ * @param transcript - The call transcript text
+ * @returns Extracted caller name or null if not found
  */
-export function parseAttentionSummary(summary: string | null): { context: string; action: string } | null {
-  if (!summary) return null;
+export function extractCallerNameFromTranscript(transcript: string | null): string | null {
+  if (!transcript) return null;
 
-  // Try to split summary into context and action
-  // Look for common patterns like "Context: ... Action: ..." or similar
-  const contextMatch = summary.match(/(?:context|situation):\s*(.*?)(?:action|next steps?|required):/i);
-  const actionMatch = summary.match(/(?:action|next steps?|required):\s*(.*?)$/i);
+  // Clean up the transcript - remove timestamps, AI/User labels, extra whitespace
+  const cleanTranscript = transcript
+    .replace(/^(AI|User|Assistant):\s*/gm, '')
+    .replace(/\[\d+:\d+\]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 
-  if (contextMatch && actionMatch && contextMatch[1] && actionMatch[1]) {
-    return {
-      context: contextMatch[1].trim(),
-      action: actionMatch[1].trim()
-    };
+  // Pattern 1: Name followed by phone number pattern (like "Dene Garamalo, 408-817") - HIGHEST PRIORITY
+  let match = cleanTranscript.match(/([A-Za-z]+\s+[A-Za-z]+)[\.,]\s*[\d-]+/);
+  if (match?.[1]) {
+    const name = match[1].trim();
+    if (isValidName(name)) {
+      return formatName(name);
+    }
   }
 
-  // Fallback: split on common separators
-  const parts = summary.split(/(?:\.\s*(?:Action|Next|Required|Please))|(?:\n\s*(?:Action|Next|Required|Please))/i);
-
-  if (parts.length >= 2 && parts[0]) {
-    return {
-      context: parts[0].trim(),
-      action: parts.slice(1).join(' ').trim()
-    };
+  // Pattern 2: "This is [Name]" (find all instances and filter out assistant names)
+  const thisIsMatches = [...cleanTranscript.matchAll(/(?:yes[,.]?\s+)?this\s+is\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/gi)];
+  for (const match of thisIsMatches) {
+    if (match?.[1]) {
+      const name = match[1].trim();
+      // Skip common assistant names and validate
+      if (!name.toLowerCase().includes('stacy') &&
+          !name.toLowerCase().includes('assistant') &&
+          !name.toLowerCase().includes('sorry') &&
+          isValidName(name)) {
+        return formatName(name);
+      }
+    }
   }
 
-  // If no clear split, treat entire summary as action
-  return {
-    context: "Attention needed",
-    action: summary.trim()
-  };
+  // Pattern 3: "My name is [Name]" or "I'm [Name]"
+  match = cleanTranscript.match(/(?:my\s+name\s+is|i'm)\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/i);
+  if (match?.[1]) {
+    const name = match[1].trim();
+    if (!name.toLowerCase().includes('sorry') && isValidName(name)) {
+      return formatName(name);
+    }
+  }
+
+  return null;
 }
 
 /**
- * Get user-friendly title from attention types
+ * Extract pet name from transcript
  *
- * Converts attention type codes into readable titles for the veterinary workflow.
+ * Looks for patterns where pet names are mentioned:
+ * - "My dog [Pet Name]"
+ * - "It's for [Pet Name]"
+ * - "[Pet Name] and [Pet Name]" (multiple pets)
  *
- * @param attentionTypes - Array of attention type strings
- * @returns User-friendly title for the attention type
+ * @param transcript - The call transcript text
+ * @returns Extracted pet name(s) or null if not found
  */
-export function getAttentionTitle(attentionTypes: string[]): string {
-  if (!attentionTypes || attentionTypes.length === 0) {
-    return "Needs Attention";
+export function extractPetNameFromTranscript(transcript: string | null): string | null {
+  if (!transcript) return null;
+
+  // Clean up the transcript
+  const cleanTranscript = transcript
+    .replace(/^(AI|User|Assistant):\s*/gm, '')
+    .replace(/\[\d+:\d+\]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // Pattern 1: "My [animal] [Name]" or "My pet [Name]"
+  let match = cleanTranscript.match(/my\s+(?:dog|cat|pet|puppy|kitten|animal)\s+([A-Za-z]+)/i);
+  if (match?.[1]) {
+    const petName = match[1].trim();
+    if (isValidPetName(petName)) {
+      return formatName(petName);
+    }
   }
 
-  const titleMap: Record<string, string> = {
-    emergency_signs: "Emergency Signs Detected",
-    medication_question: "Medication Question",
-    callback_request: "Callback Requested",
-    appointment_needed: "Appointment Required",
-    health_concern: "Health Concern",
-    dissatisfaction: "Client Dissatisfaction",
-    owner_dissatisfaction: "Owner Dissatisfaction",
-    billing_question: "Billing Question"
-  };
-
-  const primaryType = attentionTypes[0];
-  if (!primaryType) {
-    return "Needs Attention";
+  // Pattern 2: Pet name in appointment context "for [Pet Name]" or "about [Pet Name]"
+  match = cleanTranscript.match(/(?:for|about)\s+([A-Za-z]+)(?:\s+and\s+([A-Za-z]+))?/i);
+  if (match?.[1]) {
+    const petName = match[1].trim();
+    if (isValidPetName(petName)) {
+      const secondPet = match[2] ? ` and ${formatName(match[2].trim())}` : '';
+      return formatName(petName) + secondPet;
+    }
   }
 
-  const title = titleMap[primaryType];
-
-  if (title) {
-    return title;
+  // Pattern 3: Multiple pets mentioned by name "Oscar and Felix [verb]"
+  match = cleanTranscript.match(/([A-Za-z]+)\s+and\s+([A-Za-z]+)\s+(?:are|were|have|need|had)/i);
+  if (match?.[1] && match?.[2]) {
+    const pet1 = match[1].trim();
+    const pet2 = match[2].trim();
+    if (isValidPetName(pet1) && isValidPetName(pet2) && !isCommonWord(pet1) && !isCommonWord(pet2)) {
+      return `${formatName(pet1)} and ${formatName(pet2)}`;
+    }
   }
 
-  // Fallback: convert snake_case to title case
-  return primaryType
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+  // Pattern 4: "[Pet Name] is/has/needs"
+  match = cleanTranscript.match(/([A-Za-z]+)\s+(?:is|has|needs)/i);
+  if (match?.[1]) {
+    const petName = match[1].trim();
+    if (isValidPetName(petName) && !isCommonWord(petName)) {
+      return formatName(petName);
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Check if extracted text looks like a valid human name
+ */
+function isValidName(name: string): boolean {
+  if (!name || name.length < 2 || name.length > 50) return false;
+
+  // Must contain only letters and spaces
+  if (!/^[A-Za-z\s]+$/.test(name)) return false;
+
+  // Filter out common false positives
+  const lowercaseName = name.toLowerCase();
+  const invalidNames = [
+    'user', 'ai', 'assistant', 'hello', 'yes', 'no', 'ok', 'okay',
+    'thank', 'thanks', 'please', 'sorry', 'excuse', 'um', 'uh',
+    'calling', 'call', 'phone', 'number', 'clinic', 'hospital'
+  ];
+
+  return !invalidNames.some(invalid => lowercaseName.includes(invalid));
+}
+
+/**
+ * Check if extracted text looks like a valid pet name
+ */
+function isValidPetName(name: string): boolean {
+  if (!name || name.length < 2 || name.length > 20) return false;
+
+  // Must contain only letters
+  if (!/^[A-Za-z]+$/.test(name)) return false;
+
+  return !isCommonWord(name);
+}
+
+/**
+ * Check if word is too common to be a pet name
+ */
+function isCommonWord(word: string): boolean {
+  const lowercaseWord = word.toLowerCase();
+  const commonWords = [
+    'the', 'and', 'but', 'for', 'are', 'can', 'has', 'had', 'him', 'her',
+    'his', 'she', 'they', 'them', 'this', 'that', 'have', 'will', 'been',
+    'said', 'each', 'which', 'their', 'time', 'back', 'only', 'very', 'after',
+    'first', 'well', 'year', 'work', 'such', 'make', 'even', 'more', 'most',
+    'take', 'than', 'these', 'two', 'way', 'who', 'its', 'did', 'get', 'may',
+    'new', 'now', 'old', 'see', 'come', 'could', 'made', 'over', 'think', 'also',
+    'need', 'needs', 'want', 'wants', 'good', 'help', 'call', 'calling'
+  ];
+
+  return commonWords.includes(lowercaseWord);
+}
+
+/**
+ * Format name with proper capitalization
+ */
+function formatName(name: string): string {
+  return name
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(' ');
 }
+
+
+/**
+ * Parse and format appointment date from various formats including natural language
+ *
+ * Handles:
+ * - ISO format: "2025-01-29" -> "Jan 29"
+ * - Natural language: "today", "tomorrow", "monday", "next friday"
+ * - Fallback to native Date parsing
+ *
+ * @param dateStr - Date string in various formats
+ * @param outputFormat - Date-fns format string (default: "MMM d")
+ * @returns Formatted date string or original string if parsing fails
+ */
+export function parseAndFormatAppointmentDate(dateStr: string, outputFormat: string = "MMM d"): string {
+  if (!dateStr || typeof dateStr !== 'string') {
+    return dateStr;
+  }
+
+  try {
+    // Import date-fns functions dynamically to avoid circular deps
+    const { format, parse } = require('date-fns');
+
+    // First try parsing as ISO format (YYYY-MM-DD)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      const date = parse(dateStr, "yyyy-MM-dd", new Date());
+      return format(date, outputFormat);
+    }
+
+    // Handle natural language dates that VAPI might output
+    const normalized = dateStr.toLowerCase().trim();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Handle "today"
+    if (normalized === "today") {
+      return format(today, outputFormat);
+    }
+
+    // Handle "tomorrow"
+    if (normalized === "tomorrow") {
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return format(tomorrow, outputFormat);
+    }
+
+    // Handle day names like "monday", "tuesday", etc.
+    const dayNames = [
+      "sunday", "monday", "tuesday", "wednesday",
+      "thursday", "friday", "saturday"
+    ];
+
+    // Handle "next monday", "this friday", etc.
+    const nextDayMatch = /^(?:next|this)\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/i.exec(normalized);
+    if (nextDayMatch?.[1]) {
+      const targetDay = dayNames.indexOf(nextDayMatch[1].toLowerCase());
+      const currentDay = today.getDay();
+      let daysUntil = targetDay - currentDay;
+      if (daysUntil <= 0) daysUntil += 7;
+      const targetDate = new Date(today);
+      targetDate.setDate(today.getDate() + daysUntil);
+      return format(targetDate, outputFormat);
+    }
+
+    // Handle just day name like "monday", "tuesday"
+    const justDayMatch = /^(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/i.exec(normalized);
+    if (justDayMatch?.[1]) {
+      const targetDay = dayNames.indexOf(justDayMatch[1].toLowerCase());
+      const currentDay = today.getDay();
+      let daysUntil = targetDay - currentDay;
+      if (daysUntil <= 0) daysUntil += 7;
+      const targetDate = new Date(today);
+      targetDate.setDate(today.getDate() + daysUntil);
+      return format(targetDate, outputFormat);
+    }
+
+    // Try native Date parsing as fallback
+    const fallbackDate = new Date(dateStr);
+    if (!isNaN(fallbackDate.getTime())) {
+      return format(fallbackDate, outputFormat);
+    }
+
+    // If all parsing fails, return original string
+    return dateStr;
+  } catch {
+    return dateStr;
+  }
+}
+

@@ -286,7 +286,11 @@
       "Bash(SKIP_ENV_VALIDATION=true pnpm dev)",
       "Bash(open http://localhost:3000/demo/attention-card)",
       "Bash(open /Users/om/Documents/GitHub/odis-ai-web/attention-card-demo.html)",
+<<<<<<< HEAD
       "WebFetch(domain:clerk.com)"
+=======
+      "Bash(vercel:*)"
+>>>>>>> 7810e124 (fix(inbound): resolve module import for Vercel build)
     ],
     "deny": [],
     "ask": [],

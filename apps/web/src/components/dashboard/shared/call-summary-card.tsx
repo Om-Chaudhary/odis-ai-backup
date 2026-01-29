@@ -8,7 +8,7 @@ import {
   Sparkles,
   ChevronRight,
 } from "lucide-react";
-import { cn } from "@odis-ai/shared/util";
+import { cn, formatCallSummary } from "@odis-ai/shared/util";
 import { format } from "date-fns";
 
 interface ActionTaken {
@@ -132,11 +132,11 @@ export function CallSummaryCard({
           )}
         </div>
 
-        {/* Summary text */}
+        {/* Summary text with markdown formatting */}
         {summary ? (
-          <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-            {summary}
-          </p>
+          <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300 space-y-1">
+            {formatCallSummary(summary)}
+          </div>
         ) : (
           <p className="text-sm text-slate-400 italic dark:text-slate-500">
             No summary available for this call

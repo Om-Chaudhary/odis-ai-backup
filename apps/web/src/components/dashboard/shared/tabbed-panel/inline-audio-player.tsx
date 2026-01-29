@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Play, Pause, Volume2, VolumeX, RotateCcw, FastForward, Rewind } from "lucide-react";
-import { cn, formatDuration } from "@odis-ai/shared/util";
+import { cn, formatDurationHuman } from "@odis-ai/shared/util";
 import { Slider } from "@odis-ai/shared/ui/slider";
 
 interface InlineAudioPlayerProps {
@@ -180,10 +180,10 @@ export function InlineAudioPlayer({
             {/* Time display */}
             <div className="flex items-center justify-between text-xs tabular-nums">
               <span className="text-slate-600 dark:text-slate-300">
-                {formatDuration(Math.floor(currentTime))}
+                {formatDurationHuman(Math.floor(currentTime))}
               </span>
               <span className="text-slate-400 dark:text-slate-500">
-                {formatDuration(Math.floor(duration))}
+                {formatDurationHuman(Math.floor(duration))}
               </span>
             </div>
 

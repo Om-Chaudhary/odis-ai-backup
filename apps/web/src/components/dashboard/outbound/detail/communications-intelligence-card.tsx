@@ -9,7 +9,7 @@ import {
   PhoneCall,
   Sparkles,
 } from "lucide-react";
-import { cn } from "@odis-ai/shared/util";
+import { cn, formatCallSummary } from "@odis-ai/shared/util";
 
 interface ScheduledCallData {
   id: string;
@@ -194,9 +194,9 @@ export function CommunicationsIntelligenceCard({
                   Call Summary
                 </p>
               </div>
-              <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-                {scheduledCall.summary}
-              </p>
+              <div className="text-sm leading-relaxed text-slate-700 dark:text-slate-300 space-y-1">
+                {formatCallSummary(scheduledCall.summary)}
+              </div>
             </div>
           </>
         )}

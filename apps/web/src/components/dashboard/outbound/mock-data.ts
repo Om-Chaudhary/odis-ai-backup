@@ -556,39 +556,46 @@ export function generateMockCases(count = 12, includeAttentionCases = false): Di
 
 /**
  * Pre-generated mock cases (default without attention scenarios)
+ * Using a lazy getter to avoid circular dependency during module initialization
  */
-export const mockDischargeCases: DischargeCase[] = generateMockCases(12);
+export function getMockDischargeCases(): DischargeCase[] {
+  return generateMockCases(12);
+}
 
 /**
  * Mock statistics computed from mock cases
+ * Using a lazy getter to avoid circular dependency during module initialization
  */
-export const mockStats: DischargeSummaryStats = {
-  readyToSend:
-    mockDischargeCases.filter((c) => c.status === "pending_review").length +
-    mockDischargeCases.filter((c) => c.status === "ready").length +
-    mockDischargeCases.filter((c) => c.status === "in_progress").length,
-  scheduled: mockDischargeCases.filter((c) => c.status === "scheduled").length,
-  sent: mockDischargeCases.filter((c) => c.status === "completed").length,
-  failed: mockDischargeCases.filter((c) => c.status === "failed").length,
-  failureCategories: {
-    silenceTimeout: 0,
-    noAnswer: 0,
-    connectionError: 0,
-    voicemail: 0,
-    emailFailed: 0,
-    other: mockDischargeCases.filter((c) => c.status === "failed").length,
-  },
-  total: mockDischargeCases.length,
-  needsReview: mockDischargeCases.filter(
-    (c) => !c.owner.phone || !c.owner.email,
-  ).length,
-  needsAttention: mockDischargeCases.filter((c) => c.needsAttention).length,
-  needsAttentionBreakdown: {
-    critical: mockDischargeCases.filter((c) => c.attentionSeverity === "critical").length,
-    urgent: mockDischargeCases.filter((c) => c.attentionSeverity === "urgent").length,
-    routine: mockDischargeCases.filter((c) => c.attentionSeverity === "routine").length,
-  },
-};
+export function getMockStats(): DischargeSummaryStats {
+  const cases = getMockDischargeCases();
+  return {
+    readyToSend:
+      cases.filter((c) => c.status === "pending_review").length +
+      cases.filter((c) => c.status === "ready").length +
+      cases.filter((c) => c.status === "in_progress").length,
+    scheduled: cases.filter((c) => c.status === "scheduled").length,
+    sent: cases.filter((c) => c.status === "completed").length,
+    failed: cases.filter((c) => c.status === "failed").length,
+    failureCategories: {
+      silenceTimeout: 0,
+      noAnswer: 0,
+      connectionError: 0,
+      voicemail: 0,
+      emailFailed: 0,
+      other: cases.filter((c) => c.status === "failed").length,
+    },
+    total: cases.length,
+    needsReview: cases.filter(
+      (c) => !c.owner.phone || !c.owner.email,
+    ).length,
+    needsAttention: cases.filter((c) => c.needsAttention).length,
+    needsAttentionBreakdown: {
+      critical: cases.filter((c) => c.attentionSeverity === "critical").length,
+      urgent: cases.filter((c) => c.attentionSeverity === "urgent").length,
+      routine: cases.filter((c) => c.attentionSeverity === "routine").length,
+    },
+  };
+}
 
 
 /**

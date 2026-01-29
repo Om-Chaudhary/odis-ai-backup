@@ -2,7 +2,8 @@
 
 import { motion } from "framer-motion";
 import { FileText, User, PawPrint, Phone, Calendar, Clock, AlertTriangle, CheckCircle } from "lucide-react";
-import { cn, formatCallSummary } from "@odis-ai/shared/util";
+import { cn } from "@odis-ai/shared/util";
+import { formatCallSummary } from "@odis-ai/shared/util/text-formatting";
 
 interface SummaryTabProps {
   /** Call summary text */
@@ -164,17 +165,30 @@ function formatEnhancedCallSummary(summary: string | null) {
     'CALLER': <User className="h-4 w-4" />,
     'PET': <PawPrint className="h-4 w-4" />,
     'REASON FOR CALL': <Phone className="h-4 w-4" />,
-    'REASON': <Phone className="h-4 w-4" />, // Alternative field name
+    'REASON': <Phone className="h-4 w-4" />, // New simplified field name
     'ACTION TAKEN': <CheckCircle className="h-4 w-4" />,
+    'ACTION': <CheckCircle className="h-4 w-4" />, // New simplified field name
+    'CONTEXT': <AlertTriangle className="h-4 w-4" />, // For abandoned/incomplete calls
+    'FOLLOW-UP': <Calendar className="h-4 w-4" />, // For incomplete calls
   };
 
   // Color mapping for different field types
   const getFieldColors = (fieldName: string, value: string) => {
-    if (fieldName === 'ACTION TAKEN' && value.toLowerCase() !== 'no') {
+    // Green styling for completed actions
+    if ((fieldName === 'ACTION TAKEN' || fieldName === 'ACTION') && value.toLowerCase() !== 'no') {
       return {
         icon: 'text-green-500',
         label: 'text-green-600 font-semibold',
         value: 'text-green-700 font-medium'
+      };
+    }
+
+    // Orange styling for context/follow-up (incomplete/abandoned)
+    if (fieldName === 'CONTEXT' || fieldName === 'FOLLOW-UP') {
+      return {
+        icon: 'text-orange-500',
+        label: 'text-orange-600 font-semibold dark:text-orange-400',
+        value: 'text-orange-700 dark:text-orange-300'
       };
     }
 
@@ -278,9 +292,10 @@ function formatEnhancedCallSummary(summary: string | null) {
     );
   }
 
-  // Sort fields by preferred order: ACTION TAKEN should be last before KEY DETAILS
+  // Sort fields by preferred order: ACTION/ACTION TAKEN should be last before KEY DETAILS
   // CALL STATUS is now displayed in header, so exclude from field list
-  const fieldOrder = ['CALLER', 'PET', 'REASON FOR CALL', 'ACTION TAKEN'];
+  // Support both old and new field names
+  const fieldOrder = ['CALLER', 'PET', 'REASON FOR CALL', 'REASON', 'ACTION TAKEN', 'ACTION', 'CONTEXT', 'FOLLOW-UP'];
   const fieldSections = sections.filter(s => s.type === 'field');
   const detailsSections = sections.filter(s => s.type === 'details');
 

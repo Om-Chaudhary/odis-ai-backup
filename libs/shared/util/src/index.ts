@@ -6,8 +6,7 @@
  */
 
 // Core utilities
-export { cn } from "./cn";
-export { formatDuration } from "./cn";
+export { cn, formatDuration } from "./cn";
 
 // Phone utilities (consolidated)
 export * from "./phone";
@@ -52,6 +51,10 @@ export {
   formatDurationHuman,
   formatShortDateTime,
 } from "./lib/relative-time";
+
+
+// Text formatting utilities
+export * from "./text-formatting";
 
 // Attention summary parsing
 export * from "./lib/attention-parser";

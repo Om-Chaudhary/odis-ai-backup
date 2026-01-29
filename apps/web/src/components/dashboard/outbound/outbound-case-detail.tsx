@@ -242,6 +242,18 @@ export function OutboundCaseDetail({
 
       {/* Scrollable Content */}
       <div className="flex-1 space-y-4 overflow-auto p-4">
+
+        {/* Needs Attention Card - Top Priority Display */}
+        {hasActionableAttentionTypes(caseData.attentionTypes) && (
+          <NeedsAttentionCard
+            attentionTypes={caseData.attentionTypes ?? []}
+            attentionSeverity={caseData.attentionSeverity}
+            attentionSummary={caseData.attentionSummary}
+            callId={caseData.id}
+            className="mb-4"
+          />
+        )}
+
         {/* Communication Status Cards - Side by side phone/email status */}
         {showStatusCards && (
           <CommunicationStatusCards
@@ -310,15 +322,6 @@ export function OutboundCaseDetail({
           />
         )}
 
-        {/* Needs Attention Card */}
-        {hasActionableAttentionTypes(caseData.attentionTypes) && (
-          <NeedsAttentionCard
-            attentionTypes={caseData.attentionTypes ?? []}
-            attentionSeverity={caseData.attentionSeverity}
-            attentionSummary={caseData.attentionSummary}
-            className="mb-6"
-          />
-        )}
 
         {/* Communication Tabs Panel - Shows for all states */}
         {showContentTabs && (

@@ -13,7 +13,7 @@ import {
   Rewind,
   FastForward,
 } from "lucide-react";
-import { formatDuration } from "@odis-ai/shared/util";
+import { formatDurationHuman } from "@odis-ai/shared/util";
 
 interface AudioPlayerProps {
   url: string;
@@ -164,9 +164,9 @@ export function AudioPlayer({ url, duration, onTimeUpdate }: AudioPlayerProps) {
           </div>
 
           <div className="text-muted-foreground flex items-center gap-1 text-sm font-medium tabular-nums">
-            <span>{formatDuration(currentTime)}</span>
+            <span>{formatDurationHuman(currentTime)}</span>
             <span className="text-muted-foreground/50">/</span>
-            <span>{formatDuration(totalDuration)}</span>
+            <span>{formatDurationHuman(totalDuration)}</span>
           </div>
 
           <div className="flex items-center gap-2">
