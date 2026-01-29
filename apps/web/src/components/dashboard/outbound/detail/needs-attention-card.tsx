@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { parseAttentionSummary, getAttentionTitle, type ParsedAttentionSummary } from "@odis-ai/shared/util";
+import { parseAttentionSummary, getAttentionTitle, formatAttentionAction, type ParsedAttentionSummary } from "@odis-ai/shared/util";
 import { cn } from "@odis-ai/shared/util";
 import { Button } from "@odis-ai/shared/ui/button";
 import {
@@ -136,7 +136,12 @@ export function NeedsAttentionCard({
                   </span>
                 </div>
                 <p className="text-sm text-slate-800 dark:text-slate-200">
-                  {parsed.action}
+                  {formatAttentionAction(parsed.action).split('\n').map((line, index, array) => (
+                    <span key={index}>
+                      {line}
+                      {index < array.length - 1 && <br />}
+                    </span>
+                  ))}
                 </p>
               </div>
             )}

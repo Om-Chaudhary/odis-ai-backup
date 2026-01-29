@@ -9,7 +9,7 @@ import {
   PhoneCall,
   Sparkles,
 } from "lucide-react";
-import { cn, formatCallSummary } from "@odis-ai/shared/util";
+import { cn, formatCallSummary, formatAttentionAction } from "@odis-ai/shared/util";
 
 interface ScheduledCallData {
   id: string;
@@ -250,7 +250,12 @@ export function CommunicationsIntelligenceCard({
               </div>
               {attentionSummary && (
                 <p className="text-sm leading-relaxed text-orange-800 dark:text-orange-300">
-                  {attentionSummary}
+                  {formatAttentionAction(attentionSummary).split('\n').map((line, index, array) => (
+                    <span key={index}>
+                      {line}
+                      {index < array.length - 1 && <br />}
+                    </span>
+                  ))}
                 </p>
               )}
             </div>

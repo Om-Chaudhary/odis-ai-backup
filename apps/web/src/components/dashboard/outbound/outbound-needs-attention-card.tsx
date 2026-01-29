@@ -15,7 +15,7 @@ import { useOptionalClinic } from "@odis-ai/shared/ui/clinic-context";
 import Link from "next/link";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { api } from "~/trpc/client";
-import { cn } from "@odis-ai/shared/util";
+import { cn, formatAttentionAction } from "@odis-ai/shared/util";
 import {
   AttentionBadgeGroup,
   AttentionSeverityBadge,
@@ -156,8 +156,13 @@ export function OutboundNeedsAttentionCard() {
                         {c.owner.name ?? "Unknown Owner"}
                       </p>
                       {c.attentionSummary && (
-                        <p className="mt-1 line-clamp-1 text-xs text-slate-500">
-                          {c.attentionSummary}
+                        <p className="mt-1 line-clamp-2 text-xs text-slate-500">
+                          {formatAttentionAction(c.attentionSummary).split('\n').map((line, index, array) => (
+                            <span key={index}>
+                              {line}
+                              {index < array.length - 1 && <br />}
+                            </span>
+                          ))}
                         </p>
                       )}
                     </div>

@@ -345,3 +345,26 @@ export function parseAndFormatAppointmentDate(dateStr: string, outputFormat: str
   }
 }
 
+/**
+ * Format attention action text with proper line breaks after arrows
+ *
+ * Adds line breaks after arrow symbols (→ or ->) to improve readability
+ * when displaying action items in attention cards.
+ *
+ * @param actionText - The action text to format
+ * @returns Formatted text with line breaks after arrows
+ *
+ * @example
+ * formatAttentionAction("Owner requested callback → Schedule callback for owner")
+ * // Returns: "Owner requested callback →\nSchedule callback for owner"
+ */
+export function formatAttentionAction(actionText: string): string {
+  if (!actionText) return actionText;
+
+  // Add line break after arrow symbols (both → and -> variants)
+  return actionText
+    .replace(/→\s*/g, '→\n')
+    .replace(/->\s*/g, '->\n')
+    .trim();
+}
+

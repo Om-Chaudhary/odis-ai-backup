@@ -121,10 +121,9 @@ export function OutboundNeedsAttentionTable<T extends NeedsAttentionCaseBase>({
             <th className="h-12 w-[80px] pl-4 text-left font-medium">
               Severity
             </th>
-            <th className="h-12 w-[20%] text-left font-medium">Patient</th>
-            <th className="h-12 w-[25%] text-left font-medium">Concerns</th>
-            <th className="h-12 w-[30%] text-left font-medium">Summary</th>
-            <th className="h-12 w-[100px] text-center font-medium">
+            <th className="h-12 w-[25%] text-left font-medium">Patient</th>
+            <th className="h-12 w-[35%] text-left font-medium">Concerns</th>
+            <th className="h-12 w-[120px] text-center font-medium">
               Call Status
             </th>
             <th className="h-12 w-[80px] pr-4 text-right font-medium">Time</th>
@@ -186,29 +185,9 @@ export function OutboundNeedsAttentionTable<T extends NeedsAttentionCaseBase>({
                 <td className="py-4">
                   <AttentionBadgeGroup
                     types={caseItem.attentionTypes ?? []}
-                    maxVisible={3}
+                    maxVisible={4}
                     size="sm"
                   />
-                </td>
-
-                {/* Summary */}
-                <td className="py-4 pr-2">
-                  {caseItem.attentionSummary ? (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <p className="line-clamp-2 text-xs text-slate-600">
-                            {caseItem.attentionSummary}
-                          </p>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom" className="max-w-md p-3">
-                          <p className="text-sm">{caseItem.attentionSummary}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ) : (
-                    <span className="text-xs text-slate-400">No summary</span>
-                  )}
                 </td>
 
                 {/* Call Status */}
@@ -296,10 +275,9 @@ function NeedsAttentionSkeleton() {
       {/* Header skeleton */}
       <div className="mb-4 flex shrink-0 gap-3 border-b border-orange-100/50 pb-3">
         <div className="h-3 w-[80px] animate-pulse rounded bg-orange-100/50" />
-        <div className="h-3 w-[20%] animate-pulse rounded bg-orange-100/50" />
         <div className="h-3 w-[25%] animate-pulse rounded bg-orange-100/50" />
-        <div className="h-3 w-[30%] animate-pulse rounded bg-orange-100/50" />
-        <div className="h-3 w-[100px] animate-pulse rounded bg-orange-100/50" />
+        <div className="h-3 w-[35%] animate-pulse rounded bg-orange-100/50" />
+        <div className="h-3 w-[120px] animate-pulse rounded bg-orange-100/50" />
         <div className="h-3 w-[80px] animate-pulse rounded bg-orange-100/50" />
       </div>
       {/* Row skeletons */}
@@ -312,18 +290,16 @@ function NeedsAttentionSkeleton() {
             <div className="w-[80px]">
               <div className="h-5 w-16 animate-pulse rounded-full bg-orange-50" />
             </div>
-            <div className="w-[20%] space-y-1">
+            <div className="w-[25%] space-y-1">
               <div className="h-4 w-20 animate-pulse rounded bg-orange-100/40" />
               <div className="h-3 w-24 animate-pulse rounded bg-orange-50" />
             </div>
-            <div className="flex w-[25%] gap-1">
+            <div className="flex w-[35%] gap-1">
+              <div className="h-5 w-16 animate-pulse rounded-full bg-orange-50" />
               <div className="h-5 w-16 animate-pulse rounded-full bg-orange-50" />
               <div className="h-5 w-16 animate-pulse rounded-full bg-orange-50" />
             </div>
-            <div className="w-[30%]">
-              <div className="h-8 w-full animate-pulse rounded bg-orange-50" />
-            </div>
-            <div className="w-[100px] text-center">
+            <div className="w-[120px] text-center">
               <div className="mx-auto h-4 w-16 animate-pulse rounded bg-orange-50" />
             </div>
             <div className="w-[80px] text-right">

@@ -6,7 +6,7 @@ import {
 } from "@odis-ai/shared/ui/card";
 import { AlertTriangle } from "lucide-react";
 import { formatDistanceToNow, parseISO } from "date-fns";
-import { cn } from "@odis-ai/shared/util";
+import { cn, formatAttentionAction } from "@odis-ai/shared/util";
 import {
   AttentionTypeBadge,
   AttentionSeverityBadge,
@@ -68,7 +68,12 @@ export function AttentionSection({ caseData }: AttentionSectionProps) {
         {caseData.attentionSummary && (
           <div className="rounded-md bg-white/50 p-3">
             <p className="text-sm leading-relaxed">
-              {caseData.attentionSummary}
+              {formatAttentionAction(caseData.attentionSummary).split('\n').map((line, index, array) => (
+                <span key={index}>
+                  {line}
+                  {index < array.length - 1 && <br />}
+                </span>
+              ))}
             </p>
           </div>
         )}
