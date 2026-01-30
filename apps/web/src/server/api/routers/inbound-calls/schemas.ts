@@ -43,6 +43,7 @@ export const listInboundCallsInput = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   clinicName: z.string().optional(),
+  clinicId: z.string().uuid().optional(),
   assistantId: z.string().optional(),
   search: z.string().optional(),
 });

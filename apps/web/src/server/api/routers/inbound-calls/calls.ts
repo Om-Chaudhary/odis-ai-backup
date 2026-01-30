@@ -37,14 +37,35 @@ export const callsRouter = createTRPCRouter({
       const serviceClient = await createServiceClient();
 
       const user = await getUserWithClinic(serviceClient, ctx.user.id);
-      const clinic = await getClinicByUserId(ctx.user.id, serviceClient);
+
+      // Get clinic name from clinicId input if provided
+      let clinicName: string | null = null;
+      if (input.clinicId) {
+        const { data: clinicData } = await serviceClient
+          .from("clinics")
+          .select("name")
+          .eq("id", input.clinicId)
+          .maybeSingle();
+        clinicName = clinicData?.name ?? null;
+      } else {
+        // Fallback to legacy lookup
+        const clinic = await getClinicByUserId(ctx.user.id, serviceClient);
+        if (clinic?.id) {
+          const { data: clinicData } = await serviceClient
+            .from("clinics")
+            .select("name")
+            .eq("id", clinic.id)
+            .maybeSingle();
+          clinicName = clinicData?.name ?? null;
+        }
+      }
 
       let query = serviceClient
         .from("inbound_vapi_calls")
         .select("*", { count: "exact" })
         .order("created_at", { ascending: false });
 
-      query = applyRoleBasedFilter(query, user, clinic?.name ?? null);
+      query = applyRoleBasedFilter(query, user, clinicName);
 
       if (input.status) {
         query = query.eq("status", input.status);

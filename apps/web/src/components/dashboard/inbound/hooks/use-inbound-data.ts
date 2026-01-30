@@ -78,6 +78,7 @@ export function useInboundData(params: UseInboundDataParams) {
         | undefined,
       search: searchTerm || undefined,
       outcomes: getOutcomesForFilter(outcomeFilter),
+      clinicId, // Add clinic filter
     },
     {
       refetchInterval: () => {

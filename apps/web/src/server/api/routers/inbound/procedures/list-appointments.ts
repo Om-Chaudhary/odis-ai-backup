@@ -23,8 +23,16 @@ export const listAppointmentsRouter = createTRPCRouter({
       // Use service client to bypass RLS for reliable data access
       const serviceClient = await createServiceClient();
 
-      // Get current user's clinic using service client
-      const clinic = await getClinicByUserId(userId, serviceClient);
+      // Determine which clinic to filter by
+      let clinicId: string | null = null;
+      if (input.clinicId) {
+        // Use provided clinicId from input
+        clinicId = input.clinicId;
+      } else {
+        // Fall back to user's default clinic
+        const clinic = await getClinicByUserId(userId, serviceClient);
+        clinicId = clinic?.id ?? null;
+      }
 
       // Build query - using vapi_bookings table
       let query = serviceClient
@@ -33,8 +41,8 @@ export const listAppointmentsRouter = createTRPCRouter({
         .order("created_at", { ascending: false });
 
       // Filter by clinic (users only see their clinic's data)
-      if (clinic?.id) {
-        query = query.eq("clinic_id", clinic.id);
+      if (clinicId) {
+        query = query.eq("clinic_id", clinicId);
       }
 
       // Apply status filter

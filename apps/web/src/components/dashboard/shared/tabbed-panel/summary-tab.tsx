@@ -1,7 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FileText, User, PawPrint, Phone, Calendar, Clock, AlertTriangle, CheckCircle } from "lucide-react";
+import {
+  FileText,
+  User,
+  PawPrint,
+  Phone,
+  Calendar,
+  AlertTriangle,
+  CheckCircle,
+} from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
 import { formatCallSummary } from "@odis-ai/shared/util/text-formatting";
 
@@ -58,7 +66,10 @@ export function SummaryTab({ summary, className }: SummaryTabProps) {
                   "ring-1 ring-teal-500/20",
                 )}
               >
-                <FileText className="h-4.5 w-4.5 text-teal-600 dark:text-teal-400" strokeWidth={2} />
+                <FileText
+                  className="h-4.5 w-4.5 text-teal-600 dark:text-teal-400"
+                  strokeWidth={2}
+                />
               </div>
               <h3 className="text-sm font-semibold tracking-tight text-slate-800 dark:text-slate-100">
                 Call Summary
@@ -67,9 +78,9 @@ export function SummaryTab({ summary, className }: SummaryTabProps) {
               {callStatus && (
                 <span
                   className={cn(
-                    "ml-auto px-2.5 py-1 rounded-full text-xs font-medium",
+                    "ml-auto rounded-full px-2.5 py-1 text-xs font-medium",
                     callStatus.colors.text,
-                    callStatus.colors.bg
+                    callStatus.colors.bg,
                   )}
                 >
                   {callStatus.status}
@@ -78,11 +89,7 @@ export function SummaryTab({ summary, className }: SummaryTabProps) {
             </div>
 
             {/* Summary text with enhanced formatting */}
-            <div
-              className={cn(
-                "space-y-3 text-slate-700 dark:text-slate-300",
-              )}
-            >
+            <div className={cn("space-y-3 text-slate-700 dark:text-slate-300")}>
               {formatEnhancedCallSummary(summary)}
             </div>
           </div>
@@ -107,7 +114,9 @@ export function SummaryTab({ summary, className }: SummaryTabProps) {
 /**
  * Extract call status from summary text for header display
  */
-function extractCallStatus(summary: string | null): { status: string; colors: { text: string; bg: string } } | null {
+function extractCallStatus(
+  summary: string | null,
+): { status: string; colors: { text: string; bg: string } } | null {
   if (!summary) return null;
 
   // Look for CALL STATUS field in markdown format
@@ -116,37 +125,43 @@ function extractCallStatus(summary: string | null): { status: string; colors: { 
     const status = markdownMatch[1].trim();
     const statusLower = status.toLowerCase();
 
-    if (statusLower.includes('complete')) {
+    if (statusLower.includes("complete")) {
       return {
         status,
-        colors: { text: 'text-green-700', bg: 'bg-green-100 dark:bg-green-900/30' }
+        colors: {
+          text: "text-green-700",
+          bg: "bg-green-100 dark:bg-green-900/30",
+        },
       };
-    } else if (statusLower.includes('incomplete')) {
+    } else if (statusLower.includes("incomplete")) {
       return {
         status,
-        colors: { text: 'text-orange-700', bg: 'bg-orange-100 dark:bg-orange-900/30' }
+        colors: {
+          text: "text-orange-700",
+          bg: "bg-orange-100 dark:bg-orange-900/30",
+        },
       };
-    } else if (statusLower.includes('abandoned')) {
+    } else if (statusLower.includes("abandoned")) {
       return {
         status,
-        colors: { text: 'text-red-700', bg: 'bg-red-100 dark:bg-red-900/30' }
+        colors: { text: "text-red-700", bg: "bg-red-100 dark:bg-red-900/30" },
       };
     }
 
     // Default styling for other statuses
     return {
       status,
-      colors: { text: 'text-slate-700', bg: 'bg-slate-100 dark:bg-slate-800' }
+      colors: { text: "text-slate-700", bg: "bg-slate-100 dark:bg-slate-800" },
     };
   }
 
   // Look for plain text format
-  const plainTextMatch = /^CALL STATUS:\s*(.+)$/mi.exec(summary);
+  const plainTextMatch = /^CALL STATUS:\s*(.+)$/im.exec(summary);
   if (plainTextMatch?.[1]) {
-    const status = plainTextMatch[1].trim();
+    const status = plainTextMatch[1]?.trim() ?? "";
     return {
       status,
-      colors: { text: 'text-slate-700', bg: 'bg-slate-100 dark:bg-slate-800' }
+      colors: { text: "text-slate-700", bg: "bg-slate-100 dark:bg-slate-800" },
     };
   }
 
@@ -162,45 +177,51 @@ function formatEnhancedCallSummary(summary: string | null) {
 
   // Icon mapping for different field types
   const iconMap: Record<string, React.ReactNode> = {
-    'CALLER': <User className="h-4 w-4" />,
-    'PET': <PawPrint className="h-4 w-4" />,
-    'REASON FOR CALL': <Phone className="h-4 w-4" />,
-    'REASON': <Phone className="h-4 w-4" />, // New simplified field name
-    'ACTION TAKEN': <CheckCircle className="h-4 w-4" />,
-    'ACTION': <CheckCircle className="h-4 w-4" />, // New simplified field name
-    'CONTEXT': <AlertTriangle className="h-4 w-4" />, // For abandoned/incomplete calls
-    'FOLLOW-UP': <Calendar className="h-4 w-4" />, // For incomplete calls
+    CALLER: <User className="h-4 w-4" />,
+    PET: <PawPrint className="h-4 w-4" />,
+    "REASON FOR CALL": <Phone className="h-4 w-4" />,
+    REASON: <Phone className="h-4 w-4" />, // New simplified field name
+    "ACTION TAKEN": <CheckCircle className="h-4 w-4" />,
+    ACTION: <CheckCircle className="h-4 w-4" />, // New simplified field name
+    CONTEXT: <AlertTriangle className="h-4 w-4" />, // For abandoned/incomplete calls
+    "FOLLOW-UP": <Calendar className="h-4 w-4" />, // For incomplete calls
   };
 
   // Color mapping for different field types
   const getFieldColors = (fieldName: string, value: string) => {
     // Green styling for completed actions (both label and value colored)
-    if ((fieldName === 'ACTION TAKEN' || fieldName === 'ACTION') && value.toLowerCase() !== 'no') {
+    if (
+      (fieldName === "ACTION TAKEN" || fieldName === "ACTION") &&
+      value.toLowerCase() !== "no"
+    ) {
       return {
-        icon: 'text-green-500',
-        label: 'text-green-600 font-semibold',
-        value: 'text-green-700 font-medium' // Keep green for ACTION content
+        icon: "text-green-500",
+        label: "text-green-600 font-semibold",
+        value: "text-green-700 font-medium", // Keep green for ACTION content
       };
     }
 
     // Orange styling for context/follow-up field names only (content stays default)
-    if (fieldName === 'CONTEXT' || fieldName === 'FOLLOW-UP') {
+    if (fieldName === "CONTEXT" || fieldName === "FOLLOW-UP") {
       return {
-        icon: 'text-orange-500',
-        label: 'text-orange-600 font-semibold dark:text-orange-400',
-        value: 'text-slate-700 dark:text-slate-300' // Default color for content
+        icon: "text-orange-500",
+        label: "text-orange-600 font-semibold dark:text-orange-400",
+        value: "text-slate-700 dark:text-slate-300", // Default color for content
       };
     }
 
     return {
-      icon: 'text-teal-500',
-      label: 'text-slate-600 font-semibold dark:text-slate-400',
-      value: 'text-slate-700 dark:text-slate-300' // Default color for content
+      icon: "text-teal-500",
+      label: "text-slate-600 font-semibold dark:text-slate-400",
+      value: "text-slate-700 dark:text-slate-300", // Default color for content
     };
   };
 
   // Try to parse VAPI markdown format first
-  const sections: Array<{ type: 'field' | 'details'; content: any }> = [];
+  type Section =
+    | { type: "field"; content: { name: string; value: string } }
+    | { type: "details"; content: string };
+  const sections: Section[] = [];
 
   // Check if this looks like VAPI markdown format with **FIELD:** patterns
   const markdownFieldPattern = /\*\*([^*:]+):\*\*\s*([^\n*]+)/g;
@@ -213,32 +234,36 @@ function formatEnhancedCallSummary(summary: string | null) {
       const fieldValue = match[2]?.trim();
 
       // Skip KEY DETAILS, deprecated fields, and CALL STATUS (shown in header)
-      if (fieldName && fieldValue &&
-          fieldName !== 'KEY DETAILS' &&
-          fieldName !== 'URGENCY' &&
-          fieldName !== 'FOLLOW-UP NEEDED' &&
-          fieldName !== 'CALL STATUS') {
+      if (
+        fieldName &&
+        fieldValue &&
+        fieldName !== "KEY DETAILS" &&
+        fieldName !== "URGENCY" &&
+        fieldName !== "FOLLOW-UP NEEDED" &&
+        fieldName !== "CALL STATUS"
+      ) {
         sections.push({
-          type: 'field',
-          content: { name: fieldName, value: fieldValue }
+          type: "field",
+          content: { name: fieldName, value: fieldValue },
         });
       }
     }
 
     // Look for KEY DETAILS section (usually at the end)
-    const keyDetailsMatch = /\*\*KEY DETAILS:\*\*\s*([\s\S]*?)(?:\*\*[^*]+:\*\*|$)/.exec(summary);
+    const keyDetailsMatch =
+      /\*\*KEY DETAILS:\*\*\s*([\s\S]*?)(?:\*\*[^*]+:\*\*|$)/.exec(summary);
     if (keyDetailsMatch) {
       const detailsContent = keyDetailsMatch[1]?.trim();
       if (detailsContent) {
         sections.push({
-          type: 'details',
-          content: detailsContent
+          type: "details",
+          content: detailsContent,
         });
       }
     }
   } else {
     // Fallback to original parsing for plain text format
-    const lines = summary.split('\n').filter(line => line.trim());
+    const lines = summary.split("\n").filter((line) => line.trim());
     let currentDetailsSection: string[] = [];
 
     for (const line of lines) {
@@ -251,24 +276,31 @@ function formatEnhancedCallSummary(summary: string | null) {
         // If we have accumulated details, add them as a section
         if (currentDetailsSection.length > 0) {
           sections.push({
-            type: 'details',
-            content: currentDetailsSection.join('\n')
+            type: "details",
+            content: currentDetailsSection.join("\n"),
           });
           currentDetailsSection = [];
         }
 
         // Add field section (skip deprecated fields and CALL STATUS)
         const [, fieldName, fieldValue] = fieldMatch;
-        if (fieldName && fieldValue &&
-            fieldName.trim() !== 'URGENCY' &&
-            fieldName.trim() !== 'FOLLOW-UP NEEDED' &&
-            fieldName.trim() !== 'CALL STATUS') {
+        if (
+          fieldName &&
+          fieldValue &&
+          fieldName.trim() !== "URGENCY" &&
+          fieldName.trim() !== "FOLLOW-UP NEEDED" &&
+          fieldName.trim() !== "CALL STATUS"
+        ) {
           sections.push({
-            type: 'field',
-            content: { name: fieldName.trim(), value: fieldValue.trim() }
+            type: "field",
+            content: { name: fieldName.trim(), value: fieldValue.trim() },
           });
         }
-      } else if (trimmed.startsWith('•') || trimmed.startsWith('-') || trimmed.includes('presenting')) {
+      } else if (
+        trimmed.startsWith("•") ||
+        trimmed.startsWith("-") ||
+        trimmed.includes("presenting")
+      ) {
         // This is part of details/key details section
         currentDetailsSection.push(trimmed);
       }
@@ -277,8 +309,8 @@ function formatEnhancedCallSummary(summary: string | null) {
     // Add any remaining details
     if (currentDetailsSection.length > 0) {
       sections.push({
-        type: 'details',
-        content: currentDetailsSection.join('\n')
+        type: "details",
+        content: currentDetailsSection.join("\n"),
       });
     }
   }
@@ -295,9 +327,22 @@ function formatEnhancedCallSummary(summary: string | null) {
   // Sort fields by preferred order: ACTION/ACTION TAKEN should be last before KEY DETAILS
   // CALL STATUS is now displayed in header, so exclude from field list
   // Support both old and new field names
-  const fieldOrder = ['CALLER', 'PET', 'REASON FOR CALL', 'REASON', 'ACTION TAKEN', 'ACTION', 'CONTEXT', 'FOLLOW-UP'];
-  const fieldSections = sections.filter(s => s.type === 'field');
-  const detailsSections = sections.filter(s => s.type === 'details');
+  const fieldOrder = [
+    "CALLER",
+    "PET",
+    "REASON FOR CALL",
+    "REASON",
+    "ACTION TAKEN",
+    "ACTION",
+    "CONTEXT",
+    "FOLLOW-UP",
+  ];
+  const fieldSections = sections.filter(
+    (s): s is Extract<Section, { type: "field" }> => s.type === "field",
+  );
+  const detailsSections = sections.filter(
+    (s): s is Extract<Section, { type: "details" }> => s.type === "details",
+  );
 
   // Sort field sections by the preferred order
   fieldSections.sort((a, b) => {
@@ -317,7 +362,7 @@ function formatEnhancedCallSummary(summary: string | null) {
   return (
     <div className="space-y-3">
       {sortedSections.map((section, index) => {
-        if (section.type === 'field') {
+        if (section.type === "field") {
           const { name, value } = section.content;
           const colors = getFieldColors(name, value);
           const icon = iconMap[name];
@@ -326,13 +371,18 @@ function formatEnhancedCallSummary(summary: string | null) {
             <div key={index} className="flex items-start gap-3 py-1">
               {/* Icon */}
               <div className={cn("mt-0.5", colors.icon)}>
-                {icon || <FileText className="h-4 w-4" />}
+                {icon ?? <FileText className="h-4 w-4" />}
               </div>
 
               {/* Content */}
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-baseline gap-2">
-                  <span className={cn("text-sm uppercase tracking-wide", colors.label)}>
+                  <span
+                    className={cn(
+                      "text-sm tracking-wide uppercase",
+                      colors.label,
+                    )}
+                  >
                     {name}:
                   </span>
                   <span className={cn("text-sm leading-relaxed", colors.value)}>
@@ -345,17 +395,22 @@ function formatEnhancedCallSummary(summary: string | null) {
         } else {
           // Details section
           return (
-            <div key={index} className="rounded-lg bg-slate-50/60 dark:bg-slate-800/40 p-4 border border-slate-200/60 dark:border-slate-700/60">
-              <div className="flex items-center gap-2 mb-2">
+            <div
+              key={index}
+              className="rounded-lg border border-slate-200/60 bg-slate-50/60 p-4 dark:border-slate-700/60 dark:bg-slate-800/40"
+            >
+              <div className="mb-2 flex items-center gap-2">
                 <FileText className="h-4 w-4 text-slate-500" />
-                <span className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">
+                <span className="text-sm font-semibold tracking-wide text-slate-600 uppercase dark:text-slate-400">
                   Key Details
                 </span>
               </div>
-              <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed space-y-1">
-                {section.content.split('\n').map((detail: string, detailIndex: number) => (
-                  <div key={detailIndex}>{detail}</div>
-                ))}
+              <div className="space-y-1 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
+                {section.content
+                  .split("\n")
+                  .map((detail: string, detailIndex: number) => (
+                    <div key={detailIndex}>{detail}</div>
+                  ))}
               </div>
             </div>
           );

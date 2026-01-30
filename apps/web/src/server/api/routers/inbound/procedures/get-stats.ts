@@ -6,6 +6,7 @@
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { getClinicByUserId } from "@odis-ai/domain/clinics";
+import { createServiceClient } from "@odis-ai/data-access/db/server";
 import { getInboundStatsInput } from "../schemas";
 
 export const getStatsRouter = createTRPCRouter({
@@ -17,13 +18,16 @@ export const getStatsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const userId = ctx.user.id;
 
+      // Use service client to bypass RLS (consistent with listInboundCalls)
+      const serviceClient = await createServiceClient();
+
       // Use provided clinicId from input, or fall back to user's default clinic
       let clinic = null;
       let clinicName = null;
 
       if (input.clinicId) {
-        // If clinicId is provided, fetch that clinic directly
-        const { data } = await ctx.supabase
+        // If clinicId is provided, fetch that clinic directly from clinics table
+        const { data } = await serviceClient
           .from("clinics")
           .select("id, name")
           .eq("id", input.clinicId)
@@ -35,16 +39,18 @@ export const getStatsRouter = createTRPCRouter({
         }
       } else {
         // Fall back to user's default clinic
-        clinic = await getClinicByUserId(userId, ctx.supabase);
+        clinic = await getClinicByUserId(userId, serviceClient);
 
-        // Also get user's clinic_name for calls filtering (which uses clinic_name, not clinic_id)
-        const { data: userRecord } = await ctx.supabase
-          .from("users")
-          .select("clinic_name, role")
-          .eq("id", userId)
-          .maybeSingle();
+        // If we have a clinic, look up its name from the clinics table
+        if (clinic?.id) {
+          const { data: clinicData } = await serviceClient
+            .from("clinics")
+            .select("name")
+            .eq("id", clinic.id)
+            .maybeSingle();
 
-        clinicName = userRecord?.clinic_name ?? null;
+          clinicName = clinicData?.name ?? null;
+        }
       }
 
       // Build date filter helper - uses generic type to preserve query builder chain
@@ -71,7 +77,7 @@ export const getStatsRouter = createTRPCRouter({
       };
 
       // Fetch appointment stats from vapi_bookings
-      let appointmentQuery = ctx.supabase
+      let appointmentQuery = serviceClient
         .from("vapi_bookings")
         .select("status", { count: "exact" });
 
@@ -103,7 +109,7 @@ export const getStatsRouter = createTRPCRouter({
 
       // Fetch call stats (from inbound_vapi_calls table)
       // Include outcome field to calculate needsAttention
-      let callQuery = ctx.supabase
+      let callQuery = serviceClient
         .from("inbound_vapi_calls")
         .select("status, user_sentiment, outcome", { count: "exact" });
 
@@ -116,25 +122,31 @@ export const getStatsRouter = createTRPCRouter({
 
       const { data: calls, count: callCount } = await callQuery;
 
-      // Count call statuses
-      const scheduled = (calls ?? []).filter(
-        (c) => c.outcome === "scheduled",
+      // Count call statuses (case-insensitive matching to align with listInboundCalls)
+      const normalizeOutcome = (outcome: string | null) =>
+        (outcome ?? "").toLowerCase();
+
+      const scheduled = (calls ?? []).filter((c) =>
+        normalizeOutcome(c.outcome).includes("scheduled"),
       ).length;
-      const rescheduled = (calls ?? []).filter(
-        (c) => c.outcome === "rescheduled",
+      const rescheduled = (calls ?? []).filter((c) =>
+        normalizeOutcome(c.outcome).includes("rescheduled"),
       ).length;
-      const cancellation = (calls ?? []).filter(
-        (c) => c.outcome === "cancellation",
+      const cancellation = (calls ?? []).filter((c) =>
+        normalizeOutcome(c.outcome).includes("cancellation"),
       ).length;
-      const emergency = (calls ?? []).filter(
-        (c) => c.outcome === "emergency" || c.outcome === "Urgent",
-      ).length;
-      const callback = (calls ?? []).filter(
-        (c) => c.outcome === "callback" || c.outcome === "Call Back",
-      ).length;
-      const info = (calls ?? []).filter(
-        (c) => c.outcome === "info" || c.outcome === "Info Only",
-      ).length;
+      const emergency = (calls ?? []).filter((c) => {
+        const outcome = normalizeOutcome(c.outcome);
+        return outcome.includes("emergency") || outcome.includes("urgent");
+      }).length;
+      const callback = (calls ?? []).filter((c) => {
+        const outcome = normalizeOutcome(c.outcome);
+        return outcome.includes("callback") || outcome.includes("call back");
+      }).length;
+      const info = (calls ?? []).filter((c) => {
+        const outcome = normalizeOutcome(c.outcome);
+        return outcome.includes("info");
+      }).length;
 
       const callStats = {
         total: callCount ?? 0,

@@ -9,10 +9,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { getClinicByUserId } from "@odis-ai/domain/clinics";
-
-// Dynamic import for lazy-loaded library
-const getServiceClient = () =>
-  import("@odis-ai/data-access/db/server").then((m) => m.createServiceClient);
+import { createServiceClient } from "@odis-ai/data-access/db/server";
 
 export const getCallByIdRouter = createTRPCRouter({
   /**
@@ -28,7 +25,6 @@ export const getCallByIdRouter = createTRPCRouter({
       const userId = ctx.user.id;
 
       // Use service client to bypass RLS for reliable data access
-      const createServiceClient = await getServiceClient();
       const serviceClient = await createServiceClient();
 
       // Get current user's clinic

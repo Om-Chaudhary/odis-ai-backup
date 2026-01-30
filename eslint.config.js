@@ -95,6 +95,10 @@ export default tseslint.config(
           enforceBuildableLibDependency: false,
           allowCircularSelfDependency: true,
           allow: ["^~/.*"],
+          checkDynamicDependenciesExceptions: [
+            "@odis-ai/data-access/db",
+            "@odis-ai/data-access/db/*",
+          ],
           depConstraints: [
             // ============================================
             // PLATFORM CONSTRAINTS (Critical for Browser/Node separation)

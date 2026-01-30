@@ -53,6 +53,7 @@ export const listAppointmentRequestsInput = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   isNewClient: z.boolean().optional(),
+  clinicId: z.string().uuid().optional(),
 });
 
 export const updateAppointmentRequestInput = z.object({

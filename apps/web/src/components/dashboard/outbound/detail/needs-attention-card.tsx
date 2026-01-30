@@ -5,7 +5,6 @@ import { parseAttentionSummary, getAttentionTitle, formatAttentionAction, type P
 import { cn } from "@odis-ai/shared/util";
 import { Button } from "@odis-ai/shared/ui/button";
 import {
-  AlertTriangle,
   Pill,
   Phone,
   Calendar,
@@ -14,7 +13,7 @@ import {
   DollarSign,
   CheckCircle2,
   Stethoscope,
-  Octagon
+  Octagon,
 } from "lucide-react";
 
 interface NeedsAttentionCardProps {
@@ -37,16 +36,17 @@ interface NeedsAttentionCardProps {
  */
 export function NeedsAttentionCard({
   attentionTypes,
-  attentionSeverity,
+  attentionSeverity: _attentionSeverity,
   attentionSummary,
   className,
-  callId,
+  callId: _callId,
 }: NeedsAttentionCardProps) {
   // State for marking as done (in production, this would be persisted)
   const [isDone, setIsDone] = useState(false);
 
   // Parse the attention summary
-  const parsed: ParsedAttentionSummary | null = parseAttentionSummary(attentionSummary);
+  const parsed: ParsedAttentionSummary | null =
+    parseAttentionSummary(attentionSummary);
 
   // Get user-friendly title from attention types
   const title = getAttentionTitle(attentionTypes);
@@ -61,14 +61,20 @@ export function NeedsAttentionCard({
       health_concern: { icon: Heart, color: "text-pink-600" },
       dissatisfaction: { icon: AlertCircle, color: "text-amber-600" },
       owner_dissatisfaction: { icon: AlertCircle, color: "text-amber-600" },
-      billing_question: { icon: DollarSign, color: "text-emerald-600" }
+      billing_question: { icon: DollarSign, color: "text-emerald-600" },
     };
 
     const primaryType = attentionTypes[0];
-    return iconMap[primaryType as keyof typeof iconMap] || { icon: Stethoscope, color: "text-gray-600" };
+    return (
+      iconMap[primaryType as keyof typeof iconMap] || {
+        icon: Stethoscope,
+        color: "text-gray-600",
+      }
+    );
   };
 
-  const { icon: IconComponent, color: iconColor } = getAttentionIcon(attentionTypes);
+  const { icon: IconComponent, color: iconColor } =
+    getAttentionIcon(attentionTypes);
 
   const handleMarkAsDone = () => {
     setIsDone(true);
@@ -77,25 +83,29 @@ export function NeedsAttentionCard({
   };
 
   return (
-    <div className={cn(
-      "rounded-xl border shadow-sm backdrop-blur-md transition-all duration-300",
-      "bg-gradient-to-br from-white/80 via-slate-50/30 to-white/80",
-      "border-slate-200/50 hover:shadow-md",
-      "dark:from-slate-900/80 dark:via-slate-800/30 dark:to-slate-900/80",
-      "dark:border-slate-700/50",
-      isDone && "opacity-75",
-      className
-    )}>
-      <div className="p-4 space-y-4">
+    <div
+      className={cn(
+        "rounded-xl border shadow-sm backdrop-blur-md transition-all duration-300",
+        "bg-gradient-to-br from-white/80 via-slate-50/30 to-white/80",
+        "border-slate-200/50 hover:shadow-md",
+        "dark:from-slate-900/80 dark:via-slate-800/30 dark:to-slate-900/80",
+        "dark:border-slate-700/50",
+        isDone && "opacity-75",
+        className,
+      )}
+    >
+      <div className="space-y-4 p-4">
         {/* Header with icon and title */}
         <div className="flex items-start gap-3">
-          <div className={cn(
-            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
-            "bg-gradient-to-br from-slate-100 to-slate-200",
-            "dark:from-slate-800/50 dark:to-slate-700/50",
-            "shadow-inner",
-            isDone && "opacity-50"
-          )}>
+          <div
+            className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+              "bg-gradient-to-br from-slate-100 to-slate-200",
+              "dark:from-slate-800/50 dark:to-slate-700/50",
+              "shadow-inner",
+              isDone && "opacity-50",
+            )}
+          >
             {isDone ? (
               <CheckCircle2 className="h-4 w-4 text-green-600" />
             ) : (
@@ -103,10 +113,12 @@ export function NeedsAttentionCard({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className={cn(
-              "text-base font-semibold text-slate-800 dark:text-white",
-              isDone && "line-through opacity-60"
-            )}>
+            <h3
+              className={cn(
+                "text-base font-semibold text-slate-800 dark:text-white",
+                isDone && "line-through opacity-60",
+              )}
+            >
               {isDone ? "Attention Addressed" : title}
             </h3>
           </div>
@@ -119,9 +131,14 @@ export function NeedsAttentionCard({
             {parsed.isStructured && parsed.reason && (
               <div className="rounded-lg border border-slate-200/50 bg-slate-50/50 p-3 dark:border-slate-700/50 dark:bg-slate-800/30">
                 <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  <span className="text-slate-900 dark:text-white font-semibold">{parsed.reason}</span>
+                  <span className="font-semibold text-slate-900 dark:text-white">
+                    {parsed.reason}
+                  </span>
                   {parsed.context && parsed.context !== "Attention needed" && (
-                    <span className="text-slate-600 dark:text-slate-400"> - {parsed.context}</span>
+                    <span className="text-slate-600 dark:text-slate-400">
+                      {" "}
+                      - {parsed.context}
+                    </span>
                   )}
                 </p>
               </div>
@@ -130,8 +147,8 @@ export function NeedsAttentionCard({
             {/* Action line */}
             {parsed.action && (
               <div className="rounded-lg border border-slate-200/50 bg-slate-50/50 p-3 dark:border-slate-700/50 dark:bg-slate-800/30">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <div className="mb-1 flex items-center gap-2">
+                  <span className="text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">
                     Action Needed
                   </span>
                 </div>
@@ -149,7 +166,8 @@ export function NeedsAttentionCard({
         ) : !isDone ? (
           <div className="rounded-lg border border-slate-200/50 bg-slate-50/50 p-3 dark:border-slate-700/50 dark:bg-slate-800/30">
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              {attentionSummary || "Please review this case for attention items."}
+              {attentionSummary ??
+                "Please review this case for attention items."}
             </p>
           </div>
         ) : (
@@ -162,7 +180,7 @@ export function NeedsAttentionCard({
 
         {/* Mark as Done button */}
         {!isDone && (
-          <div className="pt-2 border-t border-slate-200/50 dark:border-slate-700/50">
+          <div className="border-t border-slate-200/50 pt-2 dark:border-slate-700/50">
             <Button
               variant="ghost"
               size="sm"
@@ -170,7 +188,7 @@ export function NeedsAttentionCard({
               className={cn(
                 "w-full justify-start gap-2 text-xs font-medium transition-all",
                 "hover:bg-green-100 dark:hover:bg-green-900/30",
-                "text-slate-600 hover:text-green-700 dark:text-slate-400 dark:hover:text-green-400"
+                "text-slate-600 hover:text-green-700 dark:text-slate-400 dark:hover:text-green-400",
               )}
             >
               <CheckCircle2 className="h-4 w-4" />
