@@ -88,7 +88,11 @@ export const proxy = clerkMiddleware(async (auth, req) => {
   }
 
   // Allow onboarding routes for authenticated users without organization
-  if (!authState.orgId && path.startsWith("/onboarding")) {
+  // Includes both UI routes (/onboarding) and API routes (/api/onboarding)
+  if (
+    !authState.orgId &&
+    (path.startsWith("/onboarding") || path.startsWith("/api/onboarding"))
+  ) {
     return await updateSession(req);
   }
 
