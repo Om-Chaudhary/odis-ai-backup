@@ -1,5 +1,6 @@
 import { getUser } from "~/server/actions/auth";
 import { redirect } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import { createServiceClient } from "@odis-ai/data-access/db/server";
 import { getUserClinics } from "@odis-ai/domain/clinics";
 import { ExtensionAuthHandler } from "~/components/dashboard/shell/extension-auth-handler";
@@ -55,6 +56,34 @@ export default async function DashboardPage({
 
   // Use service client to bypass RLS (needed for Clerk users who don't have Supabase session)
   const serviceClient = await createServiceClient();
+
+  // Check onboarding status for Clerk users
+  const clerkAuth = await auth();
+  if (clerkAuth?.userId) {
+    const { data: userData } = await serviceClient
+      .from("users")
+      .select("onboarding_completed")
+      .eq("clerk_user_id", clerkAuth.userId)
+      .single();
+
+    // If not completed onboarding, redirect to onboarding
+    if (!userData?.onboarding_completed) {
+      redirect("/onboarding");
+    }
+
+    // Get user's clinics (admins get ALL clinics, regular users get their assigned clinics)
+    const clinics = await getUserClinics(user.id, serviceClient);
+
+    // If completed onboarding but no clinics yet, show pending state
+    if (clinics.length === 0) {
+      redirect("/pending");
+    }
+
+    // Redirect to first clinic if available
+    if (clinics.length > 0 && clinics[0]?.slug) {
+      redirect(`/dashboard/${clinics[0].slug}`);
+    }
+  }
 
   // Get user's clinics (admins get ALL clinics, regular users get their assigned clinics)
   const clinics = await getUserClinics(user.id, serviceClient);

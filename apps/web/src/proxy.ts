@@ -87,6 +87,16 @@ export const proxy = clerkMiddleware(async (auth, req) => {
     return NextResponse.redirect(new URL("/sign-in", req.url));
   }
 
+  // Allow onboarding routes for authenticated users without organization
+  if (!authState.orgId && path.startsWith("/onboarding")) {
+    return await updateSession(req);
+  }
+
+  // Allow pending route for users who completed onboarding but have no org yet
+  if (!authState.orgId && path === "/pending") {
+    return await updateSession(req);
+  }
+
   // Superadmins bypass organization requirement
   if (await checkSuperAdmin(authState.userId)) {
     return await updateSession(req);

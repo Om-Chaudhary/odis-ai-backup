@@ -32,7 +32,7 @@ export function ClerkProvider({ children }: ClerkProviderProps) {
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
       signInFallbackRedirectUrl="/dashboard"
-      signUpFallbackRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/onboarding"
       afterSignOutUrl="/"
     >
       {children}

@@ -3561,6 +3561,9 @@ export type Database = {
           emergency_phone: string | null;
           first_name: string | null;
           id: string;
+          idexx_company_id: string | null;
+          idexx_password: string | null;
+          idexx_username: string | null;
           last_name: string | null;
           license_number: string | null;
           max_call_retries: number | null;
@@ -3580,6 +3583,8 @@ export type Database = {
           voicemail_detection_enabled: boolean | null;
           voicemail_hangup_on_detection: boolean;
           voicemail_message: string | null;
+          weave_password: string | null;
+          weave_username: string | null;
         };
         Insert: {
           avatar_url?: string | null;
@@ -3598,6 +3603,9 @@ export type Database = {
           emergency_phone?: string | null;
           first_name?: string | null;
           id?: string;
+          idexx_company_id?: string | null;
+          idexx_password?: string | null;
+          idexx_username?: string | null;
           last_name?: string | null;
           license_number?: string | null;
           max_call_retries?: number | null;
@@ -3617,6 +3625,8 @@ export type Database = {
           voicemail_detection_enabled?: boolean | null;
           voicemail_hangup_on_detection?: boolean;
           voicemail_message?: string | null;
+          weave_password?: string | null;
+          weave_username?: string | null;
         };
         Update: {
           avatar_url?: string | null;
@@ -3635,6 +3645,9 @@ export type Database = {
           emergency_phone?: string | null;
           first_name?: string | null;
           id?: string;
+          idexx_company_id?: string | null;
+          idexx_password?: string | null;
+          idexx_username?: string | null;
           last_name?: string | null;
           license_number?: string | null;
           max_call_retries?: number | null;
@@ -3654,6 +3667,8 @@ export type Database = {
           voicemail_detection_enabled?: boolean | null;
           voicemail_hangup_on_detection?: boolean;
           voicemail_message?: string | null;
+          weave_password?: string | null;
+          weave_username?: string | null;
         };
         Relationships: [
           {
@@ -3981,6 +3996,53 @@ export type Database = {
         };
         Relationships: [];
       };
+      weave_credentials: {
+        Row: {
+          clinic_id: string | null;
+          created_at: string;
+          encryption_key_id: string;
+          id: string;
+          is_active: boolean;
+          last_used_at: string | null;
+          password_encrypted: string;
+          updated_at: string;
+          user_id: string;
+          username_encrypted: string;
+        };
+        Insert: {
+          clinic_id?: string | null;
+          created_at?: string;
+          encryption_key_id?: string;
+          id?: string;
+          is_active?: boolean;
+          last_used_at?: string | null;
+          password_encrypted: string;
+          updated_at?: string;
+          user_id: string;
+          username_encrypted: string;
+        };
+        Update: {
+          clinic_id?: string | null;
+          created_at?: string;
+          encryption_key_id?: string;
+          id?: string;
+          is_active?: boolean;
+          last_used_at?: string | null;
+          password_encrypted?: string;
+          updated_at?: string;
+          user_id?: string;
+          username_encrypted?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "weave_credentials_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
       analytics_daily_active_users: {
@@ -4145,6 +4207,7 @@ export type Database = {
         Args: { resource: string; user_uuid: string };
         Returns: boolean;
       };
+      current_clerk_user_id: { Args: never; Returns: string };
       current_org_id: { Args: never; Returns: string };
       current_org_role: { Args: never; Returns: string };
       current_user_id: { Args: never; Returns: string };
