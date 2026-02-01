@@ -9,12 +9,6 @@ import {
   AttentionSeverityBadge,
   CriticalPulsingDot,
 } from "~/components/dashboard/shared";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@odis-ai/shared/ui/tooltip";
 import type { SelectedRowPosition } from "./outbound-split-layout";
 
 /**

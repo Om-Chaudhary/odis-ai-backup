@@ -121,9 +121,16 @@ export function buildIdexxConsultationData(
   const declinedItems = parseBillingString(declinedString, true);
 
   return {
-    consultationId: rawData.consultation_id as string | undefined,
-    consultationDate: rawData.consultation_date as string | undefined,
-    consultationReason: rawData.consultation_reason as string | undefined,
+    // Support both camelCase (from Chrome extension) and snake_case (legacy)
+    consultationId: (rawData.consultationId ?? rawData.consultation_id) as
+      | string
+      | undefined,
+    consultationDate: (rawData.consultationDate ??
+      rawData.consultation_date ??
+      rawData.appointment_date) as string | undefined,
+    consultationReason: (rawData.consultationReason ??
+      rawData.consultation_reason ??
+      rawData.appointment_reason) as string | undefined,
     consultationNotes: rawData.consultation_notes as string | undefined,
     billingItems: [...acceptedItems, ...declinedItems],
     acceptedItems,
