@@ -15,6 +15,8 @@ import {
   processCheckAvailability,
   processCheckAvailabilityRange,
 } from "../../processors/appointments";
+import { processLeaveMessage } from "../../processors/messaging";
+import { LeaveMessageSchema } from "../../schemas/messaging";
 
 const logger = loggers.webhook.child("built-in-tools");
 
@@ -251,8 +253,7 @@ export function registerBuiltInTools(): void {
       if (!context.assistantId) {
         return {
           error: "Assistant ID not available",
-          message:
-            "Unable to check availability. Assistant context not found.",
+          message: "Unable to check availability. Assistant context not found.",
         };
       }
 
@@ -340,6 +341,66 @@ export function registerBuiltInTools(): void {
     },
   });
 
+  // Leave message tool - records callback requests for clinic staff
+  registerTool({
+    name: "leave_message",
+    description: "Record a callback message for clinic staff",
+    handler: async (params, context) => {
+      logger.info("Leave message called", {
+        callId: context.callId,
+        assistantId: context.assistantId,
+      });
+
+      // Validate assistant ID is available
+      if (!context.assistantId) {
+        return {
+          error: "Assistant ID not available",
+          message: "Unable to record message. Assistant context not found.",
+        };
+      }
+
+      // Parse and validate input
+      const parsed = LeaveMessageSchema.safeParse(params);
+      if (!parsed.success) {
+        logger.warn("Leave message validation failed", {
+          callId: context.callId,
+          errors: parsed.error.flatten(),
+        });
+        return {
+          error: "validation_error",
+          message:
+            "I need some information to record your message. Please provide your name and phone number.",
+        };
+      }
+
+      // Get clinic from assistant_id using the standard lookup
+      const supabase = await createServiceClient();
+      const clinic = await findClinicWithConfigByAssistantId(
+        supabase,
+        context.assistantId,
+      );
+
+      // Call the processor directly (no HTTP roundtrip)
+      const result = await processLeaveMessage(parsed.data, {
+        callId: context.callId,
+        toolCallId: context.toolCallId,
+        assistantId: context.assistantId,
+        clinic,
+        supabase,
+        logger,
+      });
+
+      logger.info("Leave message completed", {
+        success: result.success,
+        callId: context.callId,
+        clinicId: clinic?.id,
+      });
+
+      // Spread result to match expected Record<string, unknown> return type
+      return { ...result };
+    },
+  });
+
   logger.info("Built-in tools registered", {
     tools: [
       "book_appointment",
@@ -348,6 +409,7 @@ export function registerBuiltInTools(): void {
       "get_clinic_hours",
       "check_availability",
       "check_availability_range",
+      "leave_message",
     ],
   });
 }
