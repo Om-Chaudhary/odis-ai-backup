@@ -8,18 +8,23 @@
  *
  * ATOMIC GUARANTEE: Caller never ends up without an appointment.
  * If new appointment creation fails, original is restored.
+ *
+ * @deprecated This HTTP endpoint is deprecated. Configure VAPI tools to use the
+ * webhook tool-calls endpoint instead (/api/webhooks/vapi). The tool registry
+ * handles all tool execution automatically with proper clinic context.
  */
 
 import { type NextRequest, NextResponse } from "next/server";
+import { loggers } from "@odis-ai/shared/logger";
+
+const deprecationLogger = loggers.vapi.child("deprecated-http");
 
 async function getHandler() {
   const { createToolHandler } = await import("@odis-ai/integrations/vapi/core");
-  const { RescheduleAppointmentSchema } = await import(
-    "@odis-ai/integrations/vapi/schemas"
-  );
-  const { processRescheduleAppointment } = await import(
-    "@odis-ai/integrations/vapi/processors"
-  );
+  const { RescheduleAppointmentSchema } =
+    await import("@odis-ai/integrations/vapi/schemas");
+  const { processRescheduleAppointment } =
+    await import("@odis-ai/integrations/vapi/processors");
 
   return createToolHandler({
     name: "reschedule-appointment",
@@ -31,6 +36,11 @@ async function getHandler() {
 let cachedHandler: Awaited<ReturnType<typeof getHandler>> | null = null;
 
 export async function POST(request: NextRequest) {
+  deprecationLogger.warn("Deprecated HTTP endpoint called", {
+    endpoint: "/api/vapi/appointments/reschedule",
+    recommendation: "Configure VAPI to use webhook tool-calls instead",
+  });
+
   cachedHandler ??= await getHandler();
   return cachedHandler.POST(request);
 }
@@ -61,12 +71,7 @@ export async function GET() {
       "original_date",
       "preferred_new_date",
     ],
-    optional: [
-      "original_time",
-      "preferred_new_time",
-      "reason",
-      "confirmed",
-    ],
+    optional: ["original_time", "preferred_new_time", "reason", "confirmed"],
     consent: "Set confirmed=true after obtaining verbal consent",
     guarantee: "Original appointment preserved if reschedule fails",
   });

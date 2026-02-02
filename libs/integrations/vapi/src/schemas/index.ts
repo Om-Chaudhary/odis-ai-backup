@@ -49,51 +49,19 @@ export {
   UrgencyLevelEnum,
   TriageActionEnum,
   LogEmergencyTriageSchema,
-  GetErInfoSchema,
   type Species,
   type UrgencyLevel,
   type TriageAction,
   type LogEmergencyTriageInput,
-  type GetErInfoInput,
 } from "./triage";
 
 // Clinical
 export {
   PharmacyPreferenceEnum,
   CreateRefillRequestSchema,
-  CheckRefillStatusSchema,
-  LogLabResultInquirySchema,
   type PharmacyPreference,
   type CreateRefillRequestInput,
-  type CheckRefillStatusInput,
-  type LogLabResultInquiryInput,
 } from "./clinical";
-
-// Records
-export {
-  RecordsTypeEnum,
-  DestinationTypeEnum,
-  LogRecordsRequestSchema,
-  type RecordsType,
-  type DestinationType,
-  type LogRecordsRequestInput,
-} from "./records";
-
-// Billing
-export {
-  BillingInquiryTypeEnum,
-  LogBillingInquirySchema,
-  type BillingInquiryType,
-  type LogBillingInquiryInput,
-} from "./billing";
-
-// Info
-export {
-  ClinicInfoCategoryEnum,
-  GetClinicInfoSchema,
-  type ClinicInfoCategory,
-  type GetClinicInfoInput,
-} from "./info";
 
 // Action Card Output (Structured Data Plan)
 export {

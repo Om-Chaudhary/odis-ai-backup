@@ -42,6 +42,8 @@ export interface ClinicWithConfig extends ClinicLookupResult {
     zip?: string;
     phone?: string;
   } | null;
+  /** Optional: ID of clinic to use for PIMS/availability lookups (for simulation) */
+  pims_clinic_id?: string | null;
 }
 
 /**
@@ -134,7 +136,7 @@ export async function findClinicWithConfigByAssistantId(
   // First, try the new mappings table
   const { data: mapping, error: mappingError } = await supabase
     .from("vapi_assistant_mappings")
-    .select("clinic_id, assistant_name, environment")
+    .select("clinic_id, assistant_name, environment, pims_clinic_id")
     .eq("assistant_id", assistantId)
     .eq("is_active", true)
     .single();
@@ -143,7 +145,9 @@ export async function findClinicWithConfigByAssistantId(
     // Found in mappings - get clinic details with config
     const { data: clinic, error: clinicError } = await supabase
       .from("clinics")
-      .select("id, name, timezone, pims_type, er_config, business_hours, address_config")
+      .select(
+        "id, name, timezone, pims_type, er_config, business_hours, address_config",
+      )
       .eq("id", mapping.clinic_id)
       .single();
 
@@ -152,15 +156,21 @@ export async function findClinicWithConfigByAssistantId(
         assistantId,
         assistantName: mapping.assistant_name,
         clinicId: clinic.id,
+        pimsClinicId: mapping.pims_clinic_id,
       });
-      return clinic as ClinicWithConfig;
+      return {
+        ...clinic,
+        pims_clinic_id: mapping.pims_clinic_id,
+      } as ClinicWithConfig;
     }
   }
 
   // Fallback: check legacy inbound_assistant_id column
   const { data: clinic, error } = await supabase
     .from("clinics")
-    .select("id, name, timezone, pims_type, er_config, business_hours, address_config")
+    .select(
+      "id, name, timezone, pims_type, er_config, business_hours, address_config",
+    )
     .eq("inbound_assistant_id", assistantId)
     .single();
 
@@ -215,7 +225,9 @@ export async function findClinicWithConfigById(
 ): Promise<ClinicWithConfig | null> {
   const { data: clinic, error } = await supabase
     .from("clinics")
-    .select("id, name, timezone, pims_type, er_config, business_hours, address_config")
+    .select(
+      "id, name, timezone, pims_type, er_config, business_hours, address_config",
+    )
     .eq("id", clinicId)
     .single();
 

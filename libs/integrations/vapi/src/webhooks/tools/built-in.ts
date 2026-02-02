@@ -14,9 +14,11 @@ import { findClinicWithConfigByAssistantId } from "../../inbound-tools/find-clin
 import {
   processCheckAvailability,
   processCheckAvailabilityRange,
+  processBookAppointment,
 } from "../../processors/appointments";
 import { processLeaveMessage } from "../../processors/messaging";
 import { LeaveMessageSchema } from "../../schemas/messaging";
+import { BookAppointmentSchema } from "../../schemas/appointments";
 
 const logger = loggers.webhook.child("built-in-tools");
 
@@ -25,88 +27,64 @@ const logger = loggers.webhook.child("built-in-tools");
  * Call this at application startup to enable default tools
  */
 export function registerBuiltInTools(): void {
-  // Book appointment tool (placeholder)
+  // Book appointment tool - books appointments via IDEXX, Avimark, or schedule_slots
   registerTool({
     name: "book_appointment",
-    description: "Book a follow-up appointment for the pet",
+    description:
+      "Book an appointment for a pet. Supports natural language dates and times.",
     handler: async (params, context) => {
-      const { date, reason, petName } = params as {
-        date?: string;
-        reason?: string;
-        petName?: string;
-      };
-
       logger.info("Book appointment called", {
         callId: context.callId,
-        date,
-        reason,
-        petName,
+        assistantId: context.assistantId,
       });
 
-      // TODO: Implement actual appointment booking logic
-      // This could integrate with your scheduling system
+      // Validate assistant ID is available
+      if (!context.assistantId) {
+        return {
+          error: "Assistant ID not available",
+          message: "Unable to book appointment. Assistant context not found.",
+        };
+      }
 
-      return {
-        success: true,
-        appointmentId: `apt_${Date.now()}`,
-        date: date ?? "next available",
-        message:
-          "Appointment booking request received. Our team will confirm shortly.",
-      };
-    },
-  });
+      // Parse and validate input
+      const parsed = BookAppointmentSchema.safeParse(params);
+      if (!parsed.success) {
+        logger.warn("Book appointment validation failed", {
+          callId: context.callId,
+          errors: parsed.error.flatten(),
+        });
+        return {
+          error: "validation_error",
+          message:
+            "I need some information to book your appointment. Please provide the date, time, your name, phone number, and your pet's name.",
+        };
+      }
 
-  // Lookup pet records tool (placeholder)
-  registerTool({
-    name: "lookup_pet_records",
-    description: "Look up pet medical records",
-    handler: async (params, context) => {
-      const { petName, ownerName, phoneNumber } = params as {
-        petName?: string;
-        ownerName?: string;
-        phoneNumber?: string;
-      };
+      // Get clinic from assistant_id using the standard lookup
+      const supabase = await createServiceClient();
+      const clinic = await findClinicWithConfigByAssistantId(
+        supabase,
+        context.assistantId,
+      );
 
-      logger.info("Lookup pet records called", {
+      // Call the processor directly (no HTTP roundtrip)
+      const result = await processBookAppointment(parsed.data, {
         callId: context.callId,
-        petName,
-        ownerName,
+        toolCallId: context.toolCallId,
+        assistantId: context.assistantId,
+        clinic,
+        supabase,
+        logger,
       });
 
-      // TODO: Implement actual record lookup
-      // This could query your PIMS system
-
-      return {
-        found: false,
-        message: "Record lookup is not yet implemented.",
-        searchCriteria: { petName, ownerName, phoneNumber },
-      };
-    },
-  });
-
-  // Send SMS notification tool (placeholder)
-  registerTool({
-    name: "send_sms_notification",
-    description: "Send an SMS notification to the pet owner",
-    handler: async (params, context) => {
-      const { phoneNumber, message: smsMessage } = params as {
-        phoneNumber?: string;
-        message?: string;
-      };
-
-      logger.info("Send SMS called", {
+      logger.info("Book appointment completed", {
+        success: result.success,
         callId: context.callId,
-        phoneNumber: phoneNumber?.substring(0, 6) + "****",
-        messageLength: smsMessage?.length,
+        clinicId: clinic?.id,
       });
 
-      // TODO: Implement actual SMS sending
-      // This could integrate with Twilio, AWS SNS, etc.
-
-      return {
-        sent: false,
-        message: "SMS sending is not yet implemented.",
-      };
+      // Spread result to match expected Record<string, unknown> return type
+      return { ...result };
     },
   });
 
@@ -404,8 +382,6 @@ export function registerBuiltInTools(): void {
   logger.info("Built-in tools registered", {
     tools: [
       "book_appointment",
-      "lookup_pet_records",
-      "send_sms_notification",
       "get_clinic_hours",
       "check_availability",
       "check_availability_range",

@@ -5,18 +5,23 @@
  *
  * Cancels an existing appointment with explicit verbal consent.
  * Two-step process: First verifies, then cancels with confirmed=true.
+ *
+ * @deprecated This HTTP endpoint is deprecated. Configure VAPI tools to use the
+ * webhook tool-calls endpoint instead (/api/webhooks/vapi). The tool registry
+ * handles all tool execution automatically with proper clinic context.
  */
 
 import { type NextRequest, NextResponse } from "next/server";
+import { loggers } from "@odis-ai/shared/logger";
+
+const deprecationLogger = loggers.vapi.child("deprecated-http");
 
 async function getHandler() {
   const { createToolHandler } = await import("@odis-ai/integrations/vapi/core");
-  const { CancelAppointmentSchema } = await import(
-    "@odis-ai/integrations/vapi/schemas"
-  );
-  const { processCancelAppointment } = await import(
-    "@odis-ai/integrations/vapi/processors"
-  );
+  const { CancelAppointmentSchema } =
+    await import("@odis-ai/integrations/vapi/schemas");
+  const { processCancelAppointment } =
+    await import("@odis-ai/integrations/vapi/processors");
 
   return createToolHandler({
     name: "cancel-appointment",
@@ -28,6 +33,11 @@ async function getHandler() {
 let cachedHandler: Awaited<ReturnType<typeof getHandler>> | null = null;
 
 export async function POST(request: NextRequest) {
+  deprecationLogger.warn("Deprecated HTTP endpoint called", {
+    endpoint: "/api/vapi/appointments/cancel",
+    recommendation: "Configure VAPI to use webhook tool-calls instead",
+  });
+
   cachedHandler ??= await getHandler();
   return cachedHandler.POST(request);
 }

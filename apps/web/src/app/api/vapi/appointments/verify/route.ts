@@ -5,18 +5,23 @@
  *
  * Verifies that an appointment exists for a given patient on a given date.
  * Queries local synced data (not live IDEXX). Used by cancel/reschedule tools.
+ *
+ * @deprecated This HTTP endpoint is deprecated. Configure VAPI tools to use the
+ * webhook tool-calls endpoint instead (/api/webhooks/vapi). The tool registry
+ * handles all tool execution automatically with proper clinic context.
  */
 
 import { type NextRequest, NextResponse } from "next/server";
+import { loggers } from "@odis-ai/shared/logger";
+
+const deprecationLogger = loggers.vapi.child("deprecated-http");
 
 async function getHandler() {
   const { createToolHandler } = await import("@odis-ai/integrations/vapi/core");
-  const { VerifyAppointmentSchema } = await import(
-    "@odis-ai/integrations/vapi/schemas"
-  );
-  const { processVerifyAppointment } = await import(
-    "@odis-ai/integrations/vapi/processors"
-  );
+  const { VerifyAppointmentSchema } =
+    await import("@odis-ai/integrations/vapi/schemas");
+  const { processVerifyAppointment } =
+    await import("@odis-ai/integrations/vapi/processors");
 
   return createToolHandler({
     name: "verify-appointment",
@@ -28,6 +33,11 @@ async function getHandler() {
 let cachedHandler: Awaited<ReturnType<typeof getHandler>> | null = null;
 
 export async function POST(request: NextRequest) {
+  deprecationLogger.warn("Deprecated HTTP endpoint called", {
+    endpoint: "/api/vapi/appointments/verify",
+    recommendation: "Configure VAPI to use webhook tool-calls instead",
+  });
+
   cachedHandler ??= await getHandler();
   return cachedHandler.POST(request);
 }

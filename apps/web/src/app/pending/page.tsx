@@ -4,6 +4,7 @@ import { SignOutButton } from "@clerk/nextjs";
 import { createServiceClient } from "@odis-ai/data-access/db/server";
 import { CheckCircle2, Clock, Mail } from "lucide-react";
 import { Button } from "@odis-ai/shared/ui";
+import { AutoSelectOrg } from "./auto-select-org";
 
 /**
  * Pending Approval Page
@@ -39,6 +40,8 @@ export default async function PendingPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4">
+      {/* Auto-select organization if user has one */}
+      <AutoSelectOrg />
       <div className="w-full max-w-2xl">
         {/* Main card */}
         <div className="rounded-xl bg-white p-8 shadow-lg md:p-12">

@@ -50,48 +50,26 @@ export {
   SpeciesEnum,
   UrgencyLevelEnum,
   TriageActionEnum,
-  GetErInfoSchema,
   type LogEmergencyTriageInput,
   type Species,
   type UrgencyLevel,
   type TriageAction,
-  type GetErInfoInput,
 
   // Clinical Agent
   CreateRefillRequestSchema,
-  CheckRefillStatusSchema,
-  LogLabResultInquirySchema,
   PharmacyPreferenceEnum,
   type CreateRefillRequestInput,
-  type CheckRefillStatusInput,
-  type LogLabResultInquiryInput,
   type PharmacyPreference,
 
   // Admin Agent
   LeaveMessageSchema,
-  LogRecordsRequestSchema,
-  LogBillingInquirySchema,
   MessageTypeEnum,
-  RecordsTypeEnum,
-  DestinationTypeEnum,
-  BillingInquiryTypeEnum,
   type LeaveMessageInput,
-  type LogRecordsRequestInput,
-  type LogBillingInquiryInput,
   type MessageType,
-  type RecordsType,
-  type DestinationType,
-  type BillingInquiryType,
 
   // Appointment Agent
   CancelAppointmentSchema,
   RescheduleAppointmentSchema,
   type CancelAppointmentInput,
   type RescheduleAppointmentInput,
-
-  // Info Agent
-  GetClinicInfoSchema,
-  ClinicInfoCategoryEnum,
-  type GetClinicInfoInput,
-  type ClinicInfoCategory,
 } from "./schemas";

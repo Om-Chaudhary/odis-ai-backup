@@ -18,19 +18,41 @@ import { executeTool } from "../tools";
 const logger = loggers.webhook.child("tool-calls");
 
 /**
- * Known clinic prefixes to strip from tool names.
- * Allows VAPI tools like `alum_rock_check_availability` to map to `check_availability`.
+ * Known tool names that are registered in the tool registry.
+ * Used for dynamic prefix stripping - any clinic prefix will be automatically detected.
+ *
+ * When VAPI sends `masson_check_availability` or `del_valle_book_appointment`,
+ * we detect that it ends with a known tool and strip the clinic prefix.
+ *
+ * To add a new tool: add its name here AND register it in built-in.ts
  */
-const CLINIC_PREFIXES = ["alum_rock_", "masson_", "clinic_"];
+const KNOWN_TOOLS = [
+  // Appointment tools
+  "check_availability",
+  "check_availability_range",
+  "book_appointment",
+  // Messaging tools
+  "leave_message",
+  // Info tools
+  "get_clinic_hours",
+] as const;
 
 /**
- * Normalize tool name by stripping clinic prefix.
- * e.g., "alum_rock_check_availability" -> "check_availability"
+ * Normalize tool name by stripping any clinic prefix.
+ * Uses suffix matching against known tools - works for ANY clinic slug automatically.
+ *
+ * @example
+ * normalizeToolName("masson_check_availability") -> "check_availability"
+ * normalizeToolName("del_valle_book_appointment") -> "book_appointment"
+ * normalizeToolName("new_clinic_xyz_leave_message") -> "leave_message"
+ * normalizeToolName("check_availability") -> "check_availability" (no prefix)
  */
 function normalizeToolName(name: string): string {
-  for (const prefix of CLINIC_PREFIXES) {
-    if (name.startsWith(prefix)) {
-      return name.slice(prefix.length);
+  // Check if name ends with a known tool (after any prefix)
+  for (const tool of KNOWN_TOOLS) {
+    if (name.endsWith(tool) && name !== tool) {
+      // Has a prefix - strip it by returning just the tool name
+      return tool;
     }
   }
   return name;

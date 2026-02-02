@@ -3690,6 +3690,7 @@ export type Database = {
           environment: string;
           id: string;
           is_active: boolean;
+          pims_clinic_id: string | null;
           updated_at: string;
         };
         Insert: {
@@ -3701,6 +3702,7 @@ export type Database = {
           environment?: string;
           id?: string;
           is_active?: boolean;
+          pims_clinic_id?: string | null;
           updated_at?: string;
         };
         Update: {
@@ -3712,12 +3714,20 @@ export type Database = {
           environment?: string;
           id?: string;
           is_active?: boolean;
+          pims_clinic_id?: string | null;
           updated_at?: string;
         };
         Relationships: [
           {
             foreignKeyName: "vapi_assistant_mappings_clinic_id_fkey";
             columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "vapi_assistant_mappings_pims_clinic_id_fkey";
+            columns: ["pims_clinic_id"];
             isOneToOne: false;
             referencedRelation: "clinics";
             referencedColumns: ["id"];
@@ -4259,9 +4269,11 @@ export type Database = {
           unique_features: number;
         }[];
       };
+      is_clerk_jwt: { Args: never; Returns: boolean };
       is_org_owner_or_admin: { Args: never; Returns: boolean };
       is_super_admin: { Args: never; Returns: boolean };
       is_veterinarian: { Args: never; Returns: boolean };
+      safe_uid: { Args: never; Returns: string };
       set_user_default_soap_template: {
         Args: { template_uuid: string; user_uuid: string };
         Returns: boolean;

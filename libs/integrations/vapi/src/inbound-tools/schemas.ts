@@ -3,6 +3,9 @@
  *
  * These schemas validate inputs from VAPI tool calls.
  * Each schema maps to a specific tool endpoint.
+ *
+ * NOTE: Many schemas are re-exported from the main schemas/ folder.
+ * Only define schemas here if they're unique to inbound-tools.
  */
 
 import { z } from "zod";
@@ -110,53 +113,6 @@ export type CreateRefillRequestInput = z.infer<
   typeof CreateRefillRequestSchema
 >;
 
-/**
- * Schema: check_refill_status
- *
- * Check the status of a pending prescription refill request.
- * Used by Clinical Agent to look up refill status.
- */
-export const CheckRefillStatusSchema = z.object({
-  // VAPI context
-  assistant_id: z.string().optional(),
-  clinic_id: z.string().uuid().optional(),
-
-  // Lookup criteria
-  client_phone: z.string().min(1, "client_phone is required"),
-  pet_name: z.string().optional(),
-});
-
-export type CheckRefillStatusInput = z.infer<typeof CheckRefillStatusSchema>;
-
-/**
- * Schema: log_lab_result_inquiry
- *
- * Log that a caller is asking about lab/test results.
- * Used by Clinical Agent to record lab result requests.
- */
-export const LogLabResultInquirySchema = z.object({
-  // VAPI context
-  assistant_id: z.string().optional(),
-  clinic_id: z.string().uuid().optional(),
-  vapi_call_id: z.string().optional(),
-
-  // Client info
-  client_name: z.string().min(1, "client_name is required"),
-  client_phone: z.string().min(1, "client_phone is required"),
-
-  // Pet info
-  pet_name: z.string().min(1, "pet_name is required"),
-
-  // Test info
-  test_type: z.string().optional(),
-  test_date: z.string().optional(),
-  notes: z.string().optional(),
-});
-
-export type LogLabResultInquiryInput = z.infer<
-  typeof LogLabResultInquirySchema
->;
-
 /* ========================================
    Admin Agent Tools
    ======================================== */
@@ -202,94 +158,6 @@ export const LeaveMessageSchema = z.object({
 });
 
 export type LeaveMessageInput = z.infer<typeof LeaveMessageSchema>;
-
-/**
- * Records request type
- */
-export const RecordsTypeEnum = z.enum([
-  "full_history",
-  "vaccines_only",
-  "specific_visit",
-  "recent_records",
-]);
-export type RecordsType = z.infer<typeof RecordsTypeEnum>;
-
-/**
- * Records destination type
- */
-export const DestinationTypeEnum = z.enum([
-  "email",
-  "fax",
-  "vet_clinic",
-  "specialist",
-]);
-export type DestinationType = z.infer<typeof DestinationTypeEnum>;
-
-/**
- * Schema: log_records_request
- *
- * Log a request for medical records to be sent.
- * Used by Admin Agent to record records requests.
- */
-export const LogRecordsRequestSchema = z.object({
-  // VAPI context
-  assistant_id: z.string().optional(),
-  clinic_id: z.string().uuid().optional(),
-  vapi_call_id: z.string().optional(),
-
-  // Client info
-  client_name: z.string().min(1, "client_name is required"),
-  client_phone: z.string().min(1, "client_phone is required"),
-
-  // Pet info
-  pet_name: z.string().min(1, "pet_name is required"),
-
-  // Records request details
-  records_type: RecordsTypeEnum,
-  specific_date: z.string().optional(),
-  destination_type: DestinationTypeEnum,
-  destination_contact: z.string().min(1, "destination_contact is required"),
-  notes: z.string().optional(),
-});
-
-export type LogRecordsRequestInput = z.infer<typeof LogRecordsRequestSchema>;
-
-/**
- * Billing inquiry type
- */
-export const BillingInquiryTypeEnum = z.enum([
-  "balance_question",
-  "payment_plan",
-  "insurance",
-  "estimate_request",
-  "refund",
-  "other",
-]);
-export type BillingInquiryType = z.infer<typeof BillingInquiryTypeEnum>;
-
-/**
- * Schema: log_billing_inquiry
- *
- * Log a billing or payment-related question.
- * Used by Admin Agent to record billing inquiries.
- */
-export const LogBillingInquirySchema = z.object({
-  // VAPI context
-  assistant_id: z.string().optional(),
-  clinic_id: z.string().uuid().optional(),
-  vapi_call_id: z.string().optional(),
-
-  // Client info
-  client_name: z.string().min(1, "client_name is required"),
-  client_phone: z.string().min(1, "client_phone is required"),
-
-  // Billing inquiry details
-  inquiry_type: BillingInquiryTypeEnum,
-  details: z.string().min(1, "details is required"),
-  visit_date: z.string().optional(),
-});
-
-export type LogBillingInquiryInput = z.infer<typeof LogBillingInquirySchema>;
 
 /* ========================================
    Appointment Agent Tools
@@ -354,52 +222,3 @@ export const RescheduleAppointmentSchema = z.object({
 export type RescheduleAppointmentInput = z.infer<
   typeof RescheduleAppointmentSchema
 >;
-
-/* ========================================
-   Info Agent Tools
-   ======================================== */
-
-/**
- * Clinic info category
- */
-export const ClinicInfoCategoryEnum = z.enum([
-  "hours",
-  "location",
-  "services",
-  "payment",
-  "new_patients",
-  "all",
-]);
-export type ClinicInfoCategory = z.infer<typeof ClinicInfoCategoryEnum>;
-
-/**
- * Schema: get_clinic_info
- *
- * Get detailed clinic information by category.
- * Used by Info Agent to provide clinic information.
- */
-export const GetClinicInfoSchema = z.object({
-  // VAPI context
-  assistant_id: z.string().optional(),
-  clinic_id: z.string().uuid().optional(),
-
-  // Info category
-  category: ClinicInfoCategoryEnum,
-});
-
-export type GetClinicInfoInput = z.infer<typeof GetClinicInfoSchema>;
-
-/**
- * Schema: get_er_info
- *
- * Get emergency veterinary clinic information.
- * Used by Emergency Agent to provide ER directions.
- * No parameters required - uses clinic config.
- */
-export const GetErInfoSchema = z.object({
-  // VAPI context
-  assistant_id: z.string().optional(),
-  clinic_id: z.string().uuid().optional(),
-});
-
-export type GetErInfoInput = z.infer<typeof GetErInfoSchema>;

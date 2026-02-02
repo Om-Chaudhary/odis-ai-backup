@@ -65,21 +65,3 @@ export const LogEmergencyTriageSchema = z.object({
 });
 
 export type LogEmergencyTriageInput = z.infer<typeof LogEmergencyTriageSchema>;
-
-/* ========================================
-   Get ER Info
-   ======================================== */
-
-/**
- * Schema: get_er_info
- *
- * Get emergency veterinary clinic information.
- * Used by Emergency Agent to provide ER directions.
- */
-export const GetErInfoSchema = z.object({
-  // VAPI context
-  assistant_id: z.string().optional(),
-  clinic_id: z.string().uuid().optional(),
-});
-
-export type GetErInfoInput = z.infer<typeof GetErInfoSchema>;

@@ -107,7 +107,9 @@ export function UnifiedSidebar({
   const currentSubPath = getSubPathFromPathname(pathname);
 
   // Build clinic-scoped URLs
-  const dashboardUrl = clinicSlug ? `/dashboard/${clinicSlug}` : "/dashboard";
+  const overviewUrl = clinicSlug
+    ? `/dashboard/${clinicSlug}/overview`
+    : "/dashboard/overview";
   const inboundUrl = clinicSlug
     ? `/dashboard/${clinicSlug}/inbound?outcome=all`
     : "/dashboard/inbound?outcome=all";
@@ -119,13 +121,9 @@ export function UnifiedSidebar({
     : "/dashboard/settings";
 
   // Determine active states
-  const isOnDashboard =
-    pathname === dashboardUrl ||
-    (pathname.startsWith(`/dashboard/${clinicSlug ?? ""}`) &&
-      !pathname.includes("/inbound") &&
-      !pathname.includes("/outbound") &&
-      !pathname.includes("/settings") &&
-      !pathname.includes("/billing"));
+  const isOnOverview =
+    pathname.includes("/overview") ||
+    (clinicSlug && pathname === `/dashboard/${clinicSlug}/overview`);
 
   const isOnInbound =
     pathname.includes("/inbound") ||
@@ -255,10 +253,10 @@ export function UnifiedSidebar({
           {/* Main Navigation */}
           <nav className="relative z-10 flex flex-col gap-1 px-3 py-2">
             <MainNavItem
-              href={dashboardUrl}
+              href={overviewUrl}
               icon={Home}
               label="Overview"
-              isActive={!!isOnDashboard}
+              isActive={!!isOnOverview}
             />
 
             {/* After Hours - Simple nav item */}
