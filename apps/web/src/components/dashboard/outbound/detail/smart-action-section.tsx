@@ -64,9 +64,9 @@ export function SmartActionSection({
   isSuperAdmin,
 }: SmartActionSectionProps) {
   // State: Ready to Send / Pending Review - show schedule UI
-  // Only show if user is a superadmin
+  // Show if user is a superadmin OR test mode is enabled
   if (status === "ready" || status === "pending_review") {
-    if (!isSuperAdmin) {
+    if (!isSuperAdmin && !testModeEnabled) {
       return null;
     }
     return (

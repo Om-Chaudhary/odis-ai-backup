@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings as SettingsIcon, Loader2, Save, AlertCircle } from "lucide-react";
+import { Settings as SettingsIcon, Loader2, Save } from "lucide-react";
 import { api } from "~/trpc/client";
 import { useForm } from "react-hook-form";
 import { useEffect, useMemo } from "react";
@@ -10,10 +10,6 @@ import { Button } from "@odis-ai/shared/ui/button";
 import { SystemSettingsSection } from "~/components/dashboard/settings/discharge-settings/sections";
 
 export default function SystemSettingsPage() {
-  // Check system-level super admin role from database
-  const { data: userRoleData } = api.dashboard.getCurrentUserRole.useQuery();
-  const isAdmin = userRoleData?.role === "admin";
-
   const { data: settingsData, refetch: refetchSettings } =
     api.cases.getDischargeSettings.useQuery();
 
@@ -114,62 +110,44 @@ export default function SystemSettingsPage() {
         </div>
       </div>
 
-      {isAdmin ? (
-        <form onSubmit={handleSubmit(handleSave)}>
-          <div className="space-y-8">
-            <div className="rounded-lg border border-slate-200/60 bg-white p-6 shadow-sm">
-              <SystemSettingsSection
-                register={register}
-                watch={watch}
-                setValue={setValue}
-                errors={errors}
-              />
-            </div>
+      <form onSubmit={handleSubmit(handleSave)}>
+        <div className="space-y-8">
+          <div className="rounded-lg border border-slate-200/60 bg-white p-6 shadow-sm">
+            <SystemSettingsSection
+              register={register}
+              watch={watch}
+              setValue={setValue}
+              errors={errors}
+            />
+          </div>
 
-            {/* Save Button */}
-            {isDirty && (
-              <div className="sticky bottom-4 flex justify-center">
-                <div className="rounded-full border border-slate-200/60 bg-white/80 px-4 py-2.5 shadow-lg backdrop-blur-md">
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm text-amber-600">
-                      Unsaved changes
-                    </span>
-                    <Button
-                      type="submit"
-                      disabled={updateSettingsMutation.isPending}
-                      size="sm"
-                      className="rounded-full bg-teal-600 px-4 hover:bg-teal-700"
-                    >
-                      {updateSettingsMutation.isPending ? (
-                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Save className="mr-1.5 h-3.5 w-3.5" />
-                      )}
-                      Save
-                    </Button>
-                  </div>
+          {/* Save Button */}
+          {isDirty && (
+            <div className="sticky bottom-4 flex justify-center">
+              <div className="rounded-full border border-slate-200/60 bg-white/80 px-4 py-2.5 shadow-lg backdrop-blur-md">
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-amber-600">
+                    Unsaved changes
+                  </span>
+                  <Button
+                    type="submit"
+                    disabled={updateSettingsMutation.isPending}
+                    size="sm"
+                    className="rounded-full bg-teal-600 px-4 hover:bg-teal-700"
+                  >
+                    {updateSettingsMutation.isPending ? (
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Save className="mr-1.5 h-3.5 w-3.5" />
+                    )}
+                    Save
+                  </Button>
                 </div>
               </div>
-            )}
-          </div>
-        </form>
-      ) : (
-        <div className="rounded-lg border border-amber-200/60 bg-amber-50/50 p-6">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 shrink-0 text-amber-600" />
-            <div>
-              <h3 className="font-medium text-amber-900">
-                Admin Access Required
-              </h3>
-              <p className="mt-1 text-sm text-amber-700">
-                System and testing settings are only accessible to
-                administrators. Please contact your clinic admin if you need to
-                make changes.
-              </p>
             </div>
-          </div>
+          )}
         </div>
-      )}
+      </form>
     </div>
   );
 }
