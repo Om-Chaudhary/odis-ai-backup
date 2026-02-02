@@ -5,6 +5,7 @@
  */
 
 import type { ToolContext, ToolResult } from "../../core/types";
+import type { ClinicWithConfig } from "../../inbound-tools/find-clinic-by-assistant";
 import type {
   BookAppointmentInput,
   BookingResult,
@@ -633,7 +634,10 @@ export async function processBookAppointment(
 
   // === All other clinics: Use schedule_slots booking ===
   // Use pims_clinic_id for booking if set (e.g., Happy Tails → Alum Rock)
-  const bookingClinicId = clinic.pims_clinic_id ?? clinic.id;
+  const clinicWithPims = clinic as ClinicWithConfig & {
+    pims_clinic_id?: string | null;
+  };
+  const bookingClinicId = clinicWithPims.pims_clinic_id ?? clinic.id;
 
   // Call the book_slot_with_hold function
   const rpcParams = {

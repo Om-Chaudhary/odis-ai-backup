@@ -44,8 +44,6 @@ export interface ClinicWithConfig extends ClinicLookupResult {
     zip?: string;
     phone?: string;
   } | null;
-  /** Optional: ID of clinic to use for PIMS/availability lookups (for simulation) */
-  pims_clinic_id?: string | null;
 }
 
 /**
