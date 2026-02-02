@@ -63,8 +63,9 @@ export function applyRoleBasedFilter(
   if (!hasAdminAccess) {
     // Regular users: see calls for their clinic OR calls assigned to them
     if (clinicName) {
+      // Quote clinic name to handle spaces and special characters in PostgREST filter
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-      query = query.or(`clinic_name.eq.${clinicName},user_id.eq.${user.id}`);
+      query = query.or(`clinic_name.eq."${clinicName}",user_id.eq.${user.id}`);
     } else {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       query = query.eq("user_id", user.id);

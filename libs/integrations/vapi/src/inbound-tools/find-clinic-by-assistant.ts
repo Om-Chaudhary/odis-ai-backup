@@ -182,7 +182,27 @@ export async function findClinicWithConfigByAssistantId(
     return null;
   }
 
-  return clinic as ClinicWithConfig;
+  // Check if there's a mapping with pims_clinic_id for this clinic
+  const { data: mappingForClinic } = await supabase
+    .from("vapi_assistant_mappings")
+    .select("pims_clinic_id")
+    .eq("clinic_id", clinic.id)
+    .eq("is_active", true)
+    .not("pims_clinic_id", "is", null)
+    .limit(1)
+    .single();
+
+  logger.info("Clinic found via legacy inbound_assistant_id", {
+    assistantId,
+    clinicId: clinic.id,
+    clinicName: clinic.name,
+    pimsClinicId: mappingForClinic?.pims_clinic_id ?? null,
+  });
+
+  return {
+    ...clinic,
+    pims_clinic_id: mappingForClinic?.pims_clinic_id ?? null,
+  } as ClinicWithConfig;
 }
 
 /**
