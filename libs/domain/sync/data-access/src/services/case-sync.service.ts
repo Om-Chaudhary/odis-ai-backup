@@ -416,22 +416,10 @@ export class CaseSyncService {
       return [];
     }
 
-    // Get case IDs that already have discharge summaries
+    // Get case IDs that already have discharge summaries (batched to avoid URL length limits)
     const caseIds = cases.map((c) => c.id);
-    const { data: existingSummaries, error: summaryError } = await this.supabase
-      .from("discharge_summaries")
-      .select("case_id")
-      .in("case_id", caseIds);
-
-    if (summaryError) {
-      throw new Error(
-        `Failed to query discharge summaries: ${summaryError.message}`,
-      );
-    }
-
-    const casesWithSummaries = new Set(
-      (existingSummaries ?? []).map((s) => s.case_id),
-    );
+    const casesWithSummaries =
+      await this.queryDischargeSummariesBatched(caseIds);
 
     // Filter to cases that need AI generation
     return cases
@@ -516,6 +504,37 @@ export class CaseSyncService {
     }
 
     return results;
+  }
+
+  /**
+   * Query discharge summaries in batches to avoid URL length limits
+   * PostgREST can fail with large .in() clauses due to URL size constraints
+   */
+  private async queryDischargeSummariesBatched(
+    caseIds: string[],
+  ): Promise<Set<string>> {
+    const casesWithSummaries = new Set<string>();
+    const batchSize = 50;
+
+    for (let i = 0; i < caseIds.length; i += batchSize) {
+      const batch = caseIds.slice(i, i + batchSize);
+      const { data, error } = await this.supabase
+        .from("discharge_summaries")
+        .select("case_id")
+        .in("case_id", batch);
+
+      if (error) {
+        throw new Error(
+          `Failed to query discharge summaries (batch ${Math.floor(i / batchSize) + 1}): ${error.message}`,
+        );
+      }
+
+      for (const row of data ?? []) {
+        casesWithSummaries.add(row.case_id);
+      }
+    }
+
+    return casesWithSummaries;
   }
 
   /**

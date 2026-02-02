@@ -330,9 +330,8 @@ export async function processBookAppointment(
     try {
       // Dynamic import to avoid loading IDEXX dependencies for non-IDEXX clinics
       const { IdexxProvider } = await import("@odis-ai/integrations/idexx");
-      const { BrowserService } = await import(
-        "@odis-ai/integrations/idexx/browser"
-      );
+      const { BrowserService } =
+        await import("@odis-ai/integrations/idexx/browser");
 
       // Get IDEXX credentials from clinic config or environment
       // TODO: Store IDEXX credentials in clinic settings
@@ -370,12 +369,15 @@ export async function processBookAppointment(
       logger.info("IDEXX provider authenticated", { clinicId: clinic.id });
 
       // Calculate end time (default 15 minutes)
-      const calculateEndTime = (startTime: string, durationMinutes = 15): string => {
+      const calculateEndTime = (
+        startTime: string,
+        durationMinutes = 15,
+      ): string => {
         const [hours, minutes] = startTime.split(":").map(Number);
         const startDate = new Date();
         startDate.setHours(hours ?? 0, minutes ?? 0, 0, 0);
         startDate.setMinutes(startDate.getMinutes() + durationMinutes);
-        
+
         const endHours = String(startDate.getHours()).padStart(2, "0");
         const endMinutes = String(startDate.getMinutes()).padStart(2, "0");
         return `${endHours}:${endMinutes}`;
@@ -391,7 +393,9 @@ export async function processBookAppointment(
         result = await provider.createAppointmentWithNewClient({
           newClient: {
             firstName: input.client_name.split(" ")[0] ?? "",
-            lastName: input.client_name.split(" ").slice(1).join(" ") || input.client_name,
+            lastName:
+              input.client_name.split(" ").slice(1).join(" ") ||
+              input.client_name,
             phone: input.client_phone,
           },
           newPatient: {
@@ -421,7 +425,9 @@ export async function processBookAppointment(
           result = await provider.createAppointmentWithNewClient({
             newClient: {
               firstName: input.client_name.split(" ")[0] ?? "",
-              lastName: input.client_name.split(" ").slice(1).join(" ") || input.client_name,
+              lastName:
+                input.client_name.split(" ").slice(1).join(" ") ||
+                input.client_name,
               phone: input.client_phone,
             },
             newPatient: {
@@ -518,17 +524,23 @@ export async function processBookAppointment(
         };
       } else {
         // IDEXX API failed, fall back to schedule_slots
-        logger.error("IDEXX appointment creation failed, falling back to schedule_slots", {
-          error: result.error,
-          clinicId: clinic.id,
-        });
+        logger.error(
+          "IDEXX appointment creation failed, falling back to schedule_slots",
+          {
+            error: result.error,
+            clinicId: clinic.id,
+          },
+        );
         // Continue to schedule_slots fallback below
       }
     } catch (error) {
-      logger.error("IDEXX appointment creation error, falling back to schedule_slots", {
-        error,
-        clinicId: clinic.id,
-      });
+      logger.error(
+        "IDEXX appointment creation error, falling back to schedule_slots",
+        {
+          error,
+          clinicId: clinic.id,
+        },
+      );
       // Continue to schedule_slots fallback below
     }
   }
@@ -620,9 +632,12 @@ export async function processBookAppointment(
   }
 
   // === All other clinics: Use schedule_slots booking ===
+  // Use pims_clinic_id for booking if set (e.g., Happy Tails → Alum Rock)
+  const bookingClinicId = clinic.pims_clinic_id ?? clinic.id;
+
   // Call the book_slot_with_hold function
   const rpcParams = {
-    p_clinic_id: clinic.id,
+    p_clinic_id: bookingClinicId,
     p_date: parsedDate,
     p_time: parsedTime,
     p_client_name: input.client_name,

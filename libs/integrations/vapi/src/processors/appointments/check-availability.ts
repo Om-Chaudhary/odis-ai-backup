@@ -73,9 +73,12 @@ export async function processCheckAvailability(
     };
   }
 
+  // Use pims_clinic_id for availability lookup if set (e.g., Happy Tails → Alum Rock)
+  const availabilityClinicId = clinic.pims_clinic_id ?? clinic.id;
+
   // Call the database function
   const { data: slots, error } = await supabase.rpc("get_available_slots", {
-    p_clinic_id: clinic.id,
+    p_clinic_id: availabilityClinicId,
     p_date: input.date,
   });
 

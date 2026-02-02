@@ -90,6 +90,9 @@ export async function processCheckAvailabilityRange(
   const endDate = new Date(startDate);
   endDate.setDate(endDate.getDate() + input.days_ahead - 1);
 
+  // Use pims_clinic_id for availability lookup if set (e.g., Happy Tails → Alum Rock)
+  const availabilityClinicId = clinic.pims_clinic_id ?? clinic.id;
+
   // Query availability for each date in range
   const availability: DayAvailability[] = [];
   const currentDate = new Date(startDate);
@@ -98,7 +101,7 @@ export async function processCheckAvailabilityRange(
     const dateStr = currentDate.toISOString().split("T")[0]!;
 
     const { data: slots, error } = await supabase.rpc("get_available_slots", {
-      p_clinic_id: clinic.id,
+      p_clinic_id: availabilityClinicId,
       p_date: dateStr,
     });
 
@@ -140,7 +143,7 @@ export async function processCheckAvailabilityRange(
 
   if (firstAvailable) {
     const { data: detailedSlots } = await supabase.rpc("get_available_slots", {
-      p_clinic_id: clinic.id,
+      p_clinic_id: availabilityClinicId,
       p_date: firstAvailable.date,
     });
 

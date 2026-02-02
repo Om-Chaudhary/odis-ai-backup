@@ -28,6 +28,8 @@ export interface ClinicWithConfig extends ClinicLookupResult {
   timezone?: string | null;
   /** PIMS type (e.g., "idexx", "avimark", etc.) */
   pims_type?: string | null;
+  /** When set, use this clinic ID for PIMS/schedule booking (e.g., Happy Tails → Alum Rock) */
+  pims_clinic_id?: string | null;
   er_config?: {
     name: string;
     address: string;
