@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useClinic } from "@odis-ai/shared/ui/clinic-context";
 import { api } from "~/trpc/client";
 import { ValueSummary } from "./value-summary";
 import { AttentionItems } from "./attention-items";
@@ -14,6 +15,8 @@ import {
   OutboundPerformanceCard,
   CaseCoverageCard,
 } from "./performance-cards";
+import { useDemoMode } from "./hooks/use-demo-mode";
+import { OverviewDemo } from "./overview-demo";
 import type { DateRangeOption } from "./types";
 
 interface OverviewClientProps {
@@ -22,6 +25,20 @@ interface OverviewClientProps {
 
 export function OverviewClient({ clinicSlug }: OverviewClientProps) {
   const [days, setDays] = useState<DateRangeOption>(7);
+
+  // Get clinic context for email-based demo detection
+  const { clinic } = useClinic();
+
+  // Check if this is a demo clinic (by slug OR by email)
+  const { isDemo, demoData } = useDemoMode({
+    clinicSlug,
+    clinicEmail: clinic.email ?? undefined,
+  });
+
+  // If demo mode, render the demo dashboard
+  if (isDemo && demoData) {
+    return <OverviewDemo data={demoData} clinicSlug={clinicSlug ?? clinic.slug} />;
+  }
 
   const {
     data: overview,
@@ -32,6 +49,7 @@ export function OverviewClient({ clinicSlug }: OverviewClientProps) {
     {
       refetchInterval: 30000, // Refresh every 30 seconds
       staleTime: 10000,
+      enabled: !isDemo, // Don't fetch data in demo mode
     },
   );
 
