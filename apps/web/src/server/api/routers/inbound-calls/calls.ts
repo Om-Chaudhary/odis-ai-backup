@@ -124,7 +124,7 @@ export const callsRouter = createTRPCRouter({
 
       const filteredCalls = filterAndDeduplicateCalls(calls ?? []);
       const callsWithOverrides = applyCallOverrides(filteredCalls);
-      const allCalls = injectAndSortDemoCalls(callsWithOverrides);
+      const allCalls = injectAndSortDemoCalls(callsWithOverrides, clinicName);
 
       return {
         calls: allCalls,
@@ -622,8 +622,25 @@ function applyCallOverrides<T extends BaseCall>(calls: T[]): T[] {
 
 /**
  * Inject demo calls and sort by date with Andrea positioned correctly
+ * Only injects Happy Tails demo calls for Happy Tails clinic
  */
-function injectAndSortDemoCalls<T extends BaseCall>(calls: T[]): T[] {
+function injectAndSortDemoCalls<T extends BaseCall>(calls: T[], clinicName: string | null): T[] {
+  // Only inject Happy Tails demo calls if the current clinic is Happy Tails
+  const shouldInjectHappyTailsCalls =
+    clinicName === "Happy Tails Veterinary Clinic" ||
+    clinicName === "happy-tails-veterinary-clinic";
+
+  if (!shouldInjectHappyTailsCalls) {
+    // For non-Happy Tails clinics, just sort the existing calls without injecting demo calls
+    const sortedCalls = [...calls];
+    sortedCalls.sort(
+      (a, b) =>
+        new Date(b.created_at ?? 0).getTime() -
+        new Date(a.created_at ?? 0).getTime(),
+    );
+    return sortedCalls;
+  }
+
   const demoCalls = getDemoCalls();
   const demoCallsWithOverrides = demoCalls.map((call) => {
     const override = getCallDataOverride(call);
