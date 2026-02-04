@@ -321,6 +321,10 @@ function extractInboundCallData(
 
 /**
  * Build update data for database
+ *
+ * Merges VAPI's analysis structured data with existing tool-stored data.
+ * Tool-stored data (like appointment dates from book_appointment) takes priority
+ * because VAPI's analysis can hallucinate dates.
  */
 function buildInboundUpdateData(
   call: VapiWebhookCall,
@@ -331,6 +335,14 @@ function buildInboundUpdateData(
   artifact: VapiArtifact,
   extractedCallerData: ExtractedCallerData,
 ): Record<string, unknown> {
+  // Merge structured data: preserve tool-stored appointment data (correct dates)
+  // over VAPI's analysis data (may have hallucinated dates)
+  const mergedStructuredData = mergeStructuredDataWithToolData(
+    callData.structuredData,
+    existingCall.structured_data,
+    call.id,
+  );
+
   return {
     vapi_call_id: call.id,
     assistant_id: call.assistantId ?? null,
@@ -350,7 +362,7 @@ function buildInboundUpdateData(
     success_evaluation:
       (callData.analysis as { successEvaluation?: string }).successEvaluation ??
       null,
-    structured_data: callData.structuredData ?? null,
+    structured_data: mergedStructuredData,
     user_sentiment: callData.userSentiment,
     cost: callData.cost,
     ended_reason: call.endedReason ?? message.endedReason ?? null,
@@ -363,7 +375,7 @@ function buildInboundUpdateData(
       (structuredOutputs.callOutcome as { call_outcome?: string } | null)
         ?.call_outcome ??
       // Fallback: derive outcome from action card data if structured outputs don't have it
-      deriveOutcomeFromActionCard(callData.structuredData) ??
+      deriveOutcomeFromActionCard(mergedStructuredData ?? undefined) ??
       null,
     call_outcome_data: structuredOutputs.callOutcome,
     pet_health_data: structuredOutputs.petHealth,
@@ -380,6 +392,98 @@ function buildInboundUpdateData(
       has_structured_outputs: !!artifact.structuredOutputs,
     },
   };
+}
+
+/**
+ * Merge VAPI's analysis structured data with existing tool-stored data
+ *
+ * The book_appointment tool stores correct dates in structured_data.appointment
+ * VAPI's analysis may return hallucinated dates in structured_data.appointment_data
+ *
+ * Priority:
+ * 1. Tool-stored data (structured_data.appointment) - has correct dates
+ * 2. VAPI analysis data (structured_data.appointment_data) - may be hallucinated
+ *
+ * @param vapiStructuredData - Structured data from VAPI's analysis
+ * @param existingStructuredData - Existing structured data from database (from tool calls)
+ * @param callId - Call ID for logging
+ * @returns Merged structured data with tool-stored appointment preserved
+ */
+function mergeStructuredDataWithToolData(
+  vapiStructuredData: Record<string, unknown> | undefined,
+  existingStructuredData: Record<string, unknown> | null | undefined,
+  callId: string,
+): Record<string, unknown> | null {
+  // If no existing data, just return VAPI data
+  if (!existingStructuredData) {
+    return vapiStructuredData ?? null;
+  }
+
+  // Check if existing data has tool-stored appointment (from book_appointment)
+  const toolAppointment = existingStructuredData.appointment as
+    | Record<string, unknown>
+    | undefined;
+
+  if (!toolAppointment) {
+    // No tool-stored appointment, just return VAPI data
+    return vapiStructuredData ?? null;
+  }
+
+  logger.info("Preserving tool-stored appointment data over VAPI analysis", {
+    callId,
+    toolAppointmentDate: toolAppointment.date,
+    toolAppointmentTime: toolAppointment.time,
+    vapiAppointmentDate: (
+      vapiStructuredData?.appointment_data as
+        | Record<string, unknown>
+        | undefined
+    )?.date,
+  });
+
+  // Start with VAPI data or empty object
+  const merged = vapiStructuredData ? { ...vapiStructuredData } : {};
+
+  // Preserve the tool-stored appointment data (has correct dates)
+  merged.appointment = toolAppointment;
+
+  // If VAPI has appointment_data, merge tool dates into it for action card display
+  // Action cards read from appointment_data, so we need to update it with correct dates
+  if (merged.appointment_data && typeof merged.appointment_data === "object") {
+    const appointmentData = merged.appointment_data as Record<string, unknown>;
+    // Override VAPI's potentially hallucinated dates with tool-stored correct dates
+    if (toolAppointment.date) {
+      appointmentData.date = toolAppointment.date;
+    }
+    if (toolAppointment.time) {
+      appointmentData.time = toolAppointment.time;
+    }
+    // Also merge other tool-stored fields if present
+    if (toolAppointment.client_name && !appointmentData.client_name) {
+      appointmentData.client_name = toolAppointment.client_name;
+    }
+    if (toolAppointment.patient_name && !appointmentData.patient_name) {
+      appointmentData.patient_name = toolAppointment.patient_name;
+    }
+    if (toolAppointment.client_phone && !appointmentData.client_phone) {
+      appointmentData.client_phone = toolAppointment.client_phone;
+    }
+    if (toolAppointment.reason && !appointmentData.reason) {
+      appointmentData.reason = toolAppointment.reason;
+    }
+  } else if (toolAppointment) {
+    // No appointment_data from VAPI, create it from tool data
+    // Map tool appointment fields to action card format
+    merged.appointment_data = {
+      date: toolAppointment.date,
+      time: toolAppointment.time,
+      client_name: toolAppointment.client_name,
+      patient_name: toolAppointment.patient_name,
+      client_phone: toolAppointment.client_phone,
+      reason: toolAppointment.reason,
+    };
+  }
+
+  return merged;
 }
 
 /**

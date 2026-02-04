@@ -70,11 +70,14 @@ export async function createInboundCallRecord(
 
 /**
  * Existing call record with optional case_id for outbound calls
+ * and structured_data for preserving tool-stored appointment data
  */
 export interface ExistingCallRecord {
   id: string;
   metadata: unknown;
   case_id?: string | null;
+  /** Existing structured_data from tool calls (e.g., book_appointment stores correct dates here) */
+  structured_data?: Record<string, unknown> | null;
 }
 
 /**
@@ -114,10 +117,10 @@ export async function fetchExistingCall(
     return data as ExistingCallRecord;
   }
 
-  // Inbound calls - no case_id column
+  // Inbound calls - include structured_data to preserve tool-stored appointment data
   const { data, error } = await supabase
     .from(tableName)
-    .select("id, metadata")
+    .select("id, metadata, structured_data")
     .eq("vapi_call_id", vapiCallId)
     .single();
 
