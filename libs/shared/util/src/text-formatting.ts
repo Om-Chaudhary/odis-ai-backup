@@ -90,6 +90,93 @@ export function stripMarkdownBold(text: string): string {
 }
 
 /**
+ * Parsed transcript line with speaker role information
+ */
+interface TranscriptLine {
+  speaker: "user" | "assistant" | "unknown";
+  text: string;
+  lineNumber: number;
+}
+
+/**
+ * Extraction result with confidence and source metadata
+ *
+ * Used for tracking extraction quality and debugging false positives.
+ */
+export interface ExtractionResult {
+  /** Extracted value (or null if not found) */
+  value: string | null;
+  /** Confidence level based on pattern used */
+  confidence: "high" | "medium" | "low";
+  /** Which pattern matched */
+  source: "pattern1" | "pattern2" | "pattern3" | "pattern4" | "none";
+  /** Surrounding text for debugging (optional) */
+  context?: string;
+}
+
+/**
+ * Parse transcript into speaker-labeled lines
+ *
+ * Identifies which lines are from the user/caller vs the AI assistant.
+ * This prevents extracting assistant names (Nancy, Stacy) as caller names.
+ *
+ * @param transcript - Raw transcript text with speaker labels
+ * @returns Array of parsed lines with speaker role information
+ */
+function parseTranscriptByRole(transcript: string): TranscriptLine[] {
+  const lines = transcript.split(/\n/);
+  return lines.map((line, index) => {
+    if (/^(User|Caller):\s*/i.test(line)) {
+      return {
+        speaker: "user",
+        text: line.replace(/^(User|Caller):\s*/i, ""),
+        lineNumber: index,
+      };
+    } else if (/^(AI|Assistant|Nancy|Stacy):\s*/i.test(line)) {
+      return {
+        speaker: "assistant",
+        text: line.replace(/^(AI|Assistant|Nancy|Stacy):\s*/i, ""),
+        lineNumber: index,
+      };
+    }
+    return { speaker: "unknown", text: line, lineNumber: index };
+  });
+}
+
+/**
+ * Extract patterns only from user speech, skipping greetings
+ *
+ * Only processes lines spoken by the user/caller, not the AI assistant.
+ * Skips the first 20% of user lines to avoid greeting pleasantries.
+ *
+ * @param transcript - Raw transcript text
+ * @param pattern - RegEx pattern to match
+ * @returns First captured group from the pattern match, or null
+ */
+function extractFromUserSpeechOnly(
+  transcript: string,
+  pattern: RegExp,
+): string | null {
+  const parsed = parseTranscriptByRole(transcript);
+  const userLines = parsed.filter((line) => line.speaker === "user");
+
+  if (userLines.length === 0) return null;
+
+  // Skip first 20% of conversation (greetings/pleasantries)
+  const startLine = Math.floor(userLines.length * 0.2);
+  const relevantText = userLines
+    .slice(startLine)
+    .map((line) => line.text)
+    .join(" ")
+    .replace(/\[\d+:\d+\]/g, "") // Remove timestamps
+    .replace(/\s+/g, " ") // Normalize whitespace
+    .trim();
+
+  const match = pattern.exec(relevantText);
+  return match?.[1] ?? null;
+}
+
+/**
  * Extract caller name from transcript
  *
  * Looks for common patterns where callers introduce themselves:
@@ -97,6 +184,9 @@ export function stripMarkdownBold(text: string): string {
  * - "This is Jane Doe"
  * - "I'm Bob Johnson"
  * - Direct name followed by phone digits: "Dene Garamalo, 408-817"
+ *
+ * IMPORTANT: Uses speaker-aware extraction to prevent capturing assistant
+ * names like "Nancy" or "Stacy" from greetings.
  *
  * @param transcript - The call transcript text
  * @returns Extracted caller name or null if not found
@@ -108,13 +198,14 @@ export function extractCallerNameFromTranscript(
 
   // Clean up the transcript - remove timestamps, AI/User labels, extra whitespace
   const cleanTranscript = transcript
-    .replace(/^(AI|User|Assistant):\s*/gm, "")
+    .replace(/^(AI|User|Assistant|Nancy|Stacy|Caller):\s*/gm, "")
     .replace(/\[\d+:\d+\]/g, "")
     .replace(/\s+/g, " ")
     .trim();
 
   // Pattern 1: Name followed by phone number pattern (like "Dene Garamalo, 408-817") - HIGHEST PRIORITY
-  let match = /([A-Za-z]+\s+[A-Za-z]+)[\.,]\s*[\d-]+/.exec(cleanTranscript);
+  // This pattern has high confidence since people typically give name + phone together
+  const match = /([A-Za-z]+\s+[A-Za-z]+)[\.,]\s*[\d-]+/.exec(cleanTranscript);
   if (match?.[1]) {
     const name = match[1].trim();
     if (isValidName(name)) {
@@ -122,36 +213,23 @@ export function extractCallerNameFromTranscript(
     }
   }
 
-  // Pattern 2: "This is [Name]" (find all instances and filter out assistant names)
-  const thisIsMatches = [
-    ...cleanTranscript.matchAll(
-      /(?:yes[,.]?\s+)?this\s+is\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/gi,
-    ),
-  ];
-  for (const match of thisIsMatches) {
-    if (match?.[1]) {
-      const name = match[1].trim();
-      // Skip common assistant names and validate
-      if (
-        !name.toLowerCase().includes("stacy") &&
-        !name.toLowerCase().includes("assistant") &&
-        !name.toLowerCase().includes("sorry") &&
-        isValidName(name)
-      ) {
-        return formatName(name);
-      }
-    }
+  // Pattern 2: "This is [Name]" - ONLY extract from user speech
+  // This prevents extracting "Nancy" from "Assistant: This is Nancy"
+  const thisIsName = extractFromUserSpeechOnly(
+    transcript,
+    /(?:yes[,.]?\s+)?this\s+is\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/i,
+  );
+  if (thisIsName && isValidName(thisIsName)) {
+    return formatName(thisIsName);
   }
 
-  // Pattern 3: "My name is [Name]" or "I'm [Name]"
-  match = /(?:my\s+name\s+is|i'm)\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/i.exec(
-    cleanTranscript,
+  // Pattern 3: "My name is [Name]" or "I'm [Name]" - ONLY extract from user speech
+  const myNameIs = extractFromUserSpeechOnly(
+    transcript,
+    /(?:my\s+name\s+is|i'm)\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/i,
   );
-  if (match?.[1]) {
-    const name = match[1].trim();
-    if (!name.toLowerCase().includes("sorry") && isValidName(name)) {
-      return formatName(name);
-    }
+  if (myNameIs && isValidName(myNameIs)) {
+    return formatName(myNameIs);
   }
 
   return null;
@@ -165,6 +243,9 @@ export function extractCallerNameFromTranscript(
  * - "It's for [Pet Name]"
  * - "[Pet Name] and [Pet Name]" (multiple pets)
  *
+ * IMPORTANT: Pattern 4 ("[word] is/has/needs") has been REMOVED due to
+ * excessive false positives (captured "Euthanized", "Today", "Lunch", etc.)
+ *
  * @param transcript - The call transcript text
  * @returns Extracted pet name(s) or null if not found
  */
@@ -173,9 +254,12 @@ export function extractPetNameFromTranscript(
 ): string | null {
   if (!transcript) return null;
 
-  // Clean up the transcript
-  const cleanTranscript = transcript
-    .replace(/^(AI|User|Assistant):\s*/gm, "")
+  // Clean up the transcript - only extract from user lines
+  const parsed = parseTranscriptByRole(transcript);
+  const userLines = parsed.filter((line) => line.speaker === "user");
+  const cleanTranscript = userLines
+    .map((line) => line.text)
+    .join(" ")
     .replace(/\[\d+:\d+\]/g, "")
     .replace(/\s+/g, " ")
     .trim();
@@ -220,16 +304,166 @@ export function extractPetNameFromTranscript(
     }
   }
 
-  // Pattern 4: "[Pet Name] is/has/needs"
-  match = /([A-Za-z]+)\s+(?:is|has|needs)/i.exec(cleanTranscript);
+  // Pattern 4: REMOVED - Too many false positives
+  // Previously: /([A-Za-z]+)\s+(?:is|has|needs)/
+  // This caught "Euthanized is", "Today is", "Lunch is", "Tomorrow is", etc.
+  // Better to have no data than bad data.
+
+  return null;
+}
+
+/**
+ * Extract caller name with confidence and source metadata
+ *
+ * Returns detailed extraction information including confidence level
+ * and pattern source for quality tracking and debugging.
+ *
+ * @param transcript - The call transcript text
+ * @returns Extraction result with metadata
+ */
+export function extractCallerNameWithConfidence(
+  transcript: string | null,
+): ExtractionResult {
+  if (!transcript) {
+    return { value: null, confidence: "low", source: "none" };
+  }
+
+  // Clean up the transcript
+  const cleanTranscript = transcript
+    .replace(/^(AI|User|Assistant|Nancy|Stacy|Caller):\s*/gm, "")
+    .replace(/\[\d+:\d+\]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // Pattern 1: Name + phone (HIGH confidence)
+  const match = /([A-Za-z]+\s+[A-Za-z]+)[\.,]\s*[\d-]+/.exec(cleanTranscript);
   if (match?.[1]) {
-    const petName = match[1].trim();
-    if (isValidPetName(petName) && !isCommonWord(petName)) {
-      return formatName(petName);
+    const name = match[1].trim();
+    if (isValidName(name)) {
+      return {
+        value: formatName(name),
+        confidence: "high",
+        source: "pattern1",
+        context: cleanTranscript.substring(
+          Math.max(0, (match.index ?? 0) - 50),
+          Math.min(cleanTranscript.length, (match.index ?? 0) + 100),
+        ),
+      };
     }
   }
 
-  return null;
+  // Pattern 2: "This is [Name]" from user speech (MEDIUM confidence)
+  const thisIsName = extractFromUserSpeechOnly(
+    transcript,
+    /(?:yes[,.]?\s+)?this\s+is\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/i,
+  );
+  if (thisIsName && isValidName(thisIsName)) {
+    return {
+      value: formatName(thisIsName),
+      confidence: "medium",
+      source: "pattern2",
+    };
+  }
+
+  // Pattern 3: "My name is [Name]" from user speech (MEDIUM confidence)
+  const myNameIs = extractFromUserSpeechOnly(
+    transcript,
+    /(?:my\s+name\s+is|i'm)\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/i,
+  );
+  if (myNameIs && isValidName(myNameIs)) {
+    return {
+      value: formatName(myNameIs),
+      confidence: "medium",
+      source: "pattern3",
+    };
+  }
+
+  return { value: null, confidence: "low", source: "none" };
+}
+
+/**
+ * Extract pet name with confidence and source metadata
+ *
+ * Returns detailed extraction information including confidence level
+ * and pattern source for quality tracking and debugging.
+ *
+ * @param transcript - The call transcript text
+ * @returns Extraction result with metadata
+ */
+export function extractPetNameWithConfidence(
+  transcript: string | null,
+): ExtractionResult {
+  if (!transcript) {
+    return { value: null, confidence: "low", source: "none" };
+  }
+
+  // Clean up the transcript - only extract from user lines
+  const parsed = parseTranscriptByRole(transcript);
+  const userLines = parsed.filter((line) => line.speaker === "user");
+  const cleanTranscript = userLines
+    .map((line) => line.text)
+    .join(" ")
+    .replace(/\[\d+:\d+\]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // Pattern 1: "My [animal] [Name]" (HIGH confidence)
+  let match = /my\s+(?:dog|cat|pet|puppy|kitten|animal)\s+([A-Za-z]+)/i.exec(
+    cleanTranscript,
+  );
+  if (match?.[1]) {
+    const petName = match[1].trim();
+    if (isValidPetName(petName)) {
+      return {
+        value: formatName(petName),
+        confidence: "high",
+        source: "pattern1",
+        context: cleanTranscript.substring(
+          Math.max(0, (match.index ?? 0) - 30),
+          Math.min(cleanTranscript.length, (match.index ?? 0) + 60),
+        ),
+      };
+    }
+  }
+
+  // Pattern 2: "for/about [Pet Name]" (MEDIUM confidence)
+  match = /(?:for|about)\s+([A-Za-z]+)(?:\s+and\s+([A-Za-z]+))?/i.exec(
+    cleanTranscript,
+  );
+  if (match?.[1]) {
+    const petName = match[1].trim();
+    if (isValidPetName(petName)) {
+      const secondPet = match[2] ? ` and ${formatName(match[2].trim())}` : "";
+      return {
+        value: formatName(petName) + secondPet,
+        confidence: "medium",
+        source: "pattern2",
+      };
+    }
+  }
+
+  // Pattern 3: "[Pet1] and [Pet2] [verb]" (MEDIUM confidence)
+  match = /([A-Za-z]+)\s+and\s+([A-Za-z]+)\s+(?:are|were|have|need|had)/i.exec(
+    cleanTranscript,
+  );
+  if (match?.[1] && match?.[2]) {
+    const pet1 = match[1].trim();
+    const pet2 = match[2].trim();
+    if (
+      isValidPetName(pet1) &&
+      isValidPetName(pet2) &&
+      !isCommonWord(pet1) &&
+      !isCommonWord(pet2)
+    ) {
+      return {
+        value: `${formatName(pet1)} and ${formatName(pet2)}`,
+        confidence: "medium",
+        source: "pattern3",
+      };
+    }
+  }
+
+  return { value: null, confidence: "low", source: "none" };
 }
 
 /**
@@ -241,12 +475,17 @@ function isValidName(name: string): boolean {
   // Must contain only letters and spaces
   if (!/^[A-Za-z\s]+$/.test(name)) return false;
 
-  // Filter out common false positives
+  // Filter out common false positives (use whole-word matching)
   const lowercaseName = name.toLowerCase();
   const invalidNames = [
+    // System labels
     "user",
     "ai",
     "assistant",
+    // Agent names (from VAPI assistant configuration)
+    "nancy",
+    "stacy",
+    // Conversational words
     "hello",
     "yes",
     "no",
@@ -263,11 +502,78 @@ function isValidName(name: string): boolean {
     "call",
     "phone",
     "number",
+    // Business/location terms
     "clinic",
     "hospital",
+    "pharmacy",
+    "costco",
+    "appointment",
+    // Temporal phrases (from false positives)
+    "today",
+    "tomorrow",
+    "yesterday",
+    "through",
+    "until",
+    "morning",
+    "afternoon",
+    "evening",
+    "noon",
+    "lunch",
+    "dinner",
+    // Date components
+    "january",
+    "february",
+    "march",
+    "april",
+    "may",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+    // Ordinal numbers (from "January Sixteenth" false positive)
+    "first",
+    "second",
+    "third",
+    "fourth",
+    "fifth",
+    "sixth",
+    "seventh",
+    "eighth",
+    "ninth",
+    "tenth",
+    "eleventh",
+    "twelfth",
+    "thirteenth",
+    "fourteenth",
+    "fifteenth",
+    "sixteenth",
+    "seventeenth",
+    "eighteenth",
+    "nineteenth",
+    "twentieth",
+    // Conversational phrases (from "Got It" false positive)
+    "got it",
+    "got",
+    "here",
+    "there",
   ];
 
-  return !invalidNames.some((invalid) => lowercaseName.includes(invalid));
+  // Use whole-word matching to avoid false positives
+  // (e.g., "nancy" should block "Nancy" but not "Nancyanne")
+  return !invalidNames.some((invalid) => {
+    const regex = new RegExp(`\\b${invalid}\\b`, "i");
+    return regex.test(lowercaseName);
+  });
 }
 
 /**
@@ -288,6 +594,7 @@ function isValidPetName(name: string): boolean {
 function isCommonWord(word: string): boolean {
   const lowercaseWord = word.toLowerCase();
   const commonWords = [
+    // Articles/conjunctions
     "the",
     "and",
     "but",
@@ -296,6 +603,7 @@ function isCommonWord(word: string): boolean {
     "can",
     "has",
     "had",
+    // Pronouns (from false positives: "You", "My", "Your")
     "him",
     "her",
     "his",
@@ -304,13 +612,51 @@ function isCommonWord(word: string): boolean {
     "them",
     "this",
     "that",
+    "you",
+    "my",
+    "your",
+    "our",
+    "their",
+    // Common verbs
     "have",
     "will",
     "been",
     "said",
+    "make",
+    "take",
+    "come",
+    "could",
+    "made",
+    "think",
+    // Temporal words (from false positives: "Today", "Tomorrow", "Lunch")
+    "today",
+    "tomorrow",
+    "yesterday",
+    "lunch",
+    "dinner",
+    "morning",
+    "afternoon",
+    "evening",
+    // Medical/veterinary terms (from "Euthanized" false positive)
+    "euthanized",
+    "deceased",
+    "passed",
+    "died",
+    "surgery",
+    "procedure",
+    "treatment",
+    // Action words
+    "emergency",
+    "urgent",
+    "appointment",
+    // Location/business terms (from "Alum", "Clinic" false positives)
+    "clinic",
+    "hospital",
+    "alum",
+    "hours",
+    // Common adjectives/adverbs
     "each",
     "which",
-    "their",
     "time",
     "back",
     "only",
@@ -321,11 +667,9 @@ function isCommonWord(word: string): boolean {
     "year",
     "work",
     "such",
-    "make",
     "even",
     "more",
     "most",
-    "take",
     "than",
     "these",
     "two",
@@ -339,11 +683,7 @@ function isCommonWord(word: string): boolean {
     "now",
     "old",
     "see",
-    "come",
-    "could",
-    "made",
     "over",
-    "think",
     "also",
     "need",
     "needs",
