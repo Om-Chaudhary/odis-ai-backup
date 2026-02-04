@@ -76,11 +76,13 @@ export const callsRouter = createTRPCRouter({
       }
 
       if (input.outcomes && input.outcomes.length > 0) {
+        // Use ilike for case-insensitive matching to align with badge count calculation
         const outcomeFilters = input.outcomes.flatMap((outcome) => {
           if (outcome === "callback") {
-            return [`outcome.eq.callback`, `outcome.eq.Call Back`];
+            return [`outcome.ilike.%callback%`, `outcome.ilike.%call back%`];
           }
-          return [`outcome.eq.${outcome}`];
+          // Use ilike with wildcards for substring matching (e.g., "scheduled" matches "Scheduled")
+          return [`outcome.ilike.%${outcome}%`];
         });
         query = query.or(outcomeFilters.join(","));
       }
@@ -624,7 +626,10 @@ function applyCallOverrides<T extends BaseCall>(calls: T[]): T[] {
  * Inject demo calls and sort by date with Andrea positioned correctly
  * Only injects Happy Tails demo calls for Happy Tails clinic
  */
-function injectAndSortDemoCalls<T extends BaseCall>(calls: T[], clinicName: string | null): T[] {
+function injectAndSortDemoCalls<T extends BaseCall>(
+  calls: T[],
+  clinicName: string | null,
+): T[] {
   // Only inject Happy Tails demo calls if the current clinic is Happy Tails
   const shouldInjectHappyTailsCalls =
     clinicName === "Happy Tails Veterinary Clinic" ||

@@ -46,7 +46,7 @@ export function CallRow({
             extractedCallerPhone={call.extracted_caller_phone}
             extractedCallerName={call.extracted_caller_name}
             extractedPetName={call.extracted_pet_name}
-            clinicName={call.clinic_name}
+            clinicPhone={call.clinic_phone}
           />
         </div>
       </td>

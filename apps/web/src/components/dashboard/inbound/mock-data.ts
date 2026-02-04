@@ -483,6 +483,7 @@ export const DEMO_CALLS = [
     extracted_caller_phone: null,
     extracted_caller_name: null,
     extracted_pet_name: null,
+    clinic_phone: null,
   },
 
   // Dene Garamalo - Dog seizures (Urgent)
@@ -539,6 +540,7 @@ export const DEMO_CALLS = [
     extracted_caller_phone: null,
     extracted_caller_name: null,
     extracted_pet_name: null,
+    clinic_phone: null,
   },
 
   // Rochelle Woodward - Cat eye infection (Scheduled)
@@ -592,6 +594,7 @@ export const DEMO_CALLS = [
     extracted_caller_phone: null,
     extracted_caller_name: null,
     extracted_pet_name: null,
+    clinic_phone: null,
   },
 
   // Shirley Steger - Reschedule (Cancellation)
@@ -645,6 +648,7 @@ export const DEMO_CALLS = [
     extracted_caller_phone: null,
     extracted_caller_name: null,
     extracted_pet_name: null,
+    clinic_phone: null,
   },
 
   // Justine Carlsow - Vaccine appointment (Scheduled)
@@ -698,6 +702,7 @@ export const DEMO_CALLS = [
     extracted_caller_phone: null,
     extracted_caller_name: null,
     extracted_pet_name: null,
+    clinic_phone: null,
   },
 
   // Lisette Duarte - Blood test results (Call Back)
@@ -751,6 +756,7 @@ export const DEMO_CALLS = [
     extracted_caller_phone: null,
     extracted_caller_name: null,
     extracted_pet_name: null,
+    clinic_phone: null,
   },
 ];
 

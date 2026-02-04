@@ -107,6 +107,7 @@ export async function handleInboundCallEnd(
     );
 
   // Build update data with enhanced structured data and extracted caller info
+  // Pass existing call to preserve tool-stored appointment data (correct dates)
   const updateData = buildInboundUpdateData(
     call,
     message,
@@ -115,6 +116,7 @@ export async function handleInboundCallEnd(
     structuredOutputs,
     artifact,
     extractedCallerData,
+    existingCall,
   );
 
   // Log extracted data
@@ -334,6 +336,7 @@ function buildInboundUpdateData(
   structuredOutputs: ReturnType<typeof parseAllStructuredOutputs>,
   artifact: VapiArtifact,
   extractedCallerData: ExtractedCallerData,
+  existingCall: ExistingCallRecord,
 ): Record<string, unknown> {
   // Merge structured data: preserve tool-stored appointment data (correct dates)
   // over VAPI's analysis data (may have hallucinated dates)

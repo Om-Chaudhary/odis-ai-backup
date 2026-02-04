@@ -36,8 +36,22 @@ export async function createInboundCallRecord(
   // Map assistant to clinic/user
   const { clinicName, userId } = await mapInboundCallToUser(callResponse);
 
-  // Format call data
-  const callData = formatInboundCallData(callResponse, clinicName, userId);
+  // Look up clinic phone for filtering out clinic number from caller display
+  let clinicPhone: string | null = null;
+  if (clinicName) {
+    const { data: clinic } = await supabase
+      .from("clinics")
+      .select("phone")
+      .eq("name", clinicName)
+      .maybeSingle();
+    clinicPhone = clinic?.phone ?? null;
+  }
+
+  // Format call data and add clinic_phone
+  const callData = {
+    ...formatInboundCallData(callResponse, clinicName, userId),
+    clinic_phone: clinicPhone,
+  };
 
   // Use upsert to handle duplicate webhook calls (VAPI may retry or send multiple events)
   const { data: upsertedCall, error: upsertError } = await supabase

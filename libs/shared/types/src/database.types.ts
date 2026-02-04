@@ -1897,6 +1897,7 @@ export type Database = {
           call_outcome_data: Json | null;
           cleaned_transcript: string | null;
           clinic_name: string | null;
+          clinic_phone: string | null;
           cost: number | null;
           created_at: string;
           customer_number: string | null;
@@ -1945,6 +1946,7 @@ export type Database = {
           call_outcome_data?: Json | null;
           cleaned_transcript?: string | null;
           clinic_name?: string | null;
+          clinic_phone?: string | null;
           cost?: number | null;
           created_at?: string;
           customer_number?: string | null;
@@ -1993,6 +1995,7 @@ export type Database = {
           call_outcome_data?: Json | null;
           cleaned_transcript?: string | null;
           clinic_name?: string | null;
+          clinic_phone?: string | null;
           cost?: number | null;
           created_at?: string;
           customer_number?: string | null;
