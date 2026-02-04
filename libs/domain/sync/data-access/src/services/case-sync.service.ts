@@ -16,8 +16,25 @@ import { createLogger } from "@odis-ai/shared/logger";
 import { createSyncAudit, recordSyncAudit } from "../utils/sync-audit.js";
 import { asCaseUpdateMetadata } from "../utils/metadata.js";
 import { ProgressThrottler } from "../utils/progress-throttler.js";
+import { withRetry } from "../utils/retry.js";
 
 const logger = createLogger("case-sync");
+
+/**
+ * Check if a Supabase fetch error is retryable.
+ * These errors typically occur after browser resource exhaustion.
+ */
+function isSupabaseFetchRetryable(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes("fetch failed") ||
+    message.includes("TypeError") ||
+    message.includes("ECONNRESET") ||
+    message.includes("ETIMEDOUT") ||
+    message.includes("ENOTFOUND") ||
+    message.includes("socket hang up")
+  );
+}
 
 /**
  * Case row with PIMS metadata
@@ -61,6 +78,33 @@ export class CaseSyncService {
     private clinicId: string,
     private userId?: string,
   ) {}
+
+  /**
+   * Test Supabase connectivity.
+   * Used to detect when browser operations have corrupted Node.js fetch state.
+   */
+  private async testSupabaseHealth(label: string): Promise<boolean> {
+    try {
+      const { error } = await this.supabase
+        .from("clinics")
+        .select("id")
+        .limit(1);
+      logger.info(`Supabase health check [${label}]`, {
+        success: !error,
+        error: error?.message,
+      });
+      return !error;
+    } catch (err) {
+      logger.error(`Supabase health check [${label}] FAILED`, {
+        error: err instanceof Error ? err.message : String(err),
+        cause:
+          err instanceof Error
+            ? (err as Error & { cause?: unknown }).cause
+            : undefined,
+      });
+      return false;
+    }
+  }
 
   /**
    * Sync consultation data for cases in date range
@@ -173,12 +217,18 @@ export class CaseSyncService {
 
       // Phase 1: Enrich cases that need PIMS consultation data
       if (casesToEnrich.length > 0) {
+        // Health check before heavy browser operations
+        await this.testSupabaseHealth("BEFORE Phase 1 (browser operations)");
+
         // Batch fetch consultations (reduced from 5 to 2 to prevent browser resource exhaustion)
         const batchSize = options.parallelBatchSize ?? 2;
         const consultations = await this.fetchConsultationsBatched(
           consultationIds,
           batchSize,
         );
+
+        // Health check after browser operations (before Phase 2 Supabase queries)
+        await this.testSupabaseHealth("AFTER Phase 1 / BEFORE Phase 2");
 
         logger.info("Fetched consultations", {
           syncId,
@@ -509,30 +559,104 @@ export class CaseSyncService {
   /**
    * Query discharge summaries in batches to avoid URL length limits
    * PostgREST can fail with large .in() clauses due to URL size constraints
+   *
+   * Includes retry logic to handle transient network errors that can occur
+   * after heavy browser automation operations.
    */
   private async queryDischargeSummariesBatched(
     caseIds: string[],
   ): Promise<Set<string>> {
     const casesWithSummaries = new Set<string>();
     const batchSize = 50;
+    const totalBatches = Math.ceil(caseIds.length / batchSize);
+
+    logger.info("queryDischargeSummariesBatched: Starting", {
+      totalCaseIds: caseIds.length,
+      batchSize,
+      totalBatches,
+      heapUsedMB: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+    });
 
     for (let i = 0; i < caseIds.length; i += batchSize) {
       const batch = caseIds.slice(i, i + batchSize);
-      const { data, error } = await this.supabase
-        .from("discharge_summaries")
-        .select("case_id")
-        .in("case_id", batch);
+      const batchNumber = Math.floor(i / batchSize) + 1;
 
-      if (error) {
-        throw new Error(
-          `Failed to query discharge summaries (batch ${Math.floor(i / batchSize) + 1}): ${error.message}`,
+      logger.debug(
+        `Batch ${batchNumber}/${totalBatches}: Querying ${batch.length} case IDs`,
+      );
+
+      try {
+        // Wrap in retry logic to handle transient fetch failures after browser operations
+        const result = await withRetry(
+          async () => {
+            const { data, error } = await this.supabase
+              .from("discharge_summaries")
+              .select("case_id")
+              .in("case_id", batch);
+
+            if (error) {
+              // Throw to trigger retry for Supabase errors
+              throw new Error(`Supabase error: ${error.message}`);
+            }
+            return data;
+          },
+          {
+            maxRetries: 3,
+            baseDelayMs: 1000,
+            maxDelayMs: 5000,
+            shouldRetry: isSupabaseFetchRetryable,
+            onRetry: (err, attempt, delay) => {
+              logger.warn(
+                `Batch ${batchNumber} retry ${attempt} after fetch failure`,
+                {
+                  error: err instanceof Error ? err.message : String(err),
+                  delayMs: delay,
+                },
+              );
+            },
+          },
         );
-      }
 
-      for (const row of data ?? []) {
-        casesWithSummaries.add(row.case_id);
+        if (!result.success) {
+          // Log detailed error info including cause chain
+          const err = result.error;
+          logger.error(`Batch ${batchNumber} failed after retries`, {
+            name: err instanceof Error ? err.name : "Unknown",
+            message: err instanceof Error ? err.message : String(err),
+            cause:
+              err instanceof Error
+                ? (err as Error & { cause?: unknown }).cause
+                : undefined,
+            heapUsedMB: Math.round(
+              process.memoryUsage().heapUsed / 1024 / 1024,
+            ),
+          });
+          throw new Error(
+            `Failed to query discharge summaries (batch ${batchNumber}): ${err instanceof Error ? err.message : String(err)}`,
+          );
+        }
+
+        for (const row of result.data ?? []) {
+          casesWithSummaries.add(row.case_id);
+        }
+      } catch (err) {
+        // Log exception with full details
+        logger.error(`Batch ${batchNumber} exception`, {
+          name: err instanceof Error ? err.name : "Unknown",
+          message: err instanceof Error ? err.message : String(err),
+          cause:
+            err instanceof Error
+              ? (err as Error & { cause?: unknown }).cause
+              : undefined,
+        });
+        throw err;
       }
     }
+
+    logger.info("queryDischargeSummariesBatched: Completed", {
+      totalCaseIds: caseIds.length,
+      totalFound: casesWithSummaries.size,
+    });
 
     return casesWithSummaries;
   }

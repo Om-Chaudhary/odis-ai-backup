@@ -17,10 +17,12 @@ import type { IPimsProvider } from "@odis-ai/domain/sync";
 import { config, SERVICE_INFO } from "./config";
 import { logger } from "./lib/logger";
 import { setupRoutes } from "./routes";
-import { SyncScheduler } from "./scheduler";
 import { PersistenceService } from "./services/persistence.service";
 import { setSchedulerInstance } from "./lib/scheduler-manager";
 import { createSupabaseServiceClient } from "./lib/supabase";
+// SyncScheduler is dynamically imported only when ENABLE_SCHEDULER=true
+// to avoid loading node-cron dependency when not needed
+import type { SyncScheduler } from "./scheduler";
 
 const app = express();
 
@@ -217,6 +219,8 @@ const server = app.listen(config.PORT, config.HOST, () => {
   if (config.ENABLE_SCHEDULER) {
     void (async () => {
       try {
+        // Dynamic import to avoid loading node-cron when scheduler is disabled
+        const { SyncScheduler } = await import("./scheduler");
         const supabase = createSupabaseServiceClient();
         scheduler = new SyncScheduler(supabase, createProviderForScheduler);
         await scheduler.start();

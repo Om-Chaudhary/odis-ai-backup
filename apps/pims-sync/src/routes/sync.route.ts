@@ -312,6 +312,21 @@ async function handleCaseSync(
       });
     } finally {
       await cleanup();
+
+      // Verify Supabase connectivity after browser cleanup
+      const { testSupabaseConnection } = await import("../lib/supabase");
+      const health = await testSupabaseConnection();
+      if (!health.success) {
+        logger.warn("Supabase health check failed after browser cleanup", {
+          clinicId: clinic.id,
+          error: health.error,
+        });
+      } else {
+        logger.debug("Supabase health check passed after browser cleanup", {
+          clinicId: clinic.id,
+          latencyMs: health.latencyMs,
+        });
+      }
     }
   } catch (error) {
     const errorMessage =
@@ -520,6 +535,21 @@ async function handleFullSync(
       });
     } finally {
       await cleanup();
+
+      // Verify Supabase connectivity after browser cleanup
+      const { testSupabaseConnection } = await import("../lib/supabase");
+      const health = await testSupabaseConnection();
+      if (!health.success) {
+        logger.warn("Supabase health check failed after browser cleanup", {
+          clinicId: clinic.id,
+          error: health.error,
+        });
+      } else {
+        logger.debug("Supabase health check passed after browser cleanup", {
+          clinicId: clinic.id,
+          latencyMs: health.latencyMs,
+        });
+      }
     }
   } catch (error) {
     const errorMessage =

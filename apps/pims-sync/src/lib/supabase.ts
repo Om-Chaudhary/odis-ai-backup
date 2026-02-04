@@ -21,3 +21,29 @@ export function createSupabaseServiceClient(): SupabaseClient<Database> {
   );
 }
 
+/**
+ * Test Supabase connection with a simple query.
+ * Useful for diagnosing connectivity issues after browser automation.
+ */
+export async function testSupabaseConnection(): Promise<{
+  success: boolean;
+  error?: string;
+  latencyMs?: number;
+}> {
+  const start = Date.now();
+  try {
+    const supabase = createSupabaseServiceClient();
+    const { error } = await supabase.from("clinics").select("id").limit(1);
+
+    if (error) {
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, latencyMs: Date.now() - start };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
