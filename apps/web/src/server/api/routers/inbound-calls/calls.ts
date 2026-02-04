@@ -78,9 +78,9 @@ export const callsRouter = createTRPCRouter({
       if (input.outcomes && input.outcomes.length > 0) {
         const outcomeFilters = input.outcomes.flatMap((outcome) => {
           if (outcome === "callback") {
-            return [`outcome.ilike.callback`, `outcome.ilike.Call Back`];
+            return [`outcome.eq.callback`, `outcome.eq.Call Back`];
           }
-          return [`outcome.ilike.${outcome}`];
+          return [`outcome.eq.${outcome}`];
         });
         query = query.or(outcomeFilters.join(","));
       }
@@ -642,7 +642,13 @@ function injectAndSortDemoCalls<T extends BaseCall>(calls: T[], clinicName: stri
   }
 
   const demoCalls = getDemoCalls();
-  const demoCallsWithOverrides = demoCalls.map((call) => {
+
+  // Filter demo calls to only include those matching the current clinic
+  const filteredDemoCalls = demoCalls.filter(
+    (call) => !clinicName || call.clinic_name === clinicName,
+  );
+
+  const demoCallsWithOverrides = filteredDemoCalls.map((call) => {
     const override = getCallDataOverride(call);
     if (override) {
       return { ...call, ...override };

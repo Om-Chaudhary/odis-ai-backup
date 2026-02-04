@@ -951,44 +951,44 @@ const FeatureDescription = ({ children }: { children?: React.ReactNode }) => {
 
 const features = [
   {
-    title: "Automated Discharge Calls",
+    title: "Automated Discharge Follow-ups",
     description:
-      "Odis automatically calls every discharged client without staff lifting a finger.",
+      "Every patient gets a next-day call. No staff time. No forgotten callbacks. 94% connection rate.",
     skeleton: <DischargeCallAnimation />,
     className: "col-span-1 border-b lg:col-span-4 lg:border-r",
   },
   {
-    title: "Real-Time Call Activity",
+    title: "Live Call Dashboard",
     description:
-      "Monitor all calls as they happen with live status updates and outcomes.",
+      "See calls as they happen. Track outcomes, sentiment, and appointments booked in real-time.",
     skeleton: <CallActivitySkeleton />,
     className: "col-span-1 border-b lg:col-span-2",
   },
   {
-    title: "Seamless PIMS Integration",
+    title: "Syncs With Your PIMS",
     description:
-      "Connect directly with IDEXX Neo, ezyVet, Cornerstone, and more.",
+      "Connects to IDEXX Neo, ezyVet, and Cornerstone. Patient data flows automatically.",
     skeleton: <PimsIntegrationSkeleton />,
     className: "col-span-1 lg:col-span-3 lg:border-r",
   },
   {
-    title: "Actionable Insights",
+    title: "See Your ROI",
     description:
-      "Track connection rates, satisfaction scores, and revenue impact in real-time.",
+      "Track hours saved, appointments recovered, and dollar impact—updated daily.",
     skeleton: <AnalyticsSkeleton />,
     className: "col-span-1 border-b lg:col-span-3 lg:border-none",
   },
   {
-    title: "Smart Appointment Booking",
+    title: "Books Appointments Automatically",
     description:
-      "Patients book directly during calls with real-time calendar sync.",
+      "Callers book directly during the call. Real-time calendar sync. No double-booking.",
     skeleton: <SchedulingSkeleton />,
     className: "col-span-1 lg:col-span-2 lg:border-r",
   },
   {
-    title: "24/7 AI Voice Assistant",
+    title: "24/7 After-Hours Coverage",
     description:
-      "Never miss a call — Odis answers every client like a real conversation, day or night.",
+      "The 11PM emergency question. The Sunday appointment request. Odis handles it all.",
     skeleton: <VoiceWaveSkeleton />,
     className: "col-span-1 lg:col-span-4",
   },
@@ -1043,18 +1043,18 @@ export function FeaturesSection() {
             variants={fadeUpVariant}
             className="font-display mb-4 text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl md:text-4xl lg:text-5xl"
           >
-            Everything you need to{" "}
+            Two Ways Odis{" "}
             <span className="bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
-              transform
+              Saves You Hours
             </span>{" "}
-            patient follow-up
+            Every Week
           </motion.h2>
           <motion.p
             variants={fadeUpVariant}
             className="mx-auto max-w-2xl text-base text-slate-600 sm:text-lg"
           >
-            A complete platform that handles calls, schedules appointments, and
-            keeps your team informed—all powered by AI.
+            Answer after-hours calls automatically. Follow up on every discharge without lifting a finger.
+            See the impact in real-time.
           </motion.p>
         </motion.div>
 

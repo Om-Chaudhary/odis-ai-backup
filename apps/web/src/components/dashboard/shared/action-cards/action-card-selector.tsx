@@ -148,10 +148,6 @@ export function ActionCardSelector({
     call.call_outcome_data?.outcome_summary ?? call.summary ?? "";
   const keyTopics = call.call_outcome_data?.key_topics_discussed;
   const escalationSummary = call.escalation_data?.escalation_summary;
-  const staffActionNeeded =
-    call.escalation_data?.staff_action_needed ??
-    call.escalation_data?.staff_action_required;
-  const nextSteps = call.follow_up_data?.next_steps;
 
   switch (cardData.card_type) {
     case "scheduled":
@@ -170,10 +166,9 @@ export function ActionCardSelector({
       );
 
     case "rescheduled": {
-      // Check both new location (appointment_data) and legacy location (root)
-      const rescheduleReason =
-        cardData.appointment_data?.reschedule_reason ??
-        cardData.reschedule_reason;
+      // Use appointment_data.reason (the visit reason like "Itchy skin"), not reschedule_reason
+      // (which is why they're rescheduling like "Work conflict" - often NULL anyway)
+      const appointmentReason = cardData.appointment_data?.reason;
       const originalAppointment =
         cardData.appointment_data?.original_appointment ??
         cardData.original_appointment;
@@ -185,8 +180,7 @@ export function ActionCardSelector({
           appointmentTime={cardData.appointment_data?.time}
           originalDate={originalAppointment?.date}
           originalTime={originalAppointment?.time}
-          rescheduleReason={rescheduleReason}
-          outcomeSummary={outcomeSummary}
+          appointmentReason={appointmentReason}
           onConfirm={isConfirmed ? undefined : onConfirm}
           isConfirming={isConfirming}
           isConfirmed={isConfirmed}
@@ -196,10 +190,12 @@ export function ActionCardSelector({
     }
 
     case "cancellation": {
-      // Check both new location (appointment_data) and legacy location (root)
+      // Use appointment_data.reason (visit reason) as primary, cancellation_reason as secondary
+      // Never fall back to long outcomeSummary
       const cancellationReason =
         cardData.appointment_data?.cancellation_reason ??
         cardData.cancellation_reason;
+      const appointmentReason = cardData.appointment_data?.reason;
 
       return (
         <CanceledAppointmentCard
@@ -207,7 +203,7 @@ export function ActionCardSelector({
           appointmentDate={cardData.appointment_data?.date}
           appointmentTime={cardData.appointment_data?.time}
           cancellationReason={cancellationReason}
-          outcomeSummary={outcomeSummary}
+          appointmentReason={appointmentReason}
           onConfirm={isConfirmed ? undefined : onConfirm}
           isConfirming={isConfirming}
           isConfirmed={isConfirmed}
@@ -227,15 +223,10 @@ export function ActionCardSelector({
       );
 
     case "callback":
+      // Only use callback_data.reason from structured output - no fallbacks to long text
       return (
         <CallbackCard
-          escalationSummary={
-            cardData.callback_data?.reason ??
-            escalationSummary ??
-            outcomeSummary
-          }
-          staffActionNeeded={staffActionNeeded}
-          nextSteps={nextSteps}
+          reason={cardData.callback_data?.reason}
           phoneNumber={
             cardData.callback_data?.phone_number ?? call.customer_phone
           }

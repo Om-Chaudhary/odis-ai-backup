@@ -166,11 +166,11 @@ export function ProblemSection() {
 
           {/* Main Headline */}
           <h2 className="font-display mb-6 text-3xl font-medium tracking-tight text-slate-900 sm:text-4xl md:text-5xl lg:text-[3.5rem] lg:leading-tight">
-            Every Day, Your Clinic Loses
+            Missed Calls Cost Vet Clinics
             <br className="hidden sm:block" />
             <span className="relative inline-block">
               <span className="relative z-10 bg-gradient-to-r from-red-600 via-orange-600 to-amber-600 bg-clip-text text-transparent">
-                Thousands in Revenue
+                $2,400+ Every Month
               </span>
               <motion.span
                 initial={{ scaleX: 0 }}
@@ -183,8 +183,8 @@ export function ProblemSection() {
 
           {/* Supporting Text */}
           <p className="mx-auto max-w-2xl text-lg text-slate-600 sm:text-xl">
-            While you're focused on patient care, missed calls are quietly
-            sending clients—and their pets—to your competitors.
+            One missed call = one lost client. One skipped follow-up = one missed recheck.
+            It adds up faster than you think.
           </p>
         </motion.div>
 
@@ -197,30 +197,30 @@ export function ProblemSection() {
         >
           <MissedOpportunityCard
             icon={<PhoneOff className="h-6 w-6 text-white" />}
-            title="Unanswered Emergency Calls"
-            description="Pet parents calling after hours need immediate answers. When they can't reach you, they call your competitor down the street."
-            stat="30%"
-            statLabel="of calls go unanswered"
+            title="After-Hours Calls Going to Voicemail"
+            description="That 9PM call about a limping dog? They called the 24-hour clinic instead. That's a new client you'll never see."
+            stat="$400+"
+            statLabel="lost per missed new client"
             delay={0.3}
             accentColor="red"
           />
 
           <MissedOpportunityCard
             icon={<Calendar className="h-6 w-6 text-white" />}
-            title="Missed Follow-Up Appointments"
-            description="Discharge calls that never happen mean rechecks that never get scheduled. Each one is $150-400 in lost care."
-            stat="3+ hrs"
-            statLabel="spent playing phone tag daily"
+            title="Discharge Follow-ups That Never Happen"
+            description="Your team meant to call, but got busy. Now that recheck won't get scheduled and post-op concerns go unaddressed."
+            stat="$150-400"
+            statLabel="lost per missed recheck"
             delay={0.4}
             accentColor="amber"
           />
 
           <MissedOpportunityCard
             icon={<Stethoscope className="h-6 w-6 text-white" />}
-            title="Lost Medication Refills"
-            description="When clients can't easily request refills, they forget or go elsewhere. Chronic medications mean recurring revenue—lost."
-            stat="15-20%"
-            statLabel="of clients lost to competitors"
+            title="Staff Buried in Phone Tag"
+            description="3+ hours daily playing phone tag with owners who don't pick up. That's time your techs could spend on actual patient care."
+            stat="15+ hrs"
+            statLabel="wasted weekly on callbacks"
             delay={0.5}
             accentColor="orange"
           />
@@ -240,17 +240,17 @@ export function ProblemSection() {
             </div>
             <div>
               <p className="mb-1 text-lg font-semibold text-teal-900">
-                What if every call was answered?
+                What if every call was answered—and every discharge got a follow-up?
               </p>
               <p className="text-sm text-teal-700">
-                AI that sounds human. Available 24/7. Ready now.
+                AI that sounds like your best CSR. Live in 48 hours.
               </p>
             </div>
             <a
               href="#sample-calls"
               className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-teal-600 to-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-teal-500/25 transition-all hover:scale-[1.02] hover:shadow-xl hover:shadow-teal-500/30"
             >
-              <span>Hear Real Calls</span>
+              <span>Hear a Real Call</span>
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </a>
           </div>

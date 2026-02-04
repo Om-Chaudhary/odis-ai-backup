@@ -17,10 +17,10 @@ interface CanceledAppointmentCardProps {
   appointmentDate?: string | null;
   /** Appointment time from structured_data (HH:MM) */
   appointmentTime?: string | null;
-  /** Cancellation reason from structured_data */
+  /** Cancellation reason from structured_data (why they're cancelling) */
   cancellationReason?: string | null;
-  /** Fallback: Summary of the cancellation from VAPI */
-  outcomeSummary?: string;
+  /** Visit reason from VAPI structured output (2-5 words, e.g., "Annual checkup") */
+  appointmentReason?: string | null;
   /** Callback when confirm is clicked */
   onConfirm?: () => void;
   /** Whether confirm action is in progress */
@@ -72,7 +72,7 @@ export function CanceledAppointmentCard({
   appointmentDate,
   appointmentTime,
   cancellationReason,
-  outcomeSummary,
+  appointmentReason,
   onConfirm,
   isConfirming,
   isConfirmed,
@@ -90,9 +90,11 @@ export function CanceledAppointmentCard({
         ? formatDate(date)
         : null;
 
-  // Get reason text - prioritize structured cancellation reason
+  // Get reason text - use structured reasons only, no fallback to long outcomeSummary
+  // Priority: appointmentReason (concise visit reason like "Routine checkup"),
+  // then cancellationReason (why cancelling - often long), then booking reason
   const reason =
-    cancellationReason ?? booking?.rescheduled_reason ?? outcomeSummary ?? null;
+    appointmentReason ?? cancellationReason ?? booking?.reason ?? null;
 
   return (
     <EditorialCardBase variant="canceled" className={className}>

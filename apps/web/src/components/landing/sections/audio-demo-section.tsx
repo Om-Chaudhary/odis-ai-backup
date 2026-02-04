@@ -293,17 +293,17 @@ export function AudioDemoSection() {
 
           {/* Title */}
           <h2 className="font-display mb-4 text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl md:text-4xl lg:text-5xl">
-            Hear{" "}
+            Real Calls.{" "}
             <span className="bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
-              Odis
+              Real Pet Parents.
             </span>{" "}
-            in Action
+            No Scripts.
           </h2>
 
           {/* Subtitle */}
           <p className="mx-auto max-w-xl text-base text-slate-600 sm:text-lg">
-            Listen to actual client calls—no scripts, no actors. This is how
-            Odis sounds with real pet parents.
+            These are actual discharge follow-up calls—unedited. Listen to how Odis
+            handles real conversations with real clients.
           </p>
         </motion.div>
 
@@ -349,7 +349,7 @@ export function AudioDemoSection() {
         >
           <div className="inline-flex flex-col items-center gap-4 rounded-2xl border border-teal-200/50 bg-gradient-to-br from-white/90 to-teal-50/60 px-8 py-6 backdrop-blur-sm sm:px-10 sm:py-7">
             <p className="text-sm font-medium text-slate-700">
-              Ready to hear how Odis can help your practice?
+              Want to hear how Odis would sound for your clinic?
             </p>
             <Link
               href="/demo"
@@ -364,10 +364,10 @@ export function AudioDemoSection() {
               {/* Shimmer effect */}
               <span className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
               <Calendar className="relative h-4 w-4" />
-              <span className="relative">Schedule a Demo</span>
+              <span className="relative">Get a Custom Demo</span>
             </Link>
             <p className="text-xs text-slate-500">
-              No commitment required · See results in 48 hours
+              15 minutes · No commitment · Live in 48 hours
             </p>
           </div>
         </motion.div>

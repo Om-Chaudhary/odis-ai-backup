@@ -43,39 +43,39 @@ interface FAQItem {
 
 const defaultFAQs: FAQItem[] = [
   {
-    question: "How does OdisAI handle calls?",
+    question: "How natural does the AI actually sound?",
     answer:
-      "OdisAI uses advanced AI voice technology to answer calls naturally, just like a trained receptionist. It can schedule appointments, answer common questions about your clinic, take messages, and route urgent calls to your team.",
+      "Listen to our demo calls—they're real, unscripted conversations with actual pet parents. Most callers don't realize they're talking to AI. The voice is warm, conversational, and trained specifically for veterinary contexts.",
     category: "technology",
   },
   {
-    question: "Will pet parents know they're talking to an AI?",
+    question: "What exactly can Odis do on a call?",
     answer:
-      "Our AI is designed to sound natural and warm. Most callers don't realize they're speaking with AI—but we can configure transparent disclosure if your clinic prefers it.",
+      "For inbound: answer questions about your clinic, book appointments with real-time calendar sync, take messages, triage urgency, and route emergencies. For outbound: call every discharged patient, check on recovery, answer follow-up questions, and schedule rechecks.",
     category: "technology",
   },
   {
-    question: "How does it integrate with my practice management system?",
+    question: "How does it connect to my PIMS?",
     answer:
-      "We currently offer deep integration with IDEXX Neo, with more PIMS integrations coming soon. The AI can check availability, book appointments, and log call notes directly in your system.",
+      "We integrate directly with IDEXX Neo, ezyVet, and Cornerstone. Odis reads your schedule in real-time to book without conflicts, and logs call notes automatically. Setup takes about 30 minutes.",
     category: "integration",
   },
   {
-    question: "What happens if the AI can't answer a question?",
+    question: "What if a caller has a complex question or emergency?",
     answer:
-      "The AI gracefully routes complex or urgent calls to your team. It can take a message, schedule a callback, or transfer directly—whatever workflow you prefer.",
+      "Odis recognizes when to escalate. It can transfer to your on-call number, take a detailed message, or schedule an urgent callback—based on your rules. You stay in control.",
     category: "support",
   },
   {
-    question: "How long does setup take?",
+    question: "How fast can we go live?",
     answer:
-      "Most clinics are fully live within 48 hours. We handle the technical setup and train the AI on your clinic's specific information, services, and scheduling rules.",
+      "48 hours from signup to answering calls. We handle all technical setup, train the AI on your services and protocols, and test everything before going live. No IT work required from your team.",
     category: "setup",
   },
   {
-    question: "Can it handle after-hours calls?",
+    question: "What does it cost compared to hiring staff?",
     answer:
-      "Absolutely. OdisAI works 24/7, so pet parents can schedule appointments or get answers even when your clinic is closed.",
+      "Most clinics see $2,400+/month in recovered revenue and saved time—far exceeding the cost. No benefits, no sick days, no training time. And Odis works nights and weekends without overtime.",
     category: "support",
   },
 ];

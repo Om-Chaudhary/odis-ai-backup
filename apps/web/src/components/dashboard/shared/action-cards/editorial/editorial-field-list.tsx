@@ -101,7 +101,7 @@ export function EditorialFieldList({
 
               {/* Value - properly sized based on type */}
               {field.isQuoted ? (
-                <span className="text-base italic text-muted-foreground/80 leading-relaxed">
+                <span className="text-base italic text-muted-foreground/80 leading-relaxed line-clamp-2 overflow-hidden">
                   "{field.value}"
                 </span>
               ) : (

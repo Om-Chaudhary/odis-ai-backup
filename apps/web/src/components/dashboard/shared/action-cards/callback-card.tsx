@@ -8,12 +8,8 @@ import {
 } from "./editorial";
 
 interface CallbackCardProps {
-  /** Summary of the callback request from VAPI */
-  escalationSummary: string;
-  /** Staff action needed from VAPI */
-  staffActionNeeded?: string | null;
-  /** Follow-up next steps */
-  nextSteps?: string | null;
+  /** Concise reason from VAPI structured output (3-8 words) */
+  reason?: string | null;
   /** Phone number to call back */
   phoneNumber?: string | null;
   /** Callback when confirm is clicked */
@@ -27,23 +23,6 @@ interface CallbackCardProps {
 }
 
 /**
- * Get reason text to display
- */
-function getReasonText(
-  escalationSummary: string,
-  staffActionNeeded?: string | null,
-): string {
-  const text = staffActionNeeded ?? escalationSummary;
-
-  // Truncate if too long
-  if (text.length > 100) {
-    return text.slice(0, 97) + "...";
-  }
-
-  return text;
-}
-
-/**
  * Callback Card
  *
  * Editorial design with:
@@ -53,24 +32,22 @@ function getReasonText(
  * - Large green confirm button
  */
 export function CallbackCard({
-  escalationSummary,
-  staffActionNeeded,
+  reason,
   onConfirm,
   isConfirming,
   isConfirmed,
   className,
 }: CallbackCardProps) {
-  // Get reason text
-  const reason = getReasonText(escalationSummary, staffActionNeeded);
-
-  // Build fields - only show reason
-  const fields = [
-    {
-      label: "Reason:",
-      value: reason,
-      isQuoted: true,
-    },
-  ];
+  // Build fields - only show reason if provided (from structured output)
+  const fields = reason
+    ? [
+        {
+          label: "Reason:",
+          value: reason,
+          isQuoted: true,
+        },
+      ]
+    : [];
 
   return (
     <EditorialCardBase variant="callback" className={className}>

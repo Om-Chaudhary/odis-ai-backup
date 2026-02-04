@@ -19,36 +19,36 @@ const fadeUpVariant = {
 const testimonials = [
   {
     quote:
-      "Before OdisAI, our front desk was drowning. Now pet parents get answers instantly, and we've seen a real bump in booked appointments.",
+      "Our front desk was drowning in calls. Now pet parents get instant answers after hours, and we're booking appointments we used to lose.",
     author: "Dr. Deepti Pal",
     role: "Veterinarian",
     clinic: "South Park Animal Hospital",
     location: "San Francisco, CA",
-    metric: "3+ hours saved daily",
+    metric: "15+ hrs/week saved",
     rating: 5,
     img: "/images/testimonials/dr-deepti-pal.png",
     profileUrl: "#",
   },
   {
     quote:
-      "The AI calls pet parents the day after discharge to check in. Our clients love it, and my techs finally have time to breathe.",
+      "Every discharged patient gets a follow-up call now—automatically. Clients tell us how impressed they are, and my techs finally have time for actual patient care.",
     author: "Dr. Tina Bath",
     role: "Practice Owner",
     clinic: "Alum Rock Animal Hospital",
     location: "San Jose, CA",
-    metric: "94% connection rate",
+    metric: "94% reach rate",
     rating: 5,
     img: "/images/testimonials/dr-tais-perpetuo.png",
     profileUrl: "#",
   },
   {
     quote:
-      "We calculated how many appointments we were losing from missed calls. OdisAI recovered them—and then some.",
+      "We tracked our missed calls for a month—$2,400 in lost appointments. OdisAI recovered that in the first week and keeps delivering.",
     author: "Jenn",
     role: "Practice Manager",
     clinic: "Del Valle Pet Hospital",
     location: "Livermore, CA",
-    metric: "$2,400/mo recovered",
+    metric: "$2,400+/mo recovered",
     rating: 5,
     img: "/images/testimonials/jenn.png",
     profileUrl: "#",

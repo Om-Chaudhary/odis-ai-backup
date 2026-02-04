@@ -23,10 +23,8 @@ interface RescheduledAppointmentCardProps {
   originalDate?: string | null;
   /** Original appointment time from structured_data (HH:MM) */
   originalTime?: string | null;
-  /** Reschedule reason from structured_data */
-  rescheduleReason?: string | null;
-  /** Fallback: Summary of the rescheduled appointment from VAPI */
-  outcomeSummary?: string;
+  /** Visit reason from VAPI structured output (2-5 words, e.g., "Itchy skin") */
+  appointmentReason?: string | null;
   /** Callback when confirm is clicked */
   onConfirm?: () => void;
   /** Whether confirm action is in progress */
@@ -79,8 +77,7 @@ export function RescheduledAppointmentCard({
   appointmentTime,
   originalDate,
   originalTime,
-  rescheduleReason,
-  outcomeSummary,
+  appointmentReason,
   onConfirm,
   isConfirming,
   isConfirmed,
@@ -110,8 +107,9 @@ export function RescheduledAppointmentCard({
         ? formatDate(origDate)
         : null;
 
-  // Get reason text - prioritize structured reason
-  const reason = rescheduleReason ?? booking?.rescheduled_reason ?? outcomeSummary ?? null;
+  // Get reason text - use structured appointment reason (visit reason like "Itchy skin")
+  // No fallback to long outcomeSummary - better to show nothing than overflow
+  const reason = appointmentReason ?? booking?.reason ?? null;
 
   return (
     <EditorialCardBase variant="rescheduled" className={className}>
@@ -173,7 +171,7 @@ export function RescheduledAppointmentCard({
                 className="flex items-baseline gap-3"
               >
                 <span className="text-sm font-medium text-muted-foreground min-w-[80px]">Reason:</span>
-                <span className="text-base italic text-muted-foreground/80 leading-relaxed">
+                <span className="text-base italic text-muted-foreground/80 leading-relaxed line-clamp-2">
                   "{reason}"
                 </span>
               </motion.div>

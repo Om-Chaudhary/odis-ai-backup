@@ -25,28 +25,28 @@ const steps = [
   {
     icon: Link2,
     step: "01",
-    title: "Connect",
+    title: "Connect Your Systems",
     description:
-      "We integrate with your PIMS and phone system—usually in under 48 hours.",
-    highlights: ["PIMS Integration", "Phone System", "Calendar Sync"],
+      "We plug into your PIMS (IDEXX Neo, ezyVet, Cornerstone) and phone system. Takes 30 minutes.",
+    highlights: ["No IT work required", "Real-time calendar sync", "Secure & HIPAA compliant"],
     color: "teal",
   },
   {
     icon: Settings,
     step: "02",
-    title: "Customize",
+    title: "We Train Odis For You",
     description:
-      "Our team trains Odis on your clinic's services, appointment types, and scheduling rules.",
-    highlights: ["Services Setup", "Protocols", "Custom Rules"],
+      "Our team configures Odis with your services, hours, protocols, and voice preferences. You approve before go-live.",
+    highlights: ["Custom to your clinic", "Your rules & workflows", "Test calls before launch"],
     color: "emerald",
   },
   {
     icon: Rocket,
     step: "03",
-    title: "Go Live",
+    title: "Go Live in 48 Hours",
     description:
-      "Start answering calls 24/7, booking appointments, and automating discharge follow-ups.",
-    highlights: ["24/7 Coverage", "Auto-booking", "Follow-ups"],
+      "Odis starts answering after-hours calls and making discharge follow-ups. Track results in your dashboard.",
+    highlights: ["24/7 inbound coverage", "Automated discharge calls", "Real-time analytics"],
     color: "cyan",
   },
 ];
