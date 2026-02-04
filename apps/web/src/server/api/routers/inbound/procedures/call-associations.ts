@@ -116,6 +116,12 @@ export const callAssociationsRouter = createTRPCRouter({
    * Get caller info by phone number from appointments or messages
    * Returns caller name, pet name, species, breed, lastVisit (if from appointment), and source
    * Used to display caller info in the Calls tab and Pet Context in Messages tab
+   *
+   * Priority:
+   * 1. Extracted columns from inbound_vapi_calls (most reliable)
+   * 2. VAPI bookings data
+   * 3. Clinic messages
+   * 4. Structured data from inbound_vapi_calls (legacy fallback)
    */
   getCallerNameByPhone: protectedProcedure
     .input(
@@ -134,7 +140,36 @@ export const callAssociationsRouter = createTRPCRouter({
 
       const supabase = ctx.supabase;
 
-      // Try to find in vapi_bookings first (by client_phone)
+      // FIRST: Check extracted columns from inbound_vapi_calls (most reliable source)
+      // These columns are populated during webhook processing from transcript/structured data
+      const { data: callWithExtracted } = await supabase
+        .from("inbound_vapi_calls")
+        .select(
+          "extracted_caller_name, extracted_pet_name, extracted_caller_phone, created_at",
+        )
+        .or(
+          `customer_phone.eq.${normalizedPhone},customer_phone.eq.+1${normalizedPhone},extracted_caller_phone.eq.${normalizedPhone}`,
+        )
+        .not("extracted_caller_name", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (
+        callWithExtracted?.extracted_caller_name ||
+        callWithExtracted?.extracted_pet_name
+      ) {
+        return {
+          name: callWithExtracted.extracted_caller_name ?? null,
+          petName: callWithExtracted.extracted_pet_name ?? null,
+          species: null,
+          breed: null,
+          lastVisit: callWithExtracted.created_at ?? null,
+          source: "extracted" as const,
+        };
+      }
+
+      // SECOND: Try to find in vapi_bookings (by client_phone)
       // Select client_name, patient_name, species, breed, and created_at for context
       const { data: appointment } = await supabase
         .from("vapi_bookings")
@@ -157,7 +192,7 @@ export const callAssociationsRouter = createTRPCRouter({
         };
       }
 
-      // Try to find in clinic_messages (by caller_phone)
+      // THIRD: Try to find in clinic_messages (by caller_phone)
       const { data: message } = await supabase
         .from("clinic_messages")
         .select("caller_name")
@@ -179,7 +214,8 @@ export const callAssociationsRouter = createTRPCRouter({
         };
       }
 
-      // Try to find in inbound_vapi_calls structured_data (from VAPI action cards)
+      // FOURTH (LEGACY FALLBACK): Try to find in inbound_vapi_calls structured_data
+      // This handles older calls that don't have extracted columns populated
       const { data: vapiCall } = await supabase
         .from("inbound_vapi_calls")
         .select("structured_data, created_at, vapi_call_id")
@@ -191,22 +227,12 @@ export const callAssociationsRouter = createTRPCRouter({
         .single();
 
       if (vapiCall?.structured_data) {
-        const structuredData = vapiCall.structured_data as unknown as ActionCardOutput;
-
-        // Log the structured data for debugging
-        console.log("Found structured_data for phone lookup:", {
-          phone: normalizedPhone,
-          callId: vapiCall.vapi_call_id || "unknown",
-          structuredData,
-          hasAppointmentData: !!structuredData?.appointment_data,
-          hasCallbackData: !!structuredData?.callback_data,
-          hasEmergencyData: !!structuredData?.emergency_data,
-        });
+        const structuredData =
+          vapiCall.structured_data as unknown as ActionCardOutput;
 
         // Check for appointment data (scheduled/rescheduled/cancellation)
         if (structuredData?.appointment_data) {
           const { client_name, patient_name } = structuredData.appointment_data;
-          console.log("Found appointment data with names:", { client_name, patient_name });
           if (client_name || patient_name) {
             return {
               name: client_name ?? null,
@@ -222,7 +248,6 @@ export const callAssociationsRouter = createTRPCRouter({
         // Check for callback data
         if (structuredData?.callback_data) {
           const { caller_name, pet_name } = structuredData.callback_data;
-          console.log("Found callback data with names:", { caller_name, pet_name });
           if (caller_name || pet_name) {
             return {
               name: caller_name ?? null,
@@ -233,11 +258,6 @@ export const callAssociationsRouter = createTRPCRouter({
               source: "message" as const,
             };
           }
-        }
-
-        // Check for emergency data - emergency calls might have caller name in callback_data
-        if (structuredData?.emergency_data) {
-          console.log("Found emergency data but no associated callback data for names");
         }
       }
 

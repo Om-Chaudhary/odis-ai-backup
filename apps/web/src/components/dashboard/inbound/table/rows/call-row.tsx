@@ -43,6 +43,9 @@ export function CallRow({
         <div className="flex flex-col gap-0.5 overflow-hidden">
           <CallerDisplay
             phone={call.customer_phone}
+            extractedCallerPhone={call.extracted_caller_phone}
+            extractedCallerName={call.extracted_caller_name}
+            extractedPetName={call.extracted_pet_name}
             clinicName={call.clinic_name}
           />
         </div>
@@ -84,8 +87,8 @@ export function CallRow({
           <Eye
             className={`h-4 w-4 transition-all duration-200 ${
               isSelected
-                ? "text-teal-600 hover:text-teal-700 drop-shadow-[0_0_4px_rgba(13,148,136,0.4)] stroke-[2.5]"
-                : "text-slate-400 hover:text-slate-600 stroke-2"
+                ? "stroke-[2.5] text-teal-600 drop-shadow-[0_0_4px_rgba(13,148,136,0.4)] hover:text-teal-700"
+                : "stroke-2 text-slate-400 hover:text-slate-600"
             }`}
           />
         </Button>

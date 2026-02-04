@@ -5,6 +5,7 @@
  */
 
 import React from "react";
+import { format, parse } from "date-fns";
 
 /**
  * Parse text with **bold** markdown formatting and convert to React elements
@@ -15,23 +16,34 @@ import React from "react";
  * @param text - The text to parse (may contain **bold** markers)
  * @returns Array of React elements with proper bold formatting
  */
-export function parseMarkdownBold(text: string): (string | React.JSX.Element)[] {
+export function parseMarkdownBold(
+  text: string,
+): (string | React.JSX.Element)[] {
   if (!text) return [];
 
   // Split text by **bold** patterns while keeping the delimiters
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
 
-  return parts.map((part, index) => {
-    // Check if this part is a bold section (**text**)
-    if (part.startsWith('**') && part.endsWith('**')) {
-      // Remove the ** markers and wrap in strong tag
-      const boldText = part.slice(2, -2);
-      return React.createElement('strong', { key: index, className: 'font-semibold text-slate-900 dark:text-slate-100' }, boldText);
-    }
+  return parts
+    .map((part, index) => {
+      // Check if this part is a bold section (**text**)
+      if (part.startsWith("**") && part.endsWith("**")) {
+        // Remove the ** markers and wrap in strong tag
+        const boldText = part.slice(2, -2);
+        return React.createElement(
+          "strong",
+          {
+            key: index,
+            className: "font-semibold text-slate-900 dark:text-slate-100",
+          },
+          boldText,
+        );
+      }
 
-    // Regular text part
-    return part;
-  }).filter(part => part !== ''); // Remove empty strings
+      // Regular text part
+      return part;
+    })
+    .filter((part) => part !== ""); // Remove empty strings
 }
 
 /**
@@ -47,21 +59,21 @@ export function formatCallSummary(summary: string | null): React.ReactNode {
   if (!summary) return null;
 
   // Split by lines to preserve line breaks
-  const lines = summary.split('\n');
+  const lines = summary.split("\n");
 
   return lines.map((line, lineIndex) => {
     const parsedLine = parseMarkdownBold(line);
 
     // If line is empty, render as line break
     if (parsedLine.length === 0) {
-      return React.createElement('br', { key: lineIndex });
+      return React.createElement("br", { key: lineIndex });
     }
 
     // If line has content, wrap in a div for proper spacing
     return React.createElement(
-      'div',
-      { key: lineIndex, className: lineIndex > 0 ? 'mt-1' : undefined },
-      ...parsedLine
+      "div",
+      { key: lineIndex, className: lineIndex > 0 ? "mt-1" : undefined },
+      ...parsedLine,
     );
   });
 }
@@ -73,8 +85,8 @@ export function formatCallSummary(summary: string | null): React.ReactNode {
  * @returns Plain text with bold markers removed
  */
 export function stripMarkdownBold(text: string): string {
-  if (!text) return '';
-  return text.replace(/\*\*([^*]+)\*\*/g, '$1');
+  if (!text) return "";
+  return text.replace(/\*\*([^*]+)\*\*/g, "$1");
 }
 
 /**
@@ -89,18 +101,20 @@ export function stripMarkdownBold(text: string): string {
  * @param transcript - The call transcript text
  * @returns Extracted caller name or null if not found
  */
-export function extractCallerNameFromTranscript(transcript: string | null): string | null {
+export function extractCallerNameFromTranscript(
+  transcript: string | null,
+): string | null {
   if (!transcript) return null;
 
   // Clean up the transcript - remove timestamps, AI/User labels, extra whitespace
   const cleanTranscript = transcript
-    .replace(/^(AI|User|Assistant):\s*/gm, '')
-    .replace(/\[\d+:\d+\]/g, '')
-    .replace(/\s+/g, ' ')
+    .replace(/^(AI|User|Assistant):\s*/gm, "")
+    .replace(/\[\d+:\d+\]/g, "")
+    .replace(/\s+/g, " ")
     .trim();
 
   // Pattern 1: Name followed by phone number pattern (like "Dene Garamalo, 408-817") - HIGHEST PRIORITY
-  let match = cleanTranscript.match(/([A-Za-z]+\s+[A-Za-z]+)[\.,]\s*[\d-]+/);
+  let match = /([A-Za-z]+\s+[A-Za-z]+)[\.,]\s*[\d-]+/.exec(cleanTranscript);
   if (match?.[1]) {
     const name = match[1].trim();
     if (isValidName(name)) {
@@ -109,25 +123,33 @@ export function extractCallerNameFromTranscript(transcript: string | null): stri
   }
 
   // Pattern 2: "This is [Name]" (find all instances and filter out assistant names)
-  const thisIsMatches = [...cleanTranscript.matchAll(/(?:yes[,.]?\s+)?this\s+is\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/gi)];
+  const thisIsMatches = [
+    ...cleanTranscript.matchAll(
+      /(?:yes[,.]?\s+)?this\s+is\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/gi,
+    ),
+  ];
   for (const match of thisIsMatches) {
     if (match?.[1]) {
       const name = match[1].trim();
       // Skip common assistant names and validate
-      if (!name.toLowerCase().includes('stacy') &&
-          !name.toLowerCase().includes('assistant') &&
-          !name.toLowerCase().includes('sorry') &&
-          isValidName(name)) {
+      if (
+        !name.toLowerCase().includes("stacy") &&
+        !name.toLowerCase().includes("assistant") &&
+        !name.toLowerCase().includes("sorry") &&
+        isValidName(name)
+      ) {
         return formatName(name);
       }
     }
   }
 
   // Pattern 3: "My name is [Name]" or "I'm [Name]"
-  match = cleanTranscript.match(/(?:my\s+name\s+is|i'm)\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/i);
+  match = /(?:my\s+name\s+is|i'm)\s+([A-Za-z]+(?:\s+[A-Za-z]+)?)/i.exec(
+    cleanTranscript,
+  );
   if (match?.[1]) {
     const name = match[1].trim();
-    if (!name.toLowerCase().includes('sorry') && isValidName(name)) {
+    if (!name.toLowerCase().includes("sorry") && isValidName(name)) {
       return formatName(name);
     }
   }
@@ -146,18 +168,22 @@ export function extractCallerNameFromTranscript(transcript: string | null): stri
  * @param transcript - The call transcript text
  * @returns Extracted pet name(s) or null if not found
  */
-export function extractPetNameFromTranscript(transcript: string | null): string | null {
+export function extractPetNameFromTranscript(
+  transcript: string | null,
+): string | null {
   if (!transcript) return null;
 
   // Clean up the transcript
   const cleanTranscript = transcript
-    .replace(/^(AI|User|Assistant):\s*/gm, '')
-    .replace(/\[\d+:\d+\]/g, '')
-    .replace(/\s+/g, ' ')
+    .replace(/^(AI|User|Assistant):\s*/gm, "")
+    .replace(/\[\d+:\d+\]/g, "")
+    .replace(/\s+/g, " ")
     .trim();
 
   // Pattern 1: "My [animal] [Name]" or "My pet [Name]"
-  let match = cleanTranscript.match(/my\s+(?:dog|cat|pet|puppy|kitten|animal)\s+([A-Za-z]+)/i);
+  let match = /my\s+(?:dog|cat|pet|puppy|kitten|animal)\s+([A-Za-z]+)/i.exec(
+    cleanTranscript,
+  );
   if (match?.[1]) {
     const petName = match[1].trim();
     if (isValidPetName(petName)) {
@@ -166,27 +192,36 @@ export function extractPetNameFromTranscript(transcript: string | null): string 
   }
 
   // Pattern 2: Pet name in appointment context "for [Pet Name]" or "about [Pet Name]"
-  match = cleanTranscript.match(/(?:for|about)\s+([A-Za-z]+)(?:\s+and\s+([A-Za-z]+))?/i);
+  match = /(?:for|about)\s+([A-Za-z]+)(?:\s+and\s+([A-Za-z]+))?/i.exec(
+    cleanTranscript,
+  );
   if (match?.[1]) {
     const petName = match[1].trim();
     if (isValidPetName(petName)) {
-      const secondPet = match[2] ? ` and ${formatName(match[2].trim())}` : '';
+      const secondPet = match[2] ? ` and ${formatName(match[2].trim())}` : "";
       return formatName(petName) + secondPet;
     }
   }
 
   // Pattern 3: Multiple pets mentioned by name "Oscar and Felix [verb]"
-  match = cleanTranscript.match(/([A-Za-z]+)\s+and\s+([A-Za-z]+)\s+(?:are|were|have|need|had)/i);
+  match = /([A-Za-z]+)\s+and\s+([A-Za-z]+)\s+(?:are|were|have|need|had)/i.exec(
+    cleanTranscript,
+  );
   if (match?.[1] && match?.[2]) {
     const pet1 = match[1].trim();
     const pet2 = match[2].trim();
-    if (isValidPetName(pet1) && isValidPetName(pet2) && !isCommonWord(pet1) && !isCommonWord(pet2)) {
+    if (
+      isValidPetName(pet1) &&
+      isValidPetName(pet2) &&
+      !isCommonWord(pet1) &&
+      !isCommonWord(pet2)
+    ) {
       return `${formatName(pet1)} and ${formatName(pet2)}`;
     }
   }
 
   // Pattern 4: "[Pet Name] is/has/needs"
-  match = cleanTranscript.match(/([A-Za-z]+)\s+(?:is|has|needs)/i);
+  match = /([A-Za-z]+)\s+(?:is|has|needs)/i.exec(cleanTranscript);
   if (match?.[1]) {
     const petName = match[1].trim();
     if (isValidPetName(petName) && !isCommonWord(petName)) {
@@ -209,12 +244,30 @@ function isValidName(name: string): boolean {
   // Filter out common false positives
   const lowercaseName = name.toLowerCase();
   const invalidNames = [
-    'user', 'ai', 'assistant', 'hello', 'yes', 'no', 'ok', 'okay',
-    'thank', 'thanks', 'please', 'sorry', 'excuse', 'um', 'uh',
-    'calling', 'call', 'phone', 'number', 'clinic', 'hospital'
+    "user",
+    "ai",
+    "assistant",
+    "hello",
+    "yes",
+    "no",
+    "ok",
+    "okay",
+    "thank",
+    "thanks",
+    "please",
+    "sorry",
+    "excuse",
+    "um",
+    "uh",
+    "calling",
+    "call",
+    "phone",
+    "number",
+    "clinic",
+    "hospital",
   ];
 
-  return !invalidNames.some(invalid => lowercaseName.includes(invalid));
+  return !invalidNames.some((invalid) => lowercaseName.includes(invalid));
 }
 
 /**
@@ -235,13 +288,71 @@ function isValidPetName(name: string): boolean {
 function isCommonWord(word: string): boolean {
   const lowercaseWord = word.toLowerCase();
   const commonWords = [
-    'the', 'and', 'but', 'for', 'are', 'can', 'has', 'had', 'him', 'her',
-    'his', 'she', 'they', 'them', 'this', 'that', 'have', 'will', 'been',
-    'said', 'each', 'which', 'their', 'time', 'back', 'only', 'very', 'after',
-    'first', 'well', 'year', 'work', 'such', 'make', 'even', 'more', 'most',
-    'take', 'than', 'these', 'two', 'way', 'who', 'its', 'did', 'get', 'may',
-    'new', 'now', 'old', 'see', 'come', 'could', 'made', 'over', 'think', 'also',
-    'need', 'needs', 'want', 'wants', 'good', 'help', 'call', 'calling'
+    "the",
+    "and",
+    "but",
+    "for",
+    "are",
+    "can",
+    "has",
+    "had",
+    "him",
+    "her",
+    "his",
+    "she",
+    "they",
+    "them",
+    "this",
+    "that",
+    "have",
+    "will",
+    "been",
+    "said",
+    "each",
+    "which",
+    "their",
+    "time",
+    "back",
+    "only",
+    "very",
+    "after",
+    "first",
+    "well",
+    "year",
+    "work",
+    "such",
+    "make",
+    "even",
+    "more",
+    "most",
+    "take",
+    "than",
+    "these",
+    "two",
+    "way",
+    "who",
+    "its",
+    "did",
+    "get",
+    "may",
+    "new",
+    "now",
+    "old",
+    "see",
+    "come",
+    "could",
+    "made",
+    "over",
+    "think",
+    "also",
+    "need",
+    "needs",
+    "want",
+    "wants",
+    "good",
+    "help",
+    "call",
+    "calling",
   ];
 
   return commonWords.includes(lowercaseWord);
@@ -252,11 +363,73 @@ function isCommonWord(word: string): boolean {
  */
 function formatName(name: string): string {
   return name
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 }
 
+/**
+ * Extract callback phone number from transcript
+ *
+ * Looks for 10-digit phone numbers in the caller's speech:
+ * - "My number is 925-337-4054"
+ * - "Call me at (408) 555-1234"
+ * - "Reach me at 510.555.9876"
+ * - "925 337 4054" (space-separated)
+ *
+ * Only extracts from caller lines (User:/Caller:) to avoid picking up
+ * clinic numbers mentioned by the AI.
+ *
+ * @param transcript - The call transcript text
+ * @returns Extracted 10-digit phone number (digits only) or null if not found
+ */
+export function extractCallbackPhoneFromTranscript(
+  transcript: string | null,
+): string | null {
+  if (!transcript) return null;
+
+  // Split by lines and identify caller speech (User: or Caller: prefixed lines)
+  const lines = transcript.split(/\n/);
+  const callerLines: string[] = [];
+
+  for (const line of lines) {
+    // Match lines that start with User: or Caller: (case-insensitive)
+    if (/^(User|Caller):\s*/i.test(line)) {
+      callerLines.push(line.replace(/^(User|Caller):\s*/i, ""));
+    }
+  }
+
+  // If no labeled lines found, try to extract from the full transcript
+  // but be more conservative - look for phone context patterns
+  const textToSearch =
+    callerLines.length > 0 ? callerLines.join(" ") : transcript;
+
+  // Phone patterns we want to match:
+  // - 925-337-4054 (dashes)
+  // - (925) 337-4054 (parentheses)
+  // - 925.337.4054 (dots)
+  // - 925 337 4054 (spaces)
+  // - 9253374054 (no separators)
+  const phonePatterns = [
+    // Pattern with context words (higher confidence)
+    /(?:my\s+(?:number|phone|cell|callback)\s+is|call\s+(?:me|back)\s+at|reach\s+me\s+at|number\s+is|at)\s*\(?(\d{3})\)?[-.\s]?(\d{3})[-.\s]?(\d{4})/i,
+    // Standalone phone pattern (lower priority)
+    /\(?(\d{3})\)?[-.\s]?(\d{3})[-.\s]?(\d{4})/,
+  ];
+
+  for (const pattern of phonePatterns) {
+    const match = textToSearch.match(pattern);
+    if (match) {
+      // Combine the three capture groups (area code, exchange, subscriber)
+      const phone = `${match[1]}${match[2]}${match[3]}`;
+      if (phone.length === 10) {
+        return phone;
+      }
+    }
+  }
+
+  return null;
+}
 
 /**
  * Parse and format appointment date from various formats including natural language
@@ -270,15 +443,15 @@ function formatName(name: string): string {
  * @param outputFormat - Date-fns format string (default: "MMM d")
  * @returns Formatted date string or original string if parsing fails
  */
-export function parseAndFormatAppointmentDate(dateStr: string, outputFormat: string = "MMM d"): string {
-  if (!dateStr || typeof dateStr !== 'string') {
+export function parseAndFormatAppointmentDate(
+  dateStr: string,
+  outputFormat = "MMM d",
+): string {
+  if (!dateStr || typeof dateStr !== "string") {
     return dateStr;
   }
 
   try {
-    // Import date-fns functions dynamically to avoid circular deps
-    const { format, parse } = require('date-fns');
-
     // First try parsing as ISO format (YYYY-MM-DD)
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
       const date = parse(dateStr, "yyyy-MM-dd", new Date());
@@ -304,12 +477,20 @@ export function parseAndFormatAppointmentDate(dateStr: string, outputFormat: str
 
     // Handle day names like "monday", "tuesday", etc.
     const dayNames = [
-      "sunday", "monday", "tuesday", "wednesday",
-      "thursday", "friday", "saturday"
+      "sunday",
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
     ];
 
     // Handle "next monday", "this friday", etc.
-    const nextDayMatch = /^(?:next|this)\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/i.exec(normalized);
+    const nextDayMatch =
+      /^(?:next|this)\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/i.exec(
+        normalized,
+      );
     if (nextDayMatch?.[1]) {
       const targetDay = dayNames.indexOf(nextDayMatch[1].toLowerCase());
       const currentDay = today.getDay();
@@ -321,7 +502,10 @@ export function parseAndFormatAppointmentDate(dateStr: string, outputFormat: str
     }
 
     // Handle just day name like "monday", "tuesday"
-    const justDayMatch = /^(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/i.exec(normalized);
+    const justDayMatch =
+      /^(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/i.exec(
+        normalized,
+      );
     if (justDayMatch?.[1]) {
       const targetDay = dayNames.indexOf(justDayMatch[1].toLowerCase());
       const currentDay = today.getDay();
@@ -365,8 +549,7 @@ export function formatAttentionAction(actionText: string): string {
   // Add line break before arrow symbols (both → and -> variants)
   // Keep the arrow on the same line as the action text
   return actionText
-    .replace(/\s*→\s*/g, '\n→ ')
-    .replace(/\s*->\s*/g, '\n-> ')
+    .replace(/\s*→\s*/g, "\n→ ")
+    .replace(/\s*->\s*/g, "\n-> ")
     .trim();
 }
-

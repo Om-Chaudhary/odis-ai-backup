@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Phone, X, PawPrint, User } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
+import { formatPhoneNumber } from "@odis-ai/shared/util/phone";
 import { ActionCardSelector } from "../../shared/action-cards";
 import { CallDetailTabs } from "../../shared/tabbed-panel";
 import { api } from "~/trpc/client";
@@ -35,11 +36,17 @@ export function CallDetail({
   // Check static demo mapping first for caller name
   const demoCallerName = getDemoCallerName(call.customer_phone);
 
-  // Query for caller info by phone number (skip if we found demo name)
+  // Check if we have extracted data - if so, skip API lookups
+  const hasExtractedName = !!call.extracted_caller_name;
+
+  // Query for caller info by phone number (skip if we have extracted data or demo name)
   const { data: callerInfo } = api.inbound.getCallerNameByPhone.useQuery(
-    { phone: call.customer_phone ?? "" },
+    { phone: call.extracted_caller_phone ?? call.customer_phone ?? "" },
     {
-      enabled: !!call.customer_phone && !demoCallerName,
+      enabled:
+        !!(call.extracted_caller_phone ?? call.customer_phone) &&
+        !demoCallerName &&
+        !hasExtractedName,
       staleTime: 5 * 60 * 1000, // 5 minutes cache
       retry: false,
     },
@@ -56,9 +63,21 @@ export function CallDetail({
   );
 
   // Get caller name and pet name
-  // Prioritize VAPI booking data, then fall back to database lookup
-  const callerName = demoCallerName ?? callerInfo?.name ?? null;
-  const petName = bookingData?.patient_name ?? callerInfo?.petName ?? null;
+  // Priority: extracted data > demo name > booking data > API lookup
+  const callerName =
+    call.extracted_caller_name ??
+    demoCallerName ??
+    bookingData?.client_name ??
+    callerInfo?.name ??
+    null;
+  const petName =
+    call.extracted_pet_name ??
+    bookingData?.patient_name ??
+    callerInfo?.petName ??
+    null;
+
+  // Get display phone - prioritize extracted phone over customer_phone
+  const displayPhone = call.extracted_caller_phone ?? call.customer_phone;
 
   // Action confirmation state - track locally for optimistic updates
   const [isActionConfirmed, setIsActionConfirmed] = useState(
@@ -142,43 +161,45 @@ export function CallDetail({
   return (
     <div id="call-detail-panel" className="flex min-h-0 flex-1 flex-col">
       {/* Compact Patient Card Header */}
-      <header className="border-b border-border/40 bg-gradient-to-r from-primary/[0.04] via-transparent to-primary/[0.02]">
+      <header className="border-border/40 from-primary/[0.04] to-primary/[0.02] border-b bg-gradient-to-r via-transparent">
         <div className="flex items-center gap-4 px-5 py-4">
           {/* Avatar */}
           <div
             className={cn(
               "flex h-12 w-12 shrink-0 items-center justify-center rounded-full",
-              "bg-gradient-to-br from-primary/15 to-primary/5",
-              "ring-1 ring-primary/10",
+              "from-primary/15 to-primary/5 bg-gradient-to-br",
+              "ring-primary/10 ring-1",
             )}
           >
-            <User className="h-5 w-5 text-primary" strokeWidth={1.5} />
+            <User className="text-primary h-5 w-5" strokeWidth={1.5} />
           </div>
 
           {/* Info Stack */}
           <div className="min-w-0 flex-1">
             {/* Name Row */}
             <div className="flex items-center gap-2">
-              <h2 className="truncate text-[15px] font-semibold tracking-tight text-foreground">
+              <h2 className="text-foreground truncate text-[15px] font-semibold tracking-tight">
                 {callerName ?? "Unknown Caller"}
               </h2>
               {petName && (
                 <>
                   <span className="text-border">·</span>
                   <div className="flex items-center gap-1">
-                    <PawPrint className="h-3 w-3 text-primary" />
-                    <span className="text-sm text-muted-foreground">{petName}</span>
+                    <PawPrint className="text-primary h-3 w-3" />
+                    <span className="text-muted-foreground text-sm">
+                      {petName}
+                    </span>
                   </div>
                 </>
               )}
             </div>
 
             {/* Phone */}
-            {call.customer_phone && (
+            {displayPhone && (
               <div className="mt-0.5 flex items-center gap-1.5">
-                <Phone className="h-3 w-3 text-muted-foreground/70" />
-                <span className="text-[13px] tabular-nums text-muted-foreground">
-                  {call.customer_phone}
+                <Phone className="text-muted-foreground/70 h-3 w-3" />
+                <span className="text-muted-foreground text-[13px] tabular-nums">
+                  {formatPhoneNumber(displayPhone) || displayPhone}
                 </span>
               </div>
             )}
@@ -191,7 +212,7 @@ export function CallDetail({
               className={cn(
                 "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
                 "text-muted-foreground/50 hover:text-foreground",
-                "transition-colors hover:bg-muted/80",
+                "hover:bg-muted/80 transition-colors",
               )}
             >
               <X className="h-4 w-4" />
@@ -208,7 +229,10 @@ export function CallDetail({
             id: call.id,
             outcome: (call.outcome as CallOutcome) ?? null,
             summary: callData.summary ?? null,
-            structured_data: call.structured_data as Record<string, unknown> | null,
+            structured_data: call.structured_data as Record<
+              string,
+              unknown
+            > | null,
             call_outcome_data: call.call_outcome_data as {
               call_outcome?: string;
               outcome_summary?: string;
@@ -254,7 +278,7 @@ export function CallDetail({
       </div>
 
       {/* Quick Actions Footer */}
-      <div className="border-t border-border/50 bg-card p-4">
+      <div className="border-border/50 bg-card border-t p-4">
         <QuickActionsFooter
           variant="call"
           isSubmitting={isSubmitting}

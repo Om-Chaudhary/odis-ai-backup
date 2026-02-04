@@ -1906,6 +1906,9 @@ export type Database = {
           ended_at: string | null;
           ended_reason: string | null;
           escalation_data: Json | null;
+          extracted_caller_name: string | null;
+          extracted_caller_phone: string | null;
+          extracted_pet_name: string | null;
           follow_up_data: Json | null;
           id: string;
           medication_compliance_data: Json | null;
@@ -1951,6 +1954,9 @@ export type Database = {
           ended_at?: string | null;
           ended_reason?: string | null;
           escalation_data?: Json | null;
+          extracted_caller_name?: string | null;
+          extracted_caller_phone?: string | null;
+          extracted_pet_name?: string | null;
           follow_up_data?: Json | null;
           id?: string;
           medication_compliance_data?: Json | null;
@@ -1996,6 +2002,9 @@ export type Database = {
           ended_at?: string | null;
           ended_reason?: string | null;
           escalation_data?: Json | null;
+          extracted_caller_name?: string | null;
+          extracted_caller_phone?: string | null;
+          extracted_pet_name?: string | null;
           follow_up_data?: Json | null;
           id?: string;
           medication_compliance_data?: Json | null;

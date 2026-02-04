@@ -11,55 +11,102 @@ import type { Database } from "@odis-ai/shared/types";
 
 type InboundCall = Database["public"]["Tables"]["inbound_vapi_calls"]["Row"];
 
+interface CallerDisplayProps {
+  /** Original phone from VAPI (may be clinic number) */
+  phone: string | null;
+  /** Extracted callback phone from transcript/structured data */
+  extractedCallerPhone?: string | null;
+  /** Extracted caller name from transcript/structured data */
+  extractedCallerName?: string | null;
+  /** Extracted pet name from transcript/structured data */
+  extractedPetName?: string | null;
+  /** Clinic's phone number to detect when customer_phone is wrong */
+  clinicPhone?: string | null;
+  /** Kept for backwards compatibility */
+  clinicName?: string | null;
+}
+
 /**
  * Displays caller information with phone number as primary
  *
  * Display hierarchy:
- * 1. Phone number (primary, bold) - always shown first
+ * 1. Phone number (primary, bold) - prioritizes extracted phone over customer_phone
  * 2. Owner name (secondary, muted, smaller) when available
  * 3. Pet name with paw icon (tertiary, muted, smaller) when available
+ *
+ * Priority for caller info:
+ * 1. Extracted data (from transcript/structured data)
+ * 2. Demo/mock data (for testing)
+ * 3. API lookup by phone
  */
 export function CallerDisplay({
   phone,
-}: {
-  phone: string | null;
-  clinicName?: string | null; // Kept for backwards compatibility but not displayed
-}) {
-  const formattedPhone = formatPhoneNumber(phone ?? "") || "Unknown";
+  extractedCallerPhone,
+  extractedCallerName,
+  extractedPetName,
+  clinicPhone,
+  clinicName: _clinicName, // Kept for backwards compatibility
+}: CallerDisplayProps) {
+  // Determine if customer_phone is actually the clinic's number (common VAPI issue)
+  const normalizedPhone = phone?.replace(/\D/g, "");
+  const normalizedClinic = clinicPhone?.replace(/\D/g, "");
+  const isClinicNumber =
+    normalizedPhone && normalizedClinic && normalizedPhone === normalizedClinic;
+
+  // Use extracted phone if available, skip customer_phone if it's the clinic number
+  const displayPhone = extractedCallerPhone ?? (isClinicNumber ? null : phone);
+  const formattedPhone = formatPhoneNumber(displayPhone ?? "");
 
   // Check static demo mapping first
   const demoName = getDemoCallerName(phone);
 
-  // Query for caller info by phone number (skip if we found demo name)
+  // Only query for caller info if we don't have extracted data
+  const needsApiLookup =
+    !extractedCallerName && !extractedPetName && !demoName && !!displayPhone;
   const { data: callerInfo, isLoading } =
     api.inbound.getCallerNameByPhone.useQuery(
-      { phone: phone ?? "" },
+      { phone: displayPhone ?? "" },
       {
-        enabled: !!phone && !demoName,
+        enabled: needsApiLookup,
         staleTime: 5 * 60 * 1000, // 5 minutes cache
         retry: false,
       },
     );
 
-  // Get caller name: demo name > API result > null
-  const callerName = demoName ?? callerInfo?.name ?? null;
-  const petName = callerInfo?.petName ?? null;
+  // Priority: extracted data > demo name > API result
+  const callerName =
+    extractedCallerName ?? demoName ?? callerInfo?.name ?? null;
+  const petName = extractedPetName ?? callerInfo?.petName ?? null;
+
+  // Determine what to show as primary display
+  const hasPrimaryPhone = !!formattedPhone;
+  const showLoading = isLoading && needsApiLookup;
 
   return (
     <div className="flex flex-col gap-0.5">
-      {/* Primary line: Phone number (always first) */}
-      <span className="text-sm font-semibold">
-        {isLoading && !demoName ? (
-          <span className="text-muted-foreground">{formattedPhone}</span>
-        ) : (
-          formattedPhone
-        )}
-      </span>
-      {/* Secondary line: Owner name if available */}
-      {callerName && (
-        <span className="text-muted-foreground truncate text-xs">{callerName}</span>
+      {/* Primary: Phone or Name */}
+      {hasPrimaryPhone ? (
+        <span className="text-sm font-semibold">
+          {showLoading ? (
+            <span className="text-muted-foreground">{formattedPhone}</span>
+          ) : (
+            formattedPhone
+          )}
+        </span>
+      ) : callerName ? (
+        <span className="text-sm font-semibold">{callerName}</span>
+      ) : (
+        <span className="text-muted-foreground text-sm">Unknown</span>
       )}
-      {/* Pet name with icon - always shown below when available */}
+
+      {/* Secondary: Name if we showed phone */}
+      {hasPrimaryPhone && callerName && (
+        <span className="text-muted-foreground truncate text-xs">
+          {callerName}
+        </span>
+      )}
+
+      {/* Tertiary: Pet name with icon */}
       {petName && (
         <div className="text-muted-foreground flex items-center gap-1 text-xs">
           <PawPrint className="h-3 w-3" />

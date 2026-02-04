@@ -446,9 +446,12 @@ export const DEMO_CALLS = [
     user_sentiment: "neutral",
     duration_seconds: 90,
     cost: 0.15,
-    transcript: "Assistant: Hello. You have reached the after hours assistant at Happy Tails Veterinary Clinic. How can I help you today?\n\nUser: Yeah. I have Prince here that's supposed to be drinking the Pedialyte. And he doesn't want to drink it. How can I get him to drink it?\n\nAssistant: I understand Prince isn't drinking the Pedialyte. You might try offering it in a different bowl or mixing a small amount with his regular water to see if he'll take it that way. If you're concerned, it might be a good idea to schedule an appointment to have him checked out. Would you like me to help with that?\n\nUser: He's supposed to have surgery Wednesday. So he's already been checked out. But they said they were worried about his electrolytes, so they wanted him to drink that Pedialyte till Wednesday and he doesn't want to drink it.\n\nAssistant: Since Prince has surgery scheduled, it's important to keep him hydrated. You might try flavoring the Pedialyte with a small amount of low sodium chicken broth to make it more appealing.\n\nUser: No. So I could put chicken broth in it?\n\nAssistant: Yes. You can try adding a small amount of low sodium chicken broth to the Pedialyte more appealing for Prince. Just make sure its not too much as you still want him to get the benefits of the Pedialyte. If you have any concerns, reaching out to the clinic during business hours would be a good idea.\n\nUser: Okay. I guess that's all I can do.\n\nAssistant: Alright if you have any other questions or need further assistance, feel free to reach out. Take care of Prince.\n\nUser: Thanks. Bye bye.",
-    summary: "Owner called about Prince having difficulty drinking prescribed Pedialyte before surgery. Provided advice on making it more appealing with low sodium chicken broth.",
-    recording_url: "https://nndjdbdnhnhxkasjgxqk.supabase.co/storage/v1/object/public/public-assets/4087810860.MP3",
+    transcript:
+      "Assistant: Hello. You have reached the after hours assistant at Happy Tails Veterinary Clinic. How can I help you today?\n\nUser: Yeah. I have Prince here that's supposed to be drinking the Pedialyte. And he doesn't want to drink it. How can I get him to drink it?\n\nAssistant: I understand Prince isn't drinking the Pedialyte. You might try offering it in a different bowl or mixing a small amount with his regular water to see if he'll take it that way. If you're concerned, it might be a good idea to schedule an appointment to have him checked out. Would you like me to help with that?\n\nUser: He's supposed to have surgery Wednesday. So he's already been checked out. But they said they were worried about his electrolytes, so they wanted him to drink that Pedialyte till Wednesday and he doesn't want to drink it.\n\nAssistant: Since Prince has surgery scheduled, it's important to keep him hydrated. You might try flavoring the Pedialyte with a small amount of low sodium chicken broth to make it more appealing.\n\nUser: No. So I could put chicken broth in it?\n\nAssistant: Yes. You can try adding a small amount of low sodium chicken broth to the Pedialyte more appealing for Prince. Just make sure its not too much as you still want him to get the benefits of the Pedialyte. If you have any concerns, reaching out to the clinic during business hours would be a good idea.\n\nUser: Okay. I guess that's all I can do.\n\nAssistant: Alright if you have any other questions or need further assistance, feel free to reach out. Take care of Prince.\n\nUser: Thanks. Bye bye.",
+    summary:
+      "Owner called about Prince having difficulty drinking prescribed Pedialyte before surgery. Provided advice on making it more appealing with low sodium chicken broth.",
+    recording_url:
+      "https://nndjdbdnhnhxkasjgxqk.supabase.co/storage/v1/object/public/public-assets/4087810860.MP3",
     created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
     updated_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     started_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
@@ -477,6 +480,9 @@ export const DEMO_CALLS = [
     transcript_messages: null,
     metadata: null,
     stereo_recording_url: null,
+    extracted_caller_phone: null,
+    extracted_caller_name: null,
+    extracted_pet_name: null,
   },
 
   // Dene Garamalo - Dog seizures (Urgent)
@@ -493,9 +499,12 @@ export const DEMO_CALLS = [
     user_sentiment: "negative",
     duration_seconds: 50,
     cost: 0.08,
-    transcript: "Assistant: Thank you for calling Happy Tails Animal Hospital. This is Stacy. How can I help you?\n\nUser: Is there an emergency hello?\n\nAssistant: If you're experiencing an emergency with your pet, it's important to get immediate help. Could you tell me what's going on with your pet?\n\nUser: My dog keeps having seizures.\n\nAssistant: I'm really sorry to hear that your dog is having seizures. This sounds like it needs immediate attention. I recommend taking your dog to an emergency veterinary hospital right away. Can I get your name and phone number to log the situation for our team?\n\nUser: Dene Garamalo. 408-817\n\nAssistant: Thank you. Could you please provide your full phone number?\n\nUser: 408-817-0784.\n\nAssistant: Thank you. I've logged this information for our team. Please take your dog to the nearest emergency veterinary hospital right away. Get your dog to an emergency vet as soon as possible. Take care.",
-    summary: "URGENT: Dene Garamalo called about dog having seizures. Directed to emergency veterinary hospital immediately.",
-    recording_url: "https://nndjdbdnhnhxkasjgxqk.supabase.co/storage/v1/object/public/public-assets/4088170784.MP3",
+    transcript:
+      "Assistant: Thank you for calling Happy Tails Animal Hospital. This is Stacy. How can I help you?\n\nUser: Is there an emergency hello?\n\nAssistant: If you're experiencing an emergency with your pet, it's important to get immediate help. Could you tell me what's going on with your pet?\n\nUser: My dog keeps having seizures.\n\nAssistant: I'm really sorry to hear that your dog is having seizures. This sounds like it needs immediate attention. I recommend taking your dog to an emergency veterinary hospital right away. Can I get your name and phone number to log the situation for our team?\n\nUser: Dene Garamalo. 408-817\n\nAssistant: Thank you. Could you please provide your full phone number?\n\nUser: 408-817-0784.\n\nAssistant: Thank you. I've logged this information for our team. Please take your dog to the nearest emergency veterinary hospital right away. Get your dog to an emergency vet as soon as possible. Take care.",
+    summary:
+      "URGENT: Dene Garamalo called about dog having seizures. Directed to emergency veterinary hospital immediately.",
+    recording_url:
+      "https://nndjdbdnhnhxkasjgxqk.supabase.co/storage/v1/object/public/public-assets/4088170784.MP3",
     created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), // 3 hours ago
     updated_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
     started_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
@@ -506,8 +515,11 @@ export const DEMO_CALLS = [
     user_id: null,
     attention_types: ["urgent"],
     attention_severity: "high",
-    attention_summary: "Dog having seizures - requires immediate emergency care",
-    attention_flagged_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
+    attention_summary:
+      "Dog having seizures - requires immediate emergency care",
+    attention_flagged_at: new Date(
+      Date.now() - 3 * 60 * 60 * 1000,
+    ).toISOString(),
     cleaned_transcript: null,
     display_transcript: null,
     use_display_transcript: false,
@@ -524,6 +536,9 @@ export const DEMO_CALLS = [
     transcript_messages: null,
     metadata: null,
     stereo_recording_url: null,
+    extracted_caller_phone: null,
+    extracted_caller_name: null,
+    extracted_pet_name: null,
   },
 
   // Rochelle Woodward - Cat eye infection (Scheduled)
@@ -540,9 +555,12 @@ export const DEMO_CALLS = [
     user_sentiment: "neutral",
     duration_seconds: 93,
     cost: 0.16,
-    transcript: "Assistant: Thank you for calling Happy Tails Animal Hospital. This is Stacy. How can I help you?\n\nUser: Hi. Are you guys open for emergency care tonight? Or urgent care?\n\nAssistant: We don't provide emergency care after hours. But I can guide you to the nearest emergency veterinary hospital if needed. What's going on with your pet?\n\nUser: I have a cat that's f o c positive. That has milky discharge from the eyes. And is squinting.\n\nAssistant: Oh, I'm sorry to hear your cat isn't feeling well. While this doesn't sound like an immediate emergency, it would be best to have a vet check it out soon. Would you like to schedule an appointment for when we're open?\n\nUser: Yes. Tomorrow, early morning.\n\nAssistant: I have availability tomorrow at 9, 9 15, and 9 30 in the morning. Which time works best for you?\n\nUser: 9 30.\n\nAssistant: Great. So that's Sunday at 9 30 AM. What's your first and last name?\n\nUser: Rochelle Woodward.\n\nAssistant: Thank you, Rochelle. What's your cat's name?\n\nUser: Milo,\n\nAssistant: Thanks. And what's the best phone number to reach you?\n\nUser: 4 0 8 8 4 0 1 3 9 8.\n\nAssistant: Perfect. You're all set for tomorrow at 9 30 AM. Is there anything else I can help you with?\n\nUser: No.\n\nAssistant: Have a good night, and take care of Milo.\n\nUser: Goodbye. Bye bye.\n\nAssistant: Thank you",
-    summary: "Rochelle Woodward scheduled appointment for cat Milo - eye discharge and squinting. Appointment set for 9:30 AM.",
-    recording_url: "https://nndjdbdnhnhxkasjgxqk.supabase.co/storage/v1/object/public/public-assets/Rochelle_Woodward.MP3",
+    transcript:
+      "Assistant: Thank you for calling Happy Tails Animal Hospital. This is Stacy. How can I help you?\n\nUser: Hi. Are you guys open for emergency care tonight? Or urgent care?\n\nAssistant: We don't provide emergency care after hours. But I can guide you to the nearest emergency veterinary hospital if needed. What's going on with your pet?\n\nUser: I have a cat that's f o c positive. That has milky discharge from the eyes. And is squinting.\n\nAssistant: Oh, I'm sorry to hear your cat isn't feeling well. While this doesn't sound like an immediate emergency, it would be best to have a vet check it out soon. Would you like to schedule an appointment for when we're open?\n\nUser: Yes. Tomorrow, early morning.\n\nAssistant: I have availability tomorrow at 9, 9 15, and 9 30 in the morning. Which time works best for you?\n\nUser: 9 30.\n\nAssistant: Great. So that's Sunday at 9 30 AM. What's your first and last name?\n\nUser: Rochelle Woodward.\n\nAssistant: Thank you, Rochelle. What's your cat's name?\n\nUser: Milo,\n\nAssistant: Thanks. And what's the best phone number to reach you?\n\nUser: 4 0 8 8 4 0 1 3 9 8.\n\nAssistant: Perfect. You're all set for tomorrow at 9 30 AM. Is there anything else I can help you with?\n\nUser: No.\n\nAssistant: Have a good night, and take care of Milo.\n\nUser: Goodbye. Bye bye.\n\nAssistant: Thank you",
+    summary:
+      "Rochelle Woodward scheduled appointment for cat Milo - eye discharge and squinting. Appointment set for 9:30 AM.",
+    recording_url:
+      "https://nndjdbdnhnhxkasjgxqk.supabase.co/storage/v1/object/public/public-assets/Rochelle_Woodward.MP3",
     created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
     updated_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
     started_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
@@ -571,6 +589,9 @@ export const DEMO_CALLS = [
     transcript_messages: null,
     metadata: null,
     stereo_recording_url: null,
+    extracted_caller_phone: null,
+    extracted_caller_name: null,
+    extracted_pet_name: null,
   },
 
   // Shirley Steger - Reschedule (Cancellation)
@@ -587,9 +608,12 @@ export const DEMO_CALLS = [
     user_sentiment: "neutral",
     duration_seconds: 83,
     cost: 0.14,
-    transcript: "Assistant: Thank you for calling Happy Tails Animal Hospital. This is Stacy. Can I help you?\n\nUser: Hello? Stacy? I had something come up in my family, and I had a 2 o'clock appointment for my dog, Mabel, yes and I totally, totally forgot about it because, need to check my work calendar. But I don't know yeah. I don't know when I could bring her in this week right now, though. So I'll probably be calling tomorrow to reschedule appointment.\n\nAssistant: Problem. I understand. I can log your request to reschedule Mabel's appointment. What's your full name?\n\nUser: My name is Shirley Steger.\n\nAssistant: Thank you, Shirley. What's the best phone number to reach you?\n\nUser: 4 0 8 7 0 6 8 4 9 6.\n\nAssistant: You, Shirley. I'll log your request to reschedule Mabel's appointment and someone from the clinic will confirm this during business hours. Is there anything else I can help you with?\n\nUser: No. That's it for now. Thank you so much. I'm so sorry about yesterday. It was it was kinda chaos.\n\nAssistant: No problem at all, Shirley. I've logged your request. Thank you for calling Happy Tails Animal Hospital. Have a good day and take care of Mabel.\n\nUser: Thank you. Thank you. Thank you.",
-    summary: "Shirley Steger called to reschedule Mabel's 2 o'clock appointment due to family emergency. Will call back tomorrow to reschedule.",
-    recording_url: "https://nndjdbdnhnhxkasjgxqk.supabase.co/storage/v1/object/public/public-assets/Shirley_Steger.MP3",
+    transcript:
+      "Assistant: Thank you for calling Happy Tails Animal Hospital. This is Stacy. Can I help you?\n\nUser: Hello? Stacy? I had something come up in my family, and I had a 2 o'clock appointment for my dog, Mabel, yes and I totally, totally forgot about it because, need to check my work calendar. But I don't know yeah. I don't know when I could bring her in this week right now, though. So I'll probably be calling tomorrow to reschedule appointment.\n\nAssistant: Problem. I understand. I can log your request to reschedule Mabel's appointment. What's your full name?\n\nUser: My name is Shirley Steger.\n\nAssistant: Thank you, Shirley. What's the best phone number to reach you?\n\nUser: 4 0 8 7 0 6 8 4 9 6.\n\nAssistant: You, Shirley. I'll log your request to reschedule Mabel's appointment and someone from the clinic will confirm this during business hours. Is there anything else I can help you with?\n\nUser: No. That's it for now. Thank you so much. I'm so sorry about yesterday. It was it was kinda chaos.\n\nAssistant: No problem at all, Shirley. I've logged your request. Thank you for calling Happy Tails Animal Hospital. Have a good day and take care of Mabel.\n\nUser: Thank you. Thank you. Thank you.",
+    summary:
+      "Shirley Steger called to reschedule Mabel's 2 o'clock appointment due to family emergency. Will call back tomorrow to reschedule.",
+    recording_url:
+      "https://nndjdbdnhnhxkasjgxqk.supabase.co/storage/v1/object/public/public-assets/Shirley_Steger.MP3",
     created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
     updated_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
     started_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
@@ -618,6 +642,9 @@ export const DEMO_CALLS = [
     transcript_messages: null,
     metadata: null,
     stereo_recording_url: null,
+    extracted_caller_phone: null,
+    extracted_caller_name: null,
+    extracted_pet_name: null,
   },
 
   // Justine Carlsow - Vaccine appointment (Scheduled)
@@ -634,9 +661,12 @@ export const DEMO_CALLS = [
     user_sentiment: "positive",
     duration_seconds: 101,
     cost: 0.17,
-    transcript: "Assistant: Thank you for calling Happy Tails Animal Hospital. This is Stacy. How can I help you?\n\nUser: Hi. Good morning. I was wondering if vaccine appointments are walk-in, or do I still need to make an appointment for my pet?\n\nAssistant: Good morning. You'll need to make an appointment for vaccines. Would you like me to help you schedule one?\n\nUser: Yes, please.\n\nAssistant: Great. What day would you like to come in?\n\nUser: Is there anything available for tomorrow morning?\n\nAssistant: I have availability tomorrow morning at 8, 8:30, and 8:45. Which time works best for you?\n\nUser: 8:45, please.\n\nAssistant: Got it. What is your first and last name?\n\nUser: Justine Carlsow.\n\nAssistant: What's your pet's name?\n\nUser: Matcha.\n\nAssistant: And what's the best phone number to reach you?\n\nUser: 408-667-3122.\n\nAssistant: What's the reason for Matcha's visit? Is it just for vaccines?\n\nUser: Yes. Vaccines\n\nAssistant: You're all set for tomorrow at 8:45 AM for Matcha's vaccine. Is there anything else I can help you with?\n\nUser: Can I get a cost or a price estimation?\n\nAssistant: I'd recommend calling the clinic during business hours for pricing information. Is there anything else I can help you with?\n\nUser: No. That's all.\n\nAssistant: Thank you for calling Happy Tails Animal Hospital. Have a good night, and take care of Matcha.\n\nUser: Thank you.",
-    summary: "Justine Carlsow scheduled vaccine appointment for Matcha at 8:45 AM tomorrow. Asked about pricing - referred to clinic hours.",
-    recording_url: "https://nndjdbdnhnhxkasjgxqk.supabase.co/storage/v1/object/public/public-assets/Justine_Carlsow.MP3",
+    transcript:
+      "Assistant: Thank you for calling Happy Tails Animal Hospital. This is Stacy. How can I help you?\n\nUser: Hi. Good morning. I was wondering if vaccine appointments are walk-in, or do I still need to make an appointment for my pet?\n\nAssistant: Good morning. You'll need to make an appointment for vaccines. Would you like me to help you schedule one?\n\nUser: Yes, please.\n\nAssistant: Great. What day would you like to come in?\n\nUser: Is there anything available for tomorrow morning?\n\nAssistant: I have availability tomorrow morning at 8, 8:30, and 8:45. Which time works best for you?\n\nUser: 8:45, please.\n\nAssistant: Got it. What is your first and last name?\n\nUser: Justine Carlsow.\n\nAssistant: What's your pet's name?\n\nUser: Matcha.\n\nAssistant: And what's the best phone number to reach you?\n\nUser: 408-667-3122.\n\nAssistant: What's the reason for Matcha's visit? Is it just for vaccines?\n\nUser: Yes. Vaccines\n\nAssistant: You're all set for tomorrow at 8:45 AM for Matcha's vaccine. Is there anything else I can help you with?\n\nUser: Can I get a cost or a price estimation?\n\nAssistant: I'd recommend calling the clinic during business hours for pricing information. Is there anything else I can help you with?\n\nUser: No. That's all.\n\nAssistant: Thank you for calling Happy Tails Animal Hospital. Have a good night, and take care of Matcha.\n\nUser: Thank you.",
+    summary:
+      "Justine Carlsow scheduled vaccine appointment for Matcha at 8:45 AM tomorrow. Asked about pricing - referred to clinic hours.",
+    recording_url:
+      "https://nndjdbdnhnhxkasjgxqk.supabase.co/storage/v1/object/public/public-assets/Justine_Carlsow.MP3",
     created_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(), // 6 hours ago
     updated_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
     started_at: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
@@ -665,6 +695,9 @@ export const DEMO_CALLS = [
     transcript_messages: null,
     metadata: null,
     stereo_recording_url: null,
+    extracted_caller_phone: null,
+    extracted_caller_name: null,
+    extracted_pet_name: null,
   },
 
   // Lisette Duarte - Blood test results (Call Back)
@@ -680,10 +713,13 @@ export const DEMO_CALLS = [
     outcome: "callback",
     user_sentiment: "neutral",
     duration_seconds: 57,
-    cost: 0.10,
-    transcript: "Assistant: Thank you for calling Happy Tails Animal Hospital. This is Stacy, I'm an AI assistaint helping answer calls while the clinic is closed. How can I help you?\n\nUser: Hi. I'm calling in regards to my cat's blood test results. I still haven't received a callback.\n\nAssistant: I can help with that. What's your name and the best phone number to reach you?\n\nUser: It's Lisette Duarte. My phone number is 4 0 8 3 7 3 5 8 3 2.\n\nAssistant: Thank you, Lizette. What would you like me to pass along to the team regarding your cat's blood test results?\n\nUser: If they could just give me a callback on what his results say,\n\nAssistant: I've passed your message along to the team. Someone will call you back during business hours. Is there anything else I can help you with?\n\nUser: No. That'll be all.\n\nAssistant: Thank you for calling Happy Tails Animal Hospital. Have a good day.\n\nUser: Thank you. Bye bye.\n\nAssistant: Thank you for calling Happy Tails Animal Hospital. Have a good night.",
-    summary: "Lisette Duarte called requesting callback about cat's blood test results. Message taken for clinic to call back during business hours.",
-    recording_url: "https://nndjdbdnhnhxkasjgxqk.supabase.co/storage/v1/object/public/public-assets/Lisette_Duarte.MP3",
+    cost: 0.1,
+    transcript:
+      "Assistant: Thank you for calling Happy Tails Animal Hospital. This is Stacy, I'm an AI assistaint helping answer calls while the clinic is closed. How can I help you?\n\nUser: Hi. I'm calling in regards to my cat's blood test results. I still haven't received a callback.\n\nAssistant: I can help with that. What's your name and the best phone number to reach you?\n\nUser: It's Lisette Duarte. My phone number is 4 0 8 3 7 3 5 8 3 2.\n\nAssistant: Thank you, Lizette. What would you like me to pass along to the team regarding your cat's blood test results?\n\nUser: If they could just give me a callback on what his results say,\n\nAssistant: I've passed your message along to the team. Someone will call you back during business hours. Is there anything else I can help you with?\n\nUser: No. That'll be all.\n\nAssistant: Thank you for calling Happy Tails Animal Hospital. Have a good day.\n\nUser: Thank you. Bye bye.\n\nAssistant: Thank you for calling Happy Tails Animal Hospital. Have a good night.",
+    summary:
+      "Lisette Duarte called requesting callback about cat's blood test results. Message taken for clinic to call back during business hours.",
+    recording_url:
+      "https://nndjdbdnhnhxkasjgxqk.supabase.co/storage/v1/object/public/public-assets/Lisette_Duarte.MP3",
     created_at: new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString(), // 7 hours ago
     updated_at: new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString(),
     started_at: new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString(),
@@ -712,6 +748,9 @@ export const DEMO_CALLS = [
     transcript_messages: null,
     metadata: null,
     stereo_recording_url: null,
+    extracted_caller_phone: null,
+    extracted_caller_name: null,
+    extracted_pet_name: null,
   },
 ];
 

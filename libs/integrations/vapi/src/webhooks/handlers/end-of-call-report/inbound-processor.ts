@@ -36,9 +36,19 @@ import type { VapiCallResponse } from "../../../client";
 import {
   extractCallerNameFromTranscript,
   extractPetNameFromTranscript,
+  extractCallbackPhoneFromTranscript,
 } from "@odis-ai/shared/util";
 
 const logger = loggers.webhook.child("inbound-processor");
+
+/**
+ * Data extracted from transcript and structured data for caller identification
+ */
+interface ExtractedCallerData {
+  callerPhone: string | null;
+  callerName: string | null;
+  petName: string | null;
+}
 
 /**
  * Handle inbound call end
@@ -89,13 +99,14 @@ export async function handleInboundCallEnd(
     parseAllStructuredOutputs(artifact.structuredOutputs) ?? {};
 
   // Enhance structured data with transcript-extracted names if action card data is incomplete
-  const enhancedStructuredData = enhanceStructuredDataWithTranscriptNames(
-    callData.structuredData,
-    callData.transcript,
-    call.id,
-  );
+  const { enhanced: enhancedStructuredData, extracted: extractedCallerData } =
+    enhanceStructuredDataWithTranscriptNames(
+      callData.structuredData,
+      callData.transcript,
+      call.id,
+    );
 
-  // Build update data with enhanced structured data
+  // Build update data with enhanced structured data and extracted caller info
   const updateData = buildInboundUpdateData(
     call,
     message,
@@ -103,6 +114,7 @@ export async function handleInboundCallEnd(
     finalStatus,
     structuredOutputs,
     artifact,
+    extractedCallerData,
   );
 
   // Log extracted data
@@ -251,12 +263,15 @@ function extractInboundCallData(
   logger.info("Inbound call structured data analysis", {
     callId: call.id,
     customerPhone: call.customer?.number,
-    hasAnalysisStructuredData: !!(analysis as { structuredData?: unknown }).structuredData,
+    hasAnalysisStructuredData: !!(analysis as { structuredData?: unknown })
+      .structuredData,
     hasArtifactStructuredOutputs: !!artifact.structuredOutputs,
-    analysisStructuredData: (analysis as { structuredData?: unknown }).structuredData,
+    analysisStructuredData: (analysis as { structuredData?: unknown })
+      .structuredData,
     artifactStructuredOutputs: artifact.structuredOutputs,
     finalStructuredData: structuredData,
-    structuredDataSource: (analysis as { structuredData?: unknown }).structuredData
+    structuredDataSource: (analysis as { structuredData?: unknown })
+      .structuredData
       ? "analysis.structuredData"
       : artifact.structuredOutputs
         ? "artifact.structuredOutputs"
@@ -314,6 +329,7 @@ function buildInboundUpdateData(
   finalStatus: string,
   structuredOutputs: ReturnType<typeof parseAllStructuredOutputs>,
   artifact: VapiArtifact,
+  extractedCallerData: ExtractedCallerData,
 ): Record<string, unknown> {
   return {
     vapi_call_id: call.id,
@@ -338,6 +354,10 @@ function buildInboundUpdateData(
     user_sentiment: callData.userSentiment,
     cost: callData.cost,
     ended_reason: call.endedReason ?? message.endedReason ?? null,
+    // Extracted caller information - stored in dedicated columns for reliable display
+    extracted_caller_phone: extractedCallerData.callerPhone,
+    extracted_caller_name: extractedCallerData.callerName,
+    extracted_pet_name: extractedCallerData.petName,
     // Call intelligence columns
     outcome:
       (structuredOutputs.callOutcome as { call_outcome?: string } | null)
@@ -398,35 +418,79 @@ function logInboundCallData(
 }
 
 /**
- * Enhance structured data with transcript-extracted names
+ * Enhance structured data with transcript-extracted names and extract caller info
  *
  * If the action card data is missing caller/pet names, this function
  * attempts to extract them directly from the transcript and adds
  * fallback entries to ensure names are captured.
  *
+ * Also returns extracted caller data for storing in dedicated columns.
+ *
  * @param structuredData - Original structured data from VAPI
  * @param transcript - Call transcript
  * @param callId - VAPI call ID for logging
- * @returns Enhanced structured data with fallback names
+ * @returns Object with enhanced structured data and extracted caller info
  */
 function enhanceStructuredDataWithTranscriptNames(
   structuredData: Record<string, unknown> | undefined,
   transcript: string | null,
   callId: string,
-): Record<string, unknown> | undefined {
-  if (!transcript) {
-    logger.debug("No transcript available for name extraction", { callId });
-    return structuredData;
-  }
-
-  // Extract names from transcript
+): {
+  enhanced: Record<string, unknown> | undefined;
+  extracted: ExtractedCallerData;
+} {
+  // Extract from transcript
   const callerNameFromTranscript = extractCallerNameFromTranscript(transcript);
   const petNameFromTranscript = extractPetNameFromTranscript(transcript);
+  const phoneFromTranscript = extractCallbackPhoneFromTranscript(transcript);
+
+  // Extract from structured data (priority over transcript)
+  const callbackData = structuredData?.callback_data as
+    | Record<string, unknown>
+    | undefined;
+  const appointmentData = structuredData?.appointment_data as
+    | Record<string, unknown>
+    | undefined;
+
+  // Build extracted caller data with priority: structured data > transcript
+  const extracted: ExtractedCallerData = {
+    callerPhone:
+      (callbackData?.phone_number as string | undefined) ??
+      (appointmentData?.client_phone as string | undefined) ??
+      phoneFromTranscript,
+    callerName:
+      (callbackData?.caller_name as string | undefined) ??
+      (appointmentData?.client_name as string | undefined) ??
+      callerNameFromTranscript,
+    petName:
+      (callbackData?.pet_name as string | undefined) ??
+      (appointmentData?.patient_name as string | undefined) ??
+      petNameFromTranscript,
+  };
+
+  logger.info("Extracted caller data for dedicated columns", {
+    callId,
+    extractedCallerPhone: extracted.callerPhone,
+    extractedCallerName: extracted.callerName,
+    extractedPetName: extracted.petName,
+    sources: {
+      phoneFromTranscript,
+      callerNameFromTranscript,
+      petNameFromTranscript,
+      hasCallbackData: !!callbackData,
+      hasAppointmentData: !!appointmentData,
+    },
+  });
+
+  if (!transcript) {
+    logger.debug("No transcript available for name extraction", { callId });
+    return { enhanced: structuredData, extracted };
+  }
 
   // If no names found in transcript, return original data
   if (!callerNameFromTranscript && !petNameFromTranscript) {
     logger.debug("No names extracted from transcript", { callId });
-    return structuredData;
+    return { enhanced: structuredData, extracted };
   }
 
   logger.info("Extracted names from transcript", {
@@ -439,7 +503,12 @@ function enhanceStructuredDataWithTranscriptNames(
   const enhanced = structuredData ? { ...structuredData } : {};
 
   // Check if we already have an action card structure
-  const hasExistingActionCard = enhanced.card_type || enhanced.appointment_data || enhanced.callback_data || enhanced.emergency_data;
+  const hasExistingActionCard = Boolean(
+    enhanced.card_type ??
+    enhanced.appointment_data ??
+    enhanced.callback_data ??
+    enhanced.emergency_data,
+  );
 
   if (!hasExistingActionCard) {
     // No existing action card - create a basic callback card with extracted names
@@ -453,40 +522,56 @@ function enhanceStructuredDataWithTranscriptNames(
   } else {
     // Enhance existing action card data with missing names
     if (enhanced.callback_data && typeof enhanced.callback_data === "object") {
-      const callbackData = enhanced.callback_data as Record<string, unknown>;
-      if (!callbackData.caller_name && callerNameFromTranscript) {
-        callbackData.caller_name = callerNameFromTranscript;
+      const callbackDataObj = enhanced.callback_data as Record<string, unknown>;
+      if (!callbackDataObj.caller_name && callerNameFromTranscript) {
+        callbackDataObj.caller_name = callerNameFromTranscript;
       }
-      if (!callbackData.pet_name && petNameFromTranscript) {
-        callbackData.pet_name = petNameFromTranscript;
+      if (!callbackDataObj.pet_name && petNameFromTranscript) {
+        callbackDataObj.pet_name = petNameFromTranscript;
       }
     }
 
-    if (enhanced.appointment_data && typeof enhanced.appointment_data === "object") {
-      const appointmentData = enhanced.appointment_data as Record<string, unknown>;
-      if (!appointmentData.client_name && callerNameFromTranscript) {
-        appointmentData.client_name = callerNameFromTranscript;
+    if (
+      enhanced.appointment_data &&
+      typeof enhanced.appointment_data === "object"
+    ) {
+      const appointmentDataObj = enhanced.appointment_data as Record<
+        string,
+        unknown
+      >;
+      if (!appointmentDataObj.client_name && callerNameFromTranscript) {
+        appointmentDataObj.client_name = callerNameFromTranscript;
       }
-      if (!appointmentData.patient_name && petNameFromTranscript) {
-        appointmentData.patient_name = petNameFromTranscript;
+      if (!appointmentDataObj.patient_name && petNameFromTranscript) {
+        appointmentDataObj.patient_name = petNameFromTranscript;
       }
     }
 
     // If we have names but no appropriate structure to store them, add callback_data
-    const hasCallbackData = enhanced.callback_data && typeof enhanced.callback_data === "object";
-    const hasAppointmentData = enhanced.appointment_data && typeof enhanced.appointment_data === "object";
+    const hasCallbackDataObj =
+      enhanced.callback_data && typeof enhanced.callback_data === "object";
+    const hasAppointmentDataObj =
+      enhanced.appointment_data &&
+      typeof enhanced.appointment_data === "object";
 
-    if (!hasCallbackData && !hasAppointmentData && (callerNameFromTranscript || petNameFromTranscript)) {
+    if (
+      !hasCallbackDataObj &&
+      !hasAppointmentDataObj &&
+      (callerNameFromTranscript || petNameFromTranscript)
+    ) {
       enhanced.callback_data = {
         reason: "Names extracted from transcript",
         caller_name: callerNameFromTranscript,
         pet_name: petNameFromTranscript,
       };
-      logger.info("Added callback_data to existing action card for transcript names", { callId });
+      logger.info(
+        "Added callback_data to existing action card for transcript names",
+        { callId },
+      );
     }
   }
 
-  return enhanced;
+  return { enhanced, extracted };
 }
 
 /**
