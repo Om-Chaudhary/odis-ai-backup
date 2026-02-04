@@ -5,14 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { usePostHog } from "posthog-js/react";
-import {
-  Calendar,
-  Play,
-  ChevronDown,
-  Sparkles,
-  Menu,
-  X,
-} from "lucide-react";
+import { Calendar, Play, ChevronDown, Sparkles, Menu, X } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
 import { usePageLoaded } from "~/hooks/use-page-loaded";
 import { Logo } from "@odis-ai/shared/ui/Logo";
@@ -21,19 +14,19 @@ import { AnimatedGradientText } from "../ui/animated-gradient-text";
 import { NumberTicker } from "../ui/number-ticker";
 import { DotPattern } from "@odis-ai/shared/ui";
 
-// Rotating words for dynamic headline - outcome-focused with specificity
+// Rotating words for dynamic headline - benefit-focused
 const ROTATING_WORDS = [
-  "Answers at 2AM",
-  "Books Appointments Automatically",
-  "Calls Every Discharge",
-  "Saves $2,400+/Month",
+  "Never Misses a Call",
+  "Books More Appointments",
+  "Saves 15+ Hours Weekly",
+  "Works 24/7",
 ];
 
-// Social proof stats - lead with money, show scale, add time-to-value
+// Social proof stats
 const STATS = [
-  { value: 2400, suffix: "+", label: "Avg Monthly Savings", prefix: "$" },
   { value: 10000, suffix: "+", label: "Calls Handled" },
-  { value: 48, suffix: "hr", label: "To Go Live" },
+  { value: 98, suffix: "%", label: "Client Satisfaction" },
+  { value: 15, suffix: "+", label: "Hours Saved Weekly" },
 ];
 
 // Navigation links
@@ -273,9 +266,11 @@ export function HeroSection() {
             >
               <Sparkles className="h-3 w-3 text-teal-300 sm:h-3.5 sm:w-3.5" />
               <span className="xs:inline hidden">
-                Live in 48 Hours · No Contracts
+                Built for Busy Veterinary Clinics
               </span>
-              <span className="xs:hidden">Live in 48 Hours</span>
+              <span className="xs:hidden">
+                Built for Busy Veterinary Clinics
+              </span>
             </span>
           </motion.div>
 
@@ -284,8 +279,7 @@ export function HeroSection() {
             variants={itemVariants}
             className="font-display text-4xl leading-[1.1] font-bold tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.25)] sm:text-6xl sm:leading-[1.08] lg:text-7xl"
           >
-            Your Front Desk Can&apos;t Answer <br className="hidden sm:block" />
-            Every Call.{" "}
+            Your AI Assistant <br className="hidden sm:block" />
             <WordRotate
               words={ROTATING_WORDS}
               duration={4000}
@@ -304,7 +298,8 @@ export function HeroSection() {
             variants={itemVariants}
             className="mt-4 max-w-3xl text-base leading-relaxed text-teal-50/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.15)] sm:mt-6 sm:text-xl sm:leading-8"
           >
-            AI voice assistants that answer after-hours calls and automate discharge follow-ups—so{" "}
+            Veterinary AI voice assistants that pick up every call, follow-up
+            with every client, and{" "}
             <AnimatedGradientText
               speed={2}
               colorFrom="#5eead4"
@@ -312,7 +307,7 @@ export function HeroSection() {
               colorTo="#a7f3d0"
               className="font-semibold"
             >
-              your team focuses on patients, not phones.
+              free your team to focus on in-clinic care.
             </AnimatedGradientText>
           </motion.p>
 
@@ -340,7 +335,7 @@ export function HeroSection() {
               {/* Glow effect on hover */}
               <span className="pointer-events-none absolute inset-0 rounded-full bg-white opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-30" />
               <Calendar className="relative h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
-              <span className="relative">See Odis in Action</span>
+              <span className="relative">Schedule Demo</span>
             </Link>
 
             {/* Secondary CTA - Hear Odis */}
@@ -356,10 +351,9 @@ export function HeroSection() {
               )}
             >
               <Play className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:scale-110 sm:h-5 sm:w-5" />
-              <span>Listen to a 60s Demo</span>
+              <span>Hear Real Calls</span>
             </a>
           </motion.div>
-
 
           {/* Social Proof Stats */}
           <motion.div
@@ -369,11 +363,6 @@ export function HeroSection() {
             {STATS.map((stat, index) => (
               <div key={stat.label} className="flex flex-col items-center">
                 <div className="flex items-baseline gap-0.5">
-                  {"prefix" in stat && (
-                    <span className="font-display text-xl font-bold text-teal-300 sm:text-3xl">
-                      {stat.prefix}
-                    </span>
-                  )}
                   <NumberTicker
                     value={stat.value}
                     delay={0.3 + index * 0.15}

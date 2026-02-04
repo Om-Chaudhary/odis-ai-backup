@@ -1027,6 +1027,8 @@ export type Database = {
           sync_schedules: Json | null;
           timezone: string;
           updated_at: string;
+          vapi_availability_end_time: string | null;
+          vapi_availability_start_time: string | null;
         };
         Insert: {
           clinic_id: string;
@@ -1044,6 +1046,8 @@ export type Database = {
           sync_schedules?: Json | null;
           timezone?: string;
           updated_at?: string;
+          vapi_availability_end_time?: string | null;
+          vapi_availability_start_time?: string | null;
         };
         Update: {
           clinic_id?: string;
@@ -1061,6 +1065,8 @@ export type Database = {
           sync_schedules?: Json | null;
           timezone?: string;
           updated_at?: string;
+          vapi_availability_end_time?: string | null;
+          vapi_availability_start_time?: string | null;
         };
         Relationships: [
           {
