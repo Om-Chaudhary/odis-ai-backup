@@ -116,6 +116,8 @@ syncRouter.post("/reconcile", (req: Request, res: Response) => {
 
 // Outbound sync request types
 interface OutboundCasesRequest {
+  /** Clinic ID to sync (overrides API key clinic if provided) */
+  clinicId?: string;
   startDate?: string; // YYYY-MM-DD
   endDate?: string; // YYYY-MM-DD
   daysAhead?: number;
@@ -127,6 +129,8 @@ interface OutboundCasesRequest {
 }
 
 interface OutboundEnrichRequest {
+  /** Clinic ID to sync (overrides API key clinic if provided) */
+  clinicId?: string;
   startDate?: string; // YYYY-MM-DD
   endDate?: string; // YYYY-MM-DD
   parallelBatchSize?: number;
@@ -138,6 +142,8 @@ interface OutboundEnrichRequest {
 }
 
 interface OutboundFullRequest {
+  /** Clinic ID to sync (overrides API key clinic if provided) */
+  clinicId?: string;
   startDate?: string;
   endDate?: string;
   daysAhead?: number;
@@ -157,6 +163,8 @@ interface OutboundFullRequest {
 
 // Inbound sync request types
 interface InboundScheduleRequest {
+  /** Clinic ID to sync (overrides API key clinic if provided) */
+  clinicId?: string;
   /** Start date for slot generation (default: today) */
   startDate?: string;
   /** End date for slot generation (default: 30 days from start) */
@@ -170,6 +178,8 @@ interface InboundScheduleRequest {
 }
 
 interface InboundAppointmentRequest {
+  /** Clinic ID to sync (overrides API key clinic if provided) */
+  clinicId?: string;
   /** Start date for appointment sync (default: today) */
   startDate?: string;
   /** End date for appointment sync (default: daysAhead from start) */
@@ -180,6 +190,8 @@ interface InboundAppointmentRequest {
 
 // Shared request types
 interface ReconciliationRequest {
+  /** Clinic ID to sync (overrides API key clinic if provided) */
+  clinicId?: string;
   lookbackDays?: number;
 }
 
@@ -212,13 +224,26 @@ async function handleOutboundCasesSync(
   const { clinic } = req;
   const body = req.body as OutboundCasesRequest;
 
-  logger.info("Starting outbound cases sync", { clinicId: clinic.id });
+  // Resolve clinic ID: prefer body, fallback to middleware
+  const clinicId = body.clinicId ?? clinic.id;
+
+  if (!clinicId) {
+    res.status(400).json({
+      success: false,
+      error:
+        "Missing clinic ID - provide clinicId in request body or ensure API key is associated with a clinic",
+      durationMs: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+
+  logger.info("Starting outbound cases sync", { clinicId });
 
   try {
     // Get provider and credentials
-    const { provider, credentials, cleanup } = await createProviderForClinic(
-      clinic.id,
-    );
+    const { provider, credentials, cleanup } =
+      await createProviderForClinic(clinicId);
 
     try {
       // Authenticate with PIMS
@@ -238,7 +263,7 @@ async function handleOutboundCasesSync(
 
       // Create sync service
       const { InboundSyncService } = await import("@odis-ai/domain/sync");
-      const syncService = new InboundSyncService(supabase, provider, clinic.id);
+      const syncService = new InboundSyncService(supabase, provider, clinicId);
 
       // Build date range - support both flat (startDate/endDate) and nested (dateRange.start/end) formats
       const dateRange = buildDateRange(
@@ -251,7 +276,7 @@ async function handleOutboundCasesSync(
       const result = await syncService.sync({ dateRange });
 
       logger.info("Outbound cases sync completed", {
-        clinicId: clinic.id,
+        clinicId,
         syncId: result.syncId,
         stats: result.stats,
         durationMs: result.durationMs,
@@ -268,7 +293,7 @@ async function handleOutboundCasesSync(
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
     logger.error("Outbound cases sync failed", {
-      clinicId: clinic.id,
+      clinicId,
       error: errorMessage,
     });
 
@@ -293,12 +318,26 @@ async function handleOutboundEnrichSync(
   const { clinic } = req;
   const body = req.body as OutboundEnrichRequest;
 
-  logger.info("Starting outbound enrich sync", { clinicId: clinic.id });
+  // Resolve clinic ID: prefer body, fallback to middleware
+  const clinicId = body.clinicId ?? clinic.id;
+
+  if (!clinicId) {
+    res.status(400).json({
+      success: false,
+      error:
+        "Missing clinic ID - provide clinicId in request body or ensure API key is associated with a clinic",
+      durationMs: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+
+  logger.info("Starting outbound enrich sync", { clinicId });
 
   try {
     // Get provider and credentials
     const { provider, credentials, cleanup, userId } =
-      await createProviderForClinic(clinic.id);
+      await createProviderForClinic(clinicId);
 
     try {
       // Authenticate with PIMS
@@ -321,7 +360,7 @@ async function handleOutboundEnrichSync(
       const syncService = new CaseSyncService(
         supabase,
         provider,
-        clinic.id,
+        clinicId,
         userId,
       );
 
@@ -344,7 +383,7 @@ async function handleOutboundEnrichSync(
       });
 
       logger.info("Outbound enrich sync completed", {
-        clinicId: clinic.id,
+        clinicId,
         syncId: result.syncId,
         stats: result.stats,
         durationMs: result.durationMs,
@@ -362,12 +401,12 @@ async function handleOutboundEnrichSync(
       const health = await testSupabaseConnection();
       if (!health.success) {
         logger.warn("Supabase health check failed after browser cleanup", {
-          clinicId: clinic.id,
+          clinicId,
           error: health.error,
         });
       } else {
         logger.debug("Supabase health check passed after browser cleanup", {
-          clinicId: clinic.id,
+          clinicId,
           latencyMs: health.latencyMs,
         });
       }
@@ -376,7 +415,7 @@ async function handleOutboundEnrichSync(
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
     logger.error("Outbound enrich sync failed", {
-      clinicId: clinic.id,
+      clinicId,
       error: errorMessage,
     });
 
@@ -400,13 +439,26 @@ async function handleReconciliation(
   const { clinic } = req;
   const body = req.body as ReconciliationRequest;
 
-  logger.info("Starting reconciliation", { clinicId: clinic.id });
+  // Resolve clinic ID: prefer body, fallback to middleware
+  const clinicId = body.clinicId ?? clinic.id;
+
+  if (!clinicId) {
+    res.status(400).json({
+      success: false,
+      error:
+        "Missing clinic ID - provide clinicId in request body or ensure API key is associated with a clinic",
+      durationMs: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+
+  logger.info("Starting reconciliation", { clinicId });
 
   try {
     // Get provider and credentials
-    const { provider, credentials, cleanup } = await createProviderForClinic(
-      clinic.id,
-    );
+    const { provider, credentials, cleanup } =
+      await createProviderForClinic(clinicId);
 
     try {
       // Authenticate with PIMS
@@ -426,7 +478,7 @@ async function handleReconciliation(
 
       // Create reconciler
       const { CaseReconciler } = await import("@odis-ai/domain/sync");
-      const reconciler = new CaseReconciler(supabase, provider, clinic.id);
+      const reconciler = new CaseReconciler(supabase, provider, clinicId);
 
       // Run reconciliation
       const result = await reconciler.reconcile({
@@ -434,7 +486,7 @@ async function handleReconciliation(
       });
 
       logger.info("Reconciliation completed", {
-        clinicId: clinic.id,
+        clinicId,
         syncId: result.syncId,
         stats: result.stats,
         durationMs: result.durationMs,
@@ -452,7 +504,7 @@ async function handleReconciliation(
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
     logger.error("Reconciliation failed", {
-      clinicId: clinic.id,
+      clinicId,
       error: errorMessage,
     });
 
@@ -477,12 +529,26 @@ async function handleOutboundFullSync(
   const { clinic } = req;
   const body = req.body as OutboundFullRequest;
 
-  logger.info("Starting outbound full sync", { clinicId: clinic.id });
+  // Resolve clinic ID: prefer body, fallback to middleware
+  const clinicId = body.clinicId ?? clinic.id;
+
+  if (!clinicId) {
+    res.status(400).json({
+      success: false,
+      error:
+        "Missing clinic ID - provide clinicId in request body or ensure API key is associated with a clinic",
+      durationMs: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+
+  logger.info("Starting outbound full sync", { clinicId });
 
   try {
     // Get provider and credentials
     const { provider, credentials, cleanup, userId } =
-      await createProviderForClinic(clinic.id);
+      await createProviderForClinic(clinicId);
 
     try {
       // Authenticate with PIMS
@@ -505,7 +571,7 @@ async function handleOutboundFullSync(
       const orchestrator = new SyncOrchestrator(
         supabase,
         provider,
-        clinic.id,
+        clinicId,
         userId,
       );
 
@@ -520,7 +586,7 @@ async function handleOutboundFullSync(
         const forwardDays = body.forwardDays ?? body.daysAhead ?? 14;
 
         logger.info("Running bidirectional sync", {
-          clinicId: clinic.id,
+          clinicId,
           backwardDays,
           forwardDays,
         });
@@ -532,7 +598,7 @@ async function handleOutboundFullSync(
         });
 
         logger.info("Outbound full sync (bidirectional) completed", {
-          clinicId: clinic.id,
+          clinicId,
           phases: {
             backwardCases: result.backwardInbound?.success,
             forwardCases: result.forwardInbound?.success,
@@ -550,7 +616,7 @@ async function handleOutboundFullSync(
         );
 
         logger.info("Running outbound full sync (forward-only)", {
-          clinicId: clinic.id,
+          clinicId,
           dateRange,
         });
 
@@ -564,7 +630,7 @@ async function handleOutboundFullSync(
         });
 
         logger.info("Outbound full sync completed", {
-          clinicId: clinic.id,
+          clinicId,
           phases: {
             cases: result.inbound?.success,
             enrich: result.cases?.success,
@@ -586,12 +652,12 @@ async function handleOutboundFullSync(
       const health = await testSupabaseConnection();
       if (!health.success) {
         logger.warn("Supabase health check failed after browser cleanup", {
-          clinicId: clinic.id,
+          clinicId,
           error: health.error,
         });
       } else {
         logger.debug("Supabase health check passed after browser cleanup", {
-          clinicId: clinic.id,
+          clinicId,
           latencyMs: health.latencyMs,
         });
       }
@@ -600,7 +666,7 @@ async function handleOutboundFullSync(
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
     logger.error("Outbound full sync failed", {
-      clinicId: clinic.id,
+      clinicId,
       error: errorMessage,
     });
 
@@ -699,7 +765,21 @@ async function handleInboundScheduleSync(
   const { clinic } = req;
   const body = req.body as InboundScheduleRequest;
 
-  logger.info("Starting inbound schedule sync", { clinicId: clinic.id });
+  // Resolve clinic ID: prefer body, fallback to middleware
+  const clinicId = body.clinicId ?? clinic.id;
+
+  if (!clinicId) {
+    res.status(400).json({
+      success: false,
+      error:
+        "Missing clinic ID - provide clinicId in request body or ensure API key is associated with a clinic",
+      durationMs: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+
+  logger.info("Starting inbound schedule sync", { clinicId });
 
   try {
     const supabase = createSupabaseServiceClient();
@@ -708,13 +788,13 @@ async function handleInboundScheduleSync(
     const { data: clinicData, error: clinicError } = await supabase
       .from("clinics")
       .select("name, timezone, business_hours")
-      .eq("id", clinic.id)
+      .eq("id", clinicId)
       .single();
 
     if (clinicError || !clinicData) {
       res.status(404).json({
         success: false,
-        error: `Clinic not found: ${clinic.id}`,
+        error: `Clinic not found: ${clinicId}`,
         durationMs: Date.now() - startTime,
         timestamp: new Date().toISOString(),
       });
@@ -747,7 +827,7 @@ async function handleInboundScheduleSync(
 
     // Generate slots
     const slots = generateScheduleSlots({
-      clinicId: clinic.id,
+      clinicId,
       startDate,
       endDate,
       businessHours,
@@ -786,7 +866,7 @@ async function handleInboundScheduleSync(
 
       if (error) {
         logger.error("Failed to insert schedule slots batch", {
-          clinicId: clinic.id,
+          clinicId,
           batchIndex: i,
           error: error.message,
         });
@@ -801,7 +881,7 @@ async function handleInboundScheduleSync(
     const startDateStr = startDate.toISOString().split("T")[0]!;
     const endDateStr = endDate.toISOString().split("T")[0]!;
     await supabase.from("schedule_syncs").insert({
-      clinic_id: clinic.id,
+      clinic_id: clinicId,
       sync_start_date: startDateStr,
       sync_end_date: endDateStr,
       status: "completed",
@@ -812,7 +892,7 @@ async function handleInboundScheduleSync(
     });
 
     logger.info("Inbound schedule sync completed", {
-      clinicId: clinic.id,
+      clinicId,
       clinicName: clinicData.name,
       timezone,
       dateRange: {
@@ -831,7 +911,7 @@ async function handleInboundScheduleSync(
       success: true,
       message: `Generated ${totalInserted} schedule slots`,
       clinic: {
-        id: clinic.id,
+        id: clinicId,
         name: clinicData.name,
         timezone,
       },
@@ -853,7 +933,7 @@ async function handleInboundScheduleSync(
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
     logger.error("Inbound schedule sync failed", {
-      clinicId: clinic.id,
+      clinicId,
       error: errorMessage,
     });
 
@@ -1019,7 +1099,21 @@ async function handleInboundAppointmentSync(
   const { clinic } = req;
   const body = req.body as InboundAppointmentRequest;
 
-  logger.info("Starting inbound appointment sync", { clinicId: clinic.id });
+  // Resolve clinic ID: prefer body, fallback to middleware
+  const clinicId = body.clinicId ?? clinic.id;
+
+  if (!clinicId) {
+    res.status(400).json({
+      success: false,
+      error:
+        "Missing clinic ID - provide clinicId in request body or ensure API key is associated with a clinic",
+      durationMs: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+
+  logger.info("Starting inbound appointment sync", { clinicId });
 
   let syncId: string | null = null;
 
@@ -1043,7 +1137,7 @@ async function handleInboundAppointmentSync(
     const { data: syncRecord, error: syncError } = await supabase
       .from("schedule_syncs")
       .insert({
-        clinic_id: clinic.id,
+        clinic_id: clinicId,
         sync_start_date: startDateStr,
         sync_end_date: endDateStr,
         sync_type: "appointments",
@@ -1055,7 +1149,7 @@ async function handleInboundAppointmentSync(
 
     if (syncError) {
       logger.error("Failed to create sync record", {
-        clinicId: clinic.id,
+        clinicId,
         error: syncError.message,
       });
     } else {
@@ -1063,9 +1157,8 @@ async function handleInboundAppointmentSync(
     }
 
     // Get provider and authenticate
-    const { provider, credentials, cleanup } = await createProviderForClinic(
-      clinic.id,
-    );
+    const { provider, credentials, cleanup } =
+      await createProviderForClinic(clinicId);
 
     try {
       // Authenticate with PIMS
@@ -1095,14 +1188,14 @@ async function handleInboundAppointmentSync(
 
       // Fetch appointments from IDEXX
       logger.info("Fetching appointments from IDEXX", {
-        clinicId: clinic.id,
+        clinicId,
         dateRange: { start: startDateStr, end: endDateStr },
       });
 
       const appointments = await provider.fetchAppointments(startDate, endDate);
 
       logger.info("Fetched appointments from IDEXX", {
-        clinicId: clinic.id,
+        clinicId,
         appointmentCount: appointments.length,
       });
 
@@ -1135,7 +1228,7 @@ async function handleInboundAppointmentSync(
           }
 
           return {
-            clinic_id: clinic.id,
+            clinic_id: clinicId,
             neo_appointment_id: appt.id,
             date: appt.date,
             start_time: timeStr,
@@ -1164,7 +1257,7 @@ async function handleInboundAppointmentSync(
 
           if (upsertError) {
             logger.error("Failed to upsert appointments batch", {
-              clinicId: clinic.id,
+              clinicId,
               batchIndex: i,
               error: upsertError.message,
             });
@@ -1182,7 +1275,7 @@ async function handleInboundAppointmentSync(
             deleted_at: new Date().toISOString(),
             last_synced_at: new Date().toISOString(),
           })
-          .eq("clinic_id", clinic.id)
+          .eq("clinic_id", clinicId)
           .gte("date", startDateStr)
           .lte("date", endDateStr)
           .is("deleted_at", null)
@@ -1195,7 +1288,7 @@ async function handleInboundAppointmentSync(
 
         if (removeError) {
           logger.warn("Failed to soft-delete stale appointments", {
-            clinicId: clinic.id,
+            clinicId,
             error: removeError.message,
           });
         } else {
@@ -1205,14 +1298,14 @@ async function handleInboundAppointmentSync(
 
       // Call PostgreSQL function to update booked_count in schedule_slots
       logger.info("Updating slot booked counts", {
-        clinicId: clinic.id,
+        clinicId,
         dateRange: { start: startDateStr, end: endDateStr },
       });
 
       const { data: updateResult, error: updateError } = (await supabase.rpc(
         "update_slot_booked_counts",
         {
-          p_clinic_id: clinic.id,
+          p_clinic_id: clinicId,
           p_start_date: startDateStr,
           p_end_date: endDateStr,
         },
@@ -1224,13 +1317,13 @@ async function handleInboundAppointmentSync(
       let slotsUpdated = 0;
       if (updateError) {
         logger.error("Failed to update slot booked counts", {
-          clinicId: clinic.id,
+          clinicId,
           error: updateError.message,
         });
       } else if (updateResult && updateResult.length > 0) {
         slotsUpdated = updateResult[0]?.slots_updated ?? 0;
         logger.info("Updated slot booked counts", {
-          clinicId: clinic.id,
+          clinicId,
           slotsUpdated,
           totalAppointments: updateResult[0]?.total_appointments ?? 0,
         });
@@ -1253,7 +1346,7 @@ async function handleInboundAppointmentSync(
       }
 
       logger.info("Inbound appointment sync completed", {
-        clinicId: clinic.id,
+        clinicId,
         syncId,
         dateRange: { start: startDateStr, end: endDateStr },
         stats: {
@@ -1270,7 +1363,7 @@ async function handleInboundAppointmentSync(
         success: true,
         syncId,
         message: `Synced ${appointments.length} appointments, updated ${slotsUpdated} slots`,
-        clinic: { id: clinic.id },
+        clinic: { id: clinicId },
         dateRange: { start: startDateStr, end: endDateStr },
         stats: {
           appointmentsFound: appointments.length,
@@ -1289,7 +1382,7 @@ async function handleInboundAppointmentSync(
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
     logger.error("Inbound appointment sync failed", {
-      clinicId: clinic.id,
+      clinicId,
       syncId,
       error: errorMessage,
     });
