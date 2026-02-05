@@ -30,9 +30,14 @@ export interface SyncHistoryItem {
 interface SyncHistoryTableProps {
   data: SyncHistoryItem[];
   isLoading: boolean;
+  clinicSlug: string;
 }
 
-export function SyncHistoryTable({ data, isLoading }: SyncHistoryTableProps) {
+export function SyncHistoryTable({
+  data,
+  isLoading,
+  clinicSlug,
+}: SyncHistoryTableProps) {
   const columns: ColumnDef<SyncHistoryItem>[] = [
     {
       accessorKey: "clinic",
@@ -43,7 +48,7 @@ export function SyncHistoryTable({ data, isLoading }: SyncHistoryTableProps) {
 
         return (
           <Link
-            href={`/admin/clinics/${clinic.id}`}
+            href={`/dashboard/${clinicSlug}/admin/clinics/${clinic.id}`}
             className="font-medium text-slate-900 transition-colors hover:text-amber-700"
           >
             {clinic.name}
@@ -62,9 +67,7 @@ export function SyncHistoryTable({ data, isLoading }: SyncHistoryTableProps) {
         // This is a temporary solution until we add a dedicated sync_type column
         const isFull = syncType === "full" || syncType === "bidirectional";
 
-        const displayType = isFull
-          ? "Full Sync"
-          : syncType.replace("_", " ");
+        const displayType = isFull ? "Full Sync" : syncType.replace("_", " ");
 
         const variantClass = isFull
           ? "bg-purple-100 text-purple-700 font-medium"

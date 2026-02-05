@@ -28,7 +28,11 @@ interface ScheduleConfig {
   sync_schedules: Json | null;
 }
 
-export function ClinicSyncOverview() {
+interface ClinicSyncOverviewProps {
+  clinicSlug: string;
+}
+
+export function ClinicSyncOverview({ clinicSlug }: ClinicSyncOverviewProps) {
   const { clinics } = useAdminContext();
 
   const { data: allSchedules, isLoading: schedulesLoading } =
@@ -69,9 +73,7 @@ export function ClinicSyncOverview() {
 
   // Filter to only IDEXX Neo clinics WITH active credentials
   const idexxClinics = clinics.filter(
-    (c) =>
-      c.pims_type === "idexx_neo" &&
-      credentialedClinicIds?.has(c.id),
+    (c) => c.pims_type === "idexx_neo" && credentialedClinicIds?.has(c.id),
   );
 
   if (schedulesLoading || credentialsLoading) {
@@ -174,7 +176,9 @@ export function ClinicSyncOverview() {
                   </div>
                 </div>
 
-                <Link href={`/admin/clinics/${clinic.id}?tab=sync`}>
+                <Link
+                  href={`/dashboard/${clinicSlug}/admin/clinics/${clinic.id}?tab=sync`}
+                >
                   <Button variant="ghost" size="sm" className="gap-1">
                     Configure
                     <ExternalLink className="h-3 w-3" />

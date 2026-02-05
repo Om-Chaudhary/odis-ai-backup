@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useParams } from "next/navigation";
 import type { Database } from "@odis-ai/shared/types";
 import { api } from "~/trpc/client";
 import { Button } from "@odis-ai/shared/ui/button";
@@ -27,6 +28,8 @@ type UserRole =
   | "client";
 
 export default function AdminUsersPage() {
+  const params = useParams<{ clinicSlug: string }>();
+  const clinicSlug = params.clinicSlug;
   const [search, setSearch] = useState("");
   const [role, setRole] = useState<UserRole>("all");
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
@@ -93,7 +96,11 @@ export default function AdminUsersPage() {
       </Card>
 
       {/* Users Table */}
-      <UsersDataTable data={data?.users ?? []} isLoading={isLoading} />
+      <UsersDataTable
+        data={data?.users ?? []}
+        isLoading={isLoading}
+        clinicSlug={clinicSlug}
+      />
 
       {/* Results count */}
       {data && (

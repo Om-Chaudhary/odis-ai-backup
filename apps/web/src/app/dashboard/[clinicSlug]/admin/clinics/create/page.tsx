@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { Button } from "@odis-ai/shared/ui/button";
 import { Input } from "@odis-ai/shared/ui/input";
 import { Label } from "@odis-ai/shared/ui/label";
@@ -19,6 +19,8 @@ import { api } from "~/trpc/client";
 
 export default function CreateClinicPage() {
   const router = useRouter();
+  const params = useParams<{ clinicSlug: string }>();
+  const clinicSlug = params.clinicSlug;
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -34,7 +36,7 @@ export default function CreateClinicPage() {
     onSuccess: (data) => {
       toast.success("Clinic created successfully");
 
-      router.push(`/admin/clinics/${data.id}`);
+      router.push(`/dashboard/${clinicSlug}/admin/clinics/${data.id}`);
     },
     onError: (error) => {
       toast.error(error.message || "Failed to create clinic");

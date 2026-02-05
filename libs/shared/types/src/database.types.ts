@@ -713,7 +713,7 @@ export type Database = {
       };
       clinic_api_keys: {
         Row: {
-          clinic_id: string;
+          clinic_id: string | null;
           created_at: string;
           expires_at: string | null;
           id: string;
@@ -727,7 +727,7 @@ export type Database = {
           user_id: string;
         };
         Insert: {
-          clinic_id: string;
+          clinic_id?: string | null;
           created_at?: string;
           expires_at?: string | null;
           id?: string;
@@ -741,7 +741,7 @@ export type Database = {
           user_id: string;
         };
         Update: {
-          clinic_id?: string;
+          clinic_id?: string | null;
           created_at?: string;
           expires_at?: string | null;
           id?: string;
@@ -1025,6 +1025,8 @@ export type Database = {
           stale_threshold_minutes: number;
           sync_horizon_days: number;
           sync_schedules: Json | null;
+          target_room_id: string | null;
+          target_room_name: string | null;
           timezone: string;
           updated_at: string;
           vapi_availability_end_time: string | null;
@@ -1044,6 +1046,8 @@ export type Database = {
           stale_threshold_minutes?: number;
           sync_horizon_days?: number;
           sync_schedules?: Json | null;
+          target_room_id?: string | null;
+          target_room_name?: string | null;
           timezone?: string;
           updated_at?: string;
           vapi_availability_end_time?: string | null;
@@ -1063,6 +1067,8 @@ export type Database = {
           stale_threshold_minutes?: number;
           sync_horizon_days?: number;
           sync_schedules?: Json | null;
+          target_room_id?: string | null;
+          target_room_name?: string | null;
           timezone?: string;
           updated_at?: string;
           vapi_availability_end_time?: string | null;
@@ -2565,6 +2571,7 @@ export type Database = {
           status: string;
           sync_end_date: string;
           sync_start_date: string;
+          sync_type: string | null;
         };
         Insert: {
           appointments_added?: number | null;
@@ -2590,6 +2597,7 @@ export type Database = {
           status?: string;
           sync_end_date: string;
           sync_start_date: string;
+          sync_type?: string | null;
         };
         Update: {
           appointments_added?: number | null;
@@ -2615,6 +2623,7 @@ export type Database = {
           status?: string;
           sync_end_date?: string;
           sync_start_date?: string;
+          sync_type?: string | null;
         };
         Relationships: [
           {
@@ -4299,6 +4308,13 @@ export type Database = {
       update_slot_booked_count: {
         Args: { p_clinic_id: string; p_date: string; p_start_time: string };
         Returns: undefined;
+      };
+      update_slot_booked_counts: {
+        Args: { p_clinic_id: string; p_end_date: string; p_start_date: string };
+        Returns: {
+          slots_updated: number;
+          total_appointments: number;
+        }[];
       };
       update_slot_counts_bulk: {
         Args: { p_clinic_id: string; p_end_date: string; p_start_date: string };

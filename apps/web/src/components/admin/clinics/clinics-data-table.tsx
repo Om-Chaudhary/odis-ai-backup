@@ -22,9 +22,14 @@ type Clinic = Database["public"]["Tables"]["clinics"]["Row"];
 interface ClinicsDataTableProps {
   data: Clinic[];
   isLoading: boolean;
+  clinicSlug: string;
 }
 
-export function ClinicsDataTable({ data, isLoading }: ClinicsDataTableProps) {
+export function ClinicsDataTable({
+  data,
+  isLoading,
+  clinicSlug,
+}: ClinicsDataTableProps) {
   const router = useRouter();
 
   const columns: ColumnDef<Clinic>[] = [
@@ -123,13 +128,21 @@ export function ClinicsDataTable({ data, isLoading }: ClinicsDataTableProps) {
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => router.push(`/admin/clinics/${clinic.id}`)}
+                onClick={() =>
+                  router.push(
+                    `/dashboard/${clinicSlug}/admin/clinics/${clinic.id}`,
+                  )
+                }
               >
                 <Eye className="mr-2 h-4 w-4" />
                 View Details
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => router.push(`/admin/clinics/${clinic.id}/edit`)}
+                onClick={() =>
+                  router.push(
+                    `/dashboard/${clinicSlug}/admin/clinics/${clinic.id}`,
+                  )
+                }
               >
                 <Edit className="mr-2 h-4 w-4" />
                 Edit Settings

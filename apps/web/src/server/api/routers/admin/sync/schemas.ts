@@ -12,7 +12,7 @@ export const getSyncHistorySchema = z.object({
 
 export const triggerSyncSchema = z.object({
   clinicId: z.string().uuid(),
-  type: z.enum(["inbound", "cases", "reconciliation"]),
+  type: z.enum(["cases", "enrich", "reconciliation"]),
 });
 
 export const triggerFullSyncSchema = z.object({
@@ -33,6 +33,14 @@ export const triggerScheduleSlotsSchema = z.object({
   defaultCapacity: z.number().int().min(1).max(10).default(2),
 });
 
+export const triggerAppointmentSyncSchema = z.object({
+  clinicId: z.string().uuid(),
+  /** Start date for appointment sync (default: today) */
+  startDate: z.string().optional(),
+  /** Number of days ahead to sync (default: 7) */
+  daysAhead: z.number().int().min(1).max(30).default(7),
+});
+
 export const getSyncSchedulesSchema = z.object({
   clinicId: z.string().uuid().optional(),
 });
@@ -51,7 +59,7 @@ export const cancelSyncSchema = z.object({
 
 // Individual sync schedule item
 export const syncScheduleItemSchema = z.object({
-  type: z.enum(["inbound", "cases", "reconciliation"]),
+  type: z.enum(["cases", "enrich", "reconciliation"]),
   cron: z.string().min(9).max(100), // Cron expression (e.g., "0 9 * * *")
   enabled: z.boolean(),
 });
@@ -67,4 +75,7 @@ export type TriggerSyncType = z.infer<typeof triggerSyncSchema>["type"];
 export type TriggerFullSyncInput = z.infer<typeof triggerFullSyncSchema>;
 export type TriggerScheduleSlotsInput = z.infer<
   typeof triggerScheduleSlotsSchema
+>;
+export type TriggerAppointmentSyncInput = z.infer<
+  typeof triggerAppointmentSyncSchema
 >;

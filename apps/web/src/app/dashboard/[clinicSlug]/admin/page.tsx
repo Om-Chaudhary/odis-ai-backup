@@ -5,11 +5,18 @@ import { QuickActionsCard } from "~/components/admin/overview/quick-actions-card
 import { RecentActivityFeed } from "~/components/admin/overview/recent-activity-feed";
 import { Skeleton } from "@odis-ai/shared/ui/skeleton";
 
+interface AdminOverviewPageProps {
+  params: Promise<{ clinicSlug: string }>;
+}
+
 /**
  * Admin Overview Page
  * Platform-wide health, stats, and quick actions
  */
-export default function AdminOverviewPage() {
+export default async function AdminOverviewPage({
+  params,
+}: AdminOverviewPageProps) {
+  const { clinicSlug } = await params;
   return (
     <div className="flex flex-col gap-5 p-5">
       {/* System Health */}
@@ -24,7 +31,7 @@ export default function AdminOverviewPage() {
 
       {/* Quick Actions & Recent Activity */}
       <div className="grid gap-6 md:grid-cols-2">
-        <QuickActionsCard />
+        <QuickActionsCard clinicSlug={clinicSlug} />
         <Suspense fallback={<Skeleton className="h-96 w-full" />}>
           <RecentActivityFeed />
         </Suspense>

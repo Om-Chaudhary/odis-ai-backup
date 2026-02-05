@@ -1,7 +1,12 @@
 /**
  * Zod Validation Schemas for Sync Routes
  *
- * Request validation for inbound, cases, reconciliation, and full sync operations.
+ * Request validation for outbound (cases, enrich, full) and inbound (schedule) sync operations.
+ *
+ * Endpoint naming convention:
+ * - /api/sync/outbound/*  - For Outbound Dashboard (Discharge Calls)
+ * - /api/sync/inbound/*   - For Inbound Dashboard (VAPI Scheduling)
+ * - /api/sync/reconcile   - Shared cleanup utility
  */
 
 import { z } from "zod";
@@ -15,10 +20,11 @@ const dateRangeSchema = z.object({
 });
 
 /**
- * Inbound sync request schema
- * Syncs appointments from PIMS to database
+ * Outbound cases sync request schema
+ * Pulls appointments from PIMS and creates cases in Supabase
+ * Used by: /api/sync/outbound/cases
  */
-export const inboundSyncSchema = z
+export const outboundCasesSchema = z
   .object({
     // Flat format (deprecated but supported)
     startDate: z
@@ -42,17 +48,19 @@ export const inboundSyncSchema = z
       return !(hasFlatFormat && hasNestedFormat);
     },
     {
-      message: "Cannot mix flat format (startDate/endDate) with nested format (dateRange)",
+      message:
+        "Cannot mix flat format (startDate/endDate) with nested format (dateRange)",
     },
   );
 
-export type InboundSyncRequest = z.infer<typeof inboundSyncSchema>;
+export type OutboundCasesRequest = z.infer<typeof outboundCasesSchema>;
 
 /**
- * Case sync request schema
- * Enriches cases with consultation data from PIMS (past appointments only)
+ * Outbound enrich sync request schema
+ * Adds consultation data (SOAP notes, discharge summaries) and runs AI pipeline
+ * Used by: /api/sync/outbound/enrich
  */
-export const caseSyncSchema = z
+export const outboundEnrichSchema = z
   .object({
     // Flat format
     startDate: z
@@ -79,7 +87,7 @@ export const caseSyncSchema = z
     },
   );
 
-export type CaseSyncRequest = z.infer<typeof caseSyncSchema>;
+export type OutboundEnrichRequest = z.infer<typeof outboundEnrichSchema>;
 
 /**
  * Reconciliation request schema
@@ -92,10 +100,11 @@ export const reconciliationSchema = z.object({
 export type ReconciliationRequest = z.infer<typeof reconciliationSchema>;
 
 /**
- * Full sync request schema
- * Runs complete sync pipeline: inbound + cases + reconciliation
+ * Outbound full sync request schema
+ * Runs complete outbound workflow: cases + enrich + reconciliation
+ * Used by: /api/sync/outbound/full
  */
-export const fullSyncSchema = z
+export const outboundFullSchema = z
   .object({
     // Flat format
     startDate: z
@@ -123,4 +132,55 @@ export const fullSyncSchema = z
     },
   );
 
-export type FullSyncRequest = z.infer<typeof fullSyncSchema>;
+export type OutboundFullRequest = z.infer<typeof outboundFullSchema>;
+
+/**
+ * Inbound schedule sync request schema
+ * Generates VAPI availability slots based on clinic business hours
+ * Used by: /api/sync/inbound/schedule
+ */
+export const inboundScheduleSchema = z.object({
+  /** Start date for slot generation (default: today) */
+  startDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD format")
+    .optional(),
+  /** End date for slot generation (default: 30 days from start) */
+  endDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD format")
+    .optional(),
+  /** Number of days ahead to generate (alternative to endDate, default: 30) */
+  daysAhead: z.number().int().min(1).max(90).optional().default(30),
+  /** Slot duration in minutes (default: 15) */
+  slotDurationMinutes: z.number().int().min(5).max(60).optional().default(15),
+  /** Default capacity per slot (default: 2) */
+  defaultCapacity: z.number().int().min(1).max(10).optional().default(2),
+});
+
+export type InboundScheduleRequest = z.infer<typeof inboundScheduleSchema>;
+
+/**
+ * Inbound appointments sync request schema
+ * Syncs appointments from IDEXX Neo to schedule_appointments table
+ * and updates schedule_slots.booked_count for accurate availability
+ * Used by: /api/sync/inbound/appointments
+ */
+export const inboundAppointmentSchema = z.object({
+  /** Start date for appointment sync (default: today) */
+  startDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD format")
+    .optional(),
+  /** End date for appointment sync (default: daysAhead from start) */
+  endDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD format")
+    .optional(),
+  /** Number of days ahead to sync (default: 7) */
+  daysAhead: z.number().int().min(1).max(30).optional().default(7),
+});
+
+export type InboundAppointmentRequest = z.infer<
+  typeof inboundAppointmentSchema
+>;

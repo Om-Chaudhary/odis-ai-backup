@@ -5,8 +5,24 @@ import type { Database } from "@odis-ai/shared/types";
 import { api } from "~/trpc/client";
 import { Button } from "@odis-ai/shared/ui/button";
 import { Badge } from "@odis-ai/shared/ui/badge";
-import { ArrowLeft, Building2 } from "lucide-react";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@odis-ai/shared/ui/tabs";
+import {
+  ArrowLeft,
+  Building2,
+  LayoutDashboard,
+  RefreshCw,
+  Clock,
+  Phone,
+} from "lucide-react";
+import { ClinicOverviewTab } from "~/components/admin/clinics/clinic-overview-tab";
 import { ClinicSyncTab } from "~/components/admin/clinics/clinic-sync-tab";
+import { ClinicSchedulingTab } from "~/components/admin/clinics/clinic-scheduling-tab";
+import { ClinicVapiTab } from "~/components/admin/clinics/clinic-vapi-tab";
 
 type Clinic = Database["public"]["Tables"]["clinics"]["Row"];
 
@@ -14,6 +30,7 @@ export default function ClinicDetailPage() {
   const params = useParams<{ clinicId: string; clinicSlug: string }>();
   const router = useRouter();
   const clinicId = params.clinicId;
+  const clinicSlug = params.clinicSlug;
 
   const { data: clinic, isLoading } = api.admin.clinics.getById.useQuery({
     clinicId,
@@ -43,7 +60,9 @@ export default function ClinicDetailPage() {
           </p>
           <Button
             variant="outline"
-            onClick={() => router.push("/admin/clinics")}
+            onClick={() =>
+              router.push(`/dashboard/${clinicSlug}/admin/clinics`)
+            }
           >
             Back to Clinics
           </Button>
@@ -63,7 +82,9 @@ export default function ClinicDetailPage() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => router.push("/admin/clinics")}
+            onClick={() =>
+              router.push(`/dashboard/${clinicSlug}/admin/clinics`)
+            }
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -92,11 +113,60 @@ export default function ClinicDetailPage() {
             </p>
           </div>
         </div>
-
       </div>
 
-      {/* PIMS Sync Configuration */}
-      <ClinicSyncTab clinic={clinicData} clinicId={clinicId} />
+      {/* Tabbed Content */}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="mb-6 w-full justify-start gap-1 bg-slate-100 p-1">
+          <TabsTrigger
+            value="overview"
+            className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            <LayoutDashboard className="h-4 w-4" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger
+            value="sync"
+            className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            <RefreshCw className="h-4 w-4" />
+            PIMS Sync
+          </TabsTrigger>
+          <TabsTrigger
+            value="scheduling"
+            className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            <Clock className="h-4 w-4" />
+            Scheduling
+          </TabsTrigger>
+          <TabsTrigger
+            value="vapi"
+            className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+          >
+            <Phone className="h-4 w-4" />
+            VAPI
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview">
+          <ClinicOverviewTab clinic={clinicData} />
+        </TabsContent>
+
+        <TabsContent value="sync">
+          <ClinicSyncTab clinic={clinicData} clinicId={clinicId} />
+        </TabsContent>
+
+        <TabsContent value="scheduling">
+          <ClinicSchedulingTab
+            clinicId={clinicId}
+            clinicSlug={clinicData.slug}
+          />
+        </TabsContent>
+
+        <TabsContent value="vapi">
+          <ClinicVapiTab clinicId={clinicId} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

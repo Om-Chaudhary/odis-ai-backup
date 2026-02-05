@@ -29,11 +29,6 @@ export default function AdminSyncPage() {
 
   const utils = api.useUtils();
 
-  // DEBUG: Log the clinic being used
-  console.log("[AdminSyncPage] URL clinicSlug:", clinicSlugFromUrl);
-  console.log("[AdminSyncPage] selectedClinicId:", selectedClinicId);
-  console.log("[AdminSyncPage] selectedClinic:", selectedClinic?.name);
-
   const { data: credentialedClinicIdsArray } =
     api.admin.sync.getClinicsWithCredentials.useQuery();
 
@@ -67,36 +62,6 @@ export default function AdminSyncPage() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      {/* DEBUG Panel - Remove after fixing */}
-      <div className="rounded-lg border-2 border-red-500 bg-red-50 p-4 font-mono text-xs">
-        <p>
-          <strong>DEBUG INFO:</strong>
-        </p>
-        <p>
-          URL clinicSlug:{" "}
-          <span className="text-blue-600">{clinicSlugFromUrl}</span>
-        </p>
-        <p>
-          selectedClinicId:{" "}
-          <span className="text-blue-600">{selectedClinicId ?? "NULL"}</span>
-        </p>
-        <p>
-          selectedClinic name:{" "}
-          <span className="text-blue-600">
-            {selectedClinic?.name ?? "NULL"}
-          </span>
-        </p>
-        <p>
-          Available clinics:{" "}
-          <span className="text-blue-600">
-            {clinics.map((c) => c.slug).join(", ") || "NONE"}
-          </span>
-        </p>
-        <p>
-          Clinics count: <span className="text-blue-600">{clinics.length}</span>
-        </p>
-      </div>
-
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -111,7 +76,10 @@ export default function AdminSyncPage() {
       <HealthMonitor />
 
       {/* Active Syncs */}
-      <ActiveSyncsCard clinicId={selectedClinicId ?? undefined} />
+      <ActiveSyncsCard
+        clinicId={selectedClinicId ?? undefined}
+        clinicSlug={clinicSlugFromUrl}
+      />
 
       {/* Sync Schedule Configuration */}
       {selectedClinicId && selectedClinic && (
@@ -171,6 +139,7 @@ export default function AdminSyncPage() {
             };
           })}
           isLoading={isLoading}
+          clinicSlug={clinicSlugFromUrl}
         />
 
         {history && (

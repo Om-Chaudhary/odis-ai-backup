@@ -6,6 +6,7 @@ import {
   triggerSyncSchema,
   triggerFullSyncSchema,
   triggerScheduleSlotsSchema,
+  triggerAppointmentSyncSchema,
   getSyncSchedulesSchema,
   getClinicSyncConfigSchema,
   getIdexxCredentialStatusSchema,
@@ -39,22 +40,9 @@ const CLINIC_API_KEYS: Record<string, string> = {
  */
 function getApiKeyForClinic(clinicId: string): string {
   const key = CLINIC_API_KEYS[clinicId];
-
-  // DEBUG: Log which key is being selected
-  console.log("[getApiKeyForClinic] clinicId:", clinicId);
-  console.log(
-    "[getApiKeyForClinic] found key prefix:",
-    key ? key.slice(0, 10) + "..." : "NONE",
-  );
-  console.log(
-    "[getApiKeyForClinic] available clinic IDs:",
-    Object.keys(CLINIC_API_KEYS),
-  );
-
   if (key) return key;
 
   // Fallback to default key
-  console.log("[getApiKeyForClinic] FALLING BACK to default key");
   return process.env.PIMS_SYNC_API_KEY ?? "";
 }
 
@@ -239,8 +227,8 @@ export const adminSyncRouter = createTRPCRouter({
       try {
         // Map to API endpoint path
         const endpointMap = {
-          inbound: "/api/sync/inbound",
-          cases: "/api/sync/cases",
+          cases: "/api/sync/outbound/cases",
+          enrich: "/api/sync/outbound/enrich",
           reconciliation: "/api/sync/reconcile",
         };
 
@@ -286,19 +274,22 @@ export const adminSyncRouter = createTRPCRouter({
     .input(triggerFullSyncSchema)
     .mutation(async ({ input }) => {
       try {
-        const response = await fetch(`${PIMS_SYNC_URL}/api/sync/full`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-api-key": getApiKeyForClinic(input.clinicId),
+        const response = await fetch(
+          `${PIMS_SYNC_URL}/api/sync/outbound/full`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": getApiKeyForClinic(input.clinicId),
+            },
+            body: JSON.stringify({
+              clinicId: input.clinicId,
+              bidirectional: true,
+              backwardDays: input.lookbackDays,
+              forwardDays: input.forwardDays,
+            }),
           },
-          body: JSON.stringify({
-            clinicId: input.clinicId,
-            bidirectional: true,
-            backwardDays: input.lookbackDays,
-            forwardDays: input.forwardDays,
-          }),
-        });
+        );
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -332,7 +323,7 @@ export const adminSyncRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       try {
         const response = await fetch(
-          `${PIMS_SYNC_URL}/api/sync/schedule-slots`,
+          `${PIMS_SYNC_URL}/api/sync/inbound/schedule`,
           {
             method: "POST",
             headers: {
@@ -367,6 +358,53 @@ export const adminSyncRouter = createTRPCRouter({
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: `Failed to generate schedule slots: ${error instanceof Error ? error.message : "Unknown error"}`,
+          cause: error,
+        });
+      }
+    }),
+
+  /**
+   * Trigger inbound appointment sync for a clinic
+   * Syncs appointments from IDEXX Neo and updates schedule_slots.booked_count
+   */
+  triggerAppointmentSync: adminProcedure
+    .input(triggerAppointmentSyncSchema)
+    .mutation(async ({ input }) => {
+      try {
+        const response = await fetch(
+          `${PIMS_SYNC_URL}/api/sync/inbound/appointments`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-api-key": getApiKeyForClinic(input.clinicId),
+            },
+            body: JSON.stringify({
+              clinicId: input.clinicId,
+              startDate: input.startDate,
+              daysAhead: input.daysAhead,
+            }),
+          },
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(
+            `Appointment sync failed: ${response.status} - ${errorText}`,
+          );
+        }
+
+        const data = await response.json();
+
+        return {
+          success: true,
+          message: `Appointment sync completed: ${data.stats?.appointmentsFound ?? 0} appointments synced`,
+          data,
+        };
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: `Failed to sync appointments: ${error instanceof Error ? error.message : "Unknown error"}`,
           cause: error,
         });
       }
@@ -451,7 +489,7 @@ export const adminSyncRouter = createTRPCRouter({
         for (const s of data.sync_schedules) {
           if (s && typeof s === "object" && "type" in s && "cron" in s) {
             schedules.push({
-              type: s.type as "inbound" | "cases" | "reconciliation",
+              type: s.type as "cases" | "enrich" | "reconciliation",
               cron: s.cron as string,
               enabled: (s.enabled as boolean) ?? true,
             });

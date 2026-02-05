@@ -23,9 +23,14 @@ type User = Database["public"]["Tables"]["users"]["Row"];
 interface UsersDataTableProps {
   data: User[];
   isLoading: boolean;
+  clinicSlug: string;
 }
 
-export function UsersDataTable({ data, isLoading }: UsersDataTableProps) {
+export function UsersDataTable({
+  data,
+  isLoading,
+  clinicSlug,
+}: UsersDataTableProps) {
   const router = useRouter();
 
   const columns: ColumnDef<User>[] = [
@@ -116,7 +121,9 @@ export function UsersDataTable({ data, isLoading }: UsersDataTableProps) {
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => router.push(`/admin/users/${user.id}`)}
+                onClick={() =>
+                  router.push(`/dashboard/${clinicSlug}/admin/users/${user.id}`)
+                }
               >
                 <Eye className="mr-2 h-4 w-4" />
                 View Details

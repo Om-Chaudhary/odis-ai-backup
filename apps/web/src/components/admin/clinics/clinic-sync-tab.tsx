@@ -32,7 +32,7 @@ interface ClinicSyncTabProps {
   clinicId: string;
 }
 
-type SyncType = "inbound" | "cases" | "reconciliation";
+type SyncType = "cases" | "enrich" | "reconciliation";
 
 interface ScheduleConfig {
   type: SyncType;
@@ -41,8 +41,8 @@ interface ScheduleConfig {
 }
 
 const DEFAULT_SCHEDULES: ScheduleConfig[] = [
-  { type: "inbound", cron: "0 8,12,17 * * 1-5", enabled: true },
-  { type: "cases", cron: "0 9,13,18 * * 1-5", enabled: true },
+  { type: "cases", cron: "0 8,12,17 * * 1-5", enabled: true },
+  { type: "enrich", cron: "0 9,13,18 * * 1-5", enabled: true },
   { type: "reconciliation", cron: "0 2 * * *", enabled: true },
 ];
 
@@ -50,14 +50,14 @@ const SYNC_TYPE_INFO: Record<
   SyncType,
   { label: string; description: string; icon: typeof DatabaseIcon }
 > = {
-  inbound: {
-    label: "Inbound Sync",
-    description: "Sync appointments from IDEXX to create cases",
+  cases: {
+    label: "Cases Sync",
+    description: "Pull appointments from IDEXX to create cases",
     icon: CalendarClock,
   },
-  cases: {
-    label: "Case Sync",
-    description: "Enrich cases with SOAP notes and consultation data",
+  enrich: {
+    label: "Enrich Sync",
+    description: "Add SOAP notes and consultation data + AI pipeline",
     icon: DatabaseIcon,
   },
   reconciliation: {
@@ -103,6 +103,17 @@ export function ClinicSyncTab({ clinic, clinicId }: ClinicSyncTabProps) {
     },
   });
 
+  const triggerAppointmentSyncMutation =
+    api.admin.sync.triggerAppointmentSync.useMutation({
+      onSuccess: (data) => {
+        toast.success(data.message);
+        void utils.admin.sync.getSyncHistory.invalidate();
+      },
+      onError: (error) => {
+        toast.error(`Appointment sync failed: ${error.message}`);
+      },
+    });
+
   const updateScheduleMutation = api.admin.sync.updateSyncSchedule.useMutation({
     onSuccess: (data) => {
       toast.success(
@@ -133,6 +144,10 @@ export function ClinicSyncTab({ clinic, clinicId }: ClinicSyncTabProps) {
     triggerSyncMutation.mutate({ clinicId, type });
   };
 
+  const handleTriggerAppointmentSync = () => {
+    triggerAppointmentSyncMutation.mutate({ clinicId, daysAhead: 7 });
+  };
+
   const handleStartEditing = () => {
     initializeSchedules();
     setIsEditing(true);
@@ -161,8 +176,7 @@ export function ClinicSyncTab({ clinic, clinicId }: ClinicSyncTabProps) {
     });
   };
 
-  const isIdexxClinic =
-    clinic.pims_type === "idexx_neo";
+  const isIdexxClinic = clinic.pims_type === "idexx_neo";
 
   return (
     <div className="space-y-6">
@@ -187,23 +201,23 @@ export function ClinicSyncTab({ clinic, clinicId }: ClinicSyncTabProps) {
 
         <div className="flex flex-wrap gap-3">
           <Button
-            onClick={() => handleTriggerSync("inbound")}
-            variant="outline"
-            className="gap-2"
-            disabled={triggerSyncMutation.isPending || !isIdexxClinic}
-          >
-            <Play className="h-4 w-4" />
-            Inbound Sync
-          </Button>
-
-          <Button
             onClick={() => handleTriggerSync("cases")}
             variant="outline"
             className="gap-2"
             disabled={triggerSyncMutation.isPending || !isIdexxClinic}
           >
             <Play className="h-4 w-4" />
-            Case Sync
+            Cases Sync
+          </Button>
+
+          <Button
+            onClick={() => handleTriggerSync("enrich")}
+            variant="outline"
+            className="gap-2"
+            disabled={triggerSyncMutation.isPending || !isIdexxClinic}
+          >
+            <Play className="h-4 w-4" />
+            Enrich Sync
           </Button>
 
           <Button
@@ -220,6 +234,62 @@ export function ClinicSyncTab({ clinic, clinicId }: ClinicSyncTabProps) {
         {!isIdexxClinic && (
           <p className="mt-3 text-sm text-amber-600">
             Manual sync is only available for IDEXX clinics.
+          </p>
+        )}
+      </Card>
+
+      {/* Inbound Sync (Appointment Availability) */}
+      <Card className="border-slate-200 bg-white p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">
+              Inbound Appointment Sync
+            </h3>
+            <p className="text-sm text-slate-500">
+              Sync appointments from IDEXX to update VAPI availability slots
+            </p>
+          </div>
+          {triggerAppointmentSyncMutation.isPending && (
+            <Badge variant="outline" className="gap-1">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Syncing...
+            </Badge>
+          )}
+        </div>
+
+        <div className="mb-4 rounded-lg bg-slate-50 p-4">
+          <p className="text-sm text-slate-600">
+            <span className="font-medium text-slate-900">What this does:</span>{" "}
+            Fetches appointments from IDEXX Neo and updates the{" "}
+            <code className="rounded bg-slate-200 px-1 text-xs">
+              schedule_slots.booked_count
+            </code>{" "}
+            field so VAPI shows accurate availability when callers ask to book
+            appointments.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <Button
+            onClick={handleTriggerAppointmentSync}
+            variant="outline"
+            className="gap-2"
+            disabled={
+              triggerAppointmentSyncMutation.isPending || !isIdexxClinic
+            }
+          >
+            {triggerAppointmentSyncMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <CalendarClock className="h-4 w-4" />
+            )}
+            Sync Appointments (7 days)
+          </Button>
+        </div>
+
+        {!isIdexxClinic && (
+          <p className="mt-3 text-sm text-amber-600">
+            Appointment sync is only available for IDEXX clinics.
           </p>
         )}
       </Card>

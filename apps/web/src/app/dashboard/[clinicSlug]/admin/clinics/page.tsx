@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { api } from "~/trpc/client";
 import { Button } from "@odis-ai/shared/ui/button";
 import { Input } from "@odis-ai/shared/ui/input";
@@ -21,6 +21,8 @@ type Clinic = Database["public"]["Tables"]["clinics"]["Row"];
 
 export default function AdminClinicsPage() {
   const router = useRouter();
+  const params = useParams<{ clinicSlug: string }>();
+  const clinicSlug = params.clinicSlug;
   const [search, setSearch] = useState("");
   const [pimsType, setPimsType] = useState<"all" | "idexx" | "neo">("all");
   const [isActive, setIsActive] = useState<boolean | undefined>(true);
@@ -50,7 +52,9 @@ export default function AdminClinicsPage() {
           </p>
         </div>
         <Button
-          onClick={() => router.push("/admin/clinics/create")}
+          onClick={() =>
+            router.push(`/dashboard/${clinicSlug}/admin/clinics/create`)
+          }
           className="gap-2 bg-amber-600 hover:bg-amber-700"
         >
           <Plus className="h-4 w-4" />
@@ -112,7 +116,11 @@ export default function AdminClinicsPage() {
       </Card>
 
       {/* Clinics Table */}
-      <ClinicsDataTable data={clinics} isLoading={isLoading} />
+      <ClinicsDataTable
+        data={clinics}
+        isLoading={isLoading}
+        clinicSlug={clinicSlug}
+      />
 
       {/* Results count */}
       {data && (

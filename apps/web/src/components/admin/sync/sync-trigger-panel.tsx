@@ -21,12 +21,9 @@ export function SyncTriggerPanel({ clinicId }: SyncTriggerPanelProps) {
 
   const triggerFullSyncMutation = api.admin.sync.triggerFullSync.useMutation({
     onSuccess: (result) => {
-      toast.success(
-        result.message ?? "Full sync triggered successfully",
-        {
-          description: "Syncing past 14 days + next 14 days",
-        },
-      );
+      toast.success(result.message ?? "Full sync triggered successfully", {
+        description: "Syncing past 14 days + next 14 days",
+      });
 
       void utils.admin.sync.getActiveSyncs.invalidate();
       void utils.admin.sync.getSyncHistory.invalidate();
@@ -36,25 +33,29 @@ export function SyncTriggerPanel({ clinicId }: SyncTriggerPanelProps) {
     },
   });
 
-  const triggerInboundMutation = api.admin.sync.triggerSync.useMutation({
+  const triggerCasesMutation = api.admin.sync.triggerSync.useMutation({
     onSuccess: () => {
-      toast.success("Inbound sync triggered successfully");
+      toast.success("Cases sync triggered successfully", {
+        description: "Pulling appointments from PIMS",
+      });
       void utils.admin.sync.getActiveSyncs.invalidate();
       void utils.admin.sync.getSyncHistory.invalidate();
     },
     onError: (error) => {
-      toast.error(error.message ?? "Failed to trigger inbound sync");
+      toast.error(error.message ?? "Failed to trigger cases sync");
     },
   });
 
-  const triggerCaseMutation = api.admin.sync.triggerSync.useMutation({
+  const triggerEnrichMutation = api.admin.sync.triggerSync.useMutation({
     onSuccess: () => {
-      toast.success("Case sync triggered successfully");
+      toast.success("Enrich sync triggered successfully", {
+        description: "Adding consultation data + AI pipeline",
+      });
       void utils.admin.sync.getActiveSyncs.invalidate();
       void utils.admin.sync.getSyncHistory.invalidate();
     },
     onError: (error) => {
-      toast.error(error.message ?? "Failed to trigger case sync");
+      toast.error(error.message ?? "Failed to trigger enrich sync");
     },
   });
 
@@ -71,8 +72,8 @@ export function SyncTriggerPanel({ clinicId }: SyncTriggerPanelProps) {
 
   const anyPending =
     triggerFullSyncMutation.isPending ||
-    triggerInboundMutation.isPending ||
-    triggerCaseMutation.isPending ||
+    triggerCasesMutation.isPending ||
+    triggerEnrichMutation.isPending ||
     triggerReconciliationMutation.isPending;
 
   return (
@@ -115,7 +116,7 @@ export function SyncTriggerPanel({ clinicId }: SyncTriggerPanelProps) {
           <div className="flex gap-3">
             <Button
               onClick={() => {
-                triggerInboundMutation.mutate({ clinicId, type: "inbound" });
+                triggerCasesMutation.mutate({ clinicId, type: "cases" });
               }}
               disabled={anyPending}
               variant="outline"
@@ -124,15 +125,15 @@ export function SyncTriggerPanel({ clinicId }: SyncTriggerPanelProps) {
             >
               <RefreshCw
                 className={`h-4 w-4 ${
-                  triggerInboundMutation.isPending ? "animate-spin" : ""
+                  triggerCasesMutation.isPending ? "animate-spin" : ""
                 }`}
               />
-              Inbound Only
+              Cases Only
             </Button>
 
             <Button
               onClick={() => {
-                triggerCaseMutation.mutate({ clinicId, type: "cases" });
+                triggerEnrichMutation.mutate({ clinicId, type: "enrich" });
               }}
               disabled={anyPending}
               variant="outline"
@@ -141,10 +142,10 @@ export function SyncTriggerPanel({ clinicId }: SyncTriggerPanelProps) {
             >
               <RefreshCw
                 className={`h-4 w-4 ${
-                  triggerCaseMutation.isPending ? "animate-spin" : ""
+                  triggerEnrichMutation.isPending ? "animate-spin" : ""
                 }`}
               />
-              Cases Only
+              Enrich Only
             </Button>
 
             <Button

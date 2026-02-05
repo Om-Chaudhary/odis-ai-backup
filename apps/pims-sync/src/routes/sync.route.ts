@@ -4,11 +4,17 @@
  * API routes for triggering PIMS sync operations.
  * Uses domain sync services with IDEXX provider.
  *
+ * Endpoint naming convention:
+ * - /api/sync/outbound/*  - For Outbound Dashboard (Discharge Calls)
+ * - /api/sync/inbound/*   - For Inbound Dashboard (VAPI Scheduling)
+ * - /api/sync/reconcile   - Shared cleanup utility
+ *
  * Endpoints:
- * - POST /api/sync/inbound   - Sync appointments from PIMS
- * - POST /api/sync/cases     - Enrich cases with consultation data
- * - POST /api/sync/reconcile - 7-day historical reconciliation
- * - POST /api/sync/full      - Run all three sync phases
+ * - POST /api/sync/outbound/cases   - Pull appointments from PIMS, create cases
+ * - POST /api/sync/outbound/enrich  - Add consultation data + AI pipeline
+ * - POST /api/sync/outbound/full    - Complete outbound workflow (cases + enrich + reconcile)
+ * - POST /api/sync/inbound/schedule - Generate VAPI availability slots
+ * - POST /api/sync/reconcile        - 7-day historical reconciliation
  */
 
 import { Router } from "express";
@@ -29,25 +35,70 @@ syncRouter.use((req: Request, res: Response, next: NextFunction) => {
   void apiKeyAuth()(req, res, next);
 });
 
+// ============================================================================
+// OUTBOUND ENDPOINTS - For Outbound Dashboard (Discharge Calls)
+// ============================================================================
+
 /**
- * POST /api/sync/inbound
+ * POST /api/sync/outbound/cases
  *
- * Sync appointments from PIMS to database.
+ * Pull appointments from PIMS and create cases in Supabase.
  * Creates or updates case records based on appointments.
  */
-syncRouter.post("/inbound", (req: Request, res: Response) => {
-  void handleInboundSync(req as AuthenticatedRequest, res);
+syncRouter.post("/outbound/cases", (req: Request, res: Response) => {
+  void handleOutboundCasesSync(req as AuthenticatedRequest, res);
 });
 
 /**
- * POST /api/sync/cases
+ * POST /api/sync/outbound/enrich
  *
  * Enrich cases with consultation data from PIMS.
- * Fetches SOAP notes, discharge summaries, etc.
+ * Fetches SOAP notes, discharge summaries, and runs AI pipeline.
  */
-syncRouter.post("/cases", (req: Request, res: Response) => {
-  void handleCaseSync(req as AuthenticatedRequest, res);
+syncRouter.post("/outbound/enrich", (req: Request, res: Response) => {
+  void handleOutboundEnrichSync(req as AuthenticatedRequest, res);
 });
+
+/**
+ * POST /api/sync/outbound/full
+ *
+ * Run complete outbound workflow:
+ * 1. Cases sync (pull appointments)
+ * 2. Enrich sync (consultation data + AI)
+ * 3. Reconciliation (7-day cleanup)
+ */
+syncRouter.post("/outbound/full", (req: Request, res: Response) => {
+  void handleOutboundFullSync(req as AuthenticatedRequest, res);
+});
+
+// ============================================================================
+// INBOUND ENDPOINTS - For Inbound Dashboard (VAPI Scheduling)
+// ============================================================================
+
+/**
+ * POST /api/sync/inbound/schedule
+ *
+ * Generate schedule availability slots based on clinic business hours.
+ * Does not require PIMS browser - uses clinic config from database.
+ */
+syncRouter.post("/inbound/schedule", (req: Request, res: Response) => {
+  void handleInboundScheduleSync(req as AuthenticatedRequest, res);
+});
+
+/**
+ * POST /api/sync/inbound/appointments
+ *
+ * Sync appointments from IDEXX Neo to update schedule availability.
+ * Fetches appointments from PIMS, upserts to schedule_appointments,
+ * and updates schedule_slots.booked_count for accurate VAPI availability.
+ */
+syncRouter.post("/inbound/appointments", (req: Request, res: Response) => {
+  void handleInboundAppointmentSync(req as AuthenticatedRequest, res);
+});
+
+// ============================================================================
+// SHARED ENDPOINTS
+// ============================================================================
 
 /**
  * POST /api/sync/reconcile
@@ -60,31 +111,11 @@ syncRouter.post("/reconcile", (req: Request, res: Response) => {
 });
 
 /**
- * POST /api/sync/full
- *
- * Run full sync pipeline:
- * 1. Inbound sync (appointments)
- * 2. Case sync (consultation enrichment)
- * 3. Reconciliation (7-day cleanup)
- */
-syncRouter.post("/full", (req: Request, res: Response) => {
-  void handleFullSync(req as AuthenticatedRequest, res);
-});
-
-/**
- * POST /api/sync/schedule-slots
- *
- * Generate schedule availability slots based on clinic business hours.
- * Does not require PIMS browser - uses clinic config from database.
- */
-syncRouter.post("/schedule-slots", (req: Request, res: Response) => {
-  void handleScheduleSlotsSync(req as AuthenticatedRequest, res);
-});
-
-/**
  * Request body types
  */
-interface InboundSyncRequest {
+
+// Outbound sync request types
+interface OutboundCasesRequest {
   startDate?: string; // YYYY-MM-DD
   endDate?: string; // YYYY-MM-DD
   daysAhead?: number;
@@ -95,7 +126,7 @@ interface InboundSyncRequest {
   };
 }
 
-interface CaseSyncRequest {
+interface OutboundEnrichRequest {
   startDate?: string; // YYYY-MM-DD
   endDate?: string; // YYYY-MM-DD
   parallelBatchSize?: number;
@@ -106,11 +137,7 @@ interface CaseSyncRequest {
   };
 }
 
-interface ReconciliationRequest {
-  lookbackDays?: number;
-}
-
-interface FullSyncRequest {
+interface OutboundFullRequest {
   startDate?: string;
   endDate?: string;
   daysAhead?: number;
@@ -128,7 +155,8 @@ interface FullSyncRequest {
   };
 }
 
-interface ScheduleSlotsRequest {
+// Inbound sync request types
+interface InboundScheduleRequest {
   /** Start date for slot generation (default: today) */
   startDate?: string;
   /** End date for slot generation (default: 30 days from start) */
@@ -139,6 +167,20 @@ interface ScheduleSlotsRequest {
   slotDurationMinutes?: number;
   /** Default capacity per slot (default: 2) */
   defaultCapacity?: number;
+}
+
+interface InboundAppointmentRequest {
+  /** Start date for appointment sync (default: today) */
+  startDate?: string;
+  /** End date for appointment sync (default: daysAhead from start) */
+  endDate?: string;
+  /** Number of days ahead to sync (default: 7) */
+  daysAhead?: number;
+}
+
+// Shared request types
+interface ReconciliationRequest {
+  lookbackDays?: number;
 }
 
 interface BusinessHours {
@@ -159,17 +201,18 @@ interface BusinessHoursConfig {
 }
 
 /**
- * Handle inbound sync request
+ * Handle outbound cases sync request
+ * Pulls appointments from PIMS and creates cases in Supabase
  */
-async function handleInboundSync(
+async function handleOutboundCasesSync(
   req: AuthenticatedRequest,
   res: Response,
 ): Promise<void> {
   const startTime = Date.now();
   const { clinic } = req;
-  const body = req.body as InboundSyncRequest;
+  const body = req.body as OutboundCasesRequest;
 
-  logger.info("Starting inbound sync", { clinicId: clinic.id });
+  logger.info("Starting outbound cases sync", { clinicId: clinic.id });
 
   try {
     // Get provider and credentials
@@ -207,7 +250,7 @@ async function handleInboundSync(
       // Run sync
       const result = await syncService.sync({ dateRange });
 
-      logger.info("Inbound sync completed", {
+      logger.info("Outbound cases sync completed", {
         clinicId: clinic.id,
         syncId: result.syncId,
         stats: result.stats,
@@ -224,7 +267,7 @@ async function handleInboundSync(
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    logger.error("Inbound sync failed", {
+    logger.error("Outbound cases sync failed", {
       clinicId: clinic.id,
       error: errorMessage,
     });
@@ -239,17 +282,18 @@ async function handleInboundSync(
 }
 
 /**
- * Handle case sync request
+ * Handle outbound enrich sync request
+ * Adds consultation data and runs AI pipeline
  */
-async function handleCaseSync(
+async function handleOutboundEnrichSync(
   req: AuthenticatedRequest,
   res: Response,
 ): Promise<void> {
   const startTime = Date.now();
   const { clinic } = req;
-  const body = req.body as CaseSyncRequest;
+  const body = req.body as OutboundEnrichRequest;
 
-  logger.info("Starting case sync", { clinicId: clinic.id });
+  logger.info("Starting outbound enrich sync", { clinicId: clinic.id });
 
   try {
     // Get provider and credentials
@@ -299,7 +343,7 @@ async function handleCaseSync(
         parallelBatchSize: body.parallelBatchSize,
       });
 
-      logger.info("Case sync completed", {
+      logger.info("Outbound enrich sync completed", {
         clinicId: clinic.id,
         syncId: result.syncId,
         stats: result.stats,
@@ -331,7 +375,7 @@ async function handleCaseSync(
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    logger.error("Case sync failed", {
+    logger.error("Outbound enrich sync failed", {
       clinicId: clinic.id,
       error: errorMessage,
     });
@@ -346,7 +390,7 @@ async function handleCaseSync(
 }
 
 /**
- * Handle reconciliation request
+ * Handle reconciliation request (shared utility)
  */
 async function handleReconciliation(
   req: AuthenticatedRequest,
@@ -422,17 +466,18 @@ async function handleReconciliation(
 }
 
 /**
- * Handle full sync request
+ * Handle outbound full sync request
+ * Complete outbound workflow: cases + enrich + reconcile
  */
-async function handleFullSync(
+async function handleOutboundFullSync(
   req: AuthenticatedRequest,
   res: Response,
 ): Promise<void> {
   const startTime = Date.now();
   const { clinic } = req;
-  const body = req.body as FullSyncRequest;
+  const body = req.body as OutboundFullRequest;
 
-  logger.info("Starting full sync", { clinicId: clinic.id });
+  logger.info("Starting outbound full sync", { clinicId: clinic.id });
 
   try {
     // Get provider and credentials
@@ -486,12 +531,12 @@ async function handleFullSync(
           reconciliationLookbackDays: 7,
         });
 
-        logger.info("Bidirectional sync completed", {
+        logger.info("Outbound full sync (bidirectional) completed", {
           clinicId: clinic.id,
           phases: {
-            backwardInbound: result.backwardInbound?.success,
-            forwardInbound: result.forwardInbound?.success,
-            cases: result.cases?.success,
+            backwardCases: result.backwardInbound?.success,
+            forwardCases: result.forwardInbound?.success,
+            enrich: result.cases?.success,
             reconciliation: result.reconciliation?.success,
           },
           durationMs: result.totalDurationMs,
@@ -504,7 +549,7 @@ async function handleFullSync(
           body.daysAhead ?? 7,
         );
 
-        logger.info("Running legacy forward sync", {
+        logger.info("Running outbound full sync (forward-only)", {
           clinicId: clinic.id,
           dateRange,
         });
@@ -518,11 +563,11 @@ async function handleFullSync(
           },
         });
 
-        logger.info("Full sync completed", {
+        logger.info("Outbound full sync completed", {
           clinicId: clinic.id,
           phases: {
-            inbound: result.inbound?.success,
-            cases: result.cases?.success,
+            cases: result.inbound?.success,
+            enrich: result.cases?.success,
             reconciliation: result.reconciliation?.success,
           },
           durationMs: result.totalDurationMs,
@@ -554,7 +599,7 @@ async function handleFullSync(
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    logger.error("Full sync failed", {
+    logger.error("Outbound full sync failed", {
       clinicId: clinic.id,
       error: errorMessage,
     });
@@ -641,20 +686,20 @@ function buildDateRange(
 }
 
 /**
- * Handle schedule slots sync request
+ * Handle inbound schedule sync request
  *
- * Generates availability slots based on clinic business hours.
+ * Generates VAPI availability slots based on clinic business hours.
  * Does not require PIMS browser authentication.
  */
-async function handleScheduleSlotsSync(
+async function handleInboundScheduleSync(
   req: AuthenticatedRequest,
   res: Response,
 ): Promise<void> {
   const startTime = Date.now();
   const { clinic } = req;
-  const body = req.body as ScheduleSlotsRequest;
+  const body = req.body as InboundScheduleRequest;
 
-  logger.info("Starting schedule slots sync", { clinicId: clinic.id });
+  logger.info("Starting inbound schedule sync", { clinicId: clinic.id });
 
   try {
     const supabase = createSupabaseServiceClient();
@@ -766,7 +811,7 @@ async function handleScheduleSlotsSync(
       duration_ms: Date.now() - startTime,
     });
 
-    logger.info("Schedule slots sync completed", {
+    logger.info("Inbound schedule sync completed", {
       clinicId: clinic.id,
       clinicName: clinicData.name,
       timezone,
@@ -807,7 +852,7 @@ async function handleScheduleSlotsSync(
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
-    logger.error("Schedule slots sync failed", {
+    logger.error("Inbound schedule sync failed", {
       clinicId: clinic.id,
       error: errorMessage,
     });
@@ -958,4 +1003,358 @@ function generateScheduleSlots(options: {
   }
 
   return slots;
+}
+
+/**
+ * Handle inbound appointment sync request
+ *
+ * Syncs appointments from IDEXX Neo to update schedule availability.
+ * This ensures that schedule_slots.booked_count reflects actual appointments.
+ */
+async function handleInboundAppointmentSync(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const startTime = Date.now();
+  const { clinic } = req;
+  const body = req.body as InboundAppointmentRequest;
+
+  logger.info("Starting inbound appointment sync", { clinicId: clinic.id });
+
+  let syncId: string | null = null;
+
+  try {
+    const supabase = createSupabaseServiceClient();
+
+    // Build date range
+    const startDate = body.startDate ? new Date(body.startDate) : new Date();
+    startDate.setHours(0, 0, 0, 0);
+
+    const daysAhead = body.daysAhead ?? 7;
+    const endDate = body.endDate
+      ? new Date(body.endDate)
+      : new Date(startDate.getTime() + daysAhead * 24 * 60 * 60 * 1000);
+    endDate.setHours(23, 59, 59, 999);
+
+    const startDateStr = startDate.toISOString().split("T")[0]!;
+    const endDateStr = endDate.toISOString().split("T")[0]!;
+
+    // Create sync record
+    const { data: syncRecord, error: syncError } = await supabase
+      .from("schedule_syncs")
+      .insert({
+        clinic_id: clinic.id,
+        sync_start_date: startDateStr,
+        sync_end_date: endDateStr,
+        sync_type: "appointments",
+        status: "in_progress",
+        started_at: new Date(startTime).toISOString(),
+      })
+      .select("id")
+      .single();
+
+    if (syncError) {
+      logger.error("Failed to create sync record", {
+        clinicId: clinic.id,
+        error: syncError.message,
+      });
+    } else {
+      syncId = syncRecord.id;
+    }
+
+    // Get provider and authenticate
+    const { provider, credentials, cleanup } = await createProviderForClinic(
+      clinic.id,
+    );
+
+    try {
+      // Authenticate with PIMS
+      const authenticated = await provider.authenticate(credentials);
+      if (!authenticated) {
+        // Update sync record with failure
+        if (syncId) {
+          await supabase
+            .from("schedule_syncs")
+            .update({
+              status: "failed",
+              error_message: "PIMS authentication failed",
+              completed_at: new Date().toISOString(),
+              duration_ms: Date.now() - startTime,
+            })
+            .eq("id", syncId);
+        }
+
+        res.status(401).json({
+          success: false,
+          error: "PIMS authentication failed",
+          durationMs: Date.now() - startTime,
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Fetch appointments from IDEXX
+      logger.info("Fetching appointments from IDEXX", {
+        clinicId: clinic.id,
+        dateRange: { start: startDateStr, end: endDateStr },
+      });
+
+      const appointments = await provider.fetchAppointments(startDate, endDate);
+
+      logger.info("Fetched appointments from IDEXX", {
+        clinicId: clinic.id,
+        appointmentCount: appointments.length,
+      });
+
+      // Upsert appointments to schedule_appointments table
+      let appointmentsAdded = 0;
+      const appointmentsUpdated = 0; // Reserved for future use when detecting actual updates vs inserts
+      let appointmentsRemoved = 0;
+
+      if (appointments.length > 0) {
+        // Convert PIMS appointments to database format
+        const appointmentRecords = appointments.map((appt) => {
+          // Parse the startTime to extract time string
+          let timeStr = "00:00:00";
+          let endTimeStr = "00:00:00";
+
+          if (appt.startTime) {
+            const hours = String(appt.startTime.getHours()).padStart(2, "0");
+            const minutes = String(appt.startTime.getMinutes()).padStart(
+              2,
+              "0",
+            );
+            timeStr = `${hours}:${minutes}:00`;
+
+            // Calculate end time from duration (default 15 minutes)
+            const durationMs = (appt.duration ?? 15) * 60 * 1000;
+            const endTime = new Date(appt.startTime.getTime() + durationMs);
+            const endHours = String(endTime.getHours()).padStart(2, "0");
+            const endMinutes = String(endTime.getMinutes()).padStart(2, "0");
+            endTimeStr = `${endHours}:${endMinutes}:00`;
+          }
+
+          return {
+            clinic_id: clinic.id,
+            neo_appointment_id: appt.id,
+            date: appt.date,
+            start_time: timeStr,
+            end_time: endTimeStr,
+            patient_name: appt.patient?.name ?? null,
+            client_name: appt.client?.name ?? null,
+            client_phone: appt.client?.phone ?? null,
+            provider_name: appt.provider?.name ?? null,
+            room_id: appt.provider?.id ?? null,
+            appointment_type: appt.type ?? null,
+            status: mapAppointmentStatus(appt.status),
+            last_synced_at: new Date().toISOString(),
+            deleted_at: null, // Clear soft delete if re-synced
+          };
+        });
+
+        // Upsert in batches
+        const batchSize = 100;
+        for (let i = 0; i < appointmentRecords.length; i += batchSize) {
+          const batch = appointmentRecords.slice(i, i + batchSize);
+          const { error: upsertError } = await supabase
+            .from("schedule_appointments")
+            .upsert(batch, {
+              onConflict: "clinic_id,neo_appointment_id",
+            });
+
+          if (upsertError) {
+            logger.error("Failed to upsert appointments batch", {
+              clinicId: clinic.id,
+              batchIndex: i,
+              error: upsertError.message,
+            });
+          } else {
+            appointmentsAdded += batch.length;
+          }
+        }
+
+        // Soft-delete appointments that weren't in this sync
+        // (appointments that existed in DB but not returned by IDEXX)
+        const syncedIds = appointments.map((a) => a.id);
+        const { data: removedData, error: removeError } = await supabase
+          .from("schedule_appointments")
+          .update({
+            deleted_at: new Date().toISOString(),
+            last_synced_at: new Date().toISOString(),
+          })
+          .eq("clinic_id", clinic.id)
+          .gte("date", startDateStr)
+          .lte("date", endDateStr)
+          .is("deleted_at", null)
+          .not(
+            "neo_appointment_id",
+            "in",
+            `(${syncedIds.map((id) => `'${id}'`).join(",")})`,
+          )
+          .select("id");
+
+        if (removeError) {
+          logger.warn("Failed to soft-delete stale appointments", {
+            clinicId: clinic.id,
+            error: removeError.message,
+          });
+        } else {
+          appointmentsRemoved = removedData?.length ?? 0;
+        }
+      }
+
+      // Call PostgreSQL function to update booked_count in schedule_slots
+      logger.info("Updating slot booked counts", {
+        clinicId: clinic.id,
+        dateRange: { start: startDateStr, end: endDateStr },
+      });
+
+      const { data: updateResult, error: updateError } = (await supabase.rpc(
+        "update_slot_booked_counts",
+        {
+          p_clinic_id: clinic.id,
+          p_start_date: startDateStr,
+          p_end_date: endDateStr,
+        },
+      )) as {
+        data: { slots_updated: number; total_appointments: number }[] | null;
+        error: Error | null;
+      };
+
+      let slotsUpdated = 0;
+      if (updateError) {
+        logger.error("Failed to update slot booked counts", {
+          clinicId: clinic.id,
+          error: updateError.message,
+        });
+      } else if (updateResult && updateResult.length > 0) {
+        slotsUpdated = updateResult[0]?.slots_updated ?? 0;
+        logger.info("Updated slot booked counts", {
+          clinicId: clinic.id,
+          slotsUpdated,
+          totalAppointments: updateResult[0]?.total_appointments ?? 0,
+        });
+      }
+
+      // Update sync record with success
+      if (syncId) {
+        await supabase
+          .from("schedule_syncs")
+          .update({
+            status: "completed",
+            appointments_added: appointmentsAdded,
+            appointments_updated: appointmentsUpdated,
+            appointments_removed: appointmentsRemoved,
+            slots_updated: slotsUpdated,
+            completed_at: new Date().toISOString(),
+            duration_ms: Date.now() - startTime,
+          })
+          .eq("id", syncId);
+      }
+
+      logger.info("Inbound appointment sync completed", {
+        clinicId: clinic.id,
+        syncId,
+        dateRange: { start: startDateStr, end: endDateStr },
+        stats: {
+          appointmentsFound: appointments.length,
+          appointmentsAdded,
+          appointmentsUpdated,
+          appointmentsRemoved,
+          slotsUpdated,
+        },
+        durationMs: Date.now() - startTime,
+      });
+
+      res.status(200).json({
+        success: true,
+        syncId,
+        message: `Synced ${appointments.length} appointments, updated ${slotsUpdated} slots`,
+        clinic: { id: clinic.id },
+        dateRange: { start: startDateStr, end: endDateStr },
+        stats: {
+          appointmentsFound: appointments.length,
+          appointmentsAdded,
+          appointmentsUpdated,
+          appointmentsRemoved,
+          slotsUpdated,
+        },
+        durationMs: Date.now() - startTime,
+        timestamp: new Date().toISOString(),
+      });
+    } finally {
+      await cleanup();
+    }
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    logger.error("Inbound appointment sync failed", {
+      clinicId: clinic.id,
+      syncId,
+      error: errorMessage,
+    });
+
+    // Update sync record with failure
+    if (syncId) {
+      const supabase = createSupabaseServiceClient();
+      await supabase
+        .from("schedule_syncs")
+        .update({
+          status: "failed",
+          error_message: errorMessage,
+          completed_at: new Date().toISOString(),
+          duration_ms: Date.now() - startTime,
+        })
+        .eq("id", syncId);
+    }
+
+    res.status(500).json({
+      success: false,
+      syncId,
+      error: errorMessage,
+      durationMs: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    });
+  }
+}
+
+/**
+ * Map PIMS appointment status to standardized status
+ */
+function mapAppointmentStatus(status: string | null | undefined): string {
+  if (!status) return "scheduled";
+
+  const statusLower = status.toLowerCase();
+
+  if (
+    statusLower.includes("cancel") ||
+    statusLower === "cancelled" ||
+    statusLower === "canceled"
+  ) {
+    return "cancelled";
+  }
+  if (
+    statusLower.includes("no show") ||
+    statusLower === "no_show" ||
+    statusLower === "noshow"
+  ) {
+    return "no_show";
+  }
+  if (
+    statusLower.includes("final") ||
+    statusLower === "finalized" ||
+    statusLower === "complete" ||
+    statusLower === "completed"
+  ) {
+    return "finalized";
+  }
+  if (
+    statusLower.includes("progress") ||
+    statusLower === "in_progress" ||
+    statusLower === "checked_in"
+  ) {
+    return "in_progress";
+  }
+
+  return "scheduled";
 }

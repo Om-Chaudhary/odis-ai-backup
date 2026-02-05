@@ -3,27 +3,9 @@
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
 import { cn } from "@odis-ai/shared/util";
-import { Clock, Send, PhoneIncoming, Palette, Settings as SettingsIcon } from "lucide-react";
+import { Palette, Settings as SettingsIcon } from "lucide-react";
 
 const TABS = [
-  {
-    id: "hours",
-    label: "Hours",
-    icon: Clock,
-    href: (clinicSlug: string) => `/dashboard/${clinicSlug}/settings/hours`,
-  },
-  {
-    id: "outbound",
-    label: "Outbound",
-    icon: Send,
-    href: (clinicSlug: string) => `/dashboard/${clinicSlug}/settings/outbound`,
-  },
-  {
-    id: "inbound",
-    label: "Inbound",
-    icon: PhoneIncoming,
-    href: (clinicSlug: string) => `/dashboard/${clinicSlug}/settings/inbound`,
-  },
   {
     id: "branding",
     label: "Branding",
@@ -86,9 +68,7 @@ export default function SettingsLayout({
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto">
-        {children}
-      </div>
+      <div className="flex-1 overflow-y-auto">{children}</div>
     </div>
   );
 }

@@ -25,7 +25,7 @@ interface ClinicSyncScheduleCardProps {
   isIdexxClinic: boolean;
 }
 
-type SyncType = "inbound" | "cases" | "reconciliation";
+type SyncType = "cases" | "enrich" | "reconciliation";
 
 interface ScheduleConfig {
   type: SyncType;
@@ -34,8 +34,8 @@ interface ScheduleConfig {
 }
 
 const DEFAULT_SCHEDULES: ScheduleConfig[] = [
-  { type: "inbound", cron: "0 8,12,17 * * 1-5", enabled: true },
-  { type: "cases", cron: "0 9,13,18 * * 1-5", enabled: true },
+  { type: "cases", cron: "0 8,12,17 * * 1-5", enabled: true },
+  { type: "enrich", cron: "0 9,13,18 * * 1-5", enabled: true },
   { type: "reconciliation", cron: "0 2 * * *", enabled: true },
 ];
 
@@ -43,14 +43,14 @@ const SYNC_TYPE_INFO: Record<
   SyncType,
   { label: string; description: string; icon: typeof DatabaseIcon }
 > = {
-  inbound: {
-    label: "Inbound Sync",
-    description: "Sync appointments from IDEXX to create cases",
+  cases: {
+    label: "Cases Sync",
+    description: "Pull appointments from IDEXX to create cases",
     icon: CalendarClock,
   },
-  cases: {
-    label: "Case Sync",
-    description: "Enrich cases with SOAP notes and consultation data",
+  enrich: {
+    label: "Enrich Sync",
+    description: "Add SOAP notes and consultation data + AI pipeline",
     icon: DatabaseIcon,
   },
   reconciliation: {
@@ -62,6 +62,7 @@ const SYNC_TYPE_INFO: Record<
 
 export function ClinicSyncScheduleCard({
   clinicId,
+  clinicSlug: _clinicSlug,
   clinicTimezone,
   isIdexxClinic,
 }: ClinicSyncScheduleCardProps) {

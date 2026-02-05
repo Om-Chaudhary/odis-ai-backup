@@ -21,9 +21,13 @@ type User = Database["public"]["Tables"]["users"]["Row"] & {
 interface UserClinicsSectionProps {
   user: User;
   userId: string;
+  clinicSlug: string;
 }
 
-export function UserClinicsSection({ user }: UserClinicsSectionProps) {
+export function UserClinicsSection({
+  user,
+  clinicSlug,
+}: UserClinicsSectionProps) {
   return (
     <Card className="border-slate-200 bg-white p-6">
       <div className="mb-4 flex items-center justify-between">
@@ -51,7 +55,7 @@ export function UserClinicsSection({ user }: UserClinicsSectionProps) {
                   </div>
                   <div>
                     <Link
-                      href={`/admin/clinics/${clinic.id}`}
+                      href={`/dashboard/${clinicSlug}/admin/clinics/${clinic.id}`}
                       className="text-sm font-medium text-slate-900 transition-colors hover:text-amber-700"
                     >
                       {clinic.name}

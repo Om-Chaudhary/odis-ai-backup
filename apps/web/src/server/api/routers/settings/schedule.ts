@@ -134,17 +134,22 @@ export const scheduleRouter = createTRPCRouter({
             updated_at: new Date().toISOString(),
           })
           .eq("clinic_id", clinic.id)
-          .select("id, clinic_id, daily_hours, timezone, created_at, updated_at")
+          .select(
+            "id, clinic_id, daily_hours, timezone, created_at, updated_at",
+          )
           .single();
 
         if (error) {
           throw new Error(`Failed to update schedule config: ${error.message}`);
         }
 
-        // Return with properly typed daily_hours
         return {
-          ...data,
+          id: data.id,
+          clinic_id: data.clinic_id,
           daily_hours: data.daily_hours as unknown as DailyHours,
+          timezone: data.timezone,
+          created_at: data.created_at,
+          updated_at: data.updated_at,
         } satisfies ScheduleConfigResponse;
       } else {
         // Create new config
@@ -155,17 +160,22 @@ export const scheduleRouter = createTRPCRouter({
             daily_hours: input.daily_hours,
             timezone: input.timezone,
           })
-          .select("id, clinic_id, daily_hours, timezone, created_at, updated_at")
+          .select(
+            "id, clinic_id, daily_hours, timezone, created_at, updated_at",
+          )
           .single();
 
         if (error) {
           throw new Error(`Failed to create schedule config: ${error.message}`);
         }
 
-        // Return with properly typed daily_hours
         return {
-          ...data,
+          id: data.id,
+          clinic_id: data.clinic_id,
           daily_hours: data.daily_hours as unknown as DailyHours,
+          timezone: data.timezone,
+          created_at: data.created_at,
+          updated_at: data.updated_at,
         } satisfies ScheduleConfigResponse;
       }
     }),

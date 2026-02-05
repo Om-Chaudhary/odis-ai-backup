@@ -11,13 +11,17 @@ import { useSyncAuditRealtime } from "./hooks";
 
 interface ActiveSyncsCardProps {
   clinicId?: string;
+  clinicSlug: string;
 }
 
 /**
  * Shows recent completed sync operations (last 5).
  * Active syncs are now displayed in the FloatingSyncWidget.
  */
-export function ActiveSyncsCard({ clinicId }: ActiveSyncsCardProps) {
+export function ActiveSyncsCard({
+  clinicId,
+  clinicSlug,
+}: ActiveSyncsCardProps) {
   const utils = api.useUtils();
   const { data: syncHistory } = api.admin.sync.getSyncHistory.useQuery({
     clinicId,
@@ -55,7 +59,10 @@ export function ActiveSyncsCard({ clinicId }: ActiveSyncsCardProps) {
   const getStatusBadge = (status: string) => {
     if (status === "completed") {
       return (
-        <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700">
+        <Badge
+          variant="outline"
+          className="border-green-200 bg-green-50 text-green-700"
+        >
           <CheckCircle2 className="mr-1 h-3 w-3" />
           Completed
         </Badge>
@@ -63,7 +70,10 @@ export function ActiveSyncsCard({ clinicId }: ActiveSyncsCardProps) {
     }
     if (status === "failed") {
       return (
-        <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700">
+        <Badge
+          variant="outline"
+          className="border-red-200 bg-red-50 text-red-700"
+        >
           <XCircle className="mr-1 h-3 w-3" />
           Failed
         </Badge>
@@ -130,7 +140,7 @@ export function ActiveSyncsCard({ clinicId }: ActiveSyncsCardProps) {
                     <div className="flex items-center gap-2">
                       {clinic && (
                         <Link
-                          href={`/admin/clinics/${clinic.id}`}
+                          href={`/dashboard/${clinicSlug}/admin/clinics/${clinic.id}`}
                           className="font-medium text-slate-900 transition-colors hover:text-teal-700"
                         >
                           {clinic.name}

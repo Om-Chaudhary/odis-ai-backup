@@ -4,31 +4,36 @@ import Link from "next/link";
 import { Building2, UserPlus, RefreshCw, Zap } from "lucide-react";
 import { Card } from "@odis-ai/shared/ui/card";
 
-const actions = [
+interface QuickActionsCardProps {
+  clinicSlug: string;
+}
+
+const getActions = (clinicSlug: string) => [
   {
     title: "Create Clinic",
     description: "Add a new veterinary clinic to the platform",
     icon: Building2,
-    href: "/admin/clinics?action=create",
+    href: `/dashboard/${clinicSlug}/admin/clinics/create`,
     color: "teal",
   },
   {
     title: "Invite User",
     description: "Send invitation to a new team member",
     icon: UserPlus,
-    href: "/admin/users?action=invite",
+    href: `/dashboard/${clinicSlug}/admin/users?action=invite`,
     color: "blue",
   },
   {
     title: "Trigger Sync",
     description: "Manually initiate a PIMS sync operation",
     icon: RefreshCw,
-    href: "/admin/sync?action=trigger",
+    href: `/dashboard/${clinicSlug}/admin/sync?action=trigger`,
     color: "emerald",
   },
 ];
 
-export function QuickActionsCard() {
+export function QuickActionsCard({ clinicSlug }: QuickActionsCardProps) {
+  const actions = getActions(clinicSlug);
   return (
     <Card className="overflow-hidden rounded-xl border border-slate-200/70 bg-white/80 shadow-sm backdrop-blur-sm">
       <div className="border-b border-slate-100 p-5">

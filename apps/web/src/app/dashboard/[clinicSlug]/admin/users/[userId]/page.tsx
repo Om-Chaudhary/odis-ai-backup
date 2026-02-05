@@ -26,9 +26,10 @@ type User = Database["public"]["Tables"]["users"]["Row"] & {
 };
 
 export default function UserDetailPage() {
-  const params = useParams<{ userId: string }>();
+  const params = useParams<{ userId: string; clinicSlug: string }>();
   const router = useRouter();
   const userId = params.userId;
+  const clinicSlug = params.clinicSlug;
 
   const { data: user, isLoading } = api.admin.users.getById.useQuery({
     userId,
@@ -56,7 +57,10 @@ export default function UserDetailPage() {
           <p className="mb-4 text-sm text-slate-500">
             The user you're looking for doesn't exist
           </p>
-          <Button variant="outline" onClick={() => router.push("/admin/users")}>
+          <Button
+            variant="outline"
+            onClick={() => router.push(`/dashboard/${clinicSlug}/admin/users`)}
+          >
             Back to Users
           </Button>
         </div>
@@ -86,7 +90,7 @@ export default function UserDetailPage() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => router.push("/admin/users")}
+            onClick={() => router.push(`/dashboard/${clinicSlug}/admin/users`)}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
@@ -134,7 +138,11 @@ export default function UserDetailPage() {
         <UserProfileSection user={userData} userId={userId} />
 
         {/* Clinics Section */}
-        <UserClinicsSection user={userData} userId={userId} />
+        <UserClinicsSection
+          user={userData}
+          userId={userId}
+          clinicSlug={clinicSlug}
+        />
       </div>
 
       {/* Activity Section */}
