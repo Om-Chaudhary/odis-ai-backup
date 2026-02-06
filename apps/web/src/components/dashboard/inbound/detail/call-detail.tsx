@@ -251,6 +251,7 @@ export function CallDetail({
                   appointment_data: {
                     ...appointmentData,
                     reason: "Pet put down",
+                    date: "2026-02-06",
                   },
                 };
               }
