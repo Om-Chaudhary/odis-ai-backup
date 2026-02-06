@@ -1,0 +1,194 @@
+{
+  "$schema": "https://conductor.dev/schemas/conductor.json",
+  "name": "odis-ai",
+  "description": "Veterinary AI platform - voice automation, case management, IDEXX integration",
+
+  "scripts": {
+    "setup": {
+      "description": "Initialize workspace with dependencies and environment",
+      "commands": [
+        "pnpm install",
+        "pnpm update-types"
+      ]
+    },
+    "run": {
+      "description": "Start the development server",
+      "commands": [
+        "pnpm dev"
+      ]
+    },
+    "archive": {
+      "description": "Validate before archiving workspace",
+      "commands": [
+        "pnpm check"
+      ]
+    }
+  },
+
+  "preferences": {
+    "general": {
+      "instructions": [
+        "This is an Nx monorepo for ODIS AI, a veterinary technology platform.",
+        "",
+        "## Tech Stack",
+        "- Next.js 16 (App Router) with React 19",
+        "- TypeScript (strict mode)",
+        "- Supabase (PostgreSQL) with Row Level Security",
+        "- tRPC for type-safe APIs",
+        "- Tailwind CSS 4 + shadcn/ui",
+        "- Nx for monorepo orchestration",
+        "",
+        "## Key Commands",
+        "- `pnpm dev` - Start Next.js dev server",
+        "- `pnpm check` - Run lint + typecheck",
+        "- `nx affected -t lint,test` - Run on affected projects",
+        "- `pnpm update-types` - Regenerate Supabase types after schema changes",
+        "",
+        "## Critical Patterns",
+        "- NEVER create middleware.ts files - use apps/web/src/proxy.ts for auth",
+        "- Use `createServerClient` for RLS-enabled queries (default)",
+        "- Use `createServiceClient` ONLY for webhooks/admin (bypasses RLS)",
+        "- Default to Server Components, minimize 'use client'",
+        "- Import from @odis-ai/* namespace (e.g., @odis-ai/shared/types)",
+        "",
+        "## File Organization",
+        "- Dashboard hooks: components/dashboard/{feature}/hooks/",
+        "- Mock data files: name as mock-data.ts (not demo-data)",
+        "- Split files >500 lines into modules"
+      ]
+    },
+
+    "codeReview": {
+      "instructions": [
+        "## Code Review Checklist",
+        "",
+        "### Architecture & Patterns",
+        "- [ ] Uses repository pattern with dependency injection for new services",
+        "- [ ] Server Components by default; 'use client' only when necessary",
+        "- [ ] No middleware.ts files (uses proxy.ts pattern for auth)",
+        "- [ ] Imports use @odis-ai/* namespace correctly",
+        "",
+        "### Security",
+        "- [ ] `createServiceClient` only used in webhooks/admin paths",
+        "- [ ] No secrets in NEXT_PUBLIC_* variables",
+        "- [ ] Webhook signatures verified (VAPI, QStash)",
+        "- [ ] No command injection, XSS, or SQL injection vulnerabilities",
+        "",
+        "### VAPI Integration",
+        "- [ ] Dynamic variables validated with Zod schemas before calls",
+        "- [ ] Tool call processors use the registry pattern",
+        "- [ ] Webhook handlers use background jobs for non-critical work (Slack, transcripts)",
+        "- [ ] Retry logic uses backoff via retry-scheduler util",
+        "",
+        "### Code Quality",
+        "- [ ] TypeScript strict mode compliance",
+        "- [ ] Zod schemas for external data validation",
+        "- [ ] Files under 500 lines (split if larger)",
+        "- [ ] No over-engineering - only changes directly requested",
+        "",
+        "### Testing",
+        "- [ ] Tests colocated in __tests__/ directories",
+        "- [ ] Uses @odis-ai/shared/testing utilities for mocks",
+        "- [ ] Coverage target: 70% lines/functions/branches",
+        "",
+        "### Nx Compliance",
+        "- [ ] Run `nx affected -t lint,test` before completing",
+        "- [ ] No circular dependencies (`nx graph` to verify)",
+        "- [ ] Appropriate Nx tags for new projects"
+      ]
+    },
+
+    "pullRequest": {
+      "instructions": [
+        "## PR Creation Guidelines",
+        "",
+        "### Commit Convention",
+        "Use conventional commits with these scopes:",
+        "- `(web)` `(extension)` `(cases)` `(clinics)` `(vapi)` `(outbound)` `(inbound)` `(dashboard)` `(ui)` `(util)` `(db)`",
+        "",
+        "### PR Title Format",
+        "`type(scope): description`",
+        "",
+        "Examples:",
+        "- `feat(vapi): add retry logic for failed calls`",
+        "- `fix(dashboard): resolve case filtering issue`",
+        "- `refactor(cases): extract service into domain layer`",
+        "",
+        "### PR Description Template",
+        "```",
+        "## Summary",
+        "Brief description of changes and motivation.",
+        "",
+        "## Changes",
+        "- Bullet list of specific changes",
+        "",
+        "## Testing",
+        "- How changes were tested",
+        "- Any new tests added",
+        "",
+        "## Checklist",
+        "- [ ] `pnpm check` passes",
+        "- [ ] `nx affected -t test` passes",
+        "- [ ] No circular dependencies",
+        "- [ ] Types regenerated if schema changed (`pnpm update-types`)",
+        "```",
+        "",
+        "### Before Creating PR",
+        "1. Run `pnpm check` (lint + typecheck)",
+        "2. Run `nx affected -t test` for affected tests",
+        "3. Verify no circular deps with `nx graph`",
+        "4. If database schema changed, run `pnpm update-types`"
+      ]
+    },
+
+    "branchRename": {
+      "instructions": [
+        "## Branch Naming Convention",
+        "",
+        "Format: `odisai/type-description`",
+        "Prefix with `odisai/`, then a concise name under 30 characters total.",
+        "",
+        "### Types",
+        "- `feat-` - New features",
+        "- `fix-` - Bug fixes",
+        "- `refactor-` - Code refactoring",
+        "- `chore-` - Maintenance tasks",
+        "",
+        "### Examples",
+        "- `odisai/feat-vapi-retry`",
+        "- `odisai/fix-case-filter`",
+        "- `odisai/refactor-cases-domain`",
+        "- `odisai/chore-update-deps`",
+        "",
+        "### Guidelines",
+        "- Use lowercase with hyphens",
+        "- Be concise and specific (under 30 chars total)",
+        "- Avoid abstract nouns - use concrete language"
+      ]
+    }
+  },
+
+  "environment": {
+    "requiredTools": [
+      { "name": "node", "minVersion": "20.0.0" },
+      { "name": "pnpm", "minVersion": "10.0.0" }
+    ],
+    "envFiles": [
+      ".env.local"
+    ]
+  },
+
+  "context": {
+    "include": [
+      "CLAUDE.md",
+      "AGENTS.md",
+      ".claude/CLAUDE.md"
+    ],
+    "exclude": [
+      "node_modules",
+      ".next",
+      "dist",
+      ".nx/cache"
+    ]
+  }
+}

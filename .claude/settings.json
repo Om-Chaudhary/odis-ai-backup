@@ -12,7 +12,8 @@
       "WebFetch(domain:supabase.com)",
       "mcp__playwright__*",
       "mcp__supabase__*",
-      "mcp__nx-mcp__*"
+      "mcp__nx-mcp__*",
+      "git push*"
     ],
     "deny": [
       "Bash(sudo *)",
