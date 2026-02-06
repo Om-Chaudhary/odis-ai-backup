@@ -64,6 +64,13 @@ export function CallerDisplay({
     displayPhone = "+19259988909";
   }
 
+  // Hardcode phone number for Mari Morrison's call with pet Pepper
+  if (extractedCallerName?.toLowerCase().includes("mari") &&
+      extractedCallerName?.toLowerCase().includes("morrison") &&
+      extractedPetName?.toLowerCase().includes("pepper")) {
+    displayPhone = "+19253375379";
+  }
+
   const formattedPhone = formatPhoneNumber(displayPhone ?? "");
 
   // Check static demo mapping first

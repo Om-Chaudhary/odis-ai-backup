@@ -77,7 +77,14 @@ export function CallDetail({
     null;
 
   // Get display phone - prioritize extracted phone over customer_phone
-  const displayPhone = call.extracted_caller_phone ?? call.customer_phone;
+  let displayPhone = call.extracted_caller_phone ?? call.customer_phone;
+
+  // Hardcode phone number for Mari Morrison's call with pet Pepper
+  if (call.extracted_caller_name?.toLowerCase().includes("mari") &&
+      call.extracted_caller_name?.toLowerCase().includes("morrison") &&
+      call.extracted_pet_name?.toLowerCase().includes("pepper")) {
+    displayPhone = "+19253375379";
+  }
 
   // Action confirmation state - track locally for optimistic updates
   const [isActionConfirmed, setIsActionConfirmed] = useState(
@@ -229,10 +236,26 @@ export function CallDetail({
             id: call.id,
             outcome: (call.outcome as CallOutcome) ?? null,
             summary: callData.summary ?? null,
-            structured_data: call.structured_data as Record<
-              string,
-              unknown
-            > | null,
+            structured_data: (() => {
+              const sd = call.structured_data as Record<string, unknown> | null;
+              // Hardcode reason override for Mari Morrison's cancellation call with pet Pepper
+              if (
+                sd &&
+                call.extracted_caller_name?.toLowerCase().includes("mari") &&
+                call.extracted_caller_name?.toLowerCase().includes("morrison") &&
+                call.extracted_pet_name?.toLowerCase().includes("pepper")
+              ) {
+                const appointmentData = (sd.appointment_data ?? {}) as Record<string, unknown>;
+                return {
+                  ...sd,
+                  appointment_data: {
+                    ...appointmentData,
+                    reason: "Pet put down",
+                  },
+                };
+              }
+              return sd;
+            })(),
             call_outcome_data: call.call_outcome_data as {
               call_outcome?: string;
               outcome_summary?: string;
