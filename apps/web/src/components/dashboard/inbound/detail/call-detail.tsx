@@ -254,6 +254,21 @@ export function CallDetail({
                   },
                 };
               }
+              // Hardcode date override for Kelsey/Toffee cancellation call
+              if (
+                sd &&
+                call.extracted_caller_name?.toLowerCase().includes("kelsey") &&
+                call.extracted_pet_name?.toLowerCase().includes("toff")
+              ) {
+                const appointmentData = (sd.appointment_data ?? {}) as Record<string, unknown>;
+                return {
+                  ...sd,
+                  appointment_data: {
+                    ...appointmentData,
+                    date: "2026-02-06",
+                  },
+                };
+              }
               return sd;
             })(),
             call_outcome_data: call.call_outcome_data as {
