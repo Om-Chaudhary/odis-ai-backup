@@ -1,6 +1,7 @@
 # AGENTS.md - AI Coding Assistant Guide
 
-> Comprehensive guide for AI coding assistants (Claude Code, Cursor, Codex, Copilot) working in the ODIS AI monorepo.
+> Comprehensive guide for AI coding assistants (Cursor, Codex, Copilot) working in the ODIS AI monorepo.
+> **Claude Code**: uses `.claude/rules/` for modular instructions instead of this file. See root `CLAUDE.md`.
 
 ## Project Overview
 
