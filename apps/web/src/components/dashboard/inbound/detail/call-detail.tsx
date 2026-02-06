@@ -86,6 +86,12 @@ export function CallDetail({
     displayPhone = "+19253375379";
   }
 
+  // Hardcode phone number for Kelsey's call with pet Toffee
+  if (call.extracted_caller_name?.toLowerCase().includes("kelsey") &&
+      call.extracted_pet_name?.toLowerCase().includes("toff")) {
+    displayPhone = "+19254953186";
+  }
+
   // Action confirmation state - track locally for optimistic updates
   const [isActionConfirmed, setIsActionConfirmed] = useState(
     call.action_confirmed ?? false,
