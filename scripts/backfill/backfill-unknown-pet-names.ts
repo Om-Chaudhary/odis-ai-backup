@@ -1,3 +1,4 @@
+#!/usr/bin/env npx tsx
 /**
  * Backfill Script: Fix Unknown Pet Names in Discharge Calls
  *
@@ -5,19 +6,30 @@
  * when the database actually has the correct patient name.
  *
  * Usage:
- *   pnpm tsx scripts/backfill-unknown-pet-names.ts [--dry-run] [--limit=N]
+ *   pnpm tsx scripts/backfill/backfill-unknown-pet-names.ts [options]
  *
  * Options:
- *   --dry-run    Show what would be updated without making changes
- *   --limit=N    Limit to N records (default: 1000)
+ *   --dry-run     Show what would be updated without making changes
+ *   --limit=N     Limit to N records (default: 1000)
+ *   --verbose     Show detailed output
+ *
+ * Environment:
+ *   SUPABASE_SERVICE_ROLE_KEY - Required for database access
  */
 
-import { config } from "dotenv";
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "../src/database.types.js";
+import {
+  loadScriptEnv,
+  parseScriptArgs,
+  createScriptSupabaseClient,
+  scriptLog,
+} from "@odis-ai/shared/script-utils";
 
-// Load environment variables from .env.local
-config({ path: ".env.local" });
+// Load environment variables
+loadScriptEnv({ required: ["SUPABASE_SERVICE_ROLE_KEY"] });
+
+// Parse CLI arguments
+const args = parseScriptArgs();
+const limit = args.limit ?? 1000;
 
 interface BackfillStats {
   total: number;
@@ -34,20 +46,8 @@ interface BackfillStats {
   }>;
 }
 
-async function backfillUnknownPetNames(
-  dryRun: boolean = false,
-  limit: number = 1000,
-): Promise<BackfillStats> {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error(
-      "Missing required environment variables: NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY",
-    );
-  }
-
-  const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey);
+async function backfillUnknownPetNames(): Promise<BackfillStats> {
+  const supabase = createScriptSupabaseClient();
 
   const stats: BackfillStats = {
     total: 0,
@@ -57,9 +57,12 @@ async function backfillUnknownPetNames(
     details: [],
   };
 
-  console.log("Starting backfill of unknown pet names...");
-  console.log(`Mode: ${dryRun ? "DRY RUN" : "LIVE"}`);
-  console.log(`Limit: ${limit} records\n`);
+  scriptLog.header("Backfill Unknown Pet Names");
+
+  if (args.dryRun) {
+    scriptLog.dryRun("Running in dry-run mode - no changes will be made");
+  }
+  scriptLog.info(`Limit: ${limit} records`);
 
   // Find all discharge calls with "unknown" pet_name where database has real name
   const { data: calls, error } = await supabase
@@ -82,23 +85,23 @@ async function backfillUnknownPetNames(
     `,
     )
     .or(
-      'dynamic_variables->>pet_name.eq.unknown,dynamic_variables->>owner_name.eq.unknown,dynamic_variables->>patient_name.eq.unknown',
+      "dynamic_variables->>pet_name.eq.unknown,dynamic_variables->>owner_name.eq.unknown,dynamic_variables->>patient_name.eq.unknown",
     )
     .limit(limit)
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Error fetching discharge calls:", error);
+    scriptLog.error("Error fetching discharge calls:", error);
     throw error;
   }
 
   if (!calls || calls.length === 0) {
-    console.log("No discharge calls found with unknown values.");
+    scriptLog.info("No discharge calls found with unknown values.");
     return stats;
   }
 
   stats.total = calls.length;
-  console.log(`Found ${stats.total} discharge calls with unknown values\n`);
+  scriptLog.info(`Found ${stats.total} discharge calls with unknown values`);
 
   for (const call of calls) {
     try {
@@ -106,9 +109,11 @@ async function backfillUnknownPetNames(
       const patient = call.cases?.patients?.[0] ?? call.cases?.patients;
 
       if (!patient) {
-        console.log(
-          `[SKIP] Call ${call.id}: No patient record found for case ${call.case_id}`,
-        );
+        if (args.verbose) {
+          scriptLog.debug(
+            `Skip call ${call.id}: No patient record found for case ${call.case_id}`,
+          );
+        }
         stats.skipped++;
         continue;
       }
@@ -129,9 +134,11 @@ async function backfillUnknownPetNames(
         patient.owner_name.toLowerCase() !== "unknown";
 
       if (!hasRealPatientName && !hasRealOwnerName) {
-        console.log(
-          `[SKIP] Call ${call.id}: Patient record also has unknown values`,
-        );
+        if (args.verbose) {
+          scriptLog.debug(
+            `Skip call ${call.id}: Patient record also has unknown values`,
+          );
+        }
         stats.skipped++;
         continue;
       }
@@ -164,7 +171,9 @@ async function backfillUnknownPetNames(
       }
 
       if (!changed) {
-        console.log(`[SKIP] Call ${call.id}: No changes needed`);
+        if (args.verbose) {
+          scriptLog.debug(`Skip call ${call.id}: No changes needed`);
+        }
         stats.skipped++;
         continue;
       }
@@ -180,33 +189,41 @@ async function backfillUnknownPetNames(
 
       stats.details.push(detail);
 
-      console.log(`[UPDATE] Call ${call.id}:`);
-      console.log(`  Pet Name: "${currentPetName}" → "${updatedVars.pet_name}"`);
-      console.log(
-        `  Owner Name: "${currentOwnerName}" → "${updatedVars.owner_name}"`,
-      );
+      if (args.verbose) {
+        scriptLog.info(`Update call ${call.id}:`);
+        scriptLog.debug(
+          `  Pet Name: "${currentPetName}" -> "${updatedVars.pet_name}"`,
+        );
+        scriptLog.debug(
+          `  Owner Name: "${currentOwnerName}" -> "${updatedVars.owner_name}"`,
+        );
+      }
 
-      if (!dryRun) {
+      if (!args.dryRun) {
         const { error: updateError } = await supabase
           .from("scheduled_discharge_calls")
           .update({ dynamic_variables: updatedVars })
           .eq("id", call.id);
 
         if (updateError) {
-          console.error(`  ❌ Error updating call ${call.id}:`, updateError);
+          scriptLog.error(`Error updating call ${call.id}:`, updateError);
           stats.errors++;
         } else {
-          console.log(`  ✅ Updated successfully`);
           stats.fixed++;
         }
       } else {
-        console.log(`  (DRY RUN - no changes made)`);
         stats.fixed++;
       }
 
-      console.log("");
+      // Show progress for larger datasets
+      if (stats.total > 10) {
+        scriptLog.progress(
+          stats.fixed + stats.skipped + stats.errors,
+          stats.total,
+        );
+      }
     } catch (err) {
-      console.error(`Error processing call ${call.id}:`, err);
+      scriptLog.error(`Error processing call ${call.id}:`, err);
       stats.errors++;
     }
   }
@@ -215,52 +232,44 @@ async function backfillUnknownPetNames(
 }
 
 async function main() {
-  const args = process.argv.slice(2);
-  const dryRun = args.includes("--dry-run");
-  const limitArg = args.find((arg) => arg.startsWith("--limit="));
-  const limit = limitArg ? parseInt(limitArg.split("=")[1] ?? "1000") : 1000;
-
   try {
-    const stats = await backfillUnknownPetNames(dryRun, limit);
+    const stats = await backfillUnknownPetNames();
 
-    console.log("\n" + "=".repeat(60));
-    console.log("BACKFILL SUMMARY");
-    console.log("=".repeat(60));
-    console.log(`Total records processed: ${stats.total}`);
-    console.log(`Successfully fixed: ${stats.fixed}`);
-    console.log(`Skipped (no changes needed): ${stats.skipped}`);
-    console.log(`Errors: ${stats.errors}`);
+    scriptLog.divider();
+    scriptLog.header("Summary");
+    scriptLog.info(`Total records processed: ${stats.total}`);
+    scriptLog.success(`Successfully fixed: ${stats.fixed}`);
+    if (stats.skipped > 0) scriptLog.warn(`Skipped: ${stats.skipped}`);
+    if (stats.errors > 0) scriptLog.error(`Errors: ${stats.errors}`);
 
-    if (dryRun) {
-      console.log("\n⚠️  DRY RUN MODE - No actual changes were made");
-      console.log("Run without --dry-run to apply changes");
+    if (args.dryRun) {
+      scriptLog.info("Run without --dry-run to apply changes");
     } else {
-      console.log("\n✅ Backfill complete!");
+      scriptLog.success("Backfill complete!");
     }
 
-    if (stats.details.length > 0) {
-      console.log("\n" + "=".repeat(60));
-      console.log("CHANGES DETAIL");
-      console.log("=".repeat(60));
+    if (args.verbose && stats.details.length > 0) {
+      scriptLog.divider();
+      scriptLog.header("Changes Detail (first 10)");
       stats.details.slice(0, 10).forEach((detail) => {
-        console.log(`\nCall ID: ${detail.callId}`);
-        console.log(`  Case ID: ${detail.caseId}`);
-        console.log(`  Pet: "${detail.oldPetName}" → "${detail.newPetName}"`);
-        console.log(
-          `  Owner: "${detail.oldOwnerName}" → "${detail.newOwnerName}"`,
+        scriptLog.info(`Call ${detail.callId}:`);
+        scriptLog.debug(`  Case: ${detail.caseId}`);
+        scriptLog.debug(
+          `  Pet: "${detail.oldPetName}" -> "${detail.newPetName}"`,
+        );
+        scriptLog.debug(
+          `  Owner: "${detail.oldOwnerName}" -> "${detail.newOwnerName}"`,
         );
       });
 
       if (stats.details.length > 10) {
-        console.log(
-          `\n... and ${stats.details.length - 10} more changes (showing first 10)`,
-        );
+        scriptLog.info(`... and ${stats.details.length - 10} more changes`);
       }
     }
 
     process.exit(0);
   } catch (error) {
-    console.error("\n❌ Backfill failed:", error);
+    scriptLog.error("Backfill failed:", error);
     process.exit(1);
   }
 }

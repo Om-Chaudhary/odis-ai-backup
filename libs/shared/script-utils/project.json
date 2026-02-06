@@ -1,0 +1,25 @@
+{
+  "name": "shared-script-utils",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/shared/script-utils/src",
+  "projectType": "library",
+  "tags": ["type:util", "scope:shared", "platform:neutral"],
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint --fix",
+        "cwd": "libs/shared/script-utils/src"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.json",
+        "cwd": "libs/shared/script-utils"
+      },
+      "cache": true,
+      "inputs": ["default", "^default"]
+    }
+  }
+}

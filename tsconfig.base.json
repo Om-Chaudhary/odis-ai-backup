@@ -49,6 +49,8 @@
       "@odis-ai/shared/env/*": ["libs/shared/env/src/*"],
       "@odis-ai/shared/email": ["libs/shared/email/src/index.ts"],
       "@odis-ai/shared/email/*": ["libs/shared/email/src/*"],
+      "@odis-ai/shared/script-utils": ["libs/shared/script-utils/src/index.ts"],
+      "@odis-ai/shared/script-utils/*": ["libs/shared/script-utils/src/*"],
       "@odis-ai/data-access/api": ["libs/data-access/api/src/index.ts"],
       "@odis-ai/data-access/api/*": ["libs/data-access/api/src/*"],
       "@odis-ai/data-access/db": ["libs/data-access/db/src/index.ts"],

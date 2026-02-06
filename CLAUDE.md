@@ -37,16 +37,90 @@ pnpm update-types           # Regenerate types after Supabase schema changes
 
 ## Key Locations
 
-| Purpose            | Location                           |
-| ------------------ | ---------------------------------- |
-| API Routes         | `apps/web/src/app/api/`            |
-| tRPC Routers       | `apps/web/src/server/api/routers/` |
-| Server Actions     | `apps/web/src/server/actions/`     |
-| UI Components      | `libs/shared/ui/src/`              |
-| Domain Services    | `libs/domain/*/`                   |
-| Validators         | `libs/shared/validators/src/`      |
-| VAPI Library       | `libs/integrations/vapi/src/`      |
-| Dashboard          | `apps/web/src/components/dashboard/` |
+| Purpose         | Location                           |
+| --------------- | ---------------------------------- |
+| API Routes      | `apps/web/src/app/api/`            |
+| tRPC Routers    | `apps/web/src/server/api/routers/` |
+| Server Actions  | `apps/web/src/server/actions/`     |
+| UI Components   | `libs/shared/ui/src/`              |
+| Domain Services | `libs/domain/*/`                   |
+| Validators      | `libs/shared/validators/src/`      |
+| VAPI Library    | `libs/integrations/vapi/src/`      |
+| Scripts         | `scripts/`                         |
+
+## Scripts
+
+### Creating New Scripts
+
+**Location**: ALL scripts go in `/scripts/{category}/`:
+
+- `scripts/tooling/` - Build & dev utilities (generate-nx-docs, update-types, etc.)
+- `scripts/backfill/` - Data backfill operations
+- `scripts/sync/` - External service syncing (VAPI, etc.)
+
+**Template**: Use the standard template at `scripts/_template.ts`
+
+**Required Pattern**:
+
+```typescript
+import {
+  loadScriptEnv,
+  parseScriptArgs,
+  createScriptSupabaseClient,
+  scriptLog,
+} from "@odis-ai/shared/script-utils";
+
+loadScriptEnv({ required: ["SUPABASE_SERVICE_ROLE_KEY"] });
+```
+
+**Standard CLI flags**:
+
+- `--dry-run` - Show what would happen without making changes
+- `--verbose` - Show detailed output
+- `--limit=N` - Limit number of records processed
+- `--days=N` - Filter by date range
+
+### Running Scripts
+
+```bash
+# Run a script with tsx
+pnpm tsx scripts/backfill/backfill-discharge-summaries.ts --dry-run
+
+# Or use pnpm script if defined
+pnpm backfill:inbound-outcomes --dry-run
+```
+
+### Script Guidelines
+
+**DO**:
+
+- Use `@odis-ai/shared/script-utils` for env loading and Supabase
+- Use `@odis-ai/*` path aliases for all imports
+- Include `--dry-run` support for destructive operations
+- Log progress with `scriptLog.info/success/error/warn()`
+
+**DON'T**:
+
+- Create scripts in `/apps/*/src/scripts/` (exception: scripts needing web app internals)
+- Use relative imports like `../libs/...`
+- Manually parse `.env` files with `dotenv` directly
+- Hardcode credentials or sensitive data in scripts
+
+## Sentry Usage
+
+See `.cursor/rules/sentry.mdc` for guidance on exceptions, spans, and logs.
+
+```typescript
+import * as Sentry from "@sentry/nextjs";
+
+// Exception capture
+Sentry.captureException(error);
+
+// Span instrumentation
+Sentry.startSpan({ op: "http.client", name: "GET /api/users" }, async () => {
+  // ... operation
+});
+```
 
 ## MCP Tools
 

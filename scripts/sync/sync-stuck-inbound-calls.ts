@@ -6,36 +6,35 @@
  * that are stuck in 'ringing' status.
  *
  * Usage:
- *   pnpm exec tsx scripts/sync-stuck-inbound-calls.ts
- *   pnpm exec tsx scripts/sync-stuck-inbound-calls.ts --dry-run
+ *   pnpm tsx scripts/sync/sync-stuck-inbound-calls.ts
+ *   pnpm tsx scripts/sync/sync-stuck-inbound-calls.ts --dry-run
+ *
+ * Environment:
+ *   SUPABASE_SERVICE_ROLE_KEY - Required for database access
+ *   VAPI_PRIVATE_KEY - Required for VAPI API access
  */
 
-import { config } from "dotenv";
-import { createClient } from "@supabase/supabase-js";
+import {
+  loadScriptEnv,
+  parseScriptArgs,
+  createScriptSupabaseClient,
+  scriptLog,
+  requireEnv,
+} from "@odis-ai/shared/script-utils";
 
-// Load .env.local first (for local development), then .env as fallback
-config({ path: ".env.local" });
-config({ path: ".env" });
+// Load environment variables
+loadScriptEnv({
+  required: ["SUPABASE_SERVICE_ROLE_KEY", "VAPI_PRIVATE_KEY"],
+});
 
-// Get env vars directly (avoid @odis-ai/env validation)
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const VAPI_API_KEY = process.env.VAPI_PRIVATE_KEY;
+// Parse CLI arguments
+const args = parseScriptArgs();
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-  console.error(
-    "Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY",
-  );
-  process.exit(1);
-}
+// Get VAPI key for API calls
+const VAPI_API_KEY = requireEnv("VAPI_PRIVATE_KEY");
 
-if (!VAPI_API_KEY) {
-  console.error("Missing VAPI_PRIVATE_KEY");
-  process.exit(1);
-}
-
-// Create Supabase client directly
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+// Create Supabase client
+const supabase = createScriptSupabaseClient();
 
 // VAPI call response type
 interface VapiCallResponse {
@@ -74,8 +73,6 @@ async function getCall(callId: string): Promise<VapiCallResponse | null> {
   return response.json();
 }
 
-const DRY_RUN = process.argv.includes("--dry-run");
-
 interface StuckCall {
   id: string;
   vapi_call_id: string;
@@ -85,11 +82,11 @@ interface StuckCall {
 }
 
 async function main() {
-  console.log("============================================================");
-  console.log("Sync Stuck Inbound Calls from VAPI");
-  console.log("============================================================");
-  console.log(`Mode: ${DRY_RUN ? "DRY RUN (no changes)" : "LIVE"}`);
-  console.log("");
+  scriptLog.header("Sync Stuck Inbound Calls from VAPI");
+
+  if (args.dryRun) {
+    scriptLog.dryRun("Running in dry-run mode - no changes will be made");
+  }
 
   // Find all stuck inbound calls
   const { data: stuckCalls, error: queryError } = await supabase
@@ -99,44 +96,49 @@ async function main() {
     .order("created_at", { ascending: false });
 
   if (queryError) {
-    console.error("Failed to query stuck calls:", queryError.message);
+    scriptLog.error("Failed to query stuck calls:", queryError.message);
     process.exit(1);
   }
 
   if (!stuckCalls || stuckCalls.length === 0) {
-    console.log("✅ No stuck calls found!");
+    scriptLog.success("No stuck calls found!");
     return;
   }
 
-  console.log(`Found ${stuckCalls.length} stuck calls:\n`);
+  scriptLog.info(`Found ${stuckCalls.length} stuck calls`);
 
   let synced = 0;
   let failed = 0;
   let skipped = 0;
 
   for (const call of stuckCalls as StuckCall[]) {
-    console.log(`Processing: ${call.vapi_call_id}`);
-    console.log(`  Clinic: ${call.clinic_name ?? "Unknown"}`);
-    console.log(`  Created: ${call.created_at}`);
+    scriptLog.info(`Processing: ${call.vapi_call_id}`);
+
+    if (args.verbose) {
+      scriptLog.debug(`  Clinic: ${call.clinic_name ?? "Unknown"}`);
+      scriptLog.debug(`  Created: ${call.created_at}`);
+    }
 
     try {
       // Fetch from VAPI
       const vapiCall = await getCall(call.vapi_call_id);
 
       if (!vapiCall) {
-        console.log(`  ⚠️  Not found in VAPI - skipping`);
+        scriptLog.warn(`  Not found in VAPI - skipping`);
         skipped++;
         continue;
       }
 
-      console.log(`  VAPI Status: ${vapiCall.status}`);
-      console.log(`  Ended Reason: ${vapiCall.endedReason ?? "N/A"}`);
-      console.log(`  Duration: ${calculateDuration(vapiCall)}s`);
-      console.log(`  Has Transcript: ${!!vapiCall.transcript}`);
-      console.log(`  Has Recording: ${!!vapiCall.recordingUrl}`);
+      if (args.verbose) {
+        scriptLog.debug(`  VAPI Status: ${vapiCall.status}`);
+        scriptLog.debug(`  Ended Reason: ${vapiCall.endedReason ?? "N/A"}`);
+        scriptLog.debug(`  Duration: ${calculateDuration(vapiCall)}s`);
+        scriptLog.debug(`  Has Transcript: ${!!vapiCall.transcript}`);
+        scriptLog.debug(`  Has Recording: ${!!vapiCall.recordingUrl}`);
+      }
 
-      if (DRY_RUN) {
-        console.log(`  📋 Would update to: ${mapStatus(vapiCall)}`);
+      if (args.dryRun) {
+        scriptLog.dryRun(`Would update to: ${mapStatus(vapiCall)}`);
         synced++;
         continue;
       }
@@ -149,32 +151,29 @@ async function main() {
         .eq("id", call.id);
 
       if (updateError) {
-        console.log(`  ❌ Update failed: ${updateError.message}`);
+        scriptLog.error(`  Update failed: ${updateError.message}`);
         failed++;
       } else {
-        console.log(`  ✅ Updated to: ${String(updateData.status)}`);
+        scriptLog.success(`  Updated to: ${String(updateData.status)}`);
         synced++;
       }
     } catch (error) {
-      console.log(
-        `  ❌ Error: ${error instanceof Error ? error.message : String(error)}`,
+      scriptLog.error(
+        `  Error: ${error instanceof Error ? error.message : String(error)}`,
       );
       failed++;
     }
-
-    console.log("");
   }
 
-  console.log("============================================================");
-  console.log("Summary");
-  console.log("============================================================");
-  console.log(`Total: ${stuckCalls.length}`);
-  console.log(`  ✅ Synced: ${synced}`);
-  console.log(`  ⚠️  Skipped: ${skipped}`);
-  console.log(`  ❌ Failed: ${failed}`);
+  scriptLog.divider();
+  scriptLog.header("Summary");
+  scriptLog.info(`Total: ${stuckCalls.length}`);
+  scriptLog.success(`Synced: ${synced}`);
+  if (skipped > 0) scriptLog.warn(`Skipped: ${skipped}`);
+  if (failed > 0) scriptLog.error(`Failed: ${failed}`);
 
-  if (DRY_RUN) {
-    console.log("\n💡 Run without --dry-run to apply changes.");
+  if (args.dryRun) {
+    scriptLog.info("Run without --dry-run to apply changes.");
   }
 }
 
@@ -246,4 +245,7 @@ function buildUpdateData(call: VapiCallResponse): Record<string, unknown> {
   };
 }
 
-main().catch(console.error);
+main().catch((error) => {
+  scriptLog.error("Script failed:", error);
+  process.exit(1);
+});

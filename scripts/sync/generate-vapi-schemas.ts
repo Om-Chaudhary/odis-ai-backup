@@ -38,7 +38,10 @@ const zodSchemas = [
     name: STRUCTURED_OUTPUT_NAMES.MEDICATION_COMPLIANCE,
     schema: MedicationComplianceSchema,
   },
-  { name: STRUCTURED_OUTPUT_NAMES.OWNER_SENTIMENT, schema: OwnerSentimentSchema },
+  {
+    name: STRUCTURED_OUTPUT_NAMES.OWNER_SENTIMENT,
+    schema: OwnerSentimentSchema,
+  },
   { name: STRUCTURED_OUTPUT_NAMES.ESCALATION, schema: EscalationSchema },
   { name: STRUCTURED_OUTPUT_NAMES.FOLLOW_UP, schema: FollowUpSchema },
   {
@@ -94,7 +97,9 @@ async function main() {
     console.log(`✓ Copied ${filename} (legacy)`);
   }
 
-  console.log(`\nDone! ${zodSchemas.length + legacySchemas.length} schemas written.`);
+  console.log(
+    `\nDone! ${zodSchemas.length + legacySchemas.length} schemas written.`,
+  );
 }
 
 main().catch((error) => {
