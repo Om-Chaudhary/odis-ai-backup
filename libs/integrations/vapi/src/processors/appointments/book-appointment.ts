@@ -349,6 +349,20 @@ export async function processBookAppointment(
         throw new Error("IDEXX credentials not configured");
       }
 
+      // Fetch clinic's slot duration from config (default 15 minutes if not configured)
+      const { data: scheduleConfig } = await supabase
+        .from("clinic_schedule_config")
+        .select("slot_duration_minutes")
+        .eq("clinic_id", clinic.id)
+        .single();
+
+      const slotDurationMinutes = scheduleConfig?.slot_duration_minutes ?? 15;
+
+      logger.info("Using clinic slot duration for IDEXX booking", {
+        clinicId: clinic.id,
+        slotDurationMinutes,
+      });
+
       // Initialize IDEXX provider
       const browserService = new BrowserService({
         headless: true,
@@ -369,10 +383,10 @@ export async function processBookAppointment(
 
       logger.info("IDEXX provider authenticated", { clinicId: clinic.id });
 
-      // Calculate end time (default 15 minutes)
+      // Calculate end time using clinic-specific slot duration
       const calculateEndTime = (
         startTime: string,
-        durationMinutes = 15,
+        durationMinutes = slotDurationMinutes,
       ): string => {
         const [hours, minutes] = startTime.split(":").map(Number);
         const startDate = new Date();
@@ -503,6 +517,57 @@ export async function processBookAppointment(
               outcome: "Scheduled",
             })
             .eq("vapi_call_id", callId);
+        }
+
+        // Update local slot availability to prevent double-booking
+        // Use pims_clinic_id for booking if set (e.g., Happy Tails → Alum Rock)
+        const clinicWithPims = clinic as ClinicWithConfig & {
+          pims_clinic_id?: string | null;
+        };
+        const bookingClinicId = clinicWithPims.pims_clinic_id ?? clinic.id;
+        // Convert parsed time (HH:MM:SS) to slot start time format
+        const slotStartTime = parsedTime.substring(0, 5) + ":00";
+
+        // Fetch current slot and increment booked_count
+        const { data: currentSlot } = await supabase
+          .from("schedule_slots")
+          .select("id, booked_count")
+          .eq("clinic_id", bookingClinicId)
+          .eq("date", parsedDate)
+          .eq("start_time", slotStartTime)
+          .single();
+
+        if (currentSlot) {
+          const { error: slotUpdateError } = await supabase
+            .from("schedule_slots")
+            .update({
+              booked_count: currentSlot.booked_count + 1,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", currentSlot.id);
+
+          if (slotUpdateError) {
+            // Log but don't fail the booking - the IDEXX booking already succeeded
+            logger.warn("Failed to update slot booked_count", {
+              error: slotUpdateError,
+              clinicId: bookingClinicId,
+              date: parsedDate,
+              startTime: slotStartTime,
+            });
+          } else {
+            logger.info("Updated slot booked_count after IDEXX booking", {
+              clinicId: bookingClinicId,
+              date: parsedDate,
+              startTime: slotStartTime,
+              newBookedCount: currentSlot.booked_count + 1,
+            });
+          }
+        } else {
+          logger.warn("No schedule slot found for booked appointment", {
+            clinicId: bookingClinicId,
+            date: parsedDate,
+            startTime: slotStartTime,
+          });
         }
 
         return {

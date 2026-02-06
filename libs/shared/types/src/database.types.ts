@@ -713,7 +713,6 @@ export type Database = {
       };
       clinic_api_keys: {
         Row: {
-          clinic_id: string | null;
           created_at: string;
           expires_at: string | null;
           id: string;
@@ -727,7 +726,6 @@ export type Database = {
           user_id: string;
         };
         Insert: {
-          clinic_id?: string | null;
           created_at?: string;
           expires_at?: string | null;
           id?: string;
@@ -741,7 +739,6 @@ export type Database = {
           user_id: string;
         };
         Update: {
-          clinic_id?: string | null;
           created_at?: string;
           expires_at?: string | null;
           id?: string;
@@ -754,15 +751,7 @@ export type Database = {
           updated_at?: string;
           user_id?: string;
         };
-        Relationships: [
-          {
-            foreignKeyName: "clinic_api_keys_clinic_id_fkey";
-            columns: ["clinic_id"];
-            isOneToOne: false;
-            referencedRelation: "clinics";
-            referencedColumns: ["id"];
-          },
-        ];
+        Relationships: [];
       };
       clinic_assistants: {
         Row: {
@@ -2496,6 +2485,77 @@ export type Database = {
           },
         ];
       };
+      schedule_appointments_v2: {
+        Row: {
+          appointment_type: string | null;
+          client_name: string | null;
+          client_phone: string | null;
+          clinic_id: string;
+          created_at: string;
+          date: string | null;
+          deleted_at: string | null;
+          id: string;
+          last_synced_at: string | null;
+          neo_appointment_id: string | null;
+          patient_name: string | null;
+          provider_name: string | null;
+          room_id: string | null;
+          source: string;
+          status: string;
+          sync_hash: string | null;
+          time_range: unknown;
+          updated_at: string;
+        };
+        Insert: {
+          appointment_type?: string | null;
+          client_name?: string | null;
+          client_phone?: string | null;
+          clinic_id: string;
+          created_at?: string;
+          date?: string | null;
+          deleted_at?: string | null;
+          id?: string;
+          last_synced_at?: string | null;
+          neo_appointment_id?: string | null;
+          patient_name?: string | null;
+          provider_name?: string | null;
+          room_id?: string | null;
+          source?: string;
+          status?: string;
+          sync_hash?: string | null;
+          time_range: unknown;
+          updated_at?: string;
+        };
+        Update: {
+          appointment_type?: string | null;
+          client_name?: string | null;
+          client_phone?: string | null;
+          clinic_id?: string;
+          created_at?: string;
+          date?: string | null;
+          deleted_at?: string | null;
+          id?: string;
+          last_synced_at?: string | null;
+          neo_appointment_id?: string | null;
+          patient_name?: string | null;
+          provider_name?: string | null;
+          room_id?: string | null;
+          source?: string;
+          status?: string;
+          sync_hash?: string | null;
+          time_range?: unknown;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "schedule_appointments_v2_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       schedule_slots: {
         Row: {
           booked_count: number;
@@ -3910,6 +3970,89 @@ export type Database = {
           },
         ];
       };
+      vapi_bookings_v2: {
+        Row: {
+          breed: string | null;
+          client_name: string;
+          client_phone: string;
+          clinic_id: string;
+          confirmation_number: string | null;
+          created_at: string;
+          date: string | null;
+          has_conflict: boolean;
+          hold_expires_at: string | null;
+          id: string;
+          is_new_client: boolean | null;
+          metadata: Json | null;
+          original_time_range: unknown;
+          patient_name: string;
+          reason: string | null;
+          rescheduled_at: string | null;
+          rescheduled_reason: string | null;
+          species: string | null;
+          status: string;
+          time_range: unknown;
+          updated_at: string;
+          vapi_call_id: string | null;
+        };
+        Insert: {
+          breed?: string | null;
+          client_name: string;
+          client_phone: string;
+          clinic_id: string;
+          confirmation_number?: string | null;
+          created_at?: string;
+          date?: string | null;
+          has_conflict?: boolean;
+          hold_expires_at?: string | null;
+          id?: string;
+          is_new_client?: boolean | null;
+          metadata?: Json | null;
+          original_time_range?: unknown;
+          patient_name: string;
+          reason?: string | null;
+          rescheduled_at?: string | null;
+          rescheduled_reason?: string | null;
+          species?: string | null;
+          status?: string;
+          time_range: unknown;
+          updated_at?: string;
+          vapi_call_id?: string | null;
+        };
+        Update: {
+          breed?: string | null;
+          client_name?: string;
+          client_phone?: string;
+          clinic_id?: string;
+          confirmation_number?: string | null;
+          created_at?: string;
+          date?: string | null;
+          has_conflict?: boolean;
+          hold_expires_at?: string | null;
+          id?: string;
+          is_new_client?: boolean | null;
+          metadata?: Json | null;
+          original_time_range?: unknown;
+          patient_name?: string;
+          reason?: string | null;
+          rescheduled_at?: string | null;
+          rescheduled_reason?: string | null;
+          species?: string | null;
+          status?: string;
+          time_range?: unknown;
+          updated_at?: string;
+          vapi_call_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "vapi_bookings_v2_clinic_id_fkey";
+            columns: ["clinic_id"];
+            isOneToOne: false;
+            referencedRelation: "clinics";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       vital_signs: {
         Row: {
           case_id: string | null;
@@ -4225,6 +4368,22 @@ export type Database = {
           patient_name: string;
         }[];
       };
+      book_appointment_with_hold_v2: {
+        Args: {
+          p_client_name: string;
+          p_client_phone: string;
+          p_clinic_id: string;
+          p_end_time: string;
+          p_hold_minutes?: number;
+          p_is_new_client?: boolean;
+          p_patient_name: string;
+          p_reason?: string;
+          p_species?: string;
+          p_start_time: string;
+          p_vapi_call_id?: string;
+        };
+        Returns: Json;
+      };
       book_slot_with_hold: {
         Args: {
           p_client_name: string;
@@ -4240,9 +4399,30 @@ export type Database = {
         };
         Returns: Json;
       };
+      cancel_booking_v2: {
+        Args: { p_booking_id: string; p_reason?: string };
+        Returns: Json;
+      };
+      check_availability_v2: {
+        Args: { p_clinic_id: string; p_time_range: unknown };
+        Returns: {
+          available_count: number;
+          block_reason: string;
+          booked_count: number;
+          capacity: number;
+          is_available: boolean;
+          is_blocked: boolean;
+        }[];
+      };
       check_usage_limit: {
         Args: { resource: string; user_uuid: string };
         Returns: boolean;
+      };
+      cleanup_expired_holds_v2: { Args: never; Returns: number };
+      confirm_booking_v2: { Args: { p_booking_id: string }; Returns: Json };
+      count_booked_in_range_v2: {
+        Args: { p_clinic_id: string; p_time_range: unknown };
+        Returns: number;
       };
       current_clerk_user_id: { Args: never; Returns: string };
       current_org_id: { Args: never; Returns: string };
@@ -4261,6 +4441,22 @@ export type Database = {
           is_blocked: boolean;
           is_stale: boolean;
           last_synced_at: string;
+          slot_end: string;
+          slot_start: string;
+        }[];
+      };
+      get_available_slots_v2: {
+        Args: {
+          p_clinic_id: string;
+          p_date: string;
+          p_duration_minutes?: number;
+        };
+        Returns: {
+          available_count: number;
+          block_reason: string;
+          booked_count: number;
+          capacity: number;
+          is_blocked: boolean;
           slot_end: string;
           slot_start: string;
         }[];

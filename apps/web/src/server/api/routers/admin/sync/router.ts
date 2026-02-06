@@ -20,31 +20,10 @@ const PIMS_SYNC_URL =
   process.env.PIMS_SYNC_URL ?? "https://pims-sync-production.up.railway.app";
 
 /**
- * Clinic-specific API keys for PIMS sync service.
- * The API key determines which clinic the sync runs for on the PIMS service side.
+ * Single shared API key for PIMS sync service.
+ * Clinic context is passed in the request body.
  */
-const CLINIC_API_KEYS: Record<string, string> = {
-  // Alum Rock Animal Hospital
-  "33f3bbb8-6613-45bc-a1f2-d55e30c243ae":
-    process.env.PIMS_SYNC_API_KEY_ALUM_ROCK ??
-    process.env.PIMS_SYNC_API_KEY ??
-    "",
-  // Masson Veterinary Hospital
-  "efcc1733-7a7b-4eab-8104-a6f49defd7a6":
-    process.env.PIMS_SYNC_API_KEY_MASSON ?? "",
-};
-
-/**
- * Get the API key for a specific clinic.
- * Falls back to default PIMS_SYNC_API_KEY if no clinic-specific key is found.
- */
-function getApiKeyForClinic(clinicId: string): string {
-  const key = CLINIC_API_KEYS[clinicId];
-  if (key) return key;
-
-  // Fallback to default key
-  return process.env.PIMS_SYNC_API_KEY ?? "";
-}
+const PIMS_SYNC_API_KEY = process.env.PIMS_SYNC_API_KEY ?? "";
 
 export const adminSyncRouter = createTRPCRouter({
   /**
@@ -238,7 +217,7 @@ export const adminSyncRouter = createTRPCRouter({
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "x-api-key": getApiKeyForClinic(input.clinicId),
+            "x-api-key": PIMS_SYNC_API_KEY,
           },
           body: JSON.stringify({ clinicId: input.clinicId }),
         });
@@ -280,7 +259,7 @@ export const adminSyncRouter = createTRPCRouter({
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-api-key": getApiKeyForClinic(input.clinicId),
+              "x-api-key": PIMS_SYNC_API_KEY,
             },
             body: JSON.stringify({
               clinicId: input.clinicId,
@@ -328,7 +307,7 @@ export const adminSyncRouter = createTRPCRouter({
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-api-key": getApiKeyForClinic(input.clinicId),
+              "x-api-key": PIMS_SYNC_API_KEY,
             },
             body: JSON.stringify({
               clinicId: input.clinicId,
@@ -377,7 +356,7 @@ export const adminSyncRouter = createTRPCRouter({
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "x-api-key": getApiKeyForClinic(input.clinicId),
+              "x-api-key": PIMS_SYNC_API_KEY,
             },
             body: JSON.stringify({
               clinicId: input.clinicId,

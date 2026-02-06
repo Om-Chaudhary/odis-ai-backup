@@ -10,3 +10,5 @@ export type {
   ProviderFactoryOptions,
   ProviderFactoryResult,
 } from "./provider-factory.service";
+export { SessionCacheService } from "./session-cache.service";
+export type { CachedSession } from "./session-cache.service";

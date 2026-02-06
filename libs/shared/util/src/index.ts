@@ -47,14 +47,13 @@ export * from "./lib/case-transforms";
 export * from "./lib/discharge-status";
 
 // Relative time formatting
-export {
-  formatDurationHuman,
-  formatShortDateTime,
-} from "./lib/relative-time";
-
+export { formatDurationHuman, formatShortDateTime } from "./lib/relative-time";
 
 // Text formatting utilities
 export * from "./text-formatting";
 
 // Attention summary parsing
 export * from "./lib/attention-parser";
+
+// Time range utilities (v2 scheduling)
+export * from "./time-range";

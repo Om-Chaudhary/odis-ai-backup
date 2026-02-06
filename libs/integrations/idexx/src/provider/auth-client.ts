@@ -20,7 +20,7 @@ export class IdexxAuthClient {
   constructor(
     private browserService: BrowserService,
     private baseUrl: string,
-  ) { }
+  ) {}
 
   /**
    * Authenticate with IDEXX Neo
@@ -230,5 +230,30 @@ export class IdexxAuthClient {
    */
   getAuthState(): IdexxAuthState {
     return { ...this.authState };
+  }
+
+  /**
+   * Restore authentication state from cached cookies
+   * @param cookiesJson - JSON stringified array of cookies
+   * @returns true if state was restored successfully
+   */
+  restoreFromCache(cookiesJson: string): boolean {
+    try {
+      // Validate cookies can be parsed
+      const cookies = JSON.parse(cookiesJson);
+      if (!Array.isArray(cookies) || cookies.length === 0) {
+        return false;
+      }
+
+      this.authState = {
+        authenticated: true,
+        sessionCookies: cookiesJson,
+        expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000), // Reset 8-hour TTL
+      };
+
+      return true;
+    } catch {
+      return false;
+    }
   }
 }

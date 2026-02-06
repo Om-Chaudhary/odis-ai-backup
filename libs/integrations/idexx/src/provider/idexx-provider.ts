@@ -371,6 +371,83 @@ export class IdexxProvider implements IPimsProvider {
   }
 
   /**
+   * Restore session from cached cookies
+   * @param cookiesJson - JSON stringified array of cookies
+   * @returns true if restoration and verification were successful
+   */
+  async restoreSession(cookiesJson: string): Promise<boolean> {
+    try {
+      // Restore auth state with cached cookies
+      const restored = this.authClient.restoreFromCache(cookiesJson);
+
+      if (!restored) {
+        if (this.debug) {
+          console.log(
+            "[IdexxProvider] Failed to restore auth state from cache",
+          );
+        }
+        return false;
+      }
+
+      // Verify session is still valid by making a lightweight request
+      const isValid = await this.verifySession();
+
+      if (!isValid) {
+        this.authClient.clearAuth();
+        if (this.debug) {
+          console.log("[IdexxProvider] Session verification failed");
+        }
+        return false;
+      }
+
+      if (this.debug) {
+        console.log(
+          "[IdexxProvider] Session restored and verified successfully",
+        );
+      }
+
+      return true;
+    } catch (error) {
+      if (this.debug) {
+        console.error("[IdexxProvider] Session restoration error:", error);
+      }
+      return false;
+    }
+  }
+
+  /**
+   * Verify the current session is still valid
+   * Makes a lightweight API request to check authentication
+   */
+  private async verifySession(): Promise<boolean> {
+    try {
+      // Try to fetch a single day of appointments as a lightweight check
+      const today = new Date();
+      const appointments = await this.scheduleClient.fetchAppointments(
+        today,
+        today,
+      );
+      // If we got here without auth error, session is valid
+      // Empty array is fine - it just means no appointments today
+      return Array.isArray(appointments);
+    } catch (error) {
+      if (this.debug) {
+        console.error("[IdexxProvider] Session verification error:", error);
+      }
+      return false;
+    }
+  }
+
+  /**
+   * Get session cookies for caching
+   * @returns JSON stringified cookies or null if not authenticated
+   */
+  getSessionCookies(): string | null {
+    const authState = this.authClient.getAuthState();
+    return authState.sessionCookies ?? null;
+  }
+
+  /**
    * Cleanup resources
    */
   async close(): Promise<void> {

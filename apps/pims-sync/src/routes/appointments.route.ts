@@ -30,11 +30,16 @@ appointmentsRouter.use((req: Request, res: Response, next: NextFunction) => {
    ======================================== */
 
 interface SearchPatientRequest {
+  /** Clinic ID (required) */
+  clinicId: string;
   query: string;
   limit?: number;
 }
 
 interface CreateAppointmentRequest {
+  /** Clinic ID (required) */
+  clinicId: string;
+
   // For existing patients
   patientId?: string;
   clientId?: string;
@@ -67,11 +72,16 @@ interface CreateAppointmentRequest {
 }
 
 interface CancelAppointmentRequest {
+  /** Clinic ID (required) */
+  clinicId: string;
   appointmentId: string; // IDEXX Neo appointment ID
   reason?: string;
 }
 
 interface RescheduleAppointmentRequest {
+  /** Clinic ID (required) */
+  clinicId: string;
+
   // Original appointment to cancel
   cancelAppointmentId: string;
 
@@ -101,8 +111,17 @@ async function handleSearchPatient(
   res: Response,
 ): Promise<void> {
   const startTime = Date.now();
-  const { clinic } = req;
   const body = req.body as SearchPatientRequest;
+  const { clinicId } = body;
+
+  if (!clinicId) {
+    res.status(400).json({
+      success: false,
+      error: "clinicId is required in request body",
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
 
   if (!body.query) {
     res.status(400).json({
@@ -113,10 +132,10 @@ async function handleSearchPatient(
     return;
   }
 
-  logger.info("Searching patients", { clinicId: clinic.id, query: body.query });
+  logger.info("Searching patients", { clinicId, query: body.query });
 
   try {
-    const { provider, cleanup } = await createProviderForClinic(clinic.id, {
+    const { provider, cleanup } = await createProviderForClinic(clinicId, {
       authenticate: true,
     });
 
@@ -127,7 +146,7 @@ async function handleSearchPatient(
       });
 
       logger.info("Patient search completed", {
-        clinicId: clinic.id,
+        clinicId,
         query: body.query,
         found: result.patients.length,
       });
@@ -144,7 +163,7 @@ async function handleSearchPatient(
     }
   } catch (error) {
     logger.error("Patient search failed", {
-      clinicId: clinic.id,
+      clinicId,
       error: extractErrorMessage(error),
     });
     res.status(500).json(buildErrorResponse(error, startTime));
@@ -164,8 +183,17 @@ async function handleCreateAppointment(
   res: Response,
 ): Promise<void> {
   const startTime = Date.now();
-  const { clinic } = req;
   const body = req.body as CreateAppointmentRequest;
+  const { clinicId } = body;
+
+  if (!clinicId) {
+    res.status(400).json({
+      success: false,
+      error: "clinicId is required in request body",
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
 
   // Validate required fields
   if (!body.date || !body.startTime || !body.reason) {
@@ -199,14 +227,14 @@ async function handleCreateAppointment(
   }
 
   logger.info("Creating appointment", {
-    clinicId: clinic.id,
+    clinicId,
     isNewClient,
     date: body.date,
     time: body.startTime,
   });
 
   try {
-    const { provider, cleanup } = await createProviderForClinic(clinic.id, {
+    const { provider, cleanup } = await createProviderForClinic(clinicId, {
       authenticate: true,
     });
 
@@ -251,7 +279,7 @@ async function handleCreateAppointment(
       }
 
       logger.info("Appointment creation completed", {
-        clinicId: clinic.id,
+        clinicId,
         success: result.success,
         appointmentId: result.appointmentId,
       });
@@ -266,7 +294,7 @@ async function handleCreateAppointment(
     }
   } catch (error) {
     logger.error("Appointment creation failed", {
-      clinicId: clinic.id,
+      clinicId,
       error: extractErrorMessage(error),
     });
     res.status(500).json(buildErrorResponse(error, startTime));
@@ -286,8 +314,17 @@ async function handleCancelAppointment(
   res: Response,
 ): Promise<void> {
   const startTime = Date.now();
-  const { clinic } = req;
   const body = req.body as CancelAppointmentRequest;
+  const { clinicId } = body;
+
+  if (!clinicId) {
+    res.status(400).json({
+      success: false,
+      error: "clinicId is required in request body",
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
 
   if (!body.appointmentId) {
     res.status(400).json({
@@ -299,12 +336,12 @@ async function handleCancelAppointment(
   }
 
   logger.info("Cancelling appointment", {
-    clinicId: clinic.id,
+    clinicId,
     appointmentId: body.appointmentId,
   });
 
   try {
-    const { provider, cleanup } = await createProviderForClinic(clinic.id, {
+    const { provider, cleanup } = await createProviderForClinic(clinicId, {
       authenticate: true,
     });
 
@@ -316,7 +353,7 @@ async function handleCancelAppointment(
       });
 
       logger.info("Appointment cancellation completed", {
-        clinicId: clinic.id,
+        clinicId,
         appointmentId: body.appointmentId,
         success: result.success,
       });
@@ -331,7 +368,7 @@ async function handleCancelAppointment(
     }
   } catch (error) {
     logger.error("Appointment cancellation failed", {
-      clinicId: clinic.id,
+      clinicId,
       appointmentId: body.appointmentId,
       error: extractErrorMessage(error),
     });
@@ -353,8 +390,17 @@ async function handleRescheduleAppointment(
   res: Response,
 ): Promise<void> {
   const startTime = Date.now();
-  const { clinic } = req;
   const body = req.body as RescheduleAppointmentRequest;
+  const { clinicId } = body;
+
+  if (!clinicId) {
+    res.status(400).json({
+      success: false,
+      error: "clinicId is required in request body",
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
 
   // Validate required fields
   if (
@@ -374,14 +420,14 @@ async function handleRescheduleAppointment(
   }
 
   logger.info("Rescheduling appointment", {
-    clinicId: clinic.id,
+    clinicId,
     cancelAppointmentId: body.cancelAppointmentId,
     newDate: body.date,
     newTime: body.startTime,
   });
 
   try {
-    const { provider, cleanup } = await createProviderForClinic(clinic.id, {
+    const { provider, cleanup } = await createProviderForClinic(clinicId, {
       authenticate: true,
     });
 
@@ -397,7 +443,7 @@ async function handleRescheduleAppointment(
         logger.error(
           "Failed to cancel original appointment during reschedule",
           {
-            clinicId: clinic.id,
+            clinicId,
             appointmentId: body.cancelAppointmentId,
             error: cancelResult.error,
           },
@@ -434,7 +480,7 @@ async function handleRescheduleAppointment(
         logger.error(
           "Failed to create new appointment during reschedule - ROLLBACK NEEDED",
           {
-            clinicId: clinic.id,
+            clinicId,
             cancelledAppointmentId: body.cancelAppointmentId,
             error: createResult.error,
           },
@@ -453,7 +499,7 @@ async function handleRescheduleAppointment(
       }
 
       logger.info("Appointment reschedule completed", {
-        clinicId: clinic.id,
+        clinicId,
         cancelledAppointmentId: body.cancelAppointmentId,
         newAppointmentId: createResult.appointmentId,
       });
@@ -470,7 +516,7 @@ async function handleRescheduleAppointment(
     }
   } catch (error) {
     logger.error("Appointment reschedule failed", {
-      clinicId: clinic.id,
+      clinicId,
       error: extractErrorMessage(error),
     });
 

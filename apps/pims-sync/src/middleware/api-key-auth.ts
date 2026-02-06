@@ -11,12 +11,12 @@ import { logger } from "../lib/logger";
 import { createSupabaseServiceClient } from "../lib/supabase";
 
 /**
- * Authenticated request with clinic context
+ * Authenticated request with API key context
+ * Note: Clinic ID comes from request body, not from API key
  */
 export interface AuthenticatedRequest extends Request {
-  clinic: {
+  apiKey: {
     id: string;
-    apiKeyId: string;
     permissions: string[] | null;
   };
 }
@@ -26,7 +26,6 @@ export interface AuthenticatedRequest extends Request {
  */
 interface ApiKeyValidation {
   valid: boolean;
-  clinicId?: string;
   apiKeyId?: string;
   permissions?: string[] | null;
   error?: string;
@@ -59,7 +58,7 @@ async function validateApiKey(apiKey: string): Promise<ApiKeyValidation> {
     // Look up key by prefix first (fast indexed lookup)
     const { data: keyRecord, error } = await supabase
       .from("clinic_api_keys")
-      .select("id, clinic_id, key_hash, is_active, expires_at, permissions")
+      .select("id, key_hash, is_active, expires_at, permissions")
       .eq("key_prefix", prefix)
       .maybeSingle();
 
@@ -101,7 +100,6 @@ async function validateApiKey(apiKey: string): Promise<ApiKeyValidation> {
 
     return {
       valid: true,
-      clinicId: keyRecord.clinic_id,
       apiKeyId: keyRecord.id,
       permissions,
     };
@@ -150,15 +148,13 @@ export function apiKeyAuth() {
       return;
     }
 
-    // Attach clinic context to request
-    (req as AuthenticatedRequest).clinic = {
-      id: validation.clinicId!,
-      apiKeyId: validation.apiKeyId!,
+    // Attach API key context to request (clinic ID comes from request body)
+    (req as AuthenticatedRequest).apiKey = {
+      id: validation.apiKeyId!,
       permissions: validation.permissions ?? null,
     };
 
     logger.debug("API key authenticated", {
-      clinicId: validation.clinicId,
       apiKeyId: validation.apiKeyId,
     });
 
@@ -176,7 +172,7 @@ export function requirePermission(permission: string) {
   return (req: Request, res: Response, next: NextFunction): void => {
     const authReq = req as AuthenticatedRequest;
 
-    if (!authReq.clinic) {
+    if (!authReq.apiKey) {
       res.status(401).json({
         success: false,
         error: "Not authenticated",
@@ -185,7 +181,7 @@ export function requirePermission(permission: string) {
       return;
     }
 
-    const { permissions } = authReq.clinic;
+    const { permissions } = authReq.apiKey;
 
     // If no permissions array, allow all (backwards compatibility)
     if (!permissions || permissions.length === 0) {
@@ -200,7 +196,7 @@ export function requirePermission(permission: string) {
     }
 
     logger.warn("Permission denied", {
-      clinicId: authReq.clinic.id,
+      apiKeyId: authReq.apiKey.id,
       required: permission,
       has: permissions,
     });

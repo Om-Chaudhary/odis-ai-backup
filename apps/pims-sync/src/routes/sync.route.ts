@@ -7,6 +7,7 @@
  * Endpoint naming convention:
  * - /api/sync/outbound/*  - For Outbound Dashboard (Discharge Calls)
  * - /api/sync/inbound/*   - For Inbound Dashboard (VAPI Scheduling)
+ * - /api/sync/full        - Combined sync for both workflows
  * - /api/sync/reconcile   - Shared cleanup utility
  *
  * Endpoints:
@@ -14,6 +15,8 @@
  * - POST /api/sync/outbound/enrich  - Add consultation data + AI pipeline
  * - POST /api/sync/outbound/full    - Complete outbound workflow (cases + enrich + reconcile)
  * - POST /api/sync/inbound/schedule - Generate VAPI availability slots
+ * - POST /api/sync/inbound/appointments - Sync appointments, update slot availability
+ * - POST /api/sync/full             - Complete sync (outbound + inbound workflows)
  * - POST /api/sync/reconcile        - 7-day historical reconciliation
  */
 
@@ -26,6 +29,8 @@ import { config } from "../config";
 import { createSupabaseServiceClient } from "../lib/supabase";
 import type { IdexxProvider } from "@odis-ai/integrations/idexx";
 import type { PimsCredentials } from "@odis-ai/domain/sync";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { createTimeRange, timeRangeToPostgres } from "@odis-ai/shared/util";
 
 export const syncRouter: ReturnType<typeof Router> = Router();
 
@@ -97,6 +102,21 @@ syncRouter.post("/inbound/appointments", (req: Request, res: Response) => {
 });
 
 // ============================================================================
+// COMBINED FULL SYNC ENDPOINT
+// ============================================================================
+
+/**
+ * POST /api/sync/full
+ *
+ * Run complete sync for both outbound and inbound workflows:
+ * 1. Outbound: cases + enrich + reconcile (discharge calls)
+ * 2. Inbound: schedule slots + appointments (VAPI scheduling)
+ */
+syncRouter.post("/full", (req: Request, res: Response) => {
+  void handleFullSync(req as AuthenticatedRequest, res);
+});
+
+// ============================================================================
 // SHARED ENDPOINTS
 // ============================================================================
 
@@ -116,8 +136,8 @@ syncRouter.post("/reconcile", (req: Request, res: Response) => {
 
 // Outbound sync request types
 interface OutboundCasesRequest {
-  /** Clinic ID to sync (overrides API key clinic if provided) */
-  clinicId?: string;
+  /** Clinic ID to sync (required) */
+  clinicId: string;
   startDate?: string; // YYYY-MM-DD
   endDate?: string; // YYYY-MM-DD
   daysAhead?: number;
@@ -129,8 +149,8 @@ interface OutboundCasesRequest {
 }
 
 interface OutboundEnrichRequest {
-  /** Clinic ID to sync (overrides API key clinic if provided) */
-  clinicId?: string;
+  /** Clinic ID to sync (required) */
+  clinicId: string;
   startDate?: string; // YYYY-MM-DD
   endDate?: string; // YYYY-MM-DD
   parallelBatchSize?: number;
@@ -142,8 +162,8 @@ interface OutboundEnrichRequest {
 }
 
 interface OutboundFullRequest {
-  /** Clinic ID to sync (overrides API key clinic if provided) */
-  clinicId?: string;
+  /** Clinic ID to sync (required) */
+  clinicId: string;
   startDate?: string;
   endDate?: string;
   daysAhead?: number;
@@ -163,8 +183,8 @@ interface OutboundFullRequest {
 
 // Inbound sync request types
 interface InboundScheduleRequest {
-  /** Clinic ID to sync (overrides API key clinic if provided) */
-  clinicId?: string;
+  /** Clinic ID to sync (required) */
+  clinicId: string;
   /** Start date for slot generation (default: today) */
   startDate?: string;
   /** End date for slot generation (default: 30 days from start) */
@@ -178,8 +198,8 @@ interface InboundScheduleRequest {
 }
 
 interface InboundAppointmentRequest {
-  /** Clinic ID to sync (overrides API key clinic if provided) */
-  clinicId?: string;
+  /** Clinic ID to sync (required) */
+  clinicId: string;
   /** Start date for appointment sync (default: today) */
   startDate?: string;
   /** End date for appointment sync (default: daysAhead from start) */
@@ -190,9 +210,39 @@ interface InboundAppointmentRequest {
 
 // Shared request types
 interface ReconciliationRequest {
-  /** Clinic ID to sync (overrides API key clinic if provided) */
-  clinicId?: string;
+  /** Clinic ID to sync (required) */
+  clinicId: string;
   lookbackDays?: number;
+}
+
+// Combined full sync request
+interface FullSyncRequest {
+  /** Clinic ID to sync (required) */
+  clinicId: string;
+
+  // Outbound options
+  /** Number of days to look backward for cases (default: 14) */
+  backwardDays?: number;
+  /** Number of days to look forward for cases (default: 14) */
+  forwardDays?: number;
+  /** Days for reconciliation lookback (default: 7) */
+  reconciliationLookbackDays?: number;
+
+  // Inbound options
+  /** Days ahead for schedule slots (default: 30) */
+  scheduleDaysAhead?: number;
+  /** Slot duration in minutes (default: 15) */
+  slotDurationMinutes?: number;
+  /** Default capacity per slot (default: 2) */
+  defaultCapacity?: number;
+  /** Days ahead for appointment sync (default: 14) */
+  appointmentDaysAhead?: number;
+
+  // Workflow control
+  /** Skip outbound sync (default: false) */
+  skipOutbound?: boolean;
+  /** Skip inbound sync (default: false) */
+  skipInbound?: boolean;
 }
 
 interface BusinessHours {
@@ -221,17 +271,15 @@ async function handleOutboundCasesSync(
   res: Response,
 ): Promise<void> {
   const startTime = Date.now();
-  const { clinic } = req;
   const body = req.body as OutboundCasesRequest;
 
-  // Resolve clinic ID: prefer body, fallback to middleware
-  const clinicId = body.clinicId ?? clinic.id;
+  // Clinic ID is required in request body
+  const { clinicId } = body;
 
   if (!clinicId) {
     res.status(400).json({
       success: false,
-      error:
-        "Missing clinic ID - provide clinicId in request body or ensure API key is associated with a clinic",
+      error: "clinicId is required in request body",
       durationMs: Date.now() - startTime,
       timestamp: new Date().toISOString(),
     });
@@ -315,17 +363,15 @@ async function handleOutboundEnrichSync(
   res: Response,
 ): Promise<void> {
   const startTime = Date.now();
-  const { clinic } = req;
   const body = req.body as OutboundEnrichRequest;
 
-  // Resolve clinic ID: prefer body, fallback to middleware
-  const clinicId = body.clinicId ?? clinic.id;
+  // Clinic ID is required in request body
+  const { clinicId } = body;
 
   if (!clinicId) {
     res.status(400).json({
       success: false,
-      error:
-        "Missing clinic ID - provide clinicId in request body or ensure API key is associated with a clinic",
+      error: "clinicId is required in request body",
       durationMs: Date.now() - startTime,
       timestamp: new Date().toISOString(),
     });
@@ -436,17 +482,15 @@ async function handleReconciliation(
   res: Response,
 ): Promise<void> {
   const startTime = Date.now();
-  const { clinic } = req;
   const body = req.body as ReconciliationRequest;
 
-  // Resolve clinic ID: prefer body, fallback to middleware
-  const clinicId = body.clinicId ?? clinic.id;
+  // Clinic ID is required in request body
+  const { clinicId } = body;
 
   if (!clinicId) {
     res.status(400).json({
       success: false,
-      error:
-        "Missing clinic ID - provide clinicId in request body or ensure API key is associated with a clinic",
+      error: "clinicId is required in request body",
       durationMs: Date.now() - startTime,
       timestamp: new Date().toISOString(),
     });
@@ -526,17 +570,15 @@ async function handleOutboundFullSync(
   res: Response,
 ): Promise<void> {
   const startTime = Date.now();
-  const { clinic } = req;
   const body = req.body as OutboundFullRequest;
 
-  // Resolve clinic ID: prefer body, fallback to middleware
-  const clinicId = body.clinicId ?? clinic.id;
+  // Clinic ID is required in request body
+  const { clinicId } = body;
 
   if (!clinicId) {
     res.status(400).json({
       success: false,
-      error:
-        "Missing clinic ID - provide clinicId in request body or ensure API key is associated with a clinic",
+      error: "clinicId is required in request body",
       durationMs: Date.now() - startTime,
       timestamp: new Date().toISOString(),
     });
@@ -680,6 +722,415 @@ async function handleOutboundFullSync(
 }
 
 /**
+ * Handle combined full sync request
+ * Runs both outbound (discharge calls) and inbound (VAPI scheduling) workflows
+ */
+async function handleFullSync(
+  req: AuthenticatedRequest,
+  res: Response,
+): Promise<void> {
+  const startTime = Date.now();
+  const body = req.body as FullSyncRequest;
+
+  const { clinicId } = body;
+
+  if (!clinicId) {
+    res.status(400).json({
+      success: false,
+      error: "clinicId is required in request body",
+      durationMs: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
+
+  logger.info("Starting combined full sync", {
+    clinicId,
+    skipOutbound: body.skipOutbound ?? false,
+    skipInbound: body.skipInbound ?? false,
+  });
+
+  const results: {
+    outbound?: {
+      success: boolean;
+      phases?: Record<string, boolean | undefined>;
+      durationMs?: number;
+      error?: string;
+    };
+    inbound?: {
+      schedule?: {
+        success: boolean;
+        slotsGenerated?: number;
+        durationMs?: number;
+        error?: string;
+      };
+      appointments?: {
+        success: boolean;
+        appointmentsFound?: number;
+        slotsUpdated?: number;
+        durationMs?: number;
+        error?: string;
+      };
+    };
+  } = {};
+
+  try {
+    const supabase = createSupabaseServiceClient();
+
+    // ========================================
+    // PHASE 1: Outbound Sync (Discharge Calls)
+    // ========================================
+    if (!body.skipOutbound) {
+      const outboundStart = Date.now();
+      logger.info("Starting outbound phase", { clinicId });
+
+      try {
+        const { provider, credentials, cleanup, userId } =
+          await createProviderForClinic(clinicId);
+
+        try {
+          const authenticated = await provider.authenticate(credentials);
+          if (!authenticated) {
+            results.outbound = {
+              success: false,
+              error: "PIMS authentication failed",
+              durationMs: Date.now() - outboundStart,
+            };
+          } else {
+            const { SyncOrchestrator } = await import("@odis-ai/domain/sync");
+            const orchestrator = new SyncOrchestrator(
+              supabase,
+              provider,
+              clinicId,
+              userId,
+            );
+
+            const backwardDays = body.backwardDays ?? 14;
+            const forwardDays = body.forwardDays ?? 14;
+
+            const outboundResult = await orchestrator.runBidirectionalSync({
+              lookbackDays: backwardDays,
+              forwardDays: forwardDays,
+              reconciliationLookbackDays: body.reconciliationLookbackDays ?? 7,
+            });
+
+            results.outbound = {
+              success: outboundResult.success,
+              phases: {
+                backwardCases: outboundResult.backwardInbound?.success,
+                forwardCases: outboundResult.forwardInbound?.success,
+                enrich: outboundResult.cases?.success,
+                reconciliation: outboundResult.reconciliation?.success,
+              },
+              durationMs: Date.now() - outboundStart,
+            };
+          }
+        } finally {
+          await cleanup();
+        }
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+        logger.error("Outbound phase failed", {
+          clinicId,
+          error: errorMessage,
+        });
+        results.outbound = {
+          success: false,
+          error: errorMessage,
+          durationMs: Date.now() - outboundStart,
+        };
+      }
+    }
+
+    // ========================================
+    // PHASE 2: Inbound Sync (VAPI Scheduling)
+    // ========================================
+    if (!body.skipInbound) {
+      results.inbound = {};
+
+      // --- Phase 2a: Generate Schedule Slots ---
+      const scheduleStart = Date.now();
+      logger.info("Starting inbound schedule phase", { clinicId });
+
+      try {
+        // Get clinic config
+        const { data: clinicData, error: clinicError } = await supabase
+          .from("clinics")
+          .select("name, timezone, business_hours")
+          .eq("id", clinicId)
+          .single();
+
+        if (clinicError || !clinicData) {
+          results.inbound.schedule = {
+            success: false,
+            error: `Clinic not found: ${clinicId}`,
+            durationMs: Date.now() - scheduleStart,
+          };
+        } else if (!clinicData.business_hours) {
+          results.inbound.schedule = {
+            success: false,
+            error: "Clinic does not have business hours configured",
+            durationMs: Date.now() - scheduleStart,
+          };
+        } else {
+          const businessHours =
+            clinicData.business_hours as BusinessHoursConfig;
+          const slotDurationMinutes = body.slotDurationMinutes ?? 15;
+          const defaultCapacity = body.defaultCapacity ?? 2;
+
+          const startDate = new Date();
+          startDate.setHours(0, 0, 0, 0);
+
+          const daysAhead = body.scheduleDaysAhead ?? 30;
+          const endDate = new Date(
+            startDate.getTime() + daysAhead * 24 * 60 * 60 * 1000,
+          );
+
+          const slots = generateScheduleSlots({
+            clinicId,
+            startDate,
+            endDate,
+            businessHours,
+            slotDurationMinutes,
+            defaultCapacity,
+          });
+
+          if (slots.length > 0) {
+            const batchSize = 500;
+            let totalInserted = 0;
+
+            for (let i = 0; i < slots.length; i += batchSize) {
+              const batch = slots.slice(i, i + batchSize);
+              const { data } = await supabase
+                .from("schedule_slots")
+                .upsert(batch, {
+                  onConflict: "clinic_id,date,start_time",
+                  ignoreDuplicates: true,
+                })
+                .select("id");
+
+              totalInserted += data?.length ?? 0;
+            }
+
+            results.inbound.schedule = {
+              success: true,
+              slotsGenerated: totalInserted,
+              durationMs: Date.now() - scheduleStart,
+            };
+          } else {
+            results.inbound.schedule = {
+              success: true,
+              slotsGenerated: 0,
+              durationMs: Date.now() - scheduleStart,
+            };
+          }
+        }
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+        logger.error("Inbound schedule phase failed", {
+          clinicId,
+          error: errorMessage,
+        });
+        results.inbound.schedule = {
+          success: false,
+          error: errorMessage,
+          durationMs: Date.now() - scheduleStart,
+        };
+      }
+
+      // --- Phase 2b: Sync Appointments ---
+      const appointmentStart = Date.now();
+      logger.info("Starting inbound appointments phase", { clinicId });
+
+      try {
+        const { provider, credentials, cleanup } =
+          await createProviderForClinic(clinicId);
+
+        try {
+          const authenticated = await provider.authenticate(credentials);
+          if (!authenticated) {
+            results.inbound.appointments = {
+              success: false,
+              error: "PIMS authentication failed",
+              durationMs: Date.now() - appointmentStart,
+            };
+          } else {
+            const startDate = new Date();
+            startDate.setHours(0, 0, 0, 0);
+
+            const daysAhead = body.appointmentDaysAhead ?? 14;
+            const endDate = new Date(
+              startDate.getTime() + daysAhead * 24 * 60 * 60 * 1000,
+            );
+
+            const startDateStr = startDate.toISOString().split("T")[0]!;
+            const endDateStr = endDate.toISOString().split("T")[0]!;
+
+            const appointments = await provider.fetchAppointments(
+              startDate,
+              endDate,
+            );
+
+            if (appointments.length > 0) {
+              const appointmentRecords = appointments.map((appt) => {
+                let timeStr = "00:00:00";
+                let endTimeStr = "00:00:00";
+
+                if (appt.startTime) {
+                  const hours = String(appt.startTime.getHours()).padStart(
+                    2,
+                    "0",
+                  );
+                  const minutes = String(appt.startTime.getMinutes()).padStart(
+                    2,
+                    "0",
+                  );
+                  timeStr = `${hours}:${minutes}:00`;
+
+                  const durationMs = (appt.duration ?? 15) * 60 * 1000;
+                  const endTime = new Date(
+                    appt.startTime.getTime() + durationMs,
+                  );
+                  const endHours = String(endTime.getHours()).padStart(2, "0");
+                  const endMinutes = String(endTime.getMinutes()).padStart(
+                    2,
+                    "0",
+                  );
+                  endTimeStr = `${endHours}:${endMinutes}:00`;
+                }
+
+                return {
+                  clinic_id: clinicId,
+                  neo_appointment_id: appt.id,
+                  date: appt.date,
+                  start_time: timeStr,
+                  end_time: endTimeStr,
+                  patient_name: appt.patient?.name ?? null,
+                  client_name: appt.client?.name ?? null,
+                  client_phone: appt.client?.phone ?? null,
+                  provider_name: appt.provider?.name ?? null,
+                  room_id: appt.provider?.id ?? null,
+                  appointment_type: appt.type ?? null,
+                  status: mapAppointmentStatus(appt.status),
+                  last_synced_at: new Date().toISOString(),
+                  deleted_at: null,
+                };
+              });
+
+              const batchSize = 100;
+              for (let i = 0; i < appointmentRecords.length; i += batchSize) {
+                const batch = appointmentRecords.slice(i, i + batchSize);
+                await supabase.from("schedule_appointments").upsert(batch, {
+                  onConflict: "clinic_id,neo_appointment_id",
+                });
+              }
+
+              // Write to time range-based table
+              const { data: clinicTzData } = await supabase
+                .from("clinics")
+                .select("timezone")
+                .eq("id", clinicId)
+                .single();
+
+              const timezone = clinicTzData?.timezone ?? "America/Los_Angeles";
+              const timeRangeRecords = convertToV2Records(
+                clinicId,
+                appointmentRecords,
+                timezone,
+              );
+              await writeAppointmentToV2Table(
+                supabase,
+                clinicId,
+                timeRangeRecords,
+              );
+            }
+
+            // Update slot booked counts
+            const { data: updateResult } = (await supabase.rpc(
+              "update_slot_booked_counts",
+              {
+                p_clinic_id: clinicId,
+                p_start_date: startDateStr,
+                p_end_date: endDateStr,
+              },
+            )) as {
+              data: { slots_updated: number }[] | null;
+              error: Error | null;
+            };
+
+            const slotsUpdated = updateResult?.[0]?.slots_updated ?? 0;
+
+            results.inbound.appointments = {
+              success: true,
+              appointmentsFound: appointments.length,
+              slotsUpdated,
+              durationMs: Date.now() - appointmentStart,
+            };
+          }
+        } finally {
+          await cleanup();
+        }
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
+        logger.error("Inbound appointments phase failed", {
+          clinicId,
+          error: errorMessage,
+        });
+        results.inbound.appointments = {
+          success: false,
+          error: errorMessage,
+          durationMs: Date.now() - appointmentStart,
+        };
+      }
+    }
+
+    // Determine overall success
+    const outboundSuccess = body.skipOutbound ?? results.outbound?.success;
+    const inboundScheduleSuccess =
+      body.skipInbound ?? results.inbound?.schedule?.success;
+    const inboundAppointmentsSuccess =
+      body.skipInbound ?? results.inbound?.appointments?.success;
+    const overallSuccess =
+      outboundSuccess && inboundScheduleSuccess && inboundAppointmentsSuccess;
+
+    logger.info("Combined full sync completed", {
+      clinicId,
+      success: overallSuccess,
+      outbound: results.outbound?.success,
+      inboundSchedule: results.inbound?.schedule?.success,
+      inboundAppointments: results.inbound?.appointments?.success,
+      durationMs: Date.now() - startTime,
+    });
+
+    res.status(overallSuccess ? 200 : 207).json({
+      success: overallSuccess,
+      clinicId,
+      results,
+      durationMs: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    logger.error("Combined full sync failed", {
+      clinicId,
+      error: errorMessage,
+    });
+
+    res.status(500).json({
+      success: false,
+      error: errorMessage,
+      results,
+      durationMs: Date.now() - startTime,
+      timestamp: new Date().toISOString(),
+    });
+  }
+}
+
+/**
  * Create IDEXX provider for a clinic
  */
 async function createProviderForClinic(clinicId: string): Promise<{
@@ -762,17 +1213,15 @@ async function handleInboundScheduleSync(
   res: Response,
 ): Promise<void> {
   const startTime = Date.now();
-  const { clinic } = req;
   const body = req.body as InboundScheduleRequest;
 
-  // Resolve clinic ID: prefer body, fallback to middleware
-  const clinicId = body.clinicId ?? clinic.id;
+  // Clinic ID is required in request body
+  const { clinicId } = body;
 
   if (!clinicId) {
     res.status(400).json({
       success: false,
-      error:
-        "Missing clinic ID - provide clinicId in request body or ensure API key is associated with a clinic",
+      error: "clinicId is required in request body",
       durationMs: Date.now() - startTime,
       timestamp: new Date().toISOString(),
     });
@@ -1096,17 +1545,15 @@ async function handleInboundAppointmentSync(
   res: Response,
 ): Promise<void> {
   const startTime = Date.now();
-  const { clinic } = req;
   const body = req.body as InboundAppointmentRequest;
 
-  // Resolve clinic ID: prefer body, fallback to middleware
-  const clinicId = body.clinicId ?? clinic.id;
+  // Clinic ID is required in request body
+  const { clinicId } = body;
 
   if (!clinicId) {
     res.status(400).json({
       success: false,
-      error:
-        "Missing clinic ID - provide clinicId in request body or ensure API key is associated with a clinic",
+      error: "clinicId is required in request body",
       durationMs: Date.now() - startTime,
       timestamp: new Date().toISOString(),
     });
@@ -1264,6 +1711,39 @@ async function handleInboundAppointmentSync(
           } else {
             appointmentsAdded += batch.length;
           }
+        }
+
+        // ========================================
+        // Write to time range-based table
+        // ========================================
+        // Get clinic timezone for accurate time range conversion
+        const { data: clinicData } = await supabase
+          .from("clinics")
+          .select("timezone")
+          .eq("id", clinicId)
+          .single();
+
+        const clinicTimezone = clinicData?.timezone ?? "America/Los_Angeles";
+
+        // Convert records to time range format
+        const timeRangeRecords = convertToV2Records(
+          clinicId,
+          appointmentRecords,
+          clinicTimezone,
+        );
+
+        // Write to time range-based table
+        const writeResult = await writeAppointmentToV2Table(
+          supabase,
+          clinicId,
+          timeRangeRecords,
+        );
+
+        if (!writeResult.success) {
+          logger.warn("Time range table write failed (non-blocking)", {
+            clinicId,
+            error: writeResult.error,
+          });
         }
 
         // Soft-delete appointments that weren't in this sync
@@ -1450,4 +1930,133 @@ function mapAppointmentStatus(status: string | null | undefined): string {
   }
 
   return "scheduled";
+}
+
+// ============================================================================
+// TIME RANGE V2 TABLE FUNCTIONS
+// ============================================================================
+
+interface AppointmentV2Record {
+  clinic_id: string;
+  time_range: string;
+  neo_appointment_id: string;
+  patient_name: string | null;
+  client_name: string | null;
+  client_phone: string | null;
+  provider_name: string | null;
+  room_id: string | null;
+  appointment_type: string | null;
+  status: string;
+  source: string;
+  sync_hash: string | null;
+  last_synced_at: string;
+  deleted_at: string | null;
+}
+
+/**
+ * Write appointments to schedule_appointments_v2 table (time range-based)
+ * This writes to the new v2 table in parallel with the existing table
+ * to support gradual migration.
+ *
+ * @param supabase - Supabase client
+ * @param clinicId - Clinic UUID
+ * @param appointments - Appointment records with time ranges
+ */
+async function writeAppointmentToV2Table(
+  supabase: SupabaseClient,
+  clinicId: string,
+  appointments: AppointmentV2Record[],
+): Promise<{ success: boolean; count: number; error?: string }> {
+  if (appointments.length === 0) {
+    return { success: true, count: 0 };
+  }
+
+  try {
+    // Upsert in batches
+    const batchSize = 100;
+    let totalUpserted = 0;
+
+    for (let i = 0; i < appointments.length; i += batchSize) {
+      const batch = appointments.slice(i, i + batchSize);
+      const { error } = await supabase
+        .from("schedule_appointments_v2")
+        .upsert(batch, {
+          onConflict: "clinic_id,neo_appointment_id",
+        });
+
+      if (error) {
+        logger.error("Failed to upsert v2 appointments batch", {
+          clinicId,
+          batchIndex: i,
+          error: error.message,
+        });
+        return { success: false, count: totalUpserted, error: error.message };
+      }
+
+      totalUpserted += batch.length;
+    }
+
+    logger.info("Appointments written to schedule_appointments_v2", {
+      clinicId,
+      count: totalUpserted,
+    });
+
+    return { success: true, count: totalUpserted };
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    logger.error("Failed to write appointments to v2 table", {
+      clinicId,
+      error: errorMessage,
+    });
+    return { success: false, count: 0, error: errorMessage };
+  }
+}
+
+/**
+ * Converts appointment records to v2 time range format
+ */
+function convertToV2Records(
+  clinicId: string,
+  records: Array<{
+    neo_appointment_id: string;
+    date: string;
+    start_time: string;
+    end_time: string;
+    patient_name: string | null;
+    client_name: string | null;
+    client_phone: string | null;
+    provider_name: string | null;
+    room_id: string | null;
+    appointment_type: string | null;
+    status: string;
+  }>,
+  timezone = "America/Los_Angeles",
+): AppointmentV2Record[] {
+  return records.map((record) => {
+    // Create time range from date + start/end times
+    const timeRange = createTimeRange(
+      record.date,
+      record.start_time,
+      record.end_time,
+      timezone,
+    );
+
+    return {
+      clinic_id: clinicId,
+      time_range: timeRangeToPostgres(timeRange),
+      neo_appointment_id: record.neo_appointment_id,
+      patient_name: record.patient_name,
+      client_name: record.client_name,
+      client_phone: record.client_phone,
+      provider_name: record.provider_name,
+      room_id: record.room_id,
+      appointment_type: record.appointment_type,
+      status: record.status,
+      source: "idexx",
+      sync_hash: null, // Will be computed if needed
+      last_synced_at: new Date().toISOString(),
+      deleted_at: null,
+    };
+  });
 }

@@ -3,12 +3,19 @@
  *
  * Centralized factory for creating IDEXX provider instances with credentials.
  * Eliminates duplication across main.ts, sync.route.ts, and appointments.route.ts.
+ *
+ * Now includes session caching to reduce authentication frequency from ~20+/day
+ * to 2-3/day per clinic.
  */
 
 import type { IdexxProvider } from "@odis-ai/integrations/idexx/provider";
 import type { PimsCredentials } from "@odis-ai/domain/sync";
 import { PersistenceService } from "./persistence.service";
+import { SessionCacheService } from "./session-cache.service";
 import { config } from "../config";
+import { logger } from "../lib/logger";
+
+const providerLogger = logger.child("provider-factory");
 
 /**
  * Options for provider creation
@@ -85,11 +92,52 @@ export async function createProviderForClinic(
 
   // Authenticate if requested
   if (authenticate) {
-    const authenticated = await provider.authenticate(credentials);
-    if (!authenticated) {
-      await provider.close();
-      throw new Error("PIMS authentication failed");
+    const sessionCache = new SessionCacheService();
+
+    // Check for cached session BEFORE authenticating
+    const cachedSession = await sessionCache.getValidSession(clinicId);
+
+    if (cachedSession) {
+      // Try to restore session from cache
+      const restored = await provider.restoreSession(cachedSession.cookies);
+
+      if (restored) {
+        // Touch session to prevent idle timeout
+        await sessionCache.touchSession(clinicId);
+        providerLogger.info(`Restored cached session for clinic ${clinicId}`);
+      } else {
+        // Cache was stale, delete and re-authenticate
+        providerLogger.info(
+          `Cached session stale for clinic ${clinicId}, re-authenticating`,
+        );
+        await sessionCache.deleteSession(clinicId);
+        await authenticateAndCache(
+          provider,
+          credentials,
+          clinicId,
+          sessionCache,
+        );
+      }
+    } else {
+      // No cache, authenticate fresh
+      providerLogger.info(
+        `No cached session for clinic ${clinicId}, authenticating fresh`,
+      );
+      await authenticateAndCache(provider, credentials, clinicId, sessionCache);
     }
+
+    return {
+      provider,
+      credentials,
+      cleanup: async () => {
+        // Touch session on cleanup to extend idle timeout
+        await sessionCache.touchSession(clinicId).catch(() => {
+          // Ignore touch errors on cleanup - session may already be invalid
+        });
+        await provider.close();
+      },
+      userId: credentialResult.userId,
+    };
   }
 
   return {
@@ -100,4 +148,27 @@ export async function createProviderForClinic(
     },
     userId: credentialResult.userId,
   };
+}
+
+/**
+ * Authenticate with PIMS and cache the session
+ */
+async function authenticateAndCache(
+  provider: IdexxProvider,
+  credentials: PimsCredentials,
+  clinicId: string,
+  sessionCache: SessionCacheService,
+): Promise<void> {
+  const authenticated = await provider.authenticate(credentials);
+  if (!authenticated) {
+    await provider.close();
+    throw new Error("PIMS authentication failed");
+  }
+
+  // Cache the new session
+  const cookies = provider.getSessionCookies();
+  if (cookies) {
+    await sessionCache.saveSession(clinicId, cookies);
+    providerLogger.info(`Cached new session for clinic ${clinicId}`);
+  }
 }

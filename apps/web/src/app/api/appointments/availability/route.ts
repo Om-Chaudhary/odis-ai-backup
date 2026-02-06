@@ -23,52 +23,8 @@ const availabilityQuerySchema = z.object({
     .string()
     .regex(/^\d{2}:\d{2}$/)
     .optional(),
+  use_v2: z.coerce.boolean().default(false),
 });
-
-// Day name mapping for business hours lookup
-const DAY_NAMES = [
-  "sunday",
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-] as const;
-
-interface DayHours {
-  open: string;
-  close: string;
-  closed?: boolean;
-}
-
-type BusinessHours = Partial<Record<(typeof DAY_NAMES)[number], DayHours>>;
-
-/**
- * Get the business hours for a specific day from clinic config
- */
-function getHoursForDay(
-  businessHours: BusinessHours | null,
-  date: string,
-): { startTime: string; endTime: string } | null {
-  if (!businessHours) {
-    return null;
-  }
-
-  const dateObj = new Date(date + "T12:00:00"); // Use noon to avoid timezone issues
-  const dayIndex = dateObj.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6;
-  const dayName = DAY_NAMES[dayIndex];
-  const dayHours = businessHours[dayName];
-
-  if (!dayHours || dayHours.closed) {
-    return null; // Clinic is closed on this day
-  }
-
-  return {
-    startTime: dayHours.open + ":00", // "08:00" -> "08:00:00"
-    endTime: dayHours.close + ":00", // "19:00" -> "19:00:00"
-  };
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -80,94 +36,125 @@ export async function GET(request: NextRequest) {
       slot_duration_minutes: searchParams.get("slot_duration_minutes") ?? "30",
       start_time: searchParams.get("start_time") ?? undefined,
       end_time: searchParams.get("end_time") ?? undefined,
+      use_v2: searchParams.get("use_v2") ?? "false",
     };
 
     const validated = availabilityQuerySchema.parse(params);
     const supabase = await createServiceClient();
 
-    // Fetch clinic business hours to determine day-specific open/close times
-    let startTime = validated.start_time
-      ? `${validated.start_time}:00`
-      : "08:00:00";
-    let endTime = validated.end_time ? `${validated.end_time}:00` : "17:30:00";
+    logger.debug("Querying availability", {
+      clinic_id: validated.clinic_id,
+      date: validated.date,
+      duration_minutes: validated.slot_duration_minutes,
+      use_v2: validated.use_v2,
+    });
 
-    // If no explicit times provided, use clinic's business hours for the requested day
-    if (!validated.start_time || !validated.end_time) {
-      const { data: clinic } = await supabase
-        .from("clinics")
-        .select("business_hours")
-        .eq("id", validated.clinic_id)
-        .single();
+    // Use v2 time range-based function if requested
+    if (validated.use_v2) {
+      const { data: slots, error } = await supabase.rpc(
+        "get_available_slots_v2",
+        {
+          p_clinic_id: validated.clinic_id,
+          p_date: validated.date,
+          p_duration_minutes: validated.slot_duration_minutes,
+        },
+      );
 
-      if (clinic?.business_hours) {
-        const dayHours = getHoursForDay(
-          clinic.business_hours as BusinessHours,
-          validated.date,
-        );
-
-        if (dayHours) {
-          // Only override if not explicitly provided in request
-          if (!validated.start_time) {
-            startTime = dayHours.startTime;
-          }
-          if (!validated.end_time) {
-            endTime = dayHours.endTime;
-          }
-
-          logger.debug("Using clinic business hours for day", {
-            date: validated.date,
-            startTime,
-            endTime,
-          });
-        } else {
-          // Clinic is closed on this day - return empty slots
-          logger.info("Clinic is closed on requested day", {
-            clinic_id: validated.clinic_id,
-            date: validated.date,
-          });
-
-          return withCorsHeaders(
-            request,
-            NextResponse.json({
-              date: validated.date,
-              available_slots: [],
-              total_slots: 0,
-              sync_freshness: null,
-              clinic_closed: true,
-              message: "The clinic is closed on this day.",
-            }),
-          );
-        }
+      if (error) {
+        logger.error("V2 availability query failed", {
+          error: error.message,
+          clinic_id: validated.clinic_id,
+        });
+        throw error;
       }
+
+      interface AvailableSlotV2 {
+        slot_start: string;
+        slot_end: string;
+        capacity: number;
+        booked_count: number;
+        available_count: number;
+        is_blocked: boolean;
+        block_reason: string | null;
+      }
+
+      const typedSlots = (slots ?? []) as AvailableSlotV2[];
+
+      // Transform and filter to available slots only
+      const availableSlots = typedSlots
+        .filter((slot) => slot.available_count > 0 && !slot.is_blocked)
+        .map((slot) => ({
+          start: new Date(slot.slot_start).toISOString(),
+          end: new Date(slot.slot_end).toISOString(),
+          capacity: slot.capacity,
+          booked_count: slot.booked_count,
+          available_count: slot.available_count,
+        }));
+
+      // Get sync freshness
+      const { data: latestSync } = await supabase
+        .from("schedule_syncs")
+        .select("synced_at")
+        .eq("clinic_id", validated.clinic_id)
+        .order("synced_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      logger.info("V2 availability queried", {
+        clinic_id: validated.clinic_id,
+        date: validated.date,
+        total_slots: typedSlots.length,
+        available_count: availableSlots.length,
+      });
+
+      return withCorsHeaders(
+        request,
+        NextResponse.json({
+          date: validated.date,
+          available_slots: availableSlots,
+          total_slots: typedSlots.length,
+          sync_freshness: latestSync?.synced_at ?? null,
+          version: "v2",
+        }),
+      );
     }
 
-    // Call get_available_slots() function
+    // Call the existing get_available_slots function (slot-based)
     const { data: slots, error } = await supabase.rpc("get_available_slots", {
       p_clinic_id: validated.clinic_id,
       p_date: validated.date,
-      p_provider_id: validated.provider_id ?? null,
-      p_slot_duration_minutes: validated.slot_duration_minutes,
-      p_start_time: startTime,
-      p_end_time: endTime,
+      p_duration_minutes: validated.slot_duration_minutes,
     });
 
-    if (error) throw error;
-
-    interface AvailableSlot {
-      is_available: boolean;
-      slot_start: string;
-      slot_end: string;
-      provider_id: string | null;
+    if (error) {
+      logger.error("Availability query failed", {
+        error: error.message,
+        clinic_id: validated.clinic_id,
+      });
+      throw error;
     }
 
-    // Filter to only available slots
+    interface AvailableSlot {
+      slot_start: string;
+      slot_end: string;
+      capacity: number;
+      booked_count: number;
+      available_count: number;
+      is_blocked: boolean;
+      block_reason: string | null;
+    }
+
     const typedSlots = (slots ?? []) as AvailableSlot[];
+
+    // Transform and filter to available slots only
     const availableSlots = typedSlots
-      .filter((slot) => slot.is_available)
+      .filter((slot) => slot.available_count > 0 && !slot.is_blocked)
       .map((slot) => ({
-        start: slot.slot_start.substring(0, 5), // HH:MM
-        end: slot.slot_end.substring(0, 5), // HH:MM
-        provider_id: slot.provider_id,
+        start: new Date(slot.slot_start).toISOString(),
+        end: new Date(slot.slot_end).toISOString(),
+        capacity: slot.capacity,
+        booked_count: slot.booked_count,
+        available_count: slot.available_count,
       }));
 
     // Get sync freshness
@@ -182,6 +169,7 @@ export async function GET(request: NextRequest) {
     logger.info("Availability queried", {
       clinic_id: validated.clinic_id,
       date: validated.date,
+      total_slots: typedSlots.length,
       available_count: availableSlots.length,
     });
 
@@ -190,7 +178,7 @@ export async function GET(request: NextRequest) {
       NextResponse.json({
         date: validated.date,
         available_slots: availableSlots,
-        total_slots: slots?.length ?? 0,
+        total_slots: typedSlots.length,
         sync_freshness: latestSync?.synced_at ?? null,
       }),
     );
@@ -221,6 +209,7 @@ export async function GET_HEALTH() {
       "slot_duration_minutes",
       "start_time",
       "end_time",
+      "use_v2",
     ],
   });
 }
