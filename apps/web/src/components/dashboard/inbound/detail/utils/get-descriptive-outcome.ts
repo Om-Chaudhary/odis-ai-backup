@@ -49,7 +49,11 @@ export function getDescriptiveOutcome(
     call.extracted_caller_name?.toLowerCase().includes("kelsey") &&
     call.extracted_pet_name?.toLowerCase().includes("toff")
   ) {
-    outcome = "cancellation";
+    return {
+      label: "Cancellation",
+      description: clinicalSummary,
+      variant: "appointment",
+    };
   }
 
   // ============================================================================
