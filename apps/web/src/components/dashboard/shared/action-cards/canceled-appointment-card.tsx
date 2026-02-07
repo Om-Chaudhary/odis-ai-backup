@@ -78,9 +78,10 @@ export function CanceledAppointmentCard({
   isConfirmed,
   className,
 }: CanceledAppointmentCardProps) {
-  // Priority: structured_data fields, then booking fields
-  const date = appointmentDate ?? booking?.date;
-  const time = appointmentTime ?? booking?.start_time;
+  // Priority: booking fields first (reliable database records), then structured_data
+  // Booking data is more reliable because structured_data may contain hallucinated dates from VAPI
+  const date = booking?.date ?? appointmentDate;
+  const time = booking?.start_time ?? appointmentTime;
 
   // Build date/time string
   const dateTimeStr =

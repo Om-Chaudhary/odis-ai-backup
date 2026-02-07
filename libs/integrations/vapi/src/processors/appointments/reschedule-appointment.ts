@@ -18,7 +18,11 @@
 import type { ToolContext, ToolResult } from "../../core/types";
 import type { RescheduleAppointmentInput } from "../../schemas/appointments";
 import { processVerifyAppointment } from "./verify-appointment";
-import { parseDateToISO, parseTimeToISO, formatTime12Hour } from "./book-appointment";
+import {
+  parseDateToISO,
+  parseTimeToISO,
+  formatTime12Hour,
+} from "./book-appointment";
 
 /**
  * Process reschedule appointment request
@@ -62,7 +66,9 @@ export async function processRescheduleAppointment(
   }
 
   // Parse new time if provided
-  let newTime = input.preferred_new_time ? parseTimeToISO(input.preferred_new_time) : null;
+  let newTime = input.preferred_new_time
+    ? parseTimeToISO(input.preferred_new_time)
+    : null;
 
   logger.info("Processing reschedule appointment request", {
     clinicId: clinic.id,
@@ -87,24 +93,26 @@ export async function processRescheduleAppointment(
     ctx,
   );
 
-  const originalAppt = verificationResult.data as {
-    status: string;
-    appointment_id?: string;
-    idexx_appointment_id?: string;
-    appointment_time?: string;
-    appointment_time_end?: string;
-    formatted_time?: string;
-    formatted_date?: string;
-    patient_name?: string;
-    client_name?: string;
-    client_phone?: string;
-    source?: string;
-    provider_name?: string;
-    appointment_type?: string;
-    room?: string;
-  } | undefined;
+  const originalAppt = verificationResult.data as
+    | {
+        status: string;
+        appointment_id?: string;
+        idexx_appointment_id?: string;
+        appointment_time?: string;
+        appointment_time_end?: string;
+        formatted_time?: string;
+        formatted_date?: string;
+        patient_name?: string;
+        client_name?: string;
+        client_phone?: string;
+        source?: string;
+        provider_name?: string;
+        appointment_type?: string;
+        room?: string;
+      }
+    | undefined;
 
-  if (!originalAppt || originalAppt.status !== "FOUND") {
+  if (originalAppt?.status !== "FOUND") {
     return {
       success: false,
       error: "appointment_not_found",
@@ -242,7 +250,8 @@ export async function processRescheduleAppointment(
     return {
       success: false,
       error: "missing_appointment_id",
-      message: "I couldn't find the appointment ID. Please try again or call the office directly.",
+      message:
+        "I couldn't find the appointment ID. Please try again or call the office directly.",
     };
   }
 
@@ -265,7 +274,8 @@ export async function processRescheduleAppointment(
       return {
         success: false,
         error: "database_error",
-        message: "I apologize, but I couldn't complete the reschedule. Don't worry - your original appointment is still in place. Please call the office directly.",
+        message:
+          "I apologize, but I couldn't complete the reschedule. Don't worry - your original appointment is still in place. Please call the office directly.",
       };
     }
   } else if (source === "vapi_bookings") {
@@ -287,7 +297,8 @@ export async function processRescheduleAppointment(
       return {
         success: false,
         error: "database_error",
-        message: "I apologize, but I couldn't complete the reschedule. Don't worry - your original appointment is still in place. Please call the office directly.",
+        message:
+          "I apologize, but I couldn't complete the reschedule. Don't worry - your original appointment is still in place. Please call the office directly.",
       };
     }
   }
@@ -354,7 +365,8 @@ export async function processRescheduleAppointment(
     return {
       success: false,
       error: "rollback_success",
-      message: "I apologize, but I couldn't complete the reschedule. Don't worry - your original appointment at " +
+      message:
+        "I apologize, but I couldn't complete the reschedule. Don't worry - your original appointment at " +
         `${originalAppt.formatted_time} on ${originalAppt.formatted_date} is still in place.`,
     };
   }
@@ -376,7 +388,8 @@ export async function processRescheduleAppointment(
   // 4d. Queue background job to sync reschedule to IDEXX
   if (clinic.pims_type === "idexx") {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.VERCEL_URL ?? "";
+      const baseUrl =
+        process.env.NEXT_PUBLIC_APP_URL ?? process.env.VERCEL_URL ?? "";
 
       await fetch(`${baseUrl}/api/jobs/idexx-reschedule-appointment`, {
         method: "POST",
@@ -413,13 +426,26 @@ export async function processRescheduleAppointment(
     }
   }
 
-  // 4e. Update inbound call record with outcome
-  // Note: Actions are already logged in appointment_audit_log
+  // 4e. Update inbound call record with outcome and appointment data
+  // Store appointment details in structured_data.appointment so that
+  // mergeStructuredDataWithToolData() can override VAPI's hallucinated dates
   if (callId) {
     await supabase
       .from("inbound_vapi_calls")
       .update({
         outcome: "Rescheduled",
+        structured_data: {
+          appointment: {
+            date: newDate,
+            time: newTime,
+            client_name: originalAppt.client_name ?? input.client_name,
+            client_phone: originalAppt.client_phone ?? input.client_phone,
+            patient_name: originalAppt.patient_name ?? input.pet_name,
+            original_date: originalDate,
+            original_time: originalAppt.appointment_time ?? null,
+            rescheduled_at: new Date().toISOString(),
+          },
+        },
         updated_at: new Date().toISOString(),
       })
       .eq("vapi_call_id", callId);

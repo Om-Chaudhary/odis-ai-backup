@@ -92,6 +92,8 @@ export interface ExistingCallRecord {
   case_id?: string | null;
   /** Existing structured_data from tool calls (e.g., book_appointment stores correct dates here) */
   structured_data?: Record<string, unknown> | null;
+  /** Tool-set outcome from during the call (e.g., cancel_appointment sets "Cancelled") */
+  outcome?: string | null;
 }
 
 /**
@@ -131,10 +133,10 @@ export async function fetchExistingCall(
     return data as ExistingCallRecord;
   }
 
-  // Inbound calls - include structured_data to preserve tool-stored appointment data
+  // Inbound calls - include structured_data and outcome to preserve tool-stored data
   const { data, error } = await supabase
     .from(tableName)
-    .select("id, metadata, structured_data")
+    .select("id, metadata, structured_data, outcome")
     .eq("vapi_call_id", vapiCallId)
     .single();
 

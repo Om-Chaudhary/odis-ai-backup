@@ -70,17 +70,19 @@ export async function processCancelAppointment(
   );
 
   // Check if appointment was found
-  const verificationData = verificationResult.data as {
-    status: string;
-    appointment_id?: string;
-    idexx_appointment_id?: string;
-    formatted_time?: string;
-    formatted_date?: string;
-    patient_name?: string;
-    source?: string;
-  } | undefined;
+  const verificationData = verificationResult.data as
+    | {
+        status: string;
+        appointment_id?: string;
+        idexx_appointment_id?: string;
+        formatted_time?: string;
+        formatted_date?: string;
+        patient_name?: string;
+        source?: string;
+      }
+    | undefined;
 
-  if (!verificationData || verificationData.status !== "FOUND") {
+  if (verificationData?.status !== "FOUND") {
     return {
       success: false,
       error: "appointment_not_found",
@@ -120,7 +122,8 @@ export async function processCancelAppointment(
     return {
       success: false,
       error: "invalid_state",
-      message: "I apologize, but I'm having some trouble right now. Please call the office directly.",
+      message:
+        "I apologize, but I'm having some trouble right now. Please call the office directly.",
     };
   }
 
@@ -146,7 +149,8 @@ export async function processCancelAppointment(
       return {
         success: false,
         error: "database_error",
-        message: "I apologize, but I'm having some trouble right now. Your appointment is still scheduled. Please call the office directly.",
+        message:
+          "I apologize, but I'm having some trouble right now. Your appointment is still scheduled. Please call the office directly.",
       };
     }
   } else if (source === "vapi_bookings") {
@@ -168,7 +172,8 @@ export async function processCancelAppointment(
       return {
         success: false,
         error: "database_error",
-        message: "I apologize, but I'm having some trouble right now. Your appointment is still scheduled. Please call the office directly.",
+        message:
+          "I apologize, but I'm having some trouble right now. Your appointment is still scheduled. Please call the office directly.",
       };
     }
   }
@@ -188,7 +193,8 @@ export async function processCancelAppointment(
   if (clinic.pims_type === "idexx" && verificationData.idexx_appointment_id) {
     try {
       // Queue job via API route (QStash will handle retry/delivery)
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.VERCEL_URL ?? "";
+      const baseUrl =
+        process.env.NEXT_PUBLIC_APP_URL ?? process.env.VERCEL_URL ?? "";
 
       await fetch(`${baseUrl}/api/jobs/idexx-cancel-appointment`, {
         method: "POST",
@@ -216,13 +222,24 @@ export async function processCancelAppointment(
     }
   }
 
-  // 3d. Update inbound call record with outcome
-  // Note: Actions are already logged in appointment_audit_log
+  // 3d. Update inbound call record with outcome and appointment data
+  // Store appointment details in structured_data.appointment so that
+  // mergeStructuredDataWithToolData() can override VAPI's hallucinated dates
   if (callId) {
     await supabase
       .from("inbound_vapi_calls")
       .update({
         outcome: "Cancelled",
+        structured_data: {
+          appointment: {
+            date: parsedDate,
+            time: verificationData.formatted_time ?? null,
+            client_name: input.client_name,
+            client_phone: input.client_phone,
+            patient_name: input.pet_name,
+            cancelled_at: new Date().toISOString(),
+          },
+        },
         updated_at: new Date().toISOString(),
       })
       .eq("vapi_call_id", callId);

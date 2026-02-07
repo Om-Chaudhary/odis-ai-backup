@@ -42,19 +42,7 @@ export function getDescriptiveOutcome(
   // Use summary as the base description
   const clinicalSummary = call.summary ?? "No details available";
   const summaryLower = clinicalSummary.toLowerCase();
-  let outcome = call.outcome?.toLowerCase() ?? "";
-
-  // Hardcode outcome override: Kelsey + Toffee (Del Valle) should show as Cancellation
-  if (
-    call.extracted_caller_name?.toLowerCase().includes("kelsey") &&
-    call.extracted_pet_name?.toLowerCase().includes("toff")
-  ) {
-    return {
-      label: "Cancellation",
-      description: clinicalSummary,
-      variant: "appointment",
-    };
-  }
+  const outcome = call.outcome?.toLowerCase() ?? "";
 
   // ============================================================================
   // CATEGORY 1: APPOINTMENT

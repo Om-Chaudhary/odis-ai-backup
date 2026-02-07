@@ -54,28 +54,7 @@ export function CallerDisplay({
     normalizedPhone && normalizedClinic && normalizedPhone === normalizedClinic;
 
   // Use extracted phone if available, skip customer_phone if it's the clinic number
-  let displayPhone = extractedCallerPhone ?? (isClinicNumber ? null : phone);
-
-  // Hardcode phone number for Holly Devlin's call with pet Willow
-  if (extractedCallerName?.toLowerCase().includes("holly") &&
-      extractedCallerName?.toLowerCase().includes("devlin") &&
-      extractedPetName?.toLowerCase().includes("willow") &&
-      !displayPhone) {
-    displayPhone = "+19259988909";
-  }
-
-  // Hardcode phone number for Mari Morrison's call with pet Pepper
-  if (extractedCallerName?.toLowerCase().includes("mari") &&
-      extractedCallerName?.toLowerCase().includes("morrison") &&
-      extractedPetName?.toLowerCase().includes("pepper")) {
-    displayPhone = "+19253375379";
-  }
-
-  // Hardcode phone number for Kelsey's call with pet Toffee
-  if (extractedCallerName?.toLowerCase().includes("kelsey") &&
-      extractedPetName?.toLowerCase().includes("toff")) {
-    displayPhone = "+19254953186";
-  }
+  const displayPhone = extractedCallerPhone ?? (isClinicNumber ? null : phone);
 
   const formattedPhone = formatPhoneNumber(displayPhone ?? "");
 

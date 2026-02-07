@@ -85,11 +85,12 @@ export function RescheduledAppointmentCard({
 }: RescheduledAppointmentCardProps) {
   const styles = getEditorialVariantStyles("rescheduled");
 
-  // Priority: structured_data fields, then booking fields
-  const newDate = appointmentDate ?? booking?.date;
-  const newTime = appointmentTime ?? booking?.start_time;
-  const origDate = originalDate ?? booking?.original_date;
-  const origTime = originalTime ?? booking?.original_time;
+  // Priority: booking fields first (reliable database records), then structured_data
+  // Booking data is more reliable because structured_data may contain hallucinated dates from VAPI
+  const newDate = booking?.date ?? appointmentDate;
+  const newTime = booking?.start_time ?? appointmentTime;
+  const origDate = booking?.original_date ?? originalDate;
+  const origTime = booking?.original_time ?? originalTime;
 
   // Build new date/time string
   const newDateTimeStr =
@@ -125,7 +126,7 @@ export function RescheduledAppointmentCard({
         initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15, duration: 0.3 }}
-        className="px-5 pb-5 pt-1"
+        className="px-5 pt-1 pb-5"
       >
         {/* Flex container: Fields on left, Confirm button on right */}
         <div className="flex items-start gap-4">
@@ -140,8 +141,12 @@ export function RescheduledAppointmentCard({
                   transition={{ delay: 0.2, duration: 0.25 }}
                   className="flex items-baseline gap-2"
                 >
-                  <span className="text-sm font-medium text-muted-foreground">Original:</span>
-                  <span className={cn("text-lg font-semibold", styles.valueColor)}>
+                  <span className="text-muted-foreground text-sm font-medium">
+                    Original:
+                  </span>
+                  <span
+                    className={cn("text-lg font-semibold", styles.valueColor)}
+                  >
                     {originalDateTimeStr}
                   </span>
                 </motion.div>
@@ -154,7 +159,9 @@ export function RescheduledAppointmentCard({
                   transition={{ delay: 0.25, duration: 0.25 }}
                   className="flex items-baseline gap-2"
                 >
-                  <span className="text-sm font-medium text-muted-foreground">New:</span>
+                  <span className="text-muted-foreground text-sm font-medium">
+                    New:
+                  </span>
                   <span className={cn("text-lg font-bold", styles.valueColor)}>
                     {newDateTimeStr}
                   </span>
@@ -170,8 +177,10 @@ export function RescheduledAppointmentCard({
                 transition={{ delay: 0.3, duration: 0.25 }}
                 className="flex items-baseline gap-3"
               >
-                <span className="text-sm font-medium text-muted-foreground min-w-[80px]">Reason:</span>
-                <span className="text-base italic text-muted-foreground/80 leading-relaxed line-clamp-2">
+                <span className="text-muted-foreground min-w-[80px] text-sm font-medium">
+                  Reason:
+                </span>
+                <span className="text-muted-foreground/80 line-clamp-2 text-base leading-relaxed italic">
                   "{reason}"
                 </span>
               </motion.div>

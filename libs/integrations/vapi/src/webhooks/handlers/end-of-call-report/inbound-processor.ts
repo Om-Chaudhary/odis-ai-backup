@@ -99,11 +99,13 @@ export async function handleInboundCallEnd(
     parseAllStructuredOutputs(artifact.structuredOutputs) ?? {};
 
   // Enhance structured data with transcript-extracted names if action card data is incomplete
+  // Pass existing structured_data so tool-stored appointment names get highest priority
   const { enhanced: enhancedStructuredData, extracted: extractedCallerData } =
     enhanceStructuredDataWithTranscriptNames(
       callData.structuredData,
       callData.transcript,
       call.id,
+      existingCall.structured_data,
     );
 
   // Build update data with enhanced structured data and extracted caller info
@@ -375,9 +377,13 @@ function buildInboundUpdateData(
     extracted_pet_name: extractedCallerData.petName,
     // Call intelligence columns
     outcome:
+      // Priority 1: Tool-set outcome (set during the call by cancel/reschedule/book processors)
+      // These are authoritative because they come from actual tool execution, not VAPI analysis
+      existingCall.outcome ??
+      // Priority 2: VAPI's structured output call_outcome
       (structuredOutputs.callOutcome as { call_outcome?: string } | null)
         ?.call_outcome ??
-      // Fallback: derive outcome from action card data if structured outputs don't have it
+      // Priority 3: Derive from action card data
       deriveOutcomeFromActionCard(mergedStructuredData ?? undefined) ??
       null,
     call_outcome_data: structuredOutputs.callOutcome,
@@ -473,6 +479,16 @@ function mergeStructuredDataWithToolData(
     if (toolAppointment.reason && !appointmentData.reason) {
       appointmentData.reason = toolAppointment.reason;
     }
+    // Propagate original appointment data for rescheduled cards
+    if (
+      toolAppointment.original_date &&
+      !appointmentData.original_appointment
+    ) {
+      appointmentData.original_appointment = {
+        date: toolAppointment.original_date,
+        time: toolAppointment.original_time ?? undefined,
+      };
+    }
   } else if (toolAppointment) {
     // No appointment_data from VAPI, create it from tool data
     // Map tool appointment fields to action card format
@@ -483,6 +499,14 @@ function mergeStructuredDataWithToolData(
       patient_name: toolAppointment.patient_name,
       client_phone: toolAppointment.client_phone,
       reason: toolAppointment.reason,
+      ...(toolAppointment.original_date
+        ? {
+            original_appointment: {
+              date: toolAppointment.original_date,
+              time: toolAppointment.original_time ?? undefined,
+            },
+          }
+        : {}),
     };
   }
 
@@ -542,6 +566,7 @@ function enhanceStructuredDataWithTranscriptNames(
   structuredData: Record<string, unknown> | undefined,
   transcript: string | null,
   callId: string,
+  existingStructuredData?: Record<string, unknown> | null,
 ): {
   enhanced: Record<string, unknown> | undefined;
   extracted: ExtractedCallerData;
@@ -551,7 +576,7 @@ function enhanceStructuredDataWithTranscriptNames(
   const petNameFromTranscript = extractPetNameFromTranscript(transcript);
   const phoneFromTranscript = extractCallbackPhoneFromTranscript(transcript);
 
-  // Extract from structured data (priority over transcript)
+  // Extract from VAPI's structured data
   const callbackData = structuredData?.callback_data as
     | Record<string, unknown>
     | undefined;
@@ -559,17 +584,26 @@ function enhanceStructuredDataWithTranscriptNames(
     | Record<string, unknown>
     | undefined;
 
-  // Build extracted caller data with priority: structured data > transcript
+  // Tool-stored appointment data (set by book/cancel/reschedule processors during the call)
+  // These are authoritative because they come from actual tool execution, not VAPI analysis
+  const toolAppointment = existingStructuredData?.appointment as
+    | Record<string, unknown>
+    | undefined;
+
+  // Build extracted caller data with priority: tool data > VAPI structured data > transcript
   const extracted: ExtractedCallerData = {
     callerPhone:
+      (toolAppointment?.client_phone as string | undefined) ??
       (callbackData?.phone_number as string | undefined) ??
       (appointmentData?.client_phone as string | undefined) ??
       phoneFromTranscript,
     callerName:
+      (toolAppointment?.client_name as string | undefined) ??
       (callbackData?.caller_name as string | undefined) ??
       (appointmentData?.client_name as string | undefined) ??
       callerNameFromTranscript,
     petName:
+      (toolAppointment?.patient_name as string | undefined) ??
       (callbackData?.pet_name as string | undefined) ??
       (appointmentData?.patient_name as string | undefined) ??
       petNameFromTranscript,
