@@ -377,13 +377,14 @@ function buildInboundUpdateData(
     extracted_pet_name: extractedCallerData.petName,
     // Call intelligence columns
     outcome:
-      // Priority 1: Tool-set outcome (set during the call by cancel/reschedule/book processors)
-      // These are authoritative because they come from actual tool execution, not VAPI analysis
+      // Priority 1: VAPI reschedule/cancellation (trusted — no tool calls exist for these)
+      getVapiRescheduleOrCancel(mergedStructuredData) ??
+      // Priority 2: Tool-set outcome (e.g., "Scheduled" from book_appointment)
       existingCall.outcome ??
-      // Priority 2: VAPI's structured output call_outcome
+      // Priority 3: VAPI's structured output call_outcome
       (structuredOutputs.callOutcome as { call_outcome?: string } | null)
         ?.call_outcome ??
-      // Priority 3: Derive from action card data
+      // Priority 4: Derive from VAPI card_type (info, callback, emergency, etc.)
       deriveOutcomeFromActionCard(mergedStructuredData ?? undefined) ??
       null,
     call_outcome_data: structuredOutputs.callOutcome,
@@ -713,6 +714,27 @@ function enhanceStructuredDataWithTranscriptNames(
   }
 
   return { enhanced, extracted };
+}
+
+/**
+ * Extract reschedule or cancellation outcome from VAPI's structured data.
+ *
+ * Reschedule and cancellation don't have tool calls, so VAPI's after-call
+ * analysis (card_type) is the only signal for these outcomes. This takes
+ * priority over tool-set outcomes (e.g., book_appointment setting "Scheduled"
+ * during a reschedule flow).
+ *
+ * @param structuredData - Merged structured data containing VAPI's card_type
+ * @returns "Rescheduled" or "Cancelled" if detected, null otherwise
+ */
+function getVapiRescheduleOrCancel(
+  structuredData: Record<string, unknown> | null | undefined,
+): string | null {
+  const cardType = structuredData?.card_type as string | undefined;
+  if (cardType === "rescheduled") return "Rescheduled";
+  if (cardType === "cancellation" || cardType === "canceled")
+    return "Cancelled";
+  return null;
 }
 
 /**

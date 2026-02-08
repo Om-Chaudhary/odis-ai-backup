@@ -41,15 +41,29 @@ export function getDescriptiveOutcome(
 ): DescriptiveOutcome | null {
   // Use summary as the base description
   const clinicalSummary = call.summary ?? "No details available";
-  const summaryLower = clinicalSummary.toLowerCase();
+
+  // structured_data.card_type is the source of truth for the outcome badge.
+  // This ensures the table badge always matches the right panel action card.
+  // Falls back to call.outcome for calls without structured_data.
+  const structuredData = call.structured_data as
+    | Record<string, unknown>
+    | null
+    | undefined;
+  const cardType = (structuredData?.card_type as string | undefined)
+    ?.toLowerCase()
+    ?.trim();
   const outcome = call.outcome?.toLowerCase() ?? "";
+  const effectiveOutcome = cardType ?? outcome;
 
   // ============================================================================
   // CATEGORY 1: APPOINTMENT
   // ============================================================================
 
   // Schedule appointment
-  if (outcome === "scheduled" || outcome === "schedule appointment") {
+  if (
+    effectiveOutcome === "scheduled" ||
+    effectiveOutcome === "schedule appointment"
+  ) {
     return {
       label: "Scheduled",
       description: clinicalSummary,
@@ -59,11 +73,8 @@ export function getDescriptiveOutcome(
 
   // Reschedule appointment
   if (
-    outcome === "rescheduled" ||
-    outcome === "reschedule appointment" ||
-    (outcome === "cancellation" &&
-      (summaryLower.includes("reschedule") ||
-        summaryLower.includes("re-schedule")))
+    effectiveOutcome === "rescheduled" ||
+    effectiveOutcome === "reschedule appointment"
   ) {
     return {
       label: "Rescheduled",
@@ -73,7 +84,11 @@ export function getDescriptiveOutcome(
   }
 
   // Cancel appointment
-  if (outcome === "cancellation" || outcome === "cancel appointment") {
+  if (
+    effectiveOutcome === "cancellation" ||
+    effectiveOutcome === "canceled" ||
+    effectiveOutcome === "cancel appointment"
+  ) {
     return {
       label: "Cancellation",
       description: clinicalSummary,
@@ -85,7 +100,10 @@ export function getDescriptiveOutcome(
   // CATEGORY 2: EMERGENCY
   // ============================================================================
 
-  if (outcome === "emergency" || outcome === "emergency triage") {
+  if (
+    effectiveOutcome === "emergency" ||
+    effectiveOutcome === "emergency triage"
+  ) {
     return {
       label: "ER",
       description: clinicalSummary,
@@ -98,9 +116,9 @@ export function getDescriptiveOutcome(
   // ============================================================================
 
   if (
-    outcome === "callback" ||
-    outcome === "call back" ||
-    outcome === "client requests callback"
+    effectiveOutcome === "callback" ||
+    effectiveOutcome === "call back" ||
+    effectiveOutcome === "client requests callback"
   ) {
     return {
       label: "Callback",
@@ -113,7 +131,7 @@ export function getDescriptiveOutcome(
   // CATEGORY 4: INFO
   // ============================================================================
 
-  if (outcome === "info" || outcome === "clinic info") {
+  if (effectiveOutcome === "info" || effectiveOutcome === "clinic info") {
     return {
       label: "Info",
       description: clinicalSummary,
