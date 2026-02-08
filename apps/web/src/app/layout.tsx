@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Outfit, Inter, Lora, Plus_Jakarta_Sans } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import { Analytics } from "@vercel/analytics/next";
+import Script from "next/script";
 import "~/styles/globals.css";
 import { ClerkProvider } from "~/components/providers/clerk-provider";
 import { ClientProviders } from "~/components/providers/client-providers";
@@ -141,7 +142,20 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className="light bg-teal-950">
-      <head />
+      <head>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=AW-17852929075"
+          strategy="afterInteractive"
+        />
+        <Script id="google-ads" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'AW-17852929075');
+          `}
+        </Script>
+      </head>
       <body
         className={`font-sans antialiased ${outfit.variable} ${inter.variable} ${lora.variable} ${plusJakarta.variable} ${geistMono.variable}`}
       >
