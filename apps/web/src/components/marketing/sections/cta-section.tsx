@@ -3,9 +3,10 @@
 import { useRef, type ReactNode } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, Phone } from "lucide-react";
+import { ArrowRight, Clock, Phone } from "lucide-react";
 import { SectionBackground } from "~/components/landing/ui/section-background";
 import type { SectionBackgroundProps } from "~/components/landing/ui/section-background";
+import { ShimmerButton } from "~/components/landing/ui/shimmer-button";
 import { Button } from "@odis-ai/shared/ui/button";
 import { cn } from "@odis-ai/shared/util";
 
@@ -66,6 +67,15 @@ export interface CTASectionProps {
    * Optional children (additional content)
    */
   children?: ReactNode;
+  /**
+   * Urgency line displayed below the CTA buttons
+   */
+  urgencyLine?: string;
+  /**
+   * Whether to use ShimmerButton for the primary CTA
+   * @default false
+   */
+  useShimmerButton?: boolean;
 }
 
 const fadeUpVariant = {
@@ -105,6 +115,8 @@ export function CTASection({
   className,
   id,
   children,
+  urgencyLine,
+  useShimmerButton = false,
 }: CTASectionProps) {
   const ref = useRef<HTMLElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
@@ -181,16 +193,29 @@ export function CTASection({
           className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
         >
           {/* Primary CTA */}
-          <Button
-            asChild
-            size="lg"
-            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 py-3 text-base font-semibold shadow-lg transition-all hover:shadow-xl"
-          >
+          {useShimmerButton ? (
             <Link href={primaryCTAHref}>
-              {primaryCTAText}
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <ShimmerButton
+                background="rgba(13, 148, 136, 1)"
+                shimmerColor="rgba(255, 255, 255, 0.3)"
+                className="px-8 py-3 text-base font-semibold shadow-lg"
+              >
+                {primaryCTAText}
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </ShimmerButton>
             </Link>
-          </Button>
+          ) : (
+            <Button
+              asChild
+              size="lg"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 py-3 text-base font-semibold shadow-lg transition-all hover:shadow-xl"
+            >
+              <Link href={primaryCTAHref}>
+                {primaryCTAText}
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          )}
 
           {/* Secondary CTA */}
           {secondaryCTAText && secondaryCTAHref && (
@@ -219,6 +244,20 @@ export function CTASection({
             </Button>
           )}
         </motion.div>
+
+        {/* Urgency Line */}
+        {urgencyLine && (
+          <motion.p
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
+            variants={fadeUpVariant}
+            transition={{ ...transition, delay: 0.35 }}
+            className="mt-6 flex items-center justify-center gap-2 text-sm text-slate-500"
+          >
+            <Clock className="h-4 w-4" />
+            {urgencyLine}
+          </motion.p>
+        )}
 
         {/* Children */}
         {children && (

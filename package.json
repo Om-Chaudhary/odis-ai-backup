@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "NX_NO_CLOUD=true NODE_ENV=production nx build web --verbose",
+    "build": "NX_NO_CLOUD=true NODE_ENV=production NODE_OPTIONS='--max-old-space-size=8192' nx build web --verbose",
     "build:all": "NX_NO_CLOUD=true NODE_ENV=production nx run-many -t build",
     "dev": "NX_NO_CLOUD=true NODE_OPTIONS='--no-deprecation' nx dev web",
     "dev:pims-sync": "nx serve pims-sync",

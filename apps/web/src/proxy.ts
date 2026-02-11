@@ -42,6 +42,8 @@ const isPublicRoute = createRouteMatcher([
   "/sitemap.xml",
   "/robots.txt",
   "/integrations(.*)",
+  "/solutions(.*)",
+  "/compare(.*)",
 ]);
 
 /**

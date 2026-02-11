@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 import { env } from "~/env.js";
+import { solutionSlugs } from "./(public)/solutions/data";
+import { comparisonSlugs } from "./(public)/compare/data";
 
 // Integration slugs for programmatic SEO pages
 const integrationSlugs = [
@@ -63,6 +65,34 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     ...integrationPages,
+
+    // Solutions hub and detail pages
+    {
+      url: `${baseUrl}/solutions`,
+      lastModified: currentDate,
+      changeFrequency: "weekly" as const,
+      priority: 0.9,
+    },
+    ...solutionSlugs.map((slug) => ({
+      url: `${baseUrl}/solutions/${slug}`,
+      lastModified: currentDate,
+      changeFrequency: "weekly" as const,
+      priority: 0.9,
+    })),
+
+    // Comparison hub and detail pages
+    {
+      url: `${baseUrl}/compare`,
+      lastModified: currentDate,
+      changeFrequency: "weekly" as const,
+      priority: 0.85,
+    },
+    ...comparisonSlugs.map((slug) => ({
+      url: `${baseUrl}/compare/${slug}`,
+      lastModified: currentDate,
+      changeFrequency: "weekly" as const,
+      priority: 0.85,
+    })),
 
     // Support pages
     {
