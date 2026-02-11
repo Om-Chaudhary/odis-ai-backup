@@ -333,8 +333,8 @@
     "vapi-mcp",
     "github",
     "shadcn",
-    "playwright",
-    "supabase"
+    "supabase",
+    "nx-mcp"
   ],
   "amp.experimental.autoHandoff": {
     "context": 90
