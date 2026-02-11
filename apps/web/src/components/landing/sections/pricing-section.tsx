@@ -63,14 +63,11 @@ export function PricingSection() {
             Get Started
           </span>
           <h2 className="font-display mb-4 text-2xl font-medium tracking-tight text-slate-800 sm:text-3xl md:text-4xl lg:text-5xl">
-            See How Much You&apos;re{" "}
-            <span className="bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
-              Leaving on the Table
-            </span>
+            Ready to Get Started?
           </h2>
           <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
-            In 15 minutes, we&apos;ll show you exactly how many calls you&apos;re missing
-            and what Odis would recover—customized for your clinic.
+            See how Odis can handle your clinic&apos;s calls. We&apos;d love to
+            hear from you.
           </p>
         </motion.div>
 
@@ -94,10 +91,11 @@ export function PricingSection() {
 
               <div>
                 <h3 className="font-display mb-2 text-lg font-medium text-slate-900 sm:text-xl md:text-2xl">
-                  Get Your Custom ROI Analysis
+                  Contact Us
                 </h3>
                 <p className="text-base text-slate-600">
-                  See exactly how much Odis would save your specific clinic.
+                  Book a demo and we&apos;ll show you how Odis works for your
+                  clinic.
                 </p>
               </div>
 
@@ -117,7 +115,7 @@ export function PricingSection() {
                   {/* Shimmer effect */}
                   <span className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                   <Calendar className="relative h-5 w-5" />
-                  <span className="relative">Get My ROI Analysis</span>
+                  <span className="relative">Contact Us</span>
                 </Link>
               </div>
 

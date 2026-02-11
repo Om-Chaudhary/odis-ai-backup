@@ -43,12 +43,12 @@ const testimonials = [
   },
   {
     quote:
-      "We tracked our missed calls for a month—$2,400 in lost appointments. OdisAI recovered that in the first week and keeps delivering.",
+      "We tracked our missed calls for a month. OdisAI recovered those appointments in the first week and keeps delivering.",
     author: "Jenn",
     role: "Practice Manager",
     clinic: "Del Valle Pet Hospital",
     location: "Livermore, CA",
-    metric: "$2,400+/mo recovered",
+    metric: "Calls recovered monthly",
     rating: 5,
     img: "/images/testimonials/jenn.png",
     profileUrl: "#",

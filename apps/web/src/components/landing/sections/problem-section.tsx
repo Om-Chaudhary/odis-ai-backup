@@ -170,7 +170,7 @@ export function ProblemSection() {
             <br className="hidden sm:block" />
             <span className="relative inline-block">
               <span className="relative z-10 bg-gradient-to-r from-red-600 via-orange-600 to-amber-600 bg-clip-text text-transparent">
-                $2,400+ Every Month
+                Every Month
               </span>
               <motion.span
                 initial={{ scaleX: 0 }}
@@ -183,8 +183,8 @@ export function ProblemSection() {
 
           {/* Supporting Text */}
           <p className="mx-auto max-w-2xl text-lg text-slate-600 sm:text-xl">
-            One missed call = one lost client. One skipped follow-up = one missed recheck.
-            It adds up faster than you think.
+            One missed call = one lost client. One skipped follow-up = one
+            missed recheck. It adds up faster than you think.
           </p>
         </motion.div>
 
@@ -199,8 +199,8 @@ export function ProblemSection() {
             icon={<PhoneOff className="h-6 w-6 text-white" />}
             title="After-Hours Calls Going to Voicemail"
             description="That 9PM call about a limping dog? They called the 24-hour clinic instead. That's a new client you'll never see."
-            stat="$400+"
-            statLabel="lost per missed new client"
+            stat="High"
+            statLabel="impact per missed new client"
             delay={0.3}
             accentColor="red"
           />
@@ -209,8 +209,8 @@ export function ProblemSection() {
             icon={<Calendar className="h-6 w-6 text-white" />}
             title="Discharge Follow-ups That Never Happen"
             description="Your team meant to call, but got busy. Now that recheck won't get scheduled and post-op concerns go unaddressed."
-            stat="$150-400"
-            statLabel="lost per missed recheck"
+            stat="Significant"
+            statLabel="impact per missed recheck"
             delay={0.4}
             accentColor="amber"
           />
@@ -240,7 +240,8 @@ export function ProblemSection() {
             </div>
             <div>
               <p className="mb-1 text-lg font-semibold text-teal-900">
-                What if every call was answered—and every discharge got a follow-up?
+                What if every call was answered—and every discharge got a
+                follow-up?
               </p>
               <p className="text-sm text-teal-700">
                 AI that sounds like your best CSR. Live in 48 hours.

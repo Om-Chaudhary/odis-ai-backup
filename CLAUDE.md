@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 ## Commands
 
 ```bash
@@ -7,6 +9,7 @@
 pnpm dev                    # Start Next.js dev server
 pnpm build                  # Production build
 pnpm check                  # lint + typecheck all
+pnpm typecheck:all          # TypeScript verification only
 
 # Testing
 pnpm test:all               # Run all tests
@@ -19,6 +22,9 @@ nx graph                    # View dependency graph
 
 # Database
 pnpm update-types           # Regenerate types after Supabase schema changes
+
+# UI Components
+npx shadcn@latest add <component>  # Add shadcn component
 ```
 
 ## Workflow
@@ -35,6 +41,16 @@ pnpm update-types           # Regenerate types after Supabase schema changes
 - Default to Server Components. Minimize `"use client"` directives.
 - Split files exceeding 500 lines into modules.
 - Prefer editing existing files over creating new ones.
+- Naming: lowercase-with-dashes for folders, PascalCase for components.
+- Formatting: Prettier with Tailwind plugin (runs on commit).
+
+## Architecture
+
+- **Repository pattern**: Domain services accept interface contracts from `@odis-ai/data-access/repository-interfaces`. Concrete implementations in `@odis-ai/data-access/repository-impl`.
+- **Server Actions** (`apps/web/src/server/actions/`): Internal form handling, simple mutations.
+- **API Routes** (`apps/web/src/app/api/`): Webhooks, external integrations, cron jobs, VAPI endpoints.
+- **tRPC Routers** (`apps/web/src/server/api/routers/`): Organized by domain. Each has `index.ts`, `schemas.ts`, optionally `procedures/`.
+- Contextual rules for dashboard, VAPI, Sentry, and security are in `.claude/rules/`.
 
 ## Key Locations
 
@@ -109,7 +125,7 @@ pnpm backfill:inbound-outcomes --dry-run
 
 ## Sentry Usage
 
-See `.cursor/rules/sentry.mdc` for guidance on exceptions, spans, and logs.
+See `.claude/rules/sentry.md` for guidance on exceptions, spans, and logs.
 
 ```typescript
 import * as Sentry from "@sentry/nextjs";

@@ -30,7 +30,7 @@ const STATS = [
 const NAV_LINKS = [
   { name: "Features", href: "#features" },
   { name: "Solutions", href: "#how-it-works" },
-  { name: "Pricing", href: "/pricing" },
+  { name: "Contact", href: "#pricing" },
   { name: "About", href: "/about" },
 ];
 
@@ -314,7 +314,7 @@ export function HeroSection() {
                   )}
                 >
                   <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
-                  Built for Busy Veterinary Clinics
+                  Your Clinic's AI Phone Team
                 </span>
               </motion.div>
 
@@ -323,18 +323,18 @@ export function HeroSection() {
                 variants={fadeInUpVariants}
                 className="font-display text-[32px] leading-[1.08] font-bold tracking-[-0.02em] text-balance text-white sm:text-5xl lg:text-6xl xl:text-[68px]"
               >
-                The leading copilot
+                Every call answered.
                 <br />
-                <span className="text-gradient">for veterinarians</span>
+                <span className="text-gradient">Every client cared for.</span>
               </motion.h1>
 
               {/* Description */}
               <motion.p
                 variants={fadeInUpVariants}
-                className="mt-5 max-w-[26rem] text-[15px] leading-[1.7] text-pretty text-white/50 sm:mt-6 sm:max-w-md sm:text-[17px] sm:leading-[1.7]"
+                className="mt-5 max-w-[26rem] text-[15px] leading-[1.7] text-pretty text-white/50 sm:mt-6 sm:max-w-lg sm:text-[17px] sm:leading-[1.7]"
               >
-                Automates discharge calls, supports diagnostics, and
-                handles messages &mdash; all in one.{" "}
+                Odis AI handles your clinic's inbound and outbound calls, from
+                scheduling appointments to post-visit follow-ups.{" "}
                 <AnimatedGradientText
                   speed={2}
                   colorFrom="#2dd4bf"
@@ -342,7 +342,7 @@ export function HeroSection() {
                   colorTo="#2dd4bf"
                   className="font-semibold"
                 >
-                  Free your team to focus on in-clinic care.
+                  Your team focuses on care. We handle the phones.
                 </AnimatedGradientText>
               </motion.p>
 
@@ -377,7 +377,7 @@ export function HeroSection() {
             variants={fadeInVariants}
             initial="hidden"
             animate={shouldAnimate ? "visible" : "hidden"}
-            className="mt-auto border-t border-white/[0.06] px-6 py-5 sm:px-10 sm:py-6 lg:px-16 xl:px-20"
+            className="mt-auto px-6 py-5 sm:px-10 sm:py-6 lg:px-16 xl:px-20"
           >
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-[11px] font-medium tracking-[0.18em] text-white/30 uppercase">

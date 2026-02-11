@@ -75,7 +75,7 @@ const defaultFAQs: FAQItem[] = [
   {
     question: "What does it cost compared to hiring staff?",
     answer:
-      "Most clinics see $2,400+/month in recovered revenue and saved time—far exceeding the cost. No benefits, no sick days, no training time. And Odis works nights and weekends without overtime.",
+      "Most clinics see meaningful recovered revenue and saved time—far exceeding the cost. No benefits, no sick days, no training time. And Odis works nights and weekends without overtime.",
     category: "support",
   },
 ];
