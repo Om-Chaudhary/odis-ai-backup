@@ -26,6 +26,7 @@ pnpm update-types           # Regenerate types after Supabase schema changes
 - Use conventional commits with scopes: `(web)` `(cases)` `(clinics)` `(vapi)` `(outbound)` `(inbound)` `(dashboard)` `(ui)` `(util)` `(db)`
 - After modifying Supabase schema, ALWAYS run `pnpm update-types` (generates `libs/shared/types/src/database.types.ts`)
 - DO NOT create `middleware.ts` files. Auth uses proxy pattern at `apps/web/src/proxy.ts`. See @docs/architecture/AUTH_PROXY_PATTERN.md
+- Use the `frontend-design` skill whenever doing anything UI related
 
 ## Code Standards
 

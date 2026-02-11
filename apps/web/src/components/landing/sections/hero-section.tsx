@@ -3,24 +3,21 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, useInView, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  useInView,
+  useScroll,
+  useTransform,
+  AnimatePresence,
+} from "framer-motion";
 import { usePostHog } from "posthog-js/react";
-import { Calendar, Play, ChevronDown, Sparkles, Menu, X } from "lucide-react";
+import { Calendar, Play, ChevronDown, Menu, X } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
 import { usePageLoaded } from "~/hooks/use-page-loaded";
 import { Logo } from "@odis-ai/shared/ui/Logo";
-import { WordRotate } from "../ui/word-rotate";
 import { AnimatedGradientText } from "../ui/animated-gradient-text";
 import { NumberTicker } from "../ui/number-ticker";
-import { DotPattern } from "@odis-ai/shared/ui";
-
-// Rotating words for dynamic headline - benefit-focused
-const ROTATING_WORDS = [
-  "Never Misses a Call",
-  "Books More Appointments",
-  "Saves 15+ Hours Weekly",
-  "Works 24/7",
-];
+import { HeroCallCard } from "../ui/hero-call-card";
 
 // Social proof stats
 const STATS = [
@@ -30,53 +27,68 @@ const STATS = [
 ];
 
 // Navigation links
-const NAVIGATION_LINKS = [
-  { name: "Features", link: "#features" },
-  { name: "How It Works", link: "#how-it-works" },
-  { name: "Testimonials", link: "#testimonials" },
+const NAV_LINKS = [
+  { name: "Features", href: "#features" },
+  { name: "Solutions", href: "#how-it-works" },
+  { name: "Pricing", href: "/pricing" },
+  { name: "About", href: "/about" },
 ];
 
-// Animation variants - slower, more noticeable
-const containerVariants = {
-  hidden: { opacity: 0 },
+// Stagger container
+const staggerVariants = {
+  hidden: {},
   visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.15,
-      delayChildren: 0.1,
-    },
+    transition: { staggerChildren: 0.1, delayChildren: 0.2 },
   },
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 24 },
+// Cubic-bezier easing (expo-out) — tuple so Framer Motion accepts it
+const EASE_OUT_EXPO: [number, number, number, number] = [0.22, 1, 0.36, 1];
+
+// Fade-in-up with blur
+const fadeInUpVariants = {
+  hidden: { opacity: 0, y: 20, filter: "blur(4px)" },
   visible: {
     opacity: 1,
     y: 0,
-    transition: {
-      duration: 0.8,
-      ease: [0.22, 1, 0.36, 1] as const,
-    },
+    filter: "blur(0px)",
+    transition: { duration: 0.7, ease: EASE_OUT_EXPO },
+  },
+};
+
+const fadeInVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { duration: 0.8, ease: EASE_OUT_EXPO },
   },
 };
 
 export function HeroSection() {
   const posthog = usePostHog();
   const sectionRef = useRef<HTMLElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
-  const isPageLoaded = usePageLoaded(150); // Wait for page load + 150ms
+  const isPageLoaded = usePageLoaded(150);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Fallback timeout - don't wait forever if image fails to load
+  // Parallax scroll
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end start"],
+  });
+  const imageY = useTransform(scrollYProgress, [0, 1], [0, 60]);
+  const cardY = useTransform(scrollYProgress, [0, 1], [0, -30]);
+
+  // Fallback timeout for image load
   useEffect(() => {
     const timeout = setTimeout(() => {
       setIsImageLoaded(true);
-    }, 3000); // 3 second max wait
+    }, 3000);
     return () => clearTimeout(timeout);
   }, []);
 
-  // Only start animations once page is loaded, section is in view, AND image is ready
   const shouldAnimate = isPageLoaded && isInView && isImageLoaded;
 
   const handleScheduleDemoClick = () => {
@@ -85,11 +97,13 @@ export function HeroSection() {
     });
   };
 
-  const handleLinkClick = (href: string) => {
+  const handleNavClick = (href: string) => {
     setIsMobileMenuOpen(false);
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
+    if (href.startsWith("#")) {
+      const element = document.querySelector(href);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
     }
   };
 
@@ -97,310 +111,354 @@ export function HeroSection() {
     <section
       id="home"
       ref={sectionRef}
-      className="relative isolate flex min-h-screen w-full flex-col overflow-hidden bg-teal-950"
+      className="mx-0 p-0 sm:mx-8 sm:p-3 lg:mx-12 lg:p-4"
     >
-      {/* Background: Hero image - base layer */}
-      <Image
-        alt=""
-        src="/images/hero/bg.png"
-        fill
-        priority
-        onLoad={() => setIsImageLoaded(true)}
-        className={cn(
-          "-z-20 object-cover object-center transition-opacity duration-700",
-          isImageLoaded ? "opacity-70" : "opacity-0",
-        )}
-      />
-
-      {/* Primary gradient overlay - stronger on left for text area */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-teal-950/95 via-teal-900/80 to-teal-950/50" />
-
-      {/* Vertical gradient for depth and vignette effect */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-teal-950/40 via-transparent to-teal-950/70" />
-
-      {/* Radial gradient for center focus - spotlight effect */}
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_50%,transparent_20%,rgba(4,47,46,0.6)_100%)]" />
-
-      {/* Noise texture overlay for premium feel */}
       <div
-        className="absolute inset-0 -z-10 opacity-[0.015]"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-        }}
-      />
-
-      {/* Dot pattern - teal tinted */}
-      <DotPattern
-        width={32}
-        height={32}
-        cx={1}
-        cy={1}
-        cr={0.8}
-        className={cn(
-          "mask-[linear-gradient(to_bottom,black,transparent_60%)]",
-          "-z-10 fill-teal-400/8",
-        )}
-      />
-
-      {/* Navbar */}
-      <motion.nav
-        initial={{ opacity: 0, y: -16 }}
-        animate={shouldAnimate ? { opacity: 1, y: 0 } : { opacity: 0, y: -16 }}
-        transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-20 w-full px-4 pt-6 sm:px-6 lg:px-8"
+        ref={containerRef}
+        className="hero-container relative overflow-hidden rounded-none sm:rounded-3xl"
       >
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Logo size="lg" className="h-8 w-8 drop-shadow-lg" />
-            <span className="font-display text-xl font-semibold tracking-tight text-white drop-shadow-md">
-              OdisAI
-            </span>
-          </div>
+        {/* === BACKGROUND LAYERS === */}
 
-          {/* Desktop - Book Demo button */}
-          <Link
-            href="/demo"
-            className={cn(
-              "hidden items-center justify-center sm:inline-flex",
-              "rounded-full px-5 py-2.5 text-sm font-medium",
-              "bg-white/95 text-teal-900 backdrop-blur-sm",
-              "shadow-lg shadow-teal-950/20",
-              "transition-all duration-300",
-              "hover:scale-[1.02] hover:bg-white hover:shadow-xl hover:shadow-teal-950/25",
-            )}
-          >
-            Book Demo
-          </Link>
-
-          {/* Mobile - Hamburger button */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="rounded-lg p-2 text-white transition-colors hover:bg-white/10 sm:hidden"
-            aria-label="Toggle menu"
-          >
-            {isMobileMenuOpen ? (
-              <X className="h-6 w-6" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
-          </button>
-        </div>
-      </motion.nav>
-
-      {/* Mobile menu */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <>
-            {/* Backdrop overlay */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-30 bg-teal-950/80 backdrop-blur-sm sm:hidden"
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
-
-            {/* Menu content */}
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="fixed top-20 right-4 left-4 z-40 rounded-2xl border border-white/10 bg-teal-900/95 backdrop-blur-xl sm:hidden"
-            >
-              <div className="space-y-1 px-6 py-4">
-                {NAVIGATION_LINKS.map((link) => (
-                  <button
-                    key={link.name}
-                    onClick={() => handleLinkClick(link.link)}
-                    className="block w-full rounded-lg px-4 py-3 text-left text-base font-medium text-white transition-colors hover:bg-white/10"
-                  >
-                    {link.name}
-                  </button>
-                ))}
-
-                <Link
-                  href="/demo"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className={cn(
-                    "mt-4 flex items-center justify-center gap-2",
-                    "w-full rounded-full px-6 py-3",
-                    "bg-white text-teal-900",
-                    "text-base font-semibold",
-                    "transition-all hover:bg-white/90",
-                  )}
-                >
-                  <Calendar className="h-4 w-4" />
-                  Book Demo
-                </Link>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Main Content */}
-      <div className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center px-4 pt-12 pb-16 sm:px-6 sm:pt-20 sm:pb-20 lg:px-8 lg:pt-24">
-        {/* Subtle ambient glow behind content */}
+        {/* Static gradient base */}
         <div
-          className="pointer-events-none absolute top-1/2 left-1/2 -z-10 h-[400px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-teal-500/10 blur-[100px]"
-          aria-hidden="true"
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(160deg, hsl(185,30%,5%) 0%, hsl(180,25%,8%) 30%, hsl(178,20%,10%) 60%, hsl(175,18%,7%) 100%)",
+          }}
         />
 
-        {/* Centered Content */}
-        <motion.div
-          className="-mt-8 flex w-full max-w-5xl flex-col items-center text-center sm:-mt-16"
-          variants={containerVariants}
-          initial="hidden"
-          animate={shouldAnimate ? "visible" : "hidden"}
-        >
-          {/* Trust Badge */}
-          <motion.div variants={itemVariants} className="mb-4 sm:mb-6">
-            <span
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 sm:gap-2 sm:px-4",
-                "bg-teal-500/10 ring-1 ring-teal-400/20 backdrop-blur-sm",
-                "text-xs font-medium text-teal-200 sm:text-sm",
-              )}
-            >
-              <Sparkles className="h-3 w-3 text-teal-300 sm:h-3.5 sm:w-3.5" />
-              <span className="xs:inline hidden">
-                Built for Busy Veterinary Clinics
+        {/* Parallax hero image with blur treatment */}
+        <motion.div className="absolute inset-0" style={{ y: imageY }}>
+          <Image
+            alt=""
+            src="/images/hero/bg.png"
+            fill
+            priority
+            sizes="100vw"
+            onLoad={() => setIsImageLoaded(true)}
+            className={cn(
+              "scale-110 object-cover object-center blur-[2px] transition-opacity duration-700",
+              isImageLoaded ? "opacity-45" : "opacity-0",
+            )}
+          />
+          <div className="absolute inset-0 bg-[hsl(185,25%,7%)]/40 mix-blend-overlay" />
+        </motion.div>
+
+        {/* Left gradient overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[hsl(185,25%,7%)] via-[hsl(185,25%,7%)]/70 to-transparent" />
+
+        {/* Bottom gradient for stats */}
+        <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[hsl(185,25%,7%)]/80 to-transparent" />
+
+        {/* Radial glow accent */}
+        <div
+          className="pointer-events-none absolute -top-32 right-1/4 h-[700px] w-[900px] opacity-10"
+          aria-hidden="true"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, hsla(174,60%,45%,0.25) 0%, transparent 65%)",
+          }}
+        />
+
+        {/* Film grain texture */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.025]"
+          aria-hidden="true"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
+          }}
+        />
+
+        {/* === CONTENT LAYER === */}
+        <div className="relative z-10 flex min-h-[100dvh] flex-col p-0 sm:min-h-[94dvh] md:p-4">
+          {/* ---- Navbar ---- */}
+          <motion.nav
+            initial={{ opacity: 0, y: -12 }}
+            animate={
+              shouldAnimate ? { opacity: 1, y: 0 } : { opacity: 0, y: -12 }
+            }
+            transition={{ duration: 0.6, ease: EASE_OUT_EXPO }}
+            className="flex items-center justify-between px-6 py-5 sm:px-10 sm:py-6 lg:px-16 xl:px-20"
+          >
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-2.5">
+              <Logo size="lg" className="h-8 w-8 drop-shadow-lg" />
+              <span className="font-display text-lg font-bold tracking-tight text-white">
+                OdisAI
               </span>
-              <span className="xs:hidden">
-                Built for Busy Veterinary Clinics
-              </span>
-            </span>
-          </motion.div>
-
-          {/* Headline */}
-          <motion.h1
-            variants={itemVariants}
-            className="font-display text-4xl leading-[1.1] font-bold tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.25)] sm:text-6xl sm:leading-[1.08] lg:text-7xl"
-          >
-            Your AI Assistant <br className="hidden sm:block" />
-            <WordRotate
-              words={ROTATING_WORDS}
-              duration={4000}
-              className="text-teal-300 drop-shadow-[0_2px_12px_rgba(0,0,0,0.2)]"
-              motionProps={{
-                initial: { opacity: 0, y: 12 },
-                animate: { opacity: 1, y: 0 },
-                exit: { opacity: 0, y: -12 },
-                transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
-              }}
-            />
-          </motion.h1>
-
-          {/* Subheadline */}
-          <motion.p
-            variants={itemVariants}
-            className="mt-4 max-w-3xl text-base leading-relaxed text-teal-50/90 drop-shadow-[0_1px_4px_rgba(0,0,0,0.15)] sm:mt-6 sm:text-xl sm:leading-8"
-          >
-            Veterinary AI voice assistants that pick up every call, follow-up
-            with every client, and{" "}
-            <AnimatedGradientText
-              speed={2}
-              colorFrom="#5eead4"
-              colorVia="#99f6e4"
-              colorTo="#a7f3d0"
-              className="font-semibold"
-            >
-              free your team to focus on in-clinic care.
-            </AnimatedGradientText>
-          </motion.p>
-
-          {/* CTA Buttons - Centered */}
-          <motion.div
-            variants={itemVariants}
-            className="mt-6 flex flex-col gap-3 sm:mt-8 sm:flex-row sm:items-center sm:gap-5"
-          >
-            {/* Primary CTA - Schedule Demo with shimmer */}
-            <Link
-              href="/demo"
-              onClick={handleScheduleDemoClick}
-              className={cn(
-                "group relative inline-flex w-full items-center justify-center gap-2 overflow-hidden rounded-full px-6 py-3.5 sm:w-auto sm:gap-2.5 sm:px-8 sm:py-4",
-                "bg-white text-teal-900",
-                "text-sm font-semibold sm:text-base",
-                "shadow-xl shadow-teal-950/30",
-                "transition-all duration-300",
-                "hover:scale-[1.03] hover:shadow-2xl hover:shadow-teal-400/25",
-                "focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-teal-900 focus-visible:outline-none",
-              )}
-            >
-              {/* Animated shimmer effect */}
-              <span className="pointer-events-none absolute inset-0 -translate-x-full animate-[shimmer_3s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-teal-400/20 to-transparent" />
-              {/* Glow effect on hover */}
-              <span className="pointer-events-none absolute inset-0 rounded-full bg-white opacity-0 blur-xl transition-opacity duration-300 group-hover:opacity-30" />
-              <Calendar className="relative h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
-              <span className="relative">Schedule Demo</span>
             </Link>
 
-            {/* Secondary CTA - Hear Odis */}
-            <a
-              href="#sample-calls"
-              className={cn(
-                "group relative inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 sm:w-auto sm:gap-2.5 sm:px-8 sm:py-4",
-                "bg-white/10 text-white ring-1 ring-white/20 backdrop-blur-sm",
-                "text-sm font-semibold sm:text-base",
-                "transition-all duration-300",
-                "hover:bg-white/15 hover:shadow-lg hover:shadow-teal-400/10 hover:ring-white/30",
-                "focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-teal-900 focus-visible:outline-none",
+            {/* Desktop nav links */}
+            <div className="hidden items-center gap-8 lg:flex">
+              {NAV_LINKS.map((item) =>
+                item.href.startsWith("#") ? (
+                  <button
+                    key={item.name}
+                    onClick={() => handleNavClick(item.href)}
+                    className="text-[13px] font-medium text-white/50 transition-colors duration-300 hover:text-white"
+                  >
+                    {item.name}
+                  </button>
+                ) : (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className="text-[13px] font-medium text-white/50 transition-colors duration-300 hover:text-white"
+                  >
+                    {item.name}
+                  </Link>
+                ),
               )}
+            </div>
+
+            {/* Desktop actions */}
+            <div className="hidden items-center gap-4 lg:flex">
+              <Link
+                href="/login"
+                className="text-[13px] font-medium text-white/50 transition-colors duration-300 hover:text-white"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/demo"
+                className="rounded-lg bg-white px-5 py-2.5 text-[13px] font-semibold text-[hsl(185,25%,7%)] transition-all duration-300 hover:bg-white/90 hover:shadow-lg hover:shadow-white/5"
+              >
+                Book Demo
+              </Link>
+            </div>
+
+            {/* Mobile toggle */}
+            <button
+              type="button"
+              className="relative z-20 cursor-pointer p-2 text-white lg:hidden"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
             >
-              <Play className="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:scale-110 sm:h-5 sm:w-5" />
-              <span>Hear Real Calls</span>
-            </a>
+              {isMobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
+          </motion.nav>
+
+          {/* Mobile menu */}
+          <AnimatePresence>
+            {isMobileMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3, ease: EASE_OUT_EXPO }}
+                className="overflow-hidden lg:hidden"
+              >
+                <div className="glass-dark mx-6 mb-4 rounded-2xl p-5">
+                  <div className="flex flex-col gap-1">
+                    {NAV_LINKS.map((item) =>
+                      item.href.startsWith("#") ? (
+                        <button
+                          key={item.name}
+                          onClick={() => handleNavClick(item.href)}
+                          className="rounded-lg px-4 py-3 text-left text-sm text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+                        >
+                          {item.name}
+                        </button>
+                      ) : (
+                        <Link
+                          key={item.name}
+                          href={item.href}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="rounded-lg px-4 py-3 text-sm text-white/60 transition-colors hover:bg-white/5 hover:text-white"
+                        >
+                          {item.name}
+                        </Link>
+                      ),
+                    )}
+                    <hr className="my-2 border-white/[0.08]" />
+                    <Link
+                      href="/login"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="rounded-lg px-4 py-3 text-sm text-white/60 transition-colors hover:text-white"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/demo"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="mt-2 rounded-lg bg-white px-5 py-3 text-center text-sm font-semibold text-[hsl(185,25%,7%)]"
+                    >
+                      Book Demo
+                    </Link>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ---- Hero content (left-aligned) ---- */}
+          <motion.div
+            variants={staggerVariants}
+            initial="hidden"
+            animate={shouldAnimate ? "visible" : "hidden"}
+            className="flex flex-1 flex-col justify-center px-6 sm:px-10 lg:px-16 xl:px-20"
+          >
+            <div className="max-w-2xl py-16 sm:py-20 lg:py-0">
+              {/* Trust badge */}
+              <motion.div variants={fadeInUpVariants} className="mb-6">
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-full px-4 py-1.5",
+                    "bg-teal-500/10 ring-1 ring-teal-400/20 backdrop-blur-sm",
+                    "text-xs font-medium text-teal-200 sm:text-sm",
+                  )}
+                >
+                  <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
+                  Built for Busy Veterinary Clinics
+                </span>
+              </motion.div>
+
+              {/* Headline */}
+              <motion.h1
+                variants={fadeInUpVariants}
+                className="font-display text-[32px] leading-[1.08] font-bold tracking-[-0.02em] text-balance text-white sm:text-5xl lg:text-6xl xl:text-[68px]"
+              >
+                The leading copilot
+                <br />
+                <span className="text-gradient">for veterinarians</span>
+              </motion.h1>
+
+              {/* Description */}
+              <motion.p
+                variants={fadeInUpVariants}
+                className="mt-5 max-w-[26rem] text-[15px] leading-[1.7] text-pretty text-white/50 sm:mt-6 sm:max-w-md sm:text-[17px] sm:leading-[1.7]"
+              >
+                Automates discharge calls, supports diagnostics, and
+                handles messages &mdash; all in one.{" "}
+                <AnimatedGradientText
+                  speed={2}
+                  colorFrom="#2dd4bf"
+                  colorVia="#5eead4"
+                  colorTo="#2dd4bf"
+                  className="font-semibold"
+                >
+                  Free your team to focus on in-clinic care.
+                </AnimatedGradientText>
+              </motion.p>
+
+              {/* CTAs */}
+              <motion.div
+                variants={fadeInUpVariants}
+                className="mt-8 flex flex-col gap-3 sm:mt-9 sm:flex-row sm:items-center sm:gap-4"
+              >
+                <Link
+                  href="/demo"
+                  onClick={handleScheduleDemoClick}
+                  className="btn-shine group relative inline-flex w-full items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-white px-7 py-3.5 text-sm font-semibold text-[hsl(185,25%,7%)] shadow-lg shadow-white/10 transition-all duration-300 hover:scale-[1.02] hover:bg-white/95 hover:shadow-xl hover:shadow-white/15 active:scale-[0.98] sm:w-auto"
+                >
+                  <Calendar className="h-4 w-4" />
+                  Schedule Demo
+                </Link>
+                <a
+                  href="#sample-calls"
+                  className="group inline-flex w-full items-center justify-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.04] px-7 py-3.5 text-sm font-semibold text-white backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] hover:border-white/20 hover:bg-white/[0.08] active:scale-[0.98] sm:w-auto"
+                >
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[hsl(174,70%,45%)]/15">
+                    <Play className="h-2.5 w-2.5 fill-[hsl(174,70%,45%)] text-[hsl(174,70%,45%)]" />
+                  </span>
+                  Hear Real Calls
+                </a>
+              </motion.div>
+            </div>
           </motion.div>
 
-          {/* Social Proof Stats */}
+          {/* ---- Stats bar ---- */}
           <motion.div
-            variants={itemVariants}
-            className="mt-8 flex flex-wrap items-center justify-center gap-6 sm:mt-10 sm:gap-12"
+            variants={fadeInVariants}
+            initial="hidden"
+            animate={shouldAnimate ? "visible" : "hidden"}
+            className="mt-auto border-t border-white/[0.06] px-6 py-5 sm:px-10 sm:py-6 lg:px-16 xl:px-20"
           >
-            {STATS.map((stat, index) => (
-              <div key={stat.label} className="flex flex-col items-center">
-                <div className="flex items-baseline gap-0.5">
-                  <NumberTicker
-                    value={stat.value}
-                    delay={0.3 + index * 0.15}
-                    className="font-display text-2xl font-bold text-white sm:text-4xl"
-                  />
-                  <span className="font-display text-xl font-bold text-teal-300 sm:text-3xl">
-                    {stat.suffix}
-                  </span>
-                </div>
-                <span className="mt-0.5 text-xs font-medium text-teal-100/60 sm:mt-1 sm:text-sm">
-                  {stat.label}
-                </span>
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-[11px] font-medium tracking-[0.18em] text-white/30 uppercase">
+                Trusted by clinics everywhere
+              </p>
+              <div className="flex items-center gap-8 sm:gap-10 lg:gap-14">
+                {STATS.map((stat, index) => (
+                  <div key={stat.label} className="flex items-baseline gap-1.5">
+                    <span className="font-display text-xl font-bold tracking-tight text-white sm:text-2xl">
+                      <NumberTicker
+                        value={stat.value}
+                        delay={0.3 + index * 0.15}
+                        className="font-display text-xl font-bold text-white sm:text-2xl"
+                      />
+                      <span className="text-[hsl(174,70%,45%)]">
+                        {stat.suffix}
+                      </span>
+                    </span>
+                    <span className="hidden text-xs text-white/35 sm:inline">
+                      {stat.label}
+                    </span>
+                    {/* Divider between stats (not after last) */}
+                    {index < STATS.length - 1 && (
+                      <div className="ml-6 hidden h-6 w-px bg-white/[0.08] sm:ml-8 sm:block lg:ml-12" />
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* === FLOATING ELEMENTS === */}
+
+        {/* Live call transcript card (desktop only, parallax) */}
+        <motion.div
+          style={{ y: cardY }}
+          className="absolute right-6 bottom-28 z-20 hidden lg:right-12 lg:block xl:right-20"
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 24, scale: 0.95 }}
+            animate={
+              shouldAnimate
+                ? { opacity: 1, y: 0, scale: 1 }
+                : { opacity: 0, y: 24, scale: 0.95 }
+            }
+            transition={{
+              duration: 0.8,
+              delay: 1,
+              ease: EASE_OUT_EXPO,
+            }}
+          >
+            <HeroCallCard shouldAnimate={shouldAnimate} />
           </motion.div>
         </motion.div>
-      </div>
 
-      {/* Scroll Indicator */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={shouldAnimate ? { opacity: 1, y: 0 } : { opacity: 0, y: -10 }}
-        transition={{ delay: 1.2, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-        className="absolute bottom-8 left-1/2 z-10 -translate-x-1/2"
-      >
-        <a
-          href="#problem"
-          className="group flex flex-col items-center gap-2 text-teal-100/50 transition-colors hover:text-teal-100/80"
+        {/* Scroll indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={shouldAnimate ? { opacity: 1 } : { opacity: 0 }}
+          transition={{ delay: 1.5, duration: 0.6 }}
+          className="absolute inset-x-0 bottom-20 z-20 hidden items-center justify-center sm:flex lg:bottom-24"
         >
-          <span className="text-xs font-medium tracking-widest uppercase">
-            Learn More
-          </span>
-          <ChevronDown className="h-5 w-5 animate-bounce" />
-        </a>
-      </motion.div>
-
-      {/* Bottom gradient fade for smooth transition */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-teal-950 to-transparent" />
+          <a
+            href="#problem"
+            className="group flex flex-col items-center gap-2 text-white/20 transition-colors hover:text-white/40"
+            aria-label="Scroll to learn more"
+          >
+            <motion.div
+              animate={{ y: [0, 6, 0] }}
+              transition={{
+                repeat: Infinity,
+                duration: 2,
+                ease: "easeInOut",
+              }}
+            >
+              <ChevronDown className="h-5 w-5" />
+            </motion.div>
+          </a>
+        </motion.div>
+      </div>
     </section>
   );
 }

@@ -395,6 +395,72 @@
 
 }
 
+/* ---- Hero boutique container ---- */
+.hero-container {
+  background: hsl(185, 25%, 7%);
+  color: hsl(150, 10%, 95%);
+}
+
+.glass-dark {
+  background: rgba(10, 32, 38, 0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(45, 190, 200, 0.12);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, hsl(174, 70%, 45%), hsl(174, 80%, 60%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.animate-pulse-dot {
+  animation: hero-pulse-dot 2s ease-in-out infinite;
+}
+
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shine:hover::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.15),
+    transparent
+  );
+  animation: hero-shine 0.6s ease;
+}
+
+@keyframes hero-pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes hero-shine {
+  from {
+    left: -100%;
+  }
+  to {
+    left: 200%;
+  }
+}
+
 /* Integration carousel scroll animations - must be at root level */
 @keyframes scroll-left {
   from {

@@ -185,7 +185,7 @@ export const LandingNavbar = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-30 bg-slate-900/20 backdrop-blur-sm md:hidden"
+              className="fixed inset-0 z-30 bg-slate-900/40 md:hidden"
               onClick={() => setIsMobileMenuOpen(false)}
             />
 
@@ -195,7 +195,7 @@ export const LandingNavbar = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="bg-background/95 border-t border-white/10 backdrop-blur-xl md:hidden"
+              className="relative z-40 bg-background border-t border-white/10 md:hidden"
             >
               <div className="space-y-1 px-6 py-4">
                 {navigationLinks.map((link) => (

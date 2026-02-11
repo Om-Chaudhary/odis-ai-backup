@@ -141,7 +141,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className="light bg-teal-950">
+    <html lang="en" className="light bg-[hsl(185,25%,7%)]">
       <head>
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=AW-17852929075"
