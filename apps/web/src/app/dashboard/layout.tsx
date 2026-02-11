@@ -8,6 +8,7 @@ import { AUTH_PARAMS } from "@odis-ai/shared/constants/auth";
 import { getUserClinics } from "@odis-ai/domain/clinics";
 import { Toaster } from "sonner";
 import { auth } from "@clerk/nextjs/server";
+import { PostHogIdentifier } from "~/components/dashboard/analytics/posthog-identifier";
 
 export const metadata: Metadata = {
   title: "Dashboard | Odis AI",
@@ -93,7 +94,7 @@ export default async function DashboardLayout({
   const [{ data: profile }, allClinics] = await Promise.all([
     serviceClient
       .from("users")
-      .select("first_name, last_name, role, clinic_name, avatar_url")
+      .select("*") // Get full user profile for PostHog identification
       .eq("id", user.id)
       .single(),
     getUserClinics(user.id, serviceClient),
@@ -116,6 +117,16 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-screen overflow-hidden">
+      {/* PostHog Identification - must happen before any events */}
+      {user && profile && (
+        <PostHogIdentifier
+          userId={user.id}
+          userProfile={profile}
+          clinicId={clinic?.id ?? null}
+          clinicData={clinic ?? null}
+        />
+      )}
+
       {/* Unified Sidebar */}
       <UnifiedSidebar
         profile={profile}
