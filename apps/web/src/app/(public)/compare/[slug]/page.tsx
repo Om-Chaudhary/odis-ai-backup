@@ -426,7 +426,11 @@ function ComparisonTabs({
   sections: Array<{ title: string; odis: string; competitor: string }>;
   competitorName: string;
 }) {
-  if (sections.length <= 1) {
+  if (sections.length === 0) {
+    return null;
+  }
+
+  if (sections.length === 1) {
     // Fallback: render as side-by-side cards without tabs
     return (
       <div className="space-y-8">
