@@ -1,5 +1,9 @@
 // Re-export types
-export type { ComparisonRow, DetailedSection, ComparisonPageData } from "./types";
+export type {
+  ComparisonRow,
+  DetailedSection,
+  ComparisonPageData,
+} from "./types";
 
 // Re-export individual comparisons
 export { guardianvets } from "./guardianvets";
@@ -24,4 +28,4 @@ export const comparisons: Record<string, ComparisonPageData> = {
   dialzara,
 };
 
-export const comparisonSlugs = Object.keys(comparisons) as string[];
+export const comparisonSlugs = Object.keys(comparisons);

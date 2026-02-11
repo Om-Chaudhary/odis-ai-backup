@@ -441,13 +441,13 @@ function ComparisonTabs({
             </h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-xl border border-teal-200/60 bg-teal-50/50 p-6">
-                <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-teal-700">
+                <div className="mb-2 text-xs font-semibold tracking-wider text-teal-700 uppercase">
                   OdisAI
                 </div>
                 <p className="text-sm text-slate-700">{section.odis}</p>
               </div>
               <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-6">
-                <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <div className="mb-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
                   {competitorName}
                 </div>
                 <p className="text-sm text-slate-600">{section.competitor}</p>
@@ -459,8 +459,9 @@ function ComparisonTabs({
     );
   }
 
+  const defaultTab = sections[0]?.title ?? "";
   return (
-    <Tabs defaultValue={sections[0].title} className="w-full">
+    <Tabs defaultValue={defaultTab} className="w-full">
       <TabsList className="mb-8 flex w-full flex-wrap justify-center gap-2">
         {sections.map((section) => (
           <TabsTrigger
@@ -477,7 +478,7 @@ function ComparisonTabs({
         <TabsContent key={section.title} value={section.title}>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-xl border border-teal-200/60 bg-teal-50/50 p-6">
-              <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-teal-700">
+              <div className="mb-2 text-xs font-semibold tracking-wider text-teal-700 uppercase">
                 OdisAI
               </div>
               <p className="text-sm leading-relaxed text-slate-700">
@@ -485,7 +486,7 @@ function ComparisonTabs({
               </p>
             </div>
             <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-6">
-              <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <div className="mb-2 text-xs font-semibold tracking-wider text-slate-500 uppercase">
                 {competitorName}
               </div>
               <p className="text-sm leading-relaxed text-slate-600">
