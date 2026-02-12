@@ -3,6 +3,7 @@ import { Outfit, Inter } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import { Analytics } from "@vercel/analytics/next";
 import Script from "next/script";
+import { Suspense } from "react";
 import "~/styles/globals.css";
 import { ClerkProvider } from "~/components/providers/clerk-provider";
 import { ClientProviders } from "~/components/providers/client-providers";
@@ -139,7 +140,11 @@ export default function RootLayout({
       <head>
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://us.i.posthog.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=AW-17852929075"
@@ -157,12 +162,14 @@ export default function RootLayout({
       <body
         className={`font-sans antialiased ${outfit.variable} ${inter.variable} ${geistMono.variable}`}
       >
-        <ClerkProvider>
-          <StructuredData />
-          <ServiceWorkerRegister />
-          <ClientProviders>{children}</ClientProviders>
-          <Analytics />
-        </ClerkProvider>
+        <Suspense>
+          <ClerkProvider>
+            <StructuredData />
+            <ServiceWorkerRegister />
+            <ClientProviders>{children}</ClientProviders>
+            <Analytics />
+          </ClerkProvider>
+        </Suspense>
       </body>
     </html>
   );

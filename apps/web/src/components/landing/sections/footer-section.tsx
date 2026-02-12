@@ -68,9 +68,8 @@ export const FooterSection = ({
   },
   copyrightText,
 }: FooterSectionProps) => {
-  const currentYear = new Date().getFullYear();
   const copyright =
-    copyrightText ?? `© ${currentYear} ${companyName}. All rights reserved.`;
+    copyrightText ?? `© 2025 ${companyName}. All rights reserved.`;
   return (
     <footer className="bg-secondary/30 border-border w-full border-t">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">

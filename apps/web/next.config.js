@@ -125,10 +125,12 @@ const config = {
   // Compression
   compress: true,
 
+  // Cache Components (moved from experimental in Next.js 16)
+  cacheComponents: true,
+
   // Experimental features for better performance
   experimental: {
     optimizePackageImports: ["lucide-react", "@radix-ui/react-icons"],
-    cacheComponents: true, // Partial Prerendering (renamed from ppr in Next.js 16)
   },
 
   // Transpile internal packages to ensure proper handling
@@ -168,9 +170,7 @@ const config = {
 
     // Also configure for the snapshot system
     if (config.snapshot) {
-      config.snapshot.managedPaths = [
-        ...(config.snapshot.managedPaths || []),
-      ];
+      config.snapshot.managedPaths = [...(config.snapshot.managedPaths || [])];
       config.snapshot.immutablePaths = [
         ...(config.snapshot.immutablePaths || []),
       ];

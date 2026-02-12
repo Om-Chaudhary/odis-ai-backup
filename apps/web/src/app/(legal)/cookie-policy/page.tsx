@@ -62,9 +62,7 @@ export default function CookiePolicyPage() {
       <footer className="border-t bg-slate-50 py-12 print:hidden">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center text-sm text-slate-600">
-            <p>
-              © {new Date().getFullYear()} {COMPANY_NAME}. All rights reserved.
-            </p>
+            <p>© 2025 {COMPANY_NAME}. All rights reserved.</p>
             <div className="mt-4 flex justify-center gap-6">
               <Link
                 href="/privacy-policy"

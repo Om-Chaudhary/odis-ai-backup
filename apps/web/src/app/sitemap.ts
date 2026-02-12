@@ -17,7 +17,7 @@ const integrationSlugs = [
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = env.NEXT_PUBLIC_SITE_URL;
-  const currentDate = new Date();
+  const currentDate = new Date("2025-01-01");
 
   // Generate integration page entries
   const integrationPages: MetadataRoute.Sitemap = integrationSlugs.map(
