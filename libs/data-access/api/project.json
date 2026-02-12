@@ -3,11 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/data-access/api/src",
   "projectType": "library",
-  "tags": [
-    "type:data-access",
-    "scope:server",
-    "platform:node"
-  ],
+  "tags": ["type:data-access", "scope:server", "platform:node"],
   "targets": {
     "test": {
       "executor": "nx:run-commands",
@@ -19,7 +15,7 @@
       "inputs": [
         "default",
         "^default",
-        "{workspaceRoot}/libs/api/vitest.config.ts"
+        "{workspaceRoot}/libs/data-access/api/vitest.config.ts"
       ]
     },
     "typecheck": {
@@ -29,10 +25,7 @@
         "cwd": "libs/data-access/api"
       },
       "cache": true,
-      "inputs": [
-        "default",
-        "^default"
-      ]
+      "inputs": ["default", "^default"]
     }
   }
 }

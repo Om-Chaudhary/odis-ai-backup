@@ -1,9 +1,6 @@
 import PostHogClient from "~/lib/posthog";
 import type { Database } from "@odis-ai/shared/types";
-import type {
-  PostHogUserProperties,
-  PostHogClinicGroupProperties,
-} from "./posthog-types";
+import type { PostHogUserProperties } from "./posthog-types";
 
 type UserRow = Database["public"]["Tables"]["users"]["Row"];
 type ClinicRow = Database["public"]["Tables"]["clinics"]["Row"];

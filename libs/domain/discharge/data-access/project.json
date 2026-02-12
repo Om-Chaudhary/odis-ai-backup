@@ -3,12 +3,21 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/domain/discharge/data-access/src",
   "projectType": "library",
-  "tags": [
-    "type:service",
-    "scope:server",
-    "platform:node"
-  ],
+  "tags": ["type:service", "scope:server", "platform:node"],
   "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vitest run",
+        "cwd": "libs/domain/discharge/data-access"
+      },
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/libs/domain/discharge/data-access/vitest.config.ts"
+      ]
+    },
     "typecheck": {
       "executor": "nx:run-commands",
       "options": {
@@ -16,10 +25,7 @@
         "cwd": "libs/domain/discharge/data-access"
       },
       "cache": true,
-      "inputs": [
-        "default",
-        "^default"
-      ]
+      "inputs": ["default", "^default"]
     }
   }
 }

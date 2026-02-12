@@ -234,6 +234,34 @@ export default tseslint.config(
               sourceTag: "scope:shared",
               onlyDependOnLibsWithTags: ["scope:shared"],
             },
+            // Web scope can use web, server, and shared libs
+            {
+              sourceTag: "scope:web",
+              onlyDependOnLibsWithTags: [
+                "scope:web",
+                "scope:server",
+                "scope:shared",
+              ],
+            },
+            // Mobile scope can use mobile and shared libs
+            {
+              sourceTag: "scope:mobile",
+              onlyDependOnLibsWithTags: ["scope:mobile", "scope:shared"],
+            },
+            // Docs scope can use docs and shared libs
+            {
+              sourceTag: "scope:docs",
+              onlyDependOnLibsWithTags: ["scope:docs", "scope:shared"],
+            },
+            // platform:react-native can use react-native, browser, and neutral libs
+            {
+              sourceTag: "platform:react-native",
+              onlyDependOnLibsWithTags: [
+                "platform:react-native",
+                "platform:browser",
+                "platform:neutral",
+              ],
+            },
           ],
         },
       ],

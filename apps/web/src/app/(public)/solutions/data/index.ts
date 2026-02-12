@@ -24,4 +24,4 @@ export const solutions: Record<string, SolutionPageData> = {
   "ai-veterinary-receptionist": aiVeterinaryReceptionist,
 };
 
-export const solutionSlugs = Object.keys(solutions) as string[];
+export const solutionSlugs = Object.keys(solutions);

@@ -39,7 +39,7 @@
         "lintFilePatterns": ["apps/chrome-extension/**/*.{ts,tsx}"]
       },
       "cache": true,
-      "inputs": ["default", "^default", "{workspaceRoot}/.eslintrc.json"]
+      "inputs": ["default", "^default", "{workspaceRoot}/eslint.config.js"]
     },
     "typecheck": {
       "executor": "nx:run-commands",

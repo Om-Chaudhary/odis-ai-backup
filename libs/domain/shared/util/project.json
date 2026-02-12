@@ -3,7 +3,7 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/domain/shared/util/src",
   "projectType": "library",
-  "tags": ["type:service", "scope:server", "platform:node"],
+  "tags": ["type:util", "scope:server", "platform:node"],
   "targets": {
     "test": {
       "executor": "nx:run-commands",
