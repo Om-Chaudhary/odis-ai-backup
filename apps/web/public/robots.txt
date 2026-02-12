@@ -1,0 +1,20 @@
+# robots.txt for OdisAI
+
+User-agent: *
+Allow: /
+
+# Disallow authenticated pages
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /sign-in
+Disallow: /sign-up
+Disallow: /login
+
+# Allow specific public API endpoints (if needed)
+Allow: /api/webhooks/
+
+# Sitemap
+Sitemap: https://odisai.net/sitemap.xml
+
+# Crawl delay (optional, helps prevent server overload)
+Crawl-delay: 1
