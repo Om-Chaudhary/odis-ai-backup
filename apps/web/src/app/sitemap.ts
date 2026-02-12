@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { env } from "~/env.js";
 import { solutionSlugs } from "./(public)/solutions/data";
 import { comparisonSlugs } from "./(public)/compare/data";
+import { resourceSlugs } from "./(public)/resources/data";
 
 // Integration slugs for programmatic SEO pages
 const integrationSlugs = [
@@ -92,6 +93,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: currentDate,
       changeFrequency: "weekly" as const,
       priority: 0.85,
+    })),
+
+    // Resources hub and detail pages
+    {
+      url: `${baseUrl}/resources`,
+      lastModified: currentDate,
+      changeFrequency: "weekly" as const,
+      priority: 0.85,
+    },
+    ...resourceSlugs.map((slug) => ({
+      url: `${baseUrl}/resources/${slug}`,
+      lastModified: currentDate,
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
     })),
 
     // Support pages

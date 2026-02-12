@@ -12,15 +12,9 @@ export {
 } from "./section-container";
 export { SectionHeader, type SectionHeaderProps } from "./section-header";
 export { CTASection, type CTASectionProps } from "./cta-section";
-export {
-  SocialProofBar,
-  type SocialProofBarProps,
-} from "./social-proof-bar";
+export { SocialProofBar, type SocialProofBarProps } from "./social-proof-bar";
 export { AccordionFAQ, type AccordionFAQProps } from "./accordion-faq";
-export {
-  TestimonialCard,
-  type TestimonialCardProps,
-} from "./testimonial-card";
+export { TestimonialCard, type TestimonialCardProps } from "./testimonial-card";
 export {
   CrossLinkSection,
   type CrossLinkItem,
@@ -36,10 +30,7 @@ export {
   type BentoFeature,
   type BentoFeatureGridProps,
 } from "./bento-feature-grid";
-export {
-  VerdictSection,
-  type VerdictSectionProps,
-} from "./verdict-section";
+export { VerdictSection, type VerdictSectionProps } from "./verdict-section";
 export {
   KeyAdvantagesBar,
   type KeyAdvantage,
@@ -54,3 +45,14 @@ export {
   type MetricItem,
   type AnimatedMetricsSectionProps,
 } from "./animated-metrics-section";
+export {
+  ArticleTableOfContents,
+  type TocItem,
+  type ArticleTableOfContentsProps,
+} from "./article-toc";
+export {
+  ArticleRenderer,
+  type ArticleSection,
+  type ArticleRendererProps,
+  type ComponentRegistry,
+} from "./article-renderer";

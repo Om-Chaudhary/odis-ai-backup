@@ -74,6 +74,9 @@ const fadeUpVariant = {
  * </PageHero>
  * ```
  */
+/** Variants that use a dark background and need light text */
+const DARK_VARIANTS = new Set(["hero-dark"]);
+
 export function PageHero({
   badge,
   title,
@@ -87,6 +90,7 @@ export function PageHero({
   const ref = useRef<HTMLElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
   const shouldReduceMotion = useReducedMotion();
+  const isDark = DARK_VARIANTS.has(backgroundVariant);
 
   const transition = {
     duration: shouldReduceMotion ? 0 : 0.6,
@@ -97,7 +101,9 @@ export function PageHero({
     <section
       ref={ref}
       id={id}
-      className={`relative w-full overflow-hidden pt-24 pb-8 sm:pt-28 sm:pb-10 md:pt-32 md:pb-12 ${className ?? ""}`}
+      className={`relative w-full overflow-hidden pt-24 sm:pt-28 md:pt-32 ${
+        isDark ? "pb-14 sm:pb-16 md:pb-20" : "pb-8 sm:pb-10 md:pb-12"
+      } ${className ?? ""}`}
     >
       <SectionBackground variant={backgroundVariant} />
 
@@ -116,14 +122,28 @@ export function PageHero({
               {breadcrumbs.map((crumb, index) => (
                 <li key={crumb.href} className="flex items-center gap-2">
                   {index > 0 && (
-                    <ChevronRight className="text-muted-foreground h-4 w-4" />
+                    <ChevronRight
+                      className={
+                        isDark
+                          ? "h-4 w-4 text-slate-400"
+                          : "text-muted-foreground h-4 w-4"
+                      }
+                    />
                   )}
                   {index === breadcrumbs.length - 1 ? (
-                    <span className="text-slate-600">{crumb.label}</span>
+                    <span
+                      className={isDark ? "text-slate-300" : "text-slate-600"}
+                    >
+                      {crumb.label}
+                    </span>
                   ) : (
                     <Link
                       href={crumb.href}
-                      className="text-muted-foreground transition-colors hover:text-slate-700"
+                      className={
+                        isDark
+                          ? "text-slate-400 transition-colors hover:text-white"
+                          : "text-muted-foreground transition-colors hover:text-slate-700"
+                      }
                     >
                       {crumb.label}
                     </Link>
@@ -143,7 +163,13 @@ export function PageHero({
             transition={{ ...transition, delay: 0.1 }}
             className="mb-6 flex justify-center"
           >
-            <span className="inline-flex items-center gap-2 rounded-full bg-teal-500/10 px-4 py-2 text-sm font-medium text-teal-700">
+            <span
+              className={
+                isDark
+                  ? "inline-flex items-center gap-2 rounded-full bg-teal-400/15 px-4 py-2 text-sm font-medium text-teal-300"
+                  : "inline-flex items-center gap-2 rounded-full bg-teal-500/10 px-4 py-2 text-sm font-medium text-teal-700"
+              }
+            >
               <span className="h-2 w-2 animate-pulse rounded-full bg-teal-500" />
               {badge}
             </span>
@@ -156,7 +182,9 @@ export function PageHero({
           animate={isInView ? "visible" : "hidden"}
           variants={fadeUpVariant}
           transition={{ ...transition, delay: 0.2 }}
-          className="font-display mx-auto max-w-4xl text-center text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl md:text-5xl lg:text-6xl"
+          className={`font-display mx-auto max-w-4xl text-center text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl ${
+            isDark ? "text-white" : "text-slate-900"
+          }`}
         >
           {title}
         </motion.h1>
@@ -168,7 +196,9 @@ export function PageHero({
             animate={isInView ? "visible" : "hidden"}
             variants={fadeUpVariant}
             transition={{ ...transition, delay: 0.3 }}
-            className="text-muted-foreground mx-auto mt-6 max-w-2xl text-center text-lg sm:text-xl"
+            className={`mx-auto mt-6 max-w-2xl text-center text-lg sm:text-xl ${
+              isDark ? "text-slate-300" : "text-muted-foreground"
+            }`}
           >
             {subtitle}
           </motion.p>

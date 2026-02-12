@@ -11,6 +11,7 @@ type SectionBackgroundVariant =
   | "accent-cool"
   // New research-informed variants
   | "hero-glow"
+  | "hero-dark"
   | "warm-violet"
   | "subtle-dark"
   | "cool-blue"
@@ -28,7 +29,8 @@ export interface SectionBackgroundProps {
  * SectionBackground - Provides cohesive gradient backgrounds for landing page sections
  *
  * New Variants (Research-Informed):
- * - hero-glow: Teal/emerald radial with subtle violet accent orbs
+ * - hero-glow: Teal/emerald radial with subtle violet accent orbs (light)
+ * - hero-dark: Cinematic dark teal matching landing hero, with bottom dissolve to light
  * - warm-violet: Teal base with purple/violet gradient accents
  * - subtle-dark: Soft navy/slate radial for dark sections
  * - cool-blue: Blue/indigo undertones with teal highlights
@@ -57,6 +59,7 @@ export function SectionBackground({
     >
       {/* New variants */}
       {variant === "hero-glow" && <HeroGlowBackground />}
+      {variant === "hero-dark" && <HeroDarkBackground />}
       {variant === "warm-violet" && <WarmVioletBackground />}
       {variant === "subtle-dark" && <SubtleDarkBackground />}
       {variant === "cool-blue" && <CoolBlueBackground />}
@@ -133,6 +136,100 @@ function HeroGlowBackground() {
           backgroundImage:
             "radial-gradient(circle, #31aba3 0.5px, transparent 0.5px)",
           backgroundSize: "32px 32px",
+        }}
+      />
+    </>
+  );
+}
+
+/**
+ * Hero Dark — Cinematic dark teal that mirrors the landing page hero.
+ * Effect: Premium, immersive, brand-establishing opening moment.
+ *
+ * Layers (bottom → top):
+ *  1. Diagonal dark-teal gradient base (matches landing hero exactly)
+ *  2. Centered teal radial glow — warm focal anchor
+ *  3. Violet accent orb — top-right, floating
+ *  4. Emerald accent orb — bottom-left, slow counter-drift
+ *  5. Film-grain SVG noise — texture & analog warmth
+ *  6. Teal dot pattern — micro-detail at very low opacity
+ *  7. Bottom dissolve gradient — dark → transparent fade into the
+ *     light body sections below. This is the critical transition.
+ */
+function HeroDarkBackground() {
+  return (
+    <>
+      {/* 1 · Base gradient — same hues as landing hero */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "linear-gradient(160deg, hsl(185,30%,5%) 0%, hsl(180,25%,8%) 30%, hsl(178,20%,10%) 60%, hsl(175,18%,7%) 100%)",
+        }}
+      />
+
+      {/* 2 · Primary teal radial — soft warm center glow */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 55% at 50% 40%, hsla(174,60%,45%,0.15) 0%, transparent 65%)",
+        }}
+      />
+
+      {/* 3 · Violet accent orb — top-right float */}
+      <div
+        className="absolute -top-[8%] right-[6%] h-[420px] w-[420px] rounded-full blur-3xl"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(139, 92, 246, 0.14) 0%, transparent 60%)",
+          animation: "float-slow 16s ease-in-out infinite",
+        }}
+      />
+
+      {/* 4 · Emerald accent orb — bottom-left counter-drift */}
+      <div
+        className="absolute bottom-[8%] left-[6%] h-[340px] w-[340px] rounded-full blur-3xl"
+        style={{
+          background:
+            "radial-gradient(circle, rgba(16, 185, 129, 0.10) 0%, transparent 55%)",
+          animation: "float-slow-reverse 20s ease-in-out infinite",
+        }}
+      />
+
+      {/* Secondary teal shimmer — off-center depth */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(ellipse 50% 40% at 25% 65%, hsla(174,50%,40%,0.06) 0%, transparent 55%)",
+        }}
+      />
+
+      {/* 5 · Film grain texture — SVG noise at low opacity */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        aria-hidden="true"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
+        }}
+      />
+
+      {/* 6 · Dot pattern — teal-tinted, very faint */}
+      <div
+        className="absolute inset-0 opacity-[0.035]"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, rgba(49, 171, 163, 0.7) 0.5px, transparent 0.5px)",
+          backgroundSize: "30px 30px",
+        }}
+      />
+
+      {/* 7 · Bottom edge — sharp cutoff with a thin softening strip */}
+      <div
+        className="absolute inset-x-0 bottom-0 h-16"
+        style={{
+          background: "linear-gradient(to bottom, transparent 0%, white 100%)",
         }}
       />
     </>
@@ -274,6 +371,8 @@ function SubtleDarkBackground() {
           background:
             "radial-gradient(circle, rgba(20, 184, 166, 0.12) 0%, transparent 55%)",
           animation: "float-slow 14s ease-in-out infinite",
+          willChange: "transform",
+          borderRadius: "9999px",
         }}
       />
 
@@ -284,6 +383,8 @@ function SubtleDarkBackground() {
           background:
             "radial-gradient(circle, rgba(20, 184, 166, 0.10) 0%, transparent 55%)",
           animation: "float-slow-reverse 16s ease-in-out infinite",
+          willChange: "transform",
+          borderRadius: "9999px",
         }}
       />
 
@@ -294,6 +395,8 @@ function SubtleDarkBackground() {
           background:
             "radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 60%)",
           animation: "float-gentle 20s ease-in-out infinite",
+          willChange: "transform",
+          borderRadius: "9999px",
         }}
       />
 
@@ -304,6 +407,8 @@ function SubtleDarkBackground() {
           background:
             "radial-gradient(circle, rgba(99, 102, 241, 0.06) 0%, transparent 55%)",
           animation: "mesh-drift 18s ease-in-out infinite",
+          willChange: "transform",
+          borderRadius: "9999px",
         }}
       />
 

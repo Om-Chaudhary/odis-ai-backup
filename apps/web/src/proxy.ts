@@ -44,6 +44,7 @@ const isPublicRoute = createRouteMatcher([
   "/integrations(.*)",
   "/solutions(.*)",
   "/compare(.*)",
+  "/resources(.*)",
 ]);
 
 /**

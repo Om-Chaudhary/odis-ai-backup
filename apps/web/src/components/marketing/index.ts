@@ -69,6 +69,13 @@ export {
   AnimatedMetricsSection,
   type MetricItem,
   type AnimatedMetricsSectionProps,
+  ArticleTableOfContents,
+  type TocItem,
+  type ArticleTableOfContentsProps,
+  ArticleRenderer,
+  type ArticleSection,
+  type ArticleRendererProps,
+  type ComponentRegistry,
 } from "./sections";
 
 // =============================================================================

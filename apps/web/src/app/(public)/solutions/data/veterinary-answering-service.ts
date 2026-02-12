@@ -12,6 +12,8 @@ export const veterinaryAnsweringService: SolutionPageData = {
     "animal hospital answering service",
     "vet clinic phone service",
     "24/7 veterinary answering",
+    "veterinary answering service cost",
+    "best answering service for vets",
   ],
   hero: {
     badge: "Answering Service",
@@ -129,6 +131,16 @@ export const veterinaryAnsweringService: SolutionPageData = {
       question: "What happens during a power outage or internet issue?",
       answer:
         "OdisAI runs in the cloud, so it's not affected by local outages at your clinic. If anything, that's when it's most valuable — calls are still answered even when your clinic can't pick up.",
+    },
+    {
+      question: "How much does a veterinary answering service cost?",
+      answer:
+        "Traditional veterinary answering services charge $1-3 per minute or $200-800/month with per-call fees. Hiring a dedicated receptionist costs $35,000-45,000/year plus benefits. OdisAI offers flat monthly pricing with unlimited calls — no per-minute charges, no overtime, no surprise bills. Most clinics see a 60-80% cost reduction compared to outsourced answering services.",
+    },
+    {
+      question: "What's the best answering service for veterinary clinics?",
+      answer:
+        "The best answering service for vets needs three things: veterinary knowledge (not generic scripts), PIMS integration (to actually book appointments), and 24/7 availability without per-minute fees. OdisAI is purpose-built for veterinary clinics — it understands medical terminology, connects to your practice management system, and handles unlimited calls at a flat rate.",
     },
   ],
   cta: {

@@ -12,6 +12,10 @@ export const dischargeFollowUp: SolutionPageData = {
     "veterinary patient follow up",
     "discharge call automation",
     "post-surgical follow up calls",
+    "veterinary post visit follow up",
+    "vet clinic outbound calls",
+    "pet owner follow up calls",
+    "medication compliance veterinary",
   ],
   hero: {
     badge: "Discharge Follow-Up",
@@ -130,7 +134,8 @@ export const dischargeFollowUp: SolutionPageData = {
     title: "Make Follow-Up Calls Automatic, Not Optional",
     subtitle:
       "See how OdisAI automates discharge follow-ups for veterinary clinics.",
-    urgencyLine: "Every day without follow-ups is a day complications go undetected",
+    urgencyLine:
+      "Every day without follow-ups is a day complications go undetected",
     badge: "Better Outcomes, Fewer Callbacks",
   },
 
@@ -180,7 +185,5 @@ export const dischargeFollowUp: SolutionPageData = {
       description: "Virtual front desk support",
     },
   ],
-  relatedComparisons: [
-    { slug: "vettriage", label: "OdisAI vs VetTriage" },
-  ],
+  relatedComparisons: [{ slug: "vettriage", label: "OdisAI vs VetTriage" }],
 };

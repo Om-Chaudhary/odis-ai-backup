@@ -1,11 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   MarketingLayout,
-  PageHero,
-  SectionContainer,
-  SectionHeader,
-  CTASection,
   KeyAdvantagesBar,
   VerdictSection,
   AccordionFAQ,
@@ -14,10 +11,9 @@ import {
   SwitchingGuideSection,
   type CrossLinkItem,
 } from "~/components/marketing";
-import { Check, X } from "lucide-react";
+import { Check, X, ArrowRight } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
 import { BlurFade } from "~/components/landing/ui/blur-fade";
-import { Badge } from "@odis-ai/shared/ui/badge";
 import {
   Tabs,
   TabsContent,
@@ -25,6 +21,12 @@ import {
   TabsTrigger,
 } from "@odis-ai/shared/ui/tabs";
 import { comparisons, comparisonSlugs } from "../data";
+
+const contentNavigation = [
+  { name: "Resources", href: "/resources" },
+  { name: "Solutions", href: "/solutions" },
+  { name: "Compare", href: "/compare" },
+];
 
 export function generateStaticParams() {
   return comparisonSlugs.map((slug) => ({ slug }));
@@ -57,15 +59,36 @@ export async function generateMetadata({
   };
 }
 
-function ComparisonValue({ value }: { value: boolean | string }) {
+function ComparisonValue({
+  value,
+  variant = "default",
+}: {
+  value: boolean | string;
+  variant?: "odis" | "default";
+}) {
   if (typeof value === "boolean") {
     return value ? (
-      <Check className="h-5 w-5 text-teal-500" />
+      <div
+        className={cn(
+          "mx-auto flex h-7 w-7 items-center justify-center rounded-full",
+          variant === "odis" ? "bg-teal-100" : "bg-teal-50",
+        )}
+      >
+        <Check
+          className={cn(
+            "h-4 w-4",
+            variant === "odis" ? "text-teal-600" : "text-teal-500",
+          )}
+          strokeWidth={variant === "odis" ? 3 : 2.5}
+        />
+      </div>
     ) : (
-      <X className="h-5 w-5 text-slate-300" />
+      <div className="mx-auto flex h-7 w-7 items-center justify-center rounded-full bg-slate-100">
+        <X className="h-3.5 w-3.5 text-slate-400" strokeWidth={2.5} />
+      </div>
     );
   }
-  return <span className="text-sm">{value}</span>;
+  return <span className="text-sm font-medium">{value}</span>;
 }
 
 export default async function ComparisonPage({
@@ -146,7 +169,10 @@ export default async function ComparisonPage({
   ];
 
   return (
-    <MarketingLayout navbar={{ variant: "transparent" }} showScrollProgress>
+    <MarketingLayout
+      navbar={{ variant: "solid", navigation: contentNavigation }}
+      showScrollProgress
+    >
       {/* JSON-LD */}
       <script
         type="application/ld+json"
@@ -158,264 +184,279 @@ export default async function ComparisonPage({
         }}
       />
 
-      {/* Hero with breadcrumbs + emotional headline */}
-      <PageHero
-        badge={data.hero.badge}
-        title={data.hero.title}
-        subtitle={data.hero.subtitle}
-        backgroundVariant="hero-glow"
-        breadcrumbs={[
-          { label: "Home", href: "/" },
-          { label: "Compare", href: "/compare" },
-          {
-            label: `vs ${data.competitorName}`,
-            href: `/compare/${slug}`,
-          },
-        ]}
-      >
-        <p className="text-lg font-medium text-teal-700 italic">
-          {data.hero.headline}
-        </p>
-      </PageHero>
+      {/* Simple article header — white bg with breadcrumbs */}
+      <header className="border-b border-slate-200 bg-white pt-32 pb-10">
+        <div className="mx-auto max-w-5xl px-6">
+          {/* Breadcrumbs */}
+          <nav className="mb-6 flex items-center gap-1.5 text-sm text-slate-400">
+            <Link href="/" className="transition-colors hover:text-slate-600">
+              Home
+            </Link>
+            <span>/</span>
+            <Link
+              href="/compare"
+              className="transition-colors hover:text-slate-600"
+            >
+              Compare
+            </Link>
+            <span>/</span>
+            <span className="text-slate-600">vs {data.competitorName}</span>
+          </nav>
+
+          <p className="text-xs font-semibold tracking-widest text-teal-600 uppercase">
+            {data.hero.badge}
+          </p>
+          <h1 className="font-display mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+            {data.hero.title}
+          </h1>
+          <p className="mt-3 max-w-2xl text-lg text-slate-500">
+            {data.hero.subtitle}
+          </p>
+          {data.hero.headline && (
+            <p className="mt-4 text-base font-medium text-teal-600 italic">
+              {data.hero.headline}
+            </p>
+          )}
+        </div>
+      </header>
 
       {/* Key Advantages Bar */}
       <KeyAdvantagesBar advantages={data.keyAdvantages} />
 
-      {/* Verdict Section (placed early for conversion) */}
-      <SectionContainer
-        id="verdict"
-        backgroundVariant="cool-blue"
-        padding="default"
-      >
-        <SectionHeader
-          badge="Our Verdict"
-          badgeVariant="teal"
-          title={`OdisAI vs ${data.competitorName}: The Bottom Line`}
-          align="center"
-        />
-        <div className="mx-auto mt-12 max-w-4xl">
-          <VerdictSection
-            summary={data.verdict.summary}
-            bestForOdis={data.verdict.bestForOdis}
-            bestForCompetitor={data.verdict.bestForCompetitor}
-            competitorName={data.competitorName}
-          />
-        </div>
-      </SectionContainer>
-
-      {/* Comparison Table (enhanced) */}
-      <SectionContainer
-        id="comparison-table"
-        backgroundVariant="subtle-dark"
-        padding="default"
-      >
-        <SectionHeader
-          badge="Feature Comparison"
-          title={`OdisAI vs ${data.competitorName}`}
-          align="center"
-        />
-        <BlurFade delay={0.1} inView>
-          <div className="mx-auto mt-12 max-w-4xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-            {/* Header row */}
-            <div className="grid grid-cols-3 border-b border-slate-200 bg-slate-50">
-              <div className="p-4 text-sm font-semibold text-slate-900">
-                Feature
-              </div>
-              <div className="border-l-2 border-teal-500 bg-teal-50/50 p-4 text-center text-sm font-semibold text-teal-700">
-                OdisAI
-              </div>
-              <div className="p-4 text-center text-sm font-semibold text-slate-500">
-                {data.competitorName}
-              </div>
-            </div>
-            {/* Data rows */}
-            {data.comparisonTable.map((row, i) => {
-              const odisWinsRow =
-                (typeof row.odis === "boolean" &&
-                  row.odis &&
-                  !row.competitor) ||
-                (typeof row.odis === "string" &&
-                  typeof row.competitor === "string" &&
-                  row.odis !== row.competitor);
-
-              return (
-                <div
-                  key={row.feature}
-                  className={cn(
-                    "grid grid-cols-3 border-b border-slate-100 last:border-b-0",
-                    i % 2 === 0 ? "bg-white" : "bg-slate-50/50",
-                  )}
-                >
-                  <div className="p-4 text-sm font-medium text-slate-700">
-                    {row.feature}
-                  </div>
-                  <div
-                    className={cn(
-                      "flex items-center justify-center p-4",
-                      odisWinsRow && "bg-teal-50/30",
-                    )}
-                  >
-                    <span
-                      className={
-                        typeof row.odis === "string"
-                          ? "font-medium text-teal-700"
-                          : ""
-                      }
-                    >
-                      <ComparisonValue value={row.odis} />
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-center p-4">
-                    <span
-                      className={
-                        typeof row.competitor === "string"
-                          ? "text-slate-500"
-                          : ""
-                      }
-                    >
-                      <ComparisonValue value={row.competitor} />
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </BlurFade>
-
-        {/* Summary badge */}
-        <div className="mt-6 flex justify-center">
-          <Badge
-            variant="secondary"
-            className="bg-teal-50 px-4 py-2 text-sm font-medium text-teal-700"
-          >
-            OdisAI leads in {odisWins} of {data.comparisonTable.length}{" "}
-            categories
-          </Badge>
-        </div>
-      </SectionContainer>
-
-      {/* Detailed Sections as Tabs */}
-      {data.detailedSections.length > 0 && (
-        <SectionContainer
-          id="detailed-comparison"
-          backgroundVariant="cool-blue"
-          padding="default"
-        >
-          <SectionHeader
-            badge="In Depth"
-            title="Detailed Comparison"
-            align="center"
-          />
+      {/* Verdict Section */}
+      <section className="border-b border-slate-100 bg-white py-12">
+        <div className="mx-auto max-w-5xl px-6">
+          <p className="text-center text-xs font-semibold tracking-widest text-teal-600 uppercase">
+            Our Verdict
+          </p>
+          <h2 className="font-display mt-2 text-center text-2xl font-bold text-slate-900">
+            OdisAI vs {data.competitorName}: The Bottom Line
+          </h2>
           <div className="mx-auto mt-12 max-w-4xl">
-            <ComparisonTabs
-              sections={data.detailedSections}
+            <VerdictSection
+              summary={data.verdict.summary}
+              bestForOdis={data.verdict.bestForOdis}
+              bestForCompetitor={data.verdict.bestForCompetitor}
               competitorName={data.competitorName}
             />
           </div>
-        </SectionContainer>
+        </div>
+      </section>
+
+      {/* Comparison Table */}
+      <section className="border-b border-slate-100 bg-slate-50/30 py-12">
+        <div className="mx-auto max-w-5xl px-6">
+          <h2 className="font-display mb-8 text-center text-2xl font-bold text-slate-900">
+            Feature-by-Feature Comparison
+          </h2>
+          <BlurFade delay={0.1} inView>
+            <div className="mx-auto max-w-4xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+              {/* Header row */}
+              <div className="grid grid-cols-[1fr_140px_140px] border-b border-slate-200 sm:grid-cols-3">
+                <div className="bg-slate-50 p-4 text-sm font-semibold text-slate-900">
+                  Feature
+                </div>
+                <div className="flex flex-col items-center justify-center gap-1 bg-teal-50 p-4">
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-teal-600 text-[10px] font-bold text-white">
+                    O
+                  </span>
+                  <span className="text-xs font-bold text-teal-700 sm:text-sm">
+                    OdisAI
+                  </span>
+                </div>
+                <div className="flex items-center justify-center bg-slate-50 p-4 text-xs font-medium text-slate-500 sm:text-sm">
+                  {data.competitorName}
+                </div>
+              </div>
+              {/* Data rows */}
+              {data.comparisonTable.map((row, i) => {
+                const odisWinsRow =
+                  (typeof row.odis === "boolean" &&
+                    row.odis &&
+                    !row.competitor) ||
+                  (typeof row.odis === "string" &&
+                    typeof row.competitor === "string" &&
+                    row.odis !== row.competitor);
+
+                return (
+                  <div
+                    key={row.feature}
+                    className={cn(
+                      "grid grid-cols-[1fr_140px_140px] border-b border-slate-100 last:border-b-0 sm:grid-cols-3",
+                      i % 2 === 0 ? "bg-white" : "bg-slate-50/30",
+                    )}
+                  >
+                    <div className="p-4 text-sm font-medium text-slate-700">
+                      {row.feature}
+                    </div>
+                    <div
+                      className={cn(
+                        "flex items-center justify-center p-4",
+                        odisWinsRow && "bg-teal-50/30",
+                      )}
+                    >
+                      <span
+                        className={
+                          typeof row.odis === "string"
+                            ? "text-center text-sm font-medium text-teal-700"
+                            : ""
+                        }
+                      >
+                        <ComparisonValue value={row.odis} variant="odis" />
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-center p-4">
+                      <span
+                        className={
+                          typeof row.competitor === "string"
+                            ? "text-center text-sm text-slate-500"
+                            : ""
+                        }
+                      >
+                        <ComparisonValue value={row.competitor} />
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </BlurFade>
+
+          {/* Summary line */}
+          <p className="mt-6 text-center text-sm font-medium text-teal-600">
+            OdisAI leads in {odisWins} of {data.comparisonTable.length}{" "}
+            categories
+          </p>
+        </div>
+      </section>
+
+      {/* Detailed Sections as Tabs */}
+      {data.detailedSections.length > 0 && (
+        <section className="border-b border-slate-100 bg-white py-12">
+          <div className="mx-auto max-w-5xl px-6">
+            <h2 className="font-display mb-8 text-center text-2xl font-bold text-slate-900">
+              Detailed Comparison
+            </h2>
+            <div className="mx-auto max-w-4xl">
+              <ComparisonTabs
+                sections={data.detailedSections}
+                competitorName={data.competitorName}
+              />
+            </div>
+          </div>
+        </section>
       )}
 
       {/* Why OdisAI — Differentiators */}
-      <SectionContainer
-        id="why-odisai"
-        backgroundVariant="warm-violet"
-        padding="default"
-      >
-        <SectionHeader
-          badge="Why OdisAI"
-          badgeVariant="teal"
-          title={`Why Clinics Choose OdisAI Over ${data.competitorName}`}
-          align="center"
-        />
-        <div className="mx-auto mt-12 grid max-w-4xl gap-4 sm:grid-cols-2">
-          {data.differentiators.map((diff, index) => (
-            <BlurFade key={diff.title} delay={index * 0.1} inView>
-              <div className="flex items-start gap-4 rounded-xl border border-white/20 bg-white/60 p-5 backdrop-blur-sm">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-100">
-                  <span className="text-sm font-bold text-teal-600">
-                    {index + 1}
-                  </span>
+      <section className="border-b border-slate-100 bg-slate-50/50 py-12">
+        <div className="mx-auto max-w-5xl px-6">
+          <h2 className="font-display mb-8 text-center text-2xl font-bold text-slate-900">
+            Why Clinics Choose OdisAI Over {data.competitorName}
+          </h2>
+          <div className="mx-auto grid max-w-4xl gap-4 sm:grid-cols-2">
+            {data.differentiators.map((diff, index) => (
+              <BlurFade key={diff.title} delay={index * 0.1} inView>
+                <div className="flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-5">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-50">
+                    <span className="text-sm font-bold text-teal-600">
+                      {index + 1}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900">
+                      {diff.title}
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-600">
+                      {diff.description}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-slate-900">{diff.title}</h3>
-                  <p className="mt-1 text-sm text-slate-600">
-                    {diff.description}
-                  </p>
-                </div>
-              </div>
-            </BlurFade>
-          ))}
+              </BlurFade>
+            ))}
+          </div>
         </div>
-      </SectionContainer>
+      </section>
 
       {/* Switching Guide */}
-      <SectionContainer
-        id="switching-guide"
-        backgroundVariant="cool-blue"
-        padding="default"
-      >
-        <SectionHeader
-          badge="Easy Switch"
-          badgeVariant="teal"
-          title="Making the Switch"
-          align="center"
-        />
-        <div className="mx-auto mt-12 max-w-3xl">
-          <SwitchingGuideSection
-            title={data.switchingGuide.title}
-            description={data.switchingGuide.description}
-            steps={data.switchingGuide.steps}
-            timeline={data.switchingGuide.timeline}
-          />
+      <section className="border-b border-slate-100 bg-white py-12">
+        <div className="mx-auto max-w-5xl px-6">
+          <h2 className="font-display mb-8 text-center text-2xl font-bold text-slate-900">
+            Making the Switch
+          </h2>
+          <div className="mx-auto max-w-3xl">
+            <SwitchingGuideSection
+              title={data.switchingGuide.title}
+              description={data.switchingGuide.description}
+              steps={data.switchingGuide.steps}
+              timeline={data.switchingGuide.timeline}
+            />
+          </div>
         </div>
-      </SectionContainer>
+      </section>
 
       {/* Testimonial */}
-      <SectionContainer
-        id="testimonial"
-        backgroundVariant="subtle-dark"
-        padding="default"
-      >
-        <TestimonialCard
-          quote={data.socialProof.quote}
-          attribution={data.socialProof.attribution}
-          proofLine={data.socialProof.proofLine}
-        />
-      </SectionContainer>
+      <section className="border-b border-slate-100 bg-slate-50/50 py-12">
+        <div className="mx-auto max-w-5xl px-6">
+          <TestimonialCard
+            quote={data.socialProof.quote}
+            attribution={data.socialProof.attribution}
+            proofLine={data.socialProof.proofLine}
+          />
+        </div>
+      </section>
 
-      {/* FAQ — Accordion */}
-      <SectionContainer
-        id="faq"
-        backgroundVariant="cool-blue"
-        padding="default"
-      >
-        <SectionHeader badge="FAQ" title="Common Questions" align="center" />
-        <div className="mx-auto mt-12 max-w-3xl">
+      {/* FAQ */}
+      <section className="border-b border-slate-100 bg-white py-12">
+        <div className="mx-auto max-w-3xl px-6">
+          <h2 className="font-display mb-8 text-center text-xl font-bold text-slate-900 sm:text-2xl">
+            Common Questions
+          </h2>
           <AccordionFAQ faqs={data.faqs} />
         </div>
-      </SectionContainer>
+      </section>
 
       {/* Cross-Links */}
-      <SectionContainer
-        id="related"
-        backgroundVariant="subtle-dark"
-        padding="small"
-      >
-        <CrossLinkSection title="Explore More" links={crossLinks} />
-      </SectionContainer>
+      {crossLinks.length > 0 && (
+        <section className="border-b border-slate-100 bg-white py-8">
+          <div className="mx-auto max-w-5xl px-6">
+            <CrossLinkSection title="Explore More" links={crossLinks} />
+          </div>
+        </section>
+      )}
 
-      {/* CTA */}
-      <CTASection
-        badge={data.cta.badge ?? "Make the Switch"}
-        title={data.cta.title}
-        subtitle={data.cta.subtitle}
-        primaryCTAText="Book a Demo"
-        primaryCTAHref="/demo"
-        secondaryCTAText="Contact Sales"
-        secondaryCTAHref="/contact"
-        urgencyLine={data.cta.urgencyLine}
-        useShimmerButton
-      />
+      {/* Soft CTA */}
+      <section className="bg-white py-16">
+        <div className="mx-auto max-w-3xl px-6">
+          <div className="rounded-2xl border border-slate-200 px-8 py-10 text-center">
+            <h2 className="font-display text-xl font-bold text-slate-900 sm:text-2xl">
+              {data.cta.title}
+            </h2>
+            <p className="mx-auto mt-3 max-w-lg text-sm text-slate-500">
+              {data.cta.subtitle}
+            </p>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+              <Link
+                href="/demo"
+                className="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-teal-700"
+              >
+                Book a Demo
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/contact"
+                className="text-sm font-medium text-slate-500 transition-colors hover:text-teal-600"
+              >
+                Contact Sales
+              </Link>
+            </div>
+            {data.cta.urgencyLine && (
+              <p className="mt-4 text-xs text-slate-400">
+                {data.cta.urgencyLine}
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
     </MarketingLayout>
   );
 }

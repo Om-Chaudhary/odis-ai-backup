@@ -28,6 +28,13 @@
       "type": "stdio",
       "command": "npx",
       "args": ["nx", "mcp"]
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "env": {
+        "BRAVE_API_KEY": "BSA8um4lBIAmeE-QnDkKq2T6-3dZ6XG"
+      }
     }
   }
 }

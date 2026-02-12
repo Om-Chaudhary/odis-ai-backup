@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { ArrowLeftRight, Lightbulb, ArrowRight } from "lucide-react";
+import { ArrowLeftRight, Lightbulb, ArrowRight, BookOpen } from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
 
 export interface CrossLinkItem {
   slug: string;
   label: string;
   description?: string;
-  type: "solution" | "comparison";
+  type: "solution" | "comparison" | "resource";
 }
 
 export interface CrossLinkSectionProps {
@@ -14,6 +14,12 @@ export interface CrossLinkSectionProps {
   links: CrossLinkItem[];
   className?: string;
 }
+
+const typeConfig = {
+  solution: { prefix: "/solutions", Icon: Lightbulb },
+  comparison: { prefix: "/compare", Icon: ArrowLeftRight },
+  resource: { prefix: "/resources", Icon: BookOpen },
+} as const;
 
 export function CrossLinkSection({
   title = "Related Pages",
@@ -29,11 +35,9 @@ export function CrossLinkSection({
       </h3>
       <div className="grid gap-4 sm:grid-cols-2">
         {links.map((link) => {
-          const href =
-            link.type === "solution"
-              ? `/solutions/${link.slug}`
-              : `/compare/${link.slug}`;
-          const Icon = link.type === "solution" ? Lightbulb : ArrowLeftRight;
+          const config = typeConfig[link.type];
+          const href = `${config.prefix}/${link.slug}`;
+          const Icon = config.Icon;
 
           return (
             <Link

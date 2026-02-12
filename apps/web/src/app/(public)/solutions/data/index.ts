@@ -7,6 +7,7 @@ export { afterHoursAnswering } from "./after-hours-answering";
 export { dischargeFollowUp } from "./discharge-follow-up";
 export { emergencyCallCenter } from "./emergency-call-center";
 export { aiVeterinaryReceptionist } from "./ai-veterinary-receptionist";
+export { veterinaryCallCenter } from "./veterinary-call-center";
 
 // Aggregated data and slugs
 import { veterinaryAnsweringService } from "./veterinary-answering-service";
@@ -14,6 +15,7 @@ import { afterHoursAnswering } from "./after-hours-answering";
 import { dischargeFollowUp } from "./discharge-follow-up";
 import { emergencyCallCenter } from "./emergency-call-center";
 import { aiVeterinaryReceptionist } from "./ai-veterinary-receptionist";
+import { veterinaryCallCenter } from "./veterinary-call-center";
 import type { SolutionPageData } from "./types";
 
 export const solutions: Record<string, SolutionPageData> = {
@@ -22,6 +24,7 @@ export const solutions: Record<string, SolutionPageData> = {
   "discharge-follow-up": dischargeFollowUp,
   "emergency-call-center": emergencyCallCenter,
   "ai-veterinary-receptionist": aiVeterinaryReceptionist,
+  "veterinary-call-center": veterinaryCallCenter,
 };
 
 export const solutionSlugs = Object.keys(solutions);
