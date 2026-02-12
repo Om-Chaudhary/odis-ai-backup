@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import SecurityContent from "~/app/(public)/security/security-content";
 
-export const dynamic = "force-dynamic";
-
 export const metadata: Metadata = {
   title: "Security & Compliance | OdisAI",
   description:

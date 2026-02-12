@@ -59,10 +59,6 @@ import {
 } from "@odis-ai/data-access/api/cors";
 import { OrchestrationRequestSchema } from "@odis-ai/shared/validators/orchestration";
 
-// Force Node.js runtime and dynamic rendering to avoid static bundling issues
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-
 // Dynamic import to avoid bundling @react-email/components during static generation
 async function getDischargeOrchestrator() {
   const { DischargeOrchestrator } =

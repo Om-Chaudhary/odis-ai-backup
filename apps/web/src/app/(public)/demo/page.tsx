@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { DemoContent } from "./demo-content";
 
-export const dynamic = "force-dynamic";
-
 export const metadata: Metadata = {
   title: "Book a Demo | See OdisAI in Action",
   description:

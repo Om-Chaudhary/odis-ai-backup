@@ -4,10 +4,6 @@ import { createClient } from "@odis-ai/data-access/db/server";
 import { z } from "zod";
 import { getUser } from "~/server/actions/auth";
 
-// Force Node.js runtime and dynamic rendering to avoid static bundling issues
-export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
-
 // Dynamic import to avoid bundling @react-email/components during static generation
 async function getDischargeBatchProcessor() {
   const { DischargeBatchProcessor } =

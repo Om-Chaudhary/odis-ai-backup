@@ -5,8 +5,6 @@ import {
 } from "~/components/marketing";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
-
 export const metadata: Metadata = {
   title: "Blog | OdisAI Insights",
   description:
