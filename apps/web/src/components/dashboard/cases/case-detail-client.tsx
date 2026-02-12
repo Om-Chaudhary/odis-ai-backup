@@ -61,6 +61,7 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
     isLoading,
     error,
     refetch,
+    // @ts-expect-error -- deeply nested Supabase join types exceed TS recursion limit through tRPC inference
   } = api.cases.getCaseDetail.useQuery(
     { id: caseId },
     {
@@ -75,10 +76,12 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
         const latestCall = calls[0] as { status: string } | undefined;
 
         // Don't poll if no calls or call is completed/failed/cancelled
-        if (!latestCall ||
-            latestCall.status === "completed" ||
-            latestCall.status === "failed" ||
-            latestCall.status === "cancelled") {
+        if (
+          !latestCall ||
+          latestCall.status === "completed" ||
+          latestCall.status === "failed" ||
+          latestCall.status === "cancelled"
+        ) {
           return false;
         }
 
@@ -145,7 +148,10 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
     // Check discharge readiness (content + contact validation)
     // Note: caseData from getCaseDetail includes metadata, so readiness check will work for both workflows
     // Use unknown intermediate to avoid deep type instantiation
-    const readiness = checkCaseDischargeReadiness(caseData as unknown as BackendCase, null);
+    const readiness = checkCaseDischargeReadiness(
+      caseData as unknown as BackendCase,
+      null,
+    );
 
     if (!readiness.isReady) {
       toast.error(
@@ -187,7 +193,7 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
   // Extract and sort data - use proper CallStatus type for status field
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const caseDataAny = caseData as any;
-  const allCalls = ((caseDataAny?.scheduled_discharge_calls ?? []) as Array<{
+  const allCalls = (caseDataAny?.scheduled_discharge_calls ?? []) as Array<{
     id: string;
     status: CallStatus;
     scheduled_for?: string | null;
@@ -208,26 +214,26 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
     duration_seconds?: number | null;
     cost?: number | null;
     created_at: string;
-  }>);
+  }>;
   const latestCall = allCalls[0];
-  const soapNotes = ((caseDataAny?.soap_notes ?? []) as Array<{
+  const soapNotes = (caseDataAny?.soap_notes ?? []) as Array<{
     id: string;
     subjective?: string | null;
     objective?: string | null;
     assessment?: string | null;
     plan?: string | null;
     created_at: string;
-  }>);
-  const transcriptions = ((caseDataAny?.transcriptions ?? []) as Array<{
+  }>;
+  const transcriptions = (caseDataAny?.transcriptions ?? []) as Array<{
     id: string;
     transcript?: string | null;
     created_at: string;
-  }>);
-  const dischargeSummaries = ((caseDataAny?.discharge_summaries ?? []) as Array<{
+  }>;
+  const dischargeSummaries = (caseDataAny?.discharge_summaries ?? []) as Array<{
     id: string;
     content?: string | null;
     created_at: string;
-  }>);
+  }>;
   // const scheduledEmails = (caseData?.scheduled_discharge_emails ??
   //   []) as Array<{
   //   id: string;
