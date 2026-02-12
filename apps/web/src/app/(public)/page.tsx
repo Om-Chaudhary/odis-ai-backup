@@ -7,7 +7,7 @@ import {
 } from "~/components/landing";
 
 // Enable PPR for landing page - static shell renders instantly
-export const experimental_ppr = true;
+export const cacheComponents = true;
 
 // Below-fold sections: dynamic import to reduce initial JS bundle
 const ProblemSection = dynamic(

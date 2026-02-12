@@ -128,7 +128,7 @@ const config = {
   // Experimental features for better performance
   experimental: {
     optimizePackageImports: ["lucide-react", "@radix-ui/react-icons"],
-    ppr: "incremental", // Enable Partial Prerendering for static shell optimization
+    cacheComponents: true, // Partial Prerendering (renamed from ppr in Next.js 16)
   },
 
   // Transpile internal packages to ensure proper handling
