@@ -2,7 +2,13 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import { motion, useInView, useReducedMotion } from "framer-motion";
+import {
+  m,
+  LazyMotion,
+  domAnimation,
+  useInView,
+  useReducedMotion,
+} from "framer-motion";
 import { usePostHog } from "posthog-js/react";
 import { NeonGradientCard } from "../ui/neon-gradient-card";
 import { Calendar, Phone, Sparkles, CheckCircle2, Shield } from "lucide-react";
@@ -42,6 +48,7 @@ export function PricingSection() {
   };
 
   return (
+    <LazyMotion features={domAnimation} strict>
     <section
       ref={sectionRef as React.LegacyRef<HTMLElement>}
       id="pricing"
@@ -51,7 +58,7 @@ export function PricingSection() {
       <SectionBackground variant="accent-cta" />
 
       <div className="relative mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        <motion.div
+        <m.div
           variants={fadeUpVariant}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
@@ -69,9 +76,9 @@ export function PricingSection() {
             See how Odis can handle your clinic&apos;s calls. We&apos;d love to
             hear from you.
           </p>
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           variants={fadeUpVariant}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
@@ -132,8 +139,9 @@ export function PricingSection() {
               </div>
             </div>
           </NeonGradientCard>
-        </motion.div>
+        </m.div>
       </div>
     </section>
+    </LazyMotion>
   );
 }

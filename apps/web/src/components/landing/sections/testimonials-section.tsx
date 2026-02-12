@@ -1,7 +1,13 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useInView, useReducedMotion } from "framer-motion";
+import {
+  m,
+  LazyMotion,
+  domAnimation,
+  useInView,
+  useReducedMotion,
+} from "framer-motion";
 import { Star, Quote, Calendar, BadgeCheck } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@odis-ai/shared/util";
@@ -167,6 +173,7 @@ export const TestimonialsSection = () => {
   };
 
   return (
+    <LazyMotion features={domAnimation} strict>
     <section
       ref={sectionRef as React.LegacyRef<HTMLElement>}
       id="testimonials"
@@ -177,7 +184,7 @@ export const TestimonialsSection = () => {
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section header */}
-        <motion.div
+        <m.div
           variants={fadeUpVariant}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
@@ -206,11 +213,11 @@ export const TestimonialsSection = () => {
               Trusted by leading veterinary practices
             </p>
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Marquee testimonials */}
         <div className="relative mb-12 flex w-full flex-col items-center justify-center overflow-hidden lg:mb-16">
-          <motion.div
+          <m.div
             variants={fadeUpVariant}
             initial="hidden"
             animate={isInView ? "visible" : "hidden"}
@@ -222,7 +229,7 @@ export const TestimonialsSection = () => {
                 <ReviewCard key={review.author} {...review} />
               ))}
             </Marquee>
-          </motion.div>
+          </m.div>
 
           {/* Gradient overlays */}
           <div className="from-background pointer-events-none absolute inset-y-0 left-0 w-1/4 bg-gradient-to-r to-transparent" />
@@ -230,7 +237,7 @@ export const TestimonialsSection = () => {
         </div>
 
         {/* Bottom CTA */}
-        <motion.div
+        <m.div
           variants={fadeUpVariant}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
@@ -257,8 +264,9 @@ export const TestimonialsSection = () => {
               <span className="relative">Schedule Your Demo</span>
             </Link>
           </div>
-        </motion.div>
+        </m.div>
       </div>
     </section>
+    </LazyMotion>
   );
 };

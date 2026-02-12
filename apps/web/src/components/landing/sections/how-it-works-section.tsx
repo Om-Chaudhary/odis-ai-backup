@@ -2,7 +2,9 @@
 
 import { useRef } from "react";
 import {
-  motion,
+  m,
+  LazyMotion,
+  domAnimation,
   useInView,
   useReducedMotion,
   useScroll,
@@ -77,20 +79,20 @@ const TimelineStep = ({
       {/* Desktop Layout */}
       <div className="hidden md:grid md:grid-cols-[1fr_100px_1fr] md:items-center md:gap-8">
         {/* Left Content (even indexes) */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, x: -50 }}
           animate={isInView ? { opacity: 1, x: 0 } : {}}
           transition={{ ...transition, delay: 0.2 }}
           className={cn("flex", isEven ? "justify-end" : "invisible")}
         >
           {isEven && <TimelineCard step={step} Icon={Icon} alignment="right" />}
-        </motion.div>
+        </m.div>
 
         {/* Center Node */}
         <div className="relative flex flex-col items-center justify-center">
           {/* Top connector */}
           {index > 0 && (
-            <motion.div
+            <m.div
               initial={{ scaleY: 0 }}
               animate={isInView ? { scaleY: 1 } : {}}
               transition={{ duration: shouldReduceMotion ? 0 : 0.4, delay: 0 }}
@@ -99,14 +101,14 @@ const TimelineStep = ({
           )}
 
           {/* Node circle */}
-          <motion.div
+          <m.div
             initial={{ scale: 0, opacity: 0 }}
             animate={isInView ? { scale: 1, opacity: 1 } : {}}
             transition={{ ...transition, delay: 0.1 }}
             className="group relative z-10"
           >
             {/* Animated glow */}
-            <motion.div
+            <m.div
               animate={
                 isInView
                   ? {
@@ -133,11 +135,11 @@ const TimelineStep = ({
                 {step.step}
               </div>
             </div>
-          </motion.div>
+          </m.div>
 
           {/* Bottom connector */}
           {index < steps.length - 1 && (
-            <motion.div
+            <m.div
               initial={{ scaleY: 0 }}
               animate={isInView ? { scaleY: 1 } : {}}
               transition={{
@@ -150,14 +152,14 @@ const TimelineStep = ({
         </div>
 
         {/* Right Content (odd indexes) */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, x: 50 }}
           animate={isInView ? { opacity: 1, x: 0 } : {}}
           transition={{ ...transition, delay: 0.2 }}
           className={cn("flex", !isEven ? "justify-start" : "invisible")}
         >
           {!isEven && <TimelineCard step={step} Icon={Icon} alignment="left" />}
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Mobile Layout */}
@@ -167,7 +169,7 @@ const TimelineStep = ({
           <div className="relative flex flex-col items-center">
             {/* Top connector */}
             {index > 0 && (
-              <motion.div
+              <m.div
                 initial={{ scaleY: 0 }}
                 animate={isInView ? { scaleY: 1 } : {}}
                 transition={{
@@ -179,13 +181,13 @@ const TimelineStep = ({
             )}
 
             {/* Node */}
-            <motion.div
+            <m.div
               initial={{ scale: 0 }}
               animate={isInView ? { scale: 1 } : {}}
               transition={{ ...transition, delay: 0.1 }}
               className="group relative z-10"
             >
-              <motion.div
+              <m.div
                 animate={
                   isInView ? { scale: [1, 1.4, 1], opacity: [0.4, 0, 0.4] } : {}
                 }
@@ -202,11 +204,11 @@ const TimelineStep = ({
                   {step.step}
                 </div>
               </div>
-            </motion.div>
+            </m.div>
 
             {/* Bottom connector */}
             {index < steps.length - 1 && (
-              <motion.div
+              <m.div
                 initial={{ scaleY: 0 }}
                 animate={isInView ? { scaleY: 1 } : {}}
                 transition={{
@@ -219,14 +221,14 @@ const TimelineStep = ({
           </div>
 
           {/* Card */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ ...transition, delay: 0.15 }}
             className="flex-1 pb-4"
           >
             <TimelineCard step={step} Icon={Icon} alignment="left" isMobile />
-          </motion.div>
+          </m.div>
         </div>
       </div>
     </div>
@@ -307,7 +309,7 @@ const TimelineCard = ({
             )}
           >
             {step.highlights.map((highlight, i) => (
-              <motion.div
+              <m.div
                 key={i}
                 initial={{ opacity: 0, x: alignment === "right" ? 15 : -15 }}
                 animate={isInView ? { opacity: 1, x: 0 } : {}}
@@ -327,7 +329,7 @@ const TimelineCard = ({
                 <span className="text-[13px] font-medium text-slate-600">
                   {highlight}
                 </span>
-              </motion.div>
+              </m.div>
             ))}
           </div>
         </div>
@@ -367,23 +369,24 @@ export const HowItWorksSection = () => {
   };
 
   return (
-    <section
-      ref={sectionRef as React.LegacyRef<HTMLElement>}
-      id="how-it-works"
-      className="relative w-full overflow-hidden py-20 sm:py-24 md:py-32 lg:py-40"
-    >
+    <LazyMotion features={domAnimation} strict>
+      <section
+        ref={sectionRef as React.LegacyRef<HTMLElement>}
+        id="how-it-works"
+        className="relative w-full overflow-hidden py-20 sm:py-24 md:py-32 lg:py-40"
+      >
       <SectionBackground variant="cool-blue" />
 
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ ...transition, delay: 0.1 }}
           className="mb-16 text-center sm:mb-20 lg:mb-24"
         >
           {/* Badge */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={isInView ? { opacity: 1, scale: 1 } : {}}
             transition={{ ...transition, delay: 0.15 }}
@@ -393,7 +396,7 @@ export const HowItWorksSection = () => {
             <span className="text-xs font-semibold tracking-wide text-teal-700 uppercase">
               How It Works
             </span>
-          </motion.div>
+          </m.div>
 
           <h2 className="font-display mb-5 text-3xl font-semibold tracking-tight text-slate-800 sm:text-4xl md:text-5xl">
             Live in{" "}
@@ -401,7 +404,7 @@ export const HowItWorksSection = () => {
               <span className="bg-gradient-to-r from-teal-600 via-emerald-500 to-teal-500 bg-clip-text text-transparent">
                 48 Hours
               </span>
-              <motion.span
+              <m.span
                 initial={{ scaleX: 0 }}
                 animate={isInView ? { scaleX: 1 } : {}}
                 transition={{ duration: 0.7, delay: 0.5, ease: "easeOut" }}
@@ -413,14 +416,14 @@ export const HowItWorksSection = () => {
           <p className="text-muted-foreground mx-auto max-w-xl text-base sm:text-lg">
             Get OdisAI answering calls for your clinic in days, not weeks.
           </p>
-        </motion.div>
+        </m.div>
 
         {/* Timeline */}
         <div className="relative">
           {/* Vertical progress line (desktop only) */}
           <div className="pointer-events-none absolute top-0 left-1/2 hidden h-full w-[2px] -translate-x-1/2 overflow-hidden rounded-full md:block">
             <div className="h-full w-full bg-teal-200/40" />
-            <motion.div
+            <m.div
               style={{ height: lineProgress }}
               className="absolute top-0 left-0 w-full bg-gradient-to-b from-teal-500 via-emerald-500 to-teal-400"
             />
@@ -440,7 +443,7 @@ export const HowItWorksSection = () => {
         </div>
 
         {/* Footer with CTA */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ ...transition, delay: 0.7 }}
@@ -479,8 +482,9 @@ export const HowItWorksSection = () => {
             <Calendar className="relative h-4 w-4" />
             <span className="relative">Get Started Today</span>
           </Link>
-        </motion.div>
+        </m.div>
       </div>
-    </section>
+      </section>
+    </LazyMotion>
   );
 };

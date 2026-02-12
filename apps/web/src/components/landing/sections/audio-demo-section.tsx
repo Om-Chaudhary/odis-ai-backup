@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { motion, useInView, useReducedMotion } from "framer-motion";
+import {
+  m,
+  LazyMotion,
+  domAnimation,
+  useInView,
+  useReducedMotion,
+} from "framer-motion";
 import { Headphones, CheckCircle2, Calendar } from "lucide-react";
 import { usePostHog } from "posthog-js/react";
 import Link from "next/link";
@@ -262,6 +268,7 @@ export function AudioDemoSection() {
   };
 
   return (
+    <LazyMotion features={domAnimation} strict>
     <section
       ref={sectionRef as React.LegacyRef<HTMLElement>}
       id="sample-calls"
@@ -272,7 +279,7 @@ export function AudioDemoSection() {
 
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <motion.div
+        <m.div
           variants={disableAnimations ? {} : fadeUpVariant}
           initial={disableAnimations ? false : "hidden"}
           animate={isInView ? "visible" : "hidden"}
@@ -305,7 +312,7 @@ export function AudioDemoSection() {
             These are actual discharge follow-up calls—unedited. Listen to how Odis
             handles real conversations with real clients.
           </p>
-        </motion.div>
+        </m.div>
 
         {/* Single column with alternating rotation */}
         <div className="mx-auto flex max-w-lg flex-col gap-12 py-4 sm:gap-16 md:gap-20">
@@ -340,7 +347,7 @@ export function AudioDemoSection() {
         </div>
 
         {/* Bottom CTA */}
-        <motion.div
+        <m.div
           variants={disableAnimations ? {} : fadeUpVariant}
           initial={disableAnimations ? false : "hidden"}
           animate={isInView ? "visible" : "hidden"}
@@ -370,8 +377,9 @@ export function AudioDemoSection() {
               15 minutes · No commitment · Live in 48 hours
             </p>
           </div>
-        </motion.div>
+        </m.div>
       </div>
     </section>
+    </LazyMotion>
   );
 }

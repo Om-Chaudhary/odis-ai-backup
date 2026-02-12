@@ -2,7 +2,9 @@
 
 import { useState, useRef } from "react";
 import {
-  motion,
+  m,
+  LazyMotion,
+  domAnimation,
   AnimatePresence,
   useInView,
   useReducedMotion,
@@ -113,6 +115,7 @@ export const FAQSection = ({
   };
 
   return (
+    <LazyMotion features={domAnimation} strict>
     <section
       ref={sectionRef as React.LegacyRef<HTMLElement>}
       id="faq"
@@ -124,7 +127,7 @@ export const FAQSection = ({
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-12 lg:gap-16">
           <div className="lg:col-span-4">
-            <motion.div
+            <m.div
               variants={fadeUpVariant}
               initial="hidden"
               animate={isInView ? "visible" : "hidden"}
@@ -149,7 +152,7 @@ export const FAQSection = ({
               </p>
 
               {/* Stats indicator */}
-              <motion.div
+              <m.div
                 variants={fadeUpVariant}
                 initial="hidden"
                 animate={isInView ? "visible" : "hidden"}
@@ -160,12 +163,12 @@ export const FAQSection = ({
                   <HelpCircle className="h-3.5 w-3.5" />
                   <span>{faqs.length} common questions</span>
                 </div>
-              </motion.div>
-            </motion.div>
+              </m.div>
+            </m.div>
           </div>
 
           <div className="lg:col-span-8">
-            <motion.div
+            <m.div
               variants={staggerContainer}
               initial="hidden"
               animate={isInView ? "visible" : "hidden"}
@@ -174,7 +177,7 @@ export const FAQSection = ({
               {faqs.map((faq, index) => {
                 const isOpen = openIndex === index;
                 return (
-                  <motion.div
+                  <m.div
                     key={index}
                     variants={itemVariant}
                     transition={{ duration: shouldReduceMotion ? 0 : 0.4 }}
@@ -213,7 +216,7 @@ export const FAQSection = ({
                         {faq.question}
                       </span>
 
-                      <motion.div
+                      <m.div
                         animate={{ rotate: isOpen ? 180 : 0 }}
                         transition={{ duration: 0.2 }}
                         className={cn(
@@ -228,12 +231,12 @@ export const FAQSection = ({
                         ) : (
                           <Plus className="h-4 w-4" />
                         )}
-                      </motion.div>
+                      </m.div>
                     </button>
 
                     <AnimatePresence initial={false}>
                       {isOpen && (
-                        <motion.div
+                        <m.div
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: "auto", opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
@@ -264,16 +267,16 @@ export const FAQSection = ({
                               </div>
                             </div>
                           </div>
-                        </motion.div>
+                        </m.div>
                       )}
                     </AnimatePresence>
-                  </motion.div>
+                  </m.div>
                 );
               })}
-            </motion.div>
+            </m.div>
 
             {/* Bottom CTA section */}
-            <motion.div
+            <m.div
               variants={fadeUpVariant}
               initial="hidden"
               animate={isInView ? "visible" : "hidden"}
@@ -310,10 +313,11 @@ export const FAQSection = ({
                   for personalized support.
                 </p>
               </div>
-            </motion.div>
+            </m.div>
           </div>
         </div>
       </div>
     </section>
+    </LazyMotion>
   );
 };

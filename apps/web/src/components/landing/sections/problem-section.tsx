@@ -1,7 +1,13 @@
 "use client";
 
 import { useRef, type Ref } from "react";
-import { motion, useInView, useReducedMotion } from "framer-motion";
+import {
+  m,
+  LazyMotion,
+  domAnimation,
+  useInView,
+  useReducedMotion,
+} from "framer-motion";
 import {
   Phone,
   PhoneOff,
@@ -81,7 +87,7 @@ function MissedOpportunityCard({
   const colors = colorClasses[accentColor];
 
   return (
-    <motion.div
+    <m.div
       variants={scaleInVariant}
       transition={{ delay, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
@@ -121,7 +127,7 @@ function MissedOpportunityCard({
           <span className="text-sm text-slate-500">{statLabel}</span>
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -142,6 +148,7 @@ export function ProblemSection() {
   };
 
   return (
+    <LazyMotion features={domAnimation} strict>
     <section
       ref={sectionRef as Ref<HTMLElement>}
       id="problem"
@@ -151,7 +158,7 @@ export function ProblemSection() {
 
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         {/* Section Header - Impactful Statement */}
-        <motion.div
+        <m.div
           variants={fadeUpVariant}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
@@ -172,7 +179,7 @@ export function ProblemSection() {
               <span className="relative z-10 bg-gradient-to-r from-red-600 via-orange-600 to-amber-600 bg-clip-text text-transparent">
                 Every Month
               </span>
-              <motion.span
+              <m.span
                 initial={{ scaleX: 0 }}
                 animate={isInView ? { scaleX: 1 } : { scaleX: 0 }}
                 transition={{ delay: 0.8, duration: 0.6, ease: "easeOut" }}
@@ -186,10 +193,10 @@ export function ProblemSection() {
             One missed call = one lost client. One skipped follow-up = one
             missed recheck. It adds up faster than you think.
           </p>
-        </motion.div>
+        </m.div>
 
         {/* What This Actually Means - Three Cards */}
-        <motion.div
+        <m.div
           variants={staggerContainer}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
@@ -224,10 +231,10 @@ export function ProblemSection() {
             delay={0.5}
             accentColor="orange"
           />
-        </motion.div>
+        </m.div>
 
         {/* Transition to Solution */}
-        <motion.div
+        <m.div
           variants={fadeUpVariant}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
@@ -255,8 +262,9 @@ export function ProblemSection() {
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </a>
           </div>
-        </motion.div>
+        </m.div>
       </div>
     </section>
+    </LazyMotion>
   );
 }

@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
-  motion,
+  m,
+  LazyMotion,
+  domAnimation,
   useInView,
   useScroll,
   useTransform,
@@ -122,11 +124,12 @@ export function HeroSection() {
   };
 
   return (
-    <section
-      id="home"
-      ref={sectionRef}
-      className="mx-0 p-0 sm:mx-8 sm:p-3 lg:mx-12 lg:p-4"
-    >
+    <LazyMotion features={domAnimation} strict>
+      <section
+        id="home"
+        ref={sectionRef}
+        className="mx-0 p-0 sm:mx-8 sm:p-3 lg:mx-12 lg:p-4"
+      >
       <div
         ref={containerRef}
         className="hero-container relative overflow-hidden rounded-none sm:rounded-3xl"
@@ -143,9 +146,9 @@ export function HeroSection() {
         />
 
         {/* Parallax hero image with blur treatment */}
-        <motion.div
+        <m.div
           className="absolute inset-0 transform-gpu"
-          style={{ y: imageY }}
+          style={{ y: imageY, willChange: "transform" }}
         >
           <Image
             alt=""
@@ -163,7 +166,7 @@ export function HeroSection() {
             )}
           />
           <div className="absolute inset-0 bg-[hsl(185,25%,7%)]/40 mix-blend-overlay" />
-        </motion.div>
+        </m.div>
 
         {/* Left gradient overlay for text readability */}
         <div className="absolute inset-0 bg-gradient-to-r from-[hsl(185,25%,7%)] via-[hsl(185,25%,7%)]/70 to-transparent" />
@@ -184,7 +187,7 @@ export function HeroSection() {
         {/* === CONTENT LAYER === */}
         <div className="relative z-10 flex min-h-[100dvh] flex-col p-0 sm:min-h-[94dvh] md:p-4">
           {/* ---- Navbar ---- */}
-          <motion.nav
+          <m.nav
             initial={{ opacity: 0, y: -12 }}
             animate={
               shouldAnimate ? { opacity: 1, y: 0 } : { opacity: 0, y: -12 }
@@ -252,12 +255,12 @@ export function HeroSection() {
                 <Menu className="h-6 w-6" />
               )}
             </button>
-          </motion.nav>
+          </m.nav>
 
           {/* Mobile menu */}
           <AnimatePresence>
             {isMobileMenuOpen && (
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
@@ -303,20 +306,21 @@ export function HeroSection() {
                     </Link>
                   </div>
                 </div>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
 
           {/* ---- Hero content (left-aligned) ---- */}
-          <motion.div
+          <m.div
             variants={staggerVariants}
             initial="hidden"
             animate={shouldAnimate ? "visible" : "hidden"}
             className="flex flex-1 flex-col justify-center px-6 sm:px-10 lg:px-16 xl:px-20"
+            style={{ willChange: "transform, opacity" }}
           >
             <div className="max-w-2xl py-16 sm:py-20 lg:py-0">
               {/* Trust badge */}
-              <motion.div variants={fadeInUpVariants} className="mb-6">
+              <m.div variants={fadeInUpVariants} className="mb-6">
                 <span
                   className={cn(
                     "inline-flex items-center gap-2 rounded-full px-4 py-1.5",
@@ -327,20 +331,20 @@ export function HeroSection() {
                   <span className="h-1.5 w-1.5 rounded-full bg-teal-400" />
                   Your Clinic's AI Phone Team
                 </span>
-              </motion.div>
+              </m.div>
 
               {/* Headline */}
-              <motion.h1
+              <m.h1
                 variants={fadeInUpVariants}
                 className="font-display text-[32px] leading-[1.08] font-bold tracking-[-0.02em] text-balance text-white sm:text-5xl lg:text-6xl xl:text-[68px]"
               >
                 Every call answered.
                 <br />
                 <span className="text-gradient">Every client cared for.</span>
-              </motion.h1>
+              </m.h1>
 
               {/* Description */}
-              <motion.p
+              <m.p
                 variants={fadeInUpVariants}
                 className="mt-5 max-w-[26rem] text-[15px] leading-[1.7] text-pretty text-white/50 sm:mt-6 sm:max-w-lg sm:text-[17px] sm:leading-[1.7]"
               >
@@ -355,10 +359,10 @@ export function HeroSection() {
                 >
                   Your team focuses on care. We handle the phones.
                 </AnimatedGradientText>
-              </motion.p>
+              </m.p>
 
               {/* CTAs */}
-              <motion.div
+              <m.div
                 variants={fadeInUpVariants}
                 className="mt-8 flex flex-col gap-3 sm:mt-9 sm:flex-row sm:items-center sm:gap-4"
               >
@@ -379,12 +383,12 @@ export function HeroSection() {
                   </span>
                   Hear Real Calls
                 </a>
-              </motion.div>
+              </m.div>
             </div>
-          </motion.div>
+          </m.div>
 
           {/* ---- Stats bar ---- */}
-          <motion.div
+          <m.div
             variants={fadeInVariants}
             initial="hidden"
             animate={shouldAnimate ? "visible" : "hidden"}
@@ -418,17 +422,17 @@ export function HeroSection() {
                 ))}
               </div>
             </div>
-          </motion.div>
+          </m.div>
         </div>
 
         {/* === FLOATING ELEMENTS === */}
 
         {/* Live call transcript card (desktop only, parallax) */}
-        <motion.div
-          style={{ y: cardY }}
-          className="absolute right-6 bottom-28 z-20 hidden lg:right-12 lg:block xl:right-20"
+        <m.div
+          style={{ y: cardY, willChange: "transform" }}
+          className="absolute right-6 bottom-28 z-20 hidden lg:right-12 lg:block xl:right-20 transform-gpu"
         >
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 24, scale: 0.95 }}
             animate={
               shouldAnimate
@@ -442,11 +446,11 @@ export function HeroSection() {
             }}
           >
             <HeroCallCard shouldAnimate={shouldAnimate} />
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
 
         {/* Scroll indicator */}
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={shouldAnimate ? { opacity: 1 } : { opacity: 0 }}
           transition={{ delay: 1.5, duration: 0.6 }}
@@ -457,7 +461,7 @@ export function HeroSection() {
             className="group flex flex-col items-center gap-2 text-white/20 transition-colors hover:text-white/40"
             aria-label="Scroll to learn more"
           >
-            <motion.div
+            <m.div
               animate={{ y: [0, 6, 0] }}
               transition={{
                 repeat: Infinity,
@@ -466,10 +470,11 @@ export function HeroSection() {
               }}
             >
               <ChevronDown className="h-5 w-5" />
-            </motion.div>
+            </m.div>
           </a>
-        </motion.div>
+        </m.div>
       </div>
-    </section>
+      </section>
+    </LazyMotion>
   );
 }

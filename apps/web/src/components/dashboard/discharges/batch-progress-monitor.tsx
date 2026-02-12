@@ -47,11 +47,26 @@ export function BatchProgressMonitor({
   const [isMinimized, setIsMinimized] = useState(false);
   const [batchStatus, setBatchStatus] = useState<BatchStatus | null>(null);
 
-  // Query batch status with polling
+  // Query batch status with smart polling and exponential backoff
   const { data, isLoading } = api.cases.getBatchStatus.useQuery(
     { batchId },
     {
-      refetchInterval: 2000, // Poll every 2 seconds
+      refetchInterval: (query) => {
+        const data = query.state.data;
+        if (!data) return 5000; // Start at 5s instead of 2s
+
+        // Stop polling completed/cancelled batches
+        if (data.status === "completed" || data.status === "cancelled") {
+          return false;
+        }
+
+        // Exponential backoff based on progress
+        const progress = data.processed_cases / data.total_cases;
+        if (progress < 0.2) return 10000; // Early: 10s
+        if (progress < 0.6) return 5000;  // Mid: 5s
+        return 3000; // Final push: 3s
+      },
+      refetchIntervalInBackground: false, // Stop polling when tab not visible
     },
   );
 

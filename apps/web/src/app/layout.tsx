@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Outfit, Inter, Lora, Plus_Jakarta_Sans } from "next/font/google";
+import { Outfit, Inter } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 import { Analytics } from "@vercel/analytics/next";
 import Script from "next/script";
@@ -7,30 +7,21 @@ import "~/styles/globals.css";
 import { ClerkProvider } from "~/components/providers/clerk-provider";
 import { ClientProviders } from "~/components/providers/client-providers";
 import { StructuredData } from "~/components/seo/structured-data";
+import { ServiceWorkerRegister } from "~/components/sw-register";
 import { env } from "~/env.js";
 
 const outfit = Outfit({
   subsets: ["latin"],
   variable: "--font-outfit",
   display: "swap",
+  preload: true,
 });
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
-});
-
-const lora = Lora({
-  subsets: ["latin"],
-  variable: "--font-lora",
-  display: "swap",
-});
-
-const plusJakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  variable: "--font-plus-jakarta",
-  display: "swap",
+  preload: true,
 });
 
 const geistMono = GeistMono;
@@ -148,6 +139,8 @@ export default function RootLayout({
       <head>
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://us.i.posthog.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=AW-17852929075"
           strategy="lazyOnload"
@@ -162,10 +155,11 @@ export default function RootLayout({
         </Script>
       </head>
       <body
-        className={`font-sans antialiased ${outfit.variable} ${inter.variable} ${lora.variable} ${plusJakarta.variable} ${geistMono.variable}`}
+        className={`font-sans antialiased ${outfit.variable} ${inter.variable} ${geistMono.variable}`}
       >
         <ClerkProvider>
           <StructuredData />
+          <ServiceWorkerRegister />
           <ClientProviders>{children}</ClientProviders>
           <Analytics />
         </ClerkProvider>

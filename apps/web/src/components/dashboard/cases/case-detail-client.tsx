@@ -55,7 +55,7 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
   const [currentTime, setCurrentTime] = useState(0);
   const showRawTranscript = true; // Default to showing original VAPI transcript
 
-  // Fetch case detail
+  // Fetch case detail with smart polling
   const {
     data: caseData,
     isLoading,
@@ -63,7 +63,31 @@ export function CaseDetailClient({ caseId }: CaseDetailClientProps) {
     refetch,
   } = api.cases.getCaseDetail.useQuery(
     { id: caseId },
-    { enabled: !!caseId, refetchInterval: 5000 }, // Poll for status updates
+    {
+      enabled: !!caseId,
+      // Only poll if case has active discharge call
+      refetchInterval: (query) => {
+        const data = query.state.data;
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const dataAny = data as any;
+        const calls = dataAny?.scheduled_discharge_calls ?? [];
+        const latestCall = calls[0] as { status: string } | undefined;
+
+        // Don't poll if no calls or call is completed/failed/cancelled
+        if (!latestCall ||
+            latestCall.status === "completed" ||
+            latestCall.status === "failed" ||
+            latestCall.status === "cancelled") {
+          return false;
+        }
+
+        // Poll active calls at 10s (reduced from 5s)
+        return 10000;
+      },
+      // Stop polling when tab not visible
+      refetchIntervalInBackground: false,
+    },
   );
 
   // Fetch discharge settings

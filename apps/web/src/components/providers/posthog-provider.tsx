@@ -1,40 +1,72 @@
 "use client";
 
-import posthog from "posthog-js";
-import { PostHogProvider as PHProvider } from "posthog-js/react";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState, useRef } from "react";
 
-// Track if PostHog has been initialized
-let posthogInitialized = false;
+// Lazy import PostHog modules
+let posthogPromise: Promise<typeof import("posthog-js")> | null = null;
+let PostHogProviderPromise: Promise<any> | null = null;
+let posthogInstance: any = null;
+
+function getPostHog() {
+  if (!posthogPromise) {
+    posthogPromise = import("posthog-js");
+  }
+  return posthogPromise;
+}
+
+function getPostHogProvider() {
+  if (!PostHogProviderPromise) {
+    PostHogProviderPromise = import("posthog-js/react").then(
+      (mod) => mod.PostHogProvider
+    );
+  }
+  return PostHogProviderPromise;
+}
 
 export function PostHogProvider({ children }: { children: ReactNode }) {
-  const [isClient, setIsClient] = useState(false);
+  const [Provider, setProvider] = useState<any>(null);
+  const initRef = useRef(false);
 
   useEffect(() => {
-    // Initialize PostHog only once on the client
-    if (
-      typeof window !== "undefined" &&
-      !posthogInitialized &&
-      process.env.NEXT_PUBLIC_POSTHOG_KEY
-    ) {
-      posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
-        api_host:
-          process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
-        ui_host: "https://us.posthog.com",
-        capture_pageview: true, // Enable automatic pageview tracking
-        capture_exceptions: false,
-        person_profiles: "identified_only", // Only create profiles for identified users
-        debug: false, // Disable debug mode to reduce console noise
-      });
-      posthogInitialized = true;
-    }
-    setIsClient(true);
+    // Defer PostHog until after critical rendering
+    const timer = setTimeout(async () => {
+      if (initRef.current) return;
+      initRef.current = true;
+
+      try {
+        const [posthogModule, ProviderComponent] = await Promise.all([
+          getPostHog(),
+          getPostHogProvider(),
+        ]);
+
+        if (
+          typeof window !== "undefined" &&
+          process.env.NEXT_PUBLIC_POSTHOG_KEY
+        ) {
+          posthogModule.default.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
+            api_host:
+              process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com",
+            ui_host: "https://us.posthog.com",
+            capture_pageview: true,
+            capture_exceptions: false,
+            person_profiles: "identified_only",
+            debug: false,
+          });
+          posthogInstance = posthogModule.default;
+          setProvider(() => ProviderComponent);
+        }
+      } catch (error) {
+        console.error("[PostHog] Failed to load:", error);
+      }
+    }, 1500); // Load after 1.5s
+
+    return () => clearTimeout(timer);
   }, []);
 
-  // During SSR/SSG, render children without the PostHog provider
-  if (!isClient) {
+  // Render children immediately, wrap when PostHog ready
+  if (!Provider || !posthogInstance) {
     return <>{children}</>;
   }
 
-  return <PHProvider client={posthog}>{children}</PHProvider>;
+  return <Provider client={posthogInstance}>{children}</Provider>;
 }

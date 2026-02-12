@@ -2,7 +2,9 @@
 
 import React, { useRef, useState, useEffect } from "react";
 import {
-  motion,
+  m,
+  LazyMotion,
+  domAnimation,
   useInView,
   useReducedMotion,
   AnimatePresence,
@@ -74,11 +76,11 @@ const VoiceWaveSkeleton = () => {
   return (
     <div className="relative flex h-full w-full flex-col items-center justify-center gap-4 overflow-hidden p-4">
       {/* AI Brain Indicator */}
-      <motion.div
+      <m.div
         className="absolute top-4 right-4 flex items-center gap-1.5"
         animate={{ opacity: isProcessing ? 1 : 0.5 }}
       >
-        <motion.div
+        <m.div
           animate={isProcessing ? { rotate: 360 } : { rotate: 0 }}
           transition={{
             duration: 1,
@@ -87,17 +89,17 @@ const VoiceWaveSkeleton = () => {
           }}
         >
           <Bot className="h-4 w-4 text-teal-500" />
-        </motion.div>
+        </m.div>
         <span className="text-[10px] font-medium text-teal-600">
           {isProcessing ? "Processing..." : "AI Ready"}
         </span>
-      </motion.div>
+      </m.div>
 
       {/* Main Voice Interface */}
       <div className="relative flex items-center justify-center">
         {/* Outer Pulse Rings */}
         {[...Array(4)].map((_, i) => (
-          <motion.div
+          <m.div
             key={i}
             className="absolute rounded-full border border-teal-400/30"
             style={{
@@ -118,7 +120,7 @@ const VoiceWaveSkeleton = () => {
         ))}
 
         {/* Center Voice Button */}
-        <motion.div
+        <m.div
           className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-teal-400 via-teal-500 to-emerald-600 shadow-xl shadow-teal-500/40"
           animate={{
             scale: isProcessing ? [1, 1.05, 1] : 1,
@@ -128,7 +130,7 @@ const VoiceWaveSkeleton = () => {
             repeat: isProcessing ? Infinity : 0,
           }}
         >
-          <motion.div
+          <m.div
             animate={isProcessing ? { scale: [1, 1.2, 1] } : {}}
             transition={{ duration: 0.3, repeat: isProcessing ? Infinity : 0 }}
           >
@@ -137,10 +139,10 @@ const VoiceWaveSkeleton = () => {
             ) : (
               <Mic className="h-8 w-8 text-white" />
             )}
-          </motion.div>
+          </m.div>
 
           {/* Active Indicator */}
-          <motion.div
+          <m.div
             className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-emerald-400"
             animate={{
               scale: [1, 1.2, 1],
@@ -152,13 +154,13 @@ const VoiceWaveSkeleton = () => {
             }}
             transition={{ duration: 1.5, repeat: Infinity }}
           />
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Audio Waveform Visualization */}
       <div className="flex h-10 items-center justify-center gap-1">
         {[...Array(12)].map((_, i) => (
-          <motion.div
+          <m.div
             key={i}
             className="w-1 rounded-full bg-gradient-to-t from-teal-400 to-emerald-400"
             animate={{
@@ -178,7 +180,7 @@ const VoiceWaveSkeleton = () => {
 
       {/* AI Response Text */}
       <AnimatePresence mode="wait">
-        <motion.div
+        <m.div
           key={currentPhrase}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -189,7 +191,7 @@ const VoiceWaveSkeleton = () => {
           <span className="text-xs font-medium text-slate-700">
             {phrases[currentPhrase]}
           </span>
-        </motion.div>
+        </m.div>
       </AnimatePresence>
 
       {/* Status Badge */}
@@ -329,21 +331,21 @@ const CallActivitySkeleton = () => {
             Live Activity
           </span>
         </div>
-        <motion.div
+        <m.div
           className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5"
           animate={{ opacity: [1, 0.5, 1] }}
           transition={{ duration: 2, repeat: Infinity }}
         >
           <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
           <span className="text-[10px] font-medium text-emerald-700">Live</span>
-        </motion.div>
+        </m.div>
       </div>
 
       {/* Notifications List */}
       <div className="flex flex-1 flex-col gap-2 overflow-hidden">
         <AnimatePresence mode="popLayout">
           {notifications.map((notif, idx) => (
-            <motion.div
+            <m.div
               key={notif.id}
               layout
               initial={{ opacity: 0, x: -20, scale: 0.95 }}
@@ -366,7 +368,7 @@ const CallActivitySkeleton = () => {
             >
               {/* New indicator */}
               {notif.isNew && (
-                <motion.div
+                <m.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   className="absolute -top-1 -left-1 h-3 w-3 rounded-full bg-teal-500"
@@ -374,7 +376,7 @@ const CallActivitySkeleton = () => {
               )}
 
               {/* Icon */}
-              <motion.div
+              <m.div
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-lg shadow-sm transition-transform duration-300"
                 style={{ backgroundColor: `${notif.color}15` }}
                 animate={activeIndex === idx ? { scale: [1, 1.1, 1] } : {}}
@@ -385,7 +387,7 @@ const CallActivitySkeleton = () => {
                 }}
               >
                 {getIconSymbol(notif.icon)}
-              </motion.div>
+              </m.div>
 
               {/* Content */}
               <div className="min-w-0 flex-1">
@@ -403,16 +405,16 @@ const CallActivitySkeleton = () => {
                   {notif.time}
                 </span>
                 {activeIndex === idx && (
-                  <motion.div
+                  <m.div
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="flex items-center gap-0.5"
                   >
                     <ChevronRight className="h-3 w-3 text-teal-500" />
-                  </motion.div>
+                  </m.div>
                 )}
               </div>
-            </motion.div>
+            </m.div>
           ))}
         </AnimatePresence>
       </div>
@@ -455,7 +457,7 @@ const PimsIntegrationSkeleton = () => {
       {/* Left Side - PIMS Systems */}
       <div className="flex flex-col gap-3">
         {pimsSystems.map((pims, idx) => (
-          <motion.div
+          <m.div
             key={pims.name}
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -481,13 +483,13 @@ const PimsIntegrationSkeleton = () => {
               <p className="text-[10px] text-slate-400">Connected</p>
             </div>
             {syncPhase === idx + 1 && (
-              <motion.div
+              <m.div
                 className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-teal-500"
                 animate={{ scale: [1, 1.2, 1] }}
                 transition={{ duration: 0.5, repeat: Infinity }}
               />
             )}
-          </motion.div>
+          </m.div>
         ))}
       </div>
 
@@ -499,7 +501,7 @@ const PimsIntegrationSkeleton = () => {
         {/* Data Packets */}
         <AnimatePresence>
           {dataPackets.map((id, idx) => (
-            <motion.div
+            <m.div
               key={id}
               className="absolute h-2 w-2 rounded-full bg-teal-500 shadow-lg shadow-teal-500/50"
               initial={{ left: "0%", opacity: 0, scale: 0 }}
@@ -523,7 +525,7 @@ const PimsIntegrationSkeleton = () => {
         {/* Sync Arrows */}
         <div className="flex flex-col gap-2">
           {[...Array(3)].map((_, i) => (
-            <motion.div
+            <m.div
               key={i}
               className="h-0.5 w-16 rounded-full bg-gradient-to-r from-teal-300 to-emerald-400"
               animate={{
@@ -543,7 +545,7 @@ const PimsIntegrationSkeleton = () => {
       </div>
 
       {/* Right Side - ODIS AI Hub */}
-      <motion.div
+      <m.div
         className="relative flex flex-col items-center gap-2"
         animate={{
           scale: syncPhase === 0 ? [1, 1.05, 1] : 1,
@@ -552,7 +554,7 @@ const PimsIntegrationSkeleton = () => {
       >
         <div className="relative">
           {/* Outer glow */}
-          <motion.div
+          <m.div
             className="absolute inset-0 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-500 blur-xl"
             animate={{ opacity: [0.3, 0.6, 0.3] }}
             transition={{ duration: 2, repeat: Infinity }}
@@ -560,16 +562,16 @@ const PimsIntegrationSkeleton = () => {
 
           {/* Main hub */}
           <div className="relative flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-400 via-teal-500 to-emerald-600 shadow-xl shadow-teal-500/30">
-            <motion.div
+            <m.div
               animate={{ rotate: 360 }}
               transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
             >
               <Shield className="h-10 w-10 text-white" />
-            </motion.div>
+            </m.div>
           </div>
 
           {/* Sync indicator */}
-          <motion.div
+          <m.div
             className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-lg"
             animate={{ rotate: syncPhase > 0 ? 360 : 0 }}
             transition={{ duration: 1, ease: "linear" }}
@@ -580,12 +582,12 @@ const PimsIntegrationSkeleton = () => {
                 syncPhase > 0 ? "text-teal-500" : "text-slate-400",
               )}
             />
-          </motion.div>
+          </m.div>
         </div>
 
         <div className="text-center">
           <p className="text-xs font-semibold text-slate-700">ODIS AI</p>
-          <motion.p
+          <m.p
             className="text-[10px] text-teal-600"
             animate={{ opacity: [1, 0.5, 1] }}
             transition={{ duration: 1.5, repeat: Infinity }}
@@ -593,9 +595,9 @@ const PimsIntegrationSkeleton = () => {
             {syncPhase === 0
               ? "All synced"
               : `Syncing ${pimsSystems[syncPhase - 1]?.name}...`}
-          </motion.p>
+          </m.p>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   );
 };
@@ -645,11 +647,11 @@ const AnalyticsSkeleton = () => {
       {/* Metrics Grid */}
       <div className="grid flex-1 grid-cols-3 gap-4">
         {/* Calls Today */}
-        <motion.div
+        <m.div
           className="flex flex-col items-center justify-center rounded-xl bg-gradient-to-br from-teal-50 to-teal-100/50 p-3"
           whileHover={{ scale: 1.02 }}
         >
-          <motion.div
+          <m.div
             className="flex items-center gap-1"
             key={callsToday}
             initial={{ scale: 1.2, color: "#14b8a6" }}
@@ -660,13 +662,13 @@ const AnalyticsSkeleton = () => {
             <span className="text-3xl font-bold text-teal-700">
               <NumberTicker value={callsToday} />
             </span>
-          </motion.div>
+          </m.div>
           <p className="mt-1 text-xs font-medium text-teal-600">Calls Today</p>
 
           {/* Mini Sparkline */}
           <div className="mt-2 flex h-6 items-end gap-0.5">
             {sparklineData.map((val, i) => (
-              <motion.div
+              <m.div
                 key={i}
                 className="w-1 rounded-full bg-teal-400"
                 initial={{ height: 0 }}
@@ -675,10 +677,10 @@ const AnalyticsSkeleton = () => {
               />
             ))}
           </div>
-        </motion.div>
+        </m.div>
 
         {/* Connected Rate */}
-        <motion.div
+        <m.div
           className="flex flex-col items-center justify-center rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-3"
           whileHover={{ scale: 1.02 }}
         >
@@ -693,7 +695,7 @@ const AnalyticsSkeleton = () => {
                 stroke="#d1fae5"
                 strokeWidth="4"
               />
-              <motion.circle
+              <m.circle
                 cx="32"
                 cy="32"
                 r="28"
@@ -717,10 +719,10 @@ const AnalyticsSkeleton = () => {
             </div>
           </div>
           <p className="mt-1 text-xs font-medium text-emerald-600">Connected</p>
-        </motion.div>
+        </m.div>
 
         {/* Satisfaction */}
-        <motion.div
+        <m.div
           className="flex flex-col items-center justify-center rounded-xl bg-gradient-to-br from-violet-50 to-violet-100/50 p-3"
           whileHover={{ scale: 1.02 }}
         >
@@ -738,7 +740,7 @@ const AnalyticsSkeleton = () => {
           {/* Star Rating */}
           <div className="mt-2 flex gap-0.5">
             {[...Array(5)].map((_, i) => (
-              <motion.div
+              <m.div
                 key={i}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
@@ -752,10 +754,10 @@ const AnalyticsSkeleton = () => {
                       : "fill-slate-200 text-slate-200",
                   )}
                 />
-              </motion.div>
+              </m.div>
             ))}
           </div>
-        </motion.div>
+        </m.div>
       </div>
     </div>
   );
@@ -797,7 +799,7 @@ const SchedulingSkeleton = () => {
   return (
     <div className="relative flex h-full w-full items-center justify-center gap-4 overflow-hidden p-4">
       {/* Calendar */}
-      <motion.div
+      <m.div
         animate={{
           scale: bookingStep === 0 ? 1.02 : 1,
           opacity: showConfirmation ? 0.5 : 1,
@@ -810,7 +812,7 @@ const SchedulingSkeleton = () => {
           onSelect={setSelectedDate}
           className="rounded-xl border border-slate-200 bg-white shadow-sm"
         />
-      </motion.div>
+      </m.div>
 
       {/* Time Slots Panel */}
       <div className="flex flex-col gap-2">
@@ -823,7 +825,7 @@ const SchedulingSkeleton = () => {
 
         <div className="flex flex-col gap-1.5">
           {timeSlots.map((slot, idx) => (
-            <motion.button
+            <m.button
               key={slot}
               initial={{ opacity: 0, x: 20 }}
               animate={{
@@ -841,11 +843,11 @@ const SchedulingSkeleton = () => {
             >
               <span>{slot}</span>
               {selectedSlot === slot && (
-                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                <m.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
                   <Check className="h-3 w-3 text-teal-600" />
-                </motion.div>
+                </m.div>
               )}
-            </motion.button>
+            </m.button>
           ))}
         </div>
       </div>
@@ -853,21 +855,21 @@ const SchedulingSkeleton = () => {
       {/* Confirmation Overlay */}
       <AnimatePresence>
         {showConfirmation && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             className="absolute inset-4 flex items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 backdrop-blur-sm"
           >
             <div className="flex flex-col items-center gap-3 text-center">
-              <motion.div
+              <m.div
                 className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/30"
                 initial={{ scale: 0 }}
                 animate={{ scale: [0, 1.2, 1] }}
                 transition={{ duration: 0.5 }}
               >
                 <Check className="h-7 w-7 text-white" />
-              </motion.div>
+              </m.div>
               <div>
                 <p className="text-sm font-semibold text-slate-800">
                   Appointment Booked!
@@ -876,16 +878,16 @@ const SchedulingSkeleton = () => {
                   {selectedSlot} confirmed
                 </p>
               </div>
-              <motion.div
+              <m.div
                 className="flex items-center gap-1 text-[10px] text-emerald-600"
                 animate={{ opacity: [1, 0.5, 1] }}
                 transition={{ duration: 1, repeat: Infinity }}
               >
                 <CalendarIcon className="h-3 w-3" />
                 <span>Synced to calendar</span>
-              </motion.div>
+              </m.div>
             </div>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>
@@ -1009,24 +1011,25 @@ export function FeaturesSection() {
   };
 
   return (
-    <section
-      ref={sectionRef}
-      id="features"
-      className="relative z-20 w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
-    >
+    <LazyMotion features={domAnimation} strict>
+      <section
+        ref={sectionRef}
+        id="features"
+        className="relative z-20 w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
+      >
       {/* Background */}
       <SectionBackground variant="hero-glow" />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <motion.div
+        <m.div
           variants={fadeUpVariant}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
           transition={{ ...transition, delay: 0.1 }}
           className="mb-12 text-center lg:mb-16"
         >
-          <motion.div
+          <m.div
             variants={fadeUpVariant}
             className="mb-5 flex flex-wrap items-center justify-center gap-2"
           >
@@ -1038,8 +1041,8 @@ export function FeaturesSection() {
               <Shield className="h-3 w-3" />
               HIPAA Compliant
             </span>
-          </motion.div>
-          <motion.h2
+          </m.div>
+          <m.h2
             variants={fadeUpVariant}
             className="font-display mb-4 text-2xl font-medium tracking-tight text-slate-900 sm:text-3xl md:text-4xl lg:text-5xl"
           >
@@ -1048,15 +1051,15 @@ export function FeaturesSection() {
               Saves You Hours
             </span>{" "}
             Every Week
-          </motion.h2>
-          <motion.p
+          </m.h2>
+          <m.p
             variants={fadeUpVariant}
             className="mx-auto max-w-2xl text-base text-slate-600 sm:text-lg"
           >
             Answer after-hours calls automatically. Follow up on every discharge without lifting a finger.
             See the impact in real-time.
-          </motion.p>
-        </motion.div>
+          </m.p>
+        </m.div>
 
         {/* Features Grid */}
         <div className="relative">
@@ -1080,7 +1083,7 @@ export function FeaturesSection() {
         </div>
 
         {/* Mini CTA */}
-        <motion.div
+        <m.div
           variants={fadeUpVariant}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
@@ -1094,8 +1097,9 @@ export function FeaturesSection() {
             <span>See how it works</span>
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
-        </motion.div>
+        </m.div>
       </div>
-    </section>
+      </section>
+    </LazyMotion>
   );
 }

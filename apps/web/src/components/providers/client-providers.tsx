@@ -3,36 +3,34 @@
 import dynamic from "next/dynamic";
 import { Suspense, type ReactNode } from "react";
 
-// Dynamically import providers with SSR disabled to prevent prerender errors
-const ClientPostHogProvider = dynamic(
-  () => import("./client-posthog-provider"),
-  { ssr: false, loading: () => null },
-);
-
-const TRPCReactProvider = dynamic(
+// Bundle all providers into single dynamic import for parallel loading
+const ProviderBundle = dynamic(
   () =>
-    import("~/trpc/Provider").then((mod) => ({
-      default: mod.TRPCReactProvider,
+    Promise.all([
+      import("./client-posthog-provider"),
+      import("~/trpc/Provider").then((mod) => mod.TRPCReactProvider),
+      import("nuqs/adapters/next/app").then((mod) => mod.NuqsAdapter),
+    ]).then(([PostHog, TRPC, Nuqs]) => ({
+      default: function Providers({ children }: { children: ReactNode }) {
+        return (
+          <PostHog.default>
+            <TRPC>
+              <Nuqs>{children}</Nuqs>
+            </TRPC>
+          </PostHog.default>
+        );
+      },
     })),
-  { ssr: false, loading: () => null },
-);
-
-const NuqsAdapter = dynamic(
-  () =>
-    import("nuqs/adapters/next/app").then((mod) => ({
-      default: mod.NuqsAdapter,
-    })),
-  { ssr: false, loading: () => null },
+  {
+    ssr: false,
+    loading: () => null,
+  }
 );
 
 export function ClientProviders({ children }: { children: ReactNode }) {
   return (
     <Suspense fallback={children}>
-      <ClientPostHogProvider>
-        <TRPCReactProvider>
-          <NuqsAdapter>{children}</NuqsAdapter>
-        </TRPCReactProvider>
-      </ClientPostHogProvider>
+      <ProviderBundle>{children}</ProviderBundle>
     </Suspense>
   );
 }
