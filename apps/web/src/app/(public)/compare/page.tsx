@@ -15,6 +15,8 @@ import { cn } from "@odis-ai/shared/util";
 import { comparisons } from "./data";
 import { solutions } from "../solutions/data";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://odisai.net";
+
 export const metadata: Metadata = {
   title:
     "Compare OdisAI vs Competitors | Veterinary Answering Service Alternatives",
@@ -30,12 +32,12 @@ export const metadata: Metadata = {
     "best vet answering service",
     "vet clinic phone automation comparison",
   ],
-  alternates: { canonical: "/compare" },
+  alternates: { canonical: `${siteUrl}/compare` },
   openGraph: {
     title: "OdisAI vs Competitors | Veterinary Answering Comparison",
     description:
       "Why clinics are switching to OdisAI. Compare to GuardianVets, VetTriage, Smith.ai, Ruby, and Dialzara.",
-    url: "/compare",
+    url: `${siteUrl}/compare`,
   },
 };
 

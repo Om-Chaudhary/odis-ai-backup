@@ -42,15 +42,17 @@ export async function generateMetadata({
     return { title: "Comparison Not Found" };
   }
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://odisai.net";
+
   return {
     title: data.metaTitle,
     description: data.metaDescription,
     keywords: data.keywords,
-    alternates: { canonical: `/compare/${slug}` },
+    alternates: { canonical: `${siteUrl}/compare/${slug}` },
     openGraph: {
       title: data.metaTitle,
       description: data.metaDescription,
-      url: `/compare/${slug}`,
+      url: `${siteUrl}/compare/${slug}`,
     },
   };
 }

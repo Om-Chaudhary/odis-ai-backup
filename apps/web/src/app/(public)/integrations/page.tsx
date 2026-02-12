@@ -7,7 +7,7 @@ import {
 } from "~/components/marketing";
 import { cn } from "@odis-ai/shared/util";
 
-export const dynamic = "force-dynamic";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://odisai.net";
 
 export const metadata: Metadata = {
   title: "Integrations | Connect OdisAI with Your Practice Software",
@@ -23,13 +23,13 @@ export const metadata: Metadata = {
     "OdisAI integrations",
   ],
   alternates: {
-    canonical: "/integrations",
+    canonical: `${siteUrl}/integrations`,
   },
   openGraph: {
     title: "OdisAI Integrations | Connect with Your Vet Software",
     description:
       "Seamless integrations with IDEXX Neo, ezyVet, Cornerstone, and more veterinary practice management systems.",
-    url: "/integrations",
+    url: `${siteUrl}/integrations`,
   },
 };
 

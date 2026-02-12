@@ -36,15 +36,17 @@ export async function generateMetadata({
     return { title: "Solution Not Found" };
   }
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://odisai.net";
+
   return {
     title: data.metaTitle,
     description: data.metaDescription,
     keywords: data.keywords,
-    alternates: { canonical: `/solutions/${slug}` },
+    alternates: { canonical: `${siteUrl}/solutions/${slug}` },
     openGraph: {
       title: data.metaTitle,
       description: data.metaDescription,
-      url: `/solutions/${slug}`,
+      url: `${siteUrl}/solutions/${slug}`,
     },
   };
 }

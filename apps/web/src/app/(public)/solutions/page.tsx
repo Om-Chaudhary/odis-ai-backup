@@ -59,6 +59,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Circle,
 };
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://odisai.net";
+
 export const metadata: Metadata = {
   title: "Veterinary AI Solutions | Phone Automation for Vet Clinics | OdisAI",
   description:
@@ -73,12 +75,12 @@ export const metadata: Metadata = {
     "vet clinic phone service",
     "animal hospital answering service",
   ],
-  alternates: { canonical: "/solutions" },
+  alternates: { canonical: `${siteUrl}/solutions` },
   openGraph: {
     title: "OdisAI Solutions | AI Voice Agents for Veterinary Clinics",
     description:
       "Stop losing revenue to missed calls. 24/7 answering, after-hours coverage, discharge follow-ups, emergency triage, and AI reception.",
-    url: "/solutions",
+    url: `${siteUrl}/solutions`,
   },
 };
 

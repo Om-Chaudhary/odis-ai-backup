@@ -555,6 +555,8 @@ export async function generateMetadata({
     };
   }
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://odisai.net";
+
   return {
     title: `OdisAI + ${integration.name} Integration | Veterinary AI Voice Agents`,
     description: integration.description,
@@ -567,18 +569,15 @@ export async function generateMetadata({
       `OdisAI ${integration.name}`,
     ],
     alternates: {
-      canonical: `/integrations/${slug}`,
+      canonical: `${siteUrl}/integrations/${slug}`,
     },
     openGraph: {
       title: `OdisAI + ${integration.name} Integration`,
       description: integration.description,
-      url: `/integrations/${slug}`,
+      url: `${siteUrl}/integrations/${slug}`,
     },
   };
 }
-
-// Disable static generation to avoid PostHog context issues during build
-export const dynamic = "force-dynamic";
 
 export default async function IntegrationPage({
   params,

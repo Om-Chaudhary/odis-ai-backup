@@ -288,7 +288,8 @@
       "Bash(open /Users/om/Documents/GitHub/odis-ai-web/attention-card-demo.html)",
       "WebFetch(domain:clerk.com)",
       "Bash(vercel:*)",
-      "WebFetch(domain:api.github.com)"
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:search.google.com)"
     ],
     "deny": [],
     "ask": [],
