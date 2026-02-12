@@ -2033,12 +2033,22 @@ function convertToV2Records(
   }>,
   timezone = "America/Los_Angeles",
 ): AppointmentV2Record[] {
+  const DEFAULT_DURATION_MINUTES = 15;
+
   return records.map((record) => {
+    // When IDEXX returns no duration (start_time == end_time), default to 15 minutes
+    let endTime = record.end_time;
+    if (record.start_time === record.end_time) {
+      const [h, m] = record.start_time.split(":").map(Number);
+      const d = new Date(2000, 0, 1, h ?? 0, (m ?? 0) + DEFAULT_DURATION_MINUTES);
+      endTime = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:00`;
+    }
+
     // Create time range from date + start/end times
     const timeRange = createTimeRange(
       record.date,
       record.start_time,
-      record.end_time,
+      endTime,
       timezone,
     );
 

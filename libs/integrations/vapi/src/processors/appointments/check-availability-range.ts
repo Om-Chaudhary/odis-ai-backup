@@ -4,23 +4,33 @@
  * Pure business logic for checking appointment availability across a date range.
  */
 
+import { toZonedTime } from "date-fns-tz";
 import type { ToolContext, ToolResult } from "../../core/types";
 import type {
   CheckAvailabilityRangeInput,
   AvailableSlot,
 } from "../../schemas/appointments";
 
+const DEFAULT_TIMEZONE = "America/Los_Angeles";
+
 /**
- * Format time from HH:MM:SS to 12-hour format
+ * Extract local time strings from a V2 timestamptz slot_start
  */
-function formatTime12Hour(time24: string): string {
-  const [hourStr, minuteStr] = time24.split(":");
-  let hour = parseInt(hourStr ?? "0", 10);
-  const minute = minuteStr ?? "00";
-  const ampm = hour >= 12 ? "PM" : "AM";
-  if (hour > 12) hour -= 12;
-  if (hour === 0) hour = 12;
-  return `${hour}:${minute} ${ampm}`;
+function slotToLocalTime(
+  timestamp: string,
+  timezone: string,
+): { time24h: string; time12h: string } {
+  const date = new Date(timestamp);
+  const zonedDate = toZonedTime(date, timezone);
+  const hours = zonedDate.getHours();
+  const minutes = zonedDate.getMinutes();
+
+  const time24h = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:00`;
+  const ampm = hours >= 12 ? "PM" : "AM";
+  const displayHours = hours % 12 || 12;
+  const time12h = `${displayHours}:${String(minutes).padStart(2, "0")} ${ampm}`;
+
+  return { time24h, time12h };
 }
 
 /**
@@ -49,7 +59,9 @@ interface DayAvailability {
   total_slots: number;
   available_slots: number;
   earliest_time: string | null;
+  earliest_time_12h: string | null;
   latest_time: string | null;
+  latest_time_12h: string | null;
   is_stale: boolean;
 }
 
@@ -92,6 +104,7 @@ export async function processCheckAvailabilityRange(
 
   // Use pims_clinic_id for availability lookup if set (e.g., Happy Tails → Alum Rock)
   const availabilityClinicId = clinic.pims_clinic_id ?? clinic.id;
+  const clinicTimezone = clinic.timezone ?? DEFAULT_TIMEZONE;
 
   // Query availability for each date in range
   const availability: DayAvailability[] = [];
@@ -100,10 +113,13 @@ export async function processCheckAvailabilityRange(
   while (currentDate <= endDate) {
     const dateStr = currentDate.toISOString().split("T")[0]!;
 
-    const { data: slots, error } = await supabase.rpc("get_available_slots", {
-      p_clinic_id: availabilityClinicId,
-      p_date: dateStr,
-    });
+    const { data: slots, error } = await supabase.rpc(
+      "get_available_slots_v2",
+      {
+        p_clinic_id: availabilityClinicId,
+        p_date: dateStr,
+      },
+    );
 
     if (!error && slots) {
       const typedSlots = slots as AvailableSlot[];
@@ -113,17 +129,27 @@ export async function processCheckAvailabilityRange(
 
       const { formatted, dayOfWeek } = formatDateForDisplay(dateStr);
 
+      // V2 returns timestamptz — extract local time for display
+      const earliestSlot = openSlots.length > 0 ? openSlots[0]! : null;
+      const latestSlot =
+        openSlots.length > 0 ? openSlots[openSlots.length - 1]! : null;
+      const earliestLocal = earliestSlot
+        ? slotToLocalTime(earliestSlot.slot_start, clinicTimezone)
+        : null;
+      const latestLocal = latestSlot
+        ? slotToLocalTime(latestSlot.slot_start, clinicTimezone)
+        : null;
+
       availability.push({
         date: dateStr,
         formatted_date: formatted,
         day_of_week: dayOfWeek,
         total_slots: typedSlots.length,
         available_slots: openSlots.length,
-        earliest_time: openSlots.length > 0 ? openSlots[0]!.slot_start : null,
-        latest_time:
-          openSlots.length > 0
-            ? openSlots[openSlots.length - 1]!.slot_start
-            : null,
+        earliest_time: earliestLocal?.time24h ?? null,
+        earliest_time_12h: earliestLocal?.time12h ?? null,
+        latest_time: latestLocal?.time24h ?? null,
+        latest_time_12h: latestLocal?.time12h ?? null,
         is_stale: false,
       });
     }
@@ -142,20 +168,29 @@ export async function processCheckAvailabilityRange(
   }> = [];
 
   if (firstAvailable) {
-    const { data: detailedSlots } = await supabase.rpc("get_available_slots", {
-      p_clinic_id: availabilityClinicId,
-      p_date: firstAvailable.date,
-    });
+    const { data: detailedSlots } = await supabase.rpc(
+      "get_available_slots_v2",
+      {
+        p_clinic_id: availabilityClinicId,
+        p_date: firstAvailable.date,
+      },
+    );
 
     if (detailedSlots) {
       const openSlots = (detailedSlots as AvailableSlot[]).filter(
         (slot) => !slot.is_blocked && slot.available_count > 0,
       );
-      firstAvailableTimes = openSlots.map((slot) => ({
-        time: formatTime12Hour(slot.slot_start),
-        time_24h: slot.slot_start,
-        slots_remaining: slot.available_count,
-      }));
+      firstAvailableTimes = openSlots.map((slot) => {
+        const { time24h, time12h } = slotToLocalTime(
+          slot.slot_start,
+          clinicTimezone,
+        );
+        return {
+          time: time12h,
+          time_24h: time24h,
+          slots_remaining: slot.available_count,
+        };
+      });
     }
   }
 
@@ -222,10 +257,8 @@ export async function processCheckAvailabilityRange(
         formatted_date: d.formatted_date,
         day_of_week: d.day_of_week,
         available_slots: d.available_slots,
-        earliest_time: d.earliest_time
-          ? formatTime12Hour(d.earliest_time)
-          : null,
-        latest_time: d.latest_time ? formatTime12Hour(d.latest_time) : null,
+        earliest_time: d.earliest_time_12h,
+        latest_time: d.latest_time_12h,
       })),
     },
   };

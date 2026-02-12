@@ -86,17 +86,16 @@ export const BookAppointmentSchema = z.object({
 export type BookAppointmentInput = z.infer<typeof BookAppointmentSchema>;
 
 /**
- * Result from book_slot_with_hold function
+ * Result from book_appointment_with_hold_v2 function
  */
 export interface BookingResult {
   success: boolean;
   booking_id?: string;
   confirmation_number?: string;
-  slot_id?: string;
   error?: string;
-  alternative_times?: Array<{
-    time: string;
-    available: number;
+  alternatives?: Array<{
+    start: string;
+    end: string;
   }>;
 }
 

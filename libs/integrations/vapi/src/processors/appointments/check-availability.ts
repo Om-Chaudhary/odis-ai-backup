@@ -4,6 +4,7 @@
  * Pure business logic for checking appointment slot availability.
  */
 
+import { toZonedTime } from "date-fns-tz";
 import type { ToolContext, ToolResult } from "../../core/types";
 import type {
   CheckAvailabilityInput,
@@ -13,16 +14,23 @@ import type {
 const DEFAULT_TIMEZONE = "America/Los_Angeles";
 
 /**
- * Format time from HH:MM:SS to 12-hour format
+ * Extract local time strings from a V2 timestamptz slot_start
  */
-function formatTime12Hour(time24: string): string {
-  const [hourStr, minuteStr] = time24.split(":");
-  let hour = parseInt(hourStr ?? "0", 10);
-  const minute = minuteStr ?? "00";
-  const ampm = hour >= 12 ? "PM" : "AM";
-  if (hour > 12) hour -= 12;
-  if (hour === 0) hour = 12;
-  return `${hour}:${minute} ${ampm}`;
+function slotToLocalTime(
+  timestamp: string,
+  timezone: string,
+): { time24h: string; time12h: string } {
+  const date = new Date(timestamp);
+  const zonedDate = toZonedTime(date, timezone);
+  const hours = zonedDate.getHours();
+  const minutes = zonedDate.getMinutes();
+
+  const time24h = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:00`;
+  const ampm = hours >= 12 ? "PM" : "AM";
+  const displayHours = hours % 12 || 12;
+  const time12h = `${displayHours}:${String(minutes).padStart(2, "0")} ${ampm}`;
+
+  return { time24h, time12h };
 }
 
 /**
@@ -76,8 +84,8 @@ export async function processCheckAvailability(
   // Use pims_clinic_id for availability lookup if set (e.g., Happy Tails → Alum Rock)
   const availabilityClinicId = clinic.pims_clinic_id ?? clinic.id;
 
-  // Call the database function
-  const { data: slots, error } = await supabase.rpc("get_available_slots", {
+  // Call the V2 database function (time range-based)
+  const { data: slots, error } = await supabase.rpc("get_available_slots_v2", {
     p_clinic_id: availabilityClinicId,
     p_date: input.date,
   });
@@ -121,13 +129,16 @@ export async function processCheckAvailability(
     };
   }
 
-  // Format slots for response
-  const times = openSlots.map((slot) => ({
-    time_12h: formatTime12Hour(slot.slot_start),
-    time_24h: slot.slot_start,
-    value: slot.slot_start,
-    slots_remaining: slot.available_count,
-  }));
+  // Format slots for response (V2 returns timestamptz, convert to clinic local time)
+  const times = openSlots.map((slot) => {
+    const { time24h, time12h } = slotToLocalTime(slot.slot_start, clinicTimezone);
+    return {
+      time_12h: time12h,
+      time_24h: time24h,
+      value: time24h,
+      slots_remaining: slot.available_count,
+    };
+  });
 
   const timeList = times
     .slice(0, 4)

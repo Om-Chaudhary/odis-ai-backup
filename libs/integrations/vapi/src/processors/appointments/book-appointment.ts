@@ -4,12 +4,15 @@
  * Pure business logic for booking appointments with natural language parsing.
  */
 
+import { fromZonedTime } from "date-fns-tz";
 import type { ToolContext, ToolResult } from "../../core/types";
 import type { ClinicWithConfig } from "../../inbound-tools/find-clinic-by-assistant";
 import type {
   BookAppointmentInput,
   BookingResult,
 } from "../../schemas/appointments";
+
+const DEFAULT_TIMEZONE = "America/Los_Angeles";
 
 /* ========================================
    Date/Time Parsing Utilities
@@ -325,6 +328,288 @@ export async function processBookAppointment(
   });
   const formattedTime = formatTime12Hour(parsedTime);
 
+  // === IDEXX Neo Clinics: Use IDEXX API ===
+  // For clinics using IDEXX Neo, use the appointment management API
+  if (clinic.pims_type === "idexx") {
+    try {
+      // Dynamic import to avoid loading IDEXX dependencies for non-IDEXX clinics
+      const { IdexxProvider } = await import("@odis-ai/integrations/idexx");
+      const { BrowserService } =
+        await import("@odis-ai/integrations/idexx/browser");
+
+      // Get IDEXX credentials from clinic config or environment
+      // TODO: Store IDEXX credentials in clinic settings
+      const credentials = {
+        username: process.env.IDEXX_USERNAME ?? "",
+        password: process.env.IDEXX_PASSWORD ?? "",
+        companyId: process.env.IDEXX_COMPANY_ID ?? "",
+      };
+
+      if (!credentials.username || !credentials.password) {
+        logger.error("IDEXX credentials not configured", {
+          clinicId: clinic.id,
+        });
+        throw new Error("IDEXX credentials not configured");
+      }
+
+      // Fetch clinic's slot duration from config (default 15 minutes if not configured)
+      const { data: scheduleConfig } = await supabase
+        .from("clinic_schedule_config")
+        .select("slot_duration_minutes")
+        .eq("clinic_id", clinic.id)
+        .single();
+
+      const slotDurationMinutes = scheduleConfig?.slot_duration_minutes ?? 15;
+
+      logger.info("Using clinic slot duration for IDEXX booking", {
+        clinicId: clinic.id,
+        slotDurationMinutes,
+      });
+
+      // Initialize IDEXX provider
+      const browserService = new BrowserService({
+        headless: true,
+        defaultTimeout: 30000,
+      });
+
+      const provider = new IdexxProvider({
+        browserService,
+        debug: false,
+      });
+
+      // Authenticate
+      const authenticated = await provider.authenticate(credentials);
+      if (!authenticated) {
+        logger.error("IDEXX authentication failed", { clinicId: clinic.id });
+        throw new Error("IDEXX authentication failed");
+      }
+
+      logger.info("IDEXX provider authenticated", { clinicId: clinic.id });
+
+      // Calculate end time using clinic-specific slot duration
+      const calculateEndTime = (
+        startTime: string,
+        durationMinutes = slotDurationMinutes,
+      ): string => {
+        const [hours, minutes] = startTime.split(":").map(Number);
+        const startDate = new Date();
+        startDate.setHours(hours ?? 0, minutes ?? 0, 0, 0);
+        startDate.setMinutes(startDate.getMinutes() + durationMinutes);
+
+        const endHours = String(startDate.getHours()).padStart(2, "0");
+        const endMinutes = String(startDate.getMinutes()).padStart(2, "0");
+        return `${endHours}:${endMinutes}`;
+      };
+
+      // Determine if this is a new client or existing
+      const isNewClient = input.is_new_client ?? false;
+
+      let result;
+
+      if (isNewClient) {
+        // Create appointment with new client and patient
+        result = await provider.createAppointmentWithNewClient({
+          newClient: {
+            firstName: input.client_name.split(" ")[0] ?? "",
+            lastName:
+              input.client_name.split(" ").slice(1).join(" ") ||
+              input.client_name,
+            phone: input.client_phone,
+          },
+          newPatient: {
+            name: input.patient_name,
+            species: input.species ?? "Unknown",
+            breed: input.breed,
+          },
+          reason: input.reason ?? "Appointment",
+          date: parsedDate,
+          startTime: parsedTime,
+          endTime: calculateEndTime(parsedTime),
+          note: `Booked via VAPI inbound call${callId ? ` (Call ID: ${callId})` : ""}`,
+        });
+      } else {
+        // Search for existing patient first
+        const searchResult = await provider.searchPatient({
+          query: input.patient_name,
+          limit: 5,
+        });
+
+        if (searchResult.patients.length === 0) {
+          logger.warn("Patient not found in IDEXX, treating as new client", {
+            patientName: input.patient_name,
+            clinicId: clinic.id,
+          });
+          // Fallback to new client workflow
+          result = await provider.createAppointmentWithNewClient({
+            newClient: {
+              firstName: input.client_name.split(" ")[0] ?? "",
+              lastName:
+                input.client_name.split(" ").slice(1).join(" ") ||
+                input.client_name,
+              phone: input.client_phone,
+            },
+            newPatient: {
+              name: input.patient_name,
+              species: input.species ?? "Unknown",
+              breed: input.breed,
+            },
+            reason: input.reason ?? "Appointment",
+            date: parsedDate,
+            startTime: parsedTime,
+            endTime: calculateEndTime(parsedTime),
+            note: `Booked via VAPI inbound call${callId ? ` (Call ID: ${callId})` : ""}`,
+          });
+        } else {
+          // Use first matching patient
+          const patient = searchResult.patients[0];
+          logger.info("Found matching patient in IDEXX", {
+            patientId: patient?.id,
+            patientName: patient?.name,
+            clinicId: clinic.id,
+          });
+
+          result = await provider.createAppointment({
+            patientId: patient?.id,
+            clientId: patient?.clientId,
+            reason: input.reason ?? "Appointment",
+            date: parsedDate,
+            startTime: parsedTime,
+            endTime: calculateEndTime(parsedTime),
+            note: `Booked via VAPI inbound call${callId ? ` (Call ID: ${callId})` : ""}`,
+          });
+        }
+      }
+
+      // Clean up browser resources
+      await provider.close();
+
+      if (result.success) {
+        logger.info("IDEXX appointment created successfully", {
+          appointmentId: result.appointmentId,
+          clinicId: clinic.id,
+          clinicName: clinic.name,
+          date: parsedDate,
+          time: parsedTime,
+          patientName: input.patient_name,
+        });
+
+        // Optionally store in inbound_vapi_calls for tracking
+        if (callId) {
+          await supabase
+            .from("inbound_vapi_calls")
+            .update({
+              structured_data: {
+                appointment: {
+                  date: parsedDate,
+                  time: parsedTime,
+                  idexx_appointment_id: result.appointmentId,
+                  client_name: input.client_name,
+                  client_phone: input.client_phone,
+                  patient_name: input.patient_name,
+                  reason: input.reason ?? null,
+                  species: input.species ?? null,
+                  breed: input.breed ?? null,
+                  is_new_client: isNewClient,
+                  booked_at: new Date().toISOString(),
+                },
+              },
+              call_analysis: {
+                outcome: "scheduled",
+                appointment_booked: true,
+              },
+              outcome: "Scheduled",
+            })
+            .eq("vapi_call_id", callId);
+        }
+
+        // Update V2 schedule to prevent double-booking before next sync
+        const clinicWithPims = clinic as ClinicWithConfig & {
+          pims_clinic_id?: string | null;
+        };
+        const bookingClinicId = clinicWithPims.pims_clinic_id ?? clinic.id;
+        const clinicTimezone = clinic.timezone ?? DEFAULT_TIMEZONE;
+        const startTimestamp = fromZonedTime(
+          `${parsedDate}T${parsedTime}`,
+          clinicTimezone,
+        );
+        const endTimestamp = new Date(
+          startTimestamp.getTime() + slotDurationMinutes * 60 * 1000,
+        );
+
+        // Insert into schedule_appointments_v2 so get_available_slots_v2 reflects booking immediately
+        const { error: v2Error } = await supabase
+          .from("schedule_appointments_v2")
+          .upsert(
+            {
+              clinic_id: bookingClinicId,
+              time_range: `[${startTimestamp.toISOString()},${endTimestamp.toISOString()})`,
+              neo_appointment_id: result.appointmentId ?? `vapi-${callId}`,
+              patient_name: input.patient_name,
+              client_name: input.client_name,
+              client_phone: input.client_phone,
+              provider_name: null,
+              appointment_type: input.reason ?? "Appointment",
+              status: "scheduled",
+              source: "vapi_idexx",
+              last_synced_at: new Date().toISOString(),
+            },
+            { onConflict: "clinic_id,neo_appointment_id" },
+          );
+
+        if (v2Error) {
+          logger.warn("Failed to insert V2 appointment after IDEXX booking", {
+            error: v2Error.message,
+            clinicId: bookingClinicId,
+          });
+        } else {
+          logger.info("V2 appointment tracked after IDEXX booking", {
+            clinicId: bookingClinicId,
+            date: parsedDate,
+            time: parsedTime,
+          });
+        }
+
+        return {
+          success: true,
+          message: `Perfect! I've scheduled ${input.patient_name} for ${formattedDate} at ${formattedTime}. Your appointment has been added to the system. Is there anything else I can help you with?`,
+          data: {
+            appointment_id: result.appointmentId,
+            appointment: {
+              date: parsedDate,
+              formatted_date: formattedDate,
+              time: parsedTime,
+              formatted_time: formattedTime,
+              patient_name: input.patient_name,
+              client_name: input.client_name,
+              reason: input.reason,
+            },
+            clinic_name: clinic.name,
+            pims_type: "idexx",
+          },
+        };
+      } else {
+        // IDEXX API failed, fall back to schedule_slots
+        logger.error(
+          "IDEXX appointment creation failed, falling back to schedule_slots",
+          {
+            error: result.error,
+            clinicId: clinic.id,
+          },
+        );
+        // Continue to schedule_slots fallback below
+      }
+    } catch (error) {
+      logger.error(
+        "IDEXX appointment creation error, falling back to schedule_slots",
+        {
+          error,
+          clinicId: clinic.id,
+        },
+      );
+      // Continue to schedule_slots fallback below
+    }
+  }
+
   // === Del Valle Pet Hospital: Store booking in inbound call record ===
   // Del Valle uses Avimark (cloud PIMS, no API), so we store the booking
   // in the inbound_vapi_calls table for staff to manually enter into Avimark
@@ -411,18 +696,36 @@ export async function processBookAppointment(
     };
   }
 
-  // === All other clinics: Use schedule_slots booking ===
-  // Use pims_clinic_id for booking if set (e.g., Happy Tails → Alum Rock)
-  const clinicWithPims = clinic as ClinicWithConfig & {
+  // === All other clinics: Use V2 time range-based booking ===
+  const clinicWithPimsDefault = clinic as ClinicWithConfig & {
     pims_clinic_id?: string | null;
   };
-  const bookingClinicId = clinicWithPims.pims_clinic_id ?? clinic.id;
+  const bookingClinicId = clinicWithPimsDefault.pims_clinic_id ?? clinic.id;
+  const clinicTimezone = clinic.timezone ?? DEFAULT_TIMEZONE;
 
-  // Call the book_slot_with_hold function
+  // Fetch clinic slot duration for end time calculation
+  const { data: scheduleConfigDefault } = await supabase
+    .from("clinic_schedule_config")
+    .select("slot_duration_minutes")
+    .eq("clinic_id", bookingClinicId)
+    .single();
+
+  const defaultSlotDuration = scheduleConfigDefault?.slot_duration_minutes ?? 15;
+
+  // Convert local date+time to UTC timestamps
+  const startTimestamp = fromZonedTime(
+    `${parsedDate}T${parsedTime}`,
+    clinicTimezone,
+  );
+  const endTimestamp = new Date(
+    startTimestamp.getTime() + defaultSlotDuration * 60 * 1000,
+  );
+
+  // Call the V2 booking function
   const rpcParams = {
     p_clinic_id: bookingClinicId,
-    p_date: parsedDate,
-    p_time: parsedTime,
+    p_start_time: startTimestamp.toISOString(),
+    p_end_time: endTimestamp.toISOString(),
     p_client_name: input.client_name,
     p_client_phone: input.client_phone,
     p_patient_name: input.patient_name,
@@ -432,7 +735,7 @@ export async function processBookAppointment(
     p_vapi_call_id: ctx.callId ?? null,
   };
   const { data, error } = await supabase.rpc(
-    "book_slot_with_hold",
+    "book_appointment_with_hold_v2",
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     rpcParams as any,
   );
@@ -451,13 +754,20 @@ export async function processBookAppointment(
 
   if (!result.success) {
     // Booking failed - slot not available
-    const alternatives = result.alternative_times ?? [];
+    // V2 returns alternatives as { start, end } timestamps
+    const alternatives = result.alternatives ?? [];
+    const alternativeTimes = alternatives.slice(0, 3).map((a) => {
+      const date = new Date(a.start);
+      return date.toLocaleTimeString("en-US", {
+        timeZone: clinicTimezone,
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    });
     const alternativeText =
-      alternatives.length > 0
-        ? ` I have availability at ${alternatives
-            .slice(0, 3)
-            .map((a) => a.time)
-            .join(", ")}. Would any of those work for you?`
+      alternativeTimes.length > 0
+        ? ` I have availability at ${alternativeTimes.join(", ")}. Would any of those work for you?`
         : " Would you like me to check another day?";
 
     logger.info("Booking failed - slot unavailable", {
@@ -472,7 +782,7 @@ export async function processBookAppointment(
       error: result.error ?? "slot_unavailable",
       message: `I'm sorry, ${formattedTime} on ${formattedDate} is no longer available.${alternativeText}`,
       data: {
-        alternative_times: alternatives,
+        alternative_times: alternativeTimes.map((time) => ({ time })),
       },
     };
   }
