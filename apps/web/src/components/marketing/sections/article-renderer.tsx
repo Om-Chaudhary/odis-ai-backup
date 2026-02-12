@@ -1,4 +1,10 @@
-import { Lightbulb, AlertTriangle, BarChart3 } from "lucide-react";
+import {
+  Lightbulb,
+  AlertTriangle,
+  BarChart3,
+  GitCompare,
+  Lightbulb as InsightIcon,
+} from "lucide-react";
 import { cn } from "@odis-ai/shared/util";
 
 /* -------------------------------------------------------------------------- */
@@ -10,7 +16,7 @@ export interface ArticleSection {
   content: string;
   component?: string;
   callout?: {
-    type: "tip" | "warning" | "stat";
+    type: "tip" | "warning" | "stat" | "comparison" | "insight";
     text: string;
   };
 }
@@ -55,6 +61,24 @@ const calloutConfig = {
     labelColor: "text-violet-600",
     Icon: BarChart3,
     label: "Key Stat",
+  },
+  comparison: {
+    border: "border-indigo-400",
+    bg: "bg-gradient-to-r from-indigo-50/80 to-indigo-50/40",
+    ring: "ring-indigo-100",
+    iconColor: "text-indigo-500",
+    labelColor: "text-indigo-600",
+    Icon: GitCompare,
+    label: "Compare",
+  },
+  insight: {
+    border: "border-cyan-400",
+    bg: "bg-gradient-to-r from-cyan-50/80 to-cyan-50/40",
+    ring: "ring-cyan-100",
+    iconColor: "text-cyan-500",
+    labelColor: "text-cyan-600",
+    Icon: InsightIcon,
+    label: "Insight",
   },
 } as const;
 
@@ -156,7 +180,7 @@ export function ArticleRenderer({
               <span className="font-mono text-sm font-semibold text-teal-400/80 tabular-nums">
                 {sectionNum}
               </span>
-              <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+              <h2 className="text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">
                 {section.title}
               </h2>
             </div>
@@ -196,10 +220,44 @@ function CalloutBlock({
   type,
   text,
 }: {
-  type: "tip" | "warning" | "stat";
+  type: "tip" | "warning" | "stat" | "comparison" | "insight";
   text: string;
 }) {
   const config = calloutConfig[type];
+
+  // Guard against undefined config (fallback to tip)
+  if (!config) {
+    console.warn(`Unknown callout type: ${type}, using 'tip' as fallback`);
+    const fallbackConfig = calloutConfig.tip;
+    const { Icon } = fallbackConfig;
+
+    return (
+      <div
+        className={cn(
+          "mt-8 rounded-xl border-l-4 p-5 ring-1 sm:p-6",
+          fallbackConfig.border,
+          fallbackConfig.bg,
+          fallbackConfig.ring,
+        )}
+      >
+        <div className="mb-2.5 flex items-center gap-2">
+          <Icon className={cn("h-4 w-4", fallbackConfig.iconColor)} />
+          <span
+            className={cn(
+              "text-[0.625rem] font-medium tracking-[0.15em] uppercase",
+              fallbackConfig.labelColor,
+            )}
+          >
+            {fallbackConfig.label}
+          </span>
+        </div>
+        <p className="text-[0.9375rem] leading-relaxed text-slate-700">
+          {text}
+        </p>
+      </div>
+    );
+  }
+
   const { Icon } = config;
 
   return (
@@ -215,7 +273,7 @@ function CalloutBlock({
         <Icon className={cn("h-4 w-4", config.iconColor)} />
         <span
           className={cn(
-            "text-[0.6875rem] font-bold tracking-[0.1em] uppercase",
+            "text-[0.625rem] font-medium tracking-[0.15em] uppercase",
             config.labelColor,
           )}
         >

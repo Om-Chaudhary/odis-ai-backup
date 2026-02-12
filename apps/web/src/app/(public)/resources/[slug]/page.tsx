@@ -146,18 +146,18 @@ export default async function ResourcePage({
     Boolean,
   );
 
-  // Build cross-link items
+  // Build cross-link items (handle both string slugs and objects)
   const crossLinks: CrossLinkItem[] = [
-    ...data.relatedResources.map((r) => ({
-      slug: r.slug,
-      label: r.label,
-      type: "resource" as const,
-    })),
-    ...data.relatedSolutions.map((s) => ({
-      slug: s.slug,
-      label: s.label,
-      type: "solution" as const,
-    })),
+    ...(data.relatedResources ?? []).map((r) => {
+      const slug = typeof r === "string" ? r : r.slug;
+      const label = typeof r === "string" ? r.replace(/-/g, " ") : r.label;
+      return { slug, label, type: "resource" as const };
+    }),
+    ...(data.relatedSolutions ?? []).map((s) => {
+      const slug = typeof s === "string" ? s : s.slug;
+      const label = typeof s === "string" ? s.replace(/-/g, " ") : s.label;
+      return { slug, label, type: "solution" as const };
+    }),
   ];
 
   // Build TOC items from sections

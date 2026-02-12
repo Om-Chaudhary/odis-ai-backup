@@ -147,10 +147,19 @@ function buildSearchText(slug: string, data: ResourcePageData): string {
     .toLowerCase();
 }
 
+// ── Pinned articles ──────────────────────────────────────────
+// These articles are always featured first in their respective sections
+const pinnedArticles: Record<string, string> = {
+  "phone-systems": "vet-call-center-solutions",
+  "after-hours": "emergency-vet-call-center",
+  automation: "ai-veterinary-receptionist-guide",
+};
+
 /**
  * Categorize all resources into sections.
  * Each resource appears in exactly one section (match priority determines ownership).
  * Sections are returned in display order, empty sections omitted.
+ * Pinned articles are always placed first in their category.
  */
 export function categorizeResources(
   resources: Record<string, ResourcePageData>,
@@ -182,6 +191,18 @@ export function categorizeResources(
   for (const [slug, data] of Object.entries(resources)) {
     if (!assigned.has(slug) && fallbackId) {
       sectionMap.get(fallbackId)!.push({ slug, data, category: fallbackId });
+    }
+  }
+
+  // Sort each section to ensure pinned articles are first
+  for (const [categoryId, categoryResources] of sectionMap.entries()) {
+    const pinnedSlug = pinnedArticles[categoryId];
+    if (pinnedSlug) {
+      categoryResources.sort((a, b) => {
+        if (a.slug === pinnedSlug) return -1;
+        if (b.slug === pinnedSlug) return 1;
+        return 0;
+      });
     }
   }
 

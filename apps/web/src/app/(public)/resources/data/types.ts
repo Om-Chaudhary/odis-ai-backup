@@ -19,7 +19,7 @@ export interface ResourcePageData {
     content: string; // rich text content (rendered as HTML with typography plugin)
     component?: string; // optional key to render a React component instead of/alongside HTML
     callout?: {
-      type: "tip" | "warning" | "stat";
+      type: "tip" | "warning" | "stat" | "comparison" | "insight";
       text: string;
     };
   }>;
@@ -48,23 +48,31 @@ export interface ResourcePageData {
   productTieIn: {
     title: string;
     description: string;
-    solutionSlug: string;
+    solutionSlug?: string; // Optional - newer resources use features instead
+    features?: string[];
+    cta?: string;
   };
 
-  // Cross-linking
-  relatedResources: Array<{
-    slug: string;
-    label: string;
-  }>;
-  relatedSolutions: Array<{
-    slug: string;
-    label: string;
-  }>;
+  // Cross-linking (accepts both string slugs and objects for backwards compatibility)
+  relatedResources?: Array<
+    | string
+    | {
+        slug: string;
+        label: string;
+      }
+  >;
+  relatedSolutions?: Array<
+    | string
+    | {
+        slug: string;
+        label: string;
+      }
+  >;
 
   // Schema.org type for JSON-LD
-  schemaType: "Article" | "HowTo" | "FAQPage";
+  schemaType?: "Article" | "HowTo" | "FAQPage";
 
   // Hub page fields
-  iconName: string;
-  cardDescription: string;
+  iconName?: string;
+  cardDescription?: string;
 }

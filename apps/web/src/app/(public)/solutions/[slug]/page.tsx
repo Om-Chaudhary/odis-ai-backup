@@ -3,8 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   MarketingLayout,
-  SectionContainer,
-  SectionHeader,
   AccordionFAQ,
   TestimonialCard,
   CrossLinkSection,

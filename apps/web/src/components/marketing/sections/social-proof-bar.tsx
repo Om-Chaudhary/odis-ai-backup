@@ -3,17 +3,14 @@
 import { useRef } from "react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import { Star, TrendingUp } from "lucide-react";
-import { NumberTicker } from "~/components/landing/ui/number-ticker";
 import { cn } from "@odis-ai/shared/util";
 
 export interface SocialProofBarProps {
-  clinicCount?: number;
   switchedText?: string;
   className?: string;
 }
 
 export function SocialProofBar({
-  clinicCount = 50,
   switchedText = "30+ clinics switched this month",
   className,
 }: SocialProofBarProps) {

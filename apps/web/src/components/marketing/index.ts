@@ -83,6 +83,8 @@ export {
 // =============================================================================
 
 export { FeatureCard, type FeatureCardProps } from "./ui";
+export { ExpandableGrid } from "./expandable-grid";
+export { FeaturedArticle, ViewAllLink } from "./featured-article";
 
 // =============================================================================
 // Skeletons
