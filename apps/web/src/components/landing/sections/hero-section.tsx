@@ -8,6 +8,7 @@ import {
   useInView,
   useScroll,
   useTransform,
+  useReducedMotion,
   AnimatePresence,
 } from "framer-motion";
 import { usePostHog } from "posthog-js/react";
@@ -72,14 +73,27 @@ export function HeroSection() {
   const isPageLoaded = usePageLoaded(150);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
-  // Parallax scroll
+  // Only enable parallax on desktop (>= 1024px) to reduce mobile main thread work
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    const mql = window.matchMedia("(min-width: 1024px)");
+    setIsDesktop(mql.matches);
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mql.addEventListener("change", handler);
+    return () => mql.removeEventListener("change", handler);
+  }, []);
+
+  // Parallax scroll (desktop only)
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start start", "end start"],
   });
-  const imageY = useTransform(scrollYProgress, [0, 1], [0, 60]);
-  const cardY = useTransform(scrollYProgress, [0, 1], [0, -30]);
+  const rawImageY = useTransform(scrollYProgress, [0, 1], [0, 60]);
+  const rawCardY = useTransform(scrollYProgress, [0, 1], [0, -30]);
+  const imageY = isDesktop && !shouldReduceMotion ? rawImageY : 0;
+  const cardY = isDesktop && !shouldReduceMotion ? rawCardY : 0;
 
   // Fallback timeout for image load
   useEffect(() => {
@@ -129,13 +143,19 @@ export function HeroSection() {
         />
 
         {/* Parallax hero image with blur treatment */}
-        <motion.div className="absolute inset-0" style={{ y: imageY }}>
+        <motion.div
+          className="absolute inset-0 transform-gpu"
+          style={{ y: imageY }}
+        >
           <Image
             alt=""
-            src="/images/hero/bg.png"
+            src="/images/hero/bg.webp"
             fill
             priority
             sizes="100vw"
+            placeholder="blur"
+            blurDataURL="data:image/webp;base64,UklGRlYAAABXRUJQVlA4IEoAAADQAQCdASoQAAsAAkA4JZQCdAEO/hEMAD+8sv/WDNOH/rnm/+Ue0//LKrUwHakHP/xGf/5ZNsq66XnfcP/rYf/+t/2v/bhmAAAA=="
+            fetchPriority="high"
             onLoad={() => setIsImageLoaded(true)}
             className={cn(
               "scale-110 object-cover object-center blur-[2px] transition-opacity duration-700",
@@ -158,15 +178,6 @@ export function HeroSection() {
           style={{
             background:
               "radial-gradient(ellipse at center, hsla(174,60%,45%,0.25) 0%, transparent 65%)",
-          }}
-        />
-
-        {/* Film grain texture */}
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.025]"
-          aria-hidden="true"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
           }}
         />
 

@@ -26,7 +26,7 @@ const testimonials = [
     location: "San Francisco, CA",
     metric: "15+ hrs/week saved",
     rating: 5,
-    img: "/images/testimonials/dr-deepti-pal.png",
+    img: "/images/testimonials/dr-deepti-pal.webp",
     profileUrl: "#",
   },
   {
@@ -38,7 +38,7 @@ const testimonials = [
     location: "San Jose, CA",
     metric: "94% reach rate",
     rating: 5,
-    img: "/images/testimonials/dr-tais-perpetuo.png",
+    img: "/images/testimonials/dr-tais-perpetuo.webp",
     profileUrl: "#",
   },
   {
@@ -50,7 +50,7 @@ const testimonials = [
     location: "Livermore, CA",
     metric: "Calls recovered monthly",
     rating: 5,
-    img: "/images/testimonials/jenn.png",
+    img: "/images/testimonials/jenn.webp",
     profileUrl: "#",
   },
 ];

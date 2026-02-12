@@ -146,11 +146,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="light bg-[hsl(185,25%,7%)]">
       <head>
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://us.i.posthog.com" />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=AW-17852929075"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
         />
-        <Script id="google-ads" strategy="afterInteractive">
+        <Script id="google-ads" strategy="lazyOnload">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}

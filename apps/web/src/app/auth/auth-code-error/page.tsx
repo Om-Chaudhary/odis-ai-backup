@@ -44,7 +44,7 @@ function AuthCodeErrorContent() {
       {/* Background image with dark overlay */}
       <Image
         alt="Background"
-        src="/images/hero/bg.png"
+        src="/images/hero/bg.webp"
         fill
         priority
         className="object-cover opacity-10"

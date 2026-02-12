@@ -1,14 +1,4 @@
-"use client";
-import {
-  Github,
-  Twitter,
-  Linkedin,
-  Mail,
-  ArrowUpRight,
-  Shield,
-  Lock,
-} from "lucide-react";
-import { motion } from "framer-motion";
+import { Shield, Lock, ArrowUpRight, Mail, Linkedin } from "lucide-react";
 import Link from "next/link";
 
 type FooterLink = {
@@ -34,7 +24,6 @@ type FooterSectionProps = {
   copyrightText?: string;
 };
 
-// Footer sections with links to actual pages and anchor links
 const defaultSections: FooterSection[] = [
   {
     title: "Product",
@@ -88,13 +77,7 @@ export const FooterSection = ({
         {/* Main Footer Content */}
         <div className="mb-12 grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-6">
           {/* Brand Column */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-50px" }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="col-span-1 sm:col-span-2 lg:col-span-2"
-          >
+          <div className="col-span-1 sm:col-span-2 lg:col-span-2">
             <div className="mb-4">
               <h3 className="font-display mb-2 text-xl font-semibold text-slate-800">
                 {companyName}
@@ -106,15 +89,6 @@ export const FooterSection = ({
 
             {/* Social Links */}
             <div className="flex items-center gap-2">
-              {socialLinks.twitter && (
-                <a
-                  href={socialLinks.twitter}
-                  className="bg-background border-border text-muted-foreground flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-200 hover:border-slate-400/30 hover:text-slate-700"
-                  aria-label="Twitter"
-                >
-                  <Twitter className="h-4 w-4" />
-                </a>
-              )}
               {socialLinks.linkedin && (
                 <a
                   href={socialLinks.linkedin}
@@ -122,15 +96,6 @@ export const FooterSection = ({
                   aria-label="LinkedIn"
                 >
                   <Linkedin className="h-4 w-4" />
-                </a>
-              )}
-              {socialLinks.github && (
-                <a
-                  href={socialLinks.github}
-                  className="bg-background border-border text-muted-foreground flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-200 hover:border-slate-400/30 hover:text-slate-700"
-                  aria-label="GitHub"
-                >
-                  <Github className="h-4 w-4" />
                 </a>
               )}
               {socialLinks.email && (
@@ -143,22 +108,11 @@ export const FooterSection = ({
                 </a>
               )}
             </div>
-          </motion.div>
+          </div>
 
           {/* Link Sections */}
           {sections.map((section, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{
-                duration: 0.5,
-                delay: index * 0.1,
-                ease: "easeOut",
-              }}
-              className="col-span-1"
-            >
+            <div key={index} className="col-span-1">
               <h4 className="mb-4 text-sm font-medium text-slate-700">
                 {section.title}
               </h4>
@@ -191,18 +145,12 @@ export const FooterSection = ({
                   );
                 })}
               </ul>
-            </motion.div>
+            </div>
           ))}
         </div>
 
         {/* Bottom Bar */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-          className="border-border border-t pt-8"
-        >
+        <div className="border-border border-t pt-8">
           <div className="flex flex-col items-center gap-6">
             {/* Compliance badges */}
             <div className="flex flex-wrap items-center justify-center gap-4">
@@ -231,7 +179,7 @@ export const FooterSection = ({
               </a>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </footer>
   );

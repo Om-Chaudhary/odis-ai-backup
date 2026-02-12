@@ -1,17 +1,6 @@
-"use client";
-
-import { useRef } from "react";
 import Image from "next/image";
-import { motion, useInView, useReducedMotion } from "framer-motion";
 import { Link2, CheckCircle2 } from "lucide-react";
 import { SectionBackground } from "../ui/section-background";
-import { useSectionVisibility } from "~/hooks/useSectionVisibility";
-
-// Animation variants - consistent with hero
-const fadeUpVariant = {
-  hidden: { opacity: 0, y: 20, filter: "blur(8px)" },
-  visible: { opacity: 1, y: 0, filter: "blur(0px)" },
-};
 
 interface IntegrationApp {
   name: string;
@@ -26,7 +15,6 @@ interface IntegrationsSectionProps {
   bottomRowApps?: IntegrationApp[];
 }
 
-// Real veterinary practice management system integrations
 const defaultTopRowApps: IntegrationApp[] = [
   { name: "IDEXX Neo", logo: "/integrations/idexx.svg", status: "active" },
   { name: "ezyVet", logo: "/integrations/ezyvet.svg", status: "active" },
@@ -53,7 +41,6 @@ const defaultTopRowApps: IntegrationApp[] = [
   },
 ];
 
-// Bottom row - same integrations in different order for visual variety
 const defaultBottomRowApps: IntegrationApp[] = [
   {
     name: "Shepherd",
@@ -80,7 +67,6 @@ const defaultBottomRowApps: IntegrationApp[] = [
   { name: "IDEXX Neo", logo: "/integrations/idexx.svg", status: "active" },
 ];
 
-// Simple grayscale logo component
 const IntegrationLogo = ({ app }: { app: IntegrationApp }) => {
   return (
     <div className="flex h-12 w-32 flex-shrink-0 items-center justify-center px-4">
@@ -96,46 +82,19 @@ const IntegrationLogo = ({ app }: { app: IntegrationApp }) => {
 };
 
 export const IntegrationsSection = ({
-  subtitle = "OdisAI integrates with the tools you already use—so every call syncs seamlessly with your patient records.",
+  subtitle = "OdisAI integrates with the tools you already use\u2014so every call syncs seamlessly with your patient records.",
   topRowApps = defaultTopRowApps,
   bottomRowApps = defaultBottomRowApps,
 }: IntegrationsSectionProps) => {
-  const sectionVisibilityRef =
-    useSectionVisibility<HTMLElement>("integrations");
-  const localRef = useRef<HTMLElement>(null);
-  const isInView = useInView(localRef, { once: true, margin: "-100px" });
-  const shouldReduceMotion = useReducedMotion();
-
-  // Combine refs for both visibility tracking and animation
-  const sectionRef = (el: HTMLElement | null) => {
-    (localRef as React.MutableRefObject<HTMLElement | null>).current = el;
-    (
-      sectionVisibilityRef as React.MutableRefObject<HTMLElement | null>
-    ).current = el;
-  };
-
-  const transition = {
-    duration: shouldReduceMotion ? 0 : 0.6,
-    ease: [0.22, 1, 0.36, 1] as const,
-  };
-
   return (
     <section
-      ref={sectionRef as React.LegacyRef<HTMLElement>}
       id="integrations"
       className="relative w-full overflow-hidden py-16 sm:py-20 md:py-24 lg:py-32"
     >
-      {/* Cool mesh gradient - professional, technical competence */}
       <SectionBackground variant="mesh-cool" />
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.div
-          variants={fadeUpVariant}
-          initial="hidden"
-          animate={isInView ? "visible" : "hidden"}
-          transition={{ ...transition, delay: 0.3 }}
-          className="mb-12 flex flex-col items-center text-center lg:mb-16"
-        >
+        <div className="mb-12 flex flex-col items-center text-center lg:mb-16">
           <div className="mb-5 flex flex-wrap items-center justify-center gap-2">
             <span className="inline-flex items-center gap-2 rounded-full border border-teal-200/60 bg-teal-50/80 px-4 py-1.5 text-xs font-semibold tracking-widest text-teal-700 uppercase backdrop-blur-sm">
               <Link2 className="h-3.5 w-3.5" />
@@ -153,22 +112,14 @@ export const IntegrationsSection = ({
             system
           </h2>
           <p className="text-muted-foreground max-w-xl text-lg">{subtitle}</p>
-        </motion.div>
+        </div>
       </div>
 
-      <motion.div
-        variants={fadeUpVariant}
-        initial="hidden"
-        animate={isInView ? "visible" : "hidden"}
-        transition={{ ...transition, delay: 0.5 }}
-        className="relative h-[140px] overflow-hidden"
-      >
+      <div className="relative h-[140px] overflow-hidden">
         <div
-          className="absolute top-4 flex items-center gap-12 whitespace-nowrap"
+          className="absolute top-4 flex transform-gpu items-center gap-12 whitespace-nowrap"
           style={{
-            animation: shouldReduceMotion
-              ? "none"
-              : "scroll-left 25s linear infinite",
+            animation: "scroll-left 25s linear infinite",
             willChange: "transform",
           }}
         >
@@ -177,16 +128,13 @@ export const IntegrationsSection = ({
           ))}
         </div>
 
-        {/* Gradient overlays - using transparent to blend with background */}
         <div className="from-background pointer-events-none absolute inset-y-0 right-0 z-20 w-32 bg-gradient-to-l to-transparent lg:w-48" />
         <div className="from-background pointer-events-none absolute inset-y-0 left-0 z-20 w-32 bg-gradient-to-r to-transparent lg:w-48" />
 
         <div
-          className="absolute top-[76px] flex items-center gap-12 whitespace-nowrap"
+          className="absolute top-[76px] flex transform-gpu items-center gap-12 whitespace-nowrap"
           style={{
-            animation: shouldReduceMotion
-              ? "none"
-              : "scroll-left-slow 35s linear infinite",
+            animation: "scroll-left-slow 35s linear infinite",
             willChange: "transform",
           }}
         >
@@ -194,7 +142,7 @@ export const IntegrationsSection = ({
             <IntegrationLogo key={`bottom-${index}`} app={app} />
           ))}
         </div>
-      </motion.div>
+      </div>
     </section>
   );
 };
