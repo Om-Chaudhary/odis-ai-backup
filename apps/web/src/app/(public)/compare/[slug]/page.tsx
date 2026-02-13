@@ -21,6 +21,7 @@ import {
   TabsTrigger,
 } from "@odis-ai/shared/ui/tabs";
 import { comparisons, comparisonSlugs } from "../data";
+import { getPublicPageRobots } from "~/lib/metadata";
 
 const contentNavigation = [
   { name: "Resources", href: "/resources" },
@@ -56,6 +57,7 @@ export async function generateMetadata({
       description: data.metaDescription,
       url: `${siteUrl}/compare/${slug}`,
     },
+    robots: getPublicPageRobots(),
   };
 }
 

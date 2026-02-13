@@ -6,6 +6,7 @@ import { cn } from "@odis-ai/shared/util";
 import { comparisons } from "./data";
 import { solutions } from "../solutions/data";
 import { CompareHero } from "./compare-hero";
+import { getPublicPageRobots } from "~/lib/metadata";
 
 const contentNavigation = [
   { name: "Resources", href: "/resources" },
@@ -37,6 +38,7 @@ export const metadata: Metadata = {
       "Why clinics are switching to OdisAI. Compare to GuardianVets, VetTriage, Smith.ai, Ruby, and Dialzara.",
     url: `${siteUrl}/compare`,
   },
+  robots: getPublicPageRobots(),
 };
 
 const comparisonEntries = Object.entries(comparisons).map(([slug, data]) => ({

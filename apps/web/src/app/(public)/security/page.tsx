@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import SecurityContent from "~/app/(public)/security/security-content";
+import { getPublicPageRobots } from "~/lib/metadata";
 
 export const metadata: Metadata = {
   title: "Security & Compliance | OdisAI",
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
     description: "Our commitment to protecting your practice data.",
     url: "/security",
   },
+  robots: getPublicPageRobots(),
 };
 
 export default function SecurityPage() {

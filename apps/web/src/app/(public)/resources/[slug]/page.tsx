@@ -12,6 +12,7 @@ import { ArticleTableOfContents } from "~/components/marketing/sections/article-
 import { Download, ArrowRight, Sparkles, Clock } from "lucide-react";
 import { BlurFade } from "~/components/landing/ui/blur-fade";
 import { resources, resourceSlugs } from "../data";
+import { getPublicPageRobots } from "~/lib/metadata";
 
 const contentNavigation = [
   { name: "Resources", href: "/resources" },
@@ -45,6 +46,7 @@ export async function generateMetadata({
       description: data.metaDescription,
       url: `/resources/${slug}`,
     },
+    robots: getPublicPageRobots(),
   };
 }
 

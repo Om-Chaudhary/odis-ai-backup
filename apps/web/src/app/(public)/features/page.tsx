@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { FeaturesContent } from "./features-content";
+import { getPublicPageRobots } from "~/lib/metadata";
 
 export const metadata: Metadata = {
   title: "AI Voice Features for Veterinarians | 24/7 Call Handling",
@@ -24,6 +25,7 @@ export const metadata: Metadata = {
       "Discover how OdisAI's AI voice agents transform veterinary practice communication with 24/7 availability, smart scheduling, and PIMS integration.",
     url: "/features",
   },
+  robots: getPublicPageRobots(),
 };
 
 export default function FeaturesPage() {

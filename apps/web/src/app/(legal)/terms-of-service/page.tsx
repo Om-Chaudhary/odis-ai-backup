@@ -7,6 +7,7 @@ import {
   LAST_UPDATED,
   EFFECTIVE_DATE,
 } from "./content";
+import { getPublicPageRobots } from "~/lib/metadata";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
@@ -25,10 +26,7 @@ export const metadata: Metadata = {
     title: `Terms of Service | ${COMPANY_NAME}`,
     description: `Read the Terms of Service for ${COMPANY_NAME}.`,
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
+  robots: getPublicPageRobots(),
 };
 
 export default function TermsOfServicePage() {

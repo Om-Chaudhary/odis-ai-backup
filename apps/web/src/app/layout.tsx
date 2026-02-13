@@ -10,6 +10,7 @@ import { ClientProviders } from "~/components/providers/client-providers";
 import { StructuredData } from "~/components/seo/structured-data";
 import { ServiceWorkerRegister } from "~/components/sw-register";
 import { env } from "~/env.js";
+import { getEnvironmentRobots } from "~/lib/metadata";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -109,17 +110,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: siteUrl,
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
-  },
+  robots: getEnvironmentRobots(),
   verification: {
     google: process.env.GOOGLE_SITE_VERIFICATION,
   },

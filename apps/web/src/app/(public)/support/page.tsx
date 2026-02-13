@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import SupportContent from "~/app/(public)/support/support-content";
+import { getPublicPageRobots } from "~/lib/metadata";
 
 export const metadata: Metadata = {
   title: "Support Hub | Get Help with OdisAI",
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
     description: "Support resources for OdisAI users.",
     url: "/support",
   },
+  robots: getPublicPageRobots(),
 };
 
 export default function SupportPage() {

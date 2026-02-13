@@ -7,6 +7,7 @@ import {
   LAST_UPDATED,
   EFFECTIVE_DATE,
 } from "./content";
+import { getPublicPageRobots } from "~/lib/metadata";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -25,10 +26,7 @@ export const metadata: Metadata = {
     title: `Privacy Policy | ${COMPANY_NAME}`,
     description: `Learn how ${COMPANY_NAME} collects, uses, and protects your personal information.`,
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
+  robots: getPublicPageRobots(),
 };
 
 export default function PrivacyPolicyPage() {

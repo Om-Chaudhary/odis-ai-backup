@@ -75,6 +75,18 @@ const config = {
         ],
       },
       {
+        source: "/((?!dashboard|api|auth|sign-in|sign-up|login).*)",
+        headers: [
+          {
+            key: "X-Robots-Tag",
+            value:
+              process.env.NEXT_PUBLIC_APP_ENV === "production"
+                ? "index, follow"
+                : "noindex, nofollow",
+          },
+        ],
+      },
+      {
         source: "/sitemap.xml",
         headers: [
           {

@@ -9,6 +9,7 @@ import {
   CTASection,
 } from "~/components/marketing";
 import { Check } from "lucide-react";
+import { getPublicPageRobots } from "~/lib/metadata";
 
 // Integration data - in production, this could come from a CMS or database
 const integrations: Record<
@@ -576,6 +577,7 @@ export async function generateMetadata({
       description: integration.description,
       url: `${siteUrl}/integrations/${slug}`,
     },
+    robots: getPublicPageRobots(),
   };
 }
 

@@ -19,6 +19,7 @@ import {
 } from "./categorize-resources";
 import { ResourcesHero } from "./resources-hero";
 import { ResourceSection } from "./resource-section";
+import { getPublicPageRobots } from "~/lib/metadata";
 
 // ─────────────────────────────────────────────────────────────
 // Shared content hub navigation
@@ -58,6 +59,7 @@ export const metadata: Metadata = {
       "Research, templates, and practical guides to help small animal clinics reduce phone overwhelm, recover revenue, and improve client compliance.",
     url: "/resources",
   },
+  robots: getPublicPageRobots(),
 };
 
 // ─────────────────────────────────────────────────────────────

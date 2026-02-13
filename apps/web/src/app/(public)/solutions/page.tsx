@@ -30,6 +30,7 @@ import { MarketingLayout } from "~/components/marketing";
 import { solutions } from "./data";
 import { comparisons } from "../compare/data";
 import { SolutionsHero } from "./solutions-hero";
+import { getPublicPageRobots } from "~/lib/metadata";
 
 const contentNavigation = [
   { name: "Resources", href: "/resources" },
@@ -93,6 +94,7 @@ export const metadata: Metadata = {
       "Stop losing revenue to missed calls. 24/7 answering, after-hours coverage, discharge follow-ups, emergency triage, and AI reception.",
     url: `${siteUrl}/solutions`,
   },
+  robots: getPublicPageRobots(),
 };
 
 const solutionEntries = Object.entries(solutions).map(([slug, data]) => ({

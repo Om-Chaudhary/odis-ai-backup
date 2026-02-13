@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import {
   LandingNavbar,
@@ -5,6 +6,11 @@ import {
   ScrollProgress,
   LandingAnalytics,
 } from "~/components/landing";
+import { getPublicPageRobots } from "~/lib/metadata";
+
+export const metadata: Metadata = {
+  robots: getPublicPageRobots(),
+};
 
 // Enable PPR for landing page - static shell renders instantly
 export const cacheComponents = true;

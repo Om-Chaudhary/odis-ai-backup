@@ -6,6 +6,7 @@ import {
   SectionContainer,
 } from "~/components/marketing";
 import { cn } from "@odis-ai/shared/util";
+import { getPublicPageRobots } from "~/lib/metadata";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://odisai.net";
 
@@ -31,6 +32,7 @@ export const metadata: Metadata = {
       "Seamless integrations with IDEXX Neo, ezyVet, Cornerstone, and more veterinary practice management systems.",
     url: `${siteUrl}/integrations`,
   },
+  robots: getPublicPageRobots(),
 };
 
 // Integration data - can be moved to a data file or CMS

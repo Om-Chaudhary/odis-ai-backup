@@ -1,3 +1,10 @@
+import type { Metadata } from "next";
+import { getPublicPageRobots } from "~/lib/metadata";
+
+export const metadata: Metadata = {
+  robots: getPublicPageRobots(),
+};
+
 /**
  * Public Layout
  *

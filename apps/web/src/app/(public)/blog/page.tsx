@@ -4,6 +4,7 @@ import {
   SectionContainer,
 } from "~/components/marketing";
 import type { Metadata } from "next";
+import { getPublicPageRobots } from "~/lib/metadata";
 
 export const metadata: Metadata = {
   title: "Blog | OdisAI Insights",
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/blog",
   },
+  robots: getPublicPageRobots(),
 };
 
 export default function BlogPage() {

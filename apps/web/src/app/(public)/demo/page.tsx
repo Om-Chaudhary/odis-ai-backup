@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DemoContent } from "./demo-content";
+import { getPublicPageRobots } from "~/lib/metadata";
 
 export const metadata: Metadata = {
   title: "Book a Demo | See OdisAI in Action",
@@ -22,6 +23,7 @@ export const metadata: Metadata = {
       "Experience OdisAI's AI voice agents in a live demo tailored to your veterinary practice.",
     url: "/demo",
   },
+  robots: getPublicPageRobots(),
 };
 
 export default function DemoPage() {

@@ -14,6 +14,7 @@ import {
 import { AlertTriangle, Check, ArrowRight } from "lucide-react";
 import { BlurFade } from "~/components/landing/ui/blur-fade";
 import { solutions, solutionSlugs } from "../data";
+import { getPublicPageRobots } from "~/lib/metadata";
 
 const contentNavigation = [
   { name: "Resources", href: "/resources" },
@@ -49,6 +50,7 @@ export async function generateMetadata({
       description: data.metaDescription,
       url: `${siteUrl}/solutions/${slug}`,
     },
+    robots: getPublicPageRobots(),
   };
 }
 

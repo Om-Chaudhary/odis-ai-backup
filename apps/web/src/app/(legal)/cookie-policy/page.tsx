@@ -7,6 +7,7 @@ import {
   LAST_UPDATED,
   EFFECTIVE_DATE,
 } from "./content";
+import { getPublicPageRobots } from "~/lib/metadata";
 
 export const metadata: Metadata = {
   title: "Cookie Policy",
@@ -25,10 +26,7 @@ export const metadata: Metadata = {
     title: `Cookie Policy | ${COMPANY_NAME}`,
     description: `Learn how ${COMPANY_NAME} uses cookies and similar tracking technologies.`,
   },
-  robots: {
-    index: true,
-    follow: true,
-  },
+  robots: getPublicPageRobots(),
 };
 
 export default function CookiePolicyPage() {

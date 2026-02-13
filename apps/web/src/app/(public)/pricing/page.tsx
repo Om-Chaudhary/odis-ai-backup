@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PricingContent } from "./pricing-content";
+import { getPublicPageRobots } from "~/lib/metadata";
 
 export const metadata: Metadata = {
   title: "Pricing | AI Voice Agents for Veterinary Clinics",
@@ -22,6 +23,7 @@ export const metadata: Metadata = {
       "See our transparent pricing plans for veterinary AI voice agents. Start free, scale as you grow.",
     url: "/pricing",
   },
+  robots: getPublicPageRobots(),
 };
 
 export default function PricingPage() {
